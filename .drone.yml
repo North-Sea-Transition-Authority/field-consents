@@ -1,0 +1,195 @@
+kind: pipeline
+type: docker
+name: default
+
+steps:
+
+  - name: restore-cache
+    image: drillster/drone-volume-cache
+    volumes:
+      - name: drone-cache
+        path: /cache
+    settings:
+      restore: true
+      mount:
+        - ./node_modules
+        # We can only mount volume caches into the working directory, so all steps which use Gradle must have
+        # the GRADLE_USER_HOME environment variable pointing here.
+        - ./gradle_cache
+        - ./sonar_cache
+
+  - name: fetch-fds-submodule
+    image: alpine/git:v2.26.2
+    commands:
+      - echo "$${BITBUCKET_SSH_KEY}" > bitbucket_ssh_key
+      - chmod 600 bitbucket_ssh_key
+      - export GIT_SSH_COMMAND="ssh -i bitbucket_ssh_key -F /dev/null  -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+      - git submodule update --init --recursive
+    environment:
+      BITBUCKET_SSH_KEY:
+        from_secret: bitbucket_ssh_key
+
+  - name: build-frontend
+    image: node:10
+    commands:
+      - cd fivium-design-system-core && npm install && npx gulp build && cd ..
+      - npm install
+      - npx gulp buildAll
+
+  - name: build-backend
+    image: eclipse-temurin:17-jdk
+    environment:
+      SONAR_TOKEN:
+        from_secret: sonarcloud_token
+    commands:
+      - chmod +x gradlew
+      - ./gradlew checkstyleMain test bootJar sonarqube
+
+  - name: sync-reports
+    image: alpine:3.16.0
+    commands:
+      - mkdir -p /var/webfiles/${DRONE_BUILD_NUMBER}
+      - cp -r build/reports /var/webfiles/${DRONE_BUILD_NUMBER}
+    volumes:
+      - name: webfiles
+        path: /var/webfiles
+    when:
+      status: [ success, failure ]
+
+  - name: publish-docker-develop
+    image: plugins/docker:19.03.8
+    settings:
+      registry: quay.io
+      repo: quay.io/fivium/field-consents
+      tags:
+        - develop
+      config:
+        from_secret: docker_config
+    when:
+      branch:
+        - develop
+      status:
+        - success
+
+  - name: publish-docker
+    image: plugins/docker:19.03.8
+    settings:
+      registry: quay.io
+      repo: quay.io/fivium/field-consents
+      tags:
+        - ${DRONE_BRANCH/\//-}-${DRONE_BUILD_NUMBER}
+      config:
+        from_secret: docker_config
+    when:
+      branch:
+        - main
+        - hotfix/**
+        - release/**
+      status:
+        - success
+
+  - name: trivy-build-image
+    image: docker:20.10.9
+    volumes:
+      - name: docker-sock
+        path: /var/run/docker.sock
+    commands:
+      - docker build -t quay.io/fivium/field-consents:trivy-scan-target .
+
+  - name: trivy-scan
+    image: aquasec/trivy:0.20.0
+    volumes:
+      - name: docker-sock
+        path: /var/run/docker.sock
+      - name: drone-trivy-cache
+        path: /root/trivy-cache
+      - name: webfiles
+        path: /var/webfiles
+    commands:
+      # timeout set as initial cache population can seemingly take a while sometimes
+      - trivy --format template --template "@contrib/html.tpl" -o /var/webfiles/${DRONE_BUILD_NUMBER}/trivy-scan.html image --timeout 30m --exit-code 1 quay.io/fivium/field-consents:trivy-scan-target
+    when:
+      status:
+        - success
+
+  - name: deploy-dev-st
+    image: plugins/downstream:linux-amd64
+    settings:
+      server: https://drone.fivium.co.uk
+      token:
+        from_secret: drone_token
+      fork: true
+      repositories:
+        - fiviumuk/fivium-dev-app@master
+    when:
+      branch:
+        - develop
+      status:
+        - success
+
+  - name: rebuild-cache
+    image: drillster/drone-volume-cache
+    volumes:
+      - name: drone-cache
+        path: /cache
+    settings:
+      rebuild: true
+      mount:
+        - ./node_modules
+        - ./gradle_cache
+        - ./sonar_cache
+
+  - name: slack
+    image: plugins/slack
+    settings:
+      webhook: https://hooks.slack.com/services/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
+      channel: field-consents-builds
+      template: "*{{build.status}}* <{{build.link}}|Commit {{truncate build.commit 7}} on {{build.branch}} by ${DRONE_COMMIT_AUTHOR_NAME}>\nReports published to: http://drone-assets.fivium.local:9090/field-consents/{{build.number}}/"
+    when:
+      status: [ success, failure ]
+
+trigger:
+  event:
+    include:
+    - push
+
+volumes:
+  - name: webfiles
+    host:
+      path: /home/fivium/www/field-consents
+
+  - name: drone-cache
+    host:
+      path: /home/fivium/drone-cache
+
+  - name: docker-sock
+    host:
+      path: /var/run/docker.sock
+
+  - name: drone-trivy-cache
+    host:
+      path: /root/.cache/
+
+---
+
+kind: secret
+name: docker_config
+data: fFAoV7Wy4spEzs8OsmYFTJOa8tPb77Kradiz398p0/hrMofZo9sH0pRXmInJi0xvEDQ5jhwANg+YLivJCs5Ws5kVH9H4StLZ++NEhVVVxEbprqcfV9aDKM2z87ncFjVY8lmSK11Z4SirhqPXjiK4B4BEJmTa5X+LcU71nPOn9xKyLvauWMY6Sb6fMfmFwijAhGwgmjxZHHMntzKCD5NwefJZ3Q4MgGXXAglbmOmMC+5dmM177cVETRPaCfzaaIW7ie1jf5mJ/rLXo/oz/81gJcoOCE8RV3a4+72M/+9fFxbQlE7Ze+6GdOzQjUlvgUCbDhtI/gz637C9oFh+6gcNvx1SXccw
+
+---
+
+kind: secret
+name: sonarcloud_token
+data: IYhMslxAE70cz5/sBnMZLZ1gdzg+0vW0cbNarmpy3feJyio3/4/DFprAusNmUHQbiM+ve0kdBTTiHQpsuv2L3iSBhDY=
+
+---
+
+kind: secret
+name: bitbucket_ssh_key
+data: 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
+
+---
+
+kind: secret
+name: drone_token
+data: gO4ROb4/mV6mWCFbR5ohEqRmMJ9QWIH2eqvHOZHtJE9Ulgyr6D5Y43UI4fFFnm6l5bJ5gZPcG9CDNipy
