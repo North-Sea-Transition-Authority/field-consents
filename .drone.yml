@@ -220,6 +220,36 @@ steps:
         - ./gradle_cache
         - ./sonar_cache
 
+  - name: fetch-fds-submodule
+    image: alpine/git:v2.26.2
+    commands:
+      - echo "$${BITBUCKET_SSH_KEY}" > bitbucket_ssh_key
+      - chmod 600 bitbucket_ssh_key
+      - export GIT_SSH_COMMAND="ssh -i bitbucket_ssh_key -F /dev/null  -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+      - git submodule update --init --recursive
+    environment:
+      BITBUCKET_SSH_KEY:
+        from_secret: bitbucket_ssh_key
+
+  - name: build-frontend
+    image: node:10
+    commands:
+      - cd fivium-design-system-core && npm install && npx gulp build && cd ..
+      - npm install
+      - npx gulp buildAll
+
+  # This is in the PR pipeline so the code-analysis below can access the test data (to see coverage)
+  - name: test
+    image: eclipse-temurin:17-jdk
+    environment:
+      GRADLE_USER_HOME: /drone/src/gradle_cache
+    volumes:
+      - name: localtime
+        path: /etc/localtime
+    commands:
+      - chmod +x gradlew
+      - ./gradlew test
+
   # This is in the PR pipeline as only PR events get the necessary information for proper github integration
   - name: code-analysis
     image: repo1.dev.fivium.local:5000/sonarcloud-scan-java17:latest

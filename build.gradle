@@ -26,6 +26,7 @@ dependencies {
 	runtimeOnly 'org.postgresql:postgresql'
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.security:spring-security-test'
 	// Using H2 for the tests as a temporary measure until a final decision is made on which database is being used.
 	// TODO This will be updated/removed when <FCS Jira URL> is picked up.
 	testImplementation 'com.h2database:h2:2.1.214'
