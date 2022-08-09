@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.dev;
+package uk.co.nstauthority.fieldconsents.workarea;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -12,15 +12,16 @@ import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @WithMockUser
-@ContextConfiguration(classes = DevController.class)
-class DevControllerTest extends AbstractControllerTest {
+@ContextConfiguration(classes = WorkAreaController.class)
+class WorkAreaControllerTest extends AbstractControllerTest {
 
   @Test
-  void getDev_assertHttpOk() throws Exception {
-    mockMvc.perform(get(ReverseRouter.route(on(DevController.class).getDev())))
+  void getWorkArea_assertHttpOk() throws Exception {
+    mockMvc.perform(
+            get(ReverseRouter.route(on(WorkAreaController.class).getWorkArea()))
+        )
         .andExpect(status().isOk())
-        .andExpect(view().name("dev/devTemplate"));
+        .andExpect(view().name("fcs/workarea/workArea"));
 
   }
-
 }

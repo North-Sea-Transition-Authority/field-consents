@@ -36,10 +36,14 @@ Following the initial consents a Field then follows the Annual Consents Exercise
 - In your IntelliJ run configuration for the Spring app, include `production` in your active profiles
 - The following environment variables are required when using this profile:
 
-| Environment Variable  | Description                                    |
-|-----------------------|------------------------------------------------|
-| FCS_DATABASE_URL      | The URL to the database the service connect to |
-| FCS_DATABASE_PASSWORD | Database schema password for the `fcs` user    |
+| Environment Variable  | Description                                                                                        |
+|-----------------------|----------------------------------------------------------------------------------------------------|
+| FCS_DATABASE_URL      | The URL to the database the service connect to                                                     |
+| FCS_DATABASE_PASSWORD | Database schema password for the `fcs` user                                                        |
+| FCS_SAML_ENTITY_ID    | Fox instance URL (dev: https://itportal.dev.fivium.local/engedudev1/fox)                           |
+| FCS_SAML_CERTIFICATE  | The x509 certificate string                                                                        |
+| FCS_SAML_LOGIN_URL    | The URL to hit the `login` entry theme of the SAML login module                                    |
+| FCS_SAML_BASE_URL     | The url prior to the `/${serverContext}` part of the url  (E.G: https://itportal.dev.fivium.local) |
 
 ### 3. Initialise the Fivium Design System
 - `git submodule update --init --recursive`

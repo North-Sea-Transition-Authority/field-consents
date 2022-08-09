@@ -5,23 +5,33 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.branding.CustomerConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.branding.IncludeServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.branding.ServiceConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @WebMvcTest
+@ActiveProfiles("test")
+@IncludeServiceBrandingConfigurationProperties
 @ContextConfiguration(classes = {
     DefaultPageControllerAdviceTest.TestController.class,
     DefaultPageControllerAdvice.class
 })
-class DefaultPageControllerAdviceTest extends AbstractControllerTest {
+@WithMockUser
+class DefaultPageControllerAdviceTest {
+
+  @Autowired
+  protected MockMvc mockMvc;
 
   @Test
   void addDefaultModelAttributes_verifyDefaultAttributes() throws Exception {

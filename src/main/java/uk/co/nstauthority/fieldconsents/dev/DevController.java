@@ -9,6 +9,6 @@ public class DevController {
 
   @GetMapping
   public ModelAndView getDev() {
-    return new ModelAndView("dev/dev-template");
+    return new ModelAndView("dev/devTemplate");
   }
 }
