@@ -10,6 +10,7 @@
   pageHeading=""
   phaseBanner=true
   pageSize=PageSize.TWO_THIRDS_COLUMN
+  breadcrumbsMap={}
 >
   <#local serviceName = serviceBranding.name() />
   <#local customerMnemonic = customerBranding.mnemonic() />
@@ -36,6 +37,11 @@
     <#assign twoThirdsColumn=true/>
   </#if>
 
+  <#assign useBreadCrumbs=false>
+  <#if breadcrumbsMap?has_content>
+    <#assign useBreadCrumbs=true>
+  </#if>
+
   <@fdsDefaultPageTemplate
     htmlTitle=htmlTitle
     serviceName=serviceName
@@ -52,6 +58,8 @@
     twoThirdsColumn=twoThirdsColumn
     twoThirdsOneThirdColumn=twoThirdsOneThirdColumn
     oneQuarterColumn=oneQuarterColumn
+    breadcrumbs=useBreadCrumbs
+    breadcrumbsList=breadcrumbsMap
   >
     <#nested />
   </@fdsDefaultPageTemplate>
