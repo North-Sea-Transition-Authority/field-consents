@@ -8,3 +8,5 @@ CVE-2019-12400
 CVE-2020-13936
 CVE-2020-13959
 CVE-2020-15522
+# Introduced until the a later Spring Boot version ups the JDBC driver postgres dependency version
+CVE-2022-31197
