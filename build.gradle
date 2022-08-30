@@ -13,6 +13,14 @@ sourceCompatibility = '17'
 
 repositories {
 	mavenCentral()
+  maven {
+    url "http://nexus.fivium.local:8081/repository/maven-releases/"
+    allowInsecureProtocol = true
+  }
+  maven {
+    url "http://nexus.fivium.local:8081/repository/maven-snapshots/"
+    allowInsecureProtocol = true
+  }
 }
 
 dependencies {
@@ -27,6 +35,8 @@ dependencies {
 	implementation 'org.springframework.session:spring-session-core'
 	implementation 'org.flywaydb:flyway-core'
 	implementation 'org.apache.commons:commons-lang3'
+
+  implementation 'uk.co.fivium.energyportalapi:client:feature-EPA-14-fields-api-SNAPSHOT'
 
 	runtimeOnly 'org.postgresql:postgresql'
 

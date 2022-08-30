@@ -62,7 +62,7 @@ steps:
     environment:
       SONARCLOUD_TOKEN:
         from_secret: sonarcloud_token
-      GRADLE_USER_HOME: /drone/src/gradle_cache
+      #GRADLE_USER_HOME: /drone/src/gradle_cache
       # This SONAR_USER_HOME is the cache path - not the actual user home
       SONAR_USER_HOME: /drone/src/sonar_cache
     commands:
