@@ -57,7 +57,7 @@ sonarqube {
 			property 'sonar.pullrequest.base', System.getenv('DRONE_TARGET_BRANCH')
 			property 'sonar.pullrequest.branch', System.getenv('DRONE_SOURCE_BRANCH')
 			property 'sonar.pullrequest.provider', 'github'
-			property 'sonar.pullrequest.github.repository', 'energy-infrastructure-portal'
+			property 'sonar.pullrequest.github.repository', 'field-consents'
 			property 'sonar.pullrequest.github.endpoint', 'https://api.github.com/'
 		} else {
 			property 'sonar.branch.name', System.getenv('DRONE_BRANCH')

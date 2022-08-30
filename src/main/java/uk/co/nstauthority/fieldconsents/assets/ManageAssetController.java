@@ -1,0 +1,39 @@
+package uk.co.nstauthority.fieldconsents.assets;
+
+import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+
+import java.util.Optional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.ModelAndView;
+import uk.co.nstauthority.fieldconsents.assets.fields.FieldController;
+import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalController;
+import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
+
+@Controller
+public class ManageAssetController {
+
+  private final AssetService assetService;
+
+  @Autowired
+  public ManageAssetController(AssetService assetService) {
+    this.assetService = assetService;
+  }
+
+  @GetMapping("manage-asset")
+  public ModelAndView manageAsset(@RequestParam String assetKey) {
+    Optional<AssetJson> assetJson = assetService.getAssetFromKey(assetKey);
+
+    if (assetJson.isPresent() && assetJson.get().assetType().equals(AssetType.FIELD)) {
+      return ReverseRouter.redirect(on(FieldController.class).manageField(assetJson.get().assetId()));
+    } else if (assetJson.isPresent() && assetJson.get().assetType().equals(AssetType.TERMINAL)) {
+      return ReverseRouter.redirect(on(TerminalController.class).manageTerminal(assetJson.get().assetId()));
+    } else {
+      return ReverseRouter.redirect(on(WorkAreaController.class).getWorkArea());
+    }
+  }
+
+}
