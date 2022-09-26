@@ -11,6 +11,7 @@
   phaseBanner=true
   pageSize=PageSize.TWO_THIRDS_COLUMN
   breadcrumbsMap={}
+  errorItems=[]
 >
   <#local serviceName = serviceBranding.name() />
   <#local customerMnemonic = customerBranding.mnemonic() />
@@ -60,6 +61,7 @@
     oneQuarterColumn=oneQuarterColumn
     breadcrumbs=useBreadCrumbs
     breadcrumbsList=breadcrumbsMap
+    errorItems=errorItems
   >
     <#nested />
   </@fdsDefaultPageTemplate>

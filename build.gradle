@@ -37,6 +37,7 @@ dependencies {
 	implementation 'org.apache.commons:commons-lang3'
 
   implementation 'uk.co.fivium.energyportalapi:client:feature-EPA-14-fields-api-SNAPSHOT'
+	implementation 'uk.co.fivium.digitalformlibrary:digital-form-library:develop-SNAPSHOT'
 
 	runtimeOnly 'org.postgresql:postgresql'
 
