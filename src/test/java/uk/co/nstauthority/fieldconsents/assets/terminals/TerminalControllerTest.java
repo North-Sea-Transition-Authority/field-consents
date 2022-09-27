@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1Json;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -19,26 +20,25 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 @ContextConfiguration(classes = TerminalController.class)
 public class TerminalControllerTest extends AbstractControllerTest {
 
-  static final TerminalJson TERMINAL1_JSON = new TerminalJson(1, "T1");
-
   @MockBean
   TerminalService terminalService;
 
   @Test
   void manageTerminal_terminal1() throws Exception {
 
-    when(terminalService.getTerminalOrError(TERMINAL1_JSON.terminalId())).thenReturn(TERMINAL1_JSON);
+    when(terminalService.getTerminalOrError(terminal1Json.terminalId(), "Manage terminal"))
+        .thenReturn(terminal1Json);
 
     var modelAndView = mockMvc
-        .perform(get(ReverseRouter.route(on(TerminalController.class).manageTerminal(TERMINAL1_JSON.terminalId()))))
+        .perform(get(ReverseRouter.route(on(TerminalController.class).manageTerminal(terminal1Json.terminalId()))))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/assets/terminals"))
         .andReturn().getModelAndView();
 
     assertThat(modelAndView).isNotNull();
     var model = modelAndView.getModel();
-    assertEquals(TERMINAL1_JSON.terminalId(), model.get("terminalId"));
-    assertEquals(TERMINAL1_JSON.terminalName(), model.get("terminalName"));
+    assertEquals(terminal1Json.terminalId(), model.get("terminalId"));
+    assertEquals(terminal1Json.terminalName(), model.get("terminalName"));
   }
 
 }

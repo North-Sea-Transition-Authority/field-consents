@@ -31,7 +31,9 @@ class ErrorListHandlerInterceptor implements HandlerInterceptor {
     String key = BindingResult.MODEL_KEY_PREFIX + "form";
     if (modelAndView != null) {
       BindingResult bindingResult = (BindingResult) modelAndView.getModel().get(key);
-      modelAndView.addObject("errorList", formErrorSummaryService.getErrorItems(bindingResult));
+      if (bindingResult != null) {
+        modelAndView.addObject("errorList", formErrorSummaryService.getErrorItems(bindingResult));
+      }
     }
   }
 }

@@ -23,7 +23,7 @@ public class AssetRestController {
 
   @GetMapping("/assets")
   RestSearchResult searchAssets(@RequestParam("term") String assetName) {
-    return searchSelectorService.search(assetName, assetService.getAllAssets());
+    return searchSelectorService.search(assetName, assetService::searchAssets);
   }
 
 }

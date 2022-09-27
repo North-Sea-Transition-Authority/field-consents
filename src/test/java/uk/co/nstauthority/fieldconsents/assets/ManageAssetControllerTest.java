@@ -6,6 +6,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.BAD_ASSET_KEY;
+import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.FIELD1_ASSET_KEY;
+import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.TERMINAL1_ASSET_KEY;
+import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.field1AssetJson;
+import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.terminal1AssetJson;
 
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -21,19 +26,13 @@ import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 @ContextConfiguration(classes = ManageAssetController.class)
 public class ManageAssetControllerTest extends AbstractControllerTest {
 
-  static final AssetJson field1 = new AssetJson(1, "F1", AssetType.FIELD);
-  static final String FIELD1_ASSET_KEY = field1.assetId() + field1.assetType().name();
-  static final AssetJson terminal1 = new AssetJson(1, "T1", AssetType.TERMINAL);
-  static final String TERMINAL1_ASSET_KEY = terminal1.assetId() + terminal1.assetType().name();
-  static final String BAD_ASSET_KEY = "BADASSETKEY";
-
   @MockBean
   AssetService assetService;
 
   @Test
   @WithMockUser
   void manageAsset_fieldRedirect() throws Exception {
-    when(assetService.getAssetFromKey(FIELD1_ASSET_KEY)).thenReturn(Optional.of(field1));
+    when(assetService.getAssetFromKey(FIELD1_ASSET_KEY)).thenReturn(Optional.of(field1AssetJson));
 
     mockMvc
         .perform(
@@ -41,13 +40,13 @@ public class ManageAssetControllerTest extends AbstractControllerTest {
                 .with(csrf())
         )
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(FieldController.class).manageField(field1.assetId()))));
+        .andExpect(redirectedUrl(ReverseRouter.route(on(FieldController.class).manageField(field1AssetJson.assetId()))));
 
   }
 
   @Test
   void manageAsset_fieldRedirect_unauthorized() throws Exception {
-    when(assetService.getAssetFromKey(FIELD1_ASSET_KEY)).thenReturn(Optional.of(field1));
+    when(assetService.getAssetFromKey(FIELD1_ASSET_KEY)).thenReturn(Optional.of(field1AssetJson));
 
     mockMvc
         .perform(
@@ -61,7 +60,7 @@ public class ManageAssetControllerTest extends AbstractControllerTest {
   @Test
   @WithMockUser
   void manageAsset_terminalRedirect() throws Exception {
-    when(assetService.getAssetFromKey(TERMINAL1_ASSET_KEY)).thenReturn(Optional.of(terminal1));
+    when(assetService.getAssetFromKey(TERMINAL1_ASSET_KEY)).thenReturn(Optional.of(terminal1AssetJson));
 
     mockMvc
         .perform(
@@ -69,7 +68,7 @@ public class ManageAssetControllerTest extends AbstractControllerTest {
                 .with(csrf())
         )
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(TerminalController.class).manageTerminal(terminal1.assetId()))));
+        .andExpect(redirectedUrl(ReverseRouter.route(on(TerminalController.class).manageTerminal(terminal1AssetJson.assetId()))));
   }
 
   @Test

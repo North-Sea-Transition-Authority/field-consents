@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -19,26 +20,24 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 @ContextConfiguration(classes = FieldController.class)
 public class FieldControllerTest extends AbstractControllerTest {
 
-  static final FieldJson FIELD1_JSON = new FieldJson(1, "F1");
-
   @MockBean
   FieldService fieldService;
 
   @Test
   void manageField_field1() throws Exception {
 
-    when(fieldService.getFieldOrError(FIELD1_JSON.fieldId())).thenReturn(FIELD1_JSON);
+    when(fieldService.getFieldOrError(field1Json.fieldId(), "Manage field")).thenReturn(field1Json);
 
     var modelAndView =
-        mockMvc.perform(get(ReverseRouter.route(on(FieldController.class).manageField(FIELD1_JSON.fieldId()))))
+        mockMvc.perform(get(ReverseRouter.route(on(FieldController.class).manageField(field1Json.fieldId()))))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/assets/fields"))
         .andReturn().getModelAndView();
 
     assertThat(modelAndView).isNotNull();
     var model = modelAndView.getModel();
-    assertEquals(FIELD1_JSON.fieldId(), model.get("fieldId"));
-    assertEquals(FIELD1_JSON.fieldName(), model.get("fieldName"));
+    assertEquals(field1Json.fieldId(), model.get("fieldId"));
+    assertEquals(field1Json.fieldName(), model.get("fieldName"));
 
   }
 

@@ -22,13 +22,13 @@ public class AssetService {
     this.terminalService = terminalService;
   }
 
-  public List<AssetJson> getAllAssets() {
-    var allFieldsStream = fieldService.getAllFields().stream()
+  public List<AssetJson> searchAssets(String assetName) {
+    var searchFieldsStream = fieldService.searchFields(assetName, "Assets search selector (search fields)").stream()
         .map(AssetJson::from);
-    var allTerminalsStream = terminalService.getAllTerminals().stream()
+    var searchTerminalsStream = terminalService.searchTerminals(assetName, "Assets search selector (search terminals)").stream()
         .map(AssetJson::from);
 
-    return Stream.concat(allFieldsStream, allTerminalsStream)
+    return Stream.concat(searchFieldsStream, searchTerminalsStream)
         .sorted(Comparator.comparing(a -> a.assetName().toLowerCase()))
         .toList();
   }
@@ -39,10 +39,10 @@ public class AssetService {
       return Optional.empty();
     } else if (assetKey.endsWith(AssetType.FIELD.name())) {
       var fieldId = Integer.valueOf(assetKey.replace(AssetType.FIELD.name(), ""));
-      return fieldService.getField(fieldId).map(AssetJson::from);
+      return fieldService.getField(fieldId, "Field asset picked from search selector").map(AssetJson::from);
     } else if (assetKey.endsWith(AssetType.TERMINAL.name())) {
       var terminalId = Integer.valueOf(assetKey.replace(AssetType.TERMINAL.name(), ""));
-      return terminalService.getTerminal(terminalId).map(AssetJson::from);
+      return terminalService.getTerminal(terminalId, "Terminal asset picked from search selector").map(AssetJson::from);
     } else {
       throw new RuntimeException("Not a valid AssetKey: " + assetKey);
     }

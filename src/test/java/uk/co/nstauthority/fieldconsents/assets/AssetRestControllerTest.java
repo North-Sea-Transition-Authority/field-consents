@@ -7,7 +7,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.util.List;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -19,20 +18,15 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 @ContextConfiguration(classes = AssetRestController.class)
 public class AssetRestControllerTest extends AbstractControllerTest {
 
-  AssetJson brent = new AssetJson(1, "BRENT", AssetType.FIELD);
-  AssetJson brenda = new AssetJson(2, "TEST", AssetType.FIELD);
-  AssetJson brae = new AssetJson(1, "BRAE", AssetType.TERMINAL);
+  AssetJson brentAssetJson = new AssetJson(1, "BRENT", AssetType.FIELD);
+  AssetJson braeAssetJson = new AssetJson(1, "BRAE", AssetType.TERMINAL);
 
   @MockBean
   AssetService assetService;
 
-  @BeforeEach
-  void beforeEach() {
-    when(assetService.getAllAssets()).thenReturn(List.of(brent, brenda, brae));
-  }
-
   @Test
   void searchAssets_assertHttpOk() throws Exception {
+    when(assetService.searchAssets("brent")).thenReturn(List.of(brentAssetJson));
 
     mockMvc.perform(get(ReverseRouter.route(on(AssetRestController.class).searchAssets("brent"))))
         .andExpect(status().isOk())
@@ -44,6 +38,7 @@ public class AssetRestControllerTest extends AbstractControllerTest {
 
   @Test
   void searchAssets_fieldsAndTerminals() throws Exception {
+    when(assetService.searchAssets("br")).thenReturn(List.of(brentAssetJson, braeAssetJson));
 
     mockMvc.perform(get(ReverseRouter.route(on(AssetRestController.class).searchAssets("br"))))
         .andExpect(status().isOk())

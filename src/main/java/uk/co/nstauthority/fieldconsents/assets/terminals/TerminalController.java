@@ -20,7 +20,7 @@ public class TerminalController {
   public ModelAndView manageTerminal(@PathVariable Integer terminalId) {
     return new ModelAndView("fcs/assets/terminals")
         .addObject("terminalId", terminalId)
-        .addObject("terminalName", terminalService.getTerminalOrError(terminalId).terminalName());
+        .addObject("terminalName", terminalService.getTerminalOrError(terminalId, "Manage terminal").terminalName());
   }
 
 }

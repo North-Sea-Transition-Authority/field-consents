@@ -8,12 +8,11 @@ CVE-2019-12400
 CVE-2020-13936
 CVE-2020-13959
 CVE-2020-15522
-# Introduced until the a later Spring Boot version ups the JDBC driver postgres dependency version
+# Introduced until a later Spring Boot version ups the JDBC driver postgres dependency version
 CVE-2022-31197
-# Introduced until the a later Spring Boot version sorts a snakeYAML DoS vulnerability
+# Introduced until a later Spring Boot version sorts the snakeYAML DoS vulnerability
 CVE-2022-25857
 CVE-2022-38749
-CVE-2022-38752
-# Introduced until the later Spring Boot version sorts a snakeYAML DoS vulnerability
 CVE-2022-38750
 CVE-2022-38751
+CVE-2022-38752
