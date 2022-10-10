@@ -1,5 +1,6 @@
-package uk.co.nstauthority.fieldconsents.production.annual;
+package uk.co.nstauthority.fieldconsents.production.shortterm;
 
+import java.time.LocalDate;
 import java.time.Month;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -8,13 +9,18 @@ import javax.persistence.Table;
 import uk.co.nstauthority.fieldconsents.production.ProductionRow;
 
 @Entity
-@Table(name = "annual_production_months")
-public class AnnualProductionMonth extends ProductionRow {
+@Table(name = "short_term_production_months")
+public class ShortTermProductionMonth extends ProductionRow {
 
   private Integer year;
 
   @Enumerated(EnumType.STRING)
   private Month month;
+
+  private LocalDate startDate;
+
+  private LocalDate endDate;
+
 
   public Integer getYear() {
     return year;
@@ -30,5 +36,21 @@ public class AnnualProductionMonth extends ProductionRow {
 
   public void setMonth(Month month) {
     this.month = month;
+  }
+
+  public LocalDate getStartDate() {
+    return startDate;
+  }
+
+  public void setStartDate(LocalDate startDate) {
+    this.startDate = startDate;
+  }
+
+  public LocalDate getEndDate() {
+    return endDate;
+  }
+
+  public void setEndDate(LocalDate endDate) {
+    this.endDate = endDate;
   }
 }

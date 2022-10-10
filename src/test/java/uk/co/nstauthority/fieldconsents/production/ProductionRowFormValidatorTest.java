@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.production.annual;
+package uk.co.nstauthority.fieldconsents.production;
 
 import static org.assertj.core.api.Assertions.entry;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -14,22 +14,22 @@ import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ValidationUtils;
 import uk.co.fivium.formlibrary.input.DecimalInput;
-import uk.co.nstauthority.fieldconsents.application.production.annual.AnnualProductionTestUtil;
+import uk.co.nstauthority.fieldconsents.production.annual.ProductionMonthFormValidator;
 import uk.co.nstauthority.fieldconsents.validation.ValidatorTestingUtil;
 
-class AnnualProductionMonthFormValidatorTest {
+class ProductionRowFormValidatorTest {
 
-  private AnnualProductionMonthForm form;
+  private ProductionRowForm form;
 
-  private AnnualProductionMonthFormValidator validator;
+  private ProductionMonthFormValidator validator;
 
   private Errors errors;
   private Map<String, List<String>> errorMap;
 
   @BeforeEach
   void setUp() {
-    form = AnnualProductionTestUtil.getCompleteAnnualProductionMonthForm(Month.OCTOBER);
-    validator = new AnnualProductionMonthFormValidator();
+    form = ProductionTestUtils.getCompleteAnnualProductionMonthForm(Month.OCTOBER);
+    validator = new ProductionMonthFormValidator();
     errors = new BeanPropertyBindingResult(form, "form");
   }
 

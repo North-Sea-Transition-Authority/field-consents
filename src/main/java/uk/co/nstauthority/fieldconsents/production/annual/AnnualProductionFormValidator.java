@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.production.annual;
 
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
@@ -10,10 +11,11 @@ import uk.co.nstauthority.fieldconsents.validation.ValidatorUtils;
 @Service
 public class AnnualProductionFormValidator implements Validator {
 
-  private final AnnualProductionMonthFormValidator annualProductionMonthFormValidator;
+  private final ProductionMonthFormValidator productionMonthFormValidator;
 
-  public AnnualProductionFormValidator(AnnualProductionMonthFormValidator annualProductionMonthFormValidator) {
-    this.annualProductionMonthFormValidator = annualProductionMonthFormValidator;
+  @Autowired
+  public AnnualProductionFormValidator(ProductionMonthFormValidator productionMonthFormValidator) {
+    this.productionMonthFormValidator = productionMonthFormValidator;
   }
 
   @Override
@@ -31,7 +33,7 @@ public class AnnualProductionFormValidator implements Validator {
     for (int index = 0; index < annualProductionMonthForms.size(); index++) {
       ValidatorUtils.invokeNestedValidator(
           errors,
-          annualProductionMonthFormValidator,
+          productionMonthFormValidator,
           "annualProductionMonthForms[" + index + "]",
           annualProductionMonthForms.get(index),
           errors

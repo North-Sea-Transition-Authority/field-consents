@@ -2,10 +2,11 @@ package uk.co.nstauthority.fieldconsents.production.annual;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.co.nstauthority.fieldconsents.application.production.annual.AnnualProductionTestUtil.PRODUCTION_YEAR;
+import static uk.co.nstauthority.fieldconsents.production.ProductionTestUtils.PRODUCTION_YEAR;
 
 import java.time.Month;
 import java.util.LinkedList;
@@ -20,7 +21,10 @@ import uk.co.fivium.formlibrary.input.DecimalInput;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.production.annual.AnnualProductionTestUtil;
+import uk.co.nstauthority.fieldconsents.production.ProductionTestUtils;
+import uk.co.nstauthority.fieldconsents.production.ProductionRowForm;
+import uk.co.nstauthority.fieldconsents.production.ProductionRow;
+import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
 
 @ExtendWith(MockitoExtension.class)
 class AnnualProductionServiceTest {
@@ -28,13 +32,16 @@ class AnnualProductionServiceTest {
   @Mock
   private AnnualProductionMonthRepository annualProductionMonthRepository;
 
+  @Mock
+  private ProductionRowService productionRowService;
+
   private AnnualProductionService annualProductionService;
 
   private ApplicationVersion applicationVersion;
 
   @BeforeEach
   void setUp() {
-    annualProductionService = new AnnualProductionService(annualProductionMonthRepository);
+    annualProductionService = new AnnualProductionService(productionRowService, annualProductionMonthRepository);
     applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
   }
 
@@ -81,8 +88,10 @@ class AnnualProductionServiceTest {
 
   @Test
   void getAnnualProductionForm_withCompleteForm() {
-    List<AnnualProductionMonth> annualProductionMonths = AnnualProductionTestUtil.getAnnualProductionMonthsData(new ApplicationVersion());
+    List<AnnualProductionMonth> annualProductionMonths = ProductionTestUtils.getAnnualProductionMonthsData(new ApplicationVersion());
     when(annualProductionMonthRepository.findAllByApplicationVersion(applicationVersion)).thenReturn(annualProductionMonths);
+    doCallRealMethod().when(productionRowService).populateFormWithPreviousProductionRow(any(ProductionRow.class), any(
+        ProductionRowForm.class));
 
     AnnualProductionForm annualProductionForm = annualProductionService.getAnnualProductionForm(applicationVersion, PRODUCTION_YEAR);
 
@@ -106,9 +115,11 @@ class AnnualProductionServiceTest {
   @Test
   void createAnnualProductionMonthDetails() {
     Month productionMonth = Month.OCTOBER;
-    AnnualProductionMonth annualProductionMonth = AnnualProductionTestUtil.getAnnualProductionMonth(applicationVersion, 10, productionMonth);
-    AnnualProductionForm annualProductionForm = AnnualProductionTestUtil.getCompleteAnnualProductionForm();
-    annualProductionService.createAnnualProductionMonthDetails(applicationVersion, annualProductionForm.getAnnualProductionMonthForms().get(productionMonth.getValue() - 1), PRODUCTION_YEAR);
+    AnnualProductionMonth annualProductionMonth = ProductionTestUtils.getAnnualProductionMonth(applicationVersion, 10, productionMonth);
+    AnnualProductionForm annualProductionForm = ProductionTestUtils.getCompleteAnnualProductionForm();
+    doCallRealMethod().when(productionRowService).updateProductionRowFromForm(any(ProductionRowForm.class), any(ProductionRow.class));
+
+    annualProductionService.saveAnnualProductionMonthDetails(applicationVersion, annualProductionForm.getAnnualProductionMonthForms().get(productionMonth.getValue() - 1), PRODUCTION_YEAR);
 
     ArgumentCaptor<AnnualProductionMonth> productionMonthArgumentCaptor = ArgumentCaptor.forClass(AnnualProductionMonth.class);
     verify(annualProductionMonthRepository, times(1)).save(productionMonthArgumentCaptor.capture());

@@ -6,5 +6,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 interface ApplicationVersionRepository extends CrudRepository<ApplicationVersion, Integer> {
-  List<ApplicationVersion> findAllByApplicationId(Integer applicationId);
+
+  List<ApplicationVersion> findAllByApplicationIdOrderByVersion(Integer applicationId);
 }

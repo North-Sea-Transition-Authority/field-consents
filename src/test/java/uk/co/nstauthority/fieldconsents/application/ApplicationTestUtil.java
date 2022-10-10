@@ -13,6 +13,6 @@ public class ApplicationTestUtil {
 
   public static ApplicationVersion getApplicationVersionWithType(ApplicationType applicationType) {
     Application newApplication = getApplicationWithType(applicationType);
-    return new ApplicationVersion(APPLICATION_VERSION_ID, newApplication, 1);
+    return new ApplicationVersion(APPLICATION_ID, newApplication, APPLICATION_VERSION_ID);
   }
 }

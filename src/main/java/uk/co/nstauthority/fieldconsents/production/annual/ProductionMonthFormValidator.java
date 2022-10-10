@@ -7,18 +7,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 import uk.co.fivium.formlibrary.validator.decimal.DecimalInputValidator;
+import uk.co.nstauthority.fieldconsents.production.ProductionRowForm;
 
 @Service
-public class AnnualProductionMonthFormValidator implements Validator {
+public class ProductionMonthFormValidator implements Validator {
 
   @Override
-  public boolean supports(Class<?> clazz) {
-    return clazz.isAssignableFrom(AnnualProductionMonthForm.class);
+  public boolean supports(@NotNull Class<?> clazz) {
+    return ProductionRowForm.class.isAssignableFrom(clazz);
   }
 
   @Override
   public void validate(@NotNull Object target, @NotNull Errors errors) {
-    AnnualProductionMonthForm monthForm = (AnnualProductionMonthForm) target;
+    ProductionRowForm monthForm = (ProductionRowForm) target;
 
     // Each form field should have a non-empty double which can be greater or equal to 0.0
     var validator = DecimalInputValidator.builder()

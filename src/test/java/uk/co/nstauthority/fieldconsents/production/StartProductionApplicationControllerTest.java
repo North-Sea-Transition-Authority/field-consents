@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.application.production;
+package uk.co.nstauthority.fieldconsents.production;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -19,7 +19,6 @@ import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.production.StartProductionApplicationController;
 
 @ContextConfiguration(classes = StartProductionApplicationController.class)
 class StartProductionApplicationControllerTest extends AbstractControllerTest {

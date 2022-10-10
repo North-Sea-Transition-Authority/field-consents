@@ -7,6 +7,7 @@ import org.springframework.validation.BindingResult;
 
 @Service
 public class FormErrorSummaryService {
+
   /**
    * Creates and returns the list of validation errors found on a form submission from the bindingResult provided.
    * @param bindingResult The result of the submitted form containing the list of validation errors
