@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.production.annual;
+package uk.co.nstauthority.fieldconsents.production;
 
 import java.math.BigDecimal;
 import java.util.NoSuchElementException;
@@ -7,10 +7,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 import uk.co.fivium.formlibrary.validator.decimal.DecimalInputValidator;
-import uk.co.nstauthority.fieldconsents.production.ProductionRowForm;
 
 @Service
-public class ProductionMonthFormValidator implements Validator {
+public class ProductionRowFormValidator implements Validator {
 
   @Override
   public boolean supports(@NotNull Class<?> clazz) {

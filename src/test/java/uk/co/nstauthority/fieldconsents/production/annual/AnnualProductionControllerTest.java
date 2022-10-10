@@ -1,8 +1,6 @@
 package uk.co.nstauthority.fieldconsents.production.annual;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -18,14 +16,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
 import uk.co.nstauthority.fieldconsents.production.ProductionTestUtils;
 import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 
@@ -37,9 +33,6 @@ class AnnualProductionControllerTest extends AbstractControllerTest {
 
   @MockBean
   private ApplicationVersionService applicationVersionService;
-
-  @MockBean
-  private ProductionRowService productionRowService;
 
   @MockBean
   private AnnualProductionFormValidator annualProductionFormValidator;
@@ -60,7 +53,6 @@ class AnnualProductionControllerTest extends AbstractControllerTest {
   @WithMockUser
   void getAnnualProductionRequestForm() throws Exception {
     when(annualProductionService.getAnnualProductionForm(applicationVersion, ProductionTestUtils.PRODUCTION_YEAR)).thenReturn(annualProductionForm);
-    doCallRealMethod().when(productionRowService).addProductionDetailsToModelAndView(any(ModelAndView.class));
 
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(AnnualProductionController.class).getAnnualProductionRequestForm(APPLICATION_ID)))
         .with(csrf()))

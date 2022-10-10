@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.production.annual;
+package uk.co.nstauthority.fieldconsents.production.longterm;
 
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
@@ -10,33 +10,33 @@ import uk.co.nstauthority.fieldconsents.production.ProductionRowFormValidator;
 import uk.co.nstauthority.fieldconsents.validation.ValidatorUtils;
 
 @Service
-public class AnnualProductionFormValidator implements Validator {
-
+public class LongTermProductionFormValidator implements Validator {
+  
   private final ProductionRowFormValidator productionRowFormValidator;
 
   @Autowired
-  public AnnualProductionFormValidator(ProductionRowFormValidator productionRowFormValidator) {
+  public LongTermProductionFormValidator(ProductionRowFormValidator productionRowFormValidator) {
     this.productionRowFormValidator = productionRowFormValidator;
   }
 
   @Override
   public boolean supports(Class<?> clazz) {
-    return clazz.isAssignableFrom(AnnualProductionForm.class);
+    return clazz.isAssignableFrom(LongTermProductionForm.class);
   }
 
   @Override
   public void validate(@NotNull Object target, @NotNull Errors errors) {
-    AnnualProductionForm form = (AnnualProductionForm) target;
+    LongTermProductionForm form = (LongTermProductionForm) target;
 
-    List<AnnualProductionMonthForm> annualProductionMonthForms = form.getAnnualProductionMonthForms();
+    List<LongTermProductionYearForm> longTermProductionYearForms = form.getLongTermProductionYearForms();
 
-    // Validate each individual field for each annual production month form
-    for (int index = 0; index < annualProductionMonthForms.size(); index++) {
+    // Validate each individual field for each long term production year form
+    for (int index = 0; index < longTermProductionYearForms.size(); index++) {
       ValidatorUtils.invokeNestedValidator(
           errors,
           productionRowFormValidator,
-          "annualProductionMonthForms[" + index + "]",
-          annualProductionMonthForms.get(index),
+          "longTermProductionYearForms[" + index + "]",
+          longTermProductionYearForms.get(index),
           errors
       );
     }

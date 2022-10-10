@@ -1,7 +1,6 @@
 package uk.co.nstauthority.fieldconsents.production.annual;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
-import static uk.co.nstauthority.fieldconsents.production.ProductionRowService.PRODUCTION_YEAR;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
@@ -20,16 +19,15 @@ import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
 @RequestMapping("applications/{applicationId}/annual-production")
 public class AnnualProductionController {
 
-  private final ProductionRowService productionRowService;
+  public static final String PRODUCTION_YEAR = "2022";
+
   private final AnnualProductionService annualProductionService;
   private final ApplicationVersionService applicationVersionService;
   private final AnnualProductionFormValidator annualProductionFormValidator;
 
-  public AnnualProductionController(ProductionRowService productionRowService,
-                                    AnnualProductionService annualProductionService,
+  public AnnualProductionController(AnnualProductionService annualProductionService,
                                     ApplicationVersionService applicationVersionService,
                                     AnnualProductionFormValidator annualProductionFormValidator) {
-    this.productionRowService = productionRowService;
     this.annualProductionService = annualProductionService;
     this.applicationVersionService = applicationVersionService;
     this.annualProductionFormValidator = annualProductionFormValidator;
@@ -37,16 +35,18 @@ public class AnnualProductionController {
 
   @GetMapping
   public ModelAndView getAnnualProductionRequestForm(@PathVariable Integer applicationId) {
-    ModelAndView modelAndView = getAnnualProductionModelAndView(applicationId);
     ApplicationVersion currentVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     AnnualProductionForm annualProductionForm = annualProductionService.getAnnualProductionForm(currentVersion, PRODUCTION_YEAR);
+    ModelAndView modelAndView = getAnnualProductionModelAndView(applicationId, annualProductionForm);
     modelAndView.addObject("form", annualProductionForm);
     return modelAndView;
   }
 
-  private ModelAndView getAnnualProductionModelAndView(Integer applicationId) {
+  private ModelAndView getAnnualProductionModelAndView(Integer applicationId, AnnualProductionForm annualProductionForm) {
     ModelAndView modelAndView = new ModelAndView("fcs/production/annualProductionForm");
-    productionRowService.addProductionDetailsToModelAndView(modelAndView);
+    modelAndView.addObject("requestYear", annualProductionForm.getYear());
+    modelAndView.addObject("oilUnit", annualProductionForm.getOilUnit().getDisplayName());
+    modelAndView.addObject("gasUnit", annualProductionForm.getGasUnit().getDisplayName());
     modelAndView.addObject("submitUrl", ReverseRouter.route(
         on(AnnualProductionController.class)
             .saveAnnualProductionDetails(applicationId, null, ReverseRouter.emptyBindingResult())));
@@ -61,7 +61,7 @@ public class AnnualProductionController {
     annualProductionFormValidator.validate(form, bindingResult);
 
     if (bindingResult.hasErrors()) {
-      return getAnnualProductionModelAndView(applicationId);
+      return getAnnualProductionModelAndView(applicationId, form);
     } else {
       annualProductionService.saveAnnualProductionDetails(
           applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId), form);

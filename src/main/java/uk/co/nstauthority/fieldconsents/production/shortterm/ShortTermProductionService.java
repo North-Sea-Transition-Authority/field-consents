@@ -16,17 +16,18 @@ import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
+import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 
 @Service
 public class ShortTermProductionService {
 
-  private final ProductionRowService productionMonthService;
+  private final ProductionRowService productionRowService;
   private final ShortTermProductionMonthRepository shortTermProductionMonthRepository;
 
   @Autowired
   public ShortTermProductionService(ProductionRowService productionRowService,
                                     ShortTermProductionMonthRepository shortTermProductionMonthRepository) {
-    this.productionMonthService = productionRowService;
+    this.productionRowService = productionRowService;
     this.shortTermProductionMonthRepository = shortTermProductionMonthRepository;
   }
 
@@ -64,7 +65,7 @@ public class ShortTermProductionService {
         mergedShortTermProductionMonthForm.setStartDate(previousProductionRow.getStartDate());
         mergedShortTermProductionMonthForm.setEndDate(previousProductionRow.getEndDate());
 
-        productionMonthService.populateFormWithPreviousProductionRow(previousProductionRow, mergedShortTermProductionMonthForm);
+        productionRowService.populateFormWithPreviousProductionRow(previousProductionRow, mergedShortTermProductionMonthForm);
       } else {
         mergedShortTermProductionMonthForm = shortTermProductionMonthForm;
       }
@@ -108,6 +109,10 @@ public class ShortTermProductionService {
 
     int consentDays = Period.between(monthFormStartDate, DateUtils.min(endTermDate, monthFormEndDate)).getDays() + 1;
     monthForm.setConsentDays(consentDays);
+
+    monthForm.setOilUnits(ProductionUnit.SCM_PER_MONTH);
+    monthForm.setGasUnits(ProductionUnit.KSCM_PER_MONTH);
+
     return monthForm;
   }
 
@@ -133,7 +138,7 @@ public class ShortTermProductionService {
     shortTermProductionMonth.setEndDate(monthProductionForm.getEndDate());
 
     try {
-      productionMonthService.updateProductionRowFromForm(monthProductionForm, shortTermProductionMonth);
+      productionRowService.updateProductionRowFromForm(monthProductionForm, shortTermProductionMonth);
     } catch (NoSuchElementException  e) {
       throw new RuntimeException(e);
     }

@@ -24,7 +24,15 @@
             <input type="hidden" name="${spring.status.expression}" value="${spring.stringStatusValue}">
               <@spring.bind "form.shortTermProductionMonthForms[${monthForm_index}].year"/>
             <input type="hidden" name="${spring.status.expression}" value="${spring.stringStatusValue}">
-              <@spring.bind "form.shortTermProductionMonthForms[${monthForm_index}].consentDays"/>
+            <@spring.bind "form.shortTermProductionMonthForms[${monthForm_index}].consentDays"/>
+            <input type="hidden" name="${spring.status.expression}" value="${spring.stringStatusValue}">
+            <@spring.bind "form.shortTermProductionMonthForms[${monthForm_index}].oilMinUnit"/>
+            <input type="hidden" name="${spring.status.expression}" value="${spring.stringStatusValue}">
+            <@spring.bind "form.shortTermProductionMonthForms[${monthForm_index}].oilMaxUnit"/>
+            <input type="hidden" name="${spring.status.expression}" value="${spring.stringStatusValue}">
+            <@spring.bind "form.shortTermProductionMonthForms[${monthForm_index}].gasMinUnit"/>
+            <input type="hidden" name="${spring.status.expression}" value="${spring.stringStatusValue}">
+            <@spring.bind "form.shortTermProductionMonthForms[${monthForm_index}].gasMaxUnit"/>
             <input type="hidden" name="${spring.status.expression}" value="${spring.stringStatusValue}">
               <@spring.bind "form.shortTermProductionMonthForms[${monthForm_index}].startDate"/>
             <input type="hidden" name="${spring.status.expression}" value="${spring.stringStatusValue}">

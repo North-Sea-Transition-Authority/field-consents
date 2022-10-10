@@ -1,6 +1,8 @@
 package uk.co.nstauthority.fieldconsents.production;
 
 public enum ProductionUnit {
+  SCM_PER_DAY("scm/day"),
+  KSCM_PER_DAY("kscm/day"),
   SCM_PER_MONTH("scm/month"),
   KSCM_PER_MONTH("kscm/month");
 

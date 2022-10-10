@@ -55,7 +55,7 @@ class ShortTermProductionServiceTest {
   void getShortTermProductionForm_withInitialForm() {
     when(shortTermProductionMonthRepository.findAllByApplicationVersion(any())).thenReturn(new LinkedList<>());
     ShortTermProductionForm shortTermProductionForm = shortTermProductionService.getShortTermProductionForm(
-        applicationVersion, 
+        applicationVersion,
         START_DATE,
         END_DATE
     );
@@ -103,8 +103,7 @@ class ShortTermProductionServiceTest {
   void getShortTermProductionForm_withCompleteForm() {
     var shortTermProductionMonths = ProductionTestUtils.getShortTermProductionMonthsData(applicationVersion);
     when(shortTermProductionMonthRepository.findAllByApplicationVersion(any())).thenReturn(shortTermProductionMonths);
-    doCallRealMethod().when(productionRowService).populateFormWithPreviousProductionRow(any(ProductionRow.class), any(
-        ProductionRowForm.class));
+    doCallRealMethod().when(productionRowService).populateFormWithPreviousProductionRow(any(ProductionRow.class), any(ProductionRowForm.class));
 
     ShortTermProductionForm shortTermProductionForm = shortTermProductionService.getShortTermProductionForm(
         applicationVersion,

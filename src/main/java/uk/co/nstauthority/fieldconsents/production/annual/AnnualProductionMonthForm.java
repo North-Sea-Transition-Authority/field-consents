@@ -5,6 +5,7 @@ import java.time.format.TextStyle;
 import java.util.Locale;
 import uk.co.fivium.formlibrary.input.DecimalInput;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowForm;
+import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 
 public class AnnualProductionMonthForm extends ProductionRowForm {
 
@@ -13,9 +14,12 @@ public class AnnualProductionMonthForm extends ProductionRowForm {
   public AnnualProductionMonthForm() {
   }
 
-  public AnnualProductionMonthForm(String month, DecimalInput oilMinValue, DecimalInput oilMaxValue,
-                                   DecimalInput gasMinValue, DecimalInput gasMaxValue) {
-    super(oilMinValue, oilMaxValue, gasMinValue, gasMaxValue);
+  public AnnualProductionMonthForm(String month,
+                                   ProductionUnit oilMinUnit, DecimalInput oilMinValue,
+                                   ProductionUnit oilMaxUnit, DecimalInput oilMaxValue,
+                                   ProductionUnit gasMinUnit, DecimalInput gasMinValue,
+                                   ProductionUnit gasMaxUnit, DecimalInput gasMaxValue) {
+    super(oilMinUnit, oilMinValue, oilMaxUnit, oilMaxValue, gasMinUnit, gasMinValue, gasMaxUnit, gasMaxValue);
     this.month = month;
   }
 

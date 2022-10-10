@@ -3,7 +3,6 @@ package uk.co.nstauthority.fieldconsents.production;
 import java.math.BigDecimal;
 import java.util.NoSuchElementException;
 import org.springframework.stereotype.Service;
-import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.formatting.DecimalFormatUtils;
 
 /**
@@ -13,49 +12,49 @@ import uk.co.nstauthority.fieldconsents.formatting.DecimalFormatUtils;
 @Service
 public class ProductionRowService {
 
-  public static final String PRODUCTION_YEAR = "2022";
-
-  public void addProductionDetailsToModelAndView(ModelAndView modelAndView) {
-    modelAndView.addObject("requestYear", PRODUCTION_YEAR);
-    modelAndView.addObject("oilUnit", ProductionUnit.SCM_PER_MONTH.getDisplayName());
-    modelAndView.addObject("gasUnit", ProductionUnit.KSCM_PER_MONTH.getDisplayName());
-  }
-
-  public void updateProductionRowFromForm(ProductionRowForm monthProductionForm,
+  public void updateProductionRowFromForm(ProductionRowForm productionRowForm,
                                           ProductionRow productionRow) {
-    BigDecimal oilMinValue = monthProductionForm.getOilMinValue().getInputValueAsBigDecimal()
+    BigDecimal oilMinValue = productionRowForm.getOilMinValue().getInputValueAsBigDecimal()
         .orElseThrow(NoSuchElementException::new);
-    BigDecimal oilMaxValue = monthProductionForm.getOilMaxValue().getInputValueAsBigDecimal()
+    BigDecimal oilMaxValue = productionRowForm.getOilMaxValue().getInputValueAsBigDecimal()
         .orElseThrow(NoSuchElementException::new);
-    BigDecimal gasMinValue = monthProductionForm.getGasMinValue().getInputValueAsBigDecimal()
+    BigDecimal gasMinValue = productionRowForm.getGasMinValue().getInputValueAsBigDecimal()
         .orElseThrow(NoSuchElementException::new);
-    BigDecimal gasMaxValue = monthProductionForm.getGasMaxValue().getInputValueAsBigDecimal()
+    BigDecimal gasMaxValue = productionRowForm.getGasMaxValue().getInputValueAsBigDecimal()
         .orElseThrow(NoSuchElementException::new);
 
     productionRow.setOilMinValue(oilMinValue);
-    productionRow.setOilMinUnit(ProductionUnit.SCM_PER_MONTH);
+    productionRow.setOilMinUnit(productionRowForm.getOilMinUnit());
     productionRow.setOilMaxValue(oilMaxValue);
-    productionRow.setOilMaxUnit(ProductionUnit.SCM_PER_MONTH);
+    productionRow.setOilMaxUnit(productionRowForm.getOilMaxUnit());
     productionRow.setGasMinValue(gasMinValue);
-    productionRow.setGasMinUnit(ProductionUnit.KSCM_PER_MONTH);
+    productionRow.setGasMinUnit(productionRowForm.getGasMinUnit());
     productionRow.setGasMaxValue(gasMaxValue);
-    productionRow.setGasMaxUnit(ProductionUnit.KSCM_PER_MONTH);
+    productionRow.setGasMaxUnit(productionRowForm.getGasMaxUnit());
   }
 
   public void populateFormWithPreviousProductionRow(ProductionRow previousProductionRow,
-                                                    ProductionRowForm mergedAnnualProductionRowForm) {
+                                                    ProductionRowForm mergedProductionRowForm) {
 
-    var oilMinInput = mergedAnnualProductionRowForm.getOilMinValue();
+    var oilMinInput = mergedProductionRowForm.getOilMinValue();
     oilMinInput.setInputValue(DecimalFormatUtils.bigDecimalToFormattedString(previousProductionRow.getOilMinValue()));
 
-    var oilMaxInput = mergedAnnualProductionRowForm.getOilMaxValue();
+    mergedProductionRowForm.setOilMinUnit(previousProductionRow.getOilMinUnit());
+
+    var oilMaxInput = mergedProductionRowForm.getOilMaxValue();
     oilMaxInput.setInputValue(DecimalFormatUtils.bigDecimalToFormattedString(previousProductionRow.getOilMaxValue()));
 
-    var gasMinInput = mergedAnnualProductionRowForm.getGasMinValue();
+    mergedProductionRowForm.setOilMaxUnit(previousProductionRow.getOilMaxUnit());
+
+    var gasMinInput = mergedProductionRowForm.getGasMinValue();
     gasMinInput.setInputValue(DecimalFormatUtils.bigDecimalToFormattedString(previousProductionRow.getGasMinValue()));
 
-    var gasMaxInput = mergedAnnualProductionRowForm.getGasMaxValue();
+    mergedProductionRowForm.setGasMinUnit(previousProductionRow.getGasMinUnit());
+
+    var gasMaxInput = mergedProductionRowForm.getGasMaxValue();
     gasMaxInput.setInputValue(DecimalFormatUtils.bigDecimalToFormattedString(previousProductionRow.getGasMaxValue()));
+
+    mergedProductionRowForm.setGasMaxUnit(previousProductionRow.getGasMaxUnit());
 
   }
 }

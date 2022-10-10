@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.production.annual;
 
 import java.util.List;
+import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 
 public class AnnualProductionForm {
 
@@ -30,4 +31,13 @@ public class AnnualProductionForm {
   public void setAnnualProductionMonthForms(List<AnnualProductionMonthForm> annualProductionMonthForms) {
     this.annualProductionMonthForms = annualProductionMonthForms;
   }
+
+  public ProductionUnit getOilUnit() {
+    return this.annualProductionMonthForms.size() > 0 ? this.annualProductionMonthForms.get(0).getOilMinUnit() : null;
+  }
+
+  public ProductionUnit getGasUnit() {
+    return this.annualProductionMonthForms.size() > 0 ? this.annualProductionMonthForms.get(0).getGasMinUnit() : null;
+  }
+
 }

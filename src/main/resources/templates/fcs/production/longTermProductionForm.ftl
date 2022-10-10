@@ -1,0 +1,55 @@
+<#include '../layout/layout.ftl'>
+
+<#-- @ftlvariable name="startYear" type="String" -->
+<#-- @ftlvariable name="endYear" type="String" -->
+<#-- @ftlvariable name="oilUnit" type="String" -->
+<#-- @ftlvariable name="gasUnit" type="String" -->
+<#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
+
+<#assign pageTitle = "Long Term Oil and Gas Production Request"/>
+
+<@defaultPage htmlTitle=pageTitle pageHeading=pageTitle errorItems=errorList>
+  <@fdsForm.htmlForm actionUrl=springUrl(submitUrl)>
+    <table class="govuk-table">
+      <caption class="govuk-table__caption govuk-table__caption--m">${startYear} to ${endYear}</caption>
+      <tbody class="govuk-table__body">
+      <tr class="govuk-table__row">
+        <th class="govuk-table__header govuk-!-width-one-third">Year</th>
+        <th class="govuk-table__header govuk-!-width-one-third">Minimum Oil (${oilUnit})</th>
+        <th class="govuk-table__header govuk-!-width-one-third">Maximum Oil (${oilUnit})</th>
+        <th class="govuk-table__header govuk-!-width-one-third">Minimum Gas (${gasUnit})</th>
+        <th class="govuk-table__header govuk-!-width-one-third">Maximum Gas (${gasUnit})</th>
+      </tr>
+      <#list form.longTermProductionYearForms as yearForm>
+        <tr class="govuk-table__row">
+          <#assign currentYearForm = "form.longTermProductionYearForms[${yearForm_index}]"/>
+          <@spring.bind "${currentYearForm}.year"/>
+          <input type="hidden" name="${spring.status.expression}" value="${spring.stringStatusValue}">
+          <@spring.bind "${currentYearForm}.oilMinUnit"/>
+          <input type="hidden" name="${spring.status.expression}" value="${spring.stringStatusValue}">
+          <@spring.bind "${currentYearForm}.oilMaxUnit"/>
+          <input type="hidden" name="${spring.status.expression}" value="${spring.stringStatusValue}">
+          <@spring.bind "${currentYearForm}.gasMinUnit"/>
+          <input type="hidden" name="${spring.status.expression}" value="${spring.stringStatusValue}">
+          <@spring.bind "${currentYearForm}.gasMaxUnit"/>
+          <input type="hidden" name="${spring.status.expression}" value="${spring.stringStatusValue}">
+          <td class="govuk-table__cell">${yearForm.year}</td>
+          <td class="govuk-table__cell">
+            <@fdsTextInput.textInput path="${currentYearForm}.oilMinValue.inputValue" labelText="Oil min value" labelClass="govuk-visually-hidden"/>
+          </td>
+          <td class="govuk-table__cell">
+            <@fdsTextInput.textInput path="${currentYearForm}.oilMaxValue.inputValue" labelText="Oil max value" labelClass="govuk-visually-hidden"/>
+          </td>
+          <td class="govuk-table__cell">
+            <@fdsTextInput.textInput path="${currentYearForm}.gasMinValue.inputValue" labelText="Gas min value" labelClass="govuk-visually-hidden"/>
+          </td>
+          <td class="govuk-table__cell">
+            <@fdsTextInput.textInput path="${currentYearForm}.gasMaxValue.inputValue" labelText="Gas max value" labelClass="govuk-visually-hidden"/>
+          </td>
+        </tr>
+      </#list>
+      </tbody>
+    </table>
+    <@fdsAction.button buttonText="Save and complete"/>
+  </@fdsForm.htmlForm>
+</@defaultPage>

@@ -14,14 +14,13 @@ import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ValidationUtils;
 import uk.co.fivium.formlibrary.input.DecimalInput;
-import uk.co.nstauthority.fieldconsents.production.annual.ProductionMonthFormValidator;
 import uk.co.nstauthority.fieldconsents.validation.ValidatorTestingUtil;
 
 class ProductionRowFormValidatorTest {
 
   private ProductionRowForm form;
 
-  private ProductionMonthFormValidator validator;
+  private ProductionRowFormValidator validator;
 
   private Errors errors;
   private Map<String, List<String>> errorMap;
@@ -29,7 +28,7 @@ class ProductionRowFormValidatorTest {
   @BeforeEach
   void setUp() {
     form = ProductionTestUtils.getCompleteAnnualProductionMonthForm(Month.OCTOBER);
-    validator = new ProductionMonthFormValidator();
+    validator = new ProductionRowFormValidator();
     errors = new BeanPropertyBindingResult(form, "form");
   }
 

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
+import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 
 @Service
 public class AnnualProductionService {
@@ -64,6 +65,8 @@ public class AnnualProductionService {
     for (Month month : Month.values()) {
       AnnualProductionMonthForm productionMonthForm = new AnnualProductionMonthForm();
       productionMonthForm.setMonth(month);
+      productionMonthForm.setOilUnits(ProductionUnit.SCM_PER_MONTH);
+      productionMonthForm.setGasUnits(ProductionUnit.KSCM_PER_MONTH);
       annualProductionMonthForms.add(productionMonthForm);
     }
     return annualProductionMonthForms;

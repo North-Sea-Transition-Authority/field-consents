@@ -15,7 +15,6 @@ import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
 
 @Controller
 @RequestMapping("applications/{applicationId}/short-term-production")
@@ -24,17 +23,14 @@ public class ShortTermProductionController {
   public static final LocalDate START_DATE = LocalDate.of(2022, 3, 14);
   public static final LocalDate END_DATE = LocalDate.of(2023, 3, 9);
 
-  private final ProductionRowService productionMonthService;
   private final ApplicationVersionService applicationVersionService;
   private final ShortTermProductionService shortTermProductionService;
   private final ShortTermProductionFormValidator shortTermProductionFormValidator;
 
   @Autowired
-  public ShortTermProductionController(ProductionRowService productionRowService,
-                                       ApplicationVersionService applicationVersionService,
+  public ShortTermProductionController(ApplicationVersionService applicationVersionService,
                                        ShortTermProductionService shortTermProductionService,
                                        ShortTermProductionFormValidator shortTermProductionFormValidator) {
-    this.productionMonthService = productionRowService;
     this.applicationVersionService = applicationVersionService;
     this.shortTermProductionService = shortTermProductionService;
     this.shortTermProductionFormValidator = shortTermProductionFormValidator;
@@ -55,10 +51,11 @@ public class ShortTermProductionController {
                                                           ShortTermProductionForm shortTermProductionForm) {
     ModelAndView modelAndView = new ModelAndView("fcs/production/shortTermProductionForm");
 
-    productionMonthService.addProductionDetailsToModelAndView(modelAndView);
     modelAndView.addObject("requestYear", shortTermProductionForm.getYear());
     modelAndView.addObject("startDate", shortTermProductionForm.getStartDate());
     modelAndView.addObject("endDate", shortTermProductionForm.getEndDate());
+    modelAndView.addObject("oilUnit", shortTermProductionForm.getOilUnit().getDisplayName());
+    modelAndView.addObject("gasUnit", shortTermProductionForm.getGasUnit().getDisplayName());
     modelAndView.addObject("submitUrl", ReverseRouter.route(
         on(ShortTermProductionController.class)
             .saveShortTermProductionDetails(applicationId, null, ReverseRouter.emptyBindingResult()))

@@ -6,17 +6,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
-import uk.co.nstauthority.fieldconsents.production.annual.ProductionMonthFormValidator;
+import uk.co.nstauthority.fieldconsents.production.ProductionRowFormValidator;
 import uk.co.nstauthority.fieldconsents.validation.ValidatorUtils;
 
 @Service
 public class ShortTermProductionFormValidator implements Validator {
   
-  private final ProductionMonthFormValidator productionMonthFormValidator;
+  private final ProductionRowFormValidator productionRowFormValidator;
 
   @Autowired
-  public ShortTermProductionFormValidator(ProductionMonthFormValidator productionMonthFormValidator) {
-    this.productionMonthFormValidator = productionMonthFormValidator;
+  public ShortTermProductionFormValidator(ProductionRowFormValidator productionRowFormValidator) {
+    this.productionRowFormValidator = productionRowFormValidator;
   }
 
   @Override
@@ -34,7 +34,7 @@ public class ShortTermProductionFormValidator implements Validator {
     for (int index = 0; index < shortTermProductionMonthForms.size(); index++) {
       ValidatorUtils.invokeNestedValidator(
           errors,
-          productionMonthFormValidator,
+          productionRowFormValidator,
           "shortTermProductionMonthForms[" + index + "]",
           shortTermProductionMonthForms.get(index),
           errors
