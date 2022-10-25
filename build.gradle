@@ -37,7 +37,7 @@ dependencies {
 	implementation 'org.apache.commons:commons-lang3'
 
   implementation 'uk.co.fivium.energyportalapi:client:develop-SNAPSHOT'
-	implementation 'uk.co.fivium.digitalformlibrary:digital-form-library:develop-SNAPSHOT'
+	implementation 'uk.co.fivium.digitalformlibrary:digital-form-library:three-fields-date-input-validator-MG-SNAPSHOT'
 
 	runtimeOnly 'org.postgresql:postgresql'
 

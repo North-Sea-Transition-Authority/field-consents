@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.application;
 
 import java.time.Instant;
+import javax.persistence.EntityNotFoundException;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 public class ApplicationService {
 
   private final ApplicationRepository applicationRepository;
+
   private final ApplicationVersionRepository applicationVersionRepository;
 
   @Autowired
@@ -37,5 +39,12 @@ public class ApplicationService {
     application.setCreatedDate(Instant.now());
     application.setCreatedByWuaId(1);
     return applicationRepository.save(application);
+  }
+
+  public Application getApplicationById(int applicationId) {
+    return applicationRepository.findById(applicationId)
+        .orElseThrow(() ->
+            new EntityNotFoundException("Application with id %s not found".formatted(applicationId))
+        );
   }
 }

@@ -1,0 +1,100 @@
+package uk.co.nstauthority.fieldconsents.application.consentlength;
+
+import java.time.LocalDate;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+
+@Entity
+@Table(name = "consent_lengths")
+public class ConsentLengthDetails {
+
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Integer id;
+
+  @OneToOne
+  @JoinColumn(name = "application_version_id")
+  private ApplicationVersion applicationVersion;
+
+  @Enumerated(EnumType.STRING)
+  private ConsentLengthType consentLength;
+
+  private Integer annualConsentYear;
+
+  private LocalDate shortTermStartDate;
+
+  private LocalDate shortTermEndDate;
+
+  private Integer longTermStartYear;
+
+  private Integer longTermEndYear;
+
+
+  public Integer getId() {
+    return id;
+  }
+
+  public ApplicationVersion getApplicationVersion() {
+    return applicationVersion;
+  }
+
+  public void setApplicationVersion(ApplicationVersion applicationVersion) {
+    this.applicationVersion = applicationVersion;
+  }
+
+  public ConsentLengthType getConsentLength() {
+    return consentLength;
+  }
+
+  public void setConsentLength(ConsentLengthType consentLength) {
+    this.consentLength = consentLength;
+  }
+
+  public Integer getAnnualConsentYear() {
+    return annualConsentYear;
+  }
+
+  public void setAnnualConsentYear(Integer annualConsentYear) {
+    this.annualConsentYear = annualConsentYear;
+  }
+
+  public LocalDate getShortTermStartDate() {
+    return shortTermStartDate;
+  }
+
+  public void setShortTermStartDate(LocalDate shortTermStartDate) {
+    this.shortTermStartDate = shortTermStartDate;
+  }
+
+  public LocalDate getShortTermEndDate() {
+    return shortTermEndDate;
+  }
+
+  public void setShortTermEndDate(LocalDate shortTermEndDate) {
+    this.shortTermEndDate = shortTermEndDate;
+  }
+
+  public Integer getLongTermStartYear() {
+    return longTermStartYear;
+  }
+
+  public void setLongTermStartYear(Integer longTermStartYear) {
+    this.longTermStartYear = longTermStartYear;
+  }
+
+  public Integer getLongTermEndYear() {
+    return longTermEndYear;
+  }
+
+  public void setLongTermEndYear(Integer longTermEndYear) {
+    this.longTermEndYear = longTermEndYear;
+  }
+}

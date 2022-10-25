@@ -104,10 +104,10 @@ class AnnualProductionServiceTest {
       DecimalInput gasMinValue = monthForm.getGasMinValue();
       DecimalInput gasMaxValue = monthForm.getGasMaxValue();
 
-      assertThat(oilMinValue.getInputValueAsBigDecimal().get()).isEqualTo(annualProductionMonths.get(index).getOilMinValue());
-      assertThat(oilMaxValue.getInputValueAsBigDecimal().get()).isEqualTo(annualProductionMonths.get(index).getOilMaxValue());
-      assertThat(gasMinValue.getInputValueAsBigDecimal().get()).isEqualTo(annualProductionMonths.get(index).getGasMinValue());
-      assertThat(gasMaxValue.getInputValueAsBigDecimal().get()).isEqualTo(annualProductionMonths.get(index).getGasMaxValue());
+      assertThat(oilMinValue.getAsBigDecimal().get()).isEqualTo(annualProductionMonths.get(index).getOilMinValue());
+      assertThat(oilMaxValue.getAsBigDecimal().get()).isEqualTo(annualProductionMonths.get(index).getOilMaxValue());
+      assertThat(gasMinValue.getAsBigDecimal().get()).isEqualTo(annualProductionMonths.get(index).getGasMinValue());
+      assertThat(gasMaxValue.getAsBigDecimal().get()).isEqualTo(annualProductionMonths.get(index).getGasMaxValue());
     }
   }
 

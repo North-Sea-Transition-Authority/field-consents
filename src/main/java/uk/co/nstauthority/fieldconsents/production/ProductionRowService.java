@@ -14,13 +14,13 @@ public class ProductionRowService {
 
   public void updateProductionRowFromForm(ProductionRowForm productionRowForm,
                                           ProductionRow productionRow) {
-    BigDecimal oilMinValue = productionRowForm.getOilMinValue().getInputValueAsBigDecimal()
+    BigDecimal oilMinValue = productionRowForm.getOilMinValue().getAsBigDecimal()
         .orElseThrow(NoSuchElementException::new);
-    BigDecimal oilMaxValue = productionRowForm.getOilMaxValue().getInputValueAsBigDecimal()
+    BigDecimal oilMaxValue = productionRowForm.getOilMaxValue().getAsBigDecimal()
         .orElseThrow(NoSuchElementException::new);
-    BigDecimal gasMinValue = productionRowForm.getGasMinValue().getInputValueAsBigDecimal()
+    BigDecimal gasMinValue = productionRowForm.getGasMinValue().getAsBigDecimal()
         .orElseThrow(NoSuchElementException::new);
-    BigDecimal gasMaxValue = productionRowForm.getGasMaxValue().getInputValueAsBigDecimal()
+    BigDecimal gasMaxValue = productionRowForm.getGasMaxValue().getAsBigDecimal()
         .orElseThrow(NoSuchElementException::new);
 
     productionRow.setOilMinValue(oilMinValue);

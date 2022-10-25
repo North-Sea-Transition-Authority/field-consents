@@ -69,19 +69,19 @@ class LongTermProductionServiceTest {
     assertThat(yearForms)
         .extracting(
             LongTermProductionYearForm::getYear,
-            yearForm -> yearForm.getOilMinValue().getInputValueAsBigDecimal(),
+            yearForm -> yearForm.getOilMinValue().getAsBigDecimal(),
             yearForm -> yearForm.getOilMinValue().getFieldName(),
             yearForm -> yearForm.getOilMinValue().getDisplayName(),
             LongTermProductionYearForm::getOilMinUnit,
-            yearForm -> yearForm.getOilMaxValue().getInputValueAsBigDecimal(),
+            yearForm -> yearForm.getOilMaxValue().getAsBigDecimal(),
             yearForm -> yearForm.getOilMaxValue().getFieldName(),
             yearForm -> yearForm.getOilMaxValue().getDisplayName(),
             LongTermProductionYearForm::getOilMaxUnit,
-            yearForm -> yearForm.getGasMinValue().getInputValueAsBigDecimal(),
+            yearForm -> yearForm.getGasMinValue().getAsBigDecimal(),
             yearForm -> yearForm.getGasMinValue().getFieldName(),
             yearForm -> yearForm.getGasMinValue().getDisplayName(),
             LongTermProductionYearForm::getGasMinUnit,
-            yearForm -> yearForm.getGasMaxValue().getInputValueAsBigDecimal(),
+            yearForm -> yearForm.getGasMaxValue().getAsBigDecimal(),
             yearForm -> yearForm.getGasMaxValue().getFieldName(),
             yearForm -> yearForm.getGasMaxValue().getDisplayName(),
             LongTermProductionYearForm::getGasMaxUnit
@@ -133,13 +133,13 @@ class LongTermProductionServiceTest {
     assertThat(yearForms)
         .extracting(
             LongTermProductionYearForm::getYear,
-            yearForm -> yearForm.getOilMinValue().getInputValueAsBigDecimal().get(),
+            yearForm -> yearForm.getOilMinValue().getAsBigDecimal().get(),
             LongTermProductionYearForm::getOilMinUnit,
-            yearForm -> yearForm.getOilMaxValue().getInputValueAsBigDecimal().get(),
+            yearForm -> yearForm.getOilMaxValue().getAsBigDecimal().get(),
             LongTermProductionYearForm::getOilMaxUnit,
-            yearForm -> yearForm.getGasMinValue().getInputValueAsBigDecimal().get(),
+            yearForm -> yearForm.getGasMinValue().getAsBigDecimal().get(),
             LongTermProductionYearForm::getGasMinUnit,
-            yearForm -> yearForm.getGasMaxValue().getInputValueAsBigDecimal().get(),
+            yearForm -> yearForm.getGasMaxValue().getAsBigDecimal().get(),
             LongTermProductionYearForm::getGasMaxUnit
         )
         .containsExactly(

@@ -5,4 +5,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 interface ApplicationRepository extends CrudRepository<Application, Integer> {
+
 }

@@ -1,6 +1,6 @@
 <#include '../layout/layout.ftl'>
 
-<#assign pageTitle = "Production application created"/>
+<#assign pageTitle = "Production application tasklist"/>
 
 <@defaultPage htmlTitle=pageTitle pageHeading=pageTitle>
 

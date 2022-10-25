@@ -22,5 +22,4 @@ public class TerminalController {
         .addObject("terminalId", terminalId)
         .addObject("terminalName", terminalService.getTerminalOrError(terminalId, "Manage terminal").terminalName());
   }
-
 }
