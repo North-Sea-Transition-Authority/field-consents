@@ -1,5 +1,5 @@
 plugins {
-	id 'org.springframework.boot' version '2.7.4'
+	id 'org.springframework.boot' version '2.7.5'
 	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 	id 'java'
 	id "org.sonarqube" version "3.3"
@@ -37,7 +37,7 @@ dependencies {
 	implementation 'org.apache.commons:commons-lang3'
 
   implementation 'uk.co.fivium.energyportalapi:client:develop-SNAPSHOT'
-	implementation 'uk.co.fivium.digitalformlibrary:digital-form-library:three-fields-date-input-validator-MG-SNAPSHOT'
+	implementation 'uk.co.fivium.digitalformlibrary:digital-form-library:develop-SNAPSHOT'
 
 	runtimeOnly 'org.postgresql:postgresql'
 

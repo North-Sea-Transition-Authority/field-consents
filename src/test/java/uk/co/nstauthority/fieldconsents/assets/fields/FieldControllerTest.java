@@ -3,7 +3,9 @@ package uk.co.nstauthority.fieldconsents.assets.fields;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
@@ -38,7 +40,5 @@ public class FieldControllerTest extends AbstractControllerTest {
     var model = modelAndView.getModel();
     assertEquals(field1Json.fieldId(), model.get("fieldId"));
     assertEquals(field1Json.fieldName(), model.get("fieldName"));
-
   }
-
 }

@@ -5,12 +5,15 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.startapplication.StartApplicationController;
+import uk.co.nstauthority.fieldconsents.startapplication.StartApplicationFromFieldController;
 
 @RestController
+@RequestMapping("/fields/{fieldId}")
 public class FieldController {
 
   private final FieldService fieldService;
@@ -20,12 +23,14 @@ public class FieldController {
     this.fieldService = fieldService;
   }
 
-  @GetMapping("/fields/{fieldId}")
+  @GetMapping
   public ModelAndView manageField(@PathVariable Integer fieldId) {
     return new ModelAndView("fcs/assets/fields")
         .addObject("fieldId", fieldId)
-        .addObject("fieldName", fieldService.getFieldOrError(fieldId, "Manage field").fieldName())
-        .addObject("startApplicationUrl", ReverseRouter.route(on(StartApplicationController.class).startNewApplication()));
+        .addObject("fieldName",
+            fieldService.getFieldOrError(fieldId, "Manage field").fieldName())
+        .addObject("startApplicationUrl",
+            ReverseRouter.route(on(StartApplicationFromFieldController.class).getStartApplicationModelAndView(fieldId))
+        );
   }
-
 }
