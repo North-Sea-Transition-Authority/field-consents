@@ -20,9 +20,9 @@ CVE-2022-38752
 CVE-2022-42003
 CVE-2022-3171
 # Xstream DoS (com.fasterxml.woodstox:woodstox-core) vulnerabilities should be fixed in subsequent Spring version
+CVE-2022-40151
 CVE-2022-40152
 CVE-2022-40153
 CVE-2022-40154
 CVE-2022-40155
 CVE-2022-40156
-CVE-2022-40151
