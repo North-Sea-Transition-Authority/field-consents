@@ -69,9 +69,10 @@ class FlareControllerTest extends AbstractControllerTest {
     assert modelAndView != null;
     var model = modelAndView.getModel();
 
-    assertThat(model.get("pageTitle")).isEqualTo(FlareController.PAGE_NAME_ADD);
-    assertThat(model.get("flareTypes")).isEqualTo(FlareTestUtil.flareTypesAsMap);
-    assertThat(model.get("cancelUrl")).isEqualTo(expectBaseFlaresUrl);
+    assertThat(model)
+        .containsEntry(FlareController.PAGE_TITLE_ATTR_NAME, FlareController.PAGE_NAME_ADD)
+        .containsEntry("flareTypes", FlareTestUtil.flareTypesAsMap)
+        .containsEntry("cancelUrl", expectBaseFlaresUrl);
     assertThat((FlareForm) model.get("form"))
         .extracting(FlareForm::getFlareType,
             flareForm -> flareForm.getDescription().getInputValue(),
@@ -103,9 +104,10 @@ class FlareControllerTest extends AbstractControllerTest {
     assert modelAndView != null;
     var model = modelAndView.getModel();
 
-    assertThat(model.get("pageTitle")).isEqualTo(FlareController.PAGE_NAME_ADD);
-    assertThat(model.get("flareTypes")).isEqualTo(FlareTestUtil.flareTypesAsMap);
-    assertThat(model.get("cancelUrl")).isEqualTo(expectBaseFlaresUrl);
+    assertThat(model)
+        .containsEntry(FlareController.PAGE_TITLE_ATTR_NAME, FlareController.PAGE_NAME_ADD)
+        .containsEntry("flareTypes", FlareTestUtil.flareTypesAsMap)
+        .containsEntry("cancelUrl", expectBaseFlaresUrl);
     assertThat((FlareForm) model.get("form"))
         .extracting(FlareForm::getFlareType,
             flareForm -> flareForm.getDescription().getInputValue(),
@@ -163,9 +165,10 @@ class FlareControllerTest extends AbstractControllerTest {
     assert modelAndView != null;
     var model = modelAndView.getModel();
 
-    assertThat(model.get("pageTitle")).isEqualTo(FlareController.PAGE_NAME_SUMMARY);
-    assertThat(model.get("flareViews")).isEqualTo(FlareTestUtil.flareViews);
-    assertThat(model.get("submitUrl")).isEqualTo(expectBaseFlaresUrl);
+    assertThat(model)
+        .containsEntry(FlareController.PAGE_TITLE_ATTR_NAME, FlareController.PAGE_NAME_SUMMARY)
+        .containsEntry("flareViews", FlareTestUtil.flareViews)
+        .containsEntry("submitUrl", expectBaseFlaresUrl);
     assertThat((FlareSetupForm) model.get("form"))
         .extracting(FlareSetupForm::getHasOtherFlaresToAdd)
         .isNull();
@@ -194,9 +197,10 @@ class FlareControllerTest extends AbstractControllerTest {
     assert modelAndView != null;
     var model = modelAndView.getModel();
 
-    assertThat(model.get("pageTitle")).isEqualTo(FlareController.PAGE_NAME_SUMMARY);
-    assertThat(model.get("flareViews")).isEqualTo(FlareTestUtil.flareViews);
-    assertThat(model.get("submitUrl")).isEqualTo(expectBaseFlaresUrl);
+    assertThat(model)
+        .containsEntry(FlareController.PAGE_TITLE_ATTR_NAME, FlareController.PAGE_NAME_SUMMARY)
+        .containsEntry("flareViews", FlareTestUtil.flareViews)
+        .containsEntry("submitUrl", expectBaseFlaresUrl);
     assertThat((FlareSetupForm) model.get("form"))
         .extracting(FlareSetupForm::getHasOtherFlaresToAdd)
         .isNull();
@@ -248,9 +252,10 @@ class FlareControllerTest extends AbstractControllerTest {
     assert modelAndView != null;
     var model = modelAndView.getModel();
 
-    assertThat(model.get("pageTitle")).isEqualTo(FlareController.PAGE_NAME_EDIT);
-    assertThat(model.get("flareTypes")).isEqualTo(FlareTestUtil.flareTypesAsMap);
-    assertThat(model.get("cancelUrl")).isEqualTo(expectBaseFlaresUrl);
+    assertThat(model)
+        .containsEntry(FlareController.PAGE_TITLE_ATTR_NAME, FlareController.PAGE_NAME_EDIT)
+        .containsEntry("flareTypes", FlareTestUtil.flareTypesAsMap)
+        .containsEntry("cancelUrl", expectBaseFlaresUrl);
     assertThat((FlareForm) model.get("form"))
         .extracting(FlareForm::getFlareType,
             flareForm -> flareForm.getDescription().getInputValue(),
@@ -303,9 +308,10 @@ class FlareControllerTest extends AbstractControllerTest {
     assert modelAndView != null;
     var model = modelAndView.getModel();
 
-    assertThat(model.get("pageTitle")).isEqualTo(FlareController.PAGE_NAME_EDIT);
-    assertThat(model.get("flareTypes")).isEqualTo(FlareTestUtil.flareTypesAsMap);
-    assertThat(model.get("cancelUrl")).isEqualTo(expectBaseFlaresUrl);
+    assertThat(model)
+        .containsEntry(FlareController.PAGE_TITLE_ATTR_NAME, FlareController.PAGE_NAME_EDIT)
+        .containsEntry("flareTypes", FlareTestUtil.flareTypesAsMap)
+        .containsEntry("cancelUrl", expectBaseFlaresUrl);
     assertThat(model.get("form").getClass()).isEqualTo(FlareForm.class);
     assertThat((FlareForm) model.get("form"))
         .extracting(FlareForm::getFlareType,
@@ -358,9 +364,10 @@ class FlareControllerTest extends AbstractControllerTest {
     assert modelAndView != null;
     var model = modelAndView.getModel();
 
-    assertThat(model.get("pageTitle")).isEqualTo(FlareController.PAGE_NAME_DELETE);
-    assertThat(model.get("submitUrl")).isEqualTo(expectBaseFlaresUrl + "/" + FlareTestUtil.flareNoHp + "/delete");
-    assertThat(model.get("cancelUrl")).isEqualTo(expectBaseFlaresUrl);
+    assertThat(model)
+        .containsEntry(FlareController.PAGE_TITLE_ATTR_NAME, FlareController.PAGE_NAME_DELETE)
+        .containsEntry("submitUrl", expectBaseFlaresUrl + "/" + FlareTestUtil.flareNoHp + "/delete")
+        .containsEntry("cancelUrl", expectBaseFlaresUrl);
     assertThat(model.get("flareView").getClass()).isEqualTo(FlareView.class);
     assertThat((FlareView) model.get("flareView"))
         .extracting(FlareView::getDisplayOrder,

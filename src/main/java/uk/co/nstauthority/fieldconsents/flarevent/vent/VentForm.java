@@ -1,10 +1,10 @@
-package uk.co.nstauthority.fieldconsents.flarevent.flare;
+package uk.co.nstauthority.fieldconsents.flarevent.vent;
 
 import uk.co.fivium.formlibrary.input.StringInput;
 
-public class FlareForm {
+public class VentForm {
 
-  private FlareType flareType;
+  private VentType ventType;
 
   private StringInput description = new StringInput("description", "Description");
 
@@ -14,41 +14,38 @@ public class FlareForm {
 
   private StringInput commentsMeteredNo = new StringInput("commentsMeteredNo", "Comments");
 
-  public FlareForm() {
+  public VentForm() {
   }
 
-  public FlareForm(FlareType flareType,
-                   StringInput description,
-                   Boolean meteredFlag,
-                   StringInput commentsMeteredYes,
-                   StringInput commentsMeteredNo) {
-    this.flareType = flareType;
+  public VentForm(VentType ventType, StringInput description, Boolean meteredFlag, StringInput commentsMeteredYes,
+                  StringInput commentsMeteredNo) {
+    this.ventType = ventType;
     this.description = description;
     this.meteredFlag = meteredFlag;
     this.commentsMeteredYes = commentsMeteredYes;
     this.commentsMeteredNo = commentsMeteredNo;
   }
 
-  static FlareForm from(Flare flare) {
-    Boolean meteredFlag = flare.getMeteredFlag();
-    FlareForm flareForm = new FlareForm();
-    flareForm.setFlareType(flare.getFlareType());
-    flareForm.getDescription().setInputValue(flare.getDescription());
-    flareForm.setMeteredFlag(meteredFlag);
+  static VentForm from(Vent vent) {
+    Boolean meteredFlag = vent.getMeteredFlag();
+    VentForm ventForm = new VentForm();
+    ventForm.setVentType(vent.getVentType());
+    ventForm.getDescription().setInputValue(vent.getDescription());
+    ventForm.setMeteredFlag(meteredFlag);
     if (Boolean.TRUE.equals(meteredFlag)) {
-      flareForm.getCommentsMeteredYes().setInputValue(flare.getComments());
+      ventForm.getCommentsMeteredYes().setInputValue(vent.getComments());
     } else {
-      flareForm.getCommentsMeteredNo().setInputValue(flare.getComments());
+      ventForm.getCommentsMeteredNo().setInputValue(vent.getComments());
     }
-    return flareForm;
+    return ventForm;
   }
 
-  public FlareType getFlareType() {
-    return flareType;
+  public VentType getVentType() {
+    return ventType;
   }
 
-  public void setFlareType(FlareType flareType) {
-    this.flareType = flareType;
+  public void setVentType(VentType ventType) {
+    this.ventType = ventType;
   }
 
   public StringInput getDescription() {

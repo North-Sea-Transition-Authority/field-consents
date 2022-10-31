@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.flarevent.flare;
+package uk.co.nstauthority.fieldconsents.flarevent.vent;
 
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -12,8 +12,8 @@ import javax.persistence.Table;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 
 @Entity
-@Table(name = "flares")
-class Flare {
+@Table(name = "vents")
+class Vent {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,10 +23,10 @@ class Flare {
   @JoinColumn(name = "application_version_id")
   private ApplicationVersion applicationVersion;
 
-  private Integer flareNo;
+  private Integer ventNo;
 
   @Enumerated(EnumType.STRING)
-  private FlareType flareType;
+  private VentType ventType;
 
   private String description;
 
@@ -34,27 +34,27 @@ class Flare {
 
   private String comments;
 
-  public Flare() {
+  public Vent() {
   }
 
-  public Flare(ApplicationVersion applicationVersion, Integer flareNo, FlareType flareType, String description,
-               Boolean meteredFlag, String comments) {
-    this.flareNo = flareNo;
+  public Vent(ApplicationVersion applicationVersion, Integer ventNo, VentType ventType, String description,
+              Boolean meteredFlag, String comments) {
     this.applicationVersion = applicationVersion;
-    this.flareType = flareType;
+    this.ventNo = ventNo;
+    this.ventType = ventType;
     this.description = description;
     this.meteredFlag = meteredFlag;
     this.comments = comments;
   }
 
-  static Flare newFromForm(ApplicationVersion applicationVersion, Integer flareNo, FlareForm flareForm) {
-    return new Flare(applicationVersion,
-        flareNo,
-        flareForm.getFlareType(),
-        flareForm.getDescription().getInputValue(),
-        flareForm.getMeteredFlag(),
-        Boolean.TRUE.equals(flareForm.getMeteredFlag()) ? flareForm.getCommentsMeteredYes().getInputValue() :
-            flareForm.getCommentsMeteredNo().getInputValue()
+  static Vent newFromForm(ApplicationVersion applicationVersion, Integer ventNo, VentForm ventForm) {
+    return new Vent(applicationVersion,
+        ventNo,
+        ventForm.getVentType(),
+        ventForm.getDescription().getInputValue(),
+        ventForm.getMeteredFlag(),
+        Boolean.TRUE.equals(ventForm.getMeteredFlag()) ? ventForm.getCommentsMeteredYes().getInputValue() :
+            ventForm.getCommentsMeteredNo().getInputValue()
     );
   }
 
@@ -66,20 +66,20 @@ class Flare {
     this.applicationVersion = applicationVersion;
   }
 
-  public Integer getFlareNo() {
-    return flareNo;
+  public Integer getVentNo() {
+    return ventNo;
   }
 
-  public void setFlareNo(Integer flareNo) {
-    this.flareNo = flareNo;
+  public void setVentNo(Integer ventNo) {
+    this.ventNo = ventNo;
   }
 
-  public FlareType getFlareType() {
-    return flareType;
+  public VentType getVentType() {
+    return ventType;
   }
 
-  public void setFlareType(FlareType flareType) {
-    this.flareType = flareType;
+  public void setVentType(VentType ventType) {
+    this.ventType = ventType;
   }
 
   public String getDescription() {
@@ -106,12 +106,12 @@ class Flare {
     this.comments = comments;
   }
 
-  void updateFromForm(FlareForm flareForm) {
-    this.flareType = flareForm.getFlareType();
-    this.description = flareForm.getDescription().getInputValue();
-    this.meteredFlag = flareForm.getMeteredFlag();
-    this.comments = Boolean.TRUE.equals(flareForm.getMeteredFlag()) ? flareForm.getCommentsMeteredYes().getInputValue() :
-        flareForm.getCommentsMeteredNo().getInputValue();
+  void updateFromForm(VentForm ventForm) {
+    this.ventType = ventForm.getVentType();
+    this.description = ventForm.getDescription().getInputValue();
+    this.meteredFlag = ventForm.getMeteredFlag();
+    this.comments = Boolean.TRUE.equals(ventForm.getMeteredFlag()) ? ventForm.getCommentsMeteredYes().getInputValue() :
+        ventForm.getCommentsMeteredNo().getInputValue();
   }
 
 }

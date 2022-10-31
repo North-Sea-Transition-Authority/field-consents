@@ -1,7 +1,6 @@
 package uk.co.nstauthority.fieldconsents.flarevent.flare;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,6 +23,6 @@ class FlareSummaryService {
   private List<FlareView> createFlareViews(List<Flare> flares) {
     return IntStream.range(0, flares.size())
         .mapToObj(index -> FlareView.from(flares.get(index), index + 1))
-        .collect(Collectors.toList());
+        .toList();
   }
 }

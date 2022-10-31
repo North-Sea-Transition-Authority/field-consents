@@ -22,6 +22,7 @@ public class FlareController {
   public static final String PAGE_NAME_ADD = "Add flare";
   public static final String PAGE_NAME_EDIT = "Change flare";
   public static final String PAGE_NAME_DELETE = "Delete flare";
+  static final String PAGE_TITLE_ATTR_NAME = "pageTitle";
 
   private final ApplicationVersionService applicationVersionService;
   private final FlareService flareService;
@@ -53,7 +54,7 @@ public class FlareController {
 
   private ModelAndView getEditFlareModelAndView(Integer applicationId, String pageTitle) {
     ModelAndView modelAndView = new ModelAndView("fcs/flare/editFlareForm");
-    modelAndView.addObject("pageTitle", pageTitle)
+    modelAndView.addObject(PAGE_TITLE_ATTR_NAME, pageTitle)
         .addObject("flareTypes", FlareType.getAllAsMap())
         .addObject("cancelUrl",
             ReverseRouter.route(on(FlareController.class).viewFlaresSummary(applicationId)));
@@ -95,7 +96,7 @@ public class FlareController {
 
   private ModelAndView getViewFlaresSummaryModelAndView(Integer applicationId) {
     ModelAndView modelAndView = new ModelAndView("fcs/flare/flaresSummaryForm");
-    modelAndView.addObject("pageTitle", PAGE_NAME_SUMMARY)
+    modelAndView.addObject(PAGE_TITLE_ATTR_NAME, PAGE_NAME_SUMMARY)
         .addObject("flareViews", flareSummaryService.getSummaryViews(
             applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId)))
         .addObject("submitUrl",
@@ -116,7 +117,7 @@ public class FlareController {
     }
 
     // other flares to add so go to the add flare screen
-    if (form.getHasOtherFlaresToAdd()) {
+    if (Boolean.TRUE.equals(form.getHasOtherFlaresToAdd())) {
       return ReverseRouter.redirect(on(FlareController.class).addFlare(applicationId));
     }
 
@@ -165,8 +166,8 @@ public class FlareController {
     var flare = flareService.getFlareOrError(applicationVersion, flareNo);
 
     // show the flare delete confirm page
-    var modelAndView = new ModelAndView("fcs/flare/deleteFlare")
-        .addObject("pageTitle", PAGE_NAME_DELETE)
+    return new ModelAndView("fcs/flare/deleteFlare")
+        .addObject(PAGE_TITLE_ATTR_NAME, PAGE_NAME_DELETE)
         .addObject("flareView", FlareView.from(flare, null))
         .addObject("submitUrl",
             ReverseRouter.route(on(FlareController.class)
@@ -174,8 +175,6 @@ public class FlareController {
         .addObject("cancelUrl",
             ReverseRouter.route(on(FlareController.class).viewFlaresSummary(applicationId))
         );
-
-    return modelAndView;
   }
 
   @PostMapping("/flares/{flareNo}/delete")

@@ -1,0 +1,15 @@
+package uk.co.nstauthority.fieldconsents.flarevent.vent;
+
+import java.util.List;
+import java.util.Optional;
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.stereotype.Repository;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+
+@Repository
+public interface VentRepository extends CrudRepository<Vent, Integer> {
+
+  List<Vent> findAllByApplicationVersionOrderByIdAsc(ApplicationVersion applicationVersion);
+
+  Optional<Vent> findByApplicationVersionAndVentNo(ApplicationVersion applicationVersion, Integer ventNo);
+}
