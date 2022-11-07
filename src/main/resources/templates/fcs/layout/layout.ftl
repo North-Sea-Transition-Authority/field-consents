@@ -12,6 +12,7 @@
   pageSize=PageSize.TWO_THIRDS_COLUMN
   breadcrumbsMap={}
   errorItems=[]
+  notificationBannerContent=""
 >
   <#local serviceName = serviceBranding.name() />
   <#local customerMnemonic = customerBranding.mnemonic() />
@@ -62,6 +63,7 @@
     breadcrumbs=useBreadCrumbs
     breadcrumbsList=breadcrumbsMap
     errorItems=errorItems
+    notificationBannerContent=notificationBannerContent
   >
     <#nested />
   </@fdsDefaultPageTemplate>

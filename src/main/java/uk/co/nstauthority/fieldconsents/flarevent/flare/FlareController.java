@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
@@ -170,8 +171,7 @@ public class FlareController {
         .addObject(PAGE_TITLE_ATTR_NAME, PAGE_NAME_DELETE)
         .addObject("flareView", FlareView.from(flare, null))
         .addObject("submitUrl",
-            ReverseRouter.route(on(FlareController.class)
-                .deleteFlare(applicationId, flareNo)))
+            ReverseRouter.route(on(FlareController.class).deleteFlare(applicationId, null, flareNo)))
         .addObject("cancelUrl",
             ReverseRouter.route(on(FlareController.class).viewFlaresSummary(applicationId))
         );
@@ -179,6 +179,7 @@ public class FlareController {
 
   @PostMapping("/flares/{flareNo}/delete")
   public ModelAndView deleteFlare(@PathVariable Integer applicationId,
+                                  RedirectAttributes redirectAttributes,
                                   @PathVariable Integer flareNo) {
     // Find the flare or error
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
@@ -187,6 +188,7 @@ public class FlareController {
     // delete the flare
     flareService.deleteFlare(flare);
 
+    redirectAttributes.addFlashAttribute("successfulDeleteBanner", "Flare has been successfully deleted.");
     return ReverseRouter.redirect(on(FlareController.class).viewFlaresSummary(applicationId));
   }
 

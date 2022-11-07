@@ -419,7 +419,7 @@ class FlareControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(
         post(ReverseRouter.route(on(FlareController.class).deleteFlare(
-            ApplicationTestUtil.APPLICATION_ID, FlareTestUtil.flareNoHp)))
+            ApplicationTestUtil.APPLICATION_ID, null, FlareTestUtil.flareNoHp)))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(view().name("redirect:" + expectBaseFlaresUrl));
@@ -436,7 +436,7 @@ class FlareControllerTest extends AbstractControllerTest {
 
     assertThatThrownBy(() ->
         mockMvc.perform(get(ReverseRouter.route(on(FlareController.class).deleteFlare(
-            ApplicationTestUtil.APPLICATION_ID, FlareTestUtil.flareNoHp)))))
+            ApplicationTestUtil.APPLICATION_ID, null, FlareTestUtil.flareNoHp)))))
         .isInstanceOf(Exception.class)
         .hasMessageContaining("Flare with application_version_id %s and flare_no %s not found"
             .formatted(applicationVersion.getId(), FlareTestUtil.flareNoHp));
@@ -446,7 +446,7 @@ class FlareControllerTest extends AbstractControllerTest {
   void deleteFlare_noUser() throws Exception {
     mockMvc.perform(
         get(ReverseRouter.route(on(FlareController.class).deleteFlare(
-            ApplicationTestUtil.APPLICATION_ID, FlareTestUtil.flareNoHp))))
+            ApplicationTestUtil.APPLICATION_ID, null, FlareTestUtil.flareNoHp))))
         .andExpect(status().isUnauthorized());
   }
 

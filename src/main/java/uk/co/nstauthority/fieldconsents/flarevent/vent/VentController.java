@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
@@ -170,8 +171,7 @@ public class VentController {
         .addObject(PAGE_TITLE_ATTR_NAME, PAGE_NAME_DELETE)
         .addObject("ventView", VentView.from(vent, null))
         .addObject("submitUrl",
-            ReverseRouter.route(on(VentController.class)
-                .deleteVent(applicationId, ventNo)))
+            ReverseRouter.route(on(VentController.class).deleteVent(applicationId, null, ventNo)))
         .addObject("cancelUrl",
             ReverseRouter.route(on(VentController.class).viewVentsSummary(applicationId))
         );
@@ -179,6 +179,7 @@ public class VentController {
 
   @PostMapping("/vents/{ventNo}/delete")
   public ModelAndView deleteVent(@PathVariable Integer applicationId,
+                                 RedirectAttributes redirectAttributes,
                                  @PathVariable Integer ventNo) {
     // Find the vent or error
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
@@ -187,6 +188,7 @@ public class VentController {
     // delete the vent
     ventService.deleteVent(vent);
 
+    redirectAttributes.addFlashAttribute("successfulDeleteBanner", "Vent has been successfully deleted.");
     return ReverseRouter.redirect(on(VentController.class).viewVentsSummary(applicationId));
   }
 

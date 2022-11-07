@@ -419,7 +419,7 @@ class VentControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(
         post(ReverseRouter.route(on(VentController.class).deleteVent(
-            ApplicationTestUtil.APPLICATION_ID, VentTestUtil.ventNoHp)))
+            ApplicationTestUtil.APPLICATION_ID, null, VentTestUtil.ventNoHp)))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(view().name("redirect:" + expectBaseVentsUrl));
@@ -436,7 +436,7 @@ class VentControllerTest extends AbstractControllerTest {
 
     assertThatThrownBy(() ->
         mockMvc.perform(get(ReverseRouter.route(on(VentController.class).deleteVent(
-            ApplicationTestUtil.APPLICATION_ID, VentTestUtil.ventNoHp)))))
+            ApplicationTestUtil.APPLICATION_ID, null, VentTestUtil.ventNoHp)))))
         .isInstanceOf(Exception.class)
         .hasMessageContaining("Vent with application_version_id %s and vent_no %s not found"
             .formatted(applicationVersion.getId(), VentTestUtil.ventNoHp));
@@ -446,7 +446,7 @@ class VentControllerTest extends AbstractControllerTest {
   void deleteVent_noUser() throws Exception {
     mockMvc.perform(
         get(ReverseRouter.route(on(VentController.class).deleteVent(
-            ApplicationTestUtil.APPLICATION_ID, VentTestUtil.ventNoHp))))
+            ApplicationTestUtil.APPLICATION_ID, null, VentTestUtil.ventNoHp))))
         .andExpect(status().isUnauthorized());
   }
 

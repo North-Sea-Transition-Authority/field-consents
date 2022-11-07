@@ -4,7 +4,22 @@
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
 <#-- @ftlvariable name="flareViews" type="java.util.List<uk.co.nstauthority.fieldconsents.flarevent.flare.FlareView>" -->
 
-<@defaultPage htmlTitle=pageTitle pageHeading=pageTitle errorItems=errorList>
+<#if successfulDeleteBanner?has_content>
+  <#assign deleteBanner>
+    <@fdsNotificationBanner.notificationBannerSuccess bannerTitleText="Success">
+      <@fdsNotificationBanner.notificationBannerContent>
+        ${successfulDeleteBanner}
+      </@fdsNotificationBanner.notificationBannerContent>
+    </@fdsNotificationBanner.notificationBannerSuccess>
+  </#assign>
+</#if>
+
+<@defaultPage
+  htmlTitle=pageTitle
+  pageHeading=pageTitle
+  errorItems=errorList
+  notificationBannerContent=deleteBanner
+>
   <#list flareViews as flare>
     <@flareSummary.flareSummary flare=flare showActions=true displayOrder="${flare.displayOrder}"/>
   </#list>

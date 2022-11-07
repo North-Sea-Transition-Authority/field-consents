@@ -26,3 +26,5 @@ CVE-2022-40153
 CVE-2022-40154
 CVE-2022-40155
 CVE-2022-40156
+# Spring security core (org.springframework.security:spring-security-core) - vulnerabilities should be fixed in subsequent Spring version
+CVE-2022-31692
