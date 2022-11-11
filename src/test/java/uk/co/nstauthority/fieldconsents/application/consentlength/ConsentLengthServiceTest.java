@@ -169,4 +169,23 @@ class ConsentLengthServiceTest {
 
     return consentLengthDetailsArgumentCaptor.getValue();
   }
+
+  @Test
+  void getConsentLengthDetails_whenPresent() {
+    consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(applicationVersion);
+    when(consentLengthRepository.findByApplicationVersion(applicationVersion)).thenReturn(Optional.of(consentLengthDetails));
+
+    Optional<ConsentLengthDetails> consentLengthDetailsOptional = consentLengthService.getConsentLengthDetails(applicationVersion);
+
+    assertThat(consentLengthDetailsOptional).isPresent();
+  }
+
+  @Test
+  void getConsentLengthDetails_whenNotPresent() {
+    when(consentLengthRepository.findByApplicationVersion(applicationVersion)).thenReturn(Optional.empty());
+
+    Optional<ConsentLengthDetails> consentLengthDetailsOptional = consentLengthService.getConsentLengthDetails(applicationVersion);
+
+    assertThat(consentLengthDetailsOptional).isEmpty();
+  }
 }

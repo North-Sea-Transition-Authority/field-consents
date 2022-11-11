@@ -8,7 +8,7 @@ import java.util.Map;
 import uk.co.fivium.formlibrary.input.IntegerInput;
 import uk.co.fivium.formlibrary.input.ThreeFieldDateInput;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import util.StreamUtils;
+import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 
 public class ConsentLengthTestUtil {
 

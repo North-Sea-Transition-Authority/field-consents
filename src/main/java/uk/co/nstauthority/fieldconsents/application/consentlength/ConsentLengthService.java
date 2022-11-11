@@ -98,4 +98,8 @@ public class ConsentLengthService {
     }
     consentLengthRepository.save(consentLengthDetails);
   }
+
+  public Optional<ConsentLengthDetails> getConsentLengthDetails(ApplicationVersion applicationVersion) {
+    return consentLengthRepository.findByApplicationVersion(applicationVersion);
+  }
 }

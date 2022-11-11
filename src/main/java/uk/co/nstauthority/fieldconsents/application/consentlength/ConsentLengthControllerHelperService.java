@@ -9,7 +9,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.Application;
-import util.StreamUtils;
+import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 
 @Service
 public class ConsentLengthControllerHelperService {

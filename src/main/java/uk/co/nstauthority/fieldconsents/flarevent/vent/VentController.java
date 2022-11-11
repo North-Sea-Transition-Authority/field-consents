@@ -188,6 +188,8 @@ public class VentController {
     // delete the vent
     ventService.deleteVent(vent);
 
+    // TODO: FCS-212 - make sure you redirect user to tasklist from here if it's the last vent being deleted
+    //       See FlareController
     redirectAttributes.addFlashAttribute("successfulDeleteBanner", "Vent has been successfully deleted.");
     return ReverseRouter.redirect(on(VentController.class).viewVentsSummary(applicationId));
   }

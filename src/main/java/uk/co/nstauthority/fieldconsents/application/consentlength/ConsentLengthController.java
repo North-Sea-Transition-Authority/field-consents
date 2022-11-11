@@ -15,8 +15,8 @@ import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @Controller
 @RequestMapping("applications/{applicationId}/consent-length")
@@ -62,8 +62,10 @@ public class ConsentLengthController {
         ReverseRouter.route(on(ConsentLengthController.class)
             .saveConsentLengthDetails(applicationId, null, ReverseRouter.emptyBindingResult()))
     );
-    // TODO: Change this to route to the appropriate task-list once FCS-210, FCS-211, FCS-212 have been completed
-    modelAndView.addObject("cancelUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()));
+    modelAndView.addObject(
+        "cancelUrl",
+        ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(application.getId()))
+    );
     return modelAndView;
   }
 
@@ -78,7 +80,7 @@ public class ConsentLengthController {
     } else {
       ApplicationVersion currentVersion = applicationVersionService.getApplicationVersionById(applicationId);
       consentLengthService.saveConsentLengthDetails(currentVersion, form);
-      return new ModelAndView("fcs/startapplication/productionApplicationTaskList");
+      return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
     }
   }
 }

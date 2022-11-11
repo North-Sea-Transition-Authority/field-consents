@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 
 @Service
-class FlareService {
+public class FlareService {
 
   private final FlareRepository flareRepository;
 

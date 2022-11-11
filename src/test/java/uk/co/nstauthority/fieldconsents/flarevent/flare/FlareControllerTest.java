@@ -143,11 +143,10 @@ class FlareControllerTest extends AbstractControllerTest {
   @WithMockUser
   void viewFlaresSummary_noFlares() throws Exception {
     when(flareService.flaresExistForApplicationVersion(applicationVersion)).thenReturn(Boolean.FALSE);
-
     mockMvc.perform(
         get(ReverseRouter.route(on(FlareController.class).viewFlaresSummary(ApplicationTestUtil.APPLICATION_ID))))
-        .andExpect(status().isOk())
-        .andExpect(view().name("fcs/flare/flareApplicationTaskList"));
+        .andExpect(status().is3xxRedirection())
+        .andExpect(view().name("redirect:/applications/1/task-list/"));
   }
 
   @Test
@@ -224,8 +223,8 @@ class FlareControllerTest extends AbstractControllerTest {
         ApplicationTestUtil.APPLICATION_ID, null, null)))
             .param("hasOtherFlaresToAdd", Boolean.FALSE.toString())
             .with(csrf()))
-        .andExpect(status().isOk())
-        .andExpect(view().name("fcs/flare/flareApplicationTaskList"));
+        .andExpect(status().is3xxRedirection())
+        .andExpect(view().name("redirect:/applications/1/task-list/"));
   }
 
   @Test
@@ -416,7 +415,7 @@ class FlareControllerTest extends AbstractControllerTest {
   void deleteFlare_flareExists() throws Exception {
     when(flareService.getFlareOrError(applicationVersion, FlareTestUtil.flareNoHp))
         .thenReturn(FlareTestUtil.flareHp);
-
+    when(flareService.flaresExistForApplicationVersion(applicationVersion)).thenReturn(true);
     mockMvc.perform(
         post(ReverseRouter.route(on(FlareController.class).deleteFlare(
             ApplicationTestUtil.APPLICATION_ID, null, FlareTestUtil.flareNoHp)))

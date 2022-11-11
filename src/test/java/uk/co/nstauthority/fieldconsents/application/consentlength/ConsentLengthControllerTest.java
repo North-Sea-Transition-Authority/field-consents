@@ -54,7 +54,7 @@ class ConsentLengthControllerTest extends AbstractControllerTest {
 
   @BeforeEach
   void setUp() {
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
+    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
     when(applicationService.getApplicationById(ApplicationTestUtil.APPLICATION_ID)).thenReturn(applicationVersion.getApplication());
     when(applicationVersionService.getApplicationVersionById(ApplicationTestUtil.APPLICATION_ID)).thenReturn(applicationVersion);
 
@@ -102,8 +102,8 @@ class ConsentLengthControllerTest extends AbstractControllerTest {
     mockMvc.perform(post(ReverseRouter.route(on(ConsentLengthController.class)
             .saveConsentLengthDetails(APPLICATION_ID, consentLengthForm, ReverseRouter.emptyBindingResult())))
             .with(csrf()))
-        .andExpect(status().isOk())
-        .andExpect(view().name("fcs/startapplication/productionApplicationTaskList"));
+        .andExpect(status().is3xxRedirection())
+        .andExpect(view().name("redirect:/applications/1/task-list/"));
   }
 
   @Test

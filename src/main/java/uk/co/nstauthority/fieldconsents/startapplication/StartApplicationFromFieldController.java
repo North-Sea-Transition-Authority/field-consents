@@ -12,9 +12,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-import uk.co.nstauthority.fieldconsents.application.ApplicationRedirectService;
+import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
+import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -27,18 +28,14 @@ public class StartApplicationFromFieldController {
 
   private final StartApplicationControllerHelperService startApplicationControllerHelperService;
 
-  private final ApplicationRedirectService applicationRedirectService;
-
   private final StartApplicationFormValidator formValidator;
 
   @Autowired
   public StartApplicationFromFieldController(ApplicationService applicationService,
                                              StartApplicationControllerHelperService startApplicationControllerHelperService,
-                                             ApplicationRedirectService applicationRedirectService,
                                              StartApplicationFormValidator formValidator) {
     this.applicationService = applicationService;
     this.startApplicationControllerHelperService = startApplicationControllerHelperService;
-    this.applicationRedirectService = applicationRedirectService;
     this.formValidator = formValidator;
   }
 
@@ -75,8 +72,8 @@ public class StartApplicationFromFieldController {
       return getModelAndView(fieldId);
     } else {
       ApplicationType type = form.getApplicationType();
-      applicationService.createNewApplication(type);
-      return applicationRedirectService.getTaskListModelAndViewByApplicationType(type);
+      Application application = applicationService.createNewApplication(type).getApplication();
+      return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(application.getId()));
     }
   }
 }

@@ -1,7 +1,6 @@
 package uk.co.nstauthority.fieldconsents.startapplication;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -18,7 +17,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
-import uk.co.nstauthority.fieldconsents.application.ApplicationRedirectService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
@@ -26,7 +24,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import util.StreamUtils;
+import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 
 @ContextConfiguration(classes = StartApplicationFromFieldController.class)
 class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
@@ -40,25 +38,19 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
   private StartApplicationControllerHelperService startApplicationControllerHelperService;
 
   @MockBean
-  private ApplicationRedirectService applicationRedirectService;
-
-  @MockBean
   private StartApplicationFormValidator formValidator;
 
   private Map<String, String> applicationTypeMap;
 
   private ApplicationVersion applicationVersion;
 
-  private StartApplicationForm form;
-
   @BeforeEach
   void setUp() {
     applicationTypeMap = Arrays.stream(ConsentLengthType.values())
         .collect(StreamUtils.toLinkedHashMap(Enum::name, ConsentLengthType::getDisplayName));
 
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
+    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
     when(startApplicationControllerHelperService.getApplicationTypesMap(AssetType.FIELD)).thenReturn(applicationTypeMap);
-    form = new StartApplicationForm(ApplicationType.PRODUCTION);
   }
 
 
@@ -97,20 +89,20 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
   @Test
   @WithMockUser
   void createNewApplicationOfType() throws Exception {
-    doCallRealMethod().when(applicationRedirectService).getTaskListModelAndViewByApplicationType(form.getApplicationType());
+    when(applicationService.createNewApplication(ApplicationType.FLARE)).thenReturn(applicationVersion);
 
     mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromFieldController.class)
-          .createNewApplicationOfType(FIELD_ID, form, ReverseRouter.emptyBindingResult())))
+        .createNewApplicationOfType(FIELD_ID, null, ReverseRouter.emptyBindingResult())))
+        .param("applicationType", ApplicationType.FLARE.name())
         .with(csrf()))
-        .andExpect(status().isOk());
+        .andExpect(status().is3xxRedirection())
+        .andExpect(view().name("redirect:/applications/1/task-list/"));
   }
 
   @Test
   void createNewApplicationOfType_whenUnauthorized() throws Exception {
-    doCallRealMethod().when(applicationRedirectService).getTaskListModelAndViewByApplicationType(form.getApplicationType());
-
     mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromFieldController.class)
-            .createNewApplicationOfType(FIELD_ID, form, ReverseRouter.emptyBindingResult())))
+            .createNewApplicationOfType(FIELD_ID, null, ReverseRouter.emptyBindingResult())))
             .with(csrf()))
         .andExpect(status().isUnauthorized());
   }

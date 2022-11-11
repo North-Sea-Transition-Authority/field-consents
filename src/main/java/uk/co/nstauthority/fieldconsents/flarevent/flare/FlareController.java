@@ -12,7 +12,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @Controller
@@ -84,9 +86,9 @@ public class FlareController {
 
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
 
-    // if there are no flares already on the application form then go to the temporary task list
+    // if there are no flares already on the application form then go to the flare task list
     if (!flareService.flaresExistForApplicationVersion(applicationVersion)) {
-      return new ModelAndView("fcs/flare/flareApplicationTaskList");
+      return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
     }
 
     ModelAndView modelAndView = getViewFlaresSummaryModelAndView(applicationId);
@@ -123,7 +125,7 @@ public class FlareController {
     }
 
     // no other flares to add so go to the task list
-    return new ModelAndView("fcs/flare/flareApplicationTaskList");
+    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
   }
 
   @GetMapping("/flares/{flareNo}")
@@ -189,6 +191,9 @@ public class FlareController {
     flareService.deleteFlare(flare);
 
     redirectAttributes.addFlashAttribute("successfulDeleteBanner", "Flare has been successfully deleted.");
+    if (!flareService.flaresExistForApplicationVersion(applicationVersion)) {
+      return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+    }
     return ReverseRouter.redirect(on(FlareController.class).viewFlaresSummary(applicationId));
   }
 
