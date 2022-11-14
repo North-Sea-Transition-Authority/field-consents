@@ -3,7 +3,7 @@ package uk.co.nstauthority.fieldconsents.application.tasklist.shared;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.CONSENT_DETAILS_DISPLAY_ORDER;
 import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.CONSENT_DETAILS_SECTION;
-import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.FLARE_INFORMATION_DISPLAY_ORDER;
+import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.FLARE_VENT_INFORMATION_DISPLAY_ORDER;
 import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.FLARE_INFORMATION_SECTION;
 import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.assertTaskListSection;
 import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.getConsentDetailsTaskListSection;
@@ -57,6 +57,6 @@ class ApplicationTaskListServiceTest {
     List<TaskListSection> taskListSections = applicationTaskListService.getAllSections(applicationVersion);
 
     assertTaskListSection(taskListSections.get(0), CONSENT_DETAILS_SECTION, CONSENT_DETAILS_DISPLAY_ORDER);
-    assertTaskListSection(taskListSections.get(1), FLARE_INFORMATION_SECTION, FLARE_INFORMATION_DISPLAY_ORDER);
+    assertTaskListSection(taskListSections.get(1), FLARE_INFORMATION_SECTION, FLARE_VENT_INFORMATION_DISPLAY_ORDER);
   }
 }

@@ -13,7 +13,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 
 @Entity
 @Table(name = "vents")
-class Vent {
+public class Vent {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

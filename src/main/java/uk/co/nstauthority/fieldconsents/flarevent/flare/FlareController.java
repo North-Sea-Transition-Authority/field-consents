@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -191,10 +190,10 @@ public class FlareController {
     flareService.deleteFlare(flare);
 
     redirectAttributes.addFlashAttribute("successfulDeleteBanner", "Flare has been successfully deleted.");
-    if (!flareService.flaresExistForApplicationVersion(applicationVersion)) {
-      return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+    if (flareService.flaresExistForApplicationVersion(applicationVersion)) {
+      return ReverseRouter.redirect(on(FlareController.class).viewFlaresSummary(applicationId));
     }
-    return ReverseRouter.redirect(on(FlareController.class).viewFlaresSummary(applicationId));
+    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
   }
 
 }

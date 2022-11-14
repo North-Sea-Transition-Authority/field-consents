@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @Controller
@@ -84,9 +85,9 @@ public class VentController {
 
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
 
-    // if there are no vents already on the application form then go to the temporary task list
+    // if there are no vents already on the application form then go to the task list
     if (!ventService.ventsExistForApplicationVersion(applicationVersion)) {
-      return new ModelAndView("fcs/vent/ventApplicationTaskList");
+      return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
     }
 
     ModelAndView modelAndView = getViewVentsSummaryModelAndView(applicationId);
@@ -123,7 +124,7 @@ public class VentController {
     }
 
     // no other vents to add so go to the task list
-    return new ModelAndView("fcs/vent/ventApplicationTaskList");
+    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
   }
 
   @GetMapping("/vents/{ventNo}")
@@ -188,10 +189,10 @@ public class VentController {
     // delete the vent
     ventService.deleteVent(vent);
 
-    // TODO: FCS-212 - make sure you redirect user to tasklist from here if it's the last vent being deleted
-    //       See FlareController
     redirectAttributes.addFlashAttribute("successfulDeleteBanner", "Vent has been successfully deleted.");
-    return ReverseRouter.redirect(on(VentController.class).viewVentsSummary(applicationId));
+    if (ventService.ventsExistForApplicationVersion(applicationVersion)) {
+      return ReverseRouter.redirect(on(VentController.class).viewVentsSummary(applicationId));
+    }
+    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
   }
-
 }

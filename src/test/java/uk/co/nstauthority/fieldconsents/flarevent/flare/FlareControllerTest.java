@@ -22,6 +22,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
+import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
@@ -29,6 +30,9 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @ContextConfiguration(classes = FlareController.class)
 class FlareControllerTest extends AbstractControllerTest {
+
+  @MockBean
+  private ApplicationService applicationService;
 
   @MockBean
   private ApplicationVersionService applicationVersionService;
@@ -55,6 +59,7 @@ class FlareControllerTest extends AbstractControllerTest {
     expectBaseFlaresUrl = FlareTestUtil.BASE_FLARES_URL;
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(applicationVersion.getApplication().getId()))
         .thenReturn(applicationVersion);
+    when(applicationService.getApplicationById(applicationVersion.getApplication().getId())).thenReturn(applicationVersion.getApplication());
   }
 
   @Test

@@ -13,15 +13,21 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 public class TaskListTestUtil {
 
   public static final String CONSENT_DETAILS_SECTION = "Consent details";
+
   public static final String FLARE_INFORMATION_SECTION = "Flare information";
+
+  public static final String VENT_INFORMATION_SECTION = "Vent information";
 
   public static final int CONSENT_DETAILS_DISPLAY_ORDER = 10;
 
-  public static final int FLARE_INFORMATION_DISPLAY_ORDER = 20;
+  public static final int FLARE_VENT_INFORMATION_DISPLAY_ORDER = 20;
 
   public static final String CONSENT_LENGTH_TASK_LIST_ITEM = "Consent length";
 
   public static final String FLARES_TASK_LIST_ITEM = "Flares";
+
+
+  public static final String VENTS_TASK_LIST_ITEM = "Vents";
 
   public static final String FLARE_REPORT_TASK_LIST_ITEM = "Flare report";
 
@@ -42,7 +48,7 @@ public class TaskListTestUtil {
   }
 
   public static TaskListSection getFlareInformationTaskListSection(List<TaskListItem> items) {
-    return new TaskListSection(FLARE_INFORMATION_SECTION, FLARE_INFORMATION_DISPLAY_ORDER, items);
+    return new TaskListSection(FLARE_INFORMATION_SECTION, FLARE_VENT_INFORMATION_DISPLAY_ORDER, items);
   }
 
   public static List<TaskListItem> getConsentDetailsTaskListItems(int applicationId) {

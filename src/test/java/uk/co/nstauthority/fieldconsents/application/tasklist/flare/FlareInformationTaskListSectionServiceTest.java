@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.FLARES_TASK_LIST_ITEM;
-import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.FLARE_INFORMATION_DISPLAY_ORDER;
+import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.FLARE_VENT_INFORMATION_DISPLAY_ORDER;
 import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.FLARE_INFORMATION_SECTION;
 import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.FLARE_REPORT_TASK_LIST_ITEM;
 import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.assertTaskListItem;
@@ -58,7 +58,7 @@ class FlareInformationTaskListSectionServiceTest {
     assertThat(taskListSectionOptional).isNotEmpty();
     TaskListSection taskListSection = taskListSectionOptional.orElseThrow(RuntimeException::new);
 
-    assertTaskListSection(taskListSection, FLARE_INFORMATION_SECTION, FLARE_INFORMATION_DISPLAY_ORDER);
+    assertTaskListSection(taskListSection, FLARE_INFORMATION_SECTION, FLARE_VENT_INFORMATION_DISPLAY_ORDER);
   }
 
   @Test

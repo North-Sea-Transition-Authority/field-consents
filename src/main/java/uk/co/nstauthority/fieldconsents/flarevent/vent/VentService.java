@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 
 @Service
-class VentService {
+public class VentService {
 
   private final VentRepository ventRepository;
 

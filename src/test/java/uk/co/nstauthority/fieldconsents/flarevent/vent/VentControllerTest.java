@@ -146,8 +146,8 @@ class VentControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(
         get(ReverseRouter.route(on(VentController.class).viewVentsSummary(ApplicationTestUtil.APPLICATION_ID))))
-        .andExpect(status().isOk())
-        .andExpect(view().name("fcs/vent/ventApplicationTaskList"));
+        .andExpect(status().is3xxRedirection())
+        .andExpect(view().name("redirect:/applications/1/task-list/"));
   }
 
   @Test
@@ -224,8 +224,8 @@ class VentControllerTest extends AbstractControllerTest {
         ApplicationTestUtil.APPLICATION_ID, null, null)))
             .param("hasOtherVentsToAdd", Boolean.FALSE.toString())
             .with(csrf()))
-        .andExpect(status().isOk())
-        .andExpect(view().name("fcs/vent/ventApplicationTaskList"));
+        .andExpect(status().is3xxRedirection())
+        .andExpect(view().name("redirect:/applications/1/task-list/"));
   }
 
   @Test
@@ -422,7 +422,7 @@ class VentControllerTest extends AbstractControllerTest {
             ApplicationTestUtil.APPLICATION_ID, null, VentTestUtil.ventNoHp)))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(view().name("redirect:" + expectBaseVentsUrl));
+        .andExpect(view().name("redirect:/applications/1/task-list/"));
 
     verify(ventService, times(1)).deleteVent(VentTestUtil.ventHp);
   }

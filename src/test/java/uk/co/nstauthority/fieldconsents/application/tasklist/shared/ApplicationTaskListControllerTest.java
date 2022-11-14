@@ -46,7 +46,6 @@ class ApplicationTaskListControllerTest extends AbstractControllerTest {
   void getTaskList_withFlareApplication() throws Exception {
     ApplicationVersion applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
-    when(applicationTaskListService.getAllSections(applicationVersion)).thenReturn(flareTaskListSections);
 
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ApplicationTaskListController.class)
             .getTaskList(APPLICATION_ID)))
