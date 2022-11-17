@@ -65,8 +65,7 @@ class ConsentDetailsTaskListSectionServiceTest {
     assertThat(taskListItems).hasSize(1);
 
     assertTaskListItem(
-        taskListItems,
-        0,
+        taskListItems.get(0),
         CONSENT_LENGTH_TASK_LIST_ITEM,
         TaskListLabel.NOT_COMPLETED,
         ReverseRouter.route(on(ConsentLengthController.class).getConsentLengthForm(applicationVersion.getApplication().getId()))
@@ -76,7 +75,7 @@ class ConsentDetailsTaskListSectionServiceTest {
   @Test
   void getSection_consentDetailsTaskListItemCompleted() {
     ConsentLengthDetails consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(applicationVersion);
-    when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(Optional.of(consentLengthDetails));
+    when(consentLengthService.findConsentLengthDetails(applicationVersion)).thenReturn(Optional.of(consentLengthDetails));
 
     Optional<TaskListSection> taskListSectionOptional = consentDetailsTaskListSectionService.getSection(applicationVersion);
     TaskListSection taskListSection = taskListSectionOptional.orElseThrow(RuntimeException::new);
@@ -86,8 +85,7 @@ class ConsentDetailsTaskListSectionServiceTest {
     assertThat(taskListItems).hasSize(1);
 
     assertTaskListItem(
-        taskListItems,
-        0,
+        taskListItems.get(0),
         CONSENT_LENGTH_TASK_LIST_ITEM,
         TaskListLabel.COMPLETED,
         ReverseRouter.route(on(ConsentLengthController.class).getConsentLengthForm(applicationVersion.getApplication().getId()))

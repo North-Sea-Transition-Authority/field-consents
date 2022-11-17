@@ -22,7 +22,6 @@ public class ProductionRowFormValidator implements Validator {
 
     // Each form field should have a non-empty double which can be greater or equal to 0.0
     var validator = DecimalInputValidator.builder()
-        .mustHaveAtLeastDecimalPlaces(0)
         .mustBeMoreThanOrEqual(BigDecimal.ZERO);
 
     validator.validate(monthForm.getOilMinValue(), errors);
@@ -34,13 +33,13 @@ public class ProductionRowFormValidator implements Validator {
     if (!errors.hasErrors()) {
       try {
         var validatorOilMinMax = DecimalInputValidator.builder()
-            .mustBeBetween(BigDecimal.ZERO, monthForm.getOilMaxValue().getInputValueAsBigDecimal()
+            .mustBeBetween(BigDecimal.ZERO, monthForm.getOilMaxValue().getAsBigDecimal()
                 .orElseThrow(NoSuchElementException::new)
             );
         validatorOilMinMax.validate(monthForm.getOilMinValue(), errors);
 
         var validatorGasMinMax = DecimalInputValidator.builder()
-            .mustBeBetween(BigDecimal.ZERO, monthForm.getGasMaxValue().getInputValueAsBigDecimal()
+            .mustBeBetween(BigDecimal.ZERO, monthForm.getGasMaxValue().getAsBigDecimal()
                 .orElseThrow(NoSuchElementException::new)
             );
         validatorGasMinMax.validate(monthForm.getGasMinValue(), errors);

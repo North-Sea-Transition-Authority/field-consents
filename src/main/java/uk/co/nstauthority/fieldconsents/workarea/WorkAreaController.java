@@ -15,7 +15,7 @@ import uk.co.nstauthority.fieldconsents.assets.ManageAssetController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @Controller
-@RequestMapping("/work-area")
+@RequestMapping({"/", "/work-area"})
 public class WorkAreaController {
 
   @GetMapping

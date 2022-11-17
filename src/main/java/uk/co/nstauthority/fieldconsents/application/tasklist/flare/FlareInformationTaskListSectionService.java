@@ -7,8 +7,13 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.FlareController;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.FlareService;
+import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportController;
+import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportPeriodController;
+import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportPeriodService;
+import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListItem;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListLabel;
@@ -20,8 +25,20 @@ public class FlareInformationTaskListSectionService implements TaskListSectionSe
 
   private final FlareService flareService;
 
-  FlareInformationTaskListSectionService(FlareService flareService) {
+  private final FlareReportPeriodService flareReportPeriodService;
+
+  private final FlareReportService flareReportService;
+
+  private final ConsentLengthService consentLengthService;
+
+  FlareInformationTaskListSectionService(FlareService flareService,
+                                         FlareReportPeriodService flareReportPeriodService,
+                                         FlareReportService flareReportService,
+                                         ConsentLengthService consentLengthService) {
     this.flareService = flareService;
+    this.flareReportPeriodService = flareReportPeriodService;
+    this.flareReportService = flareReportService;
+    this.consentLengthService = consentLengthService;
   }
 
   @Override
@@ -31,22 +48,51 @@ public class FlareInformationTaskListSectionService implements TaskListSectionSe
       return Optional.empty();
     }
 
-    var flares = flareService.getFlaresForApplicationVersion(applicationVersion);
-
-    var flaresUrl = flares.isEmpty()
-        ? ReverseRouter.route(on(FlareController.class).addFlare(applicationVersion.getApplication().getId()))
-        : ReverseRouter.route(on(FlareController.class).viewFlaresSummary(applicationVersion.getApplication().getId()));
-
     var items = List.of(
-        new TaskListItem("Flares",
-            TaskListLabel.readyOrCompleteByCollection(flares),
-            flaresUrl),
-        new TaskListItem("Flare report",
-            TaskListLabel.BLOCKED,
-            // TODO: FCS-189: Update this with route of Flare report screen
-            ReverseRouter.route(on(FlareController.class).viewFlaresSummary(applicationVersion.getApplication().getId())))
+        getFlaresTaskListItem(applicationVersion),
+        getFlareReportTaskListItem(applicationVersion)
     );
 
     return Optional.of(new TaskListSection("Flare information", 20, items));
   }
+
+  TaskListItem getFlaresTaskListItem(ApplicationVersion applicationVersion) {
+
+    var applicationId = applicationVersion.getApplication().getId();
+
+    var flares = flareService.getFlaresForApplicationVersion(applicationVersion);
+
+    var flaresUrl = flares.isEmpty()
+        ? ReverseRouter.route(on(FlareController.class).addFlare(applicationId))
+        : ReverseRouter.route(on(FlareController.class).viewFlaresSummary(applicationId));
+
+    return new TaskListItem("Flares",
+        TaskListLabel.readyOrCompleteByCollection(flares),
+        flaresUrl);
+  }
+
+  TaskListItem getFlareReportTaskListItem(ApplicationVersion applicationVersion) {
+
+    var applicationId = applicationVersion.getApplication().getId();
+
+    boolean flareReportPeriodExists = flareReportPeriodService.flareReportPeriodExists(applicationVersion);
+
+    var flareReportUrl = flareReportPeriodExists
+        ? ReverseRouter.route(on(FlareReportController.class).getFlareReportForm(applicationId))
+        : ReverseRouter.route(on(FlareReportPeriodController.class).getFlareReportPeriodForm(applicationId));
+
+    TaskListLabel flareReportLabel;
+    if (consentLengthService.findConsentLengthDetails(applicationVersion).isEmpty()) {
+      flareReportLabel = TaskListLabel.BLOCKED;
+    } else if (flareReportService.flareReportComplete(applicationVersion)) {
+      flareReportLabel = TaskListLabel.COMPLETED;
+    } else if (flareReportPeriodExists) {
+      flareReportLabel = TaskListLabel.IN_PROGRESS;
+    } else {
+      flareReportLabel = TaskListLabel.NOT_COMPLETED;
+    }
+
+    return new TaskListItem("Flare report", flareReportLabel, flareReportUrl);
+  }
+
 }

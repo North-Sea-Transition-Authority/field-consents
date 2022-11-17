@@ -1,6 +1,8 @@
 package uk.co.nstauthority.fieldconsents.application;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -57,6 +59,10 @@ public class Application {
 
   public void setCreatedDate(Instant createdDate) {
     this.createdDate = createdDate;
+  }
+
+  public LocalDate getCreatedLocalDate() {
+    return LocalDate.ofInstant(this.createdDate, ZoneId.systemDefault());
   }
 
   public Integer getCreatedByWuaId() {

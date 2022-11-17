@@ -175,7 +175,7 @@ class ConsentLengthServiceTest {
     consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(applicationVersion);
     when(consentLengthRepository.findByApplicationVersion(applicationVersion)).thenReturn(Optional.of(consentLengthDetails));
 
-    Optional<ConsentLengthDetails> consentLengthDetailsOptional = consentLengthService.getConsentLengthDetails(applicationVersion);
+    Optional<ConsentLengthDetails> consentLengthDetailsOptional = consentLengthService.findConsentLengthDetails(applicationVersion);
 
     assertThat(consentLengthDetailsOptional).isPresent();
   }
@@ -184,7 +184,7 @@ class ConsentLengthServiceTest {
   void getConsentLengthDetails_whenNotPresent() {
     when(consentLengthRepository.findByApplicationVersion(applicationVersion)).thenReturn(Optional.empty());
 
-    Optional<ConsentLengthDetails> consentLengthDetailsOptional = consentLengthService.getConsentLengthDetails(applicationVersion);
+    Optional<ConsentLengthDetails> consentLengthDetailsOptional = consentLengthService.findConsentLengthDetails(applicationVersion);
 
     assertThat(consentLengthDetailsOptional).isEmpty();
   }

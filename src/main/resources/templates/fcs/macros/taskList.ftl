@@ -5,12 +5,25 @@
     <@fdsTaskList.taskList>
       <@fdsTaskList.taskListSection sectionHeadingText=section.displayName()>
         <#list section.items() as item>
+          <#if item.label().name() = 'BLOCKED'>
+            <#assign itemUrl=""/>
+            <#assign tagText="Cannot start yet"/>
+            <#assign tagClass="govuk-tag--grey"/>
+          <#elseif item.label().name() = 'IN_PROGRESS'>
+            <#assign itemUrl=springUrl(item.actionUrl())/>
+            <#assign tagText="In progress"/>
+            <#assign tagClass="govuk-tag--blue"/>
+          <#else>
+            <#assign itemUrl=springUrl(item.actionUrl())/>
+          </#if>
           <@fdsTaskList.taskListItem
             itemText=item.displayName()
-            itemUrl=springUrl(item.actionUrl())
+            itemUrl=itemUrl
             showTag=true
             completed=item.label().name() = 'COMPLETED'
-            useNotCompletedLabels=true
+            useNotCompletedLabels=item.label().name() = 'NOT_COMPLETED'
+            tagText=tagText
+            tagClass=tagClass
           />
         </#list>
       </@fdsTaskList.taskListSection>

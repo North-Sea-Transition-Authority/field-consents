@@ -38,6 +38,10 @@ public class TaskListTestUtil {
 
   public static void assertTaskListItem(List<TaskListItem> taskListItems, int index, String name, TaskListLabel label, String route) {
     TaskListItem item = taskListItems.get(index);
+    assertTaskListItem(item, name, label, route);
+  }
+
+  public static void assertTaskListItem(TaskListItem item, String name, TaskListLabel label, String route) {
     assertThat(item.displayName()).isEqualTo(name);
     assertThat(item.label()).isEqualTo(label);
     assertThat(item.actionUrl()).isEqualTo(route);

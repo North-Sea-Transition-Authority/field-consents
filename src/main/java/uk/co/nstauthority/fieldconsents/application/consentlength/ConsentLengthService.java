@@ -3,6 +3,7 @@ package uk.co.nstauthority.fieldconsents.application.consentlength;
 import java.time.LocalDate;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -99,7 +100,15 @@ public class ConsentLengthService {
     consentLengthRepository.save(consentLengthDetails);
   }
 
-  public Optional<ConsentLengthDetails> getConsentLengthDetails(ApplicationVersion applicationVersion) {
+  public Optional<ConsentLengthDetails> findConsentLengthDetails(ApplicationVersion applicationVersion) {
     return consentLengthRepository.findByApplicationVersion(applicationVersion);
   }
+
+  public ConsentLengthDetails getConsentLengthDetails(ApplicationVersion applicationVersion)
+      throws EntityNotFoundException {
+    return findConsentLengthDetails(applicationVersion)
+        .orElseThrow(() -> new EntityNotFoundException("Consent details with application version id %s not found."
+            .formatted(applicationVersion.getId())));
+  }
+
 }
