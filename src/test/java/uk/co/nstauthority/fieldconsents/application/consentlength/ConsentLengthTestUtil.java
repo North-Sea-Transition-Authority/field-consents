@@ -15,8 +15,8 @@ public class ConsentLengthTestUtil {
   private static final int CONSENT_YEAR_LENGTH = 5;
 
   public static final int ANNUAL_CONSENT_YEAR = 2023;
-  public static final int LONG_TERM_START_YEAR = 2023;
-  public static final int LONG_TERM_END_YEAR = 2027;
+  public static final int LONG_TERM_START_YEAR = 2022;
+  public static final int LONG_TERM_END_YEAR = 2026;
 
   public static final LocalDate SHORT_TERM_START_DATE = LocalDate.of(2022, Month.OCTOBER, 31);
 

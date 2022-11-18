@@ -55,6 +55,5 @@ public class ProductionRowService {
     gasMaxInput.setInputValue(DecimalFormatUtils.bigDecimalToFormattedString(previousProductionRow.getGasMaxValue()));
 
     mergedProductionRowForm.setGasMaxUnit(previousProductionRow.getGasMaxUnit());
-
   }
 }

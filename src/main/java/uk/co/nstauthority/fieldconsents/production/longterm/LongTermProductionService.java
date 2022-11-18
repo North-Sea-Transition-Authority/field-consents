@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
 import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 
@@ -18,18 +20,24 @@ public class LongTermProductionService {
 
   private final ProductionRowService productionRowService;
 
+  private final ConsentLengthService consentLengthService;
+
   private final LongTermProductionYearRepository longTermProductionYearRepository;
 
   @Autowired
   public LongTermProductionService(ProductionRowService productionRowService,
+                                   ConsentLengthService consentLengthService,
                                    LongTermProductionYearRepository longTermProductionYearRepository) {
     this.productionRowService = productionRowService;
+    this.consentLengthService = consentLengthService;
     this.longTermProductionYearRepository = longTermProductionYearRepository;
   }
 
-  LongTermProductionForm getLongTermProductionForm(ApplicationVersion applicationVersion,
-                                                   Integer startYear,
-                                                   Integer endYear) {
+  LongTermProductionForm getLongTermProductionForm(ApplicationVersion applicationVersion) {
+    ConsentLengthDetails consentLengthDetails = consentLengthService.getConsentLengthDetails(applicationVersion);
+
+    Integer startYear = consentLengthDetails.getLongTermStartYear();
+    Integer endYear = consentLengthDetails.getLongTermEndYear();
 
     var previousProductionRows = longTermProductionYearRepository
         .findAllByApplicationVersionOrderByYearAsc(applicationVersion);

@@ -2,7 +2,6 @@ package uk.co.nstauthority.fieldconsents.production.shortterm;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
-import java.time.LocalDate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
@@ -20,9 +19,6 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 @RequestMapping("applications/{applicationId}/short-term-production")
 public class ShortTermProductionController {
 
-  public static final LocalDate START_DATE = LocalDate.of(2022, 3, 14);
-  public static final LocalDate END_DATE = LocalDate.of(2023, 3, 9);
-
   private final ApplicationVersionService applicationVersionService;
   private final ShortTermProductionService shortTermProductionService;
   private final ShortTermProductionFormValidator shortTermProductionFormValidator;
@@ -39,8 +35,7 @@ public class ShortTermProductionController {
   @GetMapping
   public ModelAndView getShortTermProductionRequestForm(@PathVariable Integer applicationId) {
     ApplicationVersion currentVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
-    ShortTermProductionForm shortTermProductionForm = shortTermProductionService.getShortTermProductionForm(
-        currentVersion, START_DATE, END_DATE);
+    ShortTermProductionForm shortTermProductionForm = shortTermProductionService.getShortTermProductionForm(currentVersion);
     ModelAndView modelAndView = getShortTermProductionModelAndView(applicationId, shortTermProductionForm);
 
     modelAndView.addObject("form", shortTermProductionForm);

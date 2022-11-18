@@ -7,6 +7,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
+import javax.persistence.EntityNotFoundException;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -171,7 +173,7 @@ class ConsentLengthServiceTest {
   }
 
   @Test
-  void getConsentLengthDetails_whenPresent() {
+  void findConsentLengthDetails_whenPresent() {
     consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(applicationVersion);
     when(consentLengthRepository.findByApplicationVersion(applicationVersion)).thenReturn(Optional.of(consentLengthDetails));
 
@@ -181,11 +183,33 @@ class ConsentLengthServiceTest {
   }
 
   @Test
-  void getConsentLengthDetails_whenNotPresent() {
+  void findConsentLengthDetails_whenNotPresent() {
     when(consentLengthRepository.findByApplicationVersion(applicationVersion)).thenReturn(Optional.empty());
 
     Optional<ConsentLengthDetails> consentLengthDetailsOptional = consentLengthService.findConsentLengthDetails(applicationVersion);
 
     assertThat(consentLengthDetailsOptional).isEmpty();
+  }
+
+  @Test
+  void getConsentLengthDetails_whenPresent() {
+    consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForAnnual(applicationVersion);
+    when(consentLengthRepository.findByApplicationVersion(applicationVersion)).thenReturn(Optional.of(consentLengthDetails));
+
+    ConsentLengthDetails expectedConsentLengthDetails = consentLengthService.getConsentLengthDetails(applicationVersion);
+
+    assertThat(expectedConsentLengthDetails.getConsentLength()).isEqualTo(ConsentLengthType.ANNUAL);
+  }
+
+  @Test
+  void getConsentLengthDetails_whenNotPresent() {
+    when(consentLengthRepository.findByApplicationVersion(applicationVersion)).thenReturn(Optional.empty());
+
+    var exception = Assertions.assertThrows(
+        EntityNotFoundException.class,
+        () -> consentLengthService.getConsentLengthDetails(applicationVersion)
+    );
+
+    Assertions.assertEquals("Consent details with application version id 1 not found.", exception.getMessage());
   }
 }

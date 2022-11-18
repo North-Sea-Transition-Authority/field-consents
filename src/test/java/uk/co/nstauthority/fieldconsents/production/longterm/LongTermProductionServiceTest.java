@@ -22,6 +22,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil;
 import uk.co.nstauthority.fieldconsents.production.ProductionRow;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowForm;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
@@ -37,23 +40,33 @@ class LongTermProductionServiceTest {
   @Mock
   private ProductionRowService productionRowService;
 
+  @Mock
+  private ConsentLengthService consentLengthService;
+
   private LongTermProductionService longTermProductionService;
 
   private ApplicationVersion applicationVersion;
 
+  private ConsentLengthDetails consentLengthDetails;
+
   @BeforeEach
   void setUp() {
-    longTermProductionService = new LongTermProductionService(productionRowService, longTermProductionYearRepository);
+    longTermProductionService = new LongTermProductionService(
+        productionRowService,
+        consentLengthService,
+        longTermProductionYearRepository
+    );
     applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
+    consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForLongTerm(applicationVersion);
   }
 
   @Test
   void getLongTermProductionForm_initialStubForm() {
     when(longTermProductionYearRepository.findAllByApplicationVersionOrderByYearAsc(applicationVersion))
         .thenReturn(new ArrayList<>());
+    when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
 
-    LongTermProductionForm longTermProductionForm =
-        longTermProductionService.getLongTermProductionForm(applicationVersion, START_YEAR_LT, END_YEAR_LT);
+    LongTermProductionForm longTermProductionForm = longTermProductionService.getLongTermProductionForm(applicationVersion);
 
     var yearForms = longTermProductionForm.getLongTermProductionYearForms();
 
@@ -124,9 +137,10 @@ class LongTermProductionServiceTest {
         .thenReturn(longTermProductionYears);
     doCallRealMethod().when(productionRowService).populateFormWithPreviousProductionRow(any(ProductionRow.class),
         any(ProductionRowForm.class));
+    when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
 
     LongTermProductionForm longTermProductionForm =
-        longTermProductionService.getLongTermProductionForm(applicationVersion, START_YEAR_LT, END_YEAR_LT);
+        longTermProductionService.getLongTermProductionForm(applicationVersion);
 
     var yearForms = longTermProductionForm.getLongTermProductionYearForms();
 

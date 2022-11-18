@@ -9,8 +9,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
-import static uk.co.nstauthority.fieldconsents.production.longterm.LongTermProductionController.END_YEAR;
-import static uk.co.nstauthority.fieldconsents.production.longterm.LongTermProductionController.START_YEAR;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,6 +27,10 @@ import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 
 @ContextConfiguration(classes = LongTermProductionController.class)
 class LongTermProductionControllerTest extends AbstractControllerTest {
+
+  private static final Integer START_YEAR = 2022;
+
+  private static final Integer END_YEAR = 2026;
 
   @MockBean
   private LongTermProductionService longTermProductionService;
@@ -58,7 +60,7 @@ class LongTermProductionControllerTest extends AbstractControllerTest {
   @Test
   @WithMockUser
   public void getLongTermProductionRequestForm() throws Exception {
-    when(longTermProductionService.getLongTermProductionForm(applicationVersion, START_YEAR, END_YEAR))
+    when(longTermProductionService.getLongTermProductionForm(applicationVersion))
         .thenReturn(longTermProductionForm);
 
     var modelAndView = mockMvc.perform(

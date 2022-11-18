@@ -14,6 +14,8 @@ import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
 import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
@@ -22,18 +24,26 @@ import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 public class ShortTermProductionService {
 
   private final ProductionRowService productionRowService;
+
+  private final ConsentLengthService consentLengthService;
+
   private final ShortTermProductionMonthRepository shortTermProductionMonthRepository;
 
   @Autowired
   public ShortTermProductionService(ProductionRowService productionRowService,
+                                    ConsentLengthService consentLengthService,
                                     ShortTermProductionMonthRepository shortTermProductionMonthRepository) {
     this.productionRowService = productionRowService;
+    this.consentLengthService = consentLengthService;
     this.shortTermProductionMonthRepository = shortTermProductionMonthRepository;
   }
 
-  public ShortTermProductionForm getShortTermProductionForm(ApplicationVersion currentVersion,
-                                                            LocalDate startTermDate,
-                                                            LocalDate endTermDate) {
+  public ShortTermProductionForm getShortTermProductionForm(ApplicationVersion currentVersion) {
+    ConsentLengthDetails consentLengthDetails = consentLengthService.getConsentLengthDetails(currentVersion);
+
+    LocalDate startTermDate = consentLengthDetails.getShortTermStartDate();
+    LocalDate endTermDate = consentLengthDetails.getShortTermEndDate();
+
     var previousProductionRows = shortTermProductionMonthRepository
         .findAllByApplicationVersion(currentVersion);
     var monthForms = initializeShortTermProductionMonths(startTermDate, endTermDate);
@@ -80,18 +90,12 @@ public class ShortTermProductionService {
     YearMonth endTermYearMonth = YearMonth.of(endTermDate.getYear(), endTermDate.getMonth());
 
     for (YearMonth yearMonth = YearMonth.of(startTermDate.getYear(), startTermDate.getMonth());
-         yearMonth.isBefore(endTermYearMonth)
-             || yearMonth.atDay(startTermDate.getDayOfMonth()).isBefore(endTermDate);
+         yearMonth.isBefore(endTermYearMonth.plusMonths(1));
          yearMonth = yearMonth.plusMonths(1)) {
       ShortTermProductionMonthForm monthForm = getShortTermMonthForm(yearMonth, startTermDate, endTermDate);
       shortTermProductionMonthForms.add(monthForm);
     }
 
-    // Add the last month of the term unless the term is as short as 1 month, otherwise the same month would be added twice
-    if (!DateUtils.isSameMonth(startTermDate, endTermDate)) {
-      ShortTermProductionMonthForm monthForm = getShortTermMonthForm(endTermYearMonth, startTermDate, endTermDate);
-      shortTermProductionMonthForms.add(monthForm);
-    }
     return shortTermProductionMonthForms;
   }
 

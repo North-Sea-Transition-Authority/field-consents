@@ -13,13 +13,10 @@ import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
 
 @Controller
 @RequestMapping("applications/{applicationId}/annual-production")
 public class AnnualProductionController {
-
-  public static final String PRODUCTION_YEAR = "2022";
 
   private final AnnualProductionService annualProductionService;
   private final ApplicationVersionService applicationVersionService;
@@ -36,7 +33,7 @@ public class AnnualProductionController {
   @GetMapping
   public ModelAndView getAnnualProductionRequestForm(@PathVariable Integer applicationId) {
     ApplicationVersion currentVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
-    AnnualProductionForm annualProductionForm = annualProductionService.getAnnualProductionForm(currentVersion, PRODUCTION_YEAR);
+    AnnualProductionForm annualProductionForm = annualProductionService.getAnnualProductionForm(currentVersion);
     ModelAndView modelAndView = getAnnualProductionModelAndView(applicationId, annualProductionForm);
     modelAndView.addObject("form", annualProductionForm);
     return modelAndView;

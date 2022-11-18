@@ -34,9 +34,9 @@ public class ProductionTestUtils {
 
   static public final String PRODUCTION_YEAR = "2022";
 
-  public static final LocalDate START_DATE = LocalDate.of(2022, 12, 14);
+  public static final LocalDate START_DATE = LocalDate.of(2022, Month.OCTOBER, 31);
 
-  public static final LocalDate END_DATE = LocalDate.of(2023, 3, 1);
+  public static final LocalDate END_DATE = LocalDate.of(2023, Month.APRIL, 12);
 
   public static final int START_MONTH_CONSENT_DAYS = YearMonth.of(START_DATE.getYear(),
       START_DATE.getMonth().ordinal() + 1).lengthOfMonth() - START_DATE.getDayOfMonth() + 1;

@@ -11,6 +11,7 @@ import static uk.co.nstauthority.fieldconsents.production.ProductionTestUtils.PR
 import java.time.Month;
 import java.util.LinkedList;
 import java.util.List;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,10 +22,13 @@ import uk.co.fivium.formlibrary.input.DecimalInput;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.production.ProductionTestUtils;
-import uk.co.nstauthority.fieldconsents.production.ProductionRowForm;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil;
 import uk.co.nstauthority.fieldconsents.production.ProductionRow;
+import uk.co.nstauthority.fieldconsents.production.ProductionRowForm;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
+import uk.co.nstauthority.fieldconsents.production.ProductionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class AnnualProductionServiceTest {
@@ -35,25 +39,35 @@ class AnnualProductionServiceTest {
   @Mock
   private ProductionRowService productionRowService;
 
+  @Mock
+  private ConsentLengthService consentLengthService;
+
   private AnnualProductionService annualProductionService;
 
   private ApplicationVersion applicationVersion;
 
+  private ConsentLengthDetails consentLengthDetails;
+
   @BeforeEach
   void setUp() {
-    annualProductionService = new AnnualProductionService(productionRowService, annualProductionMonthRepository);
+    annualProductionService = new AnnualProductionService(
+        productionRowService,
+        consentLengthService,
+        annualProductionMonthRepository
+    );
     applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
+    consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForAnnual(applicationVersion);
   }
 
   @Test
   void getAnnualProductionForm_withInitialForm() {
-
     when(annualProductionMonthRepository.findAllByApplicationVersion(any())).thenReturn(new LinkedList<>());
-    AnnualProductionForm annualProductionForm = annualProductionService.getAnnualProductionForm(applicationVersion, PRODUCTION_YEAR);
+    when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
+    AnnualProductionForm annualProductionForm = annualProductionService.getAnnualProductionForm(applicationVersion);
 
     var allMonths = Month.values();
     List<AnnualProductionMonthForm> annualProductionMonthForms = annualProductionForm.getAnnualProductionMonthForms();
-    assertThat(annualProductionForm.getYear()).isEqualTo(PRODUCTION_YEAR);
+    assertThat(annualProductionForm.getYear()).isEqualTo("2023");
 
     for(int index = 0; index < annualProductionMonthForms.size(); index++) {
       AnnualProductionMonthForm monthForm = annualProductionMonthForms.get(index);
@@ -91,11 +105,12 @@ class AnnualProductionServiceTest {
     List<AnnualProductionMonth> annualProductionMonths = ProductionTestUtils.getAnnualProductionMonthsData(new ApplicationVersion());
     when(annualProductionMonthRepository.findAllByApplicationVersion(applicationVersion)).thenReturn(annualProductionMonths);
     doCallRealMethod().when(productionRowService).populateFormWithPreviousProductionRow(any(ProductionRow.class), any(ProductionRowForm.class));
+    when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
 
-    AnnualProductionForm annualProductionForm = annualProductionService.getAnnualProductionForm(applicationVersion, PRODUCTION_YEAR);
+    AnnualProductionForm annualProductionForm = annualProductionService.getAnnualProductionForm(applicationVersion);
 
     List<AnnualProductionMonthForm> annualProductionMonthForms = annualProductionForm.getAnnualProductionMonthForms();
-    assertThat(annualProductionForm.getYear()).isEqualTo(PRODUCTION_YEAR);
+    assertThat(annualProductionForm.getYear()).isEqualTo("2023");
 
     for(int index = 0; index < annualProductionMonthForms.size(); index++) {
       AnnualProductionMonthForm monthForm = annualProductionMonthForms.get(index);

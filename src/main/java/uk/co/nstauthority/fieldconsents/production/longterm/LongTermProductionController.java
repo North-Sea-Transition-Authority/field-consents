@@ -19,10 +19,6 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 @RequestMapping("applications/{applicationId}/long-term-production")
 public class LongTermProductionController {
 
-  public static final Integer START_YEAR = 2022;
-
-  public static final Integer END_YEAR = 2026;
-
   private final ApplicationVersionService applicationVersionService;
   private final LongTermProductionService longTermProductionService;
   private final LongTermProductionFormValidator longTermProductionFormValidator;
@@ -41,8 +37,7 @@ public class LongTermProductionController {
     ApplicationVersion latestApplicationVersion =
         applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
 
-    LongTermProductionForm longTermProductionForm =
-        longTermProductionService.getLongTermProductionForm(latestApplicationVersion, START_YEAR, END_YEAR);
+    LongTermProductionForm longTermProductionForm = longTermProductionService.getLongTermProductionForm(latestApplicationVersion);
 
     ModelAndView modelAndView = getLongTermProductionModelAndView(applicationId, longTermProductionForm);
     modelAndView.addObject("form", longTermProductionForm);

@@ -6,7 +6,6 @@ import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.co.nstauthority.fieldconsents.production.ProductionTestUtils.END_DATE;
 import static uk.co.nstauthority.fieldconsents.production.ProductionTestUtils.START_DATE;
 import static uk.co.nstauthority.fieldconsents.production.ProductionTestUtils.START_MONTH_CONSENT_DAYS;
 
@@ -24,6 +23,9 @@ import uk.co.fivium.formlibrary.input.DecimalInput;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil;
 import uk.co.nstauthority.fieldconsents.production.ProductionRow;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowForm;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
@@ -38,26 +40,33 @@ class ShortTermProductionServiceTest {
   @Mock
   private ProductionRowService productionRowService;
 
+  @Mock
+  private ConsentLengthService consentLengthService;
+
   private ShortTermProductionService shortTermProductionService;
 
   private ApplicationVersion applicationVersion;
+
+  private ConsentLengthDetails consentLengthDetails;
 
   @BeforeEach
   void setUp() {
     shortTermProductionService = new ShortTermProductionService(
         productionRowService,
+        consentLengthService,
         shortTermProductionMonthRepository
     );
     applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
+    consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(applicationVersion);
   }
 
   @Test
   void getShortTermProductionForm_withInitialForm() {
     when(shortTermProductionMonthRepository.findAllByApplicationVersion(any())).thenReturn(new LinkedList<>());
+    when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
+
     ShortTermProductionForm shortTermProductionForm = shortTermProductionService.getShortTermProductionForm(
-        applicationVersion,
-        START_DATE,
-        END_DATE
+        applicationVersion
     );
 
     List<ShortTermProductionMonthForm> shortTermProductionMonthForms = shortTermProductionForm.getShortTermProductionMonthForms();
@@ -103,13 +112,10 @@ class ShortTermProductionServiceTest {
   void getShortTermProductionForm_withCompleteForm() {
     var shortTermProductionMonths = ProductionTestUtils.getShortTermProductionMonthsData(applicationVersion);
     when(shortTermProductionMonthRepository.findAllByApplicationVersion(any())).thenReturn(shortTermProductionMonths);
+    when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
     doCallRealMethod().when(productionRowService).populateFormWithPreviousProductionRow(any(ProductionRow.class), any(ProductionRowForm.class));
 
-    ShortTermProductionForm shortTermProductionForm = shortTermProductionService.getShortTermProductionForm(
-        applicationVersion,
-        START_DATE,
-        END_DATE
-    );
+    ShortTermProductionForm shortTermProductionForm = shortTermProductionService.getShortTermProductionForm(applicationVersion);
 
     List<ShortTermProductionMonthForm> shortTermProductionMonthForms = shortTermProductionForm.getShortTermProductionMonthForms();
 
@@ -130,7 +136,7 @@ class ShortTermProductionServiceTest {
 
   @Test
   void saveShortTermProductionMonthDetails() {
-    LocalDate lastDayStartDate = LocalDate.of(2022, 12, 31);
+    LocalDate lastDayStartDate = LocalDate.of(2022, 10, 31);
     ShortTermProductionMonth shortTermProductionMonth = ProductionTestUtils.getShortTermProductionMonth(
         applicationVersion,
         1,

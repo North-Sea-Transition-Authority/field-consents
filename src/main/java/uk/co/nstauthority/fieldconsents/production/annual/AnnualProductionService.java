@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
 import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 
@@ -18,21 +20,29 @@ import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 public class AnnualProductionService {
 
   private final ProductionRowService productionRowService;
+
+  private final ConsentLengthService consentLengthService;
+
   private final AnnualProductionMonthRepository annualProductionMonthRepository;
 
   @Autowired
   public AnnualProductionService(ProductionRowService productionRowService,
+                                 ConsentLengthService consentLengthService,
                                  AnnualProductionMonthRepository annualProductionMonthRepository) {
     this.productionRowService = productionRowService;
+    this.consentLengthService = consentLengthService;
     this.annualProductionMonthRepository = annualProductionMonthRepository;
   }
 
-  public AnnualProductionForm getAnnualProductionForm(ApplicationVersion applicationVersion, String year) {
+  public AnnualProductionForm getAnnualProductionForm(ApplicationVersion applicationVersion) {
+    ConsentLengthDetails consentLengthDetails = consentLengthService.getConsentLengthDetails(applicationVersion);
 
+    String year = String.valueOf(consentLengthDetails.getAnnualConsentYear());
     var previousProductionRows = annualProductionMonthRepository
         .findAllByApplicationVersion(applicationVersion);
     var monthForms = initializeAnnualProductionMonthForms();
     var mergedForms = mergeExistingMonthDetailsWithForms(monthForms, previousProductionRows);
+
     return new AnnualProductionForm(mergedForms, year);
   }
 

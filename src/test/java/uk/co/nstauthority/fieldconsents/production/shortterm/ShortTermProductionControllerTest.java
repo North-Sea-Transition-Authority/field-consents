@@ -14,7 +14,6 @@ import static uk.co.nstauthority.fieldconsents.production.ProductionTestUtils.EN
 import static uk.co.nstauthority.fieldconsents.production.ProductionTestUtils.PRODUCTION_YEAR;
 import static uk.co.nstauthority.fieldconsents.production.ProductionTestUtils.START_DATE;
 
-import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -58,11 +57,7 @@ class ShortTermProductionControllerTest extends AbstractControllerTest {
   @Test
   @WithMockUser
   void getShortTermProductionRequestForm() throws Exception {
-    when(shortTermProductionService.getShortTermProductionForm(
-        any(ApplicationVersion.class),
-        any(LocalDate.class),
-        any(LocalDate.class))
-    ).thenReturn(shortTermProductionForm);
+    when(shortTermProductionService.getShortTermProductionForm(any(ApplicationVersion.class))).thenReturn(shortTermProductionForm);
 
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ShortTermProductionController.class).getShortTermProductionRequestForm(APPLICATION_ID)))
             .with(csrf()))

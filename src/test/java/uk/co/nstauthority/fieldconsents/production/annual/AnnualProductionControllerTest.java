@@ -52,7 +52,7 @@ class AnnualProductionControllerTest extends AbstractControllerTest {
   @Test
   @WithMockUser
   void getAnnualProductionRequestForm() throws Exception {
-    when(annualProductionService.getAnnualProductionForm(applicationVersion, ProductionTestUtils.PRODUCTION_YEAR)).thenReturn(annualProductionForm);
+    when(annualProductionService.getAnnualProductionForm(applicationVersion)).thenReturn(annualProductionForm);
 
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(AnnualProductionController.class).getAnnualProductionRequestForm(APPLICATION_ID)))
         .with(csrf()))
