@@ -11,6 +11,7 @@ import static uk.co.nstauthority.fieldconsents.production.ProductionTestUtils.ST
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -58,6 +59,54 @@ class ShortTermProductionServiceTest {
     );
     applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
     consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(applicationVersion);
+  }
+
+  @Test
+  void shortTermProductionMonthsExist_false() {
+    when(shortTermProductionMonthRepository.existsByApplicationVersion(applicationVersion)).thenReturn(false);
+
+    assertThat(shortTermProductionService.shortTermProductionMonthsExist(applicationVersion)).isFalse();
+  }
+
+  @Test
+  void shortTermProductionMonthsExist_true() {
+    when(shortTermProductionMonthRepository.existsByApplicationVersion(applicationVersion)).thenReturn(true);
+
+    assertThat(shortTermProductionService.shortTermProductionMonthsExist(applicationVersion)).isTrue();
+  }
+
+  @Test
+  void shortTermProductionMonthsComplete_falseNoneExist() {
+    when(shortTermProductionMonthRepository.findAllByApplicationVersion(applicationVersion))
+        .thenReturn(new ArrayList<>());
+    when(consentLengthService.getConsentLengthDetails(applicationVersion))
+        .thenReturn(ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(applicationVersion));
+
+    assertThat(shortTermProductionService.shortTermProductionMonthsComplete(applicationVersion)).isFalse();
+  }
+
+  @Test
+  void shortTermProductionMonthsComplete_falseProdRowsExist() {
+    List<ShortTermProductionMonth> shortTermProductionMonths =
+        ProductionTestUtils.getShortTermProductionMonthsData(applicationVersion);
+    shortTermProductionMonths.remove(1); // remove a month of data
+
+    when(shortTermProductionMonthRepository.findAllByApplicationVersion(applicationVersion))
+        .thenReturn(shortTermProductionMonths);
+    when(consentLengthService.getConsentLengthDetails(applicationVersion))
+        .thenReturn(consentLengthDetails);
+
+    assertThat(shortTermProductionService.shortTermProductionMonthsComplete(applicationVersion)).isFalse();
+  }
+
+  @Test
+  void shortTermProductionMonthsComplete_true() {
+    when(shortTermProductionMonthRepository.findAllByApplicationVersion(applicationVersion))
+        .thenReturn(ProductionTestUtils.getShortTermProductionMonthsData(applicationVersion));
+    when(consentLengthService.getConsentLengthDetails(applicationVersion))
+        .thenReturn(consentLengthDetails);
+
+    assertThat(shortTermProductionService.shortTermProductionMonthsComplete(applicationVersion)).isTrue();
   }
 
   @Test

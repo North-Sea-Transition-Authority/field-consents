@@ -9,6 +9,10 @@
             <#assign itemUrl=""/>
             <#assign tagText="Cannot start yet"/>
             <#assign tagClass="govuk-tag--grey"/>
+          <#elseif item.label().name() = 'NOT_STARTED'>
+            <#assign itemUrl=springUrl(item.actionUrl())/>
+            <#assign tagText="Not started"/>
+            <#assign tagClass="govuk-tag--grey"/>
           <#elseif item.label().name() = 'IN_PROGRESS'>
             <#assign itemUrl=springUrl(item.actionUrl())/>
             <#assign tagText="In progress"/>
@@ -21,7 +25,6 @@
             itemUrl=itemUrl
             showTag=true
             completed=item.label().name() = 'COMPLETED'
-            useNotCompletedLabels=item.label().name() = 'NOT_COMPLETED'
             tagText=tagText
             tagClass=tagClass
           />

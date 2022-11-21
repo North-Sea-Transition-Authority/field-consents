@@ -50,6 +50,11 @@
       </#list>
       </tbody>
     </table>
-    <@fdsAction.button buttonText="Save and complete"/>
+    <@fdsAction.submitButtons
+    primaryButtonText="Save and continue"
+    secondaryLinkText="Cancel"
+    linkSecondaryAction=true
+    linkSecondaryActionUrl=springUrl(cancelUrl)
+    />
   </@fdsForm.htmlForm>
 </@defaultPage>

@@ -4,17 +4,17 @@ import java.util.Collection;
 import java.util.Optional;
 
 public enum TaskListLabel {
-  NOT_COMPLETED,
+  NOT_STARTED,
   IN_PROGRESS,
   COMPLETED,
   BLOCKED;
 
   public static TaskListLabel notStartedOrCompleteByOptional(
       @SuppressWarnings("OptionalUsedAsFieldOrParameterType") Optional<?> optional) {
-    return optional.isPresent() ? COMPLETED : NOT_COMPLETED;
+    return optional.isPresent() ? COMPLETED : NOT_STARTED;
   }
 
   public static TaskListLabel readyOrCompleteByCollection(Collection<?> collection) {
-    return !collection.isEmpty() ? COMPLETED : NOT_COMPLETED;
+    return !collection.isEmpty() ? COMPLETED : NOT_STARTED;
   }
 }

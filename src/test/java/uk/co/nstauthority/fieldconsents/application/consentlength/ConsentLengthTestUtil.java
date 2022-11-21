@@ -96,29 +96,47 @@ public class ConsentLengthTestUtil {
     return form;
   }
 
-  public static ConsentLengthDetails getConsentLengthDetailsForShortTerm(ApplicationVersion applicationVersion) {
+  public static ConsentLengthDetails getConsentLengthDetailsForShortTerm(ApplicationVersion applicationVersion,
+                                                                         LocalDate startDate,
+                                                                         LocalDate endDate) {
     ConsentLengthDetails consentLengthDetails = new ConsentLengthDetails();
     consentLengthDetails.setApplicationVersion(applicationVersion);
     consentLengthDetails.setConsentLength(ConsentLengthType.SHORT_TERM);
-    consentLengthDetails.setShortTermStartDate(SHORT_TERM_START_DATE);
-    consentLengthDetails.setShortTermEndDate(SHORT_TERM_END_DATE);
+    consentLengthDetails.setShortTermStartDate(startDate);
+    consentLengthDetails.setShortTermEndDate(endDate);
+    return consentLengthDetails;
+  }
+
+
+  public static ConsentLengthDetails getConsentLengthDetailsForShortTerm(ApplicationVersion applicationVersion) {
+    return getConsentLengthDetailsForShortTerm(applicationVersion, SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
+  }
+
+  public static ConsentLengthDetails getConsentLengthDetailsForAnnual(ApplicationVersion applicationVersion,
+                                                                      Integer consentYear) {
+    ConsentLengthDetails consentLengthDetails = new ConsentLengthDetails();
+    consentLengthDetails.setApplicationVersion(applicationVersion);
+    consentLengthDetails.setConsentLength(ConsentLengthType.ANNUAL);
+    consentLengthDetails.setAnnualConsentYear(consentYear);
     return consentLengthDetails;
   }
 
   public static ConsentLengthDetails getConsentLengthDetailsForAnnual(ApplicationVersion applicationVersion) {
+    return getConsentLengthDetailsForAnnual(applicationVersion, ANNUAL_CONSENT_YEAR);
+  }
+
+  public static ConsentLengthDetails getConsentLengthDetailsForLongTerm(ApplicationVersion applicationVersion,
+                                                                        Integer startYear,
+                                                                        Integer endYear) {
     ConsentLengthDetails consentLengthDetails = new ConsentLengthDetails();
     consentLengthDetails.setApplicationVersion(applicationVersion);
-    consentLengthDetails.setConsentLength(ConsentLengthType.ANNUAL);
-    consentLengthDetails.setAnnualConsentYear(ANNUAL_CONSENT_YEAR);
+    consentLengthDetails.setConsentLength(ConsentLengthType.LONG_TERM);
+    consentLengthDetails.setLongTermStartYear(startYear);
+    consentLengthDetails.setLongTermEndYear(endYear);
     return consentLengthDetails;
   }
 
   public static ConsentLengthDetails getConsentLengthDetailsForLongTerm(ApplicationVersion applicationVersion) {
-    ConsentLengthDetails consentLengthDetails = new ConsentLengthDetails();
-    consentLengthDetails.setApplicationVersion(applicationVersion);
-    consentLengthDetails.setConsentLength(ConsentLengthType.LONG_TERM);
-    consentLengthDetails.setLongTermStartYear(LONG_TERM_START_YEAR);
-    consentLengthDetails.setLongTermEndYear(LONG_TERM_END_YEAR);
-    return consentLengthDetails;
+    return getConsentLengthDetailsForLongTerm(applicationVersion, LONG_TERM_START_YEAR, LONG_TERM_END_YEAR);
   }
 }

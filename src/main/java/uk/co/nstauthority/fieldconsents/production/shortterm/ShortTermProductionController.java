@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @Controller
@@ -51,10 +52,11 @@ public class ShortTermProductionController {
     modelAndView.addObject("endDate", shortTermProductionForm.getEndDate());
     modelAndView.addObject("oilUnit", shortTermProductionForm.getOilUnit().getDisplayName());
     modelAndView.addObject("gasUnit", shortTermProductionForm.getGasUnit().getDisplayName());
-    modelAndView.addObject("submitUrl", ReverseRouter.route(
-        on(ShortTermProductionController.class)
-            .saveShortTermProductionDetails(applicationId, null, ReverseRouter.emptyBindingResult()))
-    );
+    modelAndView
+        .addObject("submitUrl", ReverseRouter.route(on(ShortTermProductionController.class)
+            .saveShortTermProductionDetails(applicationId, null, ReverseRouter.emptyBindingResult())))
+        .addObject("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class)
+            .getTaskList(applicationId)));
     return modelAndView;
   }
 
@@ -69,7 +71,7 @@ public class ShortTermProductionController {
     } else {
       ApplicationVersion currentVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
       shortTermProductionService.saveShortTermProductionDetails(currentVersion, form);
-      return new ModelAndView("fcs/production/applicationSubmitted");
+      return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
     }
   }
 }

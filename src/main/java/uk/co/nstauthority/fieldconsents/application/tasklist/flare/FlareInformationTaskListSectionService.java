@@ -4,6 +4,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
@@ -31,6 +32,7 @@ public class FlareInformationTaskListSectionService implements TaskListSectionSe
 
   private final ConsentLengthService consentLengthService;
 
+  @Autowired
   FlareInformationTaskListSectionService(FlareService flareService,
                                          FlareReportPeriodService flareReportPeriodService,
                                          FlareReportService flareReportService,
@@ -89,7 +91,7 @@ public class FlareInformationTaskListSectionService implements TaskListSectionSe
     } else if (flareReportPeriodExists) {
       flareReportLabel = TaskListLabel.IN_PROGRESS;
     } else {
-      flareReportLabel = TaskListLabel.NOT_COMPLETED;
+      flareReportLabel = TaskListLabel.NOT_STARTED;
     }
 
     return new TaskListItem("Flare report", flareReportLabel, flareReportUrl);

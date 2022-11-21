@@ -118,7 +118,7 @@ class FlareInformationTaskListSectionServiceTest {
     assertTaskListItem(
         taskListItems.get(0),
         FLARES_TASK_LIST_ITEM,
-        TaskListLabel.NOT_COMPLETED,
+        TaskListLabel.NOT_STARTED,
         ReverseRouter.route(on(FlareController.class).addFlare(applicationVersion.getApplication().getId()))
     );
 
@@ -139,7 +139,7 @@ class FlareInformationTaskListSectionServiceTest {
     assertTaskListItem(
         item,
         FLARES_TASK_LIST_ITEM,
-        TaskListLabel.NOT_COMPLETED,
+        TaskListLabel.NOT_STARTED,
         ReverseRouter.route(on(FlareController.class).addFlare(applicationVersion.getApplication().getId()))
     );
   }
@@ -216,7 +216,7 @@ class FlareInformationTaskListSectionServiceTest {
 
     assertTaskListItem(item,
         FLARE_REPORT_TASK_LIST_ITEM,
-        TaskListLabel.NOT_COMPLETED,
+        TaskListLabel.NOT_STARTED,
         ReverseRouter.route(on(FlareReportPeriodController.class)
             .getFlareReportPeriodForm(applicationVersion.getApplication().getId()))
     );

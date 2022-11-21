@@ -9,9 +9,8 @@ import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.production.ProductionTestUtils.PRODUCTION_YEAR;
 
 import java.time.Month;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -60,8 +59,65 @@ class AnnualProductionServiceTest {
   }
 
   @Test
+  void annualProductionMonthsExist_false() {
+    when(annualProductionMonthRepository.existsByApplicationVersion(applicationVersion)).thenReturn(false);
+
+    assertThat(annualProductionService.annualProductionMonthsExist(applicationVersion)).isFalse();
+  }
+
+  @Test
+  void annualProductionMonthsExist_true() {
+    when(annualProductionMonthRepository.existsByApplicationVersion(applicationVersion)).thenReturn(true);
+
+    assertThat(annualProductionService.annualProductionMonthsExist(applicationVersion)).isTrue();
+  }
+
+  @Test
+  void annualProductionMonthsComplete_falseNoneExist() {
+    when(annualProductionMonthRepository.findAllByApplicationVersion(applicationVersion))
+        .thenReturn(new ArrayList<>());
+    when(consentLengthService.getConsentLengthDetails(applicationVersion))
+        .thenReturn(consentLengthDetails); //2023
+
+    assertThat(annualProductionService.annualProductionMonthsComplete(applicationVersion)).isFalse();
+  }
+
+  @Test
+  void annualProductionMonthsComplete_falseProdRowsExistWrongYear() {
+    when(annualProductionMonthRepository.findAllByApplicationVersion(applicationVersion))
+        .thenReturn(ProductionTestUtils.getAnnualProductionMonthsData(applicationVersion)); //2022
+    when(consentLengthService.getConsentLengthDetails(applicationVersion))
+        .thenReturn(consentLengthDetails); //2023
+
+    assertThat(annualProductionService.annualProductionMonthsComplete(applicationVersion)).isFalse();
+  }
+
+  @Test
+  void annualProductionMonthsComplete_falseProdRowsExistSameYear() {
+    List<AnnualProductionMonth> annualProductionMonths =
+        ProductionTestUtils.getAnnualProductionMonthsData(applicationVersion); //2022
+    annualProductionMonths.remove(5); // remove a month of data
+    when(annualProductionMonthRepository.findAllByApplicationVersion(applicationVersion))
+        .thenReturn(annualProductionMonths);
+    when(consentLengthService.getConsentLengthDetails(applicationVersion))
+        .thenReturn(ConsentLengthTestUtil.getConsentLengthDetailsForAnnual(applicationVersion, 2022));
+
+    assertThat(annualProductionService.annualProductionMonthsComplete(applicationVersion)).isFalse();
+  }
+
+  @Test
+  void annualProductionMonthsComplete_true() {
+    when(annualProductionMonthRepository.findAllByApplicationVersion(applicationVersion))
+        .thenReturn(ProductionTestUtils.getAnnualProductionMonthsData(applicationVersion)); // 2022
+    when(consentLengthService.getConsentLengthDetails(applicationVersion))
+        .thenReturn(ConsentLengthTestUtil.getConsentLengthDetailsForAnnual(applicationVersion, 2022));
+
+    assertThat(annualProductionService.annualProductionMonthsComplete(applicationVersion)).isTrue();
+  }
+
+  @Test
   void getAnnualProductionForm_withInitialForm() {
-    when(annualProductionMonthRepository.findAllByApplicationVersion(any())).thenReturn(new LinkedList<>());
+    when(annualProductionMonthRepository.findAllByApplicationVersion(any())).thenReturn(new ArrayList<>());
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
     AnnualProductionForm annualProductionForm = annualProductionService.getAnnualProductionForm(applicationVersion);
 

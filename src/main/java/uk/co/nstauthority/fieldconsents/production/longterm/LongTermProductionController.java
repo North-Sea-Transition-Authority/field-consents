@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @Controller
@@ -51,10 +52,11 @@ public class LongTermProductionController {
     modelAndView.addObject("endYear", longTermProductionForm.getEndYear());
     modelAndView.addObject("oilUnit", longTermProductionForm.getOilUnit().getDisplayName());
     modelAndView.addObject("gasUnit", longTermProductionForm.getGasUnit().getDisplayName());
-    modelAndView.addObject("submitUrl",
-        ReverseRouter.route(
-            on(LongTermProductionController.class)
-            .saveLongTermProductionDetails(applicationId, null, null)));
+    modelAndView
+        .addObject("submitUrl", ReverseRouter.route(on(LongTermProductionController.class)
+            .saveLongTermProductionDetails(applicationId, null, null)))
+        .addObject("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class)
+            .getTaskList(applicationId)));
 
     return modelAndView;
   }
@@ -73,7 +75,7 @@ public class LongTermProductionController {
     longTermProductionService.saveLongTermProductionDetails(
         applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId), form);
 
-    return new ModelAndView("fcs/production/applicationSubmitted");
+    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
   }
 
 }

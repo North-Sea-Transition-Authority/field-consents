@@ -61,6 +61,60 @@ class LongTermProductionServiceTest {
   }
 
   @Test
+  void longTermProductionYearsExist_false() {
+    when(longTermProductionYearRepository.existsByApplicationVersion(applicationVersion)).thenReturn(false);
+
+    assertThat(longTermProductionService.longTermProductionYearsExist(applicationVersion)).isFalse();
+  }
+
+  @Test
+  void longTermProductionYearsExist_true() {
+    when(longTermProductionYearRepository.existsByApplicationVersion(applicationVersion)).thenReturn(true);
+
+    assertThat(longTermProductionService.longTermProductionYearsExist(applicationVersion)).isTrue();
+  }
+
+  @Test
+  void longTermProductionYearsComplete_falseNoneExist() {
+    when(longTermProductionYearRepository.findAllByApplicationVersionOrderByYearAsc(applicationVersion))
+        .thenReturn(new ArrayList<>());
+    // 2022 to 2026
+    when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
+
+    assertThat(longTermProductionService.longTermProductionYearsComplete(applicationVersion)).isFalse();
+  }
+
+  @Test
+  void longTermProductionYearsComplete_falseProdRowsExistWrongYears() {
+    when(longTermProductionYearRepository.findAllByApplicationVersionOrderByYearAsc(applicationVersion))
+        .thenReturn(ProductionTestUtils.getLongTermProductionYearsData(applicationVersion)); // 2022 to 2026
+    when(consentLengthService.getConsentLengthDetails(applicationVersion))
+        .thenReturn(ConsentLengthTestUtil.getConsentLengthDetailsForLongTerm(applicationVersion, 2021, 2024));
+
+    assertThat(longTermProductionService.longTermProductionYearsComplete(applicationVersion)).isFalse();
+  }
+
+  @Test
+  void longTermProductionYearsComplete_falseProdRowsExistWrongYearsNotOverlapping() {
+    when(longTermProductionYearRepository.findAllByApplicationVersionOrderByYearAsc(applicationVersion))
+        .thenReturn(ProductionTestUtils.getLongTermProductionYearsData(applicationVersion)); // 2022 to 2026
+    when(consentLengthService.getConsentLengthDetails(applicationVersion))
+        .thenReturn(ConsentLengthTestUtil.getConsentLengthDetailsForLongTerm(applicationVersion, 2020, 2021));
+
+    assertThat(longTermProductionService.longTermProductionYearsComplete(applicationVersion)).isFalse();
+  }
+
+  @Test
+  void longTermProductionYearsComplete_true() {
+    when(longTermProductionYearRepository.findAllByApplicationVersionOrderByYearAsc(applicationVersion))
+        .thenReturn(ProductionTestUtils.getLongTermProductionYearsData(applicationVersion)); // 2022 to 2026
+    when(consentLengthService.getConsentLengthDetails(applicationVersion))
+        .thenReturn(consentLengthDetails); // 2022 to 2026
+
+    assertThat(longTermProductionService.longTermProductionYearsComplete(applicationVersion)).isTrue();
+  }
+
+  @Test
   void getLongTermProductionForm_initialStubForm() {
     when(longTermProductionYearRepository.findAllByApplicationVersionOrderByYearAsc(applicationVersion))
         .thenReturn(new ArrayList<>());

@@ -9,5 +9,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 public interface ShortTermProductionMonthRepository extends CrudRepository<ShortTermProductionMonth, Integer> {
   List<ShortTermProductionMonth> findAllByApplicationVersion(ApplicationVersion applicationVersion);
 
+  boolean existsByApplicationVersion(ApplicationVersion applicationVersion);
+
   void deleteAllByApplicationVersion(ApplicationVersion applicationVersion);
 }

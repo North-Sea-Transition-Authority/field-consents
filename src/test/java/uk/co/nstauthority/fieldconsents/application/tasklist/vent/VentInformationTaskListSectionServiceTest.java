@@ -97,7 +97,7 @@ class VentInformationTaskListSectionServiceTest {
         taskListItems,
         0,
         VENTS_TASK_LIST_ITEM,
-        TaskListLabel.NOT_COMPLETED,
+        TaskListLabel.NOT_STARTED,
         ReverseRouter.route(on(VentController.class).addVent(applicationVersion.getApplication().getId()))
     );
   }

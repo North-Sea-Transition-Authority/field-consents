@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
@@ -86,8 +87,8 @@ class ShortTermProductionControllerTest extends AbstractControllerTest {
   void saveShortTermProductionDetails_withValidForm() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(ShortTermProductionController.class).saveShortTermProductionDetails(APPLICATION_ID, shortTermProductionForm, ReverseRouter.emptyBindingResult())))
             .with(csrf()))
-        .andExpect(status().isOk())
-        .andExpect(view().name("fcs/production/applicationSubmitted"));
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl("/applications/1/task-list/"));
   }
 
   @Test

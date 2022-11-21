@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,14 +34,45 @@ public class LongTermProductionService {
     this.longTermProductionYearRepository = longTermProductionYearRepository;
   }
 
+  private List<LongTermProductionYear> getLongTermProductionYears(ApplicationVersion applicationVersion) {
+    return longTermProductionYearRepository.findAllByApplicationVersionOrderByYearAsc(applicationVersion);
+  }
+
+  public boolean longTermProductionYearsExist(ApplicationVersion applicationVersion) {
+    return longTermProductionYearRepository.existsByApplicationVersion(applicationVersion);
+  }
+
+  public boolean longTermProductionYearsComplete(ApplicationVersion applicationVersion) {
+    // if there is no difference between the expected years and the existing years of production data then
+    // the production data is complete
+    return CollectionUtils.disjunction(getExistingProductionYears(applicationVersion),
+        getExpectedProductionYears(applicationVersion)).isEmpty();
+  }
+
+  private List<Integer> getExistingProductionYears(ApplicationVersion applicationVersion) {
+    // return a list of years for the long term production data we have
+    return getLongTermProductionYears(applicationVersion).stream()
+        .map(LongTermProductionYear::getYear).toList();
+  }
+
+  private List<Integer> getExpectedProductionYears(ApplicationVersion applicationVersion) {
+    ConsentLengthDetails consentLengthDetails = consentLengthService.getConsentLengthDetails(applicationVersion);
+    List<Integer> expectedProductionYears = new ArrayList<>();
+    for (Integer year = consentLengthDetails.getLongTermStartYear();
+         year <= consentLengthDetails.getLongTermEndYear();
+         year++) {
+      expectedProductionYears.add(year);
+    }
+    return expectedProductionYears;
+  }
+
   LongTermProductionForm getLongTermProductionForm(ApplicationVersion applicationVersion) {
     ConsentLengthDetails consentLengthDetails = consentLengthService.getConsentLengthDetails(applicationVersion);
 
     Integer startYear = consentLengthDetails.getLongTermStartYear();
     Integer endYear = consentLengthDetails.getLongTermEndYear();
 
-    var previousProductionRows = longTermProductionYearRepository
-        .findAllByApplicationVersionOrderByYearAsc(applicationVersion);
+    var previousProductionRows = getLongTermProductionYears(applicationVersion);
 
     // initialise stub long term production year forms between the start and end years
     var longTermProductionYearForms = initializeLongTermProductionYearForms(startYear, endYear);

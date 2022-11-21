@@ -67,7 +67,7 @@ class ConsentDetailsTaskListSectionServiceTest {
     assertTaskListItem(
         taskListItems.get(0),
         CONSENT_LENGTH_TASK_LIST_ITEM,
-        TaskListLabel.NOT_COMPLETED,
+        TaskListLabel.NOT_STARTED,
         ReverseRouter.route(on(ConsentLengthController.class).getConsentLengthForm(applicationVersion.getApplication().getId()))
     );
   }

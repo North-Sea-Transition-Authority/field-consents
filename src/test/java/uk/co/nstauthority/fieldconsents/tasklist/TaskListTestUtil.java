@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthController;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.FlareController;
+import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportPeriodController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 
@@ -18,9 +19,13 @@ public class TaskListTestUtil {
 
   public static final String VENT_INFORMATION_SECTION = "Vent information";
 
+  public static final String PRODUCTION_INFORMATION_SECTION = "Production information";
+
   public static final int CONSENT_DETAILS_DISPLAY_ORDER = 10;
 
   public static final int FLARE_VENT_INFORMATION_DISPLAY_ORDER = 20;
+
+  public static final int PRODUCTION_INFORMATION_DISPLAY_ORDER = 20;
 
   public static final String CONSENT_LENGTH_TASK_LIST_ITEM = "Consent length";
 
@@ -58,7 +63,7 @@ public class TaskListTestUtil {
   public static List<TaskListItem> getConsentDetailsTaskListItems(int applicationId) {
     List<TaskListItem> taskListItems = new ArrayList<>();
     TaskListItem consentLengthTaskListItem = new TaskListItem(CONSENT_LENGTH_TASK_LIST_ITEM,
-        TaskListLabel.NOT_COMPLETED,
+        TaskListLabel.NOT_STARTED,
         ReverseRouter.route(on(ConsentLengthController.class).getConsentLengthForm(applicationId))
     );
     taskListItems.add(consentLengthTaskListItem);
@@ -69,14 +74,13 @@ public class TaskListTestUtil {
     List<TaskListItem> taskListItems = new ArrayList<>();
     TaskListItem flaresTaskListItem = new TaskListItem(
         FLARES_TASK_LIST_ITEM,
-        TaskListLabel.NOT_COMPLETED,
+        TaskListLabel.NOT_STARTED,
         ReverseRouter.route(on(FlareController.class).addFlare(applicationId))
     );
     TaskListItem flareReportTaskListItem = new TaskListItem(
         FLARE_REPORT_TASK_LIST_ITEM,
-        TaskListLabel.NOT_COMPLETED,
-        // TODO: FCS-189: Update this with route of Flare report screen
-        ReverseRouter.route(on(FlareController.class).addFlare(applicationId))
+        TaskListLabel.NOT_STARTED,
+        ReverseRouter.route(on(FlareReportPeriodController.class).getFlareReportPeriodForm(applicationId))
     );
     taskListItems.add(flaresTaskListItem);
     taskListItems.add(flareReportTaskListItem);

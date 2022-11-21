@@ -254,7 +254,7 @@ public class ProductionTestUtils {
         index,
         END_DATE.getMonth(),
         END_DATE.getYear(),
-        END_DATE,
+        LocalDate.of(END_DATE.getYear(), END_DATE.getMonth(), 1),
         END_DATE);
     shortTermProductionMonths.add(endProductionMonth);
 

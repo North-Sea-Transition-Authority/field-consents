@@ -1,5 +1,7 @@
 <#include '../layout/layout.ftl'>
 
+<#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
+
 <#assign pageTitle = "Short Term Oil and Gas Production Request ${requestYear}"/>
 
 <@defaultPage htmlTitle=pageTitle pageHeading=pageTitle errorItems=errorList>
@@ -56,6 +58,11 @@
         </#list>
         </tbody>
       </table>
-        <@fdsAction.button buttonText="Save and complete"/>
+      <@fdsAction.submitButtons
+      primaryButtonText="Save and continue"
+      secondaryLinkText="Cancel"
+      linkSecondaryAction=true
+      linkSecondaryActionUrl=springUrl(cancelUrl)
+      />
     </@fdsForm.htmlForm>
 </@defaultPage>

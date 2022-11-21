@@ -11,6 +11,8 @@ import java.util.NoSuchElementException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.transaction.Transactional;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
@@ -38,14 +40,52 @@ public class ShortTermProductionService {
     this.shortTermProductionMonthRepository = shortTermProductionMonthRepository;
   }
 
+  private List<ShortTermProductionMonth> getShortTermProductionMonths(ApplicationVersion applicationVersion) {
+    return shortTermProductionMonthRepository.findAllByApplicationVersion(applicationVersion);
+  }
+
+  public boolean shortTermProductionMonthsExist(ApplicationVersion applicationVersion) {
+    return shortTermProductionMonthRepository.existsByApplicationVersion(applicationVersion);
+  }
+
+  public boolean shortTermProductionMonthsComplete(ApplicationVersion applicationVersion) {
+    // if there is no difference between the expected date pairs and the production data date pairs then
+    // the production data is complete
+    return CollectionUtils.disjunction(getExistingProductionMonthTerms(applicationVersion),
+        getExpectedProductionMonthTerms(applicationVersion)).isEmpty();
+  }
+
+  private List<Pair<LocalDate, LocalDate>> getExistingProductionMonthTerms(ApplicationVersion applicationVersion) {
+    // return a list of date pairs (start and end) for any months of production data we have
+    return getShortTermProductionMonths(applicationVersion).stream().map(productionMonth ->
+            Pair.of(productionMonth.getStartDate(), productionMonth.getEndDate())).toList();
+  }
+
+  private List<Pair<LocalDate, LocalDate>> getExpectedProductionMonthTerms(ApplicationVersion applicationVersion) {
+    ConsentLengthDetails consentLengthDetails = consentLengthService.getConsentLengthDetails(applicationVersion);
+    LocalDate startTermDate = consentLengthDetails.getShortTermStartDate();
+    LocalDate endTermDate = consentLengthDetails.getShortTermEndDate();
+    YearMonth startYearMonth = YearMonth.of(startTermDate.getYear(), startTermDate.getMonth());
+    YearMonth endYearMonth = YearMonth.of(endTermDate.getYear(), endTermDate.getMonth());
+
+    // create a list of expected date pairs based on the consent length details information
+    List<Pair<LocalDate, LocalDate>> expectedProductionMonthTerms = new ArrayList<>();
+    for (YearMonth yearMonth = startYearMonth;
+         yearMonth.isBefore(endYearMonth.plusMonths(1));
+         yearMonth = yearMonth.plusMonths(1)) {
+      expectedProductionMonthTerms.add(Pair.of(DateUtils.max(startTermDate, yearMonth.atDay(1)),
+          DateUtils.min(endTermDate, yearMonth.atEndOfMonth())));
+    }
+    return expectedProductionMonthTerms;
+  }
+
   public ShortTermProductionForm getShortTermProductionForm(ApplicationVersion currentVersion) {
     ConsentLengthDetails consentLengthDetails = consentLengthService.getConsentLengthDetails(currentVersion);
 
     LocalDate startTermDate = consentLengthDetails.getShortTermStartDate();
     LocalDate endTermDate = consentLengthDetails.getShortTermEndDate();
 
-    var previousProductionRows = shortTermProductionMonthRepository
-        .findAllByApplicationVersion(currentVersion);
+    var previousProductionRows = getShortTermProductionMonths(currentVersion);
     var monthForms = initializeShortTermProductionMonths(startTermDate, endTermDate);
     var mergedForms = mergeExistingMonthDetailsWithForms(monthForms, previousProductionRows);
     return new ShortTermProductionForm(mergedForms);
