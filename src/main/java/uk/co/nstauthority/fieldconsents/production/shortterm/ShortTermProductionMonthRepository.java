@@ -11,5 +11,7 @@ public interface ShortTermProductionMonthRepository extends CrudRepository<Short
 
   boolean existsByApplicationVersion(ApplicationVersion applicationVersion);
 
+  List<ShortTermProductionMonth> findAllByApplicationVersionOrderByStartDate(ApplicationVersion applicationVersion);
+
   void deleteAllByApplicationVersion(ApplicationVersion applicationVersion);
 }

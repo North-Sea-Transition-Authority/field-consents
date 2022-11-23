@@ -27,7 +27,7 @@ public class ConsentDetailsTaskListSectionService implements TaskListSectionServ
   public Optional<TaskListSection> getSection(ApplicationVersion applicationVersion) {
 
     var items = List.of(
-        new TaskListItem("Consent length",
+        new TaskListItem("Consent duration",
             TaskListLabel.notStartedOrCompleteByOptional(consentLengthService.findConsentLengthDetails(applicationVersion)),
             ReverseRouter.route(on(ConsentLengthController.class).getConsentLengthForm(applicationVersion.getId())))
     );

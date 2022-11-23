@@ -27,7 +27,7 @@ public class TaskListTestUtil {
 
   public static final int PRODUCTION_INFORMATION_DISPLAY_ORDER = 20;
 
-  public static final String CONSENT_LENGTH_TASK_LIST_ITEM = "Consent length";
+  public static final String CONSENT_LENGTH_TASK_LIST_ITEM = "Consent duration";
 
   public static final String FLARES_TASK_LIST_ITEM = "Flares";
 

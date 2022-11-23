@@ -13,8 +13,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
@@ -29,9 +31,15 @@ class ConsentLengthServiceTest {
   @Mock
   private ApplicationService applicationService;
 
+  @Mock
+  private ApplicationEventPublisher applicationEventPublisher;
+
   private ConsentLengthService consentLengthService;
 
   private ApplicationVersion applicationVersion;
+
+  @Captor
+  private ArgumentCaptor<ConsentLengthChangeEvent> captor;
 
   private ConsentLengthDetails consentLengthDetails;
 
@@ -39,7 +47,7 @@ class ConsentLengthServiceTest {
 
   @BeforeEach
   void setup() {
-    consentLengthService = new ConsentLengthService(consentLengthRepository);
+    consentLengthService = new ConsentLengthService(consentLengthRepository, applicationEventPublisher);
     applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
   }
 
@@ -129,6 +137,8 @@ class ConsentLengthServiceTest {
 
     assertNull(consentLengthDetails.getLongTermStartYear());
     assertNull(consentLengthDetails.getLongTermEndYear());
+
+    assertConsentLengthChangeEvent();
   }
 
   @Test
@@ -146,6 +156,8 @@ class ConsentLengthServiceTest {
 
     assertNull(consentLengthDetails.getLongTermStartYear());
     assertNull(consentLengthDetails.getLongTermEndYear());
+
+    assertConsentLengthChangeEvent();
   }
 
   @Test
@@ -163,6 +175,15 @@ class ConsentLengthServiceTest {
 
     assertThat(consentLengthDetails.getLongTermStartYear()).isEqualTo(ConsentLengthTestUtil.LONG_TERM_START_YEAR);
     assertThat(consentLengthDetails.getLongTermEndYear()).isEqualTo(ConsentLengthTestUtil.LONG_TERM_END_YEAR);
+
+    assertConsentLengthChangeEvent();
+  }
+
+  private void assertConsentLengthChangeEvent() {
+    verify(applicationEventPublisher).publishEvent(captor.capture());
+    assertThat(captor.getValue().getApplicationVersionId()).isEqualTo(applicationVersion.getId());
+    assertThat(captor.getValue().getClass()).isEqualTo(ConsentLengthChangeEvent.class);
+    assertThat(captor.getValue().getSource().getClass()).isEqualTo(ConsentLengthService.class);
   }
 
   private ConsentLengthDetails getEntityFromArgumentCaptor() {

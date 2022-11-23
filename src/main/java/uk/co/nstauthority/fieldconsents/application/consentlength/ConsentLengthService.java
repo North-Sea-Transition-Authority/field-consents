@@ -6,6 +6,7 @@ import java.util.Optional;
 import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 
@@ -14,9 +15,13 @@ public class ConsentLengthService {
 
   private final ConsentLengthRepository consentLengthRepository;
 
+  private final ApplicationEventPublisher applicationEventPublisher;
+
   @Autowired
-  public ConsentLengthService(ConsentLengthRepository consentLengthRepository) {
+  public ConsentLengthService(ConsentLengthRepository consentLengthRepository,
+                              ApplicationEventPublisher applicationEventPublisher) {
     this.consentLengthRepository = consentLengthRepository;
+    this.applicationEventPublisher = applicationEventPublisher;
   }
 
   public ConsentLengthForm getConsentLengthForm(ApplicationVersion currentVersion) {
@@ -65,16 +70,15 @@ public class ConsentLengthService {
     ConsentLengthDetails consentLengthDetails = new ConsentLengthDetails();
     Optional<ConsentLengthDetails> consentLengthDetailsOptional =
         consentLengthRepository.findByApplicationVersion(currentVersion);
+
+    ConsentLengthType consentLengthType = form.getConsentLengthType();
+    consentLengthDetails.setConsentLength(consentLengthType);
+
     if (consentLengthDetailsOptional.isPresent()) {
-      // TODO If this form seats on the same task-list as the application forms (short, annual, long) you will also need
-      //      to delete any existing record of a pre-saved term details which are obsolete
-      //      FCS-236 : Delete old short, annual or long term production data when consent length application changes
       consentLengthRepository.deleteByApplicationVersion(currentVersion);
     }
 
     consentLengthDetails.setApplicationVersion(currentVersion);
-    ConsentLengthType consentLengthType = form.getConsentLengthType();
-    consentLengthDetails.setConsentLength(consentLengthType);
 
     switch (consentLengthType) {
       case SHORT_TERM -> {
@@ -98,6 +102,7 @@ public class ConsentLengthService {
       default -> throw new RuntimeException("Incorrect consent length type: " + consentLengthType);
     }
     consentLengthRepository.save(consentLengthDetails);
+    applicationEventPublisher.publishEvent(new ConsentLengthChangeEvent(this, currentVersion.getId()));
   }
 
   public Optional<ConsentLengthDetails> findConsentLengthDetails(ApplicationVersion applicationVersion) {

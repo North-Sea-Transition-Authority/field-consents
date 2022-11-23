@@ -28,3 +28,5 @@ CVE-2022-40155
 CVE-2022-40156
 # Spring security core (org.springframework.security:spring-security-core) - vulnerabilities should be fixed in subsequent Spring version
 CVE-2022-31692
+# Snakeyaml vulnerable to Stack overflow leading to denial of service (org.yaml:snakeyaml)
+CVE-2022-41854
