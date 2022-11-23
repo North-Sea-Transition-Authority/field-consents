@@ -6,19 +6,21 @@
       <@fdsTaskList.taskListSection sectionHeadingText=section.displayName()>
         <#list section.items() as item>
           <#if item.label().name() = 'BLOCKED'>
-            <#assign itemUrl=""/>
-            <#assign tagText="Cannot start yet"/>
-            <#assign tagClass="govuk-tag--grey"/>
+            <#local itemUrl=""/>
+            <#local tagText="Cannot start yet"/>
+            <#local tagClass="govuk-tag--grey"/>
           <#elseif item.label().name() = 'NOT_STARTED'>
-            <#assign itemUrl=springUrl(item.actionUrl())/>
-            <#assign tagText="Not started"/>
-            <#assign tagClass="govuk-tag--grey"/>
+            <#local itemUrl=springUrl(item.actionUrl())/>
+            <#local tagText="Not started"/>
+            <#local tagClass="govuk-tag--grey"/>
           <#elseif item.label().name() = 'IN_PROGRESS'>
-            <#assign itemUrl=springUrl(item.actionUrl())/>
-            <#assign tagText="In progress"/>
-            <#assign tagClass="govuk-tag--blue"/>
+            <#local itemUrl=springUrl(item.actionUrl())/>
+            <#local tagText="In progress"/>
+            <#local tagClass="govuk-tag--blue"/>
           <#else>
-            <#assign itemUrl=springUrl(item.actionUrl())/>
+            <#local itemUrl=springUrl(item.actionUrl())/>
+            <#local tagText=""/>
+            <#local tagClass=""/>
           </#if>
           <@fdsTaskList.taskListItem
             itemText=item.displayName()
