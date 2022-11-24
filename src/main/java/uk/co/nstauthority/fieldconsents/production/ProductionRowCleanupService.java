@@ -1,7 +1,10 @@
 package uk.co.nstauthority.fieldconsents.production;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +17,7 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthC
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ShortTermUtil;
 import uk.co.nstauthority.fieldconsents.production.annual.AnnualProductionMonth;
 import uk.co.nstauthority.fieldconsents.production.annual.AnnualProductionMonthRepository;
 import uk.co.nstauthority.fieldconsents.production.longterm.LongTermProductionYear;
@@ -25,9 +29,6 @@ import uk.co.nstauthority.fieldconsents.production.shortterm.ShortTermProduction
 public class ProductionRowCleanupService implements ApplicationListener<ConsentLengthChangeEvent> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ProductionRowCleanupService.class);
-
-  private static final String LONG_TERM_PRODUCTION_DATA_REMOVED =
-      "Old long term production data removed for year / month {} / {}.";
 
   private final ShortTermProductionMonthRepository shortTermProductionMonthRepository;
 
@@ -139,12 +140,9 @@ public class ProductionRowCleanupService implements ApplicationListener<ConsentL
 
   /**
    * Executed when the consent length details have changed to be short term. This deletes any existing long term or
-   * annual data saved with this application version. Also, it deletes old production month rows if any of the following
-   * is true:
-   *   1. The start date has changed, but it's still within the first production year / month
-   *   2. The end date has changed, but it's still within the last production year / month
-   *   3. The start date has changed, and it's now after the first production month start date
-   *   4. The end date has changed, and it's now before the last production month end date
+   * annual data saved with this application version. Also, it deletes old production month rows if the row isn't
+   * now expected, based on the updated consent length start and end dates.
+   *
    * @param applicationVersion the version of the application with the production data being deleted.
    * @param consentLengthDetails the new consent length details for this application version.
    */
@@ -156,33 +154,23 @@ public class ProductionRowCleanupService implements ApplicationListener<ConsentL
     LOGGER.debug("Old production data removed when consent length changed to short term for application version with id {}.",
             applicationVersion.getId());
 
-    LocalDate newStartDate = consentLengthDetails.getShortTermStartDate();
-    LocalDate newEndDate = consentLengthDetails.getShortTermEndDate();
-
+    // get the existing saved short term production months data
     List<ShortTermProductionMonth> existingShortTermProductionMonths = shortTermProductionMonthRepository
         .findAllByApplicationVersionOrderByStartDate(applicationVersion);
 
-    if (!existingShortTermProductionMonths.isEmpty()) {
-      ShortTermProductionMonth firstMonth = existingShortTermProductionMonths.get(0);
-      if (!newStartDate.equals(firstMonth.getStartDate())) {
-        shortTermProductionMonthRepository.delete(firstMonth);
+    // create a set of expected start and end date pairs, i.e. for the new short term consent length details
+    // we expect to have the following month data for each of these pairs
+    Set<Pair<LocalDate, LocalDate>> expectedShortTermMonthTermsSet =
+        new HashSet<>(ShortTermUtil.getExpectedMonthTerms(consentLengthDetails.getShortTermStartDate(),
+            consentLengthDetails.getShortTermEndDate()));
 
-        LOGGER.debug(LONG_TERM_PRODUCTION_DATA_REMOVED, firstMonth.getYear(), firstMonth.getMonth());
-      }
+    // loop over the existing short term production data and delete it if it now isn't an expected month row
+    for (ShortTermProductionMonth estpm : existingShortTermProductionMonths) {
+      if (!expectedShortTermMonthTermsSet.contains(Pair.of(estpm.getStartDate(), estpm.getEndDate()))) {
+        shortTermProductionMonthRepository.delete(estpm);
 
-      ShortTermProductionMonth lastMonth = existingShortTermProductionMonths.get(existingShortTermProductionMonths.size() - 1);
-      if (!newEndDate.equals(lastMonth.getEndDate())) {
-        shortTermProductionMonthRepository.delete(lastMonth);
-
-        LOGGER.debug(LONG_TERM_PRODUCTION_DATA_REMOVED, lastMonth.getYear(), lastMonth.getMonth());
-      }
-
-      for (ShortTermProductionMonth estpm : existingShortTermProductionMonths) {
-        if (newStartDate.isAfter(estpm.getStartDate()) || newEndDate.isBefore(estpm.getEndDate())) {
-          shortTermProductionMonthRepository.delete(estpm);
-
-          LOGGER.debug(LONG_TERM_PRODUCTION_DATA_REMOVED, estpm.getYear(), estpm.getMonth());
-        }
+        LOGGER.debug("Old short term production data removed for start date / end date {} / {}.",
+            estpm.getStartDate(), estpm.getEndDate());
       }
     }
   }

@@ -233,4 +233,5 @@ class ConsentLengthServiceTest {
 
     Assertions.assertEquals("Consent details with application version id 1 not found.", exception.getMessage());
   }
+
 }

@@ -13,6 +13,8 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 @Service
 public class ConsentLengthService {
 
+  static final String INCORRECT_CONSENT_LENGTH_TYPE = "Incorrect consent length type: ";
+
   private final ConsentLengthRepository consentLengthRepository;
 
   private final ApplicationEventPublisher applicationEventPublisher;
@@ -37,7 +39,7 @@ public class ConsentLengthService {
         case SHORT_TERM -> populateShortTermOnForm(form, consentLengthDetails);
         case ANNUAL -> form.getAnnualConsentYear().setInteger(consentLengthDetails.getAnnualConsentYear());
         case LONG_TERM -> populateLongTermOnForm(form, consentLengthDetails);
-        default -> throw new RuntimeException("Incorrect consent length type: " + consentLengthType);
+        default -> throw new RuntimeException(INCORRECT_CONSENT_LENGTH_TYPE + consentLengthType);
       }
     }
     return form;
@@ -99,7 +101,7 @@ public class ConsentLengthService {
         );
       }
 
-      default -> throw new RuntimeException("Incorrect consent length type: " + consentLengthType);
+      default -> throw new RuntimeException(INCORRECT_CONSENT_LENGTH_TYPE + consentLengthType);
     }
     consentLengthRepository.save(consentLengthDetails);
     applicationEventPublisher.publishEvent(new ConsentLengthChangeEvent(this, currentVersion.getId()));

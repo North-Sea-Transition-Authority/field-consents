@@ -52,7 +52,6 @@ class ProductionRowCleanupServiceTest {
 
   private ConsentLengthChangeEvent consentLengthChangeEvent;
 
-
   @BeforeEach
   void setup() {
     productionRowCleanupService = new ProductionRowCleanupService(
@@ -101,7 +100,7 @@ class ProductionRowCleanupServiceTest {
     verify(annualProductionMonthRepository, times(1)).deleteAllByApplicationVersion(applicationVersion);
     verify(longTermProductionYearRepository, times(1)).deleteAllByApplicationVersion(applicationVersion);
     verify(shortTermProductionMonthRepository, times(1)).findAllByApplicationVersionOrderByStartDate(applicationVersion);
-    verify(shortTermProductionMonthRepository, times(4)).delete(any(ShortTermProductionMonth.class));
+    verify(shortTermProductionMonthRepository, times(3)).delete(any(ShortTermProductionMonth.class));
     verifyNoMoreInteractions(shortTermProductionMonthRepository);
   }
 
@@ -120,9 +119,47 @@ class ProductionRowCleanupServiceTest {
     verify(annualProductionMonthRepository, times(1)).deleteAllByApplicationVersion(applicationVersion);
     verify(longTermProductionYearRepository, times(1)).deleteAllByApplicationVersion(applicationVersion);
     verify(shortTermProductionMonthRepository, times(1)).findAllByApplicationVersionOrderByStartDate(applicationVersion);
-    verify(shortTermProductionMonthRepository, times(3)).delete(any(ShortTermProductionMonth.class));
+    verify(shortTermProductionMonthRepository, times(2)).delete(any(ShortTermProductionMonth.class));
     verifyNoMoreInteractions(shortTermProductionMonthRepository);
   }
+
+  @Test
+  void onApplicationEvent_whenShortTerm_withPreviousDataAndNewStartAndEndDates() {
+    ConsentLengthDetails consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(applicationVersion);
+    consentLengthDetails.setShortTermStartDate(LocalDate.of(2022, 11, 2));
+    consentLengthDetails.setShortTermEndDate(LocalDate.of(2023, 3, 29));
+
+    var existingProductionMonths = ProductionTestUtils.getShortTermProductionMonthsData(applicationVersion);
+    when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
+    when(shortTermProductionMonthRepository.findAllByApplicationVersionOrderByStartDate(applicationVersion))
+        .thenReturn(existingProductionMonths);
+
+    productionRowCleanupService.onApplicationEvent(consentLengthChangeEvent);
+
+    verify(annualProductionMonthRepository, times(1)).deleteAllByApplicationVersion(applicationVersion);
+    verify(longTermProductionYearRepository, times(1)).deleteAllByApplicationVersion(applicationVersion);
+    verify(shortTermProductionMonthRepository, times(1)).findAllByApplicationVersionOrderByStartDate(applicationVersion);
+    verify(shortTermProductionMonthRepository, times(4)).delete(any(ShortTermProductionMonth.class));
+    verifyNoMoreInteractions(shortTermProductionMonthRepository);
+
+    // mimic the deletes from above on the existing production rows
+    existingProductionMonths.remove(existingProductionMonths.size() - 1); // delete last month row (Apr 2023)
+    existingProductionMonths.remove(existingProductionMonths.size() - 1); // delete last month row (Mar 2023)
+    existingProductionMonths.remove(1); // delete the second month row (Nov 2022)
+    existingProductionMonths.remove(0); // delete the first month row (Oct 2022)
+
+    when(shortTermProductionMonthRepository.findAllByApplicationVersionOrderByStartDate(applicationVersion))
+        .thenReturn(existingProductionMonths);
+
+    // verify no more short term data deleted on another change event call
+    productionRowCleanupService.onApplicationEvent(consentLengthChangeEvent);
+
+    verify(annualProductionMonthRepository, times(2)).deleteAllByApplicationVersion(applicationVersion);
+    verify(longTermProductionYearRepository, times(2)).deleteAllByApplicationVersion(applicationVersion);
+    verify(shortTermProductionMonthRepository, times(2)).findAllByApplicationVersionOrderByStartDate(applicationVersion);
+    verifyNoMoreInteractions(shortTermProductionMonthRepository);
+  }
+
 
   @Test
   void onApplicationEvent_whenAnnual_noPreviousData() {

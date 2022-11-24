@@ -6,19 +6,13 @@ CVE-2015-6420
 CVE-2021-40690
 CVE-2019-12400
 CVE-2020-13936
-CVE-2020-13959
 CVE-2020-15522
-# Introduced until a later Spring Boot version ups the JDBC driver postgres dependency version
-CVE-2022-31197
 # Introduced until a later Spring Boot version sorts the snakeYAML DoS vulnerability
 CVE-2022-25857
 CVE-2022-38749
 CVE-2022-38750
 CVE-2022-38751
 CVE-2022-38752
-# Jackson databind (jackson-databind) and Protobuf java (protobuf-java) vulnerabilities should be fixed in subsequent Spring version
-CVE-2022-42003
-CVE-2022-3171
 # Xstream DoS (com.fasterxml.woodstox:woodstox-core) vulnerabilities should be fixed in subsequent Spring version
 CVE-2022-40151
 CVE-2022-40152
@@ -30,3 +24,5 @@ CVE-2022-40156
 CVE-2022-31692
 # Snakeyaml vulnerable to Stack overflow leading to denial of service (org.yaml:snakeyaml)
 CVE-2022-41854
+# Postgres vulnerability
+CVE-2022-41946
