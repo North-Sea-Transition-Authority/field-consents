@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.flarevent.flare;
+package uk.co.nstauthority.fieldconsents.flarevent.flare.flares;
 
 import uk.co.fivium.formlibrary.input.StringInput;
 

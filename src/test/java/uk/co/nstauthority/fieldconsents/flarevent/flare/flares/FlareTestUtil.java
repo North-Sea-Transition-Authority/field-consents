@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.flarevent.flare;
+package uk.co.nstauthority.fieldconsents.flarevent.flare.flares;
 
 import java.util.List;
 import java.util.Map;
@@ -45,14 +45,6 @@ public class FlareTestUtil {
       List.of(FlareView.from(flareHp, 1), FlareView.from(flareMp, 2),
           FlareView.from(flareLp, 3), FlareView.from(flareLpp, 2)
       );
-
-  public static String STRING_300_CHARACTERS = "01234567890123456789012345678901234567890123456789" +
-      "01234567890123456789012345678901234567890123456789" +
-      "01234567890123456789012345678901234567890123456789" +
-      "01234567890123456789012345678901234567890123456789" +
-      "01234567890123456789012345678901234567890123456789" +
-      "01234567890123456789012345678901234567890123456789";
-  public static String STRING_301_CHARACTERS = STRING_300_CHARACTERS + "0";
 
   public static Map<String, String> flareTypesAsMap =
       Map.of(FlareType.HP_FLARE.getEnumName(), FlareType.HP_FLARE.getDisplayName(),

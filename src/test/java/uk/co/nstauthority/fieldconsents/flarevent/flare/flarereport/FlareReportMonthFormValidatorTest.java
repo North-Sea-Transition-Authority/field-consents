@@ -97,7 +97,7 @@ class FlareReportMonthFormValidatorTest {
   @Test
   void validate_shutDownDaysInvalidInteger() {
     flareReportMonthForm = getStubFlareReportMonthForm();
-    flareReportMonthForm.getComments().setInputValue(FlareReportTestUtil.STRING_300_CHARACTERS);
+    flareReportMonthForm.getComments().setInputValue(ValidatorTestingUtil.STRING_300_CHARACTERS);
     flareReportMonthForm.getShutDownDays().setInputValue("x");
     errors = new BeanPropertyBindingResult(flareReportMonthForm, "form");
 
@@ -115,7 +115,7 @@ class FlareReportMonthFormValidatorTest {
   @Test
   void validate_commentsMoreThan300Characters() {
     flareReportMonthForm = getStubFlareReportMonthForm();
-    flareReportMonthForm.getComments().setInputValue(FlareReportTestUtil.STRING_301_CHARACTERS);
+    flareReportMonthForm.getComments().setInputValue(ValidatorTestingUtil.STRING_301_CHARACTERS);
     flareReportMonthForm.getShutDownDays().setInputValue("0");
     errors = new BeanPropertyBindingResult(flareReportMonthForm, "form");
 
@@ -133,7 +133,7 @@ class FlareReportMonthFormValidatorTest {
   @Test
   void validate_validFrom() {
     flareReportMonthForm = getStubFlareReportMonthForm();
-    flareReportMonthForm.getComments().setInputValue(FlareReportTestUtil.STRING_300_CHARACTERS);
+    flareReportMonthForm.getComments().setInputValue(ValidatorTestingUtil.STRING_300_CHARACTERS);
     flareReportMonthForm.getShutDownDays().setInputValue("30");
     errors = new BeanPropertyBindingResult(flareReportMonthForm, "form");
 

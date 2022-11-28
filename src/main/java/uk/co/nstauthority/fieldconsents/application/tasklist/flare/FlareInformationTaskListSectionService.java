@@ -8,13 +8,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
-import uk.co.nstauthority.fieldconsents.flarevent.flare.FlareController;
-import uk.co.nstauthority.fieldconsents.flarevent.flare.FlareService;
+import uk.co.nstauthority.fieldconsents.flarevent.flare.annual.FlareAnnualController;
+import uk.co.nstauthority.fieldconsents.flarevent.flare.annual.FlareAnnualService;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportController;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportPeriodController;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportPeriodService;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportService;
+import uk.co.nstauthority.fieldconsents.flarevent.flare.flares.FlareController;
+import uk.co.nstauthority.fieldconsents.flarevent.flare.flares.FlareService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListItem;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListLabel;
@@ -32,15 +35,19 @@ public class FlareInformationTaskListSectionService implements TaskListSectionSe
 
   private final ConsentLengthService consentLengthService;
 
+  private final FlareAnnualService flareAnnualService;
+
   @Autowired
   FlareInformationTaskListSectionService(FlareService flareService,
                                          FlareReportPeriodService flareReportPeriodService,
                                          FlareReportService flareReportService,
-                                         ConsentLengthService consentLengthService) {
+                                         ConsentLengthService consentLengthService,
+                                         FlareAnnualService flareAnnualService) {
     this.flareService = flareService;
     this.flareReportPeriodService = flareReportPeriodService;
     this.flareReportService = flareReportService;
     this.consentLengthService = consentLengthService;
+    this.flareAnnualService = flareAnnualService;
   }
 
   @Override
@@ -50,9 +57,19 @@ public class FlareInformationTaskListSectionService implements TaskListSectionSe
       return Optional.empty();
     }
 
+    var consentLengthDetailsOptional =
+        consentLengthService.findConsentLengthDetails(applicationVersion);
+
+    if (consentLengthDetailsOptional.isEmpty()) {
+      return Optional.empty();
+    }
+
+    ConsentLengthDetails consentLengthDetails = consentLengthDetailsOptional.get();
+
     var items = List.of(
         getFlaresTaskListItem(applicationVersion),
-        getFlareReportTaskListItem(applicationVersion)
+        getFlareReportTaskListItem(applicationVersion),
+        getFlareConsentTaskListItem(applicationVersion, consentLengthDetails)
     );
 
     return Optional.of(new TaskListSection("Flare information", 20, items));
@@ -84,9 +101,7 @@ public class FlareInformationTaskListSectionService implements TaskListSectionSe
         : ReverseRouter.route(on(FlareReportPeriodController.class).getFlareReportPeriodForm(applicationId));
 
     TaskListLabel flareReportLabel;
-    if (consentLengthService.findConsentLengthDetails(applicationVersion).isEmpty()) {
-      flareReportLabel = TaskListLabel.BLOCKED;
-    } else if (flareReportService.flareReportComplete(applicationVersion)) {
+    if (flareReportService.flareReportComplete(applicationVersion)) {
       flareReportLabel = TaskListLabel.COMPLETED;
     } else if (flareReportPeriodExists) {
       flareReportLabel = TaskListLabel.IN_PROGRESS;
@@ -95,6 +110,39 @@ public class FlareInformationTaskListSectionService implements TaskListSectionSe
     }
 
     return new TaskListItem("Flare report", flareReportLabel, flareReportUrl);
+  }
+
+  TaskListItem getFlareConsentTaskListItem(ApplicationVersion applicationVersion,
+                                           ConsentLengthDetails consentLengthDetails) {
+
+    var applicationId = applicationVersion.getApplication().getId();
+
+    var consentLengthType = consentLengthDetails.getConsentLength();
+
+    return switch (consentLengthType) {
+      case SHORT_TERM ->
+          new TaskListItem(consentLengthType.getDisplayName(),
+              TaskListLabel.BLOCKED,
+              null);
+      case ANNUAL ->
+          new TaskListItem(consentLengthType.getDisplayName(),
+              getFlareAnnualTaskListLabel(applicationVersion),
+              ReverseRouter.route(on(FlareAnnualController.class)
+                  .getFlareAnnualForm(applicationId)));
+      default ->
+          throw new RuntimeException("Incorrect consent length type: " + consentLengthType);
+    };
+  }
+
+  private TaskListLabel getFlareAnnualTaskListLabel(ApplicationVersion applicationVersion) {
+    if (!flareAnnualService.flareAnnualMonthsExist(applicationVersion)) {
+      return TaskListLabel.NOT_STARTED;
+    } else if (flareAnnualService.flareAnnualMonthsComplete(applicationVersion)) {
+      return TaskListLabel.COMPLETED;
+    } else {
+      // we know here that flare annual months data exists, but it isn't complete
+      return TaskListLabel.IN_PROGRESS;
+    }
   }
 
 }

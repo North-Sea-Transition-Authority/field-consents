@@ -2,7 +2,7 @@
 <#import './_flareSummary.ftl' as flareSummary>
 
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
-<#-- @ftlvariable name="flareViews" type="java.util.List<uk.co.nstauthority.fieldconsents.flarevent.flare.FlareView>" -->
+<#-- @ftlvariable name="flareViews" type="java.util.List<uk.co.nstauthority.fieldconsents.flarevent.flare.flares.FlareView>" -->
 
 <#if successfulDeleteBanner?has_content>
   <#assign deleteBanner>

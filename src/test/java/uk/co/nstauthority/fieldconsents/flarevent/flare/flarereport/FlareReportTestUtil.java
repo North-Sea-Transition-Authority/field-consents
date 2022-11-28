@@ -14,23 +14,15 @@ class FlareReportTestUtil {
   static ApplicationVersion flareAppVersion = ApplicationTestUtil.getApplicationVersionWithType(
       ApplicationType.FLARE);
 
-  static String STRING_300_CHARACTERS = "01234567890123456789012345678901234567890123456789" +
-      "01234567890123456789012345678901234567890123456789" +
-      "01234567890123456789012345678901234567890123456789" +
-      "01234567890123456789012345678901234567890123456789" +
-      "01234567890123456789012345678901234567890123456789" +
-      "01234567890123456789012345678901234567890123456789";
-  static String STRING_301_CHARACTERS = STRING_300_CHARACTERS + "0";
-
   static FlareReportMonthForm getFullFlareReportMonthForm() {
     FlareReportMonthForm flareReportMonthForm = new FlareReportMonthForm();
     flareReportMonthForm.setYear("2024");
     flareReportMonthForm.setMonth("April");
-    flareReportMonthForm.getShutDownDays().setInputValue("10");
-    flareReportMonthForm.getComments().setInputValue("Test form comments.");
-    flareReportMonthForm.getCategoryA().setInputValue("1");
-    flareReportMonthForm.getCategoryB().setInputValue("2");
-    flareReportMonthForm.getCategoryC().setInputValue("3");
+    flareReportMonthForm.setShutDownDays("10");
+    flareReportMonthForm.setComments("Test form comments.");
+    flareReportMonthForm.setCategoryA("1");
+    flareReportMonthForm.setCategoryB("2");
+    flareReportMonthForm.setCategoryC("3");
     return flareReportMonthForm;
   }
 

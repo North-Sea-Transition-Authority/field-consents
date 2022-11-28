@@ -1,6 +1,6 @@
 <#include '../layout/layout.ftl'>
 
-<#-- @ftlvariable name="flare" type="uk.co.nstauthority.fieldconsents.flarevent.flare.FlareView" -->
+<#-- @ftlvariable name="flare" type="uk.co.nstauthority.fieldconsents.flarevent.flare.flares.FlareView" -->
 
 <#macro flareSummary
   flare

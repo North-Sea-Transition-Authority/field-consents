@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.flarevent.flare;
+package uk.co.nstauthority.fieldconsents.flarevent.flare.flares;
 
 import java.util.Comparator;
 import java.util.List;

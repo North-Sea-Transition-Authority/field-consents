@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.flarevent.flare;
+package uk.co.nstauthority.fieldconsents.flarevent.flare.flares;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
@@ -119,7 +119,7 @@ class FlareFormValidatorTest {
   void validate_descriptionInvalidTooLong() {
     flareForm = new FlareForm();
     flareForm.setFlareType(FlareType.HP_FLARE);
-    flareForm.getDescription().setInputValue(FlareTestUtil.STRING_301_CHARACTERS);
+    flareForm.getDescription().setInputValue(ValidatorTestingUtil.STRING_301_CHARACTERS);
     flareForm.setMeteredFlag(Boolean.TRUE);
     errors = new BeanPropertyBindingResult(flareForm, "form");
 
@@ -138,10 +138,10 @@ class FlareFormValidatorTest {
   void validate_commentsYesInvalidTooLong() {
     flareForm = new FlareForm();
     flareForm.setFlareType(FlareType.HP_FLARE);
-    flareForm.getDescription().setInputValue(FlareTestUtil.STRING_300_CHARACTERS);
+    flareForm.getDescription().setInputValue(ValidatorTestingUtil.STRING_300_CHARACTERS);
     flareForm.setMeteredFlag(Boolean.TRUE);
-    flareForm.getCommentsMeteredYes().setInputValue(FlareTestUtil.STRING_301_CHARACTERS);
-    flareForm.getCommentsMeteredNo().setInputValue(FlareTestUtil.STRING_301_CHARACTERS);
+    flareForm.getCommentsMeteredYes().setInputValue(ValidatorTestingUtil.STRING_301_CHARACTERS);
+    flareForm.getCommentsMeteredNo().setInputValue(ValidatorTestingUtil.STRING_301_CHARACTERS);
     errors = new BeanPropertyBindingResult(flareForm, "form");
 
     ValidationUtils.invokeValidator(validator, flareForm, errors);
@@ -159,10 +159,10 @@ class FlareFormValidatorTest {
   void validate_commentsNoInvalidTooLong() {
     flareForm = new FlareForm();
     flareForm.setFlareType(FlareType.HP_FLARE);
-    flareForm.getDescription().setInputValue(FlareTestUtil.STRING_300_CHARACTERS);
+    flareForm.getDescription().setInputValue(ValidatorTestingUtil.STRING_300_CHARACTERS);
     flareForm.setMeteredFlag(Boolean.FALSE);
-    flareForm.getCommentsMeteredYes().setInputValue(FlareTestUtil.STRING_301_CHARACTERS);
-    flareForm.getCommentsMeteredNo().setInputValue(FlareTestUtil.STRING_301_CHARACTERS);
+    flareForm.getCommentsMeteredYes().setInputValue(ValidatorTestingUtil.STRING_301_CHARACTERS);
+    flareForm.getCommentsMeteredNo().setInputValue(ValidatorTestingUtil.STRING_301_CHARACTERS);
     errors = new BeanPropertyBindingResult(flareForm, "form");
 
     ValidationUtils.invokeValidator(validator, flareForm, errors);
@@ -180,9 +180,9 @@ class FlareFormValidatorTest {
   void validate_validForm1() {
     flareForm = new FlareForm();
     flareForm.setFlareType(FlareType.LPP_FLARE);
-    flareForm.getDescription().setInputValue(FlareTestUtil.STRING_300_CHARACTERS);
+    flareForm.getDescription().setInputValue(ValidatorTestingUtil.STRING_300_CHARACTERS);
     flareForm.setMeteredFlag(Boolean.FALSE);
-    flareForm.getCommentsMeteredNo().setInputValue(FlareTestUtil.STRING_300_CHARACTERS);
+    flareForm.getCommentsMeteredNo().setInputValue(ValidatorTestingUtil.STRING_300_CHARACTERS);
 
     errors = new BeanPropertyBindingResult(flareForm, "form");
 
@@ -195,9 +195,9 @@ class FlareFormValidatorTest {
   void validate_validForm2() {
     flareForm = new FlareForm();
     flareForm.setFlareType(FlareType.HP_FLARE);
-    flareForm.getDescription().setInputValue(FlareTestUtil.STRING_300_CHARACTERS);
+    flareForm.getDescription().setInputValue(ValidatorTestingUtil.STRING_300_CHARACTERS);
     flareForm.setMeteredFlag(Boolean.TRUE);
-    flareForm.getCommentsMeteredYes().setInputValue(FlareTestUtil.STRING_300_CHARACTERS);
+    flareForm.getCommentsMeteredYes().setInputValue(ValidatorTestingUtil.STRING_300_CHARACTERS);
 
     errors = new BeanPropertyBindingResult(flareForm, "form");
 
@@ -210,7 +210,7 @@ class FlareFormValidatorTest {
   void validate_validForm3() {
     flareForm = new FlareForm();
     flareForm.setFlareType(FlareType.MP_FLARE);
-    flareForm.getDescription().setInputValue(FlareTestUtil.STRING_300_CHARACTERS);
+    flareForm.getDescription().setInputValue(ValidatorTestingUtil.STRING_300_CHARACTERS);
     flareForm.setMeteredFlag(Boolean.TRUE);
 
     errors = new BeanPropertyBindingResult(flareForm, "form");

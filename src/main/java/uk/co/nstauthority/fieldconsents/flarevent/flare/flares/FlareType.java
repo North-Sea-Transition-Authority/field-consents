@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.flarevent.flare;
+package uk.co.nstauthority.fieldconsents.flarevent.flare.flares;
 
 import java.util.Map;
 import uk.co.nstauthority.fieldconsents.util.enumutil.Displayable;

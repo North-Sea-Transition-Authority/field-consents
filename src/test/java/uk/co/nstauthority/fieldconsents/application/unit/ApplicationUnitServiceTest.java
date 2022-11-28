@@ -17,7 +17,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentUnit;
-import uk.co.nstauthority.fieldconsents.flarevent.flare.FlareTestUtil;
+import uk.co.nstauthority.fieldconsents.flarevent.flare.flares.FlareTestUtil;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.VentTestUtil;
 import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 

@@ -3,7 +3,6 @@ package uk.co.nstauthority.fieldconsents.production.annual;
 import java.time.Month;
 import java.time.YearMonth;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -14,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.consentlength.AnnualUtil;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
@@ -46,21 +46,18 @@ public class AnnualProductionService {
   }
 
   public boolean annualProductionMonthsComplete(ApplicationVersion applicationVersion) {
+    Integer annualConsentYear = consentLengthService.getConsentLengthDetails(applicationVersion).getAnnualConsentYear();
+
     // if there is no difference between the expected year months and the existing year months of production data then
     // the production data is complete
     return CollectionUtils.disjunction(getExistingProductionYearMonths(applicationVersion),
-        getExpectedProductionYearMonths(applicationVersion)).isEmpty();
+        AnnualUtil.getExpectedYearMonths(annualConsentYear)).isEmpty();
   }
 
   private List<YearMonth> getExistingProductionYearMonths(ApplicationVersion applicationVersion) {
     // return a list of years and months for any production data we have
     return getAnnualProductionMonths(applicationVersion).stream().map(productionMonth ->
         YearMonth.of(productionMonth.getYear(), productionMonth.getMonth())).toList();
-  }
-
-  private List<YearMonth> getExpectedProductionYearMonths(ApplicationVersion applicationVersion) {
-    Integer annualConsentYear = consentLengthService.getConsentLengthDetails(applicationVersion).getAnnualConsentYear();
-    return Arrays.stream(Month.values()).map(month -> YearMonth.of(annualConsentYear, month)).toList();
   }
 
   public AnnualProductionForm getAnnualProductionForm(ApplicationVersion applicationVersion) {

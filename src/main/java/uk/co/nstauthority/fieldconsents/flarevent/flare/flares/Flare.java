@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.flarevent.flare;
+package uk.co.nstauthority.fieldconsents.flarevent.flare.flares;
 
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -13,7 +13,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 
 @Entity
 @Table(name = "flares")
-class Flare {
+public class Flare {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

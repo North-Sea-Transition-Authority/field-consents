@@ -6,10 +6,6 @@
 <@defaultPage htmlTitle=pageTitle pageHeading=pageTitle errorItems=errorList pageSize=PageSize.FULL_WIDTH>
     <@grid.gridRow>
       <@grid.twoThirdsColumn>
-        <p class="govuk-body">
-          Enter flaring report information for the previous 12 months in the table below.
-          You can <@fdsAction.link linkText="adjust the reporting period" linkUrl=springUrl(periodUrl)/> if needed.
-        </p>
         <@flareCategoryInfo.flareCategoryInfo/>
       </@grid.twoThirdsColumn>
     </@grid.gridRow>
@@ -21,12 +17,11 @@
           <th class="govuk-table__header">Category A (${categoryUnit})</th>
           <th class="govuk-table__header">Category B (${categoryUnit})</th>
           <th class="govuk-table__header">Category C (${categoryUnit})</th>
-          <th class="govuk-table__header">Days of total shutdown</th>
           <th class="govuk-table__header govuk-!-width-one-third">Comments</th>
         </tr>
-        <#list form.flareReportMonthForms as monthForm>
+        <#list form.flareAnnualMonthForms as monthForm>
           <tr class="govuk-table__row">
-            <#assign currentMonthForm = "form.flareReportMonthForms[${monthForm_index}]"/>
+            <#assign currentMonthForm = "form.flareAnnualMonthForms[${monthForm_index}]"/>
             <@spring.bind "${currentMonthForm}.month"/>
             <input type="hidden" name="${spring.status.expression}" value="${spring.stringStatusValue}">
             <@spring.bind "${currentMonthForm}.year"/>
@@ -50,13 +45,6 @@
               <@fdsTextInput.textInput
                 path="${currentMonthForm}.categoryC.inputValue"
                 labelText="${monthForm.categoryC.displayName}"
-                formGroupClass="govuk-!-margin-bottom-0"
-                labelClass="govuk-visually-hidden"/>
-            </td>
-            <td class="govuk-table__cell">
-              <@fdsTextInput.textInput
-                path="${currentMonthForm}.shutDownDays.inputValue"
-                labelText="${monthForm.shutDownDays.displayName}"
                 formGroupClass="govuk-!-margin-bottom-0"
                 labelClass="govuk-visually-hidden"/>
             </td>

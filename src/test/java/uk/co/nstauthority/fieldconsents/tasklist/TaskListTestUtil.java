@@ -6,7 +6,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import java.util.ArrayList;
 import java.util.List;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthController;
-import uk.co.nstauthority.fieldconsents.flarevent.flare.FlareController;
+import uk.co.nstauthority.fieldconsents.flarevent.flare.flares.FlareController;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportPeriodController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 

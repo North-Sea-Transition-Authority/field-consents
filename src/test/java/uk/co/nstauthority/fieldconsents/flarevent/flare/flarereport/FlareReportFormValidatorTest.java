@@ -49,4 +49,10 @@ class FlareReportFormValidatorTest {
     assertThat(validator.supports(FlareReportForm.class)).isTrue();
   }
 
+  @Test
+  void supports_false() {
+    assertThat(validator.supports(Integer.class)).isFalse();
+  }
+
+
 }

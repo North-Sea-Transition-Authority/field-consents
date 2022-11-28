@@ -119,7 +119,7 @@ class VentFormValidatorTest {
   void validate_descriptionInvalidTooLong() {
     ventForm = new VentForm();
     ventForm.setVentType(VentType.HP_VENT);
-    ventForm.getDescription().setInputValue(VentTestUtil.STRING_301_CHARACTERS);
+    ventForm.getDescription().setInputValue(ValidatorTestingUtil.STRING_301_CHARACTERS);
     ventForm.setMeteredFlag(Boolean.TRUE);
     errors = new BeanPropertyBindingResult(ventForm, "form");
 
@@ -138,10 +138,10 @@ class VentFormValidatorTest {
   void validate_commentsYesInvalidTooLong() {
     ventForm = new VentForm();
     ventForm.setVentType(VentType.HP_VENT);
-    ventForm.getDescription().setInputValue(VentTestUtil.STRING_300_CHARACTERS);
+    ventForm.getDescription().setInputValue(ValidatorTestingUtil.STRING_300_CHARACTERS);
     ventForm.setMeteredFlag(Boolean.TRUE);
-    ventForm.getCommentsMeteredYes().setInputValue(VentTestUtil.STRING_301_CHARACTERS);
-    ventForm.getCommentsMeteredNo().setInputValue(VentTestUtil.STRING_301_CHARACTERS);
+    ventForm.getCommentsMeteredYes().setInputValue(ValidatorTestingUtil.STRING_301_CHARACTERS);
+    ventForm.getCommentsMeteredNo().setInputValue(ValidatorTestingUtil.STRING_301_CHARACTERS);
     errors = new BeanPropertyBindingResult(ventForm, "form");
 
     ValidationUtils.invokeValidator(validator, ventForm, errors);
@@ -159,10 +159,10 @@ class VentFormValidatorTest {
   void validate_commentsNoInvalidTooLong() {
     ventForm = new VentForm();
     ventForm.setVentType(VentType.HP_VENT);
-    ventForm.getDescription().setInputValue(VentTestUtil.STRING_300_CHARACTERS);
+    ventForm.getDescription().setInputValue(ValidatorTestingUtil.STRING_300_CHARACTERS);
     ventForm.setMeteredFlag(Boolean.FALSE);
-    ventForm.getCommentsMeteredYes().setInputValue(VentTestUtil.STRING_301_CHARACTERS);
-    ventForm.getCommentsMeteredNo().setInputValue(VentTestUtil.STRING_301_CHARACTERS);
+    ventForm.getCommentsMeteredYes().setInputValue(ValidatorTestingUtil.STRING_301_CHARACTERS);
+    ventForm.getCommentsMeteredNo().setInputValue(ValidatorTestingUtil.STRING_301_CHARACTERS);
     errors = new BeanPropertyBindingResult(ventForm, "form");
 
     ValidationUtils.invokeValidator(validator, ventForm, errors);
@@ -180,9 +180,9 @@ class VentFormValidatorTest {
   void validate_validForm1() {
     ventForm = new VentForm();
     ventForm.setVentType(VentType.OTHER_VENT);
-    ventForm.getDescription().setInputValue(VentTestUtil.STRING_300_CHARACTERS);
+    ventForm.getDescription().setInputValue(ValidatorTestingUtil.STRING_300_CHARACTERS);
     ventForm.setMeteredFlag(Boolean.FALSE);
-    ventForm.getCommentsMeteredNo().setInputValue(VentTestUtil.STRING_300_CHARACTERS);
+    ventForm.getCommentsMeteredNo().setInputValue(ValidatorTestingUtil.STRING_300_CHARACTERS);
 
     errors = new BeanPropertyBindingResult(ventForm, "form");
 
@@ -195,9 +195,9 @@ class VentFormValidatorTest {
   void validate_validForm2() {
     ventForm = new VentForm();
     ventForm.setVentType(VentType.HP_VENT);
-    ventForm.getDescription().setInputValue(VentTestUtil.STRING_300_CHARACTERS);
+    ventForm.getDescription().setInputValue(ValidatorTestingUtil.STRING_300_CHARACTERS);
     ventForm.setMeteredFlag(Boolean.TRUE);
-    ventForm.getCommentsMeteredYes().setInputValue(VentTestUtil.STRING_300_CHARACTERS);
+    ventForm.getCommentsMeteredYes().setInputValue(ValidatorTestingUtil.STRING_300_CHARACTERS);
 
     errors = new BeanPropertyBindingResult(ventForm, "form");
 
@@ -210,7 +210,7 @@ class VentFormValidatorTest {
   void validate_validForm3() {
     ventForm = new VentForm();
     ventForm.setVentType(VentType.LP_VENT);
-    ventForm.getDescription().setInputValue(VentTestUtil.STRING_300_CHARACTERS);
+    ventForm.getDescription().setInputValue(ValidatorTestingUtil.STRING_300_CHARACTERS);
     ventForm.setMeteredFlag(Boolean.TRUE);
 
     errors = new BeanPropertyBindingResult(ventForm, "form");
