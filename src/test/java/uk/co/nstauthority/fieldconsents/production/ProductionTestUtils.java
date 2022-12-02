@@ -82,27 +82,23 @@ public class ProductionTestUtils {
 
   @NotNull
   private static AnnualProductionMonthForm getEmptyAnnualProductionMonthForm(Month month) {
-    ProductionRowForm productionRowForm = getProductionRowForm(ProductionUnit.SCM_PER_MONTH, ProductionUnit.KSCM_PER_MONTH);
+    ProductionRowForm productionRowForm = getProductionRowForm();
     return new AnnualProductionMonthForm(
         month.name(),
-        productionRowForm.getOilMinUnit(),
         productionRowForm.getOilMinValue(),
-        productionRowForm.getOilMaxUnit(),
         productionRowForm.getOilMaxValue(),
-        productionRowForm.getGasMinUnit(),
         productionRowForm.getGasMinValue(),
-        productionRowForm.getGasMaxUnit(),
         productionRowForm.getGasMaxValue()
     );
   }
 
   @NotNull
-  private static ProductionRowForm getProductionRowForm(ProductionUnit oilUnit, ProductionUnit gasUnit) {
+  private static ProductionRowForm getProductionRowForm() {
     return new ProductionRowForm(
-        oilUnit, new DecimalInput("oilMinValue", "Minimum oil"),
-        oilUnit, new DecimalInput("oilMaxValue", "Maximum oil"),
-        gasUnit, new DecimalInput("gasMinValue", "Minimum gas"),
-        gasUnit, new DecimalInput("gasMaxValue", "Maximum gas")
+        new DecimalInput("oilMinValue", "Minimum oil"),
+        new DecimalInput("oilMaxValue", "Maximum oil"),
+        new DecimalInput("gasMinValue", "Minimum gas"),
+        new DecimalInput("gasMaxValue", "Maximum gas")
     );
   }
 
@@ -129,14 +125,14 @@ public class ProductionTestUtils {
     annualProductionMonth.setApplicationVersion(applicationVersion);
     annualProductionMonth.setYear(Integer.parseInt(PRODUCTION_YEAR));
     annualProductionMonth.setMonth(month);
-    setProductionRowDetails(annualProductionMonth, ProductionUnit.SCM_PER_MONTH, ProductionUnit.KSCM_PER_MONTH);
+    setProductionRowDetails(annualProductionMonth);
 
     return annualProductionMonth;
   }
 
   @NotNull
   private static ShortTermProductionMonthForm getEmptyShortTermProductionMonthForm(LocalDate date, int consentDays) {
-    ProductionRowForm productionRowForm = getProductionRowForm(ProductionUnit.SCM_PER_MONTH, ProductionUnit.KSCM_PER_MONTH);
+    ProductionRowForm productionRowForm = getProductionRowForm();
 
     YearMonth yearMonth = YearMonth.of(
         date.getYear(),
@@ -148,13 +144,9 @@ public class ProductionTestUtils {
         consentDays,
         date,
         LocalDate.of(date.getYear(), date.getMonth(), yearMonth.lengthOfMonth()),
-        productionRowForm.getOilMinUnit(),
         productionRowForm.getOilMinValue(),
-        productionRowForm.getOilMaxUnit(),
         productionRowForm.getOilMaxValue(),
-        productionRowForm.getGasMinUnit(),
         productionRowForm.getGasMinValue(),
-        productionRowForm.getGasMaxUnit(),
         productionRowForm.getGasMaxValue()
     );
   }
@@ -183,10 +175,6 @@ public class ProductionTestUtils {
     startMonthForm.setConsentDays(START_MONTH_CONSENT_DAYS);
     startMonthForm.setStartDate(START_DATE);
     startMonthForm.setEndDate(END_DATE);
-    startMonthForm.setOilMinUnit(ProductionUnit.SCM_PER_MONTH);
-    startMonthForm.setOilMaxUnit(ProductionUnit.SCM_PER_MONTH);
-    startMonthForm.setGasMinUnit(ProductionUnit.KSCM_PER_MONTH);
-    startMonthForm.setGasMaxUnit(ProductionUnit.KSCM_PER_MONTH);
     shortTermProductionMonthForms.add(startMonthForm);
 
     // Initialise each month between start date and end date shown on the shortTermProductionForm
@@ -205,10 +193,6 @@ public class ProductionTestUtils {
     endMonthForm.setConsentDays(END_DATE.getDayOfMonth());
     endMonthForm.setStartDate(START_DATE);
     endMonthForm.setEndDate(END_DATE);
-    endMonthForm.setOilMinUnit(ProductionUnit.SCM_PER_MONTH);
-    endMonthForm.setOilMaxUnit(ProductionUnit.SCM_PER_MONTH);
-    endMonthForm.setGasMinUnit(ProductionUnit.KSCM_PER_MONTH);
-    endMonthForm.setGasMaxUnit(ProductionUnit.KSCM_PER_MONTH);
     shortTermProductionMonthForms.add(endMonthForm);
 
     shortTermProductionForm.setShortTermProductionMonthForms(shortTermProductionMonthForms);
@@ -275,7 +259,7 @@ public class ProductionTestUtils {
     shortTermProductionMonth.setMonth(month);
     shortTermProductionMonth.setStartDate(startDate);
     shortTermProductionMonth.setEndDate(endDate);
-    setProductionRowDetails(shortTermProductionMonth, ProductionUnit.SCM_PER_MONTH, ProductionUnit.KSCM_PER_MONTH);
+    setProductionRowDetails(shortTermProductionMonth);
 
     return shortTermProductionMonth;
   }
@@ -308,7 +292,7 @@ public class ProductionTestUtils {
     longTermProductionYear.setId(longTermProductionYearId);
     longTermProductionYear.setApplicationVersion(applicationVersion);
     longTermProductionYear.setYear(year);
-    setProductionRowDetails(longTermProductionYear, ProductionUnit.SCM_PER_DAY, ProductionUnit.KSCM_PER_DAY);
+    setProductionRowDetails(longTermProductionYear);
 
     return longTermProductionYear;
   }
@@ -326,28 +310,20 @@ public class ProductionTestUtils {
 
   @NotNull
   private static LongTermProductionYearForm getEmptyLongTermProductionYearForm(Integer year) {
-    ProductionRowForm productionRowForm = getProductionRowForm(ProductionUnit.SCM_PER_DAY, ProductionUnit.KSCM_PER_DAY);
+    ProductionRowForm productionRowForm = getProductionRowForm();
     return new LongTermProductionYearForm(
         year.toString(),
-        productionRowForm.getOilMinUnit(),
         productionRowForm.getOilMinValue(),
-        productionRowForm.getOilMaxUnit(),
         productionRowForm.getOilMaxValue(),
-        productionRowForm.getGasMinUnit(),
         productionRowForm.getGasMinValue(),
-        productionRowForm.getGasMaxUnit(),
         productionRowForm.getGasMaxValue()
     );
   }
 
-  private static void setProductionRowDetails(ProductionRow productionRow, ProductionUnit oilUnit, ProductionUnit gasUnit) {
-    productionRow.setOilMinUnit(oilUnit);
+  private static void setProductionRowDetails(ProductionRow productionRow) {
     productionRow.setOilMinValue(new BigDecimal("0.5"));
-    productionRow.setOilMaxUnit(oilUnit);
     productionRow.setOilMaxValue(new BigDecimal("2.3"));
-    productionRow.setGasMinUnit(gasUnit);
     productionRow.setGasMinValue(new BigDecimal("1.72"));
-    productionRow.setGasMaxUnit(gasUnit);
     productionRow.setGasMaxValue(new BigDecimal("4.25"));
   }
 }

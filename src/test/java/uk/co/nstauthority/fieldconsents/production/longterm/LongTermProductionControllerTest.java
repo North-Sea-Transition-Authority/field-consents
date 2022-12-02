@@ -22,6 +22,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.production.ProductionTestUtils;
 import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
@@ -32,6 +33,9 @@ class LongTermProductionControllerTest extends AbstractControllerTest {
   private static final Integer START_YEAR = 2022;
 
   private static final Integer END_YEAR = 2026;
+
+  @MockBean
+  private ApplicationUnitService applicationUnitService;
 
   @MockBean
   private LongTermProductionService longTermProductionService;
@@ -56,6 +60,8 @@ class LongTermProductionControllerTest extends AbstractControllerTest {
 
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
+    when(applicationUnitService.getProductionOilUnit(applicationVersion)).thenReturn(ProductionUnit.SCM_PER_DAY);
+    when(applicationUnitService.getProductionGasUnit(applicationVersion)).thenReturn(ProductionUnit.KSCM_PER_DAY);
   }
 
   @Test

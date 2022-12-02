@@ -29,7 +29,6 @@ import uk.co.nstauthority.fieldconsents.production.ProductionRow;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowForm;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
 import uk.co.nstauthority.fieldconsents.production.ProductionTestUtils;
-import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 
 @ExtendWith(MockitoExtension.class)
 class LongTermProductionServiceTest {
@@ -139,46 +138,42 @@ class LongTermProductionServiceTest {
             yearForm -> yearForm.getOilMinValue().getAsBigDecimal(),
             yearForm -> yearForm.getOilMinValue().getFieldName(),
             yearForm -> yearForm.getOilMinValue().getDisplayName(),
-            LongTermProductionYearForm::getOilMinUnit,
             yearForm -> yearForm.getOilMaxValue().getAsBigDecimal(),
             yearForm -> yearForm.getOilMaxValue().getFieldName(),
             yearForm -> yearForm.getOilMaxValue().getDisplayName(),
-            LongTermProductionYearForm::getOilMaxUnit,
             yearForm -> yearForm.getGasMinValue().getAsBigDecimal(),
             yearForm -> yearForm.getGasMinValue().getFieldName(),
             yearForm -> yearForm.getGasMinValue().getDisplayName(),
-            LongTermProductionYearForm::getGasMinUnit,
             yearForm -> yearForm.getGasMaxValue().getAsBigDecimal(),
             yearForm -> yearForm.getGasMaxValue().getFieldName(),
-            yearForm -> yearForm.getGasMaxValue().getDisplayName(),
-            LongTermProductionYearForm::getGasMaxUnit
+            yearForm -> yearForm.getGasMaxValue().getDisplayName()
         )
         .containsExactly(
             tuple(START_YEAR_LT.toString(),
-                Optional.empty(), oilMinValueFieldName, oilMinValueDisplayName, ProductionUnit.SCM_PER_DAY,
-                Optional.empty(), oilMaxValueFieldName, oilMaxValueDisplayName, ProductionUnit.SCM_PER_DAY,
-                Optional.empty(), gasMinValueFieldName, gasMinValueDisplayName, ProductionUnit.KSCM_PER_DAY,
-                Optional.empty(), gasMaxValueFieldName, gasMaxValueDisplayName, ProductionUnit.KSCM_PER_DAY),
+                Optional.empty(), oilMinValueFieldName, oilMinValueDisplayName,
+                Optional.empty(), oilMaxValueFieldName, oilMaxValueDisplayName,
+                Optional.empty(), gasMinValueFieldName, gasMinValueDisplayName,
+                Optional.empty(), gasMaxValueFieldName, gasMaxValueDisplayName),
             tuple(String.valueOf(START_YEAR_LT + 1),
-                Optional.empty(), oilMinValueFieldName, oilMinValueDisplayName, ProductionUnit.SCM_PER_DAY,
-                Optional.empty(), oilMaxValueFieldName, oilMaxValueDisplayName, ProductionUnit.SCM_PER_DAY,
-                Optional.empty(), gasMinValueFieldName, gasMinValueDisplayName, ProductionUnit.KSCM_PER_DAY,
-                Optional.empty(), gasMaxValueFieldName, gasMaxValueDisplayName, ProductionUnit.KSCM_PER_DAY),
+                Optional.empty(), oilMinValueFieldName, oilMinValueDisplayName,
+                Optional.empty(), oilMaxValueFieldName, oilMaxValueDisplayName,
+                Optional.empty(), gasMinValueFieldName, gasMinValueDisplayName,
+                Optional.empty(), gasMaxValueFieldName, gasMaxValueDisplayName),
             tuple(String.valueOf(START_YEAR_LT + 2),
-                Optional.empty(), oilMinValueFieldName, oilMinValueDisplayName, ProductionUnit.SCM_PER_DAY,
-                Optional.empty(), oilMaxValueFieldName, oilMaxValueDisplayName, ProductionUnit.SCM_PER_DAY,
-                Optional.empty(), gasMinValueFieldName, gasMinValueDisplayName, ProductionUnit.KSCM_PER_DAY,
-                Optional.empty(), gasMaxValueFieldName, gasMaxValueDisplayName, ProductionUnit.KSCM_PER_DAY),
+                Optional.empty(), oilMinValueFieldName, oilMinValueDisplayName,
+                Optional.empty(), oilMaxValueFieldName, oilMaxValueDisplayName,
+                Optional.empty(), gasMinValueFieldName, gasMinValueDisplayName,
+                Optional.empty(), gasMaxValueFieldName, gasMaxValueDisplayName),
             tuple(String.valueOf(START_YEAR_LT + 3),
-                Optional.empty(), oilMinValueFieldName, oilMinValueDisplayName, ProductionUnit.SCM_PER_DAY,
-                Optional.empty(), oilMaxValueFieldName, oilMaxValueDisplayName, ProductionUnit.SCM_PER_DAY,
-                Optional.empty(), gasMinValueFieldName, gasMinValueDisplayName, ProductionUnit.KSCM_PER_DAY,
-                Optional.empty(), gasMaxValueFieldName, gasMaxValueDisplayName, ProductionUnit.KSCM_PER_DAY),
+                Optional.empty(), oilMinValueFieldName, oilMinValueDisplayName,
+                Optional.empty(), oilMaxValueFieldName, oilMaxValueDisplayName,
+                Optional.empty(), gasMinValueFieldName, gasMinValueDisplayName,
+                Optional.empty(), gasMaxValueFieldName, gasMaxValueDisplayName),
             tuple(END_YEAR_LT.toString(),
-                Optional.empty(), oilMinValueFieldName, oilMinValueDisplayName, ProductionUnit.SCM_PER_DAY,
-                Optional.empty(), oilMaxValueFieldName, oilMaxValueDisplayName, ProductionUnit.SCM_PER_DAY,
-                Optional.empty(), gasMinValueFieldName, gasMinValueDisplayName, ProductionUnit.KSCM_PER_DAY,
-                Optional.empty(), gasMaxValueFieldName, gasMaxValueDisplayName, ProductionUnit.KSCM_PER_DAY)
+                Optional.empty(), oilMinValueFieldName, oilMinValueDisplayName,
+                Optional.empty(), oilMaxValueFieldName, oilMaxValueDisplayName,
+                Optional.empty(), gasMinValueFieldName, gasMinValueDisplayName,
+                Optional.empty(), gasMaxValueFieldName, gasMaxValueDisplayName)
         );
 
   }
@@ -202,40 +197,36 @@ class LongTermProductionServiceTest {
         .extracting(
             LongTermProductionYearForm::getYear,
             yearForm -> yearForm.getOilMinValue().getAsBigDecimal().get(),
-            LongTermProductionYearForm::getOilMinUnit,
             yearForm -> yearForm.getOilMaxValue().getAsBigDecimal().get(),
-            LongTermProductionYearForm::getOilMaxUnit,
             yearForm -> yearForm.getGasMinValue().getAsBigDecimal().get(),
-            LongTermProductionYearForm::getGasMinUnit,
-            yearForm -> yearForm.getGasMaxValue().getAsBigDecimal().get(),
-            LongTermProductionYearForm::getGasMaxUnit
+            yearForm -> yearForm.getGasMaxValue().getAsBigDecimal().get()
         )
         .containsExactly(
             tuple(START_YEAR_LT.toString(),
-                longTermProductionYears.get(0).getOilMinValue(), ProductionUnit.SCM_PER_DAY,
-                longTermProductionYears.get(0).getOilMaxValue(), ProductionUnit.SCM_PER_DAY,
-                longTermProductionYears.get(0).getGasMinValue(), ProductionUnit.KSCM_PER_DAY,
-                longTermProductionYears.get(0).getGasMaxValue(), ProductionUnit.KSCM_PER_DAY),
+                longTermProductionYears.get(0).getOilMinValue(),
+                longTermProductionYears.get(0).getOilMaxValue(),
+                longTermProductionYears.get(0).getGasMinValue(),
+                longTermProductionYears.get(0).getGasMaxValue()),
             tuple(String.valueOf(START_YEAR_LT + 1),
-                longTermProductionYears.get(1).getOilMinValue(), ProductionUnit.SCM_PER_DAY,
-                longTermProductionYears.get(1).getOilMaxValue(), ProductionUnit.SCM_PER_DAY,
-                longTermProductionYears.get(1).getGasMinValue(), ProductionUnit.KSCM_PER_DAY,
-                longTermProductionYears.get(1).getGasMaxValue(), ProductionUnit.KSCM_PER_DAY),
+                longTermProductionYears.get(1).getOilMinValue(),
+                longTermProductionYears.get(1).getOilMaxValue(),
+                longTermProductionYears.get(1).getGasMinValue(),
+                longTermProductionYears.get(1).getGasMaxValue()),
             tuple(String.valueOf(START_YEAR_LT + 2),
-                longTermProductionYears.get(2).getOilMinValue(), ProductionUnit.SCM_PER_DAY,
-                longTermProductionYears.get(2).getOilMaxValue(), ProductionUnit.SCM_PER_DAY,
-                longTermProductionYears.get(2).getGasMinValue(), ProductionUnit.KSCM_PER_DAY,
-                longTermProductionYears.get(2).getGasMaxValue(), ProductionUnit.KSCM_PER_DAY),
+                longTermProductionYears.get(2).getOilMinValue(),
+                longTermProductionYears.get(2).getOilMaxValue(),
+                longTermProductionYears.get(2).getGasMinValue(),
+                longTermProductionYears.get(2).getGasMaxValue()),
             tuple(String.valueOf(START_YEAR_LT + 3),
-                longTermProductionYears.get(3).getOilMinValue(), ProductionUnit.SCM_PER_DAY,
-                longTermProductionYears.get(3).getOilMaxValue(), ProductionUnit.SCM_PER_DAY,
-                longTermProductionYears.get(3).getGasMinValue(), ProductionUnit.KSCM_PER_DAY,
-                longTermProductionYears.get(3).getGasMaxValue(), ProductionUnit.KSCM_PER_DAY),
+                longTermProductionYears.get(3).getOilMinValue(),
+                longTermProductionYears.get(3).getOilMaxValue(),
+                longTermProductionYears.get(3).getGasMinValue(),
+                longTermProductionYears.get(3).getGasMaxValue()),
             tuple(END_YEAR_LT.toString(),
-                longTermProductionYears.get(4).getOilMinValue(), ProductionUnit.SCM_PER_DAY,
-                longTermProductionYears.get(4).getOilMaxValue(), ProductionUnit.SCM_PER_DAY,
-                longTermProductionYears.get(4).getGasMinValue(), ProductionUnit.KSCM_PER_DAY,
-                longTermProductionYears.get(4).getGasMaxValue(), ProductionUnit.KSCM_PER_DAY)
+                longTermProductionYears.get(4).getOilMinValue(),
+                longTermProductionYears.get(4).getOilMaxValue(),
+                longTermProductionYears.get(4).getGasMinValue(),
+                longTermProductionYears.get(4).getGasMaxValue())
         );
 
   }
@@ -260,13 +251,9 @@ class LongTermProductionServiceTest {
     assertThat(expectedProductionYear.getYear()).isEqualTo(longTermProductionYear.getYear());
     assertThat(expectedProductionYear.getApplicationVersion()).isEqualTo(applicationVersion);
     assertThat(expectedProductionYear.getOilMinValue()).isEqualTo(longTermProductionYear.getOilMinValue());
-    assertThat(expectedProductionYear.getOilMinUnit()).isEqualTo(longTermProductionYear.getOilMinUnit());
     assertThat(expectedProductionYear.getOilMaxValue()).isEqualTo(longTermProductionYear.getOilMaxValue());
-    assertThat(expectedProductionYear.getOilMaxUnit()).isEqualTo(longTermProductionYear.getOilMaxUnit());
     assertThat(expectedProductionYear.getGasMinValue()).isEqualTo(longTermProductionYear.getGasMinValue());
-    assertThat(expectedProductionYear.getGasMinUnit()).isEqualTo(longTermProductionYear.getGasMinUnit());
     assertThat(expectedProductionYear.getGasMaxValue()).isEqualTo(longTermProductionYear.getGasMaxValue());
-    assertThat(expectedProductionYear.getGasMaxUnit()).isEqualTo(longTermProductionYear.getGasMaxUnit());
   }
 
 }

@@ -13,19 +13,23 @@ import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
+import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @Controller
 @RequestMapping("applications/{applicationId}/annual-production")
 public class AnnualProductionController {
 
+  private final ApplicationUnitService applicationUnitService;
   private final AnnualProductionService annualProductionService;
   private final ApplicationVersionService applicationVersionService;
   private final AnnualProductionFormValidator annualProductionFormValidator;
 
-  public AnnualProductionController(AnnualProductionService annualProductionService,
+  public AnnualProductionController(ApplicationUnitService applicationUnitService,
+                                    AnnualProductionService annualProductionService,
                                     ApplicationVersionService applicationVersionService,
                                     AnnualProductionFormValidator annualProductionFormValidator) {
+    this.applicationUnitService = applicationUnitService;
     this.annualProductionService = annualProductionService;
     this.applicationVersionService = applicationVersionService;
     this.annualProductionFormValidator = annualProductionFormValidator;
@@ -41,10 +45,13 @@ public class AnnualProductionController {
   }
 
   private ModelAndView getAnnualProductionModelAndView(Integer applicationId, AnnualProductionForm annualProductionForm) {
+    ApplicationVersion currentVersion =
+        applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
+
     ModelAndView modelAndView = new ModelAndView("fcs/production/annualProductionForm");
     modelAndView.addObject("requestYear", annualProductionForm.getYear());
-    modelAndView.addObject("oilUnit", annualProductionForm.getOilUnit().getDisplayName());
-    modelAndView.addObject("gasUnit", annualProductionForm.getGasUnit().getDisplayName());
+    modelAndView.addObject("oilUnit", applicationUnitService.getProductionOilUnit(currentVersion).getDisplayName());
+    modelAndView.addObject("gasUnit", applicationUnitService.getProductionGasUnit(currentVersion).getDisplayName());
     modelAndView
         .addObject("submitUrl", ReverseRouter.route(on(AnnualProductionController.class)
             .saveAnnualProductionDetails(applicationId, null, ReverseRouter.emptyBindingResult())))

@@ -25,14 +25,6 @@
           <#assign currentYearForm = "form.longTermProductionYearForms[${yearForm_index}]"/>
           <@spring.bind "${currentYearForm}.year"/>
           <input type="hidden" name="${spring.status.expression}" value="${spring.stringStatusValue}">
-          <@spring.bind "${currentYearForm}.oilMinUnit"/>
-          <input type="hidden" name="${spring.status.expression}" value="${spring.stringStatusValue}">
-          <@spring.bind "${currentYearForm}.oilMaxUnit"/>
-          <input type="hidden" name="${spring.status.expression}" value="${spring.stringStatusValue}">
-          <@spring.bind "${currentYearForm}.gasMinUnit"/>
-          <input type="hidden" name="${spring.status.expression}" value="${spring.stringStatusValue}">
-          <@spring.bind "${currentYearForm}.gasMaxUnit"/>
-          <input type="hidden" name="${spring.status.expression}" value="${spring.stringStatusValue}">
           <td class="govuk-table__cell">${yearForm.year}</td>
           <td class="govuk-table__cell">
             <@fdsTextInput.textInput path="${currentYearForm}.oilMinValue.inputValue" labelText="Oil min value" labelClass="govuk-visually-hidden"/>

@@ -1,26 +1,37 @@
 package uk.co.nstauthority.fieldconsents.application.unit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthChangeEvent;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentUnit;
 import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 
 @Service
-public class ApplicationUnitService {
+public class ApplicationUnitService implements ApplicationListener<ConsentLengthChangeEvent> {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationUnitService.class);
 
   private final ApplicationUnitRepository applicationUnitRepository;
+
+  private final ApplicationVersionService applicationVersionService;
 
   private final ConsentLengthService consentLengthService;
 
   @Autowired
   ApplicationUnitService(ApplicationUnitRepository applicationUnitRepository,
+                         ApplicationVersionService applicationVersionService,
                          ConsentLengthService consentLengthService) {
     this.applicationUnitRepository = applicationUnitRepository;
+    this.applicationVersionService = applicationVersionService;
     this.consentLengthService = consentLengthService;
   }
 
@@ -72,4 +83,27 @@ public class ApplicationUnitService {
     return applicationUnit;
   }
 
+  @Transactional
+  public void replaceApplicationUnit(ApplicationVersion applicationVersion) {
+    applicationUnitRepository.deleteAllByApplicationVersion(applicationVersion);
+    createApplicationUnit(applicationVersion);
+  }
+
+  @Override
+  @Transactional
+  public void onApplicationEvent(ConsentLengthChangeEvent event) {
+    ApplicationVersion applicationVersion = applicationVersionService
+        .getLatestApplicationVersionByApplicationId(event.getApplicationVersionId());
+
+    ApplicationType applicationType = applicationVersion.getApplication().getType();
+
+    if (applicationType.equals(ApplicationType.PRODUCTION)) {
+      replaceApplicationUnit(applicationVersion);
+      ConsentLengthType consentLength = consentLengthService.getConsentLengthDetails(applicationVersion).getConsentLength();
+
+      LOGGER.debug("Old application units removed when consent length changed to {} for application version with id {}.",
+          consentLength.getDisplayName(),
+          applicationVersion.getId());
+    }
+  }
 }

@@ -6,7 +6,6 @@ import java.time.format.TextStyle;
 import java.util.Locale;
 import uk.co.fivium.formlibrary.input.DecimalInput;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowForm;
-import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 
 public class ShortTermProductionMonthForm extends ProductionRowForm {
 
@@ -25,11 +24,11 @@ public class ShortTermProductionMonthForm extends ProductionRowForm {
 
   public ShortTermProductionMonthForm(String month, String year, int consentDays,
                                       LocalDate startDate, LocalDate endDate,
-                                      ProductionUnit oilMinUnit, DecimalInput oilMinValue,
-                                      ProductionUnit oilMaxUnit, DecimalInput oilMaxValue,
-                                      ProductionUnit gasMinUnit, DecimalInput gasMinValue,
-                                      ProductionUnit gasMaxUnit, DecimalInput gasMaxValue) {
-    super(oilMinUnit, oilMinValue, oilMaxUnit, oilMaxValue, gasMinUnit, gasMinValue, gasMaxUnit, gasMaxValue);
+                                      DecimalInput oilMinValue,
+                                      DecimalInput oilMaxValue,
+                                      DecimalInput gasMinValue,
+                                      DecimalInput gasMaxValue) {
+    super(oilMinValue, oilMaxValue, gasMinValue, gasMaxValue);
     this.month = month;
     this.year = year;
     this.startDate = startDate;

@@ -14,20 +14,24 @@ import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
+import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @Controller
 @RequestMapping("applications/{applicationId}/short-term-production")
 public class ShortTermProductionController {
 
+  private final ApplicationUnitService applicationUnitService;
   private final ApplicationVersionService applicationVersionService;
   private final ShortTermProductionService shortTermProductionService;
   private final ShortTermProductionFormValidator shortTermProductionFormValidator;
 
   @Autowired
-  public ShortTermProductionController(ApplicationVersionService applicationVersionService,
+  public ShortTermProductionController(ApplicationUnitService applicationUnitService,
+                                       ApplicationVersionService applicationVersionService,
                                        ShortTermProductionService shortTermProductionService,
                                        ShortTermProductionFormValidator shortTermProductionFormValidator) {
+    this.applicationUnitService = applicationUnitService;
     this.applicationVersionService = applicationVersionService;
     this.shortTermProductionService = shortTermProductionService;
     this.shortTermProductionFormValidator = shortTermProductionFormValidator;
@@ -46,12 +50,14 @@ public class ShortTermProductionController {
   private ModelAndView getShortTermProductionModelAndView(Integer applicationId,
                                                           ShortTermProductionForm shortTermProductionForm) {
     ModelAndView modelAndView = new ModelAndView("fcs/production/shortTermProductionForm");
+    ApplicationVersion currentVersion =
+        applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
 
     modelAndView.addObject("requestYear", shortTermProductionForm.getYear());
     modelAndView.addObject("startDate", shortTermProductionForm.getStartDate());
     modelAndView.addObject("endDate", shortTermProductionForm.getEndDate());
-    modelAndView.addObject("oilUnit", shortTermProductionForm.getOilUnit().getDisplayName());
-    modelAndView.addObject("gasUnit", shortTermProductionForm.getGasUnit().getDisplayName());
+    modelAndView.addObject("oilUnit", applicationUnitService.getProductionOilUnit(currentVersion).getDisplayName());
+    modelAndView.addObject("gasUnit", applicationUnitService.getProductionGasUnit(currentVersion).getDisplayName());
     modelAndView
         .addObject("submitUrl", ReverseRouter.route(on(ShortTermProductionController.class)
             .saveShortTermProductionDetails(applicationId, null, ReverseRouter.emptyBindingResult())))

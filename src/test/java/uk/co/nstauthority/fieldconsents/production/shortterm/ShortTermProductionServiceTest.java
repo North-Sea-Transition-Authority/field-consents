@@ -213,12 +213,8 @@ class ShortTermProductionServiceTest {
     assertThat(expectedApplicationVersion.getVersion()).isEqualTo(applicationVersion.getVersion());
     assertThat(expectedApplicationVersion.getApplication()).isEqualTo(applicationVersion.getApplication());
     assertThat(expectedProductionMonth.getOilMinValue()).isEqualTo(shortTermProductionMonth.getOilMinValue());
-    assertThat(expectedProductionMonth.getOilMinUnit()).isEqualTo(shortTermProductionMonth.getOilMinUnit());
     assertThat(expectedProductionMonth.getOilMaxValue()).isEqualTo(shortTermProductionMonth.getOilMaxValue());
-    assertThat(expectedProductionMonth.getOilMaxUnit()).isEqualTo(shortTermProductionMonth.getOilMaxUnit());
     assertThat(expectedProductionMonth.getGasMinValue()).isEqualTo(shortTermProductionMonth.getGasMinValue());
-    assertThat(expectedProductionMonth.getGasMinUnit()).isEqualTo(shortTermProductionMonth.getGasMinUnit());
     assertThat(expectedProductionMonth.getGasMaxValue()).isEqualTo(shortTermProductionMonth.getGasMaxValue());
-    assertThat(expectedProductionMonth.getGasMaxUnit()).isEqualTo(shortTermProductionMonth.getGasMaxUnit());
   }
 }

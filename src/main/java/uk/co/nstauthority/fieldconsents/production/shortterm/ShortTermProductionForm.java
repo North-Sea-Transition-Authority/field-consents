@@ -2,7 +2,6 @@ package uk.co.nstauthority.fieldconsents.production.shortterm;
 
 import java.util.List;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
-import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 
 public class ShortTermProductionForm {
 
@@ -38,13 +37,4 @@ public class ShortTermProductionForm {
       List<ShortTermProductionMonthForm> shortTermProductionMonthForms) {
     this.shortTermProductionMonthForms = shortTermProductionMonthForms;
   }
-
-  public ProductionUnit getOilUnit() {
-    return this.shortTermProductionMonthForms.size() > 0 ? this.shortTermProductionMonthForms.get(0).getOilMinUnit() : null;
-  }
-
-  public ProductionUnit getGasUnit() {
-    return this.shortTermProductionMonthForms.size() > 0 ? this.shortTermProductionMonthForms.get(0).getGasMinUnit() : null;
-  }
-
 }

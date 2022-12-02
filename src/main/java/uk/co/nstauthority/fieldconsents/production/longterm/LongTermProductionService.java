@@ -14,7 +14,6 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
-import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 
 @Service
 public class LongTermProductionService {
@@ -90,8 +89,6 @@ public class LongTermProductionService {
     for (Integer year = startYear; year <= endYear; year++) {
       LongTermProductionYearForm productionYearForm = new LongTermProductionYearForm();
       productionYearForm.setYear(year.toString());
-      productionYearForm.setOilUnits(ProductionUnit.SCM_PER_DAY);
-      productionYearForm.setGasUnits(ProductionUnit.KSCM_PER_DAY);
       longTermProductionYearForms.add(productionYearForm);
     }
 

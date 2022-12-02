@@ -14,20 +14,24 @@ import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
+import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @Controller
 @RequestMapping("applications/{applicationId}/long-term-production")
 public class LongTermProductionController {
 
+  private final ApplicationUnitService applicationUnitService;
   private final ApplicationVersionService applicationVersionService;
   private final LongTermProductionService longTermProductionService;
   private final LongTermProductionFormValidator longTermProductionFormValidator;
 
   @Autowired
-  public LongTermProductionController(ApplicationVersionService applicationVersionService,
+  public LongTermProductionController(ApplicationUnitService applicationUnitService,
+                                      ApplicationVersionService applicationVersionService,
                                       LongTermProductionService longTermProductionService,
                                       LongTermProductionFormValidator longTermProductionFormValidator) {
+    this.applicationUnitService = applicationUnitService;
     this.applicationVersionService = applicationVersionService;
     this.longTermProductionService = longTermProductionService;
     this.longTermProductionFormValidator = longTermProductionFormValidator;
@@ -47,11 +51,14 @@ public class LongTermProductionController {
   }
 
   private ModelAndView getLongTermProductionModelAndView(Integer applicationId, LongTermProductionForm longTermProductionForm) {
+    ApplicationVersion currentVersion =
+        applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
+
     ModelAndView modelAndView = new ModelAndView("fcs/production/longTermProductionForm");
     modelAndView.addObject("startYear", longTermProductionForm.getStartYear());
     modelAndView.addObject("endYear", longTermProductionForm.getEndYear());
-    modelAndView.addObject("oilUnit", longTermProductionForm.getOilUnit().getDisplayName());
-    modelAndView.addObject("gasUnit", longTermProductionForm.getGasUnit().getDisplayName());
+    modelAndView.addObject("oilUnit", applicationUnitService.getProductionOilUnit(currentVersion).getDisplayName());
+    modelAndView.addObject("gasUnit", applicationUnitService.getProductionGasUnit(currentVersion).getDisplayName());
     modelAndView
         .addObject("submitUrl", ReverseRouter.route(on(LongTermProductionController.class)
             .saveLongTermProductionDetails(applicationId, null, null)))

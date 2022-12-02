@@ -1,7 +1,6 @@
 package uk.co.nstauthority.fieldconsents.production.longterm;
 
 import java.util.List;
-import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 
 public class LongTermProductionForm {
 
@@ -18,8 +17,7 @@ public class LongTermProductionForm {
     return longTermProductionYearForms;
   }
 
-  public void setLongTermProductionYearForms(
-      List<LongTermProductionYearForm> longTermProductionYearForms) {
+  public void setLongTermProductionYearForms(List<LongTermProductionYearForm> longTermProductionYearForms) {
     this.longTermProductionYearForms = longTermProductionYearForms;
   }
 
@@ -31,13 +29,4 @@ public class LongTermProductionForm {
     return this.longTermProductionYearForms.size() > 0
         ? this.longTermProductionYearForms.get(this.longTermProductionYearForms.size() - 1).getYear() : null;
   }
-
-  public ProductionUnit getOilUnit() {
-    return this.longTermProductionYearForms.size() > 0 ? this.longTermProductionYearForms.get(0).getOilMinUnit() : null;
-  }
-
-  public ProductionUnit getGasUnit() {
-    return this.longTermProductionYearForms.size() > 0 ? this.longTermProductionYearForms.get(0).getGasMinUnit() : null;
-  }
-
 }

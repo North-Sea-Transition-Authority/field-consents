@@ -9,4 +9,5 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 public interface ApplicationUnitRepository extends CrudRepository<ApplicationUnit, Integer> {
   Optional<ApplicationUnit> findByApplicationVersion(ApplicationVersion applicationVersion);
 
+  void deleteAllByApplicationVersion(ApplicationVersion applicationVersion);
 }

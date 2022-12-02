@@ -21,7 +21,6 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthS
 import uk.co.nstauthority.fieldconsents.application.consentlength.ShortTermUtil;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
-import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 
 @Service
 public class ShortTermProductionService {
@@ -139,9 +138,6 @@ public class ShortTermProductionService {
 
     int consentDays = Period.between(monthFormStartDate, DateUtils.min(endTermDate, monthFormEndDate)).getDays() + 1;
     monthForm.setConsentDays(consentDays);
-
-    monthForm.setOilUnits(ProductionUnit.SCM_PER_MONTH);
-    monthForm.setGasUnits(ProductionUnit.KSCM_PER_MONTH);
 
     return monthForm;
   }

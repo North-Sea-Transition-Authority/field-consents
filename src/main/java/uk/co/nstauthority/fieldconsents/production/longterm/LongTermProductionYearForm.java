@@ -2,7 +2,6 @@ package uk.co.nstauthority.fieldconsents.production.longterm;
 
 import uk.co.fivium.formlibrary.input.DecimalInput;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowForm;
-import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 
 public class LongTermProductionYearForm extends ProductionRowForm {
 
@@ -12,11 +11,11 @@ public class LongTermProductionYearForm extends ProductionRowForm {
   }
 
   public LongTermProductionYearForm(String year,
-                                    ProductionUnit oilMinUnit, DecimalInput oilMinValue,
-                                    ProductionUnit oilMaxUnit, DecimalInput oilMaxValue,
-                                    ProductionUnit gasMinUnit, DecimalInput gasMinValue,
-                                    ProductionUnit gasMaxUnit, DecimalInput gasMaxValue) {
-    super(oilMinUnit, oilMinValue, oilMaxUnit, oilMaxValue, gasMinUnit, gasMinValue, gasMaxUnit, gasMaxValue);
+                                    DecimalInput oilMinValue,
+                                    DecimalInput oilMaxValue,
+                                    DecimalInput gasMinValue,
+                                    DecimalInput gasMaxValue) {
+    super(oilMinValue, oilMaxValue, gasMinValue, gasMaxValue);
     this.year = year;
   }
 

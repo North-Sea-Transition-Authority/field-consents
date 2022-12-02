@@ -207,12 +207,8 @@ class AnnualProductionServiceTest {
     assertThat(expectedApplicationVersion.getVersion()).isEqualTo(applicationVersion.getVersion());
     assertThat(expectedApplicationVersion.getApplication()).isEqualTo(applicationVersion.getApplication());
     assertThat(expectedProductionMonth.getOilMinValue()).isEqualTo(annualProductionMonth.getOilMinValue());
-    assertThat(expectedProductionMonth.getOilMinUnit()).isEqualTo(annualProductionMonth.getOilMinUnit());
     assertThat(expectedProductionMonth.getOilMaxValue()).isEqualTo(annualProductionMonth.getOilMaxValue());
-    assertThat(expectedProductionMonth.getOilMaxUnit()).isEqualTo(annualProductionMonth.getOilMaxUnit());
     assertThat(expectedProductionMonth.getGasMinValue()).isEqualTo(annualProductionMonth.getGasMinValue());
-    assertThat(expectedProductionMonth.getGasMinUnit()).isEqualTo(annualProductionMonth.getGasMinUnit());
     assertThat(expectedProductionMonth.getGasMaxValue()).isEqualTo(annualProductionMonth.getGasMaxValue());
-    assertThat(expectedProductionMonth.getGasMaxUnit()).isEqualTo(annualProductionMonth.getGasMaxUnit());
   }
 }

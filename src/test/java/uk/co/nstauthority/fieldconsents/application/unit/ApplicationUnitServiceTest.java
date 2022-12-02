@@ -1,8 +1,11 @@
 package uk.co.nstauthority.fieldconsents.application.unit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
@@ -14,6 +17,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthChangeEvent;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentUnit;
@@ -28,6 +34,9 @@ class ApplicationUnitServiceTest {
   private ApplicationUnitRepository applicationUnitRepository;
 
   @Mock
+  private ApplicationVersionService applicationVersionService;
+
+  @Mock
   private ConsentLengthService consentLengthService;
 
   private ApplicationUnitService applicationUnitService;
@@ -40,7 +49,11 @@ class ApplicationUnitServiceTest {
 
   @BeforeEach
   void setUp() {
-    applicationUnitService = new ApplicationUnitService(applicationUnitRepository, consentLengthService);
+    applicationUnitService = new ApplicationUnitService(
+        applicationUnitRepository,
+        applicationVersionService,
+        consentLengthService
+    );
     flareAppVersion = FlareTestUtil.flareAppVersion;
     ventAppVersion = VentTestUtil.ventAppVersion;
     productionAppVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
@@ -303,6 +316,40 @@ class ApplicationUnitServiceTest {
             productionGasUnit
         );
 
+  }
+
+  @Test
+  void onApplicationEvent_nonProductionForm() {
+    ConsentLengthChangeEvent consentLengthChangeEvent = new ConsentLengthChangeEvent(
+        consentLengthService,
+        flareAppVersion.getId()
+    );
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(flareAppVersion.getId()))
+        .thenReturn(flareAppVersion);
+
+    applicationUnitService.onApplicationEvent(consentLengthChangeEvent);
+
+    verifyNoInteractions(applicationUnitRepository);
+  }
+
+  @Test
+  void onApplicationEvent_productionForm() {
+    ConsentLengthChangeEvent consentLengthChangeEvent = new ConsentLengthChangeEvent(
+        consentLengthService,
+        productionAppVersion.getId()
+    );
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(productionAppVersion.getId()))
+        .thenReturn(productionAppVersion);
+
+    ConsentLengthDetails consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(productionAppVersion);
+    when(consentLengthService.getConsentLengthDetails(productionAppVersion))
+        .thenReturn(consentLengthDetails);
+
+    applicationUnitService.onApplicationEvent(consentLengthChangeEvent);
+
+    verify(applicationUnitRepository, times(1)).deleteAllByApplicationVersion(productionAppVersion);
+    verify(applicationUnitRepository, times(1)).save(any(ApplicationUnit.class));
+    verifyNoMoreInteractions(applicationUnitRepository);
   }
 
 }

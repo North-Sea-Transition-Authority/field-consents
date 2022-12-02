@@ -17,7 +17,6 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.AnnualUtil;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
-import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 
 @Service
 public class AnnualProductionService {
@@ -100,8 +99,6 @@ public class AnnualProductionService {
     for (Month month : Month.values()) {
       AnnualProductionMonthForm productionMonthForm = new AnnualProductionMonthForm();
       productionMonthForm.setMonth(month);
-      productionMonthForm.setOilUnits(ProductionUnit.SCM_PER_MONTH);
-      productionMonthForm.setGasUnits(ProductionUnit.KSCM_PER_MONTH);
       annualProductionMonthForms.add(productionMonthForm);
     }
     return annualProductionMonthForms;

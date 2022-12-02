@@ -20,14 +20,6 @@
             <tr class="govuk-table__row">
               <@spring.bind "form.annualProductionMonthForms[${monthForm_index}].month"/>
               <input type="hidden" name="${spring.status.expression}" value="${spring.stringStatusValue}">
-              <@spring.bind "form.annualProductionMonthForms[${monthForm_index}].oilMinUnit"/>
-              <input type="hidden" name="${spring.status.expression}" value="${spring.stringStatusValue}">
-              <@spring.bind "form.annualProductionMonthForms[${monthForm_index}].oilMaxUnit"/>
-              <input type="hidden" name="${spring.status.expression}" value="${spring.stringStatusValue}">
-              <@spring.bind "form.annualProductionMonthForms[${monthForm_index}].gasMinUnit"/>
-              <input type="hidden" name="${spring.status.expression}" value="${spring.stringStatusValue}">
-              <@spring.bind "form.annualProductionMonthForms[${monthForm_index}].gasMaxUnit"/>
-              <input type="hidden" name="${spring.status.expression}" value="${spring.stringStatusValue}">
               <td class="govuk-table__cell">${monthForm.month}</td>
               <td class="govuk-table__cell">
                   <@fdsTextInput.textInput path="form.annualProductionMonthForms[${monthForm_index}].oilMinValue.inputValue" labelText="Oil min value" labelClass="govuk-visually-hidden"/>

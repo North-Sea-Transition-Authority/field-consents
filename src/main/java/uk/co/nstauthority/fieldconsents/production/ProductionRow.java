@@ -1,8 +1,6 @@
 package uk.co.nstauthority.fieldconsents.production;
 
 import java.math.BigDecimal;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -25,23 +23,11 @@ public class ProductionRow {
   @JoinColumn(name = "application_version_id")
   private ApplicationVersion applicationVersion;
 
-  @Enumerated(EnumType.STRING)
-  private ProductionUnit oilMinUnit;
-
   private BigDecimal oilMinValue;
-
-  @Enumerated(EnumType.STRING)
-  private ProductionUnit oilMaxUnit;
 
   private BigDecimal oilMaxValue;
 
-  @Enumerated(EnumType.STRING)
-  private ProductionUnit gasMinUnit;
-
   private BigDecimal gasMinValue;
-
-  @Enumerated(EnumType.STRING)
-  private ProductionUnit gasMaxUnit;
 
   private BigDecimal gasMaxValue;
 
@@ -62,28 +48,12 @@ public class ProductionRow {
     this.applicationVersion = applicationVersion;
   }
 
-  public ProductionUnit getOilMinUnit() {
-    return oilMinUnit;
-  }
-
-  public void setOilMinUnit(ProductionUnit oilMinUnit) {
-    this.oilMinUnit = oilMinUnit;
-  }
-
   public BigDecimal getOilMinValue() {
     return oilMinValue;
   }
 
   public void setOilMinValue(BigDecimal oilMinValue) {
     this.oilMinValue = oilMinValue;
-  }
-
-  public ProductionUnit getOilMaxUnit() {
-    return oilMaxUnit;
-  }
-
-  public void setOilMaxUnit(ProductionUnit oilMaxUnit) {
-    this.oilMaxUnit = oilMaxUnit;
   }
 
   public BigDecimal getOilMaxValue() {
@@ -94,28 +64,12 @@ public class ProductionRow {
     this.oilMaxValue = oilMaxValue;
   }
 
-  public ProductionUnit getGasMinUnit() {
-    return gasMinUnit;
-  }
-
-  public void setGasMinUnit(ProductionUnit gasMinUnit) {
-    this.gasMinUnit = gasMinUnit;
-  }
-
   public BigDecimal getGasMinValue() {
     return gasMinValue;
   }
 
   public void setGasMinValue(BigDecimal gasMinValue) {
     this.gasMinValue = gasMinValue;
-  }
-
-  public ProductionUnit getGasMaxUnit() {
-    return gasMaxUnit;
-  }
-
-  public void setGasMaxUnit(ProductionUnit gasMaxUnit) {
-    this.gasMaxUnit = gasMaxUnit;
   }
 
   public BigDecimal getGasMaxValue() {

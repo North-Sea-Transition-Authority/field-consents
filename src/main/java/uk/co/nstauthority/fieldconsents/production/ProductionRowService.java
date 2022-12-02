@@ -24,13 +24,9 @@ public class ProductionRowService {
         .orElseThrow(NoSuchElementException::new);
 
     productionRow.setOilMinValue(oilMinValue);
-    productionRow.setOilMinUnit(productionRowForm.getOilMinUnit());
     productionRow.setOilMaxValue(oilMaxValue);
-    productionRow.setOilMaxUnit(productionRowForm.getOilMaxUnit());
     productionRow.setGasMinValue(gasMinValue);
-    productionRow.setGasMinUnit(productionRowForm.getGasMinUnit());
     productionRow.setGasMaxValue(gasMaxValue);
-    productionRow.setGasMaxUnit(productionRowForm.getGasMaxUnit());
   }
 
   public void populateFormWithPreviousProductionRow(ProductionRow previousProductionRow,
@@ -39,21 +35,13 @@ public class ProductionRowService {
     var oilMinInput = mergedProductionRowForm.getOilMinValue();
     oilMinInput.setInputValue(DecimalFormatUtils.bigDecimalToFormattedString(previousProductionRow.getOilMinValue()));
 
-    mergedProductionRowForm.setOilMinUnit(previousProductionRow.getOilMinUnit());
-
     var oilMaxInput = mergedProductionRowForm.getOilMaxValue();
     oilMaxInput.setInputValue(DecimalFormatUtils.bigDecimalToFormattedString(previousProductionRow.getOilMaxValue()));
-
-    mergedProductionRowForm.setOilMaxUnit(previousProductionRow.getOilMaxUnit());
 
     var gasMinInput = mergedProductionRowForm.getGasMinValue();
     gasMinInput.setInputValue(DecimalFormatUtils.bigDecimalToFormattedString(previousProductionRow.getGasMinValue()));
 
-    mergedProductionRowForm.setGasMinUnit(previousProductionRow.getGasMinUnit());
-
     var gasMaxInput = mergedProductionRowForm.getGasMaxValue();
     gasMaxInput.setInputValue(DecimalFormatUtils.bigDecimalToFormattedString(previousProductionRow.getGasMaxValue()));
-
-    mergedProductionRowForm.setGasMaxUnit(previousProductionRow.getGasMaxUnit());
   }
 }
