@@ -12,9 +12,9 @@
         <@fdsSearchSelector.searchSelectorRest
         path="form.assetKey"
         restUrl=springUrl("/assets")
-        labelText="Select field/terminal"
-        hintText="Please select a field/terminal to work with"/>
-        <@fdsAction.button buttonText="Manage field/terminal" />
+        labelText="Select field/facility"
+        hintText="Please select a field/facility to work with"/>
+        <@fdsAction.button buttonText="Manage field/facility" />
     </@fdsForm.htmlForm>
 
 </@defaultPage>

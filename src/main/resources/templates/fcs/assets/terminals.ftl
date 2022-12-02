@@ -1,6 +1,6 @@
 <#include '../layout/layout.ftl'>
 
-<#assign pageTitle = "Terminal: ${terminalName}" />
+<#assign pageTitle = "Facility: ${terminalName}" />
 
 <@defaultPage
   htmlTitle=pageTitle
@@ -13,7 +13,7 @@
       startActionUrl=springUrl(startApplicationUrl)
       startActionButton=false>
       <p class="govuk-body">
-        This page will allow you to work with the terminal in question.
+        This page will allow you to work with the facility in question.
       </p>
     </@fdsStartPage.startPage>
 
