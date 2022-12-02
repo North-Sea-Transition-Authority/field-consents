@@ -78,19 +78,17 @@ public class ShortTermProductionService {
 
   private List<ShortTermProductionMonthForm> mergeExistingMonthDetailsWithForms(List<ShortTermProductionMonthForm> monthForms,
                                                                           List<ShortTermProductionMonth> previousProductionRows) {
-    Map<YearMonth, ShortTermProductionMonth> mapOfPreviousProductionRows = previousProductionRows.stream().collect(
-        Collectors.toMap(productionMonth ->
-                YearMonth.of(productionMonth.getYear(), productionMonth.getMonth()),
-            Function.identity())
-    );
+    Map<Pair<LocalDate, LocalDate>, ShortTermProductionMonth> previousShortTermProductionMonthsMap =
+        previousProductionRows
+            .stream()
+            .collect(Collectors.toMap(productionMonth ->
+                Pair.of(productionMonth.getStartDate(), productionMonth.getEndDate()), Function.identity()));
+
     List<ShortTermProductionMonthForm> mergedList = new ArrayList<>();
-    for (var shortTermProductionMonthForm : monthForms) {
-      var previousProductionRow = mapOfPreviousProductionRows.get(
-          YearMonth.of(
-              Integer.parseInt(shortTermProductionMonthForm.getYear()),
-              Month.valueOf(shortTermProductionMonthForm.getMonth().toUpperCase())
-          )
-      );
+    for (ShortTermProductionMonthForm shortTermProductionMonthForm : monthForms) {
+      var previousProductionRow =
+          previousShortTermProductionMonthsMap.get(shortTermProductionMonthForm.getMonthTerm());
+
       ShortTermProductionMonthForm mergedShortTermProductionMonthForm;
       if (previousProductionRow != null) {
         mergedShortTermProductionMonthForm = new ShortTermProductionMonthForm();
