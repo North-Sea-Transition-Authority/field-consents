@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.formatting;
 
 import java.time.LocalDate;
 import java.time.Month;
+import java.time.Period;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -50,4 +51,20 @@ public class DateUtils {
         ? secondDate
         : firstDate;
   }
+
+  /**
+   * Find the number of days inclusive between two dates in the same month and year.
+   * @param startDateInclusive The start date (inclusive)
+   * @param endDateInclusive The end date (inclusive)
+   * @return The number of days between to dates in the same month and year.
+   */
+  public static int daysBetweenInclusive(LocalDate startDateInclusive, LocalDate endDateInclusive) {
+    if (YearMonth.from(startDateInclusive).equals(YearMonth.from(endDateInclusive))) {
+      return Period.between(startDateInclusive, endDateInclusive).getDays() + 1;
+    } else {
+      throw new RuntimeException("The start date %s and end date %s should be in the same month and year"
+          .formatted(startDateInclusive, endDateInclusive));
+    }
+  }
+
 }

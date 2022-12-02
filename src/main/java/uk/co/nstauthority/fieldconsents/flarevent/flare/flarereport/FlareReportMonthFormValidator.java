@@ -7,13 +7,10 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.ValidationUtils;
 import org.springframework.validation.Validator;
 import uk.co.fivium.formlibrary.validator.integer.IntegerInputValidator;
-import uk.co.fivium.formlibrary.validator.string.StringInputValidator;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentRowFormValidator;
 
 @Service
 class FlareReportMonthFormValidator implements Validator {
-
-  public static final int COMMENTS_MAX_CHARACTER_COUNT = 300;
 
   private final FlareVentRowFormValidator flareVentRowFormValidator;
 
@@ -31,7 +28,7 @@ class FlareReportMonthFormValidator implements Validator {
   public void validate(@NotNull Object target, @NotNull Errors errors) {
     FlareReportMonthForm monthForm = (FlareReportMonthForm) target;
 
-    // validate the category data
+    // validate the category data and comments
     ValidationUtils.invokeValidator(flareVentRowFormValidator, target, errors, errors);
 
     // the shutdown days must be greater than or equal to zero and less that or equal to the month days
@@ -39,10 +36,5 @@ class FlareReportMonthFormValidator implements Validator {
         .mustBeMoreThanOrEqual(0)
         .mustBeLessThanOrEqualTo(monthForm.getMonthDays())
         .validate(monthForm.getShutDownDays(), errors);
-
-    // the comments are mandatory and must be no more than 300 chars long
-    StringInputValidator.builder()
-        .mustHaveCharacterCountAtMost(COMMENTS_MAX_CHARACTER_COUNT)
-        .validate(monthForm.getComments(), errors);
   }
 }

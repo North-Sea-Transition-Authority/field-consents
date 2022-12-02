@@ -44,7 +44,9 @@ class FlareVentRowFormValidatorTest {
             entry("categoryB.inputValue",
                 Collections.singletonList("Category B must have a value.")),
             entry("categoryC.inputValue",
-                Collections.singletonList("Category C must have a value."))
+                Collections.singletonList("Category C must have a value.")),
+            entry("comments.inputValue",
+                Collections.singletonList("Comments must have a value."))
         );
   }
 
@@ -59,9 +61,11 @@ class FlareVentRowFormValidatorTest {
   }
 
   @Test
-  void validate_textCatA() {
+  void validate_textCategories() {
     flareVentRowForm = FlareVentRowTestUtil.getValidFlareVentRowForm();
-    flareVentRowForm.getCategoryA().setInputValue("a");
+    flareVentRowForm.setCategoryA("a");
+    flareVentRowForm.setCategoryB("b");
+    flareVentRowForm.setCategoryC("c");
     errors = new BeanPropertyBindingResult(flareVentRowForm, "form");
 
     ValidationUtils.invokeValidator(validator, flareVentRowForm, errors);
@@ -71,14 +75,20 @@ class FlareVentRowFormValidatorTest {
     assertThat(errorMap)
         .containsOnly(
             entry("categoryA.inputValue",
-                Collections.singletonList("Category A must be a number with decimal places."))
+                Collections.singletonList("Category A must be a number with decimal places.")),
+            entry("categoryB.inputValue",
+                Collections.singletonList("Category B must be a number with decimal places.")),
+            entry("categoryC.inputValue",
+                Collections.singletonList("Category C must be a number with decimal places."))
         );
   }
 
   @Test
-  void validate_negativeCatA() {
+  void validate_negativeCategories() {
     flareVentRowForm = FlareVentRowTestUtil.getValidFlareVentRowForm();
-    flareVentRowForm.getCategoryA().setInputValue("-1");
+    flareVentRowForm.setCategoryA("-1");
+    flareVentRowForm.setCategoryB("-2");
+    flareVentRowForm.setCategoryC("-3");
     errors = new BeanPropertyBindingResult(flareVentRowForm, "form");
 
     ValidationUtils.invokeValidator(validator, flareVentRowForm, errors);
@@ -88,7 +98,28 @@ class FlareVentRowFormValidatorTest {
     assertThat(errorMap)
         .containsOnly(
             entry("categoryA.inputValue",
-                Collections.singletonList("Category A must be at least 0"))
+                Collections.singletonList("Category A must be at least 0")),
+            entry("categoryB.inputValue",
+                Collections.singletonList("Category B must be at least 0")),
+            entry("categoryC.inputValue",
+                Collections.singletonList("Category C must be at least 0"))
+        );
+  }
+
+  @Test
+  void validate_commentsMoreThan300Characters() {
+    flareVentRowForm = FlareVentRowTestUtil.getValidFlareVentRowForm();
+    flareVentRowForm.setComments(ValidatorTestingUtil.STRING_301_CHARACTERS);
+    errors = new BeanPropertyBindingResult(flareVentRowForm, "form");
+
+    ValidationUtils.invokeValidator(validator, flareVentRowForm, errors);
+
+    errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
+
+    assertThat(errorMap)
+        .containsOnly(
+            entry("comments.inputValue",
+                Collections.singletonList("Comments must be no more than 300 characters long"))
         );
   }
 

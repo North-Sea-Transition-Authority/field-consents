@@ -35,6 +35,8 @@ import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportS
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flares.FlareController;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flares.FlareService;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flares.FlareTestUtil;
+import uk.co.nstauthority.fieldconsents.flarevent.flare.shortterm.FlareShortTermController;
+import uk.co.nstauthority.fieldconsents.flarevent.flare.shortterm.FlareShortTermService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListItem;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListLabel;
@@ -58,18 +60,24 @@ class FlareInformationTaskListSectionServiceTest {
   @Mock
   private FlareAnnualService flareAnnualService;
 
+  @Mock
+  private FlareShortTermService flareShortTermService;
+
   private FlareInformationTaskListSectionService flareInformationTaskListSectionService;
 
   private ApplicationVersion applicationVersion;
 
   private ConsentLengthDetails annualConsentLengthDetails;
 
+  private ConsentLengthDetails shortTermConsentLengthDetails;
+
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
     flareInformationTaskListSectionService = new FlareInformationTaskListSectionService(flareService,
-        flareReportPeriodService, flareReportService, consentLengthService, flareAnnualService);
+        flareReportPeriodService, flareReportService, consentLengthService, flareAnnualService, flareShortTermService);
     annualConsentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForAnnual(applicationVersion);
+    shortTermConsentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(applicationVersion);
   }
 
   @Test
@@ -296,6 +304,53 @@ class FlareInformationTaskListSectionServiceTest {
   }
 
   @Test
+  void getFlareConsentTaskListItem_shortTermNotStarted() {
+    when(flareShortTermService.flareShortTermMonthsExist(applicationVersion)).thenReturn(false);
+
+    TaskListItem item = flareInformationTaskListSectionService
+        .getFlareConsentTaskListItem(applicationVersion, shortTermConsentLengthDetails);
+
+    assertTaskListItem(item,
+        ConsentLengthType.SHORT_TERM.getDisplayName(),
+        TaskListLabel.NOT_STARTED,
+        ReverseRouter.route(on(FlareShortTermController.class)
+            .getFlareShortTermForm(applicationVersion.getApplication().getId()))
+    );
+  }
+
+  @Test
+  void getFlareConsentTaskListItem_shortTermComplete() {
+    when(flareShortTermService.flareShortTermMonthsExist(applicationVersion)).thenReturn(true);
+    when(flareShortTermService.flareShortTermMonthsComplete(applicationVersion)).thenReturn(true);
+
+    TaskListItem item = flareInformationTaskListSectionService
+        .getFlareConsentTaskListItem(applicationVersion, shortTermConsentLengthDetails);
+
+    assertTaskListItem(item,
+        ConsentLengthType.SHORT_TERM.getDisplayName(),
+        TaskListLabel.COMPLETED,
+        ReverseRouter.route(on(FlareShortTermController.class)
+            .getFlareShortTermForm(applicationVersion.getApplication().getId()))
+    );
+  }
+
+  @Test
+  void getFlareConsentTaskListItem_shortTermInProgress() {
+    when(flareShortTermService.flareShortTermMonthsExist(applicationVersion)).thenReturn(true);
+    when(flareShortTermService.flareShortTermMonthsComplete(applicationVersion)).thenReturn(false);
+
+    TaskListItem item = flareInformationTaskListSectionService
+        .getFlareConsentTaskListItem(applicationVersion, shortTermConsentLengthDetails);
+
+    assertTaskListItem(item,
+        ConsentLengthType.SHORT_TERM.getDisplayName(),
+        TaskListLabel.IN_PROGRESS,
+        ReverseRouter.route(on(FlareShortTermController.class)
+            .getFlareShortTermForm(applicationVersion.getApplication().getId()))
+    );
+  }
+
+  @Test
   void getFlareConsentTaskListItem_longTerm() {
     ConsentLengthDetails longTermConsentLengthDetails =
         ConsentLengthTestUtil.getConsentLengthDetailsForLongTerm(applicationVersion);
@@ -303,23 +358,7 @@ class FlareInformationTaskListSectionServiceTest {
     assertThatThrownBy(() -> flareInformationTaskListSectionService
         .getFlareConsentTaskListItem(applicationVersion, longTermConsentLengthDetails))
         .isInstanceOf(RuntimeException.class)
-            .hasMessage("Incorrect consent length type: " + ConsentLengthType.LONG_TERM);
+        .hasMessage("Incorrect consent length type: " + ConsentLengthType.LONG_TERM);
   }
-
-  // temporary test until the short term work is done
-  @Test
-  void getFlareConsentTaskListItem_shortTermBlocked() {
-    TaskListItem item = flareInformationTaskListSectionService
-        .getFlareConsentTaskListItem(applicationVersion,
-            ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(applicationVersion));
-
-    assertTaskListItem(item,
-        ConsentLengthType.SHORT_TERM.getDisplayName(),
-        TaskListLabel.BLOCKED,
-        null
-    );
-  }
-
-
 
 }

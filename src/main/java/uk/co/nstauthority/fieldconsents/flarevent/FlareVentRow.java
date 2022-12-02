@@ -2,8 +2,11 @@ package uk.co.nstauthority.fieldconsents.flarevent;
 
 
 import java.math.BigDecimal;
+import java.time.Month;
 import java.util.NoSuchElementException;
 import javax.persistence.Column;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -26,6 +29,11 @@ public class FlareVentRow {
   @JoinColumn(name = "application_version_id")
   private ApplicationVersion applicationVersion;
 
+  private Integer year;
+
+  @Enumerated(EnumType.STRING)
+  private Month month;
+
   @Column(name = "category_a")
   private BigDecimal categoryA;
 
@@ -35,12 +43,30 @@ public class FlareVentRow {
   @Column(name = "category_c")
   private BigDecimal categoryC;
 
+  private String comments;
+
   public ApplicationVersion getApplicationVersion() {
     return applicationVersion;
   }
 
   public void setApplicationVersion(ApplicationVersion applicationVersion) {
     this.applicationVersion = applicationVersion;
+  }
+
+  public Integer getYear() {
+    return year;
+  }
+
+  public void setYear(Integer year) {
+    this.year = year;
+  }
+
+  public Month getMonth() {
+    return month;
+  }
+
+  public void setMonth(Month month) {
+    this.month = month;
   }
 
   public BigDecimal getCategoryA() {
@@ -67,12 +93,24 @@ public class FlareVentRow {
     this.categoryC = categoryC;
   }
 
-  public void updateFlareVentRowFromForm(FlareVentRowForm form) {
+  public String getComments() {
+    return comments;
+  }
+
+  public void setComments(String comments) {
+    this.comments = comments;
+  }
+
+  public void updateFlareVentRowFromForm(ApplicationVersion applicationVersion, FlareVentRowForm form) {
+    this.applicationVersion = applicationVersion;
+    this.year = Integer.parseInt(form.getYear());
+    this.month = Month.valueOf(form.getMonth().toUpperCase());
     this.categoryA = form.getCategoryA().getAsBigDecimal()
         .orElseThrow(NoSuchElementException::new);
     this.categoryB = form.getCategoryB().getAsBigDecimal()
         .orElseThrow(NoSuchElementException::new);
     this.categoryC = form.getCategoryC().getAsBigDecimal()
         .orElseThrow(NoSuchElementException::new);
+    this.comments = form.getComments().getInputValue();
   }
 }

@@ -18,6 +18,8 @@ import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportP
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportService;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flares.FlareController;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flares.FlareService;
+import uk.co.nstauthority.fieldconsents.flarevent.flare.shortterm.FlareShortTermController;
+import uk.co.nstauthority.fieldconsents.flarevent.flare.shortterm.FlareShortTermService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListItem;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListLabel;
@@ -37,17 +39,21 @@ public class FlareInformationTaskListSectionService implements TaskListSectionSe
 
   private final FlareAnnualService flareAnnualService;
 
+  private final FlareShortTermService flareShortTermService;
+
   @Autowired
   FlareInformationTaskListSectionService(FlareService flareService,
                                          FlareReportPeriodService flareReportPeriodService,
                                          FlareReportService flareReportService,
                                          ConsentLengthService consentLengthService,
-                                         FlareAnnualService flareAnnualService) {
+                                         FlareAnnualService flareAnnualService,
+                                         FlareShortTermService flareShortTermService) {
     this.flareService = flareService;
     this.flareReportPeriodService = flareReportPeriodService;
     this.flareReportService = flareReportService;
     this.consentLengthService = consentLengthService;
     this.flareAnnualService = flareAnnualService;
+    this.flareShortTermService = flareShortTermService;
   }
 
   @Override
@@ -122,8 +128,9 @@ public class FlareInformationTaskListSectionService implements TaskListSectionSe
     return switch (consentLengthType) {
       case SHORT_TERM ->
           new TaskListItem(consentLengthType.getDisplayName(),
-              TaskListLabel.BLOCKED,
-              null);
+              getFlareShortTermTaskListLabel(applicationVersion),
+              ReverseRouter.route(on(FlareShortTermController.class)
+                  .getFlareShortTermForm(applicationId)));
       case ANNUAL ->
           new TaskListItem(consentLengthType.getDisplayName(),
               getFlareAnnualTaskListLabel(applicationVersion),
@@ -141,6 +148,17 @@ public class FlareInformationTaskListSectionService implements TaskListSectionSe
       return TaskListLabel.COMPLETED;
     } else {
       // we know here that flare annual months data exists, but it isn't complete
+      return TaskListLabel.IN_PROGRESS;
+    }
+  }
+
+  private TaskListLabel getFlareShortTermTaskListLabel(ApplicationVersion applicationVersion) {
+    if (!flareShortTermService.flareShortTermMonthsExist(applicationVersion)) {
+      return TaskListLabel.NOT_STARTED;
+    } else if (flareShortTermService.flareShortTermMonthsComplete(applicationVersion)) {
+      return TaskListLabel.COMPLETED;
+    } else {
+      // we know here that flare short term months data exists, but it isn't complete
       return TaskListLabel.IN_PROGRESS;
     }
   }

@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.flarevent.flare.annual;
+package uk.co.nstauthority.fieldconsents.flarevent.flare.shortterm;
 
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
@@ -10,33 +10,33 @@ import uk.co.nstauthority.fieldconsents.flarevent.FlareVentRowFormValidator;
 import uk.co.nstauthority.fieldconsents.validation.ValidatorUtils;
 
 @Service
-class FlareAnnualFormValidator implements Validator {
+class FlareShortTermFormValidator implements Validator {
 
   private final FlareVentRowFormValidator flareVentRowFormValidator;
 
   @Autowired
-  public FlareAnnualFormValidator(FlareVentRowFormValidator flareVentRowFormValidator) {
+  public FlareShortTermFormValidator(FlareVentRowFormValidator flareVentRowFormValidator) {
     this.flareVentRowFormValidator = flareVentRowFormValidator;
   }
 
   @Override
   public boolean supports(Class<?> clazz) {
-    return clazz.isAssignableFrom(FlareAnnualForm.class);
+    return clazz.isAssignableFrom(FlareShortTermForm.class);
   }
 
   @Override
   public void validate(@NotNull Object target, @NotNull Errors errors) {
-    FlareAnnualForm form = (FlareAnnualForm) target;
+    FlareShortTermForm form = (FlareShortTermForm) target;
 
-    List<FlareAnnualMonthForm> flareAnnualMonthForms = form.getFlareAnnualMonthForms();
+    List<FlareShortTermMonthForm> flareShortTermMonthForms = form.getFlareShortTermMonthForms();
 
-    // Validate each individual field for each flare annual month form
-    for (int index = 0; index < flareAnnualMonthForms.size(); index++) {
+    // Validate each individual field for each flare month form
+    for (int index = 0; index < flareShortTermMonthForms.size(); index++) {
       ValidatorUtils.invokeNestedValidator(
           errors,
           flareVentRowFormValidator,
-          "flareAnnualMonthForms[" + index + "]",
-          flareAnnualMonthForms.get(index),
+          "flareShortTermMonthForms[" + index + "]",
+          flareShortTermMonthForms.get(index),
           errors
       );
     }

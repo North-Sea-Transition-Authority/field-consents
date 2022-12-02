@@ -15,6 +15,8 @@ class FlareVentRowFormTest {
 
     assertThat(flareVentRowForm)
         .extracting(
+            FlareVentRowForm::getYear,
+            FlareVentRowForm::getMonth,
             form -> form.getCategoryA().getDisplayName(),
             form -> form.getCategoryA().getFieldName(),
             form -> form.getCategoryA().getInputValue(),
@@ -23,12 +25,17 @@ class FlareVentRowFormTest {
             form -> form.getCategoryB().getInputValue(),
             form -> form.getCategoryC().getDisplayName(),
             form -> form.getCategoryC().getFieldName(),
-            form -> form.getCategoryC().getInputValue()
+            form -> form.getCategoryC().getInputValue(),
+            form -> form.getComments().getDisplayName(),
+            form -> form.getComments().getFieldName(),
+            form -> form.getComments().getInputValue()
         )
         .containsExactly(
+            "2023", "February",
             "Category A", "categoryA", "0",
             "Category B", "categoryB", "1",
-            "Category C", "categoryC", "999.999"
+            "Category C", "categoryC", "999.999",
+            "Comments", "comments", "entity comments"
         );
   }
 }

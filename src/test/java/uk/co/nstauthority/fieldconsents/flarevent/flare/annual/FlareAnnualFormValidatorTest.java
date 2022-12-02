@@ -17,8 +17,7 @@ class FlareAnnualFormValidatorTest {
   @BeforeEach
   void setUp() {
     var flareVentRowFormValidator = new FlareVentRowFormValidator();
-    var flareAnnualMonthFormValidator = new FlareAnnualMonthFormValidator(flareVentRowFormValidator);
-    validator = new FlareAnnualFormValidator(flareAnnualMonthFormValidator);
+    validator = new FlareAnnualFormValidator(flareVentRowFormValidator);
   }
 
   @Test

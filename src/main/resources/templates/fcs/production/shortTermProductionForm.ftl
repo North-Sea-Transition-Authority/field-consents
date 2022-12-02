@@ -5,9 +5,9 @@
 <#assign pageTitle = "Short Term Oil and Gas Production Request ${requestYear}"/>
 
 <@defaultPage htmlTitle=pageTitle pageHeading=pageTitle errorItems=errorList>
-    <@fdsInsetText.insetText>
-      Enter the amount of production expected for each month for the requested consent days only. IE, if the consent is due to end halfway through the month, only provide production volumes for half the month.
-    </@fdsInsetText.insetText>
+    <p class="govuk-body-l">
+      Enter the amount of production expected for each month for the requested consent days only. For example, if the consent is due to end halfway through the month, only provide production volumes for half the month.
+    </p>
     <@fdsForm.htmlForm actionUrl=springUrl(submitUrl)>
       <table class="govuk-table">
         <caption class="govuk-table__caption govuk-table__caption--m">${startDate} to ${endDate}</caption>

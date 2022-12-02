@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.formatting;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.entry;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -96,4 +97,37 @@ class DateUtilsTest {
     assertEquals(THIRD_DATE, DateUtils.max(FIRST_DATE, THIRD_DATE));
     assertEquals(THIRD_DATE, DateUtils.max(SECOND_DATE, THIRD_DATE));
   }
+
+  @Test
+  void daysBetweenInclusive() {
+    var startDate = LocalDate.of(2022, Month.OCTOBER, 1);
+    assertThat(DateUtils.daysBetweenInclusive(
+        startDate,
+        LocalDate.of(2022, Month.OCTOBER, 31)))
+        .isEqualTo(31);
+    assertThat(DateUtils.daysBetweenInclusive(
+        startDate,
+        LocalDate.of(2022, Month.OCTOBER, 10)))
+        .isEqualTo(10);
+    assertThat(DateUtils.daysBetweenInclusive(
+        startDate,
+        LocalDate.of(2022, Month.OCTOBER, 20)))
+        .isEqualTo(20);
+  }
+
+  @Test
+  void daysBetweenInclusive_differentYearMonth() {
+    var startDate = LocalDate.of(2022, Month.OCTOBER, 1);
+    var endDateInDifferentMonth = LocalDate.of(2022, Month.NOVEMBER, 20);
+    var endDateSameMonthDifferentYear = LocalDate.of(2023, Month.OCTOBER, 20);
+
+    assertThatThrownBy(() ->  DateUtils.daysBetweenInclusive(startDate, endDateInDifferentMonth))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessage("The start date 2022-10-01 and end date 2022-11-20 should be in the same month and year");
+
+    assertThatThrownBy(() ->  DateUtils.daysBetweenInclusive(startDate, endDateSameMonthDifferentYear))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessage("The start date 2022-10-01 and end date 2023-10-20 should be in the same month and year");
+  }
+
 }
