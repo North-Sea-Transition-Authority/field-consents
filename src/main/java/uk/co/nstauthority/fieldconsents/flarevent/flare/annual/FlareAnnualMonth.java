@@ -7,7 +7,7 @@ import uk.co.nstauthority.fieldconsents.flarevent.FlareVentRow;
 
 @Entity
 @Table(name = "flare_annual_months")
-class FlareAnnualMonth extends FlareVentRow {
+public class FlareAnnualMonth extends FlareVentRow {
 
   static FlareAnnualMonth from(ApplicationVersion applicationVersion,
                                FlareAnnualMonthForm flareAnnualMonthForm) {

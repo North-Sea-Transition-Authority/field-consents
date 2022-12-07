@@ -30,7 +30,7 @@ public class FlareShortTermService {
     this.consentLengthService = consentLengthService;
   }
 
-  private List<FlareShortTermMonth> getFlareShortTermMonths(ApplicationVersion applicationVersion) {
+  public List<FlareShortTermMonth> getFlareShortTermMonths(ApplicationVersion applicationVersion) {
     return flareShortTermMonthRepository.findAllByApplicationVersion(applicationVersion);
   }
 

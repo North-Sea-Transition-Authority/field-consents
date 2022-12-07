@@ -29,7 +29,7 @@ public class FlareAnnualService {
     this.consentLengthService = consentLengthService;
   }
 
-  private List<FlareAnnualMonth> getFlareAnnualMonths(ApplicationVersion applicationVersion) {
+  public List<FlareAnnualMonth> getFlareAnnualMonths(ApplicationVersion applicationVersion) {
     return flareAnnualMonthRepository.findAllByApplicationVersion(applicationVersion);
   }
 

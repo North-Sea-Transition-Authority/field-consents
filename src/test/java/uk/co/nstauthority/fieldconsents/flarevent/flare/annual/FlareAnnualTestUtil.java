@@ -9,7 +9,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 
-class FlareAnnualTestUtil {
+public class FlareAnnualTestUtil {
 
   static ApplicationVersion flareAppVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
 
@@ -65,7 +65,7 @@ class FlareAnnualTestUtil {
     return flareAnnualForm;
   }
 
-  static List<FlareAnnualMonth> getFlareAnnualMonthsForYear(ApplicationVersion applicationVersion, int year) {
+  public static List<FlareAnnualMonth> getFlareAnnualMonthsForYear(ApplicationVersion applicationVersion, int year) {
     List<FlareAnnualMonth> flareAnnualMonths = new ArrayList<>();
 
     FlareAnnualMonth flareAnnualMonth;

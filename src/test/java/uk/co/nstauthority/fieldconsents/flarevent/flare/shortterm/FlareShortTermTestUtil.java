@@ -11,7 +11,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ShortTermUtil;
 
-class FlareShortTermTestUtil {
+public class FlareShortTermTestUtil {
 
   static ApplicationVersion flareAppVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
 
@@ -72,8 +72,8 @@ class FlareShortTermTestUtil {
     return flareShortTermForm;
   }
 
-  static List<FlareShortTermMonth> getFlareShortTermMonthsForPeriod(ApplicationVersion applicationVersion,
-                                                                    LocalDate startDate, LocalDate endDate) {
+  public static List<FlareShortTermMonth> getFlareShortTermMonthsForPeriod(ApplicationVersion applicationVersion,
+                                                                           LocalDate startDate, LocalDate endDate) {
     List<FlareShortTermMonth> flareShortTermMonths = new ArrayList<>();
 
     FlareShortTermMonth flareShortTermMonth;

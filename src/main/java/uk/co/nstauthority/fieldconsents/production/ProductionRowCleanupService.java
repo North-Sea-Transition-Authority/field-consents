@@ -67,7 +67,7 @@ public class ProductionRowCleanupService implements ApplicationListener<ConsentL
         case SHORT_TERM -> removeObsoleteDataWhenShortTerm(applicationVersion, consentLengthDetails);
         case ANNUAL -> removeObsoleteDataWhenAnnual(applicationVersion, consentLengthDetails);
         case LONG_TERM -> removeObsoleteDataWhenLongTerm(applicationVersion, consentLengthDetails);
-        default -> throw new RuntimeException("Incorrect consent length type: " + type);
+        default -> throw new RuntimeException("Incorrect consent length type: " + consentLengthType);
       }
     }
   }
