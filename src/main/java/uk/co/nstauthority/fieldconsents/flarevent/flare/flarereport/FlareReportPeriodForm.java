@@ -5,8 +5,6 @@ import uk.co.fivium.formlibrary.input.StringInput;
 
 public class FlareReportPeriodForm {
 
-  private Boolean hasDataForPeriod;
-
   private final StringInput reportEndMonth;
 
   private final IntegerInput reportEndYear;
@@ -18,18 +16,9 @@ public class FlareReportPeriodForm {
 
   static FlareReportPeriodForm from(FlareReportPeriod flareReportPeriod) {
     FlareReportPeriodForm flareReportPeriodForm = new FlareReportPeriodForm();
-    flareReportPeriodForm.setHasDataForPeriod(flareReportPeriod.getHasDataForPeriod());
     flareReportPeriodForm.setReportEndMonth(flareReportPeriod.getReportEndMonth().name());
     flareReportPeriodForm.setReportEndYear(flareReportPeriod.getReportEndYear().toString());
     return flareReportPeriodForm;
-  }
-
-  public Boolean getHasDataForPeriod() {
-    return hasDataForPeriod;
-  }
-
-  public void setHasDataForPeriod(Boolean hasDataForPeriod) {
-    this.hasDataForPeriod = hasDataForPeriod;
   }
 
   public StringInput getReportEndMonth() {

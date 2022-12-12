@@ -15,13 +15,12 @@ class FlareReportPeriodFormTest {
     ApplicationVersion applicationVersion
         = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
     FlareReportPeriod flareReportPeriod =
-        new FlareReportPeriod(applicationVersion, Boolean.FALSE, Month.APRIL, 2023);
+        new FlareReportPeriod(applicationVersion, Month.APRIL, 2023);
 
     FlareReportPeriodForm flareReportPeriodForm = FlareReportPeriodForm.from(flareReportPeriod);
 
     assertThat(flareReportPeriodForm)
         .extracting(
-            FlareReportPeriodForm::getHasDataForPeriod,
             form -> form.getReportEndMonth().getDisplayName(),
             form -> form.getReportEndMonth().getFieldName(),
             form -> form.getReportEndMonth().getInputValue(),
@@ -29,7 +28,6 @@ class FlareReportPeriodFormTest {
             form -> form.getReportEndYear().getFieldName(),
             form -> form.getReportEndYear().getInputValue())
         .containsExactly(
-            Boolean.FALSE,
             "Month", "reportEndMonth", "APRIL",
             "Year", "reportEndYear", "2023"
         );

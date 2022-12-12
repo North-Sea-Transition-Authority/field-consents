@@ -62,7 +62,7 @@ class FlareReportServiceTest {
         FlareReportTestUtil.getFlareReportMonthsForYear(applicationVersion, 2022);
 
     FlareReportPeriod flareReportPeriod =
-        new FlareReportPeriod(applicationVersion, Boolean.FALSE, Month.JANUARY, 2023);
+        new FlareReportPeriod(applicationVersion, Month.JANUARY, 2023);
 
     when(flareReportPeriodService.findFlareReportPeriod(applicationVersion))
         .thenReturn(Optional.of(flareReportPeriod));
@@ -77,7 +77,7 @@ class FlareReportServiceTest {
         FlareReportTestUtil.getFlareReportMonthsForYear(applicationVersion, 2022);
 
     FlareReportPeriod flareReportPeriod =
-        new FlareReportPeriod(applicationVersion, Boolean.FALSE, Month.DECEMBER, 2022);
+        new FlareReportPeriod(applicationVersion, Month.DECEMBER, 2022);
 
     when(flareReportPeriodService.findFlareReportPeriod(applicationVersion))
         .thenReturn(Optional.of(flareReportPeriod));
@@ -93,7 +93,7 @@ class FlareReportServiceTest {
 
     YearMonth yearMonthNow = YearMonth.now();
     FlareReportPeriod flareReportPeriod =
-        new FlareReportPeriod(applicationVersion, Boolean.FALSE, yearMonthNow.getMonth(), yearMonthNow.getYear());
+        new FlareReportPeriod(applicationVersion, yearMonthNow.getMonth(), yearMonthNow.getYear());
 
     when(flareReportPeriodService.getFlareReportPeriodOrError(applicationVersion))
         .thenReturn(flareReportPeriod);
@@ -166,7 +166,7 @@ class FlareReportServiceTest {
 
     YearMonth endYearMonth = YearMonth.of(2023, Month.JUNE);
     FlareReportPeriod flareReportPeriod =
-        new FlareReportPeriod(applicationVersion, Boolean.FALSE, endYearMonth.getMonth(), endYearMonth.getYear());
+        new FlareReportPeriod(applicationVersion, endYearMonth.getMonth(), endYearMonth.getYear());
 
     when(flareReportPeriodService.getFlareReportPeriodOrError(applicationVersion))
         .thenReturn(flareReportPeriod);

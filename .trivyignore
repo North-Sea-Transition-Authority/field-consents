@@ -26,3 +26,5 @@ CVE-2022-31692
 CVE-2022-41854
 # Postgres vulnerability
 CVE-2022-41946
+# Spring (org.springframework:spring-web) HttpInvokerServiceExporter readRemoteInvocation method untrusted java deserialization
+CVE-2016-1000027

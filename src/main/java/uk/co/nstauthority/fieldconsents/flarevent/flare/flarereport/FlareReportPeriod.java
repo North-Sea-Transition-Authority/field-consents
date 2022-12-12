@@ -26,8 +26,6 @@ public class FlareReportPeriod {
   @JoinColumn(name = "application_version_id")
   private ApplicationVersion applicationVersion;
 
-  private Boolean hasDataForPeriod;
-
   @Enumerated(EnumType.STRING)
   private Month reportEndMonth;
 
@@ -37,32 +35,23 @@ public class FlareReportPeriod {
   }
 
   public FlareReportPeriod(ApplicationVersion applicationVersion,
-                           Boolean hasDataForPeriod,
                            Month reportEndMonth,
                            Integer reportEndYear) {
     this.applicationVersion = applicationVersion;
-    this.hasDataForPeriod = hasDataForPeriod;
     this.reportEndMonth = reportEndMonth;
     this.reportEndYear = reportEndYear;
   }
 
   static FlareReportPeriod from(ApplicationVersion applicationVersion,
-                                FlareReportPeriodForm flareReportPeriodForm,
-                                YearMonth proposedReportEndYearMonth) {
+                                FlareReportPeriodForm flareReportPeriodForm) {
 
     FlareReportPeriod flareReportPeriod = new FlareReportPeriod();
     flareReportPeriod.setApplicationVersion(applicationVersion);
-    Boolean hasDataForPeriod = flareReportPeriodForm.getHasDataForPeriod();
-    flareReportPeriod.setHasDataForPeriod(hasDataForPeriod);
-    if (Boolean.TRUE.equals(hasDataForPeriod)) {
-      flareReportPeriod.setReportEndMonth(proposedReportEndYearMonth.getMonth());
-      flareReportPeriod.setReportEndYear(proposedReportEndYearMonth.getYear());
-    } else {
-      flareReportPeriod.setReportEndMonth(
-          Month.valueOf(flareReportPeriodForm.getReportEndMonth().getInputValue().toUpperCase()));
-      flareReportPeriod.setReportEndYear(flareReportPeriodForm.getReportEndYear().getAsInteger()
-          .orElseThrow(NoSuchElementException::new));
-    }
+    flareReportPeriod.setReportEndMonth(
+        Month.valueOf(flareReportPeriodForm.getReportEndMonth().getInputValue().toUpperCase()));
+    flareReportPeriod.setReportEndYear(flareReportPeriodForm.getReportEndYear().getAsInteger()
+        .orElseThrow(NoSuchElementException::new));
+
     return flareReportPeriod;
   }
 
@@ -72,14 +61,6 @@ public class FlareReportPeriod {
 
   public void setApplicationVersion(ApplicationVersion applicationVersion) {
     this.applicationVersion = applicationVersion;
-  }
-
-  public Boolean getHasDataForPeriod() {
-    return hasDataForPeriod;
-  }
-
-  public void setHasDataForPeriod(Boolean hasDataForPeriod) {
-    this.hasDataForPeriod = hasDataForPeriod;
   }
 
   public Month getReportEndMonth() {

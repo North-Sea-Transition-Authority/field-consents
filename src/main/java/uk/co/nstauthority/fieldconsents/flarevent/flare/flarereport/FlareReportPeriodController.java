@@ -29,19 +29,15 @@ public class FlareReportPeriodController {
 
   private final FlareReportPeriodControllerHelperService flareReportPeriodControllerHelperService;
 
-  private final FlareReportPeriodHelperService flareReportPeriodHelperService;
-
   @Autowired
   FlareReportPeriodController(ApplicationVersionService applicationVersionService,
                               FlareReportPeriodService flareReportPeriodService,
                               FlareReportPeriodFormValidator flareReportPeriodFormValidator,
-                              FlareReportPeriodControllerHelperService flareReportPeriodControllerHelperService,
-                              FlareReportPeriodHelperService flareReportPeriodHelperService) {
+                              FlareReportPeriodControllerHelperService flareReportPeriodControllerHelperService) {
     this.applicationVersionService = applicationVersionService;
     this.flareReportPeriodService = flareReportPeriodService;
     this.flareReportPeriodFormValidator = flareReportPeriodFormValidator;
     this.flareReportPeriodControllerHelperService = flareReportPeriodControllerHelperService;
-    this.flareReportPeriodHelperService = flareReportPeriodHelperService;
   }
 
   @GetMapping
@@ -64,12 +60,6 @@ public class FlareReportPeriodController {
     var modelAndView = new ModelAndView("fcs/flare/flareReportPeriodForm");
 
     modelAndView
-        .addObject("reportPeriodStart",
-            DateUtils.format(flareReportPeriodHelperService.getProposedReportStartYearMonth(applicationVersion),
-                DateUtils.LONG_MONTH_YEAR))
-        .addObject("reportPeriodEnd",
-            DateUtils.format(flareReportPeriodHelperService.getProposedReportEndYearMonth(applicationVersion),
-                DateUtils.LONG_MONTH_YEAR))
         .addObject("reportEndMonthsMap", DateUtils.monthsMap())
         .addObject("reportEndYearsMap",
             flareReportPeriodControllerHelperService.getReportEndYearsMap(applicationVersion))

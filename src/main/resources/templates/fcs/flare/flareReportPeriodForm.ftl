@@ -5,29 +5,20 @@
 <#assign pageTitle="Flare report period"/>
 
 <@defaultPage htmlTitle=pageTitle pageHeading=pageTitle errorItems=errorList>
-  <p class="govuk-body">
-    We need to collect data relating to the flaring that has occurred over the past 12 months.
+  <p class="govuk-body-lead">
+    We need to collect data relating to the flaring that has occurred over the most recent 12-month period.<br/>
+    <br/>
+    If the field or hub has started-up during this period, then enter zeros for the prior months with a relevant comment.
   </p>
   <@fdsForm.htmlForm>
-    <@fdsRadio.radioGroup
-    path="form.hasDataForPeriod"
-    labelText="Do you have full months of flare report data for the period ${reportPeriodStart} to ${reportPeriodEnd}?"
-    hiddenContent=true
-    >
-      <@fdsRadio.radioYes path="form.hasDataForPeriod"/>
-      <@fdsRadio.radioNo path="form.hasDataForPeriod">
-        <@fdsRadio.radio
-        path="form.reportEndYear.inputValue"
-        nestingPath="form.hasDataForPeriod"
-        radioItems=reportEndYearsMap
-        labelText="Which year do you have flare report data up to?"/>
-        <@fdsSelect.select
-        path="form.reportEndMonth.inputValue"
-        nestingPath="form.hasDataForPeriod"
-        options=reportEndMonthsMap
-        labelText="Which is the latest full month of flare report data you have?"/>
-      </@fdsRadio.radioNo>
-    </@fdsRadio.radioGroup>
+    <@fdsRadio.radio
+    path="form.reportEndYear.inputValue"
+    radioItems=reportEndYearsMap
+    labelText="Which year do you have flare report data up to?"/>
+    <@fdsSelect.select
+    path="form.reportEndMonth.inputValue"
+    options=reportEndMonthsMap
+    labelText="Which is the latest full month of flare report data you have?"/>
     <@fdsAction.submitButtons
     primaryButtonText="Save and continue"
     secondaryLinkText="Cancel"

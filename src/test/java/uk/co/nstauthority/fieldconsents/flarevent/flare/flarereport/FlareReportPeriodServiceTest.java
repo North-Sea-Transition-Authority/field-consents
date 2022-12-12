@@ -7,7 +7,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.Month;
-import java.time.YearMonth;
 import java.util.Optional;
 import javax.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,9 +23,6 @@ class FlareReportPeriodServiceTest {
   @Mock
   private FlareReportPeriodRepository flareReportPeriodRepository;
 
-  @Mock
-  private FlareReportPeriodHelperService flareReportPeriodHelperService;
-
   private FlareReportPeriodService flareReportPeriodService;
 
   private ApplicationVersion applicationVersion;
@@ -35,7 +31,7 @@ class FlareReportPeriodServiceTest {
 
   @BeforeEach
   void setUp() {
-    flareReportPeriodService = new FlareReportPeriodService(flareReportPeriodRepository, flareReportPeriodHelperService);
+    flareReportPeriodService = new FlareReportPeriodService(flareReportPeriodRepository);
     applicationVersion = FlareReportTestUtil.flareAppVersion;
     exceptionMessage = "Flare report period with application_version_id %s not found".formatted(applicationVersion.getId());
   }
@@ -52,10 +48,9 @@ class FlareReportPeriodServiceTest {
     assertThat(flareReportPeriodOptional.get())
         .extracting(
             FlareReportPeriod::getApplicationVersion,
-            FlareReportPeriod::getHasDataForPeriod,
             FlareReportPeriod::getReportEndMonth,
             FlareReportPeriod::getReportEndYear)
-        .containsExactly(applicationVersion, Boolean.FALSE, Month.APRIL, 2023);
+        .containsExactly(applicationVersion, Month.APRIL, 2023);
   }
 
   @Test
@@ -76,10 +71,10 @@ class FlareReportPeriodServiceTest {
     var flareReportPeriodForm = flareReportPeriodService.getFlareReportPeriodForm(applicationVersion);
 
     assertThat(flareReportPeriodForm)
-        .extracting(FlareReportPeriodForm::getHasDataForPeriod,
+        .extracting(
             form -> form.getReportEndMonth().getInputValue(),
             form -> form.getReportEndYear().getInputValue())
-        .containsExactly(null, null, null);
+        .containsExactly(null, null);
   }
 
   @Test
@@ -90,10 +85,10 @@ class FlareReportPeriodServiceTest {
     var flareReportPeriodForm = flareReportPeriodService.getFlareReportPeriodForm(applicationVersion);
 
     assertThat(flareReportPeriodForm)
-        .extracting(FlareReportPeriodForm::getHasDataForPeriod,
+        .extracting(
             form -> form.getReportEndMonth().getInputValue(),
             form -> form.getReportEndYear().getInputValue())
-        .containsExactly(Boolean.FALSE, "APRIL", "2023");
+        .containsExactly("APRIL", "2023");
   }
 
   @Test
@@ -122,10 +117,9 @@ class FlareReportPeriodServiceTest {
     assertThat(flareReportPeriod)
         .extracting(
             FlareReportPeriod::getApplicationVersion,
-            FlareReportPeriod::getHasDataForPeriod,
             FlareReportPeriod::getReportEndMonth,
             FlareReportPeriod::getReportEndYear)
-        .containsExactly(applicationVersion, Boolean.FALSE, Month.APRIL, 2023);
+        .containsExactly(applicationVersion, Month.APRIL, 2023);
   }
 
   @Test
@@ -141,9 +135,6 @@ class FlareReportPeriodServiceTest {
   @Test
   void saveFlareReportPeriod() {
     FlareReportPeriodForm flareReportPeriodForm = FlareReportTestUtil.getFullFlareReportPeriodForm();
-
-    when(flareReportPeriodHelperService.getProposedReportEndYearMonth(applicationVersion))
-        .thenReturn(YearMonth.now().minusMonths(1));
 
     flareReportPeriodService.saveFlareReportPeriod(applicationVersion, flareReportPeriodForm);
 

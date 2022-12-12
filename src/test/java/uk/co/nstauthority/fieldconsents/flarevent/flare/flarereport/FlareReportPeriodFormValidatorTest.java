@@ -44,37 +44,6 @@ class FlareReportPeriodFormValidatorTest {
 
     assertThat(errorMap)
         .containsOnly(
-            entry("hasDataForPeriod",
-                Collections.singletonList(FlareReportPeriodFormValidator.HAS_DATA_FOR_PERIOD_EMPTY))
-        );
-
-  }
-
-  @Test
-  void validate_hasDataForPeriodTrue() {
-    flareReportPeriodForm = new FlareReportPeriodForm();
-    flareReportPeriodForm.setHasDataForPeriod(Boolean.TRUE);
-
-    errors = new BeanPropertyBindingResult(flareReportPeriodForm, "form");
-
-    ValidationUtils.invokeValidator(validator, flareReportPeriodForm, errors);
-
-    assertThat(errors.hasErrors()).isFalse();
-  }
-
-  @Test
-  void validate_hasDataForPeriodFalseElseEmpty() {
-    flareReportPeriodForm = new FlareReportPeriodForm();
-    flareReportPeriodForm.setHasDataForPeriod(Boolean.FALSE);
-
-    errors = new BeanPropertyBindingResult(flareReportPeriodForm, "form");
-
-    ValidationUtils.invokeValidator(validator, flareReportPeriodForm, errors);
-
-    errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
-
-    assertThat(errorMap)
-        .containsOnly(
             entry("reportEndMonth.inputValue",
                 Collections.singletonList("Month must have a value.")),
             entry("reportEndYear.inputValue",
@@ -86,7 +55,6 @@ class FlareReportPeriodFormValidatorTest {
   @Test
   void validate_invalidYear() {
     flareReportPeriodForm = new FlareReportPeriodForm();
-    flareReportPeriodForm.setHasDataForPeriod(Boolean.FALSE);
     flareReportPeriodForm.setReportEndYear("a");
     flareReportPeriodForm.setReportEndMonth(Month.JANUARY.name());
 
@@ -106,7 +74,6 @@ class FlareReportPeriodFormValidatorTest {
   @Test
   void validate_invalidMonth() {
     flareReportPeriodForm = new FlareReportPeriodForm();
-    flareReportPeriodForm.setHasDataForPeriod(Boolean.FALSE);
     flareReportPeriodForm.setReportEndYear(String.valueOf(Year.now()));
     flareReportPeriodForm.setReportEndMonth("NOTAMONTH");
 
@@ -121,7 +88,6 @@ class FlareReportPeriodFormValidatorTest {
   @Test
   void validate_invalidInFuture() {
     flareReportPeriodForm = new FlareReportPeriodForm();
-    flareReportPeriodForm.setHasDataForPeriod(Boolean.FALSE);
     YearMonth yearMonthInFuture = YearMonth.now().plusMonths(1);
     flareReportPeriodForm.setReportEndYear(String.valueOf(yearMonthInFuture.getYear()));
     flareReportPeriodForm.setReportEndMonth(yearMonthInFuture.getMonth().name());
@@ -142,7 +108,6 @@ class FlareReportPeriodFormValidatorTest {
   @Test
   void validate_validForm() {
     flareReportPeriodForm = new FlareReportPeriodForm();
-    flareReportPeriodForm.setHasDataForPeriod(Boolean.FALSE);
     YearMonth currentYearMonth = YearMonth.now();
     flareReportPeriodForm.setReportEndYear(String.valueOf(currentYearMonth.getYear()));
     flareReportPeriodForm.setReportEndMonth(currentYearMonth.getMonth().name());

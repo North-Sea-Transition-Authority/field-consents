@@ -99,12 +99,11 @@ class FlareReportTestUtil {
   }
 
   static FlareReportPeriod getFullFlareReportPeriod() {
-    return new FlareReportPeriod(flareAppVersion, Boolean.FALSE, Month.APRIL, 2023);
+    return new FlareReportPeriod(flareAppVersion, Month.APRIL, 2023);
   }
 
   static FlareReportPeriodForm getFullFlareReportPeriodForm() {
     FlareReportPeriodForm form = new FlareReportPeriodForm();
-    form.setHasDataForPeriod(Boolean.FALSE);
     form.setReportEndMonth("APRIL");
     form.setReportEndYear("2023");
     return form;

@@ -14,9 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
 
-import java.time.Month;
 import java.time.Year;
-import java.time.YearMonth;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,9 +44,6 @@ class FlareReportPeriodControllerTest extends AbstractControllerTest {
   @MockBean
   private FlareReportPeriodControllerHelperService flareReportPeriodControllerHelperService;
 
-  @MockBean
-  private FlareReportPeriodHelperService flareReportPeriodHelperService;
-
   private FlareReportPeriodForm flareReportPeriodForm;
 
   private ApplicationVersion applicationVersion;
@@ -70,10 +65,6 @@ class FlareReportPeriodControllerTest extends AbstractControllerTest {
   void getFlareReportPeriodForm_validUser() throws Exception {
     when(flareReportPeriodService.getFlareReportPeriodForm(applicationVersion))
         .thenReturn(flareReportPeriodForm);
-    when(flareReportPeriodHelperService.getProposedReportStartYearMonth(applicationVersion))
-        .thenReturn(YearMonth.of(2022, Month.JUNE));
-    when(flareReportPeriodHelperService.getProposedReportEndYearMonth(applicationVersion))
-        .thenReturn(YearMonth.of(2023, Month.MAY));
 
     var modelAndView =
         mockMvc.perform(get(ReverseRouter.route(on(FlareReportPeriodController.class)
@@ -87,8 +78,6 @@ class FlareReportPeriodControllerTest extends AbstractControllerTest {
     var model = modelAndView.getModel();
 
     assertThat(model)
-        .containsEntry("reportPeriodStart", "June 2022")
-        .containsEntry("reportPeriodEnd", "May 2023")
         .containsEntry("reportEndMonthsMap", DateUtils.monthsMap())
         .containsEntry("reportEndYearsMap", Map.of(
             Year.now().minusYears(1).toString(),
@@ -113,11 +102,6 @@ class FlareReportPeriodControllerTest extends AbstractControllerTest {
   @WithMockUser
   void saveFlareReportPeriodForm_invalidForm() throws Exception {
 
-    when(flareReportPeriodHelperService.getProposedReportStartYearMonth(applicationVersion))
-        .thenReturn(YearMonth.of(2022, Month.JUNE));
-    when(flareReportPeriodHelperService.getProposedReportEndYearMonth(applicationVersion))
-        .thenReturn(YearMonth.of(2023, Month.MAY));
-
     doCallRealMethod().when(flareReportPeriodFormValidator).validate(any(), any());
 
     var modelAndView =
@@ -132,8 +116,6 @@ class FlareReportPeriodControllerTest extends AbstractControllerTest {
     var model = modelAndView.getModel();
 
     assertThat(model)
-        .containsEntry("reportPeriodStart", "June 2022")
-        .containsEntry("reportPeriodEnd", "May 2023")
         .containsEntry("reportEndMonthsMap", DateUtils.monthsMap())
         .containsEntry("reportEndYearsMap", Map.of(
             Year.now().minusYears(1).toString(),

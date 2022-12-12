@@ -16,27 +16,25 @@ class FlareReportPeriodTest {
 
   static final ApplicationVersion applicationVersion =
       ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
-  static final YearMonth proposedYearMonth = YearMonth.of(2022, Month.OCTOBER);
+
   FlareReportPeriodForm flareReportPeriodForm;
 
 
   @BeforeEach
   void setUp() {
     flareReportPeriodForm = new FlareReportPeriodForm();
-    flareReportPeriodForm.setHasDataForPeriod(Boolean.TRUE);
     flareReportPeriodForm.getReportEndMonth().setInputValue("January");
     flareReportPeriodForm.getReportEndYear().setInputValue("2021");
   }
 
   @Test
-  void newFrom_hasHasDataForPeriodTrue() {
+  void newFrom_flareReportPeriodForm() {
     FlareReportPeriod flareReportPeriod =
-        FlareReportPeriod.from(applicationVersion, flareReportPeriodForm, proposedYearMonth);
+        FlareReportPeriod.from(applicationVersion, flareReportPeriodForm);
 
     assertThat(flareReportPeriod)
         .extracting(
             FlareReportPeriod::getApplicationVersion,
-            FlareReportPeriod::getHasDataForPeriod,
             FlareReportPeriod::getReportEndMonth,
             FlareReportPeriod::getReportEndYear,
             FlareReportPeriod::getReportStartYearMonth,
@@ -44,30 +42,27 @@ class FlareReportPeriodTest {
         )
         .containsExactly(
             applicationVersion,
-            Boolean.TRUE,
-            Month.OCTOBER,
-            2022,
-            YearMonth.of(2022, Month.OCTOBER).minusMonths(11),
-            YearMonth.of(2022, Month.OCTOBER)
+            Month.JANUARY,
+            2021,
+            YearMonth.of(2021, Month.JANUARY).minusMonths(11),
+            YearMonth.of(2021, Month.JANUARY)
         );
   }
 
   @Test
-  void newFrom_hasHasDataForPeriodFalseBadMonth() {
-    flareReportPeriodForm.setHasDataForPeriod(Boolean.FALSE);
+  void newFrom_badMonth() {
     flareReportPeriodForm.getReportEndMonth().setInputValue("NoAMonth");
 
-    assertThatThrownBy(() -> FlareReportPeriod.from(applicationVersion, flareReportPeriodForm, proposedYearMonth))
+    assertThatThrownBy(() -> FlareReportPeriod.from(applicationVersion, flareReportPeriodForm))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("No enum constant java.time.Month.NOAMONTH");
   }
 
   @Test
-  void newFrom_hasHasDataForPeriodFalseBadYear() {
-    flareReportPeriodForm.setHasDataForPeriod(Boolean.FALSE);
+  void newFrom_badYear() {
     flareReportPeriodForm.getReportEndYear().setInputValue("NoAYear");
 
-    assertThatThrownBy(() -> FlareReportPeriod.from(applicationVersion, flareReportPeriodForm, proposedYearMonth))
+    assertThatThrownBy(() -> FlareReportPeriod.from(applicationVersion, flareReportPeriodForm))
         .isInstanceOf(NoSuchElementException.class);
   }
 

@@ -12,13 +12,9 @@ public class FlareReportPeriodService {
 
   private final FlareReportPeriodRepository flareReportPeriodRepository;
 
-  private final FlareReportPeriodHelperService flareReportPeriodHelperService;
-
   @Autowired
-  FlareReportPeriodService(FlareReportPeriodRepository flareReportPeriodRepository,
-                           FlareReportPeriodHelperService flareReportPeriodHelperService) {
+  FlareReportPeriodService(FlareReportPeriodRepository flareReportPeriodRepository) {
     this.flareReportPeriodRepository = flareReportPeriodRepository;
-    this.flareReportPeriodHelperService = flareReportPeriodHelperService;
   }
 
   Optional<FlareReportPeriod> findFlareReportPeriod(ApplicationVersion applicationVersion) {
@@ -44,14 +40,10 @@ public class FlareReportPeriodService {
   }
 
   @Transactional
-  public void saveFlareReportPeriod(ApplicationVersion applicationVersion, FlareReportPeriodForm flareReportPeriodForm) {
-
+  public void saveFlareReportPeriod(ApplicationVersion applicationVersion,
+                                    FlareReportPeriodForm flareReportPeriodForm) {
     flareReportPeriodRepository.deleteByApplicationVersion(applicationVersion);
-
-    flareReportPeriodRepository.save(
-        FlareReportPeriod.from(applicationVersion,
-            flareReportPeriodForm,
-            flareReportPeriodHelperService.getProposedReportEndYearMonth(applicationVersion)));
+    flareReportPeriodRepository.save(FlareReportPeriod.from(applicationVersion, flareReportPeriodForm));
   }
 
 }
