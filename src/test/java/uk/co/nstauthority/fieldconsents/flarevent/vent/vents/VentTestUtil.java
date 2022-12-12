@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.flarevent.vent;
+package uk.co.nstauthority.fieldconsents.flarevent.vent.vents;
 
 import java.util.List;
 import java.util.Map;

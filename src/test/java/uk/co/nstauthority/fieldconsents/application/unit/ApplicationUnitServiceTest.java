@@ -24,7 +24,7 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthS
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentUnit;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flares.FlareTestUtil;
-import uk.co.nstauthority.fieldconsents.flarevent.vent.VentTestUtil;
+import uk.co.nstauthority.fieldconsents.flarevent.vent.vents.VentTestUtil;
 import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 
 @ExtendWith(MockitoExtension.class)

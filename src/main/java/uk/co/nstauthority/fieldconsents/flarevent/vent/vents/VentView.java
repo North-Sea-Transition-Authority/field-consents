@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.flarevent.vent;
+package uk.co.nstauthority.fieldconsents.flarevent.vent.vents;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 

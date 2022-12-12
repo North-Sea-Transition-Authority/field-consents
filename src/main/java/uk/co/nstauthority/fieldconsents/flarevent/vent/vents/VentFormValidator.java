@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.flarevent.vent;
+package uk.co.nstauthority.fieldconsents.flarevent.vent.vents;
 
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;

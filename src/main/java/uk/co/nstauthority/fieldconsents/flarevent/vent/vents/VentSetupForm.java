@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.flarevent.vent;
+package uk.co.nstauthority.fieldconsents.flarevent.vent.vents;
 
 public class VentSetupForm {
 

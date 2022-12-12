@@ -30,7 +30,7 @@ import uk.co.nstauthority.fieldconsents.flarevent.flare.shortterm.FlareShortTerm
 import uk.co.nstauthority.fieldconsents.flarevent.flare.shortterm.FlareShortTermMonthRepository;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.shortterm.FlareShortTermService;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.shortterm.FlareShortTermTestUtil;
-import uk.co.nstauthority.fieldconsents.flarevent.vent.VentTestUtil;
+import uk.co.nstauthority.fieldconsents.flarevent.vent.vents.VentTestUtil;
 
 @ExtendWith(MockitoExtension.class)
 class FlareMonthCleanupServiceTest {

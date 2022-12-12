@@ -1,6 +1,6 @@
 <#include '../layout/layout.ftl'>
 
-<#-- @ftlvariable name="vent" type="uk.co.nstauthority.fieldconsents.flarevent.vent.VentView" -->
+<#-- @ftlvariable name="vent" type="uk.co.nstauthority.fieldconsents.flarevent.vent.vents.VentView" -->
 
 <#macro ventSummary
   vent

@@ -2,7 +2,7 @@
 <#import '_ventSummary.ftl' as ventSummary>
 
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
-<#-- @ftlvariable name="ventViews" type="java.util.List<uk.co.nstauthority.fieldconsents.flarevent.vent.VentView>" -->
+<#-- @ftlvariable name="ventViews" type="java.util.List<uk.co.nstauthority.fieldconsents.flarevent.vent.vents.VentView>" -->
 
 <#if successfulDeleteBanner?has_content>
   <#assign deleteBanner>
