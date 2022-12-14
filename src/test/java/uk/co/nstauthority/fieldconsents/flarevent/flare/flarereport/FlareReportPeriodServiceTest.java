@@ -23,6 +23,8 @@ class FlareReportPeriodServiceTest {
   @Mock
   private FlareReportPeriodRepository flareReportPeriodRepository;
 
+  @Mock FlareReportCleanupService flareReportCleanupService;
+
   private FlareReportPeriodService flareReportPeriodService;
 
   private ApplicationVersion applicationVersion;
@@ -31,7 +33,7 @@ class FlareReportPeriodServiceTest {
 
   @BeforeEach
   void setUp() {
-    flareReportPeriodService = new FlareReportPeriodService(flareReportPeriodRepository);
+    flareReportPeriodService = new FlareReportPeriodService(flareReportPeriodRepository, flareReportCleanupService);
     applicationVersion = FlareReportTestUtil.flareAppVersion;
     exceptionMessage = "Flare report period with application_version_id %s not found".formatted(applicationVersion.getId());
   }
@@ -142,5 +144,17 @@ class FlareReportPeriodServiceTest {
 
     ArgumentCaptor<FlareReportPeriod> flareReportPeriodArgumentCaptor = ArgumentCaptor.forClass(FlareReportPeriod.class);
     verify(flareReportPeriodRepository, times(1)).save(flareReportPeriodArgumentCaptor.capture());
+    ArgumentCaptor<ApplicationVersion> applicationVersionArgumentCaptor = ArgumentCaptor.forClass(ApplicationVersion.class);
+    verify(flareReportCleanupService, times(1)).removeObsoleteReportDataOnPeriodSave(
+        applicationVersionArgumentCaptor.capture(),
+        flareReportPeriodArgumentCaptor.capture());
+
+    assertThat(applicationVersionArgumentCaptor.getValue()).isEqualTo(applicationVersion);
+
+    assertThat(flareReportPeriodArgumentCaptor.getValue())
+        .extracting(FlareReportPeriod::getApplicationVersion,
+            FlareReportPeriod::getReportEndYear,
+            FlareReportPeriod::getReportEndMonth)
+        .containsExactly(applicationVersion, 2023, Month.APRIL);
   }
 }

@@ -214,7 +214,7 @@ class FlareInformationTaskListSectionServiceTest {
   @Test
   void getFlareReportTaskListItem_completed() {
     when(flareReportPeriodService.flareReportPeriodExists(applicationVersion)).thenReturn(true);
-    when(flareReportService.flareReportComplete(applicationVersion)).thenReturn(true);
+    when(flareReportService.flareReportMonthsComplete(applicationVersion)).thenReturn(true);
 
     TaskListItem item = flareInformationTaskListSectionService.getFlareReportTaskListItem(applicationVersion);
 
@@ -229,7 +229,7 @@ class FlareInformationTaskListSectionServiceTest {
   @Test
   void getFlareReportTaskListItem_inProgress() {
     when(flareReportPeriodService.flareReportPeriodExists(applicationVersion)).thenReturn(true);
-    when(flareReportService.flareReportComplete(applicationVersion)).thenReturn(false);
+    when(flareReportService.flareReportMonthsComplete(applicationVersion)).thenReturn(false);
 
     TaskListItem item = flareInformationTaskListSectionService.getFlareReportTaskListItem(applicationVersion);
 
@@ -244,7 +244,7 @@ class FlareInformationTaskListSectionServiceTest {
   @Test
   void getFlareReportTaskListItem_notCompleted() {
     when(flareReportPeriodService.flareReportPeriodExists(applicationVersion)).thenReturn(false);
-    when(flareReportService.flareReportComplete(applicationVersion)).thenReturn(false);
+    when(flareReportService.flareReportMonthsComplete(applicationVersion)).thenReturn(false);
 
     TaskListItem item = flareInformationTaskListSectionService.getFlareReportTaskListItem(applicationVersion);
 

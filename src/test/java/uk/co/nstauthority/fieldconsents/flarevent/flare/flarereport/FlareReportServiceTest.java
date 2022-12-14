@@ -41,23 +41,26 @@ class FlareReportServiceTest {
   }
 
   @Test
-  void flareReportComplete_noPeriod() {
+  void flareReportMonthsComplete_noPeriod() {
     when(flareReportPeriodService.findFlareReportPeriod(applicationVersion)).thenReturn(Optional.empty());
 
-    assertThat(flareReportService.flareReportComplete(applicationVersion)).isFalse();
+    assertThat(flareReportService.flareReportMonthsComplete(applicationVersion)).isFalse();
   }
 
   @Test
-  void flareReportComplete_noReportMonth() {
+  void flareReportMonthsComplete_noReportMonths() {
+    FlareReportPeriod flareReportPeriod =
+        new FlareReportPeriod(applicationVersion, Month.JANUARY, 2023);
+
     when(flareReportPeriodService.findFlareReportPeriod(applicationVersion))
-        .thenReturn(Optional.of(new FlareReportPeriod()));
+        .thenReturn(Optional.of(flareReportPeriod));
     when(flareReportMonthRepository.findAllByApplicationVersion(applicationVersion)).thenReturn(new ArrayList<>());
 
-    assertThat(flareReportService.flareReportComplete(applicationVersion)).isFalse();
+    assertThat(flareReportService.flareReportMonthsComplete(applicationVersion)).isFalse();
   }
 
   @Test
-  void flareReportComplete_reportMonthsMissing() {
+  void flareReportMonthsComplete_reportMonthsMissing() {
     List<FlareReportMonth> flareReportMonths =
         FlareReportTestUtil.getFlareReportMonthsForYear(applicationVersion, 2022);
 
@@ -68,11 +71,11 @@ class FlareReportServiceTest {
         .thenReturn(Optional.of(flareReportPeriod));
     when(flareReportMonthRepository.findAllByApplicationVersion(applicationVersion)).thenReturn(flareReportMonths);
 
-    assertThat(flareReportService.flareReportComplete(applicationVersion)).isFalse();
+    assertThat(flareReportService.flareReportMonthsComplete(applicationVersion)).isFalse();
   }
 
   @Test
-  void flareReportComplete_reportMonthsAlign() {
+  void flareReportMonthsComplete_reportMonthsAlign() {
     List<FlareReportMonth> flareReportMonths =
         FlareReportTestUtil.getFlareReportMonthsForYear(applicationVersion, 2022);
 
@@ -83,7 +86,7 @@ class FlareReportServiceTest {
         .thenReturn(Optional.of(flareReportPeriod));
     when(flareReportMonthRepository.findAllByApplicationVersion(applicationVersion)).thenReturn(flareReportMonths);
 
-    assertThat(flareReportService.flareReportComplete(applicationVersion)).isTrue();
+    assertThat(flareReportService.flareReportMonthsComplete(applicationVersion)).isTrue();
   }
 
   @Test

@@ -7,10 +7,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.flarevent.ReportUtil;
 
 @Service
 public class FlareReportService {
@@ -26,7 +28,7 @@ public class FlareReportService {
     this.flareReportPeriodService = flareReportPeriodService;
   }
 
-  public boolean flareReportComplete(ApplicationVersion applicationVersion) {
+  public boolean flareReportMonthsComplete(ApplicationVersion applicationVersion) {
 
     Optional<FlareReportPeriod> flareReportPeriodOptional =
         flareReportPeriodService.findFlareReportPeriod(applicationVersion);
@@ -35,29 +37,24 @@ public class FlareReportService {
       return false;
     }
 
-    List<FlareReportMonth> flareReportMonths = flareReportMonthRepository
-        .findAllByApplicationVersion(applicationVersion);
-
-    if (flareReportMonths.isEmpty()) {
-      return false;
-    }
-
-    // we now know that the flare report period exists, and we have some report data
-    // now check that the data we have is for the required period
-    Map<YearMonth, FlareReportMonth> flareReportMonthsMap = getFlareReportMonthsMap(flareReportMonths);
     var flareReportPeriod = flareReportPeriodOptional.get();
-    var reportStart = flareReportPeriod.getReportStartYearMonth();
-    var reportEnd = flareReportPeriod.getReportEndYearMonth();
-    for (YearMonth yearMonth = reportStart;
-         yearMonth.isBefore(reportEnd.plusMonths(1));
-         yearMonth = yearMonth.plusMonths(1)) {
-      // if we don't have data for an expected report month then return false
-      if (!flareReportMonthsMap.containsKey(yearMonth)) {
-        return false;
-      }
-    }
 
-    return true;
+    // if there is no difference between the expected year months and the existing year months of flare report data then
+    // the flare report data is complete
+    return CollectionUtils.disjunction(
+        getExistingFlareReportYearMonths(applicationVersion),
+        ReportUtil.getExpectedYearMonthsForPeriod(
+            flareReportPeriod.getReportStartYearMonth(),
+            flareReportPeriod.getReportEndYearMonth())
+        ).isEmpty();
+  }
+
+  private List<YearMonth> getExistingFlareReportYearMonths(ApplicationVersion applicationVersion) {
+    // return a list of years and months for any flare report data we have
+    return flareReportMonthRepository.findAllByApplicationVersion(applicationVersion)
+        .stream()
+        .map(flareReportMonth -> YearMonth.of(flareReportMonth.getYear(), flareReportMonth.getMonth()))
+        .toList();
   }
 
   FlareReportForm getFlareReportForm(ApplicationVersion applicationVersion) {
@@ -78,12 +75,12 @@ public class FlareReportService {
     List<FlareReportMonthForm> flareReportMonthForms = new ArrayList<>();
 
     var flareReportPeriod = flareReportPeriodService.getFlareReportPeriodOrError(applicationVersion);
-    var reportStart = flareReportPeriod.getReportStartYearMonth();
-    var reportEnd = flareReportPeriod.getReportEndYearMonth();
+    List<YearMonth> expectedYearMonths =
+        ReportUtil.getExpectedYearMonthsForPeriod(
+            flareReportPeriod.getReportStartYearMonth(),
+            flareReportPeriod.getReportEndYearMonth());
 
-    for (YearMonth yearMonth = reportStart;
-         yearMonth.isBefore(reportEnd.plusMonths(1));
-         yearMonth = yearMonth.plusMonths(1)) {
+    for (YearMonth yearMonth: expectedYearMonths) {
       flareReportMonthForms.add(FlareReportMonthForm.from(yearMonth));
     }
 

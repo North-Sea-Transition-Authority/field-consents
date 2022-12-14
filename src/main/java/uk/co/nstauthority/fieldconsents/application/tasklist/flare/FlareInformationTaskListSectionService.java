@@ -107,7 +107,7 @@ public class FlareInformationTaskListSectionService implements TaskListSectionSe
         : ReverseRouter.route(on(FlareReportPeriodController.class).getFlareReportPeriodForm(applicationId));
 
     TaskListLabel flareReportLabel;
-    if (flareReportService.flareReportComplete(applicationVersion)) {
+    if (flareReportService.flareReportMonthsComplete(applicationVersion)) {
       flareReportLabel = TaskListLabel.COMPLETED;
     } else if (flareReportPeriodExists) {
       flareReportLabel = TaskListLabel.IN_PROGRESS;
