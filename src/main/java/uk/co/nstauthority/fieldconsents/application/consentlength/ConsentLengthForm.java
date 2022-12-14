@@ -7,26 +7,32 @@ public class ConsentLengthForm {
 
   private ConsentLengthType consentLengthType;
 
-  private ThreeFieldDateInput shortTermStartDate =
-      new ThreeFieldDateInput("shortTermStartDate", "Start date",
-          new IntegerInput("shortTermStartDay", "Day"),
-          new IntegerInput("shortTermStartMonth", "Month"),
-          new IntegerInput("shortTermStartYear", "Year")
-      );
+  private ThreeFieldDateInput shortTermStartDate;
 
-  private ThreeFieldDateInput shortTermEndDate =
-      new ThreeFieldDateInput("shortTermEndDate", "End date",
-          new IntegerInput("shortTermEndDay", "Day"),
-          new IntegerInput("shortTermEndMonth", "Month"),
-          new IntegerInput("shortTermEndYear", "Year")
-      );
+  private ThreeFieldDateInput shortTermEndDate;
 
-  private IntegerInput annualConsentYear = new IntegerInput("annualConsentYear", "Year");
+  private final IntegerInput annualConsentYear;
 
-  private IntegerInput longTermStartYear = new IntegerInput("longTermStartYear", "Start year");
+  private final IntegerInput longTermStartYear;
 
-  private IntegerInput longTermEndYear = new IntegerInput("longTermEndYear", "End year");
+  private final IntegerInput longTermEndYear;
 
+  public ConsentLengthForm() {
+    // TODO DFL-32 update below when DFL updated
+    shortTermStartDate = new ThreeFieldDateInput("shortTermStartDate", "Start date",
+        new IntegerInput("shortTermStartDay", "Day"),
+        new IntegerInput("shortTermStartMonth", "Month"),
+        new IntegerInput("shortTermStartYear", "Year")
+    );
+    shortTermEndDate = new ThreeFieldDateInput("shortTermEndDate", "End date",
+        new IntegerInput("shortTermEndDay", "Day"),
+        new IntegerInput("shortTermEndMonth", "Month"),
+        new IntegerInput("shortTermEndYear", "Year")
+    );
+    annualConsentYear = new IntegerInput("annualConsentYear", "Year");
+    longTermStartYear = new IntegerInput("longTermStartYear", "Start year");
+    longTermEndYear = new IntegerInput("longTermEndYear", "End year");
+  }
 
   public ConsentLengthType getConsentLengthType() {
     return consentLengthType;
@@ -40,72 +46,72 @@ public class ConsentLengthForm {
     return shortTermStartDate.getDayInputValue();
   }
 
-  public void setShortTermStartDay(IntegerInput shortTermStartDay) {
-    this.shortTermStartDate.setDayInputValue(shortTermStartDay);
+  public void setShortTermStartDay(String shortTermStartDay) {
+    this.shortTermStartDate.getDayInputValue().setInputValue(shortTermStartDay);
   }
 
   public IntegerInput getShortTermStartMonth() {
     return shortTermStartDate.getMonthInputValue();
   }
 
-  public void setShortTermStartMonth(IntegerInput shortTermStartMonth) {
-    this.shortTermStartDate.setMonthInputValue(shortTermStartMonth);
+  public void setShortTermStartMonth(String shortTermStartMonth) {
+    this.shortTermStartDate.getMonthInputValue().setInputValue(shortTermStartMonth);
   }
 
   public IntegerInput getShortTermStartYear() {
     return shortTermStartDate.getYearInputValue();
   }
 
-  public void setShortTermStartYear(IntegerInput shortTermStartYear) {
-    this.shortTermStartDate.setYearInputValue(shortTermStartYear);
+  public void setShortTermStartYear(String shortTermStartYear) {
+    this.shortTermStartDate.getYearInputValue().setInputValue(shortTermStartYear);
   }
 
   public IntegerInput getShortTermEndDay() {
     return shortTermEndDate.getDayInputValue();
   }
 
-  public void setShortTermEndDay(IntegerInput shortTermEndDay) {
-    this.shortTermEndDate.setDayInputValue(shortTermEndDay);
+  public void setShortTermEndDay(String shortTermEndDay) {
+    this.shortTermEndDate.getDayInputValue().setInputValue(shortTermEndDay);
   }
 
   public IntegerInput getShortTermEndMonth() {
     return shortTermEndDate.getMonthInputValue();
   }
 
-  public void setShortTermEndMonth(IntegerInput shortTermEndMonth) {
-    this.shortTermEndDate.setMonthInputValue(shortTermEndMonth);
+  public void setShortTermEndMonth(String shortTermEndMonth) {
+    this.shortTermEndDate.getMonthInputValue().setInputValue(shortTermEndMonth);
   }
 
   public IntegerInput getShortTermEndYear() {
     return shortTermEndDate.getYearInputValue();
   }
 
-  public void setShortTermEndYear(IntegerInput shortTermEndYear) {
-    this.shortTermEndDate.setYearInputValue(shortTermEndYear);
+  public void setShortTermEndYear(String shortTermEndYear) {
+    this.shortTermEndDate.getYearInputValue().setInputValue(shortTermEndYear);
   }
 
   public IntegerInput getAnnualConsentYear() {
     return annualConsentYear;
   }
 
-  public void setAnnualConsentYear(IntegerInput annualConsentYear) {
-    this.annualConsentYear = annualConsentYear;
+  public void setAnnualConsentYear(String annualConsentYear) {
+    this.annualConsentYear.setInputValue(annualConsentYear);
   }
 
   public IntegerInput getLongTermStartYear() {
     return longTermStartYear;
   }
 
-  public void setLongTermStartYear(IntegerInput longTermStartYear) {
-    this.longTermStartYear = longTermStartYear;
+  public void setLongTermStartYear(String longTermStartYear) {
+    this.longTermStartYear.setInputValue(longTermStartYear);
   }
 
   public IntegerInput getLongTermEndYear() {
     return longTermEndYear;
   }
 
-  public void setLongTermEndYear(IntegerInput longTermEndYear) {
-    this.longTermEndYear = longTermEndYear;
+  public void setLongTermEndYear(String longTermEndYear) {
+    this.longTermEndYear.setInputValue(longTermEndYear);
   }
 
   public ThreeFieldDateInput getShortTermStartDate() {

@@ -5,8 +5,6 @@ import java.time.Month;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import uk.co.fivium.formlibrary.input.IntegerInput;
-import uk.co.fivium.formlibrary.input.ThreeFieldDateInput;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 
@@ -43,57 +41,41 @@ public class ConsentLengthTestUtil {
     return consentYearList;
   }
 
-  public static ConsentLengthForm getShortTermConsentLengthForm() {
+  public static ConsentLengthForm getShortTermConsentLengthFormForDates(LocalDate startDate, LocalDate endDate) {
     ConsentLengthForm form = new ConsentLengthForm();
     form.setConsentLengthType(ConsentLengthType.SHORT_TERM);
 
-    IntegerInput shortTermStartDay = new IntegerInput("shortTermStartDay", "Day");
-    shortTermStartDay.setInputValue(String.valueOf(SHORT_TERM_START_DATE.getDayOfMonth()));
-    form.setShortTermStartDay(shortTermStartDay);
-    IntegerInput shortTermStartMonth = new IntegerInput("shortTermStartMonth", "Month");
-    shortTermStartMonth.setInputValue(String.valueOf(SHORT_TERM_START_DATE.getMonthValue()));
-    form.setShortTermStartMonth(shortTermStartMonth);
-    IntegerInput shortTermStartYear = new IntegerInput("shortTermStartYear", "Year");
-    shortTermStartYear.setInputValue(String.valueOf(SHORT_TERM_START_DATE.getYear()));
-    form.setShortTermStartYear(shortTermStartYear);
-    ThreeFieldDateInput shortTermStartDateInput = new ThreeFieldDateInput("shortTermStartDate", "Start date",
-        shortTermStartDay, shortTermStartMonth, shortTermStartYear);
-    form.setShortTermStartDate(shortTermStartDateInput);
+    form.setShortTermStartDay(String.valueOf(startDate.getDayOfMonth()));
+    form.setShortTermStartMonth(String.valueOf(startDate.getMonthValue()));
+    form.setShortTermStartYear(String.valueOf(startDate.getYear()));
 
-    IntegerInput shortTermEndDay = new IntegerInput("shortTermEndDay", "Day");
-    shortTermEndDay.setInputValue(String.valueOf(SHORT_TERM_END_DATE.getDayOfMonth()));
-    form.setShortTermEndDay(shortTermEndDay);
-    IntegerInput shortTermEndMonth = new IntegerInput("shortTermEndMonth", "Month");
-    shortTermEndMonth.setInputValue(String.valueOf(SHORT_TERM_END_DATE.getMonthValue()));
-    form.setShortTermEndMonth(shortTermEndMonth);
-    IntegerInput shortTermEndYear = new IntegerInput("shortTermEndYear", "Year");
-    shortTermEndYear.setInputValue(String.valueOf(SHORT_TERM_END_DATE.getYear()));
-    form.setShortTermEndYear(shortTermEndYear);
-    ThreeFieldDateInput shortTermEndDateInput = new ThreeFieldDateInput("shortTermEndDate", "End date",
-        shortTermEndDay, shortTermEndMonth, shortTermEndYear);
-    form.setShortTermEndDate(shortTermEndDateInput);
+    form.setShortTermEndDay(String.valueOf(endDate.getDayOfMonth()));
+    form.setShortTermEndMonth(String.valueOf(endDate.getMonthValue()));
+    form.setShortTermEndYear(String.valueOf(endDate.getYear()));
     return form;
+  }
+
+  public static ConsentLengthForm getShortTermConsentLengthForm() {
+    return getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
   }
 
   public static ConsentLengthForm getAnnualConsentLengthForm() {
     ConsentLengthForm form = new ConsentLengthForm();
     form.setConsentLengthType(ConsentLengthType.ANNUAL);
-    IntegerInput annualConsentYear = new IntegerInput("annualConsentYear", "Year");
-    annualConsentYear.setInputValue("2023");
-    form.setAnnualConsentYear(annualConsentYear);
+    form.setAnnualConsentYear("2023");
+    return form;
+  }
+
+  public static ConsentLengthForm getLongTermConsentLengthFormForYears(int startYear, int endYear) {
+    ConsentLengthForm form = new ConsentLengthForm();
+    form.setConsentLengthType(ConsentLengthType.LONG_TERM);
+    form.setLongTermStartYear(String.valueOf(startYear));
+    form.setLongTermEndYear(String.valueOf(endYear));
     return form;
   }
 
   public static ConsentLengthForm getLongTermConsentLengthForm() {
-    ConsentLengthForm form = new ConsentLengthForm();
-    form.setConsentLengthType(ConsentLengthType.LONG_TERM);
-    IntegerInput longTermStartYear = new IntegerInput("longTermStartYear", "Year");
-    longTermStartYear.setInputValue(String.valueOf(LONG_TERM_START_YEAR));
-    form.setLongTermStartYear(longTermStartYear);
-    IntegerInput longTermEndYear = new IntegerInput("longTermEndYear", "Year");
-    longTermEndYear.setInputValue(String.valueOf(LONG_TERM_END_YEAR));
-    form.setLongTermEndYear(longTermEndYear);
-    return form;
+    return getLongTermConsentLengthFormForYears(LONG_TERM_START_YEAR, LONG_TERM_END_YEAR);
   }
 
   public static ConsentLengthDetails getConsentLengthDetailsForShortTerm(ApplicationVersion applicationVersion,
