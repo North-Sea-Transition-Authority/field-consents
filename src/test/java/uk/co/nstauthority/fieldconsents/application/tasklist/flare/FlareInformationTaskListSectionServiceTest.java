@@ -273,7 +273,6 @@ class FlareInformationTaskListSectionServiceTest {
 
   @Test
   void getFlareConsentTaskListItem_annualComplete() {
-    when(flareAnnualService.flareAnnualMonthsExist(applicationVersion)).thenReturn(true);
     when(flareAnnualService.flareAnnualMonthsComplete(applicationVersion)).thenReturn(true);
 
     TaskListItem item = flareInformationTaskListSectionService
@@ -320,7 +319,6 @@ class FlareInformationTaskListSectionServiceTest {
 
   @Test
   void getFlareConsentTaskListItem_shortTermComplete() {
-    when(flareShortTermService.flareShortTermMonthsExist(applicationVersion)).thenReturn(true);
     when(flareShortTermService.flareShortTermMonthsComplete(applicationVersion)).thenReturn(true);
 
     TaskListItem item = flareInformationTaskListSectionService

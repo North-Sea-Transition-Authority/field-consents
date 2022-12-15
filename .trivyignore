@@ -28,5 +28,5 @@ CVE-2022-41854
 CVE-2022-41946
 # Spring (org.springframework:spring-web) HttpInvokerServiceExporter readRemoteInvocation method untrusted java deserialization
 CVE-2016-1000027
-# Snakeyaml vulnerability constructor deserialization remote Code execution
+# Snakeyaml Deserialization Remote Code Execution (org.yaml:snakeyaml)
 CVE-2022-1471

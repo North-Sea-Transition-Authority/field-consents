@@ -106,14 +106,10 @@ public class FlareInformationTaskListSectionService implements TaskListSectionSe
         ? ReverseRouter.route(on(FlareReportController.class).getFlareReportForm(applicationId))
         : ReverseRouter.route(on(FlareReportPeriodController.class).getFlareReportPeriodForm(applicationId));
 
-    TaskListLabel flareReportLabel;
-    if (flareReportService.flareReportMonthsComplete(applicationVersion)) {
-      flareReportLabel = TaskListLabel.COMPLETED;
-    } else if (flareReportPeriodExists) {
-      flareReportLabel = TaskListLabel.IN_PROGRESS;
-    } else {
-      flareReportLabel = TaskListLabel.NOT_STARTED;
-    }
+    TaskListLabel flareReportLabel = TaskListLabel.getTaskListLabelFor(applicationVersion,
+        flareReportService::flareReportMonthsComplete,
+        flareReportPeriodService::flareReportPeriodExists
+    );
 
     return new TaskListItem("Flare report", flareReportLabel, flareReportUrl);
   }
@@ -128,39 +124,22 @@ public class FlareInformationTaskListSectionService implements TaskListSectionSe
     return switch (consentLengthType) {
       case SHORT_TERM ->
           new TaskListItem(consentLengthType.getDisplayName(),
-              getFlareShortTermTaskListLabel(applicationVersion),
+              TaskListLabel.getTaskListLabelFor(applicationVersion,
+                  flareShortTermService::flareShortTermMonthsComplete,
+                  flareShortTermService::flareShortTermMonthsExist
+              ),
               ReverseRouter.route(on(FlareShortTermController.class)
                   .getFlareShortTermForm(applicationId)));
       case ANNUAL ->
           new TaskListItem(consentLengthType.getDisplayName(),
-              getFlareAnnualTaskListLabel(applicationVersion),
+              TaskListLabel.getTaskListLabelFor(applicationVersion,
+                  flareAnnualService::flareAnnualMonthsComplete,
+                  flareAnnualService::flareAnnualMonthsExist
+              ),
               ReverseRouter.route(on(FlareAnnualController.class)
                   .getFlareAnnualForm(applicationId)));
       default ->
           throw new RuntimeException("Incorrect consent length type: " + consentLengthType);
     };
   }
-
-  private TaskListLabel getFlareAnnualTaskListLabel(ApplicationVersion applicationVersion) {
-    if (!flareAnnualService.flareAnnualMonthsExist(applicationVersion)) {
-      return TaskListLabel.NOT_STARTED;
-    } else if (flareAnnualService.flareAnnualMonthsComplete(applicationVersion)) {
-      return TaskListLabel.COMPLETED;
-    } else {
-      // we know here that flare annual months data exists, but it isn't complete
-      return TaskListLabel.IN_PROGRESS;
-    }
-  }
-
-  private TaskListLabel getFlareShortTermTaskListLabel(ApplicationVersion applicationVersion) {
-    if (!flareShortTermService.flareShortTermMonthsExist(applicationVersion)) {
-      return TaskListLabel.NOT_STARTED;
-    } else if (flareShortTermService.flareShortTermMonthsComplete(applicationVersion)) {
-      return TaskListLabel.COMPLETED;
-    } else {
-      // we know here that flare short term months data exists, but it isn't complete
-      return TaskListLabel.IN_PROGRESS;
-    }
-  }
-
 }

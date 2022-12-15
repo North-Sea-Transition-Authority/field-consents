@@ -11,6 +11,8 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthD
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.annual.VentAnnualController;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.annual.VentAnnualService;
+import uk.co.nstauthority.fieldconsents.flarevent.vent.shortterm.VentShortTermController;
+import uk.co.nstauthority.fieldconsents.flarevent.vent.shortterm.VentShortTermService;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.vents.VentController;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.vents.VentService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -28,12 +30,16 @@ public class VentInformationTaskListSectionService implements TaskListSectionSer
 
   private final VentAnnualService ventAnnualService;
 
+  private final VentShortTermService ventShortTermService;
+
   public VentInformationTaskListSectionService(VentService ventService,
                                                ConsentLengthService consentLengthService,
-                                               VentAnnualService ventAnnualService) {
+                                               VentAnnualService ventAnnualService,
+                                               VentShortTermService ventShortTermService) {
     this.ventService = ventService;
     this.consentLengthService = consentLengthService;
     this.ventAnnualService = ventAnnualService;
+    this.ventShortTermService = ventShortTermService;
   }
 
   @Override
@@ -85,27 +91,22 @@ public class VentInformationTaskListSectionService implements TaskListSectionSer
     return switch (consentLengthType) {
       case SHORT_TERM ->
           new TaskListItem(consentLengthType.getDisplayName(),
-              TaskListLabel.BLOCKED,
-              null);
+              TaskListLabel.getTaskListLabelFor(applicationVersion,
+                  ventShortTermService::ventShortTermMonthsComplete,
+                  ventShortTermService::ventShortTermMonthsExist
+              ),
+              ReverseRouter.route(on(VentShortTermController.class)
+                  .getVentShortTermForm(applicationId)));
       case ANNUAL ->
           new TaskListItem(consentLengthType.getDisplayName(),
-              getVentAnnualTaskListLabel(applicationVersion),
+              TaskListLabel.getTaskListLabelFor(applicationVersion,
+                  ventAnnualService::ventAnnualMonthsComplete,
+                  ventAnnualService::ventAnnualMonthsExist
+                  ),
               ReverseRouter.route(on(VentAnnualController.class)
                   .getVentAnnualForm(applicationId)));
       default ->
           throw new RuntimeException("Incorrect consent length type: " + consentLengthType);
     };
   }
-
-  private TaskListLabel getVentAnnualTaskListLabel(ApplicationVersion applicationVersion) {
-    if (!ventAnnualService.ventAnnualMonthsExist(applicationVersion)) {
-      return TaskListLabel.NOT_STARTED;
-    } else if (ventAnnualService.ventAnnualMonthsComplete(applicationVersion)) {
-      return TaskListLabel.COMPLETED;
-    } else {
-      // we know here that vent annual months data exists, but it isn't complete
-      return TaskListLabel.IN_PROGRESS;
-    }
-  }
-
 }

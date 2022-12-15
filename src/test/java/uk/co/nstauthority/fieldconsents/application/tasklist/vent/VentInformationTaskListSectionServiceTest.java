@@ -27,6 +27,8 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthT
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.annual.VentAnnualController;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.annual.VentAnnualService;
+import uk.co.nstauthority.fieldconsents.flarevent.vent.shortterm.VentShortTermController;
+import uk.co.nstauthority.fieldconsents.flarevent.vent.shortterm.VentShortTermService;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.vents.VentController;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.vents.VentService;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.vents.VentTestUtil;
@@ -47,6 +49,9 @@ class VentInformationTaskListSectionServiceTest {
   @Mock
   private VentAnnualService ventAnnualService;
 
+  @Mock
+  private VentShortTermService ventShortTermService;
+
   private VentInformationTaskListSectionService ventInformationTaskListSectionService;
 
   private ApplicationVersion applicationVersion;
@@ -59,8 +64,12 @@ class VentInformationTaskListSectionServiceTest {
   void setUp() {
     applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT);
     ventInformationTaskListSectionService =
-        new VentInformationTaskListSectionService(ventService,
-            consentLengthService, ventAnnualService);
+        new VentInformationTaskListSectionService(
+            ventService,
+            consentLengthService,
+            ventAnnualService,
+            ventShortTermService
+        );
     annualConsentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForAnnual(applicationVersion);
     shortTermConsentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(applicationVersion);
   }
@@ -196,7 +205,6 @@ class VentInformationTaskListSectionServiceTest {
 
   @Test
   void getVentConsentTaskListItem_annualComplete() {
-    when(ventAnnualService.ventAnnualMonthsExist(applicationVersion)).thenReturn(true);
     when(ventAnnualService.ventAnnualMonthsComplete(applicationVersion)).thenReturn(true);
 
     TaskListItem item = ventInformationTaskListSectionService
@@ -226,16 +234,18 @@ class VentInformationTaskListSectionServiceTest {
     );
   }
 
-  // TODO rewrite short term tests once implemented
   @Test
   void getVentConsentTaskListItem_shortTermNotStarted() {
+    when(ventShortTermService.ventShortTermMonthsExist(applicationVersion)).thenReturn(false);
+
     TaskListItem item = ventInformationTaskListSectionService
         .getVentConsentTaskListItem(applicationVersion, shortTermConsentLengthDetails);
 
     assertTaskListItem(item,
         ConsentLengthType.SHORT_TERM.getDisplayName(),
-        TaskListLabel.BLOCKED,
-        null);
+        TaskListLabel.NOT_STARTED,
+        ReverseRouter.route(on(VentShortTermController.class)
+            .getVentShortTermForm(applicationVersion.getApplication().getId())));
   }
 
   @Test
