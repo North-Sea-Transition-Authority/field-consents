@@ -37,7 +37,7 @@ dependencies {
 	implementation 'org.apache.commons:commons-lang3'
 
   implementation 'uk.co.fivium.energyportalapi:client:v2.3.0'
-	implementation 'uk.co.fivium.digitalformlibrary:digital-form-library:v1.0.0'
+	implementation 'uk.co.fivium.digitalformlibrary:digital-form-library:v2.1.1'
 
 	runtimeOnly 'org.postgresql:postgresql'
 
@@ -82,7 +82,7 @@ sonarqube {
 
 checkstyle {
 	config = rootProject.resources.text.fromFile('devtools/checkstyle.xml')
-	toolVersion '9.3'
+	toolVersion '10.4'
 	ignoreFailures = false
 	maxWarnings = 0
 }

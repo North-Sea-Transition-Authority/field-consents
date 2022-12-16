@@ -45,9 +45,9 @@ class FlareReportPeriodFormValidatorTest {
     assertThat(errorMap)
         .containsOnly(
             entry("reportEndMonth.inputValue",
-                Collections.singletonList("Month must have a value.")),
+                Collections.singletonList("Enter Month")),
             entry("reportEndYear.inputValue",
-                Collections.singletonList("Year must have a value."))
+                Collections.singletonList("Enter Year"))
         );
 
   }

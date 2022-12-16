@@ -49,7 +49,7 @@ class ProductionRowFormValidatorTest {
 
     errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     Assertions.assertThat(errorMap).containsOnly(
-        entry("oilMaxValue.inputValue", Collections.singletonList("Oil max value must have a value."))
+        entry("oilMaxValue.inputValue", Collections.singletonList("Enter Oil max value"))
     );
   }
 
@@ -63,7 +63,7 @@ class ProductionRowFormValidatorTest {
 
     errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     Assertions.assertThat(errorMap).containsOnly(
-        entry("oilMaxValue.inputValue", Collections.singletonList("Oil max value must be a number with decimal places."))
+        entry("oilMaxValue.inputValue", Collections.singletonList("Oil max value must be a number"))
     );
   }
 
@@ -77,7 +77,7 @@ class ProductionRowFormValidatorTest {
 
     errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     Assertions.assertThat(errorMap).containsOnly(
-        entry("oilMinValue.inputValue", Collections.singletonList("Oil min value must be at least 0"))
+        entry("oilMinValue.inputValue", Collections.singletonList("Oil min value must be 0 or more"))
     );
   }
 
@@ -91,7 +91,7 @@ class ProductionRowFormValidatorTest {
 
     errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     Assertions.assertThat(errorMap).containsOnly(
-        entry("oilMinValue.inputValue", Collections.singletonList("Oil min value must be no more than " + form.getOilMaxValue().getInputValue()))
+        entry("oilMinValue.inputValue", Collections.singletonList("Oil min value must be %s or less".formatted(form.getOilMaxValue().getInputValue())))
     );
   }
 
@@ -105,7 +105,7 @@ class ProductionRowFormValidatorTest {
 
     errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     Assertions.assertThat(errorMap).containsOnly(
-        entry("gasMinValue.inputValue", Collections.singletonList("Gas min value must be no more than " + form.getGasMaxValue().getInputValue()))
+        entry("gasMinValue.inputValue", Collections.singletonList("Gas min value must be %s or less".formatted(form.getGasMaxValue().getInputValue())))
     );
   }
 }

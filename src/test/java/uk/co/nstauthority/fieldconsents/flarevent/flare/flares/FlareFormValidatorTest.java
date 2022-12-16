@@ -15,13 +15,13 @@ import uk.co.nstauthority.fieldconsents.validation.ValidatorTestingUtil;
 
 class FlareFormValidatorTest {
 
-  public static final String DESCRIPTION_EMPTY = "Description must have a value.";
+  public static final String DESCRIPTION_EMPTY = "Enter Description";
 
-  public static final String DESCRIPTION_TOO_LONG = "Description must be no more than 300 characters long";
+  public static final String DESCRIPTION_TOO_LONG = "Description must be 300 characters or less";
 
-  public static final String COMMENTS_EMPTY = "Comments must have a value.";
+  public static final String COMMENTS_EMPTY = "Enter Comments";
 
-  public static final String COMMENTS_TOO_LONG = "Comments must be no more than 300 characters long";
+  public static final String COMMENTS_TOO_LONG = "Comments must be 300 characters or less";
 
   private FlareFormValidator validator;
 

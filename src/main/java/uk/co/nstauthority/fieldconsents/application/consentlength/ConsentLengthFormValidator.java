@@ -77,17 +77,16 @@ public class ConsentLengthFormValidator implements Validator {
   }
 
   private void validateShortTermDetails(@NotNull Errors errors, ConsentLengthForm form) {
-    // TODO FCS-267 and DFL-33 change below to use mustBeAfterOrEqualTo and mustBeBeforeOrEqualTo when DFL gets updated
     // TODO FCS-263 and DFL-35 change below to add custom errors messages when DFL updated, i.e.
     // 1) Start date can be today or after today but not more than 6 months into the future
     // 2) End date can be the same as the start date or after
     // 3) The term should be less than 1 year
-    LocalDate yesterday = LocalDate.now().minusDays(1);
-    LocalDate sixMonthsAhead = LocalDate.now().plusMonths(6);
+    LocalDate today = LocalDate.now();
+    LocalDate sixMonthsAhead = today.plusMonths(6);
     // the start date can be the current date or after but not more than 6 months into the future
     var startDateValidator = ThreeFieldDateInputValidator.builder()
-        .mustBeAfterDate(yesterday)
-        .mustBeBeforeDate(sixMonthsAhead);
+        .mustBeAfterOrEqualTo(today)
+        .mustBeBeforeOrEqualTo(sixMonthsAhead);
     startDateValidator.validate(form.getShortTermStartDate(), errors);
 
     Optional<LocalDate> shortTermStartDate = form.getShortTermStartDate().getAsLocalDate();
@@ -96,18 +95,18 @@ public class ConsentLengthFormValidator implements Validator {
           // the end date can be the current date or after, but must also be the same as or after the start date
           // we do a maximum on the dates here to find the latest acceptable start date
           // the start date entered may be before today (i.e. not valid)
-          .mustBeAfterDate(DateUtils.max(yesterday, shortTermStartDate.get().minusDays(1)))
+          .mustBeAfterOrEqualTo(DateUtils.max(today, shortTermStartDate.get()))
           // term less than 1 year
           // we do a minimum on the dates here to find the earliest acceptable start date
           // the start date entered may be too far in the future (i.e. not valid)
-          .mustBeBeforeDate(
-              DateUtils.min(sixMonthsAhead.minusDays(1), shortTermStartDate.get())
-                  .plusYears(1).minusDays(1)
+          .mustBeBeforeOrEqualTo(
+              DateUtils.min(sixMonthsAhead, shortTermStartDate.get())
+                  .plusYears(1).minusDays(2)
           );
       endDateValidatorWithStartDate.validate(form.getShortTermEndDate(), errors);
     } else {
       var endDateValidator = ThreeFieldDateInputValidator.builder()
-          .mustBeAfterDate(yesterday);
+          .mustBeAfterOrEqualTo(today);
       endDateValidator.validate(form.getShortTermEndDate(), errors);
     }
 

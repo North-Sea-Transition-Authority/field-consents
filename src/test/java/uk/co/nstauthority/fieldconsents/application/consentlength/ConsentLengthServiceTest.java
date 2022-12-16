@@ -59,17 +59,17 @@ class ConsentLengthServiceTest {
     ConsentLengthForm form = consentLengthService.getConsentLengthForm(applicationVersion);
 
     assertThat(form.getConsentLengthType()).isEqualTo(ConsentLengthType.SHORT_TERM);
-    assertThat(Integer.valueOf(form.getShortTermStartDay().getInputValue()))
+    assertThat(Integer.valueOf(form.getShortTermStartDate().getDayInput().getInputValue()))
         .isEqualTo(ConsentLengthTestUtil.SHORT_TERM_START_DATE.getDayOfMonth());
-    assertThat(Integer.valueOf(form.getShortTermStartMonth().getInputValue()))
+    assertThat(Integer.valueOf(form.getShortTermStartDate().getMonthInput().getInputValue()))
         .isEqualTo(ConsentLengthTestUtil.SHORT_TERM_START_DATE.getMonthValue());
-    assertThat(Integer.valueOf(form.getShortTermStartYear().getInputValue()))
+    assertThat(Integer.valueOf(form.getShortTermStartDate().getYearInput().getInputValue()))
         .isEqualTo(ConsentLengthTestUtil.SHORT_TERM_START_DATE.getYear());
-    assertThat(Integer.valueOf(form.getShortTermEndDay().getInputValue()))
+    assertThat(Integer.valueOf(form.getShortTermEndDate().getDayInput().getInputValue()))
         .isEqualTo(ConsentLengthTestUtil.SHORT_TERM_END_DATE.getDayOfMonth());
-    assertThat(Integer.valueOf(form.getShortTermEndMonth().getInputValue()))
+    assertThat(Integer.valueOf(form.getShortTermEndDate().getMonthInput().getInputValue()))
         .isEqualTo(ConsentLengthTestUtil.SHORT_TERM_END_DATE.getMonthValue());
-    assertThat(Integer.valueOf(form.getShortTermEndYear().getInputValue()))
+    assertThat(Integer.valueOf(form.getShortTermEndDate().getYearInput().getInputValue()))
         .isEqualTo(ConsentLengthTestUtil.SHORT_TERM_END_DATE.getYear());
 
     assertNull(form.getAnnualConsentYear().getInputValue());
@@ -109,12 +109,12 @@ class ConsentLengthServiceTest {
   }
 
   private void assertNullShortTermForm(ConsentLengthForm form) {
-    assertNull(form.getShortTermStartDay().getInputValue());
-    assertNull(form.getShortTermStartMonth().getInputValue());
-    assertNull(form.getShortTermStartYear().getInputValue());
-    assertNull(form.getShortTermEndDay().getInputValue());
-    assertNull(form.getShortTermEndMonth().getInputValue());
-    assertNull(form.getShortTermEndYear().getInputValue());
+    assertNull(form.getShortTermStartDate().getDayInput().getInputValue());
+    assertNull(form.getShortTermStartDate().getMonthInput().getInputValue());
+    assertNull(form.getShortTermStartDate().getYearInput().getInputValue());
+    assertNull(form.getShortTermEndDate().getDayInput().getInputValue());
+    assertNull(form.getShortTermEndDate().getMonthInput().getInputValue());
+    assertNull(form.getShortTermEndDate().getYearInput().getInputValue());
   }
 
   private void assertNullLongTermForm(ConsentLengthForm form) {

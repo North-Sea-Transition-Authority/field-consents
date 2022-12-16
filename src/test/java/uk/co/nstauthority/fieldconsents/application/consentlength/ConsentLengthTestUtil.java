@@ -44,14 +44,8 @@ public class ConsentLengthTestUtil {
   public static ConsentLengthForm getShortTermConsentLengthFormForDates(LocalDate startDate, LocalDate endDate) {
     ConsentLengthForm form = new ConsentLengthForm();
     form.setConsentLengthType(ConsentLengthType.SHORT_TERM);
-
-    form.setShortTermStartDay(String.valueOf(startDate.getDayOfMonth()));
-    form.setShortTermStartMonth(String.valueOf(startDate.getMonthValue()));
-    form.setShortTermStartYear(String.valueOf(startDate.getYear()));
-
-    form.setShortTermEndDay(String.valueOf(endDate.getDayOfMonth()));
-    form.setShortTermEndMonth(String.valueOf(endDate.getMonthValue()));
-    form.setShortTermEndYear(String.valueOf(endDate.getYear()));
+    form.getShortTermStartDate().setDate(startDate);
+    form.getShortTermEndDate().setDate(endDate);
     return form;
   }
 
@@ -62,15 +56,15 @@ public class ConsentLengthTestUtil {
   public static ConsentLengthForm getAnnualConsentLengthForm() {
     ConsentLengthForm form = new ConsentLengthForm();
     form.setConsentLengthType(ConsentLengthType.ANNUAL);
-    form.setAnnualConsentYear("2023");
+    form.getAnnualConsentYear().setInteger(2023);
     return form;
   }
 
   public static ConsentLengthForm getLongTermConsentLengthFormForYears(int startYear, int endYear) {
     ConsentLengthForm form = new ConsentLengthForm();
     form.setConsentLengthType(ConsentLengthType.LONG_TERM);
-    form.setLongTermStartYear(String.valueOf(startYear));
-    form.setLongTermEndYear(String.valueOf(endYear));
+    form.getLongTermStartYear().setInteger(startYear);
+    form.getLongTermEndYear().setInteger(endYear);
     return form;
   }
 

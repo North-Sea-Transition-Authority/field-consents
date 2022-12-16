@@ -55,15 +55,15 @@ class FlareReportMonthFormValidatorTest {
     assertThat(errorMap)
         .containsOnly(
             entry("shutDownDays.inputValue",
-                Collections.singletonList("Days of total shutdown must have a value."))
+                Collections.singletonList("Enter Days of total shutdown"))
         );
   }
 
 
   @ParameterizedTest
   @CsvSource({
-      "31, Days of total shutdown must be less than or equal to 30",
-      "-1, Days of total shutdown must be greater than or equal to 0",
+      "31, Days of total shutdown must be 30 or fewer",
+      "-1, Days of total shutdown must be 0 or more",
       "x, Days of total shutdown must be a whole number."
   })
   void validate_shutDownDays_invalid(String shutDownDays, String errorMessage) {

@@ -21,41 +21,41 @@ class ConsentLengthFormValidatorTest {
 
   private static final String CONSENT_LENGTH_PERIOD_EMPTY = "Select the period of the consent you are applying for";
 
-  private static final String ANNUAL_CONSENT_YEAR_EMPTY = "Year must have a value.";
+  private static final String ANNUAL_CONSENT_YEAR_EMPTY = "Enter Year";
 
   private static final String ANNUAL_CONSENT_YEAR_INVALID = "Year must be a whole number.";
 
-  private static final String ANNUAL_CONSENT_YEAR_GT_EQUAL = "Year must be greater than or equal to %s";
+  private static final String ANNUAL_CONSENT_YEAR_GT_EQUAL = "Year must be %s or more";
 
-  private static final String SHORT_TERM_START_DATE_AFTER = "Start date must be after %s.";
+  private static final String SHORT_TERM_START_DATE_AFTER = "Start date must be the same as or after %s";
 
-  private static final String SHORT_TERM_START_DATE_INCOMPLETE = "Enter a complete Start date.";
+  private static final String SHORT_TERM_START_DATE_INCOMPLETE = "Enter a complete Start date";
 
-  private static final String SHORT_TERM_START_DATE_INVALID = "Start date must be a valid date.";
+  private static final String SHORT_TERM_START_DATE_INVALID = "Start date must be a real date";
 
-  private static final String SHORT_TERM_START_DATE_BEFORE = "Start date must be before %s.";
+  private static final String SHORT_TERM_START_DATE_BEFORE = "Start date must be the same as or before %s";
 
-  private static final String SHORT_TERM_END_DATE_AFTER = "End date must be after %s.";
+  private static final String SHORT_TERM_END_DATE_AFTER = "End date must be the same as or after %s";
 
-  private static final String SHORT_TERM_END_DATE_INCOMPLETE = "Enter a complete End date.";
+  private static final String SHORT_TERM_END_DATE_INCOMPLETE = "Enter a complete End date";
 
-  private static final String SHORT_TERM_END_DATE_INVALID = "End date must be a valid date.";
+  private static final String SHORT_TERM_END_DATE_INVALID = "End date must be a real date";
 
-  private static final String SHORT_TERM_END_DATE_BEFORE = "End date must be before %s.";
+  private static final String SHORT_TERM_END_DATE_BEFORE = "End date must be the same as or before %s";
 
-  private static final String LONG_TERM_START_YEAR_EMPTY = "Start year must have a value.";
+  private static final String LONG_TERM_START_YEAR_EMPTY = "Enter Start year";
 
   private static final String LONG_TERM_START_YEAR_INVALID = "Start year must be a whole number.";
 
-  private static final String LONG_TERM_START_YEAR_GT_EQUAL = "Start year must be greater than or equal to %s";
+  private static final String LONG_TERM_START_YEAR_GT_EQUAL = "Start year must be %s or more";
 
-  private static final String LONG_TERM_END_YEAR_EMPTY = "End year must have a value.";
+  private static final String LONG_TERM_END_YEAR_EMPTY = "Enter End year";
 
   private static final String LONG_TERM_END_YEAR_INVALID = "End year must be a whole number.";
 
-  private static final String LONG_TERM_END_YEAR_GT_EQUAL = "End year must be greater than or equal to %s";
+  private static final String LONG_TERM_END_YEAR_GT_EQUAL = "End year must be %s or more";
 
-  private static final String LONG_TERM_END_YEAR_LT_EQUAL = "End year must be less than or equal to %s";
+  private static final String LONG_TERM_END_YEAR_LT_EQUAL = "End year must be %s or fewer";
 
   private ConsentLengthFormValidator validator;
 
@@ -117,10 +117,10 @@ class ConsentLengthFormValidatorTest {
 
     errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     Assertions.assertThat(errorMap).containsOnly(
-        entry("shortTermEndDay.inputValue", Collections.singletonList(SHORT_TERM_END_DATE_BEFORE
-            .formatted(DateUtils.format(endDate, DateUtils.SHORT_DATE)))),
-        entry("shortTermEndMonth.inputValue", Collections.singletonList("")),
-        entry("shortTermEndYear.inputValue", Collections.singletonList(""))
+        entry("shortTermEndDate.dayInput.inputValue", Collections.singletonList(SHORT_TERM_END_DATE_BEFORE
+            .formatted(DateUtils.format(endDate.minusDays(1), DateUtils.SHORT_DATE)))),
+        entry("shortTermEndDate.monthInput.inputValue", Collections.singletonList("")),
+        entry("shortTermEndDate.yearInput.inputValue", Collections.singletonList(""))
     );
 
   }
@@ -128,8 +128,9 @@ class ConsentLengthFormValidatorTest {
   @Test
   void validate_shortTerm_startInPast() {
     LocalDate yesterday = LocalDate.now().minusDays(1);
+    LocalDate today = LocalDate.now();
     ConsentLengthForm form =
-        ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(yesterday, LocalDate.now());
+        ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(yesterday, today);
     errors = new BeanPropertyBindingResult(form, "form");
 
     ValidationUtils.invokeValidator(validator, form, errors);
@@ -138,10 +139,10 @@ class ConsentLengthFormValidatorTest {
 
     errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     Assertions.assertThat(errorMap).containsOnly(
-        entry("shortTermStartDay.inputValue", Collections.singletonList(SHORT_TERM_START_DATE_AFTER
-            .formatted(DateUtils.format(yesterday, DateUtils.SHORT_DATE)))),
-        entry("shortTermStartMonth.inputValue", Collections.singletonList("")),
-        entry("shortTermStartYear.inputValue", Collections.singletonList(""))
+        entry("shortTermStartDate.dayInput.inputValue", Collections.singletonList(SHORT_TERM_START_DATE_AFTER
+            .formatted(DateUtils.format(today, DateUtils.SHORT_DATE)))),
+        entry("shortTermStartDate.monthInput.inputValue", Collections.singletonList("")),
+        entry("shortTermStartDate.yearInput.inputValue", Collections.singletonList(""))
     );
 
   }
@@ -150,7 +151,7 @@ class ConsentLengthFormValidatorTest {
   void validate_shortTerm_startTooFarInFuture() {
     LocalDate sixMonthsAhead = LocalDate.now().plusMonths(6);
     ConsentLengthForm form =
-        ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(sixMonthsAhead, sixMonthsAhead);
+        ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(sixMonthsAhead.plusDays(1), sixMonthsAhead.plusDays(1));
     errors = new BeanPropertyBindingResult(form, "form");
 
     ValidationUtils.invokeValidator(validator, form, errors);
@@ -159,10 +160,10 @@ class ConsentLengthFormValidatorTest {
 
     errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     Assertions.assertThat(errorMap).containsOnly(
-        entry("shortTermStartDay.inputValue", Collections.singletonList(SHORT_TERM_START_DATE_BEFORE
+        entry("shortTermStartDate.dayInput.inputValue", Collections.singletonList(SHORT_TERM_START_DATE_BEFORE
             .formatted(DateUtils.format(sixMonthsAhead, DateUtils.SHORT_DATE)))),
-        entry("shortTermStartMonth.inputValue", Collections.singletonList("")),
-        entry("shortTermStartYear.inputValue", Collections.singletonList(""))
+        entry("shortTermStartDate.monthInput.inputValue", Collections.singletonList("")),
+        entry("shortTermStartDate.yearInput.inputValue", Collections.singletonList(""))
     );
 
   }
@@ -183,14 +184,14 @@ class ConsentLengthFormValidatorTest {
 
     errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     Assertions.assertThat(errorMap).containsOnly(
-        entry("shortTermStartDay.inputValue", Collections.singletonList(SHORT_TERM_START_DATE_BEFORE
+        entry("shortTermStartDate.dayInput.inputValue", Collections.singletonList(SHORT_TERM_START_DATE_BEFORE
             .formatted(DateUtils.format(sixMonthsAhead, DateUtils.SHORT_DATE)))),
-        entry("shortTermStartMonth.inputValue", Collections.singletonList("")),
-        entry("shortTermStartYear.inputValue", Collections.singletonList("")),
-        entry("shortTermEndDay.inputValue", Collections.singletonList(SHORT_TERM_END_DATE_BEFORE
+        entry("shortTermStartDate.monthInput.inputValue", Collections.singletonList("")),
+        entry("shortTermStartDate.yearInput.inputValue", Collections.singletonList("")),
+        entry("shortTermEndDate.dayInput.inputValue", Collections.singletonList(SHORT_TERM_END_DATE_BEFORE
             .formatted(DateUtils.format(eighteenMonthsAhead.minusDays(2), DateUtils.SHORT_DATE)))),
-        entry("shortTermEndMonth.inputValue", Collections.singletonList("")),
-        entry("shortTermEndYear.inputValue", Collections.singletonList(""))
+        entry("shortTermEndDate.monthInput.inputValue", Collections.singletonList("")),
+        entry("shortTermEndDate.yearInput.inputValue", Collections.singletonList(""))
     );
 
   }
@@ -210,22 +211,23 @@ class ConsentLengthFormValidatorTest {
 
     errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     Assertions.assertThat(errorMap).containsOnly(
-        entry("shortTermEndDay.inputValue", Collections.singletonList(SHORT_TERM_END_DATE_AFTER
-            .formatted(DateUtils.format(startDate.minusDays(1), DateUtils.SHORT_DATE)))),
-        entry("shortTermEndMonth.inputValue", Collections.singletonList("")),
-        entry("shortTermEndYear.inputValue", Collections.singletonList(""))
+        entry("shortTermEndDate.dayInput.inputValue", Collections.singletonList(SHORT_TERM_END_DATE_AFTER
+            .formatted(DateUtils.format(startDate, DateUtils.SHORT_DATE)))),
+        entry("shortTermEndDate.monthInput.inputValue", Collections.singletonList("")),
+        entry("shortTermEndDate.yearInput.inputValue", Collections.singletonList(""))
     );
 
   }
 
   @Test
   void validate_shortTerm_endInPast_blankStart() {
-    LocalDate yesterday = LocalDate.now().minusDays(1);
+    LocalDate today = LocalDate.now();
     ConsentLengthForm form =
-        ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(yesterday, yesterday);
-    form.setShortTermStartDay("");
-    form.setShortTermStartMonth("");
-    form.setShortTermStartYear("");
+        ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(today, today.minusDays(1));
+    form.getShortTermStartDate().getDayInput().setInputValue("");
+    form.getShortTermStartDate().getMonthInput().setInputValue("");
+    form.getShortTermStartDate().getYearInput().setInputValue("");
+
     errors = new BeanPropertyBindingResult(form, "form");
 
     ValidationUtils.invokeValidator(validator, form, errors);
@@ -234,13 +236,13 @@ class ConsentLengthFormValidatorTest {
 
     errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     Assertions.assertThat(errorMap).containsOnly(
-        entry("shortTermStartDay.inputValue", Collections.singletonList(SHORT_TERM_START_DATE_INCOMPLETE)),
-        entry("shortTermStartMonth.inputValue", Collections.singletonList("")),
-        entry("shortTermStartYear.inputValue", Collections.singletonList("")),
-        entry("shortTermEndDay.inputValue", Collections.singletonList(SHORT_TERM_END_DATE_AFTER
-            .formatted(DateUtils.format(yesterday, DateUtils.SHORT_DATE)))),
-        entry("shortTermEndMonth.inputValue", Collections.singletonList("")),
-        entry("shortTermEndYear.inputValue", Collections.singletonList(""))
+        entry("shortTermStartDate.dayInput.inputValue", Collections.singletonList(SHORT_TERM_START_DATE_INCOMPLETE)),
+        entry("shortTermStartDate.monthInput.inputValue", Collections.singletonList("")),
+        entry("shortTermStartDate.yearInput.inputValue", Collections.singletonList("")),
+        entry("shortTermEndDate.dayInput.inputValue", Collections.singletonList(SHORT_TERM_END_DATE_AFTER
+            .formatted(DateUtils.format(today, DateUtils.SHORT_DATE)))),
+        entry("shortTermEndDate.monthInput.inputValue", Collections.singletonList("")),
+        entry("shortTermEndDate.yearInput.inputValue", Collections.singletonList(""))
     );
 
   }
@@ -250,9 +252,9 @@ class ConsentLengthFormValidatorTest {
     LocalDate yesterday = LocalDate.now().minusDays(1);
     ConsentLengthForm form =
         ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(yesterday, yesterday);
-    form.setShortTermStartDay("a");
-    form.setShortTermStartMonth("a");
-    form.setShortTermStartYear("a");
+    form.getShortTermStartDate().getDayInput().setInputValue("a");
+    form.getShortTermStartDate().getMonthInput().setInputValue("a");
+    form.getShortTermStartDate().getYearInput().setInputValue("a");
     errors = new BeanPropertyBindingResult(form, "form");
 
     ValidationUtils.invokeValidator(validator, form, errors);
@@ -261,13 +263,13 @@ class ConsentLengthFormValidatorTest {
 
     errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     Assertions.assertThat(errorMap).containsOnly(
-        entry("shortTermStartDay.inputValue", Collections.singletonList(SHORT_TERM_START_DATE_INVALID)),
-        entry("shortTermStartMonth.inputValue", Collections.singletonList(SHORT_TERM_START_DATE_INVALID)),
-        entry("shortTermStartYear.inputValue", Collections.singletonList(SHORT_TERM_START_DATE_INVALID)),
-        entry("shortTermEndDay.inputValue", Collections.singletonList(SHORT_TERM_END_DATE_AFTER
-            .formatted(DateUtils.format(yesterday, DateUtils.SHORT_DATE)))),
-        entry("shortTermEndMonth.inputValue", Collections.singletonList("")),
-        entry("shortTermEndYear.inputValue", Collections.singletonList(""))
+        entry("shortTermStartDate.dayInput.inputValue", Collections.singletonList(SHORT_TERM_START_DATE_INVALID)),
+        entry("shortTermStartDate.monthInput.inputValue", Collections.singletonList("")),
+        entry("shortTermStartDate.yearInput.inputValue", Collections.singletonList("")),
+        entry("shortTermEndDate.dayInput.inputValue", Collections.singletonList(SHORT_TERM_END_DATE_AFTER
+            .formatted(DateUtils.format(LocalDate.now(), DateUtils.SHORT_DATE)))),
+        entry("shortTermEndDate.monthInput.inputValue", Collections.singletonList("")),
+        entry("shortTermEndDate.yearInput.inputValue", Collections.singletonList(""))
     );
 
   }
@@ -278,9 +280,9 @@ class ConsentLengthFormValidatorTest {
     LocalDate startDate = LocalDate.now().plusDays(10);
     ConsentLengthForm form =
         ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(startDate, yesterday);
-    form.setShortTermEndDay("");
-    form.setShortTermEndMonth("");
-    form.setShortTermEndYear("");
+    form.getShortTermEndDate().getDayInput().setInputValue("");
+    form.getShortTermEndDate().getMonthInput().setInputValue("");
+    form.getShortTermEndDate().getYearInput().setInputValue("");
     errors = new BeanPropertyBindingResult(form, "form");
 
     ValidationUtils.invokeValidator(validator, form, errors);
@@ -289,9 +291,9 @@ class ConsentLengthFormValidatorTest {
 
     errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     Assertions.assertThat(errorMap).containsOnly(
-        entry("shortTermEndDay.inputValue", Collections.singletonList(SHORT_TERM_END_DATE_INCOMPLETE)),
-        entry("shortTermEndMonth.inputValue", Collections.singletonList("")),
-        entry("shortTermEndYear.inputValue", Collections.singletonList(""))
+        entry("shortTermEndDate.dayInput.inputValue", Collections.singletonList(SHORT_TERM_END_DATE_INCOMPLETE)),
+        entry("shortTermEndDate.monthInput.inputValue", Collections.singletonList("")),
+        entry("shortTermEndDate.yearInput.inputValue", Collections.singletonList(""))
     );
 
   }
@@ -302,9 +304,9 @@ class ConsentLengthFormValidatorTest {
     LocalDate startDate = LocalDate.now().plusDays(10);
     ConsentLengthForm form =
         ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(startDate, yesterday);
-    form.setShortTermEndDay("-1");
-    form.setShortTermEndMonth("a");
-    form.setShortTermEndYear("b");
+    form.getShortTermEndDate().getDayInput().setInputValue("-1");
+    form.getShortTermEndDate().getMonthInput().setInputValue("a");
+    form.getShortTermEndDate().getYearInput().setInputValue("b");
     errors = new BeanPropertyBindingResult(form, "form");
 
     ValidationUtils.invokeValidator(validator, form, errors);
@@ -313,9 +315,9 @@ class ConsentLengthFormValidatorTest {
 
     errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     Assertions.assertThat(errorMap).containsOnly(
-        entry("shortTermEndDay.inputValue", Collections.singletonList(SHORT_TERM_END_DATE_INVALID)),
-        entry("shortTermEndMonth.inputValue", Collections.singletonList(SHORT_TERM_END_DATE_INVALID)),
-        entry("shortTermEndYear.inputValue", Collections.singletonList(SHORT_TERM_END_DATE_INVALID))
+        entry("shortTermEndDate.dayInput.inputValue", Collections.singletonList(SHORT_TERM_END_DATE_INVALID)),
+        entry("shortTermEndDate.monthInput.inputValue", Collections.singletonList("")),
+        entry("shortTermEndDate.yearInput.inputValue", Collections.singletonList(""))
     );
 
   }
@@ -333,7 +335,7 @@ class ConsentLengthFormValidatorTest {
   @Test
   void validate_annual_blankYear() {
     ConsentLengthForm form = ConsentLengthTestUtil.getAnnualConsentLengthForm();
-    form.setAnnualConsentYear("");
+    form.getAnnualConsentYear().setInputValue("");
     errors = new BeanPropertyBindingResult(form, "form");
 
     ValidationUtils.invokeValidator(validator, form, errors);
@@ -350,7 +352,7 @@ class ConsentLengthFormValidatorTest {
   @Test
   void validate_annual_invalidYear() {
     ConsentLengthForm form = ConsentLengthTestUtil.getAnnualConsentLengthForm();
-    form.setAnnualConsentYear("a");
+    form.getAnnualConsentYear().setInputValue("a");
     errors = new BeanPropertyBindingResult(form, "form");
 
     ValidationUtils.invokeValidator(validator, form, errors);
@@ -367,7 +369,7 @@ class ConsentLengthFormValidatorTest {
   @Test
   void validate_annual_negativeYear() {
     ConsentLengthForm form = ConsentLengthTestUtil.getAnnualConsentLengthForm();
-    form.setAnnualConsentYear("-1");
+    form.getAnnualConsentYear().setInputValue("-1");
     errors = new BeanPropertyBindingResult(form, "form");
 
     ValidationUtils.invokeValidator(validator, form, errors);
@@ -397,8 +399,8 @@ class ConsentLengthFormValidatorTest {
   void validate_longTerm_blankYears() {
     int currentYear = Year.now().getValue();
     ConsentLengthForm form = ConsentLengthTestUtil.getLongTermConsentLengthFormForYears(currentYear, currentYear);
-    form.setLongTermStartYear("");
-    form.setLongTermEndYear("");
+    form.getLongTermStartYear().setInputValue("");
+    form.getLongTermEndYear().setInputValue("");
     errors = new BeanPropertyBindingResult(form, "form");
 
     ValidationUtils.invokeValidator(validator, form, errors);
@@ -417,8 +419,8 @@ class ConsentLengthFormValidatorTest {
   void validate_longTerm_invalidYears() {
     int currentYear = Year.now().getValue();
     ConsentLengthForm form = ConsentLengthTestUtil.getLongTermConsentLengthFormForYears(currentYear, currentYear);
-    form.setLongTermStartYear("a");
-    form.setLongTermEndYear("a");
+    form.getLongTermStartYear().setInputValue("a");
+    form.getLongTermEndYear().setInputValue("a");
     errors = new BeanPropertyBindingResult(form, "form");
 
     ValidationUtils.invokeValidator(validator, form, errors);
@@ -437,8 +439,8 @@ class ConsentLengthFormValidatorTest {
   void validate_longTerm_invalidYearsNegative() {
     int currentYear = Year.now().getValue();
     ConsentLengthForm form = ConsentLengthTestUtil.getLongTermConsentLengthFormForYears(currentYear, currentYear);
-    form.setLongTermStartYear("-1");
-    form.setLongTermEndYear("-1");
+    form.getLongTermStartYear().setInputValue("-1");
+    form.getLongTermEndYear().setInputValue("-1");
     errors = new BeanPropertyBindingResult(form, "form");
 
     ValidationUtils.invokeValidator(validator, form, errors);

@@ -40,13 +40,13 @@ class FlareVentRowFormValidatorTest {
     assertThat(errorMap)
         .containsOnly(
             entry("categoryA.inputValue",
-                Collections.singletonList("Category A must have a value.")),
+                Collections.singletonList("Enter Category A")),
             entry("categoryB.inputValue",
-                Collections.singletonList("Category B must have a value.")),
+                Collections.singletonList("Enter Category B")),
             entry("categoryC.inputValue",
-                Collections.singletonList("Category C must have a value.")),
+                Collections.singletonList("Enter Category C")),
             entry("comments.inputValue",
-                Collections.singletonList("Comments must have a value."))
+                Collections.singletonList("Enter Comments"))
         );
   }
 
@@ -75,11 +75,11 @@ class FlareVentRowFormValidatorTest {
     assertThat(errorMap)
         .containsOnly(
             entry("categoryA.inputValue",
-                Collections.singletonList("Category A must be a number with decimal places.")),
+                Collections.singletonList("Category A must be a number")),
             entry("categoryB.inputValue",
-                Collections.singletonList("Category B must be a number with decimal places.")),
+                Collections.singletonList("Category B must be a number")),
             entry("categoryC.inputValue",
-                Collections.singletonList("Category C must be a number with decimal places."))
+                Collections.singletonList("Category C must be a number"))
         );
   }
 
@@ -98,11 +98,11 @@ class FlareVentRowFormValidatorTest {
     assertThat(errorMap)
         .containsOnly(
             entry("categoryA.inputValue",
-                Collections.singletonList("Category A must be at least 0")),
+                Collections.singletonList("Category A must be 0 or more")),
             entry("categoryB.inputValue",
-                Collections.singletonList("Category B must be at least 0")),
+                Collections.singletonList("Category B must be 0 or more")),
             entry("categoryC.inputValue",
-                Collections.singletonList("Category C must be at least 0"))
+                Collections.singletonList("Category C must be 0 or more"))
         );
   }
 
@@ -119,7 +119,7 @@ class FlareVentRowFormValidatorTest {
     assertThat(errorMap)
         .containsOnly(
             entry("comments.inputValue",
-                Collections.singletonList("Comments must be no more than 300 characters long"))
+                Collections.singletonList("Comments must be 300 characters or less"))
         );
   }
 
