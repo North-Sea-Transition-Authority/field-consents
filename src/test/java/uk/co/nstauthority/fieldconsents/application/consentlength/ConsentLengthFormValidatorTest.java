@@ -212,7 +212,7 @@ class ConsentLengthFormValidatorTest {
     errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     Assertions.assertThat(errorMap).containsOnly(
         entry("shortTermEndDate.dayInput.inputValue", Collections.singletonList(SHORT_TERM_END_DATE_AFTER
-            .formatted(DateUtils.format(startDate, DateUtils.SHORT_DATE)))),
+            .formatted(DateUtils.format(startDate, "d MMM yyyy")))),
         entry("shortTermEndDate.monthInput.inputValue", Collections.singletonList("")),
         entry("shortTermEndDate.yearInput.inputValue", Collections.singletonList(""))
     );
