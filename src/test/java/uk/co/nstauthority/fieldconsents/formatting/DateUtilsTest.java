@@ -22,7 +22,7 @@ class DateUtilsTest {
 
   @Test
   void format() {
-    String firstDateFormatted = "01 Oct 2022";
+    String firstDateFormatted = "1 Oct 2022";
     assertEquals(firstDateFormatted, DateUtils.format(FIRST_DATE, DateUtils.SHORT_DATE));
   }
 

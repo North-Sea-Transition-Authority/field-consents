@@ -14,7 +14,7 @@ import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 
 public class DateUtils {
 
-  public static final String SHORT_DATE = "dd MMM yyyy";
+  public static final String SHORT_DATE = uk.co.fivium.formlibrary.validator.date.DateUtils.SHORT_DATE;
 
   public static final String LONG_MONTH_YEAR = "MMMM yyyy";
 

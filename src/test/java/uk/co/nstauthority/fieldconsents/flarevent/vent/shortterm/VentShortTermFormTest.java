@@ -15,7 +15,7 @@ class VentShortTermFormTest {
             LocalDate.of(2022, Month.APRIL, 5),
             LocalDate.of(2023, Month.JANUARY, 10)
     );
-    assertThat(ventShortTermForm.getStartDate()).isEqualTo("05 Apr 2022");
+    assertThat(ventShortTermForm.getStartDate()).isEqualTo("5 Apr 2022");
     assertThat(ventShortTermForm.getEndDate()).isEqualTo("10 Jan 2023");
   }
 

@@ -80,7 +80,7 @@ class FlareShortTermControllerTest extends AbstractControllerTest {
 
     assertThat(model)
         .containsEntry("startDate", "11 Apr 2022")
-        .containsEntry("endDate", "01 Jan 2023")
+        .containsEntry("endDate", "1 Jan 2023")
         .containsEntry("categoryUnit", FlareVentUnit.TONNES_PER_MONTH.getDisplayName())
         .containsEntry("submitUrl", "/applications/1/flare-short-term/")
         .containsEntry("cancelUrl", "/applications/1/task-list/");
