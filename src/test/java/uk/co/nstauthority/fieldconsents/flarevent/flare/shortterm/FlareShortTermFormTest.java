@@ -25,5 +25,4 @@ class FlareShortTermFormTest {
     assertThat(flareShortTermForm.getStartDate()).isNull();
     assertThat(flareShortTermForm.getEndDate()).isNull();
   }
-
 }
