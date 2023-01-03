@@ -36,6 +36,8 @@ public class TaskListTestUtil {
 
   public static final String FLARE_REPORT_TASK_LIST_ITEM = "Flare report";
 
+  public static final String VENT_REPORT_TASK_LIST_ITEM = "Vent report";
+
   public static void assertTaskListSection(TaskListSection taskListSection, String name, int order) {
     assertThat(taskListSection.displayName()).isEqualTo(name);
     assertThat(taskListSection.displayOrder()).isEqualTo(order);

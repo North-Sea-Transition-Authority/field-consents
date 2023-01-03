@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport;
+package uk.co.nstauthority.fieldconsents.flarevent.vent.ventreport;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -24,6 +24,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
+import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportPeriodControllerHelperService;
@@ -32,14 +33,14 @@ import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportPeriodFormValid
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
-@ContextConfiguration(classes = FlareReportPeriodController.class)
-class FlareReportPeriodControllerTest extends AbstractControllerTest {
+@ContextConfiguration(classes = VentReportPeriodController.class)
+class VentReportPeriodControllerTest extends AbstractControllerTest {
 
   @MockBean
   private ApplicationVersionService applicationVersionService;
 
   @MockBean
-  private FlareReportPeriodService flareReportPeriodService;
+  private VentReportPeriodService ventReportPeriodService;
 
   @MockBean
   private FlareVentReportPeriodFormValidator reportPeriodFormValidator;
@@ -53,8 +54,10 @@ class FlareReportPeriodControllerTest extends AbstractControllerTest {
 
   @BeforeEach
   void setUp() {
-    applicationVersion = FlareReportTestUtil.flareAppVersion;
-    reportPeriodForm = FlareReportTestUtil.getFullFlareReportPeriodForm();
+    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT);
+    reportPeriodForm = new FlareVentReportPeriodForm();
+    reportPeriodForm.setReportEndMonth("APRIL");
+    reportPeriodForm.setReportEndYear("2023");
 
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
@@ -65,16 +68,16 @@ class FlareReportPeriodControllerTest extends AbstractControllerTest {
 
   @Test
   @WithMockUser
-  void getFlareReportPeriodForm_validUser() throws Exception {
-    when(flareReportPeriodService.getFlareReportPeriodForm(applicationVersion))
+  void getVentReportPeriodForm_validUser() throws Exception {
+    when(ventReportPeriodService.getVentReportPeriodForm(applicationVersion))
         .thenReturn(reportPeriodForm);
 
     var modelAndView =
-        mockMvc.perform(get(ReverseRouter.route(on(FlareReportPeriodController.class)
-                .getFlareReportPeriodForm(ApplicationTestUtil.APPLICATION_ID)))
+        mockMvc.perform(get(ReverseRouter.route(on(VentReportPeriodController.class)
+                .getVentReportPeriodForm(ApplicationTestUtil.APPLICATION_ID)))
                 .with(csrf()))
             .andExpect(status().isOk())
-            .andExpect(view().name("fcs/flare/flareReportPeriodForm"))
+            .andExpect(view().name("fcs/vent/ventReportPeriodForm"))
             .andReturn().getModelAndView();
 
     assert modelAndView != null;
@@ -87,7 +90,7 @@ class FlareReportPeriodControllerTest extends AbstractControllerTest {
             Year.now().minusYears(1).toString(),
             Year.now().toString(), Year.now().toString()
             ))
-        .containsEntry("submitUrl", "/applications/1/flare-report/period/")
+        .containsEntry("submitUrl", "/applications/1/vent-report/period/")
         .containsEntry("cancelUrl", "/applications/1/task-list/");
 
     assertThat((FlareVentReportPeriodForm) model.get("form"))
@@ -95,24 +98,24 @@ class FlareReportPeriodControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  void getFlareReportPeriodForm_noUser() throws Exception {
-    mockMvc.perform(get(ReverseRouter.route(on(FlareReportPeriodController.class)
-            .getFlareReportPeriodForm(ApplicationTestUtil.APPLICATION_ID))))
+  void getVentReportPeriodForm_noUser() throws Exception {
+    mockMvc.perform(get(ReverseRouter.route(on(VentReportPeriodController.class)
+            .getVentReportPeriodForm(ApplicationTestUtil.APPLICATION_ID))))
         .andExpect(status().isUnauthorized());
   }
 
   @Test
   @WithMockUser
-  void saveFlareReportPeriodForm_invalidForm() throws Exception {
+  void saveVentReportPeriodForm_invalidForm() throws Exception {
 
     doCallRealMethod().when(reportPeriodFormValidator).validate(any(), any());
 
     var modelAndView =
-        mockMvc.perform(post(ReverseRouter.route(on(FlareReportPeriodController.class)
-                .saveFlareReportPeriodForm(ApplicationTestUtil.APPLICATION_ID, null, null)))
+        mockMvc.perform(post(ReverseRouter.route(on(VentReportPeriodController.class)
+                .saveVentReportPeriodForm(ApplicationTestUtil.APPLICATION_ID, null, null)))
                 .with(csrf()))
             .andExpect(status().isOk())
-            .andExpect(view().name("fcs/flare/flareReportPeriodForm"))
+            .andExpect(view().name("fcs/vent/ventReportPeriodForm"))
             .andReturn().getModelAndView();
 
     assert modelAndView != null;
@@ -125,33 +128,33 @@ class FlareReportPeriodControllerTest extends AbstractControllerTest {
             Year.now().minusYears(1).toString(),
             Year.now().toString(), Year.now().toString()
         ))
-        .containsEntry("submitUrl", "/applications/1/flare-report/period/")
+        .containsEntry("submitUrl", "/applications/1/vent-report/period/")
         .containsEntry("cancelUrl", "/applications/1/task-list/");
   }
 
   @Test
   @WithMockUser
-  void saveFlareReportPeriodForm_validForm() throws Exception {
+  void saveVentReportPeriodForm_validForm() throws Exception {
 
-    mockMvc.perform(post(ReverseRouter.route(on(FlareReportPeriodController.class)
-            .saveFlareReportPeriodForm(ApplicationTestUtil.APPLICATION_ID, null, null)))
+    mockMvc.perform(post(ReverseRouter.route(on(VentReportPeriodController.class)
+            .saveVentReportPeriodForm(ApplicationTestUtil.APPLICATION_ID, null, null)))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(view().name("redirect:/applications/1/flare-report/"));
+        .andExpect(view().name("redirect:/applications/1/task-list/"));
 
     ArgumentCaptor<ApplicationVersion> applicationVersionArgumentCaptor =
         ArgumentCaptor.forClass(ApplicationVersion.class);
-    ArgumentCaptor<FlareVentReportPeriodForm> flareReportPeriodFormArgumentCaptor =
+    ArgumentCaptor<FlareVentReportPeriodForm> ventReportPeriodFormArgumentCaptor =
         ArgumentCaptor.forClass(FlareVentReportPeriodForm.class);
-    verify(flareReportPeriodService, times(1))
-        .saveFlareReportPeriod(applicationVersionArgumentCaptor.capture(),
-            flareReportPeriodFormArgumentCaptor.capture());
+    verify(ventReportPeriodService, times(1))
+        .saveVentReportPeriod(applicationVersionArgumentCaptor.capture(),
+            ventReportPeriodFormArgumentCaptor.capture());
   }
 
   @Test
-  void saveFlareReportPeriodForm_noUser() throws Exception {
-    mockMvc.perform(post(ReverseRouter.route(on(FlareReportPeriodController.class)
-            .saveFlareReportPeriodForm(ApplicationTestUtil.APPLICATION_ID, null, null))))
+  void saveVentReportPeriodForm_noUser() throws Exception {
+    mockMvc.perform(post(ReverseRouter.route(on(VentReportPeriodController.class)
+            .saveVentReportPeriodForm(ApplicationTestUtil.APPLICATION_ID, null, null))))
         .andExpect(status().isForbidden());
   }
 

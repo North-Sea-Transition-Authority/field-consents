@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport;
+package uk.co.nstauthority.fieldconsents.flarevent;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
@@ -7,25 +7,28 @@ import java.time.Year;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
+import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 
-class FlareReportPeriodControllerHelperServiceTest {
+class FlareVentReportPeriodControllerHelperServiceTest {
 
-  private FlareReportPeriodControllerHelperService flareReportPeriodControllerHelperService;
+  private FlareVentReportPeriodControllerHelperService reportPeriodControllerHelperService;
 
   private ApplicationVersion applicationVersion;
 
   @BeforeEach
   void setUp() {
-    applicationVersion = FlareReportTestUtil.flareAppVersion;
-    flareReportPeriodControllerHelperService = new FlareReportPeriodControllerHelperService();
+    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(
+        ApplicationType.FLARE);
+    reportPeriodControllerHelperService = new FlareVentReportPeriodControllerHelperService();
   }
 
   @Test
   void getReportEndYearsMap() {
     Integer currentYear = Year.now().getValue();
     Map<String, String> reportEndYearsMap =
-        flareReportPeriodControllerHelperService.getReportEndYearsMap(applicationVersion);
+        reportPeriodControllerHelperService.getReportEndYearsMap(applicationVersion);
 
     assertThat(reportEndYearsMap)
         .containsExactly(

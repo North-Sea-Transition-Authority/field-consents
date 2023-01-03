@@ -13,6 +13,8 @@ import uk.co.nstauthority.fieldconsents.flarevent.vent.annual.VentAnnualControll
 import uk.co.nstauthority.fieldconsents.flarevent.vent.annual.VentAnnualService;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.shortterm.VentShortTermController;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.shortterm.VentShortTermService;
+import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreport.VentReportPeriodController;
+import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreport.VentReportPeriodService;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.vents.VentController;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.vents.VentService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -32,14 +34,18 @@ public class VentInformationTaskListSectionService implements TaskListSectionSer
 
   private final VentShortTermService ventShortTermService;
 
+  private final VentReportPeriodService ventReportPeriodService;
+
   public VentInformationTaskListSectionService(VentService ventService,
                                                ConsentLengthService consentLengthService,
                                                VentAnnualService ventAnnualService,
-                                               VentShortTermService ventShortTermService) {
+                                               VentShortTermService ventShortTermService,
+                                               VentReportPeriodService ventReportPeriodService) {
     this.ventService = ventService;
     this.consentLengthService = consentLengthService;
     this.ventAnnualService = ventAnnualService;
     this.ventShortTermService = ventShortTermService;
+    this.ventReportPeriodService = ventReportPeriodService;
   }
 
   @Override
@@ -60,6 +66,7 @@ public class VentInformationTaskListSectionService implements TaskListSectionSer
 
     var items = List.of(
         getVentsTaskListItem(applicationVersion),
+        getVentReportTaskListItem(applicationVersion),
         getVentConsentTaskListItem(applicationVersion, consentLengthDetails)
     );
 
@@ -79,6 +86,21 @@ public class VentInformationTaskListSectionService implements TaskListSectionSer
     return new TaskListItem("Vents",
         TaskListLabel.readyOrCompleteByCollection(vents),
         ventsUrl);
+  }
+
+  TaskListItem getVentReportTaskListItem(ApplicationVersion applicationVersion) {
+
+    var applicationId = applicationVersion.getApplication().getId();
+
+    boolean ventReportPeriodExists = ventReportPeriodService.ventReportPeriodExists(applicationVersion);
+
+    var ventReportUrl = ReverseRouter.route(on(VentReportPeriodController.class).getVentReportPeriodForm(applicationId));
+
+    TaskListLabel ventReportLabel = ventReportPeriodExists
+        ? TaskListLabel.IN_PROGRESS
+        : TaskListLabel.NOT_STARTED;
+
+    return new TaskListItem("Vent report", ventReportLabel, ventReportUrl);
   }
 
   TaskListItem getVentConsentTaskListItem(ApplicationVersion applicationVersion,

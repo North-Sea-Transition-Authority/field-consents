@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport;
+package uk.co.nstauthority.fieldconsents.flarevent.vent.ventreport;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
@@ -21,53 +21,53 @@ import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @Controller
-@RequestMapping("applications/{applicationId}/flare-report/period")
-public class FlareReportPeriodController {
+@RequestMapping("applications/{applicationId}/vent-report/period")
+public class VentReportPeriodController {
 
   private final ApplicationVersionService applicationVersionService;
 
-  private final FlareReportPeriodService flareReportPeriodService;
+  private final VentReportPeriodService ventReportPeriodService;
 
   private final FlareVentReportPeriodFormValidator reportPeriodFormValidator;
 
   private final FlareVentReportPeriodControllerHelperService reportPeriodControllerHelperService;
 
   @Autowired
-  FlareReportPeriodController(ApplicationVersionService applicationVersionService,
-                              FlareReportPeriodService flareReportPeriodService,
-                              FlareVentReportPeriodFormValidator reportPeriodFormValidator,
-                              FlareVentReportPeriodControllerHelperService reportPeriodControllerHelperService) {
+  VentReportPeriodController(ApplicationVersionService applicationVersionService,
+                             VentReportPeriodService ventReportPeriodService,
+                             FlareVentReportPeriodFormValidator reportPeriodFormValidator,
+                             FlareVentReportPeriodControllerHelperService reportPeriodControllerHelperService) {
     this.applicationVersionService = applicationVersionService;
-    this.flareReportPeriodService = flareReportPeriodService;
+    this.ventReportPeriodService = ventReportPeriodService;
     this.reportPeriodFormValidator = reportPeriodFormValidator;
     this.reportPeriodControllerHelperService = reportPeriodControllerHelperService;
   }
 
   @GetMapping
-  public ModelAndView getFlareReportPeriodForm(@PathVariable Integer applicationId) {
+  public ModelAndView getVentReportPeriodForm(@PathVariable Integer applicationId) {
 
-    FlareVentReportPeriodForm reportPeriodForm = flareReportPeriodService.getFlareReportPeriodForm(
+    FlareVentReportPeriodForm reportPeriodForm = ventReportPeriodService.getVentReportPeriodForm(
         applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId));
 
-    var modelAndView = getFlareReportPeriodModelAndView(applicationId);
+    var modelAndView = getVentReportPeriodModelAndView(applicationId);
 
     modelAndView.addObject("form", reportPeriodForm);
 
     return modelAndView;
   }
 
-  private ModelAndView getFlareReportPeriodModelAndView(Integer applicationId) {
+  private ModelAndView getVentReportPeriodModelAndView(Integer applicationId) {
     ApplicationVersion applicationVersion =
         applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
 
-    var modelAndView = new ModelAndView("fcs/flare/flareReportPeriodForm");
+    var modelAndView = new ModelAndView("fcs/vent/ventReportPeriodForm");
 
     modelAndView
         .addObject("reportEndMonthsMap", DateUtils.monthsMap())
         .addObject("reportEndYearsMap",
             reportPeriodControllerHelperService.getReportEndYearsMap(applicationVersion))
-        .addObject("submitUrl", ReverseRouter.route(on(FlareReportPeriodController.class)
-            .saveFlareReportPeriodForm(applicationId, null, ReverseRouter.emptyBindingResult())))
+        .addObject("submitUrl", ReverseRouter.route(on(VentReportPeriodController.class)
+            .saveVentReportPeriodForm(applicationId, null, ReverseRouter.emptyBindingResult())))
         .addObject("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class)
             .getTaskList(applicationId)));
 
@@ -75,19 +75,19 @@ public class FlareReportPeriodController {
   }
 
   @PostMapping
-  public ModelAndView saveFlareReportPeriodForm(@PathVariable Integer applicationId,
-                                                @ModelAttribute("form") FlareVentReportPeriodForm form,
-                                                BindingResult bindingResult) {
+  public ModelAndView saveVentReportPeriodForm(@PathVariable Integer applicationId,
+                                               @ModelAttribute("form") FlareVentReportPeriodForm form,
+                                               BindingResult bindingResult) {
 
     reportPeriodFormValidator.validate(form, bindingResult);
 
     if (bindingResult.hasErrors()) {
-      return getFlareReportPeriodModelAndView(applicationId);
+      return getVentReportPeriodModelAndView(applicationId);
     }
 
-    flareReportPeriodService.saveFlareReportPeriod(
+    ventReportPeriodService.saveVentReportPeriod(
         applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId), form);
 
-    return ReverseRouter.redirect(on(FlareReportController.class).getFlareReportForm(applicationId));
+    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
   }
 }

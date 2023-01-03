@@ -5,6 +5,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil.ANNUAL_CONSENT_YEAR;
 
 import java.time.LocalDate;
 import java.util.Collections;
@@ -213,7 +214,7 @@ class ProductionRowCleanupServiceTest {
   @Test
   void onApplicationEvent_whenLongTerm_withPreviousDataAndNewStartYear() {
     ConsentLengthDetails consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForLongTerm(applicationVersion);
-    consentLengthDetails.setLongTermStartYear(2024);
+    consentLengthDetails.setLongTermStartYear(ANNUAL_CONSENT_YEAR + 1);
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
     when(longTermProductionYearRepository.findAllByApplicationVersionOrderByYearAsc(applicationVersion)).thenReturn(
         ProductionTestUtils.getLongTermProductionYearsData(applicationVersion)
@@ -230,7 +231,7 @@ class ProductionRowCleanupServiceTest {
   @Test
   void onApplicationEvent_whenLongTerm_withPreviousDataAndNewEndYear() {
     ConsentLengthDetails consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForLongTerm(applicationVersion);
-    consentLengthDetails.setLongTermEndYear(2024);
+    consentLengthDetails.setLongTermEndYear(ANNUAL_CONSENT_YEAR + 1);
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
     when(longTermProductionYearRepository.findAllByApplicationVersionOrderByYearAsc(applicationVersion)).thenReturn(
         ProductionTestUtils.getLongTermProductionYearsData(applicationVersion)

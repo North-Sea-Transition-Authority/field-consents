@@ -12,9 +12,9 @@ public class ConsentLengthTestUtil {
 
   private static final int CONSENT_YEAR_LENGTH = 5;
 
-  public static final int ANNUAL_CONSENT_YEAR = 2023;
-  public static final int LONG_TERM_START_YEAR = 2022;
-  public static final int LONG_TERM_END_YEAR = 2026;
+  public static final int ANNUAL_CONSENT_YEAR = LocalDate.now().getYear() + 1;
+  public static final int LONG_TERM_START_YEAR = LocalDate.now().getYear();
+  public static final int LONG_TERM_END_YEAR = LONG_TERM_START_YEAR + 4;
 
   public static final LocalDate SHORT_TERM_START_DATE = LocalDate.of(2022, Month.OCTOBER, 31);
 
@@ -56,7 +56,7 @@ public class ConsentLengthTestUtil {
   public static ConsentLengthForm getAnnualConsentLengthForm() {
     ConsentLengthForm form = new ConsentLengthForm();
     form.setConsentLengthType(ConsentLengthType.ANNUAL);
-    form.getAnnualConsentYear().setInteger(2023);
+    form.getAnnualConsentYear().setInteger(ANNUAL_CONSENT_YEAR);
     return form;
   }
 

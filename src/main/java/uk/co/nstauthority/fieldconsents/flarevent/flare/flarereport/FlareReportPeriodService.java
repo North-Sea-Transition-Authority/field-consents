@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportPeriodForm;
 
 @Service
 public class FlareReportPeriodService {
@@ -25,10 +26,10 @@ public class FlareReportPeriodService {
     return flareReportPeriodRepository.findByApplicationVersion(applicationVersion);
   }
 
-  FlareReportPeriodForm getFlareReportPeriodForm(ApplicationVersion applicationVersion) {
+  FlareVentReportPeriodForm getFlareReportPeriodForm(ApplicationVersion applicationVersion) {
     return findFlareReportPeriod(applicationVersion)
-        .map(FlareReportPeriodForm::from)
-        .orElseGet(FlareReportPeriodForm::new);
+        .map(FlareVentReportPeriodForm::from)
+        .orElseGet(FlareVentReportPeriodForm::new);
   }
 
   public boolean flareReportPeriodExists(ApplicationVersion applicationVersion) {
@@ -45,9 +46,9 @@ public class FlareReportPeriodService {
 
   @Transactional
   public void saveFlareReportPeriod(ApplicationVersion applicationVersion,
-                                    FlareReportPeriodForm flareReportPeriodForm) {
+                                    FlareVentReportPeriodForm reportPeriodForm) {
     flareReportPeriodRepository.deleteByApplicationVersion(applicationVersion);
-    var flareReportPeriod = FlareReportPeriod.from(applicationVersion, flareReportPeriodForm);
+    var flareReportPeriod = FlareReportPeriod.from(applicationVersion, reportPeriodForm);
     flareReportPeriodRepository.save(flareReportPeriod);
     flareReportCleanupService.removeObsoleteReportDataOnPeriodSave(applicationVersion, flareReportPeriod);
   }

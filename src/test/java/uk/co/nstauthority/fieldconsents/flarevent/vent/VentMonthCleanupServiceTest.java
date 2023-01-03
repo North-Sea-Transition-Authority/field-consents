@@ -5,6 +5,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil.ANNUAL_CONSENT_YEAR;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -81,7 +82,7 @@ class VentMonthCleanupServiceTest {
         VentShortTermTestUtil.getVentShortTermMonthsForPeriod(applicationVersion,
             ConsentLengthTestUtil.SHORT_TERM_START_DATE, ConsentLengthTestUtil.SHORT_TERM_END_DATE);
     existingVentAnnualMonths =
-        VentAnnualTestUtil.getVentAnnualMonthsForYear(applicationVersion, ConsentLengthTestUtil.ANNUAL_CONSENT_YEAR);
+        VentAnnualTestUtil.getVentAnnualMonthsForYear(applicationVersion, ANNUAL_CONSENT_YEAR);
   }
 
   @Test
@@ -226,7 +227,7 @@ class VentMonthCleanupServiceTest {
   void onApplicationEvent_whenAnnual_withPreviousDataAndNewConsentYear() {
     ConsentLengthDetails consentLengthDetails =
         ConsentLengthTestUtil.getConsentLengthDetailsForAnnual(applicationVersion);
-    consentLengthDetails.setAnnualConsentYear(2024);
+    consentLengthDetails.setAnnualConsentYear(ANNUAL_CONSENT_YEAR + 1);
 
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
     when(ventAnnualService.getVentAnnualMonths(applicationVersion)).thenReturn(existingVentAnnualMonths);

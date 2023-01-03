@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport;
+package uk.co.nstauthority.fieldconsents.flarevent;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -7,8 +7,9 @@ import org.junit.jupiter.api.Test;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportPeriod;
 
-class FlareReportPeriodFormTest {
+class FlareVentReportPeriodFormTest {
 
   @Test
   void newFromFlareReportPeriod() {
@@ -17,9 +18,9 @@ class FlareReportPeriodFormTest {
     FlareReportPeriod flareReportPeriod =
         new FlareReportPeriod(applicationVersion, Month.APRIL, 2023);
 
-    FlareReportPeriodForm flareReportPeriodForm = FlareReportPeriodForm.from(flareReportPeriod);
+    FlareVentReportPeriodForm reportPeriodForm = FlareVentReportPeriodForm.from(flareReportPeriod);
 
-    assertThat(flareReportPeriodForm)
+    assertThat(reportPeriodForm)
         .extracting(
             form -> form.getReportEndMonth().getDisplayName(),
             form -> form.getReportEndMonth().getFieldName(),

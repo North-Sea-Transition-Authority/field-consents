@@ -6,6 +6,7 @@ import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil.ANNUAL_CONSENT_YEAR;
 import static uk.co.nstauthority.fieldconsents.production.ProductionTestUtils.PRODUCTION_YEAR;
 
 import java.time.Month;
@@ -123,7 +124,7 @@ class AnnualProductionServiceTest {
 
     var allMonths = Month.values();
     List<AnnualProductionMonthForm> annualProductionMonthForms = annualProductionForm.getAnnualProductionMonthForms();
-    assertThat(annualProductionForm.getYear()).isEqualTo("2023");
+    assertThat(annualProductionForm.getYear()).isEqualTo(Integer.toString(ANNUAL_CONSENT_YEAR));
 
     for(int index = 0; index < annualProductionMonthForms.size(); index++) {
       AnnualProductionMonthForm monthForm = annualProductionMonthForms.get(index);
@@ -166,7 +167,7 @@ class AnnualProductionServiceTest {
     AnnualProductionForm annualProductionForm = annualProductionService.getAnnualProductionForm(applicationVersion);
 
     List<AnnualProductionMonthForm> annualProductionMonthForms = annualProductionForm.getAnnualProductionMonthForms();
-    assertThat(annualProductionForm.getYear()).isEqualTo("2023");
+    assertThat(annualProductionForm.getYear()).isEqualTo(Integer.toString(ANNUAL_CONSENT_YEAR));
 
     for(int index = 0; index < annualProductionMonthForms.size(); index++) {
       AnnualProductionMonthForm monthForm = annualProductionMonthForms.get(index);

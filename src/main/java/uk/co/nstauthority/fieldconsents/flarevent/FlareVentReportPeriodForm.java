@@ -1,24 +1,24 @@
-package uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport;
+package uk.co.nstauthority.fieldconsents.flarevent;
 
 import uk.co.fivium.formlibrary.input.IntegerInput;
 import uk.co.fivium.formlibrary.input.StringInput;
 
-public class FlareReportPeriodForm {
+public class FlareVentReportPeriodForm {
 
   private final StringInput reportEndMonth;
 
   private final IntegerInput reportEndYear;
 
-  FlareReportPeriodForm() {
+  public FlareVentReportPeriodForm() {
     reportEndMonth = new StringInput("reportEndMonth", "Month");
     reportEndYear = new IntegerInput("reportEndYear", "Year");
   }
 
-  static FlareReportPeriodForm from(FlareReportPeriod flareReportPeriod) {
-    FlareReportPeriodForm flareReportPeriodForm = new FlareReportPeriodForm();
-    flareReportPeriodForm.setReportEndMonth(flareReportPeriod.getReportEndMonth().name());
-    flareReportPeriodForm.setReportEndYear(flareReportPeriod.getReportEndYear().toString());
-    return flareReportPeriodForm;
+  public static FlareVentReportPeriodForm from(FlareVentReportPeriod flareVentReportPeriod) {
+    FlareVentReportPeriodForm flareVentReportPeriodForm = new FlareVentReportPeriodForm();
+    flareVentReportPeriodForm.setReportEndMonth(flareVentReportPeriod.getReportEndMonth().name());
+    flareVentReportPeriodForm.setReportEndYear(flareVentReportPeriod.getReportEndYear().toString());
+    return flareVentReportPeriodForm;
   }
 
   public StringInput getReportEndMonth() {

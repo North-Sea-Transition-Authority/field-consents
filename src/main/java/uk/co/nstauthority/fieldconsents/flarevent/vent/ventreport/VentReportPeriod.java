@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport;
+package uk.co.nstauthority.fieldconsents.flarevent.vent.ventreport;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.time.Month;
@@ -10,29 +10,29 @@ import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportPeriod;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportPeriodForm;
 
 @Entity
-@Table(name = "flare_report_periods")
-public class FlareReportPeriod extends FlareVentReportPeriod {
+@Table(name = "vent_report_periods")
+public class VentReportPeriod extends FlareVentReportPeriod {
 
-  public FlareReportPeriod() {
+  public VentReportPeriod() {
   }
 
   @VisibleForTesting
-  public FlareReportPeriod(ApplicationVersion applicationVersion,
+  public VentReportPeriod(ApplicationVersion applicationVersion,
                            Month reportEndMonth,
                            Integer reportEndYear) {
     super(applicationVersion, reportEndMonth, reportEndYear);
   }
 
-  public static FlareReportPeriod from(ApplicationVersion applicationVersion,
-                                       FlareVentReportPeriodForm reportPeriodForm) {
+  public static VentReportPeriod from(ApplicationVersion applicationVersion,
+                                      FlareVentReportPeriodForm reportPeriodForm) {
 
-    FlareReportPeriod flareReportPeriod = new FlareReportPeriod();
-    flareReportPeriod.setApplicationVersion(applicationVersion);
-    flareReportPeriod.setReportEndMonth(
+    VentReportPeriod ventReportPeriod = new VentReportPeriod();
+    ventReportPeriod.setApplicationVersion(applicationVersion);
+    ventReportPeriod.setReportEndMonth(
         Month.valueOf(reportPeriodForm.getReportEndMonth().getInputValue().toUpperCase()));
-    flareReportPeriod.setReportEndYear(reportPeriodForm.getReportEndYear().getAsInteger()
+    ventReportPeriod.setReportEndYear(reportPeriodForm.getReportEndYear().getAsInteger()
         .orElseThrow(NoSuchElementException::new));
 
-    return flareReportPeriod;
+    return ventReportPeriod;
   }
 }

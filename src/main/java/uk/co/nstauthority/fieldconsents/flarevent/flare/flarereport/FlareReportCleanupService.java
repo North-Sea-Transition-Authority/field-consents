@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportPeriod;
 import uk.co.nstauthority.fieldconsents.flarevent.ReportUtil;
 
 @Service
@@ -19,10 +20,12 @@ class FlareReportCleanupService {
   }
 
   @Transactional
-  public void removeObsoleteReportDataOnPeriodSave(ApplicationVersion applicationVersion, FlareReportPeriod flareReportPeriod) {
+  public void removeObsoleteReportDataOnPeriodSave(
+      ApplicationVersion applicationVersion,
+      FlareVentReportPeriod flareVentReportPeriod) {
     Set<YearMonth> expectedYearMonthsSet = ReportUtil.getSetOfExpectedYearMonthsForPeriod(
-        flareReportPeriod.getReportStartYearMonth(),
-        flareReportPeriod.getReportEndYearMonth()
+        flareVentReportPeriod.getReportStartYearMonth(),
+        flareVentReportPeriod.getReportEndYearMonth()
     );
 
     // loop over the existing saved flare report months and delete any that are obsolete

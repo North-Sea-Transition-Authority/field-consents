@@ -8,6 +8,7 @@ import java.util.List;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportPeriodForm;
 
 class FlareReportTestUtil {
 
@@ -102,8 +103,8 @@ class FlareReportTestUtil {
     return new FlareReportPeriod(flareAppVersion, Month.APRIL, 2023);
   }
 
-  static FlareReportPeriodForm getFullFlareReportPeriodForm() {
-    FlareReportPeriodForm form = new FlareReportPeriodForm();
+  static FlareVentReportPeriodForm getFullFlareReportPeriodForm() {
+    FlareVentReportPeriodForm form = new FlareVentReportPeriodForm();
     form.setReportEndMonth("APRIL");
     form.setReportEndYear("2023");
     return form;

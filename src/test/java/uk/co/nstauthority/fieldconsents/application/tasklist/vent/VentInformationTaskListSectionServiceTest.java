@@ -7,6 +7,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.FLARE_VENT_INFORMATION_DISPLAY_ORDER;
 import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.VENTS_TASK_LIST_ITEM;
 import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.VENT_INFORMATION_SECTION;
+import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.VENT_REPORT_TASK_LIST_ITEM;
 import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.assertTaskListItem;
 import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.assertTaskListSection;
 
@@ -29,6 +30,8 @@ import uk.co.nstauthority.fieldconsents.flarevent.vent.annual.VentAnnualControll
 import uk.co.nstauthority.fieldconsents.flarevent.vent.annual.VentAnnualService;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.shortterm.VentShortTermController;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.shortterm.VentShortTermService;
+import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreport.VentReportPeriodController;
+import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreport.VentReportPeriodService;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.vents.VentController;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.vents.VentService;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.vents.VentTestUtil;
@@ -52,6 +55,9 @@ class VentInformationTaskListSectionServiceTest {
   @Mock
   private VentShortTermService ventShortTermService;
 
+  @Mock
+  private VentReportPeriodService ventReportPeriodService;
+
   private VentInformationTaskListSectionService ventInformationTaskListSectionService;
 
   private ApplicationVersion applicationVersion;
@@ -68,7 +74,8 @@ class VentInformationTaskListSectionServiceTest {
             ventService,
             consentLengthService,
             ventAnnualService,
-            ventShortTermService
+            ventShortTermService,
+            ventReportPeriodService
         );
     annualConsentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForAnnual(applicationVersion);
     shortTermConsentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(applicationVersion);
@@ -114,7 +121,7 @@ class VentInformationTaskListSectionServiceTest {
 
     List<TaskListItem> taskListItems = taskListSection.items();
 
-    assertThat(taskListItems).hasSize(2);
+    assertThat(taskListItems).hasSize(3);
 
     assertTaskListItem(
         taskListItems.get(0),
@@ -125,6 +132,14 @@ class VentInformationTaskListSectionServiceTest {
 
     assertTaskListItem(
         taskListItems.get(1),
+        VENT_REPORT_TASK_LIST_ITEM,
+        TaskListLabel.NOT_STARTED,
+        ReverseRouter.route(on(VentReportPeriodController.class)
+            .getVentReportPeriodForm(applicationVersion.getApplication().getId()))
+    );
+
+    assertTaskListItem(
+        taskListItems.get(2),
         ConsentLengthType.ANNUAL.getDisplayName(),
         TaskListLabel.NOT_STARTED,
         ReverseRouter.route(on(VentAnnualController.class)
@@ -144,7 +159,7 @@ class VentInformationTaskListSectionServiceTest {
 
     List<TaskListItem> taskListItems = taskListSection.items();
 
-    assertThat(taskListItems).hasSize(2);
+    assertThat(taskListItems).hasSize(3);
 
     assertTaskListItem(
         taskListItems.get(0),
@@ -155,6 +170,14 @@ class VentInformationTaskListSectionServiceTest {
 
     assertTaskListItem(
         taskListItems.get(1),
+        VENT_REPORT_TASK_LIST_ITEM,
+        TaskListLabel.NOT_STARTED,
+        ReverseRouter.route(on(VentReportPeriodController.class)
+            .getVentReportPeriodForm(applicationVersion.getApplication().getId()))
+    );
+
+    assertTaskListItem(
+        taskListItems.get(2),
         ConsentLengthType.ANNUAL.getDisplayName(),
         TaskListLabel.NOT_STARTED,
         ReverseRouter.route(on(VentAnnualController.class)

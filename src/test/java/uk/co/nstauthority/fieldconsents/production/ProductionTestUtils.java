@@ -28,9 +28,9 @@ import uk.co.nstauthority.fieldconsents.production.shortterm.ShortTermProduction
  */
 public class ProductionTestUtils {
 
-  static public final Integer START_YEAR_LT = 2022;
+  static public final Integer START_YEAR_LT = LocalDate.now().getYear();
 
-  static public final Integer END_YEAR_LT = 2026;
+  static public final Integer END_YEAR_LT = START_YEAR_LT + 4;
 
   static public final String PRODUCTION_YEAR = "2022";
 

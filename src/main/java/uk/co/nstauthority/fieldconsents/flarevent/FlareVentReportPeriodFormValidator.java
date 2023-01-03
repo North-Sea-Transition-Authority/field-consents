@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport;
+package uk.co.nstauthority.fieldconsents.flarevent;
 
 import java.time.Month;
 import java.time.YearMonth;
@@ -11,18 +11,18 @@ import uk.co.fivium.formlibrary.validator.integer.IntegerInputValidator;
 import uk.co.fivium.formlibrary.validator.string.StringInputValidator;
 
 @Service
-class FlareReportPeriodFormValidator implements Validator {
+public class FlareVentReportPeriodFormValidator implements Validator {
 
-  static final String REPORT_END_MONTH_IN_FUTURE = "Month cannot be in the future";
+  public static final String REPORT_END_MONTH_IN_FUTURE = "Month cannot be in the future";
 
   @Override
   public boolean supports(@NotNull Class<?> clazz) {
-    return FlareReportPeriodForm.class.isAssignableFrom(clazz);
+    return FlareVentReportPeriodForm.class.isAssignableFrom(clazz);
   }
 
   @Override
   public void validate(@NotNull Object target, @NotNull Errors errors) {
-    FlareReportPeriodForm setupForm = (FlareReportPeriodForm) target;
+    FlareVentReportPeriodForm setupForm = (FlareVentReportPeriodForm) target;
 
     // ensure a year has been selected
     IntegerInputValidator.builder()

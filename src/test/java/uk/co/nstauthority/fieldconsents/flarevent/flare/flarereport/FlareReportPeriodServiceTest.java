@@ -16,6 +16,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportPeriodForm;
 
 @ExtendWith(MockitoExtension.class)
 class FlareReportPeriodServiceTest {
@@ -136,13 +137,14 @@ class FlareReportPeriodServiceTest {
 
   @Test
   void saveFlareReportPeriod() {
-    FlareReportPeriodForm flareReportPeriodForm = FlareReportTestUtil.getFullFlareReportPeriodForm();
+    FlareVentReportPeriodForm reportPeriodForm = FlareReportTestUtil.getFullFlareReportPeriodForm();
 
-    flareReportPeriodService.saveFlareReportPeriod(applicationVersion, flareReportPeriodForm);
+    flareReportPeriodService.saveFlareReportPeriod(applicationVersion, reportPeriodForm);
 
     verify(flareReportPeriodRepository, times(1)).deleteByApplicationVersion(applicationVersion);
 
-    ArgumentCaptor<FlareReportPeriod> flareReportPeriodArgumentCaptor = ArgumentCaptor.forClass(FlareReportPeriod.class);
+    ArgumentCaptor<FlareReportPeriod> flareReportPeriodArgumentCaptor = ArgumentCaptor.forClass(
+        FlareReportPeriod.class);
     verify(flareReportPeriodRepository, times(1)).save(flareReportPeriodArgumentCaptor.capture());
     ArgumentCaptor<ApplicationVersion> applicationVersionArgumentCaptor = ArgumentCaptor.forClass(ApplicationVersion.class);
     verify(flareReportCleanupService, times(1)).removeObsoleteReportDataOnPeriodSave(

@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport;
+package uk.co.nstauthority.fieldconsents.flarevent.vent.ventreport;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -13,7 +13,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportPeriodForm;
 
-class FlareReportPeriodTest {
+class VentReportPeriodTest {
 
   static final ApplicationVersion applicationVersion =
       ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
@@ -29,17 +29,17 @@ class FlareReportPeriodTest {
   }
 
   @Test
-  void newFrom_flareReportPeriodForm() {
-    FlareReportPeriod flareReportPeriod =
-        FlareReportPeriod.from(applicationVersion, reportPeriodForm);
+  void newFrom_ventReportPeriodForm() {
+    VentReportPeriod ventReportPeriod =
+        VentReportPeriod.from(applicationVersion, reportPeriodForm);
 
-    assertThat(flareReportPeriod)
+    assertThat(ventReportPeriod)
         .extracting(
-            FlareReportPeriod::getApplicationVersion,
-            FlareReportPeriod::getReportEndMonth,
-            FlareReportPeriod::getReportEndYear,
-            FlareReportPeriod::getReportStartYearMonth,
-            FlareReportPeriod::getReportEndYearMonth
+            VentReportPeriod::getApplicationVersion,
+            VentReportPeriod::getReportEndMonth,
+            VentReportPeriod::getReportEndYear,
+            VentReportPeriod::getReportStartYearMonth,
+            VentReportPeriod::getReportEndYearMonth
         )
         .containsExactly(
             applicationVersion,
@@ -54,7 +54,7 @@ class FlareReportPeriodTest {
   void newFrom_badMonth() {
     reportPeriodForm.getReportEndMonth().setInputValue("NoAMonth");
 
-    assertThatThrownBy(() -> FlareReportPeriod.from(applicationVersion, reportPeriodForm))
+    assertThatThrownBy(() -> VentReportPeriod.from(applicationVersion, reportPeriodForm))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("No enum constant java.time.Month.NOAMONTH");
   }
@@ -63,7 +63,7 @@ class FlareReportPeriodTest {
   void newFrom_badYear() {
     reportPeriodForm.getReportEndYear().setInputValue("NoAYear");
 
-    assertThatThrownBy(() -> FlareReportPeriod.from(applicationVersion, reportPeriodForm))
+    assertThatThrownBy(() -> VentReportPeriod.from(applicationVersion, reportPeriodForm))
         .isInstanceOf(NoSuchElementException.class);
   }
 

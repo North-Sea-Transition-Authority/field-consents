@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport;
+package uk.co.nstauthority.fieldconsents.flarevent;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -6,9 +6,9 @@ import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 
 @Service
-class FlareReportPeriodControllerHelperService {
+public class FlareVentReportPeriodControllerHelperService {
 
-  Map<String, String> getReportEndYearsMap(ApplicationVersion applicationVersion) {
+  public Map<String, String> getReportEndYearsMap(ApplicationVersion applicationVersion) {
     Integer applicationCreatedYear = applicationVersion.getApplication().getCreatedLocalDate().getYear();
     var yearsMap = new LinkedHashMap<String, String>();
     yearsMap.put(String.valueOf(applicationCreatedYear - 1), String.valueOf(applicationCreatedYear - 1));

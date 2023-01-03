@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport;
+package uk.co.nstauthority.fieldconsents.flarevent;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -17,11 +17,11 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.ValidationUtils;
 import uk.co.nstauthority.fieldconsents.validation.ValidatorTestingUtil;
 
-class FlareReportPeriodFormValidatorTest {
+class FlareVentReportPeriodFormValidatorTest {
 
-  private FlareReportPeriodForm flareReportPeriodForm;
+  private FlareVentReportPeriodForm reportPeriodForm;
 
-  private FlareReportPeriodFormValidator validator;
+  private FlareVentReportPeriodFormValidator validator;
 
   private Errors errors;
 
@@ -29,16 +29,16 @@ class FlareReportPeriodFormValidatorTest {
 
   @BeforeEach
   void setUp() {
-    validator = new FlareReportPeriodFormValidator();
+    validator = new FlareVentReportPeriodFormValidator();
   }
 
   @Test
   void validate_emptyForm() {
-    flareReportPeriodForm = new FlareReportPeriodForm();
+    reportPeriodForm = new FlareVentReportPeriodForm();
 
-    errors = new BeanPropertyBindingResult(flareReportPeriodForm, "form");
+    errors = new BeanPropertyBindingResult(reportPeriodForm, "form");
 
-    ValidationUtils.invokeValidator(validator, flareReportPeriodForm, errors);
+    ValidationUtils.invokeValidator(validator, reportPeriodForm, errors);
 
     errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
 
@@ -54,13 +54,13 @@ class FlareReportPeriodFormValidatorTest {
 
   @Test
   void validate_invalidYear() {
-    flareReportPeriodForm = new FlareReportPeriodForm();
-    flareReportPeriodForm.setReportEndYear("a");
-    flareReportPeriodForm.setReportEndMonth(Month.JANUARY.name());
+    reportPeriodForm = new FlareVentReportPeriodForm();
+    reportPeriodForm.setReportEndYear("a");
+    reportPeriodForm.setReportEndMonth(Month.JANUARY.name());
 
-    errors = new BeanPropertyBindingResult(flareReportPeriodForm, "form");
+    errors = new BeanPropertyBindingResult(reportPeriodForm, "form");
 
-    ValidationUtils.invokeValidator(validator, flareReportPeriodForm, errors);
+    ValidationUtils.invokeValidator(validator, reportPeriodForm, errors);
 
     errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
 
@@ -73,13 +73,13 @@ class FlareReportPeriodFormValidatorTest {
 
   @Test
   void validate_invalidMonth() {
-    flareReportPeriodForm = new FlareReportPeriodForm();
-    flareReportPeriodForm.setReportEndYear(String.valueOf(Year.now()));
-    flareReportPeriodForm.setReportEndMonth("NOTAMONTH");
+    reportPeriodForm = new FlareVentReportPeriodForm();
+    reportPeriodForm.setReportEndYear(String.valueOf(Year.now()));
+    reportPeriodForm.setReportEndMonth("NOTAMONTH");
 
-    errors = new BeanPropertyBindingResult(flareReportPeriodForm, "form");
+    errors = new BeanPropertyBindingResult(reportPeriodForm, "form");
 
-    assertThatThrownBy(() -> ValidationUtils.invokeValidator(validator, flareReportPeriodForm, errors))
+    assertThatThrownBy(() -> ValidationUtils.invokeValidator(validator, reportPeriodForm, errors))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("No enum constant java.time.Month.NOTAMONTH");
 
@@ -87,34 +87,34 @@ class FlareReportPeriodFormValidatorTest {
 
   @Test
   void validate_invalidInFuture() {
-    flareReportPeriodForm = new FlareReportPeriodForm();
+    reportPeriodForm = new FlareVentReportPeriodForm();
     YearMonth yearMonthInFuture = YearMonth.now().plusMonths(1);
-    flareReportPeriodForm.setReportEndYear(String.valueOf(yearMonthInFuture.getYear()));
-    flareReportPeriodForm.setReportEndMonth(yearMonthInFuture.getMonth().name());
+    reportPeriodForm.setReportEndYear(String.valueOf(yearMonthInFuture.getYear()));
+    reportPeriodForm.setReportEndMonth(yearMonthInFuture.getMonth().name());
 
-    errors = new BeanPropertyBindingResult(flareReportPeriodForm, "form");
+    errors = new BeanPropertyBindingResult(reportPeriodForm, "form");
 
-    ValidationUtils.invokeValidator(validator, flareReportPeriodForm, errors);
+    ValidationUtils.invokeValidator(validator, reportPeriodForm, errors);
 
     errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
 
     assertThat(errorMap)
         .containsOnly(
             entry("reportEndMonth.inputValue",
-                Collections.singletonList(FlareReportPeriodFormValidator.REPORT_END_MONTH_IN_FUTURE))
+                Collections.singletonList(FlareVentReportPeriodFormValidator.REPORT_END_MONTH_IN_FUTURE))
         );
   }
 
   @Test
   void validate_validForm() {
-    flareReportPeriodForm = new FlareReportPeriodForm();
+    reportPeriodForm = new FlareVentReportPeriodForm();
     YearMonth currentYearMonth = YearMonth.now();
-    flareReportPeriodForm.setReportEndYear(String.valueOf(currentYearMonth.getYear()));
-    flareReportPeriodForm.setReportEndMonth(currentYearMonth.getMonth().name());
+    reportPeriodForm.setReportEndYear(String.valueOf(currentYearMonth.getYear()));
+    reportPeriodForm.setReportEndMonth(currentYearMonth.getMonth().name());
 
-    errors = new BeanPropertyBindingResult(flareReportPeriodForm, "form");
+    errors = new BeanPropertyBindingResult(reportPeriodForm, "form");
 
-    ValidationUtils.invokeValidator(validator, flareReportPeriodForm, errors);
+    ValidationUtils.invokeValidator(validator, reportPeriodForm, errors);
 
     assertThat(errors.hasErrors()).isFalse();
   }

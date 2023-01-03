@@ -96,7 +96,7 @@ class LongTermProductionServiceTest {
   @Test
   void longTermProductionYearsComplete_falseProdRowsExistWrongYearsNotOverlapping() {
     when(longTermProductionYearRepository.findAllByApplicationVersionOrderByYearAsc(applicationVersion))
-        .thenReturn(ProductionTestUtils.getLongTermProductionYearsData(applicationVersion)); // 2022 to 2026
+        .thenReturn(ProductionTestUtils.getLongTermProductionYearsData(applicationVersion));
     when(consentLengthService.getConsentLengthDetails(applicationVersion))
         .thenReturn(ConsentLengthTestUtil.getConsentLengthDetailsForLongTerm(applicationVersion, 2020, 2021));
 
@@ -106,9 +106,9 @@ class LongTermProductionServiceTest {
   @Test
   void longTermProductionYearsComplete_true() {
     when(longTermProductionYearRepository.findAllByApplicationVersionOrderByYearAsc(applicationVersion))
-        .thenReturn(ProductionTestUtils.getLongTermProductionYearsData(applicationVersion)); // 2022 to 2026
+        .thenReturn(ProductionTestUtils.getLongTermProductionYearsData(applicationVersion));
     when(consentLengthService.getConsentLengthDetails(applicationVersion))
-        .thenReturn(consentLengthDetails); // 2022 to 2026
+        .thenReturn(consentLengthDetails);
 
     assertThat(longTermProductionService.longTermProductionYearsComplete(applicationVersion)).isTrue();
   }
