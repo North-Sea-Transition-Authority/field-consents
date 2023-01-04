@@ -55,9 +55,7 @@ class VentReportPeriodControllerTest extends AbstractControllerTest {
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT);
-    reportPeriodForm = new FlareVentReportPeriodForm();
-    reportPeriodForm.setReportEndMonth("APRIL");
-    reportPeriodForm.setReportEndYear("2023");
+    reportPeriodForm = VentReportTestUtil.getFullVentReportPeriodForm();
 
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
@@ -140,7 +138,7 @@ class VentReportPeriodControllerTest extends AbstractControllerTest {
             .saveVentReportPeriodForm(ApplicationTestUtil.APPLICATION_ID, null, null)))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(view().name("redirect:/applications/1/task-list/"));
+        .andExpect(view().name("redirect:/applications/1/vent-report/"));
 
     ArgumentCaptor<ApplicationVersion> applicationVersionArgumentCaptor =
         ArgumentCaptor.forClass(ApplicationVersion.class);

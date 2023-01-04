@@ -26,6 +26,9 @@ class VentReportPeriodServiceTest {
   @Mock
   private VentReportPeriodRepository ventReportPeriodRepository;
 
+  @Mock
+  private VentReportCleanupService ventReportCleanupService;
+
   private VentReportPeriodService ventReportPeriodService;
 
   private ApplicationVersion applicationVersion;
@@ -36,7 +39,7 @@ class VentReportPeriodServiceTest {
 
   @BeforeEach
   void setUp() {
-    ventReportPeriodService = new VentReportPeriodService(ventReportPeriodRepository);
+    ventReportPeriodService = new VentReportPeriodService(ventReportPeriodRepository, ventReportCleanupService);
     applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT);
     exceptionMessage = "Vent report period with application_version_id %s not found".formatted(applicationVersion.getId());
     ventReportPeriod = new VentReportPeriod(applicationVersion, Month.APRIL, 2023);
@@ -140,9 +143,7 @@ class VentReportPeriodServiceTest {
 
   @Test
   void saveVentReportPeriod() {
-    FlareVentReportPeriodForm reportPeriodForm = new FlareVentReportPeriodForm();
-    reportPeriodForm.setReportEndMonth("APRIL");
-    reportPeriodForm.setReportEndYear("2023");
+    FlareVentReportPeriodForm reportPeriodForm = VentReportTestUtil.getFullVentReportPeriodForm();
 
     ventReportPeriodService.saveVentReportPeriod(applicationVersion, reportPeriodForm);
 
@@ -151,6 +152,13 @@ class VentReportPeriodServiceTest {
     ArgumentCaptor<VentReportPeriod> ventReportPeriodArgumentCaptor = ArgumentCaptor.forClass(
         VentReportPeriod.class);
     verify(ventReportPeriodRepository, times(1)).save(ventReportPeriodArgumentCaptor.capture());
+    ArgumentCaptor<ApplicationVersion> applicationVersionArgumentCaptor = ArgumentCaptor.forClass(ApplicationVersion.class);
+    verify(ventReportCleanupService, times(1)).removeObsoleteReportDataOnPeriodSave(
+        applicationVersionArgumentCaptor.capture(),
+        ventReportPeriodArgumentCaptor.capture()
+    );
+
+    assertThat(applicationVersionArgumentCaptor.getValue()).isEqualTo(applicationVersion);
 
     assertThat(ventReportPeriodArgumentCaptor.getValue())
         .extracting(VentReportPeriod::getApplicationVersion,

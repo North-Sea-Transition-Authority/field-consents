@@ -13,11 +13,13 @@ public class VentReportPeriodService {
 
   private final VentReportPeriodRepository ventReportPeriodRepository;
 
-  // TODO: Add clean up functionality as part of FCS-195
+  private final VentReportCleanupService ventReportCleanupService;
 
   @Autowired
-  VentReportPeriodService(VentReportPeriodRepository flareReportPeriodRepository) {
+  VentReportPeriodService(VentReportPeriodRepository flareReportPeriodRepository,
+                          VentReportCleanupService ventReportCleanupService) {
     this.ventReportPeriodRepository = flareReportPeriodRepository;
+    this.ventReportCleanupService = ventReportCleanupService;
   }
 
   Optional<VentReportPeriod> findVentReportPeriod(ApplicationVersion applicationVersion) {
@@ -48,5 +50,6 @@ public class VentReportPeriodService {
     ventReportPeriodRepository.deleteByApplicationVersion(applicationVersion);
     var ventReportPeriod = VentReportPeriod.from(applicationVersion, reportPeriodForm);
     ventReportPeriodRepository.save(ventReportPeriod);
+    ventReportCleanupService.removeObsoleteReportDataOnPeriodSave(applicationVersion, ventReportPeriod);
   }
 }

@@ -13,8 +13,10 @@ import uk.co.nstauthority.fieldconsents.flarevent.vent.annual.VentAnnualControll
 import uk.co.nstauthority.fieldconsents.flarevent.vent.annual.VentAnnualService;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.shortterm.VentShortTermController;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.shortterm.VentShortTermService;
+import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreport.VentReportController;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreport.VentReportPeriodController;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreport.VentReportPeriodService;
+import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreport.VentReportService;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.vents.VentController;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.vents.VentService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -36,16 +38,20 @@ public class VentInformationTaskListSectionService implements TaskListSectionSer
 
   private final VentReportPeriodService ventReportPeriodService;
 
+  private final VentReportService ventReportService;
+
   public VentInformationTaskListSectionService(VentService ventService,
                                                ConsentLengthService consentLengthService,
                                                VentAnnualService ventAnnualService,
                                                VentShortTermService ventShortTermService,
-                                               VentReportPeriodService ventReportPeriodService) {
+                                               VentReportPeriodService ventReportPeriodService,
+                                               VentReportService ventReportService) {
     this.ventService = ventService;
     this.consentLengthService = consentLengthService;
     this.ventAnnualService = ventAnnualService;
     this.ventShortTermService = ventShortTermService;
     this.ventReportPeriodService = ventReportPeriodService;
+    this.ventReportService = ventReportService;
   }
 
   @Override
@@ -94,11 +100,14 @@ public class VentInformationTaskListSectionService implements TaskListSectionSer
 
     boolean ventReportPeriodExists = ventReportPeriodService.ventReportPeriodExists(applicationVersion);
 
-    var ventReportUrl = ReverseRouter.route(on(VentReportPeriodController.class).getVentReportPeriodForm(applicationId));
+    var ventReportUrl = ventReportPeriodExists
+        ? ReverseRouter.route(on(VentReportController.class).getVentReportForm(applicationId))
+        : ReverseRouter.route(on(VentReportPeriodController.class).getVentReportPeriodForm(applicationId));
 
-    TaskListLabel ventReportLabel = ventReportPeriodExists
-        ? TaskListLabel.IN_PROGRESS
-        : TaskListLabel.NOT_STARTED;
+    TaskListLabel ventReportLabel = TaskListLabel.getTaskListLabelFor(applicationVersion,
+        ventReportService::ventReportMonthsComplete,
+        ventReportPeriodService::ventReportPeriodExists
+    );
 
     return new TaskListItem("Vent report", ventReportLabel, ventReportUrl);
   }

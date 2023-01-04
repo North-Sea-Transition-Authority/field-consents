@@ -88,6 +88,6 @@ public class VentReportPeriodController {
     ventReportPeriodService.saveVentReportPeriod(
         applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId), form);
 
-    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+    return ReverseRouter.redirect(on(VentReportController.class).getVentReportForm(applicationId));
   }
 }

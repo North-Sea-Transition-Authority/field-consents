@@ -1,11 +1,13 @@
 package uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.util.List;
 
 public class FlareReportForm {
 
   List<FlareReportMonthForm> flareReportMonthForms;
 
+  @VisibleForTesting
   public FlareReportForm() {
   }
 
