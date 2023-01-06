@@ -72,7 +72,7 @@ public class StartApplicationFromFieldController {
       return getModelAndView(fieldId);
     } else {
       ApplicationType type = form.getApplicationType();
-      Application application = applicationService.createNewApplication(type).getApplication();
+      Application application = applicationService.createNewApplicationForField(type, fieldId).getApplication();
       return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(application.getId()));
     }
   }

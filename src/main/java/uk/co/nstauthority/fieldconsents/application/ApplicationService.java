@@ -5,6 +5,8 @@ import javax.persistence.EntityNotFoundException;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import uk.co.nstauthority.fieldconsents.assets.ApplicationAssetService;
 
 @Service
 public class ApplicationService {
@@ -13,16 +15,34 @@ public class ApplicationService {
 
   private final ApplicationVersionRepository applicationVersionRepository;
 
+  private final ApplicationAssetService applicationAssetService;
+
   @Autowired
   public ApplicationService(ApplicationRepository applicationRepository,
-                            ApplicationVersionRepository applicationVersionRepository) {
+                            ApplicationVersionRepository applicationVersionRepository,
+                            ApplicationAssetService applicationAssetService) {
     this.applicationRepository = applicationRepository;
     this.applicationVersionRepository = applicationVersionRepository;
+    this.applicationAssetService = applicationAssetService;
   }
 
-  public ApplicationVersion createNewApplication(ApplicationType applicationType) {
+  private ApplicationVersion createNewApplication(ApplicationType applicationType) {
     Application application = createNewApplicationMasterRecord(applicationType);
     return createNewApplicationVersionRecord(application);
+  }
+
+  @Transactional
+  public ApplicationVersion createNewApplicationForField(ApplicationType type, Integer fieldId) {
+    ApplicationVersion applicationVersion = createNewApplication(type);
+    applicationAssetService.createAssetRecordForField(applicationVersion, fieldId);
+    return applicationVersion;
+  }
+
+  @Transactional
+  public ApplicationVersion createNewApplicationForTerminal(ApplicationType type, Integer terminalId) {
+    ApplicationVersion applicationVersion = createNewApplication(type);
+    applicationAssetService.createAssetRecordForTerminal(applicationVersion, terminalId);
+    return applicationVersion;
   }
 
   private ApplicationVersion createNewApplicationVersionRecord(Application application) {

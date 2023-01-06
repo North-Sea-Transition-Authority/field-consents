@@ -74,7 +74,7 @@ public class StartApplicationFromTerminalController {
       return getModelAndView(terminalId);
     } else {
       ApplicationType type = form.getApplicationType();
-      Application application = applicationService.createNewApplication(type).getApplication();
+      Application application = applicationService.createNewApplicationForTerminal(type, terminalId).getApplication();
       return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(application.getId()));
     }
   }

@@ -4,7 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1Json;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -14,6 +18,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.nstauthority.fieldconsents.assets.ApplicationAssetService;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationServiceTest {
@@ -26,25 +31,59 @@ class ApplicationServiceTest {
 
   private static ApplicationVersionRepository applicationVersionRepository;
 
+  private static ApplicationAssetService applicationAssetService;
+
   @BeforeAll
   static void setup() {
     applicationRepository = mock(ApplicationRepository.class);
     applicationVersionRepository = mock(ApplicationVersionRepository.class);
-    applicationService = new ApplicationService(applicationRepository, applicationVersionRepository);
+    applicationAssetService = mock(ApplicationAssetService.class);
+    applicationService = new ApplicationService(
+        applicationRepository,
+        applicationVersionRepository,
+        applicationAssetService
+    );
     newApplication = new Application(1, ApplicationType.PRODUCTION, Instant.now(), 1);
   }
 
 
   @Test
-  void createNewApplication() {
+  void createNewApplicationForField() {
 
     when(applicationRepository.save(any(Application.class))).thenReturn(newApplication);
 
     ApplicationVersion newApplicationVersion = new ApplicationVersion(1, newApplication, 1);
     when(applicationVersionRepository.save(any(ApplicationVersion.class))).thenReturn(newApplicationVersion);
 
-    ApplicationVersion expectedApplicationVersion = applicationService.createNewApplication(ApplicationType.PRODUCTION);
+    ApplicationVersion expectedApplicationVersion = applicationService.createNewApplicationForField(
+        ApplicationType.PRODUCTION,
+        field1Json.fieldId()
+    );
 
+    assertApplicationVersion(newApplicationVersion, expectedApplicationVersion);
+
+    verify(applicationAssetService, times(1)).createAssetRecordForField(newApplicationVersion, field1Json.fieldId());
+  }
+
+  @Test
+  void createNewApplicationForTerminal() {
+
+    when(applicationRepository.save(any(Application.class))).thenReturn(newApplication);
+
+    ApplicationVersion newApplicationVersion = new ApplicationVersion(1, newApplication, 1);
+    when(applicationVersionRepository.save(any(ApplicationVersion.class))).thenReturn(newApplicationVersion);
+
+    ApplicationVersion expectedApplicationVersion = applicationService.createNewApplicationForTerminal(
+        ApplicationType.PRODUCTION,
+        terminal1Json.terminalId()
+    );
+
+    assertApplicationVersion(newApplicationVersion, expectedApplicationVersion);
+
+    verify(applicationAssetService, times(1)).createAssetRecordForTerminal(newApplicationVersion, terminal1Json.terminalId());
+  }
+
+  private void assertApplicationVersion(ApplicationVersion newApplicationVersion, ApplicationVersion expectedApplicationVersion) {
     assertThat(expectedApplicationVersion.getId()).isEqualTo(newApplicationVersion.getId());
     assertThat(expectedApplicationVersion.getVersion()).isEqualTo(newApplicationVersion.getVersion());
 

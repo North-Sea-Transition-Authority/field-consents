@@ -89,7 +89,7 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
   @Test
   @WithMockUser
   void createNewApplicationOfType() throws Exception {
-    when(applicationService.createNewApplication(ApplicationType.FLARE)).thenReturn(applicationVersion);
+    when(applicationService.createNewApplicationForField(ApplicationType.FLARE, FIELD_ID)).thenReturn(applicationVersion);
 
     mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromFieldController.class)
         .createNewApplicationOfType(FIELD_ID, null, ReverseRouter.emptyBindingResult())))

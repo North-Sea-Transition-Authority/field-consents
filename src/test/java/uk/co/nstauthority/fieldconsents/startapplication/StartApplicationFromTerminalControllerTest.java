@@ -88,7 +88,7 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
   @Test
   @WithMockUser
   void createNewApplicationOfType() throws Exception {
-    when(applicationService.createNewApplication(ApplicationType.FLARE)).thenReturn(applicationVersion);
+    when(applicationService.createNewApplicationForTerminal(ApplicationType.FLARE, TERMINAL_ID)).thenReturn(applicationVersion);
 
     mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
             .createNewApplicationOfType(TERMINAL_ID, null, ReverseRouter.emptyBindingResult())))
