@@ -20,7 +20,6 @@ public class EnergyPortalApiBeans {
     return new OrganisationApi(energyPortal);
   }
 
-
   @Bean
   public FieldApi fieldApi(EnergyPortal energyPortal) {
     return new FieldApi(energyPortal);

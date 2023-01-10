@@ -6,6 +6,8 @@ public class ApplicationTestUtil {
   static public final int USER_WUA_ID = 1;
   static public final int APPLICATION_ID = 1;
   static public final int APPLICATION_VERSION_ID = 1;
+  static public final int PRIMARY_OPERATOR_OU_ID = 1;
+  static public final String CACHED_PRIMARY_OPERATOR_NAME = "TEST ORG UNIT";
 
   public static Application getApplicationWithType(ApplicationType applicationType) {
     return new Application(APPLICATION_ID, applicationType, Instant.now(), USER_WUA_ID);
@@ -13,6 +15,7 @@ public class ApplicationTestUtil {
 
   public static ApplicationVersion getApplicationVersionWithType(ApplicationType applicationType) {
     Application newApplication = getApplicationWithType(applicationType);
-    return new ApplicationVersion(APPLICATION_ID, newApplication, APPLICATION_VERSION_ID);
+    return new ApplicationVersion(APPLICATION_ID, newApplication, APPLICATION_VERSION_ID, PRIMARY_OPERATOR_OU_ID,
+        CACHED_PRIMARY_OPERATOR_NAME);
   }
 }

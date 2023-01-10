@@ -29,7 +29,9 @@ class ApplicationVersionServiceTest {
 
   @Test
   void getApplicationVersionById_whenApplicationVersionExists() {
-    ApplicationVersion applicationVersion = new ApplicationVersion(1, new Application(1, ApplicationType.PRODUCTION, Instant.now(), 1), 1);
+    ApplicationVersion applicationVersion =
+        new ApplicationVersion(1, new Application(1, ApplicationType.PRODUCTION, Instant.now(), 1),
+            1, ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID, ApplicationTestUtil.CACHED_PRIMARY_OPERATOR_NAME);
     when(applicationVersionRepository.findById(1)).thenReturn(Optional.of(applicationVersion));
 
     ApplicationVersion expectedApplicationVersion = applicationVersionService.getApplicationVersionById(1);
@@ -42,9 +44,8 @@ class ApplicationVersionServiceTest {
   void getApplicationVersionById_whenApplicationVersionIsNotFound() {
     when(applicationVersionRepository.findById(any(Integer.class))).thenReturn(Optional.empty());
 
-    var exception = Assertions.assertThrows(EntityNotFoundException.class, () -> {
-      applicationVersionService.getApplicationVersionById(1);
-    });
+    var exception = Assertions.assertThrows(EntityNotFoundException.class, () ->
+        applicationVersionService.getApplicationVersionById(1));
 
     Assertions.assertEquals("Application version with id 1 not found", exception.getMessage());
   }

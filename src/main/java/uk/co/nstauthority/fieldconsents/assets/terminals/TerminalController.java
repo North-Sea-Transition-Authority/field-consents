@@ -12,7 +12,7 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.startapplication.StartApplicationFromTerminalController;
 
 @RestController
-@RequestMapping("/facility/{terminalId}")
+@RequestMapping("/facilities/{terminalId}")
 public class TerminalController {
 
   private final TerminalService terminalService;
@@ -29,10 +29,7 @@ public class TerminalController {
         .addObject("terminalName",
             terminalService.getTerminalOrError(terminalId, "Manage terminal").terminalName())
         .addObject("startApplicationUrl",
-            ReverseRouter.route(on(
-                StartApplicationFromTerminalController.class)
-                .getStartApplicationModelAndView(terminalId)
-            )
+            ReverseRouter.route(on(StartApplicationFromTerminalController.class).getStartApplicationForm(terminalId))
         );
   }
 }

@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.assets.ApplicationAssetService;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 
 @Service
 public class ApplicationService {
@@ -26,29 +27,34 @@ public class ApplicationService {
     this.applicationAssetService = applicationAssetService;
   }
 
-  private ApplicationVersion createNewApplication(ApplicationType applicationType) {
+  private ApplicationVersion createNewApplication(ApplicationType applicationType, OrganisationUnitJson operatorOuJson) {
     Application application = createNewApplicationMasterRecord(applicationType);
-    return createNewApplicationVersionRecord(application);
+    return createNewApplicationVersionRecord(application, operatorOuJson);
   }
 
   @Transactional
-  public ApplicationVersion createNewApplicationForField(ApplicationType type, Integer fieldId) {
-    ApplicationVersion applicationVersion = createNewApplication(type);
+  public ApplicationVersion createNewApplicationForField(ApplicationType type, Integer fieldId,
+                                                         OrganisationUnitJson operatorOuJson) {
+    ApplicationVersion applicationVersion = createNewApplication(type, operatorOuJson);
     applicationAssetService.createAssetRecordForField(applicationVersion, fieldId);
     return applicationVersion;
   }
 
   @Transactional
-  public ApplicationVersion createNewApplicationForTerminal(ApplicationType type, Integer terminalId) {
-    ApplicationVersion applicationVersion = createNewApplication(type);
+  public ApplicationVersion createNewApplicationForTerminal(ApplicationType type, Integer terminalId,
+                                                            OrganisationUnitJson operatorOuJson) {
+    ApplicationVersion applicationVersion = createNewApplication(type, operatorOuJson);
     applicationAssetService.createAssetRecordForTerminal(applicationVersion, terminalId);
     return applicationVersion;
   }
 
-  private ApplicationVersion createNewApplicationVersionRecord(Application application) {
+  private ApplicationVersion createNewApplicationVersionRecord(Application application,
+                                                               OrganisationUnitJson operatorOuJson) {
     ApplicationVersion applicationVersion = new ApplicationVersion();
     applicationVersion.setApplication(application);
     applicationVersion.setVersion(1);
+    applicationVersion.setPrimaryOperatorOuId(operatorOuJson.organisationUnitId());
+    applicationVersion.setCachedPrimaryOperatorName(operatorOuJson.name());
     return applicationVersionRepository.save(applicationVersion);
   }
 

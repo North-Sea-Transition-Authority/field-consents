@@ -10,6 +10,8 @@ import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 @Service
 public class StartApplicationControllerHelperService {
 
+  public static final String APPLICATION_TYPE_FLASH_ATTRIBUTE = "applicationType";
+
   public Map<String, String> getApplicationTypesMap(AssetType assetType) {
     LinkedHashSet<ApplicationType> appTypes = ApplicationType.getForAssetType(assetType);
     return appTypes.stream()

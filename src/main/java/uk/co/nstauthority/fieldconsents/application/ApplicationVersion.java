@@ -23,14 +23,20 @@ public class ApplicationVersion {
   @Column(name = "version_no")
   private Integer version;
 
+  private Integer primaryOperatorOuId;
+
+  private String cachedPrimaryOperatorName;
 
   public ApplicationVersion() {
   }
 
-  public ApplicationVersion(Integer id, Application application, Integer version) {
+  public ApplicationVersion(Integer id, Application application, Integer version, Integer primaryOperatorOuId,
+                            String cachedPrimaryOperatorName) {
     this.id = id;
     this.application = application;
     this.version = version;
+    this.primaryOperatorOuId = primaryOperatorOuId;
+    this.cachedPrimaryOperatorName = cachedPrimaryOperatorName;
   }
 
   public Integer getId() {
@@ -55,5 +61,21 @@ public class ApplicationVersion {
 
   public void setVersion(Integer version) {
     this.version = version;
+  }
+
+  public Integer getPrimaryOperatorOuId() {
+    return primaryOperatorOuId;
+  }
+
+  public void setPrimaryOperatorOuId(Integer primaryOperatorOuId) {
+    this.primaryOperatorOuId = primaryOperatorOuId;
+  }
+
+  public String getCachedPrimaryOperatorName() {
+    return cachedPrimaryOperatorName;
+  }
+
+  public void setCachedPrimaryOperatorName(String cachedPrimaryOperatorName) {
+    this.cachedPrimaryOperatorName = cachedPrimaryOperatorName;
   }
 }
