@@ -9,6 +9,7 @@
 <#macro defaultPage
   htmlTitle
   pageHeading=""
+  caption=""
   phaseBanner=true
   pageSize=PageSize.TWO_THIRDS_COLUMN
   breadcrumbsMap={}
@@ -50,6 +51,7 @@
     serviceName=serviceName
     htmlAppTitle=serviceName
     pageHeading=pageHeading
+    caption=caption
     headerLogo="GOV_CREST"
     logoProductText=customerMnemonic
     phaseBanner=phaseBanner

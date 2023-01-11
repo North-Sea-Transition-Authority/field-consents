@@ -34,6 +34,10 @@ public class ApplicationAsset {
   @Enumerated(EnumType.STRING)
   private AssetRole assetRole;
 
+  public Integer getId() {
+    return id;
+  }
+
   public ApplicationVersion getApplicationVersion() {
     return applicationVersion;
   }

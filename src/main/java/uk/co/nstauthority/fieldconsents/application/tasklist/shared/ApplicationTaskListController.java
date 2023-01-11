@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.nstauthority.fieldconsents.application.ApplicationContextService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 
 @Controller
@@ -12,13 +13,17 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 public class ApplicationTaskListController {
 
   private final ApplicationVersionService applicationVersionService;
+
   private final ApplicationTaskListService applicationTaskListService;
 
+  private final ApplicationContextService applicationContextService;
 
   ApplicationTaskListController(ApplicationVersionService applicationVersionService,
-                                ApplicationTaskListService applicationTaskListService) {
+                                ApplicationTaskListService applicationTaskListService,
+                                ApplicationContextService applicationContextService) {
     this.applicationVersionService = applicationVersionService;
     this.applicationTaskListService = applicationTaskListService;
+    this.applicationContextService = applicationContextService;
   }
 
   @GetMapping
@@ -30,8 +35,11 @@ public class ApplicationTaskListController {
 
     var applicationType = applicationVersion.getApplication().getType().getDisplayName();
 
+    var applicationContext = applicationContextService.getApplicationContextJson(applicationVersion);
+
     return new ModelAndView("fcs/application/applicationTaskList")
-        .addObject("pageTitle", applicationType + " application tasklist")
-        .addObject("taskListSections", sections);
+        .addObject("pageTitle", applicationType + " application")
+        .addObject("taskListSections", sections)
+        .addObject("applicationContext", applicationContext);
   }
 }
