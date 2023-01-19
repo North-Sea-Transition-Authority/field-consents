@@ -21,6 +21,9 @@ public class TerminalService {
   static final TerminalProjectionRoot terminalProjectionRoot =
       new TerminalProjectionRoot().terminalName().terminalId();
 
+  static final TerminalProjectionRoot terminalWithOperatorProjectionRoot =
+      new TerminalProjectionRoot().terminalName().terminalId().terminalOperator().organisationUnitId().name().root();
+  
   @Autowired
   public TerminalService(TerminalApi terminalApi) {
     this.terminalApi = terminalApi;
@@ -36,20 +39,34 @@ public class TerminalService {
         .toList();
   }
 
-  public Optional<TerminalJson> getTerminal(Integer terminalId, String requestPurpose) {
+  public Optional<TerminalJson> findTerminal(Integer terminalId, String requestPurpose) {
     return terminalApi.findTerminalById(terminalId,
             terminalProjectionRoot,
             requestPurpose)
         .map(this::convertTerminalToTerminalJson);
   }
 
-  public TerminalJson getTerminalOrError(Integer terminalId, String requestPurpose) {
-    return getTerminal(terminalId, requestPurpose)
+  public Optional<TerminalJson> findTerminalWithOperator(Integer terminalId, String requestPurpose) {
+    return terminalApi.findTerminalById(terminalId, terminalWithOperatorProjectionRoot, requestPurpose)
+        .map(this::convertTerminalToTerminalJson);
+  }
+
+  public TerminalJson getTerminal(Integer terminalId, String requestPurpose) {
+    return findTerminal(terminalId, requestPurpose)
+        .orElseThrow(() -> new EntityNotFoundException("Terminal not found for terminal id %s".formatted(terminalId)));
+  }
+
+  public TerminalJson getTerminalWithOperator(Integer terminalId, String requestPurpose) {
+    return findTerminalWithOperator(terminalId, requestPurpose)
         .orElseThrow(() -> new EntityNotFoundException("Terminal not found for terminal id %s".formatted(terminalId)));
   }
 
   private TerminalJson convertTerminalToTerminalJson(Terminal terminal) {
-    return new TerminalJson(terminal.getTerminalId(), terminal.getTerminalName());
+    return new TerminalJson(
+        terminal.getTerminalId(),
+        terminal.getTerminalName(),
+        terminal.getTerminalOperator() != null ? terminal.getTerminalOperator().getOrganisationUnitId() : null,
+        terminal.getTerminalOperator() != null ? terminal.getTerminalOperator().getName() : null
+    );
   }
-
 }

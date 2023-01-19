@@ -1,0 +1,37 @@
+<#include '../layout/layout.ftl'>
+<#import '_assetSummary.ftl' as assetSummary>
+
+<#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
+<#-- @ftlvariable name="assetViews" type="java.util.List<uk.co.nstauthority.fieldconsents.assets.AssetView>" -->
+
+<#if successfulDeleteBanner?has_content>
+  <#assign deleteBanner>
+    <@fdsNotificationBanner.notificationBannerSuccess bannerTitleText="Success">
+      <@fdsNotificationBanner.notificationBannerContent>
+        ${successfulDeleteBanner}
+      </@fdsNotificationBanner.notificationBannerContent>
+    </@fdsNotificationBanner.notificationBannerSuccess>
+  </#assign>
+</#if>
+
+<@defaultPage
+htmlTitle=pageTitle
+pageHeading=pageTitle
+errorItems=errorList
+notificationBannerContent=deleteBanner
+>
+  <#list assetViews as asset>
+    <@assetSummary.assetSummary asset=asset showActions=true displayOrder="${asset.displayOrder()}"/>
+  </#list>
+
+  <@fdsForm.htmlForm actionUrl=springUrl(submitUrl)>
+    <#assign hasAddedAllAssetsFormBind = "form.hasOtherAssetsToAdd"/>
+    <@fdsRadio.radioGroup
+    path=hasAddedAllAssetsFormBind
+    labelText="Do you need to add another field?">
+      <@fdsRadio.radioYes path=hasAddedAllAssetsFormBind/>
+      <@fdsRadio.radioNo path=hasAddedAllAssetsFormBind/>
+    </@fdsRadio.radioGroup>
+    <@fdsAction.button buttonText="Save and continue"/>
+  </@fdsForm.htmlForm>
+</@defaultPage>

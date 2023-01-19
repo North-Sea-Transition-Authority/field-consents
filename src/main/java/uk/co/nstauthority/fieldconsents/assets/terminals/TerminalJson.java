@@ -5,7 +5,9 @@ import uk.co.nstauthority.fieldconsents.fds.searchselector.SearchSelectable;
 
 public record TerminalJson(
     @NotNull Integer terminalId,
-    @NotNull String terminalName
+    @NotNull String terminalName,
+    Integer operatorOuId,
+    String operatorName
 ) implements SearchSelectable {
 
   @Override

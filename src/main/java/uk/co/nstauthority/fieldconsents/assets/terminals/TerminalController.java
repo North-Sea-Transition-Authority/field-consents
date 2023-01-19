@@ -27,7 +27,7 @@ public class TerminalController {
     return new ModelAndView("fcs/assets/terminals")
         .addObject("terminalId", terminalId)
         .addObject("terminalName",
-            terminalService.getTerminalOrError(terminalId, "Manage terminal").terminalName())
+            terminalService.getTerminal(terminalId, "Manage terminal").terminalName())
         .addObject("startApplicationUrl",
             ReverseRouter.route(on(StartApplicationFromTerminalController.class).getStartApplicationForm(terminalId))
         );

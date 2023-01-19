@@ -26,4 +26,8 @@ public class AssetRestController {
     return searchSelectorService.search(assetName, assetService::searchAssets);
   }
 
+  @GetMapping("/data-sources/fields")
+  RestSearchResult searchFields(@RequestParam("term") String fieldName) {
+    return searchSelectorService.search(fieldName, assetService::searchFields);
+  }
 }

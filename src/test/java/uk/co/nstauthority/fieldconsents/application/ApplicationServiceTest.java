@@ -20,6 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationServiceTest {
@@ -50,8 +51,7 @@ class ApplicationServiceTest {
 
   @Test
   void createNewApplicationForField() {
-    OrganisationUnitJson organisationUnitJson = new OrganisationUnitJson(ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID,
-            ApplicationTestUtil.CACHED_PRIMARY_OPERATOR_NAME);
+    OrganisationUnitJson organisationUnitJson = OrganisationUnitTestUtil.orgUnit1Json;
     when(applicationRepository.save(any(Application.class))).thenReturn(newApplication);
 
     ApplicationVersion newApplicationVersion = new ApplicationVersion(1, newApplication, 1, organisationUnitJson.organisationUnitId(),
@@ -60,19 +60,21 @@ class ApplicationServiceTest {
 
     ApplicationVersion expectedApplicationVersion = applicationService.createNewApplicationForField(
         ApplicationType.PRODUCTION,
-        field1Json.fieldId(),
+        field1Json,
         organisationUnitJson
     );
 
     assertApplicationVersion(newApplicationVersion, expectedApplicationVersion);
 
-    verify(applicationAssetService, times(1)).createAssetRecordForField(newApplicationVersion, field1Json.fieldId());
+    verify(applicationAssetService, times(1)).createAssetRecordForPrimaryField(
+        newApplicationVersion,
+        field1Json
+    );
   }
 
   @Test
   void createNewApplicationForTerminal() {
-    OrganisationUnitJson organisationUnitJson = new OrganisationUnitJson(ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID,
-        ApplicationTestUtil.CACHED_PRIMARY_OPERATOR_NAME);
+    OrganisationUnitJson organisationUnitJson = OrganisationUnitTestUtil.orgUnit1Json;
     when(applicationRepository.save(any(Application.class))).thenReturn(newApplication);
 
     ApplicationVersion newApplicationVersion = new ApplicationVersion(1, newApplication, 1, organisationUnitJson.organisationUnitId(),
@@ -81,13 +83,16 @@ class ApplicationServiceTest {
 
     ApplicationVersion expectedApplicationVersion = applicationService.createNewApplicationForTerminal(
         ApplicationType.PRODUCTION,
-        terminal1Json.terminalId(),
+        terminal1Json,
         organisationUnitJson
     );
 
     assertApplicationVersion(newApplicationVersion, expectedApplicationVersion);
 
-    verify(applicationAssetService, times(1)).createAssetRecordForTerminal(newApplicationVersion, terminal1Json.terminalId());
+    verify(applicationAssetService, times(1)).createAssetRecordForTerminal(
+        newApplicationVersion,
+        terminal1Json
+    );
   }
 
   private void assertApplicationVersion(ApplicationVersion newApplicationVersion, ApplicationVersion expectedApplicationVersion) {

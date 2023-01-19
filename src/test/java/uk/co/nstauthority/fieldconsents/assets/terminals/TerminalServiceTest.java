@@ -8,6 +8,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1Json;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithOperator;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1WithOperator;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal2Json;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal3;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal3Json;
@@ -58,13 +60,63 @@ public class TerminalServiceTest {
   }
 
   @Test
+  void findTerminal_terminalExists() {
+    when(terminalApi.findTerminalById(eq(terminal1.getTerminalId()),
+        any(TerminalProjectionRoot.class), eq("Terminal service test")))
+        .thenReturn(Optional.of(terminal1));
+
+    var terminalJsonOptional = terminalService.findTerminal(terminal1.getTerminalId(), "Terminal service test");
+    assertThat(terminalJsonOptional).contains(terminal1Json);
+  }
+
+  @Test
+  void findTerminalWithOperator_terminalExists() {
+    when(terminalApi.findTerminalById(eq(terminal1WithOperator.getTerminalId()),
+        any(TerminalProjectionRoot.class), eq("Terminal service test")))
+        .thenReturn(Optional.of(terminal1WithOperator));
+
+    var terminalJsonOptional = terminalService.findTerminalWithOperator(terminal1WithOperator.getTerminalId(), "Terminal service test");
+    assertThat(terminalJsonOptional).contains(terminal1JsonWithOperator);
+  }
+
+  @Test
+  void findTerminal_terminalNotExists() {
+    when(terminalApi.findTerminalById(eq(0),
+        any(TerminalProjectionRoot.class), eq("Terminal service test")))
+        .thenReturn(Optional.empty());
+
+    var terminalJsonOptional = terminalService.findTerminal(0, "Terminal service test");
+    assertThat(terminalJsonOptional).isEqualTo(Optional.empty());
+  }
+
+  @Test
+  void findTerminalWithOperator_terminalNotExists() {
+    when(terminalApi.findTerminalById(eq(0),
+        any(TerminalProjectionRoot.class), eq("Terminal service test")))
+        .thenReturn(Optional.empty());
+
+    var terminalJsonOptional = terminalService.findTerminalWithOperator(0, "Terminal service test");
+    assertThat(terminalJsonOptional).isNotPresent();
+  }
+
+  @Test
   void getTerminal_terminalExists() {
     when(terminalApi.findTerminalById(eq(terminal1.getTerminalId()),
         any(TerminalProjectionRoot.class), eq("Terminal service test")))
         .thenReturn(Optional.of(terminal1));
 
-    var terminalJsonOptional = terminalService.getTerminal(terminal1.getTerminalId(), "Terminal service test");
-    assertThat(terminalJsonOptional.get()).isEqualTo(terminal1Json);
+    var terminalJson = terminalService.getTerminal(terminal1.getTerminalId(), "Terminal service test");
+    assertThat(terminalJson).isEqualTo(terminal1Json);
+  }
+
+  @Test
+  void getTerminalWithOperator_terminalExists() {
+    when(terminalApi.findTerminalById(eq(terminal1WithOperator.getTerminalId()),
+        any(TerminalProjectionRoot.class), eq("Terminal service test")))
+        .thenReturn(Optional.of(terminal1WithOperator));
+
+    var terminalJson = terminalService.getTerminalWithOperator(terminal1WithOperator.getTerminalId(), "Terminal service test");
+    assertThat(terminalJson).isEqualTo(terminal1JsonWithOperator);
   }
 
   @Test
@@ -73,29 +125,19 @@ public class TerminalServiceTest {
         any(TerminalProjectionRoot.class), eq("Terminal service test")))
         .thenReturn(Optional.empty());
 
-    var terminalJsonOptional = terminalService.getTerminal(0, "Terminal service test");
-    assertThat(terminalJsonOptional).isEqualTo(Optional.empty());
-  }
-
-  @Test
-  void getTerminalOrError_terminalExists() {
-    when(terminalApi.findTerminalById(eq(terminal1.getTerminalId()),
-        any(TerminalProjectionRoot.class), eq("Terminal service test")))
-        .thenReturn(Optional.of(terminal1));
-
-    var terminalJson = terminalService.getTerminalOrError(terminal1.getTerminalId(), "Terminal service test");
-    assertThat(terminalJson).isEqualTo(terminal1Json);
-  }
-
-  @Test
-  void getTerminalOrError_terminalNotExists() {
-    when(terminalApi.findTerminalById(eq(0),
-        any(TerminalProjectionRoot.class), eq("Terminal service test")))
-        .thenReturn(Optional.empty());
-
-    assertThatThrownBy(() -> terminalService.getTerminalOrError(0, "Terminal service test"))
+    assertThatThrownBy(() -> terminalService.getTerminal(0, "Terminal service test"))
         .isInstanceOf(RuntimeException.class)
         .hasMessageContaining("Terminal not found for terminal id 0");
   }
 
+  @Test
+  void getTerminalWithOperator_terminalNotExists() {
+    when(terminalApi.findTerminalById(eq(0),
+        any(TerminalProjectionRoot.class), eq("Terminal service test")))
+        .thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> terminalService.getTerminalWithOperator(0, "Terminal service test"))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Terminal not found for terminal id 0");
+  }
 }

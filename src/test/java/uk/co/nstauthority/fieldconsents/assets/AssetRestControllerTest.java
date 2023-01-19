@@ -37,6 +37,18 @@ public class AssetRestControllerTest extends AbstractControllerTest {
   }
 
   @Test
+  void searchFields_assertHttpOk() throws Exception {
+    when(assetService.searchFields("brent"))
+        .thenReturn(List.of(brentAssetJson));
+
+    mockMvc.perform(get(ReverseRouter.route(on(AssetRestController.class).searchFields("brent"))))
+        .andExpect(status().isOk())
+        .andExpect(content().json("""
+           {"results":[{"id":"1FIELD","text":"BRENT"}]}
+         """));
+  }
+
+  @Test
   void searchAssets_fieldsAndTerminals() throws Exception {
     when(assetService.searchAssets("br")).thenReturn(List.of(brentAssetJson, braeAssetJson));
 

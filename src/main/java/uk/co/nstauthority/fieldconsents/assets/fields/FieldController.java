@@ -27,7 +27,7 @@ public class FieldController {
     return new ModelAndView("fcs/assets/fields")
         .addObject("fieldId", fieldId)
         .addObject("fieldName",
-            fieldService.getFieldOrError(fieldId, "Manage field").fieldName())
+            fieldService.getField(fieldId, "Manage field").fieldName())
         .addObject("startApplicationUrl",
             ReverseRouter.route(on(StartApplicationFromFieldController.class).getStartApplicationForm(fieldId))
         );

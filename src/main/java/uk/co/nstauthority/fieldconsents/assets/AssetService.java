@@ -39,14 +39,26 @@ public class AssetService {
       return Optional.empty();
     } else if (assetKey.endsWith(AssetType.FIELD.name())) {
       var fieldId = Integer.valueOf(assetKey.replace(AssetType.FIELD.name(), ""));
-      return fieldService.getField(fieldId, "Field asset picked from search selector").map(AssetJson::from);
+      return fieldService.findField(fieldId, "Field asset picked from search selector").map(AssetJson::from);
     } else if (assetKey.endsWith(AssetType.TERMINAL.name())) {
       var terminalId = Integer.valueOf(assetKey.replace(AssetType.TERMINAL.name(), ""));
-      return terminalService.getTerminal(terminalId, "Terminal asset picked from search selector").map(AssetJson::from);
+      return terminalService.findTerminal(terminalId, "Terminal asset picked from search selector").map(AssetJson::from);
     } else {
       throw new RuntimeException("Not a valid AssetKey: " + assetKey);
     }
 
   }
 
+  public List<AssetJson> searchFields(String fieldName) {
+    return fieldService.searchFields(fieldName, "Assets search selector (search fields)").stream()
+        .map(AssetJson::from)
+        .sorted(Comparator.comparing(a -> a.assetName().toLowerCase()))
+        .toList();
+  }
+
+  public AssetJson getAsset(String assetKey) {
+    return getAssetFromKey(assetKey)
+        .orElseThrow(() -> new RuntimeException("Asset with key %s not found".formatted(assetKey))
+        );
+  }
 }

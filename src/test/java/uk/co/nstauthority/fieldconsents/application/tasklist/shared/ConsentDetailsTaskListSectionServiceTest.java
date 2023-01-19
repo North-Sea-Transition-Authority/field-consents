@@ -3,12 +3,17 @@ package uk.co.nstauthority.fieldconsents.application.tasklist.shared;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.fieldconsents.assets.ApplicationAssetTestUtil.assets;
+import static uk.co.nstauthority.fieldconsents.assets.ApplicationAssetTestUtil.fieldAsset1;
+import static uk.co.nstauthority.fieldconsents.assets.ApplicationAssetTestUtil.terminalAsset1;
+import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.ADDITIONAL_ASSETS_TASK_LIST_ITEM;
 import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.CONSENT_DETAILS_DISPLAY_ORDER;
 import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.CONSENT_DETAILS_SECTION;
 import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.CONSENT_LENGTH_TASK_LIST_ITEM;
 import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.assertTaskListItem;
 import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.assertTaskListSection;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,6 +28,8 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthC
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil;
+import uk.co.nstauthority.fieldconsents.assets.ApplicationAssetController;
+import uk.co.nstauthority.fieldconsents.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListItem;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListLabel;
@@ -33,7 +40,8 @@ class ConsentDetailsTaskListSectionServiceTest {
 
   @Mock
   private ConsentLengthService consentLengthService;
-
+  @Mock
+  private ApplicationAssetService applicationAssetService;
   private ConsentDetailsTaskListSectionService consentDetailsTaskListSectionService;
 
   private ApplicationVersion applicationVersion;
@@ -42,11 +50,15 @@ class ConsentDetailsTaskListSectionServiceTest {
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
-    consentDetailsTaskListSectionService = new ConsentDetailsTaskListSectionService(consentLengthService);
+    consentDetailsTaskListSectionService = new ConsentDetailsTaskListSectionService(
+        consentLengthService,
+        applicationAssetService
+    );
   }
 
   @Test
   void getSection_consentDetailsTaskListSection() {
+    when(applicationAssetService.getPrimaryApplicationAsset(applicationVersion)).thenReturn(fieldAsset1);
     Optional<TaskListSection> taskListSectionOptional = consentDetailsTaskListSectionService.getSection(applicationVersion);
 
     assertThat(taskListSectionOptional).isNotEmpty();
@@ -56,8 +68,99 @@ class ConsentDetailsTaskListSectionServiceTest {
   }
 
   @Test
-  void getSection_consentDetailsTaskListItemNotCompleted() {
+  void getSection_consentDetailsTaskListItemsNotCompleted() {
+    when(applicationAssetService.getPrimaryApplicationAsset(applicationVersion)).thenReturn(fieldAsset1);
+    when(applicationAssetService.getAdditionalAssetsForApplicationVersion(applicationVersion)).thenReturn(
+        Collections.emptyList());
     Optional<TaskListSection> taskListSectionOptional = consentDetailsTaskListSectionService.getSection(applicationVersion);
+    TaskListSection taskListSection = taskListSectionOptional.orElseThrow(RuntimeException::new);
+
+    List<TaskListItem> taskListItems = taskListSection.items();
+
+    assertThat(taskListItems).hasSize(2);
+
+    assertTaskListItem(
+        taskListItems.get(0),
+        CONSENT_LENGTH_TASK_LIST_ITEM,
+        TaskListLabel.NOT_STARTED,
+        ReverseRouter.route(on(ConsentLengthController.class).getConsentLengthForm(applicationVersion.getApplication().getId()))
+    );
+
+    assertTaskListItem(
+        taskListItems.get(1),
+        ADDITIONAL_ASSETS_TASK_LIST_ITEM,
+        TaskListLabel.NOT_STARTED,
+        ReverseRouter.route(on(ApplicationAssetController.class).addAdditionalAsset(applicationVersion.getApplication().getId()))
+    );
+  }
+
+  @Test
+  void getSection_consentDetailsTaskListItemCompleted_withFieldPrimaryAssetAndFlareApplication() {
+    ConsentLengthDetails consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(applicationVersion);
+    when(consentLengthService.findConsentLengthDetails(applicationVersion)).thenReturn(Optional.of(consentLengthDetails));
+    when(applicationAssetService.getPrimaryApplicationAsset(applicationVersion)).thenReturn(fieldAsset1);
+    when(applicationAssetService.getAdditionalAssetsForApplicationVersion(applicationVersion)).thenReturn(assets);
+
+    Optional<TaskListSection> taskListSectionOptional = consentDetailsTaskListSectionService.getSection(applicationVersion);
+    TaskListSection taskListSection = taskListSectionOptional.orElseThrow(RuntimeException::new);
+
+    List<TaskListItem> taskListItems = taskListSection.items();
+
+    assertThat(taskListItems).hasSize(2);
+
+    assertTaskListItem(
+        taskListItems.get(0),
+        CONSENT_LENGTH_TASK_LIST_ITEM,
+        TaskListLabel.COMPLETED,
+        ReverseRouter.route(on(ConsentLengthController.class).getConsentLengthForm(applicationVersion.getApplication().getId()))
+    );
+
+    assertTaskListItem(
+        taskListItems.get(1),
+        ADDITIONAL_ASSETS_TASK_LIST_ITEM,
+        TaskListLabel.COMPLETED,
+        ReverseRouter.route(on(ApplicationAssetController.class).viewAdditionalAssetsSummary(applicationVersion.getApplication().getId()))
+    );
+  }
+
+  @Test
+  void getSection_consentDetailsTaskListItemCompleted_withFieldPrimaryAssetAndVentApplication() {
+    ApplicationVersion ventAppVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT);
+    ConsentLengthDetails consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(ventAppVersion);
+    when(consentLengthService.findConsentLengthDetails(ventAppVersion)).thenReturn(Optional.of(consentLengthDetails));
+    when(applicationAssetService.getPrimaryApplicationAsset(ventAppVersion)).thenReturn(fieldAsset1);
+    when(applicationAssetService.getAdditionalAssetsForApplicationVersion(ventAppVersion)).thenReturn(assets);
+
+    Optional<TaskListSection> taskListSectionOptional = consentDetailsTaskListSectionService.getSection(ventAppVersion);
+    TaskListSection taskListSection = taskListSectionOptional.orElseThrow(RuntimeException::new);
+
+    List<TaskListItem> taskListItems = taskListSection.items();
+
+    assertThat(taskListItems).hasSize(2);
+
+    assertTaskListItem(
+        taskListItems.get(0),
+        CONSENT_LENGTH_TASK_LIST_ITEM,
+        TaskListLabel.COMPLETED,
+        ReverseRouter.route(on(ConsentLengthController.class).getConsentLengthForm(ventAppVersion.getApplication().getId()))
+    );
+
+    assertTaskListItem(
+        taskListItems.get(1),
+        ADDITIONAL_ASSETS_TASK_LIST_ITEM,
+        TaskListLabel.COMPLETED,
+        ReverseRouter.route(on(ApplicationAssetController.class).viewAdditionalAssetsSummary(ventAppVersion.getApplication().getId()))
+    );
+  }
+
+  @Test
+  void getSection_consentDetailsTaskListItemCompleted_withFieldPrimaryAssetAndProduction() {
+    ApplicationVersion productionAppVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
+    ConsentLengthDetails consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(productionAppVersion);
+    when(consentLengthService.findConsentLengthDetails(productionAppVersion)).thenReturn(Optional.of(consentLengthDetails));
+    when(applicationAssetService.getPrimaryApplicationAsset(productionAppVersion)).thenReturn(fieldAsset1);
+
+    Optional<TaskListSection> taskListSectionOptional = consentDetailsTaskListSectionService.getSection(productionAppVersion);
     TaskListSection taskListSection = taskListSectionOptional.orElseThrow(RuntimeException::new);
 
     List<TaskListItem> taskListItems = taskListSection.items();
@@ -67,15 +170,16 @@ class ConsentDetailsTaskListSectionServiceTest {
     assertTaskListItem(
         taskListItems.get(0),
         CONSENT_LENGTH_TASK_LIST_ITEM,
-        TaskListLabel.NOT_STARTED,
-        ReverseRouter.route(on(ConsentLengthController.class).getConsentLengthForm(applicationVersion.getApplication().getId()))
+        TaskListLabel.COMPLETED,
+        ReverseRouter.route(on(ConsentLengthController.class).getConsentLengthForm(productionAppVersion.getApplication().getId()))
     );
   }
 
   @Test
-  void getSection_consentDetailsTaskListItemCompleted() {
+  void getSection_consentDetailsTaskListItemCompleted_withTerminalPrimaryAsset() {
     ConsentLengthDetails consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(applicationVersion);
     when(consentLengthService.findConsentLengthDetails(applicationVersion)).thenReturn(Optional.of(consentLengthDetails));
+    when(applicationAssetService.getPrimaryApplicationAsset(applicationVersion)).thenReturn(terminalAsset1);
 
     Optional<TaskListSection> taskListSectionOptional = consentDetailsTaskListSectionService.getSection(applicationVersion);
     TaskListSection taskListSection = taskListSectionOptional.orElseThrow(RuntimeException::new);

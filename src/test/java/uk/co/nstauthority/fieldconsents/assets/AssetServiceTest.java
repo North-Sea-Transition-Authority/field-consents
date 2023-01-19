@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.BAD_ASSET_KEY;
 import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.FIELD1_ASSET_KEY;
 import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.TERMINAL1_ASSET_KEY;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_ID_1;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2Json;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field3Json;
@@ -53,7 +54,8 @@ public class AssetServiceTest {
 
   @Test
   void searchAssets_verifyListAndOrderFieldsOnly() {
-    when(fieldService.searchFields("F", "Assets search selector (search fields)")).thenReturn(List.of(field3Json, field1Json, field2Json));
+    when(fieldService.searchFields("F", "Assets search selector (search fields)")).thenReturn(List.of(field3Json, field1Json,
+        field2Json));
     when(terminalService.searchTerminals("F", "Assets search selector (search terminals)")).thenReturn(List.of());
 
     List<AssetJson> searchAssetsResults = assetService.searchAssets("F");
@@ -78,6 +80,20 @@ public class AssetServiceTest {
   }
 
   @Test
+  void searchFields_verifyListAndOrderFieldsOnly() {
+    when(fieldService.searchFields("F", "Assets search selector (search fields)"))
+        .thenReturn(List.of(field1Json, field2Json, field3Json));
+
+    List<AssetJson> searchAssetsResults = assetService.searchFields("F");
+
+    assertThat(searchAssetsResults).containsExactly(
+        AssetJson.from(field1Json),
+        AssetJson.from(field2Json),
+        AssetJson.from(field3Json)
+    );
+  }
+
+  @Test
   void getAssetFromKey_nullAssetKey() {
 
     Optional<AssetJson> assetJson = assetService.getAssetFromKey(null);
@@ -87,7 +103,7 @@ public class AssetServiceTest {
 
   @Test
   void getAssetFromKey_field() {
-    when(fieldService.getField(field1Json.fieldId(), "Field asset picked from search selector")).thenReturn(Optional.of(
+    when(fieldService.findField(field1Json.fieldId(), "Field asset picked from search selector")).thenReturn(Optional.of(
         field1Json));
 
     Optional<AssetJson> assetJson = assetService.getAssetFromKey(FIELD1_ASSET_KEY);
@@ -96,7 +112,7 @@ public class AssetServiceTest {
 
   @Test
   void getAssetFromKey_terminal() {
-    when(terminalService.getTerminal(terminal1Json.terminalId(), "Terminal asset picked from search selector")).thenReturn(Optional.of(
+    when(terminalService.findTerminal(terminal1Json.terminalId(), "Terminal asset picked from search selector")).thenReturn(Optional.of(
         terminal1Json));
 
     Optional<AssetJson> assetJson = assetService.getAssetFromKey(TERMINAL1_ASSET_KEY);
@@ -112,4 +128,21 @@ public class AssetServiceTest {
 
   }
 
+  @Test
+  void getAsset_validKey() {
+    when(fieldService.findField(FIELD_ID_1, "Field asset picked from search selector"))
+        .thenReturn(Optional.of(field1Json));
+
+    AssetJson assetJson = assetService.getAsset(FIELD1_ASSET_KEY);
+    assertThat(assetJson).isEqualTo(AssetJson.from(field1Json));
+  }
+
+  @Test
+  void getAsset_invalidKey_thenException() {
+
+    assertThatThrownBy(() -> assetService.getAsset(BAD_ASSET_KEY))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining("Not a valid AssetKey: " + BAD_ASSET_KEY);
+
+  }
 }

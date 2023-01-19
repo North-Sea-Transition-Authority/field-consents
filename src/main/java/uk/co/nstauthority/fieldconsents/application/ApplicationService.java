@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.assets.ApplicationAssetService;
+import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
+import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 
 @Service
@@ -33,18 +35,18 @@ public class ApplicationService {
   }
 
   @Transactional
-  public ApplicationVersion createNewApplicationForField(ApplicationType type, Integer fieldId,
+  public ApplicationVersion createNewApplicationForField(ApplicationType type, FieldJson fieldJson,
                                                          OrganisationUnitJson operatorOuJson) {
     ApplicationVersion applicationVersion = createNewApplication(type, operatorOuJson);
-    applicationAssetService.createAssetRecordForField(applicationVersion, fieldId);
+    applicationAssetService.createAssetRecordForPrimaryField(applicationVersion, fieldJson);
     return applicationVersion;
   }
 
   @Transactional
-  public ApplicationVersion createNewApplicationForTerminal(ApplicationType type, Integer terminalId,
+  public ApplicationVersion createNewApplicationForTerminal(ApplicationType type, TerminalJson terminalJson,
                                                             OrganisationUnitJson operatorOuJson) {
     ApplicationVersion applicationVersion = createNewApplication(type, operatorOuJson);
-    applicationAssetService.createAssetRecordForTerminal(applicationVersion, terminalId);
+    applicationAssetService.createAssetRecordForTerminal(applicationVersion, terminalJson);
     return applicationVersion;
   }
 

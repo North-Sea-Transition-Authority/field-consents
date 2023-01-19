@@ -29,6 +29,8 @@ public class TaskListTestUtil {
 
   public static final String CONSENT_LENGTH_TASK_LIST_ITEM = "Consent duration";
 
+  public static final String ADDITIONAL_ASSETS_TASK_LIST_ITEM = "Additional fields and licences";
+
   public static final String FLARES_TASK_LIST_ITEM = "Flares";
 
 

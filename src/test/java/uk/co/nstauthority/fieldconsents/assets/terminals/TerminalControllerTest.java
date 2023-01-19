@@ -3,9 +3,7 @@ package uk.co.nstauthority.fieldconsents.assets.terminals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
@@ -28,7 +26,7 @@ public class TerminalControllerTest extends AbstractControllerTest {
   @Test
   void manageTerminal_terminal1() throws Exception {
 
-    when(terminalService.getTerminalOrError(terminal1Json.terminalId(), "Manage terminal"))
+    when(terminalService.getTerminal(terminal1Json.terminalId(), "Manage terminal"))
         .thenReturn(terminal1Json);
 
     var modelAndView = mockMvc

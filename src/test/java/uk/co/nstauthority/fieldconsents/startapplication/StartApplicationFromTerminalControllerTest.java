@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1Json;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -28,6 +29,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
+import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
@@ -54,6 +56,9 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
 
   @MockBean
   private OrganisationUnitService organisationUnitService;
+
+  @MockBean
+  private TerminalService terminalService;
 
   private Map<String, String> applicationTypeMap;
 
@@ -184,7 +189,9 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
     when(organisationUnitService.getOrganisationUnitById(ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID,
         "Lookup organisation unit prior to creating a terminal application"))
         .thenReturn(operatorOuJson);
-    when(applicationService.createNewApplicationForTerminal(ApplicationType.FLARE, TERMINAL_ID, operatorOuJson))
+    when(terminalService.getTerminalWithOperator(TERMINAL_ID, "Lookup terminal prior to creating a terminal application"))
+        .thenReturn(terminal1Json);
+    when(applicationService.createNewApplicationForTerminal(ApplicationType.FLARE, terminal1Json, operatorOuJson))
         .thenReturn(applicationVersion);
 
     mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromTerminalController.class)

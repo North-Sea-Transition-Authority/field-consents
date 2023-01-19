@@ -5,7 +5,9 @@ import uk.co.nstauthority.fieldconsents.fds.searchselector.SearchSelectable;
 
 public record FieldJson(
     @NotNull Integer fieldId,
-    @NotNull String fieldName
+    @NotNull String fieldName,
+    Integer operatorOuId,
+    String operatorName
 ) implements SearchSelectable {
 
   @Override

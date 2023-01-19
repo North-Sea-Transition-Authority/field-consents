@@ -21,6 +21,8 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldController;
+import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
+import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
@@ -39,17 +41,21 @@ public class StartApplicationFromFieldController {
 
   private final OrganisationUnitService organisationUnitService;
 
+  private final FieldService fieldService;
+
   @Autowired
   public StartApplicationFromFieldController(ApplicationService applicationService,
                                              StartApplicationControllerHelperService startApplicationControllerHelperService,
                                              StartApplicationFormValidator formValidator,
                                              StartApplicationOperatorFormValidator operatorFormValidator,
-                                             OrganisationUnitService organisationUnitService) {
+                                             OrganisationUnitService organisationUnitService,
+                                             FieldService fieldService) {
     this.applicationService = applicationService;
     this.startApplicationControllerHelperService = startApplicationControllerHelperService;
     this.formValidator = formValidator;
     this.operatorFormValidator = operatorFormValidator;
     this.organisationUnitService = organisationUnitService;
+    this.fieldService = fieldService;
   }
 
   @GetMapping("/start-application")
@@ -126,11 +132,12 @@ public class StartApplicationFromFieldController {
       return getStartApplicationOperatorModelAndView(fieldId);
     } else {
       ApplicationType type = form.getApplicationType();
+      FieldJson fieldJson = fieldService.getFieldWithOperator(fieldId, "Lookup field prior to creating a field application");
       Integer operatorOuId = form.getOrganisationUnitId().getAsInteger().orElseThrow(NoSuchElementException::new);
       OrganisationUnitJson operatorOuJson = organisationUnitService.getOrganisationUnitById(operatorOuId,
           "Lookup organisation unit prior to creating a field application");
       Application application =
-          applicationService.createNewApplicationForField(type, fieldId, operatorOuJson).getApplication();
+          applicationService.createNewApplicationForField(type, fieldJson, operatorOuJson).getApplication();
       return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(application.getId()));
     }
   }
