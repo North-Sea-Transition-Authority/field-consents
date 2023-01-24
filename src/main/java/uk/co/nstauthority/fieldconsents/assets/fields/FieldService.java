@@ -5,10 +5,10 @@ import java.util.Optional;
 import javax.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.field.FieldApi;
 import uk.co.fivium.energyportalapi.generated.client.FieldProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.client.FieldsProjectionRoot;
-import uk.co.fivium.energyportalapi.generated.types.Field;
 import uk.co.fivium.energyportalapi.generated.types.FieldStatus;
 
 @Service
@@ -38,34 +38,36 @@ public class FieldService {
   }
 
   public List<FieldJson> searchFields(String fieldName, String requestPurpose) {
-    return fieldApi.searchFields(fieldName, fieldStatusesAllowed,
+    return fieldApi.searchFields(fieldName,
+            fieldStatusesAllowed,
             fieldsProjectionRoot,
-            requestPurpose)
+            new RequestPurpose(requestPurpose))
         .stream()
-        .map(this::convertFieldToFieldJson)
+        .map(FieldJson::from)
         .toList();
   }
 
   public Optional<FieldJson> findField(Integer fieldId, String requestPurpose) {
-    return fieldApi.findFieldById(fieldId, fieldProjectionRoot, requestPurpose)
-        .map(this::convertFieldToFieldJson);
+    return fieldApi.findFieldById(fieldId, fieldProjectionRoot, new RequestPurpose(requestPurpose))
+        .map(FieldJson::from);
   }
 
-  public List<FieldJson> searchFieldsWithOperator(String fieldName, String requestPurpose) {
-    return fieldApi.searchFields(fieldName, fieldStatusesAllowed,
+  public List<FieldWithOperatorJson> searchFieldsWithOperator(String fieldName, String requestPurpose) {
+    return fieldApi.searchFields(fieldName,
+            fieldStatusesAllowed,
             fieldsWithOperatorsProjectionRoot,
-            requestPurpose)
+            new RequestPurpose(requestPurpose))
         .stream()
-        .map(this::convertFieldToFieldJson)
+        .map(FieldWithOperatorJson::from)
         .toList();
   }
 
-  public Optional<FieldJson> findFieldWithOperator(Integer fieldId, String requestPurpose) {
-    return fieldApi.findFieldById(fieldId, fieldWithOperatorProjectionRoot, requestPurpose)
-        .map(this::convertFieldToFieldJson);
+  public Optional<FieldWithOperatorJson> findFieldWithOperator(Integer fieldId, String requestPurpose) {
+    return fieldApi.findFieldById(fieldId, fieldWithOperatorProjectionRoot, new RequestPurpose(requestPurpose))
+        .map(FieldWithOperatorJson::from);
   }
 
-  public FieldJson getFieldWithOperator(Integer fieldId, String requestPurpose) {
+  public FieldWithOperatorJson getFieldWithOperator(Integer fieldId, String requestPurpose) {
     return findFieldWithOperator(fieldId, requestPurpose)
         .orElseThrow(() -> new EntityNotFoundException("Field not found for field id %s".formatted(fieldId)));
   }
@@ -73,14 +75,5 @@ public class FieldService {
   public FieldJson getField(Integer fieldId, String requestPurpose) {
     return findField(fieldId, requestPurpose)
         .orElseThrow(() -> new EntityNotFoundException("Field not found for field id %s".formatted(fieldId)));
-  }
-
-  private FieldJson convertFieldToFieldJson(Field field) {
-    return new FieldJson(
-        field.getFieldId(),
-        field.getFieldName(),
-        field.getFieldOperator() != null ? field.getFieldOperator().getOrganisationUnitId() : null,
-        field.getFieldOperator() != null ? field.getFieldOperator().getName() : null
-    );
   }
 }

@@ -1,12 +1,15 @@
 package uk.co.nstauthority.fieldconsents.assets;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
+import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalJson;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
 
 @Service
@@ -23,13 +26,13 @@ public class AssetService {
   }
 
   public List<AssetJson> searchAssets(String assetName) {
-    var searchFieldsStream = fieldService.searchFields(assetName, "Assets search selector (search fields)").stream()
-        .map(AssetJson::from);
-    var searchTerminalsStream = terminalService.searchTerminals(assetName, "Assets search selector (search terminals)").stream()
-        .map(AssetJson::from);
+    var searchFieldsStream = fieldService.searchFields(assetName, "Assets search selector (search fields)")
+        .stream();
+    var searchTerminalsStream = terminalService.searchTerminals(assetName, "Assets search selector (search terminals)")
+        .stream();
 
     return Stream.concat(searchFieldsStream, searchTerminalsStream)
-        .sorted(Comparator.comparing(a -> a.assetName().toLowerCase()))
+        .sorted(Comparator.comparing(a -> a.getName().toLowerCase()))
         .toList();
   }
 
@@ -39,10 +42,14 @@ public class AssetService {
       return Optional.empty();
     } else if (assetKey.endsWith(AssetType.FIELD.name())) {
       var fieldId = Integer.valueOf(assetKey.replace(AssetType.FIELD.name(), ""));
-      return fieldService.findField(fieldId, "Field asset picked from search selector").map(AssetJson::from);
+      FieldJson fieldJson = fieldService.findField(fieldId, "Field asset picked from search selector")
+          .orElse(null);
+      return Optional.ofNullable(fieldJson);
     } else if (assetKey.endsWith(AssetType.TERMINAL.name())) {
       var terminalId = Integer.valueOf(assetKey.replace(AssetType.TERMINAL.name(), ""));
-      return terminalService.findTerminal(terminalId, "Terminal asset picked from search selector").map(AssetJson::from);
+      TerminalJson terminalJson = terminalService.findTerminal(terminalId, "Terminal asset picked from search selector")
+          .orElse(null);
+      return Optional.ofNullable(terminalJson);
     } else {
       throw new RuntimeException("Not a valid AssetKey: " + assetKey);
     }
@@ -50,10 +57,12 @@ public class AssetService {
   }
 
   public List<AssetJson> searchFields(String fieldName) {
-    return fieldService.searchFields(fieldName, "Assets search selector (search fields)").stream()
-        .map(AssetJson::from)
-        .sorted(Comparator.comparing(a -> a.assetName().toLowerCase()))
+    List<FieldJson> fieldJsonList = fieldService.searchFields(fieldName, "Assets search selector (search fields)")
+        .stream()
+        .sorted(Comparator.comparing(a -> a.getName().toLowerCase()))
         .toList();
+
+    return new ArrayList<>(fieldJsonList);
   }
 
   public AssetJson getAsset(String assetKey) {

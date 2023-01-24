@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.field.FieldApi;
 import uk.co.fivium.energyportalapi.generated.client.FieldProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.client.FieldsProjectionRoot;
@@ -39,6 +40,10 @@ public class FieldServiceTest {
   @Mock
   FieldApi fieldApi;
 
+  private static final String REQUEST_PURPOSE = "Field service test";
+
+  private final RequestPurpose requestPurpose = new RequestPurpose(REQUEST_PURPOSE);
+
   @BeforeEach
   void setup() {
     fieldService = new FieldService(fieldApi);
@@ -47,113 +52,135 @@ public class FieldServiceTest {
   @Test
   void searchFields_allTestFields() {
     when(fieldApi.searchFields(eq("F"), eq(fieldStatusesAllowed),
-        any(FieldsProjectionRoot.class), eq("Search test fields")))
+        any(FieldsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(fieldList);
 
-    List<FieldJson> allTestFields = fieldService.searchFields("F", "Search test fields");
-    assertThat(allTestFields).containsExactly(field1Json, field2Json, field3Json);
+    List<FieldJson> allTestFields = fieldService.searchFields("F", REQUEST_PURPOSE);
+    assertThat(allTestFields).hasSize(3);
+    assertThat(allTestFields.get(0)).usingRecursiveComparison()
+        .isEqualTo(field1Json);
+    assertThat(allTestFields.get(1)).usingRecursiveComparison()
+        .isEqualTo(field2Json);
+    assertThat(allTestFields.get(2)).usingRecursiveComparison()
+        .isEqualTo(field3Json);
   }
 
   @Test
   void searchFieldsWithOperator_allTestFields() {
     when(fieldApi.searchFields(eq("F"), eq(fieldStatusesAllowed),
-        any(FieldsProjectionRoot.class), eq("Search test fields")))
+        any(FieldsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(fieldsWithOperatorList);
 
-    List<FieldJson> allTestFields = fieldService.searchFieldsWithOperator("F", "Search test fields");
-    assertThat(allTestFields).containsExactly(field1JsonWithOperator, field2JsonWithOperator, field3JsonWithOperator);
+    List<FieldWithOperatorJson> allTestFields =
+        fieldService.searchFieldsWithOperator("F", REQUEST_PURPOSE);
+    assertThat(allTestFields).hasSize(3);
+    assertThat(allTestFields.get(0)).usingRecursiveComparison()
+        .isEqualTo(field1JsonWithOperator);
+    assertThat(allTestFields.get(1)).usingRecursiveComparison()
+        .isEqualTo(field2JsonWithOperator);
+    assertThat(allTestFields.get(2)).usingRecursiveComparison()
+        .isEqualTo(field3JsonWithOperator);
   }
 
   @Test
   void searchFields_singleTestField() {
     when(fieldApi.searchFields(eq("F2"), eq(fieldStatusesAllowed),
-        any(FieldsProjectionRoot.class), eq("Search test fields")))
+        any(FieldsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(List.of(field2));
 
-    List<FieldJson> singleTestField = fieldService.searchFields("F2", "Search test fields");
-    assertThat(singleTestField).containsExactly(field2Json);
+    List<FieldJson> singleTestField = fieldService.searchFields("F2", REQUEST_PURPOSE);
+    assertThat(singleTestField).hasSize(1);
+    assertThat(singleTestField.get(0)).usingRecursiveComparison()
+        .isEqualTo(field2Json);
   }
 
   @Test
   void searchFieldsWithOperator_singleTestField() {
     when(fieldApi.searchFields(eq("F2"), eq(fieldStatusesAllowed),
-        any(FieldsProjectionRoot.class), eq("Search test fields")))
+        any(FieldsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(List.of(field2WithOperator));
 
-    List<FieldJson> singleTestField = fieldService.searchFieldsWithOperator("F2", "Search test fields");
-    assertThat(singleTestField).containsExactly(field2JsonWithOperator);
+    List<FieldWithOperatorJson> singleTestField =
+        fieldService.searchFieldsWithOperator("F2", REQUEST_PURPOSE);
+    assertThat(singleTestField).hasSize(1);
+    assertThat(singleTestField.get(0)).usingRecursiveComparison()
+        .isEqualTo(field2JsonWithOperator);
   }
 
   @Test
   void findField_fieldExists() {
-    when(fieldApi.findFieldById(eq(field1.getFieldId()), any(FieldProjectionRoot.class), eq("Field service test")))
+    when(fieldApi.findFieldById(eq(field1.getFieldId()), any(FieldProjectionRoot.class), any(RequestPurpose.class)))
         .thenReturn(Optional.of(field1));
 
-    var fieldJsonOptional = fieldService.findField(field1.getFieldId(), "Field service test");
-    assertThat(fieldJsonOptional).contains(field1Json);
+    var fieldJsonOptional = fieldService.findField(field1.getFieldId(), REQUEST_PURPOSE);
+    assertThat(fieldJsonOptional).usingRecursiveComparison()
+        .isEqualTo(Optional.of(field1Json));
   }
 
   @Test
   void findFieldWithOperator_fieldExists() {
-    when(fieldApi.findFieldById(eq(field1WithOperator.getFieldId()), any(FieldProjectionRoot.class), eq("Field service test")))
+    when(fieldApi.findFieldById(eq(field1WithOperator.getFieldId()), any(FieldProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(Optional.of(field1WithOperator));
 
-    var fieldJsonOptional = fieldService.findFieldWithOperator(field1WithOperator.getFieldId(), "Field service test");
-    assertThat(fieldJsonOptional).contains(field1JsonWithOperator);
+    var fieldJsonOptional = fieldService.findFieldWithOperator(field1WithOperator.getFieldId(), REQUEST_PURPOSE);
+    assertThat(fieldJsonOptional).usingRecursiveComparison()
+        .isEqualTo(Optional.of(field1JsonWithOperator));
   }
 
   @Test
   void findField_fieldNotExists() {
-    when(fieldApi.findFieldById(eq(0), any(FieldProjectionRoot.class), eq("Field service test")))
+    when(fieldApi.findFieldById(eq(0), any(FieldProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(Optional.empty());
 
-    var fieldJsonOptional = fieldService.findField(0, "Field service test");
+    var fieldJsonOptional = fieldService.findField(0, REQUEST_PURPOSE);
     assertThat(fieldJsonOptional).isEqualTo(Optional.empty());
   }
 
   @Test
   void findFieldWithOperator_fieldNotExists() {
-    when(fieldApi.findFieldById(eq(0), any(FieldProjectionRoot.class), eq("Field service test")))
+    when(fieldApi.findFieldById(eq(0), any(FieldProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(Optional.empty());
 
-    var fieldJsonOptional = fieldService.findFieldWithOperator(0, "Field service test");
+    var fieldJsonOptional = fieldService.findFieldWithOperator(0, REQUEST_PURPOSE);
     assertThat(fieldJsonOptional).isNotPresent();
   }
 
   @Test
   void getField_fieldExists() {
-    when(fieldApi.findFieldById(eq(field1.getFieldId()), any(FieldProjectionRoot.class), eq("Field service test")))
+    when(fieldApi.findFieldById(eq(field1.getFieldId()), any(FieldProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(Optional.of(field1));
 
-    var fieldJson = fieldService.getField(field1.getFieldId(), "Field service test");
-    assertThat(fieldJson).isEqualTo(field1Json);
+    var fieldJson = fieldService.getField(field1.getFieldId(), REQUEST_PURPOSE);
+    assertThat(fieldJson).usingRecursiveComparison()
+        .isEqualTo(field1Json);
   }
 
   @Test
   void getFieldWithOperator_fieldExists() {
-    when(fieldApi.findFieldById(eq(field1WithOperator.getFieldId()), any(FieldProjectionRoot.class), eq("Field service test")))
+    when(fieldApi.findFieldById(eq(field1WithOperator.getFieldId()), any(FieldProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(Optional.of(field1WithOperator));
 
-    var fieldJson = fieldService.getFieldWithOperator(field1WithOperator.getFieldId(), "Field service test");
-    assertThat(fieldJson).isEqualTo(field1JsonWithOperator);
+    var fieldJson = fieldService.getFieldWithOperator(field1WithOperator.getFieldId(), REQUEST_PURPOSE);
+    assertThat(fieldJson).usingRecursiveComparison()
+        .isEqualTo(field1JsonWithOperator);
   }
 
   @Test
   void getField_fieldNotExists() {
-    when(fieldApi.findFieldById(eq(0), any(FieldProjectionRoot.class), eq("Field service test")))
+    when(fieldApi.findFieldById(eq(0), any(FieldProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> fieldService.getField(0, "Field service test"))
+    assertThatThrownBy(() -> fieldService.getField(0, REQUEST_PURPOSE))
         .isInstanceOf(RuntimeException.class)
         .hasMessageContaining("Field not found for field id 0");
   }
 
   @Test
   void getFieldWithOperator_fieldNotExists() {
-    when(fieldApi.findFieldById(eq(0), any(FieldProjectionRoot.class), eq("Field service test")))
+    when(fieldApi.findFieldById(eq(0), any(FieldProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> fieldService.getFieldWithOperator(0, "Field service test"))
+    assertThatThrownBy(() -> fieldService.getFieldWithOperator(0, REQUEST_PURPOSE))
         .isInstanceOf(RuntimeException.class)
         .hasMessageContaining("Field not found for field id 0");
   }

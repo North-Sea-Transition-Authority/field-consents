@@ -13,7 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
-import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperator;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -190,8 +190,8 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
         "Lookup organisation unit prior to creating a field application"))
         .thenReturn(operatorOuJson);
     when(fieldService.getFieldWithOperator(FIELD_ID, "Lookup field prior to creating a field application"))
-        .thenReturn(field1Json);
-    when(applicationService.createNewApplicationForField(ApplicationType.FLARE, field1Json, operatorOuJson))
+        .thenReturn(field1JsonWithOperator);
+    when(applicationService.createNewApplicationForField(ApplicationType.FLARE, field1JsonWithOperator, operatorOuJson))
         .thenReturn(applicationVersion);
 
     mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromFieldController.class)

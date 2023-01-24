@@ -11,9 +11,10 @@ import static uk.co.nstauthority.fieldconsents.assets.ApplicationAssetTestUtil.a
 import static uk.co.nstauthority.fieldconsents.assets.ApplicationAssetTestUtil.fieldAsset1;
 import static uk.co.nstauthority.fieldconsents.assets.ApplicationAssetTestUtil.fieldAsset2;
 import static uk.co.nstauthority.fieldconsents.assets.ApplicationAssetTestUtil.fieldAsset3;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithNullOperator;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperator;
-import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1WithOperator;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1Json;
@@ -73,10 +74,11 @@ class ApplicationAssetServiceTest {
     ApplicationAsset capturedAsset = assetArgumentCaptor.getValue();
     assertThat(capturedAsset.getApplicationVersion().getId()).isEqualTo(applicationVersion.getId());
     assertThat(capturedAsset.getAssetRole()).isEqualTo(AssetRole.PRIMARY);
-    assertThat(capturedAsset.getFieldId()).isEqualTo(field1JsonWithOperator.fieldId());
-    assertThat(capturedAsset.getCachedFieldName()).isEqualTo(field1JsonWithOperator.fieldName());
-    assertThat(capturedAsset.getAssetOperatorOuId()).isEqualTo(field1JsonWithOperator.operatorOuId());
-    assertThat(capturedAsset.getCachedAssetOperatorName()).isEqualTo(field1JsonWithOperator.operatorName());
+    assertThat(capturedAsset.getFieldId()).isEqualTo(field1JsonWithOperator.getId());
+    assertThat(capturedAsset.getCachedFieldName()).isEqualTo(field1JsonWithOperator.getName());
+    assertThat(capturedAsset.getAssetOperatorOuId())
+        .isEqualTo(field1JsonWithOperator.getOperatorJson().organisationUnitId());
+    assertThat(capturedAsset.getCachedAssetOperatorName()).isEqualTo(field1JsonWithOperator.getOperatorJson().name());
     assertThat(capturedAsset.getTerminalId()).isNull();
     assertThat(capturedAsset.getCachedTerminalName()).isNull();
   }
@@ -92,10 +94,12 @@ class ApplicationAssetServiceTest {
     assertThat(capturedAsset.getAssetRole()).isEqualTo(AssetRole.PRIMARY);
     assertThat(capturedAsset.getFieldId()).isNull();
     assertThat(capturedAsset.getCachedFieldName()).isNull();
-    assertThat(capturedAsset.getAssetOperatorOuId()).isEqualTo(terminal1JsonWithOperator.operatorOuId());
-    assertThat(capturedAsset.getCachedAssetOperatorName()).isEqualTo(terminal1JsonWithOperator.operatorName());
-    assertThat(capturedAsset.getTerminalId()).isEqualTo(terminal1JsonWithOperator.terminalId());
-    assertThat(capturedAsset.getCachedTerminalName()).isEqualTo(terminal1JsonWithOperator.terminalName());
+    assertThat(capturedAsset.getAssetOperatorOuId())
+        .isEqualTo(terminal1JsonWithOperator.getOperatorJson().organisationUnitId());
+    assertThat(capturedAsset.getCachedAssetOperatorName())
+        .isEqualTo(terminal1JsonWithOperator.getOperatorJson().name());
+    assertThat(capturedAsset.getTerminalId()).isEqualTo(terminal1JsonWithOperator.getId());
+    assertThat(capturedAsset.getCachedTerminalName()).isEqualTo(terminal1JsonWithOperator.getName());
   }
 
   private ApplicationAsset getStubPrimaryApplicationAsset(ApplicationVersion applicationVersion) {
@@ -137,23 +141,32 @@ class ApplicationAssetServiceTest {
   @Test
   void getAssetJsonForApplicationAsset_fieldExists() {
     ApplicationAsset applicationAsset = getStubPrimaryApplicationAsset(applicationVersion);
-    applicationAsset.setFieldId(field1WithOperator.getFieldId());
-    when(fieldService.findField(eq(field1WithOperator.getFieldId()), any())).thenReturn(Optional.of(field1Json));
+    applicationAsset.setFieldId(field1.getFieldId());
+    when(fieldService.findField(eq(field1.getFieldId()), any())).thenReturn(Optional.of(field1Json));
 
     assertThat(applicationAssetService.getAssetJsonForApplicationAsset(applicationAsset))
-        .isEqualTo(new AssetJson(field1WithOperator.getFieldId(), field1WithOperator.getFieldName(), AssetType.FIELD));
+        .isEqualTo(field1Json);
   }
 
   @Test
   void getAssetJsonForApplicationAsset_fieldIdExistsButNameLookupFails() {
     ApplicationAsset applicationAsset = getStubPrimaryApplicationAsset(applicationVersion);
-    applicationAsset.setFieldId(field1WithOperator.getFieldId());
-    applicationAsset.setCachedFieldName(field1WithOperator.getFieldName());
+    applicationAsset.setFieldId(field1.getFieldId());
+    applicationAsset.setCachedFieldName(field1.getFieldName());
 
-    when(fieldService.findField(eq(field1WithOperator.getFieldId()), any())).thenReturn(Optional.empty());
+    when(fieldService.findField(eq(field1.getFieldId()), any())).thenReturn(Optional.empty());
 
     assertThat(applicationAssetService.getAssetJsonForApplicationAsset(applicationAsset))
-        .isEqualTo(new AssetJson(field1WithOperator.getFieldId(), field1WithOperator.getFieldName(), AssetType.FIELD));
+        .extracting(
+            AssetJson::getId,
+            AssetJson::getName,
+            AssetJson::getAssetType
+        )
+        .containsExactly(
+            field1.getFieldId(),
+            field1.getFieldName(),
+            AssetType.FIELD
+        );
   }
 
   @Test
@@ -164,7 +177,7 @@ class ApplicationAssetServiceTest {
         .thenReturn(Optional.of(terminal1Json));
 
     assertThat(applicationAssetService.getAssetJsonForApplicationAsset(applicationAsset))
-        .isEqualTo(new AssetJson(terminal1.getTerminalId(), terminal1.getTerminalName(), AssetType.TERMINAL));
+        .isEqualTo(terminal1Json);
   }
 
   @Test
@@ -176,7 +189,16 @@ class ApplicationAssetServiceTest {
         .thenReturn(Optional.empty());
 
     assertThat(applicationAssetService.getAssetJsonForApplicationAsset(applicationAsset))
-        .isEqualTo(new AssetJson(terminal1.getTerminalId(), terminal1.getTerminalName(), AssetType.TERMINAL));
+        .extracting(
+            AssetJson::getId,
+            AssetJson::getName,
+            AssetJson::getAssetType
+        )
+        .containsExactly(
+            terminal1.getTerminalId(),
+            terminal1.getTerminalName(),
+            AssetType.TERMINAL
+        );
   }
 
   @Test
@@ -217,38 +239,37 @@ class ApplicationAssetServiceTest {
 
   @Test
   void saveAdditionalAsset_withTerminalJson() {
-    AssetJson terminalAssetJson = AssetJson.from(terminal1JsonWithOperator);
+    AssetJson terminalAssetJson = terminal1JsonWithOperator;
     assertThatThrownBy(() -> applicationAssetService.saveAdditionalAsset(applicationVersion, terminalAssetJson))
         .isInstanceOf(RuntimeException.class)
         .hasMessageContaining(
-            "Secondary asset is not allowed on terminal asset with id " + terminal1JsonWithOperator.terminalId());
+            "Secondary asset is not allowed on terminal asset with id " + terminal1JsonWithOperator.getId());
   }
 
   @Test
   void saveAdditionalAsset_withNoOperatorFound() {
-    when(fieldService
-        .getFieldWithOperator(AssetJson.from(field1Json).assetId(), "Lookup field prior to creating a field application"))
-        .thenReturn(field1Json);
+    when(fieldService.getFieldWithOperator(field1JsonWithNullOperator.getId(),
+        "Lookup field prior to creating a field application"))
+        .thenReturn(field1JsonWithNullOperator);
 
     when(applicationAssetRepository.findAllByApplicationVersionAndAssetRoleOrderByIdAsc(applicationVersion, AssetRole.SECONDARY))
         .thenReturn(assets);
 
-    AssetJson fieldAssetJson = AssetJson.from(field1Json);
-    assertThatThrownBy(() -> applicationAssetService.saveAdditionalAsset(applicationVersion, fieldAssetJson))
+    assertThatThrownBy(() -> applicationAssetService.saveAdditionalAsset(applicationVersion, field1Json))
         .isInstanceOf(RuntimeException.class)
-        .hasMessageContaining(String.format("No operator was found for field %s with id %s.",  field1Json.fieldName(),  field1Json.fieldId()));
+        .hasMessageContaining(String.format("No operator was found for field %s with id %s.",  field1Json.getName(),  field1Json.getId()));
   }
 
   @Test
   void saveAdditionalAsset_withOperator() {
     when(fieldService
-        .getFieldWithOperator(AssetJson.from(field2JsonWithOperator).assetId(), "Lookup field prior to creating a field application"))
+        .getFieldWithOperator(field2JsonWithOperator.getId(), "Lookup field prior to creating a field application"))
         .thenReturn(field2JsonWithOperator);
 
     when(applicationAssetRepository.findAllByApplicationVersionAndAssetRoleOrderByIdAsc(applicationVersion, AssetRole.SECONDARY))
         .thenReturn(assets);
 
-    applicationAssetService.saveAdditionalAsset(applicationVersion, AssetJson.from(field2JsonWithOperator));
+    applicationAssetService.saveAdditionalAsset(applicationVersion, field2JsonWithOperator);
 
     verify(applicationAssetRepository, times(1)).save(assetArgumentCaptor.capture());
 
@@ -256,10 +277,11 @@ class ApplicationAssetServiceTest {
     assertThat(capturedAsset.getApplicationVersion().getId()).isEqualTo(applicationVersion.getId());
     assertThat(capturedAsset.getAssetRole()).isEqualTo(AssetRole.SECONDARY);
     assertThat(capturedAsset.getAssetNo()).isEqualTo(assets.size() + 1);
-    assertThat(capturedAsset.getFieldId()).isEqualTo(field2JsonWithOperator.fieldId());
-    assertThat(capturedAsset.getCachedFieldName()).isEqualTo(field2JsonWithOperator.fieldName());
-    assertThat(capturedAsset.getAssetOperatorOuId()).isEqualTo(field2JsonWithOperator.operatorOuId());
-    assertThat(capturedAsset.getCachedAssetOperatorName()).isEqualTo(field2JsonWithOperator.operatorName());
+    assertThat(capturedAsset.getFieldId()).isEqualTo(field2JsonWithOperator.getId());
+    assertThat(capturedAsset.getCachedFieldName()).isEqualTo(field2JsonWithOperator.getName());
+    assertThat(capturedAsset.getAssetOperatorOuId())
+        .isEqualTo(field2JsonWithOperator.getOperatorJson().organisationUnitId());
+    assertThat(capturedAsset.getCachedAssetOperatorName()).isEqualTo(field2JsonWithOperator.getOperatorJson().name());
     assertThat(capturedAsset.getTerminalId()).isNull();
     assertThat(capturedAsset.getCachedTerminalName()).isNull();
   }

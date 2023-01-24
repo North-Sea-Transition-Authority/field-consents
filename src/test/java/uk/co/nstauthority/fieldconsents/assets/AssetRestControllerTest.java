@@ -12,14 +12,16 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
+import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
+import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalJson;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @WithMockUser
 @ContextConfiguration(classes = AssetRestController.class)
 public class AssetRestControllerTest extends AbstractControllerTest {
 
-  AssetJson brentAssetJson = new AssetJson(1, "BRENT", AssetType.FIELD);
-  AssetJson braeAssetJson = new AssetJson(1, "BRAE", AssetType.TERMINAL);
+  AssetJson brentAssetJson = new FieldJson(1, "BRENT");
+  AssetJson braeAssetJson = new TerminalJson(1, "BRAE");
 
   @MockBean
   AssetService assetService;

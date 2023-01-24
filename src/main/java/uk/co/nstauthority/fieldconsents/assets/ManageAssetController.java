@@ -27,13 +27,12 @@ public class ManageAssetController {
   public ModelAndView manageAsset(@RequestParam String assetKey) {
     Optional<AssetJson> assetJson = assetService.getAssetFromKey(assetKey);
 
-    if (assetJson.isPresent() && assetJson.get().assetType().equals(AssetType.FIELD)) {
-      return ReverseRouter.redirect(on(FieldController.class).manageField(assetJson.get().assetId()));
-    } else if (assetJson.isPresent() && assetJson.get().assetType().equals(AssetType.TERMINAL)) {
-      return ReverseRouter.redirect(on(TerminalController.class).manageTerminal(assetJson.get().assetId()));
+    if (assetJson.isPresent() && assetJson.get().getAssetType().equals(AssetType.FIELD)) {
+      return ReverseRouter.redirect(on(FieldController.class).manageField(assetJson.get().getId()));
+    } else if (assetJson.isPresent() && assetJson.get().getAssetType().equals(AssetType.TERMINAL)) {
+      return ReverseRouter.redirect(on(TerminalController.class).manageTerminal(assetJson.get().getId()));
     } else {
       return ReverseRouter.redirect(on(WorkAreaController.class).getWorkArea());
     }
   }
-
 }

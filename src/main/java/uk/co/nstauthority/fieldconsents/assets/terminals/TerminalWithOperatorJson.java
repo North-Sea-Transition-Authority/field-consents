@@ -1,0 +1,30 @@
+package uk.co.nstauthority.fieldconsents.assets.terminals;
+
+import uk.co.fivium.energyportalapi.generated.types.Terminal;
+import uk.co.nstauthority.fieldconsents.assets.AssetWithOperatorJson;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
+
+public class TerminalWithOperatorJson extends TerminalJson implements AssetWithOperatorJson {
+
+  OrganisationUnitJson operatorJson;
+
+  public static TerminalWithOperatorJson from(Terminal terminal) {
+    return new TerminalWithOperatorJson(
+        terminal.getTerminalId(),
+        terminal.getTerminalName(),
+        terminal.getTerminalOperator() != null
+            ? OrganisationUnitJson.from(terminal.getTerminalOperator())
+            : null
+    );
+  }
+
+  public TerminalWithOperatorJson(Integer terminalId, String terminalName, OrganisationUnitJson operatorJson) {
+    super(terminalId, terminalName);
+    this.operatorJson = operatorJson;
+  }
+
+  @Override
+  public OrganisationUnitJson getOperatorJson() {
+    return operatorJson;
+  }
+}

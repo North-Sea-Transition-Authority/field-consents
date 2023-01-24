@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
 
 import javax.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,7 +32,7 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 @ContextConfiguration(classes = ApplicationAssetController.class)
 class ApplicationAssetControllerTest extends AbstractControllerTest {
 
-  private static final String ASSET_KEY = "123FIELD";
+  private static final String ASSET_KEY = "1FIELD";
   
   @MockBean
   private AssetService assetService;
@@ -110,7 +111,7 @@ class ApplicationAssetControllerTest extends AbstractControllerTest {
   @WithMockUser
   void saveNewAsset_validForm() throws Exception {
     AssetSelectionForm form = new AssetSelectionForm(ASSET_KEY);
-    AssetJson assetJson = new AssetJson(1, form.getAssetKey(), AssetType.FIELD);
+    AssetJson assetJson = field1Json;
 
     mockMvc.perform(post(ReverseRouter.route(on(ApplicationAssetController.class).saveNewAsset(
             ApplicationTestUtil.APPLICATION_ID, form, null)))

@@ -26,17 +26,17 @@ public class FieldControllerTest extends AbstractControllerTest {
   @Test
   void manageField_field1() throws Exception {
 
-    when(fieldService.getField(field1Json.fieldId(), "Manage field")).thenReturn(field1Json);
+    when(fieldService.getField(field1Json.getId(), "Manage field")).thenReturn(field1Json);
 
     var modelAndView =
-        mockMvc.perform(get(ReverseRouter.route(on(FieldController.class).manageField(field1Json.fieldId()))))
+        mockMvc.perform(get(ReverseRouter.route(on(FieldController.class).manageField(field1Json.getId()))))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/assets/fields"))
         .andReturn().getModelAndView();
 
     assertThat(modelAndView).isNotNull();
     var model = modelAndView.getModel();
-    assertEquals(field1Json.fieldId(), model.get("fieldId"));
-    assertEquals(field1Json.fieldName(), model.get("fieldName"));
+    assertEquals(field1Json.getId(), model.get("fieldId"));
+    assertEquals(field1Json.getName(), model.get("fieldName"));
   }
 }

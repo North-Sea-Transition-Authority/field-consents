@@ -21,8 +21,8 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalController;
-import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalJson;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
+import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalWithOperatorJson;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
@@ -135,13 +135,13 @@ public class StartApplicationFromTerminalController {
       return getStartApplicationOperatorModelAndView(terminalId);
     } else {
       ApplicationType type = form.getApplicationType();
-      TerminalJson terminalJson =
-          terminalService.getTerminalWithOperator(terminalId, "Lookup terminal prior to creating a terminal application");
+      TerminalWithOperatorJson terminalWithOperatorJson = terminalService.getTerminalWithOperator(terminalId,
+          "Lookup terminal prior to creating a terminal application");
       Integer operatorOuId = form.getOrganisationUnitId().getAsInteger().orElseThrow(NoSuchElementException::new);
       OrganisationUnitJson operatorOuJson = organisationUnitService.getOrganisationUnitById(operatorOuId,
           "Lookup organisation unit prior to creating a terminal application");
       Application application =
-          applicationService.createNewApplicationForTerminal(type, terminalJson, operatorOuJson).getApplication();
+          applicationService.createNewApplicationForTerminal(type, terminalWithOperatorJson, operatorOuJson).getApplication();
       return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(application.getId()));
     }
   }

@@ -7,8 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.assets.ApplicationAssetService;
-import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
-import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalJson;
+import uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorJson;
+import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalWithOperatorJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 
 @Service
@@ -35,18 +35,20 @@ public class ApplicationService {
   }
 
   @Transactional
-  public ApplicationVersion createNewApplicationForField(ApplicationType type, FieldJson fieldJson,
+  public ApplicationVersion createNewApplicationForField(ApplicationType type,
+                                                         FieldWithOperatorJson fieldWithOperatorJson,
                                                          OrganisationUnitJson operatorOuJson) {
     ApplicationVersion applicationVersion = createNewApplication(type, operatorOuJson);
-    applicationAssetService.createAssetRecordForPrimaryField(applicationVersion, fieldJson);
+    applicationAssetService.createAssetRecordForPrimaryField(applicationVersion, fieldWithOperatorJson);
     return applicationVersion;
   }
 
   @Transactional
-  public ApplicationVersion createNewApplicationForTerminal(ApplicationType type, TerminalJson terminalJson,
+  public ApplicationVersion createNewApplicationForTerminal(ApplicationType type,
+                                                            TerminalWithOperatorJson terminalWithOperatorJson,
                                                             OrganisationUnitJson operatorOuJson) {
     ApplicationVersion applicationVersion = createNewApplication(type, operatorOuJson);
-    applicationAssetService.createAssetRecordForTerminal(applicationVersion, terminalJson);
+    applicationAssetService.createAssetRecordForTerminal(applicationVersion, terminalWithOperatorJson);
     return applicationVersion;
   }
 

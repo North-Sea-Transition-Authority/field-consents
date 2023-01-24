@@ -12,7 +12,7 @@ public record OrganisationUnitJson(
 
   private static final Logger LOGGER = LoggerFactory.getLogger(OrganisationUnitJson.class);
 
-  static OrganisationUnitJson from(OrganisationUnit organisationUnit) {
+  public static OrganisationUnitJson from(OrganisationUnit organisationUnit) {
     return new OrganisationUnitJson(organisationUnit.getOrganisationUnitId(), organisationUnit.getName());
   }
 

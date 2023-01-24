@@ -7,8 +7,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
-import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1Json;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperator;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithOperator;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -60,7 +60,7 @@ class ApplicationServiceTest {
 
     ApplicationVersion expectedApplicationVersion = applicationService.createNewApplicationForField(
         ApplicationType.PRODUCTION,
-        field1Json,
+        field1JsonWithOperator,
         organisationUnitJson
     );
 
@@ -68,7 +68,7 @@ class ApplicationServiceTest {
 
     verify(applicationAssetService, times(1)).createAssetRecordForPrimaryField(
         newApplicationVersion,
-        field1Json
+        field1JsonWithOperator
     );
   }
 
@@ -83,7 +83,7 @@ class ApplicationServiceTest {
 
     ApplicationVersion expectedApplicationVersion = applicationService.createNewApplicationForTerminal(
         ApplicationType.PRODUCTION,
-        terminal1Json,
+        terminal1JsonWithOperator,
         organisationUnitJson
     );
 
@@ -91,7 +91,7 @@ class ApplicationServiceTest {
 
     verify(applicationAssetService, times(1)).createAssetRecordForTerminal(
         newApplicationVersion,
-        terminal1Json
+        terminal1JsonWithOperator
     );
   }
 

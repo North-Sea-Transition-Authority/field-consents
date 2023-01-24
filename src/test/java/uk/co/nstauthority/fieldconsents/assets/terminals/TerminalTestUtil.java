@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.assets.terminals;
 
 import java.util.List;
 import uk.co.fivium.energyportalapi.generated.types.Terminal;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil;
 
 public class TerminalTestUtil {
@@ -20,34 +21,27 @@ public class TerminalTestUtil {
 
   public static TerminalJson terminal1Json = new TerminalJson(
       terminal1.getTerminalId(),
-      terminal1.getTerminalName(),
-      null,
-      null
+      terminal1.getTerminalName()
   );
 
-  public static TerminalJson terminal1JsonWithOperator = new TerminalJson(
+  public static TerminalWithOperatorJson terminal1JsonWithOperator = new TerminalWithOperatorJson(
       terminal1WithOperator.getTerminalId(),
       terminal1WithOperator.getTerminalName(),
-      terminal1WithOperator.getTerminalOperator().getOrganisationUnitId(),
-      terminal1WithOperator.getTerminalOperator().getName()
+      OrganisationUnitJson.from(terminal1WithOperator.getTerminalOperator())
   );
 
   public static Terminal terminal2 = Terminal.newBuilder().terminalId(TERMINAL_ID_2).terminalName(TERMINAL_NAME_2).build();
 
   public static TerminalJson terminal2Json = new TerminalJson(
       terminal2.getTerminalId(),
-      terminal2.getTerminalName(),
-      null,
-      null
+      terminal2.getTerminalName()
   );
 
   public static Terminal terminal3 = Terminal.newBuilder().terminalId(TERMINAL_ID_3).terminalName(TERMINAL_NAME_3).build();
 
   public static TerminalJson terminal3Json = new TerminalJson(
       terminal3.getTerminalId(),
-      terminal3.getTerminalName(),
-      null,
-      null
+      terminal3.getTerminalName()
   );
   public static List<Terminal> terminalList = List.of(terminal1, terminal2, terminal3);
 }

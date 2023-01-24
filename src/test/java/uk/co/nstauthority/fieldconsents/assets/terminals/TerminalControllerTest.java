@@ -26,18 +26,18 @@ public class TerminalControllerTest extends AbstractControllerTest {
   @Test
   void manageTerminal_terminal1() throws Exception {
 
-    when(terminalService.getTerminal(terminal1Json.terminalId(), "Manage terminal"))
+    when(terminalService.getTerminal(terminal1Json.getId(), "Manage terminal"))
         .thenReturn(terminal1Json);
 
     var modelAndView = mockMvc
-        .perform(get(ReverseRouter.route(on(TerminalController.class).manageTerminal(terminal1Json.terminalId()))))
+        .perform(get(ReverseRouter.route(on(TerminalController.class).manageTerminal(terminal1Json.getId()))))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/assets/terminals"))
         .andReturn().getModelAndView();
 
     assertThat(modelAndView).isNotNull();
     var model = modelAndView.getModel();
-    assertEquals(terminal1Json.terminalId(), model.get("terminalId"));
-    assertEquals(terminal1Json.terminalName(), model.get("terminalName"));
+    assertEquals(terminal1Json.getId(), model.get("terminalId"));
+    assertEquals(terminal1Json.getName(), model.get("terminalName"));
   }
 }

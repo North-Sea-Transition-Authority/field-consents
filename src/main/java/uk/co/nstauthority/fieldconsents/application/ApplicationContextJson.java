@@ -9,14 +9,14 @@ public record ApplicationContextJson(
 ) {
 
   public String getPrimaryAssetPrompt() {
-    return switch (primaryAsset.assetType()) {
+    return switch (primaryAsset.getAssetType()) {
       case FIELD -> "Primary field";
       case TERMINAL -> "Primary facility";
     };
   }
 
   public String getPrimaryAssetName() {
-    return primaryAsset.assetName();
+    return primaryAsset.getName();
   }
 
   public String getPrimaryOperatorName() {

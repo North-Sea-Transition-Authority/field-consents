@@ -23,7 +23,6 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
-import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil;
@@ -49,7 +48,7 @@ class ApplicationTaskListControllerTest extends AbstractControllerTest {
   @BeforeEach
   void setUp() {
     flareTaskListSections = TaskListTestUtil.getFlareTaskListSectionWithItems(APPLICATION_ID);
-    applicationContext = new ApplicationContextJson(AssetJson.from(FieldTestUtil.field1Json),
+    applicationContext = new ApplicationContextJson(FieldTestUtil.field1Json,
         OrganisationUnitTestUtil.orgUnit1Json);
   }
 

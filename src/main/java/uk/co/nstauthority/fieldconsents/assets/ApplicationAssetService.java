@@ -8,8 +8,10 @@ import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
+import uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorJson;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalJson;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
+import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalWithOperatorJson;
 
 @Service
 public class ApplicationAssetService {
@@ -30,20 +32,20 @@ public class ApplicationAssetService {
   }
 
   public void createAssetRecordForPrimaryField(ApplicationVersion applicationVersion,
-                                               FieldJson fieldJson) {
+                                               FieldWithOperatorJson fieldWithOperatorJson) {
     ApplicationAsset applicationAsset = new ApplicationAsset();
     applicationAsset.setApplicationVersion(applicationVersion);
-    applicationAsset.setFieldId(fieldJson.fieldId());
-    applicationAsset.setCachedFieldName(fieldJson.fieldName());
+    applicationAsset.setFieldId(fieldWithOperatorJson.getId());
+    applicationAsset.setCachedFieldName(fieldWithOperatorJson.getName());
     applicationAsset.setAssetRole(AssetRole.PRIMARY);
 
     // TODO We should cater for this exception earlier on when creating an application - FCS-274
-    if (fieldJson.operatorOuId() != null) {
-      applicationAsset.setAssetOperatorOuId(fieldJson.operatorOuId());
-      applicationAsset.setCachedAssetOperatorName(fieldJson.operatorName());
+    if (fieldWithOperatorJson.getOperatorJson() != null) {
+      applicationAsset.setAssetOperatorOuId(fieldWithOperatorJson.getOperatorJson().organisationUnitId());
+      applicationAsset.setCachedAssetOperatorName(fieldWithOperatorJson.getOperatorJson().name());
     } else {
       throw new RuntimeException("No operator was found for field %s with id %s."
-          .formatted(fieldJson.fieldName(), fieldJson.fieldId())
+          .formatted(fieldWithOperatorJson.getName(), fieldWithOperatorJson.getId())
       );
     }
 
@@ -51,20 +53,20 @@ public class ApplicationAssetService {
   }
 
   public void createAssetRecordForTerminal(ApplicationVersion applicationVersion,
-                                           TerminalJson terminalJson) {
+                                           TerminalWithOperatorJson terminalWithOperatorJson) {
     ApplicationAsset applicationAsset = new ApplicationAsset();
     applicationAsset.setApplicationVersion(applicationVersion);
-    applicationAsset.setTerminalId(terminalJson.terminalId());
-    applicationAsset.setCachedTerminalName(terminalJson.terminalName());
+    applicationAsset.setTerminalId(terminalWithOperatorJson.getId());
+    applicationAsset.setCachedTerminalName(terminalWithOperatorJson.getName());
     applicationAsset.setAssetRole(AssetRole.PRIMARY);
 
     // TODO We should cater for this exception earlier on when creating an application - FCS-274
-    if (terminalJson.operatorOuId() != null) {
-      applicationAsset.setAssetOperatorOuId(terminalJson.operatorOuId());
-      applicationAsset.setCachedAssetOperatorName(terminalJson.operatorName());
+    if (terminalWithOperatorJson.getOperatorJson() != null) {
+      applicationAsset.setAssetOperatorOuId(terminalWithOperatorJson.getOperatorJson().organisationUnitId());
+      applicationAsset.setCachedAssetOperatorName(terminalWithOperatorJson.getOperatorJson().name());
     } else {
       throw new RuntimeException("No operator was found for terminal %s with id %s."
-          .formatted(terminalJson.terminalName(), terminalJson.terminalId())
+          .formatted(terminalWithOperatorJson.getName(), terminalWithOperatorJson.getId())
       );
     }
 
@@ -81,17 +83,13 @@ public class ApplicationAssetService {
     if (applicationAsset.getFieldId() != null) {
       return fieldService.findField(applicationAsset.getFieldId(),
               "Field lookup for application asset")
-          .map(AssetJson::from)
-          .orElseGet(() -> AssetJson.fromCachedInformation(applicationAsset.getFieldId(),
-              applicationAsset.getCachedFieldName(),
-              AssetType.FIELD));
+          .orElseGet(() -> FieldJson.fromCachedInformation(applicationAsset.getFieldId(),
+              applicationAsset.getCachedFieldName()));
     } else if (applicationAsset.getTerminalId() != null) {
       return terminalService.findTerminal(applicationAsset.getTerminalId(),
               "Terminal lookup for application asset")
-          .map(AssetJson::from)
-          .orElseGet(() -> AssetJson.fromCachedInformation(applicationAsset.getTerminalId(),
-              applicationAsset.getCachedTerminalName(),
-              AssetType.TERMINAL));
+          .orElseGet(() -> TerminalJson.fromCachedInformation(applicationAsset.getTerminalId(),
+              applicationAsset.getCachedTerminalName()));
     } else {
       throw new RuntimeException("Field and terminal ids not found for application asset id %s"
           .formatted(applicationAsset.getId()));
@@ -109,12 +107,12 @@ public class ApplicationAssetService {
 
   public void saveAdditionalAsset(ApplicationVersion applicationVersion, AssetJson assetJson) {
 
-    if (assetJson.assetType().equals(AssetType.TERMINAL)) {
-      throw new RuntimeException("Secondary asset is not allowed on terminal asset with id %s".formatted(assetJson.assetId()));
+    if (assetJson.getAssetType().equals(AssetType.TERMINAL)) {
+      throw new RuntimeException("Secondary asset is not allowed on terminal asset with id %s".formatted(assetJson.getId()));
     }
 
-    FieldJson fieldJson = fieldService
-        .getFieldWithOperator(assetJson.assetId(), "Lookup field prior to creating a field application");
+    FieldWithOperatorJson fieldWithOperatorJson = fieldService
+        .getFieldWithOperator(assetJson.getId(), "Lookup field prior to creating a field application");
 
     // find the next Asset number to use
     Integer nextAssetNo = getAdditionalAssetsForApplicationVersion(applicationVersion).stream()
@@ -122,18 +120,18 @@ public class ApplicationAssetService {
         .map(asset -> asset.getAssetNo() + 1).orElse(1);
 
     ApplicationAsset applicationAsset = new ApplicationAsset();
-    applicationAsset.setFieldId(fieldJson.fieldId());
-    applicationAsset.setCachedFieldName(fieldJson.fieldName());
+    applicationAsset.setFieldId(fieldWithOperatorJson.getId());
+    applicationAsset.setCachedFieldName(fieldWithOperatorJson.getName());
     applicationAsset.setAssetRole(AssetRole.SECONDARY);
     applicationAsset.setApplicationVersion(applicationVersion);
     applicationAsset.setAssetNo(nextAssetNo);
 
-    if (fieldJson.operatorOuId() != null) {
-      applicationAsset.setAssetOperatorOuId(fieldJson.operatorOuId());
-      applicationAsset.setCachedAssetOperatorName(fieldJson.operatorName());
+    if (fieldWithOperatorJson.getOperatorJson() != null) {
+      applicationAsset.setAssetOperatorOuId(fieldWithOperatorJson.getOperatorJson().organisationUnitId());
+      applicationAsset.setCachedAssetOperatorName(fieldWithOperatorJson.getOperatorJson().name());
     } else {
       throw new RuntimeException("No operator was found for field %s with id %s."
-          .formatted(fieldJson.fieldName(), fieldJson.fieldId())
+          .formatted(fieldWithOperatorJson.getName(), fieldWithOperatorJson.getId())
       );
     }
 

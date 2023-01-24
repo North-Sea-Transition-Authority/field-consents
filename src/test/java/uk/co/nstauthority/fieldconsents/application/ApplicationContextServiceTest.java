@@ -56,7 +56,7 @@ class ApplicationContextServiceTest {
 
   @Test
   void getApplicationContextJson_operatorFound_terminalApp() {
-    AssetJson primaryAsset = AssetJson.from(terminal1Json);
+    AssetJson primaryAsset = terminal1Json;
     when(applicationAssetService.getAssetJsonForApplicationAsset(primaryApplicationAsset))
         .thenReturn(primaryAsset);
 
@@ -74,13 +74,13 @@ class ApplicationContextServiceTest {
             ApplicationContextJson::getPrimaryAssetName,
             ApplicationContextJson::getPrimaryOperatorName)
         .containsExactly("Primary facility",
-            primaryAsset.assetName(),
+            primaryAsset.getName(),
             primaryOperator.name());
   }
 
   @Test
   void getApplicationContextJson_operatorCacheUsed_fieldApp() {
-    AssetJson primaryAsset = AssetJson.from(field1Json);
+    AssetJson primaryAsset = field1Json;
     when(applicationAssetService.getAssetJsonForApplicationAsset(primaryApplicationAsset))
         .thenReturn(primaryAsset);
 
@@ -98,7 +98,7 @@ class ApplicationContextServiceTest {
             ApplicationContextJson::getPrimaryAssetName,
             ApplicationContextJson::getPrimaryOperatorName)
         .containsExactly("Primary field",
-            primaryAsset.assetName(),
+            primaryAsset.getName(),
             primaryOperator.name());
   }
 }

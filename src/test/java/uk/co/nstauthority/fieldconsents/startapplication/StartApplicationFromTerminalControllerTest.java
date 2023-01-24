@@ -13,7 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
-import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1Json;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithOperator;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -190,8 +190,8 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
         "Lookup organisation unit prior to creating a terminal application"))
         .thenReturn(operatorOuJson);
     when(terminalService.getTerminalWithOperator(TERMINAL_ID, "Lookup terminal prior to creating a terminal application"))
-        .thenReturn(terminal1Json);
-    when(applicationService.createNewApplicationForTerminal(ApplicationType.FLARE, terminal1Json, operatorOuJson))
+        .thenReturn(terminal1JsonWithOperator);
+    when(applicationService.createNewApplicationForTerminal(ApplicationType.FLARE, terminal1JsonWithOperator, operatorOuJson))
         .thenReturn(applicationVersion);
 
     mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
