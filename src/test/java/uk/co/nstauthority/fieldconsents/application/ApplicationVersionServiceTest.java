@@ -31,7 +31,7 @@ class ApplicationVersionServiceTest {
   void getApplicationVersionById_whenApplicationVersionExists() {
     ApplicationVersion applicationVersion =
         new ApplicationVersion(1, new Application(1, ApplicationType.PRODUCTION, Instant.now(), 1),
-            1, ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID, ApplicationTestUtil.CACHED_PRIMARY_OPERATOR_NAME);
+            1, ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_1, ApplicationTestUtil.CACHED_PRIMARY_OPERATOR_NAME_1);
     when(applicationVersionRepository.findById(1)).thenReturn(Optional.of(applicationVersion));
 
     ApplicationVersion expectedApplicationVersion = applicationVersionService.getApplicationVersionById(1);

@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.assets;
+package uk.co.nstauthority.fieldconsents.application.assets;
 
 public class AdditionalAssetsForm {
 

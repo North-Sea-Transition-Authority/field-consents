@@ -10,7 +10,9 @@ import static uk.co.nstauthority.fieldconsents.assets.fields.FieldService.fieldS
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperator;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1WithOperator;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1WithOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2Json;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2JsonWithOperator;
@@ -172,7 +174,7 @@ public class FieldServiceTest {
 
     assertThatThrownBy(() -> fieldService.getField(0, REQUEST_PURPOSE))
         .isInstanceOf(RuntimeException.class)
-        .hasMessageContaining("Field not found for field id 0");
+        .hasMessageContaining(FieldService.FIELD_NOT_FOUND.formatted(0));
   }
 
   @Test
@@ -182,6 +184,45 @@ public class FieldServiceTest {
 
     assertThatThrownBy(() -> fieldService.getFieldWithOperator(0, REQUEST_PURPOSE))
         .isInstanceOf(RuntimeException.class)
-        .hasMessageContaining("Field not found for field id 0");
+        .hasMessageContaining(FieldService.FIELD_NOT_FOUND.formatted(0));
+  }
+
+  @Test
+  void findFieldWithOperatorAndLicences_fieldExists() {
+    when(fieldApi.findFieldById(eq(field1WithOperatorAndLicences.getFieldId()), any(FieldProjectionRoot.class), eq(requestPurpose)))
+        .thenReturn(Optional.of(field1WithOperatorAndLicences));
+
+    var fieldJsonOptional = fieldService.findFieldWithOperatorAndLicences(field1WithOperatorAndLicences.getFieldId(), REQUEST_PURPOSE);
+    assertThat(fieldJsonOptional).usingRecursiveComparison()
+        .isEqualTo(Optional.of(field1JsonWithOperatorAndLicences));
+  }
+
+  @Test
+  void findFieldWithOperatorAndLicences_fieldNotExists() {
+    when(fieldApi.findFieldById(eq(0), any(FieldProjectionRoot.class), eq(requestPurpose)))
+        .thenReturn(Optional.empty());
+
+    var fieldJsonOptional = fieldService.findFieldWithOperatorAndLicences(0, REQUEST_PURPOSE);
+    assertThat(fieldJsonOptional).isNotPresent();
+  }
+
+  @Test
+  void getFieldWithOperatorAndLicences_fieldExists() {
+    when(fieldApi.findFieldById(eq(field1WithOperatorAndLicences.getFieldId()), any(FieldProjectionRoot.class), eq(requestPurpose)))
+        .thenReturn(Optional.of(field1WithOperatorAndLicences));
+
+    var fieldJson = fieldService.getFieldWithOperatorAndLicences(field1WithOperatorAndLicences.getFieldId(), REQUEST_PURPOSE);
+    assertThat(fieldJson).usingRecursiveComparison()
+        .isEqualTo(field1JsonWithOperatorAndLicences);
+  }
+
+  @Test
+  void getFieldWithOperatorAndLicences_fieldNotExists() {
+    when(fieldApi.findFieldById(eq(0), any(FieldProjectionRoot.class), eq(requestPurpose)))
+        .thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> fieldService.getFieldWithOperatorAndLicences(0, REQUEST_PURPOSE))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessageContaining(FieldService.FIELD_NOT_FOUND.formatted(0));
   }
 }

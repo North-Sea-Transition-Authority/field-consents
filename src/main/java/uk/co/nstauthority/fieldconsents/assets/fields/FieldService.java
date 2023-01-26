@@ -14,6 +14,8 @@ import uk.co.fivium.energyportalapi.generated.types.FieldStatus;
 @Service
 public class FieldService {
 
+  public static final String FIELD_NOT_FOUND = "Field not found for field id %s";
+
   private final FieldApi fieldApi;
 
   // this status list has been taken from the DEVUK fields search
@@ -31,6 +33,13 @@ public class FieldService {
 
   static final FieldProjectionRoot fieldWithOperatorProjectionRoot =
       new FieldProjectionRoot().fieldName().fieldId().fieldOperator().organisationUnitId().name().root();
+
+  static final FieldProjectionRoot fieldWithOperatorLicencesProjectionRoot =
+      new FieldProjectionRoot()
+          .fieldName()
+          .fieldId()
+          .fieldOperator().organisationUnitId().name().root()
+          .licences().id().licenceRef().root();
 
   @Autowired
   public FieldService(FieldApi fieldApi) {
@@ -52,6 +61,11 @@ public class FieldService {
         .map(FieldJson::from);
   }
 
+  public FieldJson getField(Integer fieldId, String requestPurpose) {
+    return findField(fieldId, requestPurpose)
+        .orElseThrow(() -> new EntityNotFoundException(FIELD_NOT_FOUND.formatted(fieldId)));
+  }
+
   public List<FieldWithOperatorJson> searchFieldsWithOperator(String fieldName, String requestPurpose) {
     return fieldApi.searchFields(fieldName,
             fieldStatusesAllowed,
@@ -69,11 +83,17 @@ public class FieldService {
 
   public FieldWithOperatorJson getFieldWithOperator(Integer fieldId, String requestPurpose) {
     return findFieldWithOperator(fieldId, requestPurpose)
-        .orElseThrow(() -> new EntityNotFoundException("Field not found for field id %s".formatted(fieldId)));
+        .orElseThrow(() -> new EntityNotFoundException(FIELD_NOT_FOUND.formatted(fieldId)));
   }
 
-  public FieldJson getField(Integer fieldId, String requestPurpose) {
-    return findField(fieldId, requestPurpose)
-        .orElseThrow(() -> new EntityNotFoundException("Field not found for field id %s".formatted(fieldId)));
+  public Optional<FieldWithOperatorAndLicencesJson> findFieldWithOperatorAndLicences(Integer fieldId,
+                                                                                     String requestPurpose) {
+    return fieldApi.findFieldById(fieldId, fieldWithOperatorLicencesProjectionRoot, new RequestPurpose(requestPurpose))
+        .map(FieldWithOperatorAndLicencesJson::from);
+  }
+
+  public FieldWithOperatorAndLicencesJson getFieldWithOperatorAndLicences(Integer fieldId, String requestPurpose) {
+    return findFieldWithOperatorAndLicences(fieldId, requestPurpose)
+        .orElseThrow(() -> new EntityNotFoundException(FIELD_NOT_FOUND.formatted(fieldId)));
   }
 }

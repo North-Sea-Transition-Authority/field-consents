@@ -1,6 +1,7 @@
-package uk.co.nstauthority.fieldconsents.assets;
+package uk.co.nstauthority.fieldconsents.application.assets;
 
 import com.google.common.annotations.VisibleForTesting;
+import java.util.Objects;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -143,5 +144,21 @@ public class ApplicationAsset {
 
   public void setCachedAssetOperatorName(String cachedAssetOperatorName) {
     this.cachedAssetOperatorName = cachedAssetOperatorName;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof ApplicationAsset that)) {
+      return false;
+    }
+    return id != null && id.equals(that.id);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id);
   }
 }

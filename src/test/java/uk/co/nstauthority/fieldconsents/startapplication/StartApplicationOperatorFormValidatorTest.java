@@ -49,9 +49,9 @@ class StartApplicationOperatorFormValidatorTest {
   @Test
   void validate_whenValidForm() {
     when(organisationUnitService.findOrganisationUnitById(any(), any()))
-        .thenReturn(Optional.of(new OrganisationUnitJson(ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID,
-            ApplicationTestUtil.CACHED_PRIMARY_OPERATOR_NAME)));
-    form.setOrganisationUnitId(String.valueOf(ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID));
+        .thenReturn(Optional.of(new OrganisationUnitJson(ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_1,
+            ApplicationTestUtil.CACHED_PRIMARY_OPERATOR_NAME_1)));
+    form.setOrganisationUnitId(String.valueOf(ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_1));
     errors = new BeanPropertyBindingResult(form, "form");
 
     ValidationUtils.invokeValidator(formValidator, form, errors);

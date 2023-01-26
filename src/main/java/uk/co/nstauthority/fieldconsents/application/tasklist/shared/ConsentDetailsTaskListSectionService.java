@@ -8,10 +8,10 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.assets.AdditionalAssetsController;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthController;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
-import uk.co.nstauthority.fieldconsents.assets.ApplicationAssetController;
-import uk.co.nstauthority.fieldconsents.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListItem;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListLabel;
@@ -41,7 +41,7 @@ public class ConsentDetailsTaskListSectionService implements TaskListSectionServ
             ReverseRouter.route(on(ConsentLengthController.class).getConsentLengthForm(applicationVersion.getId())))
     );
 
-    var primaryAsset = applicationAssetService.getPrimaryApplicationAsset(applicationVersion);
+    var primaryAsset = applicationAssetService.getPrimaryAsset(applicationVersion);
     var applicationType =  applicationVersion.getApplication().getType();
 
     // Additional assets and licences can be added to Field consent applications only for Flares and Vents types
@@ -53,12 +53,12 @@ public class ConsentDetailsTaskListSectionService implements TaskListSectionServ
   }
 
   private TaskListItem getAdditionalAssetsTaskListItem(ApplicationVersion applicationVersion) {
-    var additionalAssets = applicationAssetService.getAdditionalAssetsForApplicationVersion(applicationVersion);
+    var additionalAssets = applicationAssetService.getSecondaryAssets(applicationVersion);
 
     var additionalAssetsUrl = additionalAssets.isEmpty()
-        ? ReverseRouter.route(on(ApplicationAssetController.class)
+        ? ReverseRouter.route(on(AdditionalAssetsController.class)
           .addAdditionalAsset(applicationVersion.getApplication().getId()))
-        : ReverseRouter.route(on(ApplicationAssetController.class)
+        : ReverseRouter.route(on(AdditionalAssetsController.class)
           .viewAdditionalAssetsSummary(applicationVersion.getApplication().getId()));
 
     return new TaskListItem("Additional fields and licences",

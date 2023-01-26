@@ -33,20 +33,20 @@ class OrganisationUnitRestControllerTest extends AbstractControllerTest {
     mockMvc.perform(get(ReverseRouter.route(on(OrganisationUnitRestController.class).getOrganisationUnitSearchResults("1"))))
         .andExpect(status().isOk())
         .andExpect(content().json("""
-           {"results":[{"id":"1","text":"OU TEST1"}]}
+           {"results":[{"id":"1","text":"TEST ORG UNIT 1"}]}
          """));
   }
 
   @Test
   void getOrganisationUnitSearchResults_assertHttpOk_manyOrgUnits() throws Exception {
-    when(organisationUnitService.searchOrganisationUnits("oU",
+    when(organisationUnitService.searchOrganisationUnits("OrG UnIt",
         OrganisationUnitRestController.ORG_UNIT_SEARCH_PURPOSE))
         .thenReturn(List.of(orgUnit1Json, orgUnit2Json, orgUnit3Json));
 
-    mockMvc.perform(get(ReverseRouter.route(on(OrganisationUnitRestController.class).getOrganisationUnitSearchResults("oU"))))
+    mockMvc.perform(get(ReverseRouter.route(on(OrganisationUnitRestController.class).getOrganisationUnitSearchResults("OrG UnIt"))))
         .andExpect(status().isOk())
         .andExpect(content().json("""
-           {"results":[{"id":"1","text":"OU TEST1"}, {"id":"2","text":"OU TEST2"}, {"id":"3","text":"OU TEST3"}]}
+           {"results":[{"id":"1","text":"TEST ORG UNIT 1"}, {"id":"2","text":"TEST ORG UNIT 2"}, {"id":"3","text":"TEST ORG UNIT 3"}]}
          """));
   }
 }

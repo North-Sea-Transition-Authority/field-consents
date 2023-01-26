@@ -2,7 +2,7 @@
 <#import '_assetSummary.ftl' as assetSummary>
 
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
-<#-- @ftlvariable name="assetViews" type="java.util.List<uk.co.nstauthority.fieldconsents.assets.AssetView>" -->
+<#-- @ftlvariable name="assetViews" type="java.util.List<uk.co.nstauthority.fieldconsents.application.assets.AssetView>" -->
 
 <#if successfulDeleteBanner?has_content>
   <#assign deleteBanner>

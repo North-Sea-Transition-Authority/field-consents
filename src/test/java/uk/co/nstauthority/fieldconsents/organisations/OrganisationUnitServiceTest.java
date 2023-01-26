@@ -99,4 +99,23 @@ class OrganisationUnitServiceTest {
         .hasMessageContaining("Organisation unit not found for id %s".formatted(ouId));
   }
 
+  @Test
+  void getOrganisationUnitByIdOrFallback_exists() {
+    when(organisationApi.findOrganisationUnit(eq(orgUnit1.getOrganisationUnitId()), any(), any()))
+        .thenReturn(Optional.of(orgUnit1));
+
+    var orgUnitJson = organisationUnitService.getOrganisationUnitByIdOrFallback(
+        orgUnit1.getOrganisationUnitId(), ORG_UNITS_SERVICE_PURPOSE, orgUnit1.getName());
+    assertThat(orgUnitJson).isEqualTo(orgUnit1Json);
+  }
+
+  @Test
+  void getOrganisationUnitByIdOrFallback_notExistsUsesFallback() {
+    when(organisationApi.findOrganisationUnit(eq(orgUnit1.getOrganisationUnitId()), any(), any()))
+        .thenReturn(Optional.empty());
+
+    var orgUnitJson = organisationUnitService.getOrganisationUnitByIdOrFallback(
+        orgUnit1.getOrganisationUnitId(), ORG_UNITS_SERVICE_PURPOSE, orgUnit1.getName());
+    assertThat(orgUnitJson).isEqualTo(orgUnit1Json);
+  }
 }

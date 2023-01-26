@@ -1,7 +1,9 @@
 package uk.co.nstauthority.fieldconsents.assets.fields;
 
+import java.util.Collections;
 import java.util.List;
 import uk.co.fivium.energyportalapi.generated.types.Field;
+import uk.co.nstauthority.fieldconsents.licences.LicenceTestUtil;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil;
 
@@ -19,9 +21,19 @@ public class FieldTestUtil {
   public static Field field1WithOperator = Field.newBuilder().fieldId(FIELD_ID_1).fieldName(FIELD_NAME_1)
       .fieldOperator(OrganisationUnitTestUtil.orgUnit1).build();
 
+  public static Field field1WithOperatorAndLicences = Field.newBuilder().fieldId(FIELD_ID_1).fieldName(FIELD_NAME_1)
+      .fieldOperator(OrganisationUnitTestUtil.orgUnit1)
+      .licences(LicenceTestUtil.licences3)
+      .build();
+
+  public static Field field1WithOperatorAndEmptyLicences = Field.newBuilder().fieldId(FIELD_ID_1).fieldName(FIELD_NAME_1)
+      .fieldOperator(OrganisationUnitTestUtil.orgUnit1)
+      .licences(Collections.emptyList())
+      .build();
+
   public static FieldJson field1Json = new FieldJson(
-      field1WithOperator.getFieldId(),
-      field1WithOperator.getFieldName()
+      field1.getFieldId(),
+      field1.getFieldName()
   );
 
   public static FieldWithOperatorJson field1JsonWithOperator = new FieldWithOperatorJson(
@@ -30,11 +42,11 @@ public class FieldTestUtil {
       OrganisationUnitJson.from(field1WithOperator.getFieldOperator())
   );
 
-  public static FieldWithOperatorJson field1JsonWithNullOperator = new FieldWithOperatorJson(
-      field1WithOperator.getFieldId(),
-      field1WithOperator.getFieldName(),
-      null
-  );
+  public static FieldWithOperatorAndLicencesJson field1JsonWithOperatorAndLicences =
+      FieldWithOperatorAndLicencesJson.from(field1WithOperatorAndLicences);
+
+  public static FieldWithOperatorAndLicencesJson field1JsonWithNullOperatorAndLicences =
+      FieldWithOperatorAndLicencesJson.from(field1);
 
   public static Field field2 = Field.newBuilder().fieldId(FIELD_ID_2).fieldName(FIELD_NAME_2).build();
   public static Field field2WithOperator = Field.newBuilder().fieldId(FIELD_ID_2).fieldName(FIELD_NAME_2).fieldOperator(OrganisationUnitTestUtil.orgUnit2).build();

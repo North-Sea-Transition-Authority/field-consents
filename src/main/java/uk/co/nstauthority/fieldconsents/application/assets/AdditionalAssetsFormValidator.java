@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.assets;
+package uk.co.nstauthority.fieldconsents.application.assets;
 
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;

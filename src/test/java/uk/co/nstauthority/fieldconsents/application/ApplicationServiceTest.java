@@ -7,7 +7,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperator;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithOperator;
 
 import java.time.Instant;
@@ -18,7 +18,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.nstauthority.fieldconsents.assets.ApplicationAssetService;
+import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAssetLicenceService;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil;
 
@@ -35,16 +38,19 @@ class ApplicationServiceTest {
 
   private static ApplicationAssetService applicationAssetService;
 
+  private static ApplicationAssetLicenceService applicationAssetLicenceService;
+
   @BeforeAll
   static void setup() {
     applicationRepository = mock(ApplicationRepository.class);
     applicationVersionRepository = mock(ApplicationVersionRepository.class);
     applicationAssetService = mock(ApplicationAssetService.class);
+    applicationAssetLicenceService = mock(ApplicationAssetLicenceService.class);
     applicationService = new ApplicationService(
         applicationRepository,
         applicationVersionRepository,
-        applicationAssetService
-    );
+        applicationAssetService,
+        applicationAssetLicenceService);
     newApplication = new Application(1, ApplicationType.PRODUCTION, Instant.now(), 1);
   }
 
@@ -58,18 +64,25 @@ class ApplicationServiceTest {
         organisationUnitJson.name());
     when(applicationVersionRepository.save(any(ApplicationVersion.class))).thenReturn(newApplicationVersion);
 
+    ApplicationAsset applicationAsset = ApplicationAssetTestUtil.fieldAsset1;
+    when(applicationAssetService.createPrimaryAsset(newApplicationVersion, field1JsonWithOperatorAndLicences))
+        .thenReturn(applicationAsset);
+
     ApplicationVersion expectedApplicationVersion = applicationService.createNewApplicationForField(
         ApplicationType.PRODUCTION,
-        field1JsonWithOperator,
+        field1JsonWithOperatorAndLicences,
         organisationUnitJson
     );
 
     assertApplicationVersion(newApplicationVersion, expectedApplicationVersion);
 
-    verify(applicationAssetService, times(1)).createAssetRecordForPrimaryField(
+    verify(applicationAssetService, times(1)).createPrimaryAsset(
         newApplicationVersion,
-        field1JsonWithOperator
+        field1JsonWithOperatorAndLicences
     );
+
+    verify(applicationAssetLicenceService, times(1))
+        .createAssetLicences(applicationAsset, field1JsonWithOperatorAndLicences);
   }
 
   @Test
@@ -89,7 +102,7 @@ class ApplicationServiceTest {
 
     assertApplicationVersion(newApplicationVersion, expectedApplicationVersion);
 
-    verify(applicationAssetService, times(1)).createAssetRecordForTerminal(
+    verify(applicationAssetService, times(1)).createPrimaryAsset(
         newApplicationVersion,
         terminal1JsonWithOperator
     );

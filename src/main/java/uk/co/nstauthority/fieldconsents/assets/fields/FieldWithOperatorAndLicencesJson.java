@@ -21,7 +21,7 @@ public class FieldWithOperatorAndLicencesJson extends FieldJson implements Asset
         field.getFieldOperator() != null
             ? OrganisationUnitJson.from(field.getFieldOperator())
             : null,
-        field.getLicences().isEmpty()
+        field.getLicences() == null || field.getLicences().isEmpty()
             ? Collections.emptyList()
             : field.getLicences().stream().map(LicenceJson::from).toList()
     );

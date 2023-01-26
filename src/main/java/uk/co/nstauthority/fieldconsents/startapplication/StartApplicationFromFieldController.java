@@ -22,7 +22,7 @@ import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationT
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldController;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
-import uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorJson;
+import uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorAndLicencesJson;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
@@ -132,13 +132,15 @@ public class StartApplicationFromFieldController {
       return getStartApplicationOperatorModelAndView(fieldId);
     } else {
       ApplicationType type = form.getApplicationType();
-      FieldWithOperatorJson fieldWithOperatorJson = fieldService.getFieldWithOperator(fieldId,
-          "Lookup field prior to creating a field application");
+      FieldWithOperatorAndLicencesJson fieldWithOperatorAndLicencesJson =
+          fieldService.getFieldWithOperatorAndLicences(fieldId,
+              "Lookup field prior to creating a field application");
       Integer operatorOuId = form.getOrganisationUnitId().getAsInteger().orElseThrow(NoSuchElementException::new);
       OrganisationUnitJson operatorOuJson = organisationUnitService.getOrganisationUnitById(operatorOuId,
           "Lookup organisation unit prior to creating a field application");
-      Application application =
-          applicationService.createNewApplicationForField(type, fieldWithOperatorJson, operatorOuJson).getApplication();
+      Application application = applicationService.createNewApplicationForField(type,
+          fieldWithOperatorAndLicencesJson,
+          operatorOuJson).getApplication();
       return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(application.getId()));
     }
   }

@@ -2,7 +2,7 @@
 <#import '_assetSummary.ftl' as assetSummary>
 
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
-<#-- @ftlvariable name="assetView" type="uk.co.nstauthority.fieldconsents.assets.AssetView" -->
+<#-- @ftlvariable name="assetView" type="uk.co.nstauthority.fieldconsents.application.assets.AssetView" -->
 
 <#assign pageTitle = "Are you sure you want to delete this field?"/>
 

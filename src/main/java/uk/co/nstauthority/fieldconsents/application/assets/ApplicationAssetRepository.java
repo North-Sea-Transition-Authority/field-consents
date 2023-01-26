@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.assets;
+package uk.co.nstauthority.fieldconsents.application.assets;
 
 import java.util.List;
 import java.util.Optional;

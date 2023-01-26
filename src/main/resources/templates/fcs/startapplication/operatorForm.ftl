@@ -13,7 +13,7 @@
     <@fdsAction.submitButtons
       linkSecondaryAction=true
       secondaryLinkText="Cancel"
-      primaryButtonText="Start application"
+      primaryButtonText="Save and continue"
       linkSecondaryActionUrl="${springUrl(cancelUrl)}"/>
   </@fdsForm.htmlForm>
 </@defaultPage>

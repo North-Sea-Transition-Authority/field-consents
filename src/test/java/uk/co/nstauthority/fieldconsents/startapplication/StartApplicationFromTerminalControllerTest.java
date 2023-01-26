@@ -184,9 +184,9 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
   @Test
   @WithMockUser
   void createNewApplication() throws Exception {
-    OrganisationUnitJson operatorOuJson = new OrganisationUnitJson(ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID,
-        ApplicationTestUtil.CACHED_PRIMARY_OPERATOR_NAME);
-    when(organisationUnitService.getOrganisationUnitById(ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID,
+    OrganisationUnitJson operatorOuJson = new OrganisationUnitJson(ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_1,
+        ApplicationTestUtil.CACHED_PRIMARY_OPERATOR_NAME_1);
+    when(organisationUnitService.getOrganisationUnitById(ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_1,
         "Lookup organisation unit prior to creating a terminal application"))
         .thenReturn(operatorOuJson);
     when(terminalService.getTerminalWithOperator(TERMINAL_ID, "Lookup terminal prior to creating a terminal application"))
@@ -197,7 +197,7 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
     mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
             .createNewApplication(TERMINAL_ID, null, ReverseRouter.emptyBindingResult())))
             .param("applicationType", ApplicationType.FLARE.name())
-            .param("organisationUnitId.inputValue", String.valueOf(ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID))
+            .param("organisationUnitId.inputValue", String.valueOf(ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_1))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(view().name("redirect:/applications/1/task-list/"));

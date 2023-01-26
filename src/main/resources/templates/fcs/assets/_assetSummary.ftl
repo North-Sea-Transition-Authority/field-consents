@@ -1,6 +1,6 @@
 <#include '../layout/layout.ftl'>
 
-<#-- @ftlvariable name="asset" type="uk.co.nstauthority.fieldconsents.assets.AssetView" -->
+<#-- @ftlvariable name="asset" type="uk.co.nstauthority.fieldconsents.application.assets.AssetView" -->
 
 <#macro assetSummary
 asset
@@ -20,6 +20,9 @@ displayOrder=""
     </@fdsSummaryList.summaryListRowNoAction>
     <@fdsSummaryList.summaryListRowNoAction keyText="Field operator">
       ${asset.assetOperatorName()}
+    </@fdsSummaryList.summaryListRowNoAction>
+    <@fdsSummaryList.summaryListRowNoAction keyText="Licences">
+        ${asset.assetLicences()}
     </@fdsSummaryList.summaryListRowNoAction>
   </@fdsSummaryList.summaryListCard>
 </#macro>

@@ -6,8 +6,9 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import uk.co.nstauthority.fieldconsents.assets.ApplicationAssetService;
-import uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorJson;
+import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAssetLicenceService;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
+import uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorAndLicencesJson;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalWithOperatorJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 
@@ -20,13 +21,17 @@ public class ApplicationService {
 
   private final ApplicationAssetService applicationAssetService;
 
+  private final ApplicationAssetLicenceService applicationAssetLicenceService;
+
   @Autowired
   public ApplicationService(ApplicationRepository applicationRepository,
                             ApplicationVersionRepository applicationVersionRepository,
-                            ApplicationAssetService applicationAssetService) {
+                            ApplicationAssetService applicationAssetService,
+                            ApplicationAssetLicenceService applicationAssetLicenceService) {
     this.applicationRepository = applicationRepository;
     this.applicationVersionRepository = applicationVersionRepository;
     this.applicationAssetService = applicationAssetService;
+    this.applicationAssetLicenceService = applicationAssetLicenceService;
   }
 
   private ApplicationVersion createNewApplication(ApplicationType applicationType, OrganisationUnitJson operatorOuJson) {
@@ -36,10 +41,11 @@ public class ApplicationService {
 
   @Transactional
   public ApplicationVersion createNewApplicationForField(ApplicationType type,
-                                                         FieldWithOperatorJson fieldWithOperatorJson,
+                                                         FieldWithOperatorAndLicencesJson field,
                                                          OrganisationUnitJson operatorOuJson) {
     ApplicationVersion applicationVersion = createNewApplication(type, operatorOuJson);
-    applicationAssetService.createAssetRecordForPrimaryField(applicationVersion, fieldWithOperatorJson);
+    var applicationAsset = applicationAssetService.createPrimaryAsset(applicationVersion, field);
+    applicationAssetLicenceService.createAssetLicences(applicationAsset, field);
     return applicationVersion;
   }
 
@@ -48,7 +54,7 @@ public class ApplicationService {
                                                             TerminalWithOperatorJson terminalWithOperatorJson,
                                                             OrganisationUnitJson operatorOuJson) {
     ApplicationVersion applicationVersion = createNewApplication(type, operatorOuJson);
-    applicationAssetService.createAssetRecordForTerminal(applicationVersion, terminalWithOperatorJson);
+    applicationAssetService.createPrimaryAsset(applicationVersion, terminalWithOperatorJson);
     return applicationVersion;
   }
 

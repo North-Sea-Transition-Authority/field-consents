@@ -13,7 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
-import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperator;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperatorAndLicences;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -184,20 +184,21 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
   @Test
   @WithMockUser
   void createNewApplication() throws Exception {
-    OrganisationUnitJson operatorOuJson = new OrganisationUnitJson(ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID,
-        ApplicationTestUtil.CACHED_PRIMARY_OPERATOR_NAME);
-    when(organisationUnitService.getOrganisationUnitById(ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID,
+    OrganisationUnitJson operatorOuJson = new OrganisationUnitJson(ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_1,
+        ApplicationTestUtil.CACHED_PRIMARY_OPERATOR_NAME_1);
+    when(organisationUnitService.getOrganisationUnitById(ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_1,
         "Lookup organisation unit prior to creating a field application"))
         .thenReturn(operatorOuJson);
-    when(fieldService.getFieldWithOperator(FIELD_ID, "Lookup field prior to creating a field application"))
-        .thenReturn(field1JsonWithOperator);
-    when(applicationService.createNewApplicationForField(ApplicationType.FLARE, field1JsonWithOperator, operatorOuJson))
+    when(fieldService.getFieldWithOperatorAndLicences(FIELD_ID, "Lookup field prior to creating a field application"))
+        .thenReturn(field1JsonWithOperatorAndLicences);
+    when(applicationService.createNewApplicationForField(ApplicationType.FLARE,
+        field1JsonWithOperatorAndLicences, operatorOuJson))
         .thenReturn(applicationVersion);
 
     mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromFieldController.class)
             .createNewApplication(FIELD_ID, null, ReverseRouter.emptyBindingResult())))
             .param("applicationType", ApplicationType.FLARE.name())
-            .param("organisationUnitId.inputValue", String.valueOf(ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID))
+            .param("organisationUnitId.inputValue", String.valueOf(ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_1))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(view().name("redirect:/applications/1/task-list/"));

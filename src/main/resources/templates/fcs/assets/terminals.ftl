@@ -1,6 +1,6 @@
 <#include '../layout/layout.ftl'>
 
-<#assign pageTitle = "Facility: ${terminalName}" />
+<#assign pageTitle = terminalName/>
 
 <@defaultPage
   htmlTitle=pageTitle
@@ -9,7 +9,7 @@
 >
 
     <@fdsStartPage.startPage
-      startActionText="Start an application"
+      startActionText="Start application"
       startActionUrl=springUrl(startApplicationUrl)
       startActionButton=false>
       <p class="govuk-body">

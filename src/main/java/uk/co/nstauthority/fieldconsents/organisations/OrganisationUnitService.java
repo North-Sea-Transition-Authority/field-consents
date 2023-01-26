@@ -46,4 +46,9 @@ public class OrganisationUnitService {
         .orElseThrow(() -> new EntityNotFoundException("Organisation unit not found for id %s".formatted(organisationUnitId)));
   }
 
+  public OrganisationUnitJson getOrganisationUnitByIdOrFallback(Integer organisationUnitId, String purpose,
+                                                                String cachedOrganisationUnitName) {
+    return findOrganisationUnitById(organisationUnitId, purpose)
+        .orElseGet(() -> OrganisationUnitJson.fromCachedInformation(organisationUnitId, cachedOrganisationUnitName));
+  }
 }

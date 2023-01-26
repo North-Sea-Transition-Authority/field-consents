@@ -1,0 +1,76 @@
+package uk.co.nstauthority.fieldconsents.assets.fields;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1WithOperator;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1WithOperatorAndEmptyLicences;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1WithOperatorAndLicences;
+
+import java.util.Collections;
+import org.junit.jupiter.api.Test;
+import uk.co.nstauthority.fieldconsents.licences.LicenceJson;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
+
+class FieldWithOperatorAndLicencesJsonTest {
+
+  @Test
+  void from_noOperatorOrLicences() {
+    assertThat(FieldWithOperatorAndLicencesJson.from(field1))
+        .usingRecursiveComparison()
+        .isEqualTo(
+            new FieldWithOperatorAndLicencesJson(
+                field1.getFieldId(),
+                field1.getFieldName(),
+                null,
+                Collections.emptyList()
+            )
+        );
+  }
+
+  @Test
+  void from_withOperatorButNoLicences() {
+    assertThat(FieldWithOperatorAndLicencesJson.from(field1WithOperator))
+        .usingRecursiveComparison()
+        .isEqualTo(
+            new FieldWithOperatorAndLicencesJson(
+                field1WithOperator.getFieldId(),
+                field1WithOperator.getFieldName(),
+                new OrganisationUnitJson(field1WithOperator.getFieldOperator().getOrganisationUnitId(),
+                    field1WithOperator.getFieldOperator().getName()),
+                Collections.emptyList()
+            )
+        );
+  }
+
+  @Test
+  void from_withOperatorAndEmptyLicences() {
+    assertThat(FieldWithOperatorAndLicencesJson.from(field1WithOperatorAndEmptyLicences))
+        .usingRecursiveComparison()
+        .isEqualTo(
+            new FieldWithOperatorAndLicencesJson(
+                field1WithOperatorAndEmptyLicences.getFieldId(),
+                field1WithOperatorAndEmptyLicences.getFieldName(),
+                new OrganisationUnitJson(field1WithOperatorAndEmptyLicences.getFieldOperator().getOrganisationUnitId(),
+                    field1WithOperatorAndEmptyLicences.getFieldOperator().getName()),
+                Collections.emptyList()
+            )
+        );
+  }
+
+  @Test
+  void from_withOperatorAndLicences() {
+    assertThat(FieldWithOperatorAndLicencesJson.from(field1WithOperatorAndLicences))
+        .usingRecursiveComparison()
+        .isEqualTo(
+            new FieldWithOperatorAndLicencesJson(
+                field1WithOperatorAndLicences.getFieldId(),
+                field1WithOperatorAndLicences.getFieldName(),
+                new OrganisationUnitJson(field1WithOperatorAndLicences.getFieldOperator().getOrganisationUnitId(),
+                    field1WithOperatorAndLicences.getFieldOperator().getName()),
+                field1WithOperatorAndLicences.getLicences().stream().map(
+                    licence -> new LicenceJson(licence.getId(), licence.getLicenceRef())
+                ).toList()
+            )
+        );
+  }
+}

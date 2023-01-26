@@ -7,16 +7,15 @@ import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1Json;
 
-import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.nstauthority.fieldconsents.assets.ApplicationAsset;
-import uk.co.nstauthority.fieldconsents.assets.ApplicationAssetService;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
+import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
-import uk.co.nstauthority.fieldconsents.assets.AssetRole;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 
@@ -48,7 +47,7 @@ class ApplicationContextServiceTest {
     primaryApplicationAsset = new ApplicationAsset();
     primaryApplicationAsset.setApplicationVersion(applicationVersion);
     primaryApplicationAsset.setAssetRole(AssetRole.PRIMARY);
-    when(applicationAssetService.getPrimaryApplicationAsset(applicationVersion))
+    when(applicationAssetService.getPrimaryAsset(applicationVersion))
         .thenReturn(primaryApplicationAsset);
 
     primaryOperator = new OrganisationUnitJson(applicationVersion.getPrimaryOperatorOuId(), applicationVersion.getCachedPrimaryOperatorName());
@@ -60,8 +59,9 @@ class ApplicationContextServiceTest {
     when(applicationAssetService.getAssetJsonForApplicationAsset(primaryApplicationAsset))
         .thenReturn(primaryAsset);
 
-    when(organisationUnitService.findOrganisationUnitById(eq(applicationVersion.getPrimaryOperatorOuId()), any()))
-        .thenReturn(Optional.of(primaryOperator));
+    when(organisationUnitService.getOrganisationUnitByIdOrFallback(
+        eq(applicationVersion.getPrimaryOperatorOuId()), any(), eq(applicationVersion.getCachedPrimaryOperatorName())))
+        .thenReturn(primaryOperator);
 
     ApplicationContextJson applicationContextJson
         = applicationContextService.getApplicationContextJson(applicationVersion);
@@ -84,8 +84,9 @@ class ApplicationContextServiceTest {
     when(applicationAssetService.getAssetJsonForApplicationAsset(primaryApplicationAsset))
         .thenReturn(primaryAsset);
 
-    when(organisationUnitService.findOrganisationUnitById(eq(applicationVersion.getPrimaryOperatorOuId()), any()))
-        .thenReturn(Optional.empty());
+    when(organisationUnitService.getOrganisationUnitByIdOrFallback(
+        eq(applicationVersion.getPrimaryOperatorOuId()), any(), eq(applicationVersion.getCachedPrimaryOperatorName())))
+        .thenReturn(primaryOperator);
 
     ApplicationContextJson applicationContextJson
         = applicationContextService.getApplicationContextJson(applicationVersion);
