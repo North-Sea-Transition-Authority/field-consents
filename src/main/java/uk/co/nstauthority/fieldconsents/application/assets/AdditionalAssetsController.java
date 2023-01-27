@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.application.assets;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -14,8 +15,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService;
+import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
+import uk.co.nstauthority.fieldconsents.assets.AdditionalAssetsSetupForm;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.assets.AssetSelectionForm;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
@@ -48,6 +53,8 @@ public class AdditionalAssetsController {
 
   private final AdditionalAssetsService additionalAssetsService;
 
+  private final ApplicationFlagService applicationFlagService;
+
   @Autowired
   public AdditionalAssetsController(AssetService assetService,
                                     FieldService fieldService,
@@ -56,7 +63,8 @@ public class AdditionalAssetsController {
                                     ApplicationVersionService applicationVersionService,
                                     AdditionalAssetsFormValidator additionalAssetsFormValidator,
                                     AdditionalAssetSelectionFormValidator additionalAssetSelectionFormValidator,
-                                    AdditionalAssetsService additionalAssetsService) {
+                                    AdditionalAssetsService additionalAssetsService,
+                                    ApplicationFlagService applicationFlagService) {
     this.assetService = assetService;
     this.fieldService = fieldService;
     this.assetSummaryService = assetSummaryService;
@@ -65,6 +73,40 @@ public class AdditionalAssetsController {
     this.additionalAssetsFormValidator = additionalAssetsFormValidator;
     this.additionalAssetSelectionFormValidator = additionalAssetSelectionFormValidator;
     this.additionalAssetsService = additionalAssetsService;
+    this.applicationFlagService = applicationFlagService;
+  }
+
+  @GetMapping("/required")
+  public ModelAndView getAdditionalAssetsRequiredForm(@PathVariable Integer applicationId) {
+    ApplicationVersion applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
+    AdditionalAssetsSetupForm form = applicationAssetService.getAdditionalAssetsSetupForm(applicationVersion);
+    ModelAndView modelAndView = new ModelAndView("fcs/assets/additionalAssetsRequired");
+    modelAndView.addObject("form", form);
+
+    return modelAndView;
+  }
+
+  @PostMapping("/required")
+  public ModelAndView saveAdditionalAssetsRequiredForm(@PathVariable Integer applicationId,
+                                               @Valid @ModelAttribute("form") AdditionalAssetsSetupForm form,
+                                               BindingResult bindingResult) {
+    if (bindingResult.hasErrors()) {
+      return new ModelAndView("fcs/assets/additionalAssetsRequired");
+    }
+
+    ApplicationVersion applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
+    applicationFlagService.deleteApplicationFlag(applicationVersion, ApplicationFlagType.HAS_SECONDARY_ASSETS);
+    applicationFlagService.saveApplicationFlag(
+        applicationVersion,
+        ApplicationFlagType.HAS_SECONDARY_ASSETS,
+        form.getOtherAssetsRequired()
+    );
+
+    if (Boolean.TRUE.equals(form.getOtherAssetsRequired())) {
+      return ReverseRouter.redirect(on(AdditionalAssetsController.class).addAdditionalAsset(applicationId));
+    }
+
+    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
   }
 
   @GetMapping("/new")
@@ -73,7 +115,6 @@ public class AdditionalAssetsController {
     modelAndView.addObject("form", new AssetSelectionForm());
 
     return modelAndView;
-
   }
 
   @PostMapping("/new")
@@ -190,10 +231,10 @@ public class AdditionalAssetsController {
     // delete the asset and associated licences
     additionalAssetsService.deleteAdditionalAsset(asset);
 
-    redirectAttributes.addFlashAttribute("successfulDeleteBanner", "Asset has been successfully deleted.");
+    redirectAttributes.addFlashAttribute("successfulDeleteBanner", "Field has been successfully deleted.");
     if (applicationAssetService.secondaryAssetsExist(applicationVersion)) {
       return ReverseRouter.redirect(on(AdditionalAssetsController.class).viewAdditionalAssetsSummary(applicationId));
     }
-    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+    return ReverseRouter.redirect(on(AdditionalAssetsController.class).getAdditionalAssetsRequiredForm(applicationId));
   }
 }

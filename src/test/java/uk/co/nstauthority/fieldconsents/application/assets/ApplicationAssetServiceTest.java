@@ -32,6 +32,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService;
+import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
+import uk.co.nstauthority.fieldconsents.assets.AdditionalAssetsSetupForm;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
@@ -49,6 +52,9 @@ class ApplicationAssetServiceTest {
   @Mock
   private TerminalService terminalService;
 
+  @Mock
+  private ApplicationFlagService applicationFlagService;
+
   @Captor
   private ArgumentCaptor<ApplicationAsset> assetArgumentCaptor;
 
@@ -61,7 +67,8 @@ class ApplicationAssetServiceTest {
     applicationAssetService = new ApplicationAssetService(
         fieldService,
         terminalService,
-        applicationAssetRepository);
+        applicationAssetRepository,
+        applicationFlagService);
     applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
   }
 
@@ -378,5 +385,36 @@ class ApplicationAssetServiceTest {
             terminal1.getTerminalName(),
             AssetType.TERMINAL
         );
+  }
+
+
+  @Test
+  void getAdditionalAssetsSetupForm_whenTrue() {
+    when(applicationFlagService.findFlagValue(applicationVersion, ApplicationFlagType.HAS_SECONDARY_ASSETS))
+        .thenReturn(Optional.of(true));
+
+    AdditionalAssetsSetupForm form = applicationAssetService.getAdditionalAssetsSetupForm(applicationVersion);
+
+    assertThat(form.getOtherAssetsRequired()).isTrue();
+  }
+
+  @Test
+  void getAdditionalAssetsSetupForm_whenFalse() {
+    when(applicationFlagService.findFlagValue(applicationVersion, ApplicationFlagType.HAS_SECONDARY_ASSETS))
+        .thenReturn(Optional.of(false));
+
+    AdditionalAssetsSetupForm form = applicationAssetService.getAdditionalAssetsSetupForm(applicationVersion);
+
+    assertThat(form.getOtherAssetsRequired()).isFalse();
+  }
+
+  @Test
+  void getAdditionalAssetsSetupForm_whenNotExist() {
+    when(applicationFlagService.findFlagValue(applicationVersion, ApplicationFlagType.HAS_SECONDARY_ASSETS))
+        .thenReturn(Optional.empty());
+
+    AdditionalAssetsSetupForm form = applicationAssetService.getAdditionalAssetsSetupForm(applicationVersion);
+
+    assertThat(form.getOtherAssetsRequired()).isNull();
   }
 }

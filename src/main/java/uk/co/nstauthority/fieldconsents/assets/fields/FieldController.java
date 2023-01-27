@@ -18,7 +18,7 @@ public class FieldController {
 
   public static final String LICENCE_WARNING = """
       You cannot start an application for this field as it does not have any associated licences, \
-      please contact %s if you think this field should have associated to licences.""";
+      please contact %s if you think this field should have associated licences.""";
 
   private final FieldService fieldService;
 

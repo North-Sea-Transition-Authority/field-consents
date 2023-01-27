@@ -2,11 +2,15 @@ package uk.co.nstauthority.fieldconsents.application.assets;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService;
+import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
+import uk.co.nstauthority.fieldconsents.assets.AdditionalAssetsSetupForm;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.AssetWithOperatorJson;
@@ -24,13 +28,18 @@ public class ApplicationAssetService {
 
   private final ApplicationAssetRepository applicationAssetRepository;
 
+
+  private final ApplicationFlagService applicationFlagService;
+
   @Autowired
   public ApplicationAssetService(FieldService fieldService,
                                  TerminalService terminalService,
-                                 ApplicationAssetRepository applicationAssetRepository) {
+                                 ApplicationAssetRepository applicationAssetRepository,
+                                 ApplicationFlagService applicationFlagService) {
     this.fieldService = fieldService;
     this.terminalService = terminalService;
     this.applicationAssetRepository = applicationAssetRepository;
+    this.applicationFlagService = applicationFlagService;
   }
 
   private ApplicationAsset createAsset(ApplicationVersion applicationVersion,
@@ -133,5 +142,16 @@ public class ApplicationAssetService {
       throw new RuntimeException("Field and terminal ids not found for application asset id %s"
           .formatted(applicationAsset.getId()));
     }
+  }
+
+  public AdditionalAssetsSetupForm getAdditionalAssetsSetupForm(ApplicationVersion applicationVersion) {
+    AdditionalAssetsSetupForm form = new AdditionalAssetsSetupForm();
+    Optional<Boolean> optionalFlag = applicationFlagService
+        .findFlagValue(applicationVersion, ApplicationFlagType.HAS_SECONDARY_ASSETS);
+
+    optionalFlag.ifPresent(
+        form::setOtherAssetsRequired
+    );
+    return form;
   }
 }

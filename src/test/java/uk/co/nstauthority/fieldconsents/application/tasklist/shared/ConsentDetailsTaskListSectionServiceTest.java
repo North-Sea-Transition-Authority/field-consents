@@ -21,6 +21,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService;
+import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
@@ -40,8 +42,13 @@ class ConsentDetailsTaskListSectionServiceTest {
 
   @Mock
   private ConsentLengthService consentLengthService;
+
   @Mock
   private ApplicationAssetService applicationAssetService;
+
+  @Mock
+  private ApplicationFlagService applicationFlagService;
+
   private ConsentDetailsTaskListSectionService consentDetailsTaskListSectionService;
 
   private ApplicationVersion applicationVersion;
@@ -52,8 +59,8 @@ class ConsentDetailsTaskListSectionServiceTest {
     applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
     consentDetailsTaskListSectionService = new ConsentDetailsTaskListSectionService(
         consentLengthService,
-        applicationAssetService
-    );
+        applicationAssetService,
+        applicationFlagService);
   }
 
   @Test
@@ -90,7 +97,7 @@ class ConsentDetailsTaskListSectionServiceTest {
         taskListItems.get(1),
         ADDITIONAL_ASSETS_TASK_LIST_ITEM,
         TaskListLabel.NOT_STARTED,
-        ReverseRouter.route(on(AdditionalAssetsController.class).addAdditionalAsset(applicationVersion.getApplication().getId()))
+        ReverseRouter.route(on(AdditionalAssetsController.class).getAdditionalAssetsRequiredForm(applicationVersion.getApplication().getId()))
     );
   }
 
@@ -118,7 +125,7 @@ class ConsentDetailsTaskListSectionServiceTest {
     assertTaskListItem(
         taskListItems.get(1),
         ADDITIONAL_ASSETS_TASK_LIST_ITEM,
-        TaskListLabel.COMPLETED,
+        TaskListLabel.NOT_STARTED,
         ReverseRouter.route(on(AdditionalAssetsController.class).viewAdditionalAssetsSummary(applicationVersion.getApplication().getId()))
     );
   }
@@ -148,7 +155,7 @@ class ConsentDetailsTaskListSectionServiceTest {
     assertTaskListItem(
         taskListItems.get(1),
         ADDITIONAL_ASSETS_TASK_LIST_ITEM,
-        TaskListLabel.COMPLETED,
+        TaskListLabel.NOT_STARTED,
         ReverseRouter.route(on(AdditionalAssetsController.class).viewAdditionalAssetsSummary(ventAppVersion.getApplication().getId()))
     );
   }
@@ -193,6 +200,76 @@ class ConsentDetailsTaskListSectionServiceTest {
         CONSENT_LENGTH_TASK_LIST_ITEM,
         TaskListLabel.COMPLETED,
         ReverseRouter.route(on(ConsentLengthController.class).getConsentLengthForm(applicationVersion.getApplication().getId()))
+    );
+  }
+
+  @Test
+  void getSection_noAdditionalAssets_sectionCompleted() {
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(fieldAsset1);
+    when(applicationAssetService.getSecondaryAssets(applicationVersion)).thenReturn(
+        Collections.emptyList());
+    when(applicationFlagService.findFlagValue(applicationVersion, ApplicationFlagType.HAS_SECONDARY_ASSETS))
+        .thenReturn(Optional.of(Boolean.FALSE));
+
+    Optional<TaskListSection> taskListSectionOptional = consentDetailsTaskListSectionService.getSection(applicationVersion);
+
+    TaskListSection taskListSection = taskListSectionOptional.orElseThrow(RuntimeException::new);
+    List<TaskListItem> taskListItems = taskListSection.items();
+
+    assertThat(taskListItems).hasSize(2);
+
+    assertTaskListItem(
+        taskListItems.get(1),
+        ADDITIONAL_ASSETS_TASK_LIST_ITEM,
+        TaskListLabel.COMPLETED,
+        ReverseRouter.route(on(AdditionalAssetsController.class).getAdditionalAssetsRequiredForm(applicationVersion.getApplication().getId()))
+    );
+  }
+
+  @Test
+  void getSection_withAdditionalAssetsAndEmptyList_sectionInProgress() {
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(fieldAsset1);
+    when(applicationAssetService.getSecondaryAssets(applicationVersion)).thenReturn(
+        Collections.emptyList());
+    when(applicationFlagService.findFlagValue(applicationVersion, ApplicationFlagType.HAS_SECONDARY_ASSETS))
+        .thenReturn(Optional.of(Boolean.TRUE));
+
+    Optional<TaskListSection> taskListSectionOptional = consentDetailsTaskListSectionService.getSection(applicationVersion);
+
+    TaskListSection taskListSection = taskListSectionOptional.orElseThrow(RuntimeException::new);
+    List<TaskListItem> taskListItems = taskListSection.items();
+
+    assertThat(taskListItems).hasSize(2);
+
+    assertTaskListItem(
+        taskListItems.get(1),
+        ADDITIONAL_ASSETS_TASK_LIST_ITEM,
+        TaskListLabel.IN_PROGRESS,
+        ReverseRouter.route(on(AdditionalAssetsController.class).getAdditionalAssetsRequiredForm(applicationVersion.getApplication().getId()))
+    );
+  }
+
+  @Test
+  void getSection_withAdditionalAssetsNonEmptyList_sectionCompleted() {
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(fieldAsset1);
+    when(applicationAssetService.getSecondaryAssets(applicationVersion)).thenReturn(secondaryAssets);
+    when(applicationFlagService.findFlagValue(
+        applicationVersion,
+        ApplicationFlagType.HAS_SECONDARY_ASSETS
+    )).thenReturn(Optional.of(Boolean.TRUE));
+
+    Optional<TaskListSection> taskListSectionOptional = consentDetailsTaskListSectionService.getSection(applicationVersion);
+
+    TaskListSection taskListSection = taskListSectionOptional.orElseThrow(RuntimeException::new);
+    List<TaskListItem> taskListItems = taskListSection.items();
+
+    assertThat(taskListItems).hasSize(2);
+
+    assertTaskListItem(
+        taskListItems.get(1),
+        ADDITIONAL_ASSETS_TASK_LIST_ITEM,
+        TaskListLabel.COMPLETED,
+        ReverseRouter.route(on(AdditionalAssetsController.class).viewAdditionalAssetsSummary(applicationVersion.getApplication().getId()))
     );
   }
 }

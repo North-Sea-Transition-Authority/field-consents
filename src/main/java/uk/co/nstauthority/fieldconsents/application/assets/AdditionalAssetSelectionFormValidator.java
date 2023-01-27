@@ -22,7 +22,7 @@ class AdditionalAssetSelectionFormValidator implements Validator {
 
   public static final String ASSET_MUST_HAVE_LICENCES =
       "This field does not have any associated licences therefore cannot be added to this application, " +
-          "please contact %s if you think this field should have associated to licences";
+          "please contact %s if you think this field should have associated licences";
 
   public static final String ASSET_MUST_BE_FIELD = "You must select a field";
 

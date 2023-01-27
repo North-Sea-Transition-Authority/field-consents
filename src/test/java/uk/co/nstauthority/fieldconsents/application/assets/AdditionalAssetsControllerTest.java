@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -25,10 +26,13 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
+import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService;
+import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.assets.AdditionalAssetsSetupForm;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.assets.AssetSelectionForm;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
@@ -54,6 +58,9 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
 
   @MockBean
   private ApplicationVersionService applicationVersionService;
+
+  @MockBean
+  private ApplicationFlagService applicationFlagService;
 
   @MockBean
   private AdditionalAssetsFormValidator additionalAssetsFormValidator;
@@ -319,7 +326,7 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
                 ApplicationTestUtil.APPLICATION_ID, null, ApplicationAssetTestUtil.fieldAsset2.getAssetNo())))
                 .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(view().name("redirect:/applications/1/task-list/"));
+        .andExpect(view().name("redirect:/applications/1/additional-assets/required"));
 
     verify(additionalAssetsService, times(1))
         .deleteAdditionalAsset(ApplicationAssetTestUtil.fieldAsset2);
@@ -362,6 +369,95 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
     mockMvc.perform(
             get(ReverseRouter.route(on(AdditionalAssetsController.class).deleteAsset(
                 ApplicationTestUtil.APPLICATION_ID, null,  ApplicationAssetTestUtil.fieldAsset2.getAssetNo()))))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  @WithMockUser
+  void getAdditionalAssetsRequiredForm() throws Exception {
+    when(applicationAssetService.getAdditionalAssetsSetupForm(applicationVersion))
+        .thenReturn(new AdditionalAssetsSetupForm());
+
+    mockMvc.perform(
+        get(ReverseRouter.route(on(AdditionalAssetsController.class).getAdditionalAssetsRequiredForm(
+            ApplicationTestUtil.APPLICATION_ID
+        )))
+    ).andExpect(status().isOk());
+  }
+
+  @Test
+  void getAdditionalAssetsRequiredForm_noUser() throws Exception {
+    when(applicationAssetService.getAdditionalAssetsSetupForm(applicationVersion))
+        .thenReturn(new AdditionalAssetsSetupForm());
+
+    mockMvc.perform(
+        get(ReverseRouter.route(on(AdditionalAssetsController.class).getAdditionalAssetsRequiredForm(
+            ApplicationTestUtil.APPLICATION_ID
+        )))
+    ).andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  @WithMockUser
+  void saveAdditionalAssetsRequiredForm_emptyForm() throws Exception {
+    mockMvc.perform(post(ReverseRouter.route(on(AdditionalAssetsController.class)
+            .saveAdditionalAssetsRequiredForm(
+                ApplicationTestUtil.APPLICATION_ID,
+                null,
+                null)))
+            .with(csrf()))
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/assets/additionalAssetsRequired"));
+
+    verifyNoInteractions(applicationFlagService);
+  }
+
+  @Test
+  @WithMockUser
+  void saveAdditionalAssetsRequiredForm_otherAssetsRequired() throws Exception {
+    mockMvc.perform(post(ReverseRouter.route(on(AdditionalAssetsController.class)
+            .saveAdditionalAssetsRequiredForm(
+                ApplicationTestUtil.APPLICATION_ID,
+                null,
+                null)))
+            .with(csrf())
+            .param("otherAssetsRequired", "true"))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(view().name("redirect:" + expectBaseAdditionalAssetsUrl + "/new"));
+
+    verify(applicationFlagService, times(1))
+        .deleteApplicationFlag(applicationVersion, ApplicationFlagType.HAS_SECONDARY_ASSETS);
+    verify(applicationFlagService, times(1))
+        .saveApplicationFlag(applicationVersion, ApplicationFlagType.HAS_SECONDARY_ASSETS, true);
+  }
+
+  @Test
+  @WithMockUser
+  void saveAdditionalAssetsRequiredForm_otherAssetsNotRequired() throws Exception {
+    mockMvc.perform(post(ReverseRouter.route(on(AdditionalAssetsController.class)
+            .saveAdditionalAssetsRequiredForm(
+                ApplicationTestUtil.APPLICATION_ID,
+                null,
+                null)))
+            .with(csrf())
+            .param("otherAssetsRequired", "false"))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(view().name("redirect:/applications/" + ApplicationTestUtil.APPLICATION_ID + "/task-list/"));
+
+    verify(applicationFlagService, times(1))
+        .deleteApplicationFlag(applicationVersion, ApplicationFlagType.HAS_SECONDARY_ASSETS);
+    verify(applicationFlagService, times(1))
+        .saveApplicationFlag(applicationVersion, ApplicationFlagType.HAS_SECONDARY_ASSETS, false);
+  }
+
+  @Test
+  void saveAdditionalAssetsRequiredForm_unauthorizedUser() throws Exception {
+    mockMvc.perform(post(ReverseRouter.route(on(AdditionalAssetsController.class)
+            .saveAdditionalAssetsRequiredForm(
+                ApplicationTestUtil.APPLICATION_ID,
+                null,
+                null)))
+            .with(csrf()))
         .andExpect(status().isUnauthorized());
   }
 }
