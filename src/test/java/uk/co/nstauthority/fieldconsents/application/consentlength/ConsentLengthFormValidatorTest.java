@@ -475,9 +475,9 @@ class ConsentLengthFormValidatorTest {
   }
 
   @Test
-  void validate_longTerm_termMoreThanTenYears() {
+  void validate_longTerm_termMoreThanThirtyYears() {
     int currentYear = Year.now().getValue();
-    ConsentLengthForm form = ConsentLengthTestUtil.getLongTermConsentLengthFormForYears(currentYear, currentYear + 10);
+    ConsentLengthForm form = ConsentLengthTestUtil.getLongTermConsentLengthFormForYears(currentYear, currentYear + 30);
     errors = new BeanPropertyBindingResult(form, "form");
 
     ValidationUtils.invokeValidator(validator, form, errors);
@@ -487,15 +487,15 @@ class ConsentLengthFormValidatorTest {
     errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     Assertions.assertThat(errorMap).containsOnly(
         entry("longTermEndYear.inputValue", Collections.singletonList(LONG_TERM_END_YEAR_LT_EQUAL
-            .formatted(currentYear + 9)))
+            .formatted(currentYear + 29)))
     );
 
   }
 
   @Test
-  void validate_longTerm_validTenYearTerm() {
+  void validate_longTerm_validThirtyYearTerm() {
     int currentYear = Year.now().getValue();
-    ConsentLengthForm form = ConsentLengthTestUtil.getLongTermConsentLengthFormForYears(currentYear, currentYear + 9);
+    ConsentLengthForm form = ConsentLengthTestUtil.getLongTermConsentLengthFormForYears(currentYear, currentYear + 29);
     errors = new BeanPropertyBindingResult(form, "form");
 
     ValidationUtils.invokeValidator(validator, form, errors);

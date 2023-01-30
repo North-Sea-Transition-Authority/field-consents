@@ -51,7 +51,7 @@ public class ConsentLengthFormValidator implements Validator {
     // TODO FCS-263 and DFL-35 change below to add custom errors messages when DFL updated, i.e.
     // 1) Start year can be the current year or after
     // 2) End year must be after the start year
-    // 3) The term should between 2 and 10 years
+    // 3) The term should between 2 and 30 years
     int currentYear = Year.now().getValue();
 
     // Long term start year
@@ -64,10 +64,10 @@ public class ConsentLengthFormValidator implements Validator {
       var startYear = form.getLongTermStartYear().getAsInteger()
           .orElseThrow(NoSuchElementException::new);
 
-      // the term must be a minimum of 2 years and a maximum of 10 years in duration
+      // the term must be a minimum of 2 years and a maximum of 30 years in duration
       var endYearComparisonValidator = IntegerInputValidator.builder()
           .mustBeMoreThanOrEqual(startYear + 1)
-          .mustBeLessThanOrEqualTo(startYear + 9);
+          .mustBeLessThanOrEqualTo(startYear + 29);
       endYearComparisonValidator.validate(form.getLongTermEndYear(), errors);
     } else {
       IntegerInputValidator.builder()
