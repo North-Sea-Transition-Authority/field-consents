@@ -3,7 +3,7 @@ package uk.co.nstauthority.fieldconsents.assets.fields;
 import static org.assertj.core.api.Assertions.assertThat;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1WithOperator;
-import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1WithOperatorAndEmptyLicences;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1WithOperatorButEmptyLicences;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1WithOperatorAndLicences;
 
 import java.util.Collections;
@@ -44,14 +44,14 @@ class FieldWithOperatorAndLicencesJsonTest {
 
   @Test
   void from_withOperatorAndEmptyLicences() {
-    assertThat(FieldWithOperatorAndLicencesJson.from(field1WithOperatorAndEmptyLicences))
+    assertThat(FieldWithOperatorAndLicencesJson.from(field1WithOperatorButEmptyLicences))
         .usingRecursiveComparison()
         .isEqualTo(
             new FieldWithOperatorAndLicencesJson(
-                field1WithOperatorAndEmptyLicences.getFieldId(),
-                field1WithOperatorAndEmptyLicences.getFieldName(),
-                new OrganisationUnitJson(field1WithOperatorAndEmptyLicences.getFieldOperator().getOrganisationUnitId(),
-                    field1WithOperatorAndEmptyLicences.getFieldOperator().getName()),
+                field1WithOperatorButEmptyLicences.getFieldId(),
+                field1WithOperatorButEmptyLicences.getFieldName(),
+                new OrganisationUnitJson(field1WithOperatorButEmptyLicences.getFieldOperator().getOrganisationUnitId(),
+                    field1WithOperatorButEmptyLicences.getFieldOperator().getName()),
                 Collections.emptyList()
             )
         );

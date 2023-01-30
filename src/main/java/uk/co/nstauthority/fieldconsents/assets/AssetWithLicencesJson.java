@@ -5,4 +5,8 @@ import uk.co.nstauthority.fieldconsents.licences.LicenceJson;
 
 public interface AssetWithLicencesJson extends AssetJson {
   List<LicenceJson> getLicences();
+
+  default boolean licencesExist() {
+    return getLicences() != null && !getLicences().isEmpty();
+  }
 }

@@ -83,7 +83,49 @@ class AdditionalAssetSelectionFormValidatorTest {
   }
 
   @Test
-  void validate_fieldAssetNoLicences() {
+  void validate_fieldAssetNoOperatorButLicencesExist() {
+    form.setAssetKey(AssetTestUtil.FIELD1_ASSET_KEY);
+
+    when(assetService.getAsset(AssetTestUtil.FIELD1_ASSET_KEY))
+        .thenReturn(AssetTestUtil.field1AssetJson);
+    when(fieldService.getFieldWithOperatorAndLicences(eq(AssetTestUtil.field1AssetJson.getId()), any()))
+        .thenReturn(FieldTestUtil.field1JsonWithNoOperatorButLicences);
+
+    ValidationUtils.invokeValidator(validator, form, errors);
+
+    errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
+    assertThat(errorMap).containsOnly(
+        entry(AdditionalAssetSelectionFormValidator.ASSET_KEY_FIELD_NAME,
+            Collections.singletonList(
+                AdditionalAssetSelectionFormValidator.ASSET_MUST_HAVE_OPERATOR +
+                AdditionalAssetSelectionFormValidator.ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL
+                    .formatted(customerConfigurationProperties.mnemonic())))
+    );
+  }
+
+  @Test
+  void validate_fieldAssetOperatorButNoLicences() {
+    form.setAssetKey(AssetTestUtil.FIELD1_ASSET_KEY);
+
+    when(assetService.getAsset(AssetTestUtil.FIELD1_ASSET_KEY))
+        .thenReturn(AssetTestUtil.field1AssetJson);
+    when(fieldService.getFieldWithOperatorAndLicences(eq(AssetTestUtil.field1AssetJson.getId()), any()))
+        .thenReturn(FieldTestUtil.field1JsonWithOperatorButEmptyLicences);
+
+    ValidationUtils.invokeValidator(validator, form, errors);
+
+    errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
+    assertThat(errorMap).containsOnly(
+        entry(AdditionalAssetSelectionFormValidator.ASSET_KEY_FIELD_NAME,
+            Collections.singletonList(
+                AdditionalAssetSelectionFormValidator.ASSET_MUST_HAVE_LICENCES +
+                AdditionalAssetSelectionFormValidator.ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL
+                    .formatted(customerConfigurationProperties.mnemonic())))
+    );
+  }
+
+  @Test
+  void validate_fieldAssetNoOperatorOrLicences() {
     form.setAssetKey(AssetTestUtil.FIELD1_ASSET_KEY);
 
     when(assetService.getAsset(AssetTestUtil.FIELD1_ASSET_KEY))
@@ -96,13 +138,15 @@ class AdditionalAssetSelectionFormValidatorTest {
     errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     assertThat(errorMap).containsOnly(
         entry(AdditionalAssetSelectionFormValidator.ASSET_KEY_FIELD_NAME,
-            Collections.singletonList(AdditionalAssetSelectionFormValidator.ASSET_MUST_HAVE_LICENCES
-                .formatted(customerConfigurationProperties.mnemonic())))
+            Collections.singletonList(
+                AdditionalAssetSelectionFormValidator.ASSET_MUST_HAVE_OPERATOR_LICENCES +
+                AdditionalAssetSelectionFormValidator.ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL
+                    .formatted(customerConfigurationProperties.mnemonic())))
     );
   }
 
   @Test
-  void validate_fieldAssetWithLicences() {
+  void validate_fieldAssetWithOperatorAndLicences() {
     form.setAssetKey(AssetTestUtil.FIELD1_ASSET_KEY);
 
     when(assetService.getAsset(AssetTestUtil.FIELD1_ASSET_KEY))

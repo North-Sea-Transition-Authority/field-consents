@@ -24,10 +24,14 @@ public class TerminalController {
 
   @GetMapping
   public ModelAndView manageTerminal(@PathVariable Integer terminalId) {
+    TerminalWithOperatorJson terminalJson
+        = terminalService.getTerminalWithOperator(terminalId,
+        "Check operator exists when starting a terminal application");
+
     return new ModelAndView("fcs/assets/terminals")
         .addObject("terminalId", terminalId)
-        .addObject("terminalName",
-            terminalService.getTerminal(terminalId, "Manage terminal").getName())
+        .addObject("terminalName", terminalJson.getName())
+        .addObject("noOperatorExists", !terminalJson.operatorExists())
         .addObject("startApplicationUrl",
             ReverseRouter.route(on(StartApplicationFromTerminalController.class).getStartApplicationForm(terminalId))
         );

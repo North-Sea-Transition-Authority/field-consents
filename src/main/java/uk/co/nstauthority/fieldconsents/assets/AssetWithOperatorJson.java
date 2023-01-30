@@ -4,4 +4,8 @@ import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 
 public interface AssetWithOperatorJson extends AssetJson {
   OrganisationUnitJson getOperatorJson();
+
+  default boolean operatorExists() {
+    return getOperatorJson() != null;
+  }
 }

@@ -26,9 +26,14 @@ public class FieldTestUtil {
       .licences(LicenceTestUtil.licences3)
       .build();
 
-  public static Field field1WithOperatorAndEmptyLicences = Field.newBuilder().fieldId(FIELD_ID_1).fieldName(FIELD_NAME_1)
+  public static Field field1WithOperatorButEmptyLicences = Field.newBuilder().fieldId(FIELD_ID_1).fieldName(FIELD_NAME_1)
       .fieldOperator(OrganisationUnitTestUtil.orgUnit1)
       .licences(Collections.emptyList())
+      .build();
+
+  public static Field field1WithNoOperatorButLicences = Field.newBuilder().fieldId(FIELD_ID_1).fieldName(FIELD_NAME_1)
+      .fieldOperator(null)
+      .licences(LicenceTestUtil.licences3)
       .build();
 
   public static FieldJson field1Json = new FieldJson(
@@ -46,7 +51,18 @@ public class FieldTestUtil {
       FieldWithOperatorAndLicencesJson.from(field1WithOperatorAndLicences);
 
   public static FieldWithOperatorAndLicencesJson field1JsonWithNullOperatorAndLicences =
-      FieldWithOperatorAndLicencesJson.from(field1);
+      new FieldWithOperatorAndLicencesJson(
+          field1.getFieldId(),
+          field1.getFieldName(),
+          null,
+          null
+      );
+
+  public static FieldWithOperatorAndLicencesJson field1JsonWithOperatorButEmptyLicences =
+      FieldWithOperatorAndLicencesJson.from(field1WithOperatorButEmptyLicences);
+
+  public static FieldWithOperatorAndLicencesJson field1JsonWithNoOperatorButLicences =
+      FieldWithOperatorAndLicencesJson.from(field1WithNoOperatorButLicences);
 
   public static Field field2 = Field.newBuilder().fieldId(FIELD_ID_2).fieldName(FIELD_NAME_2).build();
   public static Field field2WithOperator = Field.newBuilder().fieldId(FIELD_ID_2).fieldName(FIELD_NAME_2).fieldOperator(OrganisationUnitTestUtil.orgUnit2).build();

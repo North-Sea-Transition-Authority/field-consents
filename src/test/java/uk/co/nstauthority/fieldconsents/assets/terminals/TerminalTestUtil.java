@@ -30,6 +30,12 @@ public class TerminalTestUtil {
       OrganisationUnitJson.from(terminal1WithOperator.getTerminalOperator())
   );
 
+  public static TerminalWithOperatorJson terminal1JsonWithNullOperator = new TerminalWithOperatorJson(
+      terminal1.getTerminalId(),
+      terminal1.getTerminalName(),
+      null
+  );
+
   public static Terminal terminal2 = Terminal.newBuilder().terminalId(TERMINAL_ID_2).terminalName(TERMINAL_NAME_2).build();
 
   public static TerminalJson terminal2Json = new TerminalJson(

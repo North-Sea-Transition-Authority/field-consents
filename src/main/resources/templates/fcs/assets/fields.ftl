@@ -1,12 +1,23 @@
 <#include '../layout/layout.ftl'>
 
+<#-- @ftlvariable name="customerBranding" type="uk.co.nstauthority.fieldconsents.branding.CustomerConfigurationProperties" -->
+
 <#assign pageTitle = fieldName/>
 
-<#if !licencesExist>
+<#if noOperatorExists || noLicencesExist>
   <#assign warningBanner>
-    <@fdsNotificationBanner.notificationBannerInfo bannerTitleText=warningHeading>
+    <@fdsNotificationBanner.notificationBannerInfo bannerTitleText="Missing information">
       <@fdsNotificationBanner.notificationBannerContent headingText="Applications cannot be started">
-        ${warningContent}
+        This field has missing information
+        <ul>
+          <#if noOperatorExists>
+            <li>Field operator</li>
+          </#if>
+          <#if noLicencesExist>
+            <li>Associated licences</li>
+          </#if>
+        </ul>
+        Contact the ${customerBranding.mnemonic()} if you think the field should have this information.
       </@fdsNotificationBanner.notificationBannerContent>
     </@fdsNotificationBanner.notificationBannerInfo>
   </#assign>
@@ -18,7 +29,7 @@
   pageSize=PageSize.TWO_THIRDS_COLUMN
   notificationBannerContent=warningBanner
 >
-  <#if licencesExist>
+  <#if startApplicationEnabled>
     <@fdsStartPage.startPage
       startActionText="Start application"
       startActionUrl=springUrl(startApplicationUrl)
