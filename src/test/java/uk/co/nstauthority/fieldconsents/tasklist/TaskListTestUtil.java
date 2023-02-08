@@ -31,6 +31,8 @@ public class TaskListTestUtil {
 
   public static final String ADDITIONAL_ASSETS_TASK_LIST_ITEM = "Additional fields and licences";
 
+  public static final String GAS_INJECTION = "Gas injection";
+
   public static final String FLARES_TASK_LIST_ITEM = "Flares";
 
 

@@ -20,7 +20,6 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
-import uk.co.nstauthority.fieldconsents.assets.AdditionalAssetsSetupForm;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.assets.AssetSelectionForm;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;

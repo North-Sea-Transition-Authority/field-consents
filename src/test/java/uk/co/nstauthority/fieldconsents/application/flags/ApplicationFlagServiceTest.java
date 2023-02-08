@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.application;
+package uk.co.nstauthority.fieldconsents.application.flags;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.times;
@@ -12,10 +12,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlag;
-import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagRepository;
-import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService;
-import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
+import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
+import uk.co.nstauthority.fieldconsents.application.ApplicationType;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationFlagServiceTest {

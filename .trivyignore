@@ -1,32 +1,25 @@
-# Introduced in FCS-163 due to SAML related dependencies
+# com.fasterxml.woodstox:woodstox-core
+CVE-2022-40151
+CVE-2022-40152
+# com.google.guava:guava
 CVE-2018-10237
 CVE-2020-8908
+# commons-collections:commons-collections
 CVE-2015-7501
 CVE-2015-6420
+# org.apache.santuario:xmlsec
 CVE-2021-40690
 CVE-2019-12400
+# org.apache.velocity:velocity
 CVE-2020-13936
+# org.bouncycastle:bcprov-jdk15on
 CVE-2020-15522
-# Introduced until a later Spring Boot version sorts the snakeYAML DoS vulnerability
+# org.springframework:spring-web
+CVE-2016-1000027
+# org.yaml:snakeyaml
 CVE-2022-25857
 CVE-2022-38749
 CVE-2022-38750
 CVE-2022-38751
 CVE-2022-38752
-# Xstream DoS (com.fasterxml.woodstox:woodstox-core) vulnerabilities should be fixed in subsequent Spring version
-CVE-2022-40151
-CVE-2022-40152
-CVE-2022-40153
-CVE-2022-40154
-CVE-2022-40155
-CVE-2022-40156
-# Spring security core (org.springframework.security:spring-security-core) - vulnerabilities should be fixed in subsequent Spring version
-CVE-2022-31692
-# Snakeyaml vulnerable to Stack overflow leading to denial of service (org.yaml:snakeyaml)
 CVE-2022-41854
-# Postgres vulnerability
-CVE-2022-41946
-# Spring (org.springframework:spring-web) HttpInvokerServiceExporter readRemoteInvocation method untrusted java deserialization
-CVE-2016-1000027
-# Snakeyaml Deserialization Remote Code Execution (org.yaml:snakeyaml)
-CVE-2022-1471

@@ -10,6 +10,7 @@ import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.ADDITIO
 import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.CONSENT_DETAILS_DISPLAY_ORDER;
 import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.CONSENT_DETAILS_SECTION;
 import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.CONSENT_LENGTH_TASK_LIST_ITEM;
+import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.GAS_INJECTION;
 import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.assertTaskListItem;
 import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.assertTaskListSection;
 
@@ -19,6 +20,8 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService;
@@ -33,6 +36,7 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthD
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.production.gasinjection.GasInjectionController;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListItem;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListLabel;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListSection;
@@ -166,19 +170,61 @@ class ConsentDetailsTaskListSectionServiceTest {
     ConsentLengthDetails consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(productionAppVersion);
     when(consentLengthService.findConsentLengthDetails(productionAppVersion)).thenReturn(Optional.of(consentLengthDetails));
     when(applicationAssetService.getPrimaryAsset(productionAppVersion)).thenReturn(fieldAsset1);
+    when(applicationFlagService.findFlagValue(productionAppVersion, ApplicationFlagType.WILL_GAS_BE_INJECTED))
+        .thenReturn(Optional.empty());
 
     Optional<TaskListSection> taskListSectionOptional = consentDetailsTaskListSectionService.getSection(productionAppVersion);
     TaskListSection taskListSection = taskListSectionOptional.orElseThrow(RuntimeException::new);
 
     List<TaskListItem> taskListItems = taskListSection.items();
 
-    assertThat(taskListItems).hasSize(1);
+    assertThat(taskListItems).hasSize(2);
 
     assertTaskListItem(
         taskListItems.get(0),
         CONSENT_LENGTH_TASK_LIST_ITEM,
         TaskListLabel.COMPLETED,
         ReverseRouter.route(on(ConsentLengthController.class).getConsentLengthForm(productionAppVersion.getApplication().getId()))
+    );
+
+    assertTaskListItem(
+        taskListItems.get(1),
+        GAS_INJECTION,
+        TaskListLabel.NOT_STARTED,
+        ReverseRouter.route(on(GasInjectionController.class).getGasInjectionForm(productionAppVersion.getApplication().getId()))
+    );
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void getSection_consentDetailsTaskListItemCompleted_withFieldPrimaryAssetAndProduction_gasInjectionCompleted(
+      Boolean willGasBeInjected) {
+    ApplicationVersion productionAppVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
+    ConsentLengthDetails consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(productionAppVersion);
+    when(consentLengthService.findConsentLengthDetails(productionAppVersion)).thenReturn(Optional.of(consentLengthDetails));
+    when(applicationAssetService.getPrimaryAsset(productionAppVersion)).thenReturn(fieldAsset1);
+    when(applicationFlagService.findFlagValue(productionAppVersion, ApplicationFlagType.WILL_GAS_BE_INJECTED))
+        .thenReturn(Optional.of(willGasBeInjected));
+
+    Optional<TaskListSection> taskListSectionOptional = consentDetailsTaskListSectionService.getSection(productionAppVersion);
+    TaskListSection taskListSection = taskListSectionOptional.orElseThrow(RuntimeException::new);
+
+    List<TaskListItem> taskListItems = taskListSection.items();
+
+    assertThat(taskListItems).hasSize(2);
+
+    assertTaskListItem(
+        taskListItems.get(0),
+        CONSENT_LENGTH_TASK_LIST_ITEM,
+        TaskListLabel.COMPLETED,
+        ReverseRouter.route(on(ConsentLengthController.class).getConsentLengthForm(productionAppVersion.getApplication().getId()))
+    );
+
+    assertTaskListItem(
+        taskListItems.get(1),
+        GAS_INJECTION,
+        TaskListLabel.COMPLETED,
+        ReverseRouter.route(on(GasInjectionController.class).getGasInjectionForm(productionAppVersion.getApplication().getId()))
     );
   }
 

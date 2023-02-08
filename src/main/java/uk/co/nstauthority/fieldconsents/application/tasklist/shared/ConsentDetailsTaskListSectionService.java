@@ -5,7 +5,6 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
@@ -17,6 +16,7 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthS
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.production.gasinjection.GasInjectionController;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListItem;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListLabel;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListSection;
@@ -57,6 +57,11 @@ public class ConsentDetailsTaskListSectionService implements TaskListSectionServ
       items.add(getAdditionalAssetsTaskListItem(applicationVersion));
     }
 
+    // Gas injection section only available for Production applications
+    if (ApplicationTypeFeature.GAS_INJECTION.allowed(applicationType)) {
+      items.add(getGasInjectionTaskListItem(applicationVersion));
+    }
+
     return Optional.of(new TaskListSection("Consent details", 10, items));
   }
 
@@ -78,7 +83,6 @@ public class ConsentDetailsTaskListSectionService implements TaskListSectionServ
         additionalAssetsUrl);
   }
 
-  @NotNull
   private TaskListLabel getAdditionalAssetsTaskListLabel(List<ApplicationAsset> additionalAssets,
                                                          Optional<Boolean> secondaryAssetsRequired) {
     TaskListLabel additionalAssetsLabel;
@@ -90,5 +94,14 @@ public class ConsentDetailsTaskListSectionService implements TaskListSectionServ
       additionalAssetsLabel = TaskListLabel.COMPLETED;
     }
     return additionalAssetsLabel;
+  }
+
+  private TaskListItem getGasInjectionTaskListItem(ApplicationVersion applicationVersion) {
+    return new TaskListItem("Gas injection",
+        TaskListLabel.notStartedOrCompleteByOptional(
+            applicationFlagService.findFlagValue(applicationVersion, ApplicationFlagType.WILL_GAS_BE_INJECTED)),
+        ReverseRouter.route(on(GasInjectionController.class)
+            .getGasInjectionForm(applicationVersion.getApplication().getId()))
+    );
   }
 }
