@@ -57,7 +57,7 @@ class ShortTermProductionControllerTest extends AbstractControllerTest {
 
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(
         applicationVersion);
-    when(applicationUnitService.getProductionOilUnit(applicationVersion)).thenReturn(ProductionUnit.SCM_PER_MONTH);
+    when(applicationUnitService.getProductionOilUnit(applicationVersion)).thenReturn(ProductionUnit.KSCM_PER_MONTH);
     when(applicationUnitService.getProductionGasUnit(applicationVersion)).thenReturn(ProductionUnit.KSCM_PER_MONTH);
   }
 
@@ -78,7 +78,7 @@ class ShortTermProductionControllerTest extends AbstractControllerTest {
     assertEquals(PRODUCTION_YEAR, model.get("requestYear"));
     assertEquals(DateUtils.format(START_DATE, DateUtils.SHORT_DATE), model.get("startDate"));
     assertEquals(DateUtils.format(END_DATE, DateUtils.SHORT_DATE), model.get("endDate"));
-    assertEquals(ProductionUnit.SCM_PER_MONTH.getDisplayName(), model.get("oilUnit"));
+    assertEquals(ProductionUnit.KSCM_PER_MONTH.getDisplayName(), model.get("oilUnit"));
     assertEquals(ProductionUnit.KSCM_PER_MONTH.getDisplayName(), model.get("gasUnit"));
   }
 

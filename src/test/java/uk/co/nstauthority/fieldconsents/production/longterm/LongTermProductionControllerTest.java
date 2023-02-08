@@ -60,7 +60,7 @@ class LongTermProductionControllerTest extends AbstractControllerTest {
 
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
-    when(applicationUnitService.getProductionOilUnit(applicationVersion)).thenReturn(ProductionUnit.SCM_PER_DAY);
+    when(applicationUnitService.getProductionOilUnit(applicationVersion)).thenReturn(ProductionUnit.KSCM_PER_DAY);
     when(applicationUnitService.getProductionGasUnit(applicationVersion)).thenReturn(ProductionUnit.KSCM_PER_DAY);
   }
 
@@ -82,7 +82,7 @@ class LongTermProductionControllerTest extends AbstractControllerTest {
 
     assertThat(model.get("startYear")).isEqualTo(START_YEAR.toString());
     assertThat(model.get("endYear")).isEqualTo(END_YEAR.toString());
-    assertThat(model.get("oilUnit")).isEqualTo(ProductionUnit.SCM_PER_DAY.getDisplayName());
+    assertThat(model.get("oilUnit")).isEqualTo(ProductionUnit.KSCM_PER_DAY.getDisplayName());
     assertThat(model.get("gasUnit")).isEqualTo(ProductionUnit.KSCM_PER_DAY.getDisplayName());
     assertThat(model.get("submitUrl")).isEqualTo("/applications/" + APPLICATION_ID + "/long-term-production/");
     assertThat(model.get("form")).isEqualTo(longTermProductionForm);

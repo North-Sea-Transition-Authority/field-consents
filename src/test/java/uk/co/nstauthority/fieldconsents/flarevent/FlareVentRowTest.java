@@ -42,9 +42,9 @@ class FlareVentRowTest {
             applicationVersion,
             2022,
             Month.JANUARY,
-            BigDecimal.valueOf(1),
+            BigDecimal.valueOf(1.123456),
             BigDecimal.valueOf(1.999999),
-            BigDecimal.valueOf(99999999),
+            BigDecimal.valueOf(99999999.123456),
             "form comments"
         );
   }

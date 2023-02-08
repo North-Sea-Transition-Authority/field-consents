@@ -52,7 +52,7 @@ class AnnualProductionControllerTest extends AbstractControllerTest {
     annualProductionForm = ProductionTestUtils.getEmptyAnnualProductionForm();
 
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
-    when(applicationUnitService.getProductionOilUnit(applicationVersion)).thenReturn(ProductionUnit.SCM_PER_MONTH);
+    when(applicationUnitService.getProductionOilUnit(applicationVersion)).thenReturn(ProductionUnit.KSCM_PER_MONTH);
     when(applicationUnitService.getProductionGasUnit(applicationVersion)).thenReturn(ProductionUnit.KSCM_PER_MONTH);
   }
 
@@ -71,7 +71,7 @@ class AnnualProductionControllerTest extends AbstractControllerTest {
     var model = modelAndView.getModel();
 
     assertEquals(PRODUCTION_YEAR, model.get("requestYear"));
-    assertEquals(ProductionUnit.SCM_PER_MONTH.getDisplayName(), model.get("oilUnit"));
+    assertEquals(ProductionUnit.KSCM_PER_MONTH.getDisplayName(), model.get("oilUnit"));
     assertEquals(ProductionUnit.KSCM_PER_MONTH.getDisplayName(), model.get("gasUnit"));
   }
 

@@ -107,6 +107,30 @@ class FlareVentRowFormValidatorTest {
   }
 
   @Test
+  void validate_categoryDataWithTooManyDecimalPlaces() {
+    flareVentRowForm = FlareVentRowTestUtil.getValidFlareVentRowForm();
+    String categoryValue = "1.1234567";
+    flareVentRowForm.setCategoryA(categoryValue);
+    flareVentRowForm.setCategoryB(categoryValue);
+    flareVentRowForm.setCategoryC(categoryValue);
+    errors = new BeanPropertyBindingResult(flareVentRowForm, "form");
+
+    ValidationUtils.invokeValidator(validator, flareVentRowForm, errors);
+
+    errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
+
+    assertThat(errorMap)
+        .containsOnly(
+            entry("categoryA.inputValue",
+                Collections.singletonList("Category A must include no more than 6 decimal places")),
+            entry("categoryB.inputValue",
+                Collections.singletonList("Category B must include no more than 6 decimal places")),
+            entry("categoryC.inputValue",
+                Collections.singletonList("Category C must include no more than 6 decimal places"))
+        );
+  }
+
+  @Test
   void validate_commentsMoreThan300Characters() {
     flareVentRowForm = FlareVentRowTestUtil.getValidFlareVentRowForm();
     flareVentRowForm.setComments(ValidatorTestingUtil.STRING_301_CHARACTERS);

@@ -9,9 +9,9 @@ class FlareVentRowTestUtil {
     FlareVentRowForm form = new FlareVentRowForm();
     form.setYear("2022");
     form.setMonth(Month.JANUARY);
-    form.getCategoryA().setInputValue("1");
+    form.getCategoryA().setInputValue("1.123456");
     form.getCategoryB().setInputValue("1.999999");
-    form.getCategoryC().setInputValue("99999999");
+    form.getCategoryC().setInputValue("99999999.123456");
     form.setComments("form comments");
     return form;
   }

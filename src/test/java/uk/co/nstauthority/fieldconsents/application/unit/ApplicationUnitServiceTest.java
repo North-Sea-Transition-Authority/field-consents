@@ -139,19 +139,19 @@ class ApplicationUnitServiceTest {
     when(consentLengthService.getConsentLengthDetails(productionAppVersion))
         .thenReturn(ConsentLengthTestUtil.getConsentLengthDetailsForAnnual(productionAppVersion));
     assertThat(applicationUnitService.getProductionOilUnit(productionAppVersion))
-        .isEqualTo(ProductionUnit.SCM_PER_MONTH);
+        .isEqualTo(ProductionUnit.KSCM_PER_MONTH);
   }
 
   @Test
   void getProductionOilUnit() {
     ApplicationUnit applicationUnit = new ApplicationUnit();
     applicationUnit.setApplicationVersion(productionAppVersion);
-    applicationUnit.setProductionOilUnit(ProductionUnit.SCM_PER_MONTH);
+    applicationUnit.setProductionOilUnit(ProductionUnit.KSCM_PER_MONTH);
     when(applicationUnitRepository.findByApplicationVersion(productionAppVersion))
         .thenReturn(Optional.of(applicationUnit));
 
     assertThat(applicationUnitService.getProductionOilUnit(productionAppVersion))
-        .isEqualTo(ProductionUnit.SCM_PER_MONTH);
+        .isEqualTo(ProductionUnit.KSCM_PER_MONTH);
   }
 
   @Test
@@ -256,7 +256,7 @@ class ApplicationUnitServiceTest {
         productionAppVersion,
         null,
         null,
-        ProductionUnit.SCM_PER_DAY,
+        ProductionUnit.KSCM_PER_DAY,
         ProductionUnit.KSCM_PER_DAY);
   }
 
@@ -273,7 +273,7 @@ class ApplicationUnitServiceTest {
         productionAppVersion,
         null,
         null,
-        ProductionUnit.SCM_PER_MONTH,
+        ProductionUnit.KSCM_PER_MONTH,
         ProductionUnit.KSCM_PER_MONTH);
   }
 
@@ -290,7 +290,7 @@ class ApplicationUnitServiceTest {
         productionAppVersion,
         null,
         null,
-        ProductionUnit.SCM_PER_MONTH,
+        ProductionUnit.KSCM_PER_MONTH,
         ProductionUnit.KSCM_PER_MONTH);
   }
 

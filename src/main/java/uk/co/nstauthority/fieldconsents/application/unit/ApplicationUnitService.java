@@ -64,10 +64,10 @@ public class ApplicationUnitService implements ApplicationListener<ConsentLength
 
     switch (applicationType) {
       case PRODUCTION -> {
-        ProductionUnit oilUnit = ProductionUnit.SCM_PER_MONTH;
+        ProductionUnit oilUnit = ProductionUnit.KSCM_PER_MONTH;
         ProductionUnit gasUnit = ProductionUnit.KSCM_PER_MONTH;
         if (consentLength.equals(ConsentLengthType.LONG_TERM)) {
-          oilUnit = ProductionUnit.SCM_PER_DAY;
+          oilUnit = ProductionUnit.KSCM_PER_DAY;
           gasUnit = ProductionUnit.KSCM_PER_DAY;
         }
         applicationUnit = new ApplicationUnit(applicationVersion, null, null, oilUnit, gasUnit);

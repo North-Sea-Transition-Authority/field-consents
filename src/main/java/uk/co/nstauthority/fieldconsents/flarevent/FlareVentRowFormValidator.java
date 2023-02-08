@@ -7,6 +7,7 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 import uk.co.fivium.formlibrary.validator.decimal.DecimalInputValidator;
 import uk.co.fivium.formlibrary.validator.string.StringInputValidator;
+import uk.co.nstauthority.fieldconsents.validation.ValidatorUtils;
 
 @Service
 public class FlareVentRowFormValidator implements Validator {
@@ -23,8 +24,10 @@ public class FlareVentRowFormValidator implements Validator {
     FlareVentRowForm monthForm = (FlareVentRowForm) target;
 
     // Each category field should have a non-empty number which can be greater or equal to 0.0
+    // and must not contain more decimal places than specified by MAX_DECIMAL_PLACES
     var validator = DecimalInputValidator.builder()
-        .mustBeMoreThanOrEqual(BigDecimal.ZERO);
+        .mustBeMoreThanOrEqual(BigDecimal.ZERO)
+        .mustHaveNoMoreThanDecimalPlaces(ValidatorUtils.MAX_DECIMAL_PLACES);
 
     validator.validate(monthForm.getCategoryA(), errors);
     validator.validate(monthForm.getCategoryB(), errors);

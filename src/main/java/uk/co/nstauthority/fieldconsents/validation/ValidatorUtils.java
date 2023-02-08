@@ -6,6 +6,8 @@ import org.springframework.validation.Validator;
 
 public class ValidatorUtils {
 
+  public static final int MAX_DECIMAL_PLACES = 6;
+
   private ValidatorUtils() {
     throw new IllegalStateException("Utility class");
   }
