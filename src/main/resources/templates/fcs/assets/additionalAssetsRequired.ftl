@@ -1,6 +1,6 @@
 <#include '../layout/layout.ftl'>
 
-<#assign pageTitle = "Do you have any additional fields to add?"/>
+<#assign pageTitle = "Additional fields"/>
 
 <#if successfulDeleteBanner?has_content>
   <#assign deleteBanner>
@@ -13,20 +13,22 @@
 </#if>
 
 <@defaultPage
-htmlTitle=pageTitle
-pageHeading=pageTitle
-pageSize=PageSize.TWO_THIRDS_COLUMN
-notificationBannerContent=deleteBanner
->
-
+  htmlTitle=pageTitle
+  pageSize=PageSize.TWO_THIRDS_COLUMN
+  notificationBannerContent=deleteBanner>
   <@fdsForm.htmlForm>
     <@fdsRadio.radioGroup
-    path="form.otherAssetsRequired"
-    labelText="">
+      path="form.otherAssetsRequired"
+      labelText="Do you have any additional fields to add?"
+      fieldsetHeadingSize="h1"
+      fieldsetHeadingClass="govuk-fieldset__legend--xl">
       <@fdsRadio.radioYes path="form.otherAssetsRequired"/>
       <@fdsRadio.radioNo path="form.otherAssetsRequired"/>
     </@fdsRadio.radioGroup>
-    <@fdsAction.button buttonText="Save and continue"/>
+    <@fdsAction.submitButtons
+      primaryButtonText="Save and continue"
+      secondaryLinkText="Cancel"
+      linkSecondaryAction=true
+      linkSecondaryActionUrl=springUrl(cancelUrl)/>
   </@fdsForm.htmlForm>
-
 </@defaultPage>

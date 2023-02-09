@@ -26,12 +26,12 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
-import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService;
-import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService;
+import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.assets.AssetSelectionForm;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
@@ -74,6 +74,10 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
 
   private String expectBaseAdditionalAssetsUrl;
 
+  private static final String TASK_LIST_URL = "/applications/" + ApplicationTestUtil.APPLICATION_ID + "/task-list/";
+
+  private static final String ADDITIONAL_ASSETS_REQUIRED_VIEW = "fcs/assets/additionalAssetsRequired";
+
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT);
@@ -96,7 +100,7 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
 
     assertThat(model)
         .containsEntry(AdditionalAssetsController.PAGE_TITLE_ATTR_NAME, AdditionalAssetsController.PAGE_NAME_ADD)
-        .containsEntry("cancelUrl", expectBaseAdditionalAssetsUrl + "/summary");
+        .containsEntry(AdditionalAssetsController.CANCEL_URL_ATTR_NAME, expectBaseAdditionalAssetsUrl + "/summary");
     assertThat((AssetSelectionForm) model.get("form"))
         .extracting(AssetSelectionForm::getAssetKey)
         .isNull();
@@ -127,7 +131,7 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
 
     assertThat(model)
         .containsEntry(AdditionalAssetsController.PAGE_TITLE_ATTR_NAME, AdditionalAssetsController.PAGE_NAME_ADD)
-        .containsEntry("cancelUrl", expectBaseAdditionalAssetsUrl + "/summary");
+        .containsEntry(AdditionalAssetsController.CANCEL_URL_ATTR_NAME, expectBaseAdditionalAssetsUrl + "/summary");
     assertThat((AssetSelectionForm) model.get("form"))
         .extracting(AssetSelectionForm::getAssetKey)
         .isNull();
@@ -285,7 +289,7 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
     assertThat(model)
         .containsEntry(AdditionalAssetsController.PAGE_TITLE_ATTR_NAME, AdditionalAssetsController.PAGE_NAME_DELETE)
         .containsEntry("submitUrl", expectBaseAdditionalAssetsUrl + "/" +  ApplicationAssetTestUtil.fieldAsset2.getAssetNo() + "/delete")
-        .containsEntry("cancelUrl", expectBaseAdditionalAssetsUrl + "/summary")
+        .containsEntry(AdditionalAssetsController.CANCEL_URL_ATTR_NAME, expectBaseAdditionalAssetsUrl + "/summary")
         .containsEntry("assetView", ApplicationAssetTestUtil.assetView2);
   }
 
@@ -374,14 +378,25 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
   @Test
   @WithMockUser
   void getAdditionalAssetsRequiredForm() throws Exception {
+    var expectedAdditionalAssetsSetupForm = new AdditionalAssetsSetupForm();
     when(applicationAssetService.getAdditionalAssetsSetupForm(applicationVersion))
-        .thenReturn(new AdditionalAssetsSetupForm());
+        .thenReturn(expectedAdditionalAssetsSetupForm);
 
-    mockMvc.perform(
-        get(ReverseRouter.route(on(AdditionalAssetsController.class).getAdditionalAssetsRequiredForm(
-            ApplicationTestUtil.APPLICATION_ID
-        )))
-    ).andExpect(status().isOk());
+    var modelAndView =
+        mockMvc.perform(
+            get(ReverseRouter.route(on(AdditionalAssetsController.class).getAdditionalAssetsRequiredForm(
+                ApplicationTestUtil.APPLICATION_ID))))
+            .andExpect(status().isOk())
+            .andExpect(view().name(ADDITIONAL_ASSETS_REQUIRED_VIEW))
+            .andReturn().getModelAndView();
+
+    assert modelAndView != null;
+    var model = modelAndView.getModel();
+
+    assertThat(model)
+        .containsEntry(AdditionalAssetsController.CANCEL_URL_ATTR_NAME, TASK_LIST_URL);
+    assertThat((AdditionalAssetsSetupForm) model.get("form"))
+        .isEqualTo(expectedAdditionalAssetsSetupForm);
   }
 
   @Test
@@ -399,16 +414,27 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
   @Test
   @WithMockUser
   void saveAdditionalAssetsRequiredForm_emptyForm() throws Exception {
-    mockMvc.perform(post(ReverseRouter.route(on(AdditionalAssetsController.class)
+    var modelAndView =
+        mockMvc.perform(post(ReverseRouter.route(on(AdditionalAssetsController.class)
             .saveAdditionalAssetsRequiredForm(
                 ApplicationTestUtil.APPLICATION_ID,
                 null,
                 null)))
             .with(csrf()))
         .andExpect(status().isOk())
-        .andExpect(view().name("fcs/assets/additionalAssetsRequired"));
+        .andExpect(view().name(ADDITIONAL_ASSETS_REQUIRED_VIEW))
+        .andReturn().getModelAndView();
 
     verifyNoInteractions(applicationFlagService);
+
+    assert modelAndView != null;
+    var model = modelAndView.getModel();
+
+    assertThat(model)
+        .containsEntry(AdditionalAssetsController.CANCEL_URL_ATTR_NAME, TASK_LIST_URL);
+    assertThat((AdditionalAssetsSetupForm) model.get("form"))
+        .usingRecursiveComparison()
+        .isEqualTo(new AdditionalAssetsSetupForm());
   }
 
   @Test

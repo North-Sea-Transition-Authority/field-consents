@@ -35,6 +35,7 @@ public class AdditionalAssetsController {
   public static final String PAGE_NAME_ADD = "Add field";
   public static final String PAGE_TITLE_ATTR_NAME = "pageTitle";
   public static final String PAGE_NAME_DELETE = "Delete field";
+  public static final String CANCEL_URL_ATTR_NAME = "cancelUrl";
 
   private final AssetService assetService;
 
@@ -77,12 +78,16 @@ public class AdditionalAssetsController {
 
   @GetMapping("/required")
   public ModelAndView getAdditionalAssetsRequiredForm(@PathVariable Integer applicationId) {
-    ApplicationVersion applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
-    AdditionalAssetsSetupForm form = applicationAssetService.getAdditionalAssetsSetupForm(applicationVersion);
-    ModelAndView modelAndView = new ModelAndView("fcs/assets/additionalAssetsRequired");
-    modelAndView.addObject("form", form);
+    var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
 
-    return modelAndView;
+    return getAdditionalAssetsRequiredModelAndView(applicationId)
+        .addObject("form", applicationAssetService.getAdditionalAssetsSetupForm(applicationVersion));
+  }
+
+  private ModelAndView getAdditionalAssetsRequiredModelAndView(Integer applicationId) {
+    return new ModelAndView("fcs/assets/additionalAssetsRequired")
+        .addObject(CANCEL_URL_ATTR_NAME,
+            ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId)));
   }
 
   @PostMapping("/required")
@@ -90,7 +95,7 @@ public class AdditionalAssetsController {
                                                @Valid @ModelAttribute("form") AdditionalAssetsSetupForm form,
                                                BindingResult bindingResult) {
     if (bindingResult.hasErrors()) {
-      return new ModelAndView("fcs/assets/additionalAssetsRequired");
+      return getAdditionalAssetsRequiredModelAndView(applicationId);
     }
 
     ApplicationVersion applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
@@ -148,7 +153,7 @@ public class AdditionalAssetsController {
   private ModelAndView getNewAdditionalAssetModelAndView(Integer applicationId) {
     ModelAndView modelAndView = new ModelAndView("fcs/assets/additionalAsset");
     modelAndView.addObject(PAGE_TITLE_ATTR_NAME, AdditionalAssetsController.PAGE_NAME_ADD)
-        .addObject("cancelUrl",
+        .addObject(CANCEL_URL_ATTR_NAME,
             ReverseRouter.route(on(AdditionalAssetsController.class).viewAdditionalAssetsSummary(applicationId)));
 
     return modelAndView;
@@ -214,7 +219,7 @@ public class AdditionalAssetsController {
         .addObject("assetView", assetSummaryService.getSummaryView(asset))
         .addObject("submitUrl",
             ReverseRouter.route(on(AdditionalAssetsController.class).deleteAsset(applicationId, null, assetNo)))
-        .addObject("cancelUrl",
+        .addObject(CANCEL_URL_ATTR_NAME,
             ReverseRouter.route(on(AdditionalAssetsController.class).viewAdditionalAssetsSummary(applicationId))
         );
   }
