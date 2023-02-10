@@ -101,12 +101,12 @@ class FlareVentReportPeriodFormValidatorTest {
     assertThat(errorMap)
         .containsOnly(
             entry("reportEndMonth.inputValue",
-                Collections.singletonList(FlareVentReportPeriodFormValidator.REPORT_END_MONTH_IN_FUTURE))
+                Collections.singletonList(FlareVentReportPeriodFormValidator.REPORT_END_MONTH_INVALID))
         );
   }
 
   @Test
-  void validate_validForm() {
+  void validate_invalidCurrentMonth() {
     reportPeriodForm = new FlareVentReportPeriodForm();
     YearMonth currentYearMonth = YearMonth.now();
     reportPeriodForm.setReportEndYear(String.valueOf(currentYearMonth.getYear()));
@@ -116,7 +116,26 @@ class FlareVentReportPeriodFormValidatorTest {
 
     ValidationUtils.invokeValidator(validator, reportPeriodForm, errors);
 
-    assertThat(errors.hasErrors()).isFalse();
+    errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
+
+    assertThat(errorMap)
+        .containsOnly(
+            entry("reportEndMonth.inputValue",
+                Collections.singletonList(FlareVentReportPeriodFormValidator.REPORT_END_MONTH_INVALID))
+        );
   }
 
+  @Test
+  void validate_validForm() {
+    reportPeriodForm = new FlareVentReportPeriodForm();
+    YearMonth validYearMonth = YearMonth.now().minusMonths(1);
+    reportPeriodForm.setReportEndYear(String.valueOf(validYearMonth.getYear()));
+    reportPeriodForm.setReportEndMonth(validYearMonth.getMonth().name());
+
+    errors = new BeanPropertyBindingResult(reportPeriodForm, "form");
+
+    ValidationUtils.invokeValidator(validator, reportPeriodForm, errors);
+
+    assertThat(errors.hasErrors()).isFalse();
+  }
 }

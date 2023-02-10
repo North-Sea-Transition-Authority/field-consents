@@ -13,7 +13,7 @@ import uk.co.fivium.formlibrary.validator.string.StringInputValidator;
 @Service
 public class FlareVentReportPeriodFormValidator implements Validator {
 
-  public static final String REPORT_END_MONTH_IN_FUTURE = "Month cannot be in the future";
+  public static final String REPORT_END_MONTH_INVALID = "End of report period must be in the past";
 
   @Override
   public boolean supports(@NotNull Class<?> clazz) {
@@ -32,7 +32,8 @@ public class FlareVentReportPeriodFormValidator implements Validator {
     StringInputValidator.builder()
         .validate(setupForm.getReportEndMonth(), errors);
 
-    // if all data has been entered check that the month selected is not in the future
+    // if all data has been entered check that the month selected is not
+    // the current month or in the future
     if (!errors.hasErrors()) {
       var reportEndYear = setupForm.getReportEndYear().getAsInteger()
           .orElseThrow(NoSuchElementException::new);
@@ -41,10 +42,10 @@ public class FlareVentReportPeriodFormValidator implements Validator {
 
       // we put the error on the month here as the years given in the form
       // are never greater than the current year
-      if (reportEndYearMonth.isAfter(YearMonth.now())) {
+      if (reportEndYearMonth.equals(YearMonth.now()) || reportEndYearMonth.isAfter(YearMonth.now())) {
         errors.rejectValue("reportEndMonth.inputValue",
             "reportEndMonth.monthInFuture",
-            REPORT_END_MONTH_IN_FUTURE);
+            REPORT_END_MONTH_INVALID);
       }
     }
   }
