@@ -72,14 +72,17 @@ class ApplicationUnitServiceTest {
         FlareVentUnit.TONNES_PER_MONTH,
         null,
         null,
-        null);
+        null,
+        FlareVentUnit.KG_PER_CUBIC_METER,
+        FlareVentUnit.MASS_PERCENTAGE);
   }
 
   @Test
   void getOrCreateApplicationUnit() {
     when(applicationUnitRepository.findByApplicationVersion(flareAppVersion))
         .thenReturn(Optional.of(new ApplicationUnit(flareAppVersion, FlareVentUnit.TONNES_PER_MONTH,
-            null, null, null)));
+            null, null, null, FlareVentUnit.KG_PER_CUBIC_METER,
+            FlareVentUnit.MASS_PERCENTAGE, FlareVentUnit.KG_PER_CUBIC_METER, FlareVentUnit.MASS_PERCENTAGE)));
 
     ApplicationUnit returnedApplicationUnit = applicationUnitService.getOrCreateApplicationUnit(flareAppVersion);
 
@@ -88,7 +91,9 @@ class ApplicationUnitServiceTest {
         FlareVentUnit.TONNES_PER_MONTH,
         null,
         null,
-        null);
+        null,
+        FlareVentUnit.KG_PER_CUBIC_METER,
+        FlareVentUnit.MASS_PERCENTAGE);
   }
 
   @Test
@@ -110,6 +115,95 @@ class ApplicationUnitServiceTest {
 
     assertThat(applicationUnitService.getFlareCategoryUnit(flareAppVersion))
         .isEqualTo(FlareVentUnit.TONNES_PER_MONTH);
+  }
+
+  @Test
+  void getFlareGasDensityUnit_notExists() {
+    when(applicationUnitRepository.findByApplicationVersion(flareAppVersion)).thenReturn(Optional.empty());
+    when(consentLengthService.getConsentLengthDetails(flareAppVersion))
+        .thenReturn(ConsentLengthTestUtil.getConsentLengthDetailsForAnnual(flareAppVersion));
+
+    assertThat(applicationUnitService.getFlareGasDensityUnit(flareAppVersion))
+        .isEqualTo(FlareVentUnit.KG_PER_CUBIC_METER);
+  }
+
+  @Test
+  void getFlareGasDensityUnit() {
+    ApplicationUnit applicationUnit = new ApplicationUnit();
+    applicationUnit.setApplicationVersion(flareAppVersion);
+    applicationUnit.setFlareGasDensityUnit(FlareVentUnit.KG_PER_CUBIC_METER);
+    when(applicationUnitRepository.findByApplicationVersion(flareAppVersion))
+        .thenReturn(Optional.of(applicationUnit));
+
+    assertThat(applicationUnitService.getFlareGasDensityUnit(flareAppVersion))
+        .isEqualTo(FlareVentUnit.KG_PER_CUBIC_METER);
+  }
+
+  @Test
+  void getFlareGasContentUnit_notExists() {
+    when(applicationUnitRepository.findByApplicationVersion(flareAppVersion)).thenReturn(Optional.empty());
+    when(consentLengthService.getConsentLengthDetails(flareAppVersion))
+        .thenReturn(ConsentLengthTestUtil.getConsentLengthDetailsForAnnual(flareAppVersion));
+
+    assertThat(applicationUnitService.getFlareGasContentUnit(flareAppVersion))
+        .isEqualTo(FlareVentUnit.MASS_PERCENTAGE);
+  }
+
+  @Test
+  void getFlareGasContentUnit() {
+    ApplicationUnit applicationUnit = new ApplicationUnit();
+    applicationUnit.setApplicationVersion(flareAppVersion);
+    applicationUnit.setFlareGasContentUnit(FlareVentUnit.MASS_PERCENTAGE);
+    when(applicationUnitRepository.findByApplicationVersion(flareAppVersion))
+        .thenReturn(Optional.of(applicationUnit));
+
+    assertThat(applicationUnitService.getFlareGasContentUnit(flareAppVersion))
+        .isEqualTo(FlareVentUnit.MASS_PERCENTAGE);
+  }
+
+
+  @Test
+  void getVentGasDensityUnit_notExists() {
+    when(applicationUnitRepository.findByApplicationVersion(ventAppVersion)).thenReturn(Optional.empty());
+    when(consentLengthService.getConsentLengthDetails(ventAppVersion))
+        .thenReturn(ConsentLengthTestUtil.getConsentLengthDetailsForAnnual(ventAppVersion));
+
+    assertThat(applicationUnitService.getVentGasDensityUnit(ventAppVersion))
+        .isEqualTo(FlareVentUnit.KG_PER_CUBIC_METER);
+  }
+
+  @Test
+  void getVentGasDensityUnit() {
+    ApplicationUnit applicationUnit = new ApplicationUnit();
+    applicationUnit.setApplicationVersion(ventAppVersion);
+    applicationUnit.setVentGasDensityUnit(FlareVentUnit.KG_PER_CUBIC_METER);
+    when(applicationUnitRepository.findByApplicationVersion(ventAppVersion))
+        .thenReturn(Optional.of(applicationUnit));
+
+    assertThat(applicationUnitService.getVentGasDensityUnit(ventAppVersion))
+        .isEqualTo(FlareVentUnit.KG_PER_CUBIC_METER);
+  }
+
+  @Test
+  void getVentGasContentUnit_notExists() {
+    when(applicationUnitRepository.findByApplicationVersion(ventAppVersion)).thenReturn(Optional.empty());
+    when(consentLengthService.getConsentLengthDetails(ventAppVersion))
+        .thenReturn(ConsentLengthTestUtil.getConsentLengthDetailsForAnnual(ventAppVersion));
+
+    assertThat(applicationUnitService.getVentGasContentUnit(ventAppVersion))
+        .isEqualTo(FlareVentUnit.MASS_PERCENTAGE);
+  }
+
+  @Test
+  void getVentGasContentUnit() {
+    ApplicationUnit applicationUnit = new ApplicationUnit();
+    applicationUnit.setApplicationVersion(ventAppVersion);
+    applicationUnit.setVentGasContentUnit(FlareVentUnit.MASS_PERCENTAGE);
+    when(applicationUnitRepository.findByApplicationVersion(ventAppVersion))
+        .thenReturn(Optional.of(applicationUnit));
+
+    assertThat(applicationUnitService.getVentGasContentUnit(ventAppVersion))
+        .isEqualTo(FlareVentUnit.MASS_PERCENTAGE);
   }
 
   @Test
@@ -189,7 +283,9 @@ class ApplicationUnitServiceTest {
         FlareVentUnit.TONNES_PER_MONTH,
         null,
         null,
-        null);
+        null,
+        FlareVentUnit.KG_PER_CUBIC_METER,
+        FlareVentUnit.MASS_PERCENTAGE);
   }
 
   @Test
@@ -206,7 +302,9 @@ class ApplicationUnitServiceTest {
         FlareVentUnit.TONNES_PER_MONTH,
         null,
         null,
-        null);
+        null,
+        FlareVentUnit.KG_PER_CUBIC_METER,
+        FlareVentUnit.MASS_PERCENTAGE);
   }
 
   @Test
@@ -223,7 +321,9 @@ class ApplicationUnitServiceTest {
         null,
         FlareVentUnit.TONNES_PER_MONTH,
         null,
-        null);
+        null,
+        FlareVentUnit.KG_PER_CUBIC_METER,
+        FlareVentUnit.MASS_PERCENTAGE);
   }
 
   @Test
@@ -240,7 +340,9 @@ class ApplicationUnitServiceTest {
         null,
         FlareVentUnit.TONNES_PER_MONTH,
         null,
-        null);
+        null,
+        FlareVentUnit.KG_PER_CUBIC_METER,
+        FlareVentUnit.MASS_PERCENTAGE);
   }
 
   @Test
@@ -257,7 +359,9 @@ class ApplicationUnitServiceTest {
         null,
         null,
         ProductionUnit.KSCM_PER_DAY,
-        ProductionUnit.KSCM_PER_DAY);
+        ProductionUnit.KSCM_PER_DAY,
+        null,
+        null);
   }
 
   @Test
@@ -274,7 +378,9 @@ class ApplicationUnitServiceTest {
         null,
         null,
         ProductionUnit.KSCM_PER_MONTH,
-        ProductionUnit.KSCM_PER_MONTH);
+        ProductionUnit.KSCM_PER_MONTH,
+        null,
+        null);
   }
 
   @Test
@@ -291,7 +397,9 @@ class ApplicationUnitServiceTest {
         null,
         null,
         ProductionUnit.KSCM_PER_MONTH,
-        ProductionUnit.KSCM_PER_MONTH);
+        ProductionUnit.KSCM_PER_MONTH,
+        null,
+        null);
   }
 
   private void assertApplicationUnit(ApplicationUnit applicationUnit,
@@ -299,21 +407,27 @@ class ApplicationUnitServiceTest {
                                      FlareVentUnit flareCategoryUnit,
                                      FlareVentUnit ventCategoryUnit,
                                      ProductionUnit productionOilUnit,
-                                     ProductionUnit productionGasUnit) {
+                                     ProductionUnit productionGasUnit,
+                                     FlareVentUnit gasDensity,
+                                     FlareVentUnit gasMass) {
 
     assertThat(applicationUnit)
         .extracting(ApplicationUnit::getApplicationVersion,
             ApplicationUnit::getFlareCategoryUnit,
             ApplicationUnit::getVentCategoryUnit,
             ApplicationUnit::getProductionOilUnit,
-            ApplicationUnit::getProductionGasUnit
+            ApplicationUnit::getProductionGasUnit,
+            ApplicationUnit::getFlareGasDensityUnit,
+            ApplicationUnit::getFlareGasContentUnit
         )
         .containsExactly(
             applicationVersion,
             flareCategoryUnit,
             ventCategoryUnit,
             productionOilUnit,
-            productionGasUnit
+            productionGasUnit,
+            gasDensity,
+            gasMass
         );
 
   }

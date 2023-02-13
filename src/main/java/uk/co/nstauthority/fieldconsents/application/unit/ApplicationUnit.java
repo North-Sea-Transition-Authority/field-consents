@@ -37,17 +37,35 @@ class ApplicationUnit {
   @Enumerated(EnumType.STRING)
   private ProductionUnit productionGasUnit;
 
+  @Enumerated(EnumType.STRING)
+  private FlareVentUnit flareGasDensityUnit;
+
+  @Enumerated(EnumType.STRING)
+  private FlareVentUnit flareGasContentUnit;
+
+  @Enumerated(EnumType.STRING)
+  private FlareVentUnit ventGasDensityUnit;
+
+  @Enumerated(EnumType.STRING)
+  private FlareVentUnit ventGasContentUnit;
+
   public ApplicationUnit() {
   }
 
   public ApplicationUnit(ApplicationVersion applicationVersion, FlareVentUnit flareCategoryUnit,
                          FlareVentUnit ventCategoryUnit, ProductionUnit productionOilUnit,
-                         ProductionUnit productionGasUnit) {
+                         ProductionUnit productionGasUnit, FlareVentUnit flareGasDensityUnit,
+                         FlareVentUnit flareGasContentUnit, FlareVentUnit ventGasDensityUnit,
+                         FlareVentUnit ventGasContentUnit) {
     this.applicationVersion = applicationVersion;
     this.flareCategoryUnit = flareCategoryUnit;
     this.ventCategoryUnit = ventCategoryUnit;
     this.productionOilUnit = productionOilUnit;
     this.productionGasUnit = productionGasUnit;
+    this.flareGasDensityUnit = flareGasDensityUnit;
+    this.flareGasContentUnit = flareGasContentUnit;
+    this.ventGasDensityUnit = ventGasDensityUnit;
+    this.ventGasContentUnit = ventGasContentUnit;
   }
 
   public ApplicationVersion getApplicationVersion() {
@@ -88,5 +106,37 @@ class ApplicationUnit {
 
   public void setProductionGasUnit(ProductionUnit productionGasUnit) {
     this.productionGasUnit = productionGasUnit;
+  }
+
+  public FlareVentUnit getFlareGasDensityUnit() {
+    return flareGasDensityUnit;
+  }
+
+  public void setFlareGasDensityUnit(FlareVentUnit gasDataDensity) {
+    this.flareGasDensityUnit = gasDataDensity;
+  }
+
+  public FlareVentUnit getFlareGasContentUnit() {
+    return flareGasContentUnit;
+  }
+
+  public FlareVentUnit getVentGasDensityUnit() {
+    return ventGasDensityUnit;
+  }
+
+  public void setVentGasDensityUnit(FlareVentUnit ventGasDataDensityUnit) {
+    this.ventGasDensityUnit = ventGasDataDensityUnit;
+  }
+
+  public FlareVentUnit getVentGasContentUnit() {
+    return ventGasContentUnit;
+  }
+
+  public void setVentGasContentUnit(FlareVentUnit ventGasDataContentUnit) {
+    this.ventGasContentUnit = ventGasDataContentUnit;
+  }
+
+  public void setFlareGasContentUnit(FlareVentUnit gasDataMass) {
+    this.flareGasContentUnit = gasDataMass;
   }
 }

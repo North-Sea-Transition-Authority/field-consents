@@ -36,7 +36,7 @@ public class FlareReportPeriodService {
     return findFlareReportPeriod(applicationVersion).isPresent();
   }
 
-  FlareReportPeriod getFlareReportPeriodOrError(ApplicationVersion applicationVersion) {
+  public FlareReportPeriod getFlareReportPeriodOrError(ApplicationVersion applicationVersion) {
     return findFlareReportPeriod(applicationVersion)
         .orElseThrow(() ->
             new EntityNotFoundException("Flare report period with application_version_id %s not found"

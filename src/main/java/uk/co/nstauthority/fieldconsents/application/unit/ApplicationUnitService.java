@@ -48,6 +48,22 @@ public class ApplicationUnitService implements ApplicationListener<ConsentLength
     return getOrCreateApplicationUnit(applicationVersion).getVentCategoryUnit();
   }
 
+  public FlareVentUnit getFlareGasDensityUnit(ApplicationVersion applicationVersion) {
+    return getOrCreateApplicationUnit(applicationVersion).getFlareGasDensityUnit();
+  }
+
+  public FlareVentUnit getFlareGasContentUnit(ApplicationVersion applicationVersion) {
+    return getOrCreateApplicationUnit(applicationVersion).getFlareGasContentUnit();
+  }
+
+  public FlareVentUnit getVentGasDensityUnit(ApplicationVersion applicationVersion) {
+    return getOrCreateApplicationUnit(applicationVersion).getVentGasDensityUnit();
+  }
+
+  public FlareVentUnit getVentGasContentUnit(ApplicationVersion applicationVersion) {
+    return getOrCreateApplicationUnit(applicationVersion).getVentGasContentUnit();
+  }
+
   public ProductionUnit getProductionOilUnit(ApplicationVersion applicationVersion) {
     return getOrCreateApplicationUnit(applicationVersion).getProductionOilUnit();
   }
@@ -70,12 +86,18 @@ public class ApplicationUnitService implements ApplicationListener<ConsentLength
           oilUnit = ProductionUnit.KSCM_PER_DAY;
           gasUnit = ProductionUnit.KSCM_PER_DAY;
         }
-        applicationUnit = new ApplicationUnit(applicationVersion, null, null, oilUnit, gasUnit);
+        applicationUnit = new ApplicationUnit(applicationVersion, null, null, oilUnit, gasUnit, null, null, null, null);
       }
       case FLARE ->
-          applicationUnit = new ApplicationUnit(applicationVersion, FlareVentUnit.TONNES_PER_MONTH, null, null, null);
+          applicationUnit = new ApplicationUnit(applicationVersion, FlareVentUnit.TONNES_PER_MONTH, null, null, null,
+              FlareVentUnit.KG_PER_CUBIC_METER, FlareVentUnit.MASS_PERCENTAGE,
+              FlareVentUnit.KG_PER_CUBIC_METER, FlareVentUnit.MASS_PERCENTAGE
+          );
       case VENT ->
-          applicationUnit = new ApplicationUnit(applicationVersion, null, FlareVentUnit.TONNES_PER_MONTH, null, null);
+          applicationUnit = new ApplicationUnit(applicationVersion, null, FlareVentUnit.TONNES_PER_MONTH, null, null,
+              FlareVentUnit.KG_PER_CUBIC_METER, FlareVentUnit.MASS_PERCENTAGE,
+              FlareVentUnit.KG_PER_CUBIC_METER, FlareVentUnit.MASS_PERCENTAGE
+          );
       default -> throw new RuntimeException("Incorrect application type: " + applicationType);
     }
 

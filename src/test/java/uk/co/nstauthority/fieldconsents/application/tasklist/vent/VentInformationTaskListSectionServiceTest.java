@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.FLARE_VENT_INFORMATION_DISPLAY_ORDER;
 import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.VENTS_TASK_LIST_ITEM;
+import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.VENT_GAS_PROPERTIES_TASK_LIST_ITEM;
 import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.VENT_INFORMATION_SECTION;
 import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.VENT_REPORT_TASK_LIST_ITEM;
 import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.assertTaskListItem;
@@ -26,6 +27,7 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthD
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
+import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportGasTestUtil;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.annual.VentAnnualController;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.annual.VentAnnualService;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.shortterm.VentShortTermController;
@@ -34,6 +36,9 @@ import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreport.VentReportCont
 import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreport.VentReportPeriodController;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreport.VentReportPeriodService;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreport.VentReportService;
+import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreportgas.VentReportGasData;
+import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreportgas.VentReportGasDataController;
+import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreportgas.VentReportGasDataService;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.vents.VentController;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.vents.VentService;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.vents.VentTestUtil;
@@ -63,6 +68,9 @@ class VentInformationTaskListSectionServiceTest {
   @Mock
   private VentReportService ventReportService;
 
+  @Mock
+  private VentReportGasDataService ventReportGasDataService;
+
   private VentInformationTaskListSectionService ventInformationTaskListSectionService;
 
   private ApplicationVersion applicationVersion;
@@ -81,7 +89,9 @@ class VentInformationTaskListSectionServiceTest {
             ventAnnualService,
             ventShortTermService,
             ventReportPeriodService,
-            ventReportService);
+            ventReportService,
+            ventReportGasDataService
+        );
 
     annualConsentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForAnnual(applicationVersion);
     shortTermConsentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(applicationVersion);
@@ -127,7 +137,7 @@ class VentInformationTaskListSectionServiceTest {
 
     List<TaskListItem> taskListItems = taskListSection.items();
 
-    assertThat(taskListItems).hasSize(3);
+    assertThat(taskListItems).hasSize(4);
 
     assertTaskListItem(
         taskListItems.get(0),
@@ -146,6 +156,14 @@ class VentInformationTaskListSectionServiceTest {
 
     assertTaskListItem(
         taskListItems.get(2),
+        VENT_GAS_PROPERTIES_TASK_LIST_ITEM,
+        TaskListLabel.BLOCKED,
+        ReverseRouter.route(on(VentReportGasDataController.class)
+            .getVentReportGasDataForm(applicationVersion.getApplication().getId()))
+    );
+
+    assertTaskListItem(
+        taskListItems.get(3),
         ConsentLengthType.ANNUAL.getDisplayName(),
         TaskListLabel.NOT_STARTED,
         ReverseRouter.route(on(VentAnnualController.class)
@@ -165,7 +183,7 @@ class VentInformationTaskListSectionServiceTest {
 
     List<TaskListItem> taskListItems = taskListSection.items();
 
-    assertThat(taskListItems).hasSize(3);
+    assertThat(taskListItems).hasSize(4);
 
     assertTaskListItem(
         taskListItems.get(0),
@@ -184,6 +202,14 @@ class VentInformationTaskListSectionServiceTest {
 
     assertTaskListItem(
         taskListItems.get(2),
+        VENT_GAS_PROPERTIES_TASK_LIST_ITEM,
+        TaskListLabel.BLOCKED,
+        ReverseRouter.route(on(VentReportGasDataController.class)
+            .getVentReportGasDataForm(applicationVersion.getApplication().getId()))
+    );
+
+    assertTaskListItem(
+        taskListItems.get(3),
         ConsentLengthType.ANNUAL.getDisplayName(),
         TaskListLabel.NOT_STARTED,
         ReverseRouter.route(on(VentAnnualController.class)
@@ -262,6 +288,52 @@ class VentInformationTaskListSectionServiceTest {
     );
   }
 
+  @Test
+  void getVentReportGasDataTaskListItem_blocked() {
+    when(ventReportPeriodService.ventReportPeriodExists(applicationVersion)).thenReturn(false);
+
+    TaskListItem item = ventInformationTaskListSectionService.getVentReportGasDataTaskListItem(applicationVersion);
+
+    assertTaskListItem(item,
+        VENT_GAS_PROPERTIES_TASK_LIST_ITEM,
+        TaskListLabel.BLOCKED,
+        ReverseRouter.route(on(VentReportGasDataController.class)
+            .getVentReportGasDataForm(applicationVersion.getApplication().getId()))
+    );
+  }
+
+  @Test
+  void getVentReportGasDataTaskListItem_notStarted() {
+    when(ventReportPeriodService.ventReportPeriodExists(applicationVersion)).thenReturn(true);
+    when(ventReportGasDataService.findVentReportGasData(applicationVersion)).thenReturn(Optional.empty());
+
+    TaskListItem item = ventInformationTaskListSectionService.getVentReportGasDataTaskListItem(applicationVersion);
+
+    assertTaskListItem(item,
+        VENT_GAS_PROPERTIES_TASK_LIST_ITEM,
+        TaskListLabel.NOT_STARTED,
+        ReverseRouter.route(on(VentReportGasDataController.class)
+            .getVentReportGasDataForm(applicationVersion.getApplication().getId()))
+    );
+  }
+
+  @Test
+  void getVentReportGasDataTaskListItem_completed() {
+    when(ventReportPeriodService.ventReportPeriodExists(applicationVersion)).thenReturn(true);
+
+    VentReportGasData data = FlareVentReportGasTestUtil.getCompleteAndValidVentReportGasData();
+    when(ventReportGasDataService.findVentReportGasData(applicationVersion)).thenReturn(Optional.of(data));
+
+    TaskListItem item = ventInformationTaskListSectionService.getVentReportGasDataTaskListItem(applicationVersion);
+
+    assertTaskListItem(item,
+        VENT_GAS_PROPERTIES_TASK_LIST_ITEM,
+        TaskListLabel.COMPLETED,
+        ReverseRouter.route(on(VentReportGasDataController.class)
+            .getVentReportGasDataForm(applicationVersion.getApplication().getId()))
+    );
+  }
+  
   @Test
   void getVentConsentTaskListItem_annualNotStarted() {
     when(ventAnnualService.ventAnnualMonthsExist(applicationVersion)).thenReturn(false);

@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.FLARES_TASK_LIST_ITEM;
+import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.FLARE_GAS_PROPERTIES_TASK_LIST_ITEM;
 import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.FLARE_INFORMATION_SECTION;
 import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.FLARE_REPORT_TASK_LIST_ITEM;
 import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.FLARE_VENT_INFORMATION_DISPLAY_ORDER;
@@ -26,12 +27,16 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthD
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
+import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportGasTestUtil;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.annual.FlareAnnualController;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.annual.FlareAnnualService;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportController;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportPeriodController;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportPeriodService;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportService;
+import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereportgas.FlareReportGasData;
+import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereportgas.FlareReportGasDataController;
+import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereportgas.FlareReportGasDataService;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flares.FlareController;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flares.FlareService;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flares.FlareTestUtil;
@@ -63,6 +68,9 @@ class FlareInformationTaskListSectionServiceTest {
   @Mock
   private FlareShortTermService flareShortTermService;
 
+  @Mock
+  private FlareReportGasDataService flareReportGasDataService;
+
   private FlareInformationTaskListSectionService flareInformationTaskListSectionService;
 
   private ApplicationVersion applicationVersion;
@@ -74,8 +82,15 @@ class FlareInformationTaskListSectionServiceTest {
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
-    flareInformationTaskListSectionService = new FlareInformationTaskListSectionService(flareService,
-        flareReportPeriodService, flareReportService, consentLengthService, flareAnnualService, flareShortTermService);
+    flareInformationTaskListSectionService = new FlareInformationTaskListSectionService(
+        flareService,
+        flareReportPeriodService,
+        flareReportService,
+        consentLengthService,
+        flareAnnualService,
+        flareShortTermService,
+        flareReportGasDataService
+    );
     annualConsentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForAnnual(applicationVersion);
     shortTermConsentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(applicationVersion);
   }
@@ -120,7 +135,7 @@ class FlareInformationTaskListSectionServiceTest {
 
     List<TaskListItem> taskListItems = taskListSection.items();
 
-    assertThat(taskListItems).hasSize(3);
+    assertThat(taskListItems).hasSize(4);
 
     assertTaskListItem(
         taskListItems.get(0),
@@ -139,6 +154,14 @@ class FlareInformationTaskListSectionServiceTest {
 
     assertTaskListItem(
         taskListItems.get(2),
+        FLARE_GAS_PROPERTIES_TASK_LIST_ITEM,
+        TaskListLabel.BLOCKED,
+        ReverseRouter.route(on(FlareReportGasDataController.class)
+            .getFlareReportGasDataForm(applicationVersion.getApplication().getId()))
+    );
+
+    assertTaskListItem(
+        taskListItems.get(3),
         ConsentLengthType.ANNUAL.getDisplayName(),
         TaskListLabel.NOT_STARTED,
         ReverseRouter.route(on(FlareAnnualController.class)
@@ -158,7 +181,7 @@ class FlareInformationTaskListSectionServiceTest {
 
     List<TaskListItem> taskListItems = taskListSection.items();
 
-    assertThat(taskListItems).hasSize(3);
+    assertThat(taskListItems).hasSize(4);
 
     assertTaskListItem(
         taskListItems.get(0),
@@ -177,6 +200,14 @@ class FlareInformationTaskListSectionServiceTest {
 
     assertTaskListItem(
         taskListItems.get(2),
+        FLARE_GAS_PROPERTIES_TASK_LIST_ITEM,
+        TaskListLabel.BLOCKED,
+        ReverseRouter.route(on(FlareReportGasDataController.class)
+            .getFlareReportGasDataForm(applicationVersion.getApplication().getId()))
+    );
+
+    assertTaskListItem(
+        taskListItems.get(3),
         ConsentLengthType.ANNUAL.getDisplayName(),
         TaskListLabel.NOT_STARTED,
         ReverseRouter.route(on(FlareAnnualController.class)
@@ -253,6 +284,52 @@ class FlareInformationTaskListSectionServiceTest {
         TaskListLabel.NOT_STARTED,
         ReverseRouter.route(on(FlareReportPeriodController.class)
             .getFlareReportPeriodForm(applicationVersion.getApplication().getId()))
+    );
+  }
+
+  @Test
+  void getFlareReportGasDataTaskListItem_blocked() {
+    when(flareReportPeriodService.flareReportPeriodExists(applicationVersion)).thenReturn(false);
+
+    TaskListItem item = flareInformationTaskListSectionService.getFlareReportGasDataTaskListItem(applicationVersion);
+
+    assertTaskListItem(item,
+        FLARE_GAS_PROPERTIES_TASK_LIST_ITEM,
+        TaskListLabel.BLOCKED,
+        ReverseRouter.route(on(FlareReportGasDataController.class)
+            .getFlareReportGasDataForm(applicationVersion.getApplication().getId()))
+    );
+  }
+
+  @Test
+  void getFlareReportGasDataTaskListItem_notStarted() {
+    when(flareReportPeriodService.flareReportPeriodExists(applicationVersion)).thenReturn(true);
+    when(flareReportGasDataService.findFlareReportGasData(applicationVersion)).thenReturn(Optional.empty());
+
+    TaskListItem item = flareInformationTaskListSectionService.getFlareReportGasDataTaskListItem(applicationVersion);
+
+    assertTaskListItem(item,
+        FLARE_GAS_PROPERTIES_TASK_LIST_ITEM,
+        TaskListLabel.NOT_STARTED,
+        ReverseRouter.route(on(FlareReportGasDataController.class)
+            .getFlareReportGasDataForm(applicationVersion.getApplication().getId()))
+    );
+  }
+
+  @Test
+  void getFlareReportGasDataTaskListItem_completed() {
+    when(flareReportPeriodService.flareReportPeriodExists(applicationVersion)).thenReturn(true);
+
+    FlareReportGasData data = FlareVentReportGasTestUtil.getCompleteAndValidFlareReportGasData();
+    when(flareReportGasDataService.findFlareReportGasData(applicationVersion)).thenReturn(Optional.of(data));
+
+    TaskListItem item = flareInformationTaskListSectionService.getFlareReportGasDataTaskListItem(applicationVersion);
+
+    assertTaskListItem(item,
+        FLARE_GAS_PROPERTIES_TASK_LIST_ITEM,
+        TaskListLabel.COMPLETED,
+        ReverseRouter.route(on(FlareReportGasDataController.class)
+            .getFlareReportGasDataForm(applicationVersion.getApplication().getId()))
     );
   }
 

@@ -36,7 +36,7 @@ public class VentReportPeriodService {
     return findVentReportPeriod(applicationVersion).isPresent();
   }
 
-  VentReportPeriod getVentReportPeriodOrError(ApplicationVersion applicationVersion) {
+  public VentReportPeriod getVentReportPeriodOrError(ApplicationVersion applicationVersion) {
     return findVentReportPeriod(applicationVersion)
         .orElseThrow(() ->
             new EntityNotFoundException("Vent report period with application_version_id %s not found"

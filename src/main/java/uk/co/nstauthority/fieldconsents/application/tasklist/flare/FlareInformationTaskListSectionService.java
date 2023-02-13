@@ -16,6 +16,8 @@ import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportC
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportPeriodController;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportPeriodService;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportService;
+import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereportgas.FlareReportGasDataController;
+import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereportgas.FlareReportGasDataService;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flares.FlareController;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flares.FlareService;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.shortterm.FlareShortTermController;
@@ -41,19 +43,23 @@ public class FlareInformationTaskListSectionService implements TaskListSectionSe
 
   private final FlareShortTermService flareShortTermService;
 
+  private final FlareReportGasDataService flareReportGasDataService;
+
   @Autowired
   FlareInformationTaskListSectionService(FlareService flareService,
                                          FlareReportPeriodService flareReportPeriodService,
                                          FlareReportService flareReportService,
                                          ConsentLengthService consentLengthService,
                                          FlareAnnualService flareAnnualService,
-                                         FlareShortTermService flareShortTermService) {
+                                         FlareShortTermService flareShortTermService,
+                                         FlareReportGasDataService flareReportGasDataService) {
     this.flareService = flareService;
     this.flareReportPeriodService = flareReportPeriodService;
     this.flareReportService = flareReportService;
     this.consentLengthService = consentLengthService;
     this.flareAnnualService = flareAnnualService;
     this.flareShortTermService = flareShortTermService;
+    this.flareReportGasDataService = flareReportGasDataService;
   }
 
   @Override
@@ -75,6 +81,7 @@ public class FlareInformationTaskListSectionService implements TaskListSectionSe
     var items = List.of(
         getFlaresTaskListItem(applicationVersion),
         getFlareReportTaskListItem(applicationVersion),
+        getFlareReportGasDataTaskListItem(applicationVersion),
         getFlareConsentTaskListItem(applicationVersion, consentLengthDetails)
     );
 
@@ -112,6 +119,17 @@ public class FlareInformationTaskListSectionService implements TaskListSectionSe
     );
 
     return new TaskListItem("Flare report", flareReportLabel, flareReportUrl);
+  }
+
+  TaskListItem getFlareReportGasDataTaskListItem(ApplicationVersion applicationVersion) {
+    var applicationId = applicationVersion.getApplication().getId();
+
+    TaskListLabel flareReportGasDataLabel = flareReportPeriodService.flareReportPeriodExists(applicationVersion)
+        ? TaskListLabel.notStartedOrCompleteByOptional(flareReportGasDataService.findFlareReportGasData(applicationVersion))
+        : TaskListLabel.BLOCKED;
+
+    return new TaskListItem("Flare report gas properties", flareReportGasDataLabel,
+        ReverseRouter.route(on(FlareReportGasDataController.class).getFlareReportGasDataForm(applicationId)));
   }
 
   TaskListItem getFlareConsentTaskListItem(ApplicationVersion applicationVersion,

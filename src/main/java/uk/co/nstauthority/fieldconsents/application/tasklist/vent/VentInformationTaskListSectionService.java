@@ -17,6 +17,8 @@ import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreport.VentReportCont
 import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreport.VentReportPeriodController;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreport.VentReportPeriodService;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreport.VentReportService;
+import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreportgas.VentReportGasDataController;
+import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreportgas.VentReportGasDataService;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.vents.VentController;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.vents.VentService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -40,18 +42,22 @@ public class VentInformationTaskListSectionService implements TaskListSectionSer
 
   private final VentReportService ventReportService;
 
+  private final VentReportGasDataService ventReportGasDataService;
+
   public VentInformationTaskListSectionService(VentService ventService,
                                                ConsentLengthService consentLengthService,
                                                VentAnnualService ventAnnualService,
                                                VentShortTermService ventShortTermService,
                                                VentReportPeriodService ventReportPeriodService,
-                                               VentReportService ventReportService) {
+                                               VentReportService ventReportService,
+                                               VentReportGasDataService ventReportGasDataService) {
     this.ventService = ventService;
     this.consentLengthService = consentLengthService;
     this.ventAnnualService = ventAnnualService;
     this.ventShortTermService = ventShortTermService;
     this.ventReportPeriodService = ventReportPeriodService;
     this.ventReportService = ventReportService;
+    this.ventReportGasDataService = ventReportGasDataService;
   }
 
   @Override
@@ -73,6 +79,7 @@ public class VentInformationTaskListSectionService implements TaskListSectionSer
     var items = List.of(
         getVentsTaskListItem(applicationVersion),
         getVentReportTaskListItem(applicationVersion),
+        getVentReportGasDataTaskListItem(applicationVersion),
         getVentConsentTaskListItem(applicationVersion, consentLengthDetails)
     );
 
@@ -110,6 +117,17 @@ public class VentInformationTaskListSectionService implements TaskListSectionSer
     );
 
     return new TaskListItem("Vent report", ventReportLabel, ventReportUrl);
+  }
+
+  TaskListItem getVentReportGasDataTaskListItem(ApplicationVersion applicationVersion) {
+    var applicationId = applicationVersion.getApplication().getId();
+
+    TaskListLabel ventReportGasDataLabel = ventReportPeriodService.ventReportPeriodExists(applicationVersion)
+        ? TaskListLabel.notStartedOrCompleteByOptional(ventReportGasDataService.findVentReportGasData(applicationVersion))
+        : TaskListLabel.BLOCKED;
+
+    return new TaskListItem("Vent report gas properties", ventReportGasDataLabel,
+        ReverseRouter.route(on(VentReportGasDataController.class).getVentReportGasDataForm(applicationId)));
   }
 
   TaskListItem getVentConsentTaskListItem(ApplicationVersion applicationVersion,
