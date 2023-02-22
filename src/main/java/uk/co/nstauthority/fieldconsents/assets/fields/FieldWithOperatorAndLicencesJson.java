@@ -10,14 +10,16 @@ import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 
 public class FieldWithOperatorAndLicencesJson extends FieldJson implements AssetWithOperatorJson, AssetWithLicencesJson {
 
-  OrganisationUnitJson operatorJson;
+  private final OrganisationUnitJson operatorJson;
 
-  List<LicenceJson> licenses;
+  private final List<LicenceJson> licenses;
 
   public static FieldWithOperatorAndLicencesJson from(Field field) {
     return new FieldWithOperatorAndLicencesJson(
         field.getFieldId(),
         field.getFieldName(),
+        FieldStatusJson.from(field),
+        FieldGeographicAreaJson.from(field),
         field.getFieldOperator() != null
             ? OrganisationUnitJson.from(field.getFieldOperator())
             : null,
@@ -27,9 +29,13 @@ public class FieldWithOperatorAndLicencesJson extends FieldJson implements Asset
     );
   }
 
-  public FieldWithOperatorAndLicencesJson(Integer fieldId, String fieldName, OrganisationUnitJson operatorJson,
+  public FieldWithOperatorAndLicencesJson(Integer fieldId,
+                                          String fieldName,
+                                          FieldStatusJson statusJson,
+                                          FieldGeographicAreaJson geographicAreaJson,
+                                          OrganisationUnitJson operatorJson,
                                           List<LicenceJson> licenses) {
-    super(fieldId, fieldName);
+    super(fieldId, fieldName, statusJson, geographicAreaJson);
     this.operatorJson = operatorJson;
     this.licenses = licenses;
   }

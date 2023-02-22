@@ -27,14 +27,17 @@ public class FieldController {
 
     FieldWithOperatorAndLicencesJson fieldJson
         = fieldService.getFieldWithOperatorAndLicences(fieldId,
-        "Check operator and associated licences exist when starting a field application");
+        "Get field details for management screen");
 
     return new ModelAndView("fcs/assets/fields")
-        .addObject("fieldId", fieldId)
-        .addObject("fieldName", fieldJson.getName())
-        .addObject("noOperatorExists", !fieldJson.operatorExists())
-        .addObject("noLicencesExist", !fieldJson.licencesExist())
+        .addObject("fieldJson", fieldJson)
+        // the below default interface methods aren't accessible within the Freemarker,
+        // so we have to pass in individually here
+        .addObject("operatorExists", fieldJson.operatorExists())
+        .addObject("licencesExist", fieldJson.licencesExist())
         .addObject("startApplicationEnabled", fieldJson.operatorExists() && fieldJson.licencesExist())
+        .addObject("operatorName", fieldJson.getOperatorName())
+        .addObject("licences", fieldJson.getLicencesAsString())
         .addObject("startApplicationUrl",
             ReverseRouter.route(on(StartApplicationFromFieldController.class).getStartApplicationForm(fieldId))
         );

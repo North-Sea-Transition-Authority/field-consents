@@ -15,39 +15,48 @@ public class TerminalTestUtil {
   public static final String TERMINAL_NAME_2 = "T2";
   public static final String TERMINAL_NAME_3 = "T3";
 
-  public static Terminal terminal1 = Terminal.newBuilder().terminalId(TERMINAL_ID_1).terminalName(TERMINAL_NAME_1).build();
+  public static Terminal terminal1 = Terminal.newBuilder().terminalId(TERMINAL_ID_1).terminalName(TERMINAL_NAME_1)
+      .terminalActive(Boolean.TRUE)
+      .build();
   public static Terminal terminal1WithOperator = Terminal.newBuilder().terminalId(TERMINAL_ID_1).terminalName(TERMINAL_NAME_1)
+      .terminalActive(Boolean.TRUE)
       .terminalOperator(OrganisationUnitTestUtil.orgUnit1).build();
 
   public static TerminalJson terminal1Json = new TerminalJson(
       terminal1.getTerminalId(),
-      terminal1.getTerminalName()
-  );
+      terminal1.getTerminalName(),
+      TerminalStatus.ACTIVE);
 
   public static TerminalWithOperatorJson terminal1JsonWithOperator = new TerminalWithOperatorJson(
       terminal1WithOperator.getTerminalId(),
       terminal1WithOperator.getTerminalName(),
+      TerminalStatus.ACTIVE,
       OrganisationUnitJson.from(terminal1WithOperator.getTerminalOperator())
   );
 
   public static TerminalWithOperatorJson terminal1JsonWithNullOperator = new TerminalWithOperatorJson(
       terminal1.getTerminalId(),
       terminal1.getTerminalName(),
+      TerminalStatus.ACTIVE,
       null
   );
 
-  public static Terminal terminal2 = Terminal.newBuilder().terminalId(TERMINAL_ID_2).terminalName(TERMINAL_NAME_2).build();
+  public static Terminal terminal2 = Terminal.newBuilder().terminalId(TERMINAL_ID_2).terminalName(TERMINAL_NAME_2)
+      .terminalActive(Boolean.FALSE)
+      .build();
 
   public static TerminalJson terminal2Json = new TerminalJson(
       terminal2.getTerminalId(),
-      terminal2.getTerminalName()
-  );
+      terminal2.getTerminalName(),
+      TerminalStatus.INACTIVE);
 
-  public static Terminal terminal3 = Terminal.newBuilder().terminalId(TERMINAL_ID_3).terminalName(TERMINAL_NAME_3).build();
+  public static Terminal terminal3 = Terminal.newBuilder().terminalId(TERMINAL_ID_3).terminalName(TERMINAL_NAME_3)
+      .terminalActive(Boolean.TRUE)
+      .build();
 
   public static TerminalJson terminal3Json = new TerminalJson(
       terminal3.getTerminalId(),
-      terminal3.getTerminalName()
-  );
+      terminal3.getTerminalName(),
+      TerminalStatus.ACTIVE);
   public static List<Terminal> terminalList = List.of(terminal1, terminal2, terminal3);
 }

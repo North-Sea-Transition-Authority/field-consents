@@ -8,6 +8,8 @@ public interface AssetJson extends SearchSelectable {
 
   String getName();
 
+  String getStatusDisplayName();
+
   AssetType getAssetType();
 
   @Override

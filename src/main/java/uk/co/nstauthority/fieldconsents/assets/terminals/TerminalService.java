@@ -16,14 +16,24 @@ public class TerminalService {
   private final TerminalApi terminalApi;
 
   static final TerminalsProjectionRoot terminalsProjectionRoot =
-      new TerminalsProjectionRoot().terminalName().terminalId();
+      new TerminalsProjectionRoot()
+          .terminalId()
+          .terminalName()
+          .terminalActive();
 
   static final TerminalProjectionRoot terminalProjectionRoot =
-      new TerminalProjectionRoot().terminalName().terminalId();
+      new TerminalProjectionRoot()
+          .terminalId()
+          .terminalName()
+          .terminalActive();
 
   static final TerminalProjectionRoot terminalWithOperatorProjectionRoot =
-      new TerminalProjectionRoot().terminalName().terminalId().terminalOperator().organisationUnitId().name().root();
-  
+      new TerminalProjectionRoot()
+          .terminalId()
+          .terminalName()
+          .terminalActive()
+          .terminalOperator().organisationUnitId().name().root();
+
   @Autowired
   public TerminalService(TerminalApi terminalApi) {
     this.terminalApi = terminalApi;

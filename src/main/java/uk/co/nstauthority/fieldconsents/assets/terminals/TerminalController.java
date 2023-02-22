@@ -26,12 +26,14 @@ public class TerminalController {
   public ModelAndView manageTerminal(@PathVariable Integer terminalId) {
     TerminalWithOperatorJson terminalJson
         = terminalService.getTerminalWithOperator(terminalId,
-        "Check operator exists when starting a terminal application");
+        "Get terminal details for management screen");
 
     return new ModelAndView("fcs/assets/terminals")
-        .addObject("terminalId", terminalId)
-        .addObject("terminalName", terminalJson.getName())
-        .addObject("noOperatorExists", !terminalJson.operatorExists())
+        .addObject("terminalJson", terminalJson)
+        // the below default interface methods aren't accessible within the Freemarker,
+        // so we have to pass in individually here
+        .addObject("operatorExists", terminalJson.operatorExists())
+        .addObject("operatorName", terminalJson.getOperatorName())
         .addObject("startApplicationUrl",
             ReverseRouter.route(on(StartApplicationFromTerminalController.class).getStartApplicationForm(terminalId))
         );

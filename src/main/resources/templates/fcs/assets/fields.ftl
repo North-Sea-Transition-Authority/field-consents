@@ -1,42 +1,46 @@
 <#include '../layout/layout.ftl'>
 
 <#-- @ftlvariable name="customerBranding" type="uk.co.nstauthority.fieldconsents.branding.CustomerConfigurationProperties" -->
+<#-- @ftlvariable name="fieldJson" type="uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorAndLicencesJson" -->
 
-<#assign pageTitle = fieldName/>
+<#assign pageTitle = fieldJson.getName()/>
 
-<#if noOperatorExists || noLicencesExist>
+<#if !operatorExists || !licencesExist>
   <#assign warningBanner>
-    <@fdsNotificationBanner.notificationBannerInfo bannerTitleText="Missing information">
-      <@fdsNotificationBanner.notificationBannerContent headingText="Applications cannot be started">
-        This field has missing information
-        <ul>
-          <#if noOperatorExists>
-            <li>Field operator</li>
-          </#if>
-          <#if noLicencesExist>
-            <li>Associated licences</li>
-          </#if>
-        </ul>
-        Contact the ${customerBranding.mnemonic()} if you think the field should have this information.
-      </@fdsNotificationBanner.notificationBannerContent>
-    </@fdsNotificationBanner.notificationBannerInfo>
+    <@grid.gridRow>
+      <@grid.twoThirdsColumn>
+        <@fdsNotificationBanner.notificationBannerInfo bannerTitleText="Missing information">
+          <@fdsNotificationBanner.notificationBannerContent headingText="Applications cannot be started">
+            This field has missing information
+            <ul>
+              <#if !operatorExists>
+                <li>Field operator</li>
+              </#if>
+              <#if !licencesExist>
+                <li>Associated licences</li>
+              </#if>
+            </ul>
+            Contact the ${customerBranding.mnemonic()} if you think the field should have this information.
+          </@fdsNotificationBanner.notificationBannerContent>
+        </@fdsNotificationBanner.notificationBannerInfo>
+      </@grid.twoThirdsColumn>
+    </@grid.gridRow>
   </#assign>
 </#if>
 
 <@defaultPage
   htmlTitle=pageTitle
   pageHeading=pageTitle
-  pageSize=PageSize.TWO_THIRDS_COLUMN
+  pageSize=PageSize.FULL_WIDTH
   notificationBannerContent=warningBanner
 >
+  <@fdsDataItems.dataItem>
+    <@fdsDataItems.dataValues key="Operator" value=operatorName/>
+    <@fdsDataItems.dataValues key="Status" value=fieldJson.getStatusDisplayName()/>
+    <@fdsDataItems.dataValues key="Geographic area" value=fieldJson.getGeographicAreaDisplayName()/>
+    <@fdsDataItems.dataValues key="Licences" value=licences/>
+  </@fdsDataItems.dataItem>
   <#if startApplicationEnabled>
-    <@fdsStartPage.startPage
-      startActionText="Start application"
-      startActionUrl=springUrl(startApplicationUrl)
-      startActionButton=false>
-      <p class="govuk-body">
-        This page will allow you to work with the field in question.
-      </p>
-    </@fdsStartPage.startPage>
+    <@fdsAction.link start=true linkText="Start application" linkUrl=springUrl(startApplicationUrl)/>
   </#if>
 </@defaultPage>

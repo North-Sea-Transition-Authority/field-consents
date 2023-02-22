@@ -15,6 +15,8 @@ import static uk.co.nstauthority.fieldconsents.application.assets.ApplicationAss
 import static uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil.fieldAsset2Licences;
 import static uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil.fieldAsset3;
 import static uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil.fieldAsset3Licences;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_1_GEOGRAPHIC_AREA;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_1_STATUS;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_ID_1;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_NAME_1;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithNullOperatorAndLicences;
@@ -69,7 +71,8 @@ class ApplicationAssetLicenceServiceTest {
   @Test
   void createAssetLicences_nullLicences() {
     FieldWithOperatorAndLicencesJson fieldJson =
-        new FieldWithOperatorAndLicencesJson(FIELD_ID_1, FIELD_NAME_1, OrganisationUnitTestUtil.orgUnit1Json, null);
+        new FieldWithOperatorAndLicencesJson(FIELD_ID_1, FIELD_NAME_1, FIELD_1_STATUS, FIELD_1_GEOGRAPHIC_AREA,
+            OrganisationUnitTestUtil.orgUnit1Json, null);
 
     assertThatThrownBy(() ->
         applicationAssetLicenceService.createAssetLicences(applicationAsset, fieldJson))

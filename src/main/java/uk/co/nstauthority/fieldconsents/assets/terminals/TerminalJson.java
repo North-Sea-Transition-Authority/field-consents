@@ -12,20 +12,23 @@ public class TerminalJson implements AssetJson {
 
   private final String terminalName;
 
+  private final TerminalStatus status;
+
   private static final Logger LOGGER = LoggerFactory.getLogger(TerminalJson.class);
 
   public static TerminalJson from(Terminal terminal) {
-    return new TerminalJson(terminal.getTerminalId(), terminal.getTerminalName());
+    return new TerminalJson(terminal.getTerminalId(), terminal.getTerminalName(), TerminalStatus.from(terminal));
   }
 
   public static TerminalJson fromCachedInformation(Integer terminalId, String terminalName) {
     LOGGER.warn("Had to fallback to terminal cache info for: id {}, name {}", terminalId, terminalName);
-    return new TerminalJson(terminalId, terminalName);
+    return new TerminalJson(terminalId, terminalName, null);
   }
 
-  public TerminalJson(Integer terminalId, String terminalName) {
+  public TerminalJson(Integer terminalId, String terminalName, TerminalStatus status) {
     this.terminalId = terminalId;
     this.terminalName = terminalName;
+    this.status = status;
   }
 
   @Override
@@ -36,6 +39,11 @@ public class TerminalJson implements AssetJson {
   @Override
   public String getName() {
     return terminalName;
+  }
+
+  @Override
+  public String getStatusDisplayName() {
+    return status != null ? status.getDisplayName() : null;
   }
 
   @Override

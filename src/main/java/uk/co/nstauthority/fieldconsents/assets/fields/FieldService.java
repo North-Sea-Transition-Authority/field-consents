@@ -24,21 +24,34 @@ public class FieldService {
       List.of(FieldStatus.STATUS500, FieldStatus.STATUS600, FieldStatus.STATUS700,
           FieldStatus.STATUS799, FieldStatus.STATUS800, FieldStatus.STATUS899);
 
-  static final FieldsProjectionRoot fieldsProjectionRoot = new FieldsProjectionRoot().fieldName().fieldId();
+  static final FieldsProjectionRoot fieldsProjectionRoot =
+      new FieldsProjectionRoot()
+          .fieldId()
+          .fieldName()
+          .status().root()
+          .statusDisplayName()
+          .geographicArea().root()
+          .geographicAreaDisplayName();
 
-  static final FieldProjectionRoot fieldProjectionRoot = new FieldProjectionRoot().fieldName().fieldId();
+  static final FieldProjectionRoot fieldProjectionRoot =
+      new FieldProjectionRoot()
+          .fieldId()
+          .fieldName()
+          .status().root()
+          .statusDisplayName()
+          .geographicArea().root()
+          .geographicAreaDisplayName();
 
   static final FieldsProjectionRoot fieldsWithOperatorsProjectionRoot =
-      new FieldsProjectionRoot().fieldName().fieldId().fieldOperator().organisationUnitId().name().root();
+      fieldsProjectionRoot
+          .fieldOperator().organisationUnitId().name().root();
 
   static final FieldProjectionRoot fieldWithOperatorProjectionRoot =
-      new FieldProjectionRoot().fieldName().fieldId().fieldOperator().organisationUnitId().name().root();
+      fieldProjectionRoot
+          .fieldOperator().organisationUnitId().name().root();
 
   static final FieldProjectionRoot fieldWithOperatorLicencesProjectionRoot =
-      new FieldProjectionRoot()
-          .fieldName()
-          .fieldId()
-          .fieldOperator().organisationUnitId().name().root()
+      fieldWithOperatorProjectionRoot
           .licences().id().licenceRef().root();
 
   @Autowired

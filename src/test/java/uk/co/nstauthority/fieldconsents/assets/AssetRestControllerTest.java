@@ -13,15 +13,18 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
+import uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalJson;
+import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalStatus;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @WithMockUser
 @ContextConfiguration(classes = AssetRestController.class)
 public class AssetRestControllerTest extends AbstractControllerTest {
 
-  AssetJson brentAssetJson = new FieldJson(1, "BRENT");
-  AssetJson braeAssetJson = new TerminalJson(1, "BRAE");
+  AssetJson brentAssetJson = new FieldJson(1, "BRENT",
+      FieldTestUtil.FIELD_1_STATUS, FieldTestUtil.FIELD_1_GEOGRAPHIC_AREA);
+  AssetJson braeAssetJson = new TerminalJson(1, "BRAE", TerminalStatus.ACTIVE);
 
   @MockBean
   AssetService assetService;

@@ -42,11 +42,7 @@ public class FieldControllerTest extends AbstractControllerTest {
         .andExpect(view().name("fcs/assets/fields"))
         .andReturn().getModelAndView();
 
-    checkModelAsserts(modelAndView,
-        field1JsonWithOperatorAndLicences.getId(),
-        field1JsonWithOperatorAndLicences.getName(),
-        field1JsonWithOperatorAndLicences.operatorExists(),
-        field1JsonWithOperatorAndLicences.licencesExist());
+    checkModelAsserts(modelAndView, field1JsonWithOperatorAndLicences);
   }
 
   @Test
@@ -62,11 +58,7 @@ public class FieldControllerTest extends AbstractControllerTest {
             .andExpect(view().name("fcs/assets/fields"))
             .andReturn().getModelAndView();
 
-    checkModelAsserts(modelAndView,
-        field1JsonWithNoOperatorButLicences.getId(),
-        field1JsonWithNoOperatorButLicences.getName(),
-        field1JsonWithNoOperatorButLicences.operatorExists(),
-        field1JsonWithNoOperatorButLicences.licencesExist());
+    checkModelAsserts(modelAndView, field1JsonWithNoOperatorButLicences);
   }
 
 
@@ -83,11 +75,7 @@ public class FieldControllerTest extends AbstractControllerTest {
             .andExpect(view().name("fcs/assets/fields"))
             .andReturn().getModelAndView();
 
-    checkModelAsserts(modelAndView,
-        field1JsonWithOperatorButEmptyLicences.getId(),
-        field1JsonWithOperatorButEmptyLicences.getName(),
-        field1JsonWithOperatorButEmptyLicences.operatorExists(),
-        field1JsonWithOperatorButEmptyLicences.licencesExist());
+    checkModelAsserts(modelAndView, field1JsonWithOperatorButEmptyLicences);
   }
 
 
@@ -104,27 +92,21 @@ public class FieldControllerTest extends AbstractControllerTest {
             .andExpect(view().name("fcs/assets/fields"))
             .andReturn().getModelAndView();
 
-    checkModelAsserts(modelAndView,
-        field1JsonWithNullOperatorAndLicences.getId(),
-        field1JsonWithNullOperatorAndLicences.getName(),
-        field1JsonWithNullOperatorAndLicences.operatorExists(),
-        field1JsonWithNullOperatorAndLicences.licencesExist());
+    checkModelAsserts(modelAndView, field1JsonWithNullOperatorAndLicences);
   }
 
   private void checkModelAsserts(ModelAndView modelAndView,
-                                 Integer fieldId,
-                                 String fieldName,
-                                 boolean operatorExists,
-                                 boolean licencesExist) {
+                                 FieldWithOperatorAndLicencesJson fieldJson) {
     assertThat(modelAndView).isNotNull();
     var model = modelAndView.getModel();
     assertThat(model)
-        .containsEntry("fieldId", fieldId)
-        .containsEntry("fieldName", fieldName)
-        .containsEntry("noOperatorExists", !operatorExists)
-        .containsEntry("noLicencesExist", !licencesExist)
-        .containsEntry("startApplicationEnabled", operatorExists && licencesExist)
+        .containsEntry("fieldJson", fieldJson)
+        .containsEntry("operatorExists", fieldJson.operatorExists())
+        .containsEntry("licencesExist", fieldJson.licencesExist())
+        .containsEntry("startApplicationEnabled", fieldJson.operatorExists() && fieldJson.licencesExist())
+        .containsEntry("operatorName", fieldJson.getOperatorName())
+        .containsEntry("licences", fieldJson.getLicencesAsString())
         .containsEntry("startApplicationUrl", ReverseRouter.route(on(StartApplicationFromFieldController.class)
-            .getStartApplicationForm(fieldId)));
+            .getStartApplicationForm(fieldJson.getId())));
   }
 }

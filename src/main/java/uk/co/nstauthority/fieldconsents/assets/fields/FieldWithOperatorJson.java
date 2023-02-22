@@ -6,18 +6,24 @@ import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 
 public class FieldWithOperatorJson extends FieldJson implements AssetWithOperatorJson {
 
-  OrganisationUnitJson operatorJson;
+  private final OrganisationUnitJson operatorJson;
 
   public static FieldWithOperatorJson from(Field field) {
     return new FieldWithOperatorJson(
         field.getFieldId(),
         field.getFieldName(),
+        FieldStatusJson.from(field),
+        FieldGeographicAreaJson.from(field),
         field.getFieldOperator() != null ? OrganisationUnitJson.from(field.getFieldOperator()) : null
     );
   }
 
-  public FieldWithOperatorJson(Integer fieldId, String fieldName, OrganisationUnitJson operatorJson) {
-    super(fieldId, fieldName);
+  public FieldWithOperatorJson(Integer fieldId,
+                               String fieldName,
+                               FieldStatusJson statusJson,
+                               FieldGeographicAreaJson geographicAreaJson,
+                               OrganisationUnitJson operatorJson) {
+    super(fieldId, fieldName, statusJson, geographicAreaJson);
     this.operatorJson = operatorJson;
   }
 

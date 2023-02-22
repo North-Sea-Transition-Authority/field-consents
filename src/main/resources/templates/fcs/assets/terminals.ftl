@@ -1,10 +1,11 @@
 <#include '../layout/layout.ftl'>
 
 <#-- @ftlvariable name="customerBranding" type="uk.co.nstauthority.fieldconsents.branding.CustomerConfigurationProperties" -->
+<#-- @ftlvariable name="terminalJson" type="uk.co.nstauthority.fieldconsents.assets.terminals.TerminalWithOperatorJson" -->
 
-<#assign pageTitle = terminalName/>
+<#assign pageTitle = terminalJson.getName()/>
 
-<#if noOperatorExists>
+<#if !operatorExists>
   <#assign warningBanner>
     <@fdsNotificationBanner.notificationBannerInfo bannerTitleText="Missing information">
       <@fdsNotificationBanner.notificationBannerContent headingText="Applications cannot be started">
@@ -24,14 +25,11 @@
   pageSize=PageSize.TWO_THIRDS_COLUMN
   notificationBannerContent=warningBanner
 >
-  <#if !noOperatorExists>
-    <@fdsStartPage.startPage
-      startActionText="Start application"
-      startActionUrl=springUrl(startApplicationUrl)
-      startActionButton=false>
-      <p class="govuk-body">
-        This page will allow you to work with the facility in question.
-      </p>
-    </@fdsStartPage.startPage>
+  <@fdsDataItems.dataItem>
+    <@fdsDataItems.dataValues key="Operator" value=operatorName/>
+    <@fdsDataItems.dataValues key="Status" value=terminalJson.getStatusDisplayName()/>
+  </@fdsDataItems.dataItem>
+  <#if operatorExists>
+    <@fdsAction.link start=true linkText="Start application" linkUrl=springUrl(startApplicationUrl)/>
   </#if>
 </@defaultPage>

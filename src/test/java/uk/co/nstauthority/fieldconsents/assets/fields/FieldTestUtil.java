@@ -3,6 +3,8 @@ package uk.co.nstauthority.fieldconsents.assets.fields;
 import java.util.Collections;
 import java.util.List;
 import uk.co.fivium.energyportalapi.generated.types.Field;
+import uk.co.fivium.energyportalapi.generated.types.FieldGeographicArea;
+import uk.co.fivium.energyportalapi.generated.types.FieldStatus;
 import uk.co.nstauthority.fieldconsents.licences.LicenceTestUtil;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil;
@@ -17,33 +19,71 @@ public class FieldTestUtil {
   public static final String FIELD_NAME_2 = "F2";
   public static final String FIELD_NAME_3 = "F3";
 
-  public static Field field1 = Field.newBuilder().fieldId(FIELD_ID_1).fieldName(FIELD_NAME_1).build();
+  public static final FieldStatusJson FIELD_1_STATUS =
+      new FieldStatusJson(FieldStatus.STATUS500, "500 - Appraisal - FDP submitted review");
+  public static final FieldStatusJson FIELD_2_STATUS =
+      new FieldStatusJson(FieldStatus.STATUS600, "600 - Construction - FDP approved");
+  public static final FieldStatusJson FIELD_3_STATUS =
+      new FieldStatusJson(FieldStatus.STATUS700, "700 - Producing");
+
+  public static final FieldGeographicAreaJson FIELD_1_GEOGRAPHIC_AREA =
+      new FieldGeographicAreaJson(FieldGeographicArea.CNS, "Central North Sea");
+  public static final FieldGeographicAreaJson FIELD_2_GEOGRAPHIC_AREA =
+      new FieldGeographicAreaJson(FieldGeographicArea.SNS, "Southern North Sea");
+  public static final FieldGeographicAreaJson FIELD_3_GEOGRAPHIC_AREA =
+      new FieldGeographicAreaJson(FieldGeographicArea.NNS, "Northern North Sea");
+
+  public static Field field1 = Field.newBuilder().fieldId(FIELD_ID_1).fieldName(FIELD_NAME_1)
+      .status(FIELD_1_STATUS.status())
+      .statusDisplayName(FIELD_1_STATUS.statusDisplayName())
+      .geographicArea(FIELD_1_GEOGRAPHIC_AREA.geographicArea())
+      .geographicAreaDisplayName(FIELD_1_GEOGRAPHIC_AREA.geographicAreaDisplayName())
+      .build();
   public static Field field1WithOperator = Field.newBuilder().fieldId(FIELD_ID_1).fieldName(FIELD_NAME_1)
+      .status(FIELD_1_STATUS.status())
+      .statusDisplayName(FIELD_1_STATUS.statusDisplayName())
+      .geographicArea(FIELD_1_GEOGRAPHIC_AREA.geographicArea())
+      .geographicAreaDisplayName(FIELD_1_GEOGRAPHIC_AREA.geographicAreaDisplayName())
       .fieldOperator(OrganisationUnitTestUtil.orgUnit1).build();
 
   public static Field field1WithOperatorAndLicences = Field.newBuilder().fieldId(FIELD_ID_1).fieldName(FIELD_NAME_1)
+      .status(FIELD_1_STATUS.status())
+      .statusDisplayName(FIELD_1_STATUS.statusDisplayName())
+      .geographicArea(FIELD_1_GEOGRAPHIC_AREA.geographicArea())
+      .geographicAreaDisplayName(FIELD_1_GEOGRAPHIC_AREA.geographicAreaDisplayName())
       .fieldOperator(OrganisationUnitTestUtil.orgUnit1)
       .licences(LicenceTestUtil.licences3)
       .build();
 
-    public static Field field1WithOperatorButEmptyLicences = Field.newBuilder().fieldId(FIELD_ID_1).fieldName(FIELD_NAME_1)
+  public static Field field1WithOperatorButEmptyLicences = Field.newBuilder().fieldId(FIELD_ID_1).fieldName(FIELD_NAME_1)
+      .status(FIELD_1_STATUS.status())
+      .statusDisplayName(FIELD_1_STATUS.statusDisplayName())
+      .geographicArea(FIELD_1_GEOGRAPHIC_AREA.geographicArea())
+      .geographicAreaDisplayName(FIELD_1_GEOGRAPHIC_AREA.geographicAreaDisplayName())
       .fieldOperator(OrganisationUnitTestUtil.orgUnit1)
       .licences(Collections.emptyList())
       .build();
 
   public static Field field1WithNoOperatorButLicences = Field.newBuilder().fieldId(FIELD_ID_1).fieldName(FIELD_NAME_1)
+      .status(FIELD_1_STATUS.status())
+      .statusDisplayName(FIELD_1_STATUS.statusDisplayName())
+      .geographicArea(FIELD_1_GEOGRAPHIC_AREA.geographicArea())
+      .geographicAreaDisplayName(FIELD_1_GEOGRAPHIC_AREA.geographicAreaDisplayName())
       .fieldOperator(null)
       .licences(LicenceTestUtil.licences3)
       .build();
 
   public static FieldJson field1Json = new FieldJson(
       field1.getFieldId(),
-      field1.getFieldName()
-  );
+      field1.getFieldName(),
+      FIELD_1_STATUS,
+      FIELD_1_GEOGRAPHIC_AREA);
 
   public static FieldWithOperatorJson field1JsonWithOperator = new FieldWithOperatorJson(
       field1WithOperator.getFieldId(),
       field1WithOperator.getFieldName(),
+      FIELD_1_STATUS,
+      FIELD_1_GEOGRAPHIC_AREA,
       OrganisationUnitJson.from(field1WithOperator.getFieldOperator())
   );
 
@@ -54,6 +94,8 @@ public class FieldTestUtil {
       new FieldWithOperatorAndLicencesJson(
           field1.getFieldId(),
           field1.getFieldName(),
+          FIELD_1_STATUS,
+          FIELD_1_GEOGRAPHIC_AREA,
           null,
           null
       );
@@ -64,38 +106,74 @@ public class FieldTestUtil {
   public static FieldWithOperatorAndLicencesJson field1JsonWithNoOperatorButLicences =
       FieldWithOperatorAndLicencesJson.from(field1WithNoOperatorButLicences);
 
-  public static Field field2 = Field.newBuilder().fieldId(FIELD_ID_2).fieldName(FIELD_NAME_2).build();
-  public static Field field2WithOperator = Field.newBuilder().fieldId(FIELD_ID_2).fieldName(FIELD_NAME_2).fieldOperator(OrganisationUnitTestUtil.orgUnit2).build();
+  public static Field field2 = Field.newBuilder().fieldId(FIELD_ID_2).fieldName(FIELD_NAME_2)
+      .status(FIELD_2_STATUS.status())
+      .statusDisplayName(FIELD_2_STATUS.statusDisplayName())
+      .geographicArea(FIELD_2_GEOGRAPHIC_AREA.geographicArea())
+      .geographicAreaDisplayName(FIELD_2_GEOGRAPHIC_AREA.geographicAreaDisplayName())
+      .build();
+
+  public static Field field2WithOperator = Field.newBuilder().fieldId(FIELD_ID_2).fieldName(FIELD_NAME_2)
+      .status(FIELD_2_STATUS.status())
+      .statusDisplayName(FIELD_2_STATUS.statusDisplayName())
+      .geographicArea(FIELD_2_GEOGRAPHIC_AREA.geographicArea())
+      .geographicAreaDisplayName(FIELD_2_GEOGRAPHIC_AREA.geographicAreaDisplayName())
+      .fieldOperator(OrganisationUnitTestUtil.orgUnit2)
+      .build();
 
   public static Field field2WithOperatorAndLicences = Field.newBuilder().fieldId(FIELD_ID_2).fieldName(FIELD_NAME_2)
+      .status(FIELD_2_STATUS.status())
+      .statusDisplayName(FIELD_2_STATUS.statusDisplayName())
+      .geographicArea(FIELD_2_GEOGRAPHIC_AREA.geographicArea())
+      .geographicAreaDisplayName(FIELD_2_GEOGRAPHIC_AREA.geographicAreaDisplayName())
       .fieldOperator(OrganisationUnitTestUtil.orgUnit2)
       .licences(LicenceTestUtil.licences2)
       .build();
 
   public static FieldJson field2Json = new FieldJson(
       field2WithOperator.getFieldId(),
-      field2WithOperator.getFieldName()
+      field2WithOperator.getFieldName(),
+      FIELD_2_STATUS,
+      FIELD_2_GEOGRAPHIC_AREA
   );
 
   public static FieldWithOperatorJson field2JsonWithOperator = new FieldWithOperatorJson(
       field2WithOperator.getFieldId(),
       field2WithOperator.getFieldName(),
+      FIELD_2_STATUS,
+      FIELD_2_GEOGRAPHIC_AREA,
       OrganisationUnitJson.from(field2WithOperator.getFieldOperator())
   );
 
   public static FieldWithOperatorAndLicencesJson field2JsonWithOperatorAndLicences =
       FieldWithOperatorAndLicencesJson.from(field2WithOperatorAndLicences);
 
-  public static Field field3 = Field.newBuilder().fieldId(FIELD_ID_3).fieldName(FIELD_NAME_3).build();
-  public static Field field3WithOperator = Field.newBuilder().fieldId(FIELD_ID_3).fieldName(FIELD_NAME_3).fieldOperator(OrganisationUnitTestUtil.orgUnit3).build();
+  public static Field field3 = Field.newBuilder().fieldId(FIELD_ID_3).fieldName(FIELD_NAME_3)
+      .status(FIELD_3_STATUS.status())
+      .statusDisplayName(FIELD_3_STATUS.statusDisplayName())
+      .geographicArea(FIELD_3_GEOGRAPHIC_AREA.geographicArea())
+      .geographicAreaDisplayName(FIELD_3_GEOGRAPHIC_AREA.geographicAreaDisplayName())
+      .build();
+
+  public static Field field3WithOperator = Field.newBuilder().fieldId(FIELD_ID_3).fieldName(FIELD_NAME_3)
+      .status(FIELD_3_STATUS.status())
+      .statusDisplayName(FIELD_3_STATUS.statusDisplayName())
+      .geographicArea(FIELD_3_GEOGRAPHIC_AREA.geographicArea())
+      .geographicAreaDisplayName(FIELD_3_GEOGRAPHIC_AREA.geographicAreaDisplayName())
+      .fieldOperator(OrganisationUnitTestUtil.orgUnit3)
+      .build();
+
   public static FieldJson field3Json = new FieldJson(
       field3WithOperator.getFieldId(),
-      field3WithOperator.getFieldName()
-  );
+      field3WithOperator.getFieldName(),
+      FIELD_3_STATUS,
+      FIELD_3_GEOGRAPHIC_AREA);
 
   public static FieldWithOperatorJson field3JsonWithOperator = new FieldWithOperatorJson(
       field3WithOperator.getFieldId(),
       field3WithOperator.getFieldName(),
+      FIELD_3_STATUS,
+      FIELD_3_GEOGRAPHIC_AREA,
       OrganisationUnitJson.from(field3WithOperator.getFieldOperator())
   );
 

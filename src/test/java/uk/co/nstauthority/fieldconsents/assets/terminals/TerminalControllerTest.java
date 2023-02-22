@@ -39,11 +39,7 @@ public class TerminalControllerTest extends AbstractControllerTest {
         .andExpect(view().name("fcs/assets/terminals"))
         .andReturn().getModelAndView();
 
-    checkModelAsserts(modelAndView,
-        terminal1JsonWithNullOperator.getId(),
-        terminal1JsonWithNullOperator.getName(),
-        terminal1JsonWithNullOperator.operatorExists()
-    );
+    checkModelAsserts(modelAndView, terminal1JsonWithNullOperator);
   }
 
   @Test
@@ -58,25 +54,19 @@ public class TerminalControllerTest extends AbstractControllerTest {
         .andExpect(view().name("fcs/assets/terminals"))
         .andReturn().getModelAndView();
 
-    checkModelAsserts(modelAndView,
-        terminal1JsonWithOperator.getId(),
-        terminal1JsonWithOperator.getName(),
-        terminal1JsonWithOperator.operatorExists()
-    );
+    checkModelAsserts(modelAndView, terminal1JsonWithOperator);
   }
 
   private void checkModelAsserts(ModelAndView modelAndView,
-                                 Integer terminalId,
-                                 String terminalName,
-                                 boolean operatorExists) {
+                                 TerminalWithOperatorJson terminalJson) {
     assertThat(modelAndView).isNotNull();
     var model = modelAndView.getModel();
     assertThat(model)
-        .containsEntry("terminalId", terminalId)
-        .containsEntry("terminalName", terminalName)
-        .containsEntry("noOperatorExists", !operatorExists)
+        .containsEntry("terminalJson", terminalJson)
+        .containsEntry("operatorExists", terminalJson.operatorExists())
+        .containsEntry("operatorName", terminalJson.getOperatorName())
         .containsEntry("startApplicationUrl", ReverseRouter.route(on(StartApplicationFromTerminalController.class)
-            .getStartApplicationForm(terminalId)));
+            .getStartApplicationForm(terminalJson.getId())));
 
   }
 }
