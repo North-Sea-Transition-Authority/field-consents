@@ -5,6 +5,7 @@ import java.util.EnumSet;
 public enum ApplicationTypeFeature {
 
   SECONDARY_ASSETS(EnumSet.of(ApplicationType.FLARE, ApplicationType.VENT)),
+  ERAP_SUPPORTING_INFORMATION(EnumSet.of(ApplicationType.FLARE, ApplicationType.VENT)),
   GAS_INJECTION(EnumSet.of(ApplicationType.PRODUCTION));
 
   private final EnumSet<ApplicationType> applicationTypes;
