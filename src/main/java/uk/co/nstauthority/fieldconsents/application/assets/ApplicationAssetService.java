@@ -153,4 +153,8 @@ public class ApplicationAssetService {
     );
     return form;
   }
+
+  public Optional<ApplicationAsset> findByApplicationVersionAndFieldId(ApplicationVersion applicationVersion, Integer fieldId) {
+    return applicationAssetRepository.findByApplicationVersionAndFieldId(applicationVersion, fieldId);
+  }
 }

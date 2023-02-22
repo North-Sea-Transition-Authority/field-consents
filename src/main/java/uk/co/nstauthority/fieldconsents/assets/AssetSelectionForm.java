@@ -2,18 +2,22 @@ package uk.co.nstauthority.fieldconsents.assets;
 
 import com.google.common.annotations.VisibleForTesting;
 import javax.validation.constraints.NotBlank;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 
 public class AssetSelectionForm {
 
   @NotBlank
   private String assetKey;
 
+  private ApplicationVersion applicationVersion;
+
   public AssetSelectionForm() {
   }
 
   @VisibleForTesting
-  public AssetSelectionForm(String assetKey) {
+  public AssetSelectionForm(String assetKey, ApplicationVersion applicationVersion) {
     this.assetKey = assetKey;
+    this.applicationVersion = applicationVersion;
   }
 
   public String getAssetKey() {
@@ -22,6 +26,14 @@ public class AssetSelectionForm {
 
   public void setAssetKey(String assetKey) {
     this.assetKey = assetKey;
+  }
+
+  public ApplicationVersion getApplicationVersion() {
+    return applicationVersion;
+  }
+
+  public void setApplicationVersion(ApplicationVersion applicationVersion) {
+    this.applicationVersion = applicationVersion;
   }
 
   @Override

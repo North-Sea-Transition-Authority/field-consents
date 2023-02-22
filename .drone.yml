@@ -116,7 +116,7 @@ steps:
       - docker build -t quay.io/fivium/field-consents:trivy-scan-target .
 
   - name: trivy-scan
-    image: aquasec/trivy:0.37.1
+    image: aquasec/trivy:0.37.3
     volumes:
       - name: docker-sock
         path: /var/run/docker.sock

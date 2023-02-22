@@ -11,6 +11,7 @@ import static uk.co.nstauthority.fieldconsents.application.assets.ApplicationAss
 import static uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil.fieldAsset2;
 import static uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil.fieldAsset3;
 import static uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil.secondaryAssets;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_ID_1;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithNullOperatorAndLicences;
@@ -415,5 +416,23 @@ class ApplicationAssetServiceTest {
     AdditionalAssetsSetupForm form = applicationAssetService.getAdditionalAssetsSetupForm(applicationVersion);
 
     assertThat(form.getOtherAssetsRequired()).isNull();
+  }
+
+  @Test
+  void findByApplicationVersionAndFieldId_whenExists() {
+    when(applicationAssetRepository.findByApplicationVersionAndFieldId(applicationVersion, FIELD_ID_1))
+        .thenReturn(Optional.of(fieldAsset1));
+
+    assertThat(applicationAssetService.findByApplicationVersionAndFieldId(applicationVersion, FIELD_ID_1)).get()
+        .usingRecursiveComparison()
+        .isEqualTo(fieldAsset1);
+  }
+
+  @Test
+  void findByApplicationVersionAndFieldId_whenNotExists() {
+    when(applicationAssetRepository.findByApplicationVersionAndFieldId(applicationVersion, FIELD_ID_1))
+        .thenReturn(Optional.empty());
+
+    assertThat(applicationAssetService.findByApplicationVersionAndFieldId(applicationVersion, FIELD_ID_1)).isNotPresent();
   }
 }

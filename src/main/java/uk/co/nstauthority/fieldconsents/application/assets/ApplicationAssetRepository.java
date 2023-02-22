@@ -18,4 +18,6 @@ public interface ApplicationAssetRepository extends CrudRepository<ApplicationAs
   );
 
   Optional<ApplicationAsset> findByApplicationVersionAndAssetNo(ApplicationVersion applicationVersion, Integer assetNo);
+
+  Optional<ApplicationAsset> findByApplicationVersionAndFieldId(ApplicationVersion applicationVersion, Integer fieldId);
 }

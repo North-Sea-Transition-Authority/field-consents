@@ -41,7 +41,7 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 @ContextConfiguration(classes = AdditionalAssetsController.class)
 class AdditionalAssetsControllerTest extends AbstractControllerTest {
 
-  private static final String ASSET_KEY = "1FIELD";
+  static final String ASSET_KEY = "1FIELD";
   
   @MockBean
   private AssetService assetService;
@@ -140,11 +140,9 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
   @Test
   @WithMockUser
   void saveNewAsset_validForm() throws Exception {
-    AssetSelectionForm form = new AssetSelectionForm(ASSET_KEY);
+    AssetSelectionForm form = new AssetSelectionForm(ASSET_KEY, applicationVersion);
     AssetJson assetJson = field1Json;
 
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(ApplicationTestUtil.APPLICATION_ID))
-        .thenReturn(applicationVersion);
     when(assetService.getAsset(form.getAssetKey())).thenReturn(assetJson);
     when(fieldService.getFieldWithOperatorAndLicences(eq(assetJson.getId()), any()))
         .thenReturn(field1JsonWithOperatorAndLicences);
@@ -164,7 +162,7 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
   @WithMockUser
   void saveNewAsset_terminalAsset_passThroughValidation() throws Exception {
     AssetJson assetJson = terminal1Json;
-    AssetSelectionForm form = new AssetSelectionForm(assetJson.getSelectionId());
+    AssetSelectionForm form = new AssetSelectionForm(assetJson.getSelectionId(), applicationVersion);
 
     when(assetService.getAsset(form.getAssetKey())).thenReturn(assetJson);
 

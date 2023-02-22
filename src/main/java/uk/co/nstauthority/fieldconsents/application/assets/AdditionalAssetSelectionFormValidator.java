@@ -1,15 +1,18 @@
 package uk.co.nstauthority.fieldconsents.application.assets;
 
+import java.util.Optional;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ValidationUtils;
 import org.springframework.validation.Validator;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.assets.AssetSelectionForm;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
+import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorAndLicencesJson;
 import uk.co.nstauthority.fieldconsents.branding.CustomerConfigurationProperties;
@@ -35,19 +38,27 @@ class AdditionalAssetSelectionFormValidator implements Validator {
 
   public static final String ASSET_MUST_BE_FIELD = "You must select a field";
 
+  public static final String DUPLICATED_PRIMARY_FIELD = "%s is the primary field of this application";
+
+  public static final String DUPLICATED_SECONDARY_FIELD = "%s has already been added as an additional field on this application";
+
   private final AssetService assetService;
 
   private final FieldService fieldService;
 
   private final CustomerConfigurationProperties customerConfigurationProperties;
 
+  private final ApplicationAssetService applicationAssetService;
+
   @Autowired
   AdditionalAssetSelectionFormValidator(AssetService assetService,
                                         FieldService fieldService,
-                                        CustomerConfigurationProperties customerConfigurationProperties) {
+                                        CustomerConfigurationProperties customerConfigurationProperties,
+                                        ApplicationAssetService applicationAssetService) {
     this.assetService = assetService;
     this.fieldService = fieldService;
     this.customerConfigurationProperties = customerConfigurationProperties;
+    this.applicationAssetService = applicationAssetService;
   }
 
   @Override
@@ -67,9 +78,11 @@ class AdditionalAssetSelectionFormValidator implements Validator {
       AssetJson assetJson = assetService.getAsset(form.getAssetKey());
 
       if (assetJson.getAssetType() == AssetType.FIELD) {
+
         FieldWithOperatorAndLicencesJson fieldJson =
             fieldService.getFieldWithOperatorAndLicences(assetJson.getId(), purpose);
 
+        rejectIfDuplicatedField(errors, form.getApplicationVersion(), fieldJson);
         if (!fieldJson.operatorExists() && !fieldJson.licencesExist()) {
           errors.rejectValue(ASSET_KEY_FIELD_NAME, ASSET_KEY_FIELD_NAME + ".assetMustHaveOperatorAndLicences",
               ASSET_MUST_HAVE_OPERATOR_LICENCES +
@@ -86,6 +99,21 @@ class AdditionalAssetSelectionFormValidator implements Validator {
       } else if (assetJson.getAssetType() == AssetType.TERMINAL) {
         errors.rejectValue(ASSET_KEY_FIELD_NAME, ASSET_KEY_FIELD_NAME + ".assetMustBeAField",
             ASSET_MUST_BE_FIELD);
+      }
+    }
+  }
+
+  private void rejectIfDuplicatedField(@NotNull Errors errors, ApplicationVersion applicationVersion, FieldJson fieldJson) {
+    Optional<ApplicationAsset> optionalApplicationAsset =
+        applicationAssetService.findByApplicationVersionAndFieldId(applicationVersion, fieldJson.getId());
+    if (optionalApplicationAsset.isPresent()) {
+      ApplicationAsset applicationAsset = optionalApplicationAsset.get();
+      if (applicationAsset.getAssetRole().equals(AssetRole.PRIMARY)) {
+        errors.rejectValue(ASSET_KEY_FIELD_NAME, ASSET_KEY_FIELD_NAME + ".duplicated",
+            DUPLICATED_PRIMARY_FIELD.formatted(fieldJson.getName()));
+      } else {
+        errors.rejectValue(ASSET_KEY_FIELD_NAME, ASSET_KEY_FIELD_NAME + ".duplicated",
+            DUPLICATED_SECONDARY_FIELD.formatted(fieldJson.getName()));
       }
     }
   }

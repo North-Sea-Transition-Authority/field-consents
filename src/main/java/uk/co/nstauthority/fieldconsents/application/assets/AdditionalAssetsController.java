@@ -125,6 +125,8 @@ public class AdditionalAssetsController {
   public ModelAndView saveNewAsset(@PathVariable Integer applicationId,
                                    @ModelAttribute("form") AssetSelectionForm form,
                                    BindingResult bindingResult) {
+    ApplicationVersion applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
+    form.setApplicationVersion(applicationVersion);
 
     additionalAssetSelectionFormValidator.validate(form, bindingResult);
 
@@ -152,7 +154,8 @@ public class AdditionalAssetsController {
 
   private ModelAndView getNewAdditionalAssetModelAndView(Integer applicationId) {
     ModelAndView modelAndView = new ModelAndView("fcs/assets/additionalAsset");
-    modelAndView.addObject(PAGE_TITLE_ATTR_NAME, AdditionalAssetsController.PAGE_NAME_ADD)
+    modelAndView
+        .addObject(PAGE_TITLE_ATTR_NAME, AdditionalAssetsController.PAGE_NAME_ADD)
         .addObject(CANCEL_URL_ATTR_NAME,
             ReverseRouter.route(on(AdditionalAssetsController.class).viewAdditionalAssetsSummary(applicationId)));
 
