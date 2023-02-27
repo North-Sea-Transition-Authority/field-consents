@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.flarevent;
 
 import java.math.BigDecimal;
 import java.util.NoSuchElementException;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ValidationUtils;
@@ -17,24 +18,24 @@ public class FlareVentReportGasDataFormValidator implements Validator {
   public static final String FIELD_INPUT_VALUE = ".inputValue";
 
   public static final String EVALUATED_PER_CATEGORY_MISSING =
-      "Select Yes if you have evaluated the gas properties for each category individually";
+      "Select yes if you have evaluated the gas properties for each category individually";
 
   public static final String INVALID_GAS_CONTENT_PERCENTAGE =
       "The Inert gas content and Hydrocarbon gas content should not be greater than 100% in total for each category";
 
   @Override
-  public boolean supports(Class<?> clazz) {
+  public boolean supports(@NotNull Class<?> clazz) {
     return FlareVentReportGasDataForm.class.equals(clazz);
   }
 
   @Override
-  public void validate(Object target, Errors errors) {
+  public void validate(@NotNull Object target, @NotNull Errors errors) {
     FlareVentReportGasDataForm form = (FlareVentReportGasDataForm) target;
 
     // Each category field for standard density should have a non-empty number which can be greater or equal to 0.0
     // with a maximum of 6 decimal places
     var densityValidator = DecimalInputValidator.builder()
-        .mustBeMoreThanOrEqual(BigDecimal.ZERO)
+        .mustBeMoreThanOrEqualTo(BigDecimal.ZERO)
         .mustHaveNoMoreThanDecimalPlaces(ValidatorUtils.MAX_DECIMAL_PLACES);
 
     densityValidator.validate(form.getCategoryADensity(), errors);
@@ -44,7 +45,7 @@ public class FlareVentReportGasDataFormValidator implements Validator {
     // Each category field for gas content (Inert and Hydrocarbon) should have a non-empty number which can be between 0.0
     // and 100.0 (as this indicates a percentage) with a maximum of 6 decimal places
     var percentageValidator = DecimalInputValidator.builder()
-        .mustBeMoreThanOrEqual(BigDecimal.ZERO)
+        .mustBeMoreThanOrEqualTo(BigDecimal.ZERO)
         .mustBeLessThanOrEqualTo(BigDecimal.valueOf(100))
         .mustHaveNoMoreThanDecimalPlaces(ValidatorUtils.MAX_DECIMAL_PLACES);
 

@@ -26,7 +26,7 @@ public class FlareVentRowFormValidator implements Validator {
     // Each category field should have a non-empty number which can be greater or equal to 0.0
     // and must not contain more decimal places than specified by MAX_DECIMAL_PLACES
     var validator = DecimalInputValidator.builder()
-        .mustBeMoreThanOrEqual(BigDecimal.ZERO)
+        .mustBeMoreThanOrEqualTo(BigDecimal.ZERO)
         .mustHaveNoMoreThanDecimalPlaces(ValidatorUtils.MAX_DECIMAL_PLACES);
 
     validator.validate(monthForm.getCategoryA(), errors);

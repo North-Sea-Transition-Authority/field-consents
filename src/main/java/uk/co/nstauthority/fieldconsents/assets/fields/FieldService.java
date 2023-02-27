@@ -31,7 +31,9 @@ public class FieldService {
           .status().root()
           .statusDisplayName()
           .geographicArea().root()
-          .geographicAreaDisplayName();
+          .geographicAreaDisplayName()
+          .shore().root()
+          .shoreDisplayName();
 
   static final FieldProjectionRoot fieldProjectionRoot =
       new FieldProjectionRoot()
@@ -40,7 +42,9 @@ public class FieldService {
           .status().root()
           .statusDisplayName()
           .geographicArea().root()
-          .geographicAreaDisplayName();
+          .geographicAreaDisplayName()
+          .shore().root()
+          .shoreDisplayName();
 
   static final FieldsProjectionRoot fieldsWithOperatorsProjectionRoot =
       fieldsProjectionRoot

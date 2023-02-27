@@ -43,7 +43,7 @@ public class ConsentLengthFormValidator implements Validator {
   private void validateAnnualConsentYear(@NotNull Errors errors, ConsentLengthForm form) {
     // annual must start in the following year
     IntegerInputValidator.builder()
-        .mustBeMoreThanOrEqual(Year.now().getValue() + 1)
+        .mustBeMoreThanOrEqualTo(Year.now().getValue() + 1)
         .validate(form.getAnnualConsentYear(), errors);
   }
 
@@ -56,7 +56,7 @@ public class ConsentLengthFormValidator implements Validator {
 
     // Long term start year
     IntegerInputValidator.builder()
-        .mustBeMoreThanOrEqual(currentYear)
+        .mustBeMoreThanOrEqualTo(currentYear)
         .validate(form.getLongTermStartYear(), errors);
 
     // Long term end year
@@ -66,12 +66,12 @@ public class ConsentLengthFormValidator implements Validator {
 
       // the term must be a minimum of 2 years and a maximum of 30 years in duration
       var endYearComparisonValidator = IntegerInputValidator.builder()
-          .mustBeMoreThanOrEqual(startYear + 1)
+          .mustBeMoreThanOrEqualTo(startYear + 1)
           .mustBeLessThanOrEqualTo(startYear + 29);
       endYearComparisonValidator.validate(form.getLongTermEndYear(), errors);
     } else {
       IntegerInputValidator.builder()
-          .mustBeMoreThanOrEqual(currentYear + 1)
+          .mustBeMoreThanOrEqualTo(currentYear + 1)
           .validate(form.getLongTermEndYear(), errors);
     }
   }

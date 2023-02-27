@@ -67,7 +67,7 @@ class FlareVentReportPeriodFormValidatorTest {
     assertThat(errorMap)
         .containsOnly(
             entry("reportEndYear.inputValue",
-                Collections.singletonList("Year must be a whole number."))
+                Collections.singletonList("Year must be a whole number"))
         );
   }
 

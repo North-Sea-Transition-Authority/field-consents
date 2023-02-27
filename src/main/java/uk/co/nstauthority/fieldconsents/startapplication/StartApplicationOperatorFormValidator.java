@@ -30,7 +30,7 @@ class StartApplicationOperatorFormValidator implements Validator {
     var purpose = "Check organisation unit exists when starting an application";
 
     IntegerInputValidator.builder()
-        .mustBeMoreThanOrEqual(0)
+        .mustBeMoreThanOrEqualTo(0)
         .validate(form.getOrganisationUnitId(), errors);
 
     if (!errors.hasErrors() && organisationUnitService

@@ -23,7 +23,7 @@ class ConsentLengthFormValidatorTest {
 
   private static final String ANNUAL_CONSENT_YEAR_EMPTY = "Enter Year";
 
-  private static final String ANNUAL_CONSENT_YEAR_INVALID = "Year must be a whole number.";
+  private static final String ANNUAL_CONSENT_YEAR_INVALID = "Year must be a whole number";
 
   private static final String ANNUAL_CONSENT_YEAR_GT_EQUAL = "Year must be %s or more";
 
@@ -45,13 +45,13 @@ class ConsentLengthFormValidatorTest {
 
   private static final String LONG_TERM_START_YEAR_EMPTY = "Enter Start year";
 
-  private static final String LONG_TERM_START_YEAR_INVALID = "Start year must be a whole number.";
+  private static final String LONG_TERM_START_YEAR_INVALID = "Start year must be a whole number";
 
   private static final String LONG_TERM_START_YEAR_GT_EQUAL = "Start year must be %s or more";
 
   private static final String LONG_TERM_END_YEAR_EMPTY = "Enter End year";
 
-  private static final String LONG_TERM_END_YEAR_INVALID = "End year must be a whole number.";
+  private static final String LONG_TERM_END_YEAR_INVALID = "End year must be a whole number";
 
   private static final String LONG_TERM_END_YEAR_GT_EQUAL = "End year must be %s or more";
 

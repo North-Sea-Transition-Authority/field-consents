@@ -18,8 +18,8 @@ class FieldJsonTest {
                 field1.getFieldId(),
                 field1.getFieldName(),
                 new FieldStatusJson(field1.getStatus(), field1.getStatusDisplayName()),
-                new FieldGeographicAreaJson(field1.getGeographicArea(), field1.getGeographicAreaDisplayName())
-            )
+                new FieldGeographicAreaJson(field1.getGeographicArea(), field1.getGeographicAreaDisplayName()),
+                new FieldShoreJson(field1.getShore(), field1.getShoreDisplayName()))
         );
 
     // the asserts below check the getters in FieldJson
@@ -29,14 +29,16 @@ class FieldJsonTest {
             FieldJson::getName,
             FieldJson::getStatusDisplayName,
             FieldJson::getAssetType,
-            FieldJson::getGeographicAreaDisplayName
+            FieldJson::getGeographicAreaDisplayName,
+            FieldJson::getShoreDisplayName
         )
         .containsExactly(
             field1.getFieldId(),
             field1.getFieldName(),
             field1.getStatusDisplayName(),
             AssetType.FIELD,
-            field1.getGeographicAreaDisplayName()
+            field1.getGeographicAreaDisplayName(),
+            field1.getShoreDisplayName()
         );
   }
 
@@ -50,8 +52,8 @@ class FieldJsonTest {
                 field1.getFieldId(),
                 field1.getFieldName(),
                 null,
-                null
-            )
+                null,
+                null)
         );
 
     // the asserts below check the getters in FieldJson
@@ -61,13 +63,15 @@ class FieldJsonTest {
             FieldJson::getName,
             FieldJson::getStatusDisplayName,
             FieldJson::getAssetType,
-            FieldJson::getGeographicAreaDisplayName
+            FieldJson::getGeographicAreaDisplayName,
+            FieldJson::getShoreDisplayName
         )
         .containsExactly(
             field1.getFieldId(),
             field1.getFieldName(),
             null,
             AssetType.FIELD,
+            null,
             null
         );
   }

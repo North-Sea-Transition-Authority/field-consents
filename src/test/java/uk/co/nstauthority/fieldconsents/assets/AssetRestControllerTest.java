@@ -23,7 +23,7 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 public class AssetRestControllerTest extends AbstractControllerTest {
 
   AssetJson brentAssetJson = new FieldJson(1, "BRENT",
-      FieldTestUtil.FIELD_1_STATUS, FieldTestUtil.FIELD_1_GEOGRAPHIC_AREA);
+      FieldTestUtil.FIELD_1_STATUS, FieldTestUtil.FIELD_1_GEOGRAPHIC_AREA, FieldTestUtil.FIELD_1_SHORE_JSON);
   AssetJson braeAssetJson = new TerminalJson(1, "BRAE", TerminalStatus.ACTIVE);
 
   @MockBean

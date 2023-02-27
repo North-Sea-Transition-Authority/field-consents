@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import uk.co.fivium.energyportalapi.client.EnergyPortal;
 import uk.co.fivium.energyportalapi.client.field.FieldApi;
 import uk.co.fivium.energyportalapi.client.organisation.OrganisationApi;
+import uk.co.fivium.energyportalapi.client.pets.PetsApplicationApi;
 import uk.co.fivium.energyportalapi.client.terminal.TerminalApi;
 
 @Configuration
@@ -30,4 +31,8 @@ public class EnergyPortalApiBeans {
     return new TerminalApi(energyPortal);
   }
 
+  @Bean
+  public PetsApplicationApi petsApplicationApi(EnergyPortal energyPortal) {
+    return new PetsApplicationApi(energyPortal);
+  }
 }

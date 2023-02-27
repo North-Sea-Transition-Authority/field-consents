@@ -64,7 +64,7 @@ class FlareReportMonthFormValidatorTest {
   @CsvSource({
       "31, Days of total shutdown must be 30 or fewer",
       "-1, Days of total shutdown must be 0 or more",
-      "x, Days of total shutdown must be a whole number."
+      "x, Days of total shutdown must be a whole number"
   })
   void validate_shutDownDays_invalid(String shutDownDays, String errorMessage) {
     flareReportMonthForm = getStubFlareReportMonthForm();

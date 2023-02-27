@@ -16,24 +16,27 @@ public class FieldJson implements AssetJson {
 
   private final FieldGeographicAreaJson geographicAreaJson;
 
+  private final FieldShoreJson shoreJson;
+
   private static final Logger LOGGER = LoggerFactory.getLogger(FieldJson.class);
 
   public static FieldJson from(Field field) {
     return new FieldJson(field.getFieldId(), field.getFieldName(), FieldStatusJson.from(field),
-        FieldGeographicAreaJson.from(field));
+        FieldGeographicAreaJson.from(field), FieldShoreJson.from(field));
   }
 
   public static FieldJson fromCachedInformation(Integer fieldId, String fieldName) {
     LOGGER.warn("Had to fallback to field cache info for: id {}, name {}", fieldId, fieldName);
-    return new FieldJson(fieldId, fieldName, null, null);
+    return new FieldJson(fieldId, fieldName, null, null, null);
   }
 
   public FieldJson(Integer fieldId, String fieldName, FieldStatusJson statusJson,
-                   FieldGeographicAreaJson geographicAreaJson) {
+                   FieldGeographicAreaJson geographicAreaJson, FieldShoreJson shoreJson) {
     this.fieldId = fieldId;
     this.fieldName = fieldName;
     this.statusJson = statusJson;
     this.geographicAreaJson = geographicAreaJson;
+    this.shoreJson = shoreJson;
   }
 
   @Override
@@ -58,5 +61,13 @@ public class FieldJson implements AssetJson {
 
   public String getGeographicAreaDisplayName() {
     return geographicAreaJson != null ? geographicAreaJson.geographicAreaDisplayName() : null;
+  }
+
+  public String getShoreDisplayName() {
+    return shoreJson != null ? shoreJson.shoreDisplayName() : null;
+  }
+
+  public FieldShoreJson getShoreJson() {
+    return shoreJson;
   }
 }

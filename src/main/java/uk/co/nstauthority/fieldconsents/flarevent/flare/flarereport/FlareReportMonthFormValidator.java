@@ -33,7 +33,7 @@ class FlareReportMonthFormValidator implements Validator {
 
     // the shutdown days must be greater than or equal to zero and less that or equal to the month days
     IntegerInputValidator.builder()
-        .mustBeMoreThanOrEqual(0)
+        .mustBeMoreThanOrEqualTo(0)
         .mustBeLessThanOrEqualTo(monthForm.getMonthDays())
         .validate(monthForm.getShutDownDays(), errors);
   }

@@ -20,6 +20,7 @@ public class FieldWithOperatorAndLicencesJson extends FieldJson implements Asset
         field.getFieldName(),
         FieldStatusJson.from(field),
         FieldGeographicAreaJson.from(field),
+        FieldShoreJson.from(field),
         field.getFieldOperator() != null
             ? OrganisationUnitJson.from(field.getFieldOperator())
             : null,
@@ -33,9 +34,10 @@ public class FieldWithOperatorAndLicencesJson extends FieldJson implements Asset
                                           String fieldName,
                                           FieldStatusJson statusJson,
                                           FieldGeographicAreaJson geographicAreaJson,
+                                          FieldShoreJson shoreJson,
                                           OrganisationUnitJson operatorJson,
                                           List<LicenceJson> licenses) {
-    super(fieldId, fieldName, statusJson, geographicAreaJson);
+    super(fieldId, fieldName, statusJson, geographicAreaJson, shoreJson);
     this.operatorJson = operatorJson;
     this.licenses = licenses;
   }

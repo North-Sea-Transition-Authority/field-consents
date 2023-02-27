@@ -4,7 +4,7 @@ import javax.validation.constraints.NotNull;
 
 public class GasInjectionForm {
 
-  @NotNull(message = "Select Yes if gas will be injected")
+  @NotNull(message = "Select yes if gas will be injected")
   private Boolean willGasBeInjected;
 
   public Boolean getWillGasBeInjected() {
