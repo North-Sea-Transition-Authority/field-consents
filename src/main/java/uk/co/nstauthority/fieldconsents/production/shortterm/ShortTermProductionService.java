@@ -19,8 +19,10 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ShortTermUtil;
+import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
+import uk.co.nstauthority.fieldconsents.production.ProductionView;
 
 @Service
 public class ShortTermProductionService {
@@ -31,13 +33,17 @@ public class ShortTermProductionService {
 
   private final ShortTermProductionMonthRepository shortTermProductionMonthRepository;
 
+  private final ApplicationUnitService applicationUnitService;
+
   @Autowired
   public ShortTermProductionService(ProductionRowService productionRowService,
                                     ConsentLengthService consentLengthService,
-                                    ShortTermProductionMonthRepository shortTermProductionMonthRepository) {
+                                    ShortTermProductionMonthRepository shortTermProductionMonthRepository,
+                                    ApplicationUnitService applicationUnitService) {
     this.productionRowService = productionRowService;
     this.consentLengthService = consentLengthService;
     this.shortTermProductionMonthRepository = shortTermProductionMonthRepository;
+    this.applicationUnitService = applicationUnitService;
   }
 
   private List<ShortTermProductionMonth> getShortTermProductionMonths(ApplicationVersion applicationVersion) {
@@ -167,5 +173,13 @@ public class ShortTermProductionService {
       throw new RuntimeException(e);
     }
     shortTermProductionMonthRepository.save(shortTermProductionMonth);
+  }
+
+  public ProductionView getProductionShortTermView(ApplicationVersion applicationVersion) {
+    var shortTermProductionMonths = getShortTermProductionMonths(applicationVersion);
+    var oilUnit = applicationUnitService.getProductionOilUnit(applicationVersion);
+    var gasUnit = applicationUnitService.getProductionGasUnit(applicationVersion);
+    var averageUnit = applicationUnitService.getProductionAverageUnit(applicationVersion);
+    return ProductionView.fromShortTerm(shortTermProductionMonths, oilUnit, gasUnit, averageUnit);
   }
 }

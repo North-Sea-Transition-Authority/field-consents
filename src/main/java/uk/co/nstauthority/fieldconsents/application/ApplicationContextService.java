@@ -1,10 +1,14 @@
 package uk.co.nstauthority.fieldconsents.application;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
+import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
+import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
 @Service
 public class ApplicationContextService {
@@ -33,5 +37,20 @@ public class ApplicationContextService {
             applicationVersion.getCachedPrimaryOperatorName());
 
     return new ApplicationContextJson(primaryAsset, primaryOperator);
+  }
+
+  public SummaryDataView getApplicationContextSummaryDataView(ApplicationVersion applicationVersion) {
+    var applicationContextJson = getApplicationContextJson(applicationVersion);
+
+    List<SummaryKeyValue> summaryKeyValues = new ArrayList<>();
+
+    summaryKeyValues.add(SummaryKeyValue.from("Application type",
+        applicationVersion.getApplication().getType().getDisplayName()));
+    summaryKeyValues.add(SummaryKeyValue.from(applicationContextJson.getPrimaryAssetPrompt(),
+        applicationContextJson.getPrimaryAssetName()));
+    summaryKeyValues.add(SummaryKeyValue.from("Primary operator",
+        applicationContextJson.getPrimaryOperatorName()));
+
+    return new SummaryDataView(summaryKeyValues);
   }
 }

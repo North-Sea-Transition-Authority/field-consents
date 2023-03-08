@@ -11,6 +11,7 @@ import static uk.co.nstauthority.fieldconsents.production.ProductionTestUtils.PR
 
 import java.time.Month;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,10 +26,13 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil;
+import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.production.ProductionRow;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowForm;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
 import uk.co.nstauthority.fieldconsents.production.ProductionTestUtils;
+import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
+import uk.co.nstauthority.fieldconsents.production.ProductionView;
 
 @ExtendWith(MockitoExtension.class)
 class AnnualProductionServiceTest {
@@ -42,6 +46,9 @@ class AnnualProductionServiceTest {
   @Mock
   private ConsentLengthService consentLengthService;
 
+  @Mock
+  private ApplicationUnitService applicationUnitService;
+
   private AnnualProductionService annualProductionService;
 
   private ApplicationVersion applicationVersion;
@@ -53,8 +60,8 @@ class AnnualProductionServiceTest {
     annualProductionService = new AnnualProductionService(
         productionRowService,
         consentLengthService,
-        annualProductionMonthRepository
-    );
+        annualProductionMonthRepository,
+        applicationUnitService);
     applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
     consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForAnnual(applicationVersion);
   }
@@ -211,5 +218,49 @@ class AnnualProductionServiceTest {
     assertThat(expectedProductionMonth.getOilMaxValue()).isEqualTo(annualProductionMonth.getOilMaxValue());
     assertThat(expectedProductionMonth.getGasMinValue()).isEqualTo(annualProductionMonth.getGasMinValue());
     assertThat(expectedProductionMonth.getGasMaxValue()).isEqualTo(annualProductionMonth.getGasMaxValue());
+  }
+
+  @Test
+  void getProductionAnnualView_noMonthsData() {
+    List<AnnualProductionMonth> productionMonths = Collections.emptyList();
+    var oilUnit = ProductionUnit.KSCM_PER_MONTH;
+    var gasUnit = ProductionUnit.KSCM_PER_MONTH;
+    var averageUnit = ProductionUnit.KSCM_PER_DAY;
+
+    when(annualProductionMonthRepository.findAllByApplicationVersion(applicationVersion))
+        .thenReturn(productionMonths);
+    when(applicationUnitService.getProductionOilUnit(applicationVersion))
+        .thenReturn(oilUnit);
+    when(applicationUnitService.getProductionGasUnit(applicationVersion))
+        .thenReturn(gasUnit);
+    when(applicationUnitService.getProductionAverageUnit(applicationVersion))
+        .thenReturn(averageUnit);
+
+    var productionView = annualProductionService.getProductionAnnualView(applicationVersion);
+
+    assertThat(productionView)
+        .isEqualTo(ProductionView.fromAnnual(productionMonths, oilUnit, gasUnit, averageUnit));
+  }
+
+  @Test
+  void getProductionAnnualView_monthsDataExists() {
+    var productionMonths = ProductionTestUtils.getAnnualProductionMonthsData(applicationVersion);
+    var oilUnit = ProductionUnit.KSCM_PER_MONTH;
+    var gasUnit = ProductionUnit.KSCM_PER_MONTH;
+    var averageUnit = ProductionUnit.KSCM_PER_DAY;
+
+    when(annualProductionMonthRepository.findAllByApplicationVersion(applicationVersion))
+        .thenReturn(productionMonths);
+    when(applicationUnitService.getProductionOilUnit(applicationVersion))
+        .thenReturn(oilUnit);
+    when(applicationUnitService.getProductionGasUnit(applicationVersion))
+        .thenReturn(gasUnit);
+    when(applicationUnitService.getProductionAverageUnit(applicationVersion))
+        .thenReturn(averageUnit);
+
+    var productionView = annualProductionService.getProductionAnnualView(applicationVersion);
+
+    assertThat(productionView)
+        .isEqualTo(ProductionView.fromAnnual(productionMonths, oilUnit, gasUnit, averageUnit));
   }
 }

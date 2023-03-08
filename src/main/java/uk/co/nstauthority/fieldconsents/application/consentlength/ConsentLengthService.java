@@ -1,6 +1,8 @@
 package uk.co.nstauthority.fieldconsents.application.consentlength;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import javax.persistence.EntityNotFoundException;
@@ -9,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
+import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
 @Service
 public class ConsentLengthService {
@@ -118,4 +122,33 @@ public class ConsentLengthService {
             .formatted(applicationVersion.getId())));
   }
 
+  public SummaryDataView getConsentLengthSummaryDataView(ApplicationVersion applicationVersion) {
+
+    List<SummaryKeyValue> summaryKeyValues = new ArrayList<>();
+
+    var consentLengthDetailsOptional = findConsentLengthDetails(applicationVersion);
+    var consentPeriodPrompt = "Consent period";
+
+    if (consentLengthDetailsOptional.isEmpty()) {
+      summaryKeyValues.add(SummaryKeyValue.fromKeyNoValue(consentPeriodPrompt));
+      return new SummaryDataView(summaryKeyValues);
+    }
+
+    var consentLengthDetails = consentLengthDetailsOptional.get();
+
+    summaryKeyValues.add(SummaryKeyValue.from(consentPeriodPrompt,
+        consentLengthDetails.getConsentLength().getDisplayName()));
+
+    if (ConsentLengthType.SHORT_TERM.equals(consentLengthDetails.getConsentLength())) {
+      summaryKeyValues.add(SummaryKeyValue.fromLocalDate("Start date", consentLengthDetails.getShortTermStartDate()));
+      summaryKeyValues.add(SummaryKeyValue.fromLocalDate("End date", consentLengthDetails.getShortTermEndDate()));
+    } else if (ConsentLengthType.ANNUAL.equals(consentLengthDetails.getConsentLength())) {
+      summaryKeyValues.add(SummaryKeyValue.fromInteger("Year", consentLengthDetails.getAnnualConsentYear()));
+    } else if (ConsentLengthType.LONG_TERM.equals(consentLengthDetails.getConsentLength())) {
+      summaryKeyValues.add(SummaryKeyValue.fromInteger("Start year", consentLengthDetails.getLongTermStartYear()));
+      summaryKeyValues.add(SummaryKeyValue.fromInteger("End year", consentLengthDetails.getLongTermEndYear()));
+    }
+
+    return new SummaryDataView(summaryKeyValues);
+  }
 }

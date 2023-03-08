@@ -1,10 +1,15 @@
 package uk.co.nstauthority.fieldconsents.application.supportinginformation;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
+import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
 @Service
 public class SupportingInformationService {
@@ -31,5 +36,27 @@ public class SupportingInformationService {
                                         SupportingInformationForm form) {
     supportingInformationRepository.deleteByApplicationVersion(applicationVersion);
     supportingInformationRepository.save(SupportingInformation.from(applicationVersion, form));
+  }
+
+  public SummaryDataView getSupportingInformationSummaryDataView(ApplicationVersion applicationVersion) {
+    var supportingInformationOptional = findSupportingInformation(applicationVersion);
+
+    List<SummaryKeyValue> summaryKeyValues = new ArrayList<>();
+    var notesPrompt = "Notes";
+
+    if (supportingInformationOptional.isEmpty()) {
+      summaryKeyValues.add(SummaryKeyValue.fromKeyNoValue(notesPrompt));
+      return new SummaryDataView(summaryKeyValues);
+    }
+
+    var supportingInformation = supportingInformationOptional.get();
+
+    summaryKeyValues.add(SummaryKeyValue.from(notesPrompt, supportingInformation.getNotes()));
+
+    if (ApplicationTypeFeature.ERAP_SUPPORTING_INFORMATION.allowed(applicationVersion.getApplication().getType())) {
+      summaryKeyValues.add(SummaryKeyValue.from("ERAP alignment studies and projects", supportingInformation.getErapNotes()));
+    }
+
+    return new SummaryDataView(summaryKeyValues);
   }
 }

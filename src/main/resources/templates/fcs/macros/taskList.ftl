@@ -3,7 +3,9 @@
 <#macro standardTaskList taskListSections>
   <#list taskListSections as section>
     <@fdsTaskList.taskList>
-      <@fdsTaskList.taskListSection sectionHeadingText=section.displayName()>
+      <@fdsTaskList.taskListSection
+        sectionNumber="${section?index + 1}"
+        sectionHeadingText=section.displayName()>
         <#list section.items() as item>
           <#if item.label().name() = 'BLOCKED'>
             <#local itemUrl=""/>

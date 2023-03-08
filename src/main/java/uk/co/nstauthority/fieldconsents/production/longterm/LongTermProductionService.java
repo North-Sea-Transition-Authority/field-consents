@@ -13,7 +13,9 @@ import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
+import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
+import uk.co.nstauthority.fieldconsents.production.ProductionView;
 
 @Service
 public class LongTermProductionService {
@@ -24,13 +26,17 @@ public class LongTermProductionService {
 
   private final LongTermProductionYearRepository longTermProductionYearRepository;
 
+  private final ApplicationUnitService applicationUnitService;
+
   @Autowired
   public LongTermProductionService(ProductionRowService productionRowService,
                                    ConsentLengthService consentLengthService,
-                                   LongTermProductionYearRepository longTermProductionYearRepository) {
+                                   LongTermProductionYearRepository longTermProductionYearRepository,
+                                   ApplicationUnitService applicationUnitService) {
     this.productionRowService = productionRowService;
     this.consentLengthService = consentLengthService;
     this.longTermProductionYearRepository = longTermProductionYearRepository;
+    this.applicationUnitService = applicationUnitService;
   }
 
   private List<LongTermProductionYear> getLongTermProductionYears(ApplicationVersion applicationVersion) {
@@ -159,4 +165,10 @@ public class LongTermProductionService {
     longTermProductionYearRepository.save(longTermProductionYear);
   }
 
+  public ProductionView getProductionLongTermView(ApplicationVersion applicationVersion) {
+    var longTermProductionYears = getLongTermProductionYears(applicationVersion);
+    var oilUnit = applicationUnitService.getProductionOilUnit(applicationVersion);
+    var gasUnit = applicationUnitService.getProductionGasUnit(applicationVersion);
+    return ProductionView.fromLongTerm(longTermProductionYears, oilUnit, gasUnit);
+  }
 }

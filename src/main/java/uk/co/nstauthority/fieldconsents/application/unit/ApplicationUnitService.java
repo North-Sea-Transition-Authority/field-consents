@@ -72,6 +72,21 @@ public class ApplicationUnitService implements ApplicationListener<ConsentLength
     return getOrCreateApplicationUnit(applicationVersion).getProductionGasUnit();
   }
 
+  public ProductionUnit getProductionAverageUnit(ApplicationVersion applicationVersion) {
+    var applicationUnit = getOrCreateApplicationUnit(applicationVersion);
+    var oilUnit = applicationUnit.getProductionOilUnit();
+    var gasUnit = applicationUnit.getProductionGasUnit();
+    ProductionUnit averageUnit;
+    if (ProductionUnit.KSCM_PER_MONTH.equals(oilUnit) && ProductionUnit.KSCM_PER_MONTH.equals(gasUnit)) {
+      averageUnit = ProductionUnit.KSCM_PER_DAY;
+    } else if (ProductionUnit.SCM_PER_MONTH.equals(oilUnit) && ProductionUnit.SCM_PER_MONTH.equals(gasUnit)) {
+      averageUnit = ProductionUnit.SCM_PER_DAY;
+    } else {
+      throw new RuntimeException("Mismatched production units found. Cannot work out the unit for the averages.");
+    }
+    return averageUnit;
+  }
+
   @Transactional
   public ApplicationUnit createApplicationUnit(ApplicationVersion applicationVersion) {
     ApplicationUnit applicationUnit;

@@ -8,7 +8,8 @@ public enum TaskListLabel {
   NOT_STARTED,
   IN_PROGRESS,
   COMPLETED,
-  BLOCKED;
+  BLOCKED,
+  NO_LABEL;
 
   public static TaskListLabel notStartedOrCompleteByOptional(
       @SuppressWarnings("OptionalUsedAsFieldOrParameterType") Optional<?> optional) {

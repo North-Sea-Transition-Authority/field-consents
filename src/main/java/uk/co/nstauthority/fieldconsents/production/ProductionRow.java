@@ -8,6 +8,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.formatting.DecimalFormatUtils;
 
 /**
  * This class represents all entities with an id and other details related to oil and gas entered on a production form.
@@ -52,12 +53,20 @@ public class ProductionRow {
     return oilMinValue;
   }
 
+  public String getOilMinValueString() {
+    return DecimalFormatUtils.bigDecimalToFormattedString(oilMinValue);
+  }
+
   public void setOilMinValue(BigDecimal oilMinValue) {
     this.oilMinValue = oilMinValue;
   }
 
   public BigDecimal getOilMaxValue() {
     return oilMaxValue;
+  }
+
+  public String getOilMaxValueString() {
+    return DecimalFormatUtils.bigDecimalToFormattedString(oilMaxValue);
   }
 
   public void setOilMaxValue(BigDecimal oilMaxValue) {
@@ -68,12 +77,20 @@ public class ProductionRow {
     return gasMinValue;
   }
 
+  public String getGasMinValueString() {
+    return DecimalFormatUtils.bigDecimalToFormattedString(gasMinValue);
+  }
+
   public void setGasMinValue(BigDecimal gasMinValue) {
     this.gasMinValue = gasMinValue;
   }
 
   public BigDecimal getGasMaxValue() {
     return gasMaxValue;
+  }
+
+  public String getGasMaxValueString() {
+    return DecimalFormatUtils.bigDecimalToFormattedString(gasMaxValue);
   }
 
   public void setGasMaxValue(BigDecimal gasMaxValue) {

@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1Json;
 
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,6 +19,8 @@ import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
+import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
+import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationContextServiceTest {
@@ -101,5 +104,49 @@ class ApplicationContextServiceTest {
         .containsExactly("Primary field",
             primaryAsset.getName(),
             primaryOperator.name());
+  }
+
+  @Test
+  void getApplicationContextSummaryDataView_terminal() {
+    AssetJson primaryAsset = terminal1Json;
+    when(applicationAssetService.getAssetJsonForApplicationAsset(primaryApplicationAsset))
+        .thenReturn(primaryAsset);
+
+    when(organisationUnitService.getOrganisationUnitByIdOrFallback(
+        eq(applicationVersion.getPrimaryOperatorOuId()), any(), eq(applicationVersion.getCachedPrimaryOperatorName())))
+        .thenReturn(primaryOperator);
+
+    var summaryDataView = applicationContextService.getApplicationContextSummaryDataView(applicationVersion);
+
+    assertThat(summaryDataView).usingRecursiveComparison()
+        .isEqualTo(new SummaryDataView(
+            List.of(
+                new SummaryKeyValue("Application type", applicationVersion.getApplication().getType().getDisplayName()),
+                new SummaryKeyValue("Primary facility", primaryAsset.getName()),
+                new SummaryKeyValue("Primary operator", primaryOperator.name())
+            )));
+
+  }
+
+  @Test
+  void getApplicationContextSummaryDataView_field() {
+    AssetJson primaryAsset = field1Json;
+    when(applicationAssetService.getAssetJsonForApplicationAsset(primaryApplicationAsset))
+        .thenReturn(primaryAsset);
+
+    when(organisationUnitService.getOrganisationUnitByIdOrFallback(
+        eq(applicationVersion.getPrimaryOperatorOuId()), any(), eq(applicationVersion.getCachedPrimaryOperatorName())))
+        .thenReturn(primaryOperator);
+
+    var summaryDataView = applicationContextService.getApplicationContextSummaryDataView(applicationVersion);
+
+    assertThat(summaryDataView).usingRecursiveComparison()
+        .isEqualTo(new SummaryDataView(
+            List.of(
+                new SummaryKeyValue("Application type", applicationVersion.getApplication().getType().getDisplayName()),
+                new SummaryKeyValue("Primary field", primaryAsset.getName()),
+                new SummaryKeyValue("Primary operator", primaryOperator.name())
+            )));
+
   }
 }

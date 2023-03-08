@@ -5,20 +5,27 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
+import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
 @ExtendWith(MockitoExtension.class)
 class SupportingInformationServiceTest {
+
+  private static final String APPLICATION_NOTES_PROMPT = "Notes";
 
   static final String APPLICATION_NOTES = "application notes";
 
@@ -115,6 +122,54 @@ class SupportingInformationServiceTest {
 
     assertThat(savedSupportingInformation.getNotes()).isEqualTo(supportingInformation.getNotes());
     assertThat(savedSupportingInformation.getErapNotes()).isNull();
+  }
+
+  @Test
+  void getSupportingInformationSummaryDataView_noSupportingInfo() {
+    when(supportingInformationRepository.findByApplicationVersion(applicationVersion))
+        .thenReturn(Optional.empty());
+
+    var summaryDataView = supportingInformationService.getSupportingInformationSummaryDataView(applicationVersion);
+
+    assertThat(summaryDataView)
+        .usingRecursiveComparison()
+        .isEqualTo(new SummaryDataView(
+            List.of(new SummaryKeyValue(APPLICATION_NOTES_PROMPT, null))
+        ));
+  }
+
+  @Test
+  void getSupportingInformationSummaryDataView_supportingInfoProduction() {
+    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
+    when(supportingInformationRepository.findByApplicationVersion(applicationVersion))
+        .thenReturn(Optional.of(getSupportingInformationProduction()));
+
+    var summaryDataView = supportingInformationService.getSupportingInformationSummaryDataView(applicationVersion);
+
+    assertThat(summaryDataView)
+        .usingRecursiveComparison()
+        .isEqualTo(new SummaryDataView(
+            List.of(new SummaryKeyValue(APPLICATION_NOTES_PROMPT, APPLICATION_NOTES))
+        ));
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = ApplicationType.class, names = {"FLARE", "VENT"})
+  void getSupportingInformationSummaryDataView_supportingInfoFlare(ApplicationType applicationType) {
+    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(applicationType);
+    when(supportingInformationRepository.findByApplicationVersion(applicationVersion))
+        .thenReturn(Optional.of(getSupportingInformation()));
+
+    var summaryDataView = supportingInformationService.getSupportingInformationSummaryDataView(applicationVersion);
+
+    assertThat(summaryDataView)
+        .usingRecursiveComparison()
+        .isEqualTo(new SummaryDataView(
+            List.of(
+                new SummaryKeyValue(APPLICATION_NOTES_PROMPT, APPLICATION_NOTES),
+                new SummaryKeyValue("ERAP alignment studies and projects", ERAP_NOTES)
+            )
+        ));
   }
 
   @NotNull

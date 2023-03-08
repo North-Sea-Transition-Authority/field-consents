@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.application.unit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -9,9 +10,13 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
@@ -29,6 +34,9 @@ import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationUnitServiceTest {
+
+  private static final String MISMATCHED_PRODUCTION_UNITS_EXCEPTION_MESSAGE =
+      "Mismatched production units found. Cannot work out the unit for the averages.";
 
   @Mock
   private ApplicationUnitRepository applicationUnitRepository;
@@ -267,6 +275,82 @@ class ApplicationUnitServiceTest {
 
     assertThat(applicationUnitService.getProductionGasUnit(productionAppVersion))
         .isEqualTo(ProductionUnit.KSCM_PER_MONTH);
+  }
+
+  @Test
+  void getProductionAverageUnit_annual() {
+    when(applicationUnitRepository.findByApplicationVersion(productionAppVersion)).thenReturn(Optional.empty());
+    when(consentLengthService.getConsentLengthDetails(productionAppVersion))
+        .thenReturn(ConsentLengthTestUtil.getConsentLengthDetailsForAnnual(productionAppVersion));
+
+    assertThat(applicationUnitService.getProductionAverageUnit(productionAppVersion))
+        .isEqualTo(ProductionUnit.KSCM_PER_DAY);
+  }
+
+  @Test
+  void getProductionAverageUnit_shortTerm() {
+    when(applicationUnitRepository.findByApplicationVersion(productionAppVersion)).thenReturn(Optional.empty());
+    when(consentLengthService.getConsentLengthDetails(productionAppVersion))
+        .thenReturn(ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(productionAppVersion));
+
+    assertThat(applicationUnitService.getProductionAverageUnit(productionAppVersion))
+        .isEqualTo(ProductionUnit.KSCM_PER_DAY);
+  }
+
+  @Test
+  void getProductionAverageUnit_longTerm() {
+    when(applicationUnitRepository.findByApplicationVersion(productionAppVersion)).thenReturn(Optional.empty());
+    when(consentLengthService.getConsentLengthDetails(productionAppVersion))
+        .thenReturn(ConsentLengthTestUtil.getConsentLengthDetailsForLongTerm(productionAppVersion));
+
+    assertThatThrownBy(() -> applicationUnitService.getProductionAverageUnit(productionAppVersion))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessage(MISMATCHED_PRODUCTION_UNITS_EXCEPTION_MESSAGE);
+  }
+
+  @Test
+  void getProductionAverageUnit_manualScmPerMonth() {
+    ApplicationUnit applicationUnit = new ApplicationUnit();
+    applicationUnit.setApplicationVersion(productionAppVersion);
+    applicationUnit.setProductionOilUnit(ProductionUnit.SCM_PER_MONTH);
+    applicationUnit.setProductionGasUnit(ProductionUnit.SCM_PER_MONTH);
+    when(applicationUnitRepository.findByApplicationVersion(productionAppVersion))
+        .thenReturn(Optional.of(applicationUnit));
+
+    assertThat(applicationUnitService.getProductionAverageUnit(productionAppVersion))
+        .isEqualTo(ProductionUnit.SCM_PER_DAY);
+  }
+
+  @ParameterizedTest
+  @MethodSource("getMismatchProductionUnits")
+  void getProductionAverageUnit_manualMismatchUnits(ProductionUnit oilUnit, ProductionUnit gasUnit) {
+    ApplicationUnit applicationUnit = new ApplicationUnit();
+    applicationUnit.setApplicationVersion(productionAppVersion);
+    applicationUnit.setProductionOilUnit(oilUnit);
+    applicationUnit.setProductionGasUnit(gasUnit);
+    when(applicationUnitRepository.findByApplicationVersion(productionAppVersion))
+        .thenReturn(Optional.of(applicationUnit));
+
+    assertThatThrownBy(() -> applicationUnitService.getProductionAverageUnit(productionAppVersion))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessage(MISMATCHED_PRODUCTION_UNITS_EXCEPTION_MESSAGE);
+  }
+
+  private static Stream<Arguments> getMismatchProductionUnits() {
+    return Stream.of(
+        Arguments.of(ProductionUnit.SCM_PER_MONTH, ProductionUnit.SCM_PER_DAY),
+        Arguments.of(ProductionUnit.SCM_PER_MONTH, ProductionUnit.KSCM_PER_DAY),
+        Arguments.of(ProductionUnit.SCM_PER_MONTH, ProductionUnit.KSCM_PER_MONTH),
+        Arguments.of(ProductionUnit.KSCM_PER_MONTH, ProductionUnit.SCM_PER_DAY),
+        Arguments.of(ProductionUnit.KSCM_PER_MONTH, ProductionUnit.KSCM_PER_DAY),
+        Arguments.of(ProductionUnit.KSCM_PER_MONTH, ProductionUnit.SCM_PER_MONTH),
+        Arguments.of(ProductionUnit.SCM_PER_DAY, ProductionUnit.KSCM_PER_DAY),
+        Arguments.of(ProductionUnit.SCM_PER_DAY, ProductionUnit.SCM_PER_MONTH),
+        Arguments.of(ProductionUnit.SCM_PER_DAY, ProductionUnit.KSCM_PER_MONTH),
+        Arguments.of(ProductionUnit.KSCM_PER_DAY, ProductionUnit.SCM_PER_DAY),
+        Arguments.of(ProductionUnit.KSCM_PER_DAY, ProductionUnit.SCM_PER_MONTH),
+        Arguments.of(ProductionUnit.KSCM_PER_DAY, ProductionUnit.KSCM_PER_MONTH)
+    );
   }
 
   @Test

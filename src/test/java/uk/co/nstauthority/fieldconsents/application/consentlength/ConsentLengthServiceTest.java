@@ -5,7 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil.ANNUAL_CONSENT_YEAR;
+import static uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil.LONG_TERM_END_YEAR;
+import static uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil.LONG_TERM_START_YEAR;
+import static uk.co.nstauthority.fieldconsents.production.ProductionTestUtils.END_DATE;
+import static uk.co.nstauthority.fieldconsents.production.ProductionTestUtils.START_DATE;
 
+import java.util.List;
 import java.util.Optional;
 import javax.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Assertions;
@@ -21,9 +27,14 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
+import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
+import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
 @ExtendWith(MockitoExtension.class)
 class ConsentLengthServiceTest {
+
+  private static final String CONSENT_PERIOD_PROMPT = "Consent period";
 
   @Mock
   private ConsentLengthRepository consentLengthRepository;
@@ -84,7 +95,7 @@ class ConsentLengthServiceTest {
     ConsentLengthForm form = consentLengthService.getConsentLengthForm(applicationVersion);
 
     assertThat(form.getConsentLengthType()).isEqualTo(ConsentLengthType.ANNUAL);
-    assertThat(Integer.valueOf(form.getAnnualConsentYear().getInputValue())).isEqualTo(ConsentLengthTestUtil.ANNUAL_CONSENT_YEAR);
+    assertThat(Integer.valueOf(form.getAnnualConsentYear().getInputValue())).isEqualTo(ANNUAL_CONSENT_YEAR);
 
     assertNullShortTermForm(form);
     assertNullLongTermForm(form);
@@ -103,7 +114,7 @@ class ConsentLengthServiceTest {
     assertNullShortTermForm(form);
 
     assertThat(Integer.valueOf(form.getLongTermStartYear().getInputValue()))
-        .isEqualTo(ConsentLengthTestUtil.LONG_TERM_START_YEAR);
+        .isEqualTo(LONG_TERM_START_YEAR);
     assertThat(Integer.valueOf(form.getLongTermEndYear().getInputValue()))
         .isEqualTo(ConsentLengthTestUtil.LONG_TERM_END_YEAR);
   }
@@ -130,7 +141,7 @@ class ConsentLengthServiceTest {
     ConsentLengthDetails consentLengthDetails = getEntityFromArgumentCaptor();
 
     assertThat(consentLengthDetails.getConsentLength()).isEqualTo(ConsentLengthType.ANNUAL);
-    assertThat(consentLengthDetails.getAnnualConsentYear()).isEqualTo(ConsentLengthTestUtil.ANNUAL_CONSENT_YEAR);
+    assertThat(consentLengthDetails.getAnnualConsentYear()).isEqualTo(ANNUAL_CONSENT_YEAR);
 
     assertNull(consentLengthDetails.getShortTermStartDate());
     assertNull(consentLengthDetails.getShortTermEndDate());
@@ -173,7 +184,7 @@ class ConsentLengthServiceTest {
     assertNull(consentLengthDetails.getShortTermStartDate());
     assertNull(consentLengthDetails.getShortTermEndDate());
 
-    assertThat(consentLengthDetails.getLongTermStartYear()).isEqualTo(ConsentLengthTestUtil.LONG_TERM_START_YEAR);
+    assertThat(consentLengthDetails.getLongTermStartYear()).isEqualTo(LONG_TERM_START_YEAR);
     assertThat(consentLengthDetails.getLongTermEndYear()).isEqualTo(ConsentLengthTestUtil.LONG_TERM_END_YEAR);
 
     assertConsentLengthChangeEvent();
@@ -232,6 +243,66 @@ class ConsentLengthServiceTest {
     );
 
     Assertions.assertEquals("Consent details with application version id 1 not found.", exception.getMessage());
+  }
+
+  @Test
+  void getConsentLengthSummaryDataView_noSavedData() {
+    when(consentLengthRepository.findByApplicationVersion(applicationVersion)).thenReturn(Optional.empty());
+
+    var summaryDataView = consentLengthService.getConsentLengthSummaryDataView(applicationVersion);
+
+    assertThat(summaryDataView).usingRecursiveComparison()
+        .isEqualTo(new SummaryDataView(List.of(new SummaryKeyValue(CONSENT_PERIOD_PROMPT, null))));
+  }
+
+  @Test
+  void getConsentLengthSummaryDataView_shortTerm() {
+    consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(applicationVersion);
+    when(consentLengthRepository.findByApplicationVersion(applicationVersion))
+        .thenReturn(Optional.of(consentLengthDetails));
+
+    var summaryDataView = consentLengthService.getConsentLengthSummaryDataView(applicationVersion);
+
+    assertThat(summaryDataView).usingRecursiveComparison()
+        .isEqualTo(new SummaryDataView(
+            List.of(
+                new SummaryKeyValue(CONSENT_PERIOD_PROMPT, ConsentLengthType.SHORT_TERM.getDisplayName()),
+                new SummaryKeyValue("Start date", DateUtils.format(START_DATE, DateUtils.SHORT_DATE)),
+                new SummaryKeyValue("End date", DateUtils.format(END_DATE, DateUtils.SHORT_DATE))
+            )));
+  }
+
+  @Test
+  void getConsentLengthSummaryDataView_annual() {
+    consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForAnnual(applicationVersion);
+    when(consentLengthRepository.findByApplicationVersion(applicationVersion))
+        .thenReturn(Optional.of(consentLengthDetails));
+
+    var summaryDataView = consentLengthService.getConsentLengthSummaryDataView(applicationVersion);
+
+    assertThat(summaryDataView).usingRecursiveComparison()
+        .isEqualTo(new SummaryDataView(
+            List.of(
+                new SummaryKeyValue(CONSENT_PERIOD_PROMPT, ConsentLengthType.ANNUAL.getDisplayName()),
+                new SummaryKeyValue("Year", String.valueOf(ANNUAL_CONSENT_YEAR))
+            )));
+  }
+
+  @Test
+  void getConsentLengthSummaryDataView_longTerm() {
+    consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForLongTerm(applicationVersion);
+    when(consentLengthRepository.findByApplicationVersion(applicationVersion))
+        .thenReturn(Optional.of(consentLengthDetails));
+
+    var summaryDataView = consentLengthService.getConsentLengthSummaryDataView(applicationVersion);
+
+    assertThat(summaryDataView).usingRecursiveComparison()
+        .isEqualTo(new SummaryDataView(
+            List.of(
+                new SummaryKeyValue(CONSENT_PERIOD_PROMPT, ConsentLengthType.LONG_TERM.getDisplayName()),
+                new SummaryKeyValue("Start year", String.valueOf(LONG_TERM_START_YEAR)),
+                new SummaryKeyValue("End year", String.valueOf(LONG_TERM_END_YEAR))
+            )));
   }
 
 }

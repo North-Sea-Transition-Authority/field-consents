@@ -16,7 +16,9 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.consentlength.AnnualUtil;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
+import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
+import uk.co.nstauthority.fieldconsents.production.ProductionView;
 
 @Service
 public class AnnualProductionService {
@@ -27,13 +29,17 @@ public class AnnualProductionService {
 
   private final AnnualProductionMonthRepository annualProductionMonthRepository;
 
+  private final ApplicationUnitService applicationUnitService;
+
   @Autowired
   public AnnualProductionService(ProductionRowService productionRowService,
                                  ConsentLengthService consentLengthService,
-                                 AnnualProductionMonthRepository annualProductionMonthRepository) {
+                                 AnnualProductionMonthRepository annualProductionMonthRepository,
+                                 ApplicationUnitService applicationUnitService) {
     this.productionRowService = productionRowService;
     this.consentLengthService = consentLengthService;
     this.annualProductionMonthRepository = annualProductionMonthRepository;
+    this.applicationUnitService = applicationUnitService;
   }
 
   private List<AnnualProductionMonth> getAnnualProductionMonths(ApplicationVersion applicationVersion) {
@@ -132,4 +138,13 @@ public class AnnualProductionService {
     }
     annualProductionMonthRepository.save(annualProductionMonth);
   }
+
+  public ProductionView getProductionAnnualView(ApplicationVersion applicationVersion) {
+    var annualProductionMonths = getAnnualProductionMonths(applicationVersion);
+    var oilUnit = applicationUnitService.getProductionOilUnit(applicationVersion);
+    var gasUnit = applicationUnitService.getProductionGasUnit(applicationVersion);
+    var averageUnit = applicationUnitService.getProductionAverageUnit(applicationVersion);
+    return ProductionView.fromAnnual(annualProductionMonths, oilUnit, gasUnit, averageUnit);
+  }
+
 }

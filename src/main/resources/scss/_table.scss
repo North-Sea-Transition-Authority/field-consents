@@ -1,0 +1,9 @@
+.fcs-view-table {
+  .govuk-table__cell, .govuk-table__header {
+    text-align: center;
+  }
+
+  th.govuk-table__header:first-child  {
+    text-align: left;
+  }
+}
