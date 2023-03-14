@@ -18,7 +18,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
-import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
+import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 import uk.co.nstauthority.fieldconsents.util.BooleanUtil;
 
@@ -64,29 +64,26 @@ class GasInjectionServiceTest {
   }
 
   @Test
-  void getGasInjectionSummaryDataView_noExistingFlag() {
+  void getGasInjectionSummaryGroup_noExistingFlag() {
     when(applicationFlagService.findFlagValue(applicationVersion, ApplicationFlagType.WILL_GAS_BE_INJECTED))
         .thenReturn(Optional.empty());
 
-    var summaryDataView = gasInjectionService.getGasInjectionSummaryDataView(applicationVersion);
+    var summaryGroup = gasInjectionService.getGasInjectionSummaryGroup(applicationVersion);
 
-    assertThat(summaryDataView).usingRecursiveComparison()
-        .isEqualTo(new SummaryDataView(
-            List.of(new SummaryKeyValue(ApplicationFlagType.WILL_GAS_BE_INJECTED.getDisplayName(), "")
-            )));
-
+    assertThat(summaryGroup)
+        .isNull();
   }
 
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
-  void getGasInjectionSummaryDataView_flagExistWithValue(Boolean willGasBeInjected) {
+  void getGasInjectionSummaryGroup_flagExistWithValue(Boolean willGasBeInjected) {
     when(applicationFlagService.findFlagValue(applicationVersion, ApplicationFlagType.WILL_GAS_BE_INJECTED))
         .thenReturn(Optional.of(willGasBeInjected));
 
-    var summaryDataView = gasInjectionService.getGasInjectionSummaryDataView(applicationVersion);
+    var summaryGroup = gasInjectionService.getGasInjectionSummaryGroup(applicationVersion);
 
-    assertThat(summaryDataView).usingRecursiveComparison()
-        .isEqualTo(new SummaryDataView(
+    assertThat(summaryGroup).usingRecursiveComparison()
+        .isEqualTo(SummaryGroup.simpleSummaryGroup(
             List.of(new SummaryKeyValue(ApplicationFlagType.WILL_GAS_BE_INJECTED.getDisplayName(),
                 BooleanUtil.yesNoFromBoolean(willGasBeInjected))
             )));

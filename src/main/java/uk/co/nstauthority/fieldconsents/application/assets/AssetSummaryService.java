@@ -2,6 +2,8 @@ package uk.co.nstauthority.fieldconsents.application.assets;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -11,10 +13,14 @@ import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAssetLicence;
 import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAssetLicenceService;
+import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService;
+import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
+import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
+import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
 @Service
 public class AssetSummaryService {
@@ -25,13 +31,17 @@ public class AssetSummaryService {
 
   private final OrganisationUnitService organisationUnitService;
 
+  private final ApplicationFlagService applicationFlagService;
+
   @Autowired
   public AssetSummaryService(ApplicationAssetService applicationAssetService,
                              ApplicationAssetLicenceService applicationAssetLicenceService,
-                             OrganisationUnitService organisationUnitService) {
+                             OrganisationUnitService organisationUnitService,
+                             ApplicationFlagService applicationFlagService) {
     this.applicationAssetService = applicationAssetService;
     this.applicationAssetLicenceService = applicationAssetLicenceService;
     this.organisationUnitService = organisationUnitService;
+    this.applicationFlagService = applicationFlagService;
   }
 
   public List<AssetView> getSummaryViews(ApplicationVersion applicationVersion) {
@@ -79,5 +89,37 @@ public class AssetSummaryService {
         licences.stream().map(ApplicationAssetLicence::getCachedLicenceRef).collect(Collectors.joining(", ")),
         deleteUrl
     );
+  }
+
+  public List<SummaryGroup<?>> getAdditionalAssetsSummaryGroups(ApplicationVersion applicationVersion) {
+    var hasSecondaryAssetsOptional = applicationFlagService
+        .findFlagValue(applicationVersion, ApplicationFlagType.HAS_SECONDARY_ASSETS);
+
+    if (hasSecondaryAssetsOptional.isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    List<SummaryGroup<?>> summaryGroups = new ArrayList<>();
+
+    summaryGroups.add(
+        SummaryGroup.simpleSummaryGroup(
+            List.of(SummaryKeyValue.fromBoolean(ApplicationFlagType.HAS_SECONDARY_ASSETS.getDisplayName(),
+                hasSecondaryAssetsOptional.get()))
+        )
+    );
+
+    getSummaryViews(applicationVersion)
+        .stream()
+        .map(assetView -> SummaryGroup.simpleSummaryGroupWithHeading(
+            "Field " + assetView.displayOrder(),
+            List.of(
+                SummaryKeyValue.from("Field", assetView.assetName()),
+                SummaryKeyValue.from("Field operator", assetView.assetOperatorName()),
+                SummaryKeyValue.from("Licences", assetView.assetLicences())
+            )
+        ))
+        .forEach(summaryGroups::add);
+
+    return summaryGroups;
   }
 }

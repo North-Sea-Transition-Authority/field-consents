@@ -28,7 +28,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
-import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
+import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
 @ExtendWith(MockitoExtension.class)
@@ -246,25 +246,25 @@ class ConsentLengthServiceTest {
   }
 
   @Test
-  void getConsentLengthSummaryDataView_noSavedData() {
+  void getConsentLengthSummaryGroup_noSavedData() {
     when(consentLengthRepository.findByApplicationVersion(applicationVersion)).thenReturn(Optional.empty());
 
-    var summaryDataView = consentLengthService.getConsentLengthSummaryDataView(applicationVersion);
+    var summaryGroup = consentLengthService.getConsentLengthSummaryGroup(applicationVersion);
 
-    assertThat(summaryDataView).usingRecursiveComparison()
-        .isEqualTo(new SummaryDataView(List.of(new SummaryKeyValue(CONSENT_PERIOD_PROMPT, null))));
+    assertThat(summaryGroup)
+        .isNull();
   }
 
   @Test
-  void getConsentLengthSummaryDataView_shortTerm() {
+  void getConsentLengthSummaryGroup_shortTerm() {
     consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(applicationVersion);
     when(consentLengthRepository.findByApplicationVersion(applicationVersion))
         .thenReturn(Optional.of(consentLengthDetails));
 
-    var summaryDataView = consentLengthService.getConsentLengthSummaryDataView(applicationVersion);
+    var summaryGroup = consentLengthService.getConsentLengthSummaryGroup(applicationVersion);
 
-    assertThat(summaryDataView).usingRecursiveComparison()
-        .isEqualTo(new SummaryDataView(
+    assertThat(summaryGroup).usingRecursiveComparison()
+        .isEqualTo(SummaryGroup.simpleSummaryGroup(
             List.of(
                 new SummaryKeyValue(CONSENT_PERIOD_PROMPT, ConsentLengthType.SHORT_TERM.getDisplayName()),
                 new SummaryKeyValue("Start date", DateUtils.format(START_DATE, DateUtils.SHORT_DATE)),
@@ -273,15 +273,15 @@ class ConsentLengthServiceTest {
   }
 
   @Test
-  void getConsentLengthSummaryDataView_annual() {
+  void getConsentLengthSummaryGroup_annual() {
     consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForAnnual(applicationVersion);
     when(consentLengthRepository.findByApplicationVersion(applicationVersion))
         .thenReturn(Optional.of(consentLengthDetails));
 
-    var summaryDataView = consentLengthService.getConsentLengthSummaryDataView(applicationVersion);
+    var summaryGroup = consentLengthService.getConsentLengthSummaryGroup(applicationVersion);
 
-    assertThat(summaryDataView).usingRecursiveComparison()
-        .isEqualTo(new SummaryDataView(
+    assertThat(summaryGroup).usingRecursiveComparison()
+        .isEqualTo(SummaryGroup.simpleSummaryGroup(
             List.of(
                 new SummaryKeyValue(CONSENT_PERIOD_PROMPT, ConsentLengthType.ANNUAL.getDisplayName()),
                 new SummaryKeyValue("Year", String.valueOf(ANNUAL_CONSENT_YEAR))
@@ -289,20 +289,19 @@ class ConsentLengthServiceTest {
   }
 
   @Test
-  void getConsentLengthSummaryDataView_longTerm() {
+  void getConsentLengthSummaryGroup_longTerm() {
     consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForLongTerm(applicationVersion);
     when(consentLengthRepository.findByApplicationVersion(applicationVersion))
         .thenReturn(Optional.of(consentLengthDetails));
 
-    var summaryDataView = consentLengthService.getConsentLengthSummaryDataView(applicationVersion);
+    var summaryGroup = consentLengthService.getConsentLengthSummaryGroup(applicationVersion);
 
-    assertThat(summaryDataView).usingRecursiveComparison()
-        .isEqualTo(new SummaryDataView(
+    assertThat(summaryGroup).usingRecursiveComparison()
+        .isEqualTo(SummaryGroup.simpleSummaryGroup(
             List.of(
                 new SummaryKeyValue(CONSENT_PERIOD_PROMPT, ConsentLengthType.LONG_TERM.getDisplayName()),
                 new SummaryKeyValue("Start year", String.valueOf(LONG_TERM_START_YEAR)),
                 new SummaryKeyValue("End year", String.valueOf(LONG_TERM_END_YEAR))
             )));
   }
-
 }

@@ -33,6 +33,8 @@ import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
 import uk.co.nstauthority.fieldconsents.production.ProductionTestUtils;
 import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 import uk.co.nstauthority.fieldconsents.production.ProductionView;
+import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
+import uk.co.nstauthority.fieldconsents.summary.SummaryGroupType;
 
 @ExtendWith(MockitoExtension.class)
 class AnnualProductionServiceTest {
@@ -221,29 +223,16 @@ class AnnualProductionServiceTest {
   }
 
   @Test
-  void getProductionAnnualView_noMonthsData() {
-    List<AnnualProductionMonth> productionMonths = Collections.emptyList();
-    var oilUnit = ProductionUnit.KSCM_PER_MONTH;
-    var gasUnit = ProductionUnit.KSCM_PER_MONTH;
-    var averageUnit = ProductionUnit.KSCM_PER_DAY;
-
+  void getProductionAnnualSummaryGroup_noMonthsData() {
     when(annualProductionMonthRepository.findAllByApplicationVersion(applicationVersion))
-        .thenReturn(productionMonths);
-    when(applicationUnitService.getProductionOilUnit(applicationVersion))
-        .thenReturn(oilUnit);
-    when(applicationUnitService.getProductionGasUnit(applicationVersion))
-        .thenReturn(gasUnit);
-    when(applicationUnitService.getProductionAverageUnit(applicationVersion))
-        .thenReturn(averageUnit);
+        .thenReturn(Collections.emptyList());
 
-    var productionView = annualProductionService.getProductionAnnualView(applicationVersion);
-
-    assertThat(productionView)
-        .isEqualTo(ProductionView.fromAnnual(productionMonths, oilUnit, gasUnit, averageUnit));
+    assertThat(annualProductionService.getProductionAnnualSummaryGroup(applicationVersion))
+        .isNull();
   }
 
   @Test
-  void getProductionAnnualView_monthsDataExists() {
+  void getProductionAnnualSummaryGroup_monthsDataExists() {
     var productionMonths = ProductionTestUtils.getAnnualProductionMonthsData(applicationVersion);
     var oilUnit = ProductionUnit.KSCM_PER_MONTH;
     var gasUnit = ProductionUnit.KSCM_PER_MONTH;
@@ -258,9 +247,16 @@ class AnnualProductionServiceTest {
     when(applicationUnitService.getProductionAverageUnit(applicationVersion))
         .thenReturn(averageUnit);
 
-    var productionView = annualProductionService.getProductionAnnualView(applicationVersion);
+    var productionView = annualProductionService.getProductionAnnualSummaryGroup(applicationVersion);
 
     assertThat(productionView)
-        .isEqualTo(ProductionView.fromAnnual(productionMonths, oilUnit, gasUnit, averageUnit));
+        .isEqualTo(
+            new SummaryGroup<>(
+                null,
+                SummaryGroupType.PRODUCTION_ANNUAL,
+                ProductionView.class,
+                ProductionView.fromAnnual(productionMonths, oilUnit, gasUnit, averageUnit)
+            )
+        );
   }
 }

@@ -7,6 +7,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
 import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
+import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
 @Service
@@ -27,11 +28,17 @@ public class GasInjectionService {
     return gasInjectionForm;
   }
 
-  public SummaryDataView getGasInjectionSummaryDataView(ApplicationVersion applicationVersion) {
-    var willGasBeInjected = applicationFlagService.findFlagValue(applicationVersion, ApplicationFlagType.WILL_GAS_BE_INJECTED)
-        .orElse(null);
+  public SummaryGroup<SummaryDataView> getGasInjectionSummaryGroup(ApplicationVersion applicationVersion) {
+    var willGasBeInjectedOptional = applicationFlagService
+        .findFlagValue(applicationVersion, ApplicationFlagType.WILL_GAS_BE_INJECTED);
 
-    return new SummaryDataView(
-        List.of(SummaryKeyValue.fromBoolean(ApplicationFlagType.WILL_GAS_BE_INJECTED.getDisplayName(), willGasBeInjected)));
+    if (willGasBeInjectedOptional.isEmpty()) {
+      return null;
+    }
+
+    return SummaryGroup.simpleSummaryGroup(
+        List.of(SummaryKeyValue.fromBoolean(ApplicationFlagType.WILL_GAS_BE_INJECTED.getDisplayName(),
+            willGasBeInjectedOptional.get()))
+    );
   }
 }

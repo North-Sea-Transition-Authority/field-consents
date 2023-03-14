@@ -1,19 +1,26 @@
 package uk.co.nstauthority.fieldconsents.summary;
 
-public record SummaryItem<T>(
+import java.util.Collections;
+import java.util.List;
+
+public record SummaryItem(
     String displayName,
-    SummaryItemType summaryItemType,
-    Class<T> clazz,
-    T summaryData
+    List<SummaryGroup<?>> summaryGroups
 ) {
 
-  public static SummaryItem<SummaryDataView> simpleSummaryItem(String displayName,
-                                                               SummaryDataView summaryData) {
-    return new SummaryItem<>(
+  public static SummaryItem withGroup(String displayName,
+                                      SummaryGroup<?> summaryGroup) {
+    return new SummaryItem(
         displayName,
-        SummaryItemType.SIMPLE_SUMMARY,
-        SummaryDataView.class,
-        summaryData
+        summaryGroup != null ? List.of(summaryGroup) : Collections.emptyList()
+    );
+  }
+
+  public static SummaryItem withGroups(String displayName,
+                                       List<SummaryGroup<?>> summaryGroups) {
+    return new SummaryItem(
+        displayName,
+        summaryGroups != null ? summaryGroups : Collections.emptyList()
     );
   }
 }

@@ -1,13 +1,21 @@
 <#include '../layout/layout.ftl'>
+<#import '_emptySummary.ftl' as emptySummary>
 
 <#-- @ftlvariable name="summaryDataView" type="uk.co.nstauthority.fieldconsents.summary.SummaryDataView" -->
 
 <#macro simpleSummary summaryDataView summaryHeading>
-  <@fdsSummaryList.summaryListCard headingText=summaryHeading summaryListId="summary-data-card-list">
-      <#list summaryDataView.dataList() as data>
-        <@fdsSummaryList.summaryListRowNoAction keyText=data.key()>
-          ${(data.value())!""}
+  <#if summaryDataView.keyValues()?has_content>
+    <@fdsSummaryList.summaryListCard
+      headingText=summaryHeading
+      headingSize="h3"
+      summaryListId="summary-data-card-list">
+      <#list summaryDataView.keyValues() as keyValue>
+        <@fdsSummaryList.summaryListRowNoAction keyText=keyValue.key()>
+          ${(keyValue.value())!""}
         </@fdsSummaryList.summaryListRowNoAction>
       </#list>
-  </@fdsSummaryList.summaryListCard>
+    </@fdsSummaryList.summaryListCard>
+  <#else>
+    <@emptySummary.emptySummary/>
+  </#if>
 </#macro>

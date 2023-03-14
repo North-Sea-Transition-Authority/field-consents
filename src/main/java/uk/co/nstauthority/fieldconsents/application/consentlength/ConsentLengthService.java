@@ -12,6 +12,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
+import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
 @Service
@@ -122,21 +123,17 @@ public class ConsentLengthService {
             .formatted(applicationVersion.getId())));
   }
 
-  public SummaryDataView getConsentLengthSummaryDataView(ApplicationVersion applicationVersion) {
-
-    List<SummaryKeyValue> summaryKeyValues = new ArrayList<>();
-
+  public SummaryGroup<SummaryDataView> getConsentLengthSummaryGroup(ApplicationVersion applicationVersion) {
     var consentLengthDetailsOptional = findConsentLengthDetails(applicationVersion);
-    var consentPeriodPrompt = "Consent period";
 
     if (consentLengthDetailsOptional.isEmpty()) {
-      summaryKeyValues.add(SummaryKeyValue.fromKeyNoValue(consentPeriodPrompt));
-      return new SummaryDataView(summaryKeyValues);
+      return null;
     }
 
+    List<SummaryKeyValue> summaryKeyValues = new ArrayList<>();
     var consentLengthDetails = consentLengthDetailsOptional.get();
 
-    summaryKeyValues.add(SummaryKeyValue.from(consentPeriodPrompt,
+    summaryKeyValues.add(SummaryKeyValue.from("Consent period",
         consentLengthDetails.getConsentLength().getDisplayName()));
 
     if (ConsentLengthType.SHORT_TERM.equals(consentLengthDetails.getConsentLength())) {
@@ -149,6 +146,6 @@ public class ConsentLengthService {
       summaryKeyValues.add(SummaryKeyValue.fromInteger("End year", consentLengthDetails.getLongTermEndYear()));
     }
 
-    return new SummaryDataView(summaryKeyValues);
+    return SummaryGroup.simpleSummaryGroup(summaryKeyValues);
   }
 }

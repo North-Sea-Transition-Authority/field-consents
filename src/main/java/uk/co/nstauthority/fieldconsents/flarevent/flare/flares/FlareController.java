@@ -99,7 +99,7 @@ public class FlareController {
   private ModelAndView getViewFlaresSummaryModelAndView(Integer applicationId) {
     ModelAndView modelAndView = new ModelAndView("fcs/flare/flaresSummaryForm");
     modelAndView.addObject(PAGE_TITLE_ATTR_NAME, PAGE_NAME_SUMMARY)
-        .addObject("flareViews", flareSummaryService.getSummaryViews(
+        .addObject("flareViews", flareSummaryService.getFlareViews(
             applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId)))
         .addObject("submitUrl",
             ReverseRouter.route(on(FlareController.class).saveFlaresSummary(applicationId, null, null)));

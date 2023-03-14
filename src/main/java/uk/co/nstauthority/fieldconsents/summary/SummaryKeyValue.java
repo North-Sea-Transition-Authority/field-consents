@@ -12,10 +12,6 @@ public record SummaryKeyValue(
     return new SummaryKeyValue(key, value);
   }
 
-  public static SummaryKeyValue fromKeyNoValue(String key) {
-    return new SummaryKeyValue(key, null);
-  }
-
   public static SummaryKeyValue fromLocalDate(String key, LocalDate localDateValue) {
     return new SummaryKeyValue(key, DateUtils.format(localDateValue, DateUtils.SHORT_DATE));
   }

@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
+import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
 @Service
@@ -38,25 +39,22 @@ public class SupportingInformationService {
     supportingInformationRepository.save(SupportingInformation.from(applicationVersion, form));
   }
 
-  public SummaryDataView getSupportingInformationSummaryDataView(ApplicationVersion applicationVersion) {
+  public SummaryGroup<SummaryDataView> getSupportingInformationSummaryGroup(ApplicationVersion applicationVersion) {
     var supportingInformationOptional = findSupportingInformation(applicationVersion);
 
-    List<SummaryKeyValue> summaryKeyValues = new ArrayList<>();
-    var notesPrompt = "Notes";
-
     if (supportingInformationOptional.isEmpty()) {
-      summaryKeyValues.add(SummaryKeyValue.fromKeyNoValue(notesPrompt));
-      return new SummaryDataView(summaryKeyValues);
+      return null;
     }
 
+    List<SummaryKeyValue> summaryKeyValues = new ArrayList<>();
     var supportingInformation = supportingInformationOptional.get();
 
-    summaryKeyValues.add(SummaryKeyValue.from(notesPrompt, supportingInformation.getNotes()));
+    summaryKeyValues.add(SummaryKeyValue.from("Notes", supportingInformation.getNotes()));
 
     if (ApplicationTypeFeature.ERAP_SUPPORTING_INFORMATION.allowed(applicationVersion.getApplication().getType())) {
       summaryKeyValues.add(SummaryKeyValue.from("ERAP alignment studies and projects", supportingInformation.getErapNotes()));
     }
 
-    return new SummaryDataView(summaryKeyValues);
+    return SummaryGroup.simpleSummaryGroup(summaryKeyValues);
   }
 }

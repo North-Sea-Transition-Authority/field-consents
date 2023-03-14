@@ -33,6 +33,8 @@ import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
 import uk.co.nstauthority.fieldconsents.production.ProductionTestUtils;
 import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 import uk.co.nstauthority.fieldconsents.production.ProductionView;
+import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
+import uk.co.nstauthority.fieldconsents.summary.SummaryGroupType;
 
 @ExtendWith(MockitoExtension.class)
 class LongTermProductionServiceTest {
@@ -265,21 +267,11 @@ class LongTermProductionServiceTest {
 
   @Test
   void getProductionLongTermView_noYearsData() {
-    List<LongTermProductionYear> productionYears = Collections.emptyList();
-    var oilUnit = ProductionUnit.KSCM_PER_DAY;
-    var gasUnit = ProductionUnit.KSCM_PER_DAY;
-
     when(longTermProductionYearRepository.findAllByApplicationVersionOrderByYearAsc(applicationVersion))
-        .thenReturn(productionYears);
-    when(applicationUnitService.getProductionOilUnit(applicationVersion))
-        .thenReturn(oilUnit);
-    when(applicationUnitService.getProductionGasUnit(applicationVersion))
-        .thenReturn(gasUnit);
+        .thenReturn(Collections.emptyList());
 
-    var productionView = longTermProductionService.getProductionLongTermView(applicationVersion);
-
-    assertThat(productionView)
-        .isEqualTo(ProductionView.fromLongTerm(productionYears, oilUnit, gasUnit));
+    assertThat(longTermProductionService.getProductionLongTermSummaryGroup(applicationVersion))
+        .isNull();
   }
 
   @Test
@@ -295,9 +287,16 @@ class LongTermProductionServiceTest {
     when(applicationUnitService.getProductionGasUnit(applicationVersion))
         .thenReturn(gasUnit);
 
-    var productionView = longTermProductionService.getProductionLongTermView(applicationVersion);
+    var productionView = longTermProductionService.getProductionLongTermSummaryGroup(applicationVersion);
 
     assertThat(productionView)
-        .isEqualTo(ProductionView.fromLongTerm(productionYears, oilUnit, gasUnit));
+        .isEqualTo(
+            new SummaryGroup<>(
+                null,
+                SummaryGroupType.PRODUCTION_LONG_TERM,
+                ProductionView.class,
+                ProductionView.fromLongTerm(productionYears, oilUnit, gasUnit)
+            )
+        );
   }
 }

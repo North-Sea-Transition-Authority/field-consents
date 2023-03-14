@@ -2,24 +2,35 @@ package uk.co.nstauthority.fieldconsents.application.summary.shared;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil.fieldAsset1;
+import static uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil.terminalAsset1;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.CONSENT_DETAILS_DISPLAY_ORDER;
+import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertSummaryGroup;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertSummaryItem;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertSummarySection;
-import static uk.co.nstauthority.fieldconsents.summary.SummaryItemType.SIMPLE_SUMMARY;
+import static uk.co.nstauthority.fieldconsents.summary.SummaryGroupType.SIMPLE_SUMMARY;
 
-import java.util.Collections;
+import java.util.List;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationContextService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
+import uk.co.nstauthority.fieldconsents.application.assets.AssetSummaryService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.production.gasinjection.GasInjectionService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
+import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
+import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
 @ExtendWith(MockitoExtension.class)
 class ConsentDetailsSummarySectionServiceTest {
@@ -27,6 +38,8 @@ class ConsentDetailsSummarySectionServiceTest {
   private static final String APPLICATION_DETAILS_ITEM = "Application details";
 
   private static final String CONSENT_DURATION_ITEM = "Consent duration";
+
+  private static final String ADDITIONAL_ASSETS_ITEM = "Additional fields and licences";
 
   private static final String GAS_INJECTION_ITEM = "Gas injection";
 
@@ -39,22 +52,58 @@ class ConsentDetailsSummarySectionServiceTest {
   @Mock
   private GasInjectionService gasInjectionService;
 
+  @Mock
+  private ApplicationAssetService applicationAssetService;
+
+  @Mock
+  private AssetSummaryService assetSummaryService;
+
   @InjectMocks
   private ConsentDetailsSummarySectionService consentDetailsSummarySectionService;
 
-  SummaryDataView summaryDataView = new SummaryDataView(Collections.emptyList());
+  SummaryGroup<SummaryDataView> simpleSummaryGroup =
+      SummaryGroup.simpleSummaryGroup(List.of(new SummaryKeyValue("k", "v")));
+
+  @Test
+  void getSummarySection_production() {
+    var applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(fieldAsset1);
+    when(applicationContextService.getApplicationContextSummaryGroup(applicationVersion))
+        .thenReturn(simpleSummaryGroup);
+    when(consentLengthService.getConsentLengthSummaryGroup(applicationVersion))
+        .thenReturn(simpleSummaryGroup);
+    when(gasInjectionService.getGasInjectionSummaryGroup(applicationVersion))
+          .thenReturn(simpleSummaryGroup);
+
+    var summarySectionOptional = consentDetailsSummarySectionService.getSummarySection(applicationVersion);
+
+    assertThat(summarySectionOptional).isNotEmpty();
+    var summarySection = summarySectionOptional.get();
+    assertSummarySection(summarySection, CONSENT_DETAILS_DISPLAY_ORDER);
+    var summaryItems = summarySection.summaryItems();
+
+    assertThat(summaryItems).hasSize(3);
+
+    assertSummaryItem(summaryItems.get(0), APPLICATION_DETAILS_ITEM, 1);
+    assertSummaryGroup(summaryItems.get(0).summaryGroups().get(0), null, SIMPLE_SUMMARY, SummaryDataView.class);
+    assertSummaryItem(summaryItems.get(1), CONSENT_DURATION_ITEM, 1);
+    assertSummaryGroup(summaryItems.get(1).summaryGroups().get(0), null, SIMPLE_SUMMARY, SummaryDataView.class);
+    assertSummaryItem(summaryItems.get(2), GAS_INJECTION_ITEM, 1);
+    assertSummaryGroup(summaryItems.get(2).summaryGroups().get(0), null, SIMPLE_SUMMARY, SummaryDataView.class);
+  }
 
   @ParameterizedTest
-  @EnumSource(ApplicationType.class)
-  void getSummarySection(ApplicationType applicationType) {
+  @MethodSource("getApplicationTypeAndAsset")
+  void getSummarySection_flareVentFieldTerminal(ApplicationType applicationType, ApplicationAsset applicationAsset) {
     var applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(applicationType);
-    when(applicationContextService.getApplicationContextSummaryDataView(applicationVersion))
-        .thenReturn(summaryDataView);
-    when(consentLengthService.getConsentLengthSummaryDataView(applicationVersion))
-        .thenReturn(summaryDataView);
-    if (ApplicationType.PRODUCTION.equals(applicationType)) {
-      when(gasInjectionService.getGasInjectionSummaryDataView(applicationVersion))
-          .thenReturn(summaryDataView);
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(applicationAsset);
+    when(applicationContextService.getApplicationContextSummaryGroup(applicationVersion))
+        .thenReturn(simpleSummaryGroup);
+    when(consentLengthService.getConsentLengthSummaryGroup(applicationVersion))
+        .thenReturn(simpleSummaryGroup);
+    if (applicationAsset.isField()) {
+      when(assetSummaryService.getAdditionalAssetsSummaryGroups(applicationVersion))
+          .thenReturn(List.of(simpleSummaryGroup));
     }
 
     var summarySectionOptional = consentDetailsSummarySectionService.getSummarySection(applicationVersion);
@@ -64,14 +113,27 @@ class ConsentDetailsSummarySectionServiceTest {
     assertSummarySection(summarySection, CONSENT_DETAILS_DISPLAY_ORDER);
     var summaryItems = summarySection.summaryItems();
 
-    assertSummaryItem(summaryItems.get(0), APPLICATION_DETAILS_ITEM, SIMPLE_SUMMARY, SummaryDataView.class);
-    assertSummaryItem(summaryItems.get(1), CONSENT_DURATION_ITEM, SIMPLE_SUMMARY, SummaryDataView.class);
+    assertSummaryItem(summaryItems.get(0), APPLICATION_DETAILS_ITEM, 1);
+    assertSummaryGroup(summaryItems.get(0).summaryGroups().get(0), null, SIMPLE_SUMMARY, SummaryDataView.class);
+    assertSummaryItem(summaryItems.get(1), CONSENT_DURATION_ITEM, 1);
+    assertSummaryGroup(summaryItems.get(1).summaryGroups().get(0), null, SIMPLE_SUMMARY, SummaryDataView.class);
 
-    if (ApplicationType.PRODUCTION.equals(applicationType)) {
+
+    if (applicationAsset.isField()) {
       assertThat(summaryItems).hasSize(3);
-      assertSummaryItem(summaryItems.get(2), GAS_INJECTION_ITEM, SIMPLE_SUMMARY, SummaryDataView.class);
+      assertSummaryItem(summaryItems.get(2), ADDITIONAL_ASSETS_ITEM, 1);
+      assertSummaryGroup(summaryItems.get(2).summaryGroups().get(0), null, SIMPLE_SUMMARY, SummaryDataView.class);
     } else {
       assertThat(summaryItems).hasSize(2);
     }
+  }
+
+  private static Stream<Arguments> getApplicationTypeAndAsset() {
+    return Stream.of(
+        Arguments.of(ApplicationType.FLARE, fieldAsset1),
+        Arguments.of(ApplicationType.VENT, fieldAsset1),
+        Arguments.of(ApplicationType.FLARE, terminalAsset1),
+        Arguments.of(ApplicationType.VENT, terminalAsset1)
+    );
   }
 }

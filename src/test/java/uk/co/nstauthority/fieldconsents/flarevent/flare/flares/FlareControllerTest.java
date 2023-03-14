@@ -158,7 +158,7 @@ class FlareControllerTest extends AbstractControllerTest {
   @WithMockUser
   void viewFlaresSummary_flaresExist() throws Exception {
     when(flareService.flaresExistForApplicationVersion(applicationVersion)).thenReturn(Boolean.TRUE);
-    when(flareSummaryService.getSummaryViews(applicationVersion)).thenReturn(FlareTestUtil.flareViews);
+    when(flareSummaryService.getFlareViews(applicationVersion)).thenReturn(FlareTestUtil.flareViews);
 
     var modelAndView = mockMvc.perform(
             get(ReverseRouter.route(on(FlareController.class).viewFlaresSummary(ApplicationTestUtil.APPLICATION_ID))))
@@ -189,7 +189,7 @@ class FlareControllerTest extends AbstractControllerTest {
   void saveFlaresSummary_invalidForm() throws Exception {
 
     doCallRealMethod().when(flareSetupFormValidator).validate(any(), any());
-    when(flareSummaryService.getSummaryViews(applicationVersion)).thenReturn(FlareTestUtil.flareViews);
+    when(flareSummaryService.getFlareViews(applicationVersion)).thenReturn(FlareTestUtil.flareViews);
 
     var modelAndView = mockMvc.perform(post(ReverseRouter.route(on(FlareController.class).saveFlaresSummary(
         ApplicationTestUtil.APPLICATION_ID, null, null)))

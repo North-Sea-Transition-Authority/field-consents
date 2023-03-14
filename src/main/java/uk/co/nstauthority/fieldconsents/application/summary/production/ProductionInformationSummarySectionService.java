@@ -9,12 +9,10 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
-import uk.co.nstauthority.fieldconsents.production.ProductionView;
 import uk.co.nstauthority.fieldconsents.production.annual.AnnualProductionService;
 import uk.co.nstauthority.fieldconsents.production.longterm.LongTermProductionService;
 import uk.co.nstauthority.fieldconsents.production.shortterm.ShortTermProductionService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryItem;
-import uk.co.nstauthority.fieldconsents.summary.SummaryItemType;
 import uk.co.nstauthority.fieldconsents.summary.SummarySection;
 import uk.co.nstauthority.fieldconsents.summary.SummarySectionService;
 
@@ -42,9 +40,9 @@ public class ProductionInformationSummarySectionService implements SummarySectio
 
   @Override
   public Optional<SummarySection> getSummarySection(ApplicationVersion applicationVersion) {
-    List<SummaryItem<?>> summaryItems = new ArrayList<>();
+    List<SummaryItem> summaryItems = new ArrayList<>();
 
-    if (applicationVersion.getApplication().getType() != ApplicationType.PRODUCTION) {
+    if (!ApplicationType.PRODUCTION.equals(applicationVersion.getApplication().getType())) {
       return Optional.empty();
     }
 
@@ -62,26 +60,20 @@ public class ProductionInformationSummarySectionService implements SummarySectio
     return Optional.of(new SummarySection(20, summaryItems));
   }
 
-  private SummaryItem<ProductionView> getProductionConsentSummaryItem(ApplicationVersion applicationVersion,
-                                                                      ConsentLengthDetails consentLengthDetails) {
+  private SummaryItem getProductionConsentSummaryItem(ApplicationVersion applicationVersion,
+                                                      ConsentLengthDetails consentLengthDetails) {
 
     var consentLengthType = consentLengthDetails.getConsentLength();
 
     return switch (consentLengthType) {
-      case SHORT_TERM -> new SummaryItem<>(consentLengthType.getDisplayName(),
-          SummaryItemType.PRODUCTION_SHORT_TERM,
-          ProductionView.class,
-          shortTermProductionService.getProductionShortTermView(applicationVersion)
+      case SHORT_TERM -> SummaryItem.withGroup(consentLengthType.getDisplayName(),
+          shortTermProductionService.getProductionShortTermSummaryGroup(applicationVersion)
       );
-      case ANNUAL -> new SummaryItem<>(consentLengthType.getDisplayName(),
-          SummaryItemType.PRODUCTION_ANNUAL,
-          ProductionView.class,
-          annualProductionService.getProductionAnnualView(applicationVersion)
+      case ANNUAL -> SummaryItem.withGroup(consentLengthType.getDisplayName(),
+          annualProductionService.getProductionAnnualSummaryGroup(applicationVersion)
       );
-      case LONG_TERM -> new SummaryItem<>(consentLengthType.getDisplayName(),
-          SummaryItemType.PRODUCTION_LONG_TERM,
-          ProductionView.class,
-          longTermProductionService.getProductionLongTermView(applicationVersion)
+      case LONG_TERM -> SummaryItem.withGroup(consentLengthType.getDisplayName(),
+          longTermProductionService.getProductionLongTermSummaryGroup(applicationVersion)
       );
     };
   }

@@ -43,7 +43,7 @@ public class FlareTestUtil {
 
   public static List<FlareView> flareViews =
       List.of(FlareView.from(flareHp, 1), FlareView.from(flareMp, 2),
-          FlareView.from(flareLp, 3), FlareView.from(flareLpp, 2)
+          FlareView.from(flareLp, 3), FlareView.from(flareLpp, 4)
       );
 
   public static Map<String, String> flareTypesAsMap =

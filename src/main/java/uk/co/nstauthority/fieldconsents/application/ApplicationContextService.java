@@ -8,6 +8,7 @@ import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetServi
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
+import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
 @Service
@@ -39,7 +40,7 @@ public class ApplicationContextService {
     return new ApplicationContextJson(primaryAsset, primaryOperator);
   }
 
-  public SummaryDataView getApplicationContextSummaryDataView(ApplicationVersion applicationVersion) {
+  public SummaryGroup<SummaryDataView> getApplicationContextSummaryGroup(ApplicationVersion applicationVersion) {
     var applicationContextJson = getApplicationContextJson(applicationVersion);
 
     List<SummaryKeyValue> summaryKeyValues = new ArrayList<>();
@@ -51,6 +52,6 @@ public class ApplicationContextService {
     summaryKeyValues.add(SummaryKeyValue.from("Primary operator",
         applicationContextJson.getPrimaryOperatorName()));
 
-    return new SummaryDataView(summaryKeyValues);
+    return SummaryGroup.simpleSummaryGroup(summaryKeyValues);
   }
 }

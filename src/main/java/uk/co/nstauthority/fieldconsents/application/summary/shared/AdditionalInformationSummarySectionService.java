@@ -11,7 +11,6 @@ import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetServi
 import uk.co.nstauthority.fieldconsents.application.eiadirection.EiaDirectionService;
 import uk.co.nstauthority.fieldconsents.application.supportinginformation.SupportingInformationService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
-import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 import uk.co.nstauthority.fieldconsents.summary.SummaryItem;
 import uk.co.nstauthority.fieldconsents.summary.SummarySection;
 import uk.co.nstauthority.fieldconsents.summary.SummarySectionService;
@@ -42,7 +41,7 @@ public class AdditionalInformationSummarySectionService implements SummarySectio
 
   @Override
   public Optional<SummarySection> getSummarySection(ApplicationVersion applicationVersion) {
-    List<SummaryItem<?>> summaryItems = new ArrayList<>();
+    List<SummaryItem> summaryItems = new ArrayList<>();
 
     var primaryAsset = applicationAssetService.getPrimaryAsset(applicationVersion);
 
@@ -58,15 +57,15 @@ public class AdditionalInformationSummarySectionService implements SummarySectio
     return Optional.of(new SummarySection(30, summaryItems));
   }
 
-  private SummaryItem<SummaryDataView> getEiaDirectionSummaryItem(ApplicationVersion applicationVersion) {
-    return SummaryItem.simpleSummaryItem("EIA screening direction",
-        eiaDirectionService.getEiaDirectionSummaryDataView(applicationVersion)
+  private SummaryItem getEiaDirectionSummaryItem(ApplicationVersion applicationVersion) {
+    return SummaryItem.withGroup("EIA screening direction",
+        eiaDirectionService.getEiaDirectionSummaryGroup(applicationVersion)
     );
   }
 
-  private SummaryItem<SummaryDataView> getSupportingInformationSummaryItem(ApplicationVersion applicationVersion) {
-    return SummaryItem.simpleSummaryItem("Supporting information",
-        supportingInformationService.getSupportingInformationSummaryDataView(applicationVersion)
+  private SummaryItem getSupportingInformationSummaryItem(ApplicationVersion applicationVersion) {
+    return SummaryItem.withGroup("Supporting information",
+        supportingInformationService.getSupportingInformationSummaryGroup(applicationVersion)
     );
   }
 }

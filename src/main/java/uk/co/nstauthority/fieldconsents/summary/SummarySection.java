@@ -4,6 +4,6 @@ import java.util.List;
 
 public record SummarySection(
     int displayOrder,
-    List<SummaryItem<?>> summaryItems
+    List<SummaryItem> summaryItems
 ) {
 }

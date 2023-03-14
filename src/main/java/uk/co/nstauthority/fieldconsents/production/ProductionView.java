@@ -27,19 +27,8 @@ public record ProductionView(
   private static final String TOTAL_PROMPT = "Totals";
   private static final String AVERAGE_PROMPT = "Daily average (%s)";
 
-  private static ProductionView emptyFrom(String periodHeading,
-                                          ProductionUnit oilUnit,
-                                          ProductionUnit gasUnit) {
-
-    return new ProductionView(
-        periodHeading,
-        CONSENT_DAYS_HEADING,
-        MIN_OIL_HEADING.formatted(oilUnit.getDisplayName()),
-        MAX_OIL_HEADING.formatted(oilUnit.getDisplayName()),
-        MIN_GAS_HEADING.formatted(gasUnit.getDisplayName()),
-        MAX_GAS_HEADING.formatted(gasUnit.getDisplayName()),
-        Collections.emptyList()
-    );
+  public static ProductionView empty() {
+    return new ProductionView(null, null, null, null, null, null, Collections.emptyList());
   }
 
   public static ProductionView fromShortTerm(List<ShortTermProductionMonth> productionMonths,
@@ -48,7 +37,7 @@ public record ProductionView(
                                              ProductionUnit averageUnit) {
 
     if (productionMonths.isEmpty()) {
-      return emptyFrom(MONTH_HEADING, oilUnit, gasUnit);
+      return empty();
     }
 
     List<ProductionRowView> productionRowViews = new ArrayList<>();
@@ -67,7 +56,7 @@ public record ProductionView(
                                           ProductionUnit gasUnit,
                                           ProductionUnit averageUnit) {
     if (productionMonths.isEmpty()) {
-      return ProductionView.emptyFrom(MONTH_HEADING, oilUnit, gasUnit);
+      return empty();
     }
 
     List<ProductionRowView> productionRowViews = new ArrayList<>();
@@ -120,7 +109,7 @@ public record ProductionView(
                                             ProductionUnit oilUnit,
                                             ProductionUnit gasUnit) {
     if (productionYears.isEmpty()) {
-      return ProductionView.emptyFrom(YEAR_HEADING, oilUnit, gasUnit);
+      return empty();
     }
 
     List<ProductionRowView> productionRowViews = new ArrayList<>();

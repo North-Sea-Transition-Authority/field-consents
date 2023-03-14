@@ -1,6 +1,6 @@
 package uk.co.nstauthority.fieldconsents.summary;
 
-public enum SummaryItemType {
+public enum SummaryGroupType {
   SIMPLE_SUMMARY,
   PRODUCTION_SHORT_TERM,
   PRODUCTION_ANNUAL,

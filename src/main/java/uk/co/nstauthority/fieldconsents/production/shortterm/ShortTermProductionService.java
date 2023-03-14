@@ -23,6 +23,8 @@ import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
 import uk.co.nstauthority.fieldconsents.production.ProductionView;
+import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
+import uk.co.nstauthority.fieldconsents.summary.SummaryGroupType;
 
 @Service
 public class ShortTermProductionService {
@@ -175,11 +177,21 @@ public class ShortTermProductionService {
     shortTermProductionMonthRepository.save(shortTermProductionMonth);
   }
 
-  public ProductionView getProductionShortTermView(ApplicationVersion applicationVersion) {
+  public SummaryGroup<ProductionView> getProductionShortTermSummaryGroup(ApplicationVersion applicationVersion) {
     var shortTermProductionMonths = getShortTermProductionMonths(applicationVersion);
+
+    if (shortTermProductionMonths.isEmpty()) {
+      return null;
+    }
+
     var oilUnit = applicationUnitService.getProductionOilUnit(applicationVersion);
     var gasUnit = applicationUnitService.getProductionGasUnit(applicationVersion);
     var averageUnit = applicationUnitService.getProductionAverageUnit(applicationVersion);
-    return ProductionView.fromShortTerm(shortTermProductionMonths, oilUnit, gasUnit, averageUnit);
+    return new SummaryGroup<>(
+        null,
+        SummaryGroupType.PRODUCTION_SHORT_TERM,
+        ProductionView.class,
+        ProductionView.fromShortTerm(shortTermProductionMonths, oilUnit, gasUnit, averageUnit)
+    );
   }
 }

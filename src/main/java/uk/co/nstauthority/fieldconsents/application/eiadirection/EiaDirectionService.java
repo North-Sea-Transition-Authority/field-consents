@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
+import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
 @Service
@@ -51,26 +52,24 @@ public class EiaDirectionService {
         : null;
   }
 
-  public SummaryDataView getEiaDirectionSummaryDataView(ApplicationVersion applicationVersion) {
+  public SummaryGroup<SummaryDataView> getEiaDirectionSummaryGroup(ApplicationVersion applicationVersion) {
     var eiaDirectionOptional = findEiaDirection(applicationVersion);
-    List<SummaryKeyValue> summaryKeyValues = new ArrayList<>();
-    var haveSubmittedEiaDirectionPrompt = "Have you submitted an EIA screening direction?";
 
     if (eiaDirectionOptional.isEmpty()) {
-      summaryKeyValues.add(SummaryKeyValue.fromKeyNoValue(haveSubmittedEiaDirectionPrompt));
-      return new SummaryDataView(summaryKeyValues);
+      return null;
     }
 
+    List<SummaryKeyValue> summaryKeyValues = new ArrayList<>();
     var eiaDirection = eiaDirectionOptional.get();
 
-    summaryKeyValues.add(SummaryKeyValue.fromBoolean(haveSubmittedEiaDirectionPrompt,
+    summaryKeyValues.add(SummaryKeyValue.fromBoolean("Have you submitted an EIA screening direction?",
         eiaDirection.getHaveSubmittedEiaDirection()));
 
     if (Boolean.TRUE.equals(eiaDirection.getHaveSubmittedEiaDirection())) {
       summaryKeyValues.add(SummaryKeyValue.from("EIA screening direction reference",
           getSatRef(eiaDirection.getSatId())));
 
-      return new SummaryDataView(summaryKeyValues);
+      return SummaryGroup.simpleSummaryGroup(summaryKeyValues);
     }
 
     summaryKeyValues.add(SummaryKeyValue.fromBoolean("Do you have an EIA screening direction that still needs to be submitted?",
@@ -80,12 +79,12 @@ public class EiaDirectionService {
       summaryKeyValues.add(SummaryKeyValue.fromLocalDate("What is the latest date this will be submitted?",
           eiaDirection.getLatestDateToBeSubmitted()));
 
-      return new SummaryDataView(summaryKeyValues);
+      return SummaryGroup.simpleSummaryGroup(summaryKeyValues);
     }
 
     summaryKeyValues.add(SummaryKeyValue.from("Explain why you don’t intend to submit an EIA screening direction",
         eiaDirection.getWhyNoEiaDirection()));
 
-    return new SummaryDataView(summaryKeyValues);
+    return SummaryGroup.simpleSummaryGroup(summaryKeyValues);
   }
 }

@@ -29,34 +29,34 @@ class ProductionViewTest {
   }
 
   @Test
+  void empty() {
+    assertThat(ProductionView.empty())
+        .isEqualTo(new ProductionView(null, null, null, null, null, null, Collections.emptyList()));
+  }
+
+  @Test
   void fromShortTerm_noProductionMonthsData() {
     var productionView = ProductionView.fromShortTerm(Collections.emptyList(), ProductionUnit.KSCM_PER_MONTH, ProductionUnit.KSCM_PER_MONTH, ProductionUnit.KSCM_PER_DAY);
-    var emptyProductionView = ProductionViewTestUtil.emptyShortTerm();
 
     assertThat(productionView)
-        .usingRecursiveComparison()
-        .isEqualTo(emptyProductionView);
+        .isEqualTo(ProductionView.empty());
   }
 
   @Test
   void fromAnnual_noProductionMonthsData() {
     var productionView = ProductionView.fromAnnual(Collections.emptyList(), ProductionUnit.KSCM_PER_MONTH, ProductionUnit.KSCM_PER_MONTH, ProductionUnit.KSCM_PER_DAY);
-    var emptyProductionView = ProductionViewTestUtil.emptyAnnual();
 
     assertThat(productionView)
-        .usingRecursiveComparison()
-        .isEqualTo(emptyProductionView);
+        .isEqualTo(ProductionView.empty());
   }
 
 
   @Test
   void fromLongTerm_noProductionMonthsData() {
     var productionView = ProductionView.fromLongTerm(Collections.emptyList(), ProductionUnit.KSCM_PER_DAY, ProductionUnit.KSCM_PER_DAY);
-    var emptyProductionView = ProductionViewTestUtil.emptyLongTerm();
 
     assertThat(productionView)
-        .usingRecursiveComparison()
-        .isEqualTo(emptyProductionView);
+        .isEqualTo(ProductionView.empty());
   }
 
   @Test

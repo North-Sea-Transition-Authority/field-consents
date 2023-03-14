@@ -35,6 +35,8 @@ import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
 import uk.co.nstauthority.fieldconsents.production.ProductionTestUtils;
 import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 import uk.co.nstauthority.fieldconsents.production.ProductionView;
+import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
+import uk.co.nstauthority.fieldconsents.summary.SummaryGroupType;
 
 @ExtendWith(MockitoExtension.class)
 class ShortTermProductionServiceTest {
@@ -227,24 +229,11 @@ class ShortTermProductionServiceTest {
 
   @Test
   void getProductionShortTermView_noMonthsData() {
-    List<ShortTermProductionMonth> productionMonths = Collections.emptyList();
-    var oilUnit = ProductionUnit.KSCM_PER_MONTH;
-    var gasUnit = ProductionUnit.KSCM_PER_MONTH;
-    var averageUnit = ProductionUnit.KSCM_PER_DAY;
-
     when(shortTermProductionMonthRepository.findAllByApplicationVersion(applicationVersion))
-        .thenReturn(productionMonths);
-    when(applicationUnitService.getProductionOilUnit(applicationVersion))
-        .thenReturn(oilUnit);
-    when(applicationUnitService.getProductionGasUnit(applicationVersion))
-        .thenReturn(gasUnit);
-    when(applicationUnitService.getProductionAverageUnit(applicationVersion))
-        .thenReturn(averageUnit);
+        .thenReturn(Collections.emptyList());
 
-    var productionView = shortTermProductionService.getProductionShortTermView(applicationVersion);
-
-    assertThat(productionView)
-        .isEqualTo(ProductionView.fromShortTerm(productionMonths, oilUnit, gasUnit, averageUnit));
+    assertThat(shortTermProductionService.getProductionShortTermSummaryGroup(applicationVersion))
+        .isNull();
   }
 
   @Test
@@ -263,9 +252,16 @@ class ShortTermProductionServiceTest {
     when(applicationUnitService.getProductionAverageUnit(applicationVersion))
         .thenReturn(averageUnit);
 
-    var productionView = shortTermProductionService.getProductionShortTermView(applicationVersion);
+    var productionView = shortTermProductionService.getProductionShortTermSummaryGroup(applicationVersion);
 
     assertThat(productionView)
-        .isEqualTo(ProductionView.fromShortTerm(productionMonths, oilUnit, gasUnit, averageUnit));
+        .isEqualTo(
+            new SummaryGroup<>(
+                null,
+                SummaryGroupType.PRODUCTION_SHORT_TERM,
+                ProductionView.class,
+                ProductionView.fromShortTerm(productionMonths, oilUnit, gasUnit, averageUnit)
+            )
+        );
   }
 }
