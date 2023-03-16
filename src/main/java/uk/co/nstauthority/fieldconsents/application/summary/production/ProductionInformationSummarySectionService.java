@@ -66,14 +66,14 @@ public class ProductionInformationSummarySectionService implements SummarySectio
     var consentLengthType = consentLengthDetails.getConsentLength();
 
     return switch (consentLengthType) {
-      case SHORT_TERM -> SummaryItem.withGroup(consentLengthType.getDisplayName(),
-          shortTermProductionService.getProductionShortTermSummaryGroup(applicationVersion)
+      case SHORT_TERM -> SummaryItem.withCard(consentLengthType.getDisplayName(),
+          shortTermProductionService.getProductionShortTermSummaryCard(applicationVersion)
       );
-      case ANNUAL -> SummaryItem.withGroup(consentLengthType.getDisplayName(),
-          annualProductionService.getProductionAnnualSummaryGroup(applicationVersion)
+      case ANNUAL -> SummaryItem.withCard(consentLengthType.getDisplayName(),
+          annualProductionService.getProductionAnnualSummaryCard(applicationVersion)
       );
-      case LONG_TERM -> SummaryItem.withGroup(consentLengthType.getDisplayName(),
-          longTermProductionService.getProductionLongTermSummaryGroup(applicationVersion)
+      case LONG_TERM -> SummaryItem.withCard(consentLengthType.getDisplayName(),
+          longTermProductionService.getProductionLongTermSummaryCard(applicationVersion)
       );
     };
   }

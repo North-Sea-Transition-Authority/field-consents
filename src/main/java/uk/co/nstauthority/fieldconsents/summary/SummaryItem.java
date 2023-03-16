@@ -4,26 +4,26 @@ import java.util.List;
 
 public record SummaryItem(
     String displayName,
-    List<SummaryGroup> summaryGroups
+    List<SummaryCard> summaryCards
 ) {
 
-  public static SummaryItem withGroup(String displayName,
-                                      SummaryGroup summaryGroup) {
+  public static SummaryItem withCard(String displayName,
+                                     SummaryCard summaryCard) {
     return new SummaryItem(
         displayName,
-        summaryGroup != null
-            ? List.of(summaryGroup)
-            : SummaryGroup.emptySummaryGroupList()
+        summaryCard != null
+            ? List.of(summaryCard)
+            : SummaryCard.emptySummaryCardList()
     );
   }
 
-  public static SummaryItem withGroups(String displayName,
-                                       List<SummaryGroup> summaryGroups) {
+  public static SummaryItem withCards(String displayName,
+                                      List<SummaryCard> summaryCards) {
     return new SummaryItem(
         displayName,
-        summaryGroups != null && !summaryGroups.isEmpty()
-            ? summaryGroups
-            : SummaryGroup.emptySummaryGroupList()
+        summaryCards != null && !summaryCards.isEmpty()
+            ? summaryCards
+            : SummaryCard.emptySummaryCardList()
     );
   }
 }

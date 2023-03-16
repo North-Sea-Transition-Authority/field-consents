@@ -19,8 +19,8 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthS
 import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
 import uk.co.nstauthority.fieldconsents.production.ProductionView;
-import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
-import uk.co.nstauthority.fieldconsents.summary.SummaryGroupType;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCardType;
 
 @Service
 public class AnnualProductionService {
@@ -141,19 +141,19 @@ public class AnnualProductionService {
     annualProductionMonthRepository.save(annualProductionMonth);
   }
 
-  public SummaryGroup getProductionAnnualSummaryGroup(ApplicationVersion applicationVersion) {
+  public SummaryCard getProductionAnnualSummaryCard(ApplicationVersion applicationVersion) {
     var annualProductionMonths = getAnnualProductionMonths(applicationVersion);
 
     if (annualProductionMonths.isEmpty()) {
-      return SummaryGroup.emptySummaryGroup();
+      return SummaryCard.emptySummaryCard();
     }
 
     var oilUnit = applicationUnitService.getProductionOilUnit(applicationVersion);
     var gasUnit = applicationUnitService.getProductionGasUnit(applicationVersion);
     var averageUnit = applicationUnitService.getProductionAverageUnit(applicationVersion);
-    return new SummaryGroup(
+    return new SummaryCard(
         null,
-        SummaryGroupType.PRODUCTION_ANNUAL,
+        SummaryCardType.PRODUCTION_ANNUAL,
         ProductionView.fromAnnual(annualProductionMonths, oilUnit, gasUnit, averageUnit)
     );
   }

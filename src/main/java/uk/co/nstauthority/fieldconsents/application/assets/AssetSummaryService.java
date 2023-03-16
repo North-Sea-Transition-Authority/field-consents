@@ -18,7 +18,7 @@ import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
-import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
 @Service
@@ -90,18 +90,18 @@ public class AssetSummaryService {
     );
   }
 
-  public List<SummaryGroup> getAdditionalAssetsSummaryGroups(ApplicationVersion applicationVersion) {
+  public List<SummaryCard> getAdditionalAssetsSummaryCards(ApplicationVersion applicationVersion) {
     var hasSecondaryAssetsOptional = applicationFlagService
         .findFlagValue(applicationVersion, ApplicationFlagType.HAS_SECONDARY_ASSETS);
 
     if (hasSecondaryAssetsOptional.isEmpty()) {
-      return SummaryGroup.emptySummaryGroupList();
+      return SummaryCard.emptySummaryCardList();
     }
 
-    List<SummaryGroup> summaryGroups = new ArrayList<>();
+    List<SummaryCard> summaryCards = new ArrayList<>();
 
-    summaryGroups.add(
-        SummaryGroup.simpleSummaryGroup(
+    summaryCards.add(
+        SummaryCard.simpleSummaryCard(
             List.of(SummaryKeyValue.fromBoolean(ApplicationFlagType.HAS_SECONDARY_ASSETS.getDisplayName(),
                 hasSecondaryAssetsOptional.get()))
         )
@@ -109,7 +109,7 @@ public class AssetSummaryService {
 
     getSummaryViews(applicationVersion)
         .stream()
-        .map(assetView -> SummaryGroup.simpleSummaryGroupWithHeading(
+        .map(assetView -> SummaryCard.simpleSummaryCardWithHeading(
             "Field " + assetView.displayOrder(),
             List.of(
                 SummaryKeyValue.from("Field", assetView.assetName()),
@@ -117,8 +117,8 @@ public class AssetSummaryService {
                 SummaryKeyValue.from("Licences", assetView.assetLicences())
             )
         ))
-        .forEach(summaryGroups::add);
+        .forEach(summaryCards::add);
 
-    return summaryGroups;
+    return summaryCards;
   }
 }

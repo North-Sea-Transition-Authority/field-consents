@@ -3,11 +3,11 @@ package uk.co.nstauthority.fieldconsents.application.summary.flare;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.FLARE_INFORMATION_DISPLAY_ORDER;
-import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertEmptySummaryGroup;
-import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertSummaryGroup;
+import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertEmptySummaryCard;
+import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertSummaryCard;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertSummaryItem;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertSummarySection;
-import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.simpleSummaryGroups;
+import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.simpleSummaryCards;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,9 +30,9 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthT
 import uk.co.nstauthority.fieldconsents.flarevent.flare.annual.FlareAnnualService;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flares.FlareSummaryService;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.shortterm.FlareShortTermService;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCardType;
 import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
-import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
-import uk.co.nstauthority.fieldconsents.summary.SummaryGroupType;
 
 @ExtendWith(MockitoExtension.class)
 class FlareInformationSummarySectionServiceTest {
@@ -79,12 +79,12 @@ class FlareInformationSummarySectionServiceTest {
   }
 
   @ParameterizedTest
-  @MethodSource("getSummaryGroupList")
-  void getSummarySection_shortTerm_empty(List<SummaryGroup> summaryGroups) {
+  @MethodSource("getSummaryCardList")
+  void getSummarySection_shortTerm_empty(List<SummaryCard> summaryCards) {
     when(consentLengthService.findConsentLengthDetails(applicationVersion))
         .thenReturn(Optional.of(ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(applicationVersion)));
     when(flareSummaryService.getSummariesForFlares(applicationVersion))
-        .thenReturn(summaryGroups);
+        .thenReturn(summaryCards);
 
     var summarySectionOptional = flareInformationSummarySectionService.getSummarySection(applicationVersion);
 
@@ -95,22 +95,22 @@ class FlareInformationSummarySectionServiceTest {
     var summaryItems = summarySection.summaryItems();
     assertThat(summaryItems).hasSize(1);
 
-    if (SummaryGroupType.EMPTY_SUMMARY.equals(summaryGroups.get(0).summaryGroupType())) {
+    if (SummaryCardType.EMPTY_SUMMARY.equals(summaryCards.get(0).summaryCardType())) {
       assertSummaryItem(summaryItems.get(0), FLARES_ITEM, 1);
-      assertEmptySummaryGroup(summaryItems.get(0).summaryGroups().get(0));
+      assertEmptySummaryCard(summaryItems.get(0).summaryCards().get(0));
     } else {
       assertSummaryItem(summaryItems.get(0), FLARES_ITEM, 2);
-      assertSummaryGroup(summaryItems.get(0).summaryGroups().get(0), summaryGroups.get(0).displayName(),
-          SummaryGroupType.SIMPLE_SUMMARY, SummaryDataView.class);
-      assertSummaryGroup(summaryItems.get(0).summaryGroups().get(1), summaryGroups.get(1).displayName(),
-          SummaryGroupType.SIMPLE_SUMMARY, SummaryDataView.class);
+      assertSummaryCard(summaryItems.get(0).summaryCards().get(0), summaryCards.get(0).displayName(),
+          SummaryCardType.SIMPLE_SUMMARY, SummaryDataView.class);
+      assertSummaryCard(summaryItems.get(0).summaryCards().get(1), summaryCards.get(1).displayName(),
+          SummaryCardType.SIMPLE_SUMMARY, SummaryDataView.class);
     }
   }
 
-  private static Stream<Arguments> getSummaryGroupList() {
+  private static Stream<Arguments> getSummaryCardList() {
     return Stream.of(
-        Arguments.of(SummaryGroup.emptySummaryGroupList()),
-        Arguments.of(simpleSummaryGroups)
+        Arguments.of(SummaryCard.emptySummaryCardList()),
+        Arguments.of(simpleSummaryCards)
     );
   }
 }

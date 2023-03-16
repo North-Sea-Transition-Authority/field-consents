@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
-import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
 @Service
@@ -27,15 +27,15 @@ public class GasInjectionService {
     return gasInjectionForm;
   }
 
-  public SummaryGroup getGasInjectionSummaryGroup(ApplicationVersion applicationVersion) {
+  public SummaryCard getGasInjectionSummaryCard(ApplicationVersion applicationVersion) {
     var willGasBeInjectedOptional = applicationFlagService
         .findFlagValue(applicationVersion, ApplicationFlagType.WILL_GAS_BE_INJECTED);
 
     if (willGasBeInjectedOptional.isEmpty()) {
-      return SummaryGroup.emptySummaryGroup();
+      return SummaryCard.emptySummaryCard();
     }
 
-    return SummaryGroup.simpleSummaryGroup(
+    return SummaryCard.simpleSummaryCard(
         List.of(SummaryKeyValue.fromBoolean(ApplicationFlagType.WILL_GAS_BE_INJECTED.getDisplayName(),
             willGasBeInjectedOptional.get()))
     );

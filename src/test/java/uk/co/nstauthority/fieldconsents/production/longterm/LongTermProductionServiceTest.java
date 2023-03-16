@@ -33,8 +33,8 @@ import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
 import uk.co.nstauthority.fieldconsents.production.ProductionTestUtils;
 import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 import uk.co.nstauthority.fieldconsents.production.ProductionView;
-import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
-import uk.co.nstauthority.fieldconsents.summary.SummaryGroupType;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCardType;
 
 @ExtendWith(MockitoExtension.class)
 class LongTermProductionServiceTest {
@@ -270,8 +270,8 @@ class LongTermProductionServiceTest {
     when(longTermProductionYearRepository.findAllByApplicationVersionOrderByYearAsc(applicationVersion))
         .thenReturn(Collections.emptyList());
 
-    assertThat(longTermProductionService.getProductionLongTermSummaryGroup(applicationVersion))
-        .isEqualTo(SummaryGroup.emptySummaryGroup());
+    assertThat(longTermProductionService.getProductionLongTermSummaryCard(applicationVersion))
+        .isEqualTo(SummaryCard.emptySummaryCard());
   }
 
   @Test
@@ -287,13 +287,13 @@ class LongTermProductionServiceTest {
     when(applicationUnitService.getProductionGasUnit(applicationVersion))
         .thenReturn(gasUnit);
 
-    var productionView = longTermProductionService.getProductionLongTermSummaryGroup(applicationVersion);
+    var productionView = longTermProductionService.getProductionLongTermSummaryCard(applicationVersion);
 
     assertThat(productionView)
         .isEqualTo(
-            new SummaryGroup(
+            new SummaryCard(
                 null,
-                SummaryGroupType.PRODUCTION_LONG_TERM,
+                SummaryCardType.PRODUCTION_LONG_TERM,
                 ProductionView.fromLongTerm(productionYears, oilUnit, gasUnit)
             )
         );

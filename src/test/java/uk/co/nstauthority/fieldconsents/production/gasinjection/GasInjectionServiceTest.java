@@ -18,7 +18,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
-import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 import uk.co.nstauthority.fieldconsents.util.BooleanUtil;
 
@@ -64,26 +64,26 @@ class GasInjectionServiceTest {
   }
 
   @Test
-  void getGasInjectionSummaryGroup_noExistingFlag() {
+  void getGasInjectionSummaryCard_noExistingFlag() {
     when(applicationFlagService.findFlagValue(applicationVersion, ApplicationFlagType.WILL_GAS_BE_INJECTED))
         .thenReturn(Optional.empty());
 
-    var summaryGroup = gasInjectionService.getGasInjectionSummaryGroup(applicationVersion);
+    var summaryCard = gasInjectionService.getGasInjectionSummaryCard(applicationVersion);
 
-    assertThat(summaryGroup)
-        .isEqualTo(SummaryGroup.emptySummaryGroup());
+    assertThat(summaryCard)
+        .isEqualTo(SummaryCard.emptySummaryCard());
   }
 
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
-  void getGasInjectionSummaryGroup_flagExistWithValue(Boolean willGasBeInjected) {
+  void getGasInjectionSummaryCard_flagExistWithValue(Boolean willGasBeInjected) {
     when(applicationFlagService.findFlagValue(applicationVersion, ApplicationFlagType.WILL_GAS_BE_INJECTED))
         .thenReturn(Optional.of(willGasBeInjected));
 
-    var summaryGroup = gasInjectionService.getGasInjectionSummaryGroup(applicationVersion);
+    var summaryCard = gasInjectionService.getGasInjectionSummaryCard(applicationVersion);
 
-    assertThat(summaryGroup).usingRecursiveComparison()
-        .isEqualTo(SummaryGroup.simpleSummaryGroup(
+    assertThat(summaryCard).usingRecursiveComparison()
+        .isEqualTo(SummaryCard.simpleSummaryCard(
             List.of(new SummaryKeyValue(ApplicationFlagType.WILL_GAS_BE_INJECTED.getDisplayName(),
                 BooleanUtil.yesNoFromBoolean(willGasBeInjected))
             )));

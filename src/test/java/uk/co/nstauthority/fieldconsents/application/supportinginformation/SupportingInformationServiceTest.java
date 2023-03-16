@@ -19,7 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
 @ExtendWith(MockitoExtension.class)
@@ -125,43 +125,43 @@ class SupportingInformationServiceTest {
   }
 
   @Test
-  void getSupportingInformationSummaryGroup_noSupportingInfo() {
+  void getSupportingInformationSummaryCard_noSupportingInfo() {
     when(supportingInformationRepository.findByApplicationVersion(applicationVersion))
         .thenReturn(Optional.empty());
 
-    var summaryGroup = supportingInformationService.getSupportingInformationSummaryGroup(applicationVersion);
+    var summaryCard = supportingInformationService.getSupportingInformationSummaryCard(applicationVersion);
 
-    assertThat(summaryGroup)
-        .isEqualTo(SummaryGroup.emptySummaryGroup());
+    assertThat(summaryCard)
+        .isEqualTo(SummaryCard.emptySummaryCard());
   }
 
   @Test
-  void getSupportingInformationSummaryGroup_supportingInfoProduction() {
+  void getSupportingInformationSummaryCard_supportingInfoProduction() {
     applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
     when(supportingInformationRepository.findByApplicationVersion(applicationVersion))
         .thenReturn(Optional.of(getSupportingInformationProduction()));
 
-    var summaryGroup = supportingInformationService.getSupportingInformationSummaryGroup(applicationVersion);
+    var summaryCard = supportingInformationService.getSupportingInformationSummaryCard(applicationVersion);
 
-    assertThat(summaryGroup)
+    assertThat(summaryCard)
         .usingRecursiveComparison()
-        .isEqualTo(SummaryGroup.simpleSummaryGroup(
+        .isEqualTo(SummaryCard.simpleSummaryCard(
             List.of(new SummaryKeyValue(APPLICATION_NOTES_PROMPT, APPLICATION_NOTES))
         ));
   }
 
   @ParameterizedTest
   @EnumSource(value = ApplicationType.class, names = {"FLARE", "VENT"})
-  void getSupportingInformationSummaryGroup_supportingInfoFlare(ApplicationType applicationType) {
+  void getSupportingInformationSummaryCard_supportingInfoFlare(ApplicationType applicationType) {
     applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(applicationType);
     when(supportingInformationRepository.findByApplicationVersion(applicationVersion))
         .thenReturn(Optional.of(getSupportingInformation()));
 
-    var summaryGroup = supportingInformationService.getSupportingInformationSummaryGroup(applicationVersion);
+    var summaryCard = supportingInformationService.getSupportingInformationSummaryCard(applicationVersion);
 
-    assertThat(summaryGroup)
+    assertThat(summaryCard)
         .usingRecursiveComparison()
-        .isEqualTo(SummaryGroup.simpleSummaryGroup(
+        .isEqualTo(SummaryCard.simpleSummaryCard(
             List.of(
                 new SummaryKeyValue(APPLICATION_NOTES_PROMPT, APPLICATION_NOTES),
                 new SummaryKeyValue("ERAP alignment studies and projects", ERAP_NOTES)

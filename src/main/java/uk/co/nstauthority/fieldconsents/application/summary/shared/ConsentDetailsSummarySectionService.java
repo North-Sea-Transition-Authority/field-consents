@@ -66,26 +66,26 @@ public class ConsentDetailsSummarySectionService implements SummarySectionServic
   }
 
   private SummaryItem getApplicationContextSummaryItem(ApplicationVersion applicationVersion) {
-    return SummaryItem.withGroup("Application details",
-        applicationContextService.getApplicationContextSummaryGroup(applicationVersion)
+    return SummaryItem.withCard("Application details",
+        applicationContextService.getApplicationContextSummaryCard(applicationVersion)
     );
   }
 
   private SummaryItem getConsentDurationSummaryItem(ApplicationVersion applicationVersion) {
-    return SummaryItem.withGroup("Consent duration",
-        consentLengthService.getConsentLengthSummaryGroup(applicationVersion)
+    return SummaryItem.withCard("Consent duration",
+        consentLengthService.getConsentLengthSummaryCard(applicationVersion)
     );
   }
 
   private SummaryItem getAdditionalAssetsSummaryItem(ApplicationVersion applicationVersion) {
-    return SummaryItem.withGroups("Additional fields and licences",
-        assetSummaryService.getAdditionalAssetsSummaryGroups(applicationVersion)
+    return SummaryItem.withCards("Additional fields and licences",
+        assetSummaryService.getAdditionalAssetsSummaryCards(applicationVersion)
     );
   }
 
   private SummaryItem getGasInjectionSummaryItem(ApplicationVersion applicationVersion) {
-    return SummaryItem.withGroup("Gas injection",
-        gasInjectionService.getGasInjectionSummaryGroup(applicationVersion)
+    return SummaryItem.withCard("Gas injection",
+        gasInjectionService.getGasInjectionSummaryCard(applicationVersion)
     );
   }
 }

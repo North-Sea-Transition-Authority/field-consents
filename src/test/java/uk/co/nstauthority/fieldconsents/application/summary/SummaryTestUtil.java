@@ -3,9 +3,9 @@ package uk.co.nstauthority.fieldconsents.application.summary;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
-import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryItem;
-import uk.co.nstauthority.fieldconsents.summary.SummaryGroupType;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCardType;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 import uk.co.nstauthority.fieldconsents.summary.SummarySection;
 
@@ -22,12 +22,12 @@ public class SummaryTestUtil {
   public static final List<SummaryKeyValue> keyValues =
       List.of(new SummaryKeyValue("k1", "v1"), new SummaryKeyValue("k2", "v2"));
 
-  public static SummaryGroup simpleSummaryGroup = SummaryGroup.simpleSummaryGroup(keyValues);
+  public static SummaryCard simpleSummaryCard = SummaryCard.simpleSummaryCard(keyValues);
 
-  public static final List<SummaryGroup> simpleSummaryGroups =
+  public static final List<SummaryCard> simpleSummaryCards =
       List.of(
-          SummaryGroup.simpleSummaryGroupWithHeading("g1", keyValues),
-          SummaryGroup.simpleSummaryGroupWithHeading("g2", keyValues)
+          SummaryCard.simpleSummaryCardWithHeading("g1", keyValues),
+          SummaryCard.simpleSummaryCardWithHeading("g2", keyValues)
       );
 
   public static SummarySection getConsentDetailsSummarySection(List<SummaryItem> summaryItems) {
@@ -48,23 +48,23 @@ public class SummaryTestUtil {
 
   public static void assertSummaryItem(SummaryItem summaryItem,
                                        String displayName,
-                                       int expectedSummaryGroupCount) {
+                                       int expectedSummaryCardCount) {
     assertThat(summaryItem.displayName()).isEqualTo(displayName);
-    assertThat(summaryItem.summaryGroups()).hasSize(expectedSummaryGroupCount);
+    assertThat(summaryItem.summaryCards()).hasSize(expectedSummaryCardCount);
   }
 
-  public static void assertSummaryGroup(SummaryGroup summaryGroup,
-                                        String displayName,
-                                        SummaryGroupType summaryGroupType,
-                                        Class<?> clazz) {
-    assertThat(summaryGroup.displayName()).isEqualTo(displayName);
-    assertThat(summaryGroup.summaryGroupType()).isEqualTo(summaryGroupType);
-    assertThat(summaryGroup.summaryData()).isInstanceOf(clazz);
+  public static void assertSummaryCard(SummaryCard summaryCard,
+                                       String displayName,
+                                       SummaryCardType summaryCardType,
+                                       Class<?> clazz) {
+    assertThat(summaryCard.displayName()).isEqualTo(displayName);
+    assertThat(summaryCard.summaryCardType()).isEqualTo(summaryCardType);
+    assertThat(summaryCard.summaryData()).isInstanceOf(clazz);
   }
 
-  public static void assertEmptySummaryGroup(SummaryGroup summaryGroup) {
-    assertThat(summaryGroup.displayName()).isNull();
-    assertThat(summaryGroup.summaryGroupType()).isEqualTo(SummaryGroupType.EMPTY_SUMMARY);
-    assertThat(summaryGroup.summaryData()).isNull();
+  public static void assertEmptySummaryCard(SummaryCard summaryCard) {
+    assertThat(summaryCard.displayName()).isNull();
+    assertThat(summaryCard.summaryCardType()).isEqualTo(SummaryCardType.EMPTY_SUMMARY);
+    assertThat(summaryCard.summaryData()).isNull();
   }
 }

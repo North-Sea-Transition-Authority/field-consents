@@ -25,7 +25,7 @@ import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil;
-import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
 @ExtendWith(MockitoExtension.class)
@@ -102,24 +102,24 @@ class AssetSummaryServiceTest {
   }
 
   @Test
-  void getAdditionalAssetsSummaryGroups_noAdditionalAssetInfo() {
+  void getAdditionalAssetsSummaryCards_noAdditionalAssetInfo() {
     when(applicationFlagService.findFlagValue(applicationVersion, ApplicationFlagType.HAS_SECONDARY_ASSETS))
         .thenReturn(Optional.empty());
 
-    assertThat(assetSummaryService.getAdditionalAssetsSummaryGroups(applicationVersion))
-        .isEqualTo(SummaryGroup.emptySummaryGroupList());
+    assertThat(assetSummaryService.getAdditionalAssetsSummaryCards(applicationVersion))
+        .isEqualTo(SummaryCard.emptySummaryCardList());
   }
 
   @Test
-  void getAdditionalAssetsSummaryGroups_noAdditionalAssets() {
+  void getAdditionalAssetsSummaryCards_noAdditionalAssets() {
     when(applicationFlagService.findFlagValue(applicationVersion, ApplicationFlagType.HAS_SECONDARY_ASSETS))
         .thenReturn(Optional.of(Boolean.FALSE));
     when(applicationAssetService.getSecondaryAssets(applicationVersion)).thenReturn(Collections.emptyList());
 
-    assertThat(assetSummaryService.getAdditionalAssetsSummaryGroups(applicationVersion))
+    assertThat(assetSummaryService.getAdditionalAssetsSummaryCards(applicationVersion))
         .isEqualTo(
             List.of(
-                SummaryGroup.simpleSummaryGroup(
+                SummaryCard.simpleSummaryCard(
                     List.of(SummaryKeyValue.fromBoolean(ApplicationFlagType.HAS_SECONDARY_ASSETS.getDisplayName(), Boolean.FALSE))
                 )
             )
@@ -127,7 +127,7 @@ class AssetSummaryServiceTest {
   }
 
   @Test
-  void getAdditionalAssetsSummaryGroups_additionalAssetsExist() {
+  void getAdditionalAssetsSummaryCards_additionalAssetsExist() {
     when(applicationFlagService.findFlagValue(applicationVersion, ApplicationFlagType.HAS_SECONDARY_ASSETS))
         .thenReturn(Optional.of(Boolean.TRUE));
 
@@ -151,13 +151,13 @@ class AssetSummaryServiceTest {
     var operatorPrompt = "Field operator";
     var licencesPrompt = "Licences";
 
-    assertThat(assetSummaryService.getAdditionalAssetsSummaryGroups(applicationVersion))
+    assertThat(assetSummaryService.getAdditionalAssetsSummaryCards(applicationVersion))
         .isEqualTo(
             List.of(
-                SummaryGroup.simpleSummaryGroup(
+                SummaryCard.simpleSummaryCard(
                     List.of(SummaryKeyValue.fromBoolean(ApplicationFlagType.HAS_SECONDARY_ASSETS.getDisplayName(), Boolean.TRUE))
                 ),
-                SummaryGroup.simpleSummaryGroupWithHeading(
+                SummaryCard.simpleSummaryCardWithHeading(
                     fieldPrompt + " " + assetView2.displayOrder(),
                     List.of(
                         SummaryKeyValue.from(fieldPrompt, assetView2.assetName()),
@@ -165,7 +165,7 @@ class AssetSummaryServiceTest {
                         SummaryKeyValue.from(licencesPrompt, assetView2.assetLicences())
                     )
                 ),
-                SummaryGroup.simpleSummaryGroupWithHeading(
+                SummaryCard.simpleSummaryCardWithHeading(
                     "Field " + assetView3.displayOrder(),
                     List.of(
                         SummaryKeyValue.from(fieldPrompt, assetView3.assetName()),

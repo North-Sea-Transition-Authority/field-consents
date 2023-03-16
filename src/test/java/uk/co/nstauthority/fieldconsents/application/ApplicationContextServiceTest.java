@@ -19,7 +19,7 @@ import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
-import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
 @ExtendWith(MockitoExtension.class)
@@ -107,7 +107,7 @@ class ApplicationContextServiceTest {
   }
 
   @Test
-  void getApplicationContextSummaryGroup_terminal() {
+  void getApplicationContextSummaryCard_terminal() {
     AssetJson primaryAsset = terminal1Json;
     when(applicationAssetService.getAssetJsonForApplicationAsset(primaryApplicationAsset))
         .thenReturn(primaryAsset);
@@ -116,10 +116,10 @@ class ApplicationContextServiceTest {
         eq(applicationVersion.getPrimaryOperatorOuId()), any(), eq(applicationVersion.getCachedPrimaryOperatorName())))
         .thenReturn(primaryOperator);
 
-    var summaryGroup = applicationContextService.getApplicationContextSummaryGroup(applicationVersion);
+    var summaryCard = applicationContextService.getApplicationContextSummaryCard(applicationVersion);
 
-    assertThat(summaryGroup).usingRecursiveComparison()
-        .isEqualTo(SummaryGroup.simpleSummaryGroup(
+    assertThat(summaryCard).usingRecursiveComparison()
+        .isEqualTo(SummaryCard.simpleSummaryCard(
             List.of(
                 new SummaryKeyValue("Application type", applicationVersion.getApplication().getType().getDisplayName()),
                 new SummaryKeyValue("Primary facility", primaryAsset.getName()),
@@ -129,7 +129,7 @@ class ApplicationContextServiceTest {
   }
 
   @Test
-  void getApplicationContextSummaryGroup_field() {
+  void getApplicationContextSummaryCard_field() {
     AssetJson primaryAsset = field1Json;
     when(applicationAssetService.getAssetJsonForApplicationAsset(primaryApplicationAsset))
         .thenReturn(primaryAsset);
@@ -138,10 +138,10 @@ class ApplicationContextServiceTest {
         eq(applicationVersion.getPrimaryOperatorOuId()), any(), eq(applicationVersion.getCachedPrimaryOperatorName())))
         .thenReturn(primaryOperator);
 
-    var summaryGroup = applicationContextService.getApplicationContextSummaryGroup(applicationVersion);
+    var summaryCard = applicationContextService.getApplicationContextSummaryCard(applicationVersion);
 
-    assertThat(summaryGroup).usingRecursiveComparison()
-        .isEqualTo(SummaryGroup.simpleSummaryGroup(
+    assertThat(summaryCard).usingRecursiveComparison()
+        .isEqualTo(SummaryCard.simpleSummaryCard(
             List.of(
                 new SummaryKeyValue("Application type", applicationVersion.getApplication().getType().getDisplayName()),
                 new SummaryKeyValue("Primary field", primaryAsset.getName()),

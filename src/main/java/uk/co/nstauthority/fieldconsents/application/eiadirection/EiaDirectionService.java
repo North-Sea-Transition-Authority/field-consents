@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationService;
-import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
 @Service
@@ -51,11 +51,11 @@ public class EiaDirectionService {
         : null;
   }
 
-  public SummaryGroup getEiaDirectionSummaryGroup(ApplicationVersion applicationVersion) {
+  public SummaryCard getEiaDirectionSummaryCard(ApplicationVersion applicationVersion) {
     var eiaDirectionOptional = findEiaDirection(applicationVersion);
 
     if (eiaDirectionOptional.isEmpty()) {
-      return SummaryGroup.emptySummaryGroup();
+      return SummaryCard.emptySummaryCard();
     }
 
     List<SummaryKeyValue> summaryKeyValues = new ArrayList<>();
@@ -68,7 +68,7 @@ public class EiaDirectionService {
       summaryKeyValues.add(SummaryKeyValue.from("EIA screening direction reference",
           getSatRef(eiaDirection.getSatId())));
 
-      return SummaryGroup.simpleSummaryGroup(summaryKeyValues);
+      return SummaryCard.simpleSummaryCard(summaryKeyValues);
     }
 
     summaryKeyValues.add(SummaryKeyValue.fromBoolean("Do you have an EIA screening direction that still needs to be submitted?",
@@ -78,12 +78,12 @@ public class EiaDirectionService {
       summaryKeyValues.add(SummaryKeyValue.fromLocalDate("What is the latest date this will be submitted?",
           eiaDirection.getLatestDateToBeSubmitted()));
 
-      return SummaryGroup.simpleSummaryGroup(summaryKeyValues);
+      return SummaryCard.simpleSummaryCard(summaryKeyValues);
     }
 
     summaryKeyValues.add(SummaryKeyValue.from("Explain why you don’t intend to submit an EIA screening direction",
         eiaDirection.getWhyNoEiaDirection()));
 
-    return SummaryGroup.simpleSummaryGroup(summaryKeyValues);
+    return SummaryCard.simpleSummaryCard(summaryKeyValues);
   }
 }

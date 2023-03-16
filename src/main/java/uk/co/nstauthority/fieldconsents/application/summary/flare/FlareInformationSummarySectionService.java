@@ -63,7 +63,7 @@ public class FlareInformationSummarySectionService implements SummarySectionServ
   }
 
   private SummaryItem getFlaresSummaryItem(ApplicationVersion applicationVersion) {
-    return SummaryItem.withGroups("Flares",
+    return SummaryItem.withCards("Flares",
         flareSummaryService.getSummariesForFlares(applicationVersion)
     );
   }

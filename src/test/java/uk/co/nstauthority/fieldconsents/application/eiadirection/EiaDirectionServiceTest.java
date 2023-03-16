@@ -28,7 +28,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationService;
-import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
 @ExtendWith(MockitoExtension.class)
@@ -155,10 +155,10 @@ class EiaDirectionServiceTest {
     when(eiaDirectionRepository.findByApplicationVersion(applicationVersion))
         .thenReturn(Optional.empty());
 
-    var summaryGroup = eiaDirectionService.getEiaDirectionSummaryGroup(applicationVersion);
+    var summaryCard = eiaDirectionService.getEiaDirectionSummaryCard(applicationVersion);
 
-    assertThat(summaryGroup)
-        .isEqualTo(SummaryGroup.emptySummaryGroup());
+    assertThat(summaryCard)
+        .isEqualTo(SummaryCard.emptySummaryCard());
   }
 
   @Test
@@ -169,11 +169,11 @@ class EiaDirectionServiceTest {
     when(petsApplicationService.getPetsApplicationById(SAT_ID_3, EiaDirectionService.LOOKUP_SAT_REF_PURPOSE))
         .thenReturn(petsApplication3Json);
 
-    var summaryGroup = eiaDirectionService.getEiaDirectionSummaryGroup(applicationVersion);
+    var summaryCard = eiaDirectionService.getEiaDirectionSummaryCard(applicationVersion);
 
-    assertThat(summaryGroup)
+    assertThat(summaryCard)
         .usingRecursiveComparison()
-        .isEqualTo(SummaryGroup.simpleSummaryGroup(
+        .isEqualTo(SummaryCard.simpleSummaryCard(
             List.of(
                 new SummaryKeyValue(HAVE_SUBMITTED_EIA_DIRECTION_PROMPT, "Yes"),
                 new SummaryKeyValue(EIA_DIRECTION_REF_PROMPT, SAT_REF_3)
@@ -187,11 +187,11 @@ class EiaDirectionServiceTest {
     when(eiaDirectionRepository.findByApplicationVersion(applicationVersion))
         .thenReturn(Optional.of(testEiaDirection));
 
-    var summaryGroup = eiaDirectionService.getEiaDirectionSummaryGroup(applicationVersion);
+    var summaryCard = eiaDirectionService.getEiaDirectionSummaryCard(applicationVersion);
 
-    assertThat(summaryGroup)
+    assertThat(summaryCard)
         .usingRecursiveComparison()
-        .isEqualTo(SummaryGroup.simpleSummaryGroup(
+        .isEqualTo(SummaryCard.simpleSummaryCard(
             List.of(
                 new SummaryKeyValue(HAVE_SUBMITTED_EIA_DIRECTION_PROMPT, "No"),
                 new SummaryKeyValue(HAVE_EIA_DIRECTION_TO_SUBMIT_PROMPT, "Yes"),
@@ -206,11 +206,11 @@ class EiaDirectionServiceTest {
     when(eiaDirectionRepository.findByApplicationVersion(applicationVersion))
         .thenReturn(Optional.of(testEiaDirection));
 
-    var summaryGroup = eiaDirectionService.getEiaDirectionSummaryGroup(applicationVersion);
+    var summaryCard = eiaDirectionService.getEiaDirectionSummaryCard(applicationVersion);
 
-    assertThat(summaryGroup)
+    assertThat(summaryCard)
         .usingRecursiveComparison()
-        .isEqualTo(SummaryGroup.simpleSummaryGroup(
+        .isEqualTo(SummaryCard.simpleSummaryCard(
             List.of(
                 new SummaryKeyValue(HAVE_SUBMITTED_EIA_DIRECTION_PROMPT, "No"),
                 new SummaryKeyValue(HAVE_EIA_DIRECTION_TO_SUBMIT_PROMPT, "No"),
@@ -225,11 +225,11 @@ class EiaDirectionServiceTest {
     when(eiaDirectionRepository.findByApplicationVersion(applicationVersion))
         .thenReturn(Optional.of(testEiaDirection));
 
-    var summaryGroup = eiaDirectionService.getEiaDirectionSummaryGroup(applicationVersion);
+    var summaryCard = eiaDirectionService.getEiaDirectionSummaryCard(applicationVersion);
 
-    assertThat(summaryGroup)
+    assertThat(summaryCard)
         .usingRecursiveComparison()
-        .isEqualTo(SummaryGroup.simpleSummaryGroup(
+        .isEqualTo(SummaryCard.simpleSummaryCard(
             List.of(
                 new SummaryKeyValue(HAVE_SUBMITTED_EIA_DIRECTION_PROMPT, "No"),
                 new SummaryKeyValue(HAVE_EIA_DIRECTION_TO_SUBMIT_PROMPT, "No"),

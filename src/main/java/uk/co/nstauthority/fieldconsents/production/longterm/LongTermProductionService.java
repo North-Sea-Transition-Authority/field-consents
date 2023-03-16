@@ -16,8 +16,8 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthS
 import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
 import uk.co.nstauthority.fieldconsents.production.ProductionView;
-import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
-import uk.co.nstauthority.fieldconsents.summary.SummaryGroupType;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCardType;
 
 @Service
 public class LongTermProductionService {
@@ -167,18 +167,18 @@ public class LongTermProductionService {
     longTermProductionYearRepository.save(longTermProductionYear);
   }
 
-  public SummaryGroup getProductionLongTermSummaryGroup(ApplicationVersion applicationVersion) {
+  public SummaryCard getProductionLongTermSummaryCard(ApplicationVersion applicationVersion) {
     var longTermProductionYears = getLongTermProductionYears(applicationVersion);
 
     if (longTermProductionYears.isEmpty()) {
-      return SummaryGroup.emptySummaryGroup();
+      return SummaryCard.emptySummaryCard();
     }
 
     var oilUnit = applicationUnitService.getProductionOilUnit(applicationVersion);
     var gasUnit = applicationUnitService.getProductionGasUnit(applicationVersion);
-    return new SummaryGroup(
+    return new SummaryCard(
         null,
-        SummaryGroupType.PRODUCTION_LONG_TERM,
+        SummaryCardType.PRODUCTION_LONG_TERM,
         ProductionView.fromLongTerm(longTermProductionYears, oilUnit, gasUnit)
     );
   }

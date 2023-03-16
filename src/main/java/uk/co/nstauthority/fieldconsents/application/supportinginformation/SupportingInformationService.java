@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
 @Service
@@ -38,11 +38,11 @@ public class SupportingInformationService {
     supportingInformationRepository.save(SupportingInformation.from(applicationVersion, form));
   }
 
-  public SummaryGroup getSupportingInformationSummaryGroup(ApplicationVersion applicationVersion) {
+  public SummaryCard getSupportingInformationSummaryCard(ApplicationVersion applicationVersion) {
     var supportingInformationOptional = findSupportingInformation(applicationVersion);
 
     if (supportingInformationOptional.isEmpty()) {
-      return SummaryGroup.emptySummaryGroup();
+      return SummaryCard.emptySummaryCard();
     }
 
     List<SummaryKeyValue> summaryKeyValues = new ArrayList<>();
@@ -54,6 +54,6 @@ public class SupportingInformationService {
       summaryKeyValues.add(SummaryKeyValue.from("ERAP alignment studies and projects", supportingInformation.getErapNotes()));
     }
 
-    return SummaryGroup.simpleSummaryGroup(summaryKeyValues);
+    return SummaryCard.simpleSummaryCard(summaryKeyValues);
   }
 }

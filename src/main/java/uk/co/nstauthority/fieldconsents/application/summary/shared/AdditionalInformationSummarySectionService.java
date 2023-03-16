@@ -58,14 +58,14 @@ public class AdditionalInformationSummarySectionService implements SummarySectio
   }
 
   private SummaryItem getEiaDirectionSummaryItem(ApplicationVersion applicationVersion) {
-    return SummaryItem.withGroup("EIA screening direction",
-        eiaDirectionService.getEiaDirectionSummaryGroup(applicationVersion)
+    return SummaryItem.withCard("EIA screening direction",
+        eiaDirectionService.getEiaDirectionSummaryCard(applicationVersion)
     );
   }
 
   private SummaryItem getSupportingInformationSummaryItem(ApplicationVersion applicationVersion) {
-    return SummaryItem.withGroup("Supporting information",
-        supportingInformationService.getSupportingInformationSummaryGroup(applicationVersion)
+    return SummaryItem.withCard("Supporting information",
+        supportingInformationService.getSupportingInformationSummaryCard(applicationVersion)
     );
   }
 }

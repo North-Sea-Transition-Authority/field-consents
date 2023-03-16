@@ -5,7 +5,7 @@
 
 <#-- @ftlvariable name="summarySections" type="java.util.List<uk.co.nstauthority.fieldconsents.summary.SummarySection>" -->
 <#-- @ftlvariable name="summaryItem" type="java.util.List<uk.co.nstauthority.fieldconsents.summary.SummaryItem>" -->
-<#-- @ftlvariable name="summaryGroup" type="java.util.List<uk.co.nstauthority.fieldconsents.summary.SummaryGroup>" -->
+<#-- @ftlvariable name="summaryCard" type="java.util.List<uk.co.nstauthority.fieldconsents.summary.SummaryCard>" -->
 
 <@defaultPage
 htmlTitle=pageTitle
@@ -17,27 +17,27 @@ pageSize=PageSize.FULL_WIDTH
       <#list summarySection.summaryItems() as summaryItem>
         <@fdsAccordion.accordionSection sectionHeading=summaryItem.displayName()
           openSection=(summarySection?index == 0 && summaryItem?index == 0)>
-          <#list summaryItem.summaryGroups() as summaryGroup>
-            <#if summaryGroup.summaryGroupType() == "SIMPLE_SUMMARY">
+          <#list summaryItem.summaryCards() as summaryCard>
+            <#if summaryCard.summaryCardType() == "SIMPLE_SUMMARY">
               <@simpleSummary.simpleSummary
-                summaryDataView=summaryGroup.summaryData()
-                summaryHeading=summaryGroup.displayName()!""/>
-            <#elseif summaryGroup.summaryGroupType() == "PRODUCTION_SHORT_TERM">
+                summaryDataView=summaryCard.summaryData()
+                summaryHeading=summaryCard.displayName()!""/>
+            <#elseif summaryCard.summaryCardType() == "PRODUCTION_SHORT_TERM">
               <@productionConsentSummary.productionConsentSummary
-                productionView=summaryGroup.summaryData()
-                summaryHeading=summaryGroup.displayName()!""
+                productionView=summaryCard.summaryData()
+                summaryHeading=summaryCard.displayName()!""
                 showConsentDays=true/>
-            <#elseif summaryGroup.summaryGroupType() == "PRODUCTION_ANNUAL">
+            <#elseif summaryCard.summaryCardType() == "PRODUCTION_ANNUAL">
               <@productionConsentSummary.productionConsentSummary
-                productionView=summaryGroup.summaryData()
-                summaryHeading=summaryGroup.displayName()!""
+                productionView=summaryCard.summaryData()
+                summaryHeading=summaryCard.displayName()!""
                 showConsentDays=false/>
-            <#elseif summaryGroup.summaryGroupType() == "PRODUCTION_LONG_TERM">
+            <#elseif summaryCard.summaryCardType() == "PRODUCTION_LONG_TERM">
               <@productionConsentSummary.productionConsentSummary
-                productionView=summaryGroup.summaryData()
-                summaryHeading=summaryGroup.displayName()!""
+                productionView=summaryCard.summaryData()
+                summaryHeading=summaryCard.displayName()!""
                 showConsentDays=false/>
-            <#elseif summaryGroup.summaryGroupType() == "EMPTY_SUMMARY">
+            <#elseif summaryCard.summaryCardType() == "EMPTY_SUMMARY">
               <@emptySummary.emptySummary/>
             </#if>
           </#list>

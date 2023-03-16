@@ -35,8 +35,8 @@ import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
 import uk.co.nstauthority.fieldconsents.production.ProductionTestUtils;
 import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 import uk.co.nstauthority.fieldconsents.production.ProductionView;
-import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
-import uk.co.nstauthority.fieldconsents.summary.SummaryGroupType;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCardType;
 
 @ExtendWith(MockitoExtension.class)
 class ShortTermProductionServiceTest {
@@ -232,8 +232,8 @@ class ShortTermProductionServiceTest {
     when(shortTermProductionMonthRepository.findAllByApplicationVersion(applicationVersion))
         .thenReturn(Collections.emptyList());
 
-    assertThat(shortTermProductionService.getProductionShortTermSummaryGroup(applicationVersion))
-        .isEqualTo(SummaryGroup.emptySummaryGroup());
+    assertThat(shortTermProductionService.getProductionShortTermSummaryCard(applicationVersion))
+        .isEqualTo(SummaryCard.emptySummaryCard());
   }
 
   @Test
@@ -252,13 +252,13 @@ class ShortTermProductionServiceTest {
     when(applicationUnitService.getProductionAverageUnit(applicationVersion))
         .thenReturn(averageUnit);
 
-    var productionView = shortTermProductionService.getProductionShortTermSummaryGroup(applicationVersion);
+    var productionView = shortTermProductionService.getProductionShortTermSummaryCard(applicationVersion);
 
     assertThat(productionView)
         .isEqualTo(
-            new SummaryGroup(
+            new SummaryCard(
                 null,
-                SummaryGroupType.PRODUCTION_SHORT_TERM,
+                SummaryCardType.PRODUCTION_SHORT_TERM,
                 ProductionView.fromShortTerm(productionMonths, oilUnit, gasUnit, averageUnit)
             )
         );

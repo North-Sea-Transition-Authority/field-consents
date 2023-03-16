@@ -5,7 +5,7 @@ import java.util.stream.IntStream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
 @Service
@@ -28,16 +28,16 @@ public class FlareSummaryService {
         .toList();
   }
 
-  public List<SummaryGroup> getSummariesForFlares(ApplicationVersion applicationVersion) {
+  public List<SummaryCard> getSummariesForFlares(ApplicationVersion applicationVersion) {
     var flareViews = getFlareViews(applicationVersion);
 
     if (flareViews.isEmpty()) {
-      return SummaryGroup.emptySummaryGroupList();
+      return SummaryCard.emptySummaryCardList();
     }
 
     return flareViews
         .stream()
-        .map(flareView -> SummaryGroup.simpleSummaryGroupWithHeading(
+        .map(flareView -> SummaryCard.simpleSummaryCardWithHeading(
             "Flare " + flareView.getDisplayOrder(),
             List.of(
                 SummaryKeyValue.from("Flare type", flareView.getFlareType()),

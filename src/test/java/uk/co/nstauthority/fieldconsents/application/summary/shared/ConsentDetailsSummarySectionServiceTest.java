@@ -5,12 +5,12 @@ import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil.fieldAsset1;
 import static uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil.terminalAsset1;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.CONSENT_DETAILS_DISPLAY_ORDER;
-import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertEmptySummaryGroup;
-import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertSummaryGroup;
+import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertEmptySummaryCard;
+import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertSummaryCard;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertSummaryItem;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertSummarySection;
-import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.simpleSummaryGroup;
-import static uk.co.nstauthority.fieldconsents.summary.SummaryGroupType.SIMPLE_SUMMARY;
+import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.simpleSummaryCard;
+import static uk.co.nstauthority.fieldconsents.summary.SummaryCardType.SIMPLE_SUMMARY;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -29,9 +29,9 @@ import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetServi
 import uk.co.nstauthority.fieldconsents.application.assets.AssetSummaryService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.production.gasinjection.GasInjectionService;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCardType;
 import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
-import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
-import uk.co.nstauthority.fieldconsents.summary.SummaryGroupType;
 
 @ExtendWith(MockitoExtension.class)
 class ConsentDetailsSummarySectionServiceTest {
@@ -63,16 +63,16 @@ class ConsentDetailsSummarySectionServiceTest {
   private ConsentDetailsSummarySectionService consentDetailsSummarySectionService;
 
   @ParameterizedTest
-  @MethodSource("getSummaryGroups")
-  void getSummarySection_production(SummaryGroup summaryGroup) {
+  @MethodSource("getSummaryCards")
+  void getSummarySection_production(SummaryCard summaryCard) {
     var applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(fieldAsset1);
-    when(applicationContextService.getApplicationContextSummaryGroup(applicationVersion))
-        .thenReturn(summaryGroup);
-    when(consentLengthService.getConsentLengthSummaryGroup(applicationVersion))
-        .thenReturn(summaryGroup);
-    when(gasInjectionService.getGasInjectionSummaryGroup(applicationVersion))
-          .thenReturn(summaryGroup);
+    when(applicationContextService.getApplicationContextSummaryCard(applicationVersion))
+        .thenReturn(summaryCard);
+    when(consentLengthService.getConsentLengthSummaryCard(applicationVersion))
+        .thenReturn(summaryCard);
+    when(gasInjectionService.getGasInjectionSummaryCard(applicationVersion))
+          .thenReturn(summaryCard);
 
     var summarySectionOptional = consentDetailsSummarySectionService.getSummarySection(applicationVersion);
 
@@ -87,38 +87,38 @@ class ConsentDetailsSummarySectionServiceTest {
     assertSummaryItem(summaryItems.get(1), CONSENT_DURATION_ITEM, 1);
     assertSummaryItem(summaryItems.get(2), GAS_INJECTION_ITEM, 1);
 
-    if (SummaryGroupType.EMPTY_SUMMARY.equals(summaryGroup.summaryGroupType())) {
-      assertEmptySummaryGroup(summaryItems.get(0).summaryGroups().get(0));
-      assertEmptySummaryGroup(summaryItems.get(1).summaryGroups().get(0));
-      assertEmptySummaryGroup(summaryItems.get(2).summaryGroups().get(0));
+    if (SummaryCardType.EMPTY_SUMMARY.equals(summaryCard.summaryCardType())) {
+      assertEmptySummaryCard(summaryItems.get(0).summaryCards().get(0));
+      assertEmptySummaryCard(summaryItems.get(1).summaryCards().get(0));
+      assertEmptySummaryCard(summaryItems.get(2).summaryCards().get(0));
     } else {
-      assertSummaryGroup(summaryItems.get(0).summaryGroups().get(0), null, SIMPLE_SUMMARY, SummaryDataView.class);
-      assertSummaryGroup(summaryItems.get(1).summaryGroups().get(0), null, SIMPLE_SUMMARY, SummaryDataView.class);
-      assertSummaryGroup(summaryItems.get(2).summaryGroups().get(0), null, SIMPLE_SUMMARY, SummaryDataView.class);
+      assertSummaryCard(summaryItems.get(0).summaryCards().get(0), null, SIMPLE_SUMMARY, SummaryDataView.class);
+      assertSummaryCard(summaryItems.get(1).summaryCards().get(0), null, SIMPLE_SUMMARY, SummaryDataView.class);
+      assertSummaryCard(summaryItems.get(2).summaryCards().get(0), null, SIMPLE_SUMMARY, SummaryDataView.class);
     }
   }
 
-  private static Stream<Arguments> getSummaryGroups() {
+  private static Stream<Arguments> getSummaryCards() {
     return Stream.of(
-        Arguments.of(SummaryGroup.emptySummaryGroup()),
-        Arguments.of(simpleSummaryGroup)
+        Arguments.of(SummaryCard.emptySummaryCard()),
+        Arguments.of(simpleSummaryCard)
     );
   }
 
   @ParameterizedTest
-  @MethodSource("getApplicationTypeAssetAndSummaryGroup")
+  @MethodSource("getApplicationTypeAssetAndSummaryCard")
   void getSummarySection_flareVentFieldTerminal(ApplicationType applicationType,
                                                 ApplicationAsset applicationAsset,
-                                                SummaryGroup summaryGroup) {
+                                                SummaryCard summaryCard) {
     var applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(applicationType);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(applicationAsset);
-    when(applicationContextService.getApplicationContextSummaryGroup(applicationVersion))
-        .thenReturn(summaryGroup);
-    when(consentLengthService.getConsentLengthSummaryGroup(applicationVersion))
-        .thenReturn(summaryGroup);
+    when(applicationContextService.getApplicationContextSummaryCard(applicationVersion))
+        .thenReturn(summaryCard);
+    when(consentLengthService.getConsentLengthSummaryCard(applicationVersion))
+        .thenReturn(summaryCard);
     if (applicationAsset.isField()) {
-      when(assetSummaryService.getAdditionalAssetsSummaryGroups(applicationVersion))
-          .thenReturn(List.of(summaryGroup));
+      when(assetSummaryService.getAdditionalAssetsSummaryCards(applicationVersion))
+          .thenReturn(List.of(summaryCard));
     }
 
     var summarySectionOptional = consentDetailsSummarySectionService.getSummarySection(applicationVersion);
@@ -131,38 +131,38 @@ class ConsentDetailsSummarySectionServiceTest {
     assertSummaryItem(summaryItems.get(0), APPLICATION_DETAILS_ITEM, 1);
     assertSummaryItem(summaryItems.get(1), CONSENT_DURATION_ITEM, 1);
 
-    if (SummaryGroupType.EMPTY_SUMMARY.equals(summaryGroup.summaryGroupType())) {
-      assertEmptySummaryGroup(summaryItems.get(0).summaryGroups().get(0));
-      assertEmptySummaryGroup(summaryItems.get(1).summaryGroups().get(0));
+    if (SummaryCardType.EMPTY_SUMMARY.equals(summaryCard.summaryCardType())) {
+      assertEmptySummaryCard(summaryItems.get(0).summaryCards().get(0));
+      assertEmptySummaryCard(summaryItems.get(1).summaryCards().get(0));
     } else {
-      assertSummaryGroup(summaryItems.get(0).summaryGroups().get(0), null, SIMPLE_SUMMARY, SummaryDataView.class);
-      assertSummaryGroup(summaryItems.get(1).summaryGroups().get(0), null, SIMPLE_SUMMARY, SummaryDataView.class);
+      assertSummaryCard(summaryItems.get(0).summaryCards().get(0), null, SIMPLE_SUMMARY, SummaryDataView.class);
+      assertSummaryCard(summaryItems.get(1).summaryCards().get(0), null, SIMPLE_SUMMARY, SummaryDataView.class);
     }
 
 
     if (applicationAsset.isField()) {
       assertThat(summaryItems).hasSize(3);
       assertSummaryItem(summaryItems.get(2), ADDITIONAL_ASSETS_ITEM, 1);
-      if (SummaryGroupType.EMPTY_SUMMARY.equals(summaryGroup.summaryGroupType())) {
-        assertEmptySummaryGroup(summaryItems.get(2).summaryGroups().get(0));
+      if (SummaryCardType.EMPTY_SUMMARY.equals(summaryCard.summaryCardType())) {
+        assertEmptySummaryCard(summaryItems.get(2).summaryCards().get(0));
       } else {
-        assertSummaryGroup(summaryItems.get(2).summaryGroups().get(0), null, SIMPLE_SUMMARY, SummaryDataView.class);
+        assertSummaryCard(summaryItems.get(2).summaryCards().get(0), null, SIMPLE_SUMMARY, SummaryDataView.class);
       }
     } else {
       assertThat(summaryItems).hasSize(2);
     }
   }
 
-  private static Stream<Arguments> getApplicationTypeAssetAndSummaryGroup() {
+  private static Stream<Arguments> getApplicationTypeAssetAndSummaryCard() {
     return Stream.of(
-        Arguments.of(ApplicationType.FLARE, fieldAsset1, SummaryGroup.emptySummaryGroup()),
-        Arguments.of(ApplicationType.VENT, fieldAsset1, SummaryGroup.emptySummaryGroup()),
-        Arguments.of(ApplicationType.FLARE, terminalAsset1, SummaryGroup.emptySummaryGroup()),
-        Arguments.of(ApplicationType.VENT, terminalAsset1, SummaryGroup.emptySummaryGroup()),
-        Arguments.of(ApplicationType.FLARE, fieldAsset1, simpleSummaryGroup),
-        Arguments.of(ApplicationType.VENT, fieldAsset1, simpleSummaryGroup),
-        Arguments.of(ApplicationType.FLARE, terminalAsset1, simpleSummaryGroup),
-        Arguments.of(ApplicationType.VENT, terminalAsset1, simpleSummaryGroup)
+        Arguments.of(ApplicationType.FLARE, fieldAsset1, SummaryCard.emptySummaryCard()),
+        Arguments.of(ApplicationType.VENT, fieldAsset1, SummaryCard.emptySummaryCard()),
+        Arguments.of(ApplicationType.FLARE, terminalAsset1, SummaryCard.emptySummaryCard()),
+        Arguments.of(ApplicationType.VENT, terminalAsset1, SummaryCard.emptySummaryCard()),
+        Arguments.of(ApplicationType.FLARE, fieldAsset1, simpleSummaryCard),
+        Arguments.of(ApplicationType.VENT, fieldAsset1, simpleSummaryCard),
+        Arguments.of(ApplicationType.FLARE, terminalAsset1, simpleSummaryCard),
+        Arguments.of(ApplicationType.VENT, terminalAsset1, simpleSummaryCard)
     );
   }
 }

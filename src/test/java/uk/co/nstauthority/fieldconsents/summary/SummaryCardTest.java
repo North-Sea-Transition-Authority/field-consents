@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-class SummaryGroupTest {
+class SummaryCardTest {
 
   private final List<SummaryKeyValue> keyValues = List.of(
       new SummaryKeyValue("key1", "value1"),
@@ -13,49 +13,49 @@ class SummaryGroupTest {
   );
 
   @Test
-  void simpleSummaryGroupWithHeading() {
-    assertThat(SummaryGroup.simpleSummaryGroupWithHeading("group display name", keyValues))
+  void simpleSummaryCardWithHeading() {
+    assertThat(SummaryCard.simpleSummaryCardWithHeading("group display name", keyValues))
         .isEqualTo(
-            new SummaryGroup(
+            new SummaryCard(
                 "group display name",
-                SummaryGroupType.SIMPLE_SUMMARY,
+                SummaryCardType.SIMPLE_SUMMARY,
                 SummaryDataView.from(keyValues)
             )
         );
   }
 
   @Test
-  void simpleSummaryGroup() {
-    assertThat(SummaryGroup.simpleSummaryGroup(keyValues))
+  void simpleSummaryCard() {
+    assertThat(SummaryCard.simpleSummaryCard(keyValues))
         .isEqualTo(
-            new SummaryGroup(
+            new SummaryCard(
                 null,
-                SummaryGroupType.SIMPLE_SUMMARY,
+                SummaryCardType.SIMPLE_SUMMARY,
                 SummaryDataView.from(keyValues)
             )
         );
   }
 
   @Test
-  void emptySummaryGroup() {
-    assertThat(SummaryGroup.emptySummaryGroup())
+  void emptySummaryCard() {
+    assertThat(SummaryCard.emptySummaryCard())
         .isEqualTo(
-          new SummaryGroup(
+          new SummaryCard(
               null,
-              SummaryGroupType.EMPTY_SUMMARY,
+              SummaryCardType.EMPTY_SUMMARY,
               null
           )
         );
   }
 
   @Test
-  void emptySummaryGroupList() {
-    assertThat(SummaryGroup.emptySummaryGroupList())
+  void emptySummaryCardList() {
+    assertThat(SummaryCard.emptySummaryCardList())
         .isEqualTo(
             List.of(
-                new SummaryGroup(
+                new SummaryCard(
                     null,
-                    SummaryGroupType.EMPTY_SUMMARY,
+                    SummaryCardType.EMPTY_SUMMARY,
                     null
                 )
             )

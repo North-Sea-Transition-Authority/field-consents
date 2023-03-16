@@ -16,37 +16,37 @@ class SummaryItemTest {
   );
 
   @Test
-  void withGroup_notEmpty() {
-    assertThat(SummaryItem.withGroup(ITEM_DISPLAY_NAME, SummaryGroup.simpleSummaryGroup(keyValues)))
-        .isEqualTo(new SummaryItem(ITEM_DISPLAY_NAME, List.of(SummaryGroup.simpleSummaryGroup(keyValues))));
+  void withCard_notEmpty() {
+    assertThat(SummaryItem.withCard(ITEM_DISPLAY_NAME, SummaryCard.simpleSummaryCard(keyValues)))
+        .isEqualTo(new SummaryItem(ITEM_DISPLAY_NAME, List.of(SummaryCard.simpleSummaryCard(keyValues))));
   }
 
   @Test
-  void withGroup_emptyNullInput() {
-    assertThat(SummaryItem.withGroup(ITEM_DISPLAY_NAME, null))
-        .isEqualTo(new SummaryItem(ITEM_DISPLAY_NAME, SummaryGroup.emptySummaryGroupList()));
+  void withCard_emptyNullInput() {
+    assertThat(SummaryItem.withCard(ITEM_DISPLAY_NAME, null))
+        .isEqualTo(new SummaryItem(ITEM_DISPLAY_NAME, SummaryCard.emptySummaryCardList()));
   }
 
   @Test
-  void withGroups_notEmpty() {
-    List<SummaryGroup> summaryGroups =
+  void withCards_notEmpty() {
+    List<SummaryCard> summaryCards =
         List.of(
-            SummaryGroup.simpleSummaryGroup(keyValues),
-            SummaryGroup.simpleSummaryGroup(keyValues)
+            SummaryCard.simpleSummaryCard(keyValues),
+            SummaryCard.simpleSummaryCard(keyValues)
         );
-    assertThat(SummaryItem.withGroups(ITEM_DISPLAY_NAME, summaryGroups))
-        .isEqualTo(new SummaryItem(ITEM_DISPLAY_NAME, summaryGroups));
+    assertThat(SummaryItem.withCards(ITEM_DISPLAY_NAME, summaryCards))
+        .isEqualTo(new SummaryItem(ITEM_DISPLAY_NAME, summaryCards));
   }
 
   @Test
-  void withGroups_empty() {
-    assertThat(SummaryItem.withGroups(ITEM_DISPLAY_NAME, Collections.emptyList()))
-        .isEqualTo(new SummaryItem(ITEM_DISPLAY_NAME, SummaryGroup.emptySummaryGroupList()));
+  void withCards_empty() {
+    assertThat(SummaryItem.withCards(ITEM_DISPLAY_NAME, Collections.emptyList()))
+        .isEqualTo(new SummaryItem(ITEM_DISPLAY_NAME, SummaryCard.emptySummaryCardList()));
   }
 
   @Test
-  void withGroups_emptyNullInput() {
-    assertThat(SummaryItem.withGroups(ITEM_DISPLAY_NAME, null))
-        .isEqualTo(new SummaryItem(ITEM_DISPLAY_NAME, SummaryGroup.emptySummaryGroupList()));
+  void withCards_emptyNullInput() {
+    assertThat(SummaryItem.withCards(ITEM_DISPLAY_NAME, null))
+        .isEqualTo(new SummaryItem(ITEM_DISPLAY_NAME, SummaryCard.emptySummaryCardList()));
   }
 }

@@ -33,8 +33,8 @@ import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
 import uk.co.nstauthority.fieldconsents.production.ProductionTestUtils;
 import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 import uk.co.nstauthority.fieldconsents.production.ProductionView;
-import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
-import uk.co.nstauthority.fieldconsents.summary.SummaryGroupType;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCardType;
 
 @ExtendWith(MockitoExtension.class)
 class AnnualProductionServiceTest {
@@ -223,16 +223,16 @@ class AnnualProductionServiceTest {
   }
 
   @Test
-  void getProductionAnnualSummaryGroup_noMonthsData() {
+  void getProductionAnnualSummaryCard_noMonthsData() {
     when(annualProductionMonthRepository.findAllByApplicationVersion(applicationVersion))
         .thenReturn(Collections.emptyList());
 
-    assertThat(annualProductionService.getProductionAnnualSummaryGroup(applicationVersion))
-        .isEqualTo(SummaryGroup.emptySummaryGroup());
+    assertThat(annualProductionService.getProductionAnnualSummaryCard(applicationVersion))
+        .isEqualTo(SummaryCard.emptySummaryCard());
   }
 
   @Test
-  void getProductionAnnualSummaryGroup_monthsDataExists() {
+  void getProductionAnnualSummaryCard_monthsDataExists() {
     var productionMonths = ProductionTestUtils.getAnnualProductionMonthsData(applicationVersion);
     var oilUnit = ProductionUnit.KSCM_PER_MONTH;
     var gasUnit = ProductionUnit.KSCM_PER_MONTH;
@@ -247,13 +247,13 @@ class AnnualProductionServiceTest {
     when(applicationUnitService.getProductionAverageUnit(applicationVersion))
         .thenReturn(averageUnit);
 
-    var productionView = annualProductionService.getProductionAnnualSummaryGroup(applicationVersion);
+    var productionView = annualProductionService.getProductionAnnualSummaryCard(applicationVersion);
 
     assertThat(productionView)
         .isEqualTo(
-            new SummaryGroup(
+            new SummaryCard(
                 null,
-                SummaryGroupType.PRODUCTION_ANNUAL,
+                SummaryCardType.PRODUCTION_ANNUAL,
                 ProductionView.fromAnnual(productionMonths, oilUnit, gasUnit, averageUnit)
             )
         );
