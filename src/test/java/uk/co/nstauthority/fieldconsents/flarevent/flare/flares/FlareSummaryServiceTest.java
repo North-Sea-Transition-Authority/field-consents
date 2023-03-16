@@ -102,7 +102,7 @@ class FlareSummaryServiceTest {
     when(flareService.getFlaresForApplicationVersion(applicationVersion)).thenReturn(Collections.emptyList());
 
     assertThat(flareSummaryService.getSummariesForFlares(applicationVersion))
-        .isEqualTo(Collections.emptyList());
+        .isEqualTo(SummaryGroup.emptySummaryGroupList());
   }
 
   @Test

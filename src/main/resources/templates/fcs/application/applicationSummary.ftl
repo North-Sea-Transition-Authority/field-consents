@@ -17,32 +17,30 @@ pageSize=PageSize.FULL_WIDTH
       <#list summarySection.summaryItems() as summaryItem>
         <@fdsAccordion.accordionSection sectionHeading=summaryItem.displayName()
           openSection=(summarySection?index == 0 && summaryItem?index == 0)>
-            <#if summaryItem.summaryGroups()?has_content>
-              <#list summaryItem.summaryGroups() as summaryGroup>
-                <#if summaryGroup.summaryGroupType() == "SIMPLE_SUMMARY">
-                  <@simpleSummary.simpleSummary
-                    summaryDataView=summaryGroup.summaryData()
-                    summaryHeading=summaryGroup.displayName()!""/>
-                <#elseif summaryGroup.summaryGroupType() == "PRODUCTION_SHORT_TERM">
-                  <@productionConsentSummary.productionConsentSummary
-                    productionView=summaryGroup.summaryData()
-                    summaryHeading=summaryGroup.displayName()!""
-                    showConsentDays=true/>
-                <#elseif summaryGroup.summaryGroupType() == "PRODUCTION_ANNUAL">
-                  <@productionConsentSummary.productionConsentSummary
-                    productionView=summaryGroup.summaryData()
-                    summaryHeading=summaryGroup.displayName()!""
-                    showConsentDays=false/>
-                <#elseif summaryGroup.summaryGroupType() == "PRODUCTION_LONG_TERM">
-                  <@productionConsentSummary.productionConsentSummary
-                    productionView=summaryGroup.summaryData()
-                    summaryHeading=summaryGroup.displayName()!""
-                    showConsentDays=false/>
-                </#if>
-              </#list>
-            <#else>
+          <#list summaryItem.summaryGroups() as summaryGroup>
+            <#if summaryGroup.summaryGroupType() == "SIMPLE_SUMMARY">
+              <@simpleSummary.simpleSummary
+                summaryDataView=summaryGroup.summaryData()
+                summaryHeading=summaryGroup.displayName()!""/>
+            <#elseif summaryGroup.summaryGroupType() == "PRODUCTION_SHORT_TERM">
+              <@productionConsentSummary.productionConsentSummary
+                productionView=summaryGroup.summaryData()
+                summaryHeading=summaryGroup.displayName()!""
+                showConsentDays=true/>
+            <#elseif summaryGroup.summaryGroupType() == "PRODUCTION_ANNUAL">
+              <@productionConsentSummary.productionConsentSummary
+                productionView=summaryGroup.summaryData()
+                summaryHeading=summaryGroup.displayName()!""
+                showConsentDays=false/>
+            <#elseif summaryGroup.summaryGroupType() == "PRODUCTION_LONG_TERM">
+              <@productionConsentSummary.productionConsentSummary
+                productionView=summaryGroup.summaryData()
+                summaryHeading=summaryGroup.displayName()!""
+                showConsentDays=false/>
+            <#elseif summaryGroup.summaryGroupType() == "EMPTY_SUMMARY">
               <@emptySummary.emptySummary/>
             </#if>
+          </#list>
         </@fdsAccordion.accordionSection>
       </#list>
     </#list>

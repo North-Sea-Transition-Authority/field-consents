@@ -158,7 +158,7 @@ class EiaDirectionServiceTest {
     var summaryGroup = eiaDirectionService.getEiaDirectionSummaryGroup(applicationVersion);
 
     assertThat(summaryGroup)
-        .isNull();
+        .isEqualTo(SummaryGroup.emptySummaryGroup());
   }
 
   @Test

@@ -228,7 +228,7 @@ class AnnualProductionServiceTest {
         .thenReturn(Collections.emptyList());
 
     assertThat(annualProductionService.getProductionAnnualSummaryGroup(applicationVersion))
-        .isNull();
+        .isEqualTo(SummaryGroup.emptySummaryGroup());
   }
 
   @Test
@@ -251,10 +251,9 @@ class AnnualProductionServiceTest {
 
     assertThat(productionView)
         .isEqualTo(
-            new SummaryGroup<>(
+            new SummaryGroup(
                 null,
                 SummaryGroupType.PRODUCTION_ANNUAL,
-                ProductionView.class,
                 ProductionView.fromAnnual(productionMonths, oilUnit, gasUnit, averageUnit)
             )
         );

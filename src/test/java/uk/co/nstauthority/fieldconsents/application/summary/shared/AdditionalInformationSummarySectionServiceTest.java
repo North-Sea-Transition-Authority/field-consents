@@ -3,17 +3,21 @@ package uk.co.nstauthority.fieldconsents.application.summary.shared;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.ADDITIONAL_INFORMATION_DISPLAY_ORDER;
+import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertEmptySummaryGroup;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertSummaryGroup;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertSummaryItem;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertSummarySection;
+import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.simpleSummaryGroup;
 import static uk.co.nstauthority.fieldconsents.application.summary.shared.AdditionalInformationSummarySectionService.FIELD_LOOKUP_PURPOSE;
 import static uk.co.nstauthority.fieldconsents.summary.SummaryGroupType.SIMPLE_SUMMARY;
 
-import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -27,7 +31,7 @@ import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil;
 import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
-import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
+import uk.co.nstauthority.fieldconsents.summary.SummaryGroupType;
 import uk.co.nstauthority.fieldconsents.summary.SummarySection;
 
 @ExtendWith(MockitoExtension.class)
@@ -52,17 +56,14 @@ class AdditionalInformationSummarySectionServiceTest {
   @InjectMocks
   private AdditionalInformationSummarySectionService additionalInformationSummarySectionService;
 
-  SummaryGroup<SummaryDataView> simpleSummaryGroup =
-      SummaryGroup.simpleSummaryGroup(List.of(new SummaryKeyValue("k", "v")));
-
   @ParameterizedTest
-  @EnumSource(ApplicationType.class)
-  void getSummarySection_offshore(ApplicationType applicationType) {
+  @MethodSource("getAppTypeSummaryGroup")
+  void getSummarySection_offshore(ApplicationType applicationType, SummaryGroup summaryGroup) {
     var applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(applicationType);
     when(eiaDirectionService.getEiaDirectionSummaryGroup(applicationVersion))
-        .thenReturn(simpleSummaryGroup);
+        .thenReturn(summaryGroup);
     when(supportingInformationService.getSupportingInformationSummaryGroup(applicationVersion))
-        .thenReturn(simpleSummaryGroup);
+        .thenReturn(summaryGroup);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.fieldAsset1);
     when(fieldService.getField(ApplicationAssetTestUtil.fieldAsset1.getFieldId(), FIELD_LOOKUP_PURPOSE))
         .thenReturn(FieldTestUtil.field1Json);
@@ -76,9 +77,26 @@ class AdditionalInformationSummarySectionServiceTest {
     var summaryItems = summarySection.summaryItems();
     assertThat(summaryItems).hasSize(2);
     assertSummaryItem(summaryItems.get(0), EIA_SCREENING_DIRECTION_ITEM, 1);
-    assertSummaryGroup(summaryItems.get(0).summaryGroups().get(0), null, SIMPLE_SUMMARY, SummaryDataView.class);
     assertSummaryItem(summaryItems.get(1), SUPPORTING_INFORMATION_ITEM, 1);
-    assertSummaryGroup(summaryItems.get(1).summaryGroups().get(0), null, SIMPLE_SUMMARY, SummaryDataView.class);
+
+    if (SummaryGroupType.EMPTY_SUMMARY.equals(summaryGroup.summaryGroupType())) {
+      assertEmptySummaryGroup(summaryItems.get(0).summaryGroups().get(0));
+      assertEmptySummaryGroup(summaryItems.get(1).summaryGroups().get(0));
+    } else {
+      assertSummaryGroup(summaryItems.get(0).summaryGroups().get(0), null, SIMPLE_SUMMARY, SummaryDataView.class);
+      assertSummaryGroup(summaryItems.get(1).summaryGroups().get(0), null, SIMPLE_SUMMARY, SummaryDataView.class);
+    }
+  }
+
+  private static Stream<Arguments> getAppTypeSummaryGroup() {
+    return Stream.of(
+        Arguments.of(ApplicationType.PRODUCTION, SummaryGroup.emptySummaryGroup()),
+        Arguments.of(ApplicationType.FLARE, SummaryGroup.emptySummaryGroup()),
+        Arguments.of(ApplicationType.VENT, SummaryGroup.emptySummaryGroup()),
+        Arguments.of(ApplicationType.PRODUCTION, simpleSummaryGroup),
+        Arguments.of(ApplicationType.FLARE, simpleSummaryGroup),
+        Arguments.of(ApplicationType.VENT, simpleSummaryGroup)
+    );
   }
 
   @ParameterizedTest

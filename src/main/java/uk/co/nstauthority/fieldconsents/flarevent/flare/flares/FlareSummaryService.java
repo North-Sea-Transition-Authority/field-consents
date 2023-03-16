@@ -1,7 +1,5 @@
 package uk.co.nstauthority.fieldconsents.flarevent.flare.flares;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.IntStream;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,16 +28,14 @@ public class FlareSummaryService {
         .toList();
   }
 
-  public List<SummaryGroup<?>> getSummariesForFlares(ApplicationVersion applicationVersion) {
+  public List<SummaryGroup> getSummariesForFlares(ApplicationVersion applicationVersion) {
     var flareViews = getFlareViews(applicationVersion);
 
     if (flareViews.isEmpty()) {
-      return Collections.emptyList();
+      return SummaryGroup.emptySummaryGroupList();
     }
 
-    List<SummaryGroup<?>> summaryGroups = new ArrayList<>();
-
-    flareViews
+    return flareViews
         .stream()
         .map(flareView -> SummaryGroup.simpleSummaryGroupWithHeading(
             "Flare " + flareView.getDisplayOrder(),
@@ -49,8 +45,6 @@ public class FlareSummaryService {
                 SummaryKeyValue.from("Metered", flareView.getMeteredFlag()),
                 SummaryKeyValue.from("Comments", flareView.getComments())
             )
-        )).forEach(summaryGroups::add);
-
-    return summaryGroups;
+        )).toList();
   }
 }

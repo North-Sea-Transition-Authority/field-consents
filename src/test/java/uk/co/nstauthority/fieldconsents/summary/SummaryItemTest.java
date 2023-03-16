@@ -24,12 +24,12 @@ class SummaryItemTest {
   @Test
   void withGroup_emptyNullInput() {
     assertThat(SummaryItem.withGroup(ITEM_DISPLAY_NAME, null))
-        .isEqualTo(new SummaryItem(ITEM_DISPLAY_NAME, Collections.emptyList()));
+        .isEqualTo(new SummaryItem(ITEM_DISPLAY_NAME, SummaryGroup.emptySummaryGroupList()));
   }
 
   @Test
   void withGroups_notEmpty() {
-    List<SummaryGroup<?>> summaryGroups =
+    List<SummaryGroup> summaryGroups =
         List.of(
             SummaryGroup.simpleSummaryGroup(keyValues),
             SummaryGroup.simpleSummaryGroup(keyValues)
@@ -41,12 +41,12 @@ class SummaryItemTest {
   @Test
   void withGroups_empty() {
     assertThat(SummaryItem.withGroups(ITEM_DISPLAY_NAME, Collections.emptyList()))
-        .isEqualTo(new SummaryItem(ITEM_DISPLAY_NAME, Collections.emptyList()));
+        .isEqualTo(new SummaryItem(ITEM_DISPLAY_NAME, SummaryGroup.emptySummaryGroupList()));
   }
 
   @Test
   void withGroups_emptyNullInput() {
     assertThat(SummaryItem.withGroups(ITEM_DISPLAY_NAME, null))
-        .isEqualTo(new SummaryItem(ITEM_DISPLAY_NAME, Collections.emptyList()));
+        .isEqualTo(new SummaryItem(ITEM_DISPLAY_NAME, SummaryGroup.emptySummaryGroupList()));
   }
 }

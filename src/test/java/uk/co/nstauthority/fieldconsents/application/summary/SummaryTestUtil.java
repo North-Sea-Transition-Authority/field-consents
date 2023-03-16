@@ -6,6 +6,7 @@ import java.util.List;
 import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
 import uk.co.nstauthority.fieldconsents.summary.SummaryItem;
 import uk.co.nstauthority.fieldconsents.summary.SummaryGroupType;
+import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 import uk.co.nstauthority.fieldconsents.summary.SummarySection;
 
 public class SummaryTestUtil {
@@ -18,6 +19,16 @@ public class SummaryTestUtil {
 
   public static final int ADDITIONAL_INFORMATION_DISPLAY_ORDER = 30;
 
+  public static final List<SummaryKeyValue> keyValues =
+      List.of(new SummaryKeyValue("k1", "v1"), new SummaryKeyValue("k2", "v2"));
+
+  public static SummaryGroup simpleSummaryGroup = SummaryGroup.simpleSummaryGroup(keyValues);
+
+  public static final List<SummaryGroup> simpleSummaryGroups =
+      List.of(
+          SummaryGroup.simpleSummaryGroupWithHeading("g1", keyValues),
+          SummaryGroup.simpleSummaryGroupWithHeading("g2", keyValues)
+      );
 
   public static SummarySection getConsentDetailsSummarySection(List<SummaryItem> summaryItems) {
     return new SummarySection(CONSENT_DETAILS_DISPLAY_ORDER, summaryItems);
@@ -42,13 +53,18 @@ public class SummaryTestUtil {
     assertThat(summaryItem.summaryGroups()).hasSize(expectedSummaryGroupCount);
   }
 
-  public static void assertSummaryGroup(SummaryGroup<?> summaryGroup,
+  public static void assertSummaryGroup(SummaryGroup summaryGroup,
                                         String displayName,
                                         SummaryGroupType summaryGroupType,
                                         Class<?> clazz) {
     assertThat(summaryGroup.displayName()).isEqualTo(displayName);
     assertThat(summaryGroup.summaryGroupType()).isEqualTo(summaryGroupType);
-    assertThat(summaryGroup.clazz()).isEqualTo(clazz);
     assertThat(summaryGroup.summaryData()).isInstanceOf(clazz);
+  }
+
+  public static void assertEmptySummaryGroup(SummaryGroup summaryGroup) {
+    assertThat(summaryGroup.displayName()).isNull();
+    assertThat(summaryGroup.summaryGroupType()).isEqualTo(SummaryGroupType.EMPTY_SUMMARY);
+    assertThat(summaryGroup.summaryData()).isNull();
   }
 }

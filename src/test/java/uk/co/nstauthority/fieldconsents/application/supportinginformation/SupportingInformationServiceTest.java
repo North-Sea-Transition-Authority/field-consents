@@ -132,7 +132,7 @@ class SupportingInformationServiceTest {
     var summaryGroup = supportingInformationService.getSupportingInformationSummaryGroup(applicationVersion);
 
     assertThat(summaryGroup)
-        .isNull();
+        .isEqualTo(SummaryGroup.emptySummaryGroup());
   }
 
   @Test

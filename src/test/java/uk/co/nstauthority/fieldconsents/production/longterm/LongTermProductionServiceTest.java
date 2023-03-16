@@ -271,7 +271,7 @@ class LongTermProductionServiceTest {
         .thenReturn(Collections.emptyList());
 
     assertThat(longTermProductionService.getProductionLongTermSummaryGroup(applicationVersion))
-        .isNull();
+        .isEqualTo(SummaryGroup.emptySummaryGroup());
   }
 
   @Test
@@ -291,10 +291,9 @@ class LongTermProductionServiceTest {
 
     assertThat(productionView)
         .isEqualTo(
-            new SummaryGroup<>(
+            new SummaryGroup(
                 null,
                 SummaryGroupType.PRODUCTION_LONG_TERM,
-                ProductionView.class,
                 ProductionView.fromLongTerm(productionYears, oilUnit, gasUnit)
             )
         );

@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
@@ -39,11 +38,11 @@ public class SupportingInformationService {
     supportingInformationRepository.save(SupportingInformation.from(applicationVersion, form));
   }
 
-  public SummaryGroup<SummaryDataView> getSupportingInformationSummaryGroup(ApplicationVersion applicationVersion) {
+  public SummaryGroup getSupportingInformationSummaryGroup(ApplicationVersion applicationVersion) {
     var supportingInformationOptional = findSupportingInformation(applicationVersion);
 
     if (supportingInformationOptional.isEmpty()) {
-      return null;
+      return SummaryGroup.emptySummaryGroup();
     }
 
     List<SummaryKeyValue> summaryKeyValues = new ArrayList<>();

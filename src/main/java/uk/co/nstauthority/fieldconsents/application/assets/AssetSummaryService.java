@@ -3,7 +3,6 @@ package uk.co.nstauthority.fieldconsents.application.assets;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -91,15 +90,15 @@ public class AssetSummaryService {
     );
   }
 
-  public List<SummaryGroup<?>> getAdditionalAssetsSummaryGroups(ApplicationVersion applicationVersion) {
+  public List<SummaryGroup> getAdditionalAssetsSummaryGroups(ApplicationVersion applicationVersion) {
     var hasSecondaryAssetsOptional = applicationFlagService
         .findFlagValue(applicationVersion, ApplicationFlagType.HAS_SECONDARY_ASSETS);
 
     if (hasSecondaryAssetsOptional.isEmpty()) {
-      return Collections.emptyList();
+      return SummaryGroup.emptySummaryGroupList();
     }
 
-    List<SummaryGroup<?>> summaryGroups = new ArrayList<>();
+    List<SummaryGroup> summaryGroups = new ArrayList<>();
 
     summaryGroups.add(
         SummaryGroup.simpleSummaryGroup(

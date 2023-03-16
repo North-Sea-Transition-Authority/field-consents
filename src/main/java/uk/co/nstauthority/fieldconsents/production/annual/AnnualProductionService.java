@@ -141,20 +141,19 @@ public class AnnualProductionService {
     annualProductionMonthRepository.save(annualProductionMonth);
   }
 
-  public SummaryGroup<ProductionView> getProductionAnnualSummaryGroup(ApplicationVersion applicationVersion) {
+  public SummaryGroup getProductionAnnualSummaryGroup(ApplicationVersion applicationVersion) {
     var annualProductionMonths = getAnnualProductionMonths(applicationVersion);
 
     if (annualProductionMonths.isEmpty()) {
-      return null;
+      return SummaryGroup.emptySummaryGroup();
     }
 
     var oilUnit = applicationUnitService.getProductionOilUnit(applicationVersion);
     var gasUnit = applicationUnitService.getProductionGasUnit(applicationVersion);
     var averageUnit = applicationUnitService.getProductionAverageUnit(applicationVersion);
-    return new SummaryGroup<>(
+    return new SummaryGroup(
         null,
         SummaryGroupType.PRODUCTION_ANNUAL,
-        ProductionView.class,
         ProductionView.fromAnnual(annualProductionMonths, oilUnit, gasUnit, averageUnit)
     );
   }

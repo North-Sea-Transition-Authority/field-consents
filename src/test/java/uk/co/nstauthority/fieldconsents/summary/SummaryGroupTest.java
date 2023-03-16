@@ -16,10 +16,9 @@ class SummaryGroupTest {
   void simpleSummaryGroupWithHeading() {
     assertThat(SummaryGroup.simpleSummaryGroupWithHeading("group display name", keyValues))
         .isEqualTo(
-            new SummaryGroup<>(
+            new SummaryGroup(
                 "group display name",
                 SummaryGroupType.SIMPLE_SUMMARY,
-                SummaryDataView.class,
                 SummaryDataView.from(keyValues)
             )
         );
@@ -29,11 +28,36 @@ class SummaryGroupTest {
   void simpleSummaryGroup() {
     assertThat(SummaryGroup.simpleSummaryGroup(keyValues))
         .isEqualTo(
-            new SummaryGroup<>(
+            new SummaryGroup(
                 null,
                 SummaryGroupType.SIMPLE_SUMMARY,
-                SummaryDataView.class,
                 SummaryDataView.from(keyValues)
+            )
+        );
+  }
+
+  @Test
+  void emptySummaryGroup() {
+    assertThat(SummaryGroup.emptySummaryGroup())
+        .isEqualTo(
+          new SummaryGroup(
+              null,
+              SummaryGroupType.EMPTY_SUMMARY,
+              null
+          )
+        );
+  }
+
+  @Test
+  void emptySummaryGroupList() {
+    assertThat(SummaryGroup.emptySummaryGroupList())
+        .isEqualTo(
+            List.of(
+                new SummaryGroup(
+                    null,
+                    SummaryGroupType.EMPTY_SUMMARY,
+                    null
+                )
             )
         );
   }

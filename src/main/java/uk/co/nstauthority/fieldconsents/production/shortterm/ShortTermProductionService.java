@@ -177,20 +177,19 @@ public class ShortTermProductionService {
     shortTermProductionMonthRepository.save(shortTermProductionMonth);
   }
 
-  public SummaryGroup<ProductionView> getProductionShortTermSummaryGroup(ApplicationVersion applicationVersion) {
+  public SummaryGroup getProductionShortTermSummaryGroup(ApplicationVersion applicationVersion) {
     var shortTermProductionMonths = getShortTermProductionMonths(applicationVersion);
 
     if (shortTermProductionMonths.isEmpty()) {
-      return null;
+      return SummaryGroup.emptySummaryGroup();
     }
 
     var oilUnit = applicationUnitService.getProductionOilUnit(applicationVersion);
     var gasUnit = applicationUnitService.getProductionGasUnit(applicationVersion);
     var averageUnit = applicationUnitService.getProductionAverageUnit(applicationVersion);
-    return new SummaryGroup<>(
+    return new SummaryGroup(
         null,
         SummaryGroupType.PRODUCTION_SHORT_TERM,
-        ProductionView.class,
         ProductionView.fromShortTerm(shortTermProductionMonths, oilUnit, gasUnit, averageUnit)
     );
   }

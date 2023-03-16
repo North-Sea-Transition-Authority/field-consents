@@ -3,15 +3,20 @@ package uk.co.nstauthority.fieldconsents.application.summary.production;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.PRODUCTION_INFORMATION_DISPLAY_ORDER;
+import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertEmptySummaryGroup;
+import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertSummaryGroup;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertSummaryItem;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertSummarySection;
 
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -21,9 +26,12 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
+import uk.co.nstauthority.fieldconsents.production.ProductionView;
 import uk.co.nstauthority.fieldconsents.production.annual.AnnualProductionService;
 import uk.co.nstauthority.fieldconsents.production.longterm.LongTermProductionService;
 import uk.co.nstauthority.fieldconsents.production.shortterm.ShortTermProductionService;
+import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
+import uk.co.nstauthority.fieldconsents.summary.SummaryGroupType;
 
 @ExtendWith(MockitoExtension.class)
 class ProductionInformationSummarySectionServiceTest {
@@ -68,12 +76,13 @@ class ProductionInformationSummarySectionServiceTest {
         .isNotPresent();
   }
 
-  @Test
-  void getSummarySection_shortTerm() {
+  @ParameterizedTest
+  @MethodSource("getSummaryGroupsForShortTerm")
+  void getSummarySection_shortTerm(SummaryGroup summaryGroup) {
     when(consentLengthService.findConsentLengthDetails(applicationVersion))
         .thenReturn(Optional.of(ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(applicationVersion)));
     when(shortTermProductionService.getProductionShortTermSummaryGroup(applicationVersion))
-        .thenReturn(null);
+        .thenReturn(summaryGroup);
 
     var summarySectionOptional = productionInformationSummarySectionService.getSummarySection(applicationVersion);
 
@@ -84,15 +93,30 @@ class ProductionInformationSummarySectionServiceTest {
     var summaryItems = summarySection.summaryItems();
     assertThat(summaryItems).hasSize(1);
 
-    assertSummaryItem(summaryItems.get(0), ConsentLengthType.SHORT_TERM.getDisplayName(), 0);
+    assertSummaryItem(summaryItems.get(0), ConsentLengthType.SHORT_TERM.getDisplayName(), 1);
+    if (SummaryGroupType.EMPTY_SUMMARY.equals(summaryGroup.summaryGroupType())) {
+      assertEmptySummaryGroup(summaryItems.get(0).summaryGroups().get(0));
+    } else {
+      assertSummaryGroup(summaryItems.get(0).summaryGroups().get(0), summaryGroup.displayName(),
+          summaryGroup.summaryGroupType(), ProductionView.class);
+    }
   }
 
-  @Test
-  void getSummarySection_annual() {
+  private static Stream<Arguments> getSummaryGroupsForShortTerm() {
+    return Stream.of(
+        Arguments.of(SummaryGroup.emptySummaryGroup()),
+        Arguments.of(new SummaryGroup("test short term", SummaryGroupType.PRODUCTION_SHORT_TERM,
+            ProductionView.empty()))
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource("getSummaryGroupsForAnnual")
+  void getSummarySection_annual(SummaryGroup summaryGroup) {
     when(consentLengthService.findConsentLengthDetails(applicationVersion))
         .thenReturn(Optional.of(ConsentLengthTestUtil.getConsentLengthDetailsForAnnual(applicationVersion)));
     when(annualProductionService.getProductionAnnualSummaryGroup(applicationVersion))
-        .thenReturn(null);
+        .thenReturn(summaryGroup);
 
     var summarySectionOptional = productionInformationSummarySectionService.getSummarySection(applicationVersion);
 
@@ -102,15 +126,30 @@ class ProductionInformationSummarySectionServiceTest {
 
     var summaryItems = summarySection.summaryItems();
     assertThat(summaryItems).hasSize(1);
-    assertSummaryItem(summaryItems.get(0), ConsentLengthType.ANNUAL.getDisplayName(), 0);
+    assertSummaryItem(summaryItems.get(0), ConsentLengthType.ANNUAL.getDisplayName(), 1);
+    if (SummaryGroupType.EMPTY_SUMMARY.equals(summaryGroup.summaryGroupType())) {
+      assertEmptySummaryGroup(summaryItems.get(0).summaryGroups().get(0));
+    } else {
+      assertSummaryGroup(summaryItems.get(0).summaryGroups().get(0), summaryGroup.displayName(),
+          summaryGroup.summaryGroupType(), ProductionView.class);
+    }
   }
 
-  @Test
-  void getSummarySection_longTerm() {
+  private static Stream<Arguments> getSummaryGroupsForAnnual() {
+    return Stream.of(
+        Arguments.of(SummaryGroup.emptySummaryGroup()),
+        Arguments.of(new SummaryGroup("test annual", SummaryGroupType.PRODUCTION_ANNUAL,
+            ProductionView.empty()))
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource("getSummaryGroupsForLongTerm")
+  void getSummarySection_longTerm(SummaryGroup summaryGroup) {
     when(consentLengthService.findConsentLengthDetails(applicationVersion))
         .thenReturn(Optional.of(ConsentLengthTestUtil.getConsentLengthDetailsForLongTerm(applicationVersion)));
     when(longTermProductionService.getProductionLongTermSummaryGroup(applicationVersion))
-        .thenReturn(null);
+        .thenReturn(summaryGroup);
 
     var summarySectionOptional = productionInformationSummarySectionService.getSummarySection(applicationVersion);
 
@@ -120,6 +159,20 @@ class ProductionInformationSummarySectionServiceTest {
 
     var summaryItems = summarySection.summaryItems();
     assertThat(summaryItems).hasSize(1);
-    assertSummaryItem(summaryItems.get(0), ConsentLengthType.LONG_TERM.getDisplayName(), 0);
+    assertSummaryItem(summaryItems.get(0), ConsentLengthType.LONG_TERM.getDisplayName(), 1);
+    if (SummaryGroupType.EMPTY_SUMMARY.equals(summaryGroup.summaryGroupType())) {
+      assertEmptySummaryGroup(summaryItems.get(0).summaryGroups().get(0));
+    } else {
+      assertSummaryGroup(summaryItems.get(0).summaryGroups().get(0), summaryGroup.displayName(),
+          summaryGroup.summaryGroupType(), ProductionView.class);
+    }
+  }
+
+  private static Stream<Arguments> getSummaryGroupsForLongTerm() {
+    return Stream.of(
+        Arguments.of(SummaryGroup.emptySummaryGroup()),
+        Arguments.of(new SummaryGroup("test long term", SummaryGroupType.PRODUCTION_LONG_TERM,
+            ProductionView.empty()))
+    );
   }
 }

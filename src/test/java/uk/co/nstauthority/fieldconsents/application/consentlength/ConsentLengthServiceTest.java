@@ -252,7 +252,7 @@ class ConsentLengthServiceTest {
     var summaryGroup = consentLengthService.getConsentLengthSummaryGroup(applicationVersion);
 
     assertThat(summaryGroup)
-        .isNull();
+        .isEqualTo(SummaryGroup.emptySummaryGroup());
   }
 
   @Test

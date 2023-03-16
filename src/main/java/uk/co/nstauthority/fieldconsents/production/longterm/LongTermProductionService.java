@@ -167,19 +167,18 @@ public class LongTermProductionService {
     longTermProductionYearRepository.save(longTermProductionYear);
   }
 
-  public SummaryGroup<ProductionView> getProductionLongTermSummaryGroup(ApplicationVersion applicationVersion) {
+  public SummaryGroup getProductionLongTermSummaryGroup(ApplicationVersion applicationVersion) {
     var longTermProductionYears = getLongTermProductionYears(applicationVersion);
 
     if (longTermProductionYears.isEmpty()) {
-      return null;
+      return SummaryGroup.emptySummaryGroup();
     }
 
     var oilUnit = applicationUnitService.getProductionOilUnit(applicationVersion);
     var gasUnit = applicationUnitService.getProductionGasUnit(applicationVersion);
-    return new SummaryGroup<>(
+    return new SummaryGroup(
         null,
         SummaryGroupType.PRODUCTION_LONG_TERM,
-        ProductionView.class,
         ProductionView.fromLongTerm(longTermProductionYears, oilUnit, gasUnit)
     );
   }

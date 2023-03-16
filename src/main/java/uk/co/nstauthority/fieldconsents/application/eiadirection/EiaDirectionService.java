@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationService;
-import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
@@ -52,11 +51,11 @@ public class EiaDirectionService {
         : null;
   }
 
-  public SummaryGroup<SummaryDataView> getEiaDirectionSummaryGroup(ApplicationVersion applicationVersion) {
+  public SummaryGroup getEiaDirectionSummaryGroup(ApplicationVersion applicationVersion) {
     var eiaDirectionOptional = findEiaDirection(applicationVersion);
 
     if (eiaDirectionOptional.isEmpty()) {
-      return null;
+      return SummaryGroup.emptySummaryGroup();
     }
 
     List<SummaryKeyValue> summaryKeyValues = new ArrayList<>();

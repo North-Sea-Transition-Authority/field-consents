@@ -233,7 +233,7 @@ class ShortTermProductionServiceTest {
         .thenReturn(Collections.emptyList());
 
     assertThat(shortTermProductionService.getProductionShortTermSummaryGroup(applicationVersion))
-        .isNull();
+        .isEqualTo(SummaryGroup.emptySummaryGroup());
   }
 
   @Test
@@ -256,10 +256,9 @@ class ShortTermProductionServiceTest {
 
     assertThat(productionView)
         .isEqualTo(
-            new SummaryGroup<>(
+            new SummaryGroup(
                 null,
                 SummaryGroupType.PRODUCTION_SHORT_TERM,
-                ProductionView.class,
                 ProductionView.fromShortTerm(productionMonths, oilUnit, gasUnit, averageUnit)
             )
         );

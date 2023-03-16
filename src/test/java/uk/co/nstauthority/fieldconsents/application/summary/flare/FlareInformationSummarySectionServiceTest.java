@@ -3,16 +3,22 @@ package uk.co.nstauthority.fieldconsents.application.summary.flare;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.FLARE_INFORMATION_DISPLAY_ORDER;
+import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertEmptySummaryGroup;
+import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertSummaryGroup;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertSummaryItem;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertSummarySection;
+import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.simpleSummaryGroups;
 
-import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -24,6 +30,9 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthT
 import uk.co.nstauthority.fieldconsents.flarevent.flare.annual.FlareAnnualService;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flares.FlareSummaryService;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.shortterm.FlareShortTermService;
+import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
+import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
+import uk.co.nstauthority.fieldconsents.summary.SummaryGroupType;
 
 @ExtendWith(MockitoExtension.class)
 class FlareInformationSummarySectionServiceTest {
@@ -69,12 +78,13 @@ class FlareInformationSummarySectionServiceTest {
         .isNotPresent();
   }
 
-  @Test
-  void getSummarySection_shortTerm() {
+  @ParameterizedTest
+  @MethodSource("getSummaryGroupList")
+  void getSummarySection_shortTerm_empty(List<SummaryGroup> summaryGroups) {
     when(consentLengthService.findConsentLengthDetails(applicationVersion))
         .thenReturn(Optional.of(ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(applicationVersion)));
     when(flareSummaryService.getSummariesForFlares(applicationVersion))
-        .thenReturn(Collections.emptyList());
+        .thenReturn(summaryGroups);
 
     var summarySectionOptional = flareInformationSummarySectionService.getSummarySection(applicationVersion);
 
@@ -84,6 +94,23 @@ class FlareInformationSummarySectionServiceTest {
 
     var summaryItems = summarySection.summaryItems();
     assertThat(summaryItems).hasSize(1);
-    assertSummaryItem(summaryItems.get(0), FLARES_ITEM, 0);
+
+    if (SummaryGroupType.EMPTY_SUMMARY.equals(summaryGroups.get(0).summaryGroupType())) {
+      assertSummaryItem(summaryItems.get(0), FLARES_ITEM, 1);
+      assertEmptySummaryGroup(summaryItems.get(0).summaryGroups().get(0));
+    } else {
+      assertSummaryItem(summaryItems.get(0), FLARES_ITEM, 2);
+      assertSummaryGroup(summaryItems.get(0).summaryGroups().get(0), summaryGroups.get(0).displayName(),
+          SummaryGroupType.SIMPLE_SUMMARY, SummaryDataView.class);
+      assertSummaryGroup(summaryItems.get(0).summaryGroups().get(1), summaryGroups.get(1).displayName(),
+          SummaryGroupType.SIMPLE_SUMMARY, SummaryDataView.class);
+    }
+  }
+
+  private static Stream<Arguments> getSummaryGroupList() {
+    return Stream.of(
+        Arguments.of(SummaryGroup.emptySummaryGroupList()),
+        Arguments.of(simpleSummaryGroups)
+    );
   }
 }

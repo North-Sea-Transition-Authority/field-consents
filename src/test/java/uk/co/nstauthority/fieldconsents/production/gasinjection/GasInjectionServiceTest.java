@@ -71,7 +71,7 @@ class GasInjectionServiceTest {
     var summaryGroup = gasInjectionService.getGasInjectionSummaryGroup(applicationVersion);
 
     assertThat(summaryGroup)
-        .isNull();
+        .isEqualTo(SummaryGroup.emptySummaryGroup());
   }
 
   @ParameterizedTest

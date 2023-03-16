@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
@@ -123,11 +122,11 @@ public class ConsentLengthService {
             .formatted(applicationVersion.getId())));
   }
 
-  public SummaryGroup<SummaryDataView> getConsentLengthSummaryGroup(ApplicationVersion applicationVersion) {
+  public SummaryGroup getConsentLengthSummaryGroup(ApplicationVersion applicationVersion) {
     var consentLengthDetailsOptional = findConsentLengthDetails(applicationVersion);
 
     if (consentLengthDetailsOptional.isEmpty()) {
-      return null;
+      return SummaryGroup.emptySummaryGroup();
     }
 
     List<SummaryKeyValue> summaryKeyValues = new ArrayList<>();

@@ -107,7 +107,7 @@ class AssetSummaryServiceTest {
         .thenReturn(Optional.empty());
 
     assertThat(assetSummaryService.getAdditionalAssetsSummaryGroups(applicationVersion))
-        .isEqualTo(Collections.emptyList());
+        .isEqualTo(SummaryGroup.emptySummaryGroupList());
   }
 
   @Test

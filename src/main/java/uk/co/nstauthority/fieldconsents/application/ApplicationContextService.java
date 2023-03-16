@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
-import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 import uk.co.nstauthority.fieldconsents.summary.SummaryGroup;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
@@ -40,7 +39,7 @@ public class ApplicationContextService {
     return new ApplicationContextJson(primaryAsset, primaryOperator);
   }
 
-  public SummaryGroup<SummaryDataView> getApplicationContextSummaryGroup(ApplicationVersion applicationVersion) {
+  public SummaryGroup getApplicationContextSummaryGroup(ApplicationVersion applicationVersion) {
     var applicationContextJson = getApplicationContextJson(applicationVersion);
 
     List<SummaryKeyValue> summaryKeyValues = new ArrayList<>();
