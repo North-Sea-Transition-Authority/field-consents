@@ -20,6 +20,7 @@
   <#local customerMnemonic = customerBranding.mnemonic() />
   <#local serviceHomeUrl = springUrl(serviceHomeUrl) />
 
+  <#assign fullPageWidth=false />
   <#assign fullWidthColumn=false />
   <#assign oneHalfColumn=false />
   <#assign oneThirdColumn=false />
@@ -27,7 +28,9 @@
   <#assign twoThirdsOneThirdColumn=false />
   <#assign oneQuarterColumn=false />
 
-  <#if pageSize == PageSize.FULL_WIDTH>
+  <#if pageSize == PageSize.FULL_PAGE_WIDTH>
+    <#assign fullPageWidth=true/>
+  <#elseif pageSize == PageSize.FULL_WIDTH>
     <#assign fullWidthColumn=true/>
   <#elseif pageSize == PageSize.ONE_HALF_COLUMN>
     <#assign oneHalfColumn=true/>
@@ -57,6 +60,7 @@
     phaseBanner=phaseBanner
     serviceUrl=serviceHomeUrl
     homePageUrl=serviceHomeUrl
+    wrapperWidth=fullPageWidth
     fullWidthColumn=fullWidthColumn
     oneHalfColumn=oneHalfColumn
     oneThirdColumn=oneThirdColumn

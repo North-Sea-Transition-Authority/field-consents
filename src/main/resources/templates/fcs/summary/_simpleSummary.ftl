@@ -1,5 +1,4 @@
 <#include '../layout/layout.ftl'>
-<#import '_emptySummary.ftl' as emptySummary>
 
 <#-- @ftlvariable name="summaryDataView" type="uk.co.nstauthority.fieldconsents.summary.SummaryDataView" -->
 

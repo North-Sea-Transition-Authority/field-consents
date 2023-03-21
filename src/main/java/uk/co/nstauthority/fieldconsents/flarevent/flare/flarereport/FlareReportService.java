@@ -12,7 +12,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.flarevent.ReportUtil;
+import uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionReportSummaryService;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 
 @Service
 public class FlareReportService {
@@ -21,11 +24,23 @@ public class FlareReportService {
 
   private final FlareReportPeriodService flareReportPeriodService;
 
+  private final ApplicationUnitService applicationUnitService;
+
+  private final EmissionReportSummaryService emissionReportSummaryService;
+
   @Autowired
   FlareReportService(FlareReportMonthRepository flareReportMonthRepository,
-                     FlareReportPeriodService flareReportPeriodService) {
+                     FlareReportPeriodService flareReportPeriodService,
+                     ApplicationUnitService applicationUnitService,
+                     EmissionReportSummaryService emissionReportSummaryService) {
     this.flareReportMonthRepository = flareReportMonthRepository;
     this.flareReportPeriodService = flareReportPeriodService;
+    this.applicationUnitService = applicationUnitService;
+    this.emissionReportSummaryService = emissionReportSummaryService;
+  }
+
+  public List<FlareReportMonth> getFlareReportMonths(ApplicationVersion applicationVersion) {
+    return flareReportMonthRepository.findAllByApplicationVersion(applicationVersion);
   }
 
   public boolean flareReportMonthsComplete(ApplicationVersion applicationVersion) {
@@ -51,7 +66,7 @@ public class FlareReportService {
 
   private List<YearMonth> getExistingFlareReportYearMonths(ApplicationVersion applicationVersion) {
     // return a list of years and months for any flare report data we have
-    return flareReportMonthRepository.findAllByApplicationVersion(applicationVersion)
+    return getFlareReportMonths(applicationVersion)
         .stream()
         .map(flareReportMonth -> YearMonth.of(flareReportMonth.getYear(), flareReportMonth.getMonth()))
         .toList();
@@ -59,8 +74,7 @@ public class FlareReportService {
 
   FlareReportForm getFlareReportForm(ApplicationVersion applicationVersion) {
 
-    List<FlareReportMonth> previousFlareReportMonths = flareReportMonthRepository
-        .findAllByApplicationVersion(applicationVersion);
+    List<FlareReportMonth> previousFlareReportMonths = getFlareReportMonths(applicationVersion);
 
     List<FlareReportMonthForm> flareReportMonthForms = initialiseFlareReportMonthForms(applicationVersion);
 
@@ -133,4 +147,31 @@ public class FlareReportService {
         flareReportMonthRepository.save(FlareReportMonth.from(applicationVersion, flareReportMonthForm)));
   }
 
+  public List<SummaryCard> getFlareReportSummaryCards(ApplicationVersion applicationVersion) {
+
+    var flareReportPeriodOptional = flareReportPeriodService.findFlareReportPeriod(applicationVersion);
+
+    if (flareReportPeriodOptional.isEmpty()) {
+      return SummaryCard.emptySummaryCardList();
+    }
+
+    var summaryCards = new ArrayList<SummaryCard>();
+
+    summaryCards.add(emissionReportSummaryService.getReportPeriodSummaryCard(
+            flareReportPeriodOptional.get(),
+            applicationVersion.getApplication().getType()));
+
+    var flareReportMonths = getFlareReportMonths(applicationVersion);
+
+    if (flareReportMonths.isEmpty()) {
+      return summaryCards;
+    }
+
+    var categoryUnit = applicationUnitService.getFlareCategoryUnit(applicationVersion);
+    var averageUnit = applicationUnitService.getFlareAverageUnit(applicationVersion);
+
+    summaryCards.add(emissionReportSummaryService.getReportTableSummaryCard(flareReportMonths, categoryUnit, averageUnit));
+
+    return summaryCards;
+  }
 }

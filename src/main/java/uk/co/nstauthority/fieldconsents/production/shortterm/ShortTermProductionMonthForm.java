@@ -2,10 +2,9 @@ package uk.co.nstauthority.fieldconsents.production.shortterm;
 
 import java.time.LocalDate;
 import java.time.Month;
-import java.time.format.TextStyle;
-import java.util.Locale;
 import org.apache.commons.lang3.tuple.Pair;
 import uk.co.fivium.formlibrary.input.DecimalInput;
+import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowForm;
 
 public class ShortTermProductionMonthForm extends ProductionRowForm {
@@ -46,7 +45,7 @@ public class ShortTermProductionMonthForm extends ProductionRowForm {
   }
 
   public void setMonth(Month month) {
-    this.month = month.getDisplayName(TextStyle.FULL, Locale.ENGLISH);
+    this.month = DateUtils.formatFull(month);
   }
 
   public String getYear() {

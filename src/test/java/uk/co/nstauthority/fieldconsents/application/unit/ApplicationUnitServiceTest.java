@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -37,6 +38,9 @@ class ApplicationUnitServiceTest {
 
   private static final String MISMATCHED_PRODUCTION_UNITS_EXCEPTION_MESSAGE =
       "Mismatched production units found. Cannot work out the unit for the averages.";
+
+  private static final String MISMATCHED_FLARE_UNITS_EXCEPTION_MESSAGE =
+      "Mismatched flare category unit (%s). Cannot work out the unit for the averages.";
 
   @Mock
   private ApplicationUnitRepository applicationUnitRepository;
@@ -169,6 +173,61 @@ class ApplicationUnitServiceTest {
         .isEqualTo(FlareVentUnit.MASS_PERCENTAGE);
   }
 
+  @Test
+  void getFlareAverageUnit_shortTerm() {
+    when(applicationUnitRepository.findByApplicationVersion(flareAppVersion)).thenReturn(Optional.empty());
+    when(consentLengthService.getConsentLengthDetails(flareAppVersion))
+        .thenReturn(ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(flareAppVersion));
+
+    assertThat(applicationUnitService.getFlareAverageUnit(flareAppVersion))
+        .isEqualTo(FlareVentUnit.TONNES_PER_DAY);
+  }
+
+  @Test
+  void getFlareAverageUnit_annual() {
+    when(applicationUnitRepository.findByApplicationVersion(flareAppVersion)).thenReturn(Optional.empty());
+    when(consentLengthService.getConsentLengthDetails(flareAppVersion))
+        .thenReturn(ConsentLengthTestUtil.getConsentLengthDetailsForAnnual(flareAppVersion));
+
+    assertThat(applicationUnitService.getFlareAverageUnit(flareAppVersion))
+        .isEqualTo(FlareVentUnit.TONNES_PER_DAY);
+  }
+
+  @Test
+  void getFlareAverageUnit_longTerm() {
+    when(applicationUnitRepository.findByApplicationVersion(flareAppVersion)).thenReturn(Optional.empty());
+    when(consentLengthService.getConsentLengthDetails(flareAppVersion))
+        .thenReturn(ConsentLengthTestUtil.getConsentLengthDetailsForLongTerm(flareAppVersion));
+
+    assertThat(applicationUnitService.getFlareAverageUnit(flareAppVersion))
+        .isEqualTo(FlareVentUnit.TONNES_PER_DAY);
+  }
+
+  @Test
+  void getFlareAverageUnit_manualTonnesPerMonth() {
+    ApplicationUnit applicationUnit = new ApplicationUnit();
+    applicationUnit.setApplicationVersion(flareAppVersion);
+    applicationUnit.setFlareCategoryUnit(FlareVentUnit.TONNES_PER_MONTH);
+    when(applicationUnitRepository.findByApplicationVersion(flareAppVersion))
+        .thenReturn(Optional.of(applicationUnit));
+
+    assertThat(applicationUnitService.getFlareAverageUnit(flareAppVersion))
+        .isEqualTo(FlareVentUnit.TONNES_PER_DAY);
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = FlareVentUnit.class, mode = EnumSource.Mode.EXCLUDE, names = {"TONNES_PER_MONTH"})
+  void getFlareAverageUnit_manualMismatchUnits(FlareVentUnit flareUnit) {
+    ApplicationUnit applicationUnit = new ApplicationUnit();
+    applicationUnit.setApplicationVersion(flareAppVersion);
+    applicationUnit.setFlareCategoryUnit(flareUnit);
+    when(applicationUnitRepository.findByApplicationVersion(flareAppVersion))
+        .thenReturn(Optional.of(applicationUnit));
+
+    assertThatThrownBy(() -> applicationUnitService.getFlareAverageUnit(flareAppVersion))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessage(MISMATCHED_FLARE_UNITS_EXCEPTION_MESSAGE.formatted(flareUnit.name()));
+  }
 
   @Test
   void getVentGasDensityUnit_notExists() {
@@ -549,5 +608,4 @@ class ApplicationUnitServiceTest {
     verify(applicationUnitRepository, times(1)).save(any(ApplicationUnit.class));
     verifyNoMoreInteractions(applicationUnitRepository);
   }
-
 }

@@ -14,6 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.consentlength.AnnualUtil;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
+import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
+import uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionConsentSummaryService;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 
 @Service
 public class FlareAnnualService {
@@ -22,11 +25,19 @@ public class FlareAnnualService {
 
   private final ConsentLengthService consentLengthService;
 
+  private final ApplicationUnitService applicationUnitService;
+
+  private final EmissionConsentSummaryService emissionConsentSummaryService;
+
   @Autowired
   public FlareAnnualService(FlareAnnualMonthRepository flareAnnualMonthRepository,
-                            ConsentLengthService consentLengthService) {
+                            ConsentLengthService consentLengthService,
+                            ApplicationUnitService applicationUnitService,
+                            EmissionConsentSummaryService emissionConsentSummaryService) {
     this.flareAnnualMonthRepository = flareAnnualMonthRepository;
     this.consentLengthService = consentLengthService;
+    this.applicationUnitService = applicationUnitService;
+    this.emissionConsentSummaryService = emissionConsentSummaryService;
   }
 
   public List<FlareAnnualMonth> getFlareAnnualMonths(ApplicationVersion applicationVersion) {
@@ -122,4 +133,17 @@ public class FlareAnnualService {
         flareAnnualMonthRepository.save(FlareAnnualMonth.from(applicationVersion, flareAnnualMonthForm)));
   }
 
+  public SummaryCard getFlareAnnualSummaryCard(ApplicationVersion applicationVersion) {
+
+    var flareAnnualMonths = getFlareAnnualMonths(applicationVersion);
+
+    if (flareAnnualMonths.isEmpty()) {
+      return SummaryCard.emptySummaryCard();
+    }
+
+    var categoryUnit = applicationUnitService.getFlareCategoryUnit(applicationVersion);
+    var averageUnit = applicationUnitService.getFlareAverageUnit(applicationVersion);
+
+    return emissionConsentSummaryService.getAnnualConsentSummaryCard(flareAnnualMonths, categoryUnit, averageUnit);
+  }
 }

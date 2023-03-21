@@ -1,5 +1,6 @@
 <#include '../layout/layout.ftl'>
 <#import '../summary/_simpleSummary.ftl' as simpleSummary>
+<#import '../summary/_tableSummary.ftl' as tableSummary>
 <#import '../summary/_productionConsentSummary.ftl' as productionConsentSummary>
 <#import '../summary/_emptySummary.ftl' as emptySummary>
 
@@ -7,10 +8,18 @@
 <#-- @ftlvariable name="summaryItem" type="java.util.List<uk.co.nstauthority.fieldconsents.summary.SummaryItem>" -->
 <#-- @ftlvariable name="summaryCard" type="java.util.List<uk.co.nstauthority.fieldconsents.summary.SummaryCard>" -->
 
+<#function getPageSize>
+  <#if wideSummaryDisplay>
+    <#return PageSize.FULL_PAGE_WIDTH/>
+  <#else>
+    <#return PageSize.FULL_WIDTH/>
+  </#if>
+</#function>
+
 <@defaultPage
 htmlTitle=pageTitle
 pageHeading=pageTitle
-pageSize=PageSize.FULL_WIDTH
+pageSize=getPageSize()
 >
   <@fdsAccordion.accordion accordionId="summaryaccordian-${accordionId}">
     <#list summarySections as summarySection>
@@ -21,6 +30,10 @@ pageSize=PageSize.FULL_WIDTH
             <#if summaryCard.summaryCardType() == "SIMPLE_SUMMARY">
               <@simpleSummary.simpleSummary
                 summaryDataView=summaryCard.summaryData()
+                summaryHeading=summaryCard.displayName()!""/>
+            <#elseif summaryCard.summaryCardType() == "TABLE_SUMMARY">
+              <@tableSummary.tableSummary
+                summaryTableView=summaryCard.summaryData()
                 summaryHeading=summaryCard.displayName()!""/>
             <#elseif summaryCard.summaryCardType() == "PRODUCTION_SHORT_TERM">
               <@productionConsentSummary.productionConsentSummary

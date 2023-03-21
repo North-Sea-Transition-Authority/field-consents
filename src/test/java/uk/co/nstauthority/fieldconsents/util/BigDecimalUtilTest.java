@@ -39,6 +39,33 @@ class BigDecimalUtilTest {
   }
 
   @Test
+  void sum_arrayOfValues() {
+    assertThat(BigDecimalUtil.sum(
+        oilMinValues.get(0), oilMinValues.get(1), oilMinValues.get(2), oilMinValues.get(3), oilMinValues.get(4),
+        oilMinValues.get(5), oilMinValues.get(6), oilMinValues.get(7), oilMinValues.get(8), oilMinValues.get(9),
+        oilMinValues.get(10), oilMinValues.get(11)
+    )).isEqualByComparingTo(expectedOilMinSum);
+
+    assertThat(BigDecimalUtil.sum(
+        oilMaxValues.get(0), oilMaxValues.get(1), oilMaxValues.get(2), oilMaxValues.get(3), oilMaxValues.get(4),
+        oilMaxValues.get(5), oilMaxValues.get(6), oilMaxValues.get(7), oilMaxValues.get(8), oilMaxValues.get(9),
+        oilMaxValues.get(10), oilMaxValues.get(11)
+    )).isEqualByComparingTo(expectedOilMaxSum);
+
+    assertThat(BigDecimalUtil.sum(
+        gasMinValues.get(0), gasMinValues.get(1), gasMinValues.get(2), gasMinValues.get(3), gasMinValues.get(4),
+        gasMinValues.get(5), gasMinValues.get(6), gasMinValues.get(7), gasMinValues.get(8), gasMinValues.get(9),
+        gasMinValues.get(10), gasMinValues.get(11)
+    )).isEqualByComparingTo(expectedGasMinSum);
+
+    assertThat(BigDecimalUtil.sum(
+        gasMaxValues.get(0), gasMaxValues.get(1), gasMaxValues.get(2), gasMaxValues.get(3), gasMaxValues.get(4),
+        gasMaxValues.get(5), gasMaxValues.get(6), gasMaxValues.get(7), gasMaxValues.get(8), gasMaxValues.get(9),
+        gasMaxValues.get(10), gasMaxValues.get(11)
+    )).isEqualByComparingTo(expectedGasMaxSum);
+  }
+
+  @Test
   void sum() {
     assertThat(BigDecimalUtil.sum(oilMinValues)).isEqualByComparingTo(expectedOilMinSum);
     assertThat(BigDecimalUtil.sum(oilMaxValues)).isEqualByComparingTo(expectedOilMaxSum);

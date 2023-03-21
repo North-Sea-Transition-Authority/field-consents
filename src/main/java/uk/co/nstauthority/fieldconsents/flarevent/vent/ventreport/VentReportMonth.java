@@ -8,7 +8,7 @@ import uk.co.nstauthority.fieldconsents.flarevent.FlareVentRow;
 
 @Entity
 @Table(name = "vent_report_months")
-class VentReportMonth extends FlareVentRow {
+public class VentReportMonth extends FlareVentRow {
 
   private Integer shutDownDays;
 

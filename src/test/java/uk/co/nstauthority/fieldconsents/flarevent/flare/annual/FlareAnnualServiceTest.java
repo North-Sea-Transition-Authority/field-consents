@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import java.time.Month;
 import java.time.format.TextStyle;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,6 +21,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil;
+import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
+import uk.co.nstauthority.fieldconsents.flarevent.FlareVentUnit;
+import uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionConsentSummaryService;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
+import uk.co.nstauthority.fieldconsents.summary.SummaryTestUtil;
 
 @ExtendWith(MockitoExtension.class)
 class FlareAnnualServiceTest {
@@ -30,13 +36,20 @@ class FlareAnnualServiceTest {
   @Mock
   private ConsentLengthService consentLengthService;
 
+  @Mock
+  private ApplicationUnitService applicationUnitService;
+
+  @Mock
+  private EmissionConsentSummaryService emissionConsentSummaryService;
+
   private FlareAnnualService flareAnnualService;
 
   private ApplicationVersion applicationVersion;
 
   @BeforeEach
   void setUp() {
-    flareAnnualService = new FlareAnnualService(flareAnnualMonthRepository, consentLengthService);
+    flareAnnualService = new FlareAnnualService(flareAnnualMonthRepository, consentLengthService,
+        applicationUnitService, emissionConsentSummaryService);
     applicationVersion = FlareAnnualTestUtil.flareAppVersion;
   }
 
@@ -256,4 +269,32 @@ class FlareAnnualServiceTest {
 
   }
 
+  @Test
+  void getFlareAnnualSummaryCard_noAnnualMonthsExists() {
+    when(flareAnnualMonthRepository.findAllByApplicationVersion(applicationVersion))
+        .thenReturn(Collections.emptyList());
+
+    assertThat(flareAnnualService.getFlareAnnualSummaryCard(applicationVersion))
+        .isEqualTo(SummaryCard.emptySummaryCard());
+  }
+
+  @Test
+  void getFlareAnnualSummaryCard_annualMonthsExists() {
+    var flareAnnualMonths = FlareAnnualTestUtil.getFlareAnnualMonthsForYear(applicationVersion, 2023);
+    var flareCategoryUnit = FlareVentUnit.TONNES_PER_MONTH;
+    var flareAverageUnit = FlareVentUnit.TONNES_PER_DAY;
+    var tableSummaryCard = SummaryTestUtil.getTableSummaryCard();
+
+    when(flareAnnualMonthRepository.findAllByApplicationVersion(applicationVersion))
+        .thenReturn(flareAnnualMonths);
+    when(applicationUnitService.getFlareCategoryUnit(applicationVersion))
+        .thenReturn(flareCategoryUnit);
+    when(applicationUnitService.getFlareAverageUnit(applicationVersion))
+        .thenReturn(flareAverageUnit);
+    when(emissionConsentSummaryService.getAnnualConsentSummaryCard(flareAnnualMonths, flareCategoryUnit, flareAverageUnit))
+        .thenReturn(tableSummaryCard);
+
+    assertThat(flareAnnualService.getFlareAnnualSummaryCard(applicationVersion))
+        .isEqualTo(tableSummaryCard);
+  }
 }

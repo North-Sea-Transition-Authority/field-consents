@@ -31,9 +31,25 @@ public class DateUtils {
     return yearMonth != null ? yearMonth.format(DateTimeFormatter.ofPattern(format).withZone(ZoneId.systemDefault())) : "";
   }
 
+  public static String format(Month month, TextStyle textStyle) {
+    return month.getDisplayName(textStyle, Locale.ENGLISH);
+  }
+
+  public static String formatShort(Month month) {
+    return format(month, TextStyle.SHORT);
+  }
+
+  public static String formatFull(Month month) {
+    return format(month, TextStyle.FULL);
+  }
+
+  public static String formatShort(Month month, Integer year) {
+    return formatShort(month) + " " + year;
+  }
+
   public static Map<String, String> monthsMap() {
     return Arrays.stream(Month.values())
-        .collect(StreamUtils.toLinkedHashMap(Enum::name, item -> item.getDisplayName(TextStyle.FULL, Locale.ENGLISH)));
+        .collect(StreamUtils.toLinkedHashMap(Enum::name, DateUtils::formatFull));
   }
 
   public static boolean isSameMonth(LocalDate startTermDate, LocalDate endTermDate) {

@@ -5,11 +5,14 @@ import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil.SHORT_TERM_END_DATE;
+import static uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil.SHORT_TERM_START_DATE;
 
 import java.time.LocalDate;
 import java.time.Month;
 import java.time.format.TextStyle;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,6 +24,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil;
+import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
+import uk.co.nstauthority.fieldconsents.flarevent.FlareVentUnit;
+import uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionConsentSummaryService;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
+import uk.co.nstauthority.fieldconsents.summary.SummaryTestUtil;
 
 @ExtendWith(MockitoExtension.class)
 class FlareShortTermServiceTest {
@@ -31,13 +39,20 @@ class FlareShortTermServiceTest {
   @Mock
   private ConsentLengthService consentLengthService;
 
+  @Mock
+  private ApplicationUnitService applicationUnitService;
+
+  @Mock
+  private EmissionConsentSummaryService emissionConsentSummaryService;
+
   private FlareShortTermService flareShortTermService;
 
   private ApplicationVersion applicationVersion;
 
   @BeforeEach
   void setUp() {
-    flareShortTermService = new FlareShortTermService(flareShortTermMonthRepository, consentLengthService);
+    flareShortTermService = new FlareShortTermService(flareShortTermMonthRepository, consentLengthService,
+        applicationUnitService, emissionConsentSummaryService);
     applicationVersion = FlareShortTermTestUtil.flareAppVersion;
   }
 
@@ -69,8 +84,8 @@ class FlareShortTermServiceTest {
   void flareShortTermMonthsComplete_ShortTermMonthsMissing() {
     List<FlareShortTermMonth> flareShortTermMonths =
         FlareShortTermTestUtil.getFlareShortTermMonthsForPeriod(applicationVersion,
-            ConsentLengthTestUtil.SHORT_TERM_START_DATE,
-            ConsentLengthTestUtil.SHORT_TERM_END_DATE);
+            SHORT_TERM_START_DATE,
+            SHORT_TERM_END_DATE);
     flareShortTermMonths.remove(0); // remove first month
 
     when(consentLengthService.getConsentLengthDetails(applicationVersion))
@@ -85,8 +100,8 @@ class FlareShortTermServiceTest {
   void flareShortTermComplete_ShortTermMonthsAlign() {
     List<FlareShortTermMonth> flareShortTermMonths =
         FlareShortTermTestUtil.getFlareShortTermMonthsForPeriod(applicationVersion,
-            ConsentLengthTestUtil.SHORT_TERM_START_DATE,
-            ConsentLengthTestUtil.SHORT_TERM_END_DATE);
+            SHORT_TERM_START_DATE,
+            SHORT_TERM_END_DATE);
 
     when(consentLengthService.getConsentLengthDetails(applicationVersion))
         .thenReturn(ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(applicationVersion));
@@ -121,8 +136,8 @@ class FlareShortTermServiceTest {
 
     List<FlareShortTermMonth> flareShortTermMonths =
         FlareShortTermTestUtil.getFlareShortTermMonthsForPeriod(applicationVersion,
-            ConsentLengthTestUtil.SHORT_TERM_START_DATE.minusMonths(12),
-            ConsentLengthTestUtil.SHORT_TERM_END_DATE.minusMonths(12));
+            SHORT_TERM_START_DATE.minusMonths(12),
+            SHORT_TERM_END_DATE.minusMonths(12));
 
     when(flareShortTermMonthRepository.findAllByApplicationVersion(applicationVersion))
         .thenReturn(flareShortTermMonths);
@@ -144,8 +159,8 @@ class FlareShortTermServiceTest {
 
     List<FlareShortTermMonth> flareShortTermMonths =
         FlareShortTermTestUtil.getFlareShortTermMonthsForPeriod(applicationVersion,
-            ConsentLengthTestUtil.SHORT_TERM_START_DATE.minusMonths(2),
-            ConsentLengthTestUtil.SHORT_TERM_END_DATE.minusMonths(2));
+            SHORT_TERM_START_DATE.minusMonths(2),
+            SHORT_TERM_END_DATE.minusMonths(2));
 
     when(flareShortTermMonthRepository.findAllByApplicationVersion(applicationVersion))
         .thenReturn(flareShortTermMonths);
@@ -170,7 +185,7 @@ class FlareShortTermServiceTest {
         .containsExactly(
             tuple("2022",
                 getMonthDisplayName(Month.OCTOBER),
-                ConsentLengthTestUtil.SHORT_TERM_START_DATE,
+                SHORT_TERM_START_DATE,
                 LocalDate.of(2022, Month.OCTOBER, 31),
                 1,
                 null, null, null, null),
@@ -207,7 +222,7 @@ class FlareShortTermServiceTest {
             tuple("2023",
                 getMonthDisplayName(Month.APRIL),
                 LocalDate.of(2023, Month.APRIL, 1),
-                ConsentLengthTestUtil.SHORT_TERM_END_DATE,
+                SHORT_TERM_END_DATE,
                 12,
                 null, null, null, null));
   }
@@ -216,8 +231,8 @@ class FlareShortTermServiceTest {
   void saveFlareShortTerm() {
     flareShortTermService.saveFlareShortTerm(applicationVersion,
         FlareShortTermTestUtil.getFullFlareShortTermFormForPeriod(
-            ConsentLengthTestUtil.SHORT_TERM_START_DATE,
-            ConsentLengthTestUtil.SHORT_TERM_END_DATE));
+            SHORT_TERM_START_DATE,
+            SHORT_TERM_END_DATE));
 
     verify(flareShortTermMonthRepository, times(1))
         .deleteAllByApplicationVersion(applicationVersion);
@@ -247,7 +262,7 @@ class FlareShortTermServiceTest {
         .containsExactly(
             tuple("2022",
                 getMonthDisplayName(Month.OCTOBER),
-                ConsentLengthTestUtil.SHORT_TERM_START_DATE,
+                SHORT_TERM_START_DATE,
                 LocalDate.of(2022, Month.OCTOBER, 31),
                 1,
                 null, null, null, null),
@@ -284,10 +299,39 @@ class FlareShortTermServiceTest {
             tuple("2023",
                 getMonthDisplayName(Month.APRIL),
                 LocalDate.of(2023, Month.APRIL, 1),
-                ConsentLengthTestUtil.SHORT_TERM_END_DATE,
+                SHORT_TERM_END_DATE,
                 12,
                 null, null, null, null));
 
   }
 
+  @Test
+  void getFlareAnnualSummaryCard_noAnnualMonthsExists() {
+    when(flareShortTermMonthRepository.findAllByApplicationVersion(applicationVersion))
+        .thenReturn(Collections.emptyList());
+
+    assertThat(flareShortTermService.getFlareShortTermSummaryCard(applicationVersion))
+        .isEqualTo(SummaryCard.emptySummaryCard());
+  }
+
+  @Test
+  void getFlareAnnualSummaryCard_annualMonthsExists() {
+    var flareShortTermMonths = FlareShortTermTestUtil.getFlareShortTermMonthsForPeriod(applicationVersion,
+        SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
+    var flareCategoryUnit = FlareVentUnit.TONNES_PER_MONTH;
+    var flareAverageUnit = FlareVentUnit.TONNES_PER_DAY;
+    var tableSummaryCard = SummaryTestUtil.getTableSummaryCard();
+
+    when(flareShortTermMonthRepository.findAllByApplicationVersion(applicationVersion))
+        .thenReturn(flareShortTermMonths);
+    when(applicationUnitService.getFlareCategoryUnit(applicationVersion))
+        .thenReturn(flareCategoryUnit);
+    when(applicationUnitService.getFlareAverageUnit(applicationVersion))
+        .thenReturn(flareAverageUnit);
+    when(emissionConsentSummaryService.getShortTermConsentSummaryCard(flareShortTermMonths, flareCategoryUnit, flareAverageUnit))
+        .thenReturn(tableSummaryCard);
+
+    assertThat(flareShortTermService.getFlareShortTermSummaryCard(applicationVersion))
+        .isEqualTo(tableSummaryCard);
+  }
 }

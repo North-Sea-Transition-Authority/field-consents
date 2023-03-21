@@ -3,8 +3,6 @@ package uk.co.nstauthority.fieldconsents.production;
 import java.math.BigDecimal;
 import java.time.Year;
 import java.time.YearMonth;
-import java.time.format.TextStyle;
-import java.util.Locale;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.formatting.DecimalFormatUtils;
 import uk.co.nstauthority.fieldconsents.production.annual.AnnualProductionMonth;
@@ -38,7 +36,7 @@ public record ProductionRowView(
 
   public static ProductionRowView fromShortTerm(ShortTermProductionMonth productionMonth) {
     return new ProductionRowView(
-        productionMonth.getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH) + " " + productionMonth.getYear(),
+        DateUtils.formatShort(productionMonth.getMonth(), productionMonth.getYear()),
         String.valueOf(DateUtils.daysBetweenInclusive(productionMonth.getStartDate(), productionMonth.getEndDate())),
         productionMonth.getOilMinValueString(),
         productionMonth.getOilMaxValueString(),
@@ -49,7 +47,7 @@ public record ProductionRowView(
 
   public static ProductionRowView fromAnnual(AnnualProductionMonth productionMonth) {
     return new ProductionRowView(
-        productionMonth.getMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH),
+        DateUtils.formatFull(productionMonth.getMonth()),
         String.valueOf(YearMonth.of(productionMonth.getYear(), productionMonth.getMonth()).lengthOfMonth()),
         productionMonth.getOilMinValueString(),
         productionMonth.getOilMaxValueString(),

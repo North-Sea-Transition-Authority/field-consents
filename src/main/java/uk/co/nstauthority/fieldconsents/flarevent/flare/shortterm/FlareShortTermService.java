@@ -15,6 +15,9 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ShortTermUtil;
+import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
+import uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionConsentSummaryService;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 
 @Service
 public class FlareShortTermService {
@@ -23,11 +26,19 @@ public class FlareShortTermService {
 
   private final ConsentLengthService consentLengthService;
 
+  private final ApplicationUnitService applicationUnitService;
+
+  private final EmissionConsentSummaryService emissionConsentSummaryService;
+
   @Autowired
   public FlareShortTermService(FlareShortTermMonthRepository flareShortTermMonthRepository,
-                               ConsentLengthService consentLengthService) {
+                               ConsentLengthService consentLengthService,
+                               ApplicationUnitService applicationUnitService,
+                               EmissionConsentSummaryService emissionConsentSummaryService) {
     this.flareShortTermMonthRepository = flareShortTermMonthRepository;
     this.consentLengthService = consentLengthService;
+    this.applicationUnitService = applicationUnitService;
+    this.emissionConsentSummaryService = emissionConsentSummaryService;
   }
 
   public List<FlareShortTermMonth> getFlareShortTermMonths(ApplicationVersion applicationVersion) {
@@ -127,4 +138,17 @@ public class FlareShortTermService {
         flareShortTermMonthRepository.save(FlareShortTermMonth.from(applicationVersion, flareShortTermMonthForm)));
   }
 
+  public SummaryCard getFlareShortTermSummaryCard(ApplicationVersion applicationVersion) {
+
+    var flareShortTermMonths = getFlareShortTermMonths(applicationVersion);
+
+    if (flareShortTermMonths.isEmpty()) {
+      return SummaryCard.emptySummaryCard();
+    }
+
+    var categoryUnit = applicationUnitService.getFlareCategoryUnit(applicationVersion);
+    var averageUnit = applicationUnitService.getFlareAverageUnit(applicationVersion);
+
+    return emissionConsentSummaryService.getShortTermConsentSummaryCard(flareShortTermMonths, categoryUnit, averageUnit);
+  }
 }

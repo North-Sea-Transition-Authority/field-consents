@@ -52,5 +52,4 @@ public class FlareReportPeriodService {
     flareReportPeriodRepository.save(flareReportPeriod);
     flareReportCleanupService.removeObsoleteReportDataOnPeriodSave(applicationVersion, flareReportPeriod);
   }
-
 }

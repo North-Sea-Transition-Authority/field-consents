@@ -73,7 +73,7 @@ public class VentShortTermTestUtil {
   }
 
   public static List<VentShortTermMonth> getVentShortTermMonthsForPeriod(ApplicationVersion applicationVersion,
-                                                                          LocalDate startDate, LocalDate endDate) {
+                                                                         LocalDate startDate, LocalDate endDate) {
     List<VentShortTermMonth> ventShortTermMonths = new ArrayList<>();
 
     VentShortTermMonth ventShortTermMonth;

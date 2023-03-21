@@ -1,5 +1,7 @@
 package uk.co.nstauthority.fieldconsents.flarevent.vent.ventreport;
 
+import static uk.co.nstauthority.fieldconsents.flarevent.vent.vents.VentTestUtil.ventAppVersion;
+
 import java.math.BigDecimal;
 import java.time.Month;
 import java.time.YearMonth;
@@ -7,8 +9,9 @@ import java.util.ArrayList;
 import java.util.List;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportPeriodForm;
+import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportPeriod;
 
-class VentReportTestUtil {
+public class VentReportTestUtil {
 
   static VentReportMonthForm getFullVentReportMonthForm() {
     VentReportMonthForm ventReportMonthForm = new VentReportMonthForm();
@@ -34,7 +37,7 @@ class VentReportTestUtil {
     return ventReportMonth;
   }
 
-  static List<VentReportMonth> getVentReportMonthsForYear(ApplicationVersion applicationVersion, int year) {
+  public static List<VentReportMonth> getVentReportMonthsForYear(ApplicationVersion applicationVersion, int year) {
     List<VentReportMonth> ventReportMonths = new ArrayList<>();
 
     VentReportMonth ventReportMonth;
@@ -92,6 +95,10 @@ class VentReportTestUtil {
     }
     ventReportForm.setVentReportMonthForms(ventReportMonthForms);
     return ventReportForm;
+  }
+
+  public static FlareReportPeriod getFullVentReportPeriod() {
+    return new FlareReportPeriod(ventAppVersion, Month.APRIL, 2023);
   }
 
   static FlareVentReportPeriodForm getFullVentReportPeriodForm() {

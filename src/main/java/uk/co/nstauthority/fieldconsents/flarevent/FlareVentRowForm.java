@@ -2,10 +2,9 @@ package uk.co.nstauthority.fieldconsents.flarevent;
 
 import java.time.Month;
 import java.time.YearMonth;
-import java.time.format.TextStyle;
-import java.util.Locale;
 import uk.co.fivium.formlibrary.input.DecimalInput;
 import uk.co.fivium.formlibrary.input.StringInput;
+import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.formatting.DecimalFormatUtils;
 
 public class FlareVentRowForm {
@@ -46,7 +45,7 @@ public class FlareVentRowForm {
   }
 
   public void setMonth(Month month) {
-    this.month = month.getDisplayName(TextStyle.FULL, Locale.ENGLISH);
+    this.month = DateUtils.formatFull(month);
   }
 
   public DecimalInput getCategoryA() {

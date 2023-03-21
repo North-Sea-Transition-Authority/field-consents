@@ -6,7 +6,8 @@ public enum ApplicationTypeFeature {
 
   SECONDARY_ASSETS(EnumSet.of(ApplicationType.FLARE, ApplicationType.VENT)),
   ERAP_SUPPORTING_INFORMATION(EnumSet.of(ApplicationType.FLARE, ApplicationType.VENT)),
-  GAS_INJECTION(EnumSet.of(ApplicationType.PRODUCTION));
+  GAS_INJECTION(EnumSet.of(ApplicationType.PRODUCTION)),
+  WIDE_SUMMARY_DISPLAY(EnumSet.of(ApplicationType.FLARE, ApplicationType.VENT));
 
   private final EnumSet<ApplicationType> applicationTypes;
 

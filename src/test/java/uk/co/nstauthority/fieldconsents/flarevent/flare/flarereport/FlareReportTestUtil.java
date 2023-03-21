@@ -10,7 +10,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportPeriodForm;
 
-class FlareReportTestUtil {
+public class FlareReportTestUtil {
 
   static ApplicationVersion flareAppVersion = ApplicationTestUtil.getApplicationVersionWithType(
       ApplicationType.FLARE);
@@ -39,7 +39,7 @@ class FlareReportTestUtil {
     return flareReportMonth;
   }
 
-  static List<FlareReportMonth> getFlareReportMonthsForYear(ApplicationVersion applicationVersion, int year) {
+  public static List<FlareReportMonth> getFlareReportMonthsForYear(ApplicationVersion applicationVersion, int year) {
     List<FlareReportMonth> flareReportMonths = new ArrayList<>();
 
     FlareReportMonth flareReportMonth;
@@ -99,7 +99,7 @@ class FlareReportTestUtil {
     return flareReportForm;
   }
 
-  static FlareReportPeriod getFullFlareReportPeriod() {
+  public static FlareReportPeriod getFullFlareReportPeriod() {
     return new FlareReportPeriod(flareAppVersion, Month.APRIL, 2023);
   }
 

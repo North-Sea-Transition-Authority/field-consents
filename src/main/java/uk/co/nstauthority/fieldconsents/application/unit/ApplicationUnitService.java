@@ -44,6 +44,16 @@ public class ApplicationUnitService implements ApplicationListener<ConsentLength
     return getOrCreateApplicationUnit(applicationVersion).getFlareCategoryUnit();
   }
 
+  public FlareVentUnit getFlareAverageUnit(ApplicationVersion applicationVersion) {
+    var applicationUnit = getOrCreateApplicationUnit(applicationVersion);
+    if (FlareVentUnit.TONNES_PER_MONTH.equals(applicationUnit.getFlareCategoryUnit())) {
+      return FlareVentUnit.TONNES_PER_DAY;
+    } else {
+      throw new RuntimeException("Mismatched flare category unit (%s). Cannot work out the unit for the averages."
+          .formatted(applicationUnit.getFlareCategoryUnit().name()));
+    }
+  }
+
   public FlareVentUnit getVentCategoryUnit(ApplicationVersion applicationVersion) {
     return getOrCreateApplicationUnit(applicationVersion).getVentCategoryUnit();
   }

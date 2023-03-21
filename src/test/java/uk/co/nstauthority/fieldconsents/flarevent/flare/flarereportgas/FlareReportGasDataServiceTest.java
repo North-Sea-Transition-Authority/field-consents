@@ -5,6 +5,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,14 +16,30 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportGasDataForm;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportGasTestUtil;
+import uk.co.nstauthority.fieldconsents.flarevent.FlareVentUnit;
+import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportPeriodService;
+import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportTestUtil;
+import uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionReportGasDataSummaryService;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
+import uk.co.nstauthority.fieldconsents.summary.SummaryTestUtil;
 
 @ExtendWith(MockitoExtension.class)
 class FlareReportGasDataServiceTest {
 
   @Mock
   private FlareReportGasDataRepository flareReportGasDataRepository;
+
+  @Mock
+  private ApplicationUnitService applicationUnitService;
+
+  @Mock
+  private FlareReportPeriodService flareReportPeriodService;
+
+  @Mock
+  private EmissionReportGasDataSummaryService emissionReportGasDataSummaryService;
 
   private FlareReportGasDataService flareReportGasDataService;
 
@@ -31,7 +48,8 @@ class FlareReportGasDataServiceTest {
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
-    flareReportGasDataService = new FlareReportGasDataService(flareReportGasDataRepository);
+    flareReportGasDataService = new FlareReportGasDataService(flareReportGasDataRepository, applicationUnitService,
+        flareReportPeriodService, emissionReportGasDataSummaryService);
   }
 
   @Test
@@ -113,4 +131,39 @@ class FlareReportGasDataServiceTest {
     assertThat(savedReportGasData.getEvaluatedPerCategoryExplanation()).isEqualTo("explanation test");
   }
 
+  @Test
+  void getFlareReportGasDataSummaryCards_nonDataExists() {
+    when(flareReportGasDataRepository.findByApplicationVersion(applicationVersion))
+        .thenReturn(Optional.empty());
+
+    assertThat(flareReportGasDataService.getFlareReportGasDataSummaryCards(applicationVersion))
+        .isEqualTo(SummaryCard.emptySummaryCardList());
+  }
+
+  @Test
+  void getFlareReportGasDataSummaryCards_dataExists() {
+    var reportGasData = FlareVentReportGasTestUtil.getCompleteAndValidFlareReportGasData();
+    var flareReportPeriod = FlareReportTestUtil.getFullFlareReportPeriod();
+    var flareGasDensityUnit = FlareVentUnit.KG_PER_CUBIC_METER;
+    var flareGasContentUnit = FlareVentUnit.MASS_PERCENTAGE;
+    var tableSummaryCard = SummaryTestUtil.getTableSummaryCard();
+    var simpleSummaryCard = SummaryTestUtil.getSimpleSummaryCard();
+
+    when(flareReportGasDataRepository.findByApplicationVersion(applicationVersion))
+        .thenReturn(Optional.of(reportGasData));
+    when(applicationUnitService.getFlareGasDensityUnit(applicationVersion))
+        .thenReturn(flareGasDensityUnit);
+    when(applicationUnitService.getFlareGasContentUnit(applicationVersion))
+        .thenReturn(flareGasContentUnit);
+    when(flareReportPeriodService.getFlareReportPeriodOrError(applicationVersion))
+        .thenReturn(flareReportPeriod);
+    when(emissionReportGasDataSummaryService.getReportGasDataTableSummaryCard(
+        reportGasData, flareReportPeriod, flareGasDensityUnit, flareGasContentUnit))
+        .thenReturn(tableSummaryCard);
+    when(emissionReportGasDataSummaryService.getReportGasDataJustificationSummaryCard(reportGasData))
+        .thenReturn(simpleSummaryCard);
+
+    assertThat(flareReportGasDataService.getFlareReportGasDataSummaryCards(applicationVersion))
+        .isEqualTo(List.of(tableSummaryCard, simpleSummaryCard));
+  }
 }

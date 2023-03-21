@@ -1,3 +1,4 @@
+<#assign FULL_PAGE_WIDTH = "FULL_PAGE_WIDTH" />
 <#assign FULL_WIDTH = "FULL_WIDTH" />
 <#assign ONE_HALF_COLUMN = "ONE_HALF_COLUMN" />
 <#assign ONE_THIRD_COLUMN = "ONE_THIRD_COLUMN" />

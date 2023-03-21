@@ -4,12 +4,17 @@ import static uk.co.nstauthority.fieldconsents.validation.ValidatorUtils.MAX_DEC
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
 public class BigDecimalUtil {
   private BigDecimalUtil() {
     throw new IllegalStateException("Utility class");
+  }
+
+  public static BigDecimal sum(BigDecimal... bigDecimals) {
+    return BigDecimalUtil.sum(Arrays.stream(bigDecimals).toList());
   }
 
   public static BigDecimal sum(List<BigDecimal> bigDecimals) {

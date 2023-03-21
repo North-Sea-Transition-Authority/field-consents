@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 
 @Controller
@@ -28,9 +29,13 @@ public class ApplicationSummaryController {
 
     var summarySections = applicationSummaryService.getSummarySections(applicationVersion);
 
+    var wideSummaryDisplay =
+        ApplicationTypeFeature.WIDE_SUMMARY_DISPLAY.allowed(applicationVersion.getApplication().getType());
+
     return new ModelAndView("fcs/application/applicationSummary")
         .addObject("pageTitle", "Check your answers before submitting")
         .addObject("summarySections", summarySections)
-        .addObject("accordionId", applicationVersion.getId());
+        .addObject("accordionId", applicationVersion.getId())
+        .addObject("wideSummaryDisplay", wideSummaryDisplay);
   }
 }

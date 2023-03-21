@@ -32,4 +32,17 @@ public record SummaryCard(
   public static List<SummaryCard> emptySummaryCardList() {
     return List.of(emptySummaryCard());
   }
+
+  public static SummaryCard tableSummaryCardWithHeading(String displayName,
+                                                        SummaryTableView summaryData) {
+    return new SummaryCard(
+        displayName,
+        SummaryCardType.TABLE_SUMMARY,
+        summaryData
+    );
+  }
+
+  public static SummaryCard tableSummaryCard(SummaryTableView summaryData) {
+    return tableSummaryCardWithHeading(null, summaryData);
+  }
 }
