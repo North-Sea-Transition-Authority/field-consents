@@ -15,6 +15,9 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ShortTermUtil;
+import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
+import uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionConsentSummaryService;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 
 @Service
 public class VentShortTermService {
@@ -23,11 +26,19 @@ public class VentShortTermService {
 
   private final ConsentLengthService consentLengthService;
 
+  private final ApplicationUnitService applicationUnitService;
+
+  private final EmissionConsentSummaryService emissionConsentSummaryService;
+
   @Autowired
   public VentShortTermService(VentShortTermMonthRepository ventShortTermMonthRepository,
-                              ConsentLengthService consentLengthService) {
+                              ConsentLengthService consentLengthService,
+                              ApplicationUnitService applicationUnitService,
+                              EmissionConsentSummaryService emissionConsentSummaryService) {
     this.ventShortTermMonthRepository = ventShortTermMonthRepository;
     this.consentLengthService = consentLengthService;
+    this.applicationUnitService = applicationUnitService;
+    this.emissionConsentSummaryService = emissionConsentSummaryService;
   }
 
   public List<VentShortTermMonth> getVentShortTermMonths(ApplicationVersion applicationVersion) {
@@ -127,4 +138,17 @@ public class VentShortTermService {
         ventShortTermMonthRepository.save(VentShortTermMonth.from(applicationVersion, ventShortTermMonthForm)));
   }
 
+  public SummaryCard getVentShortTermSummaryCard(ApplicationVersion applicationVersion) {
+
+    var ventShortTermMonths = getVentShortTermMonths(applicationVersion);
+
+    if (ventShortTermMonths.isEmpty()) {
+      return SummaryCard.emptySummaryCard();
+    }
+
+    var categoryUnit = applicationUnitService.getVentCategoryUnit(applicationVersion);
+    var averageUnit = applicationUnitService.getVentAverageUnit(applicationVersion);
+
+    return emissionConsentSummaryService.getShortTermConsentSummaryCard(ventShortTermMonths, categoryUnit, averageUnit);
+  }
 }

@@ -99,7 +99,7 @@ public class VentController {
   private ModelAndView getViewVentsSummaryModelAndView(Integer applicationId) {
     ModelAndView modelAndView = new ModelAndView("fcs/vent/ventsSummaryForm");
     modelAndView.addObject(PAGE_TITLE_ATTR_NAME, PAGE_NAME_SUMMARY)
-        .addObject("ventViews", ventSummaryService.getSummaryViews(
+        .addObject("ventViews", ventSummaryService.getVentViews(
             applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId)))
         .addObject("submitUrl",
             ReverseRouter.route(on(VentController.class).saveVentsSummary(applicationId, null, null)));

@@ -18,6 +18,9 @@ import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 @Service
 public class ApplicationUnitService implements ApplicationListener<ConsentLengthChangeEvent> {
 
+  private static final String AVERAGE_UNIT_EXCEPTION_MESSAGE =
+      "Mismatched %s category unit (%s). Cannot work out the unit for the averages.";
+
   private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationUnitService.class);
 
   private final ApplicationUnitRepository applicationUnitRepository;
@@ -49,13 +52,23 @@ public class ApplicationUnitService implements ApplicationListener<ConsentLength
     if (FlareVentUnit.TONNES_PER_MONTH.equals(applicationUnit.getFlareCategoryUnit())) {
       return FlareVentUnit.TONNES_PER_DAY;
     } else {
-      throw new RuntimeException("Mismatched flare category unit (%s). Cannot work out the unit for the averages."
-          .formatted(applicationUnit.getFlareCategoryUnit().name()));
+      throw new RuntimeException(AVERAGE_UNIT_EXCEPTION_MESSAGE
+          .formatted("flare", applicationUnit.getFlareCategoryUnit().name()));
     }
   }
 
   public FlareVentUnit getVentCategoryUnit(ApplicationVersion applicationVersion) {
     return getOrCreateApplicationUnit(applicationVersion).getVentCategoryUnit();
+  }
+
+  public FlareVentUnit getVentAverageUnit(ApplicationVersion applicationVersion) {
+    var applicationUnit = getOrCreateApplicationUnit(applicationVersion);
+    if (FlareVentUnit.TONNES_PER_MONTH.equals(applicationUnit.getVentCategoryUnit())) {
+      return FlareVentUnit.TONNES_PER_DAY;
+    } else {
+      throw new RuntimeException(AVERAGE_UNIT_EXCEPTION_MESSAGE
+          .formatted("vent", applicationUnit.getVentCategoryUnit().name()));
+    }
   }
 
   public FlareVentUnit getFlareGasDensityUnit(ApplicationVersion applicationVersion) {

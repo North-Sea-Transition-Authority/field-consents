@@ -98,7 +98,7 @@ class FlareSummaryServiceTest {
   }
 
   @Test
-  void getFlaresSummaryCards_noFlaresExist() {
+  void getSummariesForFlares_noFlaresExist() {
     when(flareService.getFlaresForApplicationVersion(applicationVersion)).thenReturn(Collections.emptyList());
 
     assertThat(flareSummaryService.getSummariesForFlares(applicationVersion))
@@ -106,7 +106,7 @@ class FlareSummaryServiceTest {
   }
 
   @Test
-  void getFlaresSummaryCards() {
+  void getSummariesForFlares() {
     when(flareService.getFlaresForApplicationVersion(applicationVersion)).thenReturn(flares);
     var flareViews =
         List.of(FlareView.from(flares.get(0), 1), FlareView.from(flares.get(1), 2),

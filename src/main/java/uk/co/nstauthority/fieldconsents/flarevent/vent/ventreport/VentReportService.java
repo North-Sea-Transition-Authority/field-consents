@@ -12,7 +12,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.flarevent.ReportUtil;
+import uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionReportSummaryService;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 
 @Service
 public class VentReportService {
@@ -21,11 +24,23 @@ public class VentReportService {
 
   private final VentReportPeriodService ventReportPeriodService;
 
+  private final ApplicationUnitService applicationUnitService;
+
+  private final EmissionReportSummaryService emissionReportSummaryService;
+
   @Autowired
   VentReportService(VentReportMonthRepository ventReportMonthRepository,
-                    VentReportPeriodService ventReportPeriodService) {
+                    VentReportPeriodService ventReportPeriodService,
+                    ApplicationUnitService applicationUnitService,
+                    EmissionReportSummaryService emissionReportSummaryService) {
     this.ventReportMonthRepository = ventReportMonthRepository;
     this.ventReportPeriodService = ventReportPeriodService;
+    this.applicationUnitService = applicationUnitService;
+    this.emissionReportSummaryService = emissionReportSummaryService;
+  }
+
+  public List<VentReportMonth> getVentReportMonths(ApplicationVersion applicationVersion) {
+    return ventReportMonthRepository.findAllByApplicationVersion(applicationVersion);
   }
 
   public boolean ventReportMonthsComplete(ApplicationVersion applicationVersion) {
@@ -51,7 +66,7 @@ public class VentReportService {
 
   private List<YearMonth> getExistingVentReportYearMonths(ApplicationVersion applicationVersion) {
     // return a list of years and months for any vent report data we have
-    return ventReportMonthRepository.findAllByApplicationVersion(applicationVersion)
+    return getVentReportMonths(applicationVersion)
         .stream()
         .map(ventReportMonth -> YearMonth.of(ventReportMonth.getYear(), ventReportMonth.getMonth()))
         .toList();
@@ -59,8 +74,7 @@ public class VentReportService {
 
   VentReportForm getVentReportForm(ApplicationVersion applicationVersion) {
 
-    List<VentReportMonth> previousVentReportMonths = ventReportMonthRepository
-        .findAllByApplicationVersion(applicationVersion);
+    List<VentReportMonth> previousVentReportMonths = getVentReportMonths(applicationVersion);
 
     List<VentReportMonthForm> ventReportMonthForms = initialiseVentReportMonthForms(applicationVersion);
 
@@ -133,4 +147,31 @@ public class VentReportService {
         ventReportMonthRepository.save(VentReportMonth.from(applicationVersion, ventReportMonthForm)));
   }
 
+  public List<SummaryCard> getVentReportSummaryCards(ApplicationVersion applicationVersion) {
+
+    var ventReportPeriodOptional = ventReportPeriodService.findVentReportPeriod(applicationVersion);
+
+    if (ventReportPeriodOptional.isEmpty()) {
+      return SummaryCard.emptySummaryCardList();
+    }
+
+    var summaryCards = new ArrayList<SummaryCard>();
+
+    summaryCards.add(emissionReportSummaryService.getReportPeriodSummaryCard(
+        ventReportPeriodOptional.get(),
+        applicationVersion.getApplication().getType()));
+
+    var ventReportMonths = getVentReportMonths(applicationVersion);
+
+    if (ventReportMonths.isEmpty()) {
+      return summaryCards;
+    }
+
+    var categoryUnit = applicationUnitService.getVentCategoryUnit(applicationVersion);
+    var averageUnit = applicationUnitService.getVentAverageUnit(applicationVersion);
+
+    summaryCards.add(emissionReportSummaryService.getReportTableSummaryCard(ventReportMonths, categoryUnit, averageUnit));
+
+    return summaryCards;
+  }
 }

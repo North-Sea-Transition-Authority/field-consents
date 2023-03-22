@@ -1,10 +1,10 @@
-package uk.co.nstauthority.fieldconsents.application.summary.flare;
+package uk.co.nstauthority.fieldconsents.application.summary.vent;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
-import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.FLARE_INFORMATION_DISPLAY_ORDER;
+import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.VENT_INFORMATION_DISPLAY_ORDER;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertEmptySummaryCard;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertSummaryItem;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertSummarySection;
@@ -26,57 +26,57 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthD
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
-import uk.co.nstauthority.fieldconsents.flarevent.flare.annual.FlareAnnualService;
-import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportService;
-import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereportgas.FlareReportGasDataService;
-import uk.co.nstauthority.fieldconsents.flarevent.flare.flares.FlareSummaryService;
-import uk.co.nstauthority.fieldconsents.flarevent.flare.shortterm.FlareShortTermService;
+import uk.co.nstauthority.fieldconsents.flarevent.vent.annual.VentAnnualService;
+import uk.co.nstauthority.fieldconsents.flarevent.vent.shortterm.VentShortTermService;
+import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreport.VentReportService;
+import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreportgas.VentReportGasDataService;
+import uk.co.nstauthority.fieldconsents.flarevent.vent.vents.VentSummaryService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryItem;
 
 @ExtendWith(MockitoExtension.class)
-class FlareInformationSummarySectionServiceTest {
+class VentInformationSummarySectionServiceTest {
 
-  private static final String FLARES_ITEM = "Flares";
+  private static final String VENTS_ITEM = "Vents";
 
-  private static final String FLARE_REPORT_ITEM = "Flare report";
+  private static final String VENT_REPORT_ITEM = "Vent report";
 
-  private static final String FLARE_REPORT_GAS_PROPERTIES_ITEM = "Flare report gas properties";
+  private static final String VENT_REPORT_GAS_PROPERTIES_ITEM = "Vent report gas properties";
 
   @Mock
   private ConsentLengthService consentLengthService;
 
   @Mock
-  private FlareAnnualService flareAnnualService;
+  private VentAnnualService ventAnnualService;
 
   @Mock
-  private FlareShortTermService flareShortTermService;
+  private VentShortTermService ventShortTermService;
 
   @Mock
-  private FlareSummaryService flareSummaryService;
+  private VentSummaryService ventSummaryService;
 
   @Mock
-  private FlareReportService flareReportService;
+  private VentReportService ventReportService;
 
   @Mock
-  private FlareReportGasDataService flareReportGasDataService;
+  private VentReportGasDataService ventReportGasDataService;
 
   @InjectMocks
-  private FlareInformationSummarySectionService flareInformationSummarySectionService;
+  private VentInformationSummarySectionService ventInformationSummarySectionService;
 
   ApplicationVersion applicationVersion;
 
   @BeforeEach
   void setUp() {
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
+    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT);
   }
 
   @ParameterizedTest
-  @EnumSource(value = ApplicationType.class, names = {"PRODUCTION", "VENT"})
-  void getSummarySection_nonFlare(ApplicationType applicationType) {
-    var nonFlareAppVersion = ApplicationTestUtil.getApplicationVersionWithType(applicationType);
+  @EnumSource(value = ApplicationType.class, names = {"PRODUCTION", "FLARE"})
+  void getSummarySection_nonVent(ApplicationType applicationType) {
+    var nonVentAppVersion = ApplicationTestUtil.getApplicationVersionWithType(applicationType);
 
-    assertThat(flareInformationSummarySectionService.getSummarySection(nonFlareAppVersion))
+    assertThat(ventInformationSummarySectionService.getSummarySection(nonVentAppVersion))
         .isNotPresent();
 
     verifyNoInteractions(consentLengthService);
@@ -87,7 +87,7 @@ class FlareInformationSummarySectionServiceTest {
     when(consentLengthService.findConsentLengthDetails(applicationVersion))
         .thenReturn(Optional.empty());
 
-    assertThat(flareInformationSummarySectionService.getSummarySection(applicationVersion))
+    assertThat(ventInformationSummarySectionService.getSummarySection(applicationVersion))
         .isNotPresent();
   }
 
@@ -99,34 +99,34 @@ class FlareInformationSummarySectionServiceTest {
 
     if (ConsentLengthType.SHORT_TERM.equals(consentLengthType)) {
       consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(applicationVersion);
-      when(flareShortTermService.getFlareShortTermSummaryCard(applicationVersion))
+      when(ventShortTermService.getVentShortTermSummaryCard(applicationVersion))
           .thenReturn(expectedSummaryCard);
     } else {
       consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForAnnual(applicationVersion);
-      when(flareAnnualService.getFlareAnnualSummaryCard(applicationVersion))
+      when(ventAnnualService.getVentAnnualSummaryCard(applicationVersion))
           .thenReturn(expectedSummaryCard);
     }
     when(consentLengthService.findConsentLengthDetails(applicationVersion))
         .thenReturn(Optional.of(consentLengthDetails));
-    when(flareSummaryService.getSummariesForFlares(applicationVersion))
+    when(ventSummaryService.getSummariesForVents(applicationVersion))
         .thenReturn(List.of(expectedSummaryCard));
-    when(flareReportService.getFlareReportSummaryCards(applicationVersion))
+    when(ventReportService.getVentReportSummaryCards(applicationVersion))
         .thenReturn(List.of(expectedSummaryCard));
-    when(flareReportGasDataService.getFlareReportGasDataSummaryCards(applicationVersion))
+    when(ventReportGasDataService.getVentReportGasDataSummaryCards(applicationVersion))
         .thenReturn(List.of(expectedSummaryCard));
 
-    var summarySectionOptional = flareInformationSummarySectionService.getSummarySection(applicationVersion);
+    var summarySectionOptional = ventInformationSummarySectionService.getSummarySection(applicationVersion);
 
     assertThat(summarySectionOptional).isNotEmpty();
     var summarySection = summarySectionOptional.get();
-    assertSummarySection(summarySection, FLARE_INFORMATION_DISPLAY_ORDER);
+    assertSummarySection(summarySection, VENT_INFORMATION_DISPLAY_ORDER);
 
     var summaryItems = summarySection.summaryItems();
     assertThat(summaryItems).hasSize(4);
 
-    assertSummaryItem(summaryItems.get(0), FLARES_ITEM, 1);
-    assertSummaryItem(summaryItems.get(1), FLARE_REPORT_ITEM, 1);
-    assertSummaryItem(summaryItems.get(2), FLARE_REPORT_GAS_PROPERTIES_ITEM, 1);
+    assertSummaryItem(summaryItems.get(0), VENTS_ITEM, 1);
+    assertSummaryItem(summaryItems.get(1), VENT_REPORT_ITEM, 1);
+    assertSummaryItem(summaryItems.get(2), VENT_REPORT_GAS_PROPERTIES_ITEM, 1);
     assertSummaryItem(summaryItems.get(3), consentLengthType.getDisplayName(), 1);
 
     for (SummaryItem summaryItem : summaryItems) {
@@ -139,7 +139,7 @@ class FlareInformationSummarySectionServiceTest {
     when(consentLengthService.findConsentLengthDetails(applicationVersion))
         .thenReturn(Optional.of(ConsentLengthTestUtil.getConsentLengthDetailsForLongTerm(applicationVersion)));
 
-    assertThatThrownBy(() -> flareInformationSummarySectionService.getSummarySection(applicationVersion))
+    assertThatThrownBy(() -> ventInformationSummarySectionService.getSummarySection(applicationVersion))
         .isInstanceOf(RuntimeException.class)
         .hasMessage("Incorrect consent length type: " + ConsentLengthType.LONG_TERM);
   }

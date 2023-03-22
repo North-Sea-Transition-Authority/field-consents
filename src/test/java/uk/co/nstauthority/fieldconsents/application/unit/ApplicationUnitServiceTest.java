@@ -39,8 +39,8 @@ class ApplicationUnitServiceTest {
   private static final String MISMATCHED_PRODUCTION_UNITS_EXCEPTION_MESSAGE =
       "Mismatched production units found. Cannot work out the unit for the averages.";
 
-  private static final String MISMATCHED_FLARE_UNITS_EXCEPTION_MESSAGE =
-      "Mismatched flare category unit (%s). Cannot work out the unit for the averages.";
+  private static final String MISMATCHED_UNITS_EXCEPTION_MESSAGE =
+      "Mismatched %s category unit (%s). Cannot work out the unit for the averages.";
 
   @Mock
   private ApplicationUnitRepository applicationUnitRepository;
@@ -226,7 +226,7 @@ class ApplicationUnitServiceTest {
 
     assertThatThrownBy(() -> applicationUnitService.getFlareAverageUnit(flareAppVersion))
         .isInstanceOf(RuntimeException.class)
-        .hasMessage(MISMATCHED_FLARE_UNITS_EXCEPTION_MESSAGE.formatted(flareUnit.name()));
+        .hasMessage(MISMATCHED_UNITS_EXCEPTION_MESSAGE.formatted("flare", flareUnit.name()));
   }
 
   @Test
@@ -293,6 +293,63 @@ class ApplicationUnitServiceTest {
     assertThat(applicationUnitService.getVentCategoryUnit(ventAppVersion))
         .isEqualTo(FlareVentUnit.TONNES_PER_MONTH);
   }
+
+  @Test
+  void getVentAverageUnit_shortTerm() {
+    when(applicationUnitRepository.findByApplicationVersion(ventAppVersion)).thenReturn(Optional.empty());
+    when(consentLengthService.getConsentLengthDetails(ventAppVersion))
+        .thenReturn(ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(ventAppVersion));
+
+    assertThat(applicationUnitService.getVentAverageUnit(ventAppVersion))
+        .isEqualTo(FlareVentUnit.TONNES_PER_DAY);
+  }
+
+  @Test
+  void getVentAverageUnit_annual() {
+    when(applicationUnitRepository.findByApplicationVersion(ventAppVersion)).thenReturn(Optional.empty());
+    when(consentLengthService.getConsentLengthDetails(ventAppVersion))
+        .thenReturn(ConsentLengthTestUtil.getConsentLengthDetailsForAnnual(ventAppVersion));
+
+    assertThat(applicationUnitService.getVentAverageUnit(ventAppVersion))
+        .isEqualTo(FlareVentUnit.TONNES_PER_DAY);
+  }
+
+  @Test
+  void getVentAverageUnit_longTerm() {
+    when(applicationUnitRepository.findByApplicationVersion(ventAppVersion)).thenReturn(Optional.empty());
+    when(consentLengthService.getConsentLengthDetails(ventAppVersion))
+        .thenReturn(ConsentLengthTestUtil.getConsentLengthDetailsForLongTerm(ventAppVersion));
+
+    assertThat(applicationUnitService.getVentAverageUnit(ventAppVersion))
+        .isEqualTo(FlareVentUnit.TONNES_PER_DAY);
+  }
+
+  @Test
+  void getVentAverageUnit_manualTonnesPerMonth() {
+    ApplicationUnit applicationUnit = new ApplicationUnit();
+    applicationUnit.setApplicationVersion(ventAppVersion);
+    applicationUnit.setVentCategoryUnit(FlareVentUnit.TONNES_PER_MONTH);
+    when(applicationUnitRepository.findByApplicationVersion(ventAppVersion))
+        .thenReturn(Optional.of(applicationUnit));
+
+    assertThat(applicationUnitService.getVentAverageUnit(ventAppVersion))
+        .isEqualTo(FlareVentUnit.TONNES_PER_DAY);
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = FlareVentUnit.class, mode = EnumSource.Mode.EXCLUDE, names = {"TONNES_PER_MONTH"})
+  void getVentAverageUnit_manualMismatchUnits(FlareVentUnit ventUnit) {
+    ApplicationUnit applicationUnit = new ApplicationUnit();
+    applicationUnit.setApplicationVersion(ventAppVersion);
+    applicationUnit.setVentCategoryUnit(ventUnit);
+    when(applicationUnitRepository.findByApplicationVersion(ventAppVersion))
+        .thenReturn(Optional.of(applicationUnit));
+
+    assertThatThrownBy(() -> applicationUnitService.getVentAverageUnit(ventAppVersion))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessage(MISMATCHED_UNITS_EXCEPTION_MESSAGE.formatted("vent", ventUnit.name()));
+  }
+
 
   @Test
   void getProductionOilUnit_notExists() {

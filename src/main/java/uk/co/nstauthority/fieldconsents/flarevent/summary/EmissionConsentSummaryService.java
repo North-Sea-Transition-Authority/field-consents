@@ -64,25 +64,25 @@ public class EmissionConsentSummaryService {
     var categoryCTotal = BigDecimalUtil.sum(shortTermConsentMonths, FlareVentRow::getCategoryC);
     var categoryTotal = BigDecimalUtil.sum(categoryATotal, categoryBTotal, categoryCTotal);
 
-    summaryTable.addRow(
-        TOTAL_PROMPT,
-        totalDays,
-        categoryATotal,
-        categoryBTotal,
-        categoryCTotal,
-        categoryTotal,
-        null
-    );
-
-    summaryTable.addRow(
-        AVERAGE_PROMPT_WITH_UNIT.apply(averageUnit.getDisplayName()),
-        null,
-        null,
-        null,
-        null,
-        BigDecimalUtil.divideRound(categoryTotal, totalDays),
-        null
-    );
+    summaryTable
+        .addRow(
+            TOTAL_PROMPT,
+            totalDays,
+            categoryATotal,
+            categoryBTotal,
+            categoryCTotal,
+            categoryTotal,
+            null
+        )
+        .addRow(
+            AVERAGE_PROMPT_WITH_UNIT.apply(averageUnit.getDisplayName()),
+            null,
+            null,
+            null,
+            null,
+            BigDecimalUtil.divideRound(categoryTotal, totalDays),
+            null
+        );
 
     return SummaryCard.tableSummaryCard(summaryTable);
   }
@@ -138,23 +138,23 @@ public class EmissionConsentSummaryService {
     var categoryCTotal = BigDecimalUtil.sum(annualConsentMonths, FlareVentRow::getCategoryC);
     var categoryTotal = BigDecimalUtil.sum(categoryATotal, categoryBTotal, categoryCTotal);
 
-    summaryTable.addRow(
-        TOTAL_PROMPT,
-        categoryATotal,
-        categoryBTotal,
-        categoryCTotal,
-        categoryTotal,
-        null
-    );
-
-    summaryTable.addRow(
-        AVERAGE_PROMPT_WITH_UNIT.apply(averageUnit.getDisplayName()),
-        null,
-        null,
-        null,
-        BigDecimalUtil.divideRound(categoryTotal, totalDays),
-        null
-    );
+    summaryTable
+        .addRow(
+            TOTAL_PROMPT,
+            categoryATotal,
+            categoryBTotal,
+            categoryCTotal,
+            categoryTotal,
+            null
+        )
+        .addRow(
+            AVERAGE_PROMPT_WITH_UNIT.apply(averageUnit.getDisplayName()),
+            null,
+            null,
+            null,
+            BigDecimalUtil.divideRound(categoryTotal, totalDays),
+            null
+        );
 
     return SummaryCard.tableSummaryCard(summaryTable);
   }

@@ -154,7 +154,7 @@ class VentControllerTest extends AbstractControllerTest {
   @WithMockUser
   void viewVentsSummary_ventsExist() throws Exception {
     when(ventService.ventsExistForApplicationVersion(applicationVersion)).thenReturn(Boolean.TRUE);
-    when(ventSummaryService.getSummaryViews(applicationVersion)).thenReturn(VentTestUtil.ventViews);
+    when(ventSummaryService.getVentViews(applicationVersion)).thenReturn(VentTestUtil.ventViews);
 
     var modelAndView = mockMvc.perform(
             get(ReverseRouter.route(on(VentController.class).viewVentsSummary(ApplicationTestUtil.APPLICATION_ID))))
@@ -185,7 +185,7 @@ class VentControllerTest extends AbstractControllerTest {
   void saveVentsSummary_invalidForm() throws Exception {
 
     doCallRealMethod().when(ventSetupFormValidator).validate(any(), any());
-    when(ventSummaryService.getSummaryViews(applicationVersion)).thenReturn(VentTestUtil.ventViews);
+    when(ventSummaryService.getVentViews(applicationVersion)).thenReturn(VentTestUtil.ventViews);
 
     var modelAndView = mockMvc.perform(post(ReverseRouter.route(on(VentController.class).saveVentsSummary(
         ApplicationTestUtil.APPLICATION_ID, null, null)))

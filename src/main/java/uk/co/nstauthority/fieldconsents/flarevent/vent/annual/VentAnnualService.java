@@ -14,6 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.consentlength.AnnualUtil;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
+import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
+import uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionConsentSummaryService;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 
 @Service
 public class VentAnnualService {
@@ -22,11 +25,19 @@ public class VentAnnualService {
 
   private final ConsentLengthService consentLengthService;
 
+  private final ApplicationUnitService applicationUnitService;
+
+  private final EmissionConsentSummaryService emissionConsentSummaryService;
+
   @Autowired
   public VentAnnualService(VentAnnualMonthRepository ventAnnualMonthRepository,
-                           ConsentLengthService consentLengthService) {
+                           ConsentLengthService consentLengthService,
+                           ApplicationUnitService applicationUnitService,
+                           EmissionConsentSummaryService emissionConsentSummaryService) {
     this.ventAnnualMonthRepository = ventAnnualMonthRepository;
     this.consentLengthService = consentLengthService;
+    this.applicationUnitService = applicationUnitService;
+    this.emissionConsentSummaryService = emissionConsentSummaryService;
   }
 
   public List<VentAnnualMonth> getVentAnnualMonths(ApplicationVersion applicationVersion) {
@@ -122,4 +133,17 @@ public class VentAnnualService {
         ventAnnualMonthRepository.save(VentAnnualMonth.from(applicationVersion, ventAnnualMonthForm)));
   }
 
+  public SummaryCard getVentAnnualSummaryCard(ApplicationVersion applicationVersion) {
+
+    var ventAnnualMonths = getVentAnnualMonths(applicationVersion);
+
+    if (ventAnnualMonths.isEmpty()) {
+      return SummaryCard.emptySummaryCard();
+    }
+
+    var categoryUnit = applicationUnitService.getVentCategoryUnit(applicationVersion);
+    var averageUnit = applicationUnitService.getVentAverageUnit(applicationVersion);
+
+    return emissionConsentSummaryService.getAnnualConsentSummaryCard(ventAnnualMonths, categoryUnit, averageUnit);
+  }
 }

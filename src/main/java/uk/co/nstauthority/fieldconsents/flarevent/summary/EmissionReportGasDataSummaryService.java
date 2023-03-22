@@ -27,8 +27,9 @@ public class EmissionReportGasDataSummaryService {
                                                       FlareVentReportPeriod reportPeriod,
                                                       FlareVentUnit densityUnit,
                                                       FlareVentUnit gasContentUnit) {
-    var summaryTable = SummaryTableView.newWithHeading(
-        null,
+    var summaryTable = SummaryTableView
+        .newWithHeading(
+            null,
             CATEGORY_A_HEADING,
             CATEGORY_B_HEADING,
             CATEGORY_C_HEADING

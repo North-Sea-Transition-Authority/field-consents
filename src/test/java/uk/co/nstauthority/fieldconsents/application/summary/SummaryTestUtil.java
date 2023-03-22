@@ -17,6 +17,8 @@ public class SummaryTestUtil {
 
   public static final int FLARE_INFORMATION_DISPLAY_ORDER = 20;
 
+  public static final int VENT_INFORMATION_DISPLAY_ORDER = 20;
+
   public static final int ADDITIONAL_INFORMATION_DISPLAY_ORDER = 30;
 
   public static final List<SummaryKeyValue> keyValues =

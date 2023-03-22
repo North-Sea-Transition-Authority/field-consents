@@ -10,6 +10,7 @@ import java.time.Month;
 import java.time.YearMonth;
 import java.time.format.TextStyle;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -22,6 +23,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
+import uk.co.nstauthority.fieldconsents.flarevent.FlareVentUnit;
+import uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionReportSummaryService;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
+import uk.co.nstauthority.fieldconsents.summary.SummaryTestUtil;
 
 @ExtendWith(MockitoExtension.class)
 class VentReportServiceTest {
@@ -32,13 +38,20 @@ class VentReportServiceTest {
   @Mock
   private VentReportPeriodService ventReportPeriodService;
 
+  @Mock
+  private ApplicationUnitService applicationUnitService;
+
+  @Mock
+  private EmissionReportSummaryService emissionReportSummaryService;
+
   private VentReportService ventReportService;
 
   private ApplicationVersion applicationVersion;
 
   @BeforeEach
   void setUp() {
-    ventReportService = new VentReportService(ventReportMonthRepository, ventReportPeriodService);
+    ventReportService = new VentReportService(ventReportMonthRepository, ventReportPeriodService,
+        applicationUnitService, emissionReportSummaryService);
     applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT);
   }
 
@@ -243,4 +256,54 @@ class VentReportServiceTest {
     verify(ventReportMonthRepository, times(12)).save(ventReportMonthArgumentCaptor.capture());
   }
 
+  @Test
+  void getVentReportSummaryCards_noPeriodExists() {
+    when(ventReportPeriodService.findVentReportPeriod(applicationVersion))
+        .thenReturn(Optional.empty());
+
+    assertThat(ventReportService.getVentReportSummaryCards(applicationVersion))
+        .isEqualTo(SummaryCard.emptySummaryCardList());
+  }
+
+  @Test
+  void getVentReportSummaryCards_periodExists_noReportMonths() {
+    var ventReportPeriod = VentReportTestUtil.getFullVentReportPeriod();
+    var simpleSummaryCard = SummaryTestUtil.getSimpleSummaryCard();
+
+    when(ventReportPeriodService.findVentReportPeriod(applicationVersion))
+        .thenReturn(Optional.of(ventReportPeriod));
+    when(emissionReportSummaryService.getReportPeriodSummaryCard(ventReportPeriod, ApplicationType.VENT))
+        .thenReturn(simpleSummaryCard);
+    when(ventReportMonthRepository.findAllByApplicationVersion(applicationVersion))
+        .thenReturn(Collections.emptyList());
+
+    assertThat(ventReportService.getVentReportSummaryCards(applicationVersion))
+        .isEqualTo(List.of(simpleSummaryCard));
+  }
+
+  @Test
+  void getVentReportSummaryCards_periodExists_reportMonthsExist() {
+    var ventReportPeriod = VentReportTestUtil.getFullVentReportPeriod();
+    var ventReportMonths = VentReportTestUtil.getVentReportMonthsForYear(applicationVersion, ventReportPeriod.getReportEndYear());
+    var simpleSummaryCard = SummaryTestUtil.getSimpleSummaryCard();
+    var tableSummaryCard = SummaryTestUtil.getTableSummaryCard();
+    var ventCategoryUnit = FlareVentUnit.TONNES_PER_MONTH;
+    var ventAverageUnit = FlareVentUnit.TONNES_PER_DAY;
+
+    when(ventReportPeriodService.findVentReportPeriod(applicationVersion))
+        .thenReturn(Optional.of(ventReportPeriod));
+    when(emissionReportSummaryService.getReportPeriodSummaryCard(ventReportPeriod, ApplicationType.VENT))
+        .thenReturn(simpleSummaryCard);
+    when(ventReportMonthRepository.findAllByApplicationVersion(applicationVersion))
+        .thenReturn(ventReportMonths);
+    when(applicationUnitService.getVentCategoryUnit(applicationVersion))
+        .thenReturn(ventCategoryUnit);
+    when(applicationUnitService.getVentAverageUnit(applicationVersion))
+        .thenReturn(ventAverageUnit);
+    when(emissionReportSummaryService.getReportTableSummaryCard(ventReportMonths, ventCategoryUnit, ventAverageUnit))
+        .thenReturn(tableSummaryCard);
+
+    assertThat(ventReportService.getVentReportSummaryCards(applicationVersion))
+        .isEqualTo(List.of(simpleSummaryCard, tableSummaryCard));
+  }
 }

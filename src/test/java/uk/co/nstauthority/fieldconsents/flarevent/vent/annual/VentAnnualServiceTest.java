@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import java.time.Month;
 import java.time.format.TextStyle;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,6 +21,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil;
+import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
+import uk.co.nstauthority.fieldconsents.flarevent.FlareVentUnit;
+import uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionConsentSummaryService;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
+import uk.co.nstauthority.fieldconsents.summary.SummaryTestUtil;
 
 @ExtendWith(MockitoExtension.class)
 class VentAnnualServiceTest {
@@ -30,13 +36,20 @@ class VentAnnualServiceTest {
   @Mock
   private ConsentLengthService consentLengthService;
 
+  @Mock
+  private ApplicationUnitService applicationUnitService;
+
+  @Mock
+  private EmissionConsentSummaryService emissionConsentSummaryService;
+
   private VentAnnualService ventAnnualService;
 
   private ApplicationVersion applicationVersion;
 
   @BeforeEach
   void setUp() {
-    ventAnnualService = new VentAnnualService(ventAnnualMonthRepository, consentLengthService);
+    ventAnnualService = new VentAnnualService(ventAnnualMonthRepository, consentLengthService, applicationUnitService,
+        emissionConsentSummaryService);
     applicationVersion = VentAnnualTestUtil.ventAppVersion;
   }
 
@@ -256,4 +269,32 @@ class VentAnnualServiceTest {
 
   }
 
+  @Test
+  void getVentAnnualSummaryCard_noAnnualMonthsExists() {
+    when(ventAnnualMonthRepository.findAllByApplicationVersion(applicationVersion))
+        .thenReturn(Collections.emptyList());
+
+    assertThat(ventAnnualService.getVentAnnualSummaryCard(applicationVersion))
+        .isEqualTo(SummaryCard.emptySummaryCard());
+  }
+
+  @Test
+  void getVentAnnualSummaryCard_annualMonthsExists() {
+    var ventAnnualMonths = VentAnnualTestUtil.getVentAnnualMonthsForYear(applicationVersion, 2023);
+    var ventCategoryUnit = FlareVentUnit.TONNES_PER_MONTH;
+    var ventAverageUnit = FlareVentUnit.TONNES_PER_DAY;
+    var tableSummaryCard = SummaryTestUtil.getTableSummaryCard();
+
+    when(ventAnnualMonthRepository.findAllByApplicationVersion(applicationVersion))
+        .thenReturn(ventAnnualMonths);
+    when(applicationUnitService.getVentCategoryUnit(applicationVersion))
+        .thenReturn(ventCategoryUnit);
+    when(applicationUnitService.getVentAverageUnit(applicationVersion))
+        .thenReturn(ventAverageUnit);
+    when(emissionConsentSummaryService.getAnnualConsentSummaryCard(ventAnnualMonths, ventCategoryUnit, ventAverageUnit))
+        .thenReturn(tableSummaryCard);
+
+    assertThat(ventAnnualService.getVentAnnualSummaryCard(applicationVersion))
+        .isEqualTo(tableSummaryCard);
+  }
 }

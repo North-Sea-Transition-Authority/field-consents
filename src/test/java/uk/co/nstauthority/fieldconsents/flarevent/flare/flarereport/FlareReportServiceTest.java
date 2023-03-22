@@ -269,7 +269,6 @@ class FlareReportServiceTest {
     var flareReportPeriod = FlareReportTestUtil.getFullFlareReportPeriod();
     var simpleSummaryCard = SummaryTestUtil.getSimpleSummaryCard();
 
-
     when(flareReportPeriodService.findFlareReportPeriod(applicationVersion))
         .thenReturn(Optional.of(flareReportPeriod));
     when(emissionReportSummaryService.getReportPeriodSummaryCard(flareReportPeriod, ApplicationType.FLARE))

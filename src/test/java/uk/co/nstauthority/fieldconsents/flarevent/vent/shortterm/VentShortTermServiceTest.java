@@ -5,11 +5,14 @@ import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil.SHORT_TERM_END_DATE;
+import static uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil.SHORT_TERM_START_DATE;
 
 import java.time.LocalDate;
 import java.time.Month;
 import java.time.format.TextStyle;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,6 +24,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil;
+import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
+import uk.co.nstauthority.fieldconsents.flarevent.FlareVentUnit;
+import uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionConsentSummaryService;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
+import uk.co.nstauthority.fieldconsents.summary.SummaryTestUtil;
 
 @ExtendWith(MockitoExtension.class)
 class VentShortTermServiceTest {
@@ -31,13 +39,20 @@ class VentShortTermServiceTest {
   @Mock
   private ConsentLengthService consentLengthService;
 
+  @Mock
+  private ApplicationUnitService applicationUnitService;
+
+  @Mock
+  private EmissionConsentSummaryService emissionConsentSummaryService;
+
   private VentShortTermService ventShortTermService;
 
   private ApplicationVersion applicationVersion;
 
   @BeforeEach
   void setUp() {
-    ventShortTermService = new VentShortTermService(ventShortTermMonthRepository, consentLengthService);
+    ventShortTermService = new VentShortTermService(ventShortTermMonthRepository, consentLengthService,
+        applicationUnitService, emissionConsentSummaryService);
     applicationVersion = VentShortTermTestUtil.ventAppVersion;
   }
 
@@ -290,4 +305,33 @@ class VentShortTermServiceTest {
 
   }
 
+  @Test
+  void getVentAnnualSummaryCard_noAnnualMonthsExists() {
+    when(ventShortTermMonthRepository.findAllByApplicationVersion(applicationVersion))
+        .thenReturn(Collections.emptyList());
+
+    assertThat(ventShortTermService.getVentShortTermSummaryCard(applicationVersion))
+        .isEqualTo(SummaryCard.emptySummaryCard());
+  }
+
+  @Test
+  void getVentAnnualSummaryCard_annualMonthsExists() {
+    var ventShortTermMonths = VentShortTermTestUtil.getVentShortTermMonthsForPeriod(applicationVersion,
+        SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
+    var ventCategoryUnit = FlareVentUnit.TONNES_PER_MONTH;
+    var ventAverageUnit = FlareVentUnit.TONNES_PER_DAY;
+    var tableSummaryCard = SummaryTestUtil.getTableSummaryCard();
+
+    when(ventShortTermMonthRepository.findAllByApplicationVersion(applicationVersion))
+        .thenReturn(ventShortTermMonths);
+    when(applicationUnitService.getVentCategoryUnit(applicationVersion))
+        .thenReturn(ventCategoryUnit);
+    when(applicationUnitService.getVentAverageUnit(applicationVersion))
+        .thenReturn(ventAverageUnit);
+    when(emissionConsentSummaryService.getShortTermConsentSummaryCard(ventShortTermMonths, ventCategoryUnit, ventAverageUnit))
+        .thenReturn(tableSummaryCard);
+
+    assertThat(ventShortTermService.getVentShortTermSummaryCard(applicationVersion))
+        .isEqualTo(tableSummaryCard);
+  }
 }

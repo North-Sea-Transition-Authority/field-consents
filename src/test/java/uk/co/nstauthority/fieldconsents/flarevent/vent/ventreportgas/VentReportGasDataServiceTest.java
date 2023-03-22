@@ -5,6 +5,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,14 +16,30 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportGasDataForm;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportGasTestUtil;
+import uk.co.nstauthority.fieldconsents.flarevent.FlareVentUnit;
+import uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionReportGasDataSummaryService;
+import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreport.VentReportPeriodService;
+import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreport.VentReportTestUtil;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
+import uk.co.nstauthority.fieldconsents.summary.SummaryTestUtil;
 
 @ExtendWith(MockitoExtension.class)
 class VentReportGasDataServiceTest {
 
   @Mock
   private VentReportGasDataRepository ventReportGasDataRepository;
+
+  @Mock
+  private ApplicationUnitService applicationUnitService;
+
+  @Mock
+  private VentReportPeriodService ventReportPeriodService;
+
+  @Mock
+  private EmissionReportGasDataSummaryService emissionReportGasDataSummaryService;
 
   private VentReportGasDataService ventReportGasDataService;
 
@@ -31,7 +48,8 @@ class VentReportGasDataServiceTest {
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT);
-    ventReportGasDataService = new VentReportGasDataService(ventReportGasDataRepository);
+    ventReportGasDataService = new VentReportGasDataService(ventReportGasDataRepository, applicationUnitService,
+        ventReportPeriodService, emissionReportGasDataSummaryService);
   }
 
   @Test
@@ -111,5 +129,41 @@ class VentReportGasDataServiceTest {
 
     assertThat(savedReportGasData.getEvaluatedPerCategory()).isFalse();
     assertThat(savedReportGasData.getEvaluatedPerCategoryExplanation()).isEqualTo("explanation test");
+  }
+
+  @Test
+  void getVentReportGasDataSummaryCards_nonDataExists() {
+    when(ventReportGasDataRepository.findByApplicationVersion(applicationVersion))
+        .thenReturn(Optional.empty());
+
+    assertThat(ventReportGasDataService.getVentReportGasDataSummaryCards(applicationVersion))
+        .isEqualTo(SummaryCard.emptySummaryCardList());
+  }
+
+  @Test
+  void getVentReportGasDataSummaryCards_dataExists() {
+    var reportGasData = FlareVentReportGasTestUtil.getCompleteAndValidVentReportGasData();
+    var ventReportPeriod = VentReportTestUtil.getFullVentReportPeriod();
+    var ventGasDensityUnit = FlareVentUnit.KG_PER_CUBIC_METER;
+    var ventGasContentUnit = FlareVentUnit.MASS_PERCENTAGE;
+    var tableSummaryCard = SummaryTestUtil.getTableSummaryCard();
+    var simpleSummaryCard = SummaryTestUtil.getSimpleSummaryCard();
+
+    when(ventReportGasDataRepository.findByApplicationVersion(applicationVersion))
+        .thenReturn(Optional.of(reportGasData));
+    when(applicationUnitService.getVentGasDensityUnit(applicationVersion))
+        .thenReturn(ventGasDensityUnit);
+    when(applicationUnitService.getVentGasContentUnit(applicationVersion))
+        .thenReturn(ventGasContentUnit);
+    when(ventReportPeriodService.getVentReportPeriodOrError(applicationVersion))
+        .thenReturn(ventReportPeriod);
+    when(emissionReportGasDataSummaryService.getReportGasDataTableSummaryCard(
+        reportGasData, ventReportPeriod, ventGasDensityUnit, ventGasContentUnit))
+        .thenReturn(tableSummaryCard);
+    when(emissionReportGasDataSummaryService.getReportGasDataJustificationSummaryCard(reportGasData))
+        .thenReturn(simpleSummaryCard);
+
+    assertThat(ventReportGasDataService.getVentReportGasDataSummaryCards(applicationVersion))
+        .isEqualTo(List.of(tableSummaryCard, simpleSummaryCard));
   }
 }

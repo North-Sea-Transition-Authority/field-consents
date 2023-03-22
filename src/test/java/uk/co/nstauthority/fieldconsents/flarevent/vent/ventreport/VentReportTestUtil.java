@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportPeriodForm;
-import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportPeriod;
 
 public class VentReportTestUtil {
 
@@ -97,8 +96,8 @@ public class VentReportTestUtil {
     return ventReportForm;
   }
 
-  public static FlareReportPeriod getFullVentReportPeriod() {
-    return new FlareReportPeriod(ventAppVersion, Month.APRIL, 2023);
+  public static VentReportPeriod getFullVentReportPeriod() {
+    return new VentReportPeriod(ventAppVersion, Month.APRIL, 2023);
   }
 
   static FlareVentReportPeriodForm getFullVentReportPeriodForm() {

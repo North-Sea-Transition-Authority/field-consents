@@ -3,14 +3,19 @@ package uk.co.nstauthority.fieldconsents.flarevent.vent.vents;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.flarevent.vent.vents.VentTestUtil.vents;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
+import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
 @ExtendWith(MockitoExtension.class)
 class VentSummaryServiceTest {
@@ -32,7 +37,7 @@ class VentSummaryServiceTest {
   void getSummaryViews_noVents() {
     when(ventService.getVentsForApplicationVersion(applicationVersion)).thenReturn(new ArrayList<>());
 
-    var ventViews = ventSummaryService.getSummaryViews(applicationVersion);
+    var ventViews = ventSummaryService.getVentViews(applicationVersion);
 
     assertThat(ventViews).isEmpty();
   }
@@ -42,7 +47,7 @@ class VentSummaryServiceTest {
     var vents = VentTestUtil.vents;
     when(ventService.getVentsForApplicationVersion(applicationVersion)).thenReturn(vents);
 
-    var ventViews = ventSummaryService.getSummaryViews(applicationVersion);
+    var ventViews = ventSummaryService.getVentViews(applicationVersion);
     String expectedUrlBase = "/applications/" + applicationVersion.getApplication().getId() + "/vents/";
     String expectedUrlTailDelete = "/delete";
 
@@ -85,4 +90,55 @@ class VentSummaryServiceTest {
         );
   }
 
+  @Test
+  void getSummariesForVents_noVentsExist() {
+    when(ventService.getVentsForApplicationVersion(applicationVersion)).thenReturn(Collections.emptyList());
+
+    assertThat(ventSummaryService.getSummariesForVents(applicationVersion))
+        .isEqualTo(SummaryCard.emptySummaryCardList());
+  }
+
+  @Test
+  void getSummariesForVents() {
+    when(ventService.getVentsForApplicationVersion(applicationVersion)).thenReturn(vents);
+    var ventViews =
+        List.of(VentView.from(vents.get(0), 1), VentView.from(vents.get(1), 2),
+            VentView.from(vents.get(2), 3)
+        );
+
+    var summaryCards = ventSummaryService.getSummariesForVents(applicationVersion);
+
+    var ventPrompt = "Vent ";
+    var ventTypePrompt = "Vent type";
+    var descPrompt = "Description";
+    var meteredPrompt = "Metered";
+    var commentsPrompt = "Comments";
+
+    assertThat(summaryCards)
+        .isEqualTo(
+            List.of(
+                SummaryCard.simpleSummaryCardWithHeading(ventPrompt + ventViews.get(0).getDisplayOrder(),
+                    List.of(
+                        SummaryKeyValue.from(ventTypePrompt, ventViews.get(0).getVentType()),
+                        SummaryKeyValue.from(descPrompt, ventViews.get(0).getDescription()),
+                        SummaryKeyValue.from(meteredPrompt, ventViews.get(0).getMeteredFlag()),
+                        SummaryKeyValue.from(commentsPrompt, ventViews.get(0).getComments())
+                    )),
+                SummaryCard.simpleSummaryCardWithHeading(ventPrompt + ventViews.get(1).getDisplayOrder(),
+                    List.of(
+                        SummaryKeyValue.from(ventTypePrompt, ventViews.get(1).getVentType()),
+                        SummaryKeyValue.from(descPrompt, ventViews.get(1).getDescription()),
+                        SummaryKeyValue.from(meteredPrompt, ventViews.get(1).getMeteredFlag()),
+                        SummaryKeyValue.from(commentsPrompt, ventViews.get(1).getComments())
+                    )),
+                SummaryCard.simpleSummaryCardWithHeading(ventPrompt + ventViews.get(2).getDisplayOrder(),
+                    List.of(
+                        SummaryKeyValue.from(ventTypePrompt, ventViews.get(2).getVentType()),
+                        SummaryKeyValue.from(descPrompt, ventViews.get(2).getDescription()),
+                        SummaryKeyValue.from(meteredPrompt, ventViews.get(2).getMeteredFlag()),
+                        SummaryKeyValue.from(commentsPrompt, ventViews.get(2).getComments())
+                    ))
+            )
+        );
+  }
 }
