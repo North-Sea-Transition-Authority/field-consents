@@ -1,6 +1,8 @@
 package uk.co.nstauthority.fieldconsents.application.supportinginformation;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -40,6 +42,9 @@ class SupportingInformationControllerTest extends AbstractControllerTest {
 
   @MockBean
   private SupportingInformationService supportingInformationService;
+
+  @MockBean
+  private SupportingInformationFormValidator supportingInformationFormValidator;
 
   private ApplicationVersion applicationVersion;
 
@@ -134,7 +139,7 @@ class SupportingInformationControllerTest extends AbstractControllerTest {
         ArgumentCaptor.forClass(SupportingInformationForm.class);
 
     mockMvc.perform(post(ReverseRouter.route(on(SupportingInformationController.class)
-            .saveSupportingInformation(ApplicationTestUtil.APPLICATION_ID, null)))
+            .saveSupportingInformation(ApplicationTestUtil.APPLICATION_ID, null, null)))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(view().name("redirect:" + ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID))));
@@ -146,8 +151,24 @@ class SupportingInformationControllerTest extends AbstractControllerTest {
   @Test
   void saveSupportingInformation_withUnauthorisedUser() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(SupportingInformationController.class)
-            .saveSupportingInformation(ApplicationTestUtil.APPLICATION_ID, null)))
+            .saveSupportingInformation(ApplicationTestUtil.APPLICATION_ID, null, null)))
             .with(csrf()))
         .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  @WithMockUser
+  void saveSupportingInformation_withEmptyForm() throws Exception {
+    doCallRealMethod().when(supportingInformationFormValidator).validate(any(), any());
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(ApplicationTestUtil.APPLICATION_ID)).thenReturn(applicationVersion);
+
+    mockMvc.perform(post(ReverseRouter.route(on(SupportingInformationController.class)
+            .saveSupportingInformation(ApplicationTestUtil.APPLICATION_ID, null, null)))
+            .with(csrf())
+            .param("notes", "")
+            .param("erapNotes", ""))
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/supportingInformationForm"))
+        .andReturn().getModelAndView();
   }
 }

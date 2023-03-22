@@ -4,6 +4,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,13 +29,17 @@ public class SupportingInformationController {
 
   private final SupportingInformationService supportingInformationService;
 
+  private final SupportingInformationFormValidator supportingInformationFormValidator;
+
   @Autowired
   public SupportingInformationController(ApplicationService applicationService,
                                          ApplicationVersionService applicationVersionService,
-                                         SupportingInformationService supportingInformationService) {
+                                         SupportingInformationService supportingInformationService,
+                                         SupportingInformationFormValidator supportingInformationFormValidator) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.supportingInformationService = supportingInformationService;
+    this.supportingInformationFormValidator = supportingInformationFormValidator;
   }
 
 
@@ -67,7 +72,7 @@ public class SupportingInformationController {
     modelAndView
         .addObject("erapInformationAllowed", erapInformationAllowed)
         .addObject("submitUrl", ReverseRouter.route(on(SupportingInformationController.class)
-            .saveSupportingInformation(applicationId, null)))
+            .saveSupportingInformation(applicationId, null, null)))
         .addObject("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class)
             .getTaskList(applicationId)));
 
@@ -76,7 +81,17 @@ public class SupportingInformationController {
 
   @PostMapping
   public ModelAndView saveSupportingInformation(@PathVariable Integer applicationId,
-                                                @ModelAttribute("form") SupportingInformationForm form) {
+                                                @ModelAttribute("form") SupportingInformationForm form,
+                                                BindingResult bindingResult) {
+
+    var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
+    form.setApplicationVersion(applicationVersion);
+
+    supportingInformationFormValidator.validate(form, bindingResult);
+
+    if (bindingResult.hasErrors()) {
+      return getSupportingInformationModelAndView(applicationId);
+    }
 
     supportingInformationService.saveSupportingInformation(
         applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId), form);

@@ -1,12 +1,15 @@
 package uk.co.nstauthority.fieldconsents.application.supportinginformation;
 
 import uk.co.fivium.formlibrary.input.StringInput;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 
 public class SupportingInformationForm {
 
   private final StringInput notes;
 
   private final StringInput erapNotes;
+
+  private ApplicationVersion applicationVersion;
 
   public SupportingInformationForm() {
     this.notes = new StringInput("notes", "Notes");
@@ -27,6 +30,14 @@ public class SupportingInformationForm {
 
   public void setErapNotes(String erapNotes) {
     this.erapNotes.setInputValue(erapNotes);
+  }
+
+  public ApplicationVersion getApplicationVersion() {
+    return applicationVersion;
+  }
+
+  public void setApplicationVersion(ApplicationVersion applicationVersion) {
+    this.applicationVersion = applicationVersion;
   }
 
   public static SupportingInformationForm from(SupportingInformation supportingInformation) {

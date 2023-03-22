@@ -9,7 +9,6 @@
     path="form.notes.inputValue"
     labelText="${form.notes.displayName}"
     hintText="Please add additional information to support the application in the box provided below."
-    optionalLabel=true
     />
     <#if erapInformationAllowed>
       <@fdsTextarea.textarea
@@ -17,7 +16,6 @@
       labelText="${form.erapNotes.displayName}"
       hintText="Please provide an outline of ERAP activities related to ${applicationType} completed in the year and will be completed for the consent year.
                 Also provide explanation if the requested consent figures are not aligned with the emissions profiles in the asset ERAP/UKSS forecast."
-      optionalLabel=true
       />
     </#if>
     <@fdsAction.submitButtons
