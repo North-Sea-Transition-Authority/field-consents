@@ -20,10 +20,10 @@ public class FlareVentReportGasTestUtil {
   public static final Double CATEGORY_A_HYDROCARBON = 74.5;
   public static final Double CATEGORY_B_DENSITY = 0.745;
   public static final Double CATEGORY_B_INERT_GAS = 45.761;
-  public static final Double CATEGORY_B_HYDROCARBON = 43.00934;
+  public static final Double CATEGORY_B_HYDROCARBON = 54.239;
   public static final Double CATEGORY_C_DENSITY = 123.0052;
   public static final Double CATEGORY_C_INERT_GAS = 52.0475;
-  public static final Double CATEGORY_C_HYDROCARBON = 23.512;
+  public static final Double CATEGORY_C_HYDROCARBON = 47.9525;
 
   public static ApplicationVersion flareAppVersion = ApplicationTestUtil.getApplicationVersionWithType(
       ApplicationType.FLARE);

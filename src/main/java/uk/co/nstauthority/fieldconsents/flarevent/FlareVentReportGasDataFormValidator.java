@@ -21,7 +21,7 @@ public class FlareVentReportGasDataFormValidator implements Validator {
       "Select yes if you have evaluated the gas properties for each category individually";
 
   public static final String INVALID_GAS_CONTENT_PERCENTAGE =
-      "The Inert gas content and Hydrocarbon gas content should not be greater than 100% in total for each category";
+      "The Inert gas content and Hydrocarbon gas content should be 100% in total for each category";
 
   @Override
   public boolean supports(@NotNull Class<?> clazz) {
@@ -58,7 +58,7 @@ public class FlareVentReportGasDataFormValidator implements Validator {
     percentageValidator.validate(form.getCategoryCInertGasPercentage(), errors);
     percentageValidator.validate(form.getCategoryCHydrocarbonPercentage(), errors);
 
-    // The Inert gas and Hydrocarbon content values should add up to no more than 100% for each category
+    // The Inert gas and Hydrocarbon content values should add up to exactly 100% for each category
     if (!errors.hasFieldErrors(form.getCategoryAInertGasPercentage().getFieldName() + FIELD_INPUT_VALUE)
         && !errors.hasFieldErrors(form.getCategoryAHydrocarbonPercentage().getFieldName() + FIELD_INPUT_VALUE)) {
       validateGasPercentagePerCategory(errors, form.getCategoryAInertGasPercentage(), form.getCategoryAHydrocarbonPercentage());
@@ -88,7 +88,7 @@ public class FlareVentReportGasDataFormValidator implements Validator {
     BigDecimal categoryHydrocarbon = categoryHydrocarbonDecimalInput.getAsBigDecimal()
         .orElseThrow(NoSuchElementException::new);
 
-    if (categoryInertGas.add(categoryHydrocarbon).compareTo(BigDecimal.valueOf(100)) > 0) {
+    if (categoryInertGas.add(categoryHydrocarbon).compareTo(BigDecimal.valueOf(100)) != 0) {
       errors.rejectValue(
           categoryInertGasDecimalInput.getFieldName() + FIELD_INPUT_VALUE,
           categoryInertGasDecimalInput.getFieldName() + ".invalid",

@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ValidationUtils;
@@ -157,10 +158,11 @@ class FlareVentReportGasDataFormValidatorTest {
     );
   }
 
-  @Test
-  void validate_formWithCategoryAGasContentValuesExceedingOneHundred() {
+  @ParameterizedTest
+  @ValueSource(strings = {"50.000001", "49.999999"})
+  void validate_formWithCategoryAGasContentValuesInvalid(String hydrocarbonPercentage) {
     form.getCategoryAInertGasPercentage().setInputValue("50");
-    form.getCategoryAHydrocarbonPercentage().setInputValue("50.000001");
+    form.getCategoryAHydrocarbonPercentage().setInputValue(hydrocarbonPercentage);
 
     ValidationUtils.invokeValidator(validator, form, errors);
 
@@ -171,10 +173,11 @@ class FlareVentReportGasDataFormValidatorTest {
     );
   }
 
-  @Test
-  void validate_formWithCategoryBGasContentValuesExceedingOneHundred() {
+  @ParameterizedTest
+  @ValueSource(strings = {"50.000001", "49.999999"})
+  void validate_formWithCategoryBGasContentValuesInvalid(String hydrocarbonPercentage) {
     form.getCategoryBInertGasPercentage().setInputValue("50");
-    form.getCategoryBHydrocarbonPercentage().setInputValue("50.000001");
+    form.getCategoryBHydrocarbonPercentage().setInputValue(hydrocarbonPercentage);
 
     ValidationUtils.invokeValidator(validator, form, errors);
 
@@ -185,10 +188,11 @@ class FlareVentReportGasDataFormValidatorTest {
     );
   }
 
-  @Test
-  void validate_formWithCategoryCGasContentValuesExceedingOneHundred() {
+  @ParameterizedTest
+  @ValueSource(strings = {"50.000001", "49.999999"})
+  void validate_formWithCategoryCGasContentValuesInvalid(String hydrocarbonPercentage) {
     form.getCategoryCInertGasPercentage().setInputValue("50");
-    form.getCategoryCHydrocarbonPercentage().setInputValue("50.000001");
+    form.getCategoryCHydrocarbonPercentage().setInputValue(hydrocarbonPercentage);
 
     ValidationUtils.invokeValidator(validator, form, errors);
 
@@ -199,14 +203,15 @@ class FlareVentReportGasDataFormValidatorTest {
     );
   }
 
-  @Test
-  void validate_formWithCategoryGasContentValuesExceedingOneHundred_plusOtherFormError() {
+  @ParameterizedTest
+  @ValueSource(strings = {"50.000001", "49.999999"})
+  void validate_formWithCategoryGasContentValuesInvalid_plusOtherFormError(String hydrocarbonPercentage) {
     form.getCategoryAInertGasPercentage().setInputValue("50");
-    form.getCategoryAHydrocarbonPercentage().setInputValue("50.000001");
+    form.getCategoryAHydrocarbonPercentage().setInputValue(hydrocarbonPercentage);
     form.getCategoryBInertGasPercentage().setInputValue("50");
-    form.getCategoryBHydrocarbonPercentage().setInputValue("50.000001");
+    form.getCategoryBHydrocarbonPercentage().setInputValue(hydrocarbonPercentage);
     form.getCategoryCInertGasPercentage().setInputValue("50");
-    form.getCategoryCHydrocarbonPercentage().setInputValue("50.000001");
+    form.getCategoryCHydrocarbonPercentage().setInputValue(hydrocarbonPercentage);
     form.setEvaluatedPerCategory(null);
 
     ValidationUtils.invokeValidator(validator, form, errors);
