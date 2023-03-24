@@ -16,11 +16,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.consentlength.AnnualUtil;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
-import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
-import uk.co.nstauthority.fieldconsents.production.ProductionView;
-import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
-import uk.co.nstauthority.fieldconsents.summary.SummaryCardType;
 
 @Service
 public class AnnualProductionService {
@@ -31,20 +27,16 @@ public class AnnualProductionService {
 
   private final AnnualProductionMonthRepository annualProductionMonthRepository;
 
-  private final ApplicationUnitService applicationUnitService;
-
   @Autowired
   public AnnualProductionService(ProductionRowService productionRowService,
                                  ConsentLengthService consentLengthService,
-                                 AnnualProductionMonthRepository annualProductionMonthRepository,
-                                 ApplicationUnitService applicationUnitService) {
+                                 AnnualProductionMonthRepository annualProductionMonthRepository) {
     this.productionRowService = productionRowService;
     this.consentLengthService = consentLengthService;
     this.annualProductionMonthRepository = annualProductionMonthRepository;
-    this.applicationUnitService = applicationUnitService;
   }
 
-  private List<AnnualProductionMonth> getAnnualProductionMonths(ApplicationVersion applicationVersion) {
+  public List<AnnualProductionMonth> getAnnualProductionMonths(ApplicationVersion applicationVersion) {
     return annualProductionMonthRepository.findAllByApplicationVersion(applicationVersion);
   }
 
@@ -139,22 +131,5 @@ public class AnnualProductionService {
       throw new RuntimeException(e);
     }
     annualProductionMonthRepository.save(annualProductionMonth);
-  }
-
-  public SummaryCard getProductionAnnualSummaryCard(ApplicationVersion applicationVersion) {
-    var annualProductionMonths = getAnnualProductionMonths(applicationVersion);
-
-    if (annualProductionMonths.isEmpty()) {
-      return SummaryCard.emptySummaryCard();
-    }
-
-    var oilUnit = applicationUnitService.getProductionOilUnit(applicationVersion);
-    var gasUnit = applicationUnitService.getProductionGasUnit(applicationVersion);
-    var averageUnit = applicationUnitService.getProductionAverageUnit(applicationVersion);
-    return new SummaryCard(
-        null,
-        SummaryCardType.PRODUCTION_ANNUAL,
-        ProductionView.fromAnnual(annualProductionMonths, oilUnit, gasUnit, averageUnit)
-    );
   }
 }

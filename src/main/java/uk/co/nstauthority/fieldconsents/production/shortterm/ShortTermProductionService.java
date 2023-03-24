@@ -19,12 +19,8 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ShortTermUtil;
-import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
-import uk.co.nstauthority.fieldconsents.production.ProductionView;
-import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
-import uk.co.nstauthority.fieldconsents.summary.SummaryCardType;
 
 @Service
 public class ShortTermProductionService {
@@ -35,20 +31,16 @@ public class ShortTermProductionService {
 
   private final ShortTermProductionMonthRepository shortTermProductionMonthRepository;
 
-  private final ApplicationUnitService applicationUnitService;
-
   @Autowired
   public ShortTermProductionService(ProductionRowService productionRowService,
                                     ConsentLengthService consentLengthService,
-                                    ShortTermProductionMonthRepository shortTermProductionMonthRepository,
-                                    ApplicationUnitService applicationUnitService) {
+                                    ShortTermProductionMonthRepository shortTermProductionMonthRepository) {
     this.productionRowService = productionRowService;
     this.consentLengthService = consentLengthService;
     this.shortTermProductionMonthRepository = shortTermProductionMonthRepository;
-    this.applicationUnitService = applicationUnitService;
   }
 
-  private List<ShortTermProductionMonth> getShortTermProductionMonths(ApplicationVersion applicationVersion) {
+  public List<ShortTermProductionMonth> getShortTermProductionMonths(ApplicationVersion applicationVersion) {
     return shortTermProductionMonthRepository.findAllByApplicationVersion(applicationVersion);
   }
 
@@ -175,22 +167,5 @@ public class ShortTermProductionService {
       throw new RuntimeException(e);
     }
     shortTermProductionMonthRepository.save(shortTermProductionMonth);
-  }
-
-  public SummaryCard getProductionShortTermSummaryCard(ApplicationVersion applicationVersion) {
-    var shortTermProductionMonths = getShortTermProductionMonths(applicationVersion);
-
-    if (shortTermProductionMonths.isEmpty()) {
-      return SummaryCard.emptySummaryCard();
-    }
-
-    var oilUnit = applicationUnitService.getProductionOilUnit(applicationVersion);
-    var gasUnit = applicationUnitService.getProductionGasUnit(applicationVersion);
-    var averageUnit = applicationUnitService.getProductionAverageUnit(applicationVersion);
-    return new SummaryCard(
-        null,
-        SummaryCardType.PRODUCTION_SHORT_TERM,
-        ProductionView.fromShortTerm(shortTermProductionMonths, oilUnit, gasUnit, averageUnit)
-    );
   }
 }

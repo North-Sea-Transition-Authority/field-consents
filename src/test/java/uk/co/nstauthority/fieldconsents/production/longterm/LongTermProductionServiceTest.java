@@ -11,7 +11,6 @@ import static uk.co.nstauthority.fieldconsents.production.ProductionTestUtils.EN
 import static uk.co.nstauthority.fieldconsents.production.ProductionTestUtils.START_YEAR_LT;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,15 +25,10 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil;
-import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.production.ProductionRow;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowForm;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
 import uk.co.nstauthority.fieldconsents.production.ProductionTestUtils;
-import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
-import uk.co.nstauthority.fieldconsents.production.ProductionView;
-import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
-import uk.co.nstauthority.fieldconsents.summary.SummaryCardType;
 
 @ExtendWith(MockitoExtension.class)
 class LongTermProductionServiceTest {
@@ -48,9 +42,6 @@ class LongTermProductionServiceTest {
   @Mock
   private ConsentLengthService consentLengthService;
 
-  @Mock
-  private ApplicationUnitService applicationUnitService;
-
   private LongTermProductionService longTermProductionService;
 
   private ApplicationVersion applicationVersion;
@@ -62,8 +53,7 @@ class LongTermProductionServiceTest {
     longTermProductionService = new LongTermProductionService(
         productionRowService,
         consentLengthService,
-        longTermProductionYearRepository,
-        applicationUnitService);
+        longTermProductionYearRepository);
     applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
     consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForLongTerm(applicationVersion);
   }
@@ -263,39 +253,5 @@ class LongTermProductionServiceTest {
     assertThat(expectedProductionYear.getOilMaxValue()).isEqualTo(longTermProductionYear.getOilMaxValue());
     assertThat(expectedProductionYear.getGasMinValue()).isEqualTo(longTermProductionYear.getGasMinValue());
     assertThat(expectedProductionYear.getGasMaxValue()).isEqualTo(longTermProductionYear.getGasMaxValue());
-  }
-
-  @Test
-  void getProductionLongTermView_noYearsData() {
-    when(longTermProductionYearRepository.findAllByApplicationVersionOrderByYearAsc(applicationVersion))
-        .thenReturn(Collections.emptyList());
-
-    assertThat(longTermProductionService.getProductionLongTermSummaryCard(applicationVersion))
-        .isEqualTo(SummaryCard.emptySummaryCard());
-  }
-
-  @Test
-  void getProductionLongTermView_monthsDataExists() {
-    var productionYears = ProductionTestUtils.getLongTermProductionYearsData(applicationVersion);
-    var oilUnit = ProductionUnit.KSCM_PER_DAY;
-    var gasUnit = ProductionUnit.KSCM_PER_DAY;
-
-    when(longTermProductionYearRepository.findAllByApplicationVersionOrderByYearAsc(applicationVersion))
-        .thenReturn(productionYears);
-    when(applicationUnitService.getProductionOilUnit(applicationVersion))
-        .thenReturn(oilUnit);
-    when(applicationUnitService.getProductionGasUnit(applicationVersion))
-        .thenReturn(gasUnit);
-
-    var productionView = longTermProductionService.getProductionLongTermSummaryCard(applicationVersion);
-
-    assertThat(productionView)
-        .isEqualTo(
-            new SummaryCard(
-                null,
-                SummaryCardType.PRODUCTION_LONG_TERM,
-                ProductionView.fromLongTerm(productionYears, oilUnit, gasUnit)
-            )
-        );
   }
 }

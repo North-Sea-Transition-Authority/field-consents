@@ -1,7 +1,6 @@
 <#include '../layout/layout.ftl'>
 <#import '../summary/_simpleSummary.ftl' as simpleSummary>
 <#import '../summary/_tableSummary.ftl' as tableSummary>
-<#import '../summary/_productionConsentSummary.ftl' as productionConsentSummary>
 <#import '../summary/_emptySummary.ftl' as emptySummary>
 
 <#-- @ftlvariable name="summarySections" type="java.util.List<uk.co.nstauthority.fieldconsents.summary.SummarySection>" -->
@@ -35,21 +34,6 @@ pageSize=getPageSize()
               <@tableSummary.tableSummary
                 summaryTableView=summaryCard.summaryData()
                 summaryHeading=summaryCard.displayName()!""/>
-            <#elseif summaryCard.summaryCardType() == "PRODUCTION_SHORT_TERM">
-              <@productionConsentSummary.productionConsentSummary
-                productionView=summaryCard.summaryData()
-                summaryHeading=summaryCard.displayName()!""
-                showConsentDays=true/>
-            <#elseif summaryCard.summaryCardType() == "PRODUCTION_ANNUAL">
-              <@productionConsentSummary.productionConsentSummary
-                productionView=summaryCard.summaryData()
-                summaryHeading=summaryCard.displayName()!""
-                showConsentDays=false/>
-            <#elseif summaryCard.summaryCardType() == "PRODUCTION_LONG_TERM">
-              <@productionConsentSummary.productionConsentSummary
-                productionView=summaryCard.summaryData()
-                summaryHeading=summaryCard.displayName()!""
-                showConsentDays=false/>
             <#elseif summaryCard.summaryCardType() == "EMPTY_SUMMARY">
               <@emptySummary.emptySummary/>
             </#if>

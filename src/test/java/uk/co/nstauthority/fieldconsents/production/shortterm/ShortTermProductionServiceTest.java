@@ -12,7 +12,6 @@ import static uk.co.nstauthority.fieldconsents.production.ProductionTestUtils.ST
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,15 +27,10 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil;
-import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.production.ProductionRow;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowForm;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
 import uk.co.nstauthority.fieldconsents.production.ProductionTestUtils;
-import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
-import uk.co.nstauthority.fieldconsents.production.ProductionView;
-import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
-import uk.co.nstauthority.fieldconsents.summary.SummaryCardType;
 
 @ExtendWith(MockitoExtension.class)
 class ShortTermProductionServiceTest {
@@ -50,9 +44,6 @@ class ShortTermProductionServiceTest {
   @Mock
   private ConsentLengthService consentLengthService;
 
-  @Mock
-  private ApplicationUnitService applicationUnitService;
-
   private ShortTermProductionService shortTermProductionService;
 
   private ApplicationVersion applicationVersion;
@@ -64,8 +55,7 @@ class ShortTermProductionServiceTest {
     shortTermProductionService = new ShortTermProductionService(
         productionRowService,
         consentLengthService,
-        shortTermProductionMonthRepository,
-        applicationUnitService);
+        shortTermProductionMonthRepository);
     applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
     consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(applicationVersion);
   }
@@ -225,42 +215,5 @@ class ShortTermProductionServiceTest {
     assertThat(expectedProductionMonth.getOilMaxValue()).isEqualTo(shortTermProductionMonth.getOilMaxValue());
     assertThat(expectedProductionMonth.getGasMinValue()).isEqualTo(shortTermProductionMonth.getGasMinValue());
     assertThat(expectedProductionMonth.getGasMaxValue()).isEqualTo(shortTermProductionMonth.getGasMaxValue());
-  }
-
-  @Test
-  void getProductionShortTermView_noMonthsData() {
-    when(shortTermProductionMonthRepository.findAllByApplicationVersion(applicationVersion))
-        .thenReturn(Collections.emptyList());
-
-    assertThat(shortTermProductionService.getProductionShortTermSummaryCard(applicationVersion))
-        .isEqualTo(SummaryCard.emptySummaryCard());
-  }
-
-  @Test
-  void getProductionShortTermView_monthsDataExists() {
-    var productionMonths = ProductionTestUtils.getShortTermProductionMonthsData(applicationVersion);
-    var oilUnit = ProductionUnit.KSCM_PER_MONTH;
-    var gasUnit = ProductionUnit.KSCM_PER_MONTH;
-    var averageUnit = ProductionUnit.KSCM_PER_DAY;
-
-    when(shortTermProductionMonthRepository.findAllByApplicationVersion(applicationVersion))
-        .thenReturn(productionMonths);
-    when(applicationUnitService.getProductionOilUnit(applicationVersion))
-        .thenReturn(oilUnit);
-    when(applicationUnitService.getProductionGasUnit(applicationVersion))
-        .thenReturn(gasUnit);
-    when(applicationUnitService.getProductionAverageUnit(applicationVersion))
-        .thenReturn(averageUnit);
-
-    var productionView = shortTermProductionService.getProductionShortTermSummaryCard(applicationVersion);
-
-    assertThat(productionView)
-        .isEqualTo(
-            new SummaryCard(
-                null,
-                SummaryCardType.PRODUCTION_SHORT_TERM,
-                ProductionView.fromShortTerm(productionMonths, oilUnit, gasUnit, averageUnit)
-            )
-        );
   }
 }

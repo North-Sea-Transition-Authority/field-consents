@@ -9,9 +9,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
-import uk.co.nstauthority.fieldconsents.production.annual.AnnualProductionService;
-import uk.co.nstauthority.fieldconsents.production.longterm.LongTermProductionService;
-import uk.co.nstauthority.fieldconsents.production.shortterm.ShortTermProductionService;
+import uk.co.nstauthority.fieldconsents.production.summary.ProductionSummaryService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryItem;
 import uk.co.nstauthority.fieldconsents.summary.SummarySection;
 import uk.co.nstauthority.fieldconsents.summary.SummarySectionService;
@@ -21,21 +19,13 @@ public class ProductionInformationSummarySectionService implements SummarySectio
 
   private final ConsentLengthService consentLengthService;
 
-  private final ShortTermProductionService shortTermProductionService;
-
-  private final AnnualProductionService annualProductionService;
-
-  private final LongTermProductionService longTermProductionService;
+  private final ProductionSummaryService productionSummaryService;
 
   @Autowired
   ProductionInformationSummarySectionService(ConsentLengthService consentLengthService,
-                                             ShortTermProductionService shortTermProductionService,
-                                             AnnualProductionService annualProductionService,
-                                             LongTermProductionService longTermProductionService) {
+                                             ProductionSummaryService productionSummaryService) {
     this.consentLengthService = consentLengthService;
-    this.shortTermProductionService = shortTermProductionService;
-    this.annualProductionService = annualProductionService;
-    this.longTermProductionService = longTermProductionService;
+    this.productionSummaryService = productionSummaryService;
   }
 
   @Override
@@ -67,13 +57,13 @@ public class ProductionInformationSummarySectionService implements SummarySectio
 
     return switch (consentLengthType) {
       case SHORT_TERM -> SummaryItem.withCard(consentLengthType.getDisplayName(),
-          shortTermProductionService.getProductionShortTermSummaryCard(applicationVersion)
+          productionSummaryService.getShortTermConsentSummaryCard(applicationVersion)
       );
       case ANNUAL -> SummaryItem.withCard(consentLengthType.getDisplayName(),
-          annualProductionService.getProductionAnnualSummaryCard(applicationVersion)
+          productionSummaryService.getAnnualConsentSummaryCard(applicationVersion)
       );
       case LONG_TERM -> SummaryItem.withCard(consentLengthType.getDisplayName(),
-          longTermProductionService.getProductionLongTermSummaryCard(applicationVersion)
+          productionSummaryService.getLongTermConsentSummaryCard(applicationVersion)
       );
     };
   }

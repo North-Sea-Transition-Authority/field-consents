@@ -22,7 +22,6 @@ import java.math.BigDecimal;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -53,10 +52,6 @@ class EmissionConsentSummaryServiceTest {
 
   @InjectMocks
   private EmissionConsentSummaryService emissionConsentSummaryService;
-
-  @BeforeEach
-  void setUp() {
-  }
 
   @Test
   void getShortTermConsentSummaryCard_flare() {

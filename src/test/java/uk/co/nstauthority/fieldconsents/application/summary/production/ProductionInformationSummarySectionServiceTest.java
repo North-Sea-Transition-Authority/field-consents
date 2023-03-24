@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.application.summary.production;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.PRODUCTION_INFORMATION_DISPLAY_ORDER;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertEmptySummaryCard;
@@ -26,12 +27,10 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
-import uk.co.nstauthority.fieldconsents.production.ProductionView;
-import uk.co.nstauthority.fieldconsents.production.annual.AnnualProductionService;
-import uk.co.nstauthority.fieldconsents.production.longterm.LongTermProductionService;
-import uk.co.nstauthority.fieldconsents.production.shortterm.ShortTermProductionService;
+import uk.co.nstauthority.fieldconsents.production.summary.ProductionSummaryService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCardType;
+import uk.co.nstauthority.fieldconsents.summary.SummaryTestUtil;
 
 @ExtendWith(MockitoExtension.class)
 class ProductionInformationSummarySectionServiceTest {
@@ -40,13 +39,7 @@ class ProductionInformationSummarySectionServiceTest {
   private ConsentLengthService consentLengthService;
 
   @Mock
-  private ShortTermProductionService shortTermProductionService;
-
-  @Mock
-  private AnnualProductionService annualProductionService;
-
-  @Mock
-  private LongTermProductionService longTermProductionService;
+  private ProductionSummaryService productionSummaryService;
 
   @InjectMocks
   private ProductionInformationSummarySectionService productionInformationSummarySectionService;
@@ -65,6 +58,8 @@ class ProductionInformationSummarySectionServiceTest {
 
     assertThat(productionInformationSummarySectionService.getSummarySection(nonProductionAppVersion))
         .isNotPresent();
+
+    verifyNoInteractions(consentLengthService);
   }
 
   @Test
@@ -77,11 +72,11 @@ class ProductionInformationSummarySectionServiceTest {
   }
 
   @ParameterizedTest
-  @MethodSource("getSummaryCardsForShortTerm")
+  @MethodSource("getSummaryCards")
   void getSummarySection_shortTerm(SummaryCard summaryCard) {
     when(consentLengthService.findConsentLengthDetails(applicationVersion))
         .thenReturn(Optional.of(ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(applicationVersion)));
-    when(shortTermProductionService.getProductionShortTermSummaryCard(applicationVersion))
+    when(productionSummaryService.getShortTermConsentSummaryCard(applicationVersion))
         .thenReturn(summaryCard);
 
     var summarySectionOptional = productionInformationSummarySectionService.getSummarySection(applicationVersion);
@@ -98,24 +93,16 @@ class ProductionInformationSummarySectionServiceTest {
       assertEmptySummaryCard(summaryItems.get(0).summaryCards().get(0));
     } else {
       assertSummaryCard(summaryItems.get(0).summaryCards().get(0), summaryCard.displayName(),
-          summaryCard.summaryCardType(), ProductionView.class);
+          summaryCard.summaryCardType(), summaryCard.summaryData().getClass());
     }
   }
 
-  private static Stream<Arguments> getSummaryCardsForShortTerm() {
-    return Stream.of(
-        Arguments.of(SummaryCard.emptySummaryCard()),
-        Arguments.of(new SummaryCard("test short term", SummaryCardType.PRODUCTION_SHORT_TERM,
-            ProductionView.empty()))
-    );
-  }
-
   @ParameterizedTest
-  @MethodSource("getSummaryCardsForAnnual")
+  @MethodSource("getSummaryCards")
   void getSummarySection_annual(SummaryCard summaryCard) {
     when(consentLengthService.findConsentLengthDetails(applicationVersion))
         .thenReturn(Optional.of(ConsentLengthTestUtil.getConsentLengthDetailsForAnnual(applicationVersion)));
-    when(annualProductionService.getProductionAnnualSummaryCard(applicationVersion))
+    when(productionSummaryService.getAnnualConsentSummaryCard(applicationVersion))
         .thenReturn(summaryCard);
 
     var summarySectionOptional = productionInformationSummarySectionService.getSummarySection(applicationVersion);
@@ -131,24 +118,16 @@ class ProductionInformationSummarySectionServiceTest {
       assertEmptySummaryCard(summaryItems.get(0).summaryCards().get(0));
     } else {
       assertSummaryCard(summaryItems.get(0).summaryCards().get(0), summaryCard.displayName(),
-          summaryCard.summaryCardType(), ProductionView.class);
+          summaryCard.summaryCardType(), summaryCard.summaryData().getClass());
     }
   }
 
-  private static Stream<Arguments> getSummaryCardsForAnnual() {
-    return Stream.of(
-        Arguments.of(SummaryCard.emptySummaryCard()),
-        Arguments.of(new SummaryCard("test annual", SummaryCardType.PRODUCTION_ANNUAL,
-            ProductionView.empty()))
-    );
-  }
-
   @ParameterizedTest
-  @MethodSource("getSummaryCardsForLongTerm")
+  @MethodSource("getSummaryCards")
   void getSummarySection_longTerm(SummaryCard summaryCard) {
     when(consentLengthService.findConsentLengthDetails(applicationVersion))
         .thenReturn(Optional.of(ConsentLengthTestUtil.getConsentLengthDetailsForLongTerm(applicationVersion)));
-    when(longTermProductionService.getProductionLongTermSummaryCard(applicationVersion))
+    when(productionSummaryService.getLongTermConsentSummaryCard(applicationVersion))
         .thenReturn(summaryCard);
 
     var summarySectionOptional = productionInformationSummarySectionService.getSummarySection(applicationVersion);
@@ -164,15 +143,14 @@ class ProductionInformationSummarySectionServiceTest {
       assertEmptySummaryCard(summaryItems.get(0).summaryCards().get(0));
     } else {
       assertSummaryCard(summaryItems.get(0).summaryCards().get(0), summaryCard.displayName(),
-          summaryCard.summaryCardType(), ProductionView.class);
+          summaryCard.summaryCardType(), summaryCard.summaryData().getClass());
     }
   }
 
-  private static Stream<Arguments> getSummaryCardsForLongTerm() {
+  private static Stream<Arguments> getSummaryCards() {
     return Stream.of(
         Arguments.of(SummaryCard.emptySummaryCard()),
-        Arguments.of(new SummaryCard("test long term", SummaryCardType.PRODUCTION_LONG_TERM,
-            ProductionView.empty()))
+        Arguments.of(SummaryTestUtil.getTableSummaryCard())
     );
   }
 }
