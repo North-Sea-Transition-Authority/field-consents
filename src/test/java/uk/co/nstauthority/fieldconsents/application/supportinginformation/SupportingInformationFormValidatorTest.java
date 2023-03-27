@@ -67,7 +67,7 @@ class SupportingInformationFormValidatorTest {
     Map<String, List<String>> errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     assertThat(errorMap)
         .containsOnly(
-            entry("notes.inputValue", Collections.singletonList("Enter Notes")),
+            entry("notes.inputValue", Collections.singletonList("Enter notes")),
             entry("erapNotes.inputValue", Collections.singletonList("Enter ERAP alignment studies and projects"))
         );
   }
@@ -82,7 +82,7 @@ class SupportingInformationFormValidatorTest {
     Map<String, List<String>> errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     assertThat(errorMap)
         .containsExactly(
-            entry("notes.inputValue", Collections.singletonList("Enter Notes"))
+            entry("notes.inputValue", Collections.singletonList("Enter notes"))
         );
   }
 }

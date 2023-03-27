@@ -55,7 +55,7 @@ class VentReportMonthFormValidatorTest {
     assertThat(errorMap)
         .containsOnly(
             entry("shutDownDays.inputValue",
-                Collections.singletonList("Enter Days of total shutdown"))
+                Collections.singletonList("Enter days of total shutdown"))
         );
   }
 

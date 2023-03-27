@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.flarevent.flare.flares;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
+import static uk.co.nstauthority.fieldconsents.flarevent.flare.flares.FlareFormValidator.COMMENTS_TOO_LONG;
 
 import java.util.Collections;
 import java.util.List;
@@ -15,13 +16,11 @@ import uk.co.nstauthority.fieldconsents.validation.ValidatorTestingUtil;
 
 class FlareFormValidatorTest {
 
-  public static final String DESCRIPTION_EMPTY = "Enter Description";
+  public static final String DESCRIPTION_EMPTY = "Enter flare description";
 
-  public static final String DESCRIPTION_TOO_LONG = "Description must be 300 characters or less";
+  public static final String DESCRIPTION_TOO_LONG = "Flare description must be 300 characters or less";
 
-  public static final String COMMENTS_EMPTY = "Enter Comments";
-
-  public static final String COMMENTS_TOO_LONG = "Comments must be 300 characters or less";
+  public static final String COMMENTS_EMPTY = "Enter comments";
 
   private FlareFormValidator validator;
 

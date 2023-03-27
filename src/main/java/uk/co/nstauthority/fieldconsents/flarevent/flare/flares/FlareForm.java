@@ -6,13 +6,13 @@ public class FlareForm {
 
   private FlareType flareType;
 
-  private StringInput description = new StringInput("description", "Description");
+  private StringInput description = new StringInput("description", "flare description");
 
   private Boolean meteredFlag;
 
-  private StringInput commentsMeteredYes = new StringInput("commentsMeteredYes", "Comments");
+  private StringInput commentsMeteredYes = new StringInput("commentsMeteredYes", "comments");
 
-  private StringInput commentsMeteredNo = new StringInput("commentsMeteredNo", "Comments");
+  private StringInput commentsMeteredNo = new StringInput("commentsMeteredNo", "comments");
 
   public FlareForm() {
   }

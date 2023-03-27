@@ -22,7 +22,7 @@ class AdditionalAssetSelectionFormValidator implements Validator {
 
   static final String ASSET_KEY_FIELD_NAME = "assetKey";
 
-  public static final String ASSET_EMPTY = "You must select a field to add";
+  public static final String ASSET_EMPTY = "Select a field";
 
   public static final String ASSET_MUST_HAVE_OPERATOR_LICENCES =
       "This field does not have an operator or any associated licences therefore cannot be added to this application, ";

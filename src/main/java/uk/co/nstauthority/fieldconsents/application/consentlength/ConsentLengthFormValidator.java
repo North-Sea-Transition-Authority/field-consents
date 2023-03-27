@@ -18,6 +18,20 @@ public class ConsentLengthFormValidator implements Validator {
 
   private static final String CONSENT_LENGTH_PERIOD_EMPTY = "Select the period of the consent you are applying for";
 
+  public static final String SHORT_TERM_LONGER_THAN_ONE_YEAR = "The term must be less than 1 year";
+
+  public static final String SHORT_TERM_END_DATE_BEFORE_START_DATE = "End date can be the same as the start date or after";
+
+  public static final String SHORT_TERM_START_DATE_BEFORE_TODAY = "Start date can be today or after today";
+
+  public static final String SHORT_TERM_START_DATE_AFTER_SIX_MONTHS = "Start date must not be more than 6 months into the future";
+
+  public static final String LONG_TERM_START_YEAR_BEFORE_CURRENT_YEAR = "Start year can be the current year or after";
+
+  public static final String LONG_TERM_END_YEAR_BEFORE_CURRENT_YEAR = "End year must be after the current year";
+
+  public static final String LONG_TERM_INVALID_DURATION = "The term should between 2 and 30 years";
+
   @Override
   public boolean supports(@NotNull Class<?> clazz) {
     return ConsentLengthForm.class.equals(clazz);
@@ -48,15 +62,12 @@ public class ConsentLengthFormValidator implements Validator {
   }
 
   private void validateLongTermDetails(@NotNull Errors errors, ConsentLengthForm form) {
-    // TODO FCS-263 and DFL-35 change below to add custom errors messages when DFL updated, i.e.
-    // 1) Start year can be the current year or after
-    // 2) End year must be after the start year
-    // 3) The term should between 2 and 30 years
     int currentYear = Year.now().getValue();
 
     // Long term start year
     IntegerInputValidator.builder()
         .mustBeMoreThanOrEqualTo(currentYear)
+        .mustBeMoreThanOrEqualToErrorMessage(LONG_TERM_START_YEAR_BEFORE_CURRENT_YEAR)
         .validate(form.getLongTermStartYear(), errors);
 
     // Long term end year
@@ -67,26 +78,27 @@ public class ConsentLengthFormValidator implements Validator {
       // the term must be a minimum of 2 years and a maximum of 30 years in duration
       var endYearComparisonValidator = IntegerInputValidator.builder()
           .mustBeMoreThanOrEqualTo(startYear + 1)
-          .mustBeLessThanOrEqualTo(startYear + 29);
+          .mustBeMoreThanOrEqualToErrorMessage(LONG_TERM_INVALID_DURATION)
+          .mustBeLessThanOrEqualTo(startYear + 29)
+          .mustBeLessThanOrEqualToErrorMessage(LONG_TERM_INVALID_DURATION);
       endYearComparisonValidator.validate(form.getLongTermEndYear(), errors);
     } else {
       IntegerInputValidator.builder()
           .mustBeMoreThanOrEqualTo(currentYear + 1)
+          .mustBeMoreThanOrEqualToErrorMessage(LONG_TERM_END_YEAR_BEFORE_CURRENT_YEAR)
           .validate(form.getLongTermEndYear(), errors);
     }
   }
 
   private void validateShortTermDetails(@NotNull Errors errors, ConsentLengthForm form) {
-    // TODO FCS-263 and DFL-35 change below to add custom errors messages when DFL updated, i.e.
-    // 1) Start date can be today or after today but not more than 6 months into the future
-    // 2) End date can be the same as the start date or after
-    // 3) The term should be less than 1 year
     LocalDate today = LocalDate.now();
     LocalDate sixMonthsAhead = today.plusMonths(6);
     // the start date can be the current date or after but not more than 6 months into the future
     var startDateValidator = ThreeFieldDateInputValidator.builder()
         .mustBeAfterOrEqualTo(today)
-        .mustBeBeforeOrEqualTo(sixMonthsAhead);
+        .mustBeAfterOrEqualToErrorMessage(SHORT_TERM_START_DATE_BEFORE_TODAY)
+        .mustBeBeforeOrEqualTo(sixMonthsAhead)
+        .mustBeBeforeOrEqualToErrorMessage(SHORT_TERM_START_DATE_AFTER_SIX_MONTHS);
     startDateValidator.validate(form.getShortTermStartDate(), errors);
 
     Optional<LocalDate> shortTermStartDate = form.getShortTermStartDate().getAsLocalDate();
@@ -96,13 +108,15 @@ public class ConsentLengthFormValidator implements Validator {
           // we do a maximum on the dates here to find the latest acceptable start date
           // the start date entered may be before today (i.e. not valid)
           .mustBeAfterOrEqualTo(DateUtils.max(today, shortTermStartDate.get()))
+          .mustBeAfterOrEqualToErrorMessage(SHORT_TERM_END_DATE_BEFORE_START_DATE)
           // term less than 1 year
           // we do a minimum on the dates here to find the earliest acceptable start date
           // the start date entered may be too far in the future (i.e. not valid)
           .mustBeBeforeOrEqualTo(
               DateUtils.min(sixMonthsAhead, shortTermStartDate.get())
                   .plusYears(1).minusDays(2)
-          );
+          )
+          .mustBeBeforeOrEqualToErrorMessage(SHORT_TERM_LONGER_THAN_ONE_YEAR);
       endDateValidatorWithStartDate.validate(form.getShortTermEndDate(), errors);
     } else {
       var endDateValidator = ThreeFieldDateInputValidator.builder()

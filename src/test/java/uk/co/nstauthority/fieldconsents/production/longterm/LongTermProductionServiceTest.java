@@ -123,13 +123,13 @@ class LongTermProductionServiceTest {
     var yearForms = longTermProductionForm.getLongTermProductionYearForms();
 
     String oilMinValueFieldName = "oilMinValue";
-    String oilMinValueDisplayName = "Minimum oil";
+    String oilMinValueDisplayName = "minimum oil";
     String oilMaxValueFieldName = "oilMaxValue";
-    String oilMaxValueDisplayName = "Maximum oil";
+    String oilMaxValueDisplayName = "maximum oil";
     String gasMinValueFieldName = "gasMinValue";
-    String gasMinValueDisplayName = "Minimum gas";
+    String gasMinValueDisplayName = "minimum gas";
     String gasMaxValueFieldName = "gasMaxValue";
-    String gasMaxValueDisplayName = "Maximum gas";
+    String gasMaxValueDisplayName = "maximum gas";
 
     assertThat(yearForms)
         .extracting(

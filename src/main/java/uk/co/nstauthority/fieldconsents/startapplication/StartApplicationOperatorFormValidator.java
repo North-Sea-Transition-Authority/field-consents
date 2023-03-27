@@ -12,6 +12,8 @@ import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 @Service
 class StartApplicationOperatorFormValidator implements Validator {
 
+  public static final String SELECTED_OPERATOR_EMPTY = "Select an operator";
+
   private final OrganisationUnitService organisationUnitService;
 
   @Autowired
@@ -30,6 +32,7 @@ class StartApplicationOperatorFormValidator implements Validator {
     var purpose = "Check organisation unit exists when starting an application";
 
     IntegerInputValidator.builder()
+        .emptyInputErrorMessage(SELECTED_OPERATOR_EMPTY)
         .mustBeMoreThanOrEqualTo(0)
         .validate(form.getOrganisationUnitId(), errors);
 

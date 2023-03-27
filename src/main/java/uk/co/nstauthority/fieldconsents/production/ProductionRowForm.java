@@ -4,13 +4,13 @@ import uk.co.fivium.formlibrary.input.DecimalInput;
 
 public class ProductionRowForm {
 
-  private DecimalInput oilMinValue = new DecimalInput("oilMinValue", "Minimum oil");
+  private DecimalInput oilMinValue = new DecimalInput("oilMinValue", "minimum oil");
 
-  private DecimalInput oilMaxValue = new DecimalInput("oilMaxValue", "Maximum oil");
+  private DecimalInput oilMaxValue = new DecimalInput("oilMaxValue", "maximum oil");
 
-  private DecimalInput gasMinValue = new DecimalInput("gasMinValue", "Minimum gas");
+  private DecimalInput gasMinValue = new DecimalInput("gasMinValue", "minimum gas");
 
-  private DecimalInput gasMaxValue = new DecimalInput("gasMaxValue", "Maximum gas");
+  private DecimalInput gasMaxValue = new DecimalInput("gasMaxValue", "maximum gas");
 
   public ProductionRowForm() {
   }

@@ -9,7 +9,7 @@ class StartApplicationOperatorForm extends StartApplicationForm {
 
   public StartApplicationOperatorForm(ApplicationType applicationType) {
     super(applicationType);
-    this.organisationUnitId = new IntegerInput("organisationUnitId", "Operator");
+    this.organisationUnitId = new IntegerInput("organisationUnitId", "an operator");
   }
 
   public IntegerInput getOrganisationUnitId() {

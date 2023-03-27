@@ -64,10 +64,10 @@ class FlareVentReportGasDataFormValidatorTest {
 
   private static Stream<Arguments> getCategoryDensityArguments() {
     return Stream.of(
-        Arguments.of(null, "Enter Category %s Standard density"),
-        Arguments.of("test", "Category %s Standard density must be a number"),
-        Arguments.of("-0.5", "Category %s Standard density must be 0 or more"),
-        Arguments.of("0.0000001", "Category %s Standard density must include no more than 6 decimal places")
+        Arguments.of(null, "Enter Category %s standard density"),
+        Arguments.of("test", "Category %s standard density must be a number"),
+        Arguments.of("-0.5", "Category %s standard density must be 0 or more"),
+        Arguments.of("0.0000001", "Category %s standard density must include no more than 6 decimal places")
     );
   }
 
@@ -99,20 +99,20 @@ class FlareVentReportGasDataFormValidatorTest {
   private static Stream<Arguments> getGasContentArguments() {
     return Stream.of(
         Arguments.of(null,
-            "Enter Category %s Inert gas content",
-            "Enter Category %s Hydrocarbon content"),
+            "Enter Category %s inert gas content",
+            "Enter Category %s hydrocarbon content"),
         Arguments.of("test",
-            "Category %s Inert gas content must be a number",
-            "Category %s Hydrocarbon content must be a number"),
+            "Category %s inert gas content must be a number",
+            "Category %s hydrocarbon content must be a number"),
         Arguments.of("-0.5",
-            "Category %s Inert gas content must be 0 or more",
-            "Category %s Hydrocarbon content must be 0 or more"),
+            "Category %s inert gas content must be 0 or more",
+            "Category %s hydrocarbon content must be 0 or more"),
         Arguments.of("100.000001",
-            "Category %s Inert gas content must be 100 or less",
-            "Category %s Hydrocarbon content must be 100 or less"),
+            "Category %s inert gas content must be 100 or less",
+            "Category %s hydrocarbon content must be 100 or less"),
         Arguments.of("0.0000001",
-            "Category %s Inert gas content must include no more than 6 decimal places",
-            "Category %s Hydrocarbon content must include no more than 6 decimal places")
+            "Category %s inert gas content must include no more than 6 decimal places",
+            "Category %s hydrocarbon content must include no more than 6 decimal places")
     );
   }
 
@@ -142,19 +142,19 @@ class FlareVentReportGasDataFormValidatorTest {
     return Stream.of(
         Arguments.of("50",
             null,
-            "Enter Category %s Hydrocarbon content"),
+            "Enter Category %s hydrocarbon content"),
         Arguments.of("50",
             "test",
-            "Category %s Hydrocarbon content must be a number"),
+            "Category %s hydrocarbon content must be a number"),
         Arguments.of("50",
             "-0.5",
-            "Category %s Hydrocarbon content must be 0 or more"),
+            "Category %s hydrocarbon content must be 0 or more"),
         Arguments.of("50",
             "100.000001",
-            "Category %s Hydrocarbon content must be 100 or less"),
+            "Category %s hydrocarbon content must be 100 or less"),
         Arguments.of("50",
             "0.0000001",
-            "Category %s Hydrocarbon content must include no more than 6 decimal places")
+            "Category %s hydrocarbon content must include no more than 6 decimal places")
     );
   }
 
@@ -250,7 +250,7 @@ class FlareVentReportGasDataFormValidatorTest {
     errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     assertThat(errorMap).containsOnly(
         entry("evaluatedPerCategoryExplanation.inputValue",
-            Collections.singletonList("Enter Please provide an explanation why you haven’t evaluated the properties for each category"))
+            Collections.singletonList("Enter an explanation"))
     );
   }
 }

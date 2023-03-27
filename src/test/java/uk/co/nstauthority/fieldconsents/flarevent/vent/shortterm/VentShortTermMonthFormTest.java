@@ -40,7 +40,7 @@ class VentShortTermMonthFormTest {
             "Category A", "categoryA", null,
             "Category B", "categoryB", null,
             "Category C", "categoryC", null,
-            "Comments", "comments", null
+            "comments", "comments", null
         );
   }
 
@@ -74,7 +74,7 @@ class VentShortTermMonthFormTest {
             LocalDate.of(2023, Month.MARCH, 1),
             LocalDate.of(2023, Month.MARCH, 15),
             15,
-            "Comments", "comments", "Test comments.",
+            "comments", "comments", "Test comments.",
             "Category A", "categoryA", "0",
             "Category B", "categoryB", "1",
             "Category C", "categoryC", "999.999"

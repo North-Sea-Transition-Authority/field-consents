@@ -46,7 +46,7 @@ class FlareVentRowFormValidatorTest {
             entry("categoryC.inputValue",
                 Collections.singletonList("Enter Category C")),
             entry("comments.inputValue",
-                Collections.singletonList("Enter Comments"))
+                Collections.singletonList("Enter comments"))
         );
   }
 

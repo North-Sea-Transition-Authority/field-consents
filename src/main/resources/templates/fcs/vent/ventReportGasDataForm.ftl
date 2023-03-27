@@ -50,7 +50,7 @@
                 <@fdsTextarea.textarea
                 path="form.evaluatedPerCategoryExplanation.inputValue"
                 nestingPath="form.evaluatedPerCategory"
-                labelText="${form.evaluatedPerCategoryExplanation.displayName}"
+                labelText="Please provide an explanation why you haven’t evaluated the properties for each category"
                 />
             </@fdsRadio.radioNo>
         </@fdsRadio.radioGroup>

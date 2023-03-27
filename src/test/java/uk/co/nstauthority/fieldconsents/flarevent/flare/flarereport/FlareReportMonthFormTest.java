@@ -26,8 +26,8 @@ class FlareReportMonthFormTest {
         )
         .containsExactly(
             "2022", "January",
-            "Days of total shutdown", "shutDownDays", null,
-            "Comments", "comments", null
+            "days of total shutdown", "shutDownDays", null,
+            "comments", "comments", null
         );
   }
 
@@ -58,8 +58,8 @@ class FlareReportMonthFormTest {
         )
         .containsExactly(
             "2023", "March",
-            "Days of total shutdown", "shutDownDays", "15",
-            "Comments", "comments", "Test comments.",
+            "days of total shutdown", "shutDownDays", "15",
+            "comments", "comments", "Test comments.",
             "Category A", "categoryA", "0",
             "Category B", "categoryB", "1",
             "Category C", "categoryC", "999.999"

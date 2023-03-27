@@ -30,17 +30,16 @@ public class FlareVentReportGasDataForm {
 
 
   public FlareVentReportGasDataForm() {
-    this.categoryADensity = new DecimalInput("categoryADensity", "Category A Standard density");
-    this.categoryAInertGasPercentage = new DecimalInput("categoryAInertGasPercentage", "Category A Inert gas content");
-    this.categoryAHydrocarbonPercentage = new DecimalInput("categoryAHydrocarbonPercentage", "Category A Hydrocarbon content");
-    this.categoryBDensity = new DecimalInput("categoryBDensity", "Category B Standard density");
-    this.categoryBInertGasPercentage = new DecimalInput("categoryBInertGasPercentage", "Category B Inert gas content");
-    this.categoryBHydrocarbonPercentage = new DecimalInput("categoryBHydrocarbonPercentage", "Category B Hydrocarbon content");
-    this.categoryCDensity = new DecimalInput("categoryCDensity", "Category C Standard density");
-    this.categoryCInertGasPercentage = new DecimalInput("categoryCInertGasPercentage", "Category C Inert gas content");
-    this.categoryCHydrocarbonPercentage = new DecimalInput("categoryCHydrocarbonPercentage", "Category C Hydrocarbon content");
-    this.evaluatedPerCategoryExplanation = new StringInput("evaluatedPerCategoryExplanation",
-        "Please provide an explanation why you haven’t evaluated the properties for each category");
+    this.categoryADensity = new DecimalInput("categoryADensity", "Category A standard density");
+    this.categoryAInertGasPercentage = new DecimalInput("categoryAInertGasPercentage", "Category A inert gas content");
+    this.categoryAHydrocarbonPercentage = new DecimalInput("categoryAHydrocarbonPercentage", "Category A hydrocarbon content");
+    this.categoryBDensity = new DecimalInput("categoryBDensity", "Category B standard density");
+    this.categoryBInertGasPercentage = new DecimalInput("categoryBInertGasPercentage", "Category B inert gas content");
+    this.categoryBHydrocarbonPercentage = new DecimalInput("categoryBHydrocarbonPercentage", "Category B hydrocarbon content");
+    this.categoryCDensity = new DecimalInput("categoryCDensity", "Category C standard density");
+    this.categoryCInertGasPercentage = new DecimalInput("categoryCInertGasPercentage", "Category C inert gas content");
+    this.categoryCHydrocarbonPercentage = new DecimalInput("categoryCHydrocarbonPercentage", "Category C hydrocarbon content");
+    this.evaluatedPerCategoryExplanation = new StringInput("evaluatedPerCategoryExplanation", "an explanation");
   }
 
   public DecimalInput getCategoryADensity() {

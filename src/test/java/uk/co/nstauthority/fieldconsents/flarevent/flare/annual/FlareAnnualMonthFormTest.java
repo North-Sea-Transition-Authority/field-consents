@@ -23,7 +23,7 @@ class FlareAnnualMonthFormTest {
         )
         .containsExactly(
             "2022", "January",
-            "Comments", "comments", null
+            "comments", "comments", null
         );
   }
 
@@ -51,7 +51,7 @@ class FlareAnnualMonthFormTest {
         )
         .containsExactly(
             "2023", "March",
-            "Comments", "comments", "Test comments.",
+            "comments", "comments", "Test comments.",
             "Category A", "categoryA", "0",
             "Category B", "categoryB", "1",
             "Category C", "categoryC", "999.999"

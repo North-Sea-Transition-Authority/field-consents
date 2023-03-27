@@ -25,7 +25,7 @@ public class FlareVentRowForm {
     categoryA = new DecimalInput("categoryA", "Category A");
     categoryB = new DecimalInput("categoryB", "Category B");
     categoryC = new DecimalInput("categoryC", "Category C");
-    comments = new StringInput("comments", "Comments");
+    comments = new StringInput("comments", "comments");
   }
 
   public String getYear() {

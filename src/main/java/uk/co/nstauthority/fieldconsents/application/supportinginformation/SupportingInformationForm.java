@@ -12,7 +12,7 @@ public class SupportingInformationForm {
   private ApplicationVersion applicationVersion;
 
   public SupportingInformationForm() {
-    this.notes = new StringInput("notes", "Notes");
+    this.notes = new StringInput("notes", "notes");
     this.erapNotes = new StringInput("erapNotes", "ERAP alignment studies and projects");
   }
 

@@ -44,15 +44,13 @@ public class FlareFormValidator implements Validator {
       if (meteredFlag) {
         StringInputValidator.builder()
             .isOptional()
-            // TODO add back once the DFL develop-SNAPSHOT is up to date
-            // .mustHaveCharacterCountAtMost(commentsMaxCharacterCount, COMMENTS_TOO_LONG)
             .mustHaveCharacterCountAtMost(COMMENTS_MAX_CHARACTER_COUNT)
+            .mustHaveCharacterCountAtMostErrorMessage(COMMENTS_TOO_LONG)
             .validate(flareForm.getCommentsMeteredYes(), errors);
       } else {
         StringInputValidator.builder()
-            // TODO add back once the DFL develop-SNAPSHOT is up to date
-            // .mustHaveCharacterCountAtMost(commentsMaxCharacterCount, COMMENTS_TOO_LONG)
             .mustHaveCharacterCountAtMost(COMMENTS_MAX_CHARACTER_COUNT)
+            .mustHaveCharacterCountAtMostErrorMessage(COMMENTS_TOO_LONG)
             .validate(flareForm.getCommentsMeteredNo(), errors);
       }
     }

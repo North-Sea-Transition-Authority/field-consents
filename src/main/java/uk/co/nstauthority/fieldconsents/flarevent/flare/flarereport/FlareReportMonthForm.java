@@ -9,7 +9,7 @@ public class FlareReportMonthForm extends FlareVentRowForm {
   private final IntegerInput shutDownDays;
 
   public FlareReportMonthForm() {
-    shutDownDays = new IntegerInput("shutDownDays", "Days of total shutdown");
+    shutDownDays = new IntegerInput("shutDownDays", "days of total shutdown");
   }
 
   public static FlareReportMonthForm from(YearMonth yearMonth) {

@@ -18,11 +18,11 @@ public class ConsentLengthForm {
   private final IntegerInput longTermEndYear;
 
   public ConsentLengthForm() {
-    shortTermStartDate = new ThreeFieldDateInput("shortTermStartDate", "Start date");
-    shortTermEndDate = new ThreeFieldDateInput("shortTermEndDate", "End date");
-    annualConsentYear = new IntegerInput("annualConsentYear", "Year");
-    longTermStartYear = new IntegerInput("longTermStartYear", "Start year");
-    longTermEndYear = new IntegerInput("longTermEndYear", "End year");
+    shortTermStartDate = new ThreeFieldDateInput("shortTermStartDate", "start date");
+    shortTermEndDate = new ThreeFieldDateInput("shortTermEndDate", "end date");
+    annualConsentYear = new IntegerInput("annualConsentYear", "a year");
+    longTermStartYear = new IntegerInput("longTermStartYear", "a start year");
+    longTermEndYear = new IntegerInput("longTermEndYear", "an end year");
   }
 
   public ConsentLengthType getConsentLengthType() {

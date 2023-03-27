@@ -6,7 +6,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 
 public class AssetSelectionForm {
 
-  @NotBlank
+  @NotBlank(message = "Select a field or facility")
   private String assetKey;
 
   private ApplicationVersion applicationVersion;

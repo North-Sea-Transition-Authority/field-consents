@@ -9,7 +9,7 @@
     path="form.ventType"
     radioItems=ventTypes
     />
-    <@fdsTextarea.textarea path="form.description.inputValue" labelText="${form.description.displayName}" rows="2"/>
+    <@fdsTextarea.textarea path="form.description.inputValue" labelText="Description" rows="2"/>
     <@fdsRadio.radioGroup
     path="form.meteredFlag"
     labelText="Metered"
@@ -19,7 +19,7 @@
         <@fdsTextarea.textarea
         path="form.commentsMeteredYes.inputValue"
         nestingPath="form.meteredFlag"
-        labelText="${form.commentsMeteredYes.displayName}"
+        labelText="Comments"
         optionalLabel=true
         rows="2"
         />
@@ -28,7 +28,7 @@
         <@fdsTextarea.textarea
         path="form.commentsMeteredNo.inputValue"
         nestingPath="form.meteredFlag"
-        labelText="${form.commentsMeteredNo.displayName}"
+        labelText="Comments"
         hintText="Explain if there are issues with the meter. For example, the meters are offline"
         rows="2"
         />

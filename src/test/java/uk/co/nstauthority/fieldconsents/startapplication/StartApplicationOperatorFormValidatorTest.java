@@ -67,7 +67,7 @@ class StartApplicationOperatorFormValidatorTest {
 
     errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     assertThat(errorMap).containsOnly(
-        entry("organisationUnitId.inputValue", Collections.singletonList("Enter Operator"))
+        entry("organisationUnitId.inputValue", Collections.singletonList("Select an operator"))
     );
   }
 
@@ -80,7 +80,7 @@ class StartApplicationOperatorFormValidatorTest {
 
     errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     assertThat(errorMap).containsOnly(
-        entry("organisationUnitId.inputValue", Collections.singletonList("Operator must be 0 or more"))
+        entry("organisationUnitId.inputValue", Collections.singletonList("An operator must be 0 or more"))
     );
   }
 

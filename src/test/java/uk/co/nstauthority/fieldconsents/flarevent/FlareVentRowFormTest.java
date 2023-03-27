@@ -35,7 +35,7 @@ class FlareVentRowFormTest {
             "Category A", "categoryA", "0",
             "Category B", "categoryB", "1",
             "Category C", "categoryC", "999.999",
-            "Comments", "comments", "entity comments"
+            "comments", "comments", "entity comments"
         );
   }
 }

@@ -21,7 +21,7 @@ public class FlareVentReportGasDataFormValidator implements Validator {
       "Select yes if you have evaluated the gas properties for each category individually";
 
   public static final String INVALID_GAS_CONTENT_PERCENTAGE =
-      "The Inert gas content and Hydrocarbon gas content should be 100% in total for each category";
+      "The inert gas content and hydrocarbon gas content should be 100% in total for each category";
 
   @Override
   public boolean supports(@NotNull Class<?> clazz) {
@@ -77,7 +77,8 @@ public class FlareVentReportGasDataFormValidator implements Validator {
     ValidationUtils.rejectIfEmpty(errors, "evaluatedPerCategory", "evaluatedPerCategory.required",
         EVALUATED_PER_CATEGORY_MISSING);
     if (Boolean.FALSE.equals(form.getEvaluatedPerCategory())) {
-      StringInputValidator.builder().validate(form.getEvaluatedPerCategoryExplanation(), errors);
+      StringInputValidator.builder()
+          .validate(form.getEvaluatedPerCategoryExplanation(), errors);
     }
   }
 

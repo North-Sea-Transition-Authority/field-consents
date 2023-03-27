@@ -147,13 +147,13 @@ class AnnualProductionServiceTest {
                                        DecimalInput gasMinValue, DecimalInput gasMaxValue, Month month) {
     assertThat(monthForm.getMonth()).isEqualTo(Character.toUpperCase(month.name().charAt(0)) + month.name().substring(1).toLowerCase());
     assertThat(oilMinValue.getFieldName()).isEqualTo("oilMinValue");
-    assertThat(oilMinValue.getDisplayName()).isEqualTo("Minimum oil");
+    assertThat(oilMinValue.getDisplayName()).isEqualTo("minimum oil");
     assertThat(oilMaxValue.getFieldName()).isEqualTo("oilMaxValue");
-    assertThat(oilMaxValue.getDisplayName()).isEqualTo("Maximum oil");
+    assertThat(oilMaxValue.getDisplayName()).isEqualTo("maximum oil");
     assertThat(gasMinValue.getFieldName()).isEqualTo("gasMinValue");
-    assertThat(gasMinValue.getDisplayName()).isEqualTo("Minimum gas");
+    assertThat(gasMinValue.getDisplayName()).isEqualTo("minimum gas");
     assertThat(gasMaxValue.getFieldName()).isEqualTo("gasMaxValue");
-    assertThat(gasMaxValue.getDisplayName()).isEqualTo("Maximum gas");
+    assertThat(gasMaxValue.getDisplayName()).isEqualTo("maximum gas");
   }
 
   @Test

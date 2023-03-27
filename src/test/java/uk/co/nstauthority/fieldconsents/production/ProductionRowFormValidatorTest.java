@@ -45,7 +45,7 @@ class ProductionRowFormValidatorTest {
 
     errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     assertThat(errorMap).containsOnly(
-        entry("oilMaxValue.inputValue", Collections.singletonList("Enter Maximum oil"))
+        entry("oilMaxValue.inputValue", Collections.singletonList("Enter maximum oil"))
     );
   }
 
@@ -109,8 +109,8 @@ class ProductionRowFormValidatorTest {
 
     errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     assertThat(errorMap).containsOnly(
-        entry("oilMinValue.inputValue", Collections.singletonList("Enter Minimum oil")),
-        entry("oilMaxValue.inputValue", Collections.singletonList("Enter Maximum oil")),
+        entry("oilMinValue.inputValue", Collections.singletonList("Enter minimum oil")),
+        entry("oilMaxValue.inputValue", Collections.singletonList("Enter maximum oil")),
         entry("gasMaxValue.inputValue",
             Collections.singletonList("Maximum gas must be %s or more".formatted(form.getGasMinValue().getInputValue())))
     );
@@ -128,8 +128,8 @@ class ProductionRowFormValidatorTest {
     assertThat(errorMap).containsOnly(
         entry("oilMaxValue.inputValue",
             Collections.singletonList("Maximum oil must be %s or more".formatted(form.getOilMinValue().getInputValue()))),
-        entry("gasMinValue.inputValue", Collections.singletonList("Enter Minimum gas")),
-        entry("gasMaxValue.inputValue", Collections.singletonList("Enter Maximum gas"))
+        entry("gasMinValue.inputValue", Collections.singletonList("Enter minimum gas")),
+        entry("gasMaxValue.inputValue", Collections.singletonList("Enter maximum gas"))
     );
   }
 

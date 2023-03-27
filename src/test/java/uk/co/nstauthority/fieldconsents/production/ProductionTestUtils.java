@@ -95,10 +95,10 @@ public class ProductionTestUtils {
   @NotNull
   private static ProductionRowForm getProductionRowForm() {
     return new ProductionRowForm(
-        new DecimalInput("oilMinValue", "Minimum oil"),
-        new DecimalInput("oilMaxValue", "Maximum oil"),
-        new DecimalInput("gasMinValue", "Minimum gas"),
-        new DecimalInput("gasMaxValue", "Maximum gas")
+        new DecimalInput("oilMinValue", "minimum oil"),
+        new DecimalInput("oilMaxValue", "maximum oil"),
+        new DecimalInput("gasMinValue", "minimum gas"),
+        new DecimalInput("gasMaxValue", "maximum gas")
     );
   }
 
