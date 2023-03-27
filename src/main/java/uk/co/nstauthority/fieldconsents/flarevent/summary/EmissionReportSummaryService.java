@@ -11,7 +11,6 @@ import static uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionSummary
 import static uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionSummaryUtil.TOTAL_PROMPT;
 
 import java.time.YearMonth;
-import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
@@ -22,7 +21,7 @@ import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportM
 import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreport.VentReportMonth;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
-import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
+import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 import uk.co.nstauthority.fieldconsents.summary.SummaryTableView;
 import uk.co.nstauthority.fieldconsents.util.BigDecimalUtil;
 
@@ -32,22 +31,18 @@ public class EmissionReportSummaryService {
   public SummaryCard getReportPeriodSummaryCard(FlareVentReportPeriod reportPeriod,
                                                 ApplicationType applicationType) {
 
-    var summaryKeyValues = new ArrayList<SummaryKeyValue>();
     var appTypeDisplayName = applicationType.getDisplayName();
 
-    summaryKeyValues.add(
-        SummaryKeyValue.fromInteger(
-            "Which year do you have %s report data up to?".formatted(appTypeDisplayName.toLowerCase()),
-            reportPeriod.getReportEndYear()));
-
-    summaryKeyValues.add(
-        SummaryKeyValue.from(
-            "Which is the latest full month of %s report data you have?".formatted(appTypeDisplayName.toLowerCase()),
-            DateUtils.formatFull(reportPeriod.getReportEndMonth())));
+    var summaryData = SummaryDataView
+        .newWithKeyValue("Which year do you have %s report data up to?".formatted(appTypeDisplayName.toLowerCase()),
+            reportPeriod.getReportEndYear())
+        .addKeyValue("Which is the latest full month of %s report data you have?".formatted(appTypeDisplayName.toLowerCase()),
+            DateUtils.formatFull(reportPeriod.getReportEndMonth()));
 
     return SummaryCard.simpleSummaryCardWithHeading(
         "%s report period".formatted(appTypeDisplayName),
-        summaryKeyValues);
+        summaryData
+    );
   }
 
   public SummaryCard getReportTableSummaryCard(List<? extends FlareVentRow> reportMonths,

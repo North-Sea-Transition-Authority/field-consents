@@ -19,6 +19,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
+import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 import uk.co.nstauthority.fieldconsents.util.BooleanUtil;
 
@@ -84,9 +85,10 @@ class GasInjectionServiceTest {
 
     assertThat(summaryCard).usingRecursiveComparison()
         .isEqualTo(SummaryCard.simpleSummaryCard(
-            List.of(new SummaryKeyValue(ApplicationFlagType.WILL_GAS_BE_INJECTED.getDisplayName(),
-                BooleanUtil.yesNoFromBoolean(willGasBeInjected))
-            )));
+            new SummaryDataView(List.of(
+                new SummaryKeyValue(ApplicationFlagType.WILL_GAS_BE_INJECTED.getDisplayName(),
+                    BooleanUtil.yesNoFromBoolean(willGasBeInjected))
+            ))));
 
   }
 }

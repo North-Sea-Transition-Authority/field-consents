@@ -1,42 +1,35 @@
 package uk.co.nstauthority.fieldconsents.summary;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static uk.co.nstauthority.fieldconsents.summary.SummaryTestUtil.summaryDataView;
 
 import java.util.List;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class SummaryCardTest {
 
-  private final List<SummaryKeyValue> summaryKeyValues = SummaryTestUtil.summaryKeyValues;
-
-  private SummaryTableView summaryTableView;
-
-  @BeforeEach
-  void setUp() {
-    summaryTableView = SummaryTestUtil.getSummaryTableView();
-  }
+  private final SummaryTableView summaryTableView = SummaryTestUtil.getSummaryTableView();
 
   @Test
   void simpleSummaryCardWithHeading() {
-    assertThat(SummaryCard.simpleSummaryCardWithHeading("display name", summaryKeyValues))
+    assertThat(SummaryCard.simpleSummaryCardWithHeading("display name", summaryDataView))
         .isEqualTo(
             new SummaryCard(
                 "display name",
                 SummaryCardType.SIMPLE_SUMMARY,
-                SummaryDataView.from(summaryKeyValues)
+                summaryDataView
             )
         );
   }
 
   @Test
   void simpleSummaryCard() {
-    assertThat(SummaryCard.simpleSummaryCard(summaryKeyValues))
+    assertThat(SummaryCard.simpleSummaryCard(summaryDataView))
         .isEqualTo(
             new SummaryCard(
                 null,
                 SummaryCardType.SIMPLE_SUMMARY,
-                SummaryDataView.from(summaryKeyValues)
+                summaryDataView
             )
         );
   }

@@ -29,6 +29,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
+import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
 @ExtendWith(MockitoExtension.class)
@@ -265,11 +266,11 @@ class ConsentLengthServiceTest {
 
     assertThat(summaryCard).usingRecursiveComparison()
         .isEqualTo(SummaryCard.simpleSummaryCard(
-            List.of(
+            new SummaryDataView(List.of(
                 new SummaryKeyValue(CONSENT_PERIOD_PROMPT, ConsentLengthType.SHORT_TERM.getDisplayName()),
                 new SummaryKeyValue("Start date", DateUtils.format(START_DATE, DateUtils.SHORT_DATE)),
                 new SummaryKeyValue("End date", DateUtils.format(END_DATE, DateUtils.SHORT_DATE))
-            )));
+            ))));
   }
 
   @Test
@@ -282,10 +283,10 @@ class ConsentLengthServiceTest {
 
     assertThat(summaryCard).usingRecursiveComparison()
         .isEqualTo(SummaryCard.simpleSummaryCard(
-            List.of(
+            new SummaryDataView(List.of(
                 new SummaryKeyValue(CONSENT_PERIOD_PROMPT, ConsentLengthType.ANNUAL.getDisplayName()),
                 new SummaryKeyValue("Year", String.valueOf(ANNUAL_CONSENT_YEAR))
-            )));
+            ))));
   }
 
   @Test
@@ -298,10 +299,10 @@ class ConsentLengthServiceTest {
 
     assertThat(summaryCard).usingRecursiveComparison()
         .isEqualTo(SummaryCard.simpleSummaryCard(
-            List.of(
+            new SummaryDataView(List.of(
                 new SummaryKeyValue(CONSENT_PERIOD_PROMPT, ConsentLengthType.LONG_TERM.getDisplayName()),
                 new SummaryKeyValue("Start year", String.valueOf(LONG_TERM_START_YEAR)),
                 new SummaryKeyValue("End year", String.valueOf(LONG_TERM_END_YEAR))
-            )));
+            ))));
   }
 }

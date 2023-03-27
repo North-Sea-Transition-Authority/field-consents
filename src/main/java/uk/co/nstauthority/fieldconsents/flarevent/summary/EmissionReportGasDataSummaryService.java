@@ -5,7 +5,6 @@ import static uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionSummary
 import static uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionSummaryUtil.CATEGORY_C_HEADING;
 import static uk.co.nstauthority.fieldconsents.formatting.DateUtils.LONG_MONTH_YEAR;
 
-import java.util.ArrayList;
 import java.util.function.UnaryOperator;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportGasData;
@@ -13,7 +12,7 @@ import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportPeriod;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentUnit;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
-import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
+import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 import uk.co.nstauthority.fieldconsents.summary.SummaryTableView;
 
 @Service
@@ -61,18 +60,14 @@ public class EmissionReportGasDataSummaryService {
 
   public SummaryCard getReportGasDataJustificationSummaryCard(FlareVentReportGasData reportGasData) {
 
-    var summaryKeyValues = new ArrayList<SummaryKeyValue>();
-
-    summaryKeyValues.add(
-        SummaryKeyValue.fromBoolean("Have you evaluated the properties for each category individually?",
-            reportGasData.getEvaluatedPerCategory()));
+    var summaryData = SummaryDataView.newWithKeyValue("Have you evaluated the properties for each category individually?",
+        reportGasData.getEvaluatedPerCategory());
 
     if (Boolean.FALSE.equals(reportGasData.getEvaluatedPerCategory())) {
-      summaryKeyValues.add(
-          SummaryKeyValue.from("Please provide an explanation why you haven’t evaluated the properties for each category",
-              reportGasData.getEvaluatedPerCategoryExplanation()));
+      summaryData.addKeyValue("Please provide an explanation why you haven’t evaluated the properties for each category",
+          reportGasData.getEvaluatedPerCategoryExplanation());
     }
 
-    return SummaryCard.simpleSummaryCard(summaryKeyValues);
+    return SummaryCard.simpleSummaryCard(summaryData);
   }
 }

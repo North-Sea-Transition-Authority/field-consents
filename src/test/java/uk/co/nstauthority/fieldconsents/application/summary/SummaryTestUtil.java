@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCardType;
+import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 import uk.co.nstauthority.fieldconsents.summary.SummaryItem;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 import uk.co.nstauthority.fieldconsents.summary.SummarySection;
@@ -24,7 +25,7 @@ public class SummaryTestUtil {
   public static final List<SummaryKeyValue> keyValues =
       List.of(new SummaryKeyValue("k1", "v1"), new SummaryKeyValue("k2", "v2"));
 
-  public static SummaryCard simpleSummaryCard = SummaryCard.simpleSummaryCard(keyValues);
+  public static SummaryCard simpleSummaryCard = SummaryCard.simpleSummaryCard(new SummaryDataView(keyValues));
 
   public static SummarySection getConsentDetailsSummarySection(List<SummaryItem> summaryItems) {
     return new SummarySection(CONSENT_DETAILS_DISPLAY_ORDER, summaryItems);

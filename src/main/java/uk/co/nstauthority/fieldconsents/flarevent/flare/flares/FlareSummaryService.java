@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
-import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
+import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 
 @Service
 public class FlareSummaryService {
@@ -39,12 +39,12 @@ public class FlareSummaryService {
         .stream()
         .map(flareView -> SummaryCard.simpleSummaryCardWithHeading(
             "Flare " + flareView.getDisplayOrder(),
-            List.of(
-                SummaryKeyValue.from("Flare type", flareView.getFlareType()),
-                SummaryKeyValue.from("Description", flareView.getDescription()),
-                SummaryKeyValue.from("Metered", flareView.getMeteredFlag()),
-                SummaryKeyValue.from("Comments", flareView.getComments())
+            SummaryDataView
+                .newWithKeyValue("Flare type", flareView.getFlareType())
+                .addKeyValue("Description", flareView.getDescription())
+                .addKeyValue("Metered", flareView.getMeteredFlag())
+                .addKeyValue("Comments", flareView.getComments())
             )
-        )).toList();
+        ).toList();
   }
 }

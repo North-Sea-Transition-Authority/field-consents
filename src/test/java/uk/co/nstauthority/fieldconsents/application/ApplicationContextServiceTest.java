@@ -20,6 +20,7 @@ import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
+import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
 @ExtendWith(MockitoExtension.class)
@@ -118,13 +119,13 @@ class ApplicationContextServiceTest {
 
     var summaryCard = applicationContextService.getApplicationContextSummaryCard(applicationVersion);
 
-    assertThat(summaryCard).usingRecursiveComparison()
+    assertThat(summaryCard)
         .isEqualTo(SummaryCard.simpleSummaryCard(
-            List.of(
+            new SummaryDataView(List.of(
                 new SummaryKeyValue("Application type", applicationVersion.getApplication().getType().getDisplayName()),
                 new SummaryKeyValue("Primary facility", primaryAsset.getName()),
                 new SummaryKeyValue("Primary operator", primaryOperator.name())
-            )));
+            ))));
 
   }
 
@@ -142,11 +143,11 @@ class ApplicationContextServiceTest {
 
     assertThat(summaryCard).usingRecursiveComparison()
         .isEqualTo(SummaryCard.simpleSummaryCard(
-            List.of(
+            new SummaryDataView(List.of(
                 new SummaryKeyValue("Application type", applicationVersion.getApplication().getType().getDisplayName()),
                 new SummaryKeyValue("Primary field", primaryAsset.getName()),
                 new SummaryKeyValue("Primary operator", primaryOperator.name())
-            )));
+            ))));
 
   }
 }

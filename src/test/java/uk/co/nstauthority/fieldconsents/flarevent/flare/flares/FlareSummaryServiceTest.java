@@ -15,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
+import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
 @ExtendWith(MockitoExtension.class)
@@ -125,33 +126,34 @@ class FlareSummaryServiceTest {
         .isEqualTo(
             List.of(
                 SummaryCard.simpleSummaryCardWithHeading(flarePrompt + flareViews.get(0).getDisplayOrder(),
-                    List.of(
-                        SummaryKeyValue.from(flareTypePrompt, flareViews.get(0).getFlareType()),
-                        SummaryKeyValue.from(descPrompt, flareViews.get(0).getDescription()),
-                        SummaryKeyValue.from(meteredPrompt, flareViews.get(0).getMeteredFlag()),
-                        SummaryKeyValue.from(commentsPrompt, flareViews.get(0).getComments())
-                    )),
-                SummaryCard.simpleSummaryCardWithHeading(flarePrompt + flareViews.get(1).getDisplayOrder(),
-                    List.of(
-                        SummaryKeyValue.from(flareTypePrompt, flareViews.get(1).getFlareType()),
-                        SummaryKeyValue.from(descPrompt, flareViews.get(1).getDescription()),
-                        SummaryKeyValue.from(meteredPrompt, flareViews.get(1).getMeteredFlag()),
-                        SummaryKeyValue.from(commentsPrompt, flareViews.get(1).getComments())
-                    )),
-                SummaryCard.simpleSummaryCardWithHeading(flarePrompt + flareViews.get(2).getDisplayOrder(),
-                    List.of(
-                        SummaryKeyValue.from(flareTypePrompt, flareViews.get(2).getFlareType()),
-                        SummaryKeyValue.from(descPrompt, flareViews.get(2).getDescription()),
-                        SummaryKeyValue.from(meteredPrompt, flareViews.get(2).getMeteredFlag()),
-                        SummaryKeyValue.from(commentsPrompt, flareViews.get(2).getComments())
-                    )),
-                SummaryCard.simpleSummaryCardWithHeading(flarePrompt + flareViews.get(3).getDisplayOrder(),
-                    List.of(
-                        SummaryKeyValue.from(flareTypePrompt, flareViews.get(3).getFlareType()),
-                        SummaryKeyValue.from(descPrompt, flareViews.get(3).getDescription()),
-                        SummaryKeyValue.from(meteredPrompt, flareViews.get(3).getMeteredFlag()),
-                        SummaryKeyValue.from(commentsPrompt, flareViews.get(3).getComments())
+                    new SummaryDataView(List.of(
+                        new SummaryKeyValue(flareTypePrompt, flareViews.get(0).getFlareType()),
+                        new SummaryKeyValue(descPrompt, flareViews.get(0).getDescription()),
+                        new SummaryKeyValue(meteredPrompt, flareViews.get(0).getMeteredFlag()),
+                        new SummaryKeyValue(commentsPrompt, flareViews.get(0).getComments())
                     ))
+                ),
+                SummaryCard.simpleSummaryCardWithHeading(flarePrompt + flareViews.get(1).getDisplayOrder(),
+                    SummaryDataView
+                        .newWithKeyValue(flareTypePrompt, flareViews.get(1).getFlareType())
+                        .addKeyValue(descPrompt, flareViews.get(1).getDescription())
+                        .addKeyValue(meteredPrompt, flareViews.get(1).getMeteredFlag())
+                        .addKeyValue(commentsPrompt, flareViews.get(1).getComments())
+                ),
+                SummaryCard.simpleSummaryCardWithHeading(flarePrompt + flareViews.get(2).getDisplayOrder(),
+                    SummaryDataView
+                        .newWithKeyValue(flareTypePrompt, flareViews.get(2).getFlareType())
+                        .addKeyValue(descPrompt, flareViews.get(2).getDescription())
+                        .addKeyValue(meteredPrompt, flareViews.get(2).getMeteredFlag())
+                        .addKeyValue(commentsPrompt, flareViews.get(2).getComments())
+                ),
+                SummaryCard.simpleSummaryCardWithHeading(flarePrompt + flareViews.get(3).getDisplayOrder(),
+                    SummaryDataView
+                        .newWithKeyValue(flareTypePrompt, flareViews.get(3).getFlareType())
+                        .addKeyValue(descPrompt, flareViews.get(3).getDescription())
+                        .addKeyValue(meteredPrompt, flareViews.get(3).getMeteredFlag())
+                        .addKeyValue(commentsPrompt, flareViews.get(3).getComments())
+                )
             )
         );
   }

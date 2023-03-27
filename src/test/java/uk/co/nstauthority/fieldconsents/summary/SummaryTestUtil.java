@@ -18,6 +18,8 @@ public class SummaryTestUtil {
       new SummaryKeyValue("key2", "value2")
   );
 
+  public static SummaryDataView summaryDataView = new SummaryDataView(summaryKeyValues);
+
   public static SummaryTableView getSummaryTableView() {
     return SummaryTableView.newWithHeading(HEADING1, HEADING2, HEADING3, HEADING4)
         .addRow(null, STRING_ROW_VALUE, INTEGER_ROW_VALUE, BIG_DECIMAL_ROW_VALUE);
@@ -28,6 +30,6 @@ public class SummaryTestUtil {
   }
 
   public static SummaryCard getSimpleSummaryCard() {
-    return SummaryCard.simpleSummaryCard(summaryKeyValues);
+    return SummaryCard.simpleSummaryCard(new SummaryDataView(summaryKeyValues));
   }
 }

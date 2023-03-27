@@ -26,7 +26,9 @@ import uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
+import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
+import uk.co.nstauthority.fieldconsents.util.BooleanUtil;
 
 @ExtendWith(MockitoExtension.class)
 class AssetSummaryServiceTest {
@@ -117,13 +119,14 @@ class AssetSummaryServiceTest {
     when(applicationAssetService.getSecondaryAssets(applicationVersion)).thenReturn(Collections.emptyList());
 
     assertThat(assetSummaryService.getAdditionalAssetsSummaryCards(applicationVersion))
-        .isEqualTo(
-            List.of(
-                SummaryCard.simpleSummaryCard(
-                    List.of(SummaryKeyValue.fromBoolean(ApplicationFlagType.HAS_SECONDARY_ASSETS.getDisplayName(), Boolean.FALSE))
-                )
+        .isEqualTo(List.of(
+            SummaryCard.simpleSummaryCard(
+                new SummaryDataView(List.of(
+                    new SummaryKeyValue(ApplicationFlagType.HAS_SECONDARY_ASSETS.getDisplayName(),
+                        BooleanUtil.yesNoFromBoolean(Boolean.FALSE))
+                ))
             )
-        );
+        ));
   }
 
   @Test
@@ -155,23 +158,22 @@ class AssetSummaryServiceTest {
         .isEqualTo(
             List.of(
                 SummaryCard.simpleSummaryCard(
-                    List.of(SummaryKeyValue.fromBoolean(ApplicationFlagType.HAS_SECONDARY_ASSETS.getDisplayName(), Boolean.TRUE))
+                    SummaryDataView.newWithKeyValue(ApplicationFlagType.HAS_SECONDARY_ASSETS.getDisplayName(), Boolean.TRUE)
                 ),
                 SummaryCard.simpleSummaryCardWithHeading(
                     fieldPrompt + " " + assetView2.displayOrder(),
-                    List.of(
-                        SummaryKeyValue.from(fieldPrompt, assetView2.assetName()),
-                        SummaryKeyValue.from(operatorPrompt, assetView2.assetOperatorName()),
-                        SummaryKeyValue.from(licencesPrompt, assetView2.assetLicences())
-                    )
+                    SummaryDataView
+                        .newWithKeyValue(fieldPrompt, assetView2.assetName())
+                        .addKeyValue(operatorPrompt, assetView2.assetOperatorName())
+                        .addKeyValue(licencesPrompt, assetView2.assetLicences())
                 ),
                 SummaryCard.simpleSummaryCardWithHeading(
                     "Field " + assetView3.displayOrder(),
-                    List.of(
-                        SummaryKeyValue.from(fieldPrompt, assetView3.assetName()),
-                        SummaryKeyValue.from(operatorPrompt, assetView3.assetOperatorName()),
-                        SummaryKeyValue.from(licencesPrompt, assetView3.assetLicences())
-                    )
+                    new SummaryDataView(List.of(
+                        new SummaryKeyValue(fieldPrompt, assetView3.assetName()),
+                        new SummaryKeyValue(operatorPrompt, assetView3.assetOperatorName()),
+                        new SummaryKeyValue(licencesPrompt, assetView3.assetLicences())
+                    ))
                 )
             )
         );

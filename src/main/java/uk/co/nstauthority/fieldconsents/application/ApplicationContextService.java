@@ -1,14 +1,12 @@
 package uk.co.nstauthority.fieldconsents.application;
 
-import java.util.ArrayList;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
-import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
+import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 
 @Service
 public class ApplicationContextService {
@@ -42,15 +40,11 @@ public class ApplicationContextService {
   public SummaryCard getApplicationContextSummaryCard(ApplicationVersion applicationVersion) {
     var applicationContextJson = getApplicationContextJson(applicationVersion);
 
-    List<SummaryKeyValue> summaryKeyValues = new ArrayList<>();
+    var summaryData = SummaryDataView
+        .newWithKeyValue("Application type", applicationVersion.getApplication().getType().getDisplayName())
+        .addKeyValue(applicationContextJson.getPrimaryAssetPrompt(), applicationContextJson.getPrimaryAssetName())
+        .addKeyValue("Primary operator", applicationContextJson.getPrimaryOperatorName());
 
-    summaryKeyValues.add(SummaryKeyValue.from("Application type",
-        applicationVersion.getApplication().getType().getDisplayName()));
-    summaryKeyValues.add(SummaryKeyValue.from(applicationContextJson.getPrimaryAssetPrompt(),
-        applicationContextJson.getPrimaryAssetName()));
-    summaryKeyValues.add(SummaryKeyValue.from("Primary operator",
-        applicationContextJson.getPrimaryOperatorName()));
-
-    return SummaryCard.simpleSummaryCard(summaryKeyValues);
+    return SummaryCard.simpleSummaryCard(summaryData);
   }
 }

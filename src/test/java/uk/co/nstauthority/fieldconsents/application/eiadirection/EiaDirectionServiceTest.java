@@ -29,6 +29,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
+import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
 @ExtendWith(MockitoExtension.class)
@@ -174,10 +175,10 @@ class EiaDirectionServiceTest {
     assertThat(summaryCard)
         .usingRecursiveComparison()
         .isEqualTo(SummaryCard.simpleSummaryCard(
-            List.of(
+            new SummaryDataView(List.of(
                 new SummaryKeyValue(HAVE_SUBMITTED_EIA_DIRECTION_PROMPT, "Yes"),
                 new SummaryKeyValue(EIA_DIRECTION_REF_PROMPT, SAT_REF_3)
-            )
+            ))
         ));
   }
 
@@ -192,11 +193,11 @@ class EiaDirectionServiceTest {
     assertThat(summaryCard)
         .usingRecursiveComparison()
         .isEqualTo(SummaryCard.simpleSummaryCard(
-            List.of(
+            new SummaryDataView(List.of(
                 new SummaryKeyValue(HAVE_SUBMITTED_EIA_DIRECTION_PROMPT, "No"),
                 new SummaryKeyValue(HAVE_EIA_DIRECTION_TO_SUBMIT_PROMPT, "Yes"),
                 new SummaryKeyValue(LATEST_DATE_TO_SUBMIT_PROMPT, DateUtils.format(TOMORROW, DateUtils.SHORT_DATE))
-            )
+            ))
         ));
   }
 
@@ -211,11 +212,11 @@ class EiaDirectionServiceTest {
     assertThat(summaryCard)
         .usingRecursiveComparison()
         .isEqualTo(SummaryCard.simpleSummaryCard(
-            List.of(
+            new SummaryDataView(List.of(
                 new SummaryKeyValue(HAVE_SUBMITTED_EIA_DIRECTION_PROMPT, "No"),
                 new SummaryKeyValue(HAVE_EIA_DIRECTION_TO_SUBMIT_PROMPT, "No"),
                 new SummaryKeyValue(EXPLANATION_PROMPT, WHY_NO_EIA_DIRECTION)
-            )
+            ))
         ));
   }
 
@@ -230,11 +231,11 @@ class EiaDirectionServiceTest {
     assertThat(summaryCard)
         .usingRecursiveComparison()
         .isEqualTo(SummaryCard.simpleSummaryCard(
-            List.of(
+            new SummaryDataView(List.of(
                 new SummaryKeyValue(HAVE_SUBMITTED_EIA_DIRECTION_PROMPT, "No"),
                 new SummaryKeyValue(HAVE_EIA_DIRECTION_TO_SUBMIT_PROMPT, "No"),
                 new SummaryKeyValue(EXPLANATION_PROMPT, WHY_NO_EIA_DIRECTION)
-            )
+            ))
         ));
   }
 }

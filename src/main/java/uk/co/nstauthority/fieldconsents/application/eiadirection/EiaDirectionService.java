@@ -1,7 +1,5 @@
 package uk.co.nstauthority.fieldconsents.application.eiadirection;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +7,7 @@ import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
-import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
+import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 
 @Service
 public class EiaDirectionService {
@@ -58,32 +56,31 @@ public class EiaDirectionService {
       return SummaryCard.emptySummaryCard();
     }
 
-    List<SummaryKeyValue> summaryKeyValues = new ArrayList<>();
     var eiaDirection = eiaDirectionOptional.get();
 
-    summaryKeyValues.add(SummaryKeyValue.fromBoolean("Have you submitted an EIA screening direction?",
-        eiaDirection.getHaveSubmittedEiaDirection()));
+    var summaryData = SummaryDataView.newWithKeyValue("Have you submitted an EIA screening direction?",
+        eiaDirection.getHaveSubmittedEiaDirection());
 
     if (Boolean.TRUE.equals(eiaDirection.getHaveSubmittedEiaDirection())) {
-      summaryKeyValues.add(SummaryKeyValue.from("EIA screening direction reference",
-          getSatRef(eiaDirection.getSatId())));
+      summaryData.addKeyValue("EIA screening direction reference",
+          getSatRef(eiaDirection.getSatId()));
 
-      return SummaryCard.simpleSummaryCard(summaryKeyValues);
+      return SummaryCard.simpleSummaryCard(summaryData);
     }
 
-    summaryKeyValues.add(SummaryKeyValue.fromBoolean("Do you have an EIA screening direction that still needs to be submitted?",
-        eiaDirection.getHaveEiaDirectionToSubmit()));
+    summaryData.addKeyValue("Do you have an EIA screening direction that still needs to be submitted?",
+        eiaDirection.getHaveEiaDirectionToSubmit());
 
     if (Boolean.TRUE.equals(eiaDirection.getHaveEiaDirectionToSubmit())) {
-      summaryKeyValues.add(SummaryKeyValue.fromLocalDate("What is the latest date this will be submitted?",
-          eiaDirection.getLatestDateToBeSubmitted()));
+      summaryData.addKeyValue("What is the latest date this will be submitted?",
+          eiaDirection.getLatestDateToBeSubmitted());
 
-      return SummaryCard.simpleSummaryCard(summaryKeyValues);
+      return SummaryCard.simpleSummaryCard(summaryData);
     }
 
-    summaryKeyValues.add(SummaryKeyValue.from("Explain why you don’t intend to submit an EIA screening direction",
-        eiaDirection.getWhyNoEiaDirection()));
+    summaryData.addKeyValue("Explain why you don’t intend to submit an EIA screening direction",
+        eiaDirection.getWhyNoEiaDirection());
 
-    return SummaryCard.simpleSummaryCard(summaryKeyValues);
+    return SummaryCard.simpleSummaryCard(summaryData);
   }
 }

@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
-import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
+import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 
 @Service
 public class VentSummaryService {
@@ -39,12 +39,12 @@ public class VentSummaryService {
         .stream()
         .map(ventView -> SummaryCard.simpleSummaryCardWithHeading(
             "Vent " + ventView.getDisplayOrder(),
-            List.of(
-                SummaryKeyValue.from("Vent type", ventView.getVentType()),
-                SummaryKeyValue.from("Description", ventView.getDescription()),
-                SummaryKeyValue.from("Metered", ventView.getMeteredFlag()),
-                SummaryKeyValue.from("Comments", ventView.getComments())
+            SummaryDataView
+                .newWithKeyValue("Vent type", ventView.getVentType())
+                .addKeyValue("Description", ventView.getDescription())
+                .addKeyValue("Metered", ventView.getMeteredFlag())
+                .addKeyValue("Comments", ventView.getComments())
             )
-        )).toList();
+        ).toList();
   }
 }

@@ -1,7 +1,5 @@
 package uk.co.nstauthority.fieldconsents.application.supportinginformation;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -9,7 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
-import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
+import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 
 @Service
 public class SupportingInformationService {
@@ -45,15 +43,14 @@ public class SupportingInformationService {
       return SummaryCard.emptySummaryCard();
     }
 
-    List<SummaryKeyValue> summaryKeyValues = new ArrayList<>();
     var supportingInformation = supportingInformationOptional.get();
 
-    summaryKeyValues.add(SummaryKeyValue.from("Notes", supportingInformation.getNotes()));
+    var summaryData = SummaryDataView.newWithKeyValue("Notes", supportingInformation.getNotes());
 
     if (ApplicationTypeFeature.ERAP_SUPPORTING_INFORMATION.allowed(applicationVersion.getApplication().getType())) {
-      summaryKeyValues.add(SummaryKeyValue.from("ERAP alignment studies and projects", supportingInformation.getErapNotes()));
+      summaryData.addKeyValue("ERAP alignment studies and projects", supportingInformation.getErapNotes());
     }
 
-    return SummaryCard.simpleSummaryCard(summaryKeyValues);
+    return SummaryCard.simpleSummaryCard(summaryData);
   }
 }

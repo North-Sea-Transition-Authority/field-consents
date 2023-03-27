@@ -19,7 +19,7 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
-import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
+import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 
 @Service
 public class AssetSummaryService {
@@ -101,22 +101,22 @@ public class AssetSummaryService {
     List<SummaryCard> summaryCards = new ArrayList<>();
 
     summaryCards.add(
-        SummaryCard.simpleSummaryCard(
-            List.of(SummaryKeyValue.fromBoolean(ApplicationFlagType.HAS_SECONDARY_ASSETS.getDisplayName(),
-                hasSecondaryAssetsOptional.get()))
-        )
+        SummaryCard.simpleSummaryCard(SummaryDataView.newWithKeyValue(
+            ApplicationFlagType.HAS_SECONDARY_ASSETS.getDisplayName(),
+                hasSecondaryAssetsOptional.get()
+        ))
     );
 
     getSummaryViews(applicationVersion)
         .stream()
         .map(assetView -> SummaryCard.simpleSummaryCardWithHeading(
             "Field " + assetView.displayOrder(),
-            List.of(
-                SummaryKeyValue.from("Field", assetView.assetName()),
-                SummaryKeyValue.from("Field operator", assetView.assetOperatorName()),
-                SummaryKeyValue.from("Licences", assetView.assetLicences())
+            SummaryDataView
+                .newWithKeyValue("Field", assetView.assetName())
+                .addKeyValue("Field operator", assetView.assetOperatorName())
+                .addKeyValue("Licences", assetView.assetLicences())
             )
-        ))
+        )
         .forEach(summaryCards::add);
 
     return summaryCards;

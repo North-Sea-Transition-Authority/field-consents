@@ -15,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
+import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
 @ExtendWith(MockitoExtension.class)
@@ -118,26 +119,27 @@ class VentSummaryServiceTest {
         .isEqualTo(
             List.of(
                 SummaryCard.simpleSummaryCardWithHeading(ventPrompt + ventViews.get(0).getDisplayOrder(),
-                    List.of(
-                        SummaryKeyValue.from(ventTypePrompt, ventViews.get(0).getVentType()),
-                        SummaryKeyValue.from(descPrompt, ventViews.get(0).getDescription()),
-                        SummaryKeyValue.from(meteredPrompt, ventViews.get(0).getMeteredFlag()),
-                        SummaryKeyValue.from(commentsPrompt, ventViews.get(0).getComments())
-                    )),
-                SummaryCard.simpleSummaryCardWithHeading(ventPrompt + ventViews.get(1).getDisplayOrder(),
-                    List.of(
-                        SummaryKeyValue.from(ventTypePrompt, ventViews.get(1).getVentType()),
-                        SummaryKeyValue.from(descPrompt, ventViews.get(1).getDescription()),
-                        SummaryKeyValue.from(meteredPrompt, ventViews.get(1).getMeteredFlag()),
-                        SummaryKeyValue.from(commentsPrompt, ventViews.get(1).getComments())
-                    )),
-                SummaryCard.simpleSummaryCardWithHeading(ventPrompt + ventViews.get(2).getDisplayOrder(),
-                    List.of(
-                        SummaryKeyValue.from(ventTypePrompt, ventViews.get(2).getVentType()),
-                        SummaryKeyValue.from(descPrompt, ventViews.get(2).getDescription()),
-                        SummaryKeyValue.from(meteredPrompt, ventViews.get(2).getMeteredFlag()),
-                        SummaryKeyValue.from(commentsPrompt, ventViews.get(2).getComments())
+                    new SummaryDataView(List.of(
+                        new SummaryKeyValue(ventTypePrompt, ventViews.get(0).getVentType()),
+                        new SummaryKeyValue(descPrompt, ventViews.get(0).getDescription()),
+                        new SummaryKeyValue(meteredPrompt, ventViews.get(0).getMeteredFlag()),
+                        new SummaryKeyValue(commentsPrompt, ventViews.get(0).getComments())
                     ))
+                ),
+                SummaryCard.simpleSummaryCardWithHeading(ventPrompt + ventViews.get(1).getDisplayOrder(),
+                    SummaryDataView
+                        .newWithKeyValue(ventTypePrompt, ventViews.get(1).getVentType())
+                        .addKeyValue(descPrompt, ventViews.get(1).getDescription())
+                        .addKeyValue(meteredPrompt, ventViews.get(1).getMeteredFlag())
+                        .addKeyValue(commentsPrompt, ventViews.get(1).getComments())
+                ),
+                SummaryCard.simpleSummaryCardWithHeading(ventPrompt + ventViews.get(2).getDisplayOrder(),
+                    SummaryDataView
+                        .newWithKeyValue(ventTypePrompt, ventViews.get(2).getVentType())
+                        .addKeyValue(descPrompt, ventViews.get(2).getDescription())
+                        .addKeyValue(meteredPrompt, ventViews.get(2).getMeteredFlag())
+                        .addKeyValue(commentsPrompt, ventViews.get(2).getComments())
+                )
             )
         );
   }

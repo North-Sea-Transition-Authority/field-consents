@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.summary;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static uk.co.nstauthority.fieldconsents.summary.SummaryTestUtil.summaryDataView;
 
 import java.util.Collections;
 import java.util.List;
@@ -10,15 +11,10 @@ class SummaryItemTest {
 
   private static final String ITEM_DISPLAY_NAME = "Item display name";
 
-  private final List<SummaryKeyValue> keyValues = List.of(
-      new SummaryKeyValue("key1", "value1"),
-      new SummaryKeyValue("key2", "value2")
-  );
-
   @Test
   void withCard_notEmpty() {
-    assertThat(SummaryItem.withCard(ITEM_DISPLAY_NAME, SummaryCard.simpleSummaryCard(keyValues)))
-        .isEqualTo(new SummaryItem(ITEM_DISPLAY_NAME, List.of(SummaryCard.simpleSummaryCard(keyValues))));
+    assertThat(SummaryItem.withCard(ITEM_DISPLAY_NAME, SummaryCard.simpleSummaryCard(summaryDataView)))
+        .isEqualTo(new SummaryItem(ITEM_DISPLAY_NAME, List.of(SummaryCard.simpleSummaryCard(summaryDataView))));
   }
 
   @Test
@@ -31,8 +27,8 @@ class SummaryItemTest {
   void withCards_notEmpty() {
     List<SummaryCard> summaryCards =
         List.of(
-            SummaryCard.simpleSummaryCard(keyValues),
-            SummaryCard.simpleSummaryCard(keyValues)
+            SummaryCard.simpleSummaryCard(summaryDataView),
+            SummaryCard.simpleSummaryCard(summaryDataView)
         );
     assertThat(SummaryItem.withCards(ITEM_DISPLAY_NAME, summaryCards))
         .isEqualTo(new SummaryItem(ITEM_DISPLAY_NAME, summaryCards));

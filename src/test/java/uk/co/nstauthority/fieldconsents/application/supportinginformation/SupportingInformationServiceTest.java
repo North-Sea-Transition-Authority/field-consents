@@ -20,6 +20,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
+import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
 @ExtendWith(MockitoExtension.class)
@@ -146,7 +147,7 @@ class SupportingInformationServiceTest {
     assertThat(summaryCard)
         .usingRecursiveComparison()
         .isEqualTo(SummaryCard.simpleSummaryCard(
-            List.of(new SummaryKeyValue(APPLICATION_NOTES_PROMPT, APPLICATION_NOTES))
+            new SummaryDataView(List.of(new SummaryKeyValue(APPLICATION_NOTES_PROMPT, APPLICATION_NOTES)))
         ));
   }
 
@@ -162,10 +163,10 @@ class SupportingInformationServiceTest {
     assertThat(summaryCard)
         .usingRecursiveComparison()
         .isEqualTo(SummaryCard.simpleSummaryCard(
-            List.of(
+            new SummaryDataView(List.of(
                 new SummaryKeyValue(APPLICATION_NOTES_PROMPT, APPLICATION_NOTES),
                 new SummaryKeyValue("ERAP alignment studies and projects", ERAP_NOTES)
-            )
+            ))
         ));
   }
 

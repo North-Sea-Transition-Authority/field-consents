@@ -65,6 +65,6 @@ class SummaryTableViewTest {
     var summaryTable = SummaryTableView.newWithHeading(HEADING1);
     assertThatThrownBy(() -> summaryTable.addRow(1L))
         .isInstanceOf(RuntimeException.class)
-        .hasMessage("Unexpected summary table row value class type: %s".formatted(Long.class.getName()));
+        .hasMessage("Unexpected value class type: %s".formatted(Long.class.getName()));
   }
 }

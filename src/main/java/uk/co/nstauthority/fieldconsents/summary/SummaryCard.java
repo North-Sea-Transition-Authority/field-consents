@@ -9,16 +9,16 @@ public record SummaryCard(
 ) {
 
   public static SummaryCard simpleSummaryCardWithHeading(String displayName,
-                                                          List<SummaryKeyValue> keyValues) {
+                                                         SummaryDataView summaryData) {
     return new SummaryCard(
         displayName,
         SummaryCardType.SIMPLE_SUMMARY,
-        SummaryDataView.from(keyValues)
+        summaryData
     );
   }
 
-  public static SummaryCard simpleSummaryCard(List<SummaryKeyValue> keyValues) {
-    return simpleSummaryCardWithHeading(null, keyValues);
+  public static SummaryCard simpleSummaryCard(SummaryDataView summaryData) {
+    return simpleSummaryCardWithHeading(null, summaryData);
   }
 
   public static SummaryCard emptySummaryCard() {
