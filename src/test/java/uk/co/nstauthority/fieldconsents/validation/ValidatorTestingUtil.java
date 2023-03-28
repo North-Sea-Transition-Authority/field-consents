@@ -35,6 +35,6 @@ public class ValidatorTestingUtil {
   }
 
   public static CustomerConfigurationProperties getCustomerConfigurationProperties() {
-    return new CustomerConfigurationProperties("Customer Name", "CUSTMNEM");
+    return new CustomerConfigurationProperties("Customer Name", "CUSTMNEM", "Customer Email");
   }
 }

@@ -13,7 +13,7 @@
         <ul>
           <li>Facility operator</li>
         </ul>
-        Contact the ${customerBranding.mnemonic()} if you think the facility should have this information.
+        Contact ${customerBranding.email()} if you think the facility should have this information.
       </@fdsNotificationBanner.notificationBannerContent>
     </@fdsNotificationBanner.notificationBannerInfo>
   </#assign>

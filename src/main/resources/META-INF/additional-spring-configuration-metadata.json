@@ -21,6 +21,11 @@
       "description": "Mnemonic of the customer."
     },
     {
+      "name": "branding.customer.email",
+      "type": "java.lang.String",
+      "description": "Customer's email contact for field consents enquiries."
+    },
+    {
       "name": "database.url",
       "type": "java.lang.String",
       "description": "URL of the database the service will connect to."

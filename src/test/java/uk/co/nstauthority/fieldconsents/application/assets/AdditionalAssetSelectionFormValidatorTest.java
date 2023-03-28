@@ -116,7 +116,7 @@ class AdditionalAssetSelectionFormValidatorTest {
             Collections.singletonList(
                 AdditionalAssetSelectionFormValidator.ASSET_MUST_HAVE_OPERATOR +
                 AdditionalAssetSelectionFormValidator.ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL
-                    .formatted(customerConfigurationProperties.mnemonic())))
+                    .formatted(customerConfigurationProperties.email())))
     );
   }
 
@@ -137,7 +137,7 @@ class AdditionalAssetSelectionFormValidatorTest {
             Collections.singletonList(
                 AdditionalAssetSelectionFormValidator.ASSET_MUST_HAVE_LICENCES +
                 AdditionalAssetSelectionFormValidator.ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL
-                    .formatted(customerConfigurationProperties.mnemonic())))
+                    .formatted(customerConfigurationProperties.email())))
     );
   }
 
@@ -158,7 +158,7 @@ class AdditionalAssetSelectionFormValidatorTest {
             Collections.singletonList(
                 AdditionalAssetSelectionFormValidator.ASSET_MUST_HAVE_OPERATOR_LICENCES +
                 AdditionalAssetSelectionFormValidator.ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL
-                    .formatted(customerConfigurationProperties.mnemonic())))
+                    .formatted(customerConfigurationProperties.email())))
     );
   }
 

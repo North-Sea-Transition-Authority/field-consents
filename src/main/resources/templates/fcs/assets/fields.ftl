@@ -20,7 +20,7 @@
                 <li>Associated licences</li>
               </#if>
             </ul>
-            Contact the ${customerBranding.mnemonic()} if you think the field should have this information.
+            Contact ${customerBranding.email()} if you think the field should have this information.
           </@fdsNotificationBanner.notificationBannerContent>
         </@fdsNotificationBanner.notificationBannerInfo>
       </@grid.twoThirdsColumn>

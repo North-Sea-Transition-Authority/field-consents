@@ -34,7 +34,7 @@ class AdditionalAssetSelectionFormValidator implements Validator {
       "This field does not have any associated licences therefore cannot be added to this application, ";
 
   public static final String ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL =
-      " please contact the %s if you think the field should have this information";
+      " please contact %s if you think the field should have this information";
 
   public static final String ASSET_MUST_BE_FIELD = "You must select a field";
 
@@ -86,15 +86,15 @@ class AdditionalAssetSelectionFormValidator implements Validator {
         if (!fieldJson.operatorExists() && !fieldJson.licencesExist()) {
           errors.rejectValue(ASSET_KEY_FIELD_NAME, ASSET_KEY_FIELD_NAME + ".assetMustHaveOperatorAndLicences",
               ASSET_MUST_HAVE_OPERATOR_LICENCES +
-              ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL.formatted(customerConfigurationProperties.mnemonic()));
+              ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL.formatted(customerConfigurationProperties.email()));
         } else if (!fieldJson.operatorExists()) {
           errors.rejectValue(ASSET_KEY_FIELD_NAME, ASSET_KEY_FIELD_NAME + ".assetMustHaveOperator",
               ASSET_MUST_HAVE_OPERATOR +
-              ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL.formatted(customerConfigurationProperties.mnemonic()));
+              ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL.formatted(customerConfigurationProperties.email()));
         } else if (!fieldJson.licencesExist()) {
           errors.rejectValue(ASSET_KEY_FIELD_NAME, ASSET_KEY_FIELD_NAME + ".assetMustHaveLicences",
               ASSET_MUST_HAVE_LICENCES +
-              ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL.formatted(customerConfigurationProperties.mnemonic()));
+              ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL.formatted(customerConfigurationProperties.email()));
         }
       } else if (assetJson.getAssetType() == AssetType.TERMINAL) {
         errors.rejectValue(ASSET_KEY_FIELD_NAME, ASSET_KEY_FIELD_NAME + ".assetMustBeAField",
