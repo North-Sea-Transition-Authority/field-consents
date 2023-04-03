@@ -32,6 +32,7 @@ dependencies {
 
   implementation 'uk.co.fivium.energyportalapi:client:v4.1.0'
 	implementation 'uk.co.fivium.digitalformlibrary:digital-form-library:v3.0.0'
+	implementation "org.hibernate:hibernate-envers"
 
 	runtimeOnly 'org.postgresql:postgresql'
 

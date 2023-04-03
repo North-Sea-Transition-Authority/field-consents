@@ -2,7 +2,7 @@ package uk.co.nstauthority.fieldconsents.application.tasklist.production;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
-import java.util.List;
+import java.util.Collections;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -60,7 +60,7 @@ public class ProductionInformationTaskListSectionService implements TaskListSect
 
     ConsentLengthDetails consentLengthDetails = consentLengthDetailsOptional.get();
 
-    var items = List.of(
+    var items = Collections.singletonList(
         getProductionConsentTaskListItem(applicationVersion, consentLengthDetails)
     );
 
@@ -125,5 +125,4 @@ public class ProductionInformationTaskListSectionService implements TaskListSect
       return TaskListLabel.IN_PROGRESS;
     }
   }
-
 }

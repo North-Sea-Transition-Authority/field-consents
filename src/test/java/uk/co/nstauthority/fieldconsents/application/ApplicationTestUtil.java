@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.application;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 public class ApplicationTestUtil {
   public static  final int USER_WUA_ID = 1;
@@ -21,7 +22,21 @@ public class ApplicationTestUtil {
 
   public static ApplicationVersion getApplicationVersionWithType(ApplicationType applicationType) {
     Application newApplication = getApplicationWithType(applicationType);
-    return new ApplicationVersion(APPLICATION_ID, newApplication, APPLICATION_VERSION_ID, PRIMARY_OPERATOR_OU_ID_1,
-        CACHED_PRIMARY_OPERATOR_NAME_1);
+    return new ApplicationVersion(
+        APPLICATION_ID,
+        newApplication,
+        APPLICATION_VERSION_ID,
+        PRIMARY_OPERATOR_OU_ID_1,
+        CACHED_PRIMARY_OPERATOR_NAME_1,
+        Instant.now(),
+        USER_WUA_ID,
+        ApplicationVersionStatus.IN_PROGRESS);
+  }
+
+  public static ApplicationVersion getSubmittedApplicationVersionWithType(ApplicationType applicationType) {
+    var applicationVersion = getApplicationVersionWithType(applicationType);
+    applicationVersion.setSubmittedDateTime(Instant.now().plus(3, ChronoUnit.DAYS));
+    applicationVersion.setSubmittedByWuaId(USER_WUA_ID);
+    return applicationVersion;
   }
 }

@@ -23,6 +23,9 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionController;
+import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionService;
+import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @ContextConfiguration(classes = ApplicationSummaryController.class)
@@ -36,6 +39,9 @@ class ApplicationSummaryControllerTest extends AbstractControllerTest {
   @MockBean
   private ApplicationSummaryService applicationSummaryService;
 
+  @MockBean
+  private ApplicationSubmissionService applicationSubmissionService;
+
   @WithMockUser
   @ParameterizedTest
   @MethodSource("getApplicationVersions")
@@ -44,6 +50,7 @@ class ApplicationSummaryControllerTest extends AbstractControllerTest {
         .thenReturn(applicationVersion);
     when(applicationSummaryService.getSummarySections(applicationVersion))
         .thenReturn(Collections.emptyList());
+    when(applicationSubmissionService.isSubmittable(applicationVersion)).thenReturn(false);
 
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ApplicationSummaryController.class)
             .getSummary(APPLICATION_ID)))
@@ -58,7 +65,12 @@ class ApplicationSummaryControllerTest extends AbstractControllerTest {
     assertThat(model)
         .containsEntry("pageTitle", PAGE_TITLE)
         .containsEntry("accordionId", applicationVersion.getId())
-        .containsKey("summarySections");
+        .containsKey("summarySections")
+        .containsEntry("submitUrl", ReverseRouter.route(on(ApplicationSubmissionController.class)
+            .submitApplication(APPLICATION_ID)))
+        .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class)
+            .getTaskList(APPLICATION_ID)))
+        .containsEntry("isSubmittable", false);
   }
 
   private static Stream<Arguments> getApplicationVersions() {

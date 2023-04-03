@@ -7,6 +7,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.USER_WUA_ID;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithOperator;
 
@@ -61,7 +62,7 @@ class ApplicationServiceTest {
     when(applicationRepository.save(any(Application.class))).thenReturn(newApplication);
 
     ApplicationVersion newApplicationVersion = new ApplicationVersion(1, newApplication, 1, organisationUnitJson.organisationUnitId(),
-        organisationUnitJson.name());
+        organisationUnitJson.name(), Instant.now(), USER_WUA_ID, ApplicationVersionStatus.IN_PROGRESS);
     when(applicationVersionRepository.save(any(ApplicationVersion.class))).thenReturn(newApplicationVersion);
 
     ApplicationAsset applicationAsset = ApplicationAssetTestUtil.fieldAsset1;
@@ -91,7 +92,7 @@ class ApplicationServiceTest {
     when(applicationRepository.save(any(Application.class))).thenReturn(newApplication);
 
     ApplicationVersion newApplicationVersion = new ApplicationVersion(1, newApplication, 1, organisationUnitJson.organisationUnitId(),
-        organisationUnitJson.name());
+        organisationUnitJson.name(), Instant.now(), USER_WUA_ID, ApplicationVersionStatus.IN_PROGRESS);
     when(applicationVersionRepository.save(any(ApplicationVersion.class))).thenReturn(newApplicationVersion);
 
     ApplicationVersion expectedApplicationVersion = applicationService.createNewApplicationForTerminal(
@@ -115,6 +116,9 @@ class ApplicationServiceTest {
         .isEqualTo(newApplicationVersion.getPrimaryOperatorOuId());
     assertThat(expectedApplicationVersion.getCachedPrimaryOperatorName())
         .isEqualTo(newApplicationVersion.getCachedPrimaryOperatorName());
+    assertThat(expectedApplicationVersion.getCreatedByWuaId()).isEqualTo(USER_WUA_ID);
+    assertThat(expectedApplicationVersion.getCreatedDateTime()).isAfterOrEqualTo(newApplicationVersion.getCreatedDateTime());
+    assertThat(expectedApplicationVersion.getStatus()).isEqualTo(ApplicationVersionStatus.IN_PROGRESS);
 
     Application expectedApplication = expectedApplicationVersion.getApplication();
     assertThat(expectedApplication.getType()).isEqualTo(newApplication.getType());

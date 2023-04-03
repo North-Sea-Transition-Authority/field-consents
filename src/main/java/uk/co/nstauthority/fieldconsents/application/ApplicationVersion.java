@@ -1,18 +1,24 @@
 package uk.co.nstauthority.fieldconsents.application;
 
+import com.google.common.annotations.VisibleForTesting;
+import java.time.Instant;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import org.hibernate.envers.Audited;
 
 @Entity
 @Table(name = "application_versions")
 public class ApplicationVersion {
   @Id
+  @Audited
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Integer id;
 
@@ -27,16 +33,33 @@ public class ApplicationVersion {
 
   private String cachedPrimaryOperatorName;
 
+  private Instant createdDateTime;
+
+  private Integer createdByWuaId;
+
+  private Instant submittedDateTime;
+
+  private Integer submittedByWuaId;
+
+  @Audited
+  @Enumerated(EnumType.STRING)
+  private ApplicationVersionStatus status;
+
   public ApplicationVersion() {
   }
 
+  @VisibleForTesting
   public ApplicationVersion(Integer id, Application application, Integer version, Integer primaryOperatorOuId,
-                            String cachedPrimaryOperatorName) {
+                            String cachedPrimaryOperatorName, Instant createdDateTime, Integer createdByWuaId,
+                            ApplicationVersionStatus status) {
     this.id = id;
     this.application = application;
     this.version = version;
     this.primaryOperatorOuId = primaryOperatorOuId;
     this.cachedPrimaryOperatorName = cachedPrimaryOperatorName;
+    this.createdDateTime = createdDateTime;
+    this.createdByWuaId = createdByWuaId;
+    this.status = status;
   }
 
   public Integer getId() {
@@ -77,5 +100,45 @@ public class ApplicationVersion {
 
   public void setCachedPrimaryOperatorName(String cachedPrimaryOperatorName) {
     this.cachedPrimaryOperatorName = cachedPrimaryOperatorName;
+  }
+
+  public Instant getCreatedDateTime() {
+    return createdDateTime;
+  }
+
+  public void setCreatedDateTime(Instant createdDateTime) {
+    this.createdDateTime = createdDateTime;
+  }
+
+  public Integer getCreatedByWuaId() {
+    return createdByWuaId;
+  }
+
+  public void setCreatedByWuaId(Integer createdByWuaId) {
+    this.createdByWuaId = createdByWuaId;
+  }
+
+  public Instant getSubmittedDateTime() {
+    return submittedDateTime;
+  }
+
+  public void setSubmittedDateTime(Instant submittedDate) {
+    this.submittedDateTime = submittedDate;
+  }
+
+  public Integer getSubmittedByWuaId() {
+    return submittedByWuaId;
+  }
+
+  public void setSubmittedByWuaId(Integer submittedByWuaId) {
+    this.submittedByWuaId = submittedByWuaId;
+  }
+
+  public ApplicationVersionStatus getStatus() {
+    return status;
+  }
+
+  public void setStatus(ApplicationVersionStatus status) {
+    this.status = status;
   }
 }

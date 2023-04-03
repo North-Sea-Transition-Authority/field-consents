@@ -50,7 +50,7 @@ public class ConsentDetailsTaskListSectionService implements TaskListSectionServ
     );
 
     var primaryAsset = applicationAssetService.getPrimaryAsset(applicationVersion);
-    var applicationType =  applicationVersion.getApplication().getType();
+    var applicationType = applicationVersion.getApplication().getType();
 
     // Additional assets and licences can be added to Field consent applications only for Flares and Vents types
     if (ApplicationTypeFeature.SECONDARY_ASSETS.allowed(applicationType) && primaryAsset.isField()) {

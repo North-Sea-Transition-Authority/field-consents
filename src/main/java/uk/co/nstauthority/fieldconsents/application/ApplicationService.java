@@ -63,6 +63,10 @@ public class ApplicationService {
     ApplicationVersion applicationVersion = new ApplicationVersion();
     applicationVersion.setApplication(application);
     applicationVersion.setVersion(1);
+    applicationVersion.setCreatedDateTime(Instant.now());
+    // TODO - FCS-5: Update this with the User's wua_id when available
+    applicationVersion.setCreatedByWuaId(1);
+    applicationVersion.setStatus(ApplicationVersionStatus.IN_PROGRESS);
     applicationVersion.setPrimaryOperatorOuId(operatorOuJson.organisationUnitId());
     applicationVersion.setCachedPrimaryOperatorName(operatorOuJson.name());
     return applicationVersionRepository.save(applicationVersion);
@@ -73,6 +77,7 @@ public class ApplicationService {
     Application application = new Application();
     application.setType(applicationType);
     application.setCreatedDate(Instant.now());
+    // TODO - FCS-5: Update this with the User's wua_id when available
     application.setCreatedByWuaId(1);
     return applicationRepository.save(application);
   }

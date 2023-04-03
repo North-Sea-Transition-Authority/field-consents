@@ -46,6 +46,8 @@ public class TaskListTestUtil {
 
   public static final String VENT_GAS_PROPERTIES_TASK_LIST_ITEM = "Vent report gas properties";
 
+  public static final String TASK_LIST_ITEM_URL = "tasklist/item/url";
+
   public static void assertTaskListSection(TaskListSection taskListSection, String name, int order) {
     assertThat(taskListSection.displayName()).isEqualTo(name);
     assertThat(taskListSection.displayOrder()).isEqualTo(order);
@@ -70,26 +72,26 @@ public class TaskListTestUtil {
     return new TaskListSection(FLARE_INFORMATION_SECTION, FLARE_VENT_INFORMATION_DISPLAY_ORDER, items);
   }
 
-  public static List<TaskListItem> getConsentDetailsTaskListItems(int applicationId) {
+  public static List<TaskListItem> getConsentDetailsTaskListItemsWithLabel(int applicationId, TaskListLabel taskListLabel) {
     List<TaskListItem> taskListItems = new ArrayList<>();
     TaskListItem consentLengthTaskListItem = new TaskListItem(CONSENT_LENGTH_TASK_LIST_ITEM,
-        TaskListLabel.NOT_STARTED,
+        taskListLabel,
         ReverseRouter.route(on(ConsentLengthController.class).getConsentLengthForm(applicationId))
     );
     taskListItems.add(consentLengthTaskListItem);
     return taskListItems;
   }
 
-  public static List<TaskListItem> getFlareInformationTaskListItems(int applicationId) {
+   public static List<TaskListItem> getFlareInformationTaskListItemsWithLabel(int applicationId, TaskListLabel taskListLabel) {
     List<TaskListItem> taskListItems = new ArrayList<>();
     TaskListItem flaresTaskListItem = new TaskListItem(
         FLARES_TASK_LIST_ITEM,
-        TaskListLabel.NOT_STARTED,
+        taskListLabel,
         ReverseRouter.route(on(FlareController.class).addFlare(applicationId))
     );
     TaskListItem flareReportTaskListItem = new TaskListItem(
         FLARE_REPORT_TASK_LIST_ITEM,
-        TaskListLabel.NOT_STARTED,
+        taskListLabel,
         ReverseRouter.route(on(FlareReportPeriodController.class).getFlareReportPeriodForm(applicationId))
     );
     taskListItems.add(flaresTaskListItem);
@@ -99,8 +101,8 @@ public class TaskListTestUtil {
 
   public static List<TaskListSection> getFlareTaskListSectionWithItems(int applicationId) {
     List<TaskListSection> taskListSections = new ArrayList<>();
-    List<TaskListItem> consentDetailsTaskListItems = getConsentDetailsTaskListItems(applicationId);
-    List<TaskListItem> flareInformationTaskListItems = getFlareInformationTaskListItems(applicationId);
+    List<TaskListItem> consentDetailsTaskListItems = getConsentDetailsTaskListItemsWithLabel(applicationId, TaskListLabel.NOT_STARTED);
+    List<TaskListItem> flareInformationTaskListItems = getFlareInformationTaskListItemsWithLabel(applicationId, TaskListLabel.NOT_STARTED);
 
     taskListSections.add(getConsentDetailsTaskListSection(consentDetailsTaskListItems));
     taskListSections.add(getFlareInformationTaskListSection(flareInformationTaskListItems));
