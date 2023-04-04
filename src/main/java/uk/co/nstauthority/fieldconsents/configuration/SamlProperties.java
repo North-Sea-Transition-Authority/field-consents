@@ -6,9 +6,9 @@ import org.springframework.validation.annotation.Validated;
 
 @ConfigurationProperties(prefix = "saml")
 @Validated
-record SamlProperties(@NotNull String registrationId,
-                      @NotNull String entityId,
-                      @NotNull String certificate,
-                      @NotNull String loginUrl,
-                      @NotNull String consumerServiceLocation) {
+public record SamlProperties(@NotNull String registrationId,
+                             @NotNull String entityId,
+                             @NotNull String certificate,
+                             @NotNull String loginUrl,
+                             @NotNull String consumerServiceLocation) {
 }

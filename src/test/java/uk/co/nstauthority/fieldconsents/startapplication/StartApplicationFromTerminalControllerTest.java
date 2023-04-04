@@ -14,6 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithOperator;
+import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -104,7 +105,7 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
     mockMvc.perform(get(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
             .getStartApplicationForm(TERMINAL_ID)))
             .with(csrf()))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
   @Test
@@ -145,7 +146,7 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
     mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
             .continueStartApplicationOfType(TERMINAL_ID, null, ReverseRouter.emptyBindingResult(), null)))
             .with(csrf()))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
   @Test
@@ -178,7 +179,7 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
     mockMvc.perform(get(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
             .getStartApplicationOperatorForm(TERMINAL_ID, null)))
             .with(csrf()))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
   @Test
@@ -235,7 +236,7 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
     mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
             .createNewApplication(TERMINAL_ID, null, ReverseRouter.emptyBindingResult())))
             .with(csrf()))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
 }

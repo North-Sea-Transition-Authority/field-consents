@@ -11,6 +11,7 @@ import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.FIELD1_ASSET
 import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.TERMINAL1_ASSET_KEY;
 import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.field1AssetJson;
 import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.terminal1AssetJson;
+import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -53,7 +54,7 @@ public class ManageAssetControllerTest extends AbstractControllerTest {
             get(ReverseRouter.route(on(ManageAssetController.class).manageAsset(FIELD1_ASSET_KEY)))
                 .with(csrf())
         )
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
 
   }
 

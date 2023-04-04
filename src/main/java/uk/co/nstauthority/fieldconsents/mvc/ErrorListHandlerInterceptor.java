@@ -14,7 +14,7 @@ import uk.co.nstauthority.fieldconsents.validation.FormErrorSummaryService;
  * view object as part of a post request.
  */
 @Service
-class ErrorListHandlerInterceptor implements HandlerInterceptor {
+public class ErrorListHandlerInterceptor implements HandlerInterceptor {
 
   private final FormErrorSummaryService formErrorSummaryService;
 

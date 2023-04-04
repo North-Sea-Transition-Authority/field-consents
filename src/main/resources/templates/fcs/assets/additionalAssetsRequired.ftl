@@ -1,5 +1,7 @@
 <#include '../layout/layout.ftl'>
 
+<#-- @ftlvariable name="successfulDeleteBanner" type="String" -->
+
 <#assign pageTitle = "Additional fields"/>
 
 <#if successfulDeleteBanner?has_content>
@@ -15,7 +17,7 @@
 <@defaultPage
   htmlTitle=pageTitle
   pageSize=PageSize.TWO_THIRDS_COLUMN
-  notificationBannerContent=deleteBanner>
+  notificationBannerContentOverride=deleteBanner>
   <@fdsForm.htmlForm>
     <@fdsRadio.radioGroup
       path="form.otherAssetsRequired"

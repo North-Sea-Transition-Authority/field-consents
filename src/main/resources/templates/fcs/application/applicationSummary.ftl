@@ -17,7 +17,7 @@
 <#if !isSubmittable>
   <#assign warningBanner>
     <@fdsNotificationBanner.notificationBannerInfo bannerTitleText="Missing information">
-      <@fdsNotificationBanner.notificationBannerContent headingText="Applications cannot be submitted">
+      <@fdsNotificationBanner.notificationBannerContent headingText="Application cannot be submitted">
         Not all mandatory sections shown on the task list have been completed.
       </@fdsNotificationBanner.notificationBannerContent>
     </@fdsNotificationBanner.notificationBannerInfo>
@@ -27,7 +27,7 @@
 htmlTitle=pageTitle
 pageHeading=pageTitle
 pageSize=getPageSize()
-notificationBannerContent=warningBanner
+notificationBannerContentOverride=warningBanner
 >
   <@fdsForm.htmlForm actionUrl=springUrl(submitUrl)>
     <@fdsAccordion.accordion accordionId="summaryaccordian-${accordionId}">

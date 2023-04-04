@@ -32,7 +32,7 @@
   htmlTitle=pageTitle
   pageHeading=pageTitle
   pageSize=PageSize.FULL_WIDTH
-  notificationBannerContent=warningBanner
+  notificationBannerContentOverride=warningBanner
 >
   <@fdsDataItems.dataItem>
     <@fdsDataItems.dataValues key="Operator" value=operatorName/>

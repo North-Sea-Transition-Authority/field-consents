@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
+import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -91,7 +92,7 @@ class LongTermProductionControllerTest extends AbstractControllerTest {
   @Test
   void getLongTermProductionRequestForm_noUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(LongTermProductionController.class).getLongTermProductionRequestForm(APPLICATION_ID))))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
   @Test
@@ -107,7 +108,7 @@ class LongTermProductionControllerTest extends AbstractControllerTest {
   void saveLongTermProductionDetails_noUser() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(LongTermProductionController.class).saveLongTermProductionDetails(APPLICATION_ID, longTermProductionForm, ReverseRouter.emptyBindingResult())))
             .with(csrf()))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
 }

@@ -1,10 +1,18 @@
 <#include '../../fds/layout.ftl'>
 <#import '_pageSizes.ftl' as PageSize>
 <#import '../macros/taskList.ftl' as taskList>
+<#import '_header.ftl' as pageHeader>
 
 <#-- @ftlvariable name="serviceBranding" type="uk.co.nstauthority.fieldconsents.branding.ServiceConfigurationProperties" -->
 <#-- @ftlvariable name="customerBranding" type="uk.co.nstauthority.fieldconsents.branding.CustomerConfigurationProperties" -->
 <#-- @ftlvariable name="serviceHomeUrl" type="String" -->
+<#-- @ftlvariable name="singleErrorMessage" type="String" -->
+<#-- @ftlvariable name="loggedInUser" type="uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail" -->
+<#-- @ftlvariable name="flash" type="uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner" -->
+
+<#assign SERVICE_NAME = serviceBranding.name() />
+<#assign CUSTOMER_MNEMONIC = customerBranding.mnemonic() />
+<#assign SERVICE_HOME_URL = springUrl(serviceHomeUrl) />
 
 <#macro defaultPage
   htmlTitle
@@ -12,9 +20,13 @@
   caption=""
   phaseBanner=true
   pageSize=PageSize.TWO_THIRDS_COLUMN
+  backLinkUrl=""
+  backLinkWithBrowserBack=false
   breadcrumbsMap={}
   errorItems=[]
-  notificationBannerContent=""
+  notificationBannerContentOverride=""
+  singleErrorMessage=""
+  showNavigationItems=true
 >
   <#local serviceName = serviceBranding.name() />
   <#local customerMnemonic = customerBranding.mnemonic() />
@@ -49,13 +61,60 @@
     <#assign useBreadCrumbs=true>
   </#if>
 
+  <#assign showBackLink = false>
+
+  <#if backLinkUrl?has_content && useBreadCrumbs==false>
+    <#assign showBackLink=true/>
+  <#elseif backLinkWithBrowserBack == true && useBreadCrumbs == false>
+    <#assign showBackLink=true/>
+    <#assign backLinkUrl = ""/>
+  </#if>
+
+  <#-- if the notificationBannerContentOverride has no content then try and set from the flash data -->
+  <#if notificationBannerContentOverride?has_content>
+    <#assign notificationBannerContent=notificationBannerContentOverride/>
+  <#else>
+    <#assign notificationBannerContent>
+      <#if flash?has_content>
+
+        <#local bannerContent>
+          <#if flash.heading?has_content>
+            <#if flash.content?has_content>
+              <@fdsNotificationBanner.notificationBannerContent headingText=flash.heading moreContent=flash.content/>
+            <#else>
+              <@fdsNotificationBanner.notificationBannerContent>${flash.heading}</@fdsNotificationBanner.notificationBannerContent>
+            </#if>
+          <#else>
+            <p class="govuk-body">
+              ${flash.content}
+            </p>
+          </#if>
+        </#local>
+
+        <#if flash.type.name() == "INFO">
+          <@fdsNotificationBanner.notificationBannerInfo bannerTitleText=flash.title>
+            ${bannerContent}
+          </@fdsNotificationBanner.notificationBannerInfo>
+        <#elseif flash.type.name() == "SUCCESS">
+          <@fdsNotificationBanner.notificationBannerSuccess bannerTitleText=flash.title>
+            ${bannerContent}
+          </@fdsNotificationBanner.notificationBannerSuccess>
+        </#if>
+      </#if>
+    </#assign>
+  </#if>
+
+  <#assign serviceHeader>
+    <@_serviceHeader pageSize=pageSize />
+  </#assign>
+
   <@fdsDefaultPageTemplate
     htmlTitle=htmlTitle
     serviceName=serviceName
     htmlAppTitle=serviceName
     pageHeading=pageHeading
     caption=caption
-    headerLogo="GOV_CREST"
+    headerContent=serviceHeader
     logoProductText=customerMnemonic
     phaseBanner=phaseBanner
     serviceUrl=serviceHomeUrl
@@ -67,11 +126,26 @@
     twoThirdsColumn=twoThirdsColumn
     twoThirdsOneThirdColumn=twoThirdsOneThirdColumn
     oneQuarterColumn=oneQuarterColumn
+    topNavigation=showNavigationItems
+    backLink=showBackLink
+    backLinkUrl=backLinkUrl
     breadcrumbs=useBreadCrumbs
     breadcrumbsList=breadcrumbsMap
+    singleErrorMessage=singleErrorMessage
     errorItems=errorItems
     notificationBannerContent=notificationBannerContent
   >
     <#nested />
   </@fdsDefaultPageTemplate>
+</#macro>
+
+<#macro _serviceHeader pageSize>
+  <@pageHeader.header
+    serviceName=SERVICE_NAME
+    customerMnemonic=CUSTOMER_MNEMONIC
+    serviceHomeUrl=SERVICE_HOME_URL
+    signedInUserName=(loggedInUser?has_content)?then(loggedInUser.displayName(), "")
+    signOutUrl=springUrl("/logout")
+    pageSize=pageSize
+  />
 </#macro>

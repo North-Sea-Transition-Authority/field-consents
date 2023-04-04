@@ -11,5 +11,9 @@ public interface Displayable {
     return 0;
   }
 
-  String getEnumName();
+  String name();
+
+  default String getEnumName() {
+    return name();
+  }
 }

@@ -4,9 +4,10 @@ import javax.validation.constraints.NotNull;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
-@ConfigurationProperties(prefix = "energy-portal-api")
+@ConfigurationProperties(prefix = "energy-portal")
 @Validated
-public record EnergyPortalApiConfig(
-    @NotNull String url,
-    @NotNull String preSharedKey
-) {}
+public record EnergyPortalConfiguration(
+    @NotNull String registrationUrl,
+    @NotNull String logoutUrl
+) {
+}

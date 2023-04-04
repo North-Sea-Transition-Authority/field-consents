@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import javax.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -85,7 +86,7 @@ class VentControllerTest extends AbstractControllerTest {
   @Test
   void addVent_noUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(VentController.class).addVent(ApplicationTestUtil.APPLICATION_ID))))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
   @Test
@@ -289,7 +290,7 @@ class VentControllerTest extends AbstractControllerTest {
     mockMvc.perform(
         get(ReverseRouter.route(on(VentController.class).editVent(applicationVersion.getApplication().getId(),
                 VentTestUtil.ventNoHp))))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
   @Test
@@ -408,7 +409,7 @@ class VentControllerTest extends AbstractControllerTest {
     mockMvc.perform(
         get(ReverseRouter.route(on(VentController.class).deleteVentConfirm(
             ApplicationTestUtil.APPLICATION_ID, VentTestUtil.ventNoHp))))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
   @Test
@@ -447,7 +448,7 @@ class VentControllerTest extends AbstractControllerTest {
     mockMvc.perform(
         get(ReverseRouter.route(on(VentController.class).deleteVent(
             ApplicationTestUtil.APPLICATION_ID, null, VentTestUtil.ventNoHp))))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
 }

@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
+import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.time.LocalDate;
 import java.time.Month;
@@ -93,7 +94,7 @@ class VentShortTermControllerTest extends AbstractControllerTest {
   void getVentShortTermForm_noUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(VentShortTermController.class)
             .getVentShortTermForm(ApplicationTestUtil.APPLICATION_ID))))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
 

@@ -3,6 +3,7 @@ package uk.co.nstauthority.fieldconsents.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -34,7 +35,7 @@ class AuthenticationControllerTest extends AbstractControllerTest {
   void authenticationRequired() throws Exception {
     mockMvc.perform(
             get(ReverseRouter.route(on(TestAuthenticationController.class).renderSecured())))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
   @Test

@@ -15,8 +15,12 @@ import uk.co.nstauthority.fieldconsents.assets.ManageAssetController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @Controller
-@RequestMapping({"/", "/work-area"})
+// the ordering of the mappings is import here otherwise the top navigation always highlights the work area
+// even if another page is on display
+@RequestMapping({"/work-area", "/"})
 public class WorkAreaController {
+
+  public static final String WORK_AREA_TITLE = "Work area";
 
   @GetMapping
   public ModelAndView getWorkArea() {

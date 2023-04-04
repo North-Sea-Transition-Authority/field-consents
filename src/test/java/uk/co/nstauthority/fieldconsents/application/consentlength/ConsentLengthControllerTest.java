@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
+import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
@@ -93,7 +94,7 @@ class ConsentLengthControllerTest extends AbstractControllerTest {
     when(consentLengthService.getConsentLengthForm(applicationVersion)).thenReturn(consentLengthForm);
 
     mockMvc.perform(get(ReverseRouter.route(on(ConsentLengthController.class).getConsentLengthForm(APPLICATION_ID))))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
   @Test
@@ -112,6 +113,6 @@ class ConsentLengthControllerTest extends AbstractControllerTest {
             on(ConsentLengthController.class).saveConsentLengthDetails(APPLICATION_ID, consentLengthForm,
                 ReverseRouter.emptyBindingResult())))
         .with(csrf()))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 }

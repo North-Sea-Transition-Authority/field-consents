@@ -18,4 +18,17 @@ public class DisplayableEnumOptionUtil {
         .sorted(Comparator.comparingInt(Displayable::getDisplayOrder))
         .collect(StreamUtils.toLinkedHashMap(Displayable::getEnumName, Displayable::getDisplayName));
   }
+
+  public static Map<String, String> getDisplayableOptionsWithDescription(
+      Class<? extends DisplayableEnumWithDescription> displayableOptionEnum
+  ) {
+    return Arrays.stream((DisplayableEnumWithDescription[]) displayableOptionEnum.getEnumConstants())
+        .sorted(Comparator.comparingInt(Displayable::getDisplayOrder))
+        .collect(StreamUtils.toLinkedHashMap(
+            Displayable::getEnumName,
+            opt -> "%s (%s)".formatted(opt.getDescription(), opt.getDisplayName())
+        ));
+  }
+
+
 }

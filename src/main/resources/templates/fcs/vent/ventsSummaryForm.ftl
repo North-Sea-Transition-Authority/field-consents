@@ -1,6 +1,7 @@
 <#include '../layout/layout.ftl'>
 <#import '_ventSummary.ftl' as ventSummary>
 
+<#-- @ftlvariable name="successfulDeleteBanner" type="String" -->
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
 <#-- @ftlvariable name="ventViews" type="java.util.List<uk.co.nstauthority.fieldconsents.flarevent.vent.vents.VentView>" -->
 
@@ -18,7 +19,7 @@
   htmlTitle=pageTitle
   pageHeading=pageTitle
   errorItems=errorList
-  notificationBannerContent=deleteBanner
+  notificationBannerContentOverride=deleteBanner
 >
   <#list ventViews as vent>
     <@ventSummary.ventSummary vent=vent showActions=true displayOrder="${vent.displayOrder}"/>

@@ -18,6 +18,7 @@ import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.A
 import static uk.co.nstauthority.fieldconsents.application.eiadirection.EiaDirectionFormService.EMPTY_PREFILLED_ITEM;
 import static uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationTestUtil.SAT_ID_1;
 import static uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationTestUtil.SAT_REF_1;
+import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
@@ -69,7 +70,7 @@ class EiaDirectionControllerTest extends AbstractControllerTest {
   void getEiaDirectionForm_noUser() throws Exception {
     mockMvc.perform(
         get(ReverseRouter.route(on(EiaDirectionController.class).getEiaDirectionForm(APPLICATION_ID))))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
   @WithMockUser
@@ -111,7 +112,7 @@ class EiaDirectionControllerTest extends AbstractControllerTest {
     mockMvc.perform(post(ReverseRouter.route(on(EiaDirectionController.class)
             .saveEiaDirectionForm(APPLICATION_ID, null, null)))
             .with(csrf()))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
   @Test

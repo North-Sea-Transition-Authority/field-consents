@@ -15,6 +15,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
 import static uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportGasTestUtil.FIRST_MONTH_REPORTING_PERIOD;
 import static uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportGasTestUtil.LAST_MONTH_REPORTING_PERIOD;
+import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.time.Month;
 import org.junit.jupiter.api.BeforeEach;
@@ -101,7 +102,7 @@ class FlareReportGasDataControllerTest extends AbstractControllerTest {
   void getFlareReportGasDataForm_unauthorisedUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(FlareReportGasDataController.class)
         .getFlareReportGasDataForm(ApplicationTestUtil.APPLICATION_ID))))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
   @Test
@@ -158,6 +159,6 @@ class FlareReportGasDataControllerTest extends AbstractControllerTest {
     mockMvc.perform(post(ReverseRouter.route(on(FlareReportGasDataController.class)
         .saveFlareReportGasDataForm(ApplicationTestUtil.APPLICATION_ID, null, null)))
         .with(csrf()))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 }

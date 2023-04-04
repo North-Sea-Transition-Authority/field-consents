@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.energyportal;
+package uk.co.nstauthority.fieldconsents.energyportal.api;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -7,6 +7,7 @@ import uk.co.fivium.energyportalapi.client.field.FieldApi;
 import uk.co.fivium.energyportalapi.client.organisation.OrganisationApi;
 import uk.co.fivium.energyportalapi.client.pets.PetsApplicationApi;
 import uk.co.fivium.energyportalapi.client.terminal.TerminalApi;
+import uk.co.fivium.energyportalapi.client.user.UserApi;
 
 @Configuration
 public class EnergyPortalApiBeans {
@@ -34,5 +35,10 @@ public class EnergyPortalApiBeans {
   @Bean
   public PetsApplicationApi petsApplicationApi(EnergyPortal energyPortal) {
     return new PetsApplicationApi(energyPortal);
+  }
+
+  @Bean
+  UserApi userApi(EnergyPortal energyPortal) {
+    return new UserApi(energyPortal);
   }
 }

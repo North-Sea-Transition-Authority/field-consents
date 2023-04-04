@@ -23,7 +23,7 @@
   htmlTitle=pageTitle
   pageHeading=pageTitle
   pageSize=PageSize.TWO_THIRDS_COLUMN
-  notificationBannerContent=warningBanner
+  notificationBannerContentOverride=warningBanner
 >
   <@fdsDataItems.dataItem>
     <@fdsDataItems.dataValues key="Operator" value=operatorName/>

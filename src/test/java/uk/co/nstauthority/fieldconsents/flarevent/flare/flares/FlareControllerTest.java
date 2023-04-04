@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import javax.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -90,7 +91,7 @@ class FlareControllerTest extends AbstractControllerTest {
   @Test
   void addFlare_noUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(FlareController.class).addFlare(ApplicationTestUtil.APPLICATION_ID))))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
   @Test
@@ -293,7 +294,7 @@ class FlareControllerTest extends AbstractControllerTest {
     mockMvc.perform(
         get(ReverseRouter.route(on(FlareController.class).editFlare(applicationVersion.getApplication().getId(),
                 FlareTestUtil.flareNoHp))))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
   @Test
@@ -412,7 +413,7 @@ class FlareControllerTest extends AbstractControllerTest {
     mockMvc.perform(
         get(ReverseRouter.route(on(FlareController.class).deleteFlareConfirm(
             ApplicationTestUtil.APPLICATION_ID, FlareTestUtil.flareNoHp))))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
   @Test
@@ -451,7 +452,7 @@ class FlareControllerTest extends AbstractControllerTest {
     mockMvc.perform(
         get(ReverseRouter.route(on(FlareController.class).deleteFlare(
             ApplicationTestUtil.APPLICATION_ID, null, FlareTestUtil.flareNoHp))))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
 }

@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
+import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.time.Year;
 import java.util.Map;
@@ -98,7 +99,7 @@ class FlareReportPeriodControllerTest extends AbstractControllerTest {
   void getFlareReportPeriodForm_noUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(FlareReportPeriodController.class)
             .getFlareReportPeriodForm(ApplicationTestUtil.APPLICATION_ID))))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
   @Test

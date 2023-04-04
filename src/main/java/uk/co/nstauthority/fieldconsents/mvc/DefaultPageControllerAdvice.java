@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.mvc;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import javax.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.propertyeditors.StringTrimmerEditor;
 import org.springframework.ui.Model;
@@ -9,23 +10,33 @@ import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import uk.co.nstauthority.fieldconsents.authentication.InvalidAuthenticationException;
+import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
 import uk.co.nstauthority.fieldconsents.branding.ServiceBrandingConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.topnavigation.TopNavigationService;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @ControllerAdvice
 class DefaultPageControllerAdvice {
 
   private final ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties;
+  private final TopNavigationService topNavigationService;
+  private final UserDetailService userDetailService;
 
   @Autowired
-  DefaultPageControllerAdvice(ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties) {
+  DefaultPageControllerAdvice(ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties,
+                              TopNavigationService topNavigationService, UserDetailService userDetailService) {
     this.serviceBrandingConfigurationProperties = serviceBrandingConfigurationProperties;
+    this.topNavigationService = topNavigationService;
+    this.userDetailService = userDetailService;
   }
 
   @ModelAttribute
-  void addDefaultModelAttributes(Model model) {
+  void addDefaultModelAttributes(Model model, HttpServletRequest request) {
     addBrandingAttributes(model);
     addCommonUrls(model);
+    addTopNavigationItems(model, request);
+    addUser(model);
   }
 
   @InitBinder
@@ -45,7 +56,21 @@ class DefaultPageControllerAdvice {
     );
   }
 
+  private void addTopNavigationItems(Model model, HttpServletRequest request) {
+    model.addAttribute("navigationItems", topNavigationService.getTopNavigationItems());
+    model.addAttribute("currentEndPoint", request.getRequestURI());
+  }
+
   private void addCommonUrls(Model model) {
     model.addAttribute("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()));
+  }
+
+  private void addUser(Model model) {
+    try {
+      var user = userDetailService.getUserDetail();
+      model.addAttribute("loggedInUser", user);
+    } catch (InvalidAuthenticationException exception) {
+      // catch exception as unauthenticated endpoints won't have a logged-in user
+    }
   }
 }

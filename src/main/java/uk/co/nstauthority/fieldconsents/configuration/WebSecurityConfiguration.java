@@ -9,34 +9,53 @@ import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.saml2.core.Saml2X509Credential;
+import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider;
 import org.springframework.security.saml2.provider.service.registration.InMemoryRelyingPartyRegistrationRepository;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistration;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
 import org.springframework.security.saml2.provider.service.registration.Saml2MessageBinding;
 import org.springframework.security.web.SecurityFilterChain;
+import uk.co.nstauthority.fieldconsents.authentication.SamlResponseParser;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceLogoutSuccessHandler;
 
 @Configuration
 public class WebSecurityConfiguration {
 
+  public static final String IDP_ACCESS_GRANTED_AUTHORITY_NAME = "FCS_ACCESS_PRIVILEGE";
+
   private final SamlProperties samlProperties;
+  private final SamlResponseParser samlResponseParser;
+  private final ServiceLogoutSuccessHandler serviceLogoutSuccessHandler;
 
   @Autowired
-  public WebSecurityConfiguration(SamlProperties samlProperties) {
+  public WebSecurityConfiguration(SamlProperties samlProperties, SamlResponseParser samlResponseParser,
+                                  ServiceLogoutSuccessHandler serviceLogoutSuccessHandler) {
     this.samlProperties = samlProperties;
+    this.samlResponseParser = samlResponseParser;
+    this.serviceLogoutSuccessHandler = serviceLogoutSuccessHandler;
   }
 
   @Bean
   protected SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
+    var authenticationProvider = new OpenSaml4AuthenticationProvider();
+    authenticationProvider.setResponseAuthenticationConverter(r -> samlResponseParser.parseSamlResponse(r.getResponse()));
+
     httpSecurity
         .authorizeHttpRequests()
-            .mvcMatchers("/assets/**")
-                .permitAll()
-            .anyRequest()
-                .authenticated()
+        .mvcMatchers("/assets/**")
+          .permitAll()
+        // TODO - add in when we add FOX change to access new system via workbasket
+        //.mvcMatchers("/*")
+        //  .hasAuthority(IDP_ACCESS_GRANTED_AUTHORITY_NAME)
+        .anyRequest()
+          .authenticated()
         .and()
-            .saml2Login();
+        .saml2Login(saml2 -> saml2.authenticationManager(new ProviderManager(authenticationProvider)))
+        .logout()
+          .logoutSuccessHandler(serviceLogoutSuccessHandler);
 
     return httpSecurity.build();
   }

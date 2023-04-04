@@ -18,6 +18,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1Json;
+import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import javax.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -110,7 +111,7 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
   void addAdditionalAsset_unauthorizedUser() throws Exception {
     mockMvc.perform(
             get(ReverseRouter.route(on(AdditionalAssetsController.class).addAdditionalAsset(ApplicationTestUtil.APPLICATION_ID))))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
   @Test
@@ -313,7 +314,7 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
     mockMvc.perform(
             get(ReverseRouter.route(on(AdditionalAssetsController.class).deleteAssetConfirm(
                 ApplicationTestUtil.APPLICATION_ID, ApplicationAssetTestUtil.fieldAsset2.getAssetNo()))))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
   @Test
@@ -370,7 +371,7 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
     mockMvc.perform(
             get(ReverseRouter.route(on(AdditionalAssetsController.class).deleteAsset(
                 ApplicationTestUtil.APPLICATION_ID, null,  ApplicationAssetTestUtil.fieldAsset2.getAssetNo()))))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
   @Test
@@ -406,7 +407,7 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
         get(ReverseRouter.route(on(AdditionalAssetsController.class).getAdditionalAssetsRequiredForm(
             ApplicationTestUtil.APPLICATION_ID
         )))
-    ).andExpect(status().isUnauthorized());
+    ).andExpect(redirectionToLoginUrl());
   }
 
   @Test
@@ -481,6 +482,6 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
                 null,
                 null)))
             .with(csrf()))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 }

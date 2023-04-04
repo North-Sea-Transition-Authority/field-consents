@@ -13,7 +13,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
  * back to the client.
  */
 @Service
-class ResponseBufferSizeHandlerInterceptor implements HandlerInterceptor {
+public class ResponseBufferSizeHandlerInterceptor implements HandlerInterceptor {
 
   @Override
   public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {

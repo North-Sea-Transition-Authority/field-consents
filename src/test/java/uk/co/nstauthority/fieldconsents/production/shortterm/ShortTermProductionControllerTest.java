@@ -14,6 +14,7 @@ import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.A
 import static uk.co.nstauthority.fieldconsents.production.ProductionTestUtils.END_DATE;
 import static uk.co.nstauthority.fieldconsents.production.ProductionTestUtils.PRODUCTION_YEAR;
 import static uk.co.nstauthority.fieldconsents.production.ProductionTestUtils.START_DATE;
+import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -85,7 +86,7 @@ class ShortTermProductionControllerTest extends AbstractControllerTest {
   @Test
   void getShortTermProductionRequestForm_withUnauthorizedUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(ShortTermProductionController.class).getShortTermProductionRequestForm(APPLICATION_ID))))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
   @Test
@@ -101,7 +102,7 @@ class ShortTermProductionControllerTest extends AbstractControllerTest {
   void saveShortTermProductionDetails() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(ShortTermProductionController.class).saveShortTermProductionDetails(APPLICATION_ID, shortTermProductionForm, ReverseRouter.emptyBindingResult())))
             .with(csrf()))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
 }

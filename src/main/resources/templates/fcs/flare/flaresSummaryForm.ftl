@@ -1,6 +1,7 @@
 <#include '../layout/layout.ftl'>
 <#import './_flareSummary.ftl' as flareSummary>
 
+<#-- @ftlvariable name="successfulDeleteBanner" type="String" -->
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
 <#-- @ftlvariable name="flareViews" type="java.util.List<uk.co.nstauthority.fieldconsents.flarevent.flare.flares.FlareView>" -->
 
@@ -18,7 +19,7 @@
   htmlTitle=pageTitle
   pageHeading=pageTitle
   errorItems=errorList
-  notificationBannerContent=deleteBanner
+  notificationBannerContentOverride=deleteBanner
 >
   <#list flareViews as flare>
     <@flareSummary.flareSummary flare=flare showActions=true displayOrder="${flare.displayOrder}"/>
