@@ -5,7 +5,7 @@
 <#-- @ftlvariable name="backLinkUrl" type="java.lang.String" -->
 <#-- @ftlvariable name="submitUrl" type="java.lang.String" -->
 <#-- @ftlvariable name="registrationUrl" type="java.lang.String" -->
-<#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem>" -->
+<#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
 
 <@defaultPage
   htmlTitle=htmlTitle

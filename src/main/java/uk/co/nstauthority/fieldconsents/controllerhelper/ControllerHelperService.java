@@ -1,7 +1,6 @@
 package uk.co.nstauthority.fieldconsents.controllerhelper;
 
 import java.util.function.Supplier;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.servlet.ModelAndView;
@@ -12,7 +11,6 @@ public class ControllerHelperService {
 
   private final ValidationErrorOrderingService validationErrorOrderingService;
 
-  @Autowired
   public ControllerHelperService(ValidationErrorOrderingService validationErrorOrderingService) {
     this.validationErrorOrderingService = validationErrorOrderingService;
   }
@@ -21,23 +19,21 @@ public class ControllerHelperService {
    * Standardises basic form POST behaviour, allows controllers to either return a ModelAndView that's failed validation
    * (populated with validation errors) or do a caller-specified action if passed validation.
    * @param bindingResult result of binding the form object from request
-   * @param modelAndView the model and view to add the validation errors to if validation failed during binding
    * @param form the form used to determine the error ordering
+   * @param ifInvalid the action to perform if the validation fails
    * @param ifValid the action to perform if the validation passes
    * @return passed-in ModelAndView with validation errors added if validation failed, caller-specified ModelAndView otherwise
    */
   public ModelAndView checkErrorsAndRedirect(BindingResult bindingResult,
-                                             ModelAndView modelAndView,
                                              Object form,
+                                             Supplier<ModelAndView> ifInvalid,
                                              Supplier<ModelAndView> ifValid) {
-
     if (bindingResult.hasErrors()) {
+      var modelAndView = ifInvalid.get();
       addFieldValidationErrors(modelAndView, bindingResult, form);
       return modelAndView;
     }
-
     return ifValid.get();
-
   }
 
   /**

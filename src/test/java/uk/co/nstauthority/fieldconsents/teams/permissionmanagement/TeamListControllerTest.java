@@ -1,25 +1,29 @@
 package uk.co.nstauthority.fieldconsents.teams.permissionmanagement;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.TeamListController.INDUSTRY_NEW_TEAM_FORM_URL;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
-import com.google.common.collect.ImmutableMap;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.branding.CustomerConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -38,6 +42,9 @@ class TeamListControllerTest extends AbstractControllerTest {
 
   @MockBean
   private TeamManagementService teamManagementService;
+
+  @MockBean
+  private PermissionService permissionService;
 
   @Autowired
   private CustomerConfigurationProperties customerConfigurationProperties;
@@ -75,6 +82,22 @@ class TeamListControllerTest extends AbstractControllerTest {
             .with(user(user)))
         .andExpect(redirectedUrl(
             ReverseRouter.route(on(RegulatorTeamManagementController.class).renderMemberList(team.toTeamId()))
+        ));
+  }
+
+  @Test
+  void resolveTeamListEntryRoute_whenInSingleRegulatorTeamAndManageIndustryTeam_thenAssertRedirect() throws Exception {
+    var team = TeamTestUtil.Builder()
+        .withTeamType(TeamType.REGULATOR)
+        .build();
+    when(teamService.getUserAccessibleTeams(user))
+        .thenReturn(List.of(team));
+    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_INDUSTRY_TEAMS)))
+        .thenReturn(true);
+    mockMvc.perform(get(ReverseRouter.route(on(TeamListController.class).resolveTeamListEntryRoute()))
+            .with(user(user)))
+        .andExpect(redirectedUrl(
+            ReverseRouter.route(on(TeamListController.class).renderTeamList())
         ));
   }
 
@@ -123,8 +146,9 @@ class TeamListControllerTest extends AbstractControllerTest {
         .andExpect(redirectionToLoginUrl());
   }
 
-  @Test
-  void renderTeamList_assertModelProperties() throws Exception {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void renderTeamList_hasManageIndustryTeamsPermission_assertModelProperties(boolean hasManageIndustryTeamsPermission) throws Exception {
 
     var regulatorTeam = TeamTestUtil.Builder()
         .withTeamType(TeamType.REGULATOR)
@@ -142,17 +166,25 @@ class TeamListControllerTest extends AbstractControllerTest {
     when(teamManagementService.teamsToTeamViews(List.of(industryTeam, regulatorTeam)))
         .thenReturn(List.of(industryTeamView, regulatorTeamView));
 
-    mockMvc.perform(get(ReverseRouter.route(on(TeamListController.class).renderTeamList()))
+    when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_INDUSTRY_TEAMS)))
+        .thenReturn(hasManageIndustryTeamsPermission);
+
+    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(TeamListController.class).renderTeamList()))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/permissionmanagement/teamSelectionPage"))
-        .andExpect(model().attribute("pageTitle", "Select a team"))
-        .andExpect(model().attribute(
-            "teamGroupMap",
-            ImmutableMap.of(
-                TeamType.REGULATOR, List.of(regulatorTeamView),
-                TeamType.INDUSTRY, List.of(industryTeamView)
-            )));
-  }
+        .andReturn().getModelAndView();
 
+    assertThat(modelAndView).isNotNull();
+
+    var model = modelAndView.getModel();
+    assertThat(model)
+        .containsEntry("pageTitle", "Teams")
+        .containsEntry("allTeams", List.of(industryTeamView, regulatorTeamView));
+
+    if (hasManageIndustryTeamsPermission) {
+      assertThat(model)
+          .containsEntry("industryNewTeamFormUrl", INDUSTRY_NEW_TEAM_FORM_URL);
+    }
+  }
 }

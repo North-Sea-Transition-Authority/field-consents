@@ -1,0 +1,1 @@
+ALTER TABLE teams ADD COLUMN organisation_group_id INT;

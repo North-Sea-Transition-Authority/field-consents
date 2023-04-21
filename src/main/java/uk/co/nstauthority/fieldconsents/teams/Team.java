@@ -23,6 +23,8 @@ public class Team {
 
   private String displayName;
 
+  private Integer organisationGroupId;
+
   public Team() {
   }
 
@@ -48,6 +50,14 @@ public class Team {
 
   public void setDisplayName(String displayName) {
     this.displayName = displayName;
+  }
+
+  public Integer getOrganisationGroupId() {
+    return organisationGroupId;
+  }
+
+  public void setOrganisationGroupId(Integer organisationGroupId) {
+    this.organisationGroupId = organisationGroupId;
   }
 
   public TeamId toTeamId() {

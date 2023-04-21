@@ -101,8 +101,8 @@ public class RegulatorEditMemberController extends AbstractTeamController {
 
     return controllerHelperService.checkErrorsAndRedirect(
         bindingResult,
-        getEditModelAndView(teamId, userView, form),
         form,
+        () -> getEditModelAndView(teamId, userView, form),
         () -> {
           regulatorTeamMemberEditService.updateRoles(team, teamMember, form.getRoles());
           return ReverseRouter.redirect(on(RegulatorTeamManagementController.class).renderMemberList(teamId));

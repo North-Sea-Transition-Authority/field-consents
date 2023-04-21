@@ -132,4 +132,49 @@ class IndustryTeamServiceTest {
         .containsExactly(team);
   }
 
+  @Test
+  void createTeam() {
+    var orgGroupName = "org group team name";
+    var orgGroupId = 10000;
+
+    var expectedTeam = TeamTestUtil.Builder()
+        .withId(null)
+        .withTeamType(TeamType.INDUSTRY)
+        .withDisplayName(orgGroupName)
+        .withOrganisationGroupId(orgGroupId)
+        .build();
+
+    var team = industryTeamService.createTeam(orgGroupName, orgGroupId);
+
+    assertThat(team).usingRecursiveComparison()
+        .isEqualTo(expectedTeam);
+
+    verify(teamService, times(1)).createTeam(team);
+  }
+
+  @Test
+  void getTeamByOrganisationGroupId_teamNotFound() {
+    var orgGroupId = 10000;
+
+    when(teamService.getTeamByOrganisationGroupId(orgGroupId))
+        .thenReturn(Optional.empty());
+
+    assertThat(industryTeamService.getTeamByOrganisationGroupId(orgGroupId))
+        .isEmpty();
+  }
+
+  @Test
+  void getTeamByOrganisationGroupId_teamFound() {
+    var orgGroupId = 10000;
+    var industryTeam = TeamTestUtil.Builder()
+        .withTeamType(TeamType.INDUSTRY)
+        .withOrganisationGroupId(orgGroupId)
+        .build();
+
+    when(teamService.getTeamByOrganisationGroupId(orgGroupId))
+        .thenReturn(Optional.of(industryTeam));
+
+    assertThat(industryTeamService.getTeamByOrganisationGroupId(orgGroupId))
+        .contains(industryTeam);
+  }
 }

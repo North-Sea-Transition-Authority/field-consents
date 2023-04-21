@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
@@ -47,6 +48,20 @@ public class IndustryTeamService {
     var rolesAsStrings = getRolesAsStrings(roles);
 
     teamMemberRoleService.addUserTeamRoles(team, userToAdd, rolesAsStrings);
+  }
+
+  @Transactional
+  public Team createTeam(String groupName, int organisationGroupId) {
+    var team = new Team();
+    team.setTeamType(TeamType.INDUSTRY);
+    team.setDisplayName(groupName);
+    team.setOrganisationGroupId(organisationGroupId);
+    teamService.createTeam(team);
+    return team;
+  }
+
+  public Optional<Team> getTeamByOrganisationGroupId(int organisationGroupId) {
+    return teamService.getTeamByOrganisationGroupId(organisationGroupId);
   }
 
   private Set<String> getRolesAsStrings(Set<IndustryTeamRole> industryTeamRoles) {

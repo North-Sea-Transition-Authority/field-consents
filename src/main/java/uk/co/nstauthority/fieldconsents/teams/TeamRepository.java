@@ -33,4 +33,6 @@ interface TeamRepository extends CrudRepository<Team, Integer> {
 
   List<Team> findAllByTeamTypeIn(Collection<TeamType> teamTypes);
 
+  Optional<Team> findByOrganisationGroupId(int organisationGroupId);
+
 }

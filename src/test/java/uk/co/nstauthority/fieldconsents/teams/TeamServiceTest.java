@@ -18,6 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @ExtendWith(MockitoExtension.class)
@@ -165,5 +166,92 @@ class TeamServiceTest {
 
     assertThat(result)
         .containsExactly(industryTeam, userOwnTeam);
+  }
+
+  @Test
+  void canUserAccessMultipleTeams_oneTeam() {
+    var user = ServiceUserDetailTestUtil.Builder().build();
+    var industryTeamViewer = TeamMemberTestUtil.Builder()
+        .withTeamType(TeamType.INDUSTRY)
+        .withRole(IndustryTeamRole.VIEWER)
+        .build();
+
+    var industryTeam = TeamTestUtil.Builder()
+        .withTeamType(TeamType.INDUSTRY)
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(user)).thenReturn(List.of(industryTeamViewer));
+
+    when(teamRepository.findAllTeamsThatUserIsMemberOf(user.wuaId()))
+        .thenReturn(List.of(industryTeam));
+
+    var result = teamService.canUserAccessMultipleTeams(user);
+
+    assertThat(result).isFalse();
+  }
+
+  @Test
+  void canUserAccessMultipleTeams_manyTeams() {
+    var user = ServiceUserDetailTestUtil.Builder().build();
+    var industryTeamManager = TeamMemberTestUtil.Builder()
+        .withTeamType(TeamType.REGULATOR)
+        .withRole(RegulatorTeamRole.INDUSTRY_ACCESS_MANAGER)
+        .build();
+
+    var industryTeam1 = TeamTestUtil.Builder()
+        .withTeamType(TeamType.INDUSTRY)
+        .build();
+
+    var industryTeam2 = TeamTestUtil.Builder()
+        .withTeamType(TeamType.INDUSTRY)
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(user)).thenReturn(List.of(industryTeamManager));
+
+    when(teamRepository.findAllByTeamTypeIn(any()))
+        .thenReturn(List.of(industryTeam1, industryTeam2));
+
+    var result = teamService.canUserAccessMultipleTeams(user);
+
+    assertThat(result).isTrue();
+  }
+
+  @Test
+  void createTeam_verifySave() {
+    var industryTeam = TeamTestUtil.Builder()
+        .withTeamType(TeamType.INDUSTRY)
+        .build();
+
+    teamService.createTeam(industryTeam);
+
+    verify(teamRepository, times(1)).save(industryTeam);
+  }
+
+  @Test
+  void getTeamByOrganisationGroupId_teamExists() {
+
+    var organisationGroupId = 10000;
+    var industryTeam = TeamTestUtil.Builder()
+        .withTeamType(TeamType.INDUSTRY)
+        .withOrganisationGroupId(organisationGroupId)
+        .build();
+
+    when(teamRepository.findByOrganisationGroupId(organisationGroupId))
+        .thenReturn(Optional.of(industryTeam));
+
+    assertThat(teamService.getTeamByOrganisationGroupId(organisationGroupId))
+        .contains(industryTeam);
+  }
+
+  @Test
+  void getTeamByOrganisationGroupId_teamDoesntExist() {
+
+    var organisationGroupId = 10000;
+
+    when(teamRepository.findByOrganisationGroupId(organisationGroupId))
+        .thenReturn(Optional.empty());
+
+    assertThat(teamService.getTeamByOrganisationGroupId(organisationGroupId))
+        .isEmpty();
   }
 }

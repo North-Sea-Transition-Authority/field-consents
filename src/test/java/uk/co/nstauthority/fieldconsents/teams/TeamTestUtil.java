@@ -28,6 +28,8 @@ public class TeamTestUtil {
     private TeamType teamType = TeamType.REGULATOR;
     private String displayName = "team name";
 
+    private Integer organisationGroupId = randomInteger();
+
     public TeamBuilder withId(Integer id) {
       this.id = id;
       return this;
@@ -43,10 +45,16 @@ public class TeamTestUtil {
       return this;
     }
 
+    public TeamBuilder withOrganisationGroupId(Integer id) {
+      this.organisationGroupId = id;
+      return this;
+    }
+
     public Team build() {
       var team = new Team(id);
       team.setTeamType(teamType);
       team.setDisplayName(displayName);
+      team.setOrganisationGroupId(organisationGroupId);
       return team;
     }
   }

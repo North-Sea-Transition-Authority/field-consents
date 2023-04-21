@@ -21,6 +21,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.web.servlet.MvcResult;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
@@ -89,42 +90,7 @@ class IndustryEditMemberControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void renderEditMember_whenAccessManager_thenOk() throws Exception {
-
-    Set<TeamRole> userRoles = Set.of(IndustryTeamRole.ACCESS_MANAGER);
-
-    when(permissionService.hasPermission(accessManager, Set.of(RolePermission.GRANT_ROLES))).thenReturn(true);
-
-    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamView.teamId(), accessManager,
-        Set.of(IndustryTeamRole.ACCESS_MANAGER.name()))
-    ).thenReturn(true);
-
-    when(teamService.getTeam(teamView.teamId(), IndustryEditMemberController.TEAM_TYPE))
-        .thenReturn(Optional.of(industryTeam));
-
-    var teamMember = TeamMemberTestUtil.Builder()
-        .withTeamType(TeamType.INDUSTRY)
-        .withTeamId(teamView.teamId())
-        .withWebUserAccountId(accessManager.wuaId())
-        .withRoles(userRoles)
-        .build();
-
-    when(teamMemberService.getUserAsTeamMembers(accessManager)).thenReturn(List.of(teamMember));
-    when(teamMemberService.isMemberOfTeam(teamView.teamId(), accessManager)).thenReturn(true);
-
-    when(teamMemberService.getTeamMember(industryTeam, teamMember.wuaId()))
-        .thenReturn(Optional.of(teamMember));
-
-    var teamMemberView = TeamMemberViewTestUtil.Builder()
-        .withRoles(userRoles)
-        .withWebUserAccountId(teamMember.wuaId())
-        .build();
-    when(teamMemberViewService.getTeamMemberView(teamMember)).thenReturn(Optional.of(teamMemberView));
-
-    mockMvc.perform(get(ReverseRouter.route(on(IndustryEditMemberController.class)
-            .renderEditMember(teamView.teamId(), teamMember.wuaId())))
-            .with(user(accessManager)))
-        .andExpect(status().isOk());
-
+    makeValidRenderEditMemberRequest(Set.of(IndustryTeamRole.ACCESS_MANAGER));
   }
 
   @Test
@@ -132,39 +98,7 @@ class IndustryEditMemberControllerTest extends AbstractControllerTest {
 
     Set<TeamRole> userRoles = Set.of(IndustryTeamRole.ACCESS_MANAGER);
 
-    when(permissionService.hasPermission(accessManager, Set.of(RolePermission.GRANT_ROLES))).thenReturn(true);
-
-    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamView.teamId(), accessManager,
-        Set.of(IndustryTeamRole.ACCESS_MANAGER.name()))
-    ).thenReturn(true);
-
-    when(teamService.getTeam(teamView.teamId(), IndustryEditMemberController.TEAM_TYPE))
-        .thenReturn(Optional.of(industryTeam));
-
-    var teamMember = TeamMemberTestUtil.Builder()
-        .withTeamType(TeamType.INDUSTRY)
-        .withTeamId(teamView.teamId())
-        .withWebUserAccountId(accessManager.wuaId())
-        .withRoles(userRoles)
-        .build();
-
-    when(teamMemberService.getUserAsTeamMembers(accessManager)).thenReturn(List.of(teamMember));
-    when(teamMemberService.isMemberOfTeam(teamView.teamId(), accessManager)).thenReturn(true);
-
-    when(teamMemberService.getTeamMember(industryTeam, teamMember.wuaId()))
-        .thenReturn(Optional.of(teamMember));
-
-    var teamMemberView = TeamMemberViewTestUtil.Builder()
-        .withRoles(userRoles)
-        .withWebUserAccountId(teamMember.wuaId())
-        .build();
-    when(teamMemberViewService.getTeamMemberView(teamMember)).thenReturn(Optional.of(teamMemberView));
-
-    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(IndustryEditMemberController.class)
-            .renderEditMember(teamView.teamId(), teamMember.wuaId())))
-            .with(user(accessManager)))
-        .andExpect(status().isOk())
-        .andReturn()
+    var modelAndView = makeValidRenderEditMemberRequest(userRoles)
         .getModelAndView();
 
     assertThat(modelAndView).isNotNull();
@@ -184,6 +118,110 @@ class IndustryEditMemberControllerTest extends AbstractControllerTest {
             DisplayableEnumOptionUtil.getDisplayableOptionsWithDescription(IndustryTeamRole.class),
             ReverseRouter.route(on(IndustryTeamManagementController.class).renderMemberList(teamView.teamId()))
         );
+  }
+
+  private MvcResult makeValidRenderEditMemberRequest(Set<TeamRole> teamMemberRoles) throws Exception {
+    when(permissionService.hasPermission(accessManager, Set.of(RolePermission.GRANT_ROLES))).thenReturn(true);
+
+    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamView.teamId(), accessManager,
+        Set.of(IndustryTeamRole.ACCESS_MANAGER.name()))
+    ).thenReturn(true);
+
+    when(teamService.getTeam(teamView.teamId(), IndustryEditMemberController.TEAM_TYPE))
+        .thenReturn(Optional.of(industryTeam));
+
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withTeamType(TeamType.INDUSTRY)
+        .withTeamId(teamView.teamId())
+        .withWebUserAccountId(accessManager.wuaId())
+        .withRoles(teamMemberRoles)
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(accessManager)).thenReturn(List.of(teamMember));
+    when(teamMemberService.isMemberOfTeam(teamView.teamId(), accessManager)).thenReturn(true);
+
+    when(teamMemberService.getTeamMember(industryTeam, teamMember.wuaId()))
+        .thenReturn(Optional.of(teamMember));
+
+    var teamMemberView = TeamMemberViewTestUtil.Builder()
+        .withRoles(teamMemberRoles)
+        .withWebUserAccountId(teamMember.wuaId())
+        .build();
+    when(teamMemberViewService.getTeamMemberView(teamMember)).thenReturn(Optional.of(teamMemberView));
+
+    return mockMvc.perform(get(ReverseRouter.route(on(IndustryEditMemberController.class)
+            .renderEditMember(teamView.teamId(), teamMember.wuaId())))
+            .with(user(accessManager)))
+        .andExpect(status().isOk())
+        .andReturn();
+  }
+
+  @Test
+  void renderEditMember_whenAccessManagerAndTeamMemberDoesntExist_thenClientError() throws Exception {
+
+    Set<TeamRole> userRoles = Set.of(IndustryTeamRole.ACCESS_MANAGER);
+
+    when(permissionService.hasPermission(accessManager, Set.of(RolePermission.GRANT_ROLES))).thenReturn(true);
+
+    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamView.teamId(), accessManager,
+        Set.of(IndustryTeamRole.ACCESS_MANAGER.name()))
+    ).thenReturn(true);
+
+    when(teamService.getTeam(teamView.teamId(), IndustryEditMemberController.TEAM_TYPE))
+        .thenReturn(Optional.of(industryTeam));
+
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withTeamType(TeamType.INDUSTRY)
+        .withTeamId(teamView.teamId())
+        .withWebUserAccountId(accessManager.wuaId())
+        .withRoles(userRoles)
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(accessManager)).thenReturn(List.of(teamMember));
+    when(teamMemberService.isMemberOfTeam(teamView.teamId(), accessManager)).thenReturn(true);
+
+    when(teamMemberService.getTeamMember(industryTeam, teamMember.wuaId()))
+        .thenReturn(Optional.empty());
+
+    mockMvc.perform(get(ReverseRouter.route(on(IndustryEditMemberController.class)
+            .renderEditMember(teamView.teamId(), teamMember.wuaId())))
+            .with(user(accessManager)))
+        .andExpect(status().is4xxClientError());
+  }
+
+  @Test
+  void renderEditMember_whenAccessManagerAndTeamMemberViewDoesntExist_thenClientError() throws Exception {
+
+    Set<TeamRole> userRoles = Set.of(IndustryTeamRole.ACCESS_MANAGER);
+
+    when(permissionService.hasPermission(accessManager, Set.of(RolePermission.GRANT_ROLES))).thenReturn(true);
+
+    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamView.teamId(), accessManager,
+        Set.of(IndustryTeamRole.ACCESS_MANAGER.name()))
+    ).thenReturn(true);
+
+    when(teamService.getTeam(teamView.teamId(), IndustryEditMemberController.TEAM_TYPE))
+        .thenReturn(Optional.of(industryTeam));
+
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withTeamType(TeamType.INDUSTRY)
+        .withTeamId(teamView.teamId())
+        .withWebUserAccountId(accessManager.wuaId())
+        .withRoles(userRoles)
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(accessManager)).thenReturn(List.of(teamMember));
+    when(teamMemberService.isMemberOfTeam(teamView.teamId(), accessManager)).thenReturn(true);
+
+    when(teamMemberService.getTeamMember(industryTeam, teamMember.wuaId()))
+        .thenReturn(Optional.of(teamMember));
+
+    when(teamMemberViewService.getTeamMemberView(teamMember)).thenReturn(Optional.empty());
+
+    mockMvc.perform(get(ReverseRouter.route(on(IndustryEditMemberController.class)
+            .renderEditMember(teamView.teamId(), teamMember.wuaId())))
+            .with(user(accessManager)))
+        .andExpect(status().is4xxClientError());
   }
 
   @Test

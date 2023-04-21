@@ -66,4 +66,15 @@ public class TeamService {
         .anyMatch(rolePermission -> rolePermission.equals(permission));
   }
 
+  public boolean canUserAccessMultipleTeams(ServiceUserDetail user) {
+    return getUserAccessibleTeams(user).size() > 1;
+  }
+
+  public void createTeam(Team team) {
+    teamRepository.save(team);
+  }
+
+  public Optional<Team> getTeamByOrganisationGroupId(int organisationGroupId) {
+    return teamRepository.findByOrganisationGroupId(organisationGroupId);
+  }
 }

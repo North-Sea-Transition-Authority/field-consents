@@ -89,8 +89,8 @@ class RegulatorAddMemberController extends AbstractTeamController {
 
     return controllerHelperService.checkErrorsAndRedirect(
         bindingResult,
-        getAddTeamMemberModelAndView(teamId, form),
         form,
+        () -> getAddTeamMemberModelAndView(teamId, form),
         () -> {
           var userToAdd = energyPortalUserService.findUserByUsername(form.getUsername()).get(0);
           return ReverseRouter.redirect(on(RegulatorAddMemberController.class)
@@ -119,8 +119,8 @@ class RegulatorAddMemberController extends AbstractTeamController {
 
     return controllerHelperService.checkErrorsAndRedirect(
         bindingResult,
-        getAddTeamMemberRolesModelAndView(teamId, energyPortalUser, form),
         form,
+        () -> getAddTeamMemberRolesModelAndView(teamId, energyPortalUser, form),
         () -> {
           var regulatorRoles = form.getRoles()
               .stream()

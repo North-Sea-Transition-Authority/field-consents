@@ -2,9 +2,7 @@ package uk.co.nstauthority.fieldconsents.teams.permissionmanagement;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
-import java.util.Comparator;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -14,30 +12,35 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
 import uk.co.nstauthority.fieldconsents.authorisation.AccessibleByServiceUsers;
+import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.Team;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
-import uk.co.nstauthority.fieldconsents.teams.TeamView;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamManagementController;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamManagementController;
-import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 
 @Controller
 @RequestMapping("/permission-management")
 @AccessibleByServiceUsers
 public class TeamListController {
 
+  public static final String INDUSTRY_NEW_TEAM_FORM_URL =
+      ReverseRouter.route(on(IndustryTeamManagementController.class).renderNewIndustryTeamForm(null));
+
   private final UserDetailService userDetailService;
   private final TeamService teamService;
   private final TeamManagementService teamManagementService;
+  private final PermissionService permissionService;
 
   @Autowired
   public TeamListController(UserDetailService userDetailService,
                             TeamService teamService,
-                            TeamManagementService teamManagementService) {
+                            TeamManagementService teamManagementService,
+                            PermissionService permissionService) {
     this.userDetailService = userDetailService;
     this.teamService = teamService;
     this.teamManagementService = teamManagementService;
+    this.permissionService = permissionService;
   }
 
   @GetMapping
@@ -46,7 +49,7 @@ public class TeamListController {
     var teams = teamService.getUserAccessibleTeams(user);
     if (teams.isEmpty()) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User [%s] is not in a team".formatted(user.wuaId()));
-    } else if (teams.size() == 1) {
+    } else if (teams.size() == 1 && !permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_INDUSTRY_TEAMS))) {
       return getSingleTeamRedirect(teams.get(0));
     } else {
       return ReverseRouter.redirect(on(TeamListController.class).renderTeamList());
@@ -64,19 +67,19 @@ public class TeamListController {
 
   @GetMapping("/teams")
   public ModelAndView renderTeamList() {
+    var user = userDetailService.getUserDetail();
     var teams = teamService.getUserAccessibleTeams(userDetailService.getUserDetail());
     var teamViews = teamManagementService.teamsToTeamViews(teams);
 
-    var teamViewMap = teamViews.stream()
-        .collect(Collectors.groupingBy(TeamView::teamType))
-        .entrySet()
-        .stream()
-        .sorted(Comparator.comparing(entry -> entry.getKey().getDisplayOrder()))
-        .collect(StreamUtils.toLinkedHashMap(Map.Entry::getKey, Map.Entry::getValue));
+    var modelAndView = new ModelAndView("fcs/permissionmanagement/teamSelectionPage")
+        .addObject("pageTitle", "Teams")
+        .addObject("allTeams", teamViews);
 
-    return new ModelAndView("fcs/permissionmanagement/teamSelectionPage")
-        .addObject("pageTitle", "Select a team")
-        .addObject("teamGroupMap", teamViewMap);
+    if (permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_INDUSTRY_TEAMS))) {
+      modelAndView.addObject("industryNewTeamFormUrl", INDUSTRY_NEW_TEAM_FORM_URL);
+    }
+
+    return modelAndView;
   }
 
 }

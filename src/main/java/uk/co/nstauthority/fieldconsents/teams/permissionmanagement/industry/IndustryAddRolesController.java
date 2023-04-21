@@ -80,8 +80,8 @@ class IndustryAddRolesController extends AbstractTeamController {
     industryTeamMemberRolesValidator.validate(form, bindingResult);
     return controllerHelperService.checkErrorsAndRedirect(
         bindingResult,
-        getAddTeamMemberRolesModelAndView(teamId, energyPortalUser, form),
         form,
+        () -> getAddTeamMemberRolesModelAndView(teamId, energyPortalUser, form),
         () -> {
           var regulatorRoles = getRolesToAdd(form.getRoles());
           industryTeamService.addUserTeamRoles(team, energyPortalUser, regulatorRoles);

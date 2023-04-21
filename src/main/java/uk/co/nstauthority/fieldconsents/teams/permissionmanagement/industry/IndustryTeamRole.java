@@ -16,13 +16,13 @@ public enum IndustryTeamRole implements TeamRole {
   ),
   VIEWER(
       "Viewer",
-      "Can view applications and consents for the organisation",
+      "Can view applications and consents for the organisation group",
       20,
       EnumSet.of(RolePermission.VIEW_FCS_APPLICATION)
   ),
   CREATOR(
       "Creator",
-      "Can start applications for the organisation",
+      "Can start applications for the organisation group",
       30,
       EnumSet.of(RolePermission.CREATE_FCS_APPLICATION)
   );

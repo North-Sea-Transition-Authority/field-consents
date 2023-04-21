@@ -70,8 +70,8 @@ class IndustryAddMemberController extends AbstractTeamController {
 
     return controllerHelperService.checkErrorsAndRedirect(
         bindingResult,
-        getAddTeamMemberModelAndView(form, team),
         form,
+        () -> getAddTeamMemberModelAndView(form, team),
         () -> {
           var userToAdd = energyPortalUserService.findUserByUsername(form.getUsername()).get(0);
           return ReverseRouter.redirect(on(IndustryAddRolesController.class)

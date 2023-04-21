@@ -47,8 +47,8 @@ class ControllerHelperServiceTest extends AbstractControllerTest {
 
     var result = controllerHelperService.checkErrorsAndRedirect(
         bindingResult,
-        failedModelAndView,
         form,
+        () -> failedModelAndView,
         () -> passedModelAndView
     );
 
@@ -66,8 +66,8 @@ class ControllerHelperServiceTest extends AbstractControllerTest {
 
     var result = controllerHelperService.checkErrorsAndRedirect(
         bindingResult,
-        failedModelAndView,
         form,
+        () -> failedModelAndView,
         () -> passedModelAndView
     );
 

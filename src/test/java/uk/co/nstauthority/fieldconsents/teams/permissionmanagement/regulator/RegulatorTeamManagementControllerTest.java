@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
@@ -14,6 +15,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.ApplicationContext;
@@ -29,6 +32,7 @@ import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.TeamListController;
 
 @ContextConfiguration(classes = RegulatorTeamManagementController.class)
 class RegulatorTeamManagementControllerTest extends AbstractControllerTest {
@@ -137,8 +141,9 @@ class RegulatorTeamManagementControllerTest extends AbstractControllerTest {
         .andExpect(model().attributeDoesNotExist("addTeamMemberUrl"));
   }
 
-  @Test
-  void renderMemberList_whenAccessManager_assertModelProperties() throws Exception {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void renderMemberList_whenAccessManager_assertModelProperties(boolean canAccessMultipleTeams) throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
 
@@ -164,19 +169,35 @@ class RegulatorTeamManagementControllerTest extends AbstractControllerTest {
 
     var mnemonic = applicationContext.getBean(CustomerConfigurationProperties.class).mnemonic();
 
-    mockMvc.perform(
-            get(ReverseRouter.route(on(RegulatorTeamManagementController.class).renderMemberList(teamId)))
-                .with(user(user)))
-        .andExpect(status().isOk())
-        .andExpect(view().name("fcs/permissionmanagement/teamMembersPage"))
-        .andExpect(model().attribute("pageTitle", "Manage %s".formatted(mnemonic)))
-        .andExpect(model().attribute("teamName", mnemonic))
-        .andExpect(model().attribute("teamRoles", RegulatorTeamRole.values()))
-        .andExpect(model().attribute(
-            "addTeamMemberUrl",
-            ReverseRouter.route(on(RegulatorAddMemberController.class).renderAddTeamMember(teamId))
-        ))
-        .andExpect(model().attribute("canRemoveUsers", canRemoveUsers))
-        .andExpect(model().attribute("teamMembers", List.of(teamMemberView)));
+    when(teamService.canUserAccessMultipleTeams(user))
+        .thenReturn(canAccessMultipleTeams);
+
+    var modelAndView =
+        mockMvc.perform(
+                get(ReverseRouter.route(on(RegulatorTeamManagementController.class).renderMemberList(teamId)))
+                    .with(user(user)))
+            .andExpect(status().isOk())
+            .andExpect(view().name("fcs/permissionmanagement/teamMembersPage"))
+            .andReturn()
+            .getModelAndView();
+
+    assertThat(modelAndView).isNotNull();
+
+    var model = modelAndView.getModel();
+    assertThat(model)
+        .containsEntry("pageTitle", "Manage %s".formatted(mnemonic))
+        .containsEntry("teamName", mnemonic)
+        .containsEntry("teamRoles", RegulatorTeamRole.values())
+        .containsEntry("addTeamMemberUrl",
+            ReverseRouter.route(on(RegulatorAddMemberController.class).renderAddTeamMember(teamId)))
+        .containsEntry("canRemoveUsers", canRemoveUsers)
+        .containsEntry("teamMembers", List.of(teamMemberView));
+
+    if (canAccessMultipleTeams) {
+      assertThat(model)
+          .containsEntry("backLinkUrl", ReverseRouter.route(on(TeamListController.class).resolveTeamListEntryRoute()));
+    } else {
+      assertThat(model).doesNotContainKey("backLinkUrl");
+    }
   }
 }

@@ -15,4 +15,13 @@ public class NotificationBannerUtil {
     redirectAttributes.addFlashAttribute("flash", notificationBanner);
   }
 
+  public static void addSuccessNotification(RedirectAttributes redirectAttributes, String heading, String content) {
+    var notificationBanner = NotificationBanner.builder()
+        .withBannerType(NotificationBannerType.SUCCESS)
+        .withContent(content)
+        .withTitle(heading)
+        .build();
+
+    redirectAttributes.addFlashAttribute("flash", notificationBanner);
+  }
 }

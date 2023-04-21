@@ -105,8 +105,8 @@ public class IndustryEditMemberController extends AbstractTeamController {
 
     return controllerHelperService.checkErrorsAndRedirect(
         bindingResult,
-        getEditModelAndView(teamId, userView, form),
         form,
+        () -> getEditModelAndView(teamId, userView, form),
         () -> {
           teamMemberRoleService.updateUserTeamRoles(team, teamMember.wuaId(), form.getRoles());
           return ReverseRouter.redirect(on(IndustryTeamManagementController.class).renderMemberList(teamId));

@@ -19,6 +19,7 @@ import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.AbstractTeamController;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.TeamListController;
 
 @Controller
 @RequestMapping("/permission-management/regulator")
@@ -31,6 +32,7 @@ public class RegulatorTeamManagementController extends AbstractTeamController {
   private final UserDetailService userDetailService;
   private final CustomerConfigurationProperties customerConfigurationProperties;
   private final TeamMemberService teamMemberService;
+  private final TeamService teamService;
 
   @Autowired
   RegulatorTeamManagementController(TeamMemberViewService teamMemberViewService,
@@ -45,6 +47,7 @@ public class RegulatorTeamManagementController extends AbstractTeamController {
     this.userDetailService = userDetailService;
     this.customerConfigurationProperties = customerConfigurationProperties;
     this.teamMemberService = teamMemberService;
+    this.teamService = teamService;
   }
 
   @GetMapping("/{teamId}")
@@ -60,6 +63,12 @@ public class RegulatorTeamManagementController extends AbstractTeamController {
         .addObject("teamName", customerConfigurationProperties.mnemonic())
         .addObject("teamRoles", RegulatorTeamRole.values())
         .addObject("teamMembers", teamMemberViewService.getTeamMemberViewsForTeam(team));
+
+    if (teamService.canUserAccessMultipleTeams(user)) {
+      modelAndView
+          .addObject("backLinkUrl",
+              ReverseRouter.route(on(TeamListController.class).resolveTeamListEntryRoute()));
+    }
 
     if (regulatorTeamService.isAccessManager(teamId, userDetailService.getUserDetail())) {
       modelAndView

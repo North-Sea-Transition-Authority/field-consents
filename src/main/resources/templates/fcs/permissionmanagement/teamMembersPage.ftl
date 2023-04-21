@@ -1,7 +1,7 @@
 <#-- @ftlvariable name="teamName" type="java.lang.String" -->
-<#-- @ftlvariable name="teamRoles" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamRole>" -->
-<#-- @ftlvariable name="teamMembers" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberView>" -->
-<#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem>" -->
+<#-- @ftlvariable name="teamRoles" type="java.util.List<uk.co.nstauthority.fieldconsents.teams.permissionmanagement.TeamRole>" -->
+<#-- @ftlvariable name="teamMembers" type="java.util.List<uk.co.nstauthority.fieldconsents.teams.TeamMemberView>" -->
+<#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
 <#-- @ftlvariable name="backLinkUrl" type="java.lang.String" -->
 <#-- @ftlvariable name="breadcrumbsList" type="java.util.Map<java.lang.String, java.lang.String>" -->
 <#-- @ftlvariable name="canRemoveUsers" type="java.lang.Boolean" -->
@@ -13,11 +13,18 @@
 
 <#assign pageTitle=teamName/>
 
+<#if backLinkUrl?has_content>
+  <#assign backLinkSpringUrl=springUrl(backLinkUrl)/>
+<#else>
+  <#assign backLinkSpringUrl=""/>
+</#if>
+
 <@defaultPage
   htmlTitle=pageTitle
   pageHeading=pageTitle
   errorItems=errorList
   pageSize=PageSize.FULL_WIDTH
+  backLinkUrl=backLinkSpringUrl
 >
 
   <@roleDescriptions.roleDescriptions roles=teamRoles/>

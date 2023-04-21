@@ -14,7 +14,7 @@ import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 @Service
 public class TopNavigationService {
 
-  static final String TEAM_MANAGEMENT_NAVIGATION_ITEM_TITLE = "Manage teams";
+  static final String TEAM_MANAGEMENT_NAVIGATION_ITEM_TITLE = "Teams";
 
   public List<TopNavigationItem> getTopNavigationItems() {
     var navigationItems = new ArrayList<TopNavigationItem>();

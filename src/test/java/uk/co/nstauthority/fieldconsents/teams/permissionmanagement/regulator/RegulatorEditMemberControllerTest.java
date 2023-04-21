@@ -133,8 +133,6 @@ class RegulatorEditMemberControllerTest extends AbstractControllerTest {
   }
 
   private MvcResult makeValidRenderEditMemberRequest(Set<TeamRole> teamMemberRoles) throws Exception {
-
-
     when(teamService.getTeam(teamView.teamId(), RegulatorAddMemberController.TEAM_TYPE))
         .thenReturn(Optional.of(regulatorTeam));
 
@@ -165,9 +163,64 @@ class RegulatorEditMemberControllerTest extends AbstractControllerTest {
   }
 
   @Test
+  void renderEditMember_whenAccessManagerAndTeamMemberDoesntExist_thenClientError() throws Exception {
+    Set<TeamRole> teamMemberRoles = Set.of(RegulatorTeamRole.ACCESS_MANAGER);
+
+    when(teamService.getTeam(teamView.teamId(), RegulatorAddMemberController.TEAM_TYPE))
+        .thenReturn(Optional.of(regulatorTeam));
+
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withTeamType(TeamType.REGULATOR)
+        .withTeamId(teamView.teamId())
+        .withWebUserAccountId(accessManager.wuaId())
+        .withRoles(teamMemberRoles)
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(accessManager)).thenReturn(List.of(teamMember));
+    when(teamMemberService.isMemberOfTeam(teamView.teamId(), accessManager)).thenReturn(true);
+
+    when(teamMemberService.getTeamMember(regulatorTeam, teamMember.wuaId()))
+        .thenReturn(Optional.empty());
+
+    mockMvc.perform(get(ReverseRouter.route(on(RegulatorEditMemberController.class)
+            .renderEditMember(teamView.teamId(), teamMember.wuaId())))
+            .with(user(accessManager)))
+        .andExpect(status().is4xxClientError());
+  }
+
+  @Test
+  void renderEditMember_whenAccessManagerAndTeamMemberViewDoesntExist_thenClientError() throws Exception {
+    Set<TeamRole> teamMemberRoles = Set.of(RegulatorTeamRole.ACCESS_MANAGER);
+
+    when(teamService.getTeam(teamView.teamId(), RegulatorAddMemberController.TEAM_TYPE))
+        .thenReturn(Optional.of(regulatorTeam));
+
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withTeamType(TeamType.REGULATOR)
+        .withTeamId(teamView.teamId())
+        .withWebUserAccountId(accessManager.wuaId())
+        .withRoles(teamMemberRoles)
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(accessManager)).thenReturn(List.of(teamMember));
+    when(teamMemberService.isMemberOfTeam(teamView.teamId(), accessManager)).thenReturn(true);
+
+    when(teamMemberService.getTeamMember(regulatorTeam, teamMember.wuaId()))
+        .thenReturn(Optional.of(teamMember));
+
+    when(teamMemberViewService.getTeamMemberView(teamMember)).thenReturn(Optional.empty());
+
+    mockMvc.perform(get(ReverseRouter.route(on(RegulatorEditMemberController.class)
+            .renderEditMember(teamView.teamId(), teamMember.wuaId())))
+            .with(user(accessManager)))
+        .andExpect(status().is4xxClientError());
+  }
+
+  @SecurityTest
   void editMember_whenNotAuthorized_thenIsForbidden() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(RegulatorEditMemberController.class)
             .renderEditMember(teamView.teamId(), new WebUserAccountId(accessManager.wuaId())))))
         .andExpect(status().isForbidden());
   }
+
 }

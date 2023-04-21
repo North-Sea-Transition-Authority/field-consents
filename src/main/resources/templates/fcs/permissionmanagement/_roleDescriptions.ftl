@@ -1,4 +1,4 @@
-<#-- @ftlvariable name="roles" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamRole>" -->
+<#-- @ftlvariable name="roles" type="java.util.List<uk.co.nstauthority.fieldconsents.teams.permissionmanagement.TeamRole>" -->
 
 <#import '../../fds/components/details/details.ftl' as fdsDetails>
 <#import '../../fds/components/summaryList/summaryList.ftl' as fdsSummaryList>
