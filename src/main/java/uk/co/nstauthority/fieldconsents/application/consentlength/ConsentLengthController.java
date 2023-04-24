@@ -44,7 +44,7 @@ public class ConsentLengthController {
   @GetMapping
   public ModelAndView getConsentLengthForm(@PathVariable Integer applicationId) {
     ModelAndView modelAndView = getConsentLengthFormModelAndView(applicationId);
-    ApplicationVersion currentVersion = applicationVersionService.getApplicationVersionById(applicationId);
+    ApplicationVersion currentVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     ConsentLengthForm consentLengthForm = consentLengthService.getConsentLengthForm(currentVersion);
 
     modelAndView.addObject("form", consentLengthForm);
@@ -78,7 +78,7 @@ public class ConsentLengthController {
     if (bindingResult.hasErrors()) {
       return getConsentLengthFormModelAndView(applicationId);
     } else {
-      ApplicationVersion currentVersion = applicationVersionService.getApplicationVersionById(applicationId);
+      ApplicationVersion currentVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
       consentLengthService.saveConsentLengthDetails(currentVersion, form);
       return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
     }

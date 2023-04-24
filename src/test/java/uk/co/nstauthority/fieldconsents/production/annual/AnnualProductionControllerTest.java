@@ -49,7 +49,7 @@ class AnnualProductionControllerTest extends AbstractControllerTest {
 
   @BeforeEach
   void setUp() {
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
     annualProductionForm = ProductionTestUtils.getEmptyAnnualProductionForm();
 
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);

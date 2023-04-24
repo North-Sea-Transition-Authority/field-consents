@@ -32,7 +32,7 @@ class ApplicationFlagServiceTest {
   @BeforeEach
   void setUp() {
     applicationFlagService = new ApplicationFlagService(applicationFlagRepository);
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
     secondaryAssetsFlag = new ApplicationFlag(1, applicationVersion, ApplicationFlagType.HAS_SECONDARY_ASSETS, true);
   }
 

@@ -53,7 +53,7 @@ class SupportingInformationControllerTest extends AbstractControllerTest {
 
   @BeforeEach
   void setUp() {
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
 
     form = new SupportingInformationForm();
@@ -79,7 +79,7 @@ class SupportingInformationControllerTest extends AbstractControllerTest {
   @Test
   @WithMockUser
   void getSupportingInformationForm_withValidUserAndVentApplication() throws Exception {
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(applicationVersion.getApplication());
 
     Map<String, Object> model = getSupportingInformationFormModel();
@@ -97,7 +97,7 @@ class SupportingInformationControllerTest extends AbstractControllerTest {
   @Test
   @WithMockUser
   void getSupportingInformationForm_withValidUserAndProductionApplication() throws Exception {
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(applicationVersion.getApplication());
 
     Map<String, Object> model = getSupportingInformationFormModel();

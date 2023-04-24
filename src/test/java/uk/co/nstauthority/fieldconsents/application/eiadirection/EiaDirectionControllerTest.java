@@ -61,7 +61,7 @@ class EiaDirectionControllerTest extends AbstractControllerTest {
 
   @BeforeEach
   void setUp() {
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
   }

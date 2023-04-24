@@ -35,7 +35,7 @@ class AdditionalAssetsServiceTest {
     additionalAssetsService = new AdditionalAssetsService(
         applicationAssetService,
         applicationAssetLicenceService);
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
     applicationAsset = ApplicationAssetTestUtil.fieldAsset2;
   }
 

@@ -35,7 +35,7 @@ class SupportingInformationFormValidatorTest {
   @ParameterizedTest
   @EnumSource(value = ApplicationType.class, names = {"FLARE", "VENT"})
   void validate_withValidFormAndNonProductionApplication(ApplicationType applicationType) {
-    var applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(applicationType);
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
     form.setApplicationVersion(applicationVersion);
     form.setNotes("Test notes");
     form.setErapNotes("Test ERAP notes");
@@ -47,7 +47,7 @@ class SupportingInformationFormValidatorTest {
 
   @Test
   void validate_withValidFormAndProductionApplication() {
-    var productionApplicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var productionApplicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
     form.setApplicationVersion(productionApplicationVersion);
     form.setNotes("Test notes");
 
@@ -59,7 +59,7 @@ class SupportingInformationFormValidatorTest {
   @ParameterizedTest
   @EnumSource(value = ApplicationType.class, names = {"FLARE", "VENT"})
   void validate_withNonValidFormAndNonProductionApplication(ApplicationType applicationType) {
-    var applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(applicationType);
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
     form.setApplicationVersion(applicationVersion);
 
     ValidationUtils.invokeValidator(validator, form, errors);
@@ -74,7 +74,7 @@ class SupportingInformationFormValidatorTest {
 
   @Test
   void validate_withNonValidFormAndProductionApplication() {
-    var productionApplicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var productionApplicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
     form.setApplicationVersion(productionApplicationVersion);
 
     ValidationUtils.invokeValidator(validator, form, errors);

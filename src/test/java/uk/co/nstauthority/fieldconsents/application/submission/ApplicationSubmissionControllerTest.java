@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
+import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_REFERENCE;
 import static uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionController.PAGE_TITLE;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
@@ -18,6 +19,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
+import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
@@ -34,6 +36,9 @@ class ApplicationSubmissionControllerTest extends AbstractControllerTest {
   @MockBean
   private ApplicationSubmissionService applicationSubmissionService;
 
+  @MockBean
+  private ApplicationService applicationService;
+
   private ApplicationVersion applicationVersion;
 
   @BeforeEach
@@ -46,6 +51,7 @@ class ApplicationSubmissionControllerTest extends AbstractControllerTest {
   @WithMockUser
   void submitApplication() throws Exception {
     when(applicationSubmissionService.isSubmittable(applicationVersion)).thenReturn(true);
+    when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(APPLICATION_REFERENCE);
 
     var modelAndView = mockMvc.perform(post(ReverseRouter.route(on(ApplicationSubmissionController.class)
             .submitApplication(APPLICATION_ID)))
@@ -59,7 +65,7 @@ class ApplicationSubmissionControllerTest extends AbstractControllerTest {
 
     assertThat(model)
         .containsEntry("pageTitle", PAGE_TITLE)
-        .containsEntry("caseReference", "CASE_REF")
+        .containsEntry("applicationReference", APPLICATION_REFERENCE)
         .containsEntry("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()));
   }
 

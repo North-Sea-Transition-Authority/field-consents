@@ -70,7 +70,7 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
     applicationTypeMap = Arrays.stream(ConsentLengthType.values())
         .collect(StreamUtils.toLinkedHashMap(Enum::name, ConsentLengthType::getDisplayName));
 
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
     when(startApplicationControllerHelperService.getApplicationTypesMap(AssetType.FIELD)).thenReturn(applicationTypeMap);
   }
 

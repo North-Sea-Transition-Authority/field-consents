@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.nstauthority.fieldconsents.application.ApplicationService;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
@@ -16,12 +18,16 @@ import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 public class ApplicationSubmissionController {
 
   public static final String PAGE_TITLE = "Application submitted";
+
+  private final ApplicationService applicationService;
   private final ApplicationVersionService applicationVersionService;
   private final ApplicationSubmissionService applicationSubmissionService;
 
 
-  public ApplicationSubmissionController(ApplicationVersionService applicationVersionService,
+  public ApplicationSubmissionController(ApplicationService applicationService,
+                                         ApplicationVersionService applicationVersionService,
                                          ApplicationSubmissionService applicationSubmissionService) {
+    this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.applicationSubmissionService = applicationSubmissionService;
   }
@@ -31,20 +37,18 @@ public class ApplicationSubmissionController {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
 
     if (applicationSubmissionService.isSubmittable(applicationVersion)) {
-      applicationVersionService.submit(applicationVersion);
+      applicationService.submitApplication(applicationVersion);
     } else {
       throw new RuntimeException("The application with id %s cannot be submitted!".formatted(applicationId));
     }
 
-    return applicationSubmittedModelAndView();
+    return applicationSubmittedModelAndView(applicationVersion);
   }
 
-  private ModelAndView applicationSubmittedModelAndView() {
+  private ModelAndView applicationSubmittedModelAndView(ApplicationVersion applicationVersion) {
     ModelAndView modelAndView = new ModelAndView("fcs/application/submissionConfirmation");
     modelAndView.addObject("pageTitle", PAGE_TITLE);
-
-    // TODO FCS-36: replace CASE_REF with the case reference generated
-    modelAndView.addObject("caseReference", "CASE_REF");
+    modelAndView.addObject("applicationReference", applicationService.generateApplicationReference(applicationVersion));
     modelAndView.addObject("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()));
     return modelAndView;
   }

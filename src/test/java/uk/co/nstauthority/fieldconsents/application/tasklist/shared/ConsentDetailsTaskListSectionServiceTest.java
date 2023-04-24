@@ -60,7 +60,7 @@ class ConsentDetailsTaskListSectionServiceTest {
 
   @BeforeEach
   void setUp() {
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
     consentDetailsTaskListSectionService = new ConsentDetailsTaskListSectionService(
         consentLengthService,
         applicationAssetService,
@@ -136,7 +136,7 @@ class ConsentDetailsTaskListSectionServiceTest {
 
   @Test
   void getSection_consentDetailsTaskListItemCompleted_withFieldPrimaryAssetAndVentApplication() {
-    ApplicationVersion ventAppVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT);
+    ApplicationVersion ventAppVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
     ConsentLengthDetails consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(ventAppVersion);
     when(consentLengthService.findConsentLengthDetails(ventAppVersion)).thenReturn(Optional.of(consentLengthDetails));
     when(applicationAssetService.getPrimaryAsset(ventAppVersion)).thenReturn(fieldAsset1);
@@ -166,7 +166,7 @@ class ConsentDetailsTaskListSectionServiceTest {
 
   @Test
   void getSection_consentDetailsTaskListItemCompleted_withFieldPrimaryAssetAndProduction() {
-    ApplicationVersion productionAppVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
+    ApplicationVersion productionAppVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
     ConsentLengthDetails consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(productionAppVersion);
     when(consentLengthService.findConsentLengthDetails(productionAppVersion)).thenReturn(Optional.of(consentLengthDetails));
     when(applicationAssetService.getPrimaryAsset(productionAppVersion)).thenReturn(fieldAsset1);
@@ -199,7 +199,7 @@ class ConsentDetailsTaskListSectionServiceTest {
   @ValueSource(booleans = {true, false})
   void getSection_consentDetailsTaskListItemCompleted_withFieldPrimaryAssetAndProduction_gasInjectionCompleted(
       Boolean willGasBeInjected) {
-    ApplicationVersion productionAppVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
+    ApplicationVersion productionAppVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
     ConsentLengthDetails consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(productionAppVersion);
     when(consentLengthService.findConsentLengthDetails(productionAppVersion)).thenReturn(Optional.of(consentLengthDetails));
     when(applicationAssetService.getPrimaryAsset(productionAppVersion)).thenReturn(fieldAsset1);

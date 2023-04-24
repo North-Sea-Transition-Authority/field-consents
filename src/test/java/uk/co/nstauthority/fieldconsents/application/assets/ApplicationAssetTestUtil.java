@@ -27,7 +27,7 @@ public class ApplicationAssetTestUtil {
   public static String BASE_ASSETS_URL = "/applications/" + ApplicationTestUtil.APPLICATION_ID + "/additional-assets";
   public static final ApplicationAsset fieldAsset1 = new ApplicationAsset(
       1,
-      ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT),
+      ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT),
       FIELD_ID_1,
       FIELD_NAME_1,
       null,
@@ -59,7 +59,7 @@ public class ApplicationAssetTestUtil {
 
   public static final ApplicationAsset fieldAsset2 = new ApplicationAsset(
       2,
-      ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT),
+      ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT),
       FIELD_ID_2,
       FIELD_NAME_2,
       null,
@@ -91,7 +91,7 @@ public class ApplicationAssetTestUtil {
 
   public static final ApplicationAsset fieldAsset3 = new ApplicationAsset(
       3,
-      ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT),
+      ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT),
       FIELD_ID_3,
       FIELD_NAME_3,
       null,
@@ -123,7 +123,7 @@ public class ApplicationAssetTestUtil {
 
   public static final ApplicationAsset terminalAsset1 = new ApplicationAsset(
       1,
-      ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT),
+      ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT),
       null,
       null,
       TERMINAL_ID_1,

@@ -30,7 +30,7 @@ class BigDecimalUtilTest {
 
   @BeforeEach
   void setUp() {
-    var applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
     annualProductionMonths = ProductionTestUtils.getAnnualProductionMonthsData(applicationVersion);
     oilMinValues = annualProductionMonths.stream().map(ProductionRow::getOilMinValue).toList();
     oilMaxValues = annualProductionMonths.stream().map(ProductionRow::getOilMaxValue).toList();

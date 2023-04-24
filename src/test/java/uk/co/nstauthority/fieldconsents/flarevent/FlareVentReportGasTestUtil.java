@@ -25,7 +25,7 @@ public class FlareVentReportGasTestUtil {
   public static final Double CATEGORY_C_INERT_GAS = 52.0475;
   public static final Double CATEGORY_C_HYDROCARBON = 47.9525;
 
-  public static ApplicationVersion flareAppVersion = ApplicationTestUtil.getApplicationVersionWithType(
+  public static ApplicationVersion flareAppVersion = ApplicationTestUtil.getNewApplicationVersionWithType(
       ApplicationType.FLARE);
 
   public static FlareReportGasData getCompleteAndValidFlareReportGasData() {

@@ -55,9 +55,9 @@ class ConsentLengthControllerTest extends AbstractControllerTest {
 
   @BeforeEach
   void setUp() {
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
-    when(applicationService.getApplicationById(ApplicationTestUtil.APPLICATION_ID)).thenReturn(applicationVersion.getApplication());
-    when(applicationVersionService.getApplicationVersionById(ApplicationTestUtil.APPLICATION_ID)).thenReturn(applicationVersion);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(ApplicationTestUtil.APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(applicationVersion.getApplication());
 
     consentLengthForm = ConsentLengthTestUtil.getAnnualConsentLengthForm();
 

@@ -68,13 +68,13 @@ class FlareInformationSummarySectionServiceTest {
 
   @BeforeEach
   void setUp() {
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
   }
 
   @ParameterizedTest
   @EnumSource(value = ApplicationType.class, names = {"PRODUCTION", "VENT"})
   void getSummarySection_nonFlare(ApplicationType applicationType) {
-    var nonFlareAppVersion = ApplicationTestUtil.getApplicationVersionWithType(applicationType);
+    var nonFlareAppVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
 
     assertThat(flareInformationSummarySectionService.getSummarySection(nonFlareAppVersion))
         .isNotPresent();

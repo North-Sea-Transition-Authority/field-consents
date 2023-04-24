@@ -12,7 +12,7 @@ import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportPeriodForm;
 
 public class FlareReportTestUtil {
 
-  static ApplicationVersion flareAppVersion = ApplicationTestUtil.getApplicationVersionWithType(
+  static ApplicationVersion flareAppVersion = ApplicationTestUtil.getNewApplicationVersionWithType(
       ApplicationType.FLARE);
 
   static FlareReportMonthForm getFullFlareReportMonthForm() {

@@ -47,7 +47,7 @@ class VentReportGasDataServiceTest {
 
   @BeforeEach
   void setUp() {
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
     ventReportGasDataService = new VentReportGasDataService(ventReportGasDataRepository, applicationUnitService,
         ventReportPeriodService, emissionReportGasDataSummaryService);
   }

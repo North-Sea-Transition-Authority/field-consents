@@ -62,7 +62,7 @@ class AdditionalInformationTaskListSectionServiceTest {
 
   @BeforeEach
   void setUp() {
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
     additionalInformationTaskListSectionService = new AdditionalInformationTaskListSectionService(supportingInformationService,
         applicationAssetService, fieldService, eiaDirectionService);
   }

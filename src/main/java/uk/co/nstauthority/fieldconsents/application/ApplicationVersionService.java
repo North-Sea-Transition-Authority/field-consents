@@ -1,6 +1,5 @@
 package uk.co.nstauthority.fieldconsents.application;
 
-import java.time.Instant;
 import java.util.Comparator;
 import javax.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,13 +29,5 @@ public class ApplicationVersionService {
         .orElseThrow(() ->
             new EntityNotFoundException("Application version not found for application with id %s".formatted(applicationId))
         );
-  }
-
-  public void submit(ApplicationVersion applicationVersion) {
-    applicationVersion.setStatus(ApplicationVersionStatus.SUBMITTED);
-    applicationVersion.setSubmittedDateTime(Instant.now());
-    // TODO - FCS-5: Update this with the User's wua_id when available
-    applicationVersion.setSubmittedByWuaId(1);
-    applicationVersionRepository.save(applicationVersion);
   }
 }

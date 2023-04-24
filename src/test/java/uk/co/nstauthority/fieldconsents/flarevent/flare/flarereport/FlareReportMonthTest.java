@@ -14,7 +14,7 @@ class FlareReportMonthTest {
   @Test
   void newFromFlareReportMonthForm() {
     ApplicationVersion applicationVersion =
-        ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
+        ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
 
     FlareReportMonth flareReportMonth = FlareReportMonth.from(applicationVersion,
         FlareReportTestUtil.getFullFlareReportMonthForm());

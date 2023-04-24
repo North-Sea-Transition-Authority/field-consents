@@ -81,7 +81,7 @@ class VentInformationTaskListSectionServiceTest {
 
   @BeforeEach
   void setUp() {
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
     ventInformationTaskListSectionService =
         new VentInformationTaskListSectionService(
             ventService,
@@ -99,7 +99,7 @@ class VentInformationTaskListSectionServiceTest {
 
   @Test
   void getSection_whenNotVentApplication() {
-    ApplicationVersion ventApplicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
+    ApplicationVersion ventApplicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
 
     assertThat(ventInformationTaskListSectionService.getSection(ventApplicationVersion)).isEmpty();
   }

@@ -60,7 +60,7 @@ class ConsentLengthServiceTest {
   @BeforeEach
   void setup() {
     consentLengthService = new ConsentLengthService(consentLengthRepository, applicationEventPublisher);
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
   }
 
   @Test

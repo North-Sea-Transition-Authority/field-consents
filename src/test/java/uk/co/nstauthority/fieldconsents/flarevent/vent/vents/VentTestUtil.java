@@ -8,7 +8,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 
 public class VentTestUtil {
-  public static ApplicationVersion ventAppVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT);
+  public static ApplicationVersion ventAppVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
   public static String BASE_VENTS_URL = "/applications/" + ApplicationTestUtil.APPLICATION_ID + "/vents";
   public static Integer badVentNo = 999;
   public static Integer ventNoHp = 1;

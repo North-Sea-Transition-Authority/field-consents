@@ -59,7 +59,7 @@ class AdditionalAssetSelectionFormValidatorTest {
 
   @BeforeEach
   void setUp() {
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
     validator = new AdditionalAssetSelectionFormValidator(
         assetService,
         fieldService,

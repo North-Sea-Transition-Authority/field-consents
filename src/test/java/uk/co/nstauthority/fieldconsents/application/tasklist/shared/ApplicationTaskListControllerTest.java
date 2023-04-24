@@ -55,7 +55,7 @@ class ApplicationTaskListControllerTest extends AbstractControllerTest {
   @Test
   @WithMockUser
   void getTaskList_withFlareApplication() throws Exception {
-    ApplicationVersion applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
+    ApplicationVersion applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(applicationContextService.getApplicationContextJson(applicationVersion)).thenReturn(applicationContext);
 
@@ -80,7 +80,7 @@ class ApplicationTaskListControllerTest extends AbstractControllerTest {
   @Test
   @WithMockUser
   void getTaskList_withVentApplication() throws Exception {
-    ApplicationVersion applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT);
+    ApplicationVersion applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(applicationTaskListService.getAllSections(applicationVersion)).thenReturn(flareTaskListSections);
     when(applicationContextService.getApplicationContextJson(applicationVersion)).thenReturn(applicationContext);
@@ -106,7 +106,7 @@ class ApplicationTaskListControllerTest extends AbstractControllerTest {
   @Test
   @WithMockUser
   void getTaskList_withProductionApplication() throws Exception {
-    ApplicationVersion applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
+    ApplicationVersion applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(applicationTaskListService.getAllSections(applicationVersion)).thenReturn(flareTaskListSections);
     when(applicationContextService.getApplicationContextJson(applicationVersion)).thenReturn(applicationContext);

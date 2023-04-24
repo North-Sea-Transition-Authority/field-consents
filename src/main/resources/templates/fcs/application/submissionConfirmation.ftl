@@ -7,7 +7,7 @@ htmlTitle=pageTitle>
     <@fdsPanel.panel
     panelTitle=pageTitle
     panelText="Your reference number"
-    panelRef=caseReference
+    panelRef=applicationReference
    />
 
    <@fdsAction.link

@@ -13,7 +13,7 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ShortTermUtil;
 
 public class VentShortTermTestUtil {
 
-  static ApplicationVersion ventAppVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT);
+  static ApplicationVersion ventAppVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
 
   static VentShortTermMonthForm getFullVentShortTermMonthForm() {
     VentShortTermMonthForm ventShortTermMonthForm = new VentShortTermMonthForm();

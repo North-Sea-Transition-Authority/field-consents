@@ -16,7 +16,7 @@ import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportPeriodForm;
 class FlareReportPeriodTest {
 
   static final ApplicationVersion applicationVersion =
-      ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
+      ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
 
   FlareVentReportPeriodForm reportPeriodForm;
 

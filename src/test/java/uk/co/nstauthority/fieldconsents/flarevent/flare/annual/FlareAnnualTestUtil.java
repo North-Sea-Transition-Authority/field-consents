@@ -11,7 +11,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 
 public class FlareAnnualTestUtil {
 
-  static ApplicationVersion flareAppVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
+  static ApplicationVersion flareAppVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
 
   static FlareAnnualMonthForm getFullFlareAnnualMonthForm() {
     FlareAnnualMonthForm flareAnnualMonthForm = new FlareAnnualMonthForm();

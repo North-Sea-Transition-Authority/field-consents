@@ -47,7 +47,7 @@ class FlareReportGasDataServiceTest {
 
   @BeforeEach
   void setUp() {
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
     flareReportGasDataService = new FlareReportGasDataService(flareReportGasDataRepository, applicationUnitService,
         flareReportPeriodService, emissionReportGasDataSummaryService);
   }

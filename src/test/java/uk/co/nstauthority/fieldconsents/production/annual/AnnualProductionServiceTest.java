@@ -54,7 +54,7 @@ class AnnualProductionServiceTest {
         productionRowService,
         consentLengthService,
         annualProductionMonthRepository);
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
     consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForAnnual(applicationVersion);
   }
 

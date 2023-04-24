@@ -76,9 +76,9 @@ class ApplicationSummaryControllerTest extends AbstractControllerTest {
 
   private static Stream<Arguments> getApplicationVersions() {
     return Stream.of(
-        Arguments.of(ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION)),
-        Arguments.of(ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE)),
-        Arguments.of(ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT))
+        Arguments.of(ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION)),
+        Arguments.of(ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE)),
+        Arguments.of(ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT))
     );
   }
 

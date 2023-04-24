@@ -13,7 +13,7 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ShortTermUtil;
 
 public class FlareShortTermTestUtil {
 
-  static ApplicationVersion flareAppVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
+  static ApplicationVersion flareAppVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
 
   static FlareShortTermMonthForm getFullFlareShortTermMonthForm() {
     FlareShortTermMonthForm flareShortTermMonthForm = new FlareShortTermMonthForm();

@@ -8,7 +8,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 
 public class FlareTestUtil {
-  public static ApplicationVersion flareAppVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
+  public static ApplicationVersion flareAppVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
   public static String BASE_FLARES_URL = "/applications/" + ApplicationTestUtil.APPLICATION_ID + "/flares";
   public static Integer badFlareNo = 999;
   public static Integer flareNoHp = 1;

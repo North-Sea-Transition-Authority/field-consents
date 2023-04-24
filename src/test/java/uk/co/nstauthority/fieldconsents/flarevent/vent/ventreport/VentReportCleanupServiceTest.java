@@ -32,7 +32,7 @@ class VentReportCleanupServiceTest {
   @BeforeEach
   void setup() {
     ventReportCleanupService = new VentReportCleanupService(ventReportMonthRepository);
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
     ventReportPeriod = new VentReportPeriod(applicationVersion, Month.DECEMBER, 2022);
   }
 

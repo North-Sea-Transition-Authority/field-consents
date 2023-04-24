@@ -69,7 +69,7 @@ class ApplicationAssetServiceTest {
         terminalService,
         applicationAssetRepository,
         applicationFlagService);
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
   }
 
   @Test

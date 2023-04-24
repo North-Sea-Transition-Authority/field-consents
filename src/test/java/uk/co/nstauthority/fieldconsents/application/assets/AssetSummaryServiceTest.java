@@ -53,7 +53,7 @@ class AssetSummaryServiceTest {
   void setUp() {
     assetSummaryService = new AssetSummaryService(applicationAssetService, applicationAssetLicenceService,
         organisationUnitService, applicationFlagService);
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
   }
 
   @Test

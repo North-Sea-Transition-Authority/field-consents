@@ -14,7 +14,7 @@ class VentReportMonthTest {
   @Test
   void newFromVentReportMonthForm() {
     ApplicationVersion applicationVersion =
-        ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
+        ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
 
     VentReportMonth ventReportMonth = VentReportMonth.from(applicationVersion,
         VentReportTestUtil.getFullVentReportMonthForm());

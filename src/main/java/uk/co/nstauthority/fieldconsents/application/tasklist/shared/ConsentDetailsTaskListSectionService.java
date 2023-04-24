@@ -46,7 +46,8 @@ public class ConsentDetailsTaskListSectionService implements TaskListSectionServ
     items.add(
         new TaskListItem("Consent duration",
             TaskListLabel.notStartedOrCompleteByOptional(consentLengthService.findConsentLengthDetails(applicationVersion)),
-            ReverseRouter.route(on(ConsentLengthController.class).getConsentLengthForm(applicationVersion.getId())))
+            ReverseRouter.route(on(ConsentLengthController.class)
+                .getConsentLengthForm(applicationVersion.getApplication().getId())))
     );
 
     var primaryAsset = applicationAssetService.getPrimaryAsset(applicationVersion);

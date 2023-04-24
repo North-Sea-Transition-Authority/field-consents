@@ -53,7 +53,7 @@ class ShortTermProductionControllerTest extends AbstractControllerTest {
   void setUp() {
     shortTermProductionForm = ProductionTestUtils.getEmptyShortTermProductionForm();
 
-    ApplicationVersion applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(
+    ApplicationVersion applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(
         ApplicationType.PRODUCTION);
 
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(

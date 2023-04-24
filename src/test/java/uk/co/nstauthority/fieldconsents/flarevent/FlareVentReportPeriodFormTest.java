@@ -14,7 +14,7 @@ class FlareVentReportPeriodFormTest {
   @Test
   void newFromFlareReportPeriod() {
     ApplicationVersion applicationVersion
-        = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
+        = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
     FlareReportPeriod flareReportPeriod =
         new FlareReportPeriod(applicationVersion, Month.APRIL, 2023);
 

@@ -52,7 +52,7 @@ class VentReportServiceTest {
   void setUp() {
     ventReportService = new VentReportService(ventReportMonthRepository, ventReportPeriodService,
         applicationUnitService, emissionReportSummaryService);
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
   }
 
   @Test

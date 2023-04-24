@@ -55,7 +55,7 @@ class VentReportPeriodControllerTest extends AbstractControllerTest {
 
   @BeforeEach
   void setUp() {
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
     reportPeriodForm = VentReportTestUtil.getFullVentReportPeriodForm();
 
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))

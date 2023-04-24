@@ -56,7 +56,7 @@ class ShortTermProductionServiceTest {
         productionRowService,
         consentLengthService,
         shortTermProductionMonthRepository);
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
     consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(applicationVersion);
   }
 

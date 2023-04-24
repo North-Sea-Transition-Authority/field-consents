@@ -21,7 +21,7 @@ class FlareReportGasDataTest {
 
   @BeforeEach
   void setUp() {
-    flareAppVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
+    flareAppVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
     form = FlareVentReportGasTestUtil.getValidFlareVentReportGasDataForm();
   }
 

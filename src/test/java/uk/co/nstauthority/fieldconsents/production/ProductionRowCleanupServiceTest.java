@@ -62,7 +62,7 @@ class ProductionRowCleanupServiceTest {
         applicationVersionService,
         consentLengthService
     );
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
     consentLengthChangeEvent = new ConsentLengthChangeEvent(
         consentLengthService,
         applicationVersion.getId()

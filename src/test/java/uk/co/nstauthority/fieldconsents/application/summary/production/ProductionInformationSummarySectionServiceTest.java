@@ -48,13 +48,13 @@ class ProductionInformationSummarySectionServiceTest {
 
   @BeforeEach
   void setUp() {
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
   }
 
   @ParameterizedTest
   @EnumSource(value = ApplicationType.class, names = {"FLARE", "VENT"})
   void getSummarySection_nonProduction(ApplicationType applicationType) {
-    var nonProductionAppVersion = ApplicationTestUtil.getApplicationVersionWithType(applicationType);
+    var nonProductionAppVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
 
     assertThat(productionInformationSummarySectionService.getSummarySection(nonProductionAppVersion))
         .isNotPresent();

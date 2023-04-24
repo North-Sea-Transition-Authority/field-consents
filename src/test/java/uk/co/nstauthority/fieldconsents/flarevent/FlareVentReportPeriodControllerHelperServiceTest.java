@@ -19,7 +19,7 @@ class FlareVentReportPeriodControllerHelperServiceTest {
 
   @BeforeEach
   void setUp() {
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(
         ApplicationType.FLARE);
     reportPeriodControllerHelperService = new FlareVentReportPeriodControllerHelperService();
   }

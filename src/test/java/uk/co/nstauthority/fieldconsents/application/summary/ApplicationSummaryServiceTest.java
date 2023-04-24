@@ -43,7 +43,7 @@ class ApplicationSummaryServiceTest {
 
   @BeforeEach
   void setUp() {
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
     applicationSummaryService = new ApplicationSummaryService(List.of(
         additionalInformationSummarySectionService,
         productionInformationSummarySectionService,

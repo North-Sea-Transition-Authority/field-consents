@@ -46,7 +46,7 @@ class ApplicationContextServiceTest {
         applicationAssetService,
         organisationUnitService
     );
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
 
     primaryApplicationAsset = new ApplicationAsset();
     primaryApplicationAsset.setApplicationVersion(applicationVersion);

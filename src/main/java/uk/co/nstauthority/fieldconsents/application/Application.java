@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -24,14 +25,21 @@ public class Application {
 
   private Instant createdDate;
 
-  private Integer createdByWuaId;
+  private Long createdByWuaId;
 
-  public Application(Integer id, ApplicationType type,
-                     Instant createdDate, Integer createdByWuaId) {
+  private Integer variationNo;
+
+  private Integer applicationNo;
+
+  @VisibleForTesting
+  public Application(Integer id, ApplicationType type, Instant createdDate, Long createdByWuaId,
+                     Integer variationNo, Integer applicationNo) {
     this.id = id;
     this.type = type;
     this.createdDate = createdDate;
     this.createdByWuaId = createdByWuaId;
+    this.variationNo = variationNo;
+    this.applicationNo = applicationNo;
   }
 
   public Application() {
@@ -39,10 +47,6 @@ public class Application {
 
   public Integer getId() {
     return id;
-  }
-
-  public void setId(Integer id) {
-    this.id = id;
   }
 
   public ApplicationType getType() {
@@ -65,11 +69,27 @@ public class Application {
     return LocalDate.ofInstant(this.createdDate, ZoneId.systemDefault());
   }
 
-  public Integer getCreatedByWuaId() {
+  public Long getCreatedByWuaId() {
     return createdByWuaId;
   }
 
-  public void setCreatedByWuaId(Integer createdByWuaId) {
+  public void setCreatedByWuaId(Long createdByWuaId) {
     this.createdByWuaId = createdByWuaId;
+  }
+
+  public Integer getVariationNo() {
+    return variationNo;
+  }
+
+  public void setVariationNo(Integer variationNumber) {
+    this.variationNo = variationNumber;
+  }
+
+  public Integer getApplicationNo() {
+    return applicationNo;
+  }
+
+  public void setApplicationNo(Integer applicationNo) {
+    this.applicationNo = applicationNo;
   }
 }

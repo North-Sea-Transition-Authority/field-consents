@@ -9,9 +9,9 @@ import uk.co.nstauthority.fieldconsents.assets.AssetType;
 
 public enum ApplicationType {
 
-  PRODUCTION("Production", 1, EnumSet.of(AssetType.FIELD)),
-  FLARE("Flare", 2, EnumSet.of(AssetType.FIELD, AssetType.TERMINAL)),
-  VENT("Vent", 3, EnumSet.of(AssetType.FIELD, AssetType.TERMINAL));
+  PRODUCTION("Production", 1, EnumSet.of(AssetType.FIELD), "PCON"),
+  FLARE("Flare", 2, EnumSet.of(AssetType.FIELD, AssetType.TERMINAL), "FCON"),
+  VENT("Vent", 3, EnumSet.of(AssetType.FIELD, AssetType.TERMINAL), "VCON");
 
 
   private final String displayName;
@@ -20,10 +20,13 @@ public enum ApplicationType {
 
   private final EnumSet<AssetType> assetTypes;
 
-  ApplicationType(String displayName, int displayOrder, EnumSet<AssetType> assetTypes) {
+  private final String referenceMnemonic;
+
+  ApplicationType(String displayName, int displayOrder, EnumSet<AssetType> assetTypes, String referenceMnemonic) {
     this.displayName = displayName;
     this.displayOrder = displayOrder;
     this.assetTypes = assetTypes;
+    this.referenceMnemonic = referenceMnemonic;
   }
 
   public String getDisplayName() {
@@ -36,6 +39,10 @@ public enum ApplicationType {
 
   public EnumSet<AssetType> getAssetTypes() {
     return assetTypes;
+  }
+
+  public String getReferenceMnemonic() {
+    return referenceMnemonic;
   }
 
   public static LinkedHashSet<ApplicationType> getForAssetType(AssetType assetType) {

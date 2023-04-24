@@ -40,7 +40,7 @@ class VentReportPeriodServiceTest {
   @BeforeEach
   void setUp() {
     ventReportPeriodService = new VentReportPeriodService(ventReportPeriodRepository, ventReportCleanupService);
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
     exceptionMessage = "Vent report period with application_version_id %s not found".formatted(applicationVersion.getId());
     ventReportPeriod = new VentReportPeriod(applicationVersion, Month.APRIL, 2023);
   }

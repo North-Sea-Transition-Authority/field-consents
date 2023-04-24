@@ -39,7 +39,7 @@ class ApplicationTaskListServiceTest {
 
   @BeforeEach
   void setUp() {
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
     applicationTaskListService = new ApplicationTaskListService(
         Arrays.asList(
             consentDetailsTaskListSectionService,

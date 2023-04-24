@@ -56,7 +56,7 @@ class LongTermProductionControllerTest extends AbstractControllerTest {
 
   @BeforeEach
   void setUp() {
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
     longTermProductionForm = ProductionTestUtils.getEmptyLongTermProductionForm(START_YEAR, END_YEAR);
 
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))

@@ -54,7 +54,7 @@ class LongTermProductionServiceTest {
         productionRowService,
         consentLengthService,
         longTermProductionYearRepository);
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
     consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForLongTerm(applicationVersion);
   }
 

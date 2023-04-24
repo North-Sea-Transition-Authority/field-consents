@@ -65,7 +65,7 @@ class ConsentDetailsSummarySectionServiceTest {
   @ParameterizedTest
   @MethodSource("getSummaryCards")
   void getSummarySection_production(SummaryCard summaryCard) {
-    var applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(fieldAsset1);
     when(applicationContextService.getApplicationContextSummaryCard(applicationVersion))
         .thenReturn(summaryCard);
@@ -110,7 +110,7 @@ class ConsentDetailsSummarySectionServiceTest {
   void getSummarySection_flareVentFieldTerminal(ApplicationType applicationType,
                                                 ApplicationAsset applicationAsset,
                                                 SummaryCard summaryCard) {
-    var applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(applicationType);
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(applicationAsset);
     when(applicationContextService.getApplicationContextSummaryCard(applicationVersion))
         .thenReturn(summaryCard);

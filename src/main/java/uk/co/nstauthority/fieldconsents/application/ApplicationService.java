@@ -3,13 +3,13 @@ package uk.co.nstauthority.fieldconsents.application;
 import java.time.Instant;
 import javax.persistence.EntityNotFoundException;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAssetLicenceService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorAndLicencesJson;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalWithOperatorJson;
+import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 
 @Service
@@ -23,15 +23,22 @@ public class ApplicationService {
 
   private final ApplicationAssetLicenceService applicationAssetLicenceService;
 
-  @Autowired
+  private final ApplicationConfigurationProperties applicationConfigurationProperties;
+
+  private final UserDetailService userDetailService;
+
   public ApplicationService(ApplicationRepository applicationRepository,
                             ApplicationVersionRepository applicationVersionRepository,
                             ApplicationAssetService applicationAssetService,
-                            ApplicationAssetLicenceService applicationAssetLicenceService) {
+                            ApplicationAssetLicenceService applicationAssetLicenceService,
+                            ApplicationConfigurationProperties applicationConfigurationProperties,
+                            UserDetailService userDetailService) {
     this.applicationRepository = applicationRepository;
     this.applicationVersionRepository = applicationVersionRepository;
     this.applicationAssetService = applicationAssetService;
     this.applicationAssetLicenceService = applicationAssetLicenceService;
+    this.applicationConfigurationProperties = applicationConfigurationProperties;
+    this.userDetailService = userDetailService;
   }
 
   private ApplicationVersion createNewApplication(ApplicationType applicationType, OrganisationUnitJson operatorOuJson) {
@@ -64,12 +71,45 @@ public class ApplicationService {
     applicationVersion.setApplication(application);
     applicationVersion.setVersion(1);
     applicationVersion.setCreatedDateTime(Instant.now());
-    // TODO - FCS-5: Update this with the User's wua_id when available
-    applicationVersion.setCreatedByWuaId(1);
+    applicationVersion.setCreatedByWuaId(userDetailService.getUserDetail().wuaId());
     applicationVersion.setStatus(ApplicationVersionStatus.IN_PROGRESS);
     applicationVersion.setPrimaryOperatorOuId(operatorOuJson.organisationUnitId());
     applicationVersion.setCachedPrimaryOperatorName(operatorOuJson.name());
     return applicationVersionRepository.save(applicationVersion);
+  }
+
+  @Transactional
+  public void submitApplication(ApplicationVersion applicationVersion) {
+    var application = applicationVersion.getApplication();
+    application.setApplicationNo(getApplicationNumber());
+    submitApplicationVersion(applicationVersion);
+    applicationRepository.save(application);
+  }
+
+  protected void submitApplicationVersion(ApplicationVersion applicationVersion) {
+    if (!applicationVersion.getStatus().equals(ApplicationVersionStatus.IN_PROGRESS)) {
+      throw new IllegalStateException(String.format("Application with id %s cannot be submitted",
+          applicationVersion.getApplication().getId()));
+    }
+    applicationVersion.setStatus(ApplicationVersionStatus.SUBMITTED);
+    applicationVersion.setSubmittedDateTime(Instant.now());
+    applicationVersion.setSubmittedByWuaId(userDetailService.getUserDetail().wuaId());
+    applicationVersionRepository.save(applicationVersion);
+  }
+
+  public String generateApplicationReference(ApplicationVersion applicationVersion) {
+    var application = applicationVersion.getApplication();
+    return "%s/%d/%d (Version %d)".formatted(
+        application.getType().getReferenceMnemonic(),
+        application.getApplicationNo(),
+        application.getVariationNo(),
+        applicationVersion.getVersion());
+  }
+
+  protected int getApplicationNumber() {
+    return applicationRepository.findLatestApplicationNumber()
+        .map(latestApplicationNumber -> latestApplicationNumber + 1)
+        .orElse(Integer.valueOf(applicationConfigurationProperties.applicationNoStartValue()));
   }
 
   @NotNull
@@ -77,8 +117,8 @@ public class ApplicationService {
     Application application = new Application();
     application.setType(applicationType);
     application.setCreatedDate(Instant.now());
-    // TODO - FCS-5: Update this with the User's wua_id when available
-    application.setCreatedByWuaId(1);
+    application.setVariationNo(0);
+    application.setCreatedByWuaId(userDetailService.getUserDetail().wuaId());
     return applicationRepository.save(application);
   }
 

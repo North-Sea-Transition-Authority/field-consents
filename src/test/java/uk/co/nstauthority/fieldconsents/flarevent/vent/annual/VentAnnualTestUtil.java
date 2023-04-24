@@ -11,7 +11,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 
 public class VentAnnualTestUtil {
 
-  static ApplicationVersion ventAppVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT);
+  static ApplicationVersion ventAppVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
 
   static VentAnnualMonthForm getFullVentAnnualMonthForm() {
     VentAnnualMonthForm ventAnnualMonthForm = new VentAnnualMonthForm();

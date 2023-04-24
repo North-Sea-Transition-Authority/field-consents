@@ -53,7 +53,7 @@ class ProductionInformationTaskListSectionServiceTest {
 
   @BeforeEach
   void setUp() {
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
     productionInformationTaskListSectionService =
         new ProductionInformationTaskListSectionService(
             consentLengthService,
@@ -64,7 +64,7 @@ class ProductionInformationTaskListSectionServiceTest {
 
   @Test
   void getSection_whenNotProductionApplication() {
-    ApplicationVersion ventApplicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT);
+    ApplicationVersion ventApplicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
 
     assertThat(productionInformationTaskListSectionService.getSection(ventApplicationVersion)).isEmpty();
   }

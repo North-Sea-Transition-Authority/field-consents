@@ -80,7 +80,7 @@ class EmissionReportSummaryServiceTest {
   @Test
   void getReportTableSummaryCard_flare() {
     var reportMonths = FlareReportTestUtil.getFlareReportMonthsForYear(
-        ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE), 2023);
+        ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE), 2023);
     var categoryUnit = FlareVentUnit.TONNES_PER_MONTH;
     var averageUnit = FlareVentUnit.TONNES_PER_DAY;
 
@@ -127,7 +127,7 @@ class EmissionReportSummaryServiceTest {
   @Test
   void getReportTableSummaryCard_vent() {
     var reportMonths = VentReportTestUtil.getVentReportMonthsForYear(
-        ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT), 2023);
+        ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT), 2023);
     var categoryUnit = FlareVentUnit.TONNES_PER_MONTH;
     var averageUnit = FlareVentUnit.TONNES_PER_DAY;
 
@@ -174,7 +174,7 @@ class EmissionReportSummaryServiceTest {
   @Test
   void getReportTableSummaryCard_unexpectedReportMonthClass() {
     var flareAnnualMonths = FlareAnnualTestUtil.getFlareAnnualMonthsForYear(
-        ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT), 2023);
+        ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT), 2023);
     var categoryUnit = FlareVentUnit.TONNES_PER_MONTH;
     var averageUnit = FlareVentUnit.TONNES_PER_DAY;
 

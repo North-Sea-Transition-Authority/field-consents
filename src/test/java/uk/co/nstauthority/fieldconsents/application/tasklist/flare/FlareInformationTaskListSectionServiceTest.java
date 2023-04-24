@@ -81,7 +81,7 @@ class FlareInformationTaskListSectionServiceTest {
 
   @BeforeEach
   void setUp() {
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
     flareInformationTaskListSectionService = new FlareInformationTaskListSectionService(
         flareService,
         flareReportPeriodService,
@@ -97,7 +97,7 @@ class FlareInformationTaskListSectionServiceTest {
 
   @Test
   void getSection_whenNotFlareApplication() {
-    ApplicationVersion ventApplicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT);
+    ApplicationVersion ventApplicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
 
     assertThat(flareInformationTaskListSectionService.getSection(ventApplicationVersion)).isEmpty();
   }

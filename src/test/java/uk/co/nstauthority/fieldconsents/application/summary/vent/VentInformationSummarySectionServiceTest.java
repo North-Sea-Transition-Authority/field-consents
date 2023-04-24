@@ -68,13 +68,13 @@ class VentInformationSummarySectionServiceTest {
 
   @BeforeEach
   void setUp() {
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
   }
 
   @ParameterizedTest
   @EnumSource(value = ApplicationType.class, names = {"PRODUCTION", "FLARE"})
   void getSummarySection_nonVent(ApplicationType applicationType) {
-    var nonVentAppVersion = ApplicationTestUtil.getApplicationVersionWithType(applicationType);
+    var nonVentAppVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
 
     assertThat(ventInformationSummarySectionService.getSummarySection(nonVentAppVersion))
         .isNotPresent();

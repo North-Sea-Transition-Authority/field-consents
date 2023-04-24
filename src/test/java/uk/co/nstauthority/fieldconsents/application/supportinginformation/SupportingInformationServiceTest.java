@@ -44,7 +44,7 @@ class SupportingInformationServiceTest {
 
   @BeforeEach
   void setUp() {
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
     supportingInformationService = new SupportingInformationService(supportingInformationRepository);
 
     supportingInformation = getSupportingInformation();
@@ -138,7 +138,7 @@ class SupportingInformationServiceTest {
 
   @Test
   void getSupportingInformationSummaryCard_supportingInfoProduction() {
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
     when(supportingInformationRepository.findByApplicationVersion(applicationVersion))
         .thenReturn(Optional.of(getSupportingInformationProduction()));
 
@@ -154,7 +154,7 @@ class SupportingInformationServiceTest {
   @ParameterizedTest
   @EnumSource(value = ApplicationType.class, names = {"FLARE", "VENT"})
   void getSupportingInformationSummaryCard_supportingInfoFlare(ApplicationType applicationType) {
-    applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(applicationType);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
     when(supportingInformationRepository.findByApplicationVersion(applicationVersion))
         .thenReturn(Optional.of(getSupportingInformation()));
 

@@ -60,7 +60,7 @@ class FlareReportGasDataControllerTest extends AbstractControllerTest {
 
   @BeforeEach
   void setUp() {
-    ApplicationVersion applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE);
+    ApplicationVersion applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
     form = new FlareVentReportGasDataForm();
     FlareReportPeriod flareReportPeriod = new FlareReportPeriod(applicationVersion, Month.OCTOBER, 2022);
 

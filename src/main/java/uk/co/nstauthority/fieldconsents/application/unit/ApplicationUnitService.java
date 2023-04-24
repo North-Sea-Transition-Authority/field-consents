@@ -152,8 +152,7 @@ public class ApplicationUnitService implements ApplicationListener<ConsentLength
   @Override
   @Transactional
   public void onApplicationEvent(ConsentLengthChangeEvent event) {
-    ApplicationVersion applicationVersion = applicationVersionService
-        .getLatestApplicationVersionByApplicationId(event.getApplicationVersionId());
+    ApplicationVersion applicationVersion = applicationVersionService.getApplicationVersionById(event.getApplicationVersionId());
 
     ApplicationType applicationType = applicationVersion.getApplication().getType();
 

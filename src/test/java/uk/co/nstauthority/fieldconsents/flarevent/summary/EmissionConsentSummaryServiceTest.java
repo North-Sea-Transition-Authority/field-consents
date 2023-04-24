@@ -56,7 +56,7 @@ class EmissionConsentSummaryServiceTest {
   @Test
   void getShortTermConsentSummaryCard_flare() {
     var consentMonths = FlareShortTermTestUtil.getFlareShortTermMonthsForPeriod(
-        ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE),
+        ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE),
         SHORT_TERM_START_DATE,
         SHORT_TERM_END_DATE
     );
@@ -98,7 +98,7 @@ class EmissionConsentSummaryServiceTest {
   @Test
   void getShortTermConsentSummaryCard_vent() {
     var consentMonths = VentShortTermTestUtil.getVentShortTermMonthsForPeriod(
-        ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT),
+        ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT),
         SHORT_TERM_START_DATE,
         SHORT_TERM_END_DATE
     );
@@ -140,7 +140,7 @@ class EmissionConsentSummaryServiceTest {
   @Test
   void getShortTermConsentSummaryCard_unexpectedConsentMonthClass() {
     var reportMonths = VentReportTestUtil.getVentReportMonthsForYear(
-        ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT), 2023);
+        ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT), 2023);
     var categoryUnit = FlareVentUnit.TONNES_PER_MONTH;
     var averageUnit = FlareVentUnit.TONNES_PER_DAY;
 
@@ -261,9 +261,9 @@ class EmissionConsentSummaryServiceTest {
   private static Stream<Arguments> getAnnualConsentMonths() {
     return Stream.of(
         Arguments.of(FlareAnnualTestUtil.getFlareAnnualMonthsForYear(
-            ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.FLARE), 2023)),
+            ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE), 2023)),
         Arguments.of(VentAnnualTestUtil.getVentAnnualMonthsForYear(
-            ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT), 2023))
+            ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT), 2023))
     );
   }
 

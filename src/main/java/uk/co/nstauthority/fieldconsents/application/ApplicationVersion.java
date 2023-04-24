@@ -35,11 +35,11 @@ public class ApplicationVersion {
 
   private Instant createdDateTime;
 
-  private Integer createdByWuaId;
+  private Long createdByWuaId;
 
   private Instant submittedDateTime;
 
-  private Integer submittedByWuaId;
+  private Long submittedByWuaId;
 
   @Audited
   @Enumerated(EnumType.STRING)
@@ -50,7 +50,7 @@ public class ApplicationVersion {
 
   @VisibleForTesting
   public ApplicationVersion(Integer id, Application application, Integer version, Integer primaryOperatorOuId,
-                            String cachedPrimaryOperatorName, Instant createdDateTime, Integer createdByWuaId,
+                            String cachedPrimaryOperatorName, Instant createdDateTime, Long createdByWuaId,
                             ApplicationVersionStatus status) {
     this.id = id;
     this.application = application;
@@ -110,11 +110,11 @@ public class ApplicationVersion {
     this.createdDateTime = createdDateTime;
   }
 
-  public Integer getCreatedByWuaId() {
+  public Long getCreatedByWuaId() {
     return createdByWuaId;
   }
 
-  public void setCreatedByWuaId(Integer createdByWuaId) {
+  public void setCreatedByWuaId(Long createdByWuaId) {
     this.createdByWuaId = createdByWuaId;
   }
 
@@ -126,11 +126,11 @@ public class ApplicationVersion {
     this.submittedDateTime = submittedDate;
   }
 
-  public Integer getSubmittedByWuaId() {
+  public Long getSubmittedByWuaId() {
     return submittedByWuaId;
   }
 
-  public void setSubmittedByWuaId(Integer submittedByWuaId) {
+  public void setSubmittedByWuaId(Long submittedByWuaId) {
     this.submittedByWuaId = submittedByWuaId;
   }
 

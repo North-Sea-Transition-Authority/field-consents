@@ -68,7 +68,7 @@ class ApplicationUnitServiceTest {
     );
     flareAppVersion = FlareTestUtil.flareAppVersion;
     ventAppVersion = VentTestUtil.ventAppVersion;
-    productionAppVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.PRODUCTION);
+    productionAppVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
   }
 
   @Test
@@ -638,7 +638,7 @@ class ApplicationUnitServiceTest {
         consentLengthService,
         flareAppVersion.getId()
     );
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(flareAppVersion.getId()))
+    when(applicationVersionService.getApplicationVersionById(flareAppVersion.getId()))
         .thenReturn(flareAppVersion);
 
     applicationUnitService.onApplicationEvent(consentLengthChangeEvent);
@@ -652,7 +652,7 @@ class ApplicationUnitServiceTest {
         consentLengthService,
         productionAppVersion.getId()
     );
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(productionAppVersion.getId()))
+    when(applicationVersionService.getApplicationVersionById(productionAppVersion.getId()))
         .thenReturn(productionAppVersion);
 
     ConsentLengthDetails consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(productionAppVersion);

@@ -60,7 +60,7 @@ class VentReportGasDataControllerTest extends AbstractControllerTest {
 
   @BeforeEach
   void setUp() {
-    ApplicationVersion applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(ApplicationType.VENT);
+    ApplicationVersion applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
     form = new FlareVentReportGasDataForm();
     VentReportPeriod ventReportPeriod = new VentReportPeriod(applicationVersion, Month.OCTOBER, 2022);
 

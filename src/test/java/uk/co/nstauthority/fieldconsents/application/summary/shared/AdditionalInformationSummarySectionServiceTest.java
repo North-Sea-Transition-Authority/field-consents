@@ -59,7 +59,7 @@ class AdditionalInformationSummarySectionServiceTest {
   @ParameterizedTest
   @MethodSource("getAppTypeSummaryCard")
   void getSummarySection_offshore(ApplicationType applicationType, SummaryCard summaryCard) {
-    var applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(applicationType);
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
     when(eiaDirectionService.getEiaDirectionSummaryCard(applicationVersion))
         .thenReturn(summaryCard);
     when(supportingInformationService.getSupportingInformationSummaryCard(applicationVersion))
@@ -102,7 +102,7 @@ class AdditionalInformationSummarySectionServiceTest {
   @ParameterizedTest
   @EnumSource(ApplicationType.class)
   void getSummarySection_onshore(ApplicationType applicationType) {
-    var applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(applicationType);
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
     when(supportingInformationService.getSupportingInformationSummaryCard(applicationVersion))
         .thenReturn(simpleSummaryCard);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.fieldAsset2);
@@ -117,7 +117,7 @@ class AdditionalInformationSummarySectionServiceTest {
   @ParameterizedTest
   @EnumSource(ApplicationType.class)
   void getSummarySection_unknownShore(ApplicationType applicationType) {
-    var applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(applicationType);
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
     when(supportingInformationService.getSupportingInformationSummaryCard(applicationVersion))
         .thenReturn(simpleSummaryCard);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.fieldAsset3);
@@ -132,7 +132,7 @@ class AdditionalInformationSummarySectionServiceTest {
   @ParameterizedTest
   @EnumSource(ApplicationType.class)
   void getSummarySection_terminal(ApplicationType applicationType) {
-    var applicationVersion = ApplicationTestUtil.getApplicationVersionWithType(applicationType);
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
     when(supportingInformationService.getSupportingInformationSummaryCard(applicationVersion))
         .thenReturn(simpleSummaryCard);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.terminalAsset1);
