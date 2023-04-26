@@ -18,13 +18,33 @@ public enum IndustryTeamRole implements TeamRole {
       "Viewer",
       "Can view applications and consents for the organisation group",
       20,
-      EnumSet.of(RolePermission.VIEW_FCS_APPLICATION)
+      EnumSet.of(RolePermission.VIEW_FCS_APPLICATIONS, RolePermission.VIEW_FCS_CONSENTS)
+  ),
+  EDITOR(
+      "Editor",
+      "Can edit applications for the organisation group",
+      30,
+      EnumSet.of(RolePermission.EDIT_FCS_APPLICATIONS, RolePermission.VIEW_FCS_APPLICATIONS)
+  ),
+  SUBMITTER(
+      "Submitter",
+      "Can submit and edit applications for the organisation group",
+      40,
+      EnumSet.of(
+          RolePermission.SUBMIT_FCS_APPLICATIONS,
+          RolePermission.EDIT_FCS_APPLICATIONS,
+          RolePermission.VIEW_FCS_APPLICATIONS
+      )
   ),
   CREATOR(
       "Creator",
-      "Can start applications for the organisation group",
-      30,
-      EnumSet.of(RolePermission.CREATE_FCS_APPLICATION)
+      "Can start and edit applications for the organisation group",
+      50,
+      EnumSet.of(
+          RolePermission.CREATE_FCS_APPLICATIONS,
+          RolePermission.EDIT_FCS_APPLICATIONS,
+          RolePermission.VIEW_FCS_APPLICATIONS
+      )
   );
 
   private final String displayName;
