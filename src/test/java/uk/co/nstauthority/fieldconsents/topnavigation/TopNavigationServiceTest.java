@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.nstauthority.fieldconsents.assets.AssetSelectionController;
 import uk.co.nstauthority.fieldconsents.fds.navigation.TopNavigationItem;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.TeamListController;
@@ -33,6 +34,10 @@ class TopNavigationServiceTest {
             tuple(
                 WorkAreaController.WORK_AREA_TITLE,
                 StringUtils.stripEnd(ReverseRouter.route(on(WorkAreaController.class).getWorkArea()), "/")
+            ),
+            tuple(
+                AssetSelectionController.ASSET_SELECTION_TITLE,
+                StringUtils.stripEnd(ReverseRouter.route(on(AssetSelectionController.class).getAssetSelection()), "/")
             ),
             tuple(
                 TopNavigationService.TEAM_MANAGEMENT_NAVIGATION_ITEM_TITLE,

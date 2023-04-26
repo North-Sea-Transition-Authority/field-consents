@@ -41,7 +41,7 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
 
   private static final Integer FIELD_ID = 1;
 
-  private static final String MANAGE_FIELD_URL_BASE = "/fields/1/";
+  private static final String MANAGE_FIELD_URL_BASE = "/manage-asset/fields/1/";
 
   @MockBean
   private ApplicationService applicationService;

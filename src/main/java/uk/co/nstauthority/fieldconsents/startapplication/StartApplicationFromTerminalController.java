@@ -28,7 +28,7 @@ import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 
 @Controller
-@RequestMapping("/facilities/{terminalId}")
+@RequestMapping("/manage-asset/facilities/{terminalId}")
 public class StartApplicationFromTerminalController {
 
   private final ApplicationService applicationService;

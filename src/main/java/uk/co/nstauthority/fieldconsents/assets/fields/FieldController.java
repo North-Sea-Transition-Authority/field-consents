@@ -8,11 +8,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.nstauthority.fieldconsents.assets.AssetSelectionController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.startapplication.StartApplicationFromFieldController;
 
 @RestController
-@RequestMapping("/fields/{fieldId}")
+@RequestMapping("/manage-asset/fields/{fieldId}")
 public class FieldController {
 
   private final FieldService fieldService;
@@ -38,6 +39,7 @@ public class FieldController {
         .addObject("startApplicationEnabled", fieldJson.operatorExists() && fieldJson.licencesExist())
         .addObject("operatorName", fieldJson.getOperatorName())
         .addObject("licences", fieldJson.getLicencesAsString())
+        .addObject("backLinkUrl", ReverseRouter.route(on(AssetSelectionController.class).getAssetSelection()))
         .addObject("startApplicationUrl",
             ReverseRouter.route(on(StartApplicationFromFieldController.class).getStartApplicationForm(fieldId))
         );

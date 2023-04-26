@@ -41,7 +41,7 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
 
   private static final Integer TERMINAL_ID = 1;
 
-  private static final String MANAGE_TERMINAL_URL_BASE = "/facilities/1/";
+  private static final String MANAGE_TERMINAL_URL_BASE = "/manage-asset/facilities/1/";
 
   @MockBean
   private ApplicationService applicationService;

@@ -33,6 +33,7 @@
   pageHeading=pageTitle
   pageSize=PageSize.FULL_WIDTH
   notificationBannerContentOverride=warningBanner
+  backLinkUrl=springUrl(backLinkUrl)
 >
   <@fdsDataItems.dataItem>
     <@fdsDataItems.dataValues key="Operator" value=operatorName/>

@@ -28,7 +28,7 @@ import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 
 @Controller
-@RequestMapping("/fields/{fieldId}")
+@RequestMapping("/manage-asset/fields/{fieldId}")
 public class StartApplicationFromFieldController {
 
   private final ApplicationService applicationService;

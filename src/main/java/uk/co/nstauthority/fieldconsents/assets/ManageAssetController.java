@@ -6,14 +6,17 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldController;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalController;
+import uk.co.nstauthority.fieldconsents.authorisation.AccessibleByServiceUsers;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @Controller
+@RequestMapping("manage-asset")
+@AccessibleByServiceUsers
 public class ManageAssetController {
 
   private final AssetService assetService;
@@ -23,7 +26,7 @@ public class ManageAssetController {
     this.assetService = assetService;
   }
 
-  @GetMapping("manage-asset")
+  @GetMapping("asset-selected")
   public ModelAndView manageAsset(@RequestParam String assetKey) {
     Optional<AssetJson> assetJson = assetService.getAssetFromKey(assetKey);
 
@@ -32,7 +35,7 @@ public class ManageAssetController {
     } else if (assetJson.isPresent() && assetJson.get().getAssetType().equals(AssetType.TERMINAL)) {
       return ReverseRouter.redirect(on(TerminalController.class).manageTerminal(assetJson.get().getId()));
     } else {
-      return ReverseRouter.redirect(on(WorkAreaController.class).getWorkArea());
+      return ReverseRouter.redirect(on(AssetSelectionController.class).getAssetSelection());
     }
   }
 }
