@@ -10,11 +10,17 @@ import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
+import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @Controller
 @RequestMapping("applications/{applicationId}/submit")
+@HasApplicationStatus(statuses = ApplicationVersionStatus.IN_PROGRESS)
+@HasApplicationPermission(permissions = RolePermission.SUBMIT_FCS_APPLICATIONS)
 public class ApplicationSubmissionController {
 
   public static final String PAGE_TITLE = "Application submitted";

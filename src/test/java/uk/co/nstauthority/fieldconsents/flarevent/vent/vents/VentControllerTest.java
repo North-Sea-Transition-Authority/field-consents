@@ -13,26 +13,24 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
+import java.util.Optional;
 import javax.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
-import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
+import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @ContextConfiguration(classes = VentController.class)
-class VentControllerTest extends AbstractControllerTest {
-
-  @MockBean
-  private ApplicationVersionService applicationVersionService;
+class VentControllerTest extends AbstractApplicationControllerTest {
 
   @MockBean
   private VentService ventService;
@@ -54,15 +52,18 @@ class VentControllerTest extends AbstractControllerTest {
   void setUp() {
     applicationVersion = VentTestUtil.ventAppVersion;
     expectBaseVentsUrl = VentTestUtil.BASE_VENTS_URL;
+    when(applicationVersionService.findLatestApplicationVersion(applicationVersion.getApplication().getId()))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(applicationVersion.getApplication().getId()))
         .thenReturn(applicationVersion);
   }
 
   @Test
-  @WithMockUser
   void addVent_validUser() throws Exception {
     var modelAndView = mockMvc.perform(
-        get(ReverseRouter.route(on(VentController.class).addVent(ApplicationTestUtil.APPLICATION_ID))))
+        get(ReverseRouter.route(on(VentController.class).addVent(ApplicationTestUtil.APPLICATION_ID)))
+            .with(user(user))
+        )
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/vent/editVentForm"))
         .andReturn().getModelAndView();
@@ -83,20 +84,20 @@ class VentControllerTest extends AbstractControllerTest {
         .containsExactly(null, null, null, null, null);
   }
 
-  @Test
+  @SecurityTest
   void addVent_noUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(VentController.class).addVent(ApplicationTestUtil.APPLICATION_ID))))
         .andExpect(redirectionToLoginUrl());
   }
 
   @Test
-  @WithMockUser
   void saveNewVent_invalidForm() throws Exception {
 
     doCallRealMethod().when(ventFormValidator).validate(any(), any());
 
     var modelAndView = mockMvc.perform(post(ReverseRouter.route(on(VentController.class).saveNewVent(
         ApplicationTestUtil.APPLICATION_ID, null, null)))
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/vent/editVentForm"))
@@ -119,10 +120,10 @@ class VentControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void saveNewVent_validForm() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(VentController.class).saveNewVent(
         ApplicationTestUtil.APPLICATION_ID, null, null)))
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(view().name("redirect:" + expectBaseVentsUrl));
@@ -133,32 +134,37 @@ class VentControllerTest extends AbstractControllerTest {
         .saveNewVent(applicationVersionArgumentCaptor.capture(), ventFormArgumentCaptor.capture());
   }
 
-  @Test
+  @SecurityTest
   void saveNewVent_noUser() throws Exception {
-    mockMvc.perform(post(ReverseRouter.route(on(VentController.class).saveNewVent(
-        ApplicationTestUtil.APPLICATION_ID, null, null))))
-        .andExpect(status().isForbidden());
+    mockMvc.perform(
+        post(ReverseRouter.route(on(VentController.class).saveNewVent(
+            ApplicationTestUtil.APPLICATION_ID, null, null)))
+            .with(csrf())
+        )
+        .andExpect(redirectionToLoginUrl());
   }
 
   @Test
-  @WithMockUser
   void viewVentsSummary_noVents() throws Exception {
     when(ventService.ventsExistForApplicationVersion(applicationVersion)).thenReturn(Boolean.FALSE);
 
     mockMvc.perform(
-        get(ReverseRouter.route(on(VentController.class).viewVentsSummary(ApplicationTestUtil.APPLICATION_ID))))
+        get(ReverseRouter.route(on(VentController.class).viewVentsSummary(ApplicationTestUtil.APPLICATION_ID)))
+            .with(user(user))
+        )
         .andExpect(status().is3xxRedirection())
         .andExpect(view().name("redirect:/applications/1/task-list/"));
   }
 
   @Test
-  @WithMockUser
   void viewVentsSummary_ventsExist() throws Exception {
     when(ventService.ventsExistForApplicationVersion(applicationVersion)).thenReturn(Boolean.TRUE);
     when(ventSummaryService.getVentViews(applicationVersion)).thenReturn(VentTestUtil.ventViews);
 
     var modelAndView = mockMvc.perform(
-            get(ReverseRouter.route(on(VentController.class).viewVentsSummary(ApplicationTestUtil.APPLICATION_ID))))
+        get(ReverseRouter.route(on(VentController.class).viewVentsSummary(ApplicationTestUtil.APPLICATION_ID)))
+            .with(user(user))
+        )
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/vent/ventsSummaryForm"))
         .andReturn().getModelAndView();
@@ -175,14 +181,16 @@ class VentControllerTest extends AbstractControllerTest {
         .isNull();
   }
 
-  @Test
+  @SecurityTest
   void viewVentsSummary_noUser() throws Exception {
-    mockMvc.perform(post(ReverseRouter.route(on(VentController.class).viewVentsSummary(ApplicationTestUtil.APPLICATION_ID))))
-        .andExpect(status().isForbidden());
+    mockMvc.perform(
+        post(ReverseRouter.route(on(VentController.class).viewVentsSummary(ApplicationTestUtil.APPLICATION_ID)))
+            .with(csrf())
+        )
+        .andExpect(redirectionToLoginUrl());
   }
 
   @Test
-  @WithMockUser
   void saveVentsSummary_invalidForm() throws Exception {
 
     doCallRealMethod().when(ventSetupFormValidator).validate(any(), any());
@@ -190,6 +198,7 @@ class VentControllerTest extends AbstractControllerTest {
 
     var modelAndView = mockMvc.perform(post(ReverseRouter.route(on(VentController.class).saveVentsSummary(
         ApplicationTestUtil.APPLICATION_ID, null, null)))
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/vent/ventsSummaryForm"))
@@ -208,36 +217,38 @@ class VentControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void saveVentsSummary_validFormMoreVents() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(VentController.class).saveVentsSummary(
         ApplicationTestUtil.APPLICATION_ID,null, null)))
             .param("hasOtherVentsToAdd", Boolean.TRUE.toString())
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(view().name("redirect:" + expectBaseVentsUrl + "/new"));
   }
 
   @Test
-  @WithMockUser
   void saveVentsSummary_validFormNoMoreVents() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(VentController.class).saveVentsSummary(
         ApplicationTestUtil.APPLICATION_ID, null, null)))
             .param("hasOtherVentsToAdd", Boolean.FALSE.toString())
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(view().name("redirect:/applications/1/task-list/"));
   }
 
-  @Test
+  @SecurityTest
   void saveVentsSummary_noUser() throws Exception {
-    mockMvc.perform(post(ReverseRouter.route(on(VentController.class).saveVentsSummary(
-        ApplicationTestUtil.APPLICATION_ID, null, null))))
-        .andExpect(status().isForbidden());
+    mockMvc.perform(
+        post(ReverseRouter.route(on(VentController.class).saveVentsSummary(
+            ApplicationTestUtil.APPLICATION_ID, null, null)))
+            .with(csrf())
+        )
+        .andExpect(redirectionToLoginUrl());
   }
 
   @Test
-  @WithMockUser
   void editVent_ventFound() throws Exception {
 
     when(ventService.getVentOrError(applicationVersion, VentTestUtil.ventNoHp))
@@ -245,7 +256,9 @@ class VentControllerTest extends AbstractControllerTest {
 
     var modelAndView = mockMvc.perform(
         get(ReverseRouter.route(on(VentController.class).editVent(
-            ApplicationTestUtil.APPLICATION_ID, VentTestUtil.ventNoHp))))
+            ApplicationTestUtil.APPLICATION_ID, VentTestUtil.ventNoHp)))
+            .with(user(user))
+        )
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/vent/editVentForm"))
         .andReturn().getModelAndView();
@@ -271,7 +284,6 @@ class VentControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void editVent_noVentFound() {
 
     when(ventService.getVentOrError(applicationVersion, VentTestUtil.ventNoHp))
@@ -279,13 +291,15 @@ class VentControllerTest extends AbstractControllerTest {
 
     assertThatThrownBy(() ->
         mockMvc.perform(get(ReverseRouter.route(on(VentController.class).editVent(
-            ApplicationTestUtil.APPLICATION_ID, VentTestUtil.ventNoHp)))))
+            ApplicationTestUtil.APPLICATION_ID, VentTestUtil.ventNoHp)))
+            .with(user(user))
+        ))
         .isInstanceOf(Exception.class)
         .hasMessageContaining("Vent with application_version_id %s and vent_no %s not found"
             .formatted(applicationVersion.getId(), VentTestUtil.ventNoHp));
   }
 
-  @Test
+  @SecurityTest
   void editVent_noUser() throws Exception {
     mockMvc.perform(
         get(ReverseRouter.route(on(VentController.class).editVent(applicationVersion.getApplication().getId(),
@@ -294,13 +308,13 @@ class VentControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void saveVent_invalidForm() throws Exception {
 
     doCallRealMethod().when(ventFormValidator).validate(any(), any());
 
     var modelAndView = mockMvc.perform(post(ReverseRouter.route(on(VentController.class).saveVent(
         ApplicationTestUtil.APPLICATION_ID, VentTestUtil.ventNoHp, null, null)))
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/vent/editVentForm"))
@@ -324,7 +338,6 @@ class VentControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void saveVent_validForm() throws Exception {
 
     when(ventService.getVentOrError(applicationVersion, VentTestUtil.ventNoHp))
@@ -332,6 +345,7 @@ class VentControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(post(ReverseRouter.route(on(VentController.class).saveVent(
             ApplicationTestUtil.APPLICATION_ID, VentTestUtil.ventNoHp, null, null)))
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(view().name("redirect:" + expectBaseVentsUrl));
@@ -342,22 +356,26 @@ class VentControllerTest extends AbstractControllerTest {
         .updateVentFromForm(ventArgumentCaptor.capture(), ventFormArgumentCaptor.capture());
   }
 
-  @Test
+  @SecurityTest
   void saveVent_noUser() throws Exception {
-    mockMvc.perform(post(ReverseRouter.route(on(VentController.class).saveVent(
-            ApplicationTestUtil.APPLICATION_ID, VentTestUtil.ventNoHp, null, null))))
-        .andExpect(status().isForbidden());
+    mockMvc.perform(
+        post(ReverseRouter.route(on(VentController.class).saveVent(
+            ApplicationTestUtil.APPLICATION_ID, VentTestUtil.ventNoHp, null, null)))
+            .with(csrf())
+        )
+        .andExpect(redirectionToLoginUrl());
   }
 
   @Test
-  @WithMockUser
   void deleteVentConfirm_ventExists() throws Exception {
     when(ventService.getVentOrError(applicationVersion, VentTestUtil.ventNoHp))
         .thenReturn(VentTestUtil.ventHp);
 
     var modelAndView = mockMvc.perform(
         get(ReverseRouter.route(on(VentController.class).deleteVentConfirm(
-            ApplicationTestUtil.APPLICATION_ID, VentTestUtil.ventNoHp))))
+            ApplicationTestUtil.APPLICATION_ID, VentTestUtil.ventNoHp)))
+            .with(user(user))
+        )
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/vent/deleteVent"))
         .andReturn().getModelAndView();
@@ -390,7 +408,6 @@ class VentControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void deleteVentConfirm_noVentExists() {
 
     when(ventService.getVentOrError(applicationVersion, VentTestUtil.ventNoHp))
@@ -398,13 +415,15 @@ class VentControllerTest extends AbstractControllerTest {
 
     assertThatThrownBy(() ->
         mockMvc.perform(get(ReverseRouter.route(on(VentController.class).deleteVentConfirm(
-            ApplicationTestUtil.APPLICATION_ID, VentTestUtil.ventNoHp)))))
+            ApplicationTestUtil.APPLICATION_ID, VentTestUtil.ventNoHp)))
+            .with(user(user))
+        ))
         .isInstanceOf(Exception.class)
         .hasMessageContaining("Vent with application_version_id %s and vent_no %s not found"
             .formatted(applicationVersion.getId(), VentTestUtil.ventNoHp));
   }
 
-  @Test
+  @SecurityTest
   void deleteVentConfirm_noUser() throws Exception {
     mockMvc.perform(
         get(ReverseRouter.route(on(VentController.class).deleteVentConfirm(
@@ -413,7 +432,6 @@ class VentControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void deleteVent_ventExists() throws Exception {
     when(ventService.getVentOrError(applicationVersion, VentTestUtil.ventNoHp))
         .thenReturn(VentTestUtil.ventHp);
@@ -421,6 +439,7 @@ class VentControllerTest extends AbstractControllerTest {
     mockMvc.perform(
         post(ReverseRouter.route(on(VentController.class).deleteVent(
             ApplicationTestUtil.APPLICATION_ID, null, VentTestUtil.ventNoHp)))
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(view().name("redirect:/applications/1/task-list/"));
@@ -429,7 +448,6 @@ class VentControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void deleteVent_noVentExists() {
 
     when(ventService.getVentOrError(applicationVersion, VentTestUtil.ventNoHp))
@@ -437,18 +455,19 @@ class VentControllerTest extends AbstractControllerTest {
 
     assertThatThrownBy(() ->
         mockMvc.perform(get(ReverseRouter.route(on(VentController.class).deleteVent(
-            ApplicationTestUtil.APPLICATION_ID, null, VentTestUtil.ventNoHp)))))
+            ApplicationTestUtil.APPLICATION_ID, null, VentTestUtil.ventNoHp)))
+            .with(user(user))
+        ))
         .isInstanceOf(Exception.class)
         .hasMessageContaining("Vent with application_version_id %s and vent_no %s not found"
             .formatted(applicationVersion.getId(), VentTestUtil.ventNoHp));
   }
 
-  @Test
+  @SecurityTest
   void deleteVent_noUser() throws Exception {
     mockMvc.perform(
         get(ReverseRouter.route(on(VentController.class).deleteVent(
             ApplicationTestUtil.APPLICATION_ID, null, VentTestUtil.ventNoHp))))
         .andExpect(redirectionToLoginUrl());
   }
-
 }

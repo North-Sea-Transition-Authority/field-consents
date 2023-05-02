@@ -10,26 +10,27 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
+import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
-import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
+import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
+import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.production.ProductionTestUtils;
 import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 
 @ContextConfiguration(classes = LongTermProductionController.class)
-class LongTermProductionControllerTest extends AbstractControllerTest {
+class LongTermProductionControllerTest extends AbstractApplicationControllerTest {
 
   private static final Integer START_YEAR = 2022;
 
@@ -40,9 +41,6 @@ class LongTermProductionControllerTest extends AbstractControllerTest {
 
   @MockBean
   private LongTermProductionService longTermProductionService;
-
-  @MockBean
-  private ApplicationVersionService applicationVersionService;
 
   @MockBean
   private LongTermProductionFormValidator longTermProductionFormValidator;
@@ -59,6 +57,8 @@ class LongTermProductionControllerTest extends AbstractControllerTest {
     applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
     longTermProductionForm = ProductionTestUtils.getEmptyLongTermProductionForm(START_YEAR, END_YEAR);
 
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
     when(applicationUnitService.getProductionOilUnit(applicationVersion)).thenReturn(ProductionUnit.KSCM_PER_DAY);
@@ -66,14 +66,15 @@ class LongTermProductionControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   public void getLongTermProductionRequestForm() throws Exception {
     when(longTermProductionService.getLongTermProductionForm(applicationVersion))
         .thenReturn(longTermProductionForm);
 
     var modelAndView = mockMvc.perform(
         get(ReverseRouter.route(on(LongTermProductionController.class)
-            .getLongTermProductionRequestForm(APPLICATION_ID))))
+            .getLongTermProductionRequestForm(APPLICATION_ID)))
+            .with(user(user))
+        )
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/production/longTermProductionForm"))
         .andReturn().getModelAndView();
@@ -89,27 +90,25 @@ class LongTermProductionControllerTest extends AbstractControllerTest {
     assertThat(model.get("form")).isEqualTo(longTermProductionForm);
   }
 
-  @Test
+  @SecurityTest
   void getLongTermProductionRequestForm_noUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(LongTermProductionController.class).getLongTermProductionRequestForm(APPLICATION_ID))))
         .andExpect(redirectionToLoginUrl());
   }
 
   @Test
-  @WithMockUser
   void saveLongTermProductionDetails_validForm() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(LongTermProductionController.class).saveLongTermProductionDetails(APPLICATION_ID, longTermProductionForm, ReverseRouter.emptyBindingResult())))
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl("/applications/1/task-list/"));
   }
 
-  @Test
+  @SecurityTest
   void saveLongTermProductionDetails_noUser() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(LongTermProductionController.class).saveLongTermProductionDetails(APPLICATION_ID, longTermProductionForm, ReverseRouter.emptyBindingResult())))
             .with(csrf()))
         .andExpect(redirectionToLoginUrl());
   }
-
 }
-

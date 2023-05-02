@@ -12,29 +12,27 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
+import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
-import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
+import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
+import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @ContextConfiguration(classes = GasInjectionController.class)
-class GasInjectionControllerTest extends AbstractControllerTest {
-
-  @MockBean
-  private ApplicationVersionService applicationVersionService;
+class GasInjectionControllerTest extends AbstractApplicationControllerTest {
 
   @MockBean
   private GasInjectionService gasInjectionService;
@@ -51,18 +49,21 @@ class GasInjectionControllerTest extends AbstractControllerTest {
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
   }
 
   @Test
-  @WithMockUser
   void getGasInjectionForm_validUser() throws Exception {
     var expectedGasInjectionForm = GasInjectionTestUtil.gasInjectionFormStub;
     when(gasInjectionService.getGasInjectionForm(applicationVersion)).thenReturn(expectedGasInjectionForm);
 
     var modelAndView = mockMvc.perform(
-        get(ReverseRouter.route(on(GasInjectionController.class).getGasInjectionForm(APPLICATION_ID))))
+        get(ReverseRouter.route(on(GasInjectionController.class).getGasInjectionForm(APPLICATION_ID)))
+            .with(user(user))
+        )
         .andExpect(status().isOk())
         .andExpect(view().name(GAS_INJECTION_VIEW))
         .andReturn().getModelAndView();
@@ -76,7 +77,7 @@ class GasInjectionControllerTest extends AbstractControllerTest {
         .isEqualTo(expectedGasInjectionForm);
   }
 
-  @Test
+  @SecurityTest
   void getGasInjectionForm_noUser() throws Exception {
     mockMvc.perform(
         get(ReverseRouter.route(on(GasInjectionController.class).getGasInjectionForm(APPLICATION_ID))))
@@ -84,10 +85,10 @@ class GasInjectionControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void saveGasInjectionForm_emptyForm() throws Exception {
     var modelAndView = mockMvc.perform(post(ReverseRouter.route(on(GasInjectionController.class)
             .saveGasInjectionForm(APPLICATION_ID, null, null)))
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(view().name(GAS_INJECTION_VIEW))
@@ -107,11 +108,11 @@ class GasInjectionControllerTest extends AbstractControllerTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
-  @WithMockUser
   void saveGasInjectionForm_validForm(Boolean willGasBeInjected) throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(GasInjectionController.class)
             .saveGasInjectionForm(APPLICATION_ID, null, null)))
             .param("willGasBeInjected", willGasBeInjected.toString())
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(view().name("redirect:" + TASK_LIST_URL));
@@ -122,7 +123,7 @@ class GasInjectionControllerTest extends AbstractControllerTest {
         .saveApplicationFlag(applicationVersion, ApplicationFlagType.WILL_GAS_BE_INJECTED, willGasBeInjected);
   }
 
-  @Test
+  @SecurityTest
   void saveGasInjectionForm_noUser() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(GasInjectionController.class)
             .saveGasInjectionForm(APPLICATION_ID, null, null)))

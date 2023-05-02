@@ -74,19 +74,19 @@ class HasTeamPermissionInterceptorTest extends AbstractControllerTest {
         .andExpect(status().isOk());
   }
 
-//  @SecurityTest
-//  void teamPermissions_whenNoMatchingPermission_thenForbidden() throws Exception {
-//    var team = TeamTestUtil.Builder().build();
-//    var teamMember = TeamMemberTestUtil.Builder()
-//        .withTeamId(team.toTeamId())
-//        .withRole(RegulatorTeamRole.VIEW_NOMINATION)
-//        .build();
-//    when(teamMemberService.isMemberOfTeam(team.toTeamId(), USER)).thenReturn(true);
-//    when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(List.of(teamMember));
-//    mockMvc.perform(get(ReverseRouter.route(on(TestController.class).teamPermissions(team.toTeamId())))
-//            .with(user(USER)))
-//        .andExpect(status().isForbidden());
-//  }
+  @SecurityTest
+  void teamPermissions_whenNoMatchingPermission_thenForbidden() throws Exception {
+    var team = TeamTestUtil.Builder().build();
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withTeamId(team.toTeamId())
+        .withRole(RegulatorTeamRole.INDUSTRY_ACCESS_MANAGER)
+        .build();
+    when(teamMemberService.isMemberOfTeam(team.toTeamId(), USER)).thenReturn(true);
+    when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(List.of(teamMember));
+    mockMvc.perform(get(ReverseRouter.route(on(TestController.class).teamPermissions(team.toTeamId())))
+            .with(user(USER)))
+        .andExpect(status().isForbidden());
+  }
 
   @SecurityTest
   void anyNonTeamPermissions_whenHasMatchingPermission_thenOk() throws Exception {
@@ -102,19 +102,19 @@ class HasTeamPermissionInterceptorTest extends AbstractControllerTest {
         .andExpect(status().isOk());
   }
 
-//  @SecurityTest
-//  void anyNonTeamPermissions_whenNoMatchingPermission_thenForbidden() throws Exception {
-//    var team = TeamTestUtil.Builder().build();
-//    var teamMember = TeamMemberTestUtil.Builder()
-//        .withTeamId(team.toTeamId())
-//        .withRole(RegulatorTeamRole.VIEW_NOMINATION)
-//        .build();
-//    when(teamMemberService.isMemberOfTeam(team.toTeamId(), USER)).thenReturn(false);
-//    when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(List.of(teamMember));
-//    mockMvc.perform(get(ReverseRouter.route(on(TestController.class).anyNonTeamPermissions(team.toTeamId())))
-//            .with(user(USER)))
-//        .andExpect(status().isForbidden());
-//  }
+  @SecurityTest
+  void anyNonTeamPermissions_whenNoMatchingPermission_thenForbidden() throws Exception {
+    var team = TeamTestUtil.Builder().build();
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withTeamId(team.toTeamId())
+        .withRole(RegulatorTeamRole.ACCESS_MANAGER)
+        .build();
+    when(teamMemberService.isMemberOfTeam(team.toTeamId(), USER)).thenReturn(false);
+    when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(List.of(teamMember));
+    mockMvc.perform(get(ReverseRouter.route(on(TestController.class).anyNonTeamPermissions(team.toTeamId())))
+            .with(user(USER)))
+        .andExpect(status().isForbidden());
+  }
 
   @RequestMapping("/permission-management/test")
   @Controller

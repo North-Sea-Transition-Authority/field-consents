@@ -12,31 +12,29 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
+import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.time.LocalDate;
 import java.time.Month;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
-import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
+import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
+import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentUnit;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @ContextConfiguration(classes = FlareShortTermController.class)
-class FlareShortTermControllerTest extends AbstractControllerTest {
-
-  @MockBean
-  private ApplicationVersionService applicationVersionService;
+class FlareShortTermControllerTest extends AbstractApplicationControllerTest {
 
   @MockBean
   private FlareShortTermService flareShortTermService;
@@ -53,12 +51,13 @@ class FlareShortTermControllerTest extends AbstractControllerTest {
   void setUp() {
     applicationVersion = FlareShortTermTestUtil.flareAppVersion;
 
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
   }
 
   @Test
-  @WithMockUser
   void getFlareShortTermForm() throws Exception {
     var stubFlareShortTermForm =
         FlareShortTermTestUtil.getStubFlareShortTermFormForPeriod(
@@ -71,6 +70,7 @@ class FlareShortTermControllerTest extends AbstractControllerTest {
     var modelAndView =
         mockMvc.perform(get(ReverseRouter.route(on(FlareShortTermController.class)
                 .getFlareShortTermForm(ApplicationTestUtil.APPLICATION_ID)))
+                .with(user(user))
                 .with(csrf()))
             .andExpect(status().isOk())
             .andExpect(view().name("fcs/flare/flareShortTermForm"))
@@ -90,7 +90,7 @@ class FlareShortTermControllerTest extends AbstractControllerTest {
         .isEqualTo(stubFlareShortTermForm);
   }
 
-  @Test
+  @SecurityTest
   void getFlareShortTermForm_noUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(FlareShortTermController.class)
             .getFlareShortTermForm(ApplicationTestUtil.APPLICATION_ID))))
@@ -99,7 +99,6 @@ class FlareShortTermControllerTest extends AbstractControllerTest {
 
 
   @Test
-  @WithMockUser
   void saveFlareShortTermForm_invalidForm() throws Exception {
     var bindingResult = new BeanPropertyBindingResult(new FlareShortTermForm(), "form");
     bindingResult.addError(new FieldError("Error", "ErrorField", "Error message"));
@@ -109,6 +108,7 @@ class FlareShortTermControllerTest extends AbstractControllerTest {
     var modelAndView =
         mockMvc.perform(post(ReverseRouter.route(on(FlareShortTermController.class)
                 .saveFlareShortTermForm(ApplicationTestUtil.APPLICATION_ID, null, null)))
+                .with(user(user))
                 .with(csrf())
                 .param("flareShortTermMonthForms[0].year", "2022")
                 .param("flareShortTermMonthForms[0].month", "April")
@@ -130,7 +130,6 @@ class FlareShortTermControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void saveFlareShortTermForm_validForm() throws Exception {
 
     when(flareShortTermFormService.validate(any(), any()))
@@ -138,6 +137,7 @@ class FlareShortTermControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(post(ReverseRouter.route(on(FlareShortTermController.class)
             .saveFlareShortTermForm(ApplicationTestUtil.APPLICATION_ID, null, null)))
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(view().name("redirect:/applications/1/task-list/"));
@@ -151,11 +151,13 @@ class FlareShortTermControllerTest extends AbstractControllerTest {
             flareShortTermFormArgumentCaptor.capture());
   }
 
-  @Test
+  @SecurityTest
   void saveFlareShortTermForm_noUser() throws Exception {
-    mockMvc.perform(post(ReverseRouter.route(on(FlareShortTermController.class)
-            .saveFlareShortTermForm(ApplicationTestUtil.APPLICATION_ID, null, null))))
-        .andExpect(status().isForbidden());
+    mockMvc.perform(
+        post(ReverseRouter.route(on(FlareShortTermController.class)
+            .saveFlareShortTermForm(ApplicationTestUtil.APPLICATION_ID, null, null)))
+            .with(csrf())
+        )
+        .andExpect(redirectionToLoginUrl());
   }
-
 }

@@ -16,10 +16,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
 import static uk.co.nstauthority.fieldconsents.application.eiadirection.EiaDirectionFormService.EMPTY_PREFILLED_ITEM;
+import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationTestUtil.SAT_ID_1;
 import static uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationTestUtil.SAT_REF_1;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
+import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,21 +30,17 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
-import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
+import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @ContextConfiguration(classes = EiaDirectionController.class)
-class EiaDirectionControllerTest extends AbstractControllerTest {
-
-  @MockBean
-  private ApplicationVersionService applicationVersionService;
+class EiaDirectionControllerTest extends AbstractApplicationControllerTest {
 
   @MockBean
   private EiaDirectionService eiaDirectionService;
@@ -62,18 +60,19 @@ class EiaDirectionControllerTest extends AbstractControllerTest {
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    when(applicationVersionService.findLatestApplicationVersion(ApplicationTestUtil.APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion));
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
   }
 
-  @Test
+  @SecurityTest
   void getEiaDirectionForm_noUser() throws Exception {
     mockMvc.perform(
         get(ReverseRouter.route(on(EiaDirectionController.class).getEiaDirectionForm(APPLICATION_ID))))
         .andExpect(redirectionToLoginUrl());
   }
 
-  @WithMockUser
   @ParameterizedTest
   @MethodSource("getGasInjectionFormArguments")
   void getGasInjectionForm_validUser(EiaDirectionForm eiaDirectionForm, RestSearchItem restSearchItem) throws Exception {
@@ -81,7 +80,9 @@ class EiaDirectionControllerTest extends AbstractControllerTest {
     when(eiaDirectionFormService.getPrefilledEiaDirectionRef(any())).thenReturn(restSearchItem);
 
     var modelAndView = mockMvc.perform(
-        get(ReverseRouter.route(on(EiaDirectionController.class).getEiaDirectionForm(APPLICATION_ID))))
+        get(ReverseRouter.route(on(EiaDirectionController.class).getEiaDirectionForm(APPLICATION_ID)))
+            .with(user(user))
+        )
         .andExpect(status().isOk())
         .andExpect(view().name(EIA_DIRECTION_VIEW))
         .andReturn().getModelAndView();
@@ -107,7 +108,7 @@ class EiaDirectionControllerTest extends AbstractControllerTest {
     );
   }
 
-  @Test
+  @SecurityTest
   void saveEiaDirectionForm_noUser() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(EiaDirectionController.class)
             .saveEiaDirectionForm(APPLICATION_ID, null, null)))
@@ -116,13 +117,13 @@ class EiaDirectionControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void saveEiaDirectionForm_emptyForm() throws Exception {
     doCallRealMethod().when(formValidator).validate(any(), any());
     when(eiaDirectionFormService.getPrefilledEiaDirectionRef(any())).thenReturn(EMPTY_PREFILLED_ITEM);
 
     var modelAndView = mockMvc.perform(post(ReverseRouter.route(on(EiaDirectionController.class)
             .saveEiaDirectionForm(APPLICATION_ID, null, null)))
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(view().name(EIA_DIRECTION_VIEW))
@@ -142,13 +143,13 @@ class EiaDirectionControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void saveEiaDirectionForm_validForm() throws Exception {
     var eiaDirectionForm = EiaDirectionTestUtil.getEiaDirectionFormWithSat(SAT_ID_1);
     mockMvc.perform(post(ReverseRouter.route(on(EiaDirectionController.class)
             .saveEiaDirectionForm(APPLICATION_ID, null, null)))
             .param("haveSubmittedEiaDirection", eiaDirectionForm.getHaveSubmittedEiaDirection().toString())
             .param("satId", String.valueOf(eiaDirectionForm.getSatId()))
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(view().name("redirect:" + TASK_LIST_URL));

@@ -15,9 +15,11 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.authentication.SamlResponseParser;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceLogoutSuccessHandler;
 import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
+import uk.co.nstauthority.fieldconsents.authorisation.ApplicationHandlerInterceptor;
 import uk.co.nstauthority.fieldconsents.authorisation.HasPermissionInterceptor;
 import uk.co.nstauthority.fieldconsents.authorisation.HasTeamPermissionInterceptor;
 import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
@@ -51,6 +53,7 @@ import uk.co.nstauthority.fieldconsents.validation.ValidationErrorOrderingServic
     PermissionManagementHandlerInterceptor.class,
     HasTeamPermissionInterceptor.class,
     HasPermissionInterceptor.class,
+    ApplicationHandlerInterceptor.class,
     PermissionService.class,
     WebSecurityConfiguration.class
 })
@@ -77,6 +80,9 @@ public abstract class AbstractControllerTest {
 
   @MockBean
   protected ServiceLogoutSuccessHandler serviceLogoutSuccessHandler;
+
+  @MockBean
+  protected ApplicationVersionService applicationVersionService;
 
   @BeforeEach
   void setupAbstractControllerTest() {

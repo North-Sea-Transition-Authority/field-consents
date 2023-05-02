@@ -13,15 +13,21 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
+import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
+import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportPeriodControllerHelperService;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportPeriodForm;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportPeriodFormValidator;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Controller
 @RequestMapping("applications/{applicationId}/flare-report/period")
+@HasApplicationStatus(statuses = ApplicationVersionStatus.IN_PROGRESS)
+@HasApplicationPermission(permissions = RolePermission.EDIT_FCS_APPLICATIONS)
 public class FlareReportPeriodController {
 
   private final ApplicationVersionService applicationVersionService;

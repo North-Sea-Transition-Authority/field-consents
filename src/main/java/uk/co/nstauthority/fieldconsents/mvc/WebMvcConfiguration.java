@@ -10,6 +10,7 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.ResourceUrlEncodingFilter;
 import org.springframework.web.servlet.resource.VersionResourceResolver;
+import uk.co.nstauthority.fieldconsents.authorisation.ApplicationHandlerInterceptor;
 import uk.co.nstauthority.fieldconsents.authorisation.HasPermissionInterceptor;
 import uk.co.nstauthority.fieldconsents.authorisation.HasTeamPermissionInterceptor;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.PermissionManagementHandlerInterceptor;
@@ -29,17 +30,21 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
 
   private final HasTeamPermissionInterceptor hasTeamPermissionInterceptor;
 
+  private final ApplicationHandlerInterceptor applicationHandlerInterceptor;
+
   @Autowired
   WebMvcConfiguration(ErrorListHandlerInterceptor errorListHandlerInterceptor,
                       ResponseBufferSizeHandlerInterceptor responseBufferSizeHandlerInterceptor,
                       PermissionManagementHandlerInterceptor permissionManagementHandlerInterceptor,
                       HasPermissionInterceptor hasPermissionInterceptor,
-                      HasTeamPermissionInterceptor hasTeamPermissionInterceptor) {
+                      HasTeamPermissionInterceptor hasTeamPermissionInterceptor,
+                      ApplicationHandlerInterceptor applicationHandlerInterceptor) {
     this.errorListHandlerInterceptor = errorListHandlerInterceptor;
     this.responseBufferSizeHandlerInterceptor = responseBufferSizeHandlerInterceptor;
     this.permissionManagementHandlerInterceptor = permissionManagementHandlerInterceptor;
     this.hasPermissionInterceptor = hasPermissionInterceptor;
     this.hasTeamPermissionInterceptor = hasTeamPermissionInterceptor;
+    this.applicationHandlerInterceptor = applicationHandlerInterceptor;
   }
 
   @Override
@@ -61,6 +66,8 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
         .addPathPatterns("/permission-management/**");
     registry.addInterceptor(hasTeamPermissionInterceptor)
         .addPathPatterns("/permission-management/**");
+    registry.addInterceptor(applicationHandlerInterceptor)
+        .addPathPatterns("/applications/**");
     registry.addInterceptor(hasPermissionInterceptor)
         .excludePathPatterns(ASSETS_PATH);
   }

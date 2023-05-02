@@ -13,24 +13,25 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
+import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportGasTestUtil.FIRST_MONTH_REPORTING_PERIOD;
 import static uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportGasTestUtil.LAST_MONTH_REPORTING_PERIOD;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.time.Month;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
-import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
+import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
+import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportGasDataForm;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportGasDataFormValidator;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentUnit;
@@ -39,13 +40,10 @@ import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreport.VentReportPeri
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @ContextConfiguration(classes = VentReportGasDataController.class)
-class VentReportGasDataControllerTest extends AbstractControllerTest {
+class VentReportGasDataControllerTest extends AbstractApplicationControllerTest {
 
   @MockBean
   private VentReportGasDataService ventReportGasDataService;
-
-  @MockBean
-  private ApplicationVersionService applicationVersionService;
 
   @MockBean
   private ApplicationUnitService applicationUnitService;
@@ -64,6 +62,8 @@ class VentReportGasDataControllerTest extends AbstractControllerTest {
     form = new FlareVentReportGasDataForm();
     VentReportPeriod ventReportPeriod = new VentReportPeriod(applicationVersion, Month.OCTOBER, 2022);
 
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(ventReportGasDataService.getFlareVentReportGasDataForm(applicationVersion)).thenReturn(form);
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
@@ -73,11 +73,11 @@ class VentReportGasDataControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void getFlareReportGasDataForm() throws Exception {
     var modelAndView =
         mockMvc.perform(get(ReverseRouter.route(on(VentReportGasDataController.class)
                 .getVentReportGasDataForm(ApplicationTestUtil.APPLICATION_ID)))
+                .with(user(user))
                 .with(csrf()))
             .andExpect(status().isOk())
             .andExpect(view().name("fcs/vent/ventReportGasDataForm"))
@@ -98,7 +98,7 @@ class VentReportGasDataControllerTest extends AbstractControllerTest {
         .isEqualTo(form);
   }
 
-  @Test
+  @SecurityTest
   void getFlareReportGasDataForm_unauthorisedUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(VentReportGasDataController.class)
             .getVentReportGasDataForm(ApplicationTestUtil.APPLICATION_ID))))
@@ -106,7 +106,6 @@ class VentReportGasDataControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void saveFlareReportGasDataForm_withValidForm() throws Exception {
     ArgumentCaptor<ApplicationVersion> applicationVersionArgumentCaptor =
         ArgumentCaptor.forClass(ApplicationVersion.class);
@@ -115,6 +114,7 @@ class VentReportGasDataControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(post(ReverseRouter.route(on(VentReportGasDataController.class)
             .saveVentReportGasDataForm(ApplicationTestUtil.APPLICATION_ID, null, null)))
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(view().name("redirect:/applications/1/task-list/"));
@@ -124,7 +124,6 @@ class VentReportGasDataControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void saveFlareReportGasDataForm_withNotValidForm() throws Exception {
     doAnswer(invocation -> {
       var bindingResult = invocation.getArgument(1, BindingResult.class);
@@ -137,6 +136,7 @@ class VentReportGasDataControllerTest extends AbstractControllerTest {
     var modelAndView =
         mockMvc.perform(post(ReverseRouter.route(on(VentReportGasDataController.class)
                 .saveVentReportGasDataForm(ApplicationTestUtil.APPLICATION_ID, null, null)))
+                .with(user(user))
                 .with(csrf()))
             .andExpect(status().isOk())
             .andExpect(view().name("fcs/vent/ventReportGasDataForm"))
@@ -154,7 +154,7 @@ class VentReportGasDataControllerTest extends AbstractControllerTest {
         .containsEntry("cancelUrl", "/applications/1/task-list/");
   }
 
-  @Test
+  @SecurityTest
   void saveFlareReportGasDataForm_unauthorisedUser() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(VentReportGasDataController.class)
             .saveVentReportGasDataForm(ApplicationTestUtil.APPLICATION_ID, null, null)))

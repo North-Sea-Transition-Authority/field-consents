@@ -10,28 +10,26 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_REFERENCE;
 import static uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionController.PAGE_TITLE;
+import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
+import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
-import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
+import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @ContextConfiguration(classes = ApplicationSubmissionController.class)
-class ApplicationSubmissionControllerTest extends AbstractControllerTest {
-
-  @MockBean
-  private ApplicationVersionService applicationVersionService;
+class ApplicationSubmissionControllerTest extends AbstractApplicationControllerTest {
 
   @MockBean
   private ApplicationSubmissionService applicationSubmissionService;
@@ -43,18 +41,20 @@ class ApplicationSubmissionControllerTest extends AbstractControllerTest {
 
   @BeforeEach
   void setUp() {
-    applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.FLARE);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
+    when(applicationVersionService.findLatestApplicationVersion(ApplicationTestUtil.APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion));
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
   }
 
   @Test
-  @WithMockUser
   void submitApplication() throws Exception {
     when(applicationSubmissionService.isSubmittable(applicationVersion)).thenReturn(true);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(APPLICATION_REFERENCE);
 
     var modelAndView = mockMvc.perform(post(ReverseRouter.route(on(ApplicationSubmissionController.class)
             .submitApplication(APPLICATION_ID)))
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/application/submissionConfirmation"))
@@ -70,7 +70,6 @@ class ApplicationSubmissionControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void submitApplication_whenNotSubmittable() {
     when(applicationSubmissionService.isSubmittable(applicationVersion)).thenReturn(false);
 
@@ -78,13 +77,14 @@ class ApplicationSubmissionControllerTest extends AbstractControllerTest {
         Exception.class,
         () -> mockMvc.perform(post(ReverseRouter.route(on(ApplicationSubmissionController.class)
             .submitApplication(APPLICATION_ID)))
+            .with(user(user))
             .with(csrf()))
     );
 
     Assertions.assertEquals("Request processing failed; nested exception is java.lang.RuntimeException: The application with id 1 cannot be submitted!", exception.getMessage());
   }
 
-  @Test
+  @SecurityTest
   void submitApplication_withUnauthorizedUser() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(ApplicationSubmissionController.class)
             .submitApplication(APPLICATION_ID)))

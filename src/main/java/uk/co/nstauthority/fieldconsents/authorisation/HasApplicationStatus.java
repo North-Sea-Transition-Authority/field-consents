@@ -4,13 +4,11 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 
-/**
- * Meta annotation which is used to indicate that another annotation is an
- * annotation that is used for security purposes.
- */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.ANNOTATION_TYPE)
-@interface Security {
-  boolean disable() default false;
+@Target({ElementType.TYPE, ElementType.METHOD})
+@Security
+public @interface HasApplicationStatus {
+  ApplicationVersionStatus[] statuses();
 }

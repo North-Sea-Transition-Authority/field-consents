@@ -1,58 +1,117 @@
 package uk.co.nstauthority.fieldconsents.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
-import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.USER_WUA_ID;
+import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
+import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_VERSION_ID;
 
-import java.time.Instant;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import javax.persistence.EntityNotFoundException;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationVersionServiceTest {
 
-  private static ApplicationVersionRepository applicationVersionRepository;
+  @Mock
+  private ApplicationVersionRepository applicationVersionRepository;
 
-  private static ApplicationVersionService applicationVersionService;
+  @InjectMocks
+  private ApplicationVersionService applicationVersionService;
 
-  @BeforeAll
-  static void setup() {
-    applicationVersionRepository = mock(ApplicationVersionRepository.class);
-    applicationVersionService = new ApplicationVersionService(applicationVersionRepository);
+  private ApplicationVersion applicationVersion;
+
+  @BeforeEach
+  void setup() {
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
   }
 
   @Test
   void getApplicationVersionById_whenApplicationVersionExists() {
-    ApplicationVersion applicationVersion =
-        new ApplicationVersion(1, new Application(1, ApplicationType.PRODUCTION, Instant.now(), USER_WUA_ID, 0, null),
-            1, ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_1, ApplicationTestUtil.CACHED_PRIMARY_OPERATOR_NAME_1,
-            Instant.now(), USER_WUA_ID, ApplicationVersionStatus.IN_PROGRESS);
-    when(applicationVersionRepository.findById(1)).thenReturn(Optional.of(applicationVersion));
+    when(applicationVersionRepository.findById(APPLICATION_VERSION_ID)).thenReturn(Optional.of(applicationVersion));
 
-    ApplicationVersion actualApplicationVersion = applicationVersionService.getApplicationVersionById(1);
-
-    assertThat(actualApplicationVersion.getId()).isEqualTo(applicationVersion.getId());
-    assertThat(actualApplicationVersion.getVersion()).isEqualTo(applicationVersion.getVersion());
-    assertThat(actualApplicationVersion.getCreatedByWuaId()).isEqualTo(applicationVersion.getCreatedByWuaId());
-    assertThat(actualApplicationVersion.getCreatedDateTime()).isEqualTo(applicationVersion.getCreatedDateTime());
-    assertThat(actualApplicationVersion.getPrimaryOperatorOuId()).isEqualTo(applicationVersion.getPrimaryOperatorOuId());
-    assertThat(actualApplicationVersion.getCachedPrimaryOperatorName()).isEqualTo(applicationVersion.getCachedPrimaryOperatorName());
+    assertThat(applicationVersionService.getApplicationVersionById(APPLICATION_VERSION_ID))
+        .isEqualTo(applicationVersion);
   }
 
   @Test
   void getApplicationVersionById_whenApplicationVersionIsNotFound() {
-    when(applicationVersionRepository.findById(any(Integer.class))).thenReturn(Optional.empty());
+    when(applicationVersionRepository.findById(APPLICATION_VERSION_ID)).thenReturn(Optional.empty());
 
-    var exception = Assertions.assertThrows(EntityNotFoundException.class, () ->
-        applicationVersionService.getApplicationVersionById(1));
+    assertThatThrownBy(() -> applicationVersionService.getApplicationVersionById(APPLICATION_VERSION_ID))
+        .isInstanceOf(EntityNotFoundException.class)
+        .hasMessage("Application version with id %s not found".formatted(APPLICATION_VERSION_ID));
+  }
 
-    Assertions.assertEquals("Application version with id 1 not found", exception.getMessage());
+  @Test
+  void getLatestApplicationVersionByApplicationId_whenOneApplicationVersionExists() {
+    when(applicationVersionRepository.findAllByApplicationIdOrderByVersion(APPLICATION_ID))
+        .thenReturn(List.of(applicationVersion));
+
+    assertThat(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .isEqualTo(applicationVersion);
+  }
+
+  @Test
+  void getLatestApplicationVersionByApplicationId_whenManyApplicationVersionsExists() {
+    var applicationVersion2 = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    applicationVersion2.setVersion(2);
+    var applicationVersion3 = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    applicationVersion3.setVersion(3);
+
+    when(applicationVersionRepository.findAllByApplicationIdOrderByVersion(APPLICATION_ID))
+        .thenReturn(List.of(applicationVersion3, applicationVersion, applicationVersion2));
+
+    assertThat(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .isEqualTo(applicationVersion3);
+  }
+
+  @Test
+  void getLatestApplicationVersionByApplicationId_whenApplicationVersionsNotFound() {
+    when(applicationVersionRepository.findAllByApplicationIdOrderByVersion(APPLICATION_ID))
+        .thenReturn(Collections.emptyList());
+
+    assertThatThrownBy(() -> applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .isInstanceOf(EntityNotFoundException.class)
+        .hasMessage("Application version not found for application with id %s".formatted(APPLICATION_ID));
+  }
+
+  @Test
+  void findLatestApplicationVersion_whenOneApplicationVersionExists() {
+    when(applicationVersionRepository.findAllByApplicationIdOrderByVersion(APPLICATION_ID))
+        .thenReturn(List.of(applicationVersion));
+
+    assertThat(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .isEqualTo(Optional.of(applicationVersion));
+  }
+
+  @Test
+  void findLatestApplicationVersion_whenManyApplicationVersionsExists() {
+    var applicationVersion2 = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    applicationVersion2.setVersion(2);
+    var applicationVersion3 = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    applicationVersion3.setVersion(3);
+
+    when(applicationVersionRepository.findAllByApplicationIdOrderByVersion(APPLICATION_ID))
+        .thenReturn(List.of(applicationVersion3, applicationVersion, applicationVersion2));
+
+    assertThat(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .isEqualTo(Optional.of(applicationVersion3));
+  }
+
+  @Test
+  void findLatestApplicationVersion_whenApplicationVersionsNotFound() {
+    when(applicationVersionRepository.findAllByApplicationIdOrderByVersion(APPLICATION_ID))
+        .thenReturn(Collections.emptyList());
+
+    assertThat(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .isNotPresent();
   }
 }

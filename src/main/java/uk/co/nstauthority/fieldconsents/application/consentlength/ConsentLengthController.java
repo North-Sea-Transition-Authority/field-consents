@@ -15,11 +15,17 @@ import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
+import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
+import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Controller
 @RequestMapping("applications/{applicationId}/consent-length")
+@HasApplicationStatus(statuses = ApplicationVersionStatus.IN_PROGRESS)
+@HasApplicationPermission(permissions = RolePermission.EDIT_FCS_APPLICATIONS)
 public class ConsentLengthController {
 
   private final ApplicationService applicationService;

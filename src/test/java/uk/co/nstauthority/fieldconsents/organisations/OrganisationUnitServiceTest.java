@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit1;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit1Json;
+import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit1WithGroupsJson;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit2;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit2Json;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit3Json;
@@ -118,4 +119,52 @@ class OrganisationUnitServiceTest {
         orgUnit1.getOrganisationUnitId(), ORG_UNITS_SERVICE_PURPOSE, orgUnit1.getName());
     assertThat(orgUnitJson).isEqualTo(orgUnit1Json);
   }
+
+  @Test
+  void findOrganisationUnitWithGroupsById_exists() {
+    when(organisationApi.findOrganisationUnit(eq(orgUnit1.getOrganisationUnitId()), any(), any()))
+        .thenReturn(Optional.of(orgUnit1));
+
+    var orgUnitJsonOptional = organisationUnitService
+        .findOrganisationUnitWithGroupsById(orgUnit1.getOrganisationUnitId(), ORG_UNITS_SERVICE_PURPOSE);
+    assertThat(orgUnitJsonOptional).isPresent();
+    assertThat(orgUnitJsonOptional.get())
+        .usingRecursiveComparison()
+        .isEqualTo(orgUnit1WithGroupsJson);
+  }
+
+  @Test
+  void findOrganisationUnitWithGroupsById_notExists() {
+    when(organisationApi.findOrganisationUnit(eq(0), any(), any()))
+        .thenReturn(Optional.empty());
+
+    var orgUnitJsonOptional = organisationUnitService
+        .findOrganisationUnitWithGroupsById(0, ORG_UNITS_SERVICE_PURPOSE);
+    assertThat(orgUnitJsonOptional).isEmpty();
+  }
+
+  @Test
+  void getOrganisationUnitWithGroupsById_exists() {
+    when(organisationApi.findOrganisationUnit(eq(orgUnit1.getOrganisationUnitId()), any(), any()))
+        .thenReturn(Optional.of(orgUnit1));
+
+    var orgUnitJson = organisationUnitService
+        .getOrganisationUnitWithGroupsById(orgUnit1.getOrganisationUnitId(), ORG_UNITS_SERVICE_PURPOSE);
+    assertThat(orgUnitJson)
+        .usingRecursiveComparison()
+        .isEqualTo(orgUnit1WithGroupsJson);
+  }
+
+  @Test
+  void getOrganisationUnitWithGroupsById_notExists() {
+    when(organisationApi.findOrganisationUnit(eq(orgUnit1.getOrganisationUnitId()), any(), any()))
+        .thenReturn(Optional.empty());
+
+    var ouId = orgUnit1.getOrganisationUnitId();
+    assertThatThrownBy(() -> organisationUnitService
+        .getOrganisationUnitWithGroupsById(ouId, ORG_UNITS_SERVICE_PURPOSE))
+        .isInstanceOf(EntityNotFoundException.class)
+        .hasMessageContaining("Organisation unit not found for id %s".formatted(ouId));
+  }
+
 }

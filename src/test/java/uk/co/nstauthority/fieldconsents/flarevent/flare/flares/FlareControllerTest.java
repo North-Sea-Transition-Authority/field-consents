@@ -13,30 +13,28 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
+import java.util.Optional;
 import javax.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
-import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
+import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @ContextConfiguration(classes = FlareController.class)
-class FlareControllerTest extends AbstractControllerTest {
+class FlareControllerTest extends AbstractApplicationControllerTest {
 
   @MockBean
   private ApplicationService applicationService;
-
-  @MockBean
-  private ApplicationVersionService applicationVersionService;
 
   @MockBean
   private FlareService flareService;
@@ -58,16 +56,18 @@ class FlareControllerTest extends AbstractControllerTest {
   void setUp() {
     applicationVersion = FlareTestUtil.flareAppVersion;
     expectBaseFlaresUrl = FlareTestUtil.BASE_FLARES_URL;
+    when(applicationVersionService.findLatestApplicationVersion(applicationVersion.getApplication().getId()))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(applicationVersion.getApplication().getId()))
         .thenReturn(applicationVersion);
     when(applicationService.getApplicationById(applicationVersion.getApplication().getId())).thenReturn(applicationVersion.getApplication());
   }
 
   @Test
-  @WithMockUser
   void addFlare_validUser() throws Exception {
     var modelAndView = mockMvc.perform(
-        get(ReverseRouter.route(on(FlareController.class).addFlare(ApplicationTestUtil.APPLICATION_ID))))
+        get(ReverseRouter.route(on(FlareController.class).addFlare(ApplicationTestUtil.APPLICATION_ID)))
+            .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/flare/editFlareForm"))
         .andReturn().getModelAndView();
@@ -88,20 +88,20 @@ class FlareControllerTest extends AbstractControllerTest {
         .containsExactly(null, null, null, null, null);
   }
 
-  @Test
+  @SecurityTest
   void addFlare_noUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(FlareController.class).addFlare(ApplicationTestUtil.APPLICATION_ID))))
         .andExpect(redirectionToLoginUrl());
   }
 
   @Test
-  @WithMockUser
   void saveNewFlare_invalidForm() throws Exception {
 
     doCallRealMethod().when(flareFormValidator).validate(any(), any());
 
     var modelAndView = mockMvc.perform(post(ReverseRouter.route(on(FlareController.class).saveNewFlare(
         ApplicationTestUtil.APPLICATION_ID, null, null)))
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/flare/editFlareForm"))
@@ -124,10 +124,10 @@ class FlareControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void saveNewFlare_validForm() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(FlareController.class).saveNewFlare(
         ApplicationTestUtil.APPLICATION_ID, null, null)))
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(view().name("redirect:" + expectBaseFlaresUrl));
@@ -138,31 +138,35 @@ class FlareControllerTest extends AbstractControllerTest {
         .saveNewFlare(applicationVersionArgumentCaptor.capture(), flareFormArgumentCaptor.capture());
   }
 
-  @Test
+  @SecurityTest
   void saveNewFlare_noUser() throws Exception {
-    mockMvc.perform(post(ReverseRouter.route(on(FlareController.class).saveNewFlare(
-        ApplicationTestUtil.APPLICATION_ID, null, null))))
-        .andExpect(status().isForbidden());
+    mockMvc.perform(post(ReverseRouter.route(on(FlareController.class)
+            .saveNewFlare(ApplicationTestUtil.APPLICATION_ID, null, null)))
+            .with(csrf())
+        )
+        .andExpect(redirectionToLoginUrl());
   }
 
   @Test
-  @WithMockUser
   void viewFlaresSummary_noFlares() throws Exception {
     when(flareService.flaresExistForApplicationVersion(applicationVersion)).thenReturn(Boolean.FALSE);
     mockMvc.perform(
-        get(ReverseRouter.route(on(FlareController.class).viewFlaresSummary(ApplicationTestUtil.APPLICATION_ID))))
+        get(ReverseRouter.route(on(FlareController.class).viewFlaresSummary(ApplicationTestUtil.APPLICATION_ID)))
+            .with(user(user))
+        )
         .andExpect(status().is3xxRedirection())
         .andExpect(view().name("redirect:/applications/1/task-list/"));
   }
 
   @Test
-  @WithMockUser
   void viewFlaresSummary_flaresExist() throws Exception {
     when(flareService.flaresExistForApplicationVersion(applicationVersion)).thenReturn(Boolean.TRUE);
     when(flareSummaryService.getFlareViews(applicationVersion)).thenReturn(FlareTestUtil.flareViews);
 
     var modelAndView = mockMvc.perform(
-            get(ReverseRouter.route(on(FlareController.class).viewFlaresSummary(ApplicationTestUtil.APPLICATION_ID))))
+        get(ReverseRouter.route(on(FlareController.class).viewFlaresSummary(ApplicationTestUtil.APPLICATION_ID)))
+            .with(user(user))
+        )
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/flare/flaresSummaryForm"))
         .andReturn().getModelAndView();
@@ -179,14 +183,16 @@ class FlareControllerTest extends AbstractControllerTest {
         .isNull();
   }
 
-  @Test
+  @SecurityTest
   void viewFlaresSummary_noUser() throws Exception {
-    mockMvc.perform(post(ReverseRouter.route(on(FlareController.class).viewFlaresSummary(ApplicationTestUtil.APPLICATION_ID))))
-        .andExpect(status().isForbidden());
+    mockMvc.perform(
+        post(ReverseRouter.route(on(FlareController.class).viewFlaresSummary(ApplicationTestUtil.APPLICATION_ID)))
+            .with(csrf())
+        )
+        .andExpect(redirectionToLoginUrl());
   }
 
   @Test
-  @WithMockUser
   void saveFlaresSummary_invalidForm() throws Exception {
 
     doCallRealMethod().when(flareSetupFormValidator).validate(any(), any());
@@ -194,6 +200,7 @@ class FlareControllerTest extends AbstractControllerTest {
 
     var modelAndView = mockMvc.perform(post(ReverseRouter.route(on(FlareController.class).saveFlaresSummary(
         ApplicationTestUtil.APPLICATION_ID, null, null)))
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/flare/flaresSummaryForm"))
@@ -212,36 +219,38 @@ class FlareControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void saveFlaresSummary_validFormMoreFlares() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(FlareController.class).saveFlaresSummary(
         ApplicationTestUtil.APPLICATION_ID,null, null)))
             .param("hasOtherFlaresToAdd", Boolean.TRUE.toString())
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(view().name("redirect:" + expectBaseFlaresUrl + "/new"));
   }
 
   @Test
-  @WithMockUser
   void saveFlaresSummary_validFormNoMoreFlares() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(FlareController.class).saveFlaresSummary(
         ApplicationTestUtil.APPLICATION_ID, null, null)))
             .param("hasOtherFlaresToAdd", Boolean.FALSE.toString())
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(view().name("redirect:/applications/1/task-list/"));
   }
 
-  @Test
+  @SecurityTest
   void saveFlaresSummary_noUser() throws Exception {
-    mockMvc.perform(post(ReverseRouter.route(on(FlareController.class).saveFlaresSummary(
-        ApplicationTestUtil.APPLICATION_ID, null, null))))
-        .andExpect(status().isForbidden());
+    mockMvc.perform(
+        post(ReverseRouter.route(on(FlareController.class).saveFlaresSummary(
+            ApplicationTestUtil.APPLICATION_ID, null, null)))
+            .with(csrf())
+        )
+        .andExpect(redirectionToLoginUrl());
   }
 
   @Test
-  @WithMockUser
   void editFlare_flareFound() throws Exception {
 
     when(flareService.getFlareOrError(applicationVersion, FlareTestUtil.flareNoHp))
@@ -249,7 +258,9 @@ class FlareControllerTest extends AbstractControllerTest {
 
     var modelAndView = mockMvc.perform(
         get(ReverseRouter.route(on(FlareController.class).editFlare(
-            ApplicationTestUtil.APPLICATION_ID, FlareTestUtil.flareNoHp))))
+            ApplicationTestUtil.APPLICATION_ID, FlareTestUtil.flareNoHp)))
+            .with(user(user))
+        )
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/flare/editFlareForm"))
         .andReturn().getModelAndView();
@@ -275,21 +286,21 @@ class FlareControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void editFlare_noFlareFound() {
-
     when(flareService.getFlareOrError(applicationVersion, FlareTestUtil.flareNoHp))
         .thenThrow(new EntityNotFoundException("Flare with application_version_id 1 and flare_no 1 not found"));
 
     assertThatThrownBy(() ->
         mockMvc.perform(get(ReverseRouter.route(on(FlareController.class).editFlare(
-            ApplicationTestUtil.APPLICATION_ID, FlareTestUtil.flareNoHp)))))
+            ApplicationTestUtil.APPLICATION_ID, FlareTestUtil.flareNoHp)))
+            .with(user(user))
+        ))
         .isInstanceOf(Exception.class)
         .hasMessageContaining("Flare with application_version_id %s and flare_no %s not found"
             .formatted(applicationVersion.getId(), FlareTestUtil.flareNoHp));
   }
 
-  @Test
+  @SecurityTest
   void editFlare_noUser() throws Exception {
     mockMvc.perform(
         get(ReverseRouter.route(on(FlareController.class).editFlare(applicationVersion.getApplication().getId(),
@@ -298,13 +309,13 @@ class FlareControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void saveFlare_invalidForm() throws Exception {
 
     doCallRealMethod().when(flareFormValidator).validate(any(), any());
 
     var modelAndView = mockMvc.perform(post(ReverseRouter.route(on(FlareController.class).saveFlare(
         ApplicationTestUtil.APPLICATION_ID, FlareTestUtil.flareNoHp, null, null)))
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/flare/editFlareForm"))
@@ -328,7 +339,6 @@ class FlareControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void saveFlare_validForm() throws Exception {
 
     when(flareService.getFlareOrError(applicationVersion, FlareTestUtil.flareNoHp))
@@ -336,6 +346,7 @@ class FlareControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(post(ReverseRouter.route(on(FlareController.class).saveFlare(
             ApplicationTestUtil.APPLICATION_ID, FlareTestUtil.flareNoHp, null, null)))
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(view().name("redirect:" + expectBaseFlaresUrl));
@@ -346,22 +357,26 @@ class FlareControllerTest extends AbstractControllerTest {
         .updateFlareFromForm(flareArgumentCaptor.capture(), flareFormArgumentCaptor.capture());
   }
 
-  @Test
+  @SecurityTest
   void saveFlare_noUser() throws Exception {
-    mockMvc.perform(post(ReverseRouter.route(on(FlareController.class).saveFlare(
-            ApplicationTestUtil.APPLICATION_ID, FlareTestUtil.flareNoHp, null, null))))
-        .andExpect(status().isForbidden());
+    mockMvc.perform(
+        post(ReverseRouter.route(on(FlareController.class).saveFlare(
+            ApplicationTestUtil.APPLICATION_ID, FlareTestUtil.flareNoHp, null, null)))
+            .with(csrf())
+        )
+        .andExpect(redirectionToLoginUrl());
   }
 
   @Test
-  @WithMockUser
   void deleteFlareConfirm_flareExists() throws Exception {
     when(flareService.getFlareOrError(applicationVersion, FlareTestUtil.flareNoHp))
         .thenReturn(FlareTestUtil.flareHp);
 
     var modelAndView = mockMvc.perform(
         get(ReverseRouter.route(on(FlareController.class).deleteFlareConfirm(
-            ApplicationTestUtil.APPLICATION_ID, FlareTestUtil.flareNoHp))))
+            ApplicationTestUtil.APPLICATION_ID, FlareTestUtil.flareNoHp)))
+            .with(user(user))
+        )
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/flare/deleteFlare"))
         .andReturn().getModelAndView();
@@ -394,7 +409,6 @@ class FlareControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void deleteFlareConfirm_noFlareExists() {
 
     when(flareService.getFlareOrError(applicationVersion, FlareTestUtil.flareNoHp))
@@ -402,13 +416,15 @@ class FlareControllerTest extends AbstractControllerTest {
 
     assertThatThrownBy(() ->
         mockMvc.perform(get(ReverseRouter.route(on(FlareController.class).deleteFlareConfirm(
-            ApplicationTestUtil.APPLICATION_ID, FlareTestUtil.flareNoHp)))))
+            ApplicationTestUtil.APPLICATION_ID, FlareTestUtil.flareNoHp)))
+            .with(user(user))
+        ))
         .isInstanceOf(Exception.class)
         .hasMessageContaining("Flare with application_version_id %s and flare_no %s not found"
             .formatted(applicationVersion.getId(), FlareTestUtil.flareNoHp));
   }
 
-  @Test
+  @SecurityTest
   void deleteFlareConfirm_noUser() throws Exception {
     mockMvc.perform(
         get(ReverseRouter.route(on(FlareController.class).deleteFlareConfirm(
@@ -417,7 +433,6 @@ class FlareControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void deleteFlare_flareExists() throws Exception {
     when(flareService.getFlareOrError(applicationVersion, FlareTestUtil.flareNoHp))
         .thenReturn(FlareTestUtil.flareHp);
@@ -425,6 +440,7 @@ class FlareControllerTest extends AbstractControllerTest {
     mockMvc.perform(
         post(ReverseRouter.route(on(FlareController.class).deleteFlare(
             ApplicationTestUtil.APPLICATION_ID, null, FlareTestUtil.flareNoHp)))
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(view().name("redirect:" + expectBaseFlaresUrl));
@@ -433,7 +449,6 @@ class FlareControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void deleteFlare_noFlareExists() {
 
     when(flareService.getFlareOrError(applicationVersion, FlareTestUtil.flareNoHp))
@@ -441,18 +456,19 @@ class FlareControllerTest extends AbstractControllerTest {
 
     assertThatThrownBy(() ->
         mockMvc.perform(get(ReverseRouter.route(on(FlareController.class).deleteFlare(
-            ApplicationTestUtil.APPLICATION_ID, null, FlareTestUtil.flareNoHp)))))
+            ApplicationTestUtil.APPLICATION_ID, null, FlareTestUtil.flareNoHp)))
+            .with(user(user))
+        ))
         .isInstanceOf(Exception.class)
         .hasMessageContaining("Flare with application_version_id %s and flare_no %s not found"
             .formatted(applicationVersion.getId(), FlareTestUtil.flareNoHp));
   }
 
-  @Test
+  @SecurityTest
   void deleteFlare_noUser() throws Exception {
     mockMvc.perform(
         get(ReverseRouter.route(on(FlareController.class).deleteFlare(
             ApplicationTestUtil.APPLICATION_ID, null, FlareTestUtil.flareNoHp))))
         .andExpect(redirectionToLoginUrl());
   }
-
 }

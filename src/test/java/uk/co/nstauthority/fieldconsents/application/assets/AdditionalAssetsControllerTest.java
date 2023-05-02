@@ -18,29 +18,30 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1Json;
+import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
+import java.util.Optional;
 import javax.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
-import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
+import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.assets.AssetSelectionForm;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
+import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @ContextConfiguration(classes = AdditionalAssetsController.class)
-class AdditionalAssetsControllerTest extends AbstractControllerTest {
+class AdditionalAssetsControllerTest extends AbstractApplicationControllerTest {
 
   static final String ASSET_KEY = "1FIELD";
   
@@ -55,9 +56,6 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
 
   @MockBean
   private ApplicationAssetService applicationAssetService;
-
-  @MockBean
-  private ApplicationVersionService applicationVersionService;
 
   @MockBean
   private ApplicationFlagService applicationFlagService;
@@ -84,15 +82,18 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
     applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
     expectBaseAdditionalAssetsUrl = ApplicationAssetTestUtil.BASE_ASSETS_URL;
 
+    when(applicationVersionService.findLatestApplicationVersion(ApplicationTestUtil.APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion));
+
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(ApplicationTestUtil.APPLICATION_ID))
         .thenReturn(applicationVersion);
   }
 
   @Test
-  @WithMockUser
   void addAdditionalAsset_ValidUser() throws Exception {
     var modelAndView = mockMvc.perform(
-            get(ReverseRouter.route(on(AdditionalAssetsController.class).addAdditionalAsset(ApplicationTestUtil.APPLICATION_ID))))
+            get(ReverseRouter.route(on(AdditionalAssetsController.class).addAdditionalAsset(ApplicationTestUtil.APPLICATION_ID)))
+                .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/assets/additionalAsset"))
         .andReturn().getModelAndView();
@@ -107,7 +108,7 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
         .isNull();
   }
 
-  @Test
+  @SecurityTest
   void addAdditionalAsset_unauthorizedUser() throws Exception {
     mockMvc.perform(
             get(ReverseRouter.route(on(AdditionalAssetsController.class).addAdditionalAsset(ApplicationTestUtil.APPLICATION_ID))))
@@ -115,15 +116,15 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void saveNewAsset_emptyForm() throws Exception {
 
     doCallRealMethod().when(additionalAssetSelectionFormValidator).validate(any(), any());
 
     var modelAndView = mockMvc.perform(post(ReverseRouter.route(on(AdditionalAssetsController.class).saveNewAsset(
         ApplicationTestUtil.APPLICATION_ID, null, null)))
-        .with(csrf())
-        .param("assetKey", ""))
+            .with(user(user))
+            .with(csrf())
+            .param("assetKey", ""))
     .andExpect(status().isOk())
     .andExpect(view().name("fcs/assets/additionalAsset"))
     .andReturn().getModelAndView();
@@ -139,7 +140,6 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void saveNewAsset_validForm() throws Exception {
     AssetSelectionForm form = new AssetSelectionForm(ASSET_KEY, applicationVersion);
     AssetJson assetJson = field1Json;
@@ -150,6 +150,7 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(post(ReverseRouter.route(on(AdditionalAssetsController.class).saveNewAsset(
             ApplicationTestUtil.APPLICATION_ID, form, null)))
+            .with(user(user))
             .with(csrf())
             .param("assetKey", ASSET_KEY))
         .andExpect(status().is3xxRedirection())
@@ -160,7 +161,6 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void saveNewAsset_terminalAsset_passThroughValidation() throws Exception {
     AssetJson assetJson = terminal1Json;
     AssetSelectionForm form = new AssetSelectionForm(assetJson.getSelectionId(), applicationVersion);
@@ -168,31 +168,34 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
     when(assetService.getAsset(form.getAssetKey())).thenReturn(assetJson);
 
     mockMvc.perform(post(ReverseRouter.route(on(AdditionalAssetsController.class).saveNewAsset(
-            ApplicationTestUtil.APPLICATION_ID, form, null)))
+        ApplicationTestUtil.APPLICATION_ID, form, null)))
+            .with(user(user))
             .with(csrf())
             .param("assetKey", assetJson.getSelectionId()))
         .andExpect(status().is4xxClientError());
   }
 
   @Test
-  @WithMockUser
   void viewAdditionalAssetsSummary_noAssets() throws Exception {
     when(applicationAssetService.secondaryAssetsExist(applicationVersion)).thenReturn(Boolean.FALSE);
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(AdditionalAssetsController.class).viewAdditionalAssetsSummary(ApplicationTestUtil.APPLICATION_ID))))
+            get(ReverseRouter.route(on(AdditionalAssetsController.class).viewAdditionalAssetsSummary(ApplicationTestUtil.APPLICATION_ID)))
+                .with(user(user))
+        )
         .andExpect(status().is3xxRedirection())
         .andExpect(view().name("redirect:/applications/1/task-list/"));
   }
 
   @Test
-  @WithMockUser
   void viewAdditionalAssetsSummary_withAssets() throws Exception {
     when(applicationAssetService.secondaryAssetsExist(applicationVersion)).thenReturn(Boolean.TRUE);
     when(assetSummaryService.getSummaryViews(applicationVersion)).thenReturn(ApplicationAssetTestUtil.assetViews);
 
     var modelAndView = mockMvc.perform(
-            get(ReverseRouter.route(on(AdditionalAssetsController.class).viewAdditionalAssetsSummary(ApplicationTestUtil.APPLICATION_ID))))
+            get(ReverseRouter.route(on(AdditionalAssetsController.class).viewAdditionalAssetsSummary(ApplicationTestUtil.APPLICATION_ID)))
+                .with(user(user))
+        )
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/assets/assetsSummaryForm"))
         .andReturn().getModelAndView();
@@ -208,21 +211,21 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
         .isNull();
   }
 
-  @Test
+  @SecurityTest
   void viewAdditionalAssetsSummary_unauthorizedUser() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(AdditionalAssetsController.class).viewAdditionalAssetsSummary(ApplicationTestUtil.APPLICATION_ID))))
         .andExpect(status().isForbidden());
   }
 
   @Test
-  @WithMockUser
   void saveAssetsSummary_invalidForm() throws Exception {
 
     doCallRealMethod().when(additionalAssetsFormValidator).validate(any(), any());
     when(assetSummaryService.getSummaryViews(applicationVersion)).thenReturn(ApplicationAssetTestUtil.assetViews);
 
     var modelAndView = mockMvc.perform(post(ReverseRouter.route(on(AdditionalAssetsController.class).saveAssetsSummary(
-            ApplicationTestUtil.APPLICATION_ID, null, null)))
+        ApplicationTestUtil.APPLICATION_ID, null, null)))
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/assets/assetsSummaryForm"))
@@ -240,28 +243,28 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void saveAssetsSummary_validFormWithAssetsToAdd() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(AdditionalAssetsController.class).saveAssetsSummary(
-            ApplicationTestUtil.APPLICATION_ID,null, null)))
+        ApplicationTestUtil.APPLICATION_ID,null, null)))
             .param("hasOtherAssetsToAdd", Boolean.TRUE.toString())
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(view().name("redirect:" + expectBaseAdditionalAssetsUrl + "/new"));
   }
 
   @Test
-  @WithMockUser
   void saveAssetsSummary_validFormWithNoMoreAssetsToAdd() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(AdditionalAssetsController.class).saveAssetsSummary(
             ApplicationTestUtil.APPLICATION_ID,null, null)))
             .param("hasOtherAssetsToAdd", Boolean.FALSE.toString())
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(view().name("redirect:/applications/1/task-list/"));
   }
 
-  @Test
+  @SecurityTest
   void saveAssetsSummary_unauthorizedUser() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(AdditionalAssetsController.class).saveAssetsSummary(
         ApplicationTestUtil.APPLICATION_ID,null, null))))
@@ -269,7 +272,6 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void deleteAssetConfirm_assetExists() throws Exception {
     when(applicationAssetService.getSecondaryAsset(applicationVersion, ApplicationAssetTestUtil.fieldAsset2.getAssetNo()))
         .thenReturn(ApplicationAssetTestUtil.fieldAsset2);
@@ -278,7 +280,9 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
 
     var modelAndView = mockMvc.perform(
             get(ReverseRouter.route(on(AdditionalAssetsController.class).deleteAssetConfirm(
-                ApplicationTestUtil.APPLICATION_ID, ApplicationAssetTestUtil.fieldAsset2.getAssetNo()))))
+                ApplicationTestUtil.APPLICATION_ID, ApplicationAssetTestUtil.fieldAsset2.getAssetNo())))
+                .with(user(user))
+        )
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/assets/deleteAsset"))
         .andReturn().getModelAndView();
@@ -293,7 +297,6 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void deleteAssetConfirm_noAssetExists() {
 
     when(applicationAssetService.getSecondaryAsset(applicationVersion, ApplicationAssetTestUtil.fieldAsset2.getAssetNo()))
@@ -302,6 +305,7 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
     assertThatThrownBy(() ->
         mockMvc.perform(get(ReverseRouter.route(on(AdditionalAssetsController.class).deleteAssetConfirm(
                 ApplicationTestUtil.APPLICATION_ID, ApplicationAssetTestUtil.fieldAsset2.getAssetNo())))
+            .with(user(user))
         )
     )
         .isInstanceOf(Exception.class)
@@ -309,7 +313,7 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
             .formatted(applicationVersion.getId(), ApplicationAssetTestUtil.fieldAsset2.getAssetNo()));
   }
 
-  @Test
+  @SecurityTest
   void deleteAssetConfirm_noUser() throws Exception {
     mockMvc.perform(
             get(ReverseRouter.route(on(AdditionalAssetsController.class).deleteAssetConfirm(
@@ -318,7 +322,6 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void deleteAsset_assetExists() throws Exception {
     when(applicationAssetService.getSecondaryAsset(applicationVersion, ApplicationAssetTestUtil.fieldAsset2.getAssetNo()))
         .thenReturn(ApplicationAssetTestUtil.fieldAsset2);
@@ -326,6 +329,7 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
     mockMvc.perform(
             post(ReverseRouter.route(on(AdditionalAssetsController.class).deleteAsset(
                 ApplicationTestUtil.APPLICATION_ID, null, ApplicationAssetTestUtil.fieldAsset2.getAssetNo())))
+                .with(user(user))
                 .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(view().name("redirect:/applications/1/additional-assets/required"));
@@ -335,21 +339,21 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void deleteAsset_noAssetExists() {
     when(applicationAssetService.getSecondaryAsset(applicationVersion, ApplicationAssetTestUtil.fieldAsset2.getAssetNo()))
         .thenThrow(new EntityNotFoundException("Asset with application_version_id 1 and asset_no 2 not found"));
 
     assertThatThrownBy(() ->
         mockMvc.perform(get(ReverseRouter.route(on(AdditionalAssetsController.class).deleteAsset(
-            ApplicationTestUtil.APPLICATION_ID, null,  ApplicationAssetTestUtil.fieldAsset2.getAssetNo())))))
+            ApplicationTestUtil.APPLICATION_ID, null,  ApplicationAssetTestUtil.fieldAsset2.getAssetNo())))
+            .with(user(user))
+        ))
         .isInstanceOf(Exception.class)
         .hasMessageContaining("Asset with application_version_id %s and asset_no %s not found"
             .formatted(applicationVersion.getId(),  ApplicationAssetTestUtil.fieldAsset2.getAssetNo()));
   }
 
   @Test
-  @WithMockUser
   void deleteAsset_otherAssetsExist() throws Exception {
     when(applicationAssetService.getSecondaryAsset(applicationVersion, ApplicationAssetTestUtil.fieldAsset2.getAssetNo()))
         .thenReturn(ApplicationAssetTestUtil.fieldAsset2);
@@ -358,6 +362,7 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
     mockMvc.perform(
             post(ReverseRouter.route(on(AdditionalAssetsController.class).deleteAsset(
                 ApplicationTestUtil.APPLICATION_ID, null, ApplicationAssetTestUtil.fieldAsset2.getAssetNo())))
+                .with(user(user))
                 .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(view().name("redirect:" + expectBaseAdditionalAssetsUrl + "/summary"));
@@ -366,7 +371,7 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
         .deleteAdditionalAsset(ApplicationAssetTestUtil.fieldAsset2);
   }
 
-  @Test
+  @SecurityTest
   void deleteAsset_noUser() throws Exception {
     mockMvc.perform(
             get(ReverseRouter.route(on(AdditionalAssetsController.class).deleteAsset(
@@ -375,7 +380,6 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void getAdditionalAssetsRequiredForm() throws Exception {
     var expectedAdditionalAssetsSetupForm = new AdditionalAssetsSetupForm();
     when(applicationAssetService.getAdditionalAssetsSetupForm(applicationVersion))
@@ -384,7 +388,9 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
     var modelAndView =
         mockMvc.perform(
             get(ReverseRouter.route(on(AdditionalAssetsController.class).getAdditionalAssetsRequiredForm(
-                ApplicationTestUtil.APPLICATION_ID))))
+                ApplicationTestUtil.APPLICATION_ID)))
+                .with(user(user))
+            )
             .andExpect(status().isOk())
             .andExpect(view().name(ADDITIONAL_ASSETS_REQUIRED_VIEW))
             .andReturn().getModelAndView();
@@ -398,7 +404,7 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
         .isEqualTo(expectedAdditionalAssetsSetupForm);
   }
 
-  @Test
+  @SecurityTest
   void getAdditionalAssetsRequiredForm_noUser() throws Exception {
     when(applicationAssetService.getAdditionalAssetsSetupForm(applicationVersion))
         .thenReturn(new AdditionalAssetsSetupForm());
@@ -411,15 +417,15 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void saveAdditionalAssetsRequiredForm_emptyForm() throws Exception {
     var modelAndView =
         mockMvc.perform(post(ReverseRouter.route(on(AdditionalAssetsController.class)
-            .saveAdditionalAssetsRequiredForm(
-                ApplicationTestUtil.APPLICATION_ID,
-                null,
-                null)))
-            .with(csrf()))
+                .saveAdditionalAssetsRequiredForm(
+                    ApplicationTestUtil.APPLICATION_ID,
+                    null,
+                    null)))
+                .with(user(user))
+                .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(view().name(ADDITIONAL_ASSETS_REQUIRED_VIEW))
         .andReturn().getModelAndView();
@@ -437,13 +443,13 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void saveAdditionalAssetsRequiredForm_otherAssetsRequired() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(AdditionalAssetsController.class)
             .saveAdditionalAssetsRequiredForm(
                 ApplicationTestUtil.APPLICATION_ID,
                 null,
                 null)))
+            .with(user(user))
             .with(csrf())
             .param("otherAssetsRequired", "true"))
         .andExpect(status().is3xxRedirection())
@@ -456,13 +462,13 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void saveAdditionalAssetsRequiredForm_otherAssetsNotRequired() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(AdditionalAssetsController.class)
             .saveAdditionalAssetsRequiredForm(
                 ApplicationTestUtil.APPLICATION_ID,
                 null,
                 null)))
+            .with(user(user))
             .with(csrf())
             .param("otherAssetsRequired", "false"))
         .andExpect(status().is3xxRedirection())
@@ -474,7 +480,7 @@ class AdditionalAssetsControllerTest extends AbstractControllerTest {
         .saveApplicationFlag(applicationVersion, ApplicationFlagType.HAS_SECONDARY_ASSETS, false);
   }
 
-  @Test
+  @SecurityTest
   void saveAdditionalAssetsRequiredForm_unauthorizedUser() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(AdditionalAssetsController.class)
             .saveAdditionalAssetsRequiredForm(

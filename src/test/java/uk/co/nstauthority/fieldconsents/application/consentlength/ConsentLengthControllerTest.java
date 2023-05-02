@@ -9,33 +9,31 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
+import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
-import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
+import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @ContextConfiguration(classes = ConsentLengthController.class)
-class ConsentLengthControllerTest extends AbstractControllerTest {
+class ConsentLengthControllerTest extends AbstractApplicationControllerTest {
 
   @MockBean
   private ApplicationService applicationService;
 
   @MockBean
   private ConsentLengthService consentLengthService;
-
-  @MockBean
-  private ApplicationVersionService applicationVersionService;
 
   @MockBean
   private ConsentLengthFormValidator consentLengthFormValidator;
@@ -56,7 +54,10 @@ class ConsentLengthControllerTest extends AbstractControllerTest {
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(ApplicationTestUtil.APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(applicationVersion.getApplication());
 
     consentLengthForm = ConsentLengthTestUtil.getAnnualConsentLengthForm();
@@ -70,12 +71,12 @@ class ConsentLengthControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void getConsentLengthForm() throws Exception {
     when(consentLengthService.getConsentLengthForm(applicationVersion)).thenReturn(consentLengthForm);
 
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ConsentLengthController.class)
             .getConsentLengthForm(APPLICATION_ID)))
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/application/consentLengthForm"))
@@ -89,7 +90,7 @@ class ConsentLengthControllerTest extends AbstractControllerTest {
     assertEquals(longTermConsentMap, model.get("longTermStartYears"));
   }
 
-  @Test
+  @SecurityTest
   void getConsentLengthForm_withUnauthorizedUser() throws Exception {
     when(consentLengthService.getConsentLengthForm(applicationVersion)).thenReturn(consentLengthForm);
 
@@ -98,16 +99,16 @@ class ConsentLengthControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void saveConsentLengthDetails() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(ConsentLengthController.class)
             .saveConsentLengthDetails(APPLICATION_ID, consentLengthForm, ReverseRouter.emptyBindingResult())))
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(view().name("redirect:/applications/1/task-list/"));
   }
 
-  @Test
+  @SecurityTest
   void saveConsentLengthDetails_withUnauthorizedUser() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(
             on(ConsentLengthController.class).saveConsentLengthDetails(APPLICATION_ID, consentLengthForm,

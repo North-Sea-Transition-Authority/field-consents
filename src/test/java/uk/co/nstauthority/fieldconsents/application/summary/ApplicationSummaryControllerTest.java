@@ -8,34 +8,31 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
+import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.Collections;
+import java.util.Optional;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
-import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
+import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionController;
 import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionService;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
+import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @ContextConfiguration(classes = ApplicationSummaryController.class)
-class ApplicationSummaryControllerTest extends AbstractControllerTest {
+class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest {
 
   private static final String PAGE_TITLE = "Check your answers before submitting";
-
-  @MockBean
-  private ApplicationVersionService applicationVersionService;
 
   @MockBean
   private ApplicationSummaryService applicationSummaryService;
@@ -43,10 +40,11 @@ class ApplicationSummaryControllerTest extends AbstractControllerTest {
   @MockBean
   private ApplicationSubmissionService applicationSubmissionService;
 
-  @WithMockUser
   @ParameterizedTest
   @MethodSource("getApplicationVersions")
   void getSummary(ApplicationVersion applicationVersion) throws Exception {
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
     when(applicationSummaryService.getSummarySections(applicationVersion))
@@ -55,6 +53,7 @@ class ApplicationSummaryControllerTest extends AbstractControllerTest {
 
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ApplicationSummaryController.class)
             .getSummary(APPLICATION_ID)))
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/application/applicationSummary"))
@@ -82,7 +81,7 @@ class ApplicationSummaryControllerTest extends AbstractControllerTest {
     );
   }
 
-  @Test
+  @SecurityTest
   void getSummary_noUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationSummaryController.class)
             .getSummary(APPLICATION_ID))))

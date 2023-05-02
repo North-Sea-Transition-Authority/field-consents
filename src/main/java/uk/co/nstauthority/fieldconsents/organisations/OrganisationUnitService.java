@@ -51,4 +51,20 @@ public class OrganisationUnitService {
     return findOrganisationUnitById(organisationUnitId, purpose)
         .orElseGet(() -> OrganisationUnitJson.fromCachedInformation(organisationUnitId, cachedOrganisationUnitName));
   }
+
+  public Optional<OrganisationUnitWithGroupsJson> findOrganisationUnitWithGroupsById(Integer organisationUnitId, String purpose) {
+    var requestPurpose = new RequestPurpose(purpose);
+    var requestedFields = new OrganisationUnitProjectionRoot()
+        .organisationUnitId()
+        .name()
+        .organisationGroups().organisationGroupId().name().root();
+
+    return organisationApi.findOrganisationUnit(organisationUnitId, requestedFields, requestPurpose)
+        .map(OrganisationUnitWithGroupsJson::from);
+  }
+
+  public OrganisationUnitWithGroupsJson getOrganisationUnitWithGroupsById(Integer organisationUnitId, String purpose) {
+    return findOrganisationUnitWithGroupsById(organisationUnitId, purpose)
+        .orElseThrow(() -> new EntityNotFoundException("Organisation unit not found for id %s".formatted(organisationUnitId)));
+  }
 }

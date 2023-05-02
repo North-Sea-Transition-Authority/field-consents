@@ -13,33 +13,31 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
+import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.Map;
+import java.util.Optional;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
-import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
+import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
+import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @ContextConfiguration(classes = SupportingInformationController.class)
-class SupportingInformationControllerTest extends AbstractControllerTest {
+class SupportingInformationControllerTest extends AbstractApplicationControllerTest {
 
   @MockBean
   private ApplicationService applicationService;
-
-  @MockBean
-  private ApplicationVersionService applicationVersionService;
 
   @MockBean
   private SupportingInformationService supportingInformationService;
@@ -54,7 +52,10 @@ class SupportingInformationControllerTest extends AbstractControllerTest {
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
 
     form = new SupportingInformationForm();
     when(supportingInformationService.getSupportingInformationForm(applicationVersion)).thenReturn(form);
@@ -62,7 +63,6 @@ class SupportingInformationControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void getSupportingInformationForm_withValidUserAndFlareApplication() throws Exception {
     Map<String, Object> model = getSupportingInformationFormModel();
 
@@ -77,7 +77,6 @@ class SupportingInformationControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void getSupportingInformationForm_withValidUserAndVentApplication() throws Exception {
     applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(applicationVersion.getApplication());
@@ -95,7 +94,6 @@ class SupportingInformationControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void getSupportingInformationForm_withValidUserAndProductionApplication() throws Exception {
     applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(applicationVersion.getApplication());
@@ -114,17 +112,18 @@ class SupportingInformationControllerTest extends AbstractControllerTest {
   @NotNull
   private Map<String, Object> getSupportingInformationFormModel() throws Exception {
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(SupportingInformationController.class)
-                .getSupportingInformationForm(ApplicationTestUtil.APPLICATION_ID)))
-                .with(csrf()))
-            .andExpect(status().isOk())
-            .andExpect(view().name("fcs/application/supportingInformationForm"))
-            .andReturn().getModelAndView();
+            .getSupportingInformationForm(ApplicationTestUtil.APPLICATION_ID)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/supportingInformationForm"))
+        .andReturn().getModelAndView();
 
     assert modelAndView != null;
     return modelAndView.getModel();
   }
 
-  @Test
+  @SecurityTest
   void getSupportingInformationForm_withUnauthorisedUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(SupportingInformationController.class)
             .getSupportingInformationForm(ApplicationTestUtil.APPLICATION_ID))))
@@ -132,7 +131,6 @@ class SupportingInformationControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void saveSupportingInformation_withValidUser() throws Exception {
     ArgumentCaptor<ApplicationVersion> applicationVersionArgumentCaptor =
         ArgumentCaptor.forClass(ApplicationVersion.class);
@@ -141,6 +139,7 @@ class SupportingInformationControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(post(ReverseRouter.route(on(SupportingInformationController.class)
             .saveSupportingInformation(ApplicationTestUtil.APPLICATION_ID, null, null)))
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(view().name("redirect:" + ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID))));
@@ -149,7 +148,7 @@ class SupportingInformationControllerTest extends AbstractControllerTest {
         .saveSupportingInformation(applicationVersionArgumentCaptor.capture(), supportingInformationFormArgumentCaptor.capture());
   }
 
-  @Test
+  @SecurityTest
   void saveSupportingInformation_withUnauthorisedUser() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(SupportingInformationController.class)
             .saveSupportingInformation(ApplicationTestUtil.APPLICATION_ID, null, null)))
@@ -158,13 +157,13 @@ class SupportingInformationControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void saveSupportingInformation_withEmptyForm() throws Exception {
     doCallRealMethod().when(supportingInformationFormValidator).validate(any(), any());
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(ApplicationTestUtil.APPLICATION_ID)).thenReturn(applicationVersion);
 
     mockMvc.perform(post(ReverseRouter.route(on(SupportingInformationController.class)
             .saveSupportingInformation(ApplicationTestUtil.APPLICATION_ID, null, null)))
+            .with(user(user))
             .with(csrf())
             .param("notes", "")
             .param("erapNotes", ""))

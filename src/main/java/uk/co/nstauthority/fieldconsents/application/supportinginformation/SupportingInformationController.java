@@ -16,11 +16,17 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
+import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
+import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Controller
 @RequestMapping("applications/{applicationId}/supporting-information")
+@HasApplicationStatus(statuses = ApplicationVersionStatus.IN_PROGRESS)
+@HasApplicationPermission(permissions = RolePermission.EDIT_FCS_APPLICATIONS)
 public class SupportingInformationController {
 
   private final ApplicationService applicationService;

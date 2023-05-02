@@ -9,31 +9,30 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
+import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
-import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
+import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationContextJson;
 import uk.co.nstauthority.fieldconsents.application.ApplicationContextService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil;
+import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListSection;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil;
 
 @ContextConfiguration(classes = ApplicationTaskListController.class)
-class ApplicationTaskListControllerTest extends AbstractControllerTest {
-
-  @MockBean
-  private ApplicationVersionService applicationVersionService;
+class ApplicationTaskListControllerTest extends AbstractApplicationControllerTest {
 
   @MockBean
   private ApplicationTaskListService applicationTaskListService;
@@ -52,15 +51,24 @@ class ApplicationTaskListControllerTest extends AbstractControllerTest {
         OrganisationUnitTestUtil.orgUnit1Json);
   }
 
+  @SecurityTest
+  void getTaskList_withUnauthorizedUser() throws Exception {
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationTaskListController.class)
+            .getTaskList(APPLICATION_ID))))
+        .andExpect(redirectionToLoginUrl());
+  }
+
   @Test
-  @WithMockUser
   void getTaskList_withFlareApplication() throws Exception {
     ApplicationVersion applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(applicationContextService.getApplicationContextJson(applicationVersion)).thenReturn(applicationContext);
 
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ApplicationTaskListController.class)
             .getTaskList(APPLICATION_ID)))
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/application/applicationTaskList"))
@@ -78,15 +86,17 @@ class ApplicationTaskListControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void getTaskList_withVentApplication() throws Exception {
     ApplicationVersion applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(applicationTaskListService.getAllSections(applicationVersion)).thenReturn(flareTaskListSections);
     when(applicationContextService.getApplicationContextJson(applicationVersion)).thenReturn(applicationContext);
 
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ApplicationTaskListController.class)
             .getTaskList(APPLICATION_ID)))
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/application/applicationTaskList"))
@@ -104,15 +114,17 @@ class ApplicationTaskListControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void getTaskList_withProductionApplication() throws Exception {
     ApplicationVersion applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(applicationTaskListService.getAllSections(applicationVersion)).thenReturn(flareTaskListSections);
     when(applicationContextService.getApplicationContextJson(applicationVersion)).thenReturn(applicationContext);
 
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ApplicationTaskListController.class)
             .getTaskList(APPLICATION_ID)))
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/application/applicationTaskList"))

@@ -8,6 +8,9 @@ public class ApplicationTestUtil {
 
   public static final int APPLICATION_ID = 1;
   public static final int APPLICATION_VERSION_ID = 1;
+
+  public static final int APPLICATION_VERSION_NUMBER = 1;
+
   public static final int PRIMARY_OPERATOR_OU_ID_1 = 1;
   public static final String CACHED_PRIMARY_OPERATOR_NAME_1 = "TEST ORG UNIT 1";
 
@@ -28,9 +31,9 @@ public class ApplicationTestUtil {
   public static ApplicationVersion getNewApplicationVersionWithType(ApplicationType applicationType) {
     var newApplication = getNewApplicationWithType(applicationType);
     return new ApplicationVersion(
-        APPLICATION_ID,
-        newApplication,
         APPLICATION_VERSION_ID,
+        newApplication,
+        APPLICATION_VERSION_NUMBER,
         PRIMARY_OPERATOR_OU_ID_1,
         CACHED_PRIMARY_OPERATOR_NAME_1,
         Instant.now(),
@@ -46,9 +49,9 @@ public class ApplicationTestUtil {
   public static ApplicationVersion getSubmittedApplicationVersionWithType(ApplicationType applicationType) {
     var submittedApplication = getSubmittedApplicationWithType(applicationType);
     var submittedApplicationVersion = new ApplicationVersion(
-        APPLICATION_ID,
-        submittedApplication,
         APPLICATION_VERSION_ID,
+        submittedApplication,
+        APPLICATION_VERSION_NUMBER,
         PRIMARY_OPERATOR_OU_ID_1,
         CACHED_PRIMARY_OPERATOR_NAME_1,
         Instant.now(),
