@@ -14,11 +14,22 @@
     <#return PageSize.FULL_WIDTH/>
   </#if>
 </#function>
-<#if !isSubmittable>
+<#if !isSubmittable || !userHasSubmitPermission>
   <#assign warningBanner>
-    <@fdsNotificationBanner.notificationBannerInfo bannerTitleText="Missing information">
+    <@fdsNotificationBanner.notificationBannerInfo bannerTitleText="Missing information or permissions">
       <@fdsNotificationBanner.notificationBannerContent headingText="Application cannot be submitted">
-        Not all mandatory sections shown on the task list have been completed.
+        <#assign missingInformationExplanation="Not all mandatory sections shown on the task list have been completed"/>
+        <#assign missingPermissionsExplanation="Your account does not have permission to submit applications for the primary operator"/>
+        <#if !isSubmittable && !userHasSubmitPermission>
+          <ul>
+            <li>${missingInformationExplanation}</li>
+            <li>${missingPermissionsExplanation}</li>
+          </ul>
+        <#elseif !isSubmittable>
+          ${missingInformationExplanation}
+        <#elseif !userHasSubmitPermission>
+          ${missingPermissionsExplanation}
+        </#if>
       </@fdsNotificationBanner.notificationBannerContent>
     </@fdsNotificationBanner.notificationBannerInfo>
   </#assign>
@@ -52,12 +63,12 @@ notificationBannerContentOverride=warningBanner
         </#list>
       </#list>
     </@fdsAccordion.accordion>
-    <#if isSubmittable>
+    <#if isSubmittable && userHasSubmitPermission>
       <@fdsAction.submitButtons
-      primaryButtonText="Submit"
-      secondaryLinkText="Back to task list"
-      linkSecondaryAction=true
-      linkSecondaryActionUrl="${springUrl(cancelUrl)}"/>
+        primaryButtonText="Submit"
+        secondaryLinkText="Back to task list"
+        linkSecondaryAction=true
+        linkSecondaryActionUrl="${springUrl(cancelUrl)}"/>
     <#else>
       <@fdsAction.link linkText="Back to task list" linkUrl="${springUrl(cancelUrl)}"/>
     </#if>

@@ -30,7 +30,7 @@ public class ApplicationHandlerInterceptor extends AbstractHandlerInterceptor {
                                        List<ApplicationInterceptorSecurityRule> securityRules) {
     this.applicationVersionService = applicationVersionService;
     this.userDetailService = userDetailService;
-    this.securityRules = securityRules; // TODO do we need to run the rules in a specific order?
+    this.securityRules = securityRules;
   }
 
   @Override

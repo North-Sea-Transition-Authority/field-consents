@@ -14,6 +14,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.fieldconsents.authorisation.ApplicationAccessService;
 import uk.co.nstauthority.fieldconsents.authorisation.ApplicationHandlerInterceptor;
 import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
@@ -25,7 +26,8 @@ import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
 
 @Import({
     ApplicationAccessInterceptorRule.class,
-    ApplicationStatusInterceptorRule.class
+    ApplicationStatusInterceptorRule.class,
+    ApplicationAccessService.class
 })
 public abstract class AbstractApplicationControllerTest extends AbstractControllerTest {
 
@@ -37,6 +39,9 @@ public abstract class AbstractApplicationControllerTest extends AbstractControll
 
   @Autowired
   protected ApplicationStatusInterceptorRule applicationStatusInterceptorRule;
+
+  @Autowired
+  protected ApplicationAccessService applicationAccessService;
 
   @MockBean
   protected OrganisationUnitService organisationUnitService;

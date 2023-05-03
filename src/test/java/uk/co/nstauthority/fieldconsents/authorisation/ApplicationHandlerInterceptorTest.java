@@ -123,11 +123,7 @@ class ApplicationHandlerInterceptorTest extends AbstractApplicationControllerTes
             get(ReverseRouter.route(on(ApplicationHandlerInterceptorTest.TestController.class)
                 .noOrgGroups(APPLICATION_ID)))
                 .with(user(user)))
-        .andExpect(status().isForbidden())
-        .andExpect(status().reason(
-            "No organisation groups found for organisation unit id %s. Application id %s"
-                .formatted(applicationVersionInProgress.getPrimaryOperatorOuId(), APPLICATION_ID)
-        ));
+        .andExpect(status().isForbidden());
   }
 
   @SecurityTest

@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -15,6 +16,7 @@ import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityRuleResult;
 
 @Component
+@Order(1)
 public class ApplicationStatusInterceptorRule implements ApplicationInterceptorSecurityRule {
 
   @Override
