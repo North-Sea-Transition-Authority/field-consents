@@ -39,7 +39,6 @@ import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserServic
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.TeamId;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberTestUtil;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
 import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.AddTeamMemberValidator;
@@ -57,9 +56,6 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
   @MockBean
   private EnergyPortalUserService energyPortalUserService;
-
-  @MockBean
-  private TeamService teamService;
 
   @Autowired
   AddTeamMemberValidator addTeamMemberValidator;

@@ -31,9 +31,9 @@ public class ManageAssetController {
     Optional<AssetJson> assetJson = assetService.getAssetFromKey(assetKey);
 
     if (assetJson.isPresent() && assetJson.get().getAssetType().equals(AssetType.FIELD)) {
-      return ReverseRouter.redirect(on(FieldController.class).manageField(assetJson.get().getId()));
+      return ReverseRouter.redirect(on(FieldController.class).manageField(assetJson.get().getId(), null));
     } else if (assetJson.isPresent() && assetJson.get().getAssetType().equals(AssetType.TERMINAL)) {
-      return ReverseRouter.redirect(on(TerminalController.class).manageTerminal(assetJson.get().getId()));
+      return ReverseRouter.redirect(on(TerminalController.class).manageTerminal(assetJson.get().getId(), null));
     } else {
       return ReverseRouter.redirect(on(AssetSelectionController.class).getAssetSelection());
     }

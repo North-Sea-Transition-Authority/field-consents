@@ -146,7 +146,7 @@ public class IndustryTeamManagementController extends AbstractTeamController {
               ReverseRouter.route(on(TeamListController.class).resolveTeamListEntryRoute()));
     }
 
-    if (permissionService.hasPermissionForTeam(teamId, user, Set.of(RolePermission.GRANT_ROLES))
+    if (permissionService.hasPermissionForTeam(team, user, Set.of(RolePermission.GRANT_ROLES))
         || permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_INDUSTRY_TEAMS))) {
       modelAndView
           .addObject("addTeamMemberUrl",

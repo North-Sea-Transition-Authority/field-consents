@@ -3,10 +3,7 @@ package uk.co.nstauthority.fieldconsents;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.when;
-import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.ORG_GROUP_ID_1;
-import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit1WithGroupsJson;
 
-import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,18 +13,13 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.authorisation.ApplicationAccessService;
 import uk.co.nstauthority.fieldconsents.authorisation.ApplicationHandlerInterceptor;
-import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.authorisation.rules.ApplicationAccessInterceptorRule;
 import uk.co.nstauthority.fieldconsents.authorisation.rules.ApplicationStatusInterceptorRule;
-import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
-import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
 
 @Import({
     ApplicationAccessInterceptorRule.class,
-    ApplicationStatusInterceptorRule.class,
-    ApplicationAccessService.class
+    ApplicationStatusInterceptorRule.class
 })
 public abstract class AbstractApplicationControllerTest extends AbstractControllerTest {
 
@@ -40,17 +32,8 @@ public abstract class AbstractApplicationControllerTest extends AbstractControll
   @Autowired
   protected ApplicationStatusInterceptorRule applicationStatusInterceptorRule;
 
-  @Autowired
+  @MockBean
   protected ApplicationAccessService applicationAccessService;
-
-  @MockBean
-  protected OrganisationUnitService organisationUnitService;
-
-  @MockBean
-  protected TeamService teamService;
-
-  @MockBean
-  protected PermissionService permissionService;
 
   protected ServiceUserDetail user;
 
@@ -69,12 +52,7 @@ public abstract class AbstractApplicationControllerTest extends AbstractControll
   }
 
   void setupWhenUserHasApplicationAccessPermission() {
-    when(organisationUnitService.getOrganisationUnitWithGroupsById(any(), any()))
-        .thenReturn(orgUnit1WithGroupsJson);
-    var team = TeamTestUtil.Builder().withOrganisationGroupId(ORG_GROUP_ID_1).build();
-    when(teamService.getTeamByOrganisationGroupId(ORG_GROUP_ID_1))
-        .thenReturn(Optional.of(team));
-    when(permissionService.hasPermissionForTeam(any(), any(), any()))
+    when(applicationAccessService.hasApplicationPermission(any(), any(), any()))
         .thenReturn(true);
   }
 }

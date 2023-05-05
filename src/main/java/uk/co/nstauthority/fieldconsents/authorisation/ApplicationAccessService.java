@@ -1,88 +1,28 @@
 package uk.co.nstauthority.fieldconsents.authorisation;
 
 import java.util.Set;
-import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Service
 public class ApplicationAccessService {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationAccessService.class);
-
-  private final OrganisationUnitService organisationUnitService;
-
-  private final TeamService teamService;
-
-  private final PermissionService permissionService;
+  private final OrganisationUnitPermissionService organisationUnitPermissionService;
 
   @Autowired
-  ApplicationAccessService(OrganisationUnitService organisationUnitService,
-                           TeamService teamService,
-                           PermissionService permissionService) {
-    this.organisationUnitService = organisationUnitService;
-    this.teamService = teamService;
-    this.permissionService = permissionService;
+  ApplicationAccessService(OrganisationUnitPermissionService organisationUnitPermissionService) {
+    this.organisationUnitPermissionService = organisationUnitPermissionService;
   }
 
   public boolean hasApplicationPermission(ServiceUserDetail user,
                                           ApplicationVersion applicationVersion,
                                           Set<RolePermission> requiredPermissions) {
 
-    var applicationId = applicationVersion.getApplication().getId();
-    var organisationUnitWithGroups = organisationUnitService.getOrganisationUnitWithGroupsById(
-        applicationVersion.getPrimaryOperatorOuId(),
-        "Lookup organisation unit with groups for application security check"
-    );
-
-    // if the operator doesn't have an organisation group then no user has permission
-    if (organisationUnitWithGroups.organisationGroups().isEmpty()) {
-      LOGGER.warn("No organisation groups found for organisation unit id {}. Application id {}",
-          applicationVersion.getPrimaryOperatorOuId(), applicationId);
-      return false;
-    }
-
-    // loop over the organisation groups for the operator
-    // (there is typically 1 but can be more, so we have to cater for this here)
-    var requiredPermissionNames = requiredPermissions
-        .stream()
-        .map(RolePermission::name)
-        .collect(Collectors.joining(","));
-
-    for (var orgGroup: organisationUnitWithGroups.organisationGroups()) {
-      var teamOptional = teamService.getTeamByOrganisationGroupId(orgGroup.getOrganisationGroupId());
-
-      if (teamOptional.isEmpty()) {
-        LOGGER.warn("Team not found for organisation group id {}. Application id {}",
-            orgGroup.getOrganisationGroupId(), applicationId);
-        continue;
-      }
-
-      var hasPermissionForTeam =
-          permissionService.hasPermissionForTeam(teamOptional.get().toTeamId(), user, requiredPermissions);
-
-      if (hasPermissionForTeam) {
-        return true; // return as soon as we find a team the user has permissions in
-      }
-
-      LOGGER.warn("""
-              User {} attempted to access application {} with responsible organisation group id {}.
-              User was expected to have at least one of the following permission(s): {}
-              """,
-          user.wuaId(),
-          applicationId,
-          orgGroup.getOrganisationGroupId(),
-          requiredPermissionNames
-      );
-    }
-
-    return false;
+    return organisationUnitPermissionService
+        .hasOperatorPermission(user, applicationVersion.getPrimaryOperatorOuId(), requiredPermissions);
   }
 }

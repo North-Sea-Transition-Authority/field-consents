@@ -6,8 +6,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 
-import java.util.Collections;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -19,9 +17,7 @@ import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.TeamRole;
 
 @ContextConfiguration(classes = HasPermissionInterceptorTest.TestController.class)
 class HasPermissionInterceptorTest extends AbstractControllerTest {
@@ -38,63 +34,31 @@ class HasPermissionInterceptorTest extends AbstractControllerTest {
   }
 
   @Test
-  void preHandle_whenTeamMembershipIsNull_thenForbidden() throws Exception {
-
-    when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(null);
-
-    mockMvc.perform(get(ReverseRouter.route(on(TestController.class)
-            .withCreateNominationPermissionRequired()
-        ))
-            .with(user(USER)))
-        .andExpect(status().isForbidden());
-  }
-
-  @Test
-  void preHandle_whenMemberNotInTeam_thenForbidden() throws Exception {
-
-    when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(Collections.emptyList());
-
-    mockMvc.perform(get(ReverseRouter.route(on(TestController.class)
-            .withCreateNominationPermissionRequired()
-        ))
-            .with(user(USER)))
-        .andExpect(status().isForbidden());
-  }
-
-  @Test
   void preHandle_whenUserHasRequiredPermission_thenOk() throws Exception {
-
-    var roleWithRequiredPermission = TestTeamRole.CREATE_NOMINATION_ROLE;
-
-    var teamMember = TeamMemberTestUtil.Builder()
-        .withRole(roleWithRequiredPermission)
-        .build();
-
-    when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(List.of(teamMember));
+    when(permissionService.hasPermission(USER, Set.of(RolePermission.MANAGE_INDUSTRY_TEAMS)))
+        .thenReturn(true);
 
     mockMvc.perform(get(ReverseRouter.route(on(TestController.class)
-            .withCreateNominationPermissionRequired()
+            .withPermissionRequired()
         ))
             .with(user(USER)))
         .andExpect(status().isOk());
   }
 
   @Test
-  void preHandle_whenUserDoesNotHaveRequiredPermission_thenOk() throws Exception {
-
-    var roleWithoutRequiredPermission = TestTeamRole.NOT_CREATE_NOMINATION_ROLE;
-
-    var teamMember = TeamMemberTestUtil.Builder()
-        .withRole(roleWithoutRequiredPermission)
-        .build();
-
-    when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(List.of(teamMember));
+  void preHandle_whenUserDoesNotHaveRequiredPermission_thenForbidden() throws Exception {
+    when(permissionService.hasPermission(USER, Set.of(RolePermission.MANAGE_INDUSTRY_TEAMS)))
+        .thenReturn(false);
 
     mockMvc.perform(get(ReverseRouter.route(on(TestController.class)
-            .withCreateNominationPermissionRequired()
+            .withPermissionRequired()
         ))
             .with(user(USER)))
-        .andExpect(status().isForbidden());
+        .andExpect(status().isForbidden())
+        .andExpect(status().reason(
+            "User with ID %s doesn't have any of the required permissions %s"
+                .formatted(USER.wuaId(), List.of(RolePermission.MANAGE_INDUSTRY_TEAMS.name()))
+        ));
   }
 
   @Controller
@@ -109,44 +73,8 @@ class HasPermissionInterceptorTest extends AbstractControllerTest {
 
     @GetMapping("/with-manage-industry-teams-annotation")
     @HasPermission(permissions = RolePermission.MANAGE_INDUSTRY_TEAMS)
-    ModelAndView withCreateNominationPermissionRequired() {
+    ModelAndView withPermissionRequired() {
       return new ModelAndView(VIEW_NAME);
-    }
-  }
-
-  enum TestTeamRole implements TeamRole {
-
-    CREATE_NOMINATION_ROLE(
-        EnumSet.of(RolePermission.MANAGE_INDUSTRY_TEAMS)
-    ),
-    NOT_CREATE_NOMINATION_ROLE(
-        EnumSet.of(RolePermission.GRANT_ROLES)
-    );
-
-    private final Set<RolePermission> rolePermissions;
-
-    TestTeamRole(Set<RolePermission> rolePermissions) {
-      this.rolePermissions = rolePermissions;
-    }
-
-    @Override
-    public String getDescription() {
-      return null;
-    }
-
-    @Override
-    public int getDisplayOrder() {
-      return 0;
-    }
-
-    @Override
-    public String getDisplayName() {
-      return null;
-    }
-
-    @Override
-    public Set<RolePermission> getRolePermissions() {
-      return rolePermissions;
     }
   }
 }

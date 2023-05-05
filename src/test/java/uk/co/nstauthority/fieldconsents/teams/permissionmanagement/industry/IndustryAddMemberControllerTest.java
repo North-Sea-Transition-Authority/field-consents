@@ -24,7 +24,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
-import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.energyportal.EnergyPortalConfiguration;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
@@ -33,7 +32,6 @@ import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserServic
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.TeamId;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberTestUtil;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
 import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.AddTeamMemberValidator;
@@ -53,12 +51,6 @@ class IndustryAddMemberControllerTest extends AbstractControllerTest {
 
   @Autowired
   private ApplicationContext applicationContext;
-
-  @MockBean
-  protected PermissionService permissionService;
-
-  @MockBean
-  private TeamService teamService;
 
   @SecurityTest
   void renderAddTeamMember_whenUserIsNotLoggedIn_thenRedirectedToLogin() throws Exception {

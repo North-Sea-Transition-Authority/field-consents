@@ -29,7 +29,6 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.TeamId;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewTestUtil;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
 import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.TeamListController;
@@ -42,9 +41,6 @@ class RegulatorTeamManagementControllerTest extends AbstractControllerTest {
 
   @MockBean
   private RegulatorTeamService regulatorTeamService;
-
-  @MockBean
-  private TeamService teamService;
 
   @Autowired
   private ApplicationContext applicationContext;

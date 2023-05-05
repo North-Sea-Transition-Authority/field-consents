@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Service
@@ -14,12 +16,15 @@ public class TeamService {
 
   private final TeamRepository teamRepository;
   private final TeamMemberService teamMemberService;
+  private final PermissionService permissionService;
 
   @Autowired
   TeamService(TeamRepository teamRepository,
-              TeamMemberService teamMemberService) {
+              TeamMemberService teamMemberService,
+              PermissionService permissionService) {
     this.teamRepository = teamRepository;
     this.teamMemberService = teamMemberService;
+    this.permissionService = permissionService;
   }
 
   public Optional<Team> getTeam(TeamId teamId, TeamType teamType) {
@@ -28,6 +33,15 @@ public class TeamService {
 
   public List<Team> getTeamsOfTypeThatUserBelongsTo(ServiceUserDetail user, TeamType teamType) {
     return teamRepository.findAllTeamsOfTypeThatUserIsMemberOf(user.wuaId(), teamType);
+  }
+
+  public List<Team> getTeamsOfTypeThatUserHasPermissionFor(ServiceUserDetail user,
+                                                           TeamType teamType,
+                                                           Set<RolePermission> requiredPermissions) {
+    return getTeamsOfTypeThatUserBelongsTo(user, teamType)
+        .stream()
+        .filter(team -> permissionService.hasPermissionForTeam(team, user, requiredPermissions))
+        .toList();
   }
 
   public List<Team> getUserAccessibleTeams(ServiceUserDetail user) {

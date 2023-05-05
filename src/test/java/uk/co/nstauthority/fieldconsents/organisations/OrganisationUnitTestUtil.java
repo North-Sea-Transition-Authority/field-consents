@@ -19,6 +19,13 @@ public class OrganisationUnitTestUtil {
           .name(ORG_GROUP_NAME_1)
           .build();
 
+  public static OrganisationGroup ORG_GROUP_1_WITH_EMPTY_OUS =
+      OrganisationGroup.newBuilder()
+          .organisationGroupId(ORG_GROUP_ID_1)
+          .name(ORG_GROUP_NAME_1)
+          .organisationUnits(Collections.emptyList())
+          .build();
+
   public static Integer ORG_GROUP_ID_2 = 2;
 
   public static String ORG_GROUP_NAME_2 = "Org group 2";

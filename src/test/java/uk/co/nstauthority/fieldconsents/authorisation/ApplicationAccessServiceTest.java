@@ -1,15 +1,8 @@
 package uk.co.nstauthority.fieldconsents.authorisation;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.ORG_GROUP_ID_1;
-import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.ORG_GROUP_ID_2;
-import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit1With2GroupsJson;
-import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit1WithGroupsJson;
-import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit2WithGroupsJsonNoGroups;
 
-import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,9 +15,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
-import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
-import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,13 +24,7 @@ class ApplicationAccessServiceTest {
   private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
 
   @Mock
-  private OrganisationUnitService organisationUnitService;
-
-  @Mock
-  private TeamService teamService;
-
-  @Mock
-  private PermissionService permissionService;
+  private OrganisationUnitPermissionService organisationUnitPermissionService;
 
   @InjectMocks
   private ApplicationAccessService applicationAccessService;
@@ -52,37 +37,12 @@ class ApplicationAccessServiceTest {
   }
 
   @Test
-  void hasApplicationPermission_whenNoOrganisationGroups_thenFalse() {
-    when(organisationUnitService.getOrganisationUnitWithGroupsById(any(), any()))
-        .thenReturn(orgUnit2WithGroupsJsonNoGroups);
-
-    assertThat(
-        applicationAccessService
-            .hasApplicationPermission(USER, applicationVersion, Set.of(RolePermission.SUBMIT_FCS_APPLICATIONS))
-    ).isFalse();
-  }
-
-  @Test
-  void hasApplicationPermission_whenNoTeamForOrganisationGroup_thenFalse() {
-    when(organisationUnitService.getOrganisationUnitWithGroupsById(any(), any()))
-        .thenReturn(orgUnit1WithGroupsJson);
-    when(teamService.getTeamByOrganisationGroupId(ORG_GROUP_ID_1))
-        .thenReturn(Optional.empty());
-
-    assertThat(
-        applicationAccessService
-            .hasApplicationPermission(USER, applicationVersion, Set.of(RolePermission.SUBMIT_FCS_APPLICATIONS))
-    ).isFalse();
-  }
-
-  @Test
-  void hasApplicationPermission_whenNoPermissionForTeam_thenFalse() {
-    when(organisationUnitService.getOrganisationUnitWithGroupsById(any(), any()))
-        .thenReturn(orgUnit1WithGroupsJson);
-    var team = TeamTestUtil.Builder().withOrganisationGroupId(ORG_GROUP_ID_1).build();
-    when(teamService.getTeamByOrganisationGroupId(ORG_GROUP_ID_1))
-        .thenReturn(Optional.of(team));
-    when(permissionService.hasPermissionForTeam(any(), any(), any()))
+  void hasApplicationPermission_whenDoesntHasPermission_thenFalse() {
+    when(organisationUnitPermissionService
+        .hasOperatorPermission(
+            USER,
+            applicationVersion.getPrimaryOperatorOuId(),
+            Set.of(RolePermission.SUBMIT_FCS_APPLICATIONS)))
         .thenReturn(false);
 
     assertThat(
@@ -90,79 +50,19 @@ class ApplicationAccessServiceTest {
             .hasApplicationPermission(USER, applicationVersion, Set.of(RolePermission.SUBMIT_FCS_APPLICATIONS))
     ).isFalse();
   }
-
 
   @Test
   void hasApplicationPermission_whenPermissionForTeam_thenTrue() {
-    when(organisationUnitService.getOrganisationUnitWithGroupsById(any(), any()))
-        .thenReturn(orgUnit1WithGroupsJson);
-    var team = TeamTestUtil.Builder().withOrganisationGroupId(ORG_GROUP_ID_1).build();
-    when(teamService.getTeamByOrganisationGroupId(ORG_GROUP_ID_1))
-        .thenReturn(Optional.of(team));
-    when(permissionService.hasPermissionForTeam(any(), any(), any()))
+    when(organisationUnitPermissionService
+        .hasOperatorPermission(
+            USER,
+            applicationVersion.getPrimaryOperatorOuId(),
+            Set.of(RolePermission.SUBMIT_FCS_APPLICATIONS)))
         .thenReturn(true);
 
     assertThat(
         applicationAccessService
             .hasApplicationPermission(USER, applicationVersion, Set.of(RolePermission.SUBMIT_FCS_APPLICATIONS))
     ).isTrue();
-  }
-
-  @Test
-  void hasApplicationPermission_whenPermissionForSecondTeam_thenTrue() {
-    when(organisationUnitService.getOrganisationUnitWithGroupsById(any(), any()))
-        .thenReturn(orgUnit1With2GroupsJson);
-    var team1 = TeamTestUtil.Builder().withOrganisationGroupId(ORG_GROUP_ID_1).build();
-    var team2 = TeamTestUtil.Builder().withOrganisationGroupId(ORG_GROUP_ID_2).build();
-    when(teamService.getTeamByOrganisationGroupId(ORG_GROUP_ID_1))
-        .thenReturn(Optional.of(team1));
-    when(teamService.getTeamByOrganisationGroupId(ORG_GROUP_ID_2))
-        .thenReturn(Optional.of(team2));
-    when(permissionService.hasPermissionForTeam(team1.toTeamId(), USER, Set.of(RolePermission.SUBMIT_FCS_APPLICATIONS)))
-        .thenReturn(false);
-    when(permissionService.hasPermissionForTeam(team2.toTeamId(), USER, Set.of(RolePermission.SUBMIT_FCS_APPLICATIONS)))
-        .thenReturn(true);
-
-    assertThat(
-        applicationAccessService
-            .hasApplicationPermission(USER, applicationVersion, Set.of(RolePermission.SUBMIT_FCS_APPLICATIONS))
-    ).isTrue();
-  }
-
-  @Test
-  void hasApplicationPermission_whenPermissionForFirstTeam_thenTrue() {
-    when(organisationUnitService.getOrganisationUnitWithGroupsById(any(), any()))
-        .thenReturn(orgUnit1With2GroupsJson);
-    var team1 = TeamTestUtil.Builder().withOrganisationGroupId(ORG_GROUP_ID_1).build();
-    when(teamService.getTeamByOrganisationGroupId(ORG_GROUP_ID_1))
-        .thenReturn(Optional.of(team1));
-    when(permissionService.hasPermissionForTeam(team1.toTeamId(), USER, Set.of(RolePermission.SUBMIT_FCS_APPLICATIONS)))
-        .thenReturn(true);
-
-    assertThat(
-        applicationAccessService
-            .hasApplicationPermission(USER, applicationVersion, Set.of(RolePermission.SUBMIT_FCS_APPLICATIONS))
-    ).isTrue();
-  }
-
-  @Test
-  void hasApplicationPermission_whenNoPermissionForAnyTeam_thenFalse() {
-    when(organisationUnitService.getOrganisationUnitWithGroupsById(any(), any()))
-        .thenReturn(orgUnit1With2GroupsJson);
-    var team1 = TeamTestUtil.Builder().withOrganisationGroupId(ORG_GROUP_ID_1).build();
-    var team2 = TeamTestUtil.Builder().withOrganisationGroupId(ORG_GROUP_ID_2).build();
-    when(teamService.getTeamByOrganisationGroupId(ORG_GROUP_ID_1))
-        .thenReturn(Optional.of(team1));
-    when(teamService.getTeamByOrganisationGroupId(ORG_GROUP_ID_2))
-        .thenReturn(Optional.of(team2));
-    when(permissionService.hasPermissionForTeam(team1.toTeamId(), USER, Set.of(RolePermission.SUBMIT_FCS_APPLICATIONS)))
-        .thenReturn(false);
-    when(permissionService.hasPermissionForTeam(team2.toTeamId(), USER, Set.of(RolePermission.SUBMIT_FCS_APPLICATIONS)))
-        .thenReturn(false);
-
-    assertThat(
-        applicationAccessService
-            .hasApplicationPermission(USER, applicationVersion, Set.of(RolePermission.SUBMIT_FCS_APPLICATIONS))
-    ).isFalse();
   }
 }

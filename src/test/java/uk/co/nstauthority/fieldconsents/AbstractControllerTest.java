@@ -18,6 +18,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.authentication.SamlResponseParser;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceLogoutSuccessHandler;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailArgumentResolver;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
 import uk.co.nstauthority.fieldconsents.authorisation.ApplicationHandlerInterceptor;
 import uk.co.nstauthority.fieldconsents.authorisation.HasPermissionInterceptor;
@@ -28,12 +31,15 @@ import uk.co.nstauthority.fieldconsents.configuration.SamlProperties;
 import uk.co.nstauthority.fieldconsents.configuration.WebSecurityConfiguration;
 import uk.co.nstauthority.fieldconsents.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.fieldconsents.energyportal.IncludeEnergyPortalConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupQueryService;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.SearchSelectorService;
 import uk.co.nstauthority.fieldconsents.mvc.ErrorListHandlerInterceptor;
 import uk.co.nstauthority.fieldconsents.mvc.ResponseBufferSizeHandlerInterceptor;
 import uk.co.nstauthority.fieldconsents.mvc.WebMvcConfiguration;
 import uk.co.nstauthority.fieldconsents.mvc.WithDefaultPageControllerAdvice;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberService;
+import uk.co.nstauthority.fieldconsents.teams.TeamService;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.PermissionManagementHandlerInterceptor;
 import uk.co.nstauthority.fieldconsents.validation.FormErrorSummaryService;
 import uk.co.nstauthority.fieldconsents.validation.ValidationErrorOrderingService;
@@ -55,7 +61,8 @@ import uk.co.nstauthority.fieldconsents.validation.ValidationErrorOrderingServic
     HasPermissionInterceptor.class,
     ApplicationHandlerInterceptor.class,
     PermissionService.class,
-    WebSecurityConfiguration.class
+    WebSecurityConfiguration.class,
+    ServiceUserDetailArgumentResolver.class
 })
 @EnableConfigurationProperties(SamlProperties.class)
 public abstract class AbstractControllerTest {
@@ -63,7 +70,7 @@ public abstract class AbstractControllerTest {
   @Autowired
   protected MockMvc mockMvc;
 
-  @Autowired
+  @MockBean
   protected PermissionService permissionService;
 
   @Autowired
@@ -71,6 +78,15 @@ public abstract class AbstractControllerTest {
 
   @MockBean
   protected TeamMemberService teamMemberService;
+
+  @MockBean
+  protected TeamService teamService;
+
+  @MockBean
+  protected OrganisationUnitService organisationUnitService;
+
+  @MockBean
+  protected OrganisationGroupQueryService organisationGroupQueryService;
 
   @MockBean
   protected UserDetailService userDetailService;
@@ -84,9 +100,12 @@ public abstract class AbstractControllerTest {
   @MockBean
   protected ApplicationVersionService applicationVersionService;
 
+  protected ServiceUserDetail user;
+
   @BeforeEach
   void setupAbstractControllerTest() {
     doCallRealMethod().when(userDetailService).getUserDetail();
+    user = ServiceUserDetailTestUtil.Builder().build();
   }
 
   @TestConfiguration

@@ -7,11 +7,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
-import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.ORG_GROUP_ID_1;
-import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.ORG_GROUP_ID_2;
-import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit1With2GroupsJson;
-import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit1WithGroupsJson;
-import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit2WithGroupsJsonNoGroups;
 
 import java.util.Optional;
 import java.util.Set;
@@ -28,14 +23,10 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @ContextConfiguration(classes = ApplicationHandlerInterceptorTest.TestController.class)
 class ApplicationHandlerInterceptorTest extends AbstractApplicationControllerTest {
-
-  private static final String ORG_UNIT_LOOKUP_PURPOSE =
-      "Lookup organisation unit with groups for application security check";
 
   private ApplicationVersion applicationVersionInProgress;
 
@@ -111,54 +102,13 @@ class ApplicationHandlerInterceptorTest extends AbstractApplicationControllerTes
   }
 
   @SecurityTest
-  void noOrgGroups() throws Exception {
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersionInProgress));
-
-    when(organisationUnitService.getOrganisationUnitWithGroupsById(
-        applicationVersionInProgress.getPrimaryOperatorOuId(), ORG_UNIT_LOOKUP_PURPOSE))
-        .thenReturn(orgUnit2WithGroupsJsonNoGroups);
-
-    mockMvc.perform(
-            get(ReverseRouter.route(on(ApplicationHandlerInterceptorTest.TestController.class)
-                .noOrgGroups(APPLICATION_ID)))
-                .with(user(user)))
-        .andExpect(status().isForbidden());
-  }
-
-  @SecurityTest
-  void noTeamForOrgGroup() throws Exception {
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersionInProgress));
-
-    when(organisationUnitService.getOrganisationUnitWithGroupsById(
-        applicationVersionInProgress.getPrimaryOperatorOuId(), ORG_UNIT_LOOKUP_PURPOSE))
-        .thenReturn(orgUnit1WithGroupsJson);
-
-    when(teamService.getTeamByOrganisationGroupId(ORG_GROUP_ID_1))
-        .thenReturn(Optional.empty());
-
-    mockMvc.perform(
-            get(ReverseRouter.route(on(ApplicationHandlerInterceptorTest.TestController.class)
-                .noTeamForOrgGroup(APPLICATION_ID)))
-                .with(user(user)))
-        .andExpect(status().isForbidden());
-  }
-
-  @SecurityTest
   void userDoesntHavePermission() throws Exception {
-    var team = TeamTestUtil.Builder().build();
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersionInProgress));
 
-    when(organisationUnitService.getOrganisationUnitWithGroupsById(
-        applicationVersionInProgress.getPrimaryOperatorOuId(), ORG_UNIT_LOOKUP_PURPOSE))
-        .thenReturn(orgUnit1WithGroupsJson);
-
-    when(teamService.getTeamByOrganisationGroupId(ORG_GROUP_ID_1))
-        .thenReturn(Optional.of(team));
-
-    when(permissionService.hasPermissionForTeam(team.toTeamId(), user, Set.of(RolePermission.VIEW_FCS_APPLICATIONS)))
+    when(applicationAccessService
+        .hasApplicationPermission(user, applicationVersionInProgress,
+            Set.of(RolePermission.VIEW_FCS_APPLICATIONS)))
         .thenReturn(false);
 
     mockMvc.perform(
@@ -170,44 +120,12 @@ class ApplicationHandlerInterceptorTest extends AbstractApplicationControllerTes
 
   @SecurityTest
   void userHasPermission() throws Exception {
-    var team = TeamTestUtil.Builder().build();
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersionInProgress));
 
-    when(organisationUnitService.getOrganisationUnitWithGroupsById(
-        applicationVersionInProgress.getPrimaryOperatorOuId(), ORG_UNIT_LOOKUP_PURPOSE))
-        .thenReturn(orgUnit1WithGroupsJson);
-
-    when(teamService.getTeamByOrganisationGroupId(ORG_GROUP_ID_1))
-        .thenReturn(Optional.of(team));
-
-    when(permissionService.hasPermissionForTeam(team.toTeamId(), user, Set.of(RolePermission.VIEW_FCS_APPLICATIONS)))
-        .thenReturn(true);
-
-    mockMvc.perform(
-            get(ReverseRouter.route(on(ApplicationHandlerInterceptorTest.TestController.class)
-                .userHasPermission(APPLICATION_ID)))
-                .with(user(user)))
-        .andExpect(status().isOk());
-  }
-
-  @SecurityTest
-  void userHasPermissionViaSecondOrgGroup() throws Exception {
-    var team = TeamTestUtil.Builder().build();
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersionInProgress));
-
-    when(organisationUnitService.getOrganisationUnitWithGroupsById(
-        applicationVersionInProgress.getPrimaryOperatorOuId(), ORG_UNIT_LOOKUP_PURPOSE))
-        .thenReturn(orgUnit1With2GroupsJson);
-
-    when(teamService.getTeamByOrganisationGroupId(ORG_GROUP_ID_1))
-        .thenReturn(Optional.empty());
-
-    when(teamService.getTeamByOrganisationGroupId(ORG_GROUP_ID_2))
-        .thenReturn(Optional.of(team));
-
-    when(permissionService.hasPermissionForTeam(team.toTeamId(), user, Set.of(RolePermission.VIEW_FCS_APPLICATIONS)))
+    when(applicationAccessService
+        .hasApplicationPermission(user, applicationVersionInProgress,
+            Set.of(RolePermission.VIEW_FCS_APPLICATIONS)))
         .thenReturn(true);
 
     mockMvc.perform(

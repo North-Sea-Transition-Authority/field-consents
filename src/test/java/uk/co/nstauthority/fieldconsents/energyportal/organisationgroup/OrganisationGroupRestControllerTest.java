@@ -20,9 +20,6 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 class OrganisationGroupRestControllerTest extends AbstractControllerTest {
 
   @MockBean
-  private OrganisationGroupQueryService organisationGroupQueryService;
-
-  @MockBean
   private SearchSelectorService searchSelectorService;
 
   @SecurityTest

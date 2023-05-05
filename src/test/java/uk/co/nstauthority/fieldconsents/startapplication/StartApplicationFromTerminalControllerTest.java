@@ -33,7 +33,6 @@ import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
-import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 
 @ContextConfiguration(classes = StartApplicationFromTerminalController.class)
@@ -54,9 +53,6 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
 
   @MockBean
   private StartApplicationOperatorFormValidator operatorFormValidator;
-
-  @MockBean
-  private OrganisationUnitService organisationUnitService;
 
   @MockBean
   private TerminalService terminalService;

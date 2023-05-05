@@ -19,6 +19,12 @@ public enum RegulatorTeamRole implements TeamRole {
       "Manage industry access to the service",
       20,
       EnumSet.of(RolePermission.MANAGE_INDUSTRY_TEAMS)
+  ),
+  VIEWER(
+      "Viewer",
+      "Can view all applications and consents",
+      30,
+      EnumSet.of(RolePermission.VIEW_FCS_APPLICATIONS, RolePermission.VIEW_FCS_CONSENTS)
   );
 
   private final String displayName;

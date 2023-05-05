@@ -7,6 +7,17 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupTestUtil.ORGANISATION_GROUP_1;
+import static uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupTestUtil.ORGANISATION_GROUP_2;
+import static uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupTestUtil.ORGANISATION_GROUP_ID_1;
+import static uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupTestUtil.ORGANISATION_GROUP_ID_2;
+import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.ORG_GROUP_1;
+import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.ORG_GROUP_1_WITH_EMPTY_OUS;
+import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.ORG_GROUP_2;
+import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.ORG_GROUP_ID_1;
+import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.ORG_GROUP_ID_2;
+import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit1Json;
+import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit2Json;
 
 import java.util.Collections;
 import java.util.List;
@@ -187,5 +198,85 @@ class OrganisationGroupQueryServiceTest {
 
     assertThat(returnedOrganisations)
         .isEqualTo(List.of(organisationGroup, organisationGroup2));
+  }
+
+  @Test
+  void getOrganisationUnitsByOrganisationGroupIds_whenOne_verifyApiCallsAndReturn() {
+    when(organisationApi.getAllOrganisationGroupsByIds(
+        eq(List.of(ORGANISATION_GROUP_ID_1)),
+        any(OrganisationGroupsProjectionRoot.class),
+        any(RequestPurpose.class)))
+        .thenReturn(List.of(ORGANISATION_GROUP_1));
+
+    var returnedOrganisationUnitJsons = organisationGroupQueryService
+        .getOrganisationUnitsByOrganisationGroupIds(List.of(ORGANISATION_GROUP_ID_1));
+
+    verify(organisationApi).getAllOrganisationGroupsByIds(
+        eq(List.of(ORGANISATION_GROUP_ID_1)),
+        any(),
+        any(RequestPurpose.class));
+
+    assertThat(returnedOrganisationUnitJsons)
+        .isEqualTo(List.of(orgUnit1Json));
+  }
+
+  @Test
+  void getOrganisationUnitsByOrganisationGroupIds_whenMany_verifyApiCallsAndReturn() {
+    when(organisationApi.getAllOrganisationGroupsByIds(
+        eq(List.of(ORGANISATION_GROUP_ID_1, ORGANISATION_GROUP_ID_2)),
+        any(OrganisationGroupsProjectionRoot.class),
+        any(RequestPurpose.class)))
+        .thenReturn(List.of(ORGANISATION_GROUP_1, ORGANISATION_GROUP_2));
+
+    var returnedOrganisationUnitJsons = organisationGroupQueryService
+        .getOrganisationUnitsByOrganisationGroupIds(List.of(ORGANISATION_GROUP_ID_1, ORGANISATION_GROUP_ID_2));
+
+    verify(organisationApi).getAllOrganisationGroupsByIds(
+        eq(List.of(ORGANISATION_GROUP_ID_1, ORGANISATION_GROUP_ID_2)),
+        any(),
+        any(RequestPurpose.class));
+
+    assertThat(returnedOrganisationUnitJsons)
+        .isEqualTo(List.of(orgUnit1Json, orgUnit2Json));
+  }
+
+  @Test
+  void getOrganisationUnitsByOrganisationGroupIds_whenNone_verifyApiCallsAndReturn() {
+    when(organisationApi.getAllOrganisationGroupsByIds(
+        eq(List.of(ORG_GROUP_ID_1, ORG_GROUP_ID_2)),
+        any(OrganisationGroupsProjectionRoot.class),
+        any(RequestPurpose.class)))
+        .thenReturn(List.of(ORG_GROUP_1, ORG_GROUP_2));
+
+    var returnedOrganisationUnitJsons = organisationGroupQueryService
+        .getOrganisationUnitsByOrganisationGroupIds(List.of(ORG_GROUP_ID_1, ORG_GROUP_ID_2));
+
+    verify(organisationApi).getAllOrganisationGroupsByIds(
+        eq(List.of(ORG_GROUP_ID_1, ORG_GROUP_ID_2)),
+        any(),
+        any(RequestPurpose.class));
+
+    assertThat(returnedOrganisationUnitJsons)
+        .isEqualTo(Collections.emptyList());
+  }
+
+  @Test
+  void getOrganisationUnitsByOrganisationGroupIds_whenNoneWithNullOrgUnits_verifyApiCallsAndReturn() {
+    when(organisationApi.getAllOrganisationGroupsByIds(
+        eq(List.of(ORG_GROUP_ID_1)),
+        any(OrganisationGroupsProjectionRoot.class),
+        any(RequestPurpose.class)))
+        .thenReturn(List.of(ORG_GROUP_1_WITH_EMPTY_OUS));
+
+    var returnedOrganisationUnitJsons = organisationGroupQueryService
+        .getOrganisationUnitsByOrganisationGroupIds(List.of(ORG_GROUP_ID_1));
+
+    verify(organisationApi).getAllOrganisationGroupsByIds(
+        eq(List.of(ORG_GROUP_ID_1)),
+        any(),
+        any(RequestPurpose.class));
+
+    assertThat(returnedOrganisationUnitJsons)
+        .isEqualTo(Collections.emptyList());
   }
 }

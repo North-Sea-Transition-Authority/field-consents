@@ -23,11 +23,9 @@ import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
-import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.branding.CustomerConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
 import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
 import uk.co.nstauthority.fieldconsents.teams.TeamView;
@@ -38,13 +36,7 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.Reg
 class TeamListControllerTest extends AbstractControllerTest {
 
   @MockBean
-  private TeamService teamService;
-
-  @MockBean
   private TeamManagementService teamManagementService;
-
-  @MockBean
-  private PermissionService permissionService;
 
   @Autowired
   private CustomerConfigurationProperties customerConfigurationProperties;

@@ -79,7 +79,7 @@ public class StartApplicationFromTerminalController {
         )
     );
     modelAndView.addObject("cancelUrl",
-        ReverseRouter.route(on(TerminalController.class).manageTerminal(terminalId)));
+        ReverseRouter.route(on(TerminalController.class).manageTerminal(terminalId, null)));
     return modelAndView;
   }
 
@@ -121,7 +121,7 @@ public class StartApplicationFromTerminalController {
         )
     );
     modelAndView.addObject("cancelUrl",
-        ReverseRouter.route(on(TerminalController.class).manageTerminal(terminalId)));
+        ReverseRouter.route(on(TerminalController.class).manageTerminal(terminalId, null)));
     return modelAndView;
   }
 

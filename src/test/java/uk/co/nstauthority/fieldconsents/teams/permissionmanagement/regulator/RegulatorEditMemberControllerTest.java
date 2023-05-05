@@ -32,7 +32,6 @@ import uk.co.nstauthority.fieldconsents.teams.Team;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewTestUtil;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
 import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
 import uk.co.nstauthority.fieldconsents.teams.TeamView;
@@ -46,9 +45,6 @@ class RegulatorEditMemberControllerTest extends AbstractControllerTest {
 
   @MockBean
   private RegulatorTeamService regulatorTeamService;
-
-  @MockBean
-  private TeamService teamService;
 
   @MockBean
   private TeamMemberViewService teamMemberViewService;

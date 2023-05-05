@@ -9,6 +9,7 @@ import uk.co.fivium.energyportalapi.generated.client.OrganisationGroupProjection
 import uk.co.fivium.energyportalapi.generated.client.OrganisationGroupsProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.types.OrganisationGroup;
 import uk.co.nstauthority.fieldconsents.energyportal.api.EnergyPortalApiWrapper;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 
 @Service
 public class OrganisationGroupQueryService {
@@ -16,13 +17,12 @@ public class OrganisationGroupQueryService {
       new OrganisationGroupsProjectionRoot()
           .organisationGroupId()
           .name();
-  public static final OrganisationGroupProjectionRoot ORGANISATION_GROUP_PROJECTION_ROOT = new OrganisationGroupProjectionRoot()
-      .organisationGroupId()
-      .name();
-  public static final OrganisationGroupsProjectionRoot ORGANISATION_GROUPS_UNITS_PROJECTION_ROOT =
-      new OrganisationGroupsProjectionRoot()
+  public static final OrganisationGroupProjectionRoot ORGANISATION_GROUP_PROJECTION_ROOT =
+      new OrganisationGroupProjectionRoot()
           .organisationGroupId()
-          .name()
+          .name();
+  public static final OrganisationGroupsProjectionRoot ORGANISATION_GROUPS_UNITS_PROJECTION_ROOT =
+      ORGANISATION_GROUPS_PROJECTION_ROOT
           .organisationUnits()
           .organisationUnitId()
           .name()
@@ -42,28 +42,28 @@ public class OrganisationGroupQueryService {
     return energyPortalApiWrapper.makeRequest((logCorrelationId, requestPurpose) ->
         organisationApi.searchOrganisationGroups(name, ORGANISATION_GROUPS_PROJECTION_ROOT, requestPurpose))
         .stream()
-        .map(this::fromOrganisationGroup)
+        .map(OrganisationGroupDto::from)
         .toList();
   }
 
   public List<OrganisationGroup> getOrganisationGroupsByIds(List<Integer> organisationGroups) {
     return energyPortalApiWrapper.makeRequest((logCorrelationId, requestPurpose) -> organisationApi
         .getAllOrganisationGroupsByIds(
-            organisationGroups, ORGANISATION_GROUPS_UNITS_PROJECTION_ROOT, requestPurpose))
+            organisationGroups, ORGANISATION_GROUPS_UNITS_PROJECTION_ROOT, requestPurpose));
+  }
+
+  public List<OrganisationUnitJson> getOrganisationUnitsByOrganisationGroupIds(List<Integer> organisationGroupIds) {
+    return getOrganisationGroupsByIds(organisationGroupIds)
         .stream()
+        .filter(orgGroup -> orgGroup.getOrganisationUnits() != null && !orgGroup.getOrganisationUnits().isEmpty())
+        .flatMap(orgGroup -> orgGroup.getOrganisationUnits().stream())
+        .map(OrganisationUnitJson::from)
         .toList();
   }
 
   public Optional<OrganisationGroupDto> getOrganisationGroupById(Integer id) {
     return energyPortalApiWrapper.makeRequest((logCorrelationId, requestPurpose) ->
         organisationApi.findOrganisationGroup(id, ORGANISATION_GROUP_PROJECTION_ROOT, requestPurpose))
-        .map(this::fromOrganisationGroup);
-  }
-
-  private OrganisationGroupDto fromOrganisationGroup(OrganisationGroup organisationGroup) {
-    var dto = new OrganisationGroupDto();
-    dto.setOrganisationGroupId(organisationGroup.getOrganisationGroupId());
-    dto.setOrganisationGroupName(organisationGroup.getName());
-    return dto;
+        .map(OrganisationGroupDto::from);
   }
 }

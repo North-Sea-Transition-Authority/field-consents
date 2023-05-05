@@ -11,7 +11,6 @@ import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTes
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
@@ -20,9 +19,6 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 @WithMockUser
 @ContextConfiguration(classes = OrganisationUnitRestController.class)
 class OrganisationUnitRestControllerTest extends AbstractControllerTest {
-
-  @MockBean
-  OrganisationUnitService organisationUnitService;
 
   @Test
   void getOrganisationUnitSearchResults_assertHttpOk() throws Exception {

@@ -10,6 +10,7 @@ import static uk.co.nstauthority.fieldconsents.teams.TeamTestUtil.randomInteger;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -18,6 +19,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
@@ -29,6 +32,9 @@ class TeamServiceTest {
 
   @Mock
   private TeamMemberService teamMemberService;
+
+  @Mock
+  private PermissionService permissionService;
 
   @InjectMocks
   private TeamService teamService;
@@ -80,6 +86,53 @@ class TeamServiceTest {
     var result = teamService.getTeamsOfTypeThatUserBelongsTo(user, teamType);
 
     assertThat(result).containsExactly(team);
+    verify(teamRepository, times(1)).findAllTeamsOfTypeThatUserIsMemberOf(user.wuaId(), teamType);
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = TeamType.class)
+  void getTeamsOfTypeThatUserHasPermissionFor_whenUserIsNotMember_thenNoTeamsReturned(TeamType teamType) {
+    var user = ServiceUserDetailTestUtil.Builder().build();
+    var requiredPermissions = Set.of(RolePermission.VIEW_FCS_APPLICATIONS, RolePermission.VIEW_FCS_CONSENTS);
+    when(teamRepository.findAllTeamsOfTypeThatUserIsMemberOf(user.wuaId(), teamType)).thenReturn(List.of());
+
+    var result = teamService.getTeamsOfTypeThatUserHasPermissionFor(user, teamType, requiredPermissions);
+
+    assertThat(result).isEmpty();
+    verify(teamRepository, times(1)).findAllTeamsOfTypeThatUserIsMemberOf(user.wuaId(), teamType);
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = TeamType.class)
+  void getTeamsOfTypeThatUserHasPermissionFor_whenUserIsMemberAndHasPermission_thenTeamsReturned(TeamType teamType) {
+    var user = ServiceUserDetailTestUtil.Builder().build();
+    var requiredPermissions = Set.of(RolePermission.VIEW_FCS_APPLICATIONS, RolePermission.VIEW_FCS_CONSENTS);
+    var team = new Team();
+
+    when(teamRepository.findAllTeamsOfTypeThatUserIsMemberOf(user.wuaId(), teamType)).thenReturn(List.of(team));
+    when(permissionService.hasPermissionForTeam(team, user, requiredPermissions))
+        .thenReturn(true);
+
+    var result = teamService.getTeamsOfTypeThatUserHasPermissionFor(user, teamType, requiredPermissions);
+
+    assertThat(result).containsExactly(team);
+    verify(teamRepository, times(1)).findAllTeamsOfTypeThatUserIsMemberOf(user.wuaId(), teamType);
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = TeamType.class)
+  void getTeamsOfTypeThatUserHasPermissionFor_whenUserIsMemberAndDoesntHavePermission_thenNoTeamsReturned(TeamType teamType) {
+    var user = ServiceUserDetailTestUtil.Builder().build();
+    var requiredPermissions = Set.of(RolePermission.VIEW_FCS_APPLICATIONS, RolePermission.VIEW_FCS_CONSENTS);
+    var team = new Team();
+
+    when(teamRepository.findAllTeamsOfTypeThatUserIsMemberOf(user.wuaId(), teamType)).thenReturn(List.of(team));
+    when(permissionService.hasPermissionForTeam(team, user, requiredPermissions))
+        .thenReturn(false);
+
+    var result = teamService.getTeamsOfTypeThatUserHasPermissionFor(user, teamType, requiredPermissions);
+
+    assertThat(result).isEmpty();
     verify(teamRepository, times(1)).findAllTeamsOfTypeThatUserIsMemberOf(user.wuaId(), teamType);
   }
 

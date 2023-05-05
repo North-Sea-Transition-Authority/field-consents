@@ -22,16 +22,13 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
-import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
-import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupQueryService;
 import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupRestController;
 import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupTestUtil;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.TeamId;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewTestUtil;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
 import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
@@ -48,15 +45,6 @@ class IndustryTeamManagementControllerTest extends AbstractControllerTest {
 
   @MockBean
   private IndustryNewTeamFormValidator industryNewTeamFormValidator;
-
-  @MockBean
-  private OrganisationGroupQueryService organisationGroupQueryService;
-
-  @MockBean
-  protected PermissionService permissionService;
-
-  @MockBean
-  private TeamService teamService;
 
   @SecurityTest
   void renderNewIndustryTeamForm_whenNotAuthenticated_thenRedirectToLogin() throws Exception {

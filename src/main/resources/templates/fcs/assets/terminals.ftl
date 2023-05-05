@@ -30,7 +30,7 @@
     <@fdsDataItems.dataValues key="Operator" value=operatorName/>
     <@fdsDataItems.dataValues key="Status" value=terminalJson.getStatusDisplayName()/>
   </@fdsDataItems.dataItem>
-  <#if operatorExists>
+  <#if startApplicationEnabled>
     <@fdsAction.link start=true linkText="Start application" linkUrl=springUrl(startApplicationUrl)/>
   </#if>
 </@defaultPage>

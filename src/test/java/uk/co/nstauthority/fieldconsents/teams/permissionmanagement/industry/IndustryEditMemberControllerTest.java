@@ -25,7 +25,6 @@ import org.springframework.test.web.servlet.MvcResult;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
-import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -34,7 +33,6 @@ import uk.co.nstauthority.fieldconsents.teams.TeamMemberRoleService;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewTestUtil;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
 import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
 import uk.co.nstauthority.fieldconsents.teams.TeamView;
@@ -55,12 +53,6 @@ class IndustryEditMemberControllerTest extends AbstractControllerTest {
 
   @MockBean
   IndustryTeamMemberEditRolesValidator industryTeamMemberEditRolesValidator;
-
-  @MockBean
-  protected PermissionService permissionService;
-
-  @MockBean
-  private TeamService teamService;
 
   private Team industryTeam;
   private TeamView teamView;

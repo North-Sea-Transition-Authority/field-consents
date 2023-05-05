@@ -24,7 +24,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
-import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
@@ -35,7 +34,6 @@ import uk.co.nstauthority.fieldconsents.teams.TeamMemberRemovalService;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewTestUtil;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
 import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
@@ -50,12 +48,6 @@ class IndustryRemoveMemberControllerTest extends AbstractControllerTest {
 
   @MockBean
   private TeamMemberRemovalService teamMemberRemovalService;
-
-  @MockBean
-  protected PermissionService permissionService;
-
-  @MockBean
-  private TeamService teamService;
 
   @SecurityTest
   void renderRemoveMember_whenUserIsNotLoggedIn_thenRedirectedToLogin() throws Exception {

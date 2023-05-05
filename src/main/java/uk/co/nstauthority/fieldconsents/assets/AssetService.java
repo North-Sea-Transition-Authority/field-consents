@@ -11,6 +11,7 @@ import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalJson;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 
 @Service
 public class AssetService {
@@ -25,10 +26,12 @@ public class AssetService {
     this.terminalService = terminalService;
   }
 
-  public List<AssetJson> searchAssets(String assetName) {
-    var searchFieldsStream = fieldService.searchFields(assetName, "Assets search selector (search fields)")
+  public List<AssetWithOperatorJson> searchAssets(String assetName, ServiceUserDetail user) {
+    var searchFieldsStream = fieldService
+        .searchFieldsWithOperator(assetName, "Assets search selector (search fields)", user)
         .stream();
-    var searchTerminalsStream = terminalService.searchTerminals(assetName, "Assets search selector (search terminals)")
+    var searchTerminalsStream = terminalService
+        .searchTerminalsWithOperator(assetName, "Assets search selector (search terminals)", user)
         .stream();
 
     return Stream.concat(searchFieldsStream, searchTerminalsStream)

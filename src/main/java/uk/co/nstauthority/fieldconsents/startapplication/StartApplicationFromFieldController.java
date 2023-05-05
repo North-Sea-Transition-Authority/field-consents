@@ -78,7 +78,7 @@ public class StartApplicationFromFieldController {
             null)
         )
     );
-    modelAndView.addObject("cancelUrl", ReverseRouter.route(on(FieldController.class).manageField(fieldId)));
+    modelAndView.addObject("cancelUrl", ReverseRouter.route(on(FieldController.class).manageField(fieldId, null)));
     return modelAndView;
   }
 
@@ -118,7 +118,7 @@ public class StartApplicationFromFieldController {
             ReverseRouter.emptyBindingResult())
         )
     );
-    modelAndView.addObject("cancelUrl", ReverseRouter.route(on(FieldController.class).manageField(fieldId)));
+    modelAndView.addObject("cancelUrl", ReverseRouter.route(on(FieldController.class).manageField(fieldId, null)));
     return modelAndView;
   }
 

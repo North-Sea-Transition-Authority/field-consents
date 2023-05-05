@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchResult;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.SearchSelectorService;
 
@@ -22,8 +23,12 @@ public class AssetRestController {
   }
 
   @GetMapping("/data-sources/assets")
-  RestSearchResult searchAssets(@RequestParam("term") String assetName) {
-    return searchSelectorService.search(assetName, assetService::searchAssets);
+  RestSearchResult searchAssets(@RequestParam("term") String assetName,
+                                ServiceUserDetail user) {
+    return searchSelectorService.search(
+        assetName,
+        searchAssetName -> assetService.searchAssets(searchAssetName, user)
+    );
   }
 
   @GetMapping("/data-sources/fields")

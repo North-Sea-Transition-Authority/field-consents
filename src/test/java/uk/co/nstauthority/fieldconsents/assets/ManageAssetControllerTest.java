@@ -51,7 +51,8 @@ public class ManageAssetControllerTest extends AbstractControllerTest {
                 .with(csrf())
         )
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(FieldController.class).manageField(field1AssetJson.getId()))));
+        .andExpect(redirectedUrl(ReverseRouter.route(on(FieldController.class)
+            .manageField(field1AssetJson.getId(), null))));
 
   }
 
@@ -79,7 +80,8 @@ public class ManageAssetControllerTest extends AbstractControllerTest {
                 .with(csrf())
         )
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(TerminalController.class).manageTerminal(terminal1AssetJson.getId()))));
+        .andExpect(redirectedUrl(ReverseRouter.route(on(TerminalController.class)
+            .manageTerminal(terminal1AssetJson.getId(), null))));
   }
 
   @Test

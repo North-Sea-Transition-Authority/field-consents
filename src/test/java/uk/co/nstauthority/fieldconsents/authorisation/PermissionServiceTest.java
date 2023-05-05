@@ -71,14 +71,14 @@ class PermissionServiceTest {
   void hasTeamPermission_whenTeamMemberNull_thenFalse() {
     var team = TeamTestUtil.Builder().build();
     when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(null);
-    assertFalse(permissionService.hasPermissionForTeam(team.toTeamId(), USER, Set.of(RolePermission.CREATE_FCS_APPLICATIONS)));
+    assertFalse(permissionService.hasPermissionForTeam(team, USER, Set.of(RolePermission.CREATE_FCS_APPLICATIONS)));
   }
 
   @Test
   void hasTeamPermission_whenTeamMemberEmpty_thenFalse() {
     var team = TeamTestUtil.Builder().build();
     when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(Collections.emptyList());
-    assertFalse(permissionService.hasPermissionForTeam(team.toTeamId(), USER, Set.of(RolePermission.CREATE_FCS_APPLICATIONS)));
+    assertFalse(permissionService.hasPermissionForTeam(team, USER, Set.of(RolePermission.CREATE_FCS_APPLICATIONS)));
   }
 
   @Test
@@ -91,7 +91,7 @@ class PermissionServiceTest {
 
     when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(List.of(teamMember));
 
-    assertFalse(permissionService.hasPermissionForTeam(team.toTeamId(), USER, Set.of(RolePermission.CREATE_FCS_APPLICATIONS)));
+    assertFalse(permissionService.hasPermissionForTeam(team, USER, Set.of(RolePermission.CREATE_FCS_APPLICATIONS)));
   }
 
   @Test
@@ -104,7 +104,7 @@ class PermissionServiceTest {
 
     when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(List.of(teamMember));
 
-    assertTrue(permissionService.hasPermissionForTeam(team.toTeamId(), USER, Set.of(RolePermission.CREATE_FCS_APPLICATIONS)));
+    assertTrue(permissionService.hasPermissionForTeam(team, USER, Set.of(RolePermission.CREATE_FCS_APPLICATIONS)));
   }
 
   @Test
@@ -116,7 +116,7 @@ class PermissionServiceTest {
 
     when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(List.of(teamMember));
 
-    assertFalse(permissionService.hasPermissionForTeam(team.toTeamId(), USER, Set.of(RolePermission.CREATE_FCS_APPLICATIONS)));
+    assertFalse(permissionService.hasPermissionForTeam(team, USER, Set.of(RolePermission.CREATE_FCS_APPLICATIONS)));
   }
 
   enum TestTeamRole implements TeamRole {
@@ -150,5 +150,4 @@ class PermissionServiceTest {
       return Set.of(rolePermission);
     }
   }
-
 }
