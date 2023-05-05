@@ -66,7 +66,7 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
     assertThat(model)
         .containsEntry("pageTitle", PAGE_TITLE)
         .containsEntry("applicationReference", APPLICATION_REFERENCE)
-        .containsEntry("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()));
+        .containsEntry("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null)));
   }
 
   @Test

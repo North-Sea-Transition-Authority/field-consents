@@ -4,10 +4,13 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.stream.Collectors;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
+import uk.co.nstauthority.fieldconsents.util.enumutil.Displayable;
+import uk.co.nstauthority.fieldconsents.util.enumutil.DisplayableEnumOptionUtil;
 
-public enum ApplicationType {
+public enum ApplicationType implements Displayable {
 
   PRODUCTION("Production", 1, EnumSet.of(AssetType.FIELD), "PCON"),
   FLARE("Flare", 2, EnumSet.of(AssetType.FIELD, AssetType.TERMINAL), "FCON"),
@@ -29,10 +32,12 @@ public enum ApplicationType {
     this.referenceMnemonic = referenceMnemonic;
   }
 
+  @Override
   public String getDisplayName() {
     return displayName;
   }
 
+  @Override
   public int getDisplayOrder() {
     return displayOrder;
   }
@@ -50,5 +55,9 @@ public enum ApplicationType {
         .filter(type -> type.getAssetTypes().contains(assetType))
         .sorted(Comparator.comparing(ApplicationType::getDisplayOrder))
         .collect(Collectors.toCollection(LinkedHashSet::new));
+  }
+
+  public static Map<String, String> getDisplayableOptions() {
+    return DisplayableEnumOptionUtil.getDisplayableOptions(ApplicationType.class);
   }
 }

@@ -8,8 +8,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.YearMonth;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import org.junit.jupiter.api.Test;
 
 class DateUtilsTest {
@@ -20,10 +23,20 @@ class DateUtilsTest {
 
   private static final LocalDate THIRD_DATE = LocalDate.of(2022, Month.DECEMBER, 8);
 
+  private static final LocalDateTime FIRST_DATE_TIME = LocalDateTime.of(2022, Month.OCTOBER, 1, 12, 0);
+
+  private static final ZonedDateTime FIRST_ZONED_DATE_TIME = FIRST_DATE_TIME.atZone(ZoneId.systemDefault());
+
   @Test
-  void format() {
+  void format_shortDate() {
     String firstDateFormatted = "1 Oct 2022";
     assertEquals(firstDateFormatted, DateUtils.format(FIRST_DATE, DateUtils.SHORT_DATE));
+  }
+
+  @Test
+  void format_dateTime() {
+    String firstDateFormatted = "1 Oct 2022 12:00";
+    assertEquals(firstDateFormatted, DateUtils.format(FIRST_ZONED_DATE_TIME.toInstant(), DateUtils.DATE_TIME));
   }
 
   @Test

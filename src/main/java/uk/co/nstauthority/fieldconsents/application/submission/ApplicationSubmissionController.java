@@ -55,7 +55,7 @@ public class ApplicationSubmissionController {
     ModelAndView modelAndView = new ModelAndView("fcs/application/submissionConfirmation");
     modelAndView.addObject("pageTitle", PAGE_TITLE);
     modelAndView.addObject("applicationReference", applicationService.generateApplicationReference(applicationVersion));
-    modelAndView.addObject("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()));
+    modelAndView.addObject("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null)));
     return modelAndView;
   }
 }

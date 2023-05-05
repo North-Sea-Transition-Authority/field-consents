@@ -33,7 +33,7 @@ class TopNavigationServiceTest {
         .containsExactly(
             tuple(
                 WorkAreaController.WORK_AREA_TITLE,
-                StringUtils.stripEnd(ReverseRouter.route(on(WorkAreaController.class).getWorkArea()), "/")
+                StringUtils.stripEnd(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null)), "/")
             ),
             tuple(
                 AssetSelectionController.ASSET_SELECTION_TITLE,

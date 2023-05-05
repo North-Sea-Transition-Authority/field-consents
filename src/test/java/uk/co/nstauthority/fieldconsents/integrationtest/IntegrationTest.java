@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents;
+package uk.co.nstauthority.fieldconsents.integrationtest;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

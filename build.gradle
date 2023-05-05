@@ -5,6 +5,11 @@ plugins {
 	id "org.sonarqube" version "3.3"
 	id 'checkstyle'
 	id 'jacoco'
+	id 'nu.studer.jooq' version '8.1'
+	//docker-compose needed to startup a postgres container for Jooq codegen
+	id 'com.avast.gradle.docker-compose' version "0.16.11"
+	//Flyway added manually here, as it's used for the Jooq codegen
+	id "org.flywaydb.flyway" version "9.16.0"
 }
 
 group = 'uk.co.nstauthority'
@@ -48,13 +53,19 @@ dependencies {
 	implementation 'uk.co.fivium.digitalformlibrary:digital-form-library:v3.0.0'
 	implementation "org.hibernate:hibernate-envers"
 
+	implementation 'org.springframework.boot:spring-boot-starter-jooq'
+	implementation 'org.jooq:jooq-codegen'
+	implementation 'org.jooq:jooq-meta'
+
 	runtimeOnly 'org.postgresql:postgresql'
+	jooqGenerator 'org.postgresql:postgresql'
 
 	// Using H2 for the tests as a temporary measure until a final decision is made on which database is being used.
 	testImplementation 'com.h2database:h2:2.1.214'
 
 	testImplementation 'com.tngtech.archunit:archunit-junit5:1.0.1'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.testcontainers:postgresql:1.17.6'
 	testImplementation 'org.springframework.security:spring-security-test'
 }
 
@@ -67,6 +78,66 @@ tasks {
 	bootJar {
 		archiveFileName.set("${rootProject.name}.jar")
 	}
+}
+
+dockerCompose {
+	useComposeFiles = ['devtools/local-dev-compose.yml']
+}
+
+flyway {
+	user = 'fcs_app'
+	password = 'dev1'
+	schemas = ['fcs']
+}
+
+//Set the url before the build to dynamically set the port
+//This must be done here, not above, as the serviceInfos object won't exist at configuration time
+flywayMigrate.doFirst {
+	url = 'jdbc:postgresql://' + dockerCompose.servicesInfos['local-db'].host + ':' + dockerCompose.servicesInfos['local-db'].ports[5432] + '/fcs'
+	System.setProperty('DB_URL', url)
+}
+
+jooq {
+	version = dependencyManagement.importedProperties['jooq.version']
+	configurations {
+		main {
+			generateSchemaSourceOnCompilation = false
+			generationTool {
+				jdbc {
+					driver = 'org.postgresql.Driver'
+					user = 'fcs_app'
+					password = 'dev1'
+				}
+				generator {
+					database {
+						name = 'org.jooq.meta.postgres.PostgresDatabase'
+						inputSchema = 'fcs'
+					}
+					target {
+						packageName = 'uk.co.nstauthority.fieldconsents.generated.jooq'
+					}
+				}
+			}
+		}
+	}
+}
+
+flywayMigrate.dependsOn(composeUp)
+
+generateJooq.dependsOn(flywayMigrate)
+
+generateJooq.finalizedBy(composeDown)
+
+generateJooq.doFirst {
+	//Jooq doesn't allow you to specify the config at runtime
+	//This will make the field modifiable so we can change the url
+	def clazz = generateJooq.class.superclass
+	def field = clazz.getDeclaredField("jooqConfiguration")
+
+	field.accessible = true
+
+	def jooqConfiguration = (org.jooq.meta.jaxb.Configuration) field.get(generateJooq)
+	jooqConfiguration.jdbc.url = System.getProperty('DB_URL')
 }
 
 sonarqube {
@@ -99,6 +170,8 @@ checkstyle {
 	ignoreFailures = false
 	maxWarnings = 0
 }
+
+checkstyleMain.exclude 'uk/co/nstauthority/fieldconsents/generated/**'
 
 jacocoTestReport {
 	reports {

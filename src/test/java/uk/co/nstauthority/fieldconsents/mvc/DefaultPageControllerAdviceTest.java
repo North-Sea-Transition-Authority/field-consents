@@ -60,7 +60,7 @@ class DefaultPageControllerAdviceTest extends AbstractControllerTest {
     assertThat((CustomerConfigurationProperties) modelMap.get("customerBranding")).hasNoNullFieldsOrProperties();
     assertThat((ServiceConfigurationProperties) modelMap.get("serviceBranding")).hasNoNullFieldsOrProperties();
     assertThat(modelMap).contains(
-        entry("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea())),
+        entry("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null))),
         entry("loggedInUser", loggedInUser)
     );
   }

@@ -30,7 +30,7 @@ class BreadcrumbsUtilTest {
     BreadcrumbsUtil.addBreadcrumbsToModel(modelAndView, breadcrumbs);
 
     Map<String, String> expectedCrumbList = new LinkedHashMap<>();
-    expectedCrumbList.put(ReverseRouter.route(on(WorkAreaController.class).getWorkArea()), "Work area");
+    expectedCrumbList.put(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null)), "Work area");
     expectedCrumbList.put(taskListUrl, "Task list");
     expectedCrumbList.put(breadcrumbEndpoint, breadcrumbPrompt);
 

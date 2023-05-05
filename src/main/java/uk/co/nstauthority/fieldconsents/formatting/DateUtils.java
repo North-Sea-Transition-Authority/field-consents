@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.formatting;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Month;
 import java.time.Period;
@@ -15,6 +16,8 @@ import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 public class DateUtils {
 
   public static final String SHORT_DATE = uk.co.fivium.formlibrary.validator.date.DateUtils.SHORT_DATE;
+
+  public static final String DATE_TIME = "d MMM yyyy HH:mm";
 
   public static final String LONG_MONTH_YEAR = "MMMM yyyy";
 
@@ -33,6 +36,11 @@ public class DateUtils {
 
   public static String format(Month month, TextStyle textStyle) {
     return month.getDisplayName(textStyle, Locale.ENGLISH);
+  }
+
+  public static String format(Instant instant, String format) {
+    DateTimeFormatter customFormatter = DateTimeFormatter.ofPattern(format).withZone(ZoneId.systemDefault());
+    return instant != null ? customFormatter.format(instant) : "";
   }
 
   public static String formatShort(Month month) {
