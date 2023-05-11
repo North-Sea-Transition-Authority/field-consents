@@ -9,7 +9,6 @@ import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.A
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 
 import java.util.Optional;
-import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.stereotype.Controller;
 import org.springframework.test.context.ContextConfiguration;
@@ -107,8 +106,7 @@ class ApplicationHandlerInterceptorTest extends AbstractApplicationControllerTes
         .thenReturn(Optional.of(applicationVersionInProgress));
 
     when(applicationAccessService
-        .hasApplicationPermission(user, applicationVersionInProgress,
-            Set.of(RolePermission.VIEW_FCS_APPLICATIONS)))
+        .hasApplicationPermission(user, applicationVersionInProgress, RolePermission.VIEW_FCS_APPLICATIONS))
         .thenReturn(false);
 
     mockMvc.perform(
@@ -124,8 +122,7 @@ class ApplicationHandlerInterceptorTest extends AbstractApplicationControllerTes
         .thenReturn(Optional.of(applicationVersionInProgress));
 
     when(applicationAccessService
-        .hasApplicationPermission(user, applicationVersionInProgress,
-            Set.of(RolePermission.VIEW_FCS_APPLICATIONS)))
+        .hasApplicationPermission(user, applicationVersionInProgress, RolePermission.VIEW_FCS_APPLICATIONS))
         .thenReturn(true);
 
     mockMvc.perform(

@@ -2,7 +2,7 @@ package uk.co.nstauthority.fieldconsents.workarea;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
-import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
+import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 public record WorkAreaItem(
@@ -17,9 +17,7 @@ public record WorkAreaItem(
     String submittedDateTime,
     String submittedBy
 ) {
-  // TODO: We need to cater for switching between IN_PROGRESS case redirection and SUBMITTED ones.
-  //       Also redirect regulators and industry users to the right screen.
   public String url() {
-    return ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId));
+    return ReverseRouter.route(on(ApplicationSummaryController.class).getApplicationSummary(applicationId, null));
   }
 }

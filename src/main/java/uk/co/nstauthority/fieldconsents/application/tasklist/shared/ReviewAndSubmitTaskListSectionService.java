@@ -27,8 +27,8 @@ public class ReviewAndSubmitTaskListSectionService implements TaskListSectionSer
     items.add(
         new TaskListItem(REVIEW_SUBMIT_ITEM_NAME,
             TaskListLabel.NO_LABEL,
-            ReverseRouter.route(on(ApplicationSummaryController.class).getSummary(
-                applicationVersion.getApplication().getId())))
+            ReverseRouter.route(on(ApplicationSummaryController.class).getReviewAndSubmit(
+                applicationVersion.getApplication().getId(), null)))
     );
 
     return Optional.of(new TaskListSection(REVIEW_SUBMIT_ITEM_NAME, 40, items));

@@ -1,7 +1,6 @@
 package uk.co.nstauthority.fieldconsents.authorisation.rules;
 
 import java.lang.annotation.Annotation;
-import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +38,7 @@ public class ApplicationAccessInterceptorRule implements ApplicationInterceptorS
     var requiredPermissions = ((HasApplicationPermission) annotation).permissions();
 
     var hasApplicationPermission =
-        applicationAccessService.hasApplicationPermission(user, applicationVersion, Set.of(requiredPermissions));
+        applicationAccessService.hasApplicationPermission(user, applicationVersion, requiredPermissions);
 
     if (hasApplicationPermission) {
       return SecurityRuleResult.continueAsNormal();

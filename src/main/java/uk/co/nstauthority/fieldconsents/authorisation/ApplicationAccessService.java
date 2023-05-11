@@ -1,6 +1,5 @@
 package uk.co.nstauthority.fieldconsents.authorisation;
 
-import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
@@ -20,7 +19,7 @@ public class ApplicationAccessService {
 
   public boolean hasApplicationPermission(ServiceUserDetail user,
                                           ApplicationVersion applicationVersion,
-                                          Set<RolePermission> requiredPermissions) {
+                                          RolePermission... requiredPermissions) {
 
     return organisationUnitPermissionService
         .hasOperatorPermission(user, applicationVersion.getPrimaryOperatorOuId(), requiredPermissions);

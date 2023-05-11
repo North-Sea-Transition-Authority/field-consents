@@ -53,8 +53,8 @@ class ReviewAndSubmitTaskListSectionServiceTest {
         taskListItems.get(0),
         REVIEW_SUBMIT_ITEM_NAME,
         TaskListLabel.NO_LABEL,
-        ReverseRouter.route(on(ApplicationSummaryController.class).getSummary(
-            applicationVersion.getApplication().getId()))
+        ReverseRouter.route(on(ApplicationSummaryController.class).getReviewAndSubmit(
+            applicationVersion.getApplication().getId(), null))
     );
   }
 }

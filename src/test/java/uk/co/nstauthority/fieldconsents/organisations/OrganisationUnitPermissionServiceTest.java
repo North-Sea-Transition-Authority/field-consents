@@ -57,7 +57,7 @@ class OrganisationUnitPermissionServiceTest {
 
     assertThat(
         organisationUnitPermissionService
-            .hasOperatorPermission(USER, PRIMARY_OPERATOR_OU_ID_1, Set.of(RolePermission.SUBMIT_FCS_APPLICATIONS))
+            .hasOperatorPermission(USER, PRIMARY_OPERATOR_OU_ID_1, RolePermission.SUBMIT_FCS_APPLICATIONS)
     ).isFalse();
   }
 
@@ -70,7 +70,7 @@ class OrganisationUnitPermissionServiceTest {
 
     assertThat(
         organisationUnitPermissionService
-            .hasOperatorPermission(USER, PRIMARY_OPERATOR_OU_ID_1, Set.of(RolePermission.SUBMIT_FCS_APPLICATIONS))
+            .hasOperatorPermission(USER, PRIMARY_OPERATOR_OU_ID_1, RolePermission.SUBMIT_FCS_APPLICATIONS)
     ).isFalse();
   }
 
@@ -86,7 +86,7 @@ class OrganisationUnitPermissionServiceTest {
 
     assertThat(
         organisationUnitPermissionService
-            .hasOperatorPermission(USER, PRIMARY_OPERATOR_OU_ID_1, Set.of(RolePermission.SUBMIT_FCS_APPLICATIONS))
+            .hasOperatorPermission(USER, PRIMARY_OPERATOR_OU_ID_1, RolePermission.SUBMIT_FCS_APPLICATIONS)
     ).isFalse();
   }
 
@@ -103,7 +103,7 @@ class OrganisationUnitPermissionServiceTest {
 
     assertThat(
         organisationUnitPermissionService
-            .hasOperatorPermission(USER, PRIMARY_OPERATOR_OU_ID_1, Set.of(RolePermission.SUBMIT_FCS_APPLICATIONS))
+            .hasOperatorPermission(USER, PRIMARY_OPERATOR_OU_ID_1, RolePermission.SUBMIT_FCS_APPLICATIONS)
     ).isTrue();
   }
 
@@ -124,7 +124,7 @@ class OrganisationUnitPermissionServiceTest {
 
     assertThat(
         organisationUnitPermissionService
-            .hasOperatorPermission(USER, PRIMARY_OPERATOR_OU_ID_1, Set.of(RolePermission.SUBMIT_FCS_APPLICATIONS))
+            .hasOperatorPermission(USER, PRIMARY_OPERATOR_OU_ID_1, RolePermission.SUBMIT_FCS_APPLICATIONS)
     ).isTrue();
   }
 
@@ -140,7 +140,7 @@ class OrganisationUnitPermissionServiceTest {
 
     assertThat(
         organisationUnitPermissionService
-            .hasOperatorPermission(USER, PRIMARY_OPERATOR_OU_ID_1, Set.of(RolePermission.SUBMIT_FCS_APPLICATIONS))
+            .hasOperatorPermission(USER, PRIMARY_OPERATOR_OU_ID_1, RolePermission.SUBMIT_FCS_APPLICATIONS)
     ).isTrue();
   }
 
@@ -161,7 +161,7 @@ class OrganisationUnitPermissionServiceTest {
 
     assertThat(
         organisationUnitPermissionService
-            .hasOperatorPermission(USER, PRIMARY_OPERATOR_OU_ID_1, Set.of(RolePermission.SUBMIT_FCS_APPLICATIONS))
+            .hasOperatorPermission(USER, PRIMARY_OPERATOR_OU_ID_1, RolePermission.SUBMIT_FCS_APPLICATIONS)
     ).isFalse();
   }
 

@@ -2,7 +2,6 @@ package uk.co.nstauthority.fieldconsents.assets.fields;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
-import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -43,7 +42,7 @@ public class FieldController {
         fieldJson.operatorExists()
         && fieldJson.licencesExist()
         && organisationUnitPermissionService.hasOperatorPermission(
-            user, fieldJson.getOperatorJson().organisationUnitId(), Set.of(RolePermission.CREATE_FCS_APPLICATIONS));
+            user, fieldJson.getOperatorJson().organisationUnitId(), RolePermission.CREATE_FCS_APPLICATIONS);
 
     return new ModelAndView("fcs/assets/fields")
         .addObject("fieldJson", fieldJson)

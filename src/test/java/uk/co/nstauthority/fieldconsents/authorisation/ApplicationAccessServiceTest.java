@@ -3,7 +3,6 @@ package uk.co.nstauthority.fieldconsents.authorisation;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,12 +41,12 @@ class ApplicationAccessServiceTest {
         .hasOperatorPermission(
             USER,
             applicationVersion.getPrimaryOperatorOuId(),
-            Set.of(RolePermission.SUBMIT_FCS_APPLICATIONS)))
+            RolePermission.SUBMIT_FCS_APPLICATIONS))
         .thenReturn(false);
 
     assertThat(
         applicationAccessService
-            .hasApplicationPermission(USER, applicationVersion, Set.of(RolePermission.SUBMIT_FCS_APPLICATIONS))
+            .hasApplicationPermission(USER, applicationVersion, RolePermission.SUBMIT_FCS_APPLICATIONS)
     ).isFalse();
   }
 
@@ -57,12 +56,12 @@ class ApplicationAccessServiceTest {
         .hasOperatorPermission(
             USER,
             applicationVersion.getPrimaryOperatorOuId(),
-            Set.of(RolePermission.SUBMIT_FCS_APPLICATIONS)))
+            RolePermission.SUBMIT_FCS_APPLICATIONS))
         .thenReturn(true);
 
     assertThat(
         applicationAccessService
-            .hasApplicationPermission(USER, applicationVersion, Set.of(RolePermission.SUBMIT_FCS_APPLICATIONS))
+            .hasApplicationPermission(USER, applicationVersion, RolePermission.SUBMIT_FCS_APPLICATIONS)
     ).isTrue();
   }
 }
