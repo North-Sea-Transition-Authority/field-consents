@@ -133,6 +133,13 @@ public class FieldService {
         .toList();
   }
 
+  public List<FieldJson> findFieldsByIds(List<Integer> fieldIds, String requestPurpose) {
+    return fieldApi.getFieldsByIds(fieldIds, fieldsProjectionRoot, new RequestPurpose(requestPurpose))
+        .stream()
+        .map(FieldJson::from)
+        .toList();
+  }
+
   public Optional<FieldWithOperatorJson> findFieldWithOperator(Integer fieldId, String requestPurpose) {
     return fieldApi.findFieldById(fieldId, fieldWithOperatorProjectionRoot, new RequestPurpose(requestPurpose))
         .map(FieldWithOperatorJson::from);

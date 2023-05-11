@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.workarea;
 
+import static org.jooq.impl.DSL.greatest;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_ASSETS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_VERSIONS;
@@ -57,8 +58,7 @@ class WorkAreaItemDtoRepository {
         .leftJoin(APPLICATION_ASSETS).onKey(APPLICATION_ASSETS.APPLICATION_VERSION_ID)
         .leftJoin(CONSENT_LENGTHS).onKey(CONSENT_LENGTHS.APPLICATION_VERSION_ID)
         .where(APPLICATION_VERSIONS.ID.in(detailsSubQuery))
-        .orderBy(APPLICATION_VERSIONS.SUBMITTED_DATE_TIME.desc().nullsFirst(), APPLICATION_VERSIONS.CREATED_DATE_TIME.desc())
-
+        .orderBy(greatest(APPLICATION_VERSIONS.SUBMITTED_DATE_TIME, APPLICATION_VERSIONS.CREATED_DATE_TIME).desc())
         .fetchInto(WorkAreaItemDto.class);
   }
 }

@@ -14,9 +14,7 @@ import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.authorisation.AccessibleByServiceUsers;
-import uk.co.nstauthority.fieldconsents.authorisation.HasPermission;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Controller
 // the ordering of the mappings is important here otherwise the top navigation always highlights the work area
@@ -24,7 +22,6 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
 @RequestMapping({"/work-area", "/"})
 @SessionAttributes({"workAreaFilter"})
 @AccessibleByServiceUsers
-@HasPermission(permissions = RolePermission.VIEW_FCS_APPLICATIONS)
 public class WorkAreaController {
 
   private final WorkAreaService workAreaService;

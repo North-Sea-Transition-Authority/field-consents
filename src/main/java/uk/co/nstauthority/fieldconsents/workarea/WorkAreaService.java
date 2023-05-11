@@ -4,14 +4,16 @@ import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.jooq.Condition;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
@@ -28,7 +30,7 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
 @Service
 public class WorkAreaService {
 
-  static final String FIELD_LOOKUP_PURPOSE = "Lookup field to get the asset location";
+  static final String FIELD_LOOKUP_PURPOSE = "Lookup field to get the asset location for the work-area";
 
   private final TeamService teamService;
 
@@ -69,7 +71,7 @@ public class WorkAreaService {
   public List<WorkAreaItem> getWorkAreaItems(WorkAreaFilter filter) {
     var conditions = workAreaFilterService.getConditions(filter);
     var userDetail = userDetailService.getUserDetail();
-    var requiredPermissions = Set.of(RolePermission.VIEW_FCS_APPLICATIONS);
+    var requiredPermissions = Set.of(RolePermission.EDIT_FCS_APPLICATIONS);
     var industryTeams =
         teamService.getTeamsOfTypeThatUserHasPermissionFor(userDetail, TeamType.INDUSTRY, requiredPermissions);
     var regulatorTeams =
@@ -83,7 +85,7 @@ public class WorkAreaService {
       return getRegulatorWorkAreaItems(conditions);
     }
 
-    throw new RuntimeException("User with id %s cannot access the work-area screen.".formatted(userDetail.wuaId()));
+    return Collections.emptyList();
   }
 
   private List<WorkAreaItem> getIndustryWorkAreaItems(List<Team> teams, List<Condition> conditions) {
@@ -114,6 +116,39 @@ public class WorkAreaService {
     var organisationUnitsMap = organisationUnitJsons.stream()
         .collect(Collectors.toMap(OrganisationUnitJson::organisationUnitId, OrganisationUnitJson::name));
 
+    // Early call to API to get all fields from workAreaItemDtoList at once
+    // instead of calling the EPA for each item in loop.
+    var fieldJsons = fieldService.findFieldsByIds(workAreaItemDtoList
+        .stream()
+        .map(WorkAreaItemDto::fieldId)
+        .distinct()
+        .toList(), FIELD_LOOKUP_PURPOSE);
+
+    var fieldJsonsMap = fieldJsons
+        .stream()
+        .collect(Collectors.toMap(
+            FieldJson::getId,
+            Function.identity())
+        );
+
+    // Early call to API to get all energy portal users from workAreaItemDtoList at once
+    // instead of calling the EPA for each item in loop.
+    var portalUserDtos = energyPortalUserService.findByWuaIds(workAreaItemDtoList
+        .stream()
+        .filter(workAreaItemDto -> workAreaItemDto.submittedByWuaId() != null)
+        .map(workAreaItemDto ->
+            new WebUserAccountId(workAreaItemDto.submittedByWuaId())
+        )
+        .distinct()
+        .toList());
+
+    var portalUserDtosMap = portalUserDtos
+        .stream()
+        .collect(Collectors.toMap(
+            EnergyPortalUserDto::webUserAccountId,
+            Function.identity())
+        );
+
     return workAreaItemDtoList.stream()
         .filter(workAreaItemDto -> !workAreaItemDto.status().equals(ApplicationVersionStatus.COMPLETED))
         .map(workAreaItemDto -> new WorkAreaItem(
@@ -123,12 +158,14 @@ public class WorkAreaService {
             getApplicationReference(workAreaItemDto),
             organisationUnitsMap.getOrDefault(workAreaItemDto.operatorId(), "MISSING OPERATOR"),
             workAreaItemDto.fieldId() != null ? workAreaItemDto.fieldName() : workAreaItemDto.terminalName(),
-            getAssetLocation(workAreaItemDto),
+            getAssetLocation(workAreaItemDto, fieldJsonsMap),
             workAreaItemDto.status().getDisplayName(),
             workAreaItemDto.status().equals(ApplicationVersionStatus.SUBMITTED)
                 ? "Submitted %s".formatted(DateUtils.format(workAreaItemDto.submittedDateTime(), DateUtils.DATE_TIME))
                 : "",
-            getSubmitter(workAreaItemDto)))
+            workAreaItemDto.status().equals(ApplicationVersionStatus.SUBMITTED)
+                ? getSubmitter(workAreaItemDto, portalUserDtosMap)
+                : ""))
         .toList();
   }
 
@@ -164,28 +201,19 @@ public class WorkAreaService {
     return info;
   }
 
-  private String getAssetLocation(WorkAreaItemDto workAreaItemDto) {
+  private String getAssetLocation(WorkAreaItemDto workAreaItemDto, Map<Integer, FieldJson> fieldJsonsMap) {
     if (workAreaItemDto.fieldId() == null) {
       return "";
     }
 
-    return String.format("%s", fieldService.getField(workAreaItemDto.fieldId(), FIELD_LOOKUP_PURPOSE)
-        .getGeographicAreaDisplayName());
+    var matchingFieldJson = fieldJsonsMap.get(workAreaItemDto.fieldId());
+    return matchingFieldJson != null ? String.format("%s", matchingFieldJson.getGeographicAreaDisplayName()) : "Unknown area";
   }
 
-  private String getSubmitter(WorkAreaItemDto workAreaItemDto) {
-    if (workAreaItemDto.status().equals(ApplicationVersionStatus.IN_PROGRESS)) {
-      return "";
-    }
-
-    Optional<EnergyPortalUserDto> portalUserDtoOptional = energyPortalUserService
-        .findByWuaId(new WebUserAccountId(workAreaItemDto.submittedByWuaId()));
-    if (portalUserDtoOptional.isPresent()) {
-      var portalUserDto = portalUserDtoOptional.get();
-      return "Submitted by %s %s %s".formatted(portalUserDto.title(), portalUserDto.forename(), portalUserDto.surname());
-    }
-
-    return "UNKNOWN USER";
+  private String getSubmitter(WorkAreaItemDto workAreaItemDto, Map<Long, EnergyPortalUserDto> portalUserDtosMap) {
+    var matchingPortalUserDto = portalUserDtosMap.get(workAreaItemDto.submittedByWuaId());
+    return "Submitted by %s %s %s"
+        .formatted(matchingPortalUserDto.title(), matchingPortalUserDto.forename(), matchingPortalUserDto.surname());
   }
 
   // TODO FCS-78: NSTA Work Area - Unassigned applications
