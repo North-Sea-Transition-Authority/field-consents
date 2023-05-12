@@ -23,10 +23,6 @@ public class WorkAreaFilter implements Serializable {
     return reference;
   }
 
-  public void setReference(String reference) {
-    this.reference = reference;
-  }
-
   public List<ApplicationVersionStatus> getStatuses() {
     return statuses;
   }

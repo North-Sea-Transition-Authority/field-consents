@@ -6,7 +6,6 @@ import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.Application
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import org.apache.commons.lang3.StringUtils;
 import org.jooq.Condition;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
@@ -22,9 +21,10 @@ public class WorkAreaFilterService {
       conditions.add(getStatusQueryCondition(filter.getStatuses()));
     }
 
-    if (StringUtils.isNotBlank(filter.getReference())) {
-      conditions.add(getReferenceQueryCondition(filter.getReference()));
-    }
+    // TODO: uncomment this on FCS-326: Add work-area filter for application reference and sea location
+    //    if (StringUtils.isNotBlank(filter.getReference())) {
+    //      conditions.add(getReferenceQueryCondition(filter.getReference()));
+    //    }
 
     if (Objects.nonNull(filter.getApplicationTypes())) {
       conditions.add(getApplicationTypesQueryCondition(filter.getApplicationTypes()));
@@ -41,10 +41,10 @@ public class WorkAreaFilterService {
     return APPLICATION_VERSIONS.STATUS.in(statusStrings);
   }
 
-  // TODO: Implement this when case reference ticket FCS-323 is resolved
-  private Condition getReferenceQueryCondition(String reference) {
-    return null;
-  }
+  // TODO: Implement this FCS-326: Add work-area filter for application reference and sea location
+  //    private Condition getReferenceQueryCondition(String reference) {
+  //      return null;
+  //    }
 
   private Condition getApplicationTypesQueryCondition(List<ApplicationType> applicationTypes) {
     var applicationTypeStrings = applicationTypes

@@ -5,6 +5,7 @@ import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -30,7 +31,7 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
 @Service
 public class WorkAreaService {
 
-  static final String FIELD_LOOKUP_PURPOSE = "Lookup field to get the asset location for the work-area";
+  public static final String FIELD_LOOKUP_PURPOSE = "Lookup field to get the asset location for the work-area";
 
   private final TeamService teamService;
 
@@ -89,7 +90,10 @@ public class WorkAreaService {
   }
 
   private List<WorkAreaItem> getIndustryWorkAreaItems(List<Team> teams, List<Condition> conditions) {
-    var organisationGroupIds = teams.stream().map(Team::getOrganisationGroupId).toList();
+    var organisationGroupIds = teams.stream()
+        .map(Team::getOrganisationGroupId)
+        .filter(Objects::nonNull)
+        .toList();
 
     if (organisationGroupIds.isEmpty()) {
       return Collections.emptyList();
