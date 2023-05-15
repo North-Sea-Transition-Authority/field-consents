@@ -168,8 +168,7 @@ public class WorkAreaTestUtil {
 
   static String getDuration(WorkAreaItemDto workAreaItemDto) {
     if (workAreaItemDto.duration() != null) {
-      var consentDuration = workAreaItemDto.duration().getDisplayName();
-      var consentDurationString = consentDuration.substring(0, consentDuration.lastIndexOf(" "));
+      var consentDurationString = workAreaItemDto.duration().getShortDisplayName();
 
       switch (workAreaItemDto.duration()) {
         case ANNUAL -> {

@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.web.bind.annotation.SessionAttributes;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 
 @SessionAttributes({"workAreaFilter"})
 public class WorkAreaFilter implements Serializable {
@@ -18,6 +19,7 @@ public class WorkAreaFilter implements Serializable {
   private String reference;
   private List<ApplicationVersionStatus> statuses;
   private List<ApplicationType> applicationTypes;
+  private List<ConsentLengthType> durationTypes;
 
   public String getReference() {
     return reference;
@@ -40,15 +42,25 @@ public class WorkAreaFilter implements Serializable {
     this.applicationTypes = applicationTypes;
   }
 
+  public List<ConsentLengthType> getDurationTypes() {
+    return durationTypes;
+  }
+
+  public void setDurationTypes(List<ConsentLengthType> durationTypes) {
+    this.durationTypes = durationTypes;
+  }
+
   public void clearFilter() {
     reference = null;
     statuses = null;
     applicationTypes = null;
+    durationTypes = null;
   }
 
   public void update(WorkAreaForm form) {
     reference = form.getReference();
     statuses = form.getStatuses();
     applicationTypes = form.getApplicationTypes();
+    durationTypes = form.getDurationTypes();
   }
 }

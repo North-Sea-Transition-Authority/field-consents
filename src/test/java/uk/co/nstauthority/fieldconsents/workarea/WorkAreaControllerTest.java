@@ -22,6 +22,7 @@ import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
@@ -62,6 +63,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
         .containsEntry("clearFiltersUrl", ReverseRouter.route(on(WorkAreaController.class).clearWorkAreaFilter(null, null)))
         .containsEntry("appStatuses", ApplicationVersionStatus.getWorkAreaOptions())
         .containsEntry("appTypes", ApplicationType.getDisplayableOptions())
+        .containsEntry("durationTypes", ConsentLengthType.getWorkAreaOptions())
         .containsEntry("pageTitle", WORK_AREA_TITLE);
 
     var form = (WorkAreaForm) model.get("form");
@@ -73,6 +75,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
     var form = new WorkAreaForm();
     form.setStatuses(Collections.singletonList(ApplicationVersionStatus.IN_PROGRESS));
     form.setApplicationTypes(Collections.singletonList(ApplicationType.PRODUCTION));
+    form.setDurationTypes(Collections.singletonList(ConsentLengthType.LONG_TERM));
     var filter = new WorkAreaFilter();
     var expectedRedirectUrl = ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null));
 
@@ -87,10 +90,12 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
     assertThat(filter).extracting(
         WorkAreaFilter::getStatuses,
-        WorkAreaFilter::getApplicationTypes
+        WorkAreaFilter::getApplicationTypes,
+        WorkAreaFilter::getDurationTypes
     ).containsExactly(
         form.getStatuses(),
-        form.getApplicationTypes()
+        form.getApplicationTypes(),
+        form.getDurationTypes()
     );
   }
 
@@ -99,6 +104,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
     var form = new WorkAreaForm();
     form.setStatuses(Collections.singletonList(ApplicationVersionStatus.IN_PROGRESS));
     form.setApplicationTypes(Collections.singletonList(ApplicationType.PRODUCTION));
+    form.setDurationTypes(Collections.singletonList(ConsentLengthType.LONG_TERM));
     var filter = new WorkAreaFilter();
     filter.update(form);
     var expectedRedirectUrl = ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null));
@@ -112,7 +118,8 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
     assertThat(filter).extracting(
         WorkAreaFilter::getStatuses,
-        WorkAreaFilter::getApplicationTypes
+        WorkAreaFilter::getApplicationTypes,
+        WorkAreaFilter::getDurationTypes
     ).containsOnlyNulls();
   }
 }

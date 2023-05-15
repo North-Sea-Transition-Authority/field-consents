@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.workarea;
 
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.Applications.APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ConsentLengths.CONSENT_LENGTHS;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +11,7 @@ import org.jooq.Condition;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 
 @Service
 public class WorkAreaFilterService {
@@ -28,6 +30,10 @@ public class WorkAreaFilterService {
 
     if (Objects.nonNull(filter.getApplicationTypes())) {
       conditions.add(getApplicationTypesQueryCondition(filter.getApplicationTypes()));
+    }
+
+    if (Objects.nonNull(filter.getDurationTypes())) {
+      conditions.add(getDurationTypesQueryCondition(filter.getDurationTypes()));
     }
 
     return conditions;
@@ -52,5 +58,13 @@ public class WorkAreaFilterService {
         .map(ApplicationType::getEnumName)
         .toList();
     return APPLICATIONS.TYPE.in(applicationTypeStrings);
+  }
+
+  private Condition getDurationTypesQueryCondition(List<ConsentLengthType> durationTypes) {
+    var consentLengthStrings = durationTypes
+        .stream()
+        .map(ConsentLengthType::getEnumName)
+        .toList();
+    return CONSENT_LENGTHS.CONSENT_LENGTH.in(consentLengthStrings);
   }
 }

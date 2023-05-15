@@ -4,11 +4,14 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
+import uk.co.nstauthority.fieldconsents.util.StreamUtils;
+import uk.co.nstauthority.fieldconsents.util.enumutil.Displayable;
 
-public enum ConsentLengthType {
+public enum ConsentLengthType implements Displayable {
   SHORT_TERM("Short term consent", 10, EnumSet.of(ApplicationType.PRODUCTION, ApplicationType.FLARE, ApplicationType.VENT)),
   ANNUAL("Annual consent", 20, EnumSet.of(ApplicationType.PRODUCTION, ApplicationType.FLARE, ApplicationType.VENT)),
   LONG_TERM("Long term consent", 30, EnumSet.of(ApplicationType.PRODUCTION));
@@ -25,12 +28,18 @@ public enum ConsentLengthType {
     this.applicationTypes = applicationTypes;
   }
 
+  @Override
   public String getDisplayName() {
     return displayName;
   }
 
+  @Override
   public int getDisplayOrder() {
     return displayOrder;
+  }
+
+  public String getShortDisplayName() {
+    return displayName.replace(" consent", "");
   }
 
   public Set<ApplicationType> getApplicationTypes() {
@@ -42,5 +51,11 @@ public enum ConsentLengthType {
         .filter(type -> type.getApplicationTypes().contains(appType))
         .sorted(Comparator.comparing(ConsentLengthType::getDisplayOrder))
         .collect(Collectors.toCollection(LinkedHashSet::new));
+  }
+
+  public static Map<String, String> getWorkAreaOptions() {
+    return Arrays.stream(ConsentLengthType.values())
+        .sorted(Comparator.comparingInt(Displayable::getDisplayOrder))
+        .collect(StreamUtils.toLinkedHashMap(Displayable::getEnumName, ConsentLengthType::getShortDisplayName));
   }
 }

@@ -8,9 +8,10 @@
   <@fdsSearch.searchPage>
     <@fdsSearch.searchFilter>
       <@fdsSearch.searchFilterList clearFilterUrl=springUrl(clearFiltersUrl) filterButtonClass="govuk-button govuk-button--secondary">
-        <#--<@referenceFilter form=form/>--> <#--TODO: Uncomment this out when case reference ticket FCS-323 is resolved -->
+        <#--<@referenceFilter form=form/>--> <#--TODO: Uncomment this out when case reference ticket FCS-326 is resolved -->
         <@statusFilter form=form statusCheckboxes=appStatuses/>
         <@applicationTypeFilter form=form applicationTypeCheckboxes=appTypes/>
+        <@durationFilter form=form durationCheckboxes=durationTypes/>
       </@fdsSearch.searchFilterList>
     </@fdsSearch.searchFilter>
     <@fdsSearch.searchPageContent>
@@ -47,6 +48,15 @@
     <@fdsSearch.searchCheckboxes
       path="form.applicationTypes"
       checkboxes=applicationTypeCheckboxes
+    />
+  </@fdsSearch.searchFilterItem>
+</#macro>
+
+<#macro durationFilter form durationCheckboxes>
+  <@fdsSearch.searchFilterItem itemName="Duration" expanded=form.durationTypes?has_content>
+    <@fdsSearch.searchCheckboxes
+      path="form.durationTypes"
+      checkboxes=durationCheckboxes
     />
   </@fdsSearch.searchFilterItem>
 </#macro>

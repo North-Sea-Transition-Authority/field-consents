@@ -185,17 +185,21 @@ public class WorkAreaService {
 
   private String getConsentDuration(WorkAreaItemDto workAreaItemDto) {
     String info;
+    var consentDuration = workAreaItemDto.duration();
 
-    if (workAreaItemDto.duration() == null) {
+    if (consentDuration == null) {
       return "";
     }
 
-    switch (workAreaItemDto.duration()) {
-      case ANNUAL -> info = "Annual %d".formatted(workAreaItemDto.consentYear());
+    switch (consentDuration) {
+      case ANNUAL -> info = "%s %d".formatted(consentDuration.getShortDisplayName(), workAreaItemDto.consentYear());
       case LONG_TERM ->
-          info = "Long term %d - %d".formatted(workAreaItemDto.longTermStartYear(), workAreaItemDto.longTermEndYear());
+          info = "%s %d - %d".formatted(consentDuration.getShortDisplayName(),
+              workAreaItemDto.longTermStartYear(),
+              workAreaItemDto.longTermEndYear()
+          );
       case SHORT_TERM ->
-          info = "Short term %s - %s".formatted(
+          info = "%s %s - %s".formatted(consentDuration.getShortDisplayName(),
               DateUtils.format(workAreaItemDto.shortTermStartDate(), DateUtils.SHORT_DATE),
               DateUtils.format(workAreaItemDto.shortTermEndDate(), DateUtils.SHORT_DATE)
           );

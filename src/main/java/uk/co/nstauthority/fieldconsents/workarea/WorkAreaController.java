@@ -13,6 +13,7 @@ import org.springframework.web.bind.support.SessionStatus;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.authorisation.AccessibleByServiceUsers;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
@@ -37,6 +38,7 @@ public class WorkAreaController {
     var workAreaItems = workAreaService.getWorkAreaItems(filter);
     var appStatuses = ApplicationVersionStatus.getWorkAreaOptions();
     var appTypes = ApplicationType.getDisplayableOptions();
+    var durationTypes = ConsentLengthType.getWorkAreaOptions();
     var form = WorkAreaForm.from(filter);
 
     return new ModelAndView("fcs/workarea/workArea")
@@ -45,6 +47,7 @@ public class WorkAreaController {
             ReverseRouter.route(on(WorkAreaController.class).clearWorkAreaFilter(null, null)))
         .addObject("appStatuses", appStatuses)
         .addObject("appTypes", appTypes)
+        .addObject("durationTypes", durationTypes)
         .addObject("form", form)
         .addObject("pageTitle", WORK_AREA_TITLE);
   }

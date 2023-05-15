@@ -3,6 +3,7 @@ package uk.co.nstauthority.fieldconsents.workarea;
 import static org.assertj.core.api.Assertions.assertThat;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.Applications.APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ConsentLengths.CONSENT_LENGTHS;
 
 import java.util.Collections;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 
 @ExtendWith(MockitoExtension.class)
 class WorkAreaFilterServiceTest {
@@ -36,7 +38,7 @@ class WorkAreaFilterServiceTest {
   @Test
   void getConditions_StatusesSelected() {
     var status = ApplicationVersionStatus.IN_PROGRESS;
-    form.setStatuses(Collections.singletonList(ApplicationVersionStatus.IN_PROGRESS));
+    form.setStatuses(Collections.singletonList(status));
     filter.update(form);
 
     var conditions = workAreaFilterService.getConditions(filter);
@@ -49,13 +51,26 @@ class WorkAreaFilterServiceTest {
   @Test
   void getConditions_ApplicationTypesSelected() {
     var applicationType = ApplicationType.PRODUCTION;
-    form.setApplicationTypes(Collections.singletonList(ApplicationType.PRODUCTION));
+    form.setApplicationTypes(Collections.singletonList(applicationType));
     filter.update(form);
 
     var conditions = workAreaFilterService.getConditions(filter);
 
     assertThat(conditions).containsExactly(
         APPLICATIONS.TYPE.in(Collections.singletonList(applicationType.getEnumName()))
+    );
+  }
+
+  @Test
+  void getConditions_DurationTypesSelected() {
+    var durationTypes = ConsentLengthType.LONG_TERM;
+    form.setDurationTypes(Collections.singletonList(durationTypes));
+    filter.update(form);
+
+    var conditions = workAreaFilterService.getConditions(filter);
+
+    assertThat(conditions).containsExactly(
+        CONSENT_LENGTHS.CONSENT_LENGTH.in(Collections.singletonList(durationTypes.getEnumName()))
     );
   }
 }
