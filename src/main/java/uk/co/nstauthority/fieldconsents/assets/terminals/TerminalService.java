@@ -2,7 +2,6 @@ package uk.co.nstauthority.fieldconsents.assets.terminals;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import javax.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,7 +11,7 @@ import uk.co.fivium.energyportalapi.generated.client.TerminalProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.client.TerminalsProjectionRoot;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
-import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
@@ -24,7 +23,7 @@ public class TerminalService {
 
   private final TeamService teamService;
 
-  private final OrganisationUnitPermissionService organisationUnitPermissionService;
+  private final OrganisationUnitService organisationUnitService;
 
   static final TerminalsProjectionRoot terminalsProjectionRoot =
       new TerminalsProjectionRoot()
@@ -48,10 +47,10 @@ public class TerminalService {
   @Autowired
   public TerminalService(TerminalApi terminalApi,
                          TeamService teamService,
-                         OrganisationUnitPermissionService organisationUnitPermissionService) {
+                         OrganisationUnitService organisationUnitService) {
     this.terminalApi = terminalApi;
     this.teamService = teamService;
-    this.organisationUnitPermissionService = organisationUnitPermissionService;
+    this.organisationUnitService = organisationUnitService;
   }
 
   public List<TerminalJson> searchTerminals(String terminalName, String requestPurpose) {
@@ -64,12 +63,11 @@ public class TerminalService {
         .toList();
   }
 
-  public List<TerminalWithOperatorJson> searchTerminalsWithOperator(String terminalName,
-                                                                    String requestPurpose,
-                                                                    ServiceUserDetail user) {
-    var requiredPermissions = Set.of(RolePermission.VIEW_FCS_APPLICATIONS, RolePermission.VIEW_FCS_CONSENTS);
+  public List<TerminalWithOperatorJson> searchTerminalsWithOperatorForUser(String terminalName,
+                                                                           String requestPurpose,
+                                                                           ServiceUserDetail user) {
     var userRegulatorTeams =
-        teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, requiredPermissions);
+        teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS);
 
     var terminalWithOperatorJsons = terminalApi.searchTerminals(
             terminalName,
@@ -86,7 +84,7 @@ public class TerminalService {
     }
 
     var organisationUnitIdsUserHasPermissionFor =
-        organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(user, requiredPermissions)
+        organisationUnitService.getOperatorsUserHasPermissionsFor(user, RolePermission.VIEW_PERMISSIONS)
             .stream()
             .map(OrganisationUnitJson::organisationUnitId)
             .toList();

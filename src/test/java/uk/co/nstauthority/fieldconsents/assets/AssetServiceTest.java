@@ -50,15 +50,15 @@ public class AssetServiceTest {
   }
 
   @Test
-  void searchAssets_verifyListAndOrder() {
+  void searchAssetsForUser_verifyListAndOrder() {
     when(fieldService
-        .searchFieldsWithOperator("1", "Assets search selector (search fields)", user))
+        .searchFieldsWithOperatorForUser("1", "Assets search selector (search fields)", user))
         .thenReturn(List.of(field1JsonWithOperator));
     when(terminalService
-        .searchTerminalsWithOperator("1", "Assets search selector (search terminals)", user))
+        .searchTerminalsWithOperatorForUser("1", "Assets search selector (search terminals)", user))
         .thenReturn(List.of(terminal1JsonWithOperator));
 
-    var searchAssetsResults = assetService.searchAssets("1", user);
+    var searchAssetsResults = assetService.searchAssetsForUser("1", user);
 
     assertThat(searchAssetsResults).containsExactly(
         field1JsonWithOperator,
@@ -66,15 +66,15 @@ public class AssetServiceTest {
   }
 
   @Test
-  void searchAssets_verifyListAndOrderFieldsOnly() {
+  void searchAssetsForUser_verifyListAndOrderFieldsOnly() {
     when(fieldService
-        .searchFieldsWithOperator("F", "Assets search selector (search fields)", user))
+        .searchFieldsWithOperatorForUser("F", "Assets search selector (search fields)", user))
         .thenReturn(List.of(field3JsonWithOperator, field1JsonWithOperator, field2JsonWithOperator));
     when(terminalService
-        .searchTerminalsWithOperator("F", "Assets search selector (search terminals)", user))
+        .searchTerminalsWithOperatorForUser("F", "Assets search selector (search terminals)", user))
         .thenReturn(List.of());
 
-    var searchAssetsResults = assetService.searchAssets("F", user);
+    var searchAssetsResults = assetService.searchAssetsForUser("F", user);
 
     assertThat(searchAssetsResults).containsExactly(
         field1JsonWithOperator,
@@ -83,15 +83,15 @@ public class AssetServiceTest {
   }
 
   @Test
-  void searchAssets_verifyListAndOrderTerminalsOnly() {
+  void searchAssetsForUser_verifyListAndOrderTerminalsOnly() {
     when(fieldService
-        .searchFieldsWithOperator("T", "Assets search selector (search fields)", user))
+        .searchFieldsWithOperatorForUser("T", "Assets search selector (search fields)", user))
         .thenReturn(List.of());
     when(terminalService
-        .searchTerminalsWithOperator("T", "Assets search selector (search terminals)", user))
+        .searchTerminalsWithOperatorForUser("T", "Assets search selector (search terminals)", user))
         .thenReturn(List.of(terminal2JsonWithOperator, terminal3JsonWithOperator, terminal1JsonWithOperator));
 
-    var searchAssetsResults = assetService.searchAssets("T", user);
+    var searchAssetsResults = assetService.searchAssetsForUser("T", user);
 
     assertThat(searchAssetsResults).containsExactly(
         terminal1JsonWithOperator,

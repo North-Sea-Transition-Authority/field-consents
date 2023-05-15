@@ -5,4 +5,5 @@ package uk.co.nstauthority.fieldconsents.fds.searchselector;
  * id and text are required fields for the JSON response.
  */
 public record RestSearchItem(String id, String text) {
+  public static final RestSearchItem EMPTY_REST_SEARCH_ITEM = new RestSearchItem("", "");
 }

@@ -15,8 +15,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
-import static uk.co.nstauthority.fieldconsents.application.eiadirection.EiaDirectionFormService.EMPTY_PREFILLED_ITEM;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem.EMPTY_REST_SEARCH_ITEM;
 import static uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationTestUtil.SAT_ID_1;
 import static uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationTestUtil.SAT_REF_1;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
@@ -100,10 +100,10 @@ class EiaDirectionControllerTest extends AbstractApplicationControllerTest {
   private static Stream<Arguments> getGasInjectionFormArguments() {
     var restSearchItem = new RestSearchItem(String.valueOf(SAT_ID_1), SAT_REF_1);
     return Stream.of(
-        Arguments.of(new EiaDirectionForm(), EMPTY_PREFILLED_ITEM),
+        Arguments.of(new EiaDirectionForm(), EMPTY_REST_SEARCH_ITEM),
         Arguments.of(EiaDirectionTestUtil.getEiaDirectionFormWithSat(SAT_ID_1), restSearchItem),
-        Arguments.of(EiaDirectionTestUtil.getEiaDirectionFormWithSatToSubmit(), EMPTY_PREFILLED_ITEM),
-        Arguments.of(EiaDirectionTestUtil.getEiaDirectionFormWithNoSatToSubmit(), EMPTY_PREFILLED_ITEM),
+        Arguments.of(EiaDirectionTestUtil.getEiaDirectionFormWithSatToSubmit(), EMPTY_REST_SEARCH_ITEM),
+        Arguments.of(EiaDirectionTestUtil.getEiaDirectionFormWithNoSatToSubmit(), EMPTY_REST_SEARCH_ITEM),
         Arguments.of(EiaDirectionTestUtil.getEiaDirectionFormWithAllDataSet(SAT_ID_1) , restSearchItem)
     );
   }
@@ -119,7 +119,7 @@ class EiaDirectionControllerTest extends AbstractApplicationControllerTest {
   @Test
   void saveEiaDirectionForm_emptyForm() throws Exception {
     doCallRealMethod().when(formValidator).validate(any(), any());
-    when(eiaDirectionFormService.getPrefilledEiaDirectionRef(any())).thenReturn(EMPTY_PREFILLED_ITEM);
+    when(eiaDirectionFormService.getPrefilledEiaDirectionRef(any())).thenReturn(EMPTY_REST_SEARCH_ITEM);
 
     var modelAndView = mockMvc.perform(post(ReverseRouter.route(on(EiaDirectionController.class)
             .saveEiaDirectionForm(APPLICATION_ID, null, null)))
@@ -135,7 +135,7 @@ class EiaDirectionControllerTest extends AbstractApplicationControllerTest {
     var model = modelAndView.getModel();
 
     assertThat(model)
-        .containsEntry("prefilledEiaDirectionRef", EMPTY_PREFILLED_ITEM)
+        .containsEntry("prefilledEiaDirectionRef", EMPTY_REST_SEARCH_ITEM)
         .containsEntry("cancelUrl", TASK_LIST_URL);
     assertThat((EiaDirectionForm) model.get("form"))
         .usingRecursiveComparison()

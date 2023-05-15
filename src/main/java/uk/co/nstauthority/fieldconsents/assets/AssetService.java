@@ -26,12 +26,12 @@ public class AssetService {
     this.terminalService = terminalService;
   }
 
-  public List<AssetWithOperatorJson> searchAssets(String assetName, ServiceUserDetail user) {
+  public List<AssetWithOperatorJson> searchAssetsForUser(String assetName, ServiceUserDetail user) {
     var searchFieldsStream = fieldService
-        .searchFieldsWithOperator(assetName, "Assets search selector (search fields)", user)
+        .searchFieldsWithOperatorForUser(assetName, "Assets search selector (search fields)", user)
         .stream();
     var searchTerminalsStream = terminalService
-        .searchTerminalsWithOperator(assetName, "Assets search selector (search terminals)", user)
+        .searchTerminalsWithOperatorForUser(assetName, "Assets search selector (search terminals)", user)
         .stream();
 
     return Stream.concat(searchFieldsStream, searchTerminalsStream)

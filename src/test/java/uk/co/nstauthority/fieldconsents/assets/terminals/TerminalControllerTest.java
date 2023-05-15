@@ -12,7 +12,6 @@ import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 
-import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -36,7 +35,7 @@ public class TerminalControllerTest extends AbstractControllerTest {
 
   @BeforeEach
   void setUp() {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.VIEW_FCS_APPLICATIONS, RolePermission.VIEW_FCS_CONSENTS)))
+    when(permissionService.hasPermission(user, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(true);
   }
 

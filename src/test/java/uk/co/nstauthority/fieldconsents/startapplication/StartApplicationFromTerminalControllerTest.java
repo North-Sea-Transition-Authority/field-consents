@@ -14,6 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithOperator;
+import static uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem.EMPTY_REST_SEARCH_ITEM;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.Arrays;
@@ -31,8 +32,10 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
+import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
 import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 
 @ContextConfiguration(classes = StartApplicationFromTerminalController.class)
@@ -56,6 +59,9 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
 
   @MockBean
   private TerminalService terminalService;
+
+  @MockBean
+  private StartApplicationOperatorFormService startApplicationOperatorFormService;
 
   private Map<String, String> applicationTypeMap;
 
@@ -148,6 +154,10 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
   @Test
   @WithMockUser
   void getStartApplicationOperatorForm() throws Exception {
+    var orgUnitRestSearchItem = new RestSearchItem("1", "ORG_NAME");
+    when(startApplicationOperatorFormService.getPrefilledOperatorForTerminal(TERMINAL_ID))
+        .thenReturn(orgUnitRestSearchItem);
+
     var modelAndView =
         mockMvc.perform(get(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
                 .getStartApplicationOperatorForm(TERMINAL_ID, null)))
@@ -163,7 +173,11 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
     assertThat(model)
         .contains(
             entry("createApplicationUrl", MANAGE_TERMINAL_URL_BASE + "start-application/operator"),
-            entry("cancelUrl", MANAGE_TERMINAL_URL_BASE)
+            entry("cancelUrl", MANAGE_TERMINAL_URL_BASE),
+            entry("organisationUnitSearchRestUrl",
+                ReverseRouter.route(on(OrganisationUnitRestController.class)
+                    .getOrganisationUnitsForCreator(null, null))),
+            entry("prefilledOperator", orgUnitRestSearchItem)
         );
     var form = (StartApplicationOperatorForm) model.get("form");
     assertThat(form.getApplicationType()).isEqualTo(ApplicationType.FLARE);
@@ -204,6 +218,9 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
   @WithMockUser
   void createNewApplication_formErrors() throws Exception {
     doCallRealMethod().when(operatorFormValidator).validate(any(), any());
+
+    when(startApplicationOperatorFormService.getPrefilledOperatorForTerminal(TERMINAL_ID))
+        .thenReturn(EMPTY_REST_SEARCH_ITEM);
 
     var modelAndView =
         mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromTerminalController.class)

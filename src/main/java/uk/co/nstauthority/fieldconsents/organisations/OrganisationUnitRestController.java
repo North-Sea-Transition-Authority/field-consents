@@ -4,8 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchResult;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.SearchSelectorService;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @RestController
 public class OrganisationUnitRestController {
@@ -23,11 +25,16 @@ public class OrganisationUnitRestController {
     this.searchSelectorService = searchSelectorService;
   }
 
-  @GetMapping("/data-sources/organisation-units")
-  public RestSearchResult getOrganisationUnitSearchResults(@RequestParam(value = "term") String term) {
-
+  @GetMapping("/data-sources/organisation-units-creator")
+  public RestSearchResult getOrganisationUnitsForCreator(@RequestParam(value = "term", required = false) String term,
+                                                         ServiceUserDetail user) {
     return searchSelectorService.search(term, searchTerm -> organisationUnitService
-        .searchOrganisationUnits(searchTerm, ORG_UNIT_SEARCH_PURPOSE));
+        .searchOrganisationUnitsForUser(
+            searchTerm,
+            ORG_UNIT_SEARCH_PURPOSE,
+            user,
+            RolePermission.CREATE_FCS_APPLICATIONS
+        )
+    );
   }
-
 }

@@ -25,6 +25,7 @@ import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorAndLicencesJson;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 
 @Controller
@@ -43,19 +44,23 @@ public class StartApplicationFromFieldController {
 
   private final FieldService fieldService;
 
+  private final StartApplicationOperatorFormService startApplicationOperatorFormService;
+
   @Autowired
   public StartApplicationFromFieldController(ApplicationService applicationService,
                                              StartApplicationControllerHelperService startApplicationControllerHelperService,
                                              StartApplicationFormValidator formValidator,
                                              StartApplicationOperatorFormValidator operatorFormValidator,
                                              OrganisationUnitService organisationUnitService,
-                                             FieldService fieldService) {
+                                             FieldService fieldService,
+                                             StartApplicationOperatorFormService startApplicationOperatorFormService) {
     this.applicationService = applicationService;
     this.startApplicationControllerHelperService = startApplicationControllerHelperService;
     this.formValidator = formValidator;
     this.operatorFormValidator = operatorFormValidator;
     this.organisationUnitService = organisationUnitService;
     this.fieldService = fieldService;
+    this.startApplicationOperatorFormService = startApplicationOperatorFormService;
   }
 
   @GetMapping("/start-application")
@@ -111,14 +116,22 @@ public class StartApplicationFromFieldController {
 
   private ModelAndView getStartApplicationOperatorModelAndView(Integer fieldId) {
     ModelAndView modelAndView = new ModelAndView("fcs/startapplication/operatorForm");
-    modelAndView.addObject("createApplicationUrl",
-        ReverseRouter.route(on(StartApplicationFromFieldController.class).createNewApplication(
-            fieldId,
-            null,
-            ReverseRouter.emptyBindingResult())
+    modelAndView
+        .addObject("createApplicationUrl",
+            ReverseRouter.route(on(StartApplicationFromFieldController.class).createNewApplication(
+                fieldId,
+                null,
+                ReverseRouter.emptyBindingResult())
+            )
         )
-    );
-    modelAndView.addObject("cancelUrl", ReverseRouter.route(on(FieldController.class).manageField(fieldId, null)));
+        .addObject("cancelUrl",
+            ReverseRouter.route(on(FieldController.class).manageField(fieldId, null)))
+        .addObject("organisationUnitSearchRestUrl",
+            ReverseRouter.route(on(OrganisationUnitRestController.class)
+                .getOrganisationUnitsForCreator(null, null)))
+        .addObject("prefilledOperator",
+            startApplicationOperatorFormService.getPrefilledOperatorForField(fieldId));
+
     return modelAndView;
   }
 

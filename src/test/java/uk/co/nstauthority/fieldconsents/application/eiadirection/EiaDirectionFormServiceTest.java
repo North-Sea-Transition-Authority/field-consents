@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.application.eiadirection;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem.EMPTY_REST_SEARCH_ITEM;
 import static uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationTestUtil.SAT_ID_1;
 import static uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationTestUtil.SAT_ID_3;
 import static uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationTestUtil.petsApplication3Json;
@@ -27,7 +28,7 @@ class EiaDirectionFormServiceTest {
   @Test
   void getPrefilledEiaDirectionRef_satIdNull() {
     assertThat(eiaDirectionFormService.getPrefilledEiaDirectionRef(null))
-        .isEqualTo(EiaDirectionFormService.EMPTY_PREFILLED_ITEM);
+        .isEqualTo(EMPTY_REST_SEARCH_ITEM);
   }
 
   @Test
@@ -36,7 +37,7 @@ class EiaDirectionFormServiceTest {
         .thenReturn(Optional.empty());
 
     assertThat(eiaDirectionFormService.getPrefilledEiaDirectionRef(SAT_ID_1))
-        .isEqualTo(EiaDirectionFormService.EMPTY_PREFILLED_ITEM);
+        .isEqualTo(EMPTY_REST_SEARCH_ITEM);
   }
 
   @Test

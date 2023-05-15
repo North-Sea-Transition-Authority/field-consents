@@ -8,10 +8,13 @@
     <input type="hidden" name="${spring.status.expression}" value="${spring.stringStatusValue}">
     <@fdsSearchSelector.searchSelectorRest
       path="form.organisationUnitId.inputValue"
-      restUrl=springUrl("/data-sources/organisation-units")
+      restUrl=springUrl(organisationUnitSearchRestUrl)
       labelText="Who is the primary operator?"
       pageHeading=true
-      labelHeadingClass="govuk-label--xl"/>
+      labelHeadingClass="govuk-label--xl"
+      preselectedItems={prefilledOperator.id(): prefilledOperator.text()}
+      hintText="The field or facility operator has been preselected here"
+    />
     <@fdsAction.submitButtons
       linkSecondaryAction=true
       secondaryLinkText="Cancel"

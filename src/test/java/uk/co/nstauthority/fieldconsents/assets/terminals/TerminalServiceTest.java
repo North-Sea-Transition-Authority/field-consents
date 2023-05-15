@@ -25,7 +25,6 @@ import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTes
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -37,7 +36,7 @@ import uk.co.fivium.energyportalapi.generated.client.TerminalProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.client.TerminalsProjectionRoot;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
-import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 import uk.co.nstauthority.fieldconsents.teams.Team;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
@@ -46,9 +45,6 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
 
 @ExtendWith(MockitoExtension.class)
 public class TerminalServiceTest {
-
-  private static final Set<RolePermission> REQUIRED_PERMISSIONS =
-      Set.of(RolePermission.VIEW_FCS_APPLICATIONS, RolePermission.VIEW_FCS_CONSENTS);
 
   private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
 
@@ -59,7 +55,7 @@ public class TerminalServiceTest {
   private TeamService teamService;
 
   @Mock
-  private OrganisationUnitPermissionService organisationUnitPermissionService;
+  private OrganisationUnitService organisationUnitService;
 
   @InjectMocks
   private TerminalService terminalService;
@@ -99,97 +95,97 @@ public class TerminalServiceTest {
   }
 
   @Test
-  void searchTerminalsWithOperator_whenRegulator_allTestTerminals() {
+  void searchTerminalsWithOperatorForUser_whenRegulator_allTestTerminals() {
     when(terminalApi.searchTerminals(eq("T"), eq(Boolean.TRUE),
         any(TerminalsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(terminalsWithOperatorList);
 
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, REQUIRED_PERMISSIONS))
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(List.of(regulatorTeam));
 
-    assertThat(terminalService.searchTerminalsWithOperator("T", REQUEST_PURPOSE, USER))
+    assertThat(terminalService.searchTerminalsWithOperatorForUser("T", REQUEST_PURPOSE, USER))
         .usingRecursiveComparison()
         .isEqualTo(List.of(terminal1JsonWithOperator, terminal2JsonWithOperator, terminal3JsonWithOperator));
   }
 
   @Test
-  void searchTerminalsWithOperator_whenRegulator_singleTestTerminal() {
+  void searchTerminalsWithOperatorForUser_whenRegulator_singleTestTerminal() {
     when(terminalApi.searchTerminals(eq("T3"), eq(Boolean.TRUE),
         any(TerminalsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(List.of(terminal3WithOperator));
 
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, REQUIRED_PERMISSIONS))
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(List.of(regulatorTeam));
 
-    assertThat(terminalService.searchTerminalsWithOperator("T3", REQUEST_PURPOSE, USER))
+    assertThat(terminalService.searchTerminalsWithOperatorForUser("T3", REQUEST_PURPOSE, USER))
         .usingRecursiveComparison()
         .isEqualTo(List.of(terminal3JsonWithOperator));
   }
 
   @Test
-  void searchTerminalsWithOperator_whenIndustryUser_twoTerminals() {
+  void searchTerminalsWithOperatorForUser_whenIndustryUser_twoTerminals() {
     when(terminalApi.searchTerminals(eq("T"), eq(Boolean.TRUE),
         any(TerminalsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(terminalsWithOperatorList);
 
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, REQUIRED_PERMISSIONS))
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(Collections.emptyList());
 
-    when(organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(USER, REQUIRED_PERMISSIONS))
+    when(organisationUnitService.getOperatorsUserHasPermissionsFor(USER, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(List.of(orgUnit1Json, orgUnit2Json));
 
-    assertThat(terminalService.searchTerminalsWithOperator("T", REQUEST_PURPOSE, USER))
+    assertThat(terminalService.searchTerminalsWithOperatorForUser("T", REQUEST_PURPOSE, USER))
         .usingRecursiveComparison()
         .isEqualTo(List.of(terminal1JsonWithOperator, terminal2JsonWithOperator));
   }
 
   @Test
-  void searchTerminalsWithOperator_whenIndustryUser_singleTerminal() {
+  void searchTerminalsWithOperatorForUser_whenIndustryUser_singleTerminal() {
     when(terminalApi.searchTerminals(eq("T3"), eq(Boolean.TRUE),
         any(TerminalsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(terminalsWithOperatorList);
 
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, REQUIRED_PERMISSIONS))
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(Collections.emptyList());
 
-    when(organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(USER, REQUIRED_PERMISSIONS))
+    when(organisationUnitService.getOperatorsUserHasPermissionsFor(USER, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(List.of(orgUnit2Json));
 
-    assertThat(terminalService.searchTerminalsWithOperator("T3", REQUEST_PURPOSE, USER))
+    assertThat(terminalService.searchTerminalsWithOperatorForUser("T3", REQUEST_PURPOSE, USER))
         .usingRecursiveComparison()
         .isEqualTo(List.of(terminal2JsonWithOperator));
   }
 
   @Test
-  void searchTerminalsWithOperator_whenIndustryUser_noPermission() {
+  void searchTerminalsWithOperatorForUser_whenIndustryUser_noPermission() {
     when(terminalApi.searchTerminals(eq("T3"), eq(Boolean.TRUE),
         any(TerminalsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(List.of(terminal1WithOperator));
 
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, REQUIRED_PERMISSIONS))
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(Collections.emptyList());
 
-    when(organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(USER, REQUIRED_PERMISSIONS))
+    when(organisationUnitService.getOperatorsUserHasPermissionsFor(USER, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(List.of(orgUnit2Json));
 
-    assertThat(terminalService.searchTerminalsWithOperator("T3", REQUEST_PURPOSE, USER))
+    assertThat(terminalService.searchTerminalsWithOperatorForUser("T3", REQUEST_PURPOSE, USER))
         .usingRecursiveComparison()
         .isEqualTo(Collections.emptyList());
   }
 
   @Test
-  void searchTerminalsWithOperator_whenIndustryUser_noOperator() {
+  void searchTerminalsWithOperatorForUser_whenIndustryUser_noOperator() {
     when(terminalApi.searchTerminals(eq("T3"), eq(Boolean.TRUE),
         any(TerminalsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(List.of(terminal1WithNoOperator));
 
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, REQUIRED_PERMISSIONS))
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(Collections.emptyList());
 
-    when(organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(USER, REQUIRED_PERMISSIONS))
+    when(organisationUnitService.getOperatorsUserHasPermissionsFor(USER, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(List.of(orgUnit1Json));
 
-    assertThat(terminalService.searchTerminalsWithOperator("T3", REQUEST_PURPOSE, USER))
+    assertThat(terminalService.searchTerminalsWithOperatorForUser("T3", REQUEST_PURPOSE, USER))
         .usingRecursiveComparison()
         .isEqualTo(Collections.emptyList());
   }

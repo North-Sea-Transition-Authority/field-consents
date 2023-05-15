@@ -10,8 +10,6 @@ class EiaDirectionFormService {
 
   static final String EIA_DIRECTION_SEARCH_PURPOSE = "Get preselected eia screening direction reference";
 
-  static final RestSearchItem EMPTY_PREFILLED_ITEM = new RestSearchItem("", "");
-
   private final PetsApplicationService petsApplicationService;
 
   @Autowired
@@ -21,12 +19,12 @@ class EiaDirectionFormService {
 
   RestSearchItem getPrefilledEiaDirectionRef(Integer satId) {
     if (satId == null) {
-      return EMPTY_PREFILLED_ITEM;
+      return RestSearchItem.EMPTY_REST_SEARCH_ITEM;
     }
 
     return petsApplicationService.findPetsApplicationById(satId, EIA_DIRECTION_SEARCH_PURPOSE)
         .map(petsApplicationJson ->
             new RestSearchItem(petsApplicationJson.getSelectionId(), petsApplicationJson.getSelectionText()))
-        .orElse(EMPTY_PREFILLED_ITEM);
+        .orElse(RestSearchItem.EMPTY_REST_SEARCH_ITEM);
   }
 }

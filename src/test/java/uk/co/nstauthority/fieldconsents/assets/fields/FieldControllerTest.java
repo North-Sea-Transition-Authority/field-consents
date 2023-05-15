@@ -15,7 +15,6 @@ import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperatorButEmptyLicences;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 
-import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -39,7 +38,7 @@ public class FieldControllerTest extends AbstractControllerTest {
 
   @BeforeEach
   void setUp() {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.VIEW_FCS_APPLICATIONS, RolePermission.VIEW_FCS_CONSENTS)))
+    when(permissionService.hasPermission(user, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(true);
   }
 

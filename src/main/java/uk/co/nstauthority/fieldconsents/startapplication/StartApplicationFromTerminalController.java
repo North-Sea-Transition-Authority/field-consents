@@ -25,6 +25,7 @@ import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalWithOperatorJson;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 
 @Controller
@@ -43,19 +44,23 @@ public class StartApplicationFromTerminalController {
 
   private final TerminalService terminalService;
 
+  private final StartApplicationOperatorFormService startApplicationOperatorFormService;
+
   @Autowired
   public StartApplicationFromTerminalController(ApplicationService applicationService,
                                                 StartApplicationControllerHelperService startApplicationControllerHelperService,
                                                 StartApplicationFormValidator formValidator,
                                                 StartApplicationOperatorFormValidator operatorFormValidator,
                                                 OrganisationUnitService organisationUnitService,
-                                                TerminalService terminalService) {
+                                                TerminalService terminalService,
+                                                StartApplicationOperatorFormService startApplicationOperatorFormService) {
     this.applicationService = applicationService;
     this.startApplicationControllerHelperService = startApplicationControllerHelperService;
     this.formValidator = formValidator;
     this.operatorFormValidator = operatorFormValidator;
     this.organisationUnitService = organisationUnitService;
     this.terminalService = terminalService;
+    this.startApplicationOperatorFormService = startApplicationOperatorFormService;
   }
 
   @GetMapping("/start-application")
@@ -113,15 +118,21 @@ public class StartApplicationFromTerminalController {
 
   private ModelAndView getStartApplicationOperatorModelAndView(Integer terminalId) {
     ModelAndView modelAndView = new ModelAndView("fcs/startapplication/operatorForm");
-    modelAndView.addObject("createApplicationUrl",
-        ReverseRouter.route(on(StartApplicationFromTerminalController.class).createNewApplication(
-            terminalId,
-            null,
-            ReverseRouter.emptyBindingResult())
+    modelAndView
+        .addObject("createApplicationUrl",
+            ReverseRouter.route(on(StartApplicationFromTerminalController.class).createNewApplication(
+                terminalId,
+                null,
+                ReverseRouter.emptyBindingResult())
+            )
         )
-    );
-    modelAndView.addObject("cancelUrl",
-        ReverseRouter.route(on(TerminalController.class).manageTerminal(terminalId, null)));
+        .addObject("cancelUrl",
+            ReverseRouter.route(on(TerminalController.class).manageTerminal(terminalId, null)))
+        .addObject("organisationUnitSearchRestUrl",
+            ReverseRouter.route(on(OrganisationUnitRestController.class)
+                .getOrganisationUnitsForCreator(null, null)))
+        .addObject("prefilledOperator",
+            startApplicationOperatorFormService.getPrefilledOperatorForTerminal(terminalId));
     return modelAndView;
   }
 
