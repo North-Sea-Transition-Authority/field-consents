@@ -17,6 +17,7 @@ public record WorkAreaItemDto(
     ApplicationVersionStatus status,
     Integer fieldId,
     String fieldName,
+    Integer terminalId,
     String terminalName,
     ConsentLengthType duration,
     Integer consentYear,

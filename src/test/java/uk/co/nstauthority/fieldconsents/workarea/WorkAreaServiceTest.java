@@ -7,7 +7,7 @@ import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_ID_1;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.ORG_GROUP_ID_1;
-import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaService.FIELD_LOOKUP_PURPOSE;
+import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaFormService.FIELD_LOOKUP_PURPOSE;
 
 import java.util.ArrayList;
 import java.util.Collections;

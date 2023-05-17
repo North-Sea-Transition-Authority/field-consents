@@ -11,6 +11,7 @@ import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
 
 @Repository
 class WorkAreaItemDtoRepository {
@@ -43,6 +44,7 @@ class WorkAreaItemDtoRepository {
             APPLICATION_VERSIONS.STATUS,
             APPLICATION_ASSETS.FIELD_ID,
             APPLICATION_ASSETS.CACHED_FIELD_NAME,
+            APPLICATION_ASSETS.TERMINAL_ID,
             APPLICATION_ASSETS.CACHED_TERMINAL_NAME,
             CONSENT_LENGTHS.CONSENT_LENGTH,
             CONSENT_LENGTHS.ANNUAL_CONSENT_YEAR,
@@ -55,7 +57,9 @@ class WorkAreaItemDtoRepository {
         )
         .from(APPLICATIONS)
         .join(APPLICATION_VERSIONS).onKey(APPLICATION_VERSIONS.APPLICATION_ID)
-        .leftJoin(APPLICATION_ASSETS).onKey(APPLICATION_ASSETS.APPLICATION_VERSION_ID)
+        .leftJoin(APPLICATION_ASSETS)
+        .on(APPLICATION_ASSETS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID)
+            .and(APPLICATION_ASSETS.ASSET_ROLE.eq(AssetRole.PRIMARY.name())))
         .leftJoin(CONSENT_LENGTHS).onKey(CONSENT_LENGTHS.APPLICATION_VERSION_ID)
         .where(APPLICATION_VERSIONS.ID.in(detailsSubQuery))
         .orderBy(greatest(APPLICATION_VERSIONS.SUBMITTED_DATE_TIME, APPLICATION_VERSIONS.CREATED_DATE_TIME).desc())

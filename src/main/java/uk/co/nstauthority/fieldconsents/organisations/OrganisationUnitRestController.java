@@ -14,6 +14,8 @@ public class OrganisationUnitRestController {
 
   static final String ORG_UNIT_SEARCH_PURPOSE = "Organisation units search selector";
 
+  static final String ORG_UNIT_WORK_AREA_PURPOSE = "Organisation units available in work-area";
+
   private final OrganisationUnitService organisationUnitService;
 
   private final SearchSelectorService searchSelectorService;
@@ -34,6 +36,19 @@ public class OrganisationUnitRestController {
             ORG_UNIT_SEARCH_PURPOSE,
             user,
             RolePermission.CREATE_FCS_APPLICATIONS
+        )
+    );
+  }
+
+  @GetMapping("/data-sources/organisation-units-editor")
+  public RestSearchResult getOrganisationUnitsForEditor(@RequestParam(value = "term", required = false) String term,
+                                                        ServiceUserDetail user) {
+    return searchSelectorService.search(term, searchTerm -> organisationUnitService
+        .searchOrganisationUnitsForUser(
+            searchTerm,
+            ORG_UNIT_WORK_AREA_PURPOSE,
+            user,
+            RolePermission.EDIT_FCS_APPLICATIONS
         )
     );
   }

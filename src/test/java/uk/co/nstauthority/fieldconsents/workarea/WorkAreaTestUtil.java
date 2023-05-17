@@ -17,6 +17,7 @@ import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_ID_1;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_NAME_1;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperator;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.TERMINAL_ID_1;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.TERMINAL_NAME_1;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithOperator;
 
@@ -44,6 +45,7 @@ public class WorkAreaTestUtil {
         FIELD_ID_1,
         FIELD_NAME_1,
         null,
+        null,
         ConsentLengthType.ANNUAL,
         ANNUAL_CONSENT_YEAR,
         null,
@@ -69,6 +71,7 @@ public class WorkAreaTestUtil {
         FIELD_NAME_1,
         null,
         null,
+        null,
         ANNUAL_CONSENT_YEAR,
         null,
         null,
@@ -91,6 +94,7 @@ public class WorkAreaTestUtil {
         ApplicationVersionStatus.SUBMITTED,
         null,
         null,
+        TERMINAL_ID_1,
         TERMINAL_NAME_1,
         ConsentLengthType.SHORT_TERM,
         null,
@@ -115,6 +119,7 @@ public class WorkAreaTestUtil {
         ApplicationVersionStatus.SUBMITTED,
         null,
         null,
+        TERMINAL_ID_1,
         TERMINAL_NAME_1,
         ConsentLengthType.LONG_TERM,
         null,

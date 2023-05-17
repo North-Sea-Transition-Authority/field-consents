@@ -23,8 +23,10 @@ import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
+import uk.co.nstauthority.fieldconsents.assets.AssetRestController;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
 
 @ContextConfiguration(classes = WorkAreaController.class)
 class WorkAreaControllerTest extends AbstractControllerTest {
@@ -33,6 +35,9 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @MockBean
   private WorkAreaService workAreaService;
+
+  @MockBean
+  private WorkAreaFormService workAreaFormService;
 
   @SecurityTest
   void getWorkArea_whenNotAuthenticated_thenRedirectedToLogin() throws Exception {
@@ -45,7 +50,12 @@ class WorkAreaControllerTest extends AbstractControllerTest {
     var filter = new WorkAreaFilter();
     filter.setStatuses(List.of(ApplicationVersionStatus.IN_PROGRESS, ApplicationVersionStatus.SUBMITTED));
     filter.setApplicationTypes(List.of(ApplicationType.values()));
-
+    var form = WorkAreaFormServiceTestUtil.getWorkAreaFormForFilterWithFieldAndOperator();
+    when(workAreaFormService.getFromFilter(any(WorkAreaFilter.class))).thenReturn(form);
+    var orgUnitRestSearchItem = WorkAreaFormServiceTestUtil.ORGANISATION_REST_SEARCH_ITEM;
+    when(workAreaFormService.getPrefilledOrganisation(any())).thenReturn(orgUnitRestSearchItem);
+    var assetRestSearchItem = WorkAreaFormServiceTestUtil.FIELD_REST_SEARCH_ITEM;
+    when(workAreaFormService.getPrefilledAsset(any())).thenReturn(assetRestSearchItem);
     var workAreaItems = List.of(WorkAreaTestUtil.getWorkAreaItem());
     when(workAreaService.getWorkAreaItems(any(WorkAreaFilter.class))).thenReturn(workAreaItems);
 
@@ -64,10 +74,16 @@ class WorkAreaControllerTest extends AbstractControllerTest {
         .containsEntry("appStatuses", ApplicationVersionStatus.getWorkAreaOptions())
         .containsEntry("appTypes", ApplicationType.getDisplayableOptions())
         .containsEntry("durationTypes", ConsentLengthType.getWorkAreaOptions())
+        .containsEntry("prefilledAsset", assetRestSearchItem)
+        .containsEntry("assetSearchRestUrl",
+            ReverseRouter.route(on(AssetRestController.class).searchAssetsForUser(null, null)))
+        .containsEntry("prefilledOperator", orgUnitRestSearchItem)
+        .containsEntry("operatorSearchRestUrl",
+            ReverseRouter.route(on(OrganisationUnitRestController.class).getOrganisationUnitsForEditor(null, null)))
         .containsEntry("pageTitle", WORK_AREA_TITLE);
 
-    var form = (WorkAreaForm) model.get("form");
-    assertThat(form).usingRecursiveComparison().isEqualTo(WorkAreaForm.from(filter));
+    var actualForm = (WorkAreaForm) model.get("form");
+    assertThat(actualForm).usingRecursiveComparison().isEqualTo(form);
   }
 
   @Test

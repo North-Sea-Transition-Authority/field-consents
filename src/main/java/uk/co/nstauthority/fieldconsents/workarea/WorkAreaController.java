@@ -14,8 +14,10 @@ import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
+import uk.co.nstauthority.fieldconsents.assets.AssetRestController;
 import uk.co.nstauthority.fieldconsents.authorisation.AccessibleByServiceUsers;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
 
 @Controller
 // the ordering of the mappings is important here otherwise the top navigation always highlights the work area
@@ -27,10 +29,13 @@ public class WorkAreaController {
 
   private final WorkAreaService workAreaService;
 
+  private final WorkAreaFormService workAreaFormService;
+
   public static final String WORK_AREA_TITLE = "Work area";
 
-  public WorkAreaController(WorkAreaService workAreaService) {
+  public WorkAreaController(WorkAreaService workAreaService, WorkAreaFormService workAreaFormService) {
     this.workAreaService = workAreaService;
+    this.workAreaFormService = workAreaFormService;
   }
 
   @GetMapping
@@ -39,7 +44,9 @@ public class WorkAreaController {
     var appStatuses = ApplicationVersionStatus.getWorkAreaOptions();
     var appTypes = ApplicationType.getDisplayableOptions();
     var durationTypes = ConsentLengthType.getWorkAreaOptions();
-    var form = WorkAreaForm.from(filter);
+    var form = workAreaFormService.getFromFilter(filter);
+    var prefilledOperator = workAreaFormService.getPrefilledOrganisation(form.getOperatorId());
+    var prefilledAsset = workAreaFormService.getPrefilledAsset(form.getAssetKey());
 
     return new ModelAndView("fcs/workarea/workArea")
         .addObject("workAreaItems", workAreaItems)
@@ -48,6 +55,12 @@ public class WorkAreaController {
         .addObject("appStatuses", appStatuses)
         .addObject("appTypes", appTypes)
         .addObject("durationTypes", durationTypes)
+        .addObject("prefilledOperator", prefilledOperator)
+        .addObject("operatorSearchRestUrl",
+            ReverseRouter.route(on(OrganisationUnitRestController.class).getOrganisationUnitsForEditor(null, null)))
+        .addObject("prefilledAsset", prefilledAsset)
+        .addObject("assetSearchRestUrl",
+            ReverseRouter.route(on(AssetRestController.class).searchAssetsForUser(null, null)))
         .addObject("form", form)
         .addObject("pageTitle", WORK_AREA_TITLE);
   }

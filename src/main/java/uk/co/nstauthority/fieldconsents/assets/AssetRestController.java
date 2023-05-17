@@ -23,8 +23,8 @@ public class AssetRestController {
   }
 
   @GetMapping("/data-sources/assets")
-  RestSearchResult searchAssetsForUser(@RequestParam("term") String assetName,
-                                       ServiceUserDetail user) {
+  public RestSearchResult searchAssetsForUser(@RequestParam(value = "term", required = false) String assetName,
+                                              ServiceUserDetail user) {
     return searchSelectorService.search(
         assetName,
         searchAssetName -> assetService.searchAssetsForUser(searchAssetName, user)

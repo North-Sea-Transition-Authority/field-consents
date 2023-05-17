@@ -6,15 +6,17 @@
   pageSize=PageSize.FULL_WIDTH
 >
   <@fdsSearch.searchPage>
-    <@fdsSearch.searchFilter>
+    <@fdsSearch.searchFilter oneThirdWidth=true>
       <@fdsSearch.searchFilterList clearFilterUrl=springUrl(clearFiltersUrl) filterButtonClass="govuk-button govuk-button--secondary">
         <#--<@referenceFilter form=form/>--> <#--TODO: Uncomment this out when case reference ticket FCS-326 is resolved -->
         <@statusFilter form=form statusCheckboxes=appStatuses/>
         <@applicationTypeFilter form=form applicationTypeCheckboxes=appTypes/>
         <@durationFilter form=form durationCheckboxes=durationTypes/>
+        <@assetFilter form=form prefilledAsset=prefilledAsset assetSearchRestUrl=assetSearchRestUrl/>
+        <@operatorFilter form=form prefilledOperator=prefilledOperator operatorSearchRestUrl=operatorSearchRestUrl/>
       </@fdsSearch.searchFilterList>
     </@fdsSearch.searchFilter>
-    <@fdsSearch.searchPageContent>
+    <@fdsSearch.searchPageContent twoThirdsWidth=true>
       <@fdsResultList.resultList resultCount=workAreaItems?size>
         <#list workAreaItems as workAreaItem>
           <@fcsWorkAreaItem workAreaItem=workAreaItem/>
@@ -57,6 +59,30 @@
     <@fdsSearch.searchCheckboxes
       path="form.durationTypes"
       checkboxes=durationCheckboxes
+    />
+  </@fdsSearch.searchFilterItem>
+</#macro>
+
+<#macro assetFilter form prefilledAsset assetSearchRestUrl>
+  <@fdsSearch.searchFilterItem itemName="Primary field / facility" expanded=prefilledAsset.id()?has_content>
+    <@fdsSearchSelector.searchSelectorRest
+      path="form.assetKey"
+      restUrl=springUrl(assetSearchRestUrl)
+      labelText=""
+      preselectedItems={prefilledAsset.id() : prefilledAsset.text()}
+      inputClass="govuk-input--width-10"
+    />
+  </@fdsSearch.searchFilterItem>
+</#macro>
+
+<#macro operatorFilter form prefilledOperator operatorSearchRestUrl>
+  <@fdsSearch.searchFilterItem itemName="Primary operator" expanded=prefilledOperator.id()?has_content>
+    <@fdsSearchSelector.searchSelectorRest
+      path="form.operatorId"
+      restUrl=springUrl(operatorSearchRestUrl)
+      labelText=""
+      preselectedItems={prefilledOperator.id() : prefilledOperator.text()}
+      inputClass="govuk-input--width-10"
     />
   </@fdsSearch.searchFilterItem>
 </#macro>

@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.workarea;
 
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_VERSIONS;
+import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaFormService.FIELD_LOOKUP_PURPOSE;
 
 import java.util.Collections;
 import java.util.List;
@@ -31,8 +32,6 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
 @Service
 public class WorkAreaService {
 
-  public static final String FIELD_LOOKUP_PURPOSE = "Lookup field to get the asset location for the work-area";
-
   private final TeamService teamService;
 
   private final UserDetailService userDetailService;
@@ -56,7 +55,8 @@ public class WorkAreaService {
                          WorkAreaItemDtoRepository workAreaItemDtoRepository,
                          OrganisationGroupQueryService organisationGroupQueryService,
                          EnergyPortalUserService energyPortalUserService,
-                         ApplicationService applicationService, ApplicationVersionService applicationVersionService,
+                         ApplicationService applicationService,
+                         ApplicationVersionService applicationVersionService,
                          FieldService fieldService) {
     this.teamService = teamService;
     this.userDetailService = userDetailService;

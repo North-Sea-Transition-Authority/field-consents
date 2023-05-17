@@ -7,10 +7,12 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthT
 
 public class WorkAreaForm {
 
-  private String reference;
-  private List<ApplicationVersionStatus> statuses;
-  private List<ApplicationType> applicationTypes;
-  private List<ConsentLengthType> durationTypes;
+  String reference;
+  List<ApplicationVersionStatus> statuses;
+  List<ApplicationType> applicationTypes;
+  List<ConsentLengthType> durationTypes;
+  Integer operatorId;
+  String assetKey;
 
   public String getReference() {
     return reference;
@@ -45,12 +47,19 @@ public class WorkAreaForm {
     this.durationTypes = durationTypes;
   }
 
-  public static WorkAreaForm from(WorkAreaFilter filter) {
-    var form = new WorkAreaForm();
-    form.setReference(filter.getReference());
-    form.setStatuses(filter.getStatuses());
-    form.setApplicationTypes(filter.getApplicationTypes());
-    form.setDurationTypes(filter.getDurationTypes());
-    return form;
+  public Integer getOperatorId() {
+    return operatorId;
+  }
+
+  public void setOperatorId(Integer operatorId) {
+    this.operatorId = operatorId;
+  }
+
+  public String getAssetKey() {
+    return assetKey;
+  }
+
+  public void setAssetKey(String assetKey) {
+    this.assetKey = assetKey;
   }
 }

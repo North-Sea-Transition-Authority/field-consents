@@ -56,7 +56,6 @@ public class AssetService {
     } else {
       throw new RuntimeException("Not a valid AssetKey: " + assetKey);
     }
-
   }
 
   public List<AssetJson> searchFields(String fieldName) {
