@@ -27,12 +27,9 @@ public class FieldTestUtil {
   public static final FieldStatusJson FIELD_3_STATUS =
       new FieldStatusJson(FieldStatus.STATUS700, "700 - Producing");
 
-  public static final FieldGeographicAreaJson FIELD_1_GEOGRAPHIC_AREA =
-      new FieldGeographicAreaJson(FieldGeographicArea.CNS, "Central North Sea");
-  public static final FieldGeographicAreaJson FIELD_2_GEOGRAPHIC_AREA =
-      new FieldGeographicAreaJson(FieldGeographicArea.SNS, "Southern North Sea");
-  public static final FieldGeographicAreaJson FIELD_3_GEOGRAPHIC_AREA =
-      new FieldGeographicAreaJson(FieldGeographicArea.NNS, "Northern North Sea");
+  public static final GeographicArea FIELD_1_GEOGRAPHIC_AREA = GeographicArea.valueOf(FieldGeographicArea.CNS.name());
+  public static final GeographicArea FIELD_2_GEOGRAPHIC_AREA = GeographicArea.valueOf(FieldGeographicArea.SNS.name());
+  public static final GeographicArea FIELD_3_GEOGRAPHIC_AREA = GeographicArea.valueOf(FieldGeographicArea.NNS.name());
 
   public static final FieldShoreJson FIELD_1_SHORE_JSON =
       new FieldShoreJson(FieldShore.OFFSHORE, "Offshore");
@@ -46,16 +43,16 @@ public class FieldTestUtil {
   public static Field field1 = Field.newBuilder().fieldId(FIELD_ID_1).fieldName(FIELD_NAME_1)
       .status(FIELD_1_STATUS.status())
       .statusDisplayName(FIELD_1_STATUS.statusDisplayName())
-      .geographicArea(FIELD_1_GEOGRAPHIC_AREA.geographicArea())
-      .geographicAreaDisplayName(FIELD_1_GEOGRAPHIC_AREA.geographicAreaDisplayName())
+      .geographicArea(FieldGeographicArea.valueOf(FIELD_1_GEOGRAPHIC_AREA.name()))
+      .geographicAreaDisplayName(FIELD_1_GEOGRAPHIC_AREA.getDisplayName())
       .shore(FIELD_1_SHORE_JSON.shore())
       .shoreDisplayName(FIELD_1_SHORE_JSON.shoreDisplayName())
       .build();
   public static Field field1WithOperator = Field.newBuilder().fieldId(FIELD_ID_1).fieldName(FIELD_NAME_1)
       .status(FIELD_1_STATUS.status())
       .statusDisplayName(FIELD_1_STATUS.statusDisplayName())
-      .geographicArea(FIELD_1_GEOGRAPHIC_AREA.geographicArea())
-      .geographicAreaDisplayName(FIELD_1_GEOGRAPHIC_AREA.geographicAreaDisplayName())
+      .geographicArea(FieldGeographicArea.valueOf(FIELD_1_GEOGRAPHIC_AREA.name()))
+      .geographicAreaDisplayName(FIELD_1_GEOGRAPHIC_AREA.getDisplayName())
       .shore(FIELD_1_SHORE_JSON.shore())
       .shoreDisplayName(FIELD_1_SHORE_JSON.shoreDisplayName())
       .fieldOperator(OrganisationUnitTestUtil.orgUnit1).build();
@@ -63,8 +60,8 @@ public class FieldTestUtil {
   public static Field field1WithOperatorAndLicences = Field.newBuilder().fieldId(FIELD_ID_1).fieldName(FIELD_NAME_1)
       .status(FIELD_1_STATUS.status())
       .statusDisplayName(FIELD_1_STATUS.statusDisplayName())
-      .geographicArea(FIELD_1_GEOGRAPHIC_AREA.geographicArea())
-      .geographicAreaDisplayName(FIELD_1_GEOGRAPHIC_AREA.geographicAreaDisplayName())
+      .geographicArea(FieldGeographicArea.valueOf(FIELD_1_GEOGRAPHIC_AREA.name()))
+      .geographicAreaDisplayName(FIELD_1_GEOGRAPHIC_AREA.getDisplayName())
       .shore(FIELD_1_SHORE_JSON.shore())
       .shoreDisplayName(FIELD_1_SHORE_JSON.shoreDisplayName())
       .fieldOperator(OrganisationUnitTestUtil.orgUnit1)
@@ -74,8 +71,8 @@ public class FieldTestUtil {
   public static Field field1WithOperatorButEmptyLicences = Field.newBuilder().fieldId(FIELD_ID_1).fieldName(FIELD_NAME_1)
       .status(FIELD_1_STATUS.status())
       .statusDisplayName(FIELD_1_STATUS.statusDisplayName())
-      .geographicArea(FIELD_1_GEOGRAPHIC_AREA.geographicArea())
-      .geographicAreaDisplayName(FIELD_1_GEOGRAPHIC_AREA.geographicAreaDisplayName())
+      .geographicArea(FieldGeographicArea.valueOf(FIELD_1_GEOGRAPHIC_AREA.name()))
+      .geographicAreaDisplayName(FIELD_1_GEOGRAPHIC_AREA.getDisplayName())
       .shore(FIELD_1_SHORE_JSON.shore())
       .shoreDisplayName(FIELD_1_SHORE_JSON.shoreDisplayName())
       .fieldOperator(OrganisationUnitTestUtil.orgUnit1)
@@ -85,8 +82,8 @@ public class FieldTestUtil {
   public static Field field1WithNoOperatorButLicences = Field.newBuilder().fieldId(FIELD_ID_1).fieldName(FIELD_NAME_1)
       .status(FIELD_1_STATUS.status())
       .statusDisplayName(FIELD_1_STATUS.statusDisplayName())
-      .geographicArea(FIELD_1_GEOGRAPHIC_AREA.geographicArea())
-      .geographicAreaDisplayName(FIELD_1_GEOGRAPHIC_AREA.geographicAreaDisplayName())
+      .geographicArea(FieldGeographicArea.valueOf(FIELD_1_GEOGRAPHIC_AREA.name()))
+      .geographicAreaDisplayName(FIELD_1_GEOGRAPHIC_AREA.getDisplayName())
       .shore(FIELD_1_SHORE_JSON.shore())
       .shoreDisplayName(FIELD_1_SHORE_JSON.shoreDisplayName())
       .fieldOperator(null)
@@ -132,8 +129,8 @@ public class FieldTestUtil {
   public static Field field2 = Field.newBuilder().fieldId(FIELD_ID_2).fieldName(FIELD_NAME_2)
       .status(FIELD_2_STATUS.status())
       .statusDisplayName(FIELD_2_STATUS.statusDisplayName())
-      .geographicArea(FIELD_2_GEOGRAPHIC_AREA.geographicArea())
-      .geographicAreaDisplayName(FIELD_2_GEOGRAPHIC_AREA.geographicAreaDisplayName())
+      .geographicArea(FieldGeographicArea.valueOf(FIELD_2_GEOGRAPHIC_AREA.name()))
+      .geographicAreaDisplayName(FIELD_2_GEOGRAPHIC_AREA.getDisplayName())
       .shore(FIELD_2_SHORE_JSON.shore())
       .shoreDisplayName(FIELD_2_SHORE_JSON.shoreDisplayName())
       .build();
@@ -141,8 +138,8 @@ public class FieldTestUtil {
   public static Field field2WithOperator = Field.newBuilder().fieldId(FIELD_ID_2).fieldName(FIELD_NAME_2)
       .status(FIELD_2_STATUS.status())
       .statusDisplayName(FIELD_2_STATUS.statusDisplayName())
-      .geographicArea(FIELD_2_GEOGRAPHIC_AREA.geographicArea())
-      .geographicAreaDisplayName(FIELD_2_GEOGRAPHIC_AREA.geographicAreaDisplayName())
+      .geographicArea(FieldGeographicArea.valueOf(FIELD_2_GEOGRAPHIC_AREA.name()))
+      .geographicAreaDisplayName(FIELD_2_GEOGRAPHIC_AREA.getDisplayName())
       .shore(FIELD_2_SHORE_JSON.shore())
       .shoreDisplayName(FIELD_2_SHORE_JSON.shoreDisplayName())
       .fieldOperator(OrganisationUnitTestUtil.orgUnit2)
@@ -151,8 +148,8 @@ public class FieldTestUtil {
   public static Field field2WithOperatorAndLicences = Field.newBuilder().fieldId(FIELD_ID_2).fieldName(FIELD_NAME_2)
       .status(FIELD_2_STATUS.status())
       .statusDisplayName(FIELD_2_STATUS.statusDisplayName())
-      .geographicArea(FIELD_2_GEOGRAPHIC_AREA.geographicArea())
-      .geographicAreaDisplayName(FIELD_2_GEOGRAPHIC_AREA.geographicAreaDisplayName())
+      .geographicArea(FieldGeographicArea.valueOf(FIELD_2_GEOGRAPHIC_AREA.name()))
+      .geographicAreaDisplayName(FIELD_2_GEOGRAPHIC_AREA.getDisplayName())
       .shore(FIELD_2_SHORE_JSON.shore())
       .shoreDisplayName(FIELD_2_SHORE_JSON.shoreDisplayName())
       .fieldOperator(OrganisationUnitTestUtil.orgUnit2)
@@ -181,8 +178,8 @@ public class FieldTestUtil {
   public static Field field3 = Field.newBuilder().fieldId(FIELD_ID_3).fieldName(FIELD_NAME_3)
       .status(FIELD_3_STATUS.status())
       .statusDisplayName(FIELD_3_STATUS.statusDisplayName())
-      .geographicArea(FIELD_3_GEOGRAPHIC_AREA.geographicArea())
-      .geographicAreaDisplayName(FIELD_3_GEOGRAPHIC_AREA.geographicAreaDisplayName())
+      .geographicArea(FieldGeographicArea.valueOf(FIELD_3_GEOGRAPHIC_AREA.name()))
+      .geographicAreaDisplayName(FIELD_3_GEOGRAPHIC_AREA.getDisplayName())
       .shore(FIELD_3_SHORE_JSON.shore())
       .shoreDisplayName(FIELD_3_SHORE_JSON.shoreDisplayName())
       .build();
@@ -190,8 +187,8 @@ public class FieldTestUtil {
   public static Field field3WithOperator = Field.newBuilder().fieldId(FIELD_ID_3).fieldName(FIELD_NAME_3)
       .status(FIELD_3_STATUS.status())
       .statusDisplayName(FIELD_3_STATUS.statusDisplayName())
-      .geographicArea(FIELD_3_GEOGRAPHIC_AREA.geographicArea())
-      .geographicAreaDisplayName(FIELD_3_GEOGRAPHIC_AREA.geographicAreaDisplayName())
+      .geographicArea(FieldGeographicArea.valueOf(FIELD_3_GEOGRAPHIC_AREA.name()))
+      .geographicAreaDisplayName(FIELD_3_GEOGRAPHIC_AREA.getDisplayName())
       .shore(FIELD_3_SHORE_JSON.shore())
       .shoreDisplayName(FIELD_3_SHORE_JSON.shoreDisplayName())
       .fieldOperator(OrganisationUnitTestUtil.orgUnit3)

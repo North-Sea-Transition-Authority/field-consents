@@ -8,12 +8,13 @@
   <@fdsSearch.searchPage>
     <@fdsSearch.searchFilter oneThirdWidth=true>
       <@fdsSearch.searchFilterList clearFilterUrl=springUrl(clearFiltersUrl) filterButtonClass="govuk-button govuk-button--secondary">
-        <#--<@referenceFilter form=form/>--> <#--TODO: Uncomment this out when case reference ticket FCS-326 is resolved -->
+        <@referenceNumberFilter form=form/>
         <@statusFilter form=form statusCheckboxes=appStatuses/>
         <@applicationTypeFilter form=form applicationTypeCheckboxes=appTypes/>
         <@durationFilter form=form durationCheckboxes=durationTypes/>
         <@assetFilter form=form prefilledAsset=prefilledAsset assetSearchRestUrl=assetSearchRestUrl/>
         <@operatorFilter form=form prefilledOperator=prefilledOperator operatorSearchRestUrl=operatorSearchRestUrl/>
+        <@geographicAreaFilter form=form geographicAreaCheckboxes=geographicAreas/>
       </@fdsSearch.searchFilterList>
     </@fdsSearch.searchFilter>
     <@fdsSearch.searchPageContent twoThirdsWidth=true>
@@ -26,12 +27,12 @@
   </@fdsSearch.searchPage>
 </@defaultPage>
 
-<#macro referenceFilter form>
-  <@fdsSearch.searchFilterItem itemName="Reference" expanded=form.referenceSearchTerm?has_content>
+<#macro referenceNumberFilter form>
+  <@fdsSearch.searchFilterItem itemName="Reference number" expanded=form.referenceSearchTerm?has_content>
     <@fdsSearch.searchTextInput
-      path="form.referenceSearchTerm"
+      path="form.referenceNumber"
       labelText=""
-      suffixScreenReaderPrompt="Application reference"
+      suffixScreenReaderPrompt="Application reference number"
     />
   </@fdsSearch.searchFilterItem>
 </#macro>
@@ -87,6 +88,15 @@
   </@fdsSearch.searchFilterItem>
 </#macro>
 
+<#macro geographicAreaFilter form geographicAreaCheckboxes>
+  <@fdsSearch.searchFilterItem itemName="Sea location" expanded=form.geographicAreas?has_content>
+    <@fdsSearch.searchCheckboxes
+      path="form.geographicAreas"
+      checkboxes=geographicAreaCheckboxes
+    />
+  </@fdsSearch.searchFilterItem>
+</#macro>
+
 <#macro fcsWorkAreaItem workAreaItem>
   <@fdsResultList.resultListItem
     linkHeadingText=workAreaItem.reference()
@@ -98,7 +108,7 @@
           ${workAreaItem.type()} <br/> ${workAreaItem.duration()}
         </#assign>
         <#assign location>
-          ${workAreaItem.asset()} <br/> ${workAreaItem.seaLocation()}
+          ${workAreaItem.asset()} <br/> ${workAreaItem.geographicArea()}
         </#assign>
         <#assign otherInformation>
           ${workAreaItem.submittedDateTime()} <br/> ${workAreaItem.submittedBy()}

@@ -3,14 +3,22 @@ package uk.co.nstauthority.fieldconsents.workarea;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_ID_1;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_ID_2;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_ID_3;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2Json;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field3Json;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.TERMINAL_ID_1;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationAssets.APPLICATION_ASSETS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.Applications.APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ConsentLengths.CONSENT_LENGTHS;
+import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaFormService.FIELD_LOOKUP_PURPOSE;
+import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaFormServiceTestUtil.APPLICATION_NO;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaFormServiceTestUtil.ORGANISATION_UNIT_ID;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,15 +27,24 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationFieldService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.assets.AssetTestUtil;
+import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
+import uk.co.nstauthority.fieldconsents.assets.fields.GeographicArea;
 
 @ExtendWith(MockitoExtension.class)
 class WorkAreaFilterServiceTest {
 
   @Mock
   private AssetService assetService;
+
+  @Mock
+  private FieldService fieldService;
+
+  @Mock
+  private ApplicationFieldService applicationFieldService;
 
   private WorkAreaFilterService workAreaFilterService;
 
@@ -36,7 +53,12 @@ class WorkAreaFilterServiceTest {
 
   @BeforeEach
   void setup() {
-    workAreaFilterService = new WorkAreaFilterService(assetService);
+    workAreaFilterService = new WorkAreaFilterService(
+        assetService,
+        fieldService,
+        applicationFieldService
+    );
+
     filter = new WorkAreaFilter();
     form = new WorkAreaForm();
   }
@@ -133,5 +155,51 @@ class WorkAreaFilterServiceTest {
     assertThat(conditions).containsExactly(
         APPLICATION_VERSIONS.PRIMARY_OPERATOR_OU_ID.eq(ORGANISATION_UNIT_ID)
     );
+  }
+
+  @Test
+  void getConditions_ReferenceNumberSelected() {
+    form.setReferenceNumber(APPLICATION_NO);
+    filter.update(form);
+
+    var conditions = workAreaFilterService.getConditions(filter);
+
+    assertThat(conditions).containsExactly(
+        APPLICATIONS.APPLICATION_NO.cast(String.class).eq(APPLICATION_NO)
+    );
+  }
+
+  @Test
+  void getConditions_SeaLocationsSelected() {
+    form.setGeographicAreas(List.of(GeographicArea.CNS, GeographicArea.SNS));
+    filter.update(form);
+
+    var distinctPrimaryFields = List.of(FIELD_ID_1, FIELD_ID_2);
+    var primaryFieldJsonsInGeographicAreas = List.of(field1Json, field2Json);
+
+    when(applicationFieldService.findDistinctPrimaryFieldIds()).thenReturn(distinctPrimaryFields);
+    when(fieldService.findFieldsByIds(distinctPrimaryFields, FIELD_LOOKUP_PURPOSE))
+        .thenReturn(primaryFieldJsonsInGeographicAreas);
+
+    var conditions = workAreaFilterService.getConditions(filter);
+
+    assertThat(conditions).containsExactly(APPLICATION_ASSETS.FIELD_ID.in(distinctPrimaryFields));
+  }
+
+  @Test
+  void getConditions_twoGeographicAreas_conditionContainsOnlyThoseFieldsThatMatchTheFilter() {
+    form.setGeographicAreas(List.of(GeographicArea.CNS, GeographicArea.SNS));
+    filter.update(form);
+
+    var distinctPrimaryFieldIds = List.of(FIELD_ID_1, FIELD_ID_2, FIELD_ID_3);
+    var primaryFieldJsons = List.of(field1Json, field2Json, field3Json);
+    when(applicationFieldService.findDistinctPrimaryFieldIds()).thenReturn(distinctPrimaryFieldIds);
+    when(fieldService.findFieldsByIds(distinctPrimaryFieldIds, FIELD_LOOKUP_PURPOSE))
+        .thenReturn(primaryFieldJsons);
+    var fieldIdsInFilterGeographicAreas = List.of(FIELD_ID_1, FIELD_ID_2);
+
+    var conditions = workAreaFilterService.getConditions(filter);
+
+    assertThat(conditions).containsExactly(APPLICATION_ASSETS.FIELD_ID.in(fieldIdsInFilterGeographicAreas));
   }
 }

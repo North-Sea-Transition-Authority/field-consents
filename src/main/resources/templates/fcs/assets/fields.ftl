@@ -38,7 +38,7 @@
   <@fdsDataItems.dataItem>
     <@fdsDataItems.dataValues key="Operator" value=operatorName/>
     <@fdsDataItems.dataValues key="Status" value=fieldJson.getStatusDisplayName()/>
-    <@fdsDataItems.dataValues key="Geographic area" value=fieldJson.getGeographicAreaDisplayName()/>
+    <@fdsDataItems.dataValues key="Geographic area" value=fieldJson.getGeographicArea().getDisplayName()/>
     <@fdsDataItems.dataValues key="Licences" value=licences/>
   </@fdsDataItems.dataItem>
   <#if startApplicationEnabled>

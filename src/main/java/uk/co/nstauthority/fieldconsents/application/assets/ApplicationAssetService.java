@@ -157,4 +157,8 @@ public class ApplicationAssetService {
   public Optional<ApplicationAsset> findByApplicationVersionAndFieldId(ApplicationVersion applicationVersion, Integer fieldId) {
     return applicationAssetRepository.findByApplicationVersionAndFieldId(applicationVersion, fieldId);
   }
+
+  public List<ApplicationAsset> findAllPrimaryFieldAssets() {
+    return applicationAssetRepository.findAllByAssetRoleAndFieldIdIsNotNull(AssetRole.PRIMARY);
+  }
 }

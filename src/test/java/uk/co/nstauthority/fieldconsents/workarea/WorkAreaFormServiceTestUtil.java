@@ -27,7 +27,7 @@ public class WorkAreaFormServiceTestUtil {
 
   public static final String TERMINAL_ASSET_KEY = TERMINAL_ASSET_ID_STRING + AssetType.TERMINAL.name();
 
-  public static final RestSearchItem TERMINAL_REST_SEARCH_ITEM = new RestSearchItem(TERMINAL_ASSET_ID_STRING, AssetType.TERMINAL.name());
+  public static final String APPLICATION_NO = "10";
 
   static WorkAreaFilter getDefaultFilter() {
     var workAreaFilter = new WorkAreaFilter();

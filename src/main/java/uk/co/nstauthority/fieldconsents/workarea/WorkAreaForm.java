@@ -4,22 +4,24 @@ import java.util.List;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
+import uk.co.nstauthority.fieldconsents.assets.fields.GeographicArea;
 
 public class WorkAreaForm {
 
-  String reference;
+  String referenceNumber;
   List<ApplicationVersionStatus> statuses;
   List<ApplicationType> applicationTypes;
   List<ConsentLengthType> durationTypes;
   Integer operatorId;
   String assetKey;
+  List<GeographicArea> geographicAreas;
 
-  public String getReference() {
-    return reference;
+  public String getReferenceNumber() {
+    return referenceNumber;
   }
 
-  public void setReference(String reference) {
-    this.reference = reference;
+  public void setReferenceNumber(String reference) {
+    this.referenceNumber = reference;
   }
 
   public List<ApplicationVersionStatus> getStatuses() {
@@ -61,5 +63,13 @@ public class WorkAreaForm {
 
   public void setAssetKey(String assetKey) {
     this.assetKey = assetKey;
+  }
+
+  public List<GeographicArea> getGeographicAreas() {
+    return geographicAreas;
+  }
+
+  public void setGeographicAreas(List<GeographicArea> geographicArea) {
+    this.geographicAreas = geographicArea;
   }
 }

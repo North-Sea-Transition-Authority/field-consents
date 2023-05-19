@@ -15,6 +15,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.assets.AssetRestController;
+import uk.co.nstauthority.fieldconsents.assets.fields.GeographicArea;
 import uk.co.nstauthority.fieldconsents.authorisation.AccessibleByServiceUsers;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
@@ -47,6 +48,7 @@ public class WorkAreaController {
     var form = workAreaFormService.getFromFilter(filter);
     var prefilledOperator = workAreaFormService.getPrefilledOrganisation(form.getOperatorId());
     var prefilledAsset = workAreaFormService.getPrefilledAsset(form.getAssetKey());
+    var geographicAreas = GeographicArea.getDisplayableOptions();
 
     return new ModelAndView("fcs/workarea/workArea")
         .addObject("workAreaItems", workAreaItems)
@@ -61,6 +63,7 @@ public class WorkAreaController {
         .addObject("prefilledAsset", prefilledAsset)
         .addObject("assetSearchRestUrl",
             ReverseRouter.route(on(AssetRestController.class).searchAssetsForUser(null, null)))
+        .addObject("geographicAreas", geographicAreas)
         .addObject("form", form)
         .addObject("pageTitle", WORK_AREA_TITLE);
   }

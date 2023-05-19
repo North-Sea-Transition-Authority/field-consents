@@ -10,8 +10,6 @@ public class WorkAreaFormService {
 
   public static final String FIELD_LOOKUP_PURPOSE = "Lookup field for the work-area";
 
-  public static final String TERMINAL_LOOKUP_PURPOSE = "Lookup terminal for the work-area";
-
   public static final String ORGANISATION_UNIT_LOOKUP_PURPOSE = "Lookup organisation unit for the work-area";
 
   private final AssetService assetService;
@@ -26,12 +24,13 @@ public class WorkAreaFormService {
 
   public WorkAreaForm getFromFilter(WorkAreaFilter filter) {
     var form = new WorkAreaForm();
-    form.setReference(filter.getReference());
+    form.setReferenceNumber(filter.getReferenceNumber());
     form.setStatuses(filter.getStatuses());
     form.setApplicationTypes(filter.getApplicationTypes());
     form.setDurationTypes(filter.getDurationTypes());
     form.setAssetKey(filter.getAssetKey());
     form.setOperatorId(filter.getOperatorId());
+    form.setGeographicAreas(filter.getGeographicAreas());
     return form;
   }
 

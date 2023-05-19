@@ -11,20 +11,22 @@ public class WorkAreaFilter extends WorkAreaForm implements Serializable {
   private static final long serialVersionUID = 8791625085927579692L;
 
   public void clearFilter() {
-    reference = null;
+    referenceNumber = null;
     statuses = null;
     applicationTypes = null;
     durationTypes = null;
     assetKey = null;
     operatorId = null;
+    geographicAreas = null;
   }
 
   public void update(WorkAreaForm form) {
-    reference = form.getReference();
+    referenceNumber = form.getReferenceNumber();
     statuses = form.getStatuses();
     applicationTypes = form.getApplicationTypes();
     durationTypes = form.getDurationTypes();
     assetKey = form.getAssetKey();
     operatorId = form.getOperatorId();
+    geographicAreas = form.getGeographicAreas();
   }
 }

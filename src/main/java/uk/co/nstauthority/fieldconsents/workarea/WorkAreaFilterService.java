@@ -4,6 +4,7 @@ import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.Application
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.Applications.APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ConsentLengths.CONSENT_LENGTHS;
+import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaFormService.FIELD_LOOKUP_PURPOSE;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,18 +13,30 @@ import org.jooq.Condition;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationFieldService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
+import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
+import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
+import uk.co.nstauthority.fieldconsents.assets.fields.GeographicArea;
 
 @Service
 public class WorkAreaFilterService {
 
   private final AssetService assetService;
 
-  public WorkAreaFilterService(AssetService assetService) {
+  private final FieldService fieldService;
+
+  private final ApplicationFieldService applicationFieldService;
+
+  public WorkAreaFilterService(AssetService assetService,
+                               FieldService fieldService,
+                               ApplicationFieldService applicationFieldService) {
     this.assetService = assetService;
+    this.fieldService = fieldService;
+    this.applicationFieldService = applicationFieldService;
   }
 
   ArrayList<Condition> getConditions(WorkAreaFilter filter)  {
@@ -33,10 +46,9 @@ public class WorkAreaFilterService {
       conditions.add(getStatusQueryCondition(filter.getStatuses()));
     }
 
-    // TODO: uncomment this on FCS-326: Add work-area filter for application reference and sea location
-    //    if (StringUtils.isNotBlank(filter.getReference())) {
-    //      conditions.add(getReferenceQueryCondition(filter.getReference()));
-    //    }
+    if (Objects.nonNull(filter.getReferenceNumber())) {
+      conditions.add(getReferenceNumberQueryCondition(filter.getReferenceNumber()));
+    }
 
     if (Objects.nonNull(filter.getApplicationTypes())) {
       conditions.add(getApplicationTypesQueryCondition(filter.getApplicationTypes()));
@@ -55,7 +67,14 @@ public class WorkAreaFilterService {
       assetJsonOptional.ifPresent(assetJson -> conditions.add(getAssetCondition(assetJson)));
     }
 
+    if (Objects.nonNull(filter.getGeographicAreas())) {
+      conditions.add(getGeographicAreasQueryCondition(filter.getGeographicAreas()));
+    }
     return conditions;
+  }
+
+  private Condition getReferenceNumberQueryCondition(String referenceNumber) {
+    return APPLICATIONS.APPLICATION_NO.cast(String.class).eq(referenceNumber);
   }
 
   private Condition getStatusQueryCondition(List<ApplicationVersionStatus> statuses) {
@@ -65,11 +84,6 @@ public class WorkAreaFilterService {
         .toList();
     return APPLICATION_VERSIONS.STATUS.in(statusStrings);
   }
-
-  // TODO: Implement this FCS-326: Add work-area filter for application reference and sea location
-  //    private Condition getReferenceQueryCondition(String reference) {
-  //      return null;
-  //    }
 
   private Condition getApplicationTypesQueryCondition(List<ApplicationType> applicationTypes) {
     var applicationTypeStrings = applicationTypes
@@ -85,6 +99,19 @@ public class WorkAreaFilterService {
         .map(ConsentLengthType::getEnumName)
         .toList();
     return CONSENT_LENGTHS.CONSENT_LENGTH.in(consentLengthStrings);
+  }
+
+  private Condition getGeographicAreasQueryCondition(List<GeographicArea> geographicAreas) {
+    var primaryFieldIdsInGeographicAreas = fieldService
+        .findFieldsByIds(
+            applicationFieldService.findDistinctPrimaryFieldIds(),
+            FIELD_LOOKUP_PURPOSE
+        )
+        .stream()
+        .filter(fieldJson -> geographicAreas.contains(fieldJson.getGeographicArea()))
+        .map(FieldJson::getId)
+        .toList();
+    return APPLICATION_ASSETS.FIELD_ID.in(primaryFieldIdsInGeographicAreas);
   }
 
   private Condition getAssetCondition(AssetJson assetJson) {

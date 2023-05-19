@@ -21,6 +21,7 @@ import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithOperator;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import javax.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -434,5 +435,20 @@ class ApplicationAssetServiceTest {
         .thenReturn(Optional.empty());
 
     assertThat(applicationAssetService.findByApplicationVersionAndFieldId(applicationVersion, FIELD_ID_1)).isNotPresent();
+  }
+
+  @Test
+  void findAllPrimaryFieldAssets_emptyList() {
+    when(applicationAssetRepository.findAllByAssetRoleAndFieldIdIsNotNull(AssetRole.PRIMARY)).thenReturn(Collections.emptyList());
+    assertThat(applicationAssetService.findAllPrimaryFieldAssets()).isEmpty();
+  }
+
+  @Test
+  void findAllPrimaryFieldAssets_nonEmptyList() {
+    when(applicationAssetRepository.findAllByAssetRoleAndFieldIdIsNotNull(AssetRole.PRIMARY)).thenReturn(List.of(fieldAsset1));
+    var primaryFieldAssets = applicationAssetService.findAllPrimaryFieldAssets();
+
+    assertThat(primaryFieldAssets).hasSize(1);
+    assertThat(primaryFieldAssets.get(0)).usingRecursiveComparison().isEqualTo(fieldAsset1);
   }
 }

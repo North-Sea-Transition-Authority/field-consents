@@ -12,7 +12,7 @@ public record WorkAreaItem(
     String reference,
     String operator,
     String asset,
-    String seaLocation,
+    String geographicArea,
     String status,
     String submittedDateTime,
     String submittedBy

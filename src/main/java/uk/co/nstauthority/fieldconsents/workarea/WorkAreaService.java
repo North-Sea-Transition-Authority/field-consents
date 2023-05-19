@@ -215,7 +215,10 @@ public class WorkAreaService {
     }
 
     var matchingFieldJson = fieldJsonsMap.get(workAreaItemDto.fieldId());
-    return matchingFieldJson != null ? String.format("%s", matchingFieldJson.getGeographicAreaDisplayName()) : "Unknown area";
+    return
+        matchingFieldJson != null
+            ? matchingFieldJson.getGeographicArea().getDisplayName()
+            : "Unknown area";
   }
 
   private String getSubmitter(WorkAreaItemDto workAreaItemDto, Map<Long, EnergyPortalUserDto> portalUserDtosMap) {

@@ -13,7 +13,7 @@ public class FieldWithOperatorJson extends FieldJson implements AssetWithOperato
         field.getFieldId(),
         field.getFieldName(),
         FieldStatusJson.from(field),
-        FieldGeographicAreaJson.from(field),
+        GeographicArea.valueOf(field.getGeographicArea().name()),
         FieldShoreJson.from(field),
         field.getFieldOperator() != null ? OrganisationUnitJson.from(field.getFieldOperator()) : null
     );
@@ -22,10 +22,10 @@ public class FieldWithOperatorJson extends FieldJson implements AssetWithOperato
   public FieldWithOperatorJson(Integer fieldId,
                                String fieldName,
                                FieldStatusJson statusJson,
-                               FieldGeographicAreaJson geographicAreaJson,
+                               GeographicArea geographicArea,
                                FieldShoreJson shoreJson,
                                OrganisationUnitJson operatorJson) {
-    super(fieldId, fieldName, statusJson, geographicAreaJson, shoreJson);
+    super(fieldId, fieldName, statusJson, geographicArea, shoreJson);
     this.operatorJson = operatorJson;
   }
 

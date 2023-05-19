@@ -140,7 +140,7 @@ public class WorkAreaTestUtil {
         getCaseReference(workAreaItemDto),
         getOperator(workAreaItemDto),
         getAsset(workAreaItemDto),
-        getSeaLocation(workAreaItemDto),
+        getGeographicArea(workAreaItemDto),
         workAreaItemDto.status().getDisplayName(),
         getSubmittedDateTime(workAreaItemDto),
         getSubmitter(workAreaItemDto)
@@ -153,9 +153,9 @@ public class WorkAreaTestUtil {
         : "";
   }
 
-  private static String getSeaLocation(WorkAreaItemDto workAreaItemDto) {
+  private static String getGeographicArea(WorkAreaItemDto workAreaItemDto) {
     return workAreaItemDto.fieldId() != null
-        ? field1JsonWithOperator.getGeographicAreaDisplayName()
+        ? field1JsonWithOperator.getGeographicArea().getDisplayName()
         : "";
   }
 
@@ -222,7 +222,7 @@ public class WorkAreaTestUtil {
         APPLICATION_REFERENCE,
         CACHED_PRIMARY_OPERATOR_NAME_1,
         FIELD_NAME_1,
-        FIELD_1_GEOGRAPHIC_AREA.geographicAreaDisplayName(),
+        FIELD_1_GEOGRAPHIC_AREA.getDisplayName(),
         ApplicationVersionStatus.SUBMITTED.getDisplayName(),
         SUBMITTED_DATE_TIME,
         String.valueOf(USER_WUA_ID)

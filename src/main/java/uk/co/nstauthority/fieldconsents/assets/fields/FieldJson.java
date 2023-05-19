@@ -14,7 +14,7 @@ public class FieldJson implements AssetJson {
 
   private final FieldStatusJson statusJson;
 
-  private final FieldGeographicAreaJson geographicAreaJson;
+  private final GeographicArea geographicArea;
 
   private final FieldShoreJson shoreJson;
 
@@ -22,7 +22,7 @@ public class FieldJson implements AssetJson {
 
   public static FieldJson from(Field field) {
     return new FieldJson(field.getFieldId(), field.getFieldName(), FieldStatusJson.from(field),
-        FieldGeographicAreaJson.from(field), FieldShoreJson.from(field));
+        GeographicArea.valueOf(field.getGeographicArea().name()), FieldShoreJson.from(field));
   }
 
   public static FieldJson fromCachedInformation(Integer fieldId, String fieldName) {
@@ -31,11 +31,11 @@ public class FieldJson implements AssetJson {
   }
 
   public FieldJson(Integer fieldId, String fieldName, FieldStatusJson statusJson,
-                   FieldGeographicAreaJson geographicAreaJson, FieldShoreJson shoreJson) {
+                   GeographicArea geographicArea, FieldShoreJson shoreJson) {
     this.fieldId = fieldId;
     this.fieldName = fieldName;
     this.statusJson = statusJson;
-    this.geographicAreaJson = geographicAreaJson;
+    this.geographicArea = geographicArea;
     this.shoreJson = shoreJson;
   }
 
@@ -59,8 +59,8 @@ public class FieldJson implements AssetJson {
     return AssetType.FIELD;
   }
 
-  public String getGeographicAreaDisplayName() {
-    return geographicAreaJson != null ? geographicAreaJson.geographicAreaDisplayName() : null;
+  public GeographicArea getGeographicArea() {
+    return geographicArea;
   }
 
   public String getShoreDisplayName() {

@@ -18,7 +18,7 @@ class FieldJsonTest {
                 field1.getFieldId(),
                 field1.getFieldName(),
                 new FieldStatusJson(field1.getStatus(), field1.getStatusDisplayName()),
-                new FieldGeographicAreaJson(field1.getGeographicArea(), field1.getGeographicAreaDisplayName()),
+                GeographicArea.valueOf(field1.getGeographicArea().name()),
                 new FieldShoreJson(field1.getShore(), field1.getShoreDisplayName()))
         );
 
@@ -29,7 +29,7 @@ class FieldJsonTest {
             FieldJson::getName,
             FieldJson::getStatusDisplayName,
             FieldJson::getAssetType,
-            FieldJson::getGeographicAreaDisplayName,
+            FieldJson::getGeographicArea,
             FieldJson::getShoreDisplayName
         )
         .containsExactly(
@@ -37,7 +37,7 @@ class FieldJsonTest {
             field1.getFieldName(),
             field1.getStatusDisplayName(),
             AssetType.FIELD,
-            field1.getGeographicAreaDisplayName(),
+            GeographicArea.valueOf(field1.getGeographicArea().name()),
             field1.getShoreDisplayName()
         );
   }
@@ -63,7 +63,7 @@ class FieldJsonTest {
             FieldJson::getName,
             FieldJson::getStatusDisplayName,
             FieldJson::getAssetType,
-            FieldJson::getGeographicAreaDisplayName,
+            FieldJson::getGeographicArea,
             FieldJson::getShoreDisplayName
         )
         .containsExactly(
