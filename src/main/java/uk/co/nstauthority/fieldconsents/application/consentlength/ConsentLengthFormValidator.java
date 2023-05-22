@@ -28,7 +28,9 @@ public class ConsentLengthFormValidator implements Validator {
 
   public static final String LONG_TERM_START_YEAR_BEFORE_CURRENT_YEAR = "Start year can be the current year or after";
 
-  public static final String LONG_TERM_END_YEAR_BEFORE_CURRENT_YEAR = "End year must be after the current year";
+  public static final String LONG_TERM_END_YEAR_IS_CURRENT_YEAR_OR_BEFORE = "End year must be after the current year";
+
+  public static final String LONG_TERM_END_YEAR_IS_START_YEAR_OR_BEFORE = "End year must be after the start year";
 
   public static final String LONG_TERM_INVALID_DURATION = "The term should between 2 and 30 years";
 
@@ -78,14 +80,14 @@ public class ConsentLengthFormValidator implements Validator {
       // the term must be a minimum of 2 years and a maximum of 30 years in duration
       var endYearComparisonValidator = IntegerInputValidator.builder()
           .mustBeMoreThanOrEqualTo(startYear + 1)
-          .mustBeMoreThanOrEqualToErrorMessage(LONG_TERM_INVALID_DURATION)
+          .mustBeMoreThanOrEqualToErrorMessage(LONG_TERM_END_YEAR_IS_START_YEAR_OR_BEFORE)
           .mustBeLessThanOrEqualTo(startYear + 29)
           .mustBeLessThanOrEqualToErrorMessage(LONG_TERM_INVALID_DURATION);
       endYearComparisonValidator.validate(form.getLongTermEndYear(), errors);
     } else {
       IntegerInputValidator.builder()
           .mustBeMoreThanOrEqualTo(currentYear + 1)
-          .mustBeMoreThanOrEqualToErrorMessage(LONG_TERM_END_YEAR_BEFORE_CURRENT_YEAR)
+          .mustBeMoreThanOrEqualToErrorMessage(LONG_TERM_END_YEAR_IS_CURRENT_YEAR_OR_BEFORE)
           .validate(form.getLongTermEndYear(), errors);
     }
   }

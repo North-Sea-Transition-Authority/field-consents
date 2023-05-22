@@ -2,7 +2,8 @@ package uk.co.nstauthority.fieldconsents.application.consentlength;
 
 import static org.assertj.core.api.Assertions.entry;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthFormValidator.LONG_TERM_END_YEAR_BEFORE_CURRENT_YEAR;
+import static uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthFormValidator.LONG_TERM_END_YEAR_IS_CURRENT_YEAR_OR_BEFORE;
+import static uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthFormValidator.LONG_TERM_END_YEAR_IS_START_YEAR_OR_BEFORE;
 import static uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthFormValidator.LONG_TERM_INVALID_DURATION;
 import static uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthFormValidator.LONG_TERM_START_YEAR_BEFORE_CURRENT_YEAR;
 import static uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthFormValidator.SHORT_TERM_END_DATE_BEFORE_START_DATE;
@@ -15,9 +16,13 @@ import java.time.Year;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ValidationUtils;
@@ -437,16 +442,16 @@ class ConsentLengthFormValidatorTest {
     errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     Assertions.assertThat(errorMap).containsOnly(
         entry("longTermStartYear.inputValue", Collections.singletonList(LONG_TERM_START_YEAR_BEFORE_CURRENT_YEAR)),
-        entry("longTermEndYear.inputValue", Collections.singletonList(LONG_TERM_END_YEAR_BEFORE_CURRENT_YEAR))
+        entry("longTermEndYear.inputValue", Collections.singletonList(LONG_TERM_END_YEAR_IS_CURRENT_YEAR_OR_BEFORE))
     );
 
   }
 
 
-  @Test
-  void validate_longTerm_termTooShort() {
-    int currentYear = Year.now().getValue();
-    ConsentLengthForm form = ConsentLengthTestUtil.getLongTermConsentLengthFormForYears(currentYear, currentYear);
+  @ParameterizedTest
+  @MethodSource("getInvalidLongTermYears")
+  void validate_longTerm_endYearIsStartYearOrBefore(int startYear, int endYear) {
+    ConsentLengthForm form = ConsentLengthTestUtil.getLongTermConsentLengthFormForYears(startYear, endYear);
     errors = new BeanPropertyBindingResult(form, "form");
 
     ValidationUtils.invokeValidator(validator, form, errors);
@@ -455,9 +460,35 @@ class ConsentLengthFormValidatorTest {
 
     errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     Assertions.assertThat(errorMap).containsOnly(
-        entry("longTermEndYear.inputValue", Collections.singletonList(LONG_TERM_INVALID_DURATION))
+        entry("longTermEndYear.inputValue", Collections.singletonList(LONG_TERM_END_YEAR_IS_START_YEAR_OR_BEFORE))
     );
+  }
 
+  private static Stream<Arguments> getInvalidLongTermYears() {
+    return Stream.of(
+        Arguments.of(Year.now().getValue(), Year.now().getValue()), // start and end the same
+        Arguments.of(Year.now().getValue(), Year.now().getValue() - 1), // end before start
+        Arguments.of(Year.now().getValue() + 4, Year.now().getValue()) // start in future and end before start
+    );
+  }
+
+  @Test
+  void validate_longTerm_noStartYear_endYearIsCurrent() {
+    int currentYear = Year.now().getValue();
+    ConsentLengthForm form = new ConsentLengthForm();
+    form.setConsentLengthType(ConsentLengthType.LONG_TERM);
+    form.getLongTermEndYear().setInteger(currentYear);
+    errors = new BeanPropertyBindingResult(form, "form");
+
+    ValidationUtils.invokeValidator(validator, form, errors);
+
+    assertThat(errors.hasErrors()).isTrue();
+
+    errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
+    Assertions.assertThat(errorMap).containsExactly(
+        entry("longTermStartYear.inputValue", Collections.singletonList(LONG_TERM_START_YEAR_EMPTY)),
+        entry("longTermEndYear.inputValue", Collections.singletonList(LONG_TERM_END_YEAR_IS_CURRENT_YEAR_OR_BEFORE))
+    );
   }
 
   @Test
