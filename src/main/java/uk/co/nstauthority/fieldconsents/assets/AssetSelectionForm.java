@@ -1,7 +1,7 @@
 package uk.co.nstauthority.fieldconsents.assets;
 
 import com.google.common.annotations.VisibleForTesting;
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 
 public class AssetSelectionForm {

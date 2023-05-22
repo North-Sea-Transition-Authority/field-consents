@@ -77,8 +77,8 @@ class VentAnnualControllerTest extends AbstractApplicationControllerTest {
     assertThat(model)
         .containsEntry("pageTitle", "Annual consent 2022")
         .containsEntry("categoryUnit", FlareVentUnit.TONNES_PER_MONTH.getDisplayName())
-        .containsEntry("submitUrl", "/applications/1/vent-annual/")
-        .containsEntry("cancelUrl", "/applications/1/task-list/");
+        .containsEntry("submitUrl", "/applications/1/vent-annual")
+        .containsEntry("cancelUrl", "/applications/1/task-list");
 
     assertThat((VentAnnualForm) model.get("form"))
         .isEqualTo(stubVentAnnualForm);
@@ -117,8 +117,8 @@ class VentAnnualControllerTest extends AbstractApplicationControllerTest {
     assertThat(model)
         .containsEntry("pageTitle", "Annual consent 2022")
         .containsEntry("categoryUnit", FlareVentUnit.TONNES_PER_MONTH.getDisplayName())
-        .containsEntry("submitUrl", "/applications/1/vent-annual/")
-        .containsEntry("cancelUrl", "/applications/1/task-list/");
+        .containsEntry("submitUrl", "/applications/1/vent-annual")
+        .containsEntry("cancelUrl", "/applications/1/task-list");
   }
 
   @Test
@@ -132,7 +132,7 @@ class VentAnnualControllerTest extends AbstractApplicationControllerTest {
             .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(view().name("redirect:/applications/1/task-list/"));
+        .andExpect(view().name("redirect:/applications/1/task-list"));
 
     ArgumentCaptor<ApplicationVersion> applicationVersionArgumentCaptor =
         ArgumentCaptor.forClass(ApplicationVersion.class);

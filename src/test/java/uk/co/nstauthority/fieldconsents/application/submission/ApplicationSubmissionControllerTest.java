@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.application.submission;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -14,7 +15,6 @@ import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.u
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.Optional;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -73,15 +73,12 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
   void submitApplication_whenNotSubmittable() {
     when(applicationSubmissionService.isSubmittable(applicationVersion)).thenReturn(false);
 
-    var exception = Assertions.assertThrows(
-        Exception.class,
+    assertThatThrownBy(
         () -> mockMvc.perform(post(ReverseRouter.route(on(ApplicationSubmissionController.class)
             .submitApplication(APPLICATION_ID)))
             .with(user(user))
             .with(csrf()))
-    );
-
-    Assertions.assertEquals("Request processing failed; nested exception is java.lang.RuntimeException: The application with id 1 cannot be submitted!", exception.getMessage());
+    ).hasMessageContaining("The application with id 1 cannot be submitted!");
   }
 
   @SecurityTest

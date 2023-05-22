@@ -83,8 +83,8 @@ class VentShortTermControllerTest extends AbstractApplicationControllerTest {
         .containsEntry("startDate", "11 Apr 2022")
         .containsEntry("endDate", "1 Jan 2023")
         .containsEntry("categoryUnit", FlareVentUnit.TONNES_PER_MONTH.getDisplayName())
-        .containsEntry("submitUrl", "/applications/1/vent-short-term/")
-        .containsEntry("cancelUrl", "/applications/1/task-list/");
+        .containsEntry("submitUrl", "/applications/1/vent-short-term")
+        .containsEntry("cancelUrl", "/applications/1/task-list");
 
     assertThat((VentShortTermForm) model.get("form"))
         .isEqualTo(stubVentShortTermForm);
@@ -125,8 +125,8 @@ class VentShortTermControllerTest extends AbstractApplicationControllerTest {
         .containsKey("startDate")
         .containsKey("endDate")
         .containsEntry("categoryUnit", FlareVentUnit.TONNES_PER_MONTH.getDisplayName())
-        .containsEntry("submitUrl", "/applications/1/vent-short-term/")
-        .containsEntry("cancelUrl", "/applications/1/task-list/");
+        .containsEntry("submitUrl", "/applications/1/vent-short-term")
+        .containsEntry("cancelUrl", "/applications/1/task-list");
   }
 
   @Test
@@ -140,7 +140,7 @@ class VentShortTermControllerTest extends AbstractApplicationControllerTest {
             .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(view().name("redirect:/applications/1/task-list/"));
+        .andExpect(view().name("redirect:/applications/1/task-list"));
 
     ArgumentCaptor<ApplicationVersion> applicationVersionArgumentCaptor =
         ArgumentCaptor.forClass(ApplicationVersion.class);

@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.mvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
+import static org.assertj.core.api.InstanceOfAssertFactories.type;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
@@ -9,25 +10,35 @@ import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.u
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.stereotype.Controller;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
 import uk.co.nstauthority.fieldconsents.branding.CustomerConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.branding.IncludeServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.branding.ServiceConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.topnavigation.TopNavigationService;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
+@WebMvcTest
+@ActiveProfiles("test")
+@IncludeServiceBrandingConfigurationProperties
 @ContextConfiguration(classes = {
     DefaultPageControllerAdviceTest.TestController.class,
-    DefaultPageControllerAdvice.class
+    DefaultPageControllerAdvice.class,
+    TopNavigationService.class,
+    UserDetailService.class
 })
-class DefaultPageControllerAdviceTest extends AbstractControllerTest {
+class DefaultPageControllerAdviceTest {
 
   @Autowired
-  protected MockMvc mockMvc;
+  private MockMvc mockMvc;
 
   @Test
   void addDefaultModelAttributes_verifyDefaultAttributes() throws Exception {
@@ -57,26 +68,32 @@ class DefaultPageControllerAdviceTest extends AbstractControllerTest {
         "org.springframework.validation.BindingResult.loggedInUser"
     );
 
-    assertThat((CustomerConfigurationProperties) modelMap.get("customerBranding")).hasNoNullFieldsOrProperties();
-    assertThat((ServiceConfigurationProperties) modelMap.get("serviceBranding")).hasNoNullFieldsOrProperties();
+    assertThat(modelMap.get("customerBranding"))
+        .asInstanceOf(type(CustomerConfigurationProperties.class))
+        .hasNoNullFieldsOrProperties();
+
+    assertThat(modelMap.get("serviceBranding"))
+        .asInstanceOf(type(ServiceConfigurationProperties.class))
+        .hasNoNullFieldsOrProperties();
+
     assertThat(modelMap).contains(
         entry("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null))),
         entry("loggedInUser", loggedInUser)
     );
   }
 
-
   // Dummy application to stop the @WebMvcTest loading more than it needs
   @SpringBootApplication
   static class TestApplication {
   }
 
+  @Controller
   @RequestMapping("/endpoint")
   static class TestController {
 
-    @GetMapping()
+    @GetMapping
     ModelAndView testEndpoint() {
-      return new ModelAndView();
+      return new ModelAndView("testTemplate");
     }
   }
 

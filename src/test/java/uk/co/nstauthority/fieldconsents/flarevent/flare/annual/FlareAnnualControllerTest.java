@@ -77,8 +77,8 @@ class FlareAnnualControllerTest extends AbstractApplicationControllerTest {
     assertThat(model)
         .containsEntry("pageTitle", "Annual consent 2022")
         .containsEntry("categoryUnit", FlareVentUnit.TONNES_PER_MONTH.getDisplayName())
-        .containsEntry("submitUrl", "/applications/1/flare-annual/")
-        .containsEntry("cancelUrl", "/applications/1/task-list/");
+        .containsEntry("submitUrl", "/applications/1/flare-annual")
+        .containsEntry("cancelUrl", "/applications/1/task-list");
 
     assertThat((FlareAnnualForm) model.get("form"))
         .isEqualTo(stubFlareAnnualForm);
@@ -117,8 +117,8 @@ class FlareAnnualControllerTest extends AbstractApplicationControllerTest {
     assertThat(model)
         .containsEntry("pageTitle", "Annual consent 2022")
         .containsEntry("categoryUnit", FlareVentUnit.TONNES_PER_MONTH.getDisplayName())
-        .containsEntry("submitUrl", "/applications/1/flare-annual/")
-        .containsEntry("cancelUrl", "/applications/1/task-list/");
+        .containsEntry("submitUrl", "/applications/1/flare-annual")
+        .containsEntry("cancelUrl", "/applications/1/task-list");
   }
 
   @Test
@@ -132,7 +132,7 @@ class FlareAnnualControllerTest extends AbstractApplicationControllerTest {
             .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(view().name("redirect:/applications/1/task-list/"));
+        .andExpect(view().name("redirect:/applications/1/task-list"));
 
     ArgumentCaptor<ApplicationVersion> applicationVersionArgumentCaptor =
         ArgumentCaptor.forClass(ApplicationVersion.class);

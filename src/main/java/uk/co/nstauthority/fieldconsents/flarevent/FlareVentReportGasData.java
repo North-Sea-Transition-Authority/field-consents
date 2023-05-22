@@ -1,14 +1,14 @@
 package uk.co.nstauthority.fieldconsents.flarevent;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.OneToOne;
 import java.math.BigDecimal;
 import java.util.NoSuchElementException;
-import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.OneToOne;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 
 @MappedSuperclass

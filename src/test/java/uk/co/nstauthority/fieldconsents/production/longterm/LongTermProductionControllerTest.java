@@ -86,7 +86,7 @@ class LongTermProductionControllerTest extends AbstractApplicationControllerTest
     assertThat(model.get("endYear")).isEqualTo(END_YEAR.toString());
     assertThat(model.get("oilUnit")).isEqualTo(ProductionUnit.KSCM_PER_DAY.getDisplayName());
     assertThat(model.get("gasUnit")).isEqualTo(ProductionUnit.KSCM_PER_DAY.getDisplayName());
-    assertThat(model.get("submitUrl")).isEqualTo("/applications/" + APPLICATION_ID + "/long-term-production/");
+    assertThat(model.get("submitUrl")).isEqualTo("/applications/" + APPLICATION_ID + "/long-term-production");
     assertThat(model.get("form")).isEqualTo(longTermProductionForm);
   }
 
@@ -102,7 +102,7 @@ class LongTermProductionControllerTest extends AbstractApplicationControllerTest
             .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl("/applications/1/task-list/"));
+        .andExpect(redirectedUrl("/applications/1/task-list"));
   }
 
   @SecurityTest

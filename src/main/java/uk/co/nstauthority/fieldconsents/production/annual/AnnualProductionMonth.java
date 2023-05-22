@@ -1,10 +1,10 @@
 package uk.co.nstauthority.fieldconsents.production.annual;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Table;
 import java.time.Month;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.Table;
 import uk.co.nstauthority.fieldconsents.production.ProductionRow;
 
 @Entity

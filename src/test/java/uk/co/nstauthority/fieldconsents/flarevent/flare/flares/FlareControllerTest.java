@@ -16,8 +16,8 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
+import jakarta.persistence.EntityNotFoundException;
 import java.util.Optional;
-import javax.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -155,7 +155,7 @@ class FlareControllerTest extends AbstractApplicationControllerTest {
             .with(user(user))
         )
         .andExpect(status().is3xxRedirection())
-        .andExpect(view().name("redirect:/applications/1/task-list/"));
+        .andExpect(view().name("redirect:/applications/1/task-list"));
   }
 
   @Test
@@ -237,7 +237,7 @@ class FlareControllerTest extends AbstractApplicationControllerTest {
             .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(view().name("redirect:/applications/1/task-list/"));
+        .andExpect(view().name("redirect:/applications/1/task-list"));
   }
 
   @SecurityTest

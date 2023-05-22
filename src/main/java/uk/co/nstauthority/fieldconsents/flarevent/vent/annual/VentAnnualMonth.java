@@ -1,7 +1,7 @@
 package uk.co.nstauthority.fieldconsents.flarevent.vent.annual;
 
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentRow;
 

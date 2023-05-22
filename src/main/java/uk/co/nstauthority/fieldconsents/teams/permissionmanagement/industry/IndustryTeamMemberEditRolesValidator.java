@@ -1,11 +1,11 @@
 package uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry;
 
 import com.google.common.collect.Sets;
+import jakarta.annotation.Nullable;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import javax.annotation.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;

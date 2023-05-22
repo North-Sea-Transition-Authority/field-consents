@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
-import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -33,16 +32,15 @@ class TopNavigationServiceTest {
         .containsExactly(
             tuple(
                 WorkAreaController.WORK_AREA_TITLE,
-                StringUtils.stripEnd(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null)), "/")
+                ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null))
             ),
             tuple(
                 AssetSelectionController.ASSET_SELECTION_TITLE,
-                StringUtils.stripEnd(ReverseRouter.route(on(AssetSelectionController.class).getAssetSelection()), "/")
+                ReverseRouter.route(on(AssetSelectionController.class).getAssetSelection())
             ),
             tuple(
                 TopNavigationService.TEAM_MANAGEMENT_NAVIGATION_ITEM_TITLE,
-                StringUtils.stripEnd(
-                    ReverseRouter.route(on(TeamListController.class).resolveTeamListEntryRoute()), "/")
+                ReverseRouter.route(on(TeamListController.class).resolveTeamListEntryRoute())
             )
         );
   }

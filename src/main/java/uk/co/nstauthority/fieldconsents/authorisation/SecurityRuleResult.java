@@ -1,6 +1,6 @@
 package uk.co.nstauthority.fieldconsents.authorisation;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 import org.springframework.http.HttpStatus;
 
 public record SecurityRuleResult(

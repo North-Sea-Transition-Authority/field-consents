@@ -82,9 +82,9 @@ class VentReportControllerTest extends AbstractApplicationControllerTest {
     assertThat(model)
         .containsEntry("pageTitle", "Vent report 2022/2023")
         .containsEntry("categoryUnit", FlareVentUnit.TONNES_PER_MONTH.getDisplayName())
-        .containsEntry("periodUrl", "/applications/1/vent-report/period/")
-        .containsEntry("submitUrl", "/applications/1/vent-report/")
-        .containsEntry("cancelUrl", "/applications/1/task-list/");
+        .containsEntry("periodUrl", "/applications/1/vent-report/period")
+        .containsEntry("submitUrl", "/applications/1/vent-report")
+        .containsEntry("cancelUrl", "/applications/1/task-list");
 
     assertThat((VentReportForm) model.get("form"))
         .isEqualTo(stubVentReportForm);
@@ -100,7 +100,7 @@ class VentReportControllerTest extends AbstractApplicationControllerTest {
             .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(view().name("redirect:/applications/1/vent-report/period/"));
+        .andExpect(view().name("redirect:/applications/1/vent-report/period"));
 
   }
 
@@ -138,9 +138,9 @@ class VentReportControllerTest extends AbstractApplicationControllerTest {
     assertThat(model)
         .containsEntry("pageTitle", "Vent report 2022")
         .containsEntry("categoryUnit", FlareVentUnit.TONNES_PER_MONTH.getDisplayName())
-        .containsEntry("periodUrl", "/applications/1/vent-report/period/")
-        .containsEntry("submitUrl", "/applications/1/vent-report/")
-        .containsEntry("cancelUrl", "/applications/1/task-list/");
+        .containsEntry("periodUrl", "/applications/1/vent-report/period")
+        .containsEntry("submitUrl", "/applications/1/vent-report")
+        .containsEntry("cancelUrl", "/applications/1/task-list");
   }
 
   @Test
@@ -154,7 +154,7 @@ class VentReportControllerTest extends AbstractApplicationControllerTest {
             .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(view().name("redirect:/applications/1/task-list/"));
+        .andExpect(view().name("redirect:/applications/1/task-list"));
 
     ArgumentCaptor<ApplicationVersion> applicationVersionArgumentCaptor =
         ArgumentCaptor.forClass(ApplicationVersion.class);

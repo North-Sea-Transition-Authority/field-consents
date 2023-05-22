@@ -1,8 +1,8 @@
 package uk.co.nstauthority.fieldconsents.application;
 
+import jakarta.persistence.EntityNotFoundException;
 import java.util.Comparator;
 import java.util.Optional;
-import javax.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

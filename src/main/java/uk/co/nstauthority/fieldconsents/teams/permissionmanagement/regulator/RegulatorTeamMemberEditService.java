@@ -1,7 +1,7 @@
 package uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator;
 
+import jakarta.transaction.Transactional;
 import java.util.Set;
-import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.teams.Team;

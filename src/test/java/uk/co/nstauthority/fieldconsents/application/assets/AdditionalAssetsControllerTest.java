@@ -21,8 +21,8 @@ import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
+import jakarta.persistence.EntityNotFoundException;
 import java.util.Optional;
-import javax.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -73,7 +73,7 @@ class AdditionalAssetsControllerTest extends AbstractApplicationControllerTest {
 
   private String expectBaseAdditionalAssetsUrl;
 
-  private static final String TASK_LIST_URL = "/applications/" + ApplicationTestUtil.APPLICATION_ID + "/task-list/";
+  private static final String TASK_LIST_URL = "/applications/" + ApplicationTestUtil.APPLICATION_ID + "/task-list";
 
   private static final String ADDITIONAL_ASSETS_REQUIRED_VIEW = "fcs/assets/additionalAssetsRequired";
 
@@ -184,7 +184,7 @@ class AdditionalAssetsControllerTest extends AbstractApplicationControllerTest {
                 .with(user(user))
         )
         .andExpect(status().is3xxRedirection())
-        .andExpect(view().name("redirect:/applications/1/task-list/"));
+        .andExpect(view().name("redirect:/applications/1/task-list"));
   }
 
   @Test
@@ -261,7 +261,7 @@ class AdditionalAssetsControllerTest extends AbstractApplicationControllerTest {
             .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(view().name("redirect:/applications/1/task-list/"));
+        .andExpect(view().name("redirect:/applications/1/task-list"));
   }
 
   @SecurityTest
@@ -472,7 +472,7 @@ class AdditionalAssetsControllerTest extends AbstractApplicationControllerTest {
             .with(csrf())
             .param("otherAssetsRequired", "false"))
         .andExpect(status().is3xxRedirection())
-        .andExpect(view().name("redirect:/applications/" + ApplicationTestUtil.APPLICATION_ID + "/task-list/"));
+        .andExpect(view().name("redirect:/applications/" + ApplicationTestUtil.APPLICATION_ID + "/task-list"));
 
     verify(applicationFlagService, times(1))
         .deleteApplicationFlag(applicationVersion, ApplicationFlagType.HAS_SECONDARY_ASSETS);

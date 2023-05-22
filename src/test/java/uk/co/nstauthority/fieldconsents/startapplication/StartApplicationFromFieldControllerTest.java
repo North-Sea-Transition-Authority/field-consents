@@ -43,7 +43,7 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
 
   private static final Integer FIELD_ID = 1;
 
-  private static final String MANAGE_FIELD_URL_BASE = "/manage-asset/fields/1/";
+  private static final String MANAGE_FIELD_URL_BASE = "/manage-asset/fields/1";
 
   @MockBean
   private ApplicationService applicationService;
@@ -120,7 +120,7 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
         .andExpect(status().is3xxRedirection())
         .andExpect(flash().attributeCount(1))
         .andExpect(flash().attribute("applicationType", ApplicationType.FLARE))
-        .andExpect(view().name("redirect:" + MANAGE_FIELD_URL_BASE + "start-application/operator"));
+        .andExpect(view().name("redirect:" + MANAGE_FIELD_URL_BASE + "/start-application/operator"));
   }
 
   @Test
@@ -140,7 +140,7 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
     var model = modelAndView.getModel();
 
     assertEquals(applicationTypeMap, model.get("applicationTypes"));
-    assertEquals(MANAGE_FIELD_URL_BASE + "start-application", model.get("continueStartApplicationUrl"));
+    assertEquals(MANAGE_FIELD_URL_BASE + "/start-application", model.get("continueStartApplicationUrl"));
   }
 
   @Test
@@ -172,7 +172,7 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
 
     assertThat(model)
         .contains(
-            entry("createApplicationUrl", MANAGE_FIELD_URL_BASE + "start-application/operator"),
+            entry("createApplicationUrl", MANAGE_FIELD_URL_BASE + "/start-application/operator"),
             entry("cancelUrl", MANAGE_FIELD_URL_BASE),
             entry("organisationUnitSearchRestUrl",
                 ReverseRouter.route(on(OrganisationUnitRestController.class)
@@ -212,7 +212,7 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
             .param("organisationUnitId.inputValue", String.valueOf(ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_1))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(view().name("redirect:/applications/1/task-list/"));
+        .andExpect(view().name("redirect:/applications/1/task-list"));
   }
 
   @Test
@@ -237,7 +237,7 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
 
     assertThat(model)
         .contains(
-            entry("createApplicationUrl", MANAGE_FIELD_URL_BASE + "start-application/operator"),
+            entry("createApplicationUrl", MANAGE_FIELD_URL_BASE + "/start-application/operator"),
             entry("cancelUrl", MANAGE_FIELD_URL_BASE)
         );
     var form = (StartApplicationOperatorForm) model.get("form");

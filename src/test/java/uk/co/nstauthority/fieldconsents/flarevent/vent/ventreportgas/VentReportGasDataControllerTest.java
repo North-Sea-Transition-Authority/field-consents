@@ -91,8 +91,8 @@ class VentReportGasDataControllerTest extends AbstractApplicationControllerTest 
         .containsEntry("reportPeriodEnd", LAST_MONTH_REPORTING_PERIOD)
         .containsEntry("standardDensityUnit", FlareVentUnit.KG_PER_CUBIC_METER.getDisplayName())
         .containsEntry("gasContentUnit", FlareVentUnit.MASS_PERCENTAGE.getDisplayName())
-        .containsEntry("submitUrl", "/applications/1/vent-report-gas-properties/")
-        .containsEntry("cancelUrl", "/applications/1/task-list/");
+        .containsEntry("submitUrl", "/applications/1/vent-report-gas-properties")
+        .containsEntry("cancelUrl", "/applications/1/task-list");
 
     assertThat((FlareVentReportGasDataForm) model.get("form"))
         .isEqualTo(form);
@@ -117,7 +117,7 @@ class VentReportGasDataControllerTest extends AbstractApplicationControllerTest 
             .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(view().name("redirect:/applications/1/task-list/"));
+        .andExpect(view().name("redirect:/applications/1/task-list"));
 
     verify(ventReportGasDataService, times(1))
         .saveVentReportGasData(applicationVersionArgumentCaptor.capture(), flareVentReportGasDataFormCaptor.capture());
@@ -150,8 +150,8 @@ class VentReportGasDataControllerTest extends AbstractApplicationControllerTest 
         .containsEntry("reportPeriodEnd", LAST_MONTH_REPORTING_PERIOD)
         .containsEntry("standardDensityUnit", FlareVentUnit.KG_PER_CUBIC_METER.getDisplayName())
         .containsEntry("gasContentUnit", FlareVentUnit.MASS_PERCENTAGE.getDisplayName())
-        .containsEntry("submitUrl", "/applications/1/vent-report-gas-properties/")
-        .containsEntry("cancelUrl", "/applications/1/task-list/");
+        .containsEntry("submitUrl", "/applications/1/vent-report-gas-properties")
+        .containsEntry("cancelUrl", "/applications/1/task-list");
   }
 
   @SecurityTest

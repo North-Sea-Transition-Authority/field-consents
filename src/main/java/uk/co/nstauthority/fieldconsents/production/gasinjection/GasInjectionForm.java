@@ -1,6 +1,6 @@
 package uk.co.nstauthority.fieldconsents.production.gasinjection;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 public class GasInjectionForm {
 

@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.production.shortterm;
 
+import jakarta.transaction.Transactional;
 import java.time.LocalDate;
 import java.time.Month;
 import java.time.Period;
@@ -10,7 +11,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import javax.transaction.Transactional;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -88,8 +88,8 @@ class FlareReportPeriodControllerTest extends AbstractApplicationControllerTest 
             Year.now().minusYears(1).toString(),
             Year.now().toString(), Year.now().toString()
             ))
-        .containsEntry("submitUrl", "/applications/1/flare-report/period/")
-        .containsEntry("cancelUrl", "/applications/1/task-list/");
+        .containsEntry("submitUrl", "/applications/1/flare-report/period")
+        .containsEntry("cancelUrl", "/applications/1/task-list");
 
     assertThat((FlareVentReportPeriodForm) model.get("form"))
         .isEqualTo(reportPeriodForm);
@@ -126,8 +126,8 @@ class FlareReportPeriodControllerTest extends AbstractApplicationControllerTest 
             Year.now().minusYears(1).toString(),
             Year.now().toString(), Year.now().toString()
         ))
-        .containsEntry("submitUrl", "/applications/1/flare-report/period/")
-        .containsEntry("cancelUrl", "/applications/1/task-list/");
+        .containsEntry("submitUrl", "/applications/1/flare-report/period")
+        .containsEntry("cancelUrl", "/applications/1/task-list");
   }
 
   @Test
@@ -138,7 +138,7 @@ class FlareReportPeriodControllerTest extends AbstractApplicationControllerTest 
             .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(view().name("redirect:/applications/1/flare-report/"));
+        .andExpect(view().name("redirect:/applications/1/flare-report"));
 
     ArgumentCaptor<ApplicationVersion> applicationVersionArgumentCaptor =
         ArgumentCaptor.forClass(ApplicationVersion.class);

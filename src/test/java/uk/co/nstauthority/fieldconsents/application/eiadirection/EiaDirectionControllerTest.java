@@ -53,7 +53,7 @@ class EiaDirectionControllerTest extends AbstractApplicationControllerTest {
 
   private ApplicationVersion applicationVersion;
 
-  private static final String TASK_LIST_URL = "/applications/" + APPLICATION_ID + "/task-list/";
+  private static final String TASK_LIST_URL = "/applications/" + APPLICATION_ID + "/task-list";
 
   private static final String EIA_DIRECTION_VIEW = "fcs/application/eiaDirectionForm";
 

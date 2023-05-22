@@ -89,8 +89,8 @@ class VentReportPeriodControllerTest extends AbstractApplicationControllerTest {
             Year.now().minusYears(1).toString(),
             Year.now().toString(), Year.now().toString()
             ))
-        .containsEntry("submitUrl", "/applications/1/vent-report/period/")
-        .containsEntry("cancelUrl", "/applications/1/task-list/");
+        .containsEntry("submitUrl", "/applications/1/vent-report/period")
+        .containsEntry("cancelUrl", "/applications/1/task-list");
 
     assertThat((FlareVentReportPeriodForm) model.get("form"))
         .isEqualTo(reportPeriodForm);
@@ -127,8 +127,8 @@ class VentReportPeriodControllerTest extends AbstractApplicationControllerTest {
             Year.now().minusYears(1).toString(),
             Year.now().toString(), Year.now().toString()
         ))
-        .containsEntry("submitUrl", "/applications/1/vent-report/period/")
-        .containsEntry("cancelUrl", "/applications/1/task-list/");
+        .containsEntry("submitUrl", "/applications/1/vent-report/period")
+        .containsEntry("cancelUrl", "/applications/1/task-list");
   }
 
   @Test
@@ -139,7 +139,7 @@ class VentReportPeriodControllerTest extends AbstractApplicationControllerTest {
             .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(view().name("redirect:/applications/1/vent-report/"));
+        .andExpect(view().name("redirect:/applications/1/vent-report"));
 
     ArgumentCaptor<ApplicationVersion> applicationVersionArgumentCaptor =
         ArgumentCaptor.forClass(ApplicationVersion.class);

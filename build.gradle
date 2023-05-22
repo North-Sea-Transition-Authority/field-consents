@@ -1,15 +1,15 @@
 plugins {
-	id 'org.springframework.boot' version '2.7.11'
-	id 'io.spring.dependency-management' version '1.1.0'
-	id 'java'
-	id "org.sonarqube" version "3.3"
-	id 'checkstyle'
-	id 'jacoco'
-	id 'nu.studer.jooq' version '8.1'
-	//docker-compose needed to startup a postgres container for Jooq codegen
-	id 'com.avast.gradle.docker-compose' version "0.16.11"
-	//Flyway added manually here, as it's used for the Jooq codegen
-	id "org.flywaydb.flyway" version "9.16.0"
+  id("org.springframework.boot") version "3.1.0"
+  id("io.spring.dependency-management") version "1.1.0"
+  id 'java'
+  id "org.sonarqube" version "3.3"
+  id 'checkstyle'
+  id 'jacoco'
+  id 'nu.studer.jooq' version '8.1'
+  //docker-compose needed to startup a postgres container for Jooq codegen
+  id 'com.avast.gradle.docker-compose' version "0.16.11"
+  //Flyway added manually here, as it's used for the Jooq codegen
+  id "org.flywaydb.flyway" version "9.16.0"
 }
 
 group = 'uk.co.nstauthority'
@@ -17,109 +17,109 @@ version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '17'
 
 repositories {
-	mavenCentral()
-	maven {
-		// Required for opensaml deps
-		url "https://build.shibboleth.net/nexus/content/repositories/releases/"
-	}
-	maven { url "https://nexus.fivium.co.uk/repository/maven-releases/" }
-	maven { url "https://nexus.fivium.co.uk/repository/maven-snapshots/" }
+  mavenCentral()
+  maven {
+    // Required for opensaml deps
+    url "https://build.shibboleth.net/nexus/content/repositories/releases/"
+  }
+  maven { url "https://nexus.fivium.co.uk/repository/maven-releases/" }
+  maven { url "https://nexus.fivium.co.uk/repository/maven-snapshots/" }
 }
 
 dependencies {
 
-	// OpenSAML 4.1+ is required for most SAML functionality
-	// See the Spring samples e.g. https://github.com/spring-projects/spring-security-samples/blob/main/servlet/spring-boot/java/saml2/login/build.gradle
-	constraints {
-		implementation "org.opensaml:opensaml-core:4.2.0"
-		implementation "org.opensaml:opensaml-saml-api:4.2.0"
-		implementation "org.opensaml:opensaml-saml-impl:4.2.0"
-	}
+  // OpenSAML 4.1+ is required for most SAML functionality
+  // See the Spring samples e.g. https://github.com/spring-projects/spring-security-samples/blob/main/servlet/spring-boot/java/saml2/login/build.gradle
+  constraints {
+    implementation "org.opensaml:opensaml-core:4.2.0"
+    implementation "org.opensaml:opensaml-saml-api:4.2.0"
+    implementation "org.opensaml:opensaml-saml-impl:4.2.0"
+  }
 
-	implementation 'org.springframework.boot:spring-boot-starter-freemarker'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework.boot:spring-boot-starter-actuator'
-	implementation 'org.springframework.boot:spring-boot-starter-validation'
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-configuration-processor'
-	implementation 'org.springframework.boot:spring-boot-starter-security'
-	implementation 'org.springframework.security:spring-security-saml2-service-provider'
-	implementation 'org.springframework.session:spring-session-core'
-	implementation 'org.flywaydb:flyway-core'
-	implementation 'org.apache.commons:commons-lang3:3.12.0'
-	implementation 'commons-collections:commons-collections:3.2.2'
+  implementation 'org.springframework.boot:spring-boot-starter-freemarker'
+  implementation 'org.springframework.boot:spring-boot-starter-web'
+  implementation 'org.springframework.boot:spring-boot-starter-actuator'
+  implementation 'org.springframework.boot:spring-boot-starter-validation'
+  implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+  implementation 'org.springframework.boot:spring-boot-configuration-processor'
+  implementation 'org.springframework.boot:spring-boot-starter-security'
+  implementation "org.springframework.data:spring-data-envers"
+  implementation 'org.springframework.security:spring-security-saml2-service-provider'
+  implementation 'org.springframework.session:spring-session-core'
+  implementation 'org.flywaydb:flyway-core'
+  implementation 'org.apache.commons:commons-lang3:3.12.0'
+  implementation 'commons-collections:commons-collections:3.2.2'
 
-	implementation 'uk.co.fivium.energyportalapi:client:v4.1.0'
-	implementation 'uk.co.fivium.digitalformlibrary:digital-form-library:v3.0.0'
-	implementation "org.hibernate:hibernate-envers"
+  implementation 'uk.co.fivium.energyportalapi:client:v4.1.0'
+  implementation 'uk.co.fivium.digitalformlibrary:digital-form-library:v3.0.0'
 
-	implementation 'org.springframework.boot:spring-boot-starter-jooq'
-	implementation 'org.jooq:jooq-codegen'
-	implementation 'org.jooq:jooq-meta'
+  implementation 'org.springframework.boot:spring-boot-starter-jooq'
+  implementation 'org.jooq:jooq-codegen'
+  implementation 'org.jooq:jooq-meta'
 
-	runtimeOnly 'org.postgresql:postgresql'
-	jooqGenerator 'org.postgresql:postgresql'
+  runtimeOnly 'org.postgresql:postgresql'
+  jooqGenerator 'org.postgresql:postgresql'
 
-	// Using H2 for the tests as a temporary measure until a final decision is made on which database is being used.
-	testImplementation 'com.h2database:h2:2.1.214'
+  // Using H2 for the tests as a temporary measure until a final decision is made on which database is being used.
+  testImplementation 'com.h2database:h2:2.1.214'
 
-	testImplementation 'com.tngtech.archunit:archunit-junit5:1.0.1'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.testcontainers:postgresql:1.17.6'
-	testImplementation 'org.springframework.security:spring-security-test'
+  testImplementation 'com.tngtech.archunit:archunit-junit5:1.0.1'
+  testImplementation 'org.springframework.boot:spring-boot-starter-test'
+  testImplementation 'org.testcontainers:postgresql:1.17.6'
+  testImplementation 'org.springframework.security:spring-security-test'
 }
 
 tasks {
-	test {
-		useJUnitPlatform()
-		finalizedBy jacocoTestReport
-		systemProperty 'spring.profiles.active', 'test'
-	}
-	bootJar {
-		archiveFileName.set("${rootProject.name}.jar")
-	}
+  test {
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport
+    systemProperty 'spring.profiles.active', 'test'
+  }
+  bootJar {
+    archiveFileName.set("${rootProject.name}.jar")
+  }
 }
 
 dockerCompose {
-	useComposeFiles = ['devtools/local-dev-compose.yml']
+  useComposeFiles = ['devtools/local-dev-compose.yml']
 }
 
 flyway {
-	user = 'fcs_app'
-	password = 'dev1'
-	schemas = ['fcs']
+  user = 'fcs_app'
+  password = 'dev1'
+  schemas = ['fcs']
 }
 
 //Set the url before the build to dynamically set the port
 //This must be done here, not above, as the serviceInfos object won't exist at configuration time
 flywayMigrate.doFirst {
-	url = 'jdbc:postgresql://' + dockerCompose.servicesInfos['local-db'].host + ':' + dockerCompose.servicesInfos['local-db'].ports[5432] + '/fcs'
-	System.setProperty('DB_URL', url)
+  url = 'jdbc:postgresql://' + dockerCompose.servicesInfos['local-db'].host + ':' + dockerCompose.servicesInfos['local-db'].ports[5432] + '/fcs'
+  System.setProperty('DB_URL', url)
 }
 
 jooq {
-	version = dependencyManagement.importedProperties['jooq.version']
-	configurations {
-		main {
-			generateSchemaSourceOnCompilation = false
-			generationTool {
-				jdbc {
-					driver = 'org.postgresql.Driver'
-					user = 'fcs_app'
-					password = 'dev1'
-				}
-				generator {
-					database {
-						name = 'org.jooq.meta.postgres.PostgresDatabase'
-						inputSchema = 'fcs'
-					}
-					target {
-						packageName = 'uk.co.nstauthority.fieldconsents.generated.jooq'
-					}
-				}
-			}
-		}
-	}
+  version = dependencyManagement.importedProperties['jooq.version']
+  configurations {
+    main {
+      generateSchemaSourceOnCompilation = false
+      generationTool {
+        jdbc {
+          driver = 'org.postgresql.Driver'
+          user = 'fcs_app'
+          password = 'dev1'
+        }
+        generator {
+          database {
+            name = 'org.jooq.meta.postgres.PostgresDatabase'
+            inputSchema = 'fcs'
+          }
+          target {
+            packageName = 'uk.co.nstauthority.fieldconsents.generated.jooq'
+          }
+        }
+      }
+    }
+  }
 }
 
 flywayMigrate.dependsOn(composeUp)
@@ -129,52 +129,52 @@ generateJooq.dependsOn(flywayMigrate)
 generateJooq.finalizedBy(composeDown)
 
 generateJooq.doFirst {
-	//Jooq doesn't allow you to specify the config at runtime
-	//This will make the field modifiable so we can change the url
-	def clazz = generateJooq.class.superclass
-	def field = clazz.getDeclaredField("jooqConfiguration")
+  //Jooq doesn't allow you to specify the config at runtime
+  //This will make the field modifiable so we can change the url
+  def clazz = generateJooq.class.superclass
+  def field = clazz.getDeclaredField("jooqConfiguration")
 
-	field.accessible = true
+  field.accessible = true
 
-	def jooqConfiguration = (org.jooq.meta.jaxb.Configuration) field.get(generateJooq)
-	jooqConfiguration.jdbc.url = System.getProperty('DB_URL')
+  def jooqConfiguration = (org.jooq.meta.jaxb.Configuration) field.get(generateJooq)
+  jooqConfiguration.jdbc.url = System.getProperty('DB_URL')
 }
 
 sonarqube {
-	properties {
-		property 'sonar.projectKey', "Fivium_${rootProject.name}"
-		property 'sonar.organization', 'fivium-gh'
-		property 'sonar.host.url', 'https://sonarcloud.io'
-		property 'sonar.login', System.getenv('SONARCLOUD_TOKEN')
+  properties {
+    property 'sonar.projectKey', "Fivium_${rootProject.name}"
+    property 'sonar.organization', 'fivium-gh'
+    property 'sonar.host.url', 'https://sonarcloud.io'
+    property 'sonar.login', System.getenv('SONARCLOUD_TOKEN')
 
-		if (System.getenv('DRONE_PULL_REQUEST') != null) {
-			property 'sonar.pullrequest.key', System.getenv('DRONE_PULL_REQUEST')
-			property 'sonar.pullrequest.base', System.getenv('DRONE_TARGET_BRANCH')
-			property 'sonar.pullrequest.branch', System.getenv('DRONE_SOURCE_BRANCH')
-			property 'sonar.pullrequest.provider', 'github'
-			property 'sonar.pullrequest.github.repository', 'field-consents'
-			property 'sonar.pullrequest.github.endpoint', 'https://api.github.com/'
-		} else {
-			property 'sonar.branch.name', System.getenv('DRONE_BRANCH')
-			if (System.getenv('DRONE_BRANCH') != 'develop') {
-				property 'sonar.branch.target', 'develop'
-			}
-			property 'sonar.coverage.jacoco.xmlReportPaths', "$buildDir/reports/jacoco/test/jacocoTestReport.xml"
-		}
-	}
+    if (System.getenv('DRONE_PULL_REQUEST') != null) {
+      property 'sonar.pullrequest.key', System.getenv('DRONE_PULL_REQUEST')
+      property 'sonar.pullrequest.base', System.getenv('DRONE_TARGET_BRANCH')
+      property 'sonar.pullrequest.branch', System.getenv('DRONE_SOURCE_BRANCH')
+      property 'sonar.pullrequest.provider', 'github'
+      property 'sonar.pullrequest.github.repository', 'field-consents'
+      property 'sonar.pullrequest.github.endpoint', 'https://api.github.com/'
+    } else {
+      property 'sonar.branch.name', System.getenv('DRONE_BRANCH')
+      if (System.getenv('DRONE_BRANCH') != 'develop') {
+        property 'sonar.branch.target', 'develop'
+      }
+      property 'sonar.coverage.jacoco.xmlReportPaths', "$buildDir/reports/jacoco/test/jacocoTestReport.xml"
+    }
+  }
 }
 
 checkstyle {
-	config = rootProject.resources.text.fromFile('devtools/checkstyle.xml')
-	toolVersion '10.4'
-	ignoreFailures = false
-	maxWarnings = 0
+  config = rootProject.resources.text.fromFile('devtools/checkstyle.xml')
+  toolVersion '10.4'
+  ignoreFailures = false
+  maxWarnings = 0
 }
 
 checkstyleMain.exclude 'uk/co/nstauthority/fieldconsents/generated/**'
 
 jacocoTestReport {
-	reports {
-		xml.required = true
-	}
+  reports {
+    xml.required = true
+  }
 }

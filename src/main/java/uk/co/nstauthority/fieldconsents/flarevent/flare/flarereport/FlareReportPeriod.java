@@ -1,10 +1,10 @@
 package uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport;
 
 import com.google.common.annotations.VisibleForTesting;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import java.time.Month;
 import java.util.NoSuchElementException;
-import javax.persistence.Entity;
-import javax.persistence.Table;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportPeriod;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportPeriodForm;

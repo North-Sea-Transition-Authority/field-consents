@@ -1,8 +1,8 @@
 package uk.co.nstauthority.fieldconsents.flarevent.vent.ventreport;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import java.util.NoSuchElementException;
-import javax.persistence.Entity;
-import javax.persistence.Table;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentRow;
 

@@ -41,23 +41,18 @@ public class WebSecurityConfiguration {
   @Bean
   protected SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
     var authenticationProvider = new OpenSaml4AuthenticationProvider();
-    authenticationProvider.setResponseAuthenticationConverter(r -> samlResponseParser.parseSamlResponse(r.getResponse()));
+    authenticationProvider.setResponseAuthenticationConverter(r ->
+        samlResponseParser.parseSamlResponse(r.getResponse()));
 
-    httpSecurity
-        .authorizeHttpRequests()
-        .mvcMatchers("/assets/**")
-          .permitAll()
-        // TODO - add in when we add FOX change to access new system via workbasket
-        //.mvcMatchers("/*")
-        //  .hasAuthority(IDP_ACCESS_GRANTED_AUTHORITY_NAME)
-        .anyRequest()
-          .authenticated()
-        .and()
+    return httpSecurity
+        .authorizeHttpRequests(http -> http
+            .requestMatchers("/assets/**").permitAll()
+            // TODO - add in when we add FOX change to access new system via workbasket
+            //.requestMatchers("/*").hasAuthority(IDP_ACCESS_GRANTED_AUTHORITY_NAME)
+            .anyRequest().authenticated())
         .saml2Login(saml2 -> saml2.authenticationManager(new ProviderManager(authenticationProvider)))
-        .logout()
-          .logoutSuccessHandler(serviceLogoutSuccessHandler);
-
-    return httpSecurity.build();
+        .logout(logout -> logout.logoutSuccessHandler(serviceLogoutSuccessHandler))
+        .build();
   }
 
   @Bean

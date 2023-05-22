@@ -1,7 +1,7 @@
 package uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport;
 
+import jakarta.persistence.EntityNotFoundException;
 import java.util.Optional;
-import javax.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

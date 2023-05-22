@@ -1,7 +1,7 @@
 package uk.co.nstauthority.fieldconsents.application;
 
+import jakarta.persistence.EntityNotFoundException;
 import java.time.Instant;
-import javax.persistence.EntityNotFoundException;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

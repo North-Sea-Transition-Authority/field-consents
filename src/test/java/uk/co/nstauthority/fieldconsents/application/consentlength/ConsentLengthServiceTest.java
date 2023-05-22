@@ -11,9 +11,9 @@ import static uk.co.nstauthority.fieldconsents.application.consentlength.Consent
 import static uk.co.nstauthority.fieldconsents.production.ProductionTestUtils.END_DATE;
 import static uk.co.nstauthority.fieldconsents.production.ProductionTestUtils.START_DATE;
 
+import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.Optional;
-import javax.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

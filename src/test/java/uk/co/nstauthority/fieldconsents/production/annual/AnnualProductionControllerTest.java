@@ -93,7 +93,7 @@ class AnnualProductionControllerTest extends AbstractApplicationControllerTest {
             .with(csrf())
         )
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl("/applications/1/task-list/"));
+        .andExpect(redirectedUrl("/applications/1/task-list"));
   }
 
   @SecurityTest
