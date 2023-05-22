@@ -10,7 +10,7 @@ import uk.co.nstauthority.fieldconsents.teams.TeamType;
 @Component
 public abstract class AbstractTeamController {
 
-  private final TeamService teamService;
+  protected final TeamService teamService;
 
   protected AbstractTeamController(TeamService teamService) {
     this.teamService = teamService;
@@ -22,5 +22,4 @@ public abstract class AbstractTeamController {
             "No team with ID [%s] found with TeamType of [%s]".formatted(teamId.id(), teamType.name())
         ));
   }
-
 }

@@ -74,8 +74,11 @@ class IndustryAddMemberController extends AbstractTeamController {
         () -> getAddTeamMemberModelAndView(form, team),
         () -> {
           var userToAdd = energyPortalUserService.findUserByUsername(form.getUsername()).get(0);
-          return ReverseRouter.redirect(on(IndustryAddRolesController.class)
-              .renderAddTeamMemberRoles(teamId, new WebUserAccountId(userToAdd.webUserAccountId())));
+          var wuaId = new WebUserAccountId(userToAdd.webUserAccountId());
+          if (teamService.isMemberOfTeam(teamId, wuaId)) {
+            return ReverseRouter.redirect(on(IndustryEditMemberController.class).renderEditMember(teamId, wuaId));
+          }
+          return ReverseRouter.redirect(on(IndustryAddRolesController.class).renderAddTeamMemberRoles(teamId, wuaId));
         }
     );
   }

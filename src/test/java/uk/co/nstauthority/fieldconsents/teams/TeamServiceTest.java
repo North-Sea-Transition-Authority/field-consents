@@ -19,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
+import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
@@ -215,6 +216,24 @@ class TeamServiceTest {
 
     assertThat(result)
         .containsExactly(industryTeam, userOwnTeam);
+  }
+
+  @Test
+  void isMemberOfTeam_whenMember_thenTrue() {
+    var wuaId = new WebUserAccountId(1);
+    var teamId = new TeamId(randomInteger());
+
+    when(teamService.isMemberOfTeam(teamId, wuaId)).thenReturn(true);
+    assertThat(teamService.isMemberOfTeam(teamId, wuaId)).isTrue();
+  }
+
+  @Test
+  void isMemberOfTeam_whenNotMember_thenFalse() {
+    var wuaId = new WebUserAccountId(1);
+    var teamId = new TeamId(randomInteger());
+
+    when(teamService.isMemberOfTeam(teamId, wuaId)).thenReturn(false);
+    assertThat(teamService.isMemberOfTeam(teamId, wuaId)).isFalse();
   }
 
   @Test

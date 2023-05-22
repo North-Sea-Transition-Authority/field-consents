@@ -59,6 +59,10 @@ public class TeamMemberService {
     return teamMemberRoleRepository.existsByWuaIdAndTeam_Id(user.wuaId(), teamId.id());
   }
 
+  public boolean isMemberOfTeam(TeamId teamId, WebUserAccountId webUserAccountId) {
+    return teamMemberRoleRepository.existsByWuaIdAndTeam_Id(webUserAccountId.id(), teamId.id());
+  }
+
   public boolean isMemberOfTeamWithAnyRoleOf(TeamId teamId, ServiceUserDetail user, Set<String> roles) {
     return teamMemberRoleRepository.existsByWuaIdAndTeam_IdAndRoleIn(user.wuaId(), teamId.id(), roles);
   }
