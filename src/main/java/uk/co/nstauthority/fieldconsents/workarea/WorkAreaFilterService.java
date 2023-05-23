@@ -14,10 +14,12 @@ import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationFieldService;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationTerminalService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
+import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.fields.GeographicArea;
@@ -31,12 +33,16 @@ public class WorkAreaFilterService {
 
   private final ApplicationFieldService applicationFieldService;
 
+  private final ApplicationTerminalService applicationTerminalService;
+
   public WorkAreaFilterService(AssetService assetService,
                                FieldService fieldService,
-                               ApplicationFieldService applicationFieldService) {
+                               ApplicationFieldService applicationFieldService,
+                               ApplicationTerminalService applicationTerminalService) {
     this.assetService = assetService;
     this.fieldService = fieldService;
     this.applicationFieldService = applicationFieldService;
+    this.applicationTerminalService = applicationTerminalService;
   }
 
   ArrayList<Condition> getConditions(WorkAreaFilter filter)  {
@@ -69,6 +75,10 @@ public class WorkAreaFilterService {
 
     if (Objects.nonNull(filter.getGeographicAreas())) {
       conditions.add(getGeographicAreasQueryCondition(filter.getGeographicAreas()));
+    }
+
+    if (Objects.nonNull(filter.getAssetTypesWithShore())) {
+      conditions.add(getAssetTypesQueryCondition(filter.getAssetTypesWithShore()));
     }
     return conditions;
   }
@@ -112,6 +122,54 @@ public class WorkAreaFilterService {
         .map(FieldJson::getId)
         .toList();
     return APPLICATION_ASSETS.FIELD_ID.in(primaryFieldIdsInGeographicAreas);
+  }
+
+  private Condition getAssetTypesQueryCondition(List<AssetTypeWithShore> assetTypes) {
+    if (containsTerminalOnly(assetTypes)) {
+
+      return APPLICATION_ASSETS.TERMINAL_ID.in(applicationTerminalService.findDistinctPrimaryTerminalIds());
+
+    } else if (containsFieldsOnly(assetTypes)) {
+
+      return APPLICATION_ASSETS.FIELD_ID.in(getPrimaryFieldIdsOfShoreType(assetTypes));
+    } else {
+
+      return APPLICATION_ASSETS.FIELD_ID.in(getPrimaryFieldIdsOfShoreType(assetTypes))
+          .or(APPLICATION_ASSETS.TERMINAL_ID.in(applicationTerminalService.findDistinctPrimaryTerminalIds()));
+    }
+  }
+
+  private static boolean containsFieldsOnly(List<AssetTypeWithShore> assetTypeWithShores) {
+    var terminalOnly = assetTypeWithShores
+        .stream()
+        .filter(AssetTypeWithShore::isTerminal)
+        .toList();
+
+    return terminalOnly.isEmpty();
+  }
+
+  private static boolean containsTerminalOnly(List<AssetTypeWithShore> assetTypeWithShores) {
+    var fieldsOnly = assetTypeWithShores
+        .stream()
+        .filter(AssetTypeWithShore::isField)
+        .toList();
+
+    return fieldsOnly.isEmpty();
+  }
+
+  private List<Integer> getPrimaryFieldIdsOfShoreType(List<AssetTypeWithShore> assetTypes) {
+    return fieldService
+        .findFieldsByIds(
+            applicationFieldService.findDistinctPrimaryFieldIds(),
+            FIELD_LOOKUP_PURPOSE
+        )
+        .stream()
+        .filter(fieldJson -> assetTypes.stream()
+            .map(AssetTypeWithShore::getShore)
+            .toList()
+            .contains(fieldJson.getShore()))
+        .map(FieldJson::getId)
+        .toList();
   }
 
   private Condition getAssetCondition(AssetJson assetJson) {

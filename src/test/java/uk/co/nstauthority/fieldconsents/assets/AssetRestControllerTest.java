@@ -25,7 +25,7 @@ import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil;
 public class AssetRestControllerTest extends AbstractControllerTest {
 
   AssetWithOperatorJson brentAssetJson = new FieldWithOperatorJson(1, "BRENT",
-      FieldTestUtil.FIELD_1_STATUS, FieldTestUtil.FIELD_1_GEOGRAPHIC_AREA, FieldTestUtil.FIELD_1_SHORE_JSON,
+      FieldTestUtil.FIELD_1_STATUS, FieldTestUtil.FIELD_1_GEOGRAPHIC_AREA, FieldTestUtil.FIELD_1_SHORE,
       OrganisationUnitTestUtil.orgUnit1Json
   );
   AssetWithOperatorJson braeAssetJson = new TerminalWithOperatorJson(1, "BRAE",

@@ -19,6 +19,8 @@ public interface ApplicationAssetRepository extends CrudRepository<ApplicationAs
 
   List<ApplicationAsset> findAllByAssetRoleAndFieldIdIsNotNull(AssetRole assetRole);
 
+  List<ApplicationAsset> findAllByAssetRoleAndTerminalIdIsNotNull(AssetRole assetRole);
+
   Optional<ApplicationAsset> findByApplicationVersionAndAssetNo(ApplicationVersion applicationVersion, Integer assetNo);
 
   Optional<ApplicationAsset> findByApplicationVersionAndFieldId(ApplicationVersion applicationVersion, Integer fieldId);

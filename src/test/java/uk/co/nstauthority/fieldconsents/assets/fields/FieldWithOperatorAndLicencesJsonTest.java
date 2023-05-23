@@ -2,7 +2,7 @@ package uk.co.nstauthority.fieldconsents.assets.fields;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_1_GEOGRAPHIC_AREA;
-import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_1_SHORE_JSON;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_1_SHORE;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_1_STATUS;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1WithOperator;
@@ -26,7 +26,7 @@ class FieldWithOperatorAndLicencesJsonTest {
                 field1.getFieldName(),
                 FIELD_1_STATUS,
                 FIELD_1_GEOGRAPHIC_AREA,
-                FIELD_1_SHORE_JSON,
+                FIELD_1_SHORE,
                 null,
                 Collections.emptyList()
             )
@@ -43,7 +43,7 @@ class FieldWithOperatorAndLicencesJsonTest {
                 field1WithOperator.getFieldName(),
                 FIELD_1_STATUS,
                 FIELD_1_GEOGRAPHIC_AREA,
-                FIELD_1_SHORE_JSON,
+                FIELD_1_SHORE,
                 new OrganisationUnitJson(field1WithOperator.getFieldOperator().getOrganisationUnitId(),
                     field1WithOperator.getFieldOperator().getName()),
                 Collections.emptyList()
@@ -61,7 +61,7 @@ class FieldWithOperatorAndLicencesJsonTest {
                 field1WithOperatorButEmptyLicences.getFieldName(),
                 FIELD_1_STATUS,
                 FIELD_1_GEOGRAPHIC_AREA,
-                FIELD_1_SHORE_JSON,
+                FIELD_1_SHORE,
                 new OrganisationUnitJson(field1WithOperatorButEmptyLicences.getFieldOperator().getOrganisationUnitId(),
                     field1WithOperatorButEmptyLicences.getFieldOperator().getName()),
                 Collections.emptyList()
@@ -79,7 +79,7 @@ class FieldWithOperatorAndLicencesJsonTest {
                 field1WithOperatorAndLicences.getFieldName(),
                 FIELD_1_STATUS,
                 FIELD_1_GEOGRAPHIC_AREA,
-                FIELD_1_SHORE_JSON,
+                FIELD_1_SHORE,
                 new OrganisationUnitJson(field1WithOperatorAndLicences.getFieldOperator().getOrganisationUnitId(),
                     field1WithOperatorAndLicences.getFieldOperator().getName()),
                 field1WithOperatorAndLicences.getLicences().stream().map(

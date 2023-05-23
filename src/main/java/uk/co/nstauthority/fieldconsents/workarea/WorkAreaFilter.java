@@ -18,6 +18,7 @@ public class WorkAreaFilter extends WorkAreaForm implements Serializable {
     assetKey = null;
     operatorId = null;
     geographicAreas = null;
+    assetTypesWithShore = null;
   }
 
   public void update(WorkAreaForm form) {
@@ -28,5 +29,6 @@ public class WorkAreaFilter extends WorkAreaForm implements Serializable {
     assetKey = form.getAssetKey();
     operatorId = form.getOperatorId();
     geographicAreas = form.getGeographicAreas();
+    assetTypesWithShore = form.getAssetTypesWithShore();
   }
 }

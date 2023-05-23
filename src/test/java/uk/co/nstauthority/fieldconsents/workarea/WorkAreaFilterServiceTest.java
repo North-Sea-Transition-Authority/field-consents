@@ -9,6 +9,7 @@ import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2Json;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field3Json;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.TERMINAL_ID_1;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.TERMINAL_ID_2;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationAssets.APPLICATION_ASSETS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.Applications.APPLICATIONS;
@@ -28,9 +29,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationFieldService;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationTerminalService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.assets.AssetTestUtil;
+import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.fields.GeographicArea;
 
@@ -46,6 +49,9 @@ class WorkAreaFilterServiceTest {
   @Mock
   private ApplicationFieldService applicationFieldService;
 
+  @Mock
+  private ApplicationTerminalService applicationTerminalService;
+
   private WorkAreaFilterService workAreaFilterService;
 
   private WorkAreaFilter filter;
@@ -56,7 +62,8 @@ class WorkAreaFilterServiceTest {
     workAreaFilterService = new WorkAreaFilterService(
         assetService,
         fieldService,
-        applicationFieldService
+        applicationFieldService,
+        applicationTerminalService
     );
 
     filter = new WorkAreaFilter();
@@ -201,5 +208,74 @@ class WorkAreaFilterServiceTest {
     var conditions = workAreaFilterService.getConditions(filter);
 
     assertThat(conditions).containsExactly(APPLICATION_ASSETS.FIELD_ID.in(fieldIdsInFilterGeographicAreas));
+  }
+
+  @Test
+  void getConditions_AssetTypesSelected_containsFieldsOnly() {
+    form.setAssetTypesWithShore(List.of(AssetTypeWithShore.FIELD_OFFSHORE, AssetTypeWithShore.FIELD_ONSHORE));
+    filter.update(form);
+
+    var distinctPrimaryFieldIds = List.of(FIELD_ID_1, FIELD_ID_2);
+    var primaryFieldJsonsOfShoreTypes = List.of(field1Json, field2Json);
+
+    when(applicationFieldService.findDistinctPrimaryFieldIds()).thenReturn(distinctPrimaryFieldIds);
+    when(fieldService.findFieldsByIds(distinctPrimaryFieldIds, FIELD_LOOKUP_PURPOSE))
+        .thenReturn(primaryFieldJsonsOfShoreTypes);
+
+    var conditions = workAreaFilterService.getConditions(filter);
+
+    assertThat(conditions).containsExactly(APPLICATION_ASSETS.FIELD_ID.in(distinctPrimaryFieldIds));
+  }
+
+  @Test
+  void getConditions_AssetTypesSelected_conditionContainsOnlyThoseFieldsThatMatchTheFilter() {
+    form.setAssetTypesWithShore(List.of(AssetTypeWithShore.FIELD_OFFSHORE, AssetTypeWithShore.FIELD_ONSHORE));
+    filter.update(form);
+
+    var distinctPrimaryFieldIds = List.of(FIELD_ID_1, FIELD_ID_2, FIELD_ID_3);
+    var primaryFieldJsons = List.of(field1Json, field2Json, field3Json);
+
+    when(applicationFieldService.findDistinctPrimaryFieldIds()).thenReturn(distinctPrimaryFieldIds);
+    when(fieldService.findFieldsByIds(distinctPrimaryFieldIds, FIELD_LOOKUP_PURPOSE))
+        .thenReturn(primaryFieldJsons);
+
+    var fieldIdsInFilterShoreTypes = List.of(FIELD_ID_1, FIELD_ID_2);
+    var conditions = workAreaFilterService.getConditions(filter);
+
+    assertThat(conditions).containsExactly(APPLICATION_ASSETS.FIELD_ID.in(fieldIdsInFilterShoreTypes));
+  }
+
+  @Test
+  void getConditions_AssetTypesSelected_containsTerminalsOnly() {
+    form.setAssetTypesWithShore(List.of(AssetTypeWithShore.TERMINAL));
+    filter.update(form);
+
+    var distinctPrimaryTerminalIds = List.of(TERMINAL_ID_1, TERMINAL_ID_2);
+    when(applicationTerminalService.findDistinctPrimaryTerminalIds()).thenReturn(distinctPrimaryTerminalIds);
+
+    var conditions = workAreaFilterService.getConditions(filter);
+
+    assertThat(conditions).containsExactly(APPLICATION_ASSETS.TERMINAL_ID.in(distinctPrimaryTerminalIds));
+  }
+
+  @Test
+  void getConditions_AssetTypesSelected_containsFieldsAndTerminals() {
+    form.setAssetTypesWithShore(List.of(AssetTypeWithShore.FIELD_OFFSHORE, AssetTypeWithShore.FIELD_ONSHORE, AssetTypeWithShore.TERMINAL));
+    filter.update(form);
+
+    var distinctPrimaryFieldIds = List.of(FIELD_ID_1, FIELD_ID_2);
+    var primaryFieldJsonsOfShoreTypes = List.of(field1Json, field2Json);
+
+    when(applicationFieldService.findDistinctPrimaryFieldIds()).thenReturn(distinctPrimaryFieldIds);
+    when(fieldService.findFieldsByIds(distinctPrimaryFieldIds, FIELD_LOOKUP_PURPOSE))
+        .thenReturn(primaryFieldJsonsOfShoreTypes);
+
+    var distinctPrimaryTerminalIds = List.of(TERMINAL_ID_1, TERMINAL_ID_2);
+    when(applicationTerminalService.findDistinctPrimaryTerminalIds()).thenReturn(distinctPrimaryTerminalIds);
+
+    var conditions = workAreaFilterService.getConditions(filter);
+
+    assertThat(conditions).containsExactly(APPLICATION_ASSETS.FIELD_ID.in(distinctPrimaryFieldIds)
+        .or(APPLICATION_ASSETS.TERMINAL_ID.in(distinctPrimaryTerminalIds)));
   }
 }

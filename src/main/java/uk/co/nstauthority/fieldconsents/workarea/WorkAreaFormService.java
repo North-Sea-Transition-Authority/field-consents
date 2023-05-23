@@ -31,6 +31,7 @@ public class WorkAreaFormService {
     form.setAssetKey(filter.getAssetKey());
     form.setOperatorId(filter.getOperatorId());
     form.setGeographicAreas(filter.getGeographicAreas());
+    form.setAssetTypesWithShore(filter.getAssetTypesWithShore());
     return form;
   }
 

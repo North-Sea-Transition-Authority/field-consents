@@ -4,6 +4,7 @@ import java.util.List;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
+import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.assets.fields.GeographicArea;
 
 public class WorkAreaForm {
@@ -15,6 +16,7 @@ public class WorkAreaForm {
   Integer operatorId;
   String assetKey;
   List<GeographicArea> geographicAreas;
+  List<AssetTypeWithShore> assetTypesWithShore;
 
   public String getReferenceNumber() {
     return referenceNumber;
@@ -71,5 +73,13 @@ public class WorkAreaForm {
 
   public void setGeographicAreas(List<GeographicArea> geographicArea) {
     this.geographicAreas = geographicArea;
+  }
+
+  public List<AssetTypeWithShore> getAssetTypesWithShore() {
+    return assetTypesWithShore;
+  }
+
+  public void setAssetTypesWithShore(List<AssetTypeWithShore> assetTypes) {
+    this.assetTypesWithShore = assetTypes;
   }
 }

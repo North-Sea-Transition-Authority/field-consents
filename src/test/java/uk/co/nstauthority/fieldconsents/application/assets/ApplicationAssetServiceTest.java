@@ -11,6 +11,7 @@ import static uk.co.nstauthority.fieldconsents.application.assets.ApplicationAss
 import static uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil.fieldAsset2;
 import static uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil.fieldAsset3;
 import static uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil.secondaryAssets;
+import static uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil.terminalAsset1;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_ID_1;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
@@ -450,5 +451,20 @@ class ApplicationAssetServiceTest {
 
     assertThat(primaryFieldAssets).hasSize(1);
     assertThat(primaryFieldAssets.get(0)).usingRecursiveComparison().isEqualTo(fieldAsset1);
+  }
+
+  @Test
+  void findAllPrimaryTerminalAssets_emptyList() {
+    when(applicationAssetRepository.findAllByAssetRoleAndTerminalIdIsNotNull(AssetRole.PRIMARY)).thenReturn(Collections.emptyList());
+    assertThat(applicationAssetService.findAllPrimaryTerminalAssets()).isEmpty();
+  }
+
+  @Test
+  void findAllPrimaryTerminalAssets_nonEmptyList() {
+    when(applicationAssetRepository.findAllByAssetRoleAndTerminalIdIsNotNull(AssetRole.PRIMARY)).thenReturn(List.of(terminalAsset1));
+    var primaryFieldAssets = applicationAssetService.findAllPrimaryTerminalAssets();
+
+    assertThat(primaryFieldAssets).hasSize(1);
+    assertThat(primaryFieldAssets.get(0)).usingRecursiveComparison().isEqualTo(terminalAsset1);
   }
 }

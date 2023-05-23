@@ -15,6 +15,7 @@
         <@assetFilter form=form prefilledAsset=prefilledAsset assetSearchRestUrl=assetSearchRestUrl/>
         <@operatorFilter form=form prefilledOperator=prefilledOperator operatorSearchRestUrl=operatorSearchRestUrl/>
         <@geographicAreaFilter form=form geographicAreaCheckboxes=geographicAreas/>
+        <@assetTypeWithShoreFilter form=form assetTypeWithShoreCheckboxes=assetTypesWithShore/>
       </@fdsSearch.searchFilterList>
     </@fdsSearch.searchFilter>
     <@fdsSearch.searchPageContent twoThirdsWidth=true>
@@ -93,6 +94,15 @@
     <@fdsSearch.searchCheckboxes
       path="form.geographicAreas"
       checkboxes=geographicAreaCheckboxes
+    />
+  </@fdsSearch.searchFilterItem>
+</#macro>
+
+<#macro assetTypeWithShoreFilter form assetTypeWithShoreCheckboxes>
+  <@fdsSearch.searchFilterItem itemName="Asset type" expanded=form.assetTypesWithShore?has_content>
+    <@fdsSearch.searchCheckboxes
+      path="form.assetTypesWithShore"
+      checkboxes=assetTypeWithShoreCheckboxes
     />
   </@fdsSearch.searchFilterItem>
 </#macro>

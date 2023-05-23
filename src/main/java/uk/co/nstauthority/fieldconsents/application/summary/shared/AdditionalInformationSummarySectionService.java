@@ -5,12 +5,12 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import uk.co.fivium.energyportalapi.generated.types.FieldShore;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.eiadirection.EiaDirectionService;
 import uk.co.nstauthority.fieldconsents.application.supportinginformation.SupportingInformationService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
+import uk.co.nstauthority.fieldconsents.assets.fields.Shore;
 import uk.co.nstauthority.fieldconsents.summary.SummaryItem;
 import uk.co.nstauthority.fieldconsents.summary.SummarySection;
 import uk.co.nstauthority.fieldconsents.summary.SummarySectionService;
@@ -47,7 +47,7 @@ public class AdditionalInformationSummarySectionService implements SummarySectio
 
     if (primaryAsset.isField()) {
       var primaryFieldJson = fieldService.getField(primaryAsset.getFieldId(), FIELD_LOOKUP_PURPOSE);
-      if (FieldShore.OFFSHORE.equals(primaryFieldJson.getShoreJson().shore())) {
+      if (Shore.OFFSHORE.equals(primaryFieldJson.getShore())) {
         summaryItems.add(getEiaDirectionSummaryItem(applicationVersion));
       }
     }

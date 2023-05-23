@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import uk.co.fivium.energyportalapi.generated.types.FieldShore;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.eiadirection.EiaDirectionController;
@@ -15,6 +14,7 @@ import uk.co.nstauthority.fieldconsents.application.eiadirection.EiaDirectionSer
 import uk.co.nstauthority.fieldconsents.application.supportinginformation.SupportingInformationController;
 import uk.co.nstauthority.fieldconsents.application.supportinginformation.SupportingInformationService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
+import uk.co.nstauthority.fieldconsents.assets.fields.Shore;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListItem;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListLabel;
@@ -54,7 +54,7 @@ public class AdditionalInformationTaskListSectionService implements TaskListSect
 
     if (primaryAsset.isField()) {
       var primaryFieldJson = fieldService.getField(primaryAsset.getFieldId(), FIELD_LOOKUP_PURPOSE);
-      if (FieldShore.OFFSHORE.equals(primaryFieldJson.getShoreJson().shore())) {
+      if (Shore.OFFSHORE.equals(primaryFieldJson.getShore())) {
         items.add(getEiaDirectionTaskListItem(applicationVersion));
       }
     }

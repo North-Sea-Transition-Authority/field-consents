@@ -16,13 +16,13 @@ public class FieldJson implements AssetJson {
 
   private final GeographicArea geographicArea;
 
-  private final FieldShoreJson shoreJson;
+  private final Shore shore;
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FieldJson.class);
 
   public static FieldJson from(Field field) {
     return new FieldJson(field.getFieldId(), field.getFieldName(), FieldStatusJson.from(field),
-        GeographicArea.valueOf(field.getGeographicArea().name()), FieldShoreJson.from(field));
+        GeographicArea.valueOf(field.getGeographicArea().name()), Shore.valueOf(field.getShore().name()));
   }
 
   public static FieldJson fromCachedInformation(Integer fieldId, String fieldName) {
@@ -31,12 +31,12 @@ public class FieldJson implements AssetJson {
   }
 
   public FieldJson(Integer fieldId, String fieldName, FieldStatusJson statusJson,
-                   GeographicArea geographicArea, FieldShoreJson shoreJson) {
+                   GeographicArea geographicArea, Shore shore) {
     this.fieldId = fieldId;
     this.fieldName = fieldName;
     this.statusJson = statusJson;
     this.geographicArea = geographicArea;
-    this.shoreJson = shoreJson;
+    this.shore = shore;
   }
 
   @Override
@@ -63,11 +63,7 @@ public class FieldJson implements AssetJson {
     return geographicArea;
   }
 
-  public String getShoreDisplayName() {
-    return shoreJson != null ? shoreJson.shoreDisplayName() : null;
-  }
-
-  public FieldShoreJson getShoreJson() {
-    return shoreJson;
+  public Shore getShore() {
+    return shore;
   }
 }

@@ -19,7 +19,7 @@ class FieldJsonTest {
                 field1.getFieldName(),
                 new FieldStatusJson(field1.getStatus(), field1.getStatusDisplayName()),
                 GeographicArea.valueOf(field1.getGeographicArea().name()),
-                new FieldShoreJson(field1.getShore(), field1.getShoreDisplayName()))
+                Shore.valueOf(field1.getShore().name()))
         );
 
     // the asserts below check the getters in FieldJson
@@ -30,7 +30,7 @@ class FieldJsonTest {
             FieldJson::getStatusDisplayName,
             FieldJson::getAssetType,
             FieldJson::getGeographicArea,
-            FieldJson::getShoreDisplayName
+            FieldJson::getShore
         )
         .containsExactly(
             field1.getFieldId(),
@@ -38,7 +38,7 @@ class FieldJsonTest {
             field1.getStatusDisplayName(),
             AssetType.FIELD,
             GeographicArea.valueOf(field1.getGeographicArea().name()),
-            field1.getShoreDisplayName()
+            Shore.valueOf(field1.getShore().name())
         );
   }
 
@@ -64,7 +64,7 @@ class FieldJsonTest {
             FieldJson::getStatusDisplayName,
             FieldJson::getAssetType,
             FieldJson::getGeographicArea,
-            FieldJson::getShoreDisplayName
+            FieldJson::getShore
         )
         .containsExactly(
             field1.getFieldId(),

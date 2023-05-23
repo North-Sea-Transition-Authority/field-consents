@@ -161,4 +161,8 @@ public class ApplicationAssetService {
   public List<ApplicationAsset> findAllPrimaryFieldAssets() {
     return applicationAssetRepository.findAllByAssetRoleAndFieldIdIsNotNull(AssetRole.PRIMARY);
   }
+
+  public List<ApplicationAsset> findAllPrimaryTerminalAssets() {
+    return applicationAssetRepository.findAllByAssetRoleAndTerminalIdIsNotNull(AssetRole.PRIMARY);
+  }
 }
