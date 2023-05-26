@@ -11,6 +11,7 @@ import static uk.co.nstauthority.fieldconsents.teams.TeamTestUtil.randomInteger;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -328,5 +329,22 @@ class TeamServiceTest {
     when(teamRepository.findAllTeamsOfTypeThatUserIsMemberOf(user.wuaId(), TeamType.REGULATOR)).thenReturn(List.of(team));
 
     assertThat(teamService.isRegulatorUser(user)).isTrue();
+  }
+
+  @Test
+  void getUserPermissionsForTeam_whenPermissions_thenPermissionsReturned() {
+    var expectedPermissions = Set.of(RolePermission.PROCESS_FCS_APPLICATIONS, RolePermission.VIEW_FCS_APPLICATIONS);
+    when(permissionService.getUserPermissionsForTeam(team, user))
+        .thenReturn(expectedPermissions);
+    assertThat(teamService.getUserPermissionsForTeam(team, user))
+        .containsAll(expectedPermissions);
+  }
+
+  @Test
+  void getUserPermissionsForTeam_whenNoPermissions_thenEmpty() {
+    when(permissionService.getUserPermissionsForTeam(team, user))
+        .thenReturn(Collections.emptySet());
+    assertThat(teamService.getUserPermissionsForTeam(team, user))
+        .containsAll(Collections.emptySet());
   }
 }

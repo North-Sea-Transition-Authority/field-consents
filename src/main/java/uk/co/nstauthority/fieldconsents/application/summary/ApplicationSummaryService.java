@@ -10,7 +10,7 @@ import uk.co.nstauthority.fieldconsents.summary.SummarySection;
 import uk.co.nstauthority.fieldconsents.summary.SummarySectionService;
 
 @Service
-class ApplicationSummaryService {
+public class ApplicationSummaryService {
 
   private final List<SummarySectionService<ApplicationVersion>> summarySectionServices;
 

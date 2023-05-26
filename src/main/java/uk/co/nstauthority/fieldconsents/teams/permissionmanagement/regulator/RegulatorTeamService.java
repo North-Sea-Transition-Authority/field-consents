@@ -45,6 +45,14 @@ public class RegulatorTeamService {
     return teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, Set.of(RegulatorTeamRole.ACCESS_MANAGER.name()));
   }
 
+  public boolean isCaseOfficer(ServiceUserDetail user) {
+    return teamService.getTeamsOfTypeThatUserBelongsTo(user, TeamType.REGULATOR)
+        .stream()
+        .anyMatch(regulatorTeam -> teamMemberService
+            .isMemberOfTeamWithAnyRoleOf(regulatorTeam.toTeamId(), user, Set.of(RegulatorTeamRole.CASE_OFFICER.name()))
+        );
+  }
+
   void addUserTeamRoles(Team team, EnergyPortalUserDto userToAdd, Set<RegulatorTeamRole> roles) {
     var rolesAsStrings = roles
         .stream()

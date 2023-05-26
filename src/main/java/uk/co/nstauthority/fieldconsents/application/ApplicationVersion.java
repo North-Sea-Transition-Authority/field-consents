@@ -45,6 +45,9 @@ public class ApplicationVersion {
   @Enumerated(EnumType.STRING)
   private ApplicationVersionStatus status;
 
+  @Audited
+  private Long caseOfficerWuaId;
+
   public ApplicationVersion() {
   }
 
@@ -140,5 +143,13 @@ public class ApplicationVersion {
 
   public void setStatus(ApplicationVersionStatus status) {
     this.status = status;
+  }
+
+  public Long getCaseOfficerWuaId() {
+    return caseOfficerWuaId;
+  }
+
+  public void setCaseOfficerWuaId(Long caseOfficerWuaId) {
+    this.caseOfficerWuaId = caseOfficerWuaId;
   }
 }

@@ -1,5 +1,7 @@
 package uk.co.nstauthority.fieldconsents.organisations;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -74,5 +76,30 @@ public class OrganisationUnitPermissionService {
     }
 
     return false;
+  }
+
+  public Set<RolePermission> getUserPermissionsForOperator(ServiceUserDetail user,
+                                                           Integer operatorOuId) {
+    var organisationUnitWithGroups = organisationUnitService.getOrganisationUnitWithGroupsById(
+        operatorOuId,
+        "Lookup organisation unit with groups for application security lookup"
+    );
+
+    // if the operator doesn't have an organisation group then no user has any permissions
+    if (organisationUnitWithGroups.organisationGroups().isEmpty()) {
+      return Collections.emptySet();
+    }
+
+    var userRolePermissions = new HashSet<RolePermission>();
+
+    for (var orgGroup : organisationUnitWithGroups.organisationGroups()) {
+      var teamOptional = teamService.getTeamByOrganisationGroupId(orgGroup.getOrganisationGroupId());
+      if (teamOptional.isEmpty()) {
+        continue;
+      }
+      userRolePermissions.addAll(permissionService.getUserPermissionsForTeam(teamOptional.get(), user));
+    }
+
+    return userRolePermissions;
   }
 }

@@ -1,16 +1,24 @@
 package uk.co.nstauthority.fieldconsents.audit;
 
 import org.hibernate.envers.RevisionListener;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
 
 @Service
 public class AuditRevisionListener implements RevisionListener {
 
+  private final UserDetailService userDetailService;
+
+  @Autowired
+  public AuditRevisionListener(UserDetailService userDetailService) {
+    this.userDetailService = userDetailService;
+  }
+
   @Override
   public void newRevision(Object revision) {
     var auditRevision = (AuditRevision) revision;
-
-    // TODO - FCS-5: Update this with the User's wua_id when available
-    auditRevision.setUserWuaId(1);
+    var user = userDetailService.getUserDetail();
+    auditRevision.setUserWuaId(user.wuaId());
   }
 }

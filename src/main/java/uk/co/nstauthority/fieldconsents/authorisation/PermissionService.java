@@ -1,7 +1,10 @@
 package uk.co.nstauthority.fieldconsents.authorisation;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
@@ -22,36 +25,36 @@ public class PermissionService {
   }
 
   public boolean hasPermission(ServiceUserDetail user, Set<RolePermission> requiredPermissions) {
-
-    var teamMembers = teamMemberService.getUserAsTeamMembers(user);
-
-    if (teamMembers == null) {
-      return false;
-    }
-
-    return teamMembers
+    return getUserPermissionsForPredicate(user, teamMember -> true) // implies any team
         .stream()
-        .map(TeamMember::roles)
-        .flatMap(Collection::stream)
-        .map(TeamRole::getRolePermissions)
-        .flatMap(Collection::stream)
         .anyMatch(requiredPermissions::contains);
   }
 
   public boolean hasPermissionForTeam(Team team, ServiceUserDetail user, Collection<RolePermission> requiredPermissions) {
+    return getUserPermissionsForTeam(team, user)
+        .stream()
+        .anyMatch(requiredPermissions::contains);
+  }
+
+  public Set<RolePermission> getUserPermissionsForTeam(Team team, ServiceUserDetail user) {
+    return getUserPermissionsForPredicate(user, teamMember -> teamMember.teamView().teamId().equals(team.toTeamId()));
+  }
+
+  private Set<RolePermission> getUserPermissionsForPredicate(ServiceUserDetail user,
+                                                             Predicate<TeamMember> teamMemberPredicate) {
     var teamMembers = teamMemberService.getUserAsTeamMembers(user);
 
     if (teamMembers == null) {
-      return false;
+      return Collections.emptySet();
     }
 
     return teamMembers
         .stream()
-        .filter(teamMember -> teamMember.teamView().teamId().equals(team.toTeamId()))
+        .filter(teamMemberPredicate)
         .map(TeamMember::roles)
         .flatMap(Collection::stream)
         .map(TeamRole::getRolePermissions)
         .flatMap(Collection::stream)
-        .anyMatch(requiredPermissions::contains);
+        .collect(Collectors.toSet());
   }
 }

@@ -2,18 +2,23 @@ package uk.co.nstauthority.fieldconsents.authorisation;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.stereotype.Controller;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
@@ -21,6 +26,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
@@ -29,9 +35,12 @@ class ApplicationHandlerInterceptorTest extends AbstractApplicationControllerTes
 
   private ApplicationVersion applicationVersionInProgress;
 
+  private ApplicationVersion applicationVersionSubmitted;
+
   @BeforeEach
   void setUp() {
     applicationVersionInProgress = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    applicationVersionSubmitted = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.FLARE);
   }
 
   @SecurityTest
@@ -132,6 +141,41 @@ class ApplicationHandlerInterceptorTest extends AbstractApplicationControllerTes
         .andExpect(status().isOk());
   }
 
+  @SecurityTest
+  void actionEndPointForbidden() throws Exception {
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersionSubmitted));
+
+    when(caseProcessingActionService.getUserActionItems(applicationVersionSubmitted, user))
+        .thenReturn(Collections.emptyList());
+
+    mockMvc.perform(
+            post(ReverseRouter.route(on(ApplicationHandlerInterceptorTest.TestController.class)
+                .actionEndPointForbidden(APPLICATION_ID)))
+                .with(user(user))
+                .with(csrf()))
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void actionEndPointAllowed() throws Exception {
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersionSubmitted));
+
+    when(caseProcessingActionService.getUserActionItems(applicationVersionSubmitted, user))
+        .thenReturn(List.of(
+            CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP,
+            CaseProcessingActionItem.CASE_OFFICER_RELEASE_OWNERSHIP
+        ));
+
+    mockMvc.perform(
+            post(ReverseRouter.route(on(ApplicationHandlerInterceptorTest.TestController.class)
+                .actionEndPointAllowed(APPLICATION_ID)))
+                .with(user(user))
+                .with(csrf()))
+        .andExpect(status().isOk());
+  }
+
   @RequestMapping("/applications/test")
   @Controller
   static class TestController {
@@ -195,6 +239,18 @@ class ApplicationHandlerInterceptorTest extends AbstractApplicationControllerTes
     @HasApplicationStatus(statuses = ApplicationVersionStatus.IN_PROGRESS)
     @HasApplicationPermission(permissions = RolePermission.VIEW_FCS_APPLICATIONS)
     public ModelAndView userHasPermission(@PathVariable Integer applicationId) {
+      return new ModelAndView(VIEW_NAME);
+    }
+
+    @PostMapping("/action-end-point-forbidden/{applicationId}")
+    @ActionEndPoint(CaseProcessingActionItem.CASE_OFFICER_RELEASE_OWNERSHIP)
+    public ModelAndView actionEndPointForbidden(@PathVariable Integer applicationId) {
+      return new ModelAndView(VIEW_NAME);
+    }
+
+    @PostMapping("/action-end-point-allowed/{applicationId}")
+    @ActionEndPoint(CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP)
+    public ModelAndView actionEndPointAllowed(@PathVariable Integer applicationId) {
       return new ModelAndView(VIEW_NAME);
     }
   }

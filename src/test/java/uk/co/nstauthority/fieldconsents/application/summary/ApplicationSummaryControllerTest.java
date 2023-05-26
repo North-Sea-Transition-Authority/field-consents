@@ -48,7 +48,7 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
 
   @ParameterizedTest
   @MethodSource("getInProgressApplicationVersions")
-  void getSubmitSummary_whenInProgressAndUserHasSubmitPermission(ApplicationVersion applicationVersion) throws Exception {
+  void getReviewAndSubmit_whenInProgressAndUserHasSubmitPermission(ApplicationVersion applicationVersion) throws Exception {
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
@@ -85,7 +85,7 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
   }
 
   @SecurityTest
-  void getSubmitSummary_noUser() throws Exception {
+  void getReviewAndSubmit_noUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationSummaryController.class)
             .getReviewAndSubmit(APPLICATION_ID, null))))
         .andExpect(redirectionToLoginUrl());
@@ -93,7 +93,7 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
 
   @ParameterizedTest
   @MethodSource("getSubmittedApplicationVersions")
-  void getSummaryOrRedirect_whenSubmittedApplication_thenGetSummaryView(ApplicationVersion applicationVersion) throws Exception {
+  void getApplicationSummary_whenSubmittedApplicationAndUserHasNoProcessPermission_thenGetSummaryView(ApplicationVersion applicationVersion) throws Exception {
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
@@ -101,6 +101,9 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
     when(applicationAccessService.hasApplicationPermission(
         user, applicationVersion, RolePermission.EDIT_FCS_APPLICATIONS
     )).thenReturn(true);
+    when(applicationAccessService.hasApplicationPermission(
+        user, applicationVersion, RolePermission.PROCESS_FCS_APPLICATIONS
+    )).thenReturn(false);
 
     when(applicationSummaryService.getSummarySections(applicationVersion))
         .thenReturn(Collections.emptyList());
@@ -108,12 +111,12 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
     when(applicationService.generateApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
 
-    getSummaryOrRedirectAndCheckModel(applicationVersion, DUMMY_APP_REF);
+    getApplicationSummaryAndCheckModel(applicationVersion, DUMMY_APP_REF);
   }
 
   @ParameterizedTest
   @MethodSource("getInProgressApplicationVersions")
-  void getSummaryOrRedirect_whenInProgressAndUserHasNoEditPermission_thenGetSummaryView(ApplicationVersion applicationVersion) throws Exception {
+  void getApplicationSummary_whenInProgressAndUserHasNoEditPermission_thenGetSummaryView(ApplicationVersion applicationVersion) throws Exception {
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
@@ -121,11 +124,14 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
     when(applicationAccessService.hasApplicationPermission(
         user, applicationVersion, RolePermission.EDIT_FCS_APPLICATIONS
     )).thenReturn(false);
+    when(applicationAccessService.hasApplicationPermission(
+        user, applicationVersion, RolePermission.PROCESS_FCS_APPLICATIONS
+    )).thenReturn(true);
 
-    getSummaryOrRedirectAndCheckModel(applicationVersion, "Application summary");
+    getApplicationSummaryAndCheckModel(applicationVersion, "Application summary");
   }
 
-  private void getSummaryOrRedirectAndCheckModel(ApplicationVersion applicationVersion, String expectedPageTitle) throws Exception {
+  private void getApplicationSummaryAndCheckModel(ApplicationVersion applicationVersion, String expectedPageTitle) throws Exception {
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ApplicationSummaryController.class)
             .getApplicationSummary(APPLICATION_ID, null)))
             .with(user(user))
@@ -149,7 +155,7 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
 
   @ParameterizedTest
   @MethodSource("getInProgressApplicationVersions")
-  void getSummaryOrRedirect_whenInProgressApplication_thenRedirect(ApplicationVersion applicationVersion) throws Exception {
+  void getApplicationSummary_whenInProgressApplication_thenRedirect(ApplicationVersion applicationVersion) throws Exception {
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
@@ -165,8 +171,29 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
         .andExpect(status().is3xxRedirection());
   }
 
+  @ParameterizedTest
+  @MethodSource("getSubmittedApplicationVersions")
+  void getApplicationSummary_whenSubmittedAndUserHasProcessPermission_thenRedirect(ApplicationVersion applicationVersion) throws Exception {
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
+    when(applicationAccessService.hasApplicationPermission(
+        user, applicationVersion, RolePermission.EDIT_FCS_APPLICATIONS
+    )).thenReturn(true);
+    when(applicationAccessService.hasApplicationPermission(
+        user, applicationVersion, RolePermission.PROCESS_FCS_APPLICATIONS
+    )).thenReturn(true);
+
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationSummaryController.class)
+            .getApplicationSummary(APPLICATION_ID, null)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().is3xxRedirection());
+  }
+
   @SecurityTest
-  void getSummaryOrRedirect_noUser() throws Exception {
+  void getApplicationSummary_noUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationSummaryController.class)
             .getApplicationSummary(APPLICATION_ID, null))))
         .andExpect(redirectionToLoginUrl());

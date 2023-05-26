@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.authorisation;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
@@ -117,6 +118,49 @@ class PermissionServiceTest {
     when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(List.of(teamMember));
 
     assertFalse(permissionService.hasPermissionForTeam(team, USER, Set.of(RolePermission.CREATE_FCS_APPLICATIONS)));
+  }
+
+  @Test
+  void getUserPermissionsForTeam_whenTeamMemberNull_thenEmpty() {
+    var team = TeamTestUtil.Builder().build();
+    when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(null);
+    assertThat(permissionService.getUserPermissionsForTeam(team, USER)).isEmpty();
+  }
+
+  @Test
+  void getUserPermissionsForTeam_whenTeamMemberEmpty_thenEmpty() {
+    var team = TeamTestUtil.Builder().build();
+    when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(Collections.emptyList());
+    assertThat(permissionService.getUserPermissionsForTeam(team, USER)).isEmpty();
+  }
+
+  @Test
+  void getUserPermissionsForTeam_whenTeamMemberWithPermission_thenPermissionReturned() {
+    var team = TeamTestUtil.Builder().build();
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withTeamId(team.toTeamId())
+        .withRole(TestTeamRole.CREATE_FCS_APPLICATIONS_ROLE)
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(List.of(teamMember));
+
+    assertThat(permissionService.getUserPermissionsForTeam(team, USER))
+        .containsExactly(RolePermission.CREATE_FCS_APPLICATIONS);
+  }
+
+  @Test
+  void getUserPermissionsForTeam_whenTeamMemberWithManyPermissions_thenPermissionsReturned() {
+    var team = TeamTestUtil.Builder().build();
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withTeamId(team.toTeamId())
+        .withRole(TestTeamRole.CREATE_FCS_APPLICATIONS_ROLE)
+        .build();
+    teamMember.roles().add(TestTeamRole.NON_CREATE_FCS_APPLICATIONS_ROLE);
+
+    when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(List.of(teamMember));
+
+    assertThat(permissionService.getUserPermissionsForTeam(team, USER))
+        .containsAll(Set.of(RolePermission.CREATE_FCS_APPLICATIONS, RolePermission.VIEW_FCS_APPLICATIONS));
   }
 
   enum TestTeamRole implements TeamRole {

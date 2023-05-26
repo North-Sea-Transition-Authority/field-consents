@@ -16,6 +16,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionService;
 import uk.co.nstauthority.fieldconsents.authentication.SamlResponseParser;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceLogoutSuccessHandler;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
@@ -99,6 +100,9 @@ public abstract class AbstractControllerTest {
 
   @MockBean
   protected ApplicationVersionService applicationVersionService;
+
+  @MockBean
+  protected CaseProcessingActionService caseProcessingActionService;
 
   protected ServiceUserDetail user;
 

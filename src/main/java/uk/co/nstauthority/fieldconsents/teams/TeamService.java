@@ -100,4 +100,8 @@ public class TeamService {
   public Optional<Team> getTeamByOrganisationGroupId(int organisationGroupId) {
     return teamRepository.findByOrganisationGroupId(organisationGroupId);
   }
+
+  public Set<RolePermission> getUserPermissionsForTeam(Team team, ServiceUserDetail user) {
+    return permissionService.getUserPermissionsForTeam(team, user);
+  }
 }

@@ -1,0 +1,58 @@
+package uk.co.nstauthority.fieldconsents.application.caseprocessing.action;
+
+import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+
+import java.util.function.Function;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
+import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.util.enumutil.Displayable;
+
+public enum CaseProcessingActionItem implements Displayable {
+
+  CASE_OFFICER_TAKE_OWNERSHIP("Take ownership", 1, true,
+      applicationId -> ReverseRouter.route(on(ApplicationCaseProcessingController.class)
+          .takeOwnershipCaseOfficer(applicationId, null)), null),
+  CASE_OFFICER_RELEASE_OWNERSHIP("Release ownership", 2, false,
+      applicationId -> ReverseRouter.route(on(ApplicationCaseProcessingController.class)
+          .releaseOwnershipCaseOfficer(applicationId)), null);
+
+  private final String displayName;
+  private final int displayOrder;
+  private final boolean primaryAction;
+  private final Function<Integer, String> postUrl;
+  private final Function<Integer, String> redirectUrl;
+
+  CaseProcessingActionItem(String displayName,
+                           int displayOrder,
+                           boolean primaryAction,
+                           Function<Integer, String> postUrl,
+                           Function<Integer, String> redirectUrl) {
+    this.displayName = displayName;
+    this.displayOrder = displayOrder;
+    this.primaryAction = primaryAction;
+    this.postUrl = postUrl;
+    this.redirectUrl = redirectUrl;
+  }
+
+  @Override
+  public String getDisplayName() {
+    return displayName;
+  }
+
+  @Override
+  public int getDisplayOrder() {
+    return displayOrder;
+  }
+
+  public boolean isPrimaryAction() {
+    return primaryAction;
+  }
+
+  public String getActionPostUrl(int applicationId) {
+    return postUrl == null ? null : postUrl.apply(applicationId);
+  }
+
+  public String getActionRedirectUrl(int applicationId) {
+    return redirectUrl == null ? null : redirectUrl.apply(applicationId);
+  }
+}

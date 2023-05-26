@@ -12,6 +12,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
 import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionController;
 import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionService;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
@@ -88,13 +89,21 @@ public class ApplicationSummaryController {
 
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
 
-    var userHasEditPermission = applicationAccessService.hasApplicationPermission(
-        user, applicationVersion, RolePermission.EDIT_FCS_APPLICATIONS
-    );
+    var userHasEditPermission = applicationAccessService
+        .hasApplicationPermission(user, applicationVersion, RolePermission.EDIT_FCS_APPLICATIONS);
 
     if (ApplicationVersionStatus.IN_PROGRESS.equals(applicationVersion.getStatus())
         && userHasEditPermission) {
       return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+    }
+
+    var userHasProcessPermission = applicationAccessService
+        .hasApplicationPermission(user, applicationVersion, RolePermission.PROCESS_FCS_APPLICATIONS);
+
+    if (ApplicationVersionStatus.SUBMITTED.equals(applicationVersion.getStatus())
+        && userHasProcessPermission) {
+      return ReverseRouter.redirect(on(ApplicationCaseProcessingController.class)
+          .getApplicationCaseProcessing(applicationId, null));
     }
 
     return getApplicationSummaryModelAndView(applicationVersion);
