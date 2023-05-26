@@ -116,6 +116,6 @@ public class ApplicationSummaryController {
         .addObject("summarySections", summarySections)
         .addObject("accordionId", applicationVersion.getId())
         .addObject("wideSummaryDisplay", wideSummaryDisplay)
-        .addObject("backLinkUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null)));
+        .addObject("backLinkUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)));
   }
 }

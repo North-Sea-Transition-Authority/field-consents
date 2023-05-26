@@ -123,4 +123,16 @@ public class OrganisationUnitService {
 
     return organisationGroupQueryService.getOrganisationUnitsByOrganisationGroupIds(organisationGroupIds);
   }
+
+  public List<OrganisationUnitJson> getOrganisationUnitsByIds(List<Integer> organisationUnitIds,
+                                                              String purpose) {
+    var requestPurpose = new RequestPurpose(purpose);
+    var organisationUnitsProjectionRoot = new OrganisationUnitsProjectionRoot()
+        .organisationUnitId().name();
+
+    return organisationApi.getOrganisationUnitsByIds(organisationUnitIds, organisationUnitsProjectionRoot, requestPurpose)
+        .stream()
+        .map(OrganisationUnitJson::from)
+        .toList();
+  }
 }

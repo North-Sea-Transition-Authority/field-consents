@@ -36,6 +36,10 @@ public class TeamService {
     return teamRepository.findAllTeamsOfTypeThatUserIsMemberOf(user.wuaId(), teamType);
   }
 
+  public boolean isRegulatorUser(ServiceUserDetail user) {
+    return !getTeamsOfTypeThatUserBelongsTo(user, TeamType.REGULATOR).isEmpty();
+  }
+
   public List<Team> getTeamsOfTypeThatUserHasPermissionFor(ServiceUserDetail user,
                                                            TeamType teamType,
                                                            Set<RolePermission> requiredPermissions) {

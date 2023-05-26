@@ -23,6 +23,8 @@ import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.fields.GeographicArea;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.teams.TeamService;
 
 @Service
 public class WorkAreaFilterService {
@@ -35,14 +37,18 @@ public class WorkAreaFilterService {
 
   private final ApplicationTerminalService applicationTerminalService;
 
+  private final TeamService teamService;
+
   public WorkAreaFilterService(AssetService assetService,
                                FieldService fieldService,
                                ApplicationFieldService applicationFieldService,
-                               ApplicationTerminalService applicationTerminalService) {
+                               ApplicationTerminalService applicationTerminalService,
+                               TeamService teamService) {
     this.assetService = assetService;
     this.fieldService = fieldService;
     this.applicationFieldService = applicationFieldService;
     this.applicationTerminalService = applicationTerminalService;
+    this.teamService = teamService;
   }
 
   ArrayList<Condition> getConditions(WorkAreaFilter filter)  {
@@ -184,5 +190,16 @@ public class WorkAreaFilterService {
 
   private Condition getOperatorCondition(Integer operatorId) {
     return APPLICATION_VERSIONS.PRIMARY_OPERATOR_OU_ID.eq(operatorId);
+  }
+
+  public WorkAreaFilter getDefaultFilter(ServiceUserDetail user) {
+    var defaultFilter = new WorkAreaFilter();
+
+    if (!teamService.isRegulatorUser(user)) {
+      defaultFilter.setStatuses(List.of(ApplicationVersionStatus.IN_PROGRESS, ApplicationVersionStatus.SUBMITTED));
+    }
+
+    defaultFilter.setApplicationTypes(List.of(ApplicationType.PRODUCTION, ApplicationType.FLARE, ApplicationType.VENT));
+    return defaultFilter;
   }
 }

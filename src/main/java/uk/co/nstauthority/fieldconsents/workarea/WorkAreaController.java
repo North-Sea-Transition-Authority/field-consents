@@ -2,7 +2,6 @@ package uk.co.nstauthority.fieldconsents.workarea;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
-import java.util.List;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -17,6 +16,7 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthT
 import uk.co.nstauthority.fieldconsents.assets.AssetRestController;
 import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.assets.fields.GeographicArea;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.AccessibleByServiceUsers;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
@@ -33,16 +33,21 @@ public class WorkAreaController {
 
   private final WorkAreaFormService workAreaFormService;
 
+  private final WorkAreaFilterService workAreaFilterService;
+
   public static final String WORK_AREA_TITLE = "Work area";
 
-  public WorkAreaController(WorkAreaService workAreaService, WorkAreaFormService workAreaFormService) {
+  public WorkAreaController(WorkAreaService workAreaService,
+                            WorkAreaFormService workAreaFormService,
+                            WorkAreaFilterService workAreaFilterService) {
     this.workAreaService = workAreaService;
     this.workAreaFormService = workAreaFormService;
+    this.workAreaFilterService = workAreaFilterService;
   }
 
   @GetMapping
-  public ModelAndView getWorkArea(@ModelAttribute("workAreaFilter") WorkAreaFilter filter) {
-    var workAreaItems = workAreaService.getWorkAreaItems(filter);
+  public ModelAndView getWorkArea(@ModelAttribute("workAreaFilter") WorkAreaFilter filter, ServiceUserDetail user) {
+    var workAreaItems = workAreaService.getWorkAreaItemsForUser(filter, user);
     var appStatuses = ApplicationVersionStatus.getWorkAreaOptions();
     var appTypes = ApplicationType.getDisplayableOptions();
     var durationTypes = ConsentLengthType.getWorkAreaOptions();
@@ -75,7 +80,7 @@ public class WorkAreaController {
   ModelAndView filterWorkArea(@ModelAttribute("form") WorkAreaForm form,
                               @ModelAttribute("workAreaFilter") WorkAreaFilter filter) {
     filter.update(form);
-    return ReverseRouter.redirect(on(WorkAreaController.class).getWorkArea(null));
+    return ReverseRouter.redirect(on(WorkAreaController.class).getWorkArea(null, null));
   }
 
   @GetMapping("/clear-filters")
@@ -83,14 +88,11 @@ public class WorkAreaController {
                                           SessionStatus sessionStatus) {
     sessionStatus.setComplete();
     filter.clearFilter();
-    return ReverseRouter.redirect(on(WorkAreaController.class).getWorkArea(null));
+    return ReverseRouter.redirect(on(WorkAreaController.class).getWorkArea(null, null));
   }
 
   @ModelAttribute("workAreaFilter")
-  private WorkAreaFilter getDefaultFilter() {
-    var defaultFilter = new WorkAreaFilter();
-    defaultFilter.setStatuses(List.of(ApplicationVersionStatus.IN_PROGRESS, ApplicationVersionStatus.SUBMITTED));
-    defaultFilter.setApplicationTypes(List.of(ApplicationType.PRODUCTION, ApplicationType.FLARE, ApplicationType.VENT));
-    return defaultFilter;
+  private WorkAreaFilter getDefaultFilter(ServiceUserDetail user) {
+    return workAreaFilterService.getDefaultFilter(user);
   }
 }

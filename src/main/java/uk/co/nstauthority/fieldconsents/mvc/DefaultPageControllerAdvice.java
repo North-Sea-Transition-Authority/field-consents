@@ -62,7 +62,7 @@ class DefaultPageControllerAdvice {
   }
 
   private void addCommonUrls(Model model) {
-    model.addAttribute("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null)));
+    model.addAttribute("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)));
   }
 
   private void addUser(Model model) {

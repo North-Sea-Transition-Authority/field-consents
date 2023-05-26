@@ -32,7 +32,7 @@ class TopNavigationServiceTest {
         .containsExactly(
             tuple(
                 WorkAreaController.WORK_AREA_TITLE,
-                ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null))
+                ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null))
             ),
             tuple(
                 AssetSelectionController.ASSET_SELECTION_TITLE,

@@ -3,8 +3,11 @@ package uk.co.nstauthority.fieldconsents.organisations;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_1;
+import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_2;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.ORG_GROUP_ID_1;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.ORG_GROUP_ID_2;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit1;
@@ -16,6 +19,7 @@ import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTes
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnits;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.CREATE_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.SUBMIT_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaService.ALL_ORG_UNITS_WORK_AREA_PURPOSE;
 
 import jakarta.persistence.EntityNotFoundException;
 import java.util.Collections;
@@ -28,7 +32,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.organisation.OrganisationApi;
+import uk.co.fivium.energyportalapi.generated.client.OrganisationUnitsProjectionRoot;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
@@ -300,5 +306,33 @@ class OrganisationUnitServiceTest {
 
     assertThat(organisationUnitService.getOperatorsUserHasPermissionsFor(USER, SUBMIT_PERMISSION_SET))
         .isEqualTo(List.of(orgUnit1Json, orgUnit2Json));
+  }
+
+  @Test
+  void getOrganisationUnitsByIds_emptyList() {
+    when(organisationApi.getOrganisationUnitsByIds(
+        anyList(),
+        any(OrganisationUnitsProjectionRoot.class),
+        any(RequestPurpose.class))
+    ).thenReturn(Collections.emptyList());
+
+    assertThat(organisationUnitService.getOrganisationUnitsByIds(
+        List.of(PRIMARY_OPERATOR_OU_ID_1, PRIMARY_OPERATOR_OU_ID_2),
+        ALL_ORG_UNITS_WORK_AREA_PURPOSE)
+    ).isEqualTo(Collections.emptyList());
+  }
+
+  @Test
+  void getOrganisationUnitsByIds() {
+    when(organisationApi.getOrganisationUnitsByIds(
+        anyList(),
+        any(OrganisationUnitsProjectionRoot.class),
+        any(RequestPurpose.class))
+    ).thenReturn(List.of(orgUnit1, orgUnit2));
+
+    assertThat(organisationUnitService.getOrganisationUnitsByIds(
+        List.of(PRIMARY_OPERATOR_OU_ID_1, PRIMARY_OPERATOR_OU_ID_2),
+        ALL_ORG_UNITS_WORK_AREA_PURPOSE)
+    ).isEqualTo(List.of(orgUnit1Json, orgUnit2Json));
   }
 }

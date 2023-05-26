@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.workarea;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.USER_WUA_ID;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_ID_1;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_ID_2;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_ID_3;
@@ -36,6 +37,8 @@ import uk.co.nstauthority.fieldconsents.assets.AssetTestUtil;
 import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.fields.GeographicArea;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.fieldconsents.teams.TeamService;
 
 @ExtendWith(MockitoExtension.class)
 class WorkAreaFilterServiceTest {
@@ -52,6 +55,9 @@ class WorkAreaFilterServiceTest {
   @Mock
   private ApplicationTerminalService applicationTerminalService;
 
+  @Mock
+  private TeamService teamService;
+
   private WorkAreaFilterService workAreaFilterService;
 
   private WorkAreaFilter filter;
@@ -63,7 +69,8 @@ class WorkAreaFilterServiceTest {
         assetService,
         fieldService,
         applicationFieldService,
-        applicationTerminalService
+        applicationTerminalService,
+        teamService
     );
 
     filter = new WorkAreaFilter();
@@ -277,5 +284,47 @@ class WorkAreaFilterServiceTest {
 
     assertThat(conditions).containsExactly(APPLICATION_ASSETS.FIELD_ID.in(distinctPrimaryFieldIds)
         .or(APPLICATION_ASSETS.TERMINAL_ID.in(distinctPrimaryTerminalIds)));
+  }
+
+  @Test
+  void getDefaultFilter_forIndustryUser() {
+    var serviceUser = ServiceUserDetailTestUtil.Builder()
+        .withWuaId(USER_WUA_ID)
+        .build();
+    when(teamService.isRegulatorUser(serviceUser)).thenReturn(false);
+    var expectedStatuses = List.of(ApplicationVersionStatus.IN_PROGRESS, ApplicationVersionStatus.SUBMITTED);
+    var expectedApplicationTypes = List.of(ApplicationType.PRODUCTION, ApplicationType.FLARE, ApplicationType.VENT);
+
+    var workAreaFilter = workAreaFilterService.getDefaultFilter(serviceUser);
+
+    assertThat(workAreaFilter.statuses).isEqualTo(expectedStatuses);
+    assertThat(workAreaFilter.applicationTypes).isEqualTo(expectedApplicationTypes);
+
+    assertNonDefaultFilter(workAreaFilter);
+  }
+
+  @Test
+  void getDefaultFilter_forRegulatorUser() {
+    var serviceUser = ServiceUserDetailTestUtil.Builder()
+        .withWuaId(USER_WUA_ID)
+        .build();
+    when(teamService.isRegulatorUser(serviceUser)).thenReturn(true);
+    var expectedApplicationTypes = List.of(ApplicationType.PRODUCTION, ApplicationType.FLARE, ApplicationType.VENT);
+
+    var workAreaFilter = workAreaFilterService.getDefaultFilter(serviceUser);
+
+    assertThat(workAreaFilter.statuses).isNull();
+    assertThat(workAreaFilter.applicationTypes).isEqualTo(expectedApplicationTypes);
+
+    assertNonDefaultFilter(workAreaFilter);
+  }
+
+  private void assertNonDefaultFilter(WorkAreaFilter workAreaFilter) {
+    assertThat(workAreaFilter.referenceNumber).isNull();
+    assertThat(workAreaFilter.durationTypes).isNull();
+    assertThat(workAreaFilter.assetKey).isNull();
+    assertThat(workAreaFilter.operatorId).isNull();
+    assertThat(workAreaFilter.geographicAreas).isNull();
+    assertThat(workAreaFilter.assetTypesWithShore).isNull();
   }
 }

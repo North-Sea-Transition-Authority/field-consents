@@ -1,5 +1,7 @@
 package uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator;
 
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_PERMISSIONS;
+
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
@@ -20,11 +22,21 @@ public enum RegulatorTeamRole implements TeamRole {
       20,
       EnumSet.of(RolePermission.MANAGE_INDUSTRY_TEAMS)
   ),
+  CASE_OFFICER(
+      "Case officer",
+      "Can process applications and run consultations",
+      30,
+      EnumSet.of(
+          RolePermission.PROCESS_FCS_APPLICATIONS,
+          RolePermission.VIEW_FCS_APPLICATIONS,
+          RolePermission.VIEW_FCS_CONSENTS
+      )
+  ),
   VIEWER(
       "Viewer",
       "Can view all applications and consents",
-      30,
-      EnumSet.of(RolePermission.VIEW_FCS_APPLICATIONS, RolePermission.VIEW_FCS_CONSENTS)
+      40,
+      VIEW_PERMISSIONS
   );
 
   private final String displayName;

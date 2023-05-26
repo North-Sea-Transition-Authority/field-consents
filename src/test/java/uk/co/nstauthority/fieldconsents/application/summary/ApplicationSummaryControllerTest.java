@@ -143,7 +143,7 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
         .containsEntry("accordionId", applicationVersion.getId())
         .containsKey("wideSummaryDisplay")
         .containsEntry("backLinkUrl", ReverseRouter.route(on(WorkAreaController.class)
-            .getWorkArea(null)));
+            .getWorkArea(null, null)));
 
   }
 

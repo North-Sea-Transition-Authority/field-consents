@@ -16,6 +16,7 @@ import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaController.WORK_
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
@@ -24,6 +25,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.assets.AssetRestController;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
@@ -39,9 +41,12 @@ class WorkAreaControllerTest extends AbstractControllerTest {
   @MockBean
   private WorkAreaFormService workAreaFormService;
 
+  @MockBean
+  private WorkAreaFilterService workAreaFilterService;
+
   @SecurityTest
   void getWorkArea_whenNotAuthenticated_thenRedirectedToLogin() throws Exception {
-    mockMvc.perform(get(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null))))
+    mockMvc.perform(get(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null))))
         .andExpect(redirectionToLoginUrl());
   }
 
@@ -50,16 +55,17 @@ class WorkAreaControllerTest extends AbstractControllerTest {
     var filter = new WorkAreaFilter();
     filter.setStatuses(List.of(ApplicationVersionStatus.IN_PROGRESS, ApplicationVersionStatus.SUBMITTED));
     filter.setApplicationTypes(List.of(ApplicationType.values()));
+    when(workAreaFilterService.getDefaultFilter(user)).thenReturn(filter);
     var form = WorkAreaFormServiceTestUtil.getWorkAreaFormForFilterWithFieldAndOperator();
     when(workAreaFormService.getFromFilter(any(WorkAreaFilter.class))).thenReturn(form);
     var orgUnitRestSearchItem = WorkAreaFormServiceTestUtil.ORGANISATION_REST_SEARCH_ITEM;
     when(workAreaFormService.getPrefilledOrganisation(any())).thenReturn(orgUnitRestSearchItem);
     var assetRestSearchItem = WorkAreaFormServiceTestUtil.FIELD_REST_SEARCH_ITEM;
     when(workAreaFormService.getPrefilledAsset(any())).thenReturn(assetRestSearchItem);
-    var workAreaItems = List.of(WorkAreaTestUtil.getWorkAreaItem());
-    when(workAreaService.getWorkAreaItems(any(WorkAreaFilter.class))).thenReturn(workAreaItems);
+    var workAreaItems = Set.of(WorkAreaTestUtil.getWorkAreaItem());
+    when(workAreaService.getWorkAreaItemsForUser(any(WorkAreaFilter.class), any(ServiceUserDetail.class))).thenReturn(workAreaItems);
 
-    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null)))
+    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name(WORK_AREA_VIEW_NAME))
@@ -93,7 +99,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
     form.setApplicationTypes(Collections.singletonList(ApplicationType.PRODUCTION));
     form.setDurationTypes(Collections.singletonList(ConsentLengthType.LONG_TERM));
     var filter = new WorkAreaFilter();
-    var expectedRedirectUrl = ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null));
+    var expectedRedirectUrl = ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null));
 
     mockMvc.perform(
         post(ReverseRouter.route(on(WorkAreaController.class).filterWorkArea(null, null)))
@@ -123,7 +129,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
     form.setDurationTypes(Collections.singletonList(ConsentLengthType.LONG_TERM));
     var filter = new WorkAreaFilter();
     filter.update(form);
-    var expectedRedirectUrl = ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null));
+    var expectedRedirectUrl = ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null));
 
     mockMvc.perform(
         get(ReverseRouter.route(on(WorkAreaController.class).clearWorkAreaFilter(null, null)))

@@ -8,8 +8,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.teams.TeamTestUtil.randomInteger;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -17,6 +19,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
@@ -39,10 +42,18 @@ class TeamServiceTest {
   @InjectMocks
   private TeamService teamService;
 
+  private ServiceUserDetail user;
+
+  private Team team;
+
+  @BeforeEach
+  void setUp() {
+    user = ServiceUserDetailTestUtil.Builder().build();
+    team = TeamTestUtil.Builder().build();
+  }
+
   @Test
   void getTeam_whenMatch_thenReturnTeam() {
-
-    var team = TeamTestUtil.Builder().build();
 
     when(teamRepository.findByIdAndTeamType(team.getId(), team.getTeamType())).thenReturn(Optional.of(team));
     var result = teamService.getTeam(TeamId.valueOf(team.getId()), team.getTeamType());
@@ -53,9 +64,6 @@ class TeamServiceTest {
 
   @Test
   void getTeam_whenNoMatch_thenEmptyOptionalReturned() {
-
-    var team = TeamTestUtil.Builder().build();
-
     when(teamRepository.findByIdAndTeamType(team.getId(), team.getTeamType())).thenReturn(Optional.empty());
     var result = teamService.getTeam(TeamId.valueOf(team.getId()), team.getTeamType());
 
@@ -66,7 +74,6 @@ class TeamServiceTest {
   @ParameterizedTest
   @EnumSource(value = TeamType.class)
   void getTeamsOfTypeThatUserBelongsTo_whenUserIsNotMember_thenNoTeamsReturned(TeamType teamType) {
-    var user = ServiceUserDetailTestUtil.Builder().build();
     when(teamRepository.findAllTeamsOfTypeThatUserIsMemberOf(user.wuaId(), teamType)).thenReturn(List.of());
 
     var result = teamService.getTeamsOfTypeThatUserBelongsTo(user, teamType);
@@ -78,9 +85,6 @@ class TeamServiceTest {
   @ParameterizedTest
   @EnumSource(value = TeamType.class)
   void getTeamsOfTypeThatUserBelongsTo_whenUserIsMember_thenTeamsReturned(TeamType teamType) {
-    var user = ServiceUserDetailTestUtil.Builder().build();
-    var team = new Team();
-
     when(teamRepository.findAllTeamsOfTypeThatUserIsMemberOf(user.wuaId(), teamType)).thenReturn(List.of(team));
 
     var result = teamService.getTeamsOfTypeThatUserBelongsTo(user, teamType);
@@ -92,7 +96,6 @@ class TeamServiceTest {
   @ParameterizedTest
   @EnumSource(value = TeamType.class)
   void getTeamsOfTypeThatUserHasPermissionFor_whenUserIsNotMember_thenNoTeamsReturned(TeamType teamType) {
-    var user = ServiceUserDetailTestUtil.Builder().build();
     when(teamRepository.findAllTeamsOfTypeThatUserIsMemberOf(user.wuaId(), teamType)).thenReturn(List.of());
 
     var result = teamService.getTeamsOfTypeThatUserHasPermissionFor(user, teamType, RolePermission.VIEW_PERMISSIONS);
@@ -104,9 +107,6 @@ class TeamServiceTest {
   @ParameterizedTest
   @EnumSource(value = TeamType.class)
   void getTeamsOfTypeThatUserHasPermissionFor_whenUserIsMemberAndHasPermission_thenTeamsReturned(TeamType teamType) {
-    var user = ServiceUserDetailTestUtil.Builder().build();
-    var team = new Team();
-
     when(teamRepository.findAllTeamsOfTypeThatUserIsMemberOf(user.wuaId(), teamType)).thenReturn(List.of(team));
     when(permissionService.hasPermissionForTeam(team, user, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(true);
@@ -120,9 +120,6 @@ class TeamServiceTest {
   @ParameterizedTest
   @EnumSource(value = TeamType.class)
   void getTeamsOfTypeThatUserHasPermissionFor_whenUserIsMemberAndDoesntHavePermission_thenNoTeamsReturned(TeamType teamType) {
-    var user = ServiceUserDetailTestUtil.Builder().build();
-    var team = new Team();
-
     when(teamRepository.findAllTeamsOfTypeThatUserIsMemberOf(user.wuaId(), teamType)).thenReturn(List.of(team));
     when(permissionService.hasPermissionForTeam(team, user, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(false);
@@ -135,7 +132,6 @@ class TeamServiceTest {
 
   @Test
   void getUserAccessibleTeams_whenCanManageIndustryTeams_thenIndustryTeamsReturned() {
-    var user = ServiceUserDetailTestUtil.Builder().build();
     var industryTeamManager = TeamMemberTestUtil.Builder()
         .withTeamType(TeamType.REGULATOR)
         .withRole(RegulatorTeamRole.INDUSTRY_ACCESS_MANAGER)
@@ -163,7 +159,6 @@ class TeamServiceTest {
 
   @Test
   void getUserAccessibleTeams_whenOnlyHasAccessToViewOwnTeams_thenOnlyPersonalTeams() {
-    var user = ServiceUserDetailTestUtil.Builder().build();
     var industryTeamManager = TeamMemberTestUtil.Builder()
         .withTeamType(TeamType.REGULATOR)
         .withRole(RegulatorTeamRole.ACCESS_MANAGER)
@@ -187,7 +182,6 @@ class TeamServiceTest {
 
   @Test
   void getUserAccessibleTeams_whenHasAccessToViewIndustryTeams_andIsInIndustryTeam_thenVerifyDistinct() {
-    var user = ServiceUserDetailTestUtil.Builder().build();
     var industryTeamManager = TeamMemberTestUtil.Builder()
         .withTeamType(TeamType.REGULATOR)
         .withRole(RegulatorTeamRole.INDUSTRY_ACCESS_MANAGER)
@@ -238,7 +232,6 @@ class TeamServiceTest {
 
   @Test
   void canUserAccessMultipleTeams_oneTeam() {
-    var user = ServiceUserDetailTestUtil.Builder().build();
     var industryTeamViewer = TeamMemberTestUtil.Builder()
         .withTeamType(TeamType.INDUSTRY)
         .withRole(IndustryTeamRole.VIEWER)
@@ -260,7 +253,6 @@ class TeamServiceTest {
 
   @Test
   void canUserAccessMultipleTeams_manyTeams() {
-    var user = ServiceUserDetailTestUtil.Builder().build();
     var industryTeamManager = TeamMemberTestUtil.Builder()
         .withTeamType(TeamType.REGULATOR)
         .withRole(RegulatorTeamRole.INDUSTRY_ACCESS_MANAGER)
@@ -321,5 +313,20 @@ class TeamServiceTest {
 
     assertThat(teamService.getTeamByOrganisationGroupId(organisationGroupId))
         .isEmpty();
+  }
+
+  @Test
+  void isRegulatorUser_whenUserIsNotRegulator_thenFalse() {
+    when(teamRepository.findAllTeamsOfTypeThatUserIsMemberOf(user.wuaId(), TeamType.REGULATOR)).thenReturn(
+        Collections.emptyList());
+
+    assertThat(teamService.isRegulatorUser(user)).isFalse();
+  }
+
+  @Test
+  void isRegulatorUser_whenUserIsRegulator_thenTrue() {
+    when(teamRepository.findAllTeamsOfTypeThatUserIsMemberOf(user.wuaId(), TeamType.REGULATOR)).thenReturn(List.of(team));
+
+    assertThat(teamService.isRegulatorUser(user)).isTrue();
   }
 }

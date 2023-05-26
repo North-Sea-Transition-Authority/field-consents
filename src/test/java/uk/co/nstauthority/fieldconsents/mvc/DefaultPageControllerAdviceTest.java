@@ -77,7 +77,7 @@ class DefaultPageControllerAdviceTest {
         .hasNoNullFieldsOrProperties();
 
     assertThat(modelMap).contains(
-        entry("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null))),
+        entry("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null))),
         entry("loggedInUser", loggedInUser)
     );
   }

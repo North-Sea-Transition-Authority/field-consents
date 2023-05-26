@@ -50,7 +50,7 @@ dependencies {
   implementation 'org.apache.commons:commons-lang3:3.12.0'
   implementation 'commons-collections:commons-collections:3.2.2'
 
-  implementation 'uk.co.fivium.energyportalapi:client:v4.1.0'
+  implementation 'uk.co.fivium.energyportalapi:client:v6.0.1'
   implementation 'uk.co.fivium.digitalformlibrary:digital-form-library:v3.0.0'
 
   implementation 'org.springframework.boot:spring-boot-starter-jooq'

@@ -9,7 +9,8 @@ public enum RolePermission {
   VIEW_FCS_APPLICATIONS,
   EDIT_FCS_APPLICATIONS,
   SUBMIT_FCS_APPLICATIONS,
-  VIEW_FCS_CONSENTS;
+  VIEW_FCS_CONSENTS,
+  PROCESS_FCS_APPLICATIONS;
 
   public static final Set<RolePermission> VIEW_PERMISSIONS =
       Set.of(RolePermission.VIEW_FCS_APPLICATIONS, RolePermission.VIEW_FCS_CONSENTS);
