@@ -35,4 +35,14 @@ public class ApplicationVersionService {
         .stream()
         .max(Comparator.comparing(ApplicationVersion::getVersion));
   }
+
+  public void deleteApplicationVersion(ApplicationVersion applicationVersion) {
+    if (ApplicationVersionStatus.IN_PROGRESS.equals(applicationVersion.getStatus())) {
+      applicationVersion.setStatus(ApplicationVersionStatus.DELETED);
+      applicationVersionRepository.save(applicationVersion);
+    } else {
+      throw new IllegalStateException("Cannot delete draft application with version id %d as application status is not %s"
+          .formatted(applicationVersion.getId(), ApplicationVersionStatus.IN_PROGRESS));
+    }
+  }
 }

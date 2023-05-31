@@ -2,6 +2,9 @@ package uk.co.nstauthority.fieldconsents.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.Assert.assertThrows;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_VERSION_ID;
@@ -13,6 +16,8 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -113,5 +118,28 @@ class ApplicationVersionServiceTest {
 
     assertThat(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .isNotPresent();
+  }
+
+  @Test
+  void deleteApplicationVersion_whenCalled_thenVerifyEntityUpdatedAndSaved() {
+    applicationVersionService.deleteApplicationVersion(applicationVersion);
+
+    assertThat(applicationVersion.getStatus()).isEqualTo(ApplicationVersionStatus.DELETED);
+    verify(applicationVersionRepository).save(applicationVersion);
+  }
+
+  @ParameterizedTest
+  @EnumSource(ApplicationVersionStatus.class)
+  void deleteApplicationVersion_ensureOnlyDraftCanBeDeleted(ApplicationVersionStatus applicationVersionStatus) {
+    if (applicationVersionStatus == ApplicationVersionStatus.IN_PROGRESS) {
+      applicationVersionService.deleteApplicationVersion(applicationVersion);
+      verify(applicationVersionRepository).save(applicationVersion);
+    } else {
+      applicationVersion.setStatus(applicationVersionStatus);
+
+      assertThrows(IllegalStateException.class,
+          () -> applicationVersionService.deleteApplicationVersion(applicationVersion));
+      verify(applicationVersionRepository, never()).save(applicationVersion);
+    }
   }
 }

@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
@@ -106,25 +105,15 @@ public class ApplicationSummaryController {
           .getApplicationCaseProcessing(applicationId, null));
     }
 
-    return getApplicationSummaryModelAndView(applicationVersion);
-  }
-
-  private ModelAndView getApplicationSummaryModelAndView(ApplicationVersion applicationVersion) {
-
-    var summarySections = applicationSummaryService.getSummarySections(applicationVersion);
-
-    var wideSummaryDisplay =
-        ApplicationTypeFeature.WIDE_SUMMARY_DISPLAY.allowed(applicationVersion.getApplication().getType());
-
     var pageTitle = ApplicationVersionStatus.IN_PROGRESS.equals(applicationVersion.getStatus())
         ? "Application summary"
         : applicationService.generateApplicationReference(applicationVersion);
 
-    return new ModelAndView("fcs/application/applicationSummary")
-        .addObject("pageTitle", pageTitle)
-        .addObject("summarySections", summarySections)
-        .addObject("accordionId", applicationVersion.getId())
-        .addObject("wideSummaryDisplay", wideSummaryDisplay)
-        .addObject("backLinkUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)));
+    return applicationSummaryService.getApplicationSummaryModelAndView(
+        applicationVersion,
+        "fcs/application/applicationSummary",
+        pageTitle,
+        ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null))
+    );
   }
 }

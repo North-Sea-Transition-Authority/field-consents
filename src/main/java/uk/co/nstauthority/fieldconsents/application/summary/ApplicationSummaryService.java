@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.ModelAndView;
+import uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.summary.SummarySection;
 import uk.co.nstauthority.fieldconsents.summary.SummarySectionService;
@@ -25,5 +27,21 @@ public class ApplicationSummaryService {
         .flatMap(Optional::stream)
         .sorted(Comparator.comparing(SummarySection::displayOrder))
         .toList();
+  }
+
+  public ModelAndView getApplicationSummaryModelAndView(ApplicationVersion applicationVersion, String viewName,
+                                                        String pageTitle, String backLinkUrl) {
+
+    var summarySections = getSummarySections(applicationVersion);
+
+    var wideSummaryDisplay =
+        ApplicationTypeFeature.WIDE_SUMMARY_DISPLAY.allowed(applicationVersion.getApplication().getType());
+
+    return new ModelAndView(viewName)
+        .addObject("pageTitle", pageTitle)
+        .addObject("summarySections", summarySections)
+        .addObject("accordionId", applicationVersion.getId())
+        .addObject("wideSummaryDisplay", wideSummaryDisplay)
+        .addObject("backLinkUrl", backLinkUrl);
   }
 }

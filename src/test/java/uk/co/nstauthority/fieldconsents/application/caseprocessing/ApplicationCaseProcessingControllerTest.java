@@ -1,6 +1,8 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -74,6 +76,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     when(applicationService.generateApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
 
+    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any(), any());
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
             .getApplicationCaseProcessing(APPLICATION_ID, null)))
             .with(user(user))

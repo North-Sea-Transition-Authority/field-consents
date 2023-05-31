@@ -1,6 +1,8 @@
 package uk.co.nstauthority.fieldconsents.application.summary;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -132,6 +134,7 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
   }
 
   private void getApplicationSummaryAndCheckModel(ApplicationVersion applicationVersion, String expectedPageTitle) throws Exception {
+    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any(), any());
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ApplicationSummaryController.class)
             .getApplicationSummary(APPLICATION_ID, null)))
             .with(user(user))

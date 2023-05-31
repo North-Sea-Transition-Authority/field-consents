@@ -22,5 +22,9 @@
   notificationBannerContentOverride=deleteBanner
 >
   <@applicationContextInfo.applicationContextInfo applicationContext=applicationContext/>
+  <@fdsAction.link
+    linkText="Delete application"
+    linkUrl=springUrl(deleteApplicationUrl)
+    linkClass="govuk-button govuk-button--secondary"/>
   <@taskList.standardTaskList taskListSections=taskListSections/>
 </@defaultPage>
