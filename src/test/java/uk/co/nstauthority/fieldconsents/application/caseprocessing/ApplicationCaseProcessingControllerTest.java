@@ -3,13 +3,9 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doCallRealMethod;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
@@ -31,7 +27,6 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.CaseAssignmentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionView;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
@@ -49,9 +44,6 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
 
   @MockBean
   private ApplicationSummaryService applicationSummaryService;
-
-  @MockBean
-  private CaseAssignmentService caseAssignmentService;
 
   @SecurityTest
   void getApplicationCaseProcessing_noUser() throws Exception {
@@ -96,50 +88,6 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
         .containsEntry("caseProcessingActions", actionViews)
         .containsEntry("backLinkUrl", ReverseRouter.route(on(WorkAreaController.class)
             .getWorkArea(null, null)));
-  }
-
-  @ParameterizedTest
-  @MethodSource("getSubmittedApplicationVersions")
-  void takeOwnershipCaseOfficer(ApplicationVersion applicationVersion) throws Exception {
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
-        .thenReturn(applicationVersion);
-
-    mockMvc.perform(
-            post(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-                .takeOwnershipCaseOfficer(APPLICATION_ID, null)))
-                .with(csrf())
-                .with(user(user))
-        )
-        .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .getApplicationCaseProcessing(APPLICATION_ID, null))));
-
-    verify(caseAssignmentService, times(1))
-        .assignCaseOfficer(applicationVersion, user);
-  }
-
-  @ParameterizedTest
-  @MethodSource("getSubmittedApplicationVersions")
-  void releaseOwnershipCaseOfficer(ApplicationVersion applicationVersion) throws Exception {
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
-        .thenReturn(applicationVersion);
-
-    mockMvc.perform(
-            post(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-                .releaseOwnershipCaseOfficer(APPLICATION_ID)))
-                .with(csrf())
-                .with(user(user))
-        )
-        .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .getApplicationCaseProcessing(APPLICATION_ID, null))));
-
-    verify(caseAssignmentService, times(1))
-        .unassignCaseOfficer(applicationVersion);
   }
 
   private static Stream<Arguments> getSubmittedApplicationVersions() {

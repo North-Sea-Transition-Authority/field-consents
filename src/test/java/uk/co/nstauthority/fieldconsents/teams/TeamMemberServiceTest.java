@@ -120,6 +120,7 @@ class TeamMemberServiceTest {
         .thenReturn(true);
 
     assertTrue(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, roles));
+    assertTrue(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, new WebUserAccountId(user.wuaId()), roles));
   }
 
   @Test
@@ -134,6 +135,7 @@ class TeamMemberServiceTest {
     teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, roles);
 
     assertFalse(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, roles));
+    assertFalse(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, new WebUserAccountId(user.wuaId()), roles));
   }
 
   @Test

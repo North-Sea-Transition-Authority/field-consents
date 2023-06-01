@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.teams.Team;
 import uk.co.nstauthority.fieldconsents.teams.TeamId;
@@ -45,11 +46,11 @@ public class RegulatorTeamService {
     return teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, Set.of(RegulatorTeamRole.ACCESS_MANAGER.name()));
   }
 
-  public boolean isCaseOfficer(ServiceUserDetail user) {
-    return teamService.getTeamsOfTypeThatUserBelongsTo(user, TeamType.REGULATOR)
+  public boolean isCaseOfficer(WebUserAccountId wuaId) {
+    return teamService.getTeamsOfTypeThatUserBelongsTo(wuaId, TeamType.REGULATOR)
         .stream()
         .anyMatch(regulatorTeam -> teamMemberService
-            .isMemberOfTeamWithAnyRoleOf(regulatorTeam.toTeamId(), user, Set.of(RegulatorTeamRole.CASE_OFFICER.name()))
+            .isMemberOfTeamWithAnyRoleOf(regulatorTeam.toTeamId(), wuaId, Set.of(RegulatorTeamRole.CASE_OFFICER.name()))
         );
   }
 

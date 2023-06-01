@@ -1,5 +1,11 @@
 package uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator;
 
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ASSIGN_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.GRANT_ROLES;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.MANAGE_INDUSTRY_TEAMS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_CONSENTS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_PERMISSIONS;
 
 import java.util.EnumSet;
@@ -14,28 +20,38 @@ public enum RegulatorTeamRole implements TeamRole {
       "Access manager",
       "Can add, remove and update members of this team",
       10,
-      EnumSet.of(RolePermission.GRANT_ROLES)
+      EnumSet.of(GRANT_ROLES)
   ),
   INDUSTRY_ACCESS_MANAGER(
       "Industry access manager",
       "Manage industry access to the service",
       20,
-      EnumSet.of(RolePermission.MANAGE_INDUSTRY_TEAMS)
+      EnumSet.of(MANAGE_INDUSTRY_TEAMS)
   ),
   CASE_OFFICER(
       "Case officer",
       "Can process applications and run consultations",
       30,
       EnumSet.of(
-          RolePermission.PROCESS_FCS_APPLICATIONS,
-          RolePermission.VIEW_FCS_APPLICATIONS,
-          RolePermission.VIEW_FCS_CONSENTS
+          PROCESS_FCS_APPLICATIONS,
+          VIEW_FCS_APPLICATIONS,
+          VIEW_FCS_CONSENTS
+      )
+  ),
+  CASE_MANAGER(
+      "Case manager",
+      "Can view all applications and consents and assign case officers",
+      40,
+      EnumSet.of(
+          ASSIGN_FCS_APPLICATIONS,
+          VIEW_FCS_APPLICATIONS,
+          VIEW_FCS_CONSENTS
       )
   ),
   VIEWER(
       "Viewer",
       "Can view all applications and consents",
-      40,
+      50,
       VIEW_PERMISSIONS
   );
 

@@ -96,6 +96,28 @@ class TeamServiceTest {
 
   @ParameterizedTest
   @EnumSource(value = TeamType.class)
+  void getTeamsOfTypeThatUserBelongsTo_wuaId_whenUserIsNotMember_thenNoTeamsReturned(TeamType teamType) {
+    when(teamRepository.findAllTeamsOfTypeThatUserIsMemberOf(user.wuaId(), teamType)).thenReturn(List.of());
+
+    var result = teamService.getTeamsOfTypeThatUserBelongsTo(new WebUserAccountId(user.wuaId()), teamType);
+
+    assertThat(result).isEmpty();
+    verify(teamRepository, times(1)).findAllTeamsOfTypeThatUserIsMemberOf(user.wuaId(), teamType);
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = TeamType.class)
+  void getTeamsOfTypeThatUserBelongsTo__wuaId_whenUserIsMember_thenTeamsReturned(TeamType teamType) {
+    when(teamRepository.findAllTeamsOfTypeThatUserIsMemberOf(user.wuaId(), teamType)).thenReturn(List.of(team));
+
+    var result = teamService.getTeamsOfTypeThatUserBelongsTo(new WebUserAccountId(user.wuaId()), teamType);
+
+    assertThat(result).containsExactly(team);
+    verify(teamRepository, times(1)).findAllTeamsOfTypeThatUserIsMemberOf(user.wuaId(), teamType);
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = TeamType.class)
   void getTeamsOfTypeThatUserHasPermissionFor_whenUserIsNotMember_thenNoTeamsReturned(TeamType teamType) {
     when(teamRepository.findAllTeamsOfTypeThatUserIsMemberOf(user.wuaId(), teamType)).thenReturn(List.of());
 

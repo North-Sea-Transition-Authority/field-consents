@@ -67,6 +67,10 @@ public class TeamMemberService {
     return teamMemberRoleRepository.existsByWuaIdAndTeam_IdAndRoleIn(user.wuaId(), teamId.id(), roles);
   }
 
+  public boolean isMemberOfTeamWithAnyRoleOf(TeamId teamId, WebUserAccountId wuaId, Set<String> roles) {
+    return teamMemberRoleRepository.existsByWuaIdAndTeam_IdAndRoleIn(wuaId.id(), teamId.id(), roles);
+  }
+
   public List<TeamMember> getUserAsTeamMembers(ServiceUserDetail user) {
     Map<Team, List<TeamMemberRole>> teamRoleMap = teamMemberRoleRepository.findAllByWuaId(user.wuaId())
         .stream()

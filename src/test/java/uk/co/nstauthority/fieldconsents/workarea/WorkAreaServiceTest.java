@@ -8,6 +8,8 @@ import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.P
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_ID_1;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.ORG_GROUP_ID_1;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ASSIGN_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaFormService.FIELD_LOOKUP_PURPOSE;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaService.ALL_ORG_UNITS_WORK_AREA_PURPOSE;
 
@@ -140,7 +142,7 @@ class WorkAreaServiceTest {
     when(workAreaFilterService.getConditions(filter)).thenReturn(new ArrayList<>());
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.INDUSTRY, Set.of(RolePermission.EDIT_FCS_APPLICATIONS))).thenReturn(
         Collections.emptyList());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, Set.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS))).thenReturn(
         List.of(regulatorTeam));
     var workAreaItemDto = WorkAreaTestUtil.getWorkAreaItemDtoForShortVentSubmittedForTerminal();
     when(workAreaItemDtoRepository.runQuery(any())).thenReturn(List.of(workAreaItemDto));

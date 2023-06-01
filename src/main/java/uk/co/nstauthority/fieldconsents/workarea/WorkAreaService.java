@@ -88,9 +88,11 @@ public class WorkAreaService {
       workAreaItems.addAll(getIndustryWorkAreaItems(industryTeams, conditions));
     }
 
-    var regulatorTeams =
-        teamService.getTeamsOfTypeThatUserHasPermissionFor(
-            user, TeamType.REGULATOR, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS));
+    var regulatorTeams = teamService.getTeamsOfTypeThatUserHasPermissionFor(
+        user,
+        TeamType.REGULATOR,
+        Set.of(RolePermission.PROCESS_FCS_APPLICATIONS, RolePermission.ASSIGN_FCS_APPLICATIONS)
+    );
 
     if (!regulatorTeams.isEmpty()) {
       workAreaItems.addAll(getRegulatorWorkAreaItems(conditions));

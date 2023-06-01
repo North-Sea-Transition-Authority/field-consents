@@ -20,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.Team;
 import uk.co.nstauthority.fieldconsents.teams.TeamId;
@@ -33,6 +34,8 @@ import uk.co.nstauthority.fieldconsents.teams.TeamType;
 class RegulatorTeamServiceTest {
 
   private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
+
+  private static final WebUserAccountId WEB_USER_ACCOUNT_ID = WebUserAccountId.from(USER);
 
   @Mock
   private TeamService teamService;
@@ -110,30 +113,30 @@ class RegulatorTeamServiceTest {
 
   @Test
   void isCaseOfficer_whenCaseOfficer_thenTrue() {
-    when(teamService.getTeamsOfTypeThatUserBelongsTo(USER, TeamType.REGULATOR))
+    when(teamService.getTeamsOfTypeThatUserBelongsTo(WEB_USER_ACCOUNT_ID, TeamType.REGULATOR))
         .thenReturn(List.of(team));
-    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, USER, Set.of(RegulatorTeamRole.CASE_OFFICER.name())))
+    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, WEB_USER_ACCOUNT_ID, Set.of(RegulatorTeamRole.CASE_OFFICER.name())))
         .thenReturn(true);
 
-    assertTrue(regulatorTeamService.isCaseOfficer(USER));
+    assertTrue(regulatorTeamService.isCaseOfficer(WEB_USER_ACCOUNT_ID));
   }
 
   @Test
   void isCaseOfficer_whenNotCaseOfficer_thenFalse() {
-    when(teamService.getTeamsOfTypeThatUserBelongsTo(USER, TeamType.REGULATOR))
+    when(teamService.getTeamsOfTypeThatUserBelongsTo(WEB_USER_ACCOUNT_ID, TeamType.REGULATOR))
         .thenReturn(List.of(team));
-    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, USER, Set.of(RegulatorTeamRole.CASE_OFFICER.name())))
+    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, WEB_USER_ACCOUNT_ID, Set.of(RegulatorTeamRole.CASE_OFFICER.name())))
         .thenReturn(false);
 
-    assertFalse(regulatorTeamService.isCaseOfficer(USER));
+    assertFalse(regulatorTeamService.isCaseOfficer(WEB_USER_ACCOUNT_ID));
   }
 
   @Test
   void isCaseOfficer_whenNoTeamsOfRegulatorType_thenFalse() {
-    when(teamService.getTeamsOfTypeThatUserBelongsTo(USER, TeamType.REGULATOR))
+    when(teamService.getTeamsOfTypeThatUserBelongsTo(WEB_USER_ACCOUNT_ID, TeamType.REGULATOR))
         .thenReturn(Collections.emptyList());
 
-    assertFalse(regulatorTeamService.isCaseOfficer(USER));
+    assertFalse(regulatorTeamService.isCaseOfficer(WEB_USER_ACCOUNT_ID));
   }
 
   @Test

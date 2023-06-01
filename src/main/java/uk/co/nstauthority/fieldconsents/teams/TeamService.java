@@ -36,6 +36,10 @@ public class TeamService {
     return teamRepository.findAllTeamsOfTypeThatUserIsMemberOf(user.wuaId(), teamType);
   }
 
+  public List<Team> getTeamsOfTypeThatUserBelongsTo(WebUserAccountId wuaId, TeamType teamType) {
+    return teamRepository.findAllTeamsOfTypeThatUserIsMemberOf(wuaId.id(), teamType);
+  }
+
   public boolean isRegulatorUser(ServiceUserDetail user) {
     return !getTeamsOfTypeThatUserBelongsTo(user, TeamType.REGULATOR).isEmpty();
   }

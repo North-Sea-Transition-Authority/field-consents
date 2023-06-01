@@ -96,11 +96,12 @@ public class ApplicationSummaryController {
       return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
     }
 
-    var userHasProcessPermission = applicationAccessService
-        .hasApplicationPermission(user, applicationVersion, RolePermission.PROCESS_FCS_APPLICATIONS);
+    var userHasProcessOrAssignPermission = applicationAccessService
+        .hasApplicationPermission(user, applicationVersion,
+            RolePermission.PROCESS_FCS_APPLICATIONS, RolePermission.ASSIGN_FCS_APPLICATIONS);
 
     if (ApplicationVersionStatus.SUBMITTED.equals(applicationVersion.getStatus())
-        && userHasProcessPermission) {
+        && userHasProcessOrAssignPermission) {
       return ReverseRouter.redirect(on(ApplicationCaseProcessingController.class)
           .getApplicationCaseProcessing(applicationId, null));
     }

@@ -16,9 +16,9 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil
 import uk.co.nstauthority.fieldconsents.authorisation.ApplicationAccessService;
 import uk.co.nstauthority.fieldconsents.authorisation.ApplicationHandlerInterceptor;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
+import uk.co.nstauthority.fieldconsents.authorisation.rules.ActionEndPointInterceptorRule;
 import uk.co.nstauthority.fieldconsents.authorisation.rules.ApplicationAccessInterceptorRule;
 import uk.co.nstauthority.fieldconsents.authorisation.rules.ApplicationStatusInterceptorRule;
-import uk.co.nstauthority.fieldconsents.authorisation.rules.ActionEndPointInterceptorRule;
 
 @Import({
     ApplicationAccessInterceptorRule.class,
@@ -62,13 +62,16 @@ public abstract class AbstractApplicationControllerTest extends AbstractControll
   void setupWhenUserHasApplicationAccessPermission() {
     when(applicationAccessService.hasApplicationPermission(any(), any(), any()))
         .thenReturn(true);
+    when(applicationAccessService.hasApplicationPermission(any(), any(), any(), any()))
+        .thenReturn(true);
   }
 
   void setupWhenUserCanCallAllActionEndPoints() {
     when(caseProcessingActionService.getUserActionItems(any(), any()))
         .thenReturn(List.of(
             CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP,
-            CaseProcessingActionItem.CASE_OFFICER_RELEASE_OWNERSHIP
+            CaseProcessingActionItem.CASE_OFFICER_RELEASE_OWNERSHIP,
+            CaseProcessingActionItem.CASE_OFFICER_ASSIGN_OWNERSHIP
         ));
   }
 }

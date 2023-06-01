@@ -8,6 +8,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_ASSIGN_OWNERSHIP;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_RELEASE_OWNERSHIP;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 
 import java.util.Collections;
@@ -26,7 +29,6 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
@@ -164,8 +166,8 @@ class ApplicationHandlerInterceptorTest extends AbstractApplicationControllerTes
 
     when(caseProcessingActionService.getUserActionItems(applicationVersionSubmitted, user))
         .thenReturn(List.of(
-            CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP,
-            CaseProcessingActionItem.CASE_OFFICER_RELEASE_OWNERSHIP
+            CASE_OFFICER_TAKE_OWNERSHIP,
+            CASE_OFFICER_RELEASE_OWNERSHIP
         ));
 
     mockMvc.perform(
@@ -174,6 +176,76 @@ class ApplicationHandlerInterceptorTest extends AbstractApplicationControllerTes
                 .with(user(user))
                 .with(csrf()))
         .andExpect(status().isOk());
+  }
+
+  @SecurityTest
+  void getAssigmentEndpointAllowed() throws Exception {
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersionSubmitted));
+
+    when(caseProcessingActionService.getUserActionItems(applicationVersionSubmitted, user))
+        .thenReturn(List.of(
+            CASE_OFFICER_TAKE_OWNERSHIP,
+            CASE_OFFICER_RELEASE_OWNERSHIP,
+            CASE_OFFICER_ASSIGN_OWNERSHIP
+        ));
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(ApplicationHandlerInterceptorTest.TestController.class)
+                .getAssignmentEndpoint(APPLICATION_ID)))
+                .with(user(user)))
+        .andExpect(status().isOk());
+  }
+
+  @SecurityTest
+  void getAssigmentEndpointForbidden() throws Exception {
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersionSubmitted));
+
+    when(caseProcessingActionService.getUserActionItems(applicationVersionSubmitted, user))
+        .thenReturn(List.of(CASE_OFFICER_RELEASE_OWNERSHIP));
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(ApplicationHandlerInterceptorTest.TestController.class)
+                .getAssignmentEndpoint(APPLICATION_ID)))
+                .with(user(user)))
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void postAssigmentEndpointAllowed() throws Exception {
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersionSubmitted));
+
+    when(caseProcessingActionService.getUserActionItems(applicationVersionSubmitted, user))
+        .thenReturn(List.of(
+            CASE_OFFICER_TAKE_OWNERSHIP,
+            CASE_OFFICER_RELEASE_OWNERSHIP,
+            CASE_OFFICER_ASSIGN_OWNERSHIP
+        ));
+
+    mockMvc.perform(
+            post(ReverseRouter.route(on(ApplicationHandlerInterceptorTest.TestController.class)
+                .postAssignmentEndpoint(APPLICATION_ID)))
+                .with(user(user))
+                .with(csrf()))
+        .andExpect(status().isOk());
+  }
+
+  @SecurityTest
+  void postAssigmentEndpointForbidden() throws Exception {
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersionSubmitted));
+
+    when(caseProcessingActionService.getUserActionItems(applicationVersionSubmitted, user))
+        .thenReturn(List.of(CASE_OFFICER_RELEASE_OWNERSHIP));
+
+    mockMvc.perform(
+            post(ReverseRouter.route(on(ApplicationHandlerInterceptorTest.TestController.class)
+                .postAssignmentEndpoint(APPLICATION_ID)))
+                .with(user(user))
+                .with(csrf()))
+        .andExpect(status().isForbidden());
   }
 
   @RequestMapping("/applications/test")
@@ -243,14 +315,26 @@ class ApplicationHandlerInterceptorTest extends AbstractApplicationControllerTes
     }
 
     @PostMapping("/action-end-point-forbidden/{applicationId}")
-    @ActionEndPoint(CaseProcessingActionItem.CASE_OFFICER_RELEASE_OWNERSHIP)
+    @ActionEndPoint(CASE_OFFICER_RELEASE_OWNERSHIP)
     public ModelAndView actionEndPointForbidden(@PathVariable Integer applicationId) {
       return new ModelAndView(VIEW_NAME);
     }
 
     @PostMapping("/action-end-point-allowed/{applicationId}")
-    @ActionEndPoint(CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP)
+    @ActionEndPoint(CASE_OFFICER_TAKE_OWNERSHIP)
     public ModelAndView actionEndPointAllowed(@PathVariable Integer applicationId) {
+      return new ModelAndView(VIEW_NAME);
+    }
+
+    @GetMapping("/get-assignment-endpoint/{applicationId}")
+    @ActionEndPoint(CASE_OFFICER_ASSIGN_OWNERSHIP)
+    public ModelAndView getAssignmentEndpoint(@PathVariable Integer applicationId) {
+      return new ModelAndView(VIEW_NAME);
+    }
+
+    @PostMapping("/post-assignment-endpoint/{applicationId}")
+    @ActionEndPoint(CASE_OFFICER_ASSIGN_OWNERSHIP)
+    public ModelAndView postAssignmentEndpoint(@PathVariable Integer applicationId) {
       return new ModelAndView(VIEW_NAME);
     }
   }
