@@ -41,7 +41,7 @@ public class PermissionService {
   }
 
   private Set<RolePermission> getUserPermissionsForPredicate(ServiceUserDetail user,
-                                                             Predicate<TeamMember> teamMemberPredicate) {
+                                                            Predicate<TeamMember> teamMemberPredicate) {
     var teamMembers = teamMemberService.getUserAsTeamMembers(user);
 
     if (teamMembers == null) {

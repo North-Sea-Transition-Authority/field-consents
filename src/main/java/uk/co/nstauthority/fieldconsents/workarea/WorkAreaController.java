@@ -1,6 +1,8 @@
 package uk.co.nstauthority.fieldconsents.workarea;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.MY_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.UNASSIGNED_APPLICATIONS;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,8 +20,11 @@ import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.assets.fields.GeographicArea;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.AccessibleByServiceUsers;
+import uk.co.nstauthority.fieldconsents.authorisation.HasPermission;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
+import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Controller
 // the ordering of the mappings is important here otherwise the top navigation always highlights the work area
@@ -29,25 +34,77 @@ import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestContro
 @AccessibleByServiceUsers
 public class WorkAreaController {
 
+  public static final String WORK_AREA_TITLE = "Work area";
+
   private final WorkAreaService workAreaService;
 
   private final WorkAreaFormService workAreaFormService;
 
   private final WorkAreaFilterService workAreaFilterService;
 
-  public static final String WORK_AREA_TITLE = "Work area";
+  private final TeamService teamService;
+
 
   public WorkAreaController(WorkAreaService workAreaService,
                             WorkAreaFormService workAreaFormService,
-                            WorkAreaFilterService workAreaFilterService) {
+                            WorkAreaFilterService workAreaFilterService,
+                            TeamService teamService) {
     this.workAreaService = workAreaService;
     this.workAreaFormService = workAreaFormService;
     this.workAreaFilterService = workAreaFilterService;
+    this.teamService = teamService;
   }
 
   @GetMapping
   public ModelAndView getWorkArea(@ModelAttribute("workAreaFilter") WorkAreaFilter filter, ServiceUserDetail user) {
-    var workAreaItems = workAreaService.getWorkAreaItemsForUser(filter, user);
+    var isRegulatorUser = teamService.isRegulatorUser(user);
+
+    if (isRegulatorUser) {
+      return renderRegulatorWorkAreaOnTab(filter, user, MY_APPLICATIONS);
+    }
+
+    return getWorkAreaModelAndView(filter, user)
+        .addObject("isRegulatorUser", isRegulatorUser)
+        .addObject("workAreaItems", workAreaService.getIndustryWorkAreaItems(filter, user));
+  }
+
+  @GetMapping("case-officer-my-applications")
+  @HasPermission(permissions = RolePermission.PROCESS_FCS_APPLICATIONS)
+  public ModelAndView getWorkAreaCaseOfficerMyApplications(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
+                                                           ServiceUserDetail user) {
+    return renderRegulatorWorkAreaOnTab(filter, user, MY_APPLICATIONS);
+  }
+
+  @PostMapping("case-officer-my-applications")
+  @HasPermission(permissions = RolePermission.PROCESS_FCS_APPLICATIONS)
+  public ModelAndView postWorkAreaCaseOfficerMyApplications(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
+                                                            ServiceUserDetail user) {
+    return ReverseRouter.redirect(on(WorkAreaController.class).getWorkAreaCaseOfficerMyApplications(filter, user));
+  }
+
+  @GetMapping("case-officer-unassigned")
+  @HasPermission(permissions = RolePermission.PROCESS_FCS_APPLICATIONS)
+  public ModelAndView getWorkAreaCaseOfficerUnassignedApplications(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
+                                                                   ServiceUserDetail user) {
+    return renderRegulatorWorkAreaOnTab(filter, user, UNASSIGNED_APPLICATIONS);
+  }
+
+  @PostMapping("case-officer-unassigned")
+  @HasPermission(permissions = RolePermission.PROCESS_FCS_APPLICATIONS)
+  public ModelAndView postWorkAreaCaseOfficerUnassignedApplications(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
+                                                                    ServiceUserDetail user) {
+    return ReverseRouter.redirect(on(WorkAreaController.class).getWorkAreaCaseOfficerUnassignedApplications(filter, user));
+  }
+
+  private ModelAndView renderRegulatorWorkAreaOnTab(WorkAreaFilter filter, ServiceUserDetail user,
+                                                    WorkAreaTab workAreaTab) {
+    return getWorkAreaModelAndView(filter, user)
+        .addObject("selectedTab", workAreaTab.getValue())
+        .addObject("workAreaItems", workAreaService.getRegulatorWorkAreaItems(filter, user, workAreaTab))
+        .addObject("isRegulatorUser", true);
+  }
+
+  private ModelAndView getWorkAreaModelAndView(WorkAreaFilter filter, ServiceUserDetail user) {
     var appStatuses = ApplicationVersionStatus.getWorkAreaOptions();
     var appTypes = ApplicationType.getDisplayableOptions();
     var durationTypes = ConsentLengthType.getWorkAreaOptions();
@@ -58,7 +115,6 @@ public class WorkAreaController {
     var assetTypesWithShore = AssetTypeWithShore.getDisplayableOptions();
 
     return new ModelAndView("fcs/workarea/workArea")
-        .addObject("workAreaItems", workAreaItems)
         .addObject("clearFiltersUrl",
             ReverseRouter.route(on(WorkAreaController.class).clearWorkAreaFilter(null, null)))
         .addObject("appStatuses", appStatuses)
@@ -73,7 +129,9 @@ public class WorkAreaController {
         .addObject("geographicAreas", geographicAreas)
         .addObject("assetTypesWithShore", assetTypesWithShore)
         .addObject("form", form)
-        .addObject("pageTitle", WORK_AREA_TITLE);
+        .addObject("pageTitle", WORK_AREA_TITLE)
+        .addObject("workAreaTabs", workAreaService.getTabsAvailableToUser(user));
+
   }
 
   @PostMapping

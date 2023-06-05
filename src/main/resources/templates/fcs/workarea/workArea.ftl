@@ -3,7 +3,7 @@
 <@defaultPage
   htmlTitle=pageTitle
   pageHeading=pageTitle
-  pageSize=PageSize.FULL_WIDTH
+  pageSize=PageSize.FULL_PAGE_WIDTH
 >
   <@fdsSearch.searchPage>
     <@fdsSearch.searchFilter oneThirdWidth=true>
@@ -19,11 +19,30 @@
       </@fdsSearch.searchFilterList>
     </@fdsSearch.searchFilter>
     <@fdsSearch.searchPageContent twoThirdsWidth=true>
-      <@fdsResultList.resultList resultCount=workAreaItems?size>
-        <#list workAreaItems as workAreaItem>
-          <@fcsWorkAreaItem workAreaItem=workAreaItem/>
-        </#list>
-      </@fdsResultList.resultList>
+      <#if isRegulatorUser>
+        <@fdsBackendTabs.tabs tabsHeading="work-area tabs">
+          <@fdsBackendTabs.tabList>
+            <#list workAreaTabs as tab>
+              <@fdsBackendTabs.tab tabLabel=tab.label tabUrl=tab.url tabAnchor=tab.anchor currentTab=selectedTab tabValue=tab.value />
+            </#list>
+          </@fdsBackendTabs.tabList>
+          <#list workAreaTabs as tab>
+            <@fdsBackendTabs.tabContent tabAnchor=tab.anchor currentTab=selectedTab tabValue=tab.value>
+              <@fdsResultList.resultList resultCount=workAreaItems?size>
+                <#list workAreaItems as workAreaItem>
+                  <@fcsWorkAreaItem workAreaItem=workAreaItem/>
+                </#list>
+              </@fdsResultList.resultList>
+            </@fdsBackendTabs.tabContent>
+          </#list>
+        </@fdsBackendTabs.tabs>
+      <#else>
+        <@fdsResultList.resultList resultCount=workAreaItems?size>
+          <#list workAreaItems as workAreaItem>
+            <@fcsWorkAreaItem workAreaItem=workAreaItem/>
+          </#list>
+        </@fdsResultList.resultList>
+      </#if>
     </@fdsSearch.searchPageContent>
   </@fdsSearch.searchPage>
 </@defaultPage>

@@ -16,7 +16,9 @@ import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaController.WORK_
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
@@ -27,8 +29,10 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthT
 import uk.co.nstauthority.fieldconsents.assets.AssetRestController;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
+import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @ContextConfiguration(classes = WorkAreaController.class)
 class WorkAreaControllerTest extends AbstractControllerTest {
@@ -44,26 +48,165 @@ class WorkAreaControllerTest extends AbstractControllerTest {
   @MockBean
   private WorkAreaFilterService workAreaFilterService;
 
+  private WorkAreaFilter filter;
+
+  private WorkAreaForm form;
+
+  private List<WorkAreaItem> workAreaItems;
+
+  private RestSearchItem orgUnitRestSearchItem;
+
+  private RestSearchItem assetRestSearchItem;
+
   @SecurityTest
   void getWorkArea_whenNotAuthenticated_thenRedirectedToLogin() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null))))
         .andExpect(redirectionToLoginUrl());
   }
 
-  @Test
-  void getWorkArea_assertHttpOk() throws Exception {
-    var filter = new WorkAreaFilter();
-    filter.setStatuses(List.of(ApplicationVersionStatus.IN_PROGRESS, ApplicationVersionStatus.SUBMITTED));
+  @BeforeEach
+  void setUp() {
+    filter = new WorkAreaFilter();
     filter.setApplicationTypes(List.of(ApplicationType.values()));
+    form = WorkAreaFormServiceTestUtil.getWorkAreaFormForDefaultFilter();
     when(workAreaFilterService.getDefaultFilter(user)).thenReturn(filter);
-    var form = WorkAreaFormServiceTestUtil.getWorkAreaFormForFilterWithFieldAndOperator();
     when(workAreaFormService.getFromFilter(any(WorkAreaFilter.class))).thenReturn(form);
-    var orgUnitRestSearchItem = WorkAreaFormServiceTestUtil.ORGANISATION_REST_SEARCH_ITEM;
+    workAreaItems = List.of(WorkAreaTestUtil.getWorkAreaItem());
+    orgUnitRestSearchItem = WorkAreaFormServiceTestUtil.ORGANISATION_REST_SEARCH_ITEM;
     when(workAreaFormService.getPrefilledOrganisation(any())).thenReturn(orgUnitRestSearchItem);
-    var assetRestSearchItem = WorkAreaFormServiceTestUtil.FIELD_REST_SEARCH_ITEM;
+    assetRestSearchItem = WorkAreaFormServiceTestUtil.FIELD_REST_SEARCH_ITEM;
     when(workAreaFormService.getPrefilledAsset(any())).thenReturn(assetRestSearchItem);
-    var workAreaItems = Set.of(WorkAreaTestUtil.getWorkAreaItem());
-    when(workAreaService.getWorkAreaItemsForUser(any(WorkAreaFilter.class), any(ServiceUserDetail.class))).thenReturn(workAreaItems);
+  }
+
+  @Test
+  void getWorkArea_IndustryUser() throws Exception {
+    filter.setStatuses(List.of(ApplicationVersionStatus.IN_PROGRESS, ApplicationVersionStatus.SUBMITTED));
+    when(workAreaService.getIndustryWorkAreaItems(any(WorkAreaFilter.class), any(ServiceUserDetail.class))).thenReturn(workAreaItems);
+    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)))
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(view().name(WORK_AREA_VIEW_NAME))
+        .andReturn().getModelAndView();
+
+    assert modelAndView != null;
+    var model = modelAndView.getModel();
+
+    assertWorkAreaModel(model);
+    assertThat(model)
+        .containsEntry("isRegulatorUser", false)
+        .containsEntry("workAreaTabs", Collections.emptyList());
+
+    var actualForm = (WorkAreaForm) model.get("form");
+    assertThat(actualForm).usingRecursiveComparison().isEqualTo(form);
+  }
+
+  @SecurityTest
+  void getWorkAreaCaseOfficerApplications_whenUserDoesNotHaveProcessFcsPermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS)))
+        .thenReturn(false);
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(WorkAreaController.class)
+                .getWorkAreaCaseOfficerMyApplications(filter, user)))
+                .with(user(user))
+        )
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void getWorkAreaCaseOfficerApplications_whenUserDoesHaveProcessFcsPermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS)))
+        .thenReturn(true);
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(WorkAreaController.class)
+                .getWorkAreaCaseOfficerMyApplications(filter, user)))
+                .with(user(user))
+        )
+        .andExpect(status().isOk());
+  }
+
+  @SecurityTest
+  void getWorkAreaCaseOfficerUnassignedApplications_whenUserDoesNotHaveProcessFcsPermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS)))
+        .thenReturn(false);
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(WorkAreaController.class)
+                .getWorkAreaCaseOfficerUnassignedApplications(filter, user)))
+                .with(user(user))
+        )
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void getWorkAreaCaseOfficerUnassignedApplications_whenUserDoesHaveProcessFcsPermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS)))
+        .thenReturn(true);
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(WorkAreaController.class)
+                .getWorkAreaCaseOfficerUnassignedApplications(filter, user)))
+                .with(user(user))
+        )
+        .andExpect(status().isOk());
+  }
+
+  @SecurityTest
+  void postWorkAreaCaseOfficerApplications_whenUserDoesNotHaveProcessFcsPermission() throws Exception {
+    mockMvc.perform(
+        post(ReverseRouter.route(on(WorkAreaController.class)
+            .postWorkAreaCaseOfficerMyApplications(filter, user)))
+            .with(user(user))
+            .with(csrf())
+        )
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void postWorkAreaCaseOfficerApplications_whenUserDoesHaveProcessFcsPermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS)))
+        .thenReturn(true);
+
+    mockMvc.perform(
+        post(ReverseRouter.route(on(WorkAreaController.class)
+            .postWorkAreaCaseOfficerMyApplications(filter, user)))
+            .with(user(user))
+            .with(csrf())
+        )
+        .andExpect(status().is3xxRedirection());
+  }
+
+  @SecurityTest
+  void postWorkAreaCaseOfficerUnassignedApplications_whenUserDoesNotHaveProcessFcsPermission() throws Exception {
+    mockMvc.perform(
+        post(ReverseRouter.route(on(WorkAreaController.class)
+            .postWorkAreaCaseOfficerUnassignedApplications(filter, user)))
+            .with(user(user))
+            .with(csrf())
+        )
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void postWorkAreaCaseOfficerUnassignedApplications_whenUserDoesHaveProcessFcsPermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS)))
+        .thenReturn(true);
+    mockMvc.perform(
+        post(ReverseRouter.route(on(WorkAreaController.class)
+            .postWorkAreaCaseOfficerUnassignedApplications(filter, user)))
+            .with(user(user))
+            .with(csrf())
+        )
+        .andExpect(status().is3xxRedirection());
+  }
+
+  @Test
+  void getWorkArea_RegulatorUser() throws Exception {
+    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    when(workAreaService.getRegulatorWorkAreaItems(any(WorkAreaFilter.class), any(ServiceUserDetail.class), any(WorkAreaTab.class))).thenReturn(workAreaItems);
+    var caseOfficerTabs = List.of(WorkAreaTab.MY_APPLICATIONS, WorkAreaTab.UNASSIGNED_APPLICATIONS);
+    when(workAreaService.getTabsAvailableToUser(user)).thenReturn(caseOfficerTabs);
 
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)))
             .with(user(user)))
@@ -74,6 +217,17 @@ class WorkAreaControllerTest extends AbstractControllerTest {
     assert modelAndView != null;
     var model = modelAndView.getModel();
 
+    assertWorkAreaModel(model);
+    assertThat(model)
+        .containsEntry("isRegulatorUser", true)
+        .containsEntry("selectedTab", WorkAreaTab.MY_APPLICATIONS.getValue())
+        .containsEntry("workAreaTabs", caseOfficerTabs);
+
+    var actualForm = (WorkAreaForm) model.get("form");
+    assertThat(actualForm).usingRecursiveComparison().isEqualTo(form);
+  }
+
+  private void assertWorkAreaModel(Map<String, Object> model) {
     assertThat(model)
         .containsEntry("workAreaItems", workAreaItems)
         .containsEntry("clearFiltersUrl", ReverseRouter.route(on(WorkAreaController.class).clearWorkAreaFilter(null, null)))
@@ -87,9 +241,6 @@ class WorkAreaControllerTest extends AbstractControllerTest {
         .containsEntry("operatorSearchRestUrl",
             ReverseRouter.route(on(OrganisationUnitRestController.class).getOrganisationUnitsForEditor(null, null)))
         .containsEntry("pageTitle", WORK_AREA_TITLE);
-
-    var actualForm = (WorkAreaForm) model.get("form");
-    assertThat(actualForm).usingRecursiveComparison().isEqualTo(form);
   }
 
   @Test

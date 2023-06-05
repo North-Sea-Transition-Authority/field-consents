@@ -354,6 +354,21 @@ class TeamServiceTest {
   }
 
   @Test
+  void isIndustryUser_whenUserIsNotIndustry_thenFalse() {
+    when(teamRepository.findAllTeamsOfTypeThatUserIsMemberOf(user.wuaId(), TeamType.INDUSTRY)).thenReturn(
+        Collections.emptyList());
+
+    assertThat(teamService.isIndustryUser(user)).isFalse();
+  }
+
+  @Test
+  void isIndustryUser_whenUserIsIndustry_thenTrue() {
+    when(teamRepository.findAllTeamsOfTypeThatUserIsMemberOf(user.wuaId(), TeamType.INDUSTRY)).thenReturn(List.of(team));
+
+    assertThat(teamService.isIndustryUser(user)).isTrue();
+  }
+
+  @Test
   void getUserPermissionsForTeam_whenPermissions_thenPermissionsReturned() {
     var expectedPermissions = Set.of(RolePermission.PROCESS_FCS_APPLICATIONS, RolePermission.VIEW_FCS_APPLICATIONS);
     when(permissionService.getUserPermissionsForTeam(team, user))

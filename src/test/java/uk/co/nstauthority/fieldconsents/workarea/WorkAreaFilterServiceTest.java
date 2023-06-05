@@ -37,6 +37,7 @@ import uk.co.nstauthority.fieldconsents.assets.AssetTestUtil;
 import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.fields.GeographicArea;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 
@@ -63,6 +64,8 @@ class WorkAreaFilterServiceTest {
   private WorkAreaFilter filter;
   private WorkAreaForm form;
 
+  private ServiceUserDetail user;
+
   @BeforeEach
   void setup() {
     workAreaFilterService = new WorkAreaFilterService(
@@ -73,13 +76,14 @@ class WorkAreaFilterServiceTest {
         teamService
     );
 
+    user = ServiceUserDetailTestUtil.Builder().build();
     filter = new WorkAreaFilter();
     form = new WorkAreaForm();
   }
 
   @Test
   void getConditions_EmptyFilter_AssertEmpty() {
-    var conditions = workAreaFilterService.getConditions(filter);
+    var conditions = workAreaFilterService.getConditions(filter, user, null);
     assertThat(conditions).isEmpty();
   }
 
@@ -89,7 +93,7 @@ class WorkAreaFilterServiceTest {
     form.setStatuses(Collections.singletonList(status));
     filter.update(form);
 
-    var conditions = workAreaFilterService.getConditions(filter);
+    var conditions = workAreaFilterService.getConditions(filter, user, null);
 
     assertThat(conditions).containsExactly(
         APPLICATION_VERSIONS.STATUS.in(Collections.singletonList(status.getEnumName()))
@@ -102,7 +106,7 @@ class WorkAreaFilterServiceTest {
     form.setApplicationTypes(Collections.singletonList(applicationType));
     filter.update(form);
 
-    var conditions = workAreaFilterService.getConditions(filter);
+    var conditions = workAreaFilterService.getConditions(filter, user, null);
 
     assertThat(conditions).containsExactly(
         APPLICATIONS.TYPE.in(Collections.singletonList(applicationType.getEnumName()))
@@ -115,7 +119,7 @@ class WorkAreaFilterServiceTest {
     form.setDurationTypes(Collections.singletonList(durationTypes));
     filter.update(form);
 
-    var conditions = workAreaFilterService.getConditions(filter);
+    var conditions = workAreaFilterService.getConditions(filter, user, null);
 
     assertThat(conditions).containsExactly(
         CONSENT_LENGTHS.CONSENT_LENGTH.in(Collections.singletonList(durationTypes.getEnumName()))
@@ -128,7 +132,7 @@ class WorkAreaFilterServiceTest {
     filter.update(form);
 
     when(assetService.getAssetFromKey(filter.getAssetKey())).thenReturn(Optional.empty());
-    var conditions = workAreaFilterService.getConditions(filter);
+    var conditions = workAreaFilterService.getConditions(filter, user, null);
 
     assertThat(conditions).isEmpty();
   }
@@ -139,7 +143,7 @@ class WorkAreaFilterServiceTest {
     filter.update(form);
 
     when(assetService.getAssetFromKey(filter.getAssetKey())).thenReturn(Optional.of(AssetTestUtil.field1AssetJson));
-    var conditions = workAreaFilterService.getConditions(filter);
+    var conditions = workAreaFilterService.getConditions(filter, user, null);
 
     assertThat(conditions).containsExactly(
         APPLICATION_ASSETS.FIELD_ID.eq(FIELD_ID_1)
@@ -152,7 +156,7 @@ class WorkAreaFilterServiceTest {
     filter.update(form);
 
     when(assetService.getAssetFromKey(filter.getAssetKey())).thenReturn(Optional.of(AssetTestUtil.terminal1AssetJson));
-    var conditions = workAreaFilterService.getConditions(filter);
+    var conditions = workAreaFilterService.getConditions(filter, user, null);
 
     assertThat(conditions).containsExactly(
         APPLICATION_ASSETS.TERMINAL_ID.eq(TERMINAL_ID_1)
@@ -164,7 +168,7 @@ class WorkAreaFilterServiceTest {
     form.setOperatorId(ORGANISATION_UNIT_ID);
     filter.update(form);
 
-    var conditions = workAreaFilterService.getConditions(filter);
+    var conditions = workAreaFilterService.getConditions(filter, user, null);
 
     assertThat(conditions).containsExactly(
         APPLICATION_VERSIONS.PRIMARY_OPERATOR_OU_ID.eq(ORGANISATION_UNIT_ID)
@@ -176,7 +180,7 @@ class WorkAreaFilterServiceTest {
     form.setReferenceNumber(APPLICATION_NO);
     filter.update(form);
 
-    var conditions = workAreaFilterService.getConditions(filter);
+    var conditions = workAreaFilterService.getConditions(filter, user, null);
 
     assertThat(conditions).containsExactly(
         APPLICATIONS.APPLICATION_NO.cast(String.class).eq(APPLICATION_NO)
@@ -195,7 +199,7 @@ class WorkAreaFilterServiceTest {
     when(fieldService.findFieldsByIds(distinctPrimaryFields, FIELD_LOOKUP_PURPOSE))
         .thenReturn(primaryFieldJsonsInGeographicAreas);
 
-    var conditions = workAreaFilterService.getConditions(filter);
+    var conditions = workAreaFilterService.getConditions(filter, user, null);
 
     assertThat(conditions).containsExactly(APPLICATION_ASSETS.FIELD_ID.in(distinctPrimaryFields));
   }
@@ -212,7 +216,7 @@ class WorkAreaFilterServiceTest {
         .thenReturn(primaryFieldJsons);
     var fieldIdsInFilterGeographicAreas = List.of(FIELD_ID_1, FIELD_ID_2);
 
-    var conditions = workAreaFilterService.getConditions(filter);
+    var conditions = workAreaFilterService.getConditions(filter, user, null);
 
     assertThat(conditions).containsExactly(APPLICATION_ASSETS.FIELD_ID.in(fieldIdsInFilterGeographicAreas));
   }
@@ -229,7 +233,7 @@ class WorkAreaFilterServiceTest {
     when(fieldService.findFieldsByIds(distinctPrimaryFieldIds, FIELD_LOOKUP_PURPOSE))
         .thenReturn(primaryFieldJsonsOfShoreTypes);
 
-    var conditions = workAreaFilterService.getConditions(filter);
+    var conditions = workAreaFilterService.getConditions(filter, user, null);
 
     assertThat(conditions).containsExactly(APPLICATION_ASSETS.FIELD_ID.in(distinctPrimaryFieldIds));
   }
@@ -247,7 +251,7 @@ class WorkAreaFilterServiceTest {
         .thenReturn(primaryFieldJsons);
 
     var fieldIdsInFilterShoreTypes = List.of(FIELD_ID_1, FIELD_ID_2);
-    var conditions = workAreaFilterService.getConditions(filter);
+    var conditions = workAreaFilterService.getConditions(filter, user, null);
 
     assertThat(conditions).containsExactly(APPLICATION_ASSETS.FIELD_ID.in(fieldIdsInFilterShoreTypes));
   }
@@ -260,7 +264,7 @@ class WorkAreaFilterServiceTest {
     var distinctPrimaryTerminalIds = List.of(TERMINAL_ID_1, TERMINAL_ID_2);
     when(applicationTerminalService.findDistinctPrimaryTerminalIds()).thenReturn(distinctPrimaryTerminalIds);
 
-    var conditions = workAreaFilterService.getConditions(filter);
+    var conditions = workAreaFilterService.getConditions(filter, user, null);
 
     assertThat(conditions).containsExactly(APPLICATION_ASSETS.TERMINAL_ID.in(distinctPrimaryTerminalIds));
   }
@@ -280,10 +284,50 @@ class WorkAreaFilterServiceTest {
     var distinctPrimaryTerminalIds = List.of(TERMINAL_ID_1, TERMINAL_ID_2);
     when(applicationTerminalService.findDistinctPrimaryTerminalIds()).thenReturn(distinctPrimaryTerminalIds);
 
-    var conditions = workAreaFilterService.getConditions(filter);
+    var conditions = workAreaFilterService.getConditions(filter, user, null);
 
     assertThat(conditions).containsExactly(APPLICATION_ASSETS.FIELD_ID.in(distinctPrimaryFieldIds)
         .or(APPLICATION_ASSETS.TERMINAL_ID.in(distinctPrimaryTerminalIds)));
+  }
+
+  @Test
+  void getConditions_MyApplicationsCaseOfficer() {
+    var conditions = workAreaFilterService.getConditions(filter, user, WorkAreaTab.MY_APPLICATIONS);
+
+    assertThat(conditions).containsExactly(
+        APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.eq(user.wuaId().intValue())
+    );
+  }
+
+  @Test
+  void getConditions_UnassignedCaseOfficer() {
+    var conditions = workAreaFilterService.getConditions(filter, user, WorkAreaTab.UNASSIGNED_APPLICATIONS);
+
+    assertThat(conditions).containsExactly(
+        APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.isNull()
+    );
+  }
+
+  @Test
+  void getConditions_RegulatorApplicationStatusCondition() {
+    when(teamService.isRegulatorUser(user)).thenReturn(true);
+
+    var conditions = workAreaFilterService.getConditions(filter, user, WorkAreaTab.MY_APPLICATIONS);
+
+    assertThat(conditions).contains(
+        APPLICATION_VERSIONS.STATUS.eq(ApplicationVersionStatus.SUBMITTED.name())
+    );
+  }
+
+  @Test
+  void getConditions_IndustryApplicationStatusCondition() {
+    when(teamService.isIndustryUser(user)).thenReturn(true);
+
+    var conditions = workAreaFilterService.getConditions(filter, user, null);
+
+    assertThat(conditions).containsExactly(
+        APPLICATION_VERSIONS.STATUS.notEqual(ApplicationVersionStatus.COMPLETED.name())
+    );
   }
 
   @Test

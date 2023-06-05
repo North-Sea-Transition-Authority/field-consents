@@ -51,7 +51,7 @@ public class WorkAreaFilterService {
     this.teamService = teamService;
   }
 
-  ArrayList<Condition> getConditions(WorkAreaFilter filter)  {
+  ArrayList<Condition> getConditions(WorkAreaFilter filter, ServiceUserDetail user, WorkAreaTab workAreaTab)  {
     var conditions = new ArrayList<Condition>();
 
     if (Objects.nonNull(filter.getStatuses())) {
@@ -85,6 +85,22 @@ public class WorkAreaFilterService {
 
     if (Objects.nonNull(filter.getAssetTypesWithShore())) {
       conditions.add(getAssetTypesQueryCondition(filter.getAssetTypesWithShore()));
+    }
+
+    if (Objects.nonNull(workAreaTab) && WorkAreaTab.MY_APPLICATIONS.equals(workAreaTab)) {
+      conditions.add(getMyApplicationsCaseOfficerCondition(user));
+    }
+
+    if (Objects.nonNull(workAreaTab) && WorkAreaTab.UNASSIGNED_APPLICATIONS.equals(workAreaTab)) {
+      conditions.add(getUnassignedApplicationsCaseOfficerCondition());
+    }
+
+    if (teamService.isRegulatorUser(user)) {
+      conditions.add(getRegulatorApplicationStatusCondition());
+    }
+
+    if (teamService.isIndustryUser(user)) {
+      conditions.add(getIndustryApplicationStatusCondition());
     }
     return conditions;
   }
@@ -201,5 +217,21 @@ public class WorkAreaFilterService {
 
     defaultFilter.setApplicationTypes(List.of(ApplicationType.PRODUCTION, ApplicationType.FLARE, ApplicationType.VENT));
     return defaultFilter;
+  }
+
+  private Condition getMyApplicationsCaseOfficerCondition(ServiceUserDetail user) {
+    return APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.eq(user.wuaId().intValue());
+  }
+
+  private Condition getUnassignedApplicationsCaseOfficerCondition() {
+    return APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.isNull();
+  }
+
+  private Condition getIndustryApplicationStatusCondition() {
+    return APPLICATION_VERSIONS.STATUS.notEqual(ApplicationVersionStatus.COMPLETED.name());
+  }
+
+  private Condition getRegulatorApplicationStatusCondition() {
+    return APPLICATION_VERSIONS.STATUS.eq(ApplicationVersionStatus.SUBMITTED.name());
   }
 }

@@ -44,6 +44,10 @@ public class TeamService {
     return !getTeamsOfTypeThatUserBelongsTo(user, TeamType.REGULATOR).isEmpty();
   }
 
+  public boolean isIndustryUser(ServiceUserDetail user) {
+    return !getTeamsOfTypeThatUserBelongsTo(user, TeamType.INDUSTRY).isEmpty();
+  }
+
   public List<Team> getTeamsOfTypeThatUserHasPermissionFor(ServiceUserDetail user,
                                                            TeamType teamType,
                                                            Set<RolePermission> requiredPermissions) {

@@ -4,16 +4,15 @@ import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaFormService.FIELD_LOOKUP_PURPOSE;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import org.jooq.Condition;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
@@ -21,6 +20,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupQueryService;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
@@ -56,6 +56,8 @@ public class WorkAreaService {
 
   private final OrganisationUnitService organisationUnitService;
 
+  private final PermissionService permissionService;
+
   public WorkAreaService(TeamService teamService,
                          WorkAreaFilterService workAreaFilterService,
                          WorkAreaItemDtoRepository workAreaItemDtoRepository,
@@ -63,7 +65,8 @@ public class WorkAreaService {
                          EnergyPortalUserService energyPortalUserService,
                          ApplicationService applicationService,
                          ApplicationVersionService applicationVersionService,
-                         FieldService fieldService, OrganisationUnitService organisationUnitService) {
+                         FieldService fieldService, OrganisationUnitService organisationUnitService,
+                         PermissionService permissionService) {
     this.teamService = teamService;
     this.workAreaFilterService = workAreaFilterService;
     this.workAreaItemDtoRepository = workAreaItemDtoRepository;
@@ -73,44 +76,29 @@ public class WorkAreaService {
     this.applicationVersionService = applicationVersionService;
     this.fieldService = fieldService;
     this.organisationUnitService = organisationUnitService;
+    this.permissionService = permissionService;
   }
 
-  public Set<WorkAreaItem> getWorkAreaItemsForUser(WorkAreaFilter filter, ServiceUserDetail user) {
-    var conditions = workAreaFilterService.getConditions(filter);
-    var workAreaItems = new HashSet<WorkAreaItem>();
+  public List<WorkAreaItem> getIndustryWorkAreaItems(WorkAreaFilter filter, ServiceUserDetail user) {
+    var conditions = workAreaFilterService.getConditions(filter, user, null);
 
     var industryTeams =
         teamService.getTeamsOfTypeThatUserHasPermissionFor(
-            user, TeamType.INDUSTRY, Set.of(RolePermission.EDIT_FCS_APPLICATIONS)
+            user, TeamType.INDUSTRY, EnumSet.of(RolePermission.EDIT_FCS_APPLICATIONS)
         );
 
-    if (!industryTeams.isEmpty()) {
-      workAreaItems.addAll(getIndustryWorkAreaItems(industryTeams, conditions));
+    var workAreaItems = new ArrayList<WorkAreaItem>();
+    if (industryTeams.isEmpty()) {
+      return workAreaItems;
     }
 
-    var regulatorTeams = teamService.getTeamsOfTypeThatUserHasPermissionFor(
-        user,
-        TeamType.REGULATOR,
-        Set.of(RolePermission.PROCESS_FCS_APPLICATIONS, RolePermission.ASSIGN_FCS_APPLICATIONS)
-    );
-
-    if (!regulatorTeams.isEmpty()) {
-      workAreaItems.addAll(getRegulatorWorkAreaItems(conditions));
-    }
-
-    // TODO: what would happen in practice if a regulator was also an industry user (even if temporarily)?
-    //       Where should we redirect the user to when they click the work-area link for the application?
-    return workAreaItems;
-  }
-
-  private List<WorkAreaItem> getIndustryWorkAreaItems(List<Team> teams, List<Condition> conditions) {
-    var organisationGroupIds = teams.stream()
+    var organisationGroupIds = industryTeams.stream()
         .map(Team::getOrganisationGroupId)
         .filter(Objects::nonNull)
         .toList();
 
     if (organisationGroupIds.isEmpty()) {
-      return Collections.emptyList();
+      return workAreaItems;
     }
 
     var organisationUnitJsons = organisationGroupQueryService.getOrganisationUnitsByOrganisationGroupIds(organisationGroupIds);
@@ -122,14 +110,23 @@ public class WorkAreaService {
     conditions.add(APPLICATION_VERSIONS.PRIMARY_OPERATOR_OU_ID.in(organisationUnitIds));
     var workAreaItemDtoList = workAreaItemDtoRepository.runQuery(conditions);
 
-    return getItemsFromDtoList(workAreaItemDtoList, organisationUnitJsons,
-        workAreaItemDto -> !workAreaItemDto.status().equals(ApplicationVersionStatus.COMPLETED)
-    );
+    return getItemsFromDtoList(workAreaItemDtoList, organisationUnitJsons);
   }
 
-  // TODO: at the moment this returns every application for a regulator user with PROCESS_FCS_APPLICATIONS permission.
-  //      We need to understand how this would work the unassigned/my/all tabs.
-  private List<WorkAreaItem> getRegulatorWorkAreaItems(ArrayList<Condition> conditions) {
+  public List<WorkAreaItem> getRegulatorWorkAreaItems(WorkAreaFilter filter, ServiceUserDetail user,
+                                                      WorkAreaTab workAreaTab) {
+    var conditions = workAreaFilterService.getConditions(filter, user, workAreaTab);
+
+    var regulatorTeams = teamService.getTeamsOfTypeThatUserHasPermissionFor(
+        user,
+        TeamType.REGULATOR,
+        EnumSet.of(RolePermission.PROCESS_FCS_APPLICATIONS, RolePermission.ASSIGN_FCS_APPLICATIONS)
+    );
+
+    if (regulatorTeams.isEmpty()) {
+      return Collections.emptyList();
+    }
+
     var workAreaItemDtoList = workAreaItemDtoRepository.runQuery(conditions);
 
     var organisationUnitJsons = organisationUnitService.getOrganisationUnitsByIds(
@@ -139,14 +136,11 @@ public class WorkAreaService {
             .toList(),
         ALL_ORG_UNITS_WORK_AREA_PURPOSE);
 
-    return getItemsFromDtoList(workAreaItemDtoList, organisationUnitJsons,
-        workAreaItemDto -> workAreaItemDto.status().equals(ApplicationVersionStatus.SUBMITTED)
-    );
+    return getItemsFromDtoList(workAreaItemDtoList, organisationUnitJsons);
   }
 
   private List<WorkAreaItem> getItemsFromDtoList(List<WorkAreaItemDto> workAreaItemDtoList,
-                                                 List<OrganisationUnitJson> organisationUnitJsons,
-                                                 Predicate<WorkAreaItemDto> workAreaItemDtoPredicate) {
+                                                 List<OrganisationUnitJson> organisationUnitJsons) {
     if (workAreaItemDtoList.isEmpty()) {
       return Collections.emptyList();
     }
@@ -188,7 +182,6 @@ public class WorkAreaService {
         );
 
     return workAreaItemDtoList.stream()
-        .filter(workAreaItemDtoPredicate)
         .map(workAreaItemDto -> new WorkAreaItem(
             workAreaItemDto.applicationVersionId(),
             workAreaItemDto.type().getDisplayName(),
@@ -265,5 +258,12 @@ public class WorkAreaService {
 
   private String getAceFlag(WorkAreaItemDto workAreaItemDto) {
     return Boolean.TRUE.equals(workAreaItemDto.aceFlag()) ? "ACE" : "";
+  }
+
+  public List<WorkAreaTab> getTabsAvailableToUser(ServiceUserDetail user) {
+    return Arrays.stream(WorkAreaTab.values())
+        .filter(tab -> permissionService.hasPermission(user, tab.getRolePermissions()))
+        .sorted(Comparator.comparing(WorkAreaTab::getDisplayOrder))
+        .toList();
   }
 }
