@@ -53,6 +53,7 @@ public class WorkAreaTestUtil {
         null,
         null,
         null,
+        null,
         null
     );
   }
@@ -73,6 +74,7 @@ public class WorkAreaTestUtil {
         null,
         null,
         ANNUAL_CONSENT_YEAR,
+        null,
         null,
         null,
         null,
@@ -103,7 +105,8 @@ public class WorkAreaTestUtil {
         null,
         null,
         Instant.now(),
-        1L
+        1L,
+        null
     );
   }
 
@@ -128,7 +131,8 @@ public class WorkAreaTestUtil {
         LONG_TERM_START_YEAR,
         LONG_TERM_END_YEAR,
         Instant.now(),
-        1L
+        1L,
+        null
     );
   }
 
@@ -143,8 +147,13 @@ public class WorkAreaTestUtil {
         getGeographicArea(workAreaItemDto),
         workAreaItemDto.status().getDisplayName(),
         getSubmittedDateTime(workAreaItemDto),
-        getSubmitter(workAreaItemDto)
+        getSubmitter(workAreaItemDto),
+        getAceFlag(workAreaItemDto)
     );
+  }
+
+  private static String getAceFlag(WorkAreaItemDto workAreaItemDto) {
+    return Boolean.TRUE.equals(workAreaItemDto.aceFlag()) ? "ACE" : "";
   }
 
   private static String getSubmittedDateTime(WorkAreaItemDto workAreaItemDto) {
@@ -225,7 +234,8 @@ public class WorkAreaTestUtil {
         FIELD_1_GEOGRAPHIC_AREA.getDisplayName(),
         ApplicationVersionStatus.SUBMITTED.getDisplayName(),
         SUBMITTED_DATE_TIME,
-        String.valueOf(USER_WUA_ID)
-        );
+        String.valueOf(USER_WUA_ID),
+        ""
+    );
   }
 }

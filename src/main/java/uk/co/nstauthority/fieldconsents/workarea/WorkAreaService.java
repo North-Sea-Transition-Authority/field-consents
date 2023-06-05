@@ -203,7 +203,9 @@ public class WorkAreaService {
                 : "",
             workAreaItemDto.status().equals(ApplicationVersionStatus.SUBMITTED)
                 ? getSubmitter(workAreaItemDto, portalUserDtosMap)
-                : ""))
+                : "",
+            getAceFlag(workAreaItemDto)
+        ))
         .toList();
   }
 
@@ -259,5 +261,9 @@ public class WorkAreaService {
     var matchingPortalUserDto = portalUserDtosMap.get(workAreaItemDto.submittedByWuaId());
     return "Submitted by %s %s %s"
         .formatted(matchingPortalUserDto.title(), matchingPortalUserDto.forename(), matchingPortalUserDto.surname());
+  }
+
+  private String getAceFlag(WorkAreaItemDto workAreaItemDto) {
+    return Boolean.TRUE.equals(workAreaItemDto.aceFlag()) ? "ACE" : "";
   }
 }

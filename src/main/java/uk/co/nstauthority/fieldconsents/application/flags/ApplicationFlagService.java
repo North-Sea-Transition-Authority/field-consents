@@ -24,20 +24,22 @@ public class ApplicationFlagService {
   }
 
   @Transactional
-  public void saveApplicationFlag(ApplicationVersion applicationVersion,
-                                  ApplicationFlagType flagType,
-                                  Boolean flagValue) {
+  public void addApplicationFlag(ApplicationVersion applicationVersion,
+                                 ApplicationFlagType flagType,
+                                 Boolean flagValue) {
 
-    ApplicationFlag applicationFlag = new ApplicationFlag();
-    applicationFlag.setFlagType(flagType);
-    applicationFlag.setFlagValue(flagValue);
-    applicationFlag.setApplicationVersion(applicationVersion);
-
+    var applicationFlag = new ApplicationFlag(applicationVersion, flagType, flagValue);
     applicationFlagRepository.save(applicationFlag);
   }
 
   @Transactional
-  public void deleteApplicationFlag(ApplicationVersion applicationVersion, ApplicationFlagType flagType) {
-    applicationFlagRepository.deleteByApplicationVersionAndFlagType(applicationVersion, flagType);
+  public void addOrUpdateApplicationFlag(ApplicationVersion applicationVersion,
+                                         ApplicationFlagType flagType,
+                                         Boolean flagValue) {
+    var applicationFlag = applicationFlagRepository.findByApplicationVersionAndFlagType(applicationVersion, flagType)
+        .orElseGet(() -> new ApplicationFlag(applicationVersion, flagType));
+
+    applicationFlag.setFlagValue(flagValue);
+    applicationFlagRepository.save(applicationFlag);
   }
 }

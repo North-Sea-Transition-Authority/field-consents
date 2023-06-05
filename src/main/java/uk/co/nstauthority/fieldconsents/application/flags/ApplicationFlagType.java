@@ -2,7 +2,8 @@ package uk.co.nstauthority.fieldconsents.application.flags;
 
 public enum ApplicationFlagType {
   HAS_SECONDARY_ASSETS("Do you have any additional fields to add?"),
-  WILL_GAS_BE_INJECTED("Will gas be injected for the purpose of creating or increasing the pressure support?");
+  WILL_GAS_BE_INJECTED("Will gas be injected for the purpose of creating or increasing the pressure support?"),
+  IS_ACE_APPLICATION("Is this an ACE application?");
 
   private final String displayName;
 

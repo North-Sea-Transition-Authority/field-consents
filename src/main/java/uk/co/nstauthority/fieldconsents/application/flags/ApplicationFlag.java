@@ -10,8 +10,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import org.hibernate.envers.Audited;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 
+@Audited
 @Entity
 @Table(name = "application_flags")
 public class ApplicationFlag {
@@ -29,7 +31,6 @@ public class ApplicationFlag {
 
   private Boolean flagValue;
 
-
   @VisibleForTesting
   public ApplicationFlag(Integer id, ApplicationVersion applicationVersion,
                          ApplicationFlagType flagType, Boolean flagValue) {
@@ -40,6 +41,20 @@ public class ApplicationFlag {
   }
 
   public ApplicationFlag() {
+  }
+
+  public ApplicationFlag(ApplicationVersion applicationVersion,
+                         ApplicationFlagType flagType) {
+    this.applicationVersion = applicationVersion;
+    this.flagType = flagType;
+  }
+
+  public ApplicationFlag(ApplicationVersion applicationVersion,
+                         ApplicationFlagType flagType,
+                         Boolean flagValue) {
+    this.applicationVersion = applicationVersion;
+    this.flagType = flagType;
+    this.flagValue = flagValue;
   }
 
   public Integer getId() {

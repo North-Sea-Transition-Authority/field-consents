@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -98,7 +99,10 @@ class CaseProcessingActionServiceTest {
         .thenReturn(Set.of(CaseStatusFlag.CASE_OFFICER_ASSIGNED));
 
     assertThat(caseProcessingActionService.getUserActionItems(applicationVersion, USER))
-        .containsExactly(CaseProcessingActionItem.CASE_OFFICER_RELEASE_OWNERSHIP);
+        .containsOnly(
+            CaseProcessingActionItem.CHANGE_ACE_STATUS,
+            CaseProcessingActionItem.CASE_OFFICER_RELEASE_OWNERSHIP
+        );
   }
 
   @Test
@@ -131,14 +135,20 @@ class CaseProcessingActionServiceTest {
 
     var actionViews = caseProcessingActionService.getUserActionViews(applicationVersion, USER);
 
-    assertThat(actionViews).hasSize(1);
+    assertThat(actionViews).hasSize(2);
 
-    assertThat(actionViews.get(0))
+    assertThat(actionViews)
         .usingRecursiveComparison()
         .isEqualTo(
-            CaseProcessingActionView.from(
-                CaseProcessingActionItem.CASE_OFFICER_RELEASE_OWNERSHIP,
-                applicationVersion
+            List.of(
+                CaseProcessingActionView.from(
+                    CaseProcessingActionItem.CHANGE_ACE_STATUS,
+                    applicationVersion
+                ),
+                CaseProcessingActionView.from(
+                    CaseProcessingActionItem.CASE_OFFICER_RELEASE_OWNERSHIP,
+                    applicationVersion
+                )
             )
         );
   }

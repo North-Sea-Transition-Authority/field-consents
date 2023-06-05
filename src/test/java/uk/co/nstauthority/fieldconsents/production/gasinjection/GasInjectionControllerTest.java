@@ -118,9 +118,7 @@ class GasInjectionControllerTest extends AbstractApplicationControllerTest {
         .andExpect(view().name("redirect:" + TASK_LIST_URL));
 
     verify(applicationFlagService, times(1))
-        .deleteApplicationFlag(applicationVersion, ApplicationFlagType.WILL_GAS_BE_INJECTED);
-    verify(applicationFlagService, times(1))
-        .saveApplicationFlag(applicationVersion, ApplicationFlagType.WILL_GAS_BE_INJECTED, willGasBeInjected);
+        .addOrUpdateApplicationFlag(applicationVersion, ApplicationFlagType.WILL_GAS_BE_INJECTED, willGasBeInjected);
   }
 
   @SecurityTest

@@ -15,7 +15,8 @@ public record WorkAreaItem(
     String geographicArea,
     String status,
     String submittedDateTime,
-    String submittedBy
+    String submittedBy,
+    String aceFlag
 ) {
   public String url() {
     return ReverseRouter.route(on(ApplicationSummaryController.class).getApplicationSummary(applicationId, null));

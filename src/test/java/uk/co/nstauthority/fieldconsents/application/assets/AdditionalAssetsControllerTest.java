@@ -456,9 +456,7 @@ class AdditionalAssetsControllerTest extends AbstractApplicationControllerTest {
         .andExpect(view().name("redirect:" + expectBaseAdditionalAssetsUrl + "/new"));
 
     verify(applicationFlagService, times(1))
-        .deleteApplicationFlag(applicationVersion, ApplicationFlagType.HAS_SECONDARY_ASSETS);
-    verify(applicationFlagService, times(1))
-        .saveApplicationFlag(applicationVersion, ApplicationFlagType.HAS_SECONDARY_ASSETS, true);
+        .addOrUpdateApplicationFlag(applicationVersion, ApplicationFlagType.HAS_SECONDARY_ASSETS, true);
   }
 
   @Test
@@ -475,9 +473,7 @@ class AdditionalAssetsControllerTest extends AbstractApplicationControllerTest {
         .andExpect(view().name("redirect:/applications/" + ApplicationTestUtil.APPLICATION_ID + "/task-list"));
 
     verify(applicationFlagService, times(1))
-        .deleteApplicationFlag(applicationVersion, ApplicationFlagType.HAS_SECONDARY_ASSETS);
-    verify(applicationFlagService, times(1))
-        .saveApplicationFlag(applicationVersion, ApplicationFlagType.HAS_SECONDARY_ASSETS, false);
+        .addOrUpdateApplicationFlag(applicationVersion, ApplicationFlagType.HAS_SECONDARY_ASSETS, false);
   }
 
   @SecurityTest

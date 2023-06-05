@@ -10,4 +10,5 @@ $govuk-assets-path: "../../govuk-frontend/govuk/assets/";
 @import "../templates/fds/all";
 
 // Imports Field Consents components
+@import "button-group"; // TODO remove when FDS-457 is fixed
 @import "table";

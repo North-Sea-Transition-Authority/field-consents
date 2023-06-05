@@ -66,9 +66,9 @@ public class GasInjectionController {
     }
 
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
-    applicationFlagService.deleteApplicationFlag(applicationVersion, ApplicationFlagType.WILL_GAS_BE_INJECTED);
-    applicationFlagService.saveApplicationFlag(
-        applicationVersion, ApplicationFlagType.WILL_GAS_BE_INJECTED, form.getWillGasBeInjected());
+    applicationFlagService.addOrUpdateApplicationFlag(
+        applicationVersion, ApplicationFlagType.WILL_GAS_BE_INJECTED, form.getWillGasBeInjected()
+    );
 
     return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
   }

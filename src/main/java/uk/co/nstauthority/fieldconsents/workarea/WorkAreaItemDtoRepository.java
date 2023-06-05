@@ -1,8 +1,10 @@
 package uk.co.nstauthority.fieldconsents.workarea;
 
 import static org.jooq.impl.DSL.greatest;
+import static uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType.IS_ACE_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_ASSETS;
+import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_FLAGS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_VERSIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.CONSENT_LENGTHS;
 
@@ -53,14 +55,17 @@ class WorkAreaItemDtoRepository {
             CONSENT_LENGTHS.LONG_TERM_START_YEAR,
             CONSENT_LENGTHS.LONG_TERM_END_YEAR,
             APPLICATION_VERSIONS.SUBMITTED_DATE_TIME,
-            APPLICATION_VERSIONS.SUBMITTED_BY_WUA_ID
+            APPLICATION_VERSIONS.SUBMITTED_BY_WUA_ID,
+            APPLICATION_FLAGS.FLAG_VALUE.as("aceFlag")
         )
         .from(APPLICATIONS)
         .join(APPLICATION_VERSIONS).onKey(APPLICATION_VERSIONS.APPLICATION_ID)
         .leftJoin(APPLICATION_ASSETS)
-        .on(APPLICATION_ASSETS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID)
+            .on(APPLICATION_ASSETS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID)
             .and(APPLICATION_ASSETS.ASSET_ROLE.eq(AssetRole.PRIMARY.name())))
         .leftJoin(CONSENT_LENGTHS).onKey(CONSENT_LENGTHS.APPLICATION_VERSION_ID)
+        .leftJoin(APPLICATION_FLAGS).onKey(APPLICATION_FLAGS.APPLICATION_VERSION_ID)
+            .and(APPLICATION_FLAGS.FLAG_TYPE.eq(IS_ACE_APPLICATION.name()))
         .where(APPLICATION_VERSIONS.ID.in(detailsSubQuery))
         .orderBy(greatest(APPLICATION_VERSIONS.SUBMITTED_DATE_TIME, APPLICATION_VERSIONS.CREATED_DATE_TIME).desc())
         .fetchInto(WorkAreaItemDto.class);

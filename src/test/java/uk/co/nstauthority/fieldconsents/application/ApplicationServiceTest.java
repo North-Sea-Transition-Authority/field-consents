@@ -24,6 +24,7 @@ import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAss
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.aceflag.AceFlagService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
@@ -55,6 +56,9 @@ class ApplicationServiceTest {
   @Mock
   private UserDetailService userDetailService;
 
+  @Mock
+  private AceFlagService aceFlagService;
+
   private ServiceUserDetail serviceUser;
 
   @BeforeEach
@@ -71,8 +75,8 @@ class ApplicationServiceTest {
         applicationAssetService,
         applicationAssetLicenceService,
         applicationConfigurationProperties,
-        userDetailService
-    );
+        userDetailService,
+        aceFlagService);
     newApplication = new Application(1, ApplicationType.PRODUCTION, Instant.now(), USER_WUA_ID, 0, null);
   }
 

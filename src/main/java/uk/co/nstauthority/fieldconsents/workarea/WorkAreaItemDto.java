@@ -26,6 +26,7 @@ public record WorkAreaItemDto(
     Integer longTermStartYear,
     Integer longTermEndYear,
     Instant submittedDateTime,
-    Long submittedByWuaId
+    Long submittedByWuaId,
+    Boolean aceFlag
 ) {
 }

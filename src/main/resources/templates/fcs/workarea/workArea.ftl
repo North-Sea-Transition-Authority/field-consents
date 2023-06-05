@@ -115,7 +115,7 @@
   >
     <@fdsResultList.resultListDataItem>
         <#assign consentType>
-          ${workAreaItem.type()} <br/> ${workAreaItem.duration()}
+          ${workAreaItem.type()} <br/> ${workAreaItem.duration()} <br/> ${workAreaItem.aceFlag()}
         </#assign>
         <#assign location>
           ${workAreaItem.asset()} <br/> ${workAreaItem.geographicArea()}

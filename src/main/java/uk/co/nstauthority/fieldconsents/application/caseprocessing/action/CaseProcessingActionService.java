@@ -3,12 +3,14 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.action;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_ASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_RELEASE_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CHANGE_ACE_STATUS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ASSIGN_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
 
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -33,21 +35,24 @@ public class CaseProcessingActionService {
   private final Map<ApplicationVersionStatus, Set<CaseProcessingActionItem>> caseStatusToActions =
       Map.of(
           ApplicationVersionStatus.SUBMITTED,
-          Set.of(CASE_OFFICER_TAKE_OWNERSHIP, CASE_OFFICER_RELEASE_OWNERSHIP, CASE_OFFICER_ASSIGN_OWNERSHIP)
+          EnumSet.of(CASE_OFFICER_TAKE_OWNERSHIP, CHANGE_ACE_STATUS, CASE_OFFICER_RELEASE_OWNERSHIP,
+              CASE_OFFICER_ASSIGN_OWNERSHIP)
       );
 
   private final Map<CaseProcessingActionItem, Set<RolePermission>> actionsToPermissions =
       Map.of(
-          CASE_OFFICER_TAKE_OWNERSHIP, Set.of(PROCESS_FCS_APPLICATIONS),
-          CASE_OFFICER_RELEASE_OWNERSHIP, Set.of(PROCESS_FCS_APPLICATIONS),
-          CASE_OFFICER_ASSIGN_OWNERSHIP, Set.of(ASSIGN_FCS_APPLICATIONS)
+          CASE_OFFICER_TAKE_OWNERSHIP, EnumSet.of(PROCESS_FCS_APPLICATIONS),
+          CHANGE_ACE_STATUS, EnumSet.of(PROCESS_FCS_APPLICATIONS),
+          CASE_OFFICER_RELEASE_OWNERSHIP, EnumSet.of(PROCESS_FCS_APPLICATIONS),
+          CASE_OFFICER_ASSIGN_OWNERSHIP, EnumSet.of(ASSIGN_FCS_APPLICATIONS)
       );
 
   private final Map<CaseProcessingActionItem, Set<CaseStatusFlag>> actionsToStatusFlags =
       Map.of(
-          CASE_OFFICER_TAKE_OWNERSHIP, Set.of(CASE_OFFICER_NOT_ASSIGNED),
-          CASE_OFFICER_RELEASE_OWNERSHIP, Set.of(CASE_OFFICER_ASSIGNED),
-          CASE_OFFICER_ASSIGN_OWNERSHIP, Set.of(CASE_OFFICER_NOT_ASSIGNED)
+          CASE_OFFICER_TAKE_OWNERSHIP, EnumSet.of(CASE_OFFICER_NOT_ASSIGNED),
+          CHANGE_ACE_STATUS, EnumSet.of(CASE_OFFICER_ASSIGNED),
+          CASE_OFFICER_RELEASE_OWNERSHIP, EnumSet.of(CASE_OFFICER_ASSIGNED),
+          CASE_OFFICER_ASSIGN_OWNERSHIP, EnumSet.of(CASE_OFFICER_NOT_ASSIGNED)
       );
 
   @Autowired

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAssetLicenceService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.aceflag.AceFlagService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorAndLicencesJson;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalWithOperatorJson;
 import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
@@ -27,18 +28,22 @@ public class ApplicationService {
 
   private final UserDetailService userDetailService;
 
+  private final AceFlagService aceFlagService;
+
   public ApplicationService(ApplicationRepository applicationRepository,
                             ApplicationVersionRepository applicationVersionRepository,
                             ApplicationAssetService applicationAssetService,
                             ApplicationAssetLicenceService applicationAssetLicenceService,
                             ApplicationConfigurationProperties applicationConfigurationProperties,
-                            UserDetailService userDetailService) {
+                            UserDetailService userDetailService,
+                            AceFlagService aceFlagService) {
     this.applicationRepository = applicationRepository;
     this.applicationVersionRepository = applicationVersionRepository;
     this.applicationAssetService = applicationAssetService;
     this.applicationAssetLicenceService = applicationAssetLicenceService;
     this.applicationConfigurationProperties = applicationConfigurationProperties;
     this.userDetailService = userDetailService;
+    this.aceFlagService = aceFlagService;
   }
 
   private ApplicationVersion createNewApplication(ApplicationType applicationType, OrganisationUnitJson operatorOuJson) {
@@ -95,6 +100,7 @@ public class ApplicationService {
     applicationVersion.setSubmittedDateTime(Instant.now());
     applicationVersion.setSubmittedByWuaId(userDetailService.getUserDetail().wuaId());
     applicationVersionRepository.save(applicationVersion);
+    aceFlagService.autoSetAceFlag(applicationVersion);
   }
 
   public String generateApplicationReference(ApplicationVersion applicationVersion) {

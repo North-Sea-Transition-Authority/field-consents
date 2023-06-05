@@ -105,8 +105,7 @@ public class AdditionalAssetsController {
     }
 
     ApplicationVersion applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
-    applicationFlagService.deleteApplicationFlag(applicationVersion, ApplicationFlagType.HAS_SECONDARY_ASSETS);
-    applicationFlagService.saveApplicationFlag(
+    applicationFlagService.addOrUpdateApplicationFlag(
         applicationVersion,
         ApplicationFlagType.HAS_SECONDARY_ASSETS,
         form.getOtherAssetsRequired()

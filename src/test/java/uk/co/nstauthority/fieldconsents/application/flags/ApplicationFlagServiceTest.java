@@ -55,8 +55,8 @@ class ApplicationFlagServiceTest {
   }
 
   @Test
-  void saveApplicationFlag_hasSecondaryAssets() {
-    applicationFlagService.saveApplicationFlag(applicationVersion, ApplicationFlagType.HAS_SECONDARY_ASSETS, true);
+  void addApplicationFlag_hasSecondaryAssets() {
+    applicationFlagService.addApplicationFlag(applicationVersion, ApplicationFlagType.HAS_SECONDARY_ASSETS, true);
 
     ArgumentCaptor<ApplicationFlag> flagArgumentCaptor = ArgumentCaptor.forClass(ApplicationFlag.class);
     verify(applicationFlagRepository, times(1)).save(flagArgumentCaptor.capture());
@@ -70,5 +70,37 @@ class ApplicationFlagServiceTest {
     assertThat(actualVersion.getId()).isEqualTo(applicationVersion.getId());
     assertThat(actualVersion.getVersion()).isEqualTo(applicationVersion.getVersion());
     assertThat(actualVersion.getApplication().getType()).isEqualTo(applicationVersion.getApplication().getType());
+  }
+
+  @Test
+  void addOrUpdateApplicationFlag_whenFlagNotFound_thenNew() {
+    when(applicationFlagRepository
+        .findByApplicationVersionAndFlagType(applicationVersion, ApplicationFlagType.HAS_SECONDARY_ASSETS))
+        .thenReturn(Optional.empty());
+
+    applicationFlagService.addOrUpdateApplicationFlag(applicationVersion, ApplicationFlagType.HAS_SECONDARY_ASSETS, true);
+
+    var flagArgumentCaptor = ArgumentCaptor.forClass(ApplicationFlag.class);
+    verify(applicationFlagRepository, times(1)).save(flagArgumentCaptor.capture());
+
+    ApplicationFlag actualFlag = flagArgumentCaptor.getValue();
+    assertThat(actualFlag.getFlagType()).isEqualTo(ApplicationFlagType.HAS_SECONDARY_ASSETS);
+    assertThat(actualFlag.getFlagValue()).isTrue();
+  }
+
+  @Test
+  void addOrUpdateApplicationFlag_whenFlagFound_thenNew() {
+    when(applicationFlagRepository
+        .findByApplicationVersionAndFlagType(applicationVersion, ApplicationFlagType.HAS_SECONDARY_ASSETS))
+        .thenReturn(Optional.of(secondaryAssetsFlag));
+
+    applicationFlagService.addOrUpdateApplicationFlag(applicationVersion, ApplicationFlagType.HAS_SECONDARY_ASSETS, false);
+
+    var flagArgumentCaptor = ArgumentCaptor.forClass(ApplicationFlag.class);
+    verify(applicationFlagRepository, times(1)).save(flagArgumentCaptor.capture());
+
+    ApplicationFlag actualFlag = flagArgumentCaptor.getValue();
+    assertThat(actualFlag.getFlagType()).isEqualTo(ApplicationFlagType.HAS_SECONDARY_ASSETS);
+    assertThat(actualFlag.getFlagValue()).isFalse();
   }
 }
