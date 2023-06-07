@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_1;
+import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.CASE_OFFICER_WUA_ID;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_ID_1;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.ORG_GROUP_ID_1;
@@ -96,6 +97,8 @@ class WorkAreaServiceTest {
 
   private EnergyPortalUserDto submitter;
 
+  private EnergyPortalUserDto caseOfficer;
+
   @BeforeEach
   void setUp() {
     user = ServiceUserDetailTestUtil.Builder().build();
@@ -113,6 +116,9 @@ class WorkAreaServiceTest {
     flareVersionSubmitted = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.FLARE);
     filter = new WorkAreaFilter();
     submitter = EnergyPortalUserDtoTestUtil.Builder().build();
+    caseOfficer = EnergyPortalUserDtoTestUtil.Builder()
+        .withWebUserAccountId(CASE_OFFICER_WUA_ID)
+        .build();
   }
 
   @Test
@@ -159,7 +165,7 @@ class WorkAreaServiceTest {
   }
 
   @Test
-  void getWorkAreaItems_forRegulator_withWorkAreaItemsToDisplay() {
+  void getWorkAreaItems_forRegulator_withNoWorkAreaItemsToDisplay() {
     when(workAreaFilterService.getConditions(filter, user, WorkAreaTab.MY_APPLICATIONS)).thenReturn(new ArrayList<>());
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR,
         Set.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS))).thenReturn(
@@ -170,7 +176,7 @@ class WorkAreaServiceTest {
   }
 
   @Test
-  void getWorkAreaItems_forRegulator_withProcessAndAssignPermission() {
+  void getWorkAreaItems_forRegulator_withSubmittedApplication() {
     when(workAreaFilterService.getConditions(filter, user, WorkAreaTab.MY_APPLICATIONS)).thenReturn(new ArrayList<>());
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, Set.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS))).thenReturn(
         List.of(regulatorTeam));
@@ -179,6 +185,27 @@ class WorkAreaServiceTest {
     when(organisationUnitService.getOrganisationUnitsByIds(List.of(PRIMARY_OPERATOR_OU_ID_1), ALL_ORG_UNITS_WORK_AREA_PURPOSE))
         .thenReturn(List.of(field1JsonWithOperator.getOperatorJson()));
     when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(workAreaItemDto.submittedByWuaId())))).thenReturn(List.of(submitter));
+    when(applicationVersionService.getApplicationVersionById(workAreaItemDto.applicationVersionId())).thenReturn(
+        ventVersionSubmitted);
+    doCallRealMethod().when(applicationService).generateApplicationReference(ventVersionSubmitted);
+
+    var workAreaItems = workAreaService.getRegulatorWorkAreaItems(filter, user, WorkAreaTab.MY_APPLICATIONS);
+
+    assertThat(workAreaItems).hasSize(1);
+    assertThat(workAreaItems.stream().toList().get(0)).usingRecursiveComparison().isEqualTo(WorkAreaTestUtil.getWorkAreaItemFromDto(workAreaItemDto));
+  }
+
+  @Test
+  void getWorkAreaItems_forRegulator_withCaseAssigned() {
+    when(workAreaFilterService.getConditions(filter, user, WorkAreaTab.MY_APPLICATIONS)).thenReturn(new ArrayList<>());
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, Set.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS))).thenReturn(
+        List.of(regulatorTeam));
+    var workAreaItemDto = WorkAreaTestUtil.getWorkAreaItemDtoForShortVentAssignedForTerminal();
+    when(workAreaItemDtoRepository.runQuery(any())).thenReturn(List.of(workAreaItemDto));
+    when(organisationUnitService.getOrganisationUnitsByIds(List.of(PRIMARY_OPERATOR_OU_ID_1), ALL_ORG_UNITS_WORK_AREA_PURPOSE))
+        .thenReturn(List.of(field1JsonWithOperator.getOperatorJson()));
+    var portalUserWuaIdList = List.of(new WebUserAccountId(workAreaItemDto.submittedByWuaId()), new WebUserAccountId(workAreaItemDto.caseOfficerWuaId()));
+    when(energyPortalUserService.findByWuaIds(portalUserWuaIdList)).thenReturn(List.of(submitter, caseOfficer));
     when(applicationVersionService.getApplicationVersionById(workAreaItemDto.applicationVersionId())).thenReturn(
         ventVersionSubmitted);
     doCallRealMethod().when(applicationService).generateApplicationReference(ventVersionSubmitted);
@@ -264,6 +291,10 @@ class WorkAreaServiceTest {
   @Test
   void getTabsAvailableToUser_withProcessFcsApplications() {
     when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS)))
+        .thenReturn(true);
+    when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS)))
+        .thenReturn(false);
+    when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS)))
         .thenReturn(true);
 
     assertThat(workAreaService.getTabsAvailableToUser(user))

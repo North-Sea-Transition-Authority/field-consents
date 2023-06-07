@@ -18,21 +18,21 @@ public enum WorkAreaTab {
       10,
       EnumSet.of(PROCESS_FCS_APPLICATIONS)
   ),
+  ALL_APPLICATIONS(
+      "All applications",
+      "allApplications",
+      "all-applications",
+      ReverseRouter.route(on(WorkAreaController.class).getWorkAreaRegulatorAllApplications(null, null)),
+      20,
+      EnumSet.of(ASSIGN_FCS_APPLICATIONS)
+  ),
   UNASSIGNED_APPLICATIONS(
       "Unassigned",
       "unassigned",
       "unassigned",
       ReverseRouter.route(on(WorkAreaController.class).getWorkAreaCaseOfficerUnassignedApplications(null, null)),
-      20,
-      EnumSet.of(PROCESS_FCS_APPLICATIONS)
-  ),
-  ALL_APPLICATIONS(
-      "All applications",
-      "allApplications",
-      "all-applications",
-      "url3", // TODO - FCS-357: NSTA Work Area - All applications (Case Manager)
       30,
-      EnumSet.of(ASSIGN_FCS_APPLICATIONS)
+      EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS)
   );
 
   private final String label;

@@ -139,12 +139,15 @@
         <#assign location>
           ${workAreaItem.asset()} <br/> ${workAreaItem.geographicArea()}
         </#assign>
+        <#assign status>
+            ${workAreaItem.status()} <br/> ${workAreaItem.caseOfficer()}
+        </#assign>
         <#assign otherInformation>
           ${workAreaItem.submittedDateTime()} <br/> ${workAreaItem.submittedBy()}
         </#assign>
       <@fdsResultList.resultListDataValue key="Consent type" value=consentType/>
       <@fdsResultList.resultListDataValue key="Location" value=location/>
-      <@fdsResultList.resultListDataValue key="Status" value=workAreaItem.status()/>
+      <@fdsResultList.resultListDataValue key="Status" value=status/>
       <@fdsResultList.resultListDataValue key="Other information" value=otherInformation/>
     </@fdsResultList.resultListDataItem>
   </@fdsResultList.resultListItem>

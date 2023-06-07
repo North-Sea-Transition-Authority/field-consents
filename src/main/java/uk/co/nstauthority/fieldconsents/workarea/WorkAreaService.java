@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
@@ -165,21 +166,27 @@ public class WorkAreaService {
 
     // Early call to API to get all energy portal users from workAreaItemDtoList at once
     // instead of calling the EPA for each item in loop.
-    var portalUserDtos = energyPortalUserService.findByWuaIds(workAreaItemDtoList
+    var submitterWuaIdsStream = workAreaItemDtoList
         .stream()
         .filter(workAreaItemDto -> workAreaItemDto.submittedByWuaId() != null)
-        .map(workAreaItemDto ->
-            new WebUserAccountId(workAreaItemDto.submittedByWuaId())
-        )
-        .distinct()
-        .toList());
+        .map(workAreaItemDto -> new WebUserAccountId(workAreaItemDto.submittedByWuaId()));
 
-    var portalUserDtosMap = portalUserDtos
+    var caseOfficerWuaIdsStream = workAreaItemDtoList
         .stream()
-        .collect(Collectors.toMap(
-            EnergyPortalUserDto::webUserAccountId,
-            Function.identity())
-        );
+        .filter(workAreaItemDto -> workAreaItemDto.caseOfficerWuaId() != null)
+        .map(workAreaItemDto -> new WebUserAccountId(workAreaItemDto.caseOfficerWuaId()));
+
+    var portalUserDtosMap =
+        energyPortalUserService.findByWuaIds(
+            Stream.concat(submitterWuaIdsStream, caseOfficerWuaIdsStream)
+                .distinct()
+                .toList()
+            )
+            .stream()
+            .collect(Collectors.toMap(
+                EnergyPortalUserDto::webUserAccountId,
+                Function.identity())
+            );
 
     return workAreaItemDtoList.stream()
         .map(workAreaItemDto -> new WorkAreaItem(
@@ -192,12 +199,15 @@ public class WorkAreaService {
             getAssetLocation(workAreaItemDto, fieldJsonsMap),
             workAreaItemDto.status().getDisplayName(),
             workAreaItemDto.status().equals(ApplicationVersionStatus.SUBMITTED)
-                ? "Submitted %s".formatted(DateUtils.format(workAreaItemDto.submittedDateTime(), DateUtils.DATE_TIME))
+                ? "Submitted: %s".formatted(DateUtils.format(workAreaItemDto.submittedDateTime(), DateUtils.DATE_TIME))
                 : "",
             workAreaItemDto.status().equals(ApplicationVersionStatus.SUBMITTED)
                 ? getSubmitter(workAreaItemDto, portalUserDtosMap)
                 : "",
-            getAceFlag(workAreaItemDto)
+            getAceFlag(workAreaItemDto),
+            Objects.nonNull(workAreaItemDto.caseOfficerWuaId())
+                ? getCaseOfficer(workAreaItemDto, portalUserDtosMap)
+                : ""
         ))
         .toList();
   }
@@ -252,12 +262,16 @@ public class WorkAreaService {
 
   private String getSubmitter(WorkAreaItemDto workAreaItemDto, Map<Long, EnergyPortalUserDto> portalUserDtosMap) {
     var matchingPortalUserDto = portalUserDtosMap.get(workAreaItemDto.submittedByWuaId());
-    return "Submitted by %s %s %s"
-        .formatted(matchingPortalUserDto.title(), matchingPortalUserDto.forename(), matchingPortalUserDto.surname());
+    return "Submitter: %s".formatted(matchingPortalUserDto.displayName());
   }
 
   private String getAceFlag(WorkAreaItemDto workAreaItemDto) {
     return Boolean.TRUE.equals(workAreaItemDto.aceFlag()) ? "ACE" : "";
+  }
+
+  private String getCaseOfficer(WorkAreaItemDto workAreaItemDto, Map<Long, EnergyPortalUserDto> portalUserDtosMap) {
+    var matchingPortalUserDto = portalUserDtosMap.get(workAreaItemDto.caseOfficerWuaId());
+    return "Case Officer: %s".formatted(matchingPortalUserDto.displayName());
   }
 
   public List<WorkAreaTab> getTabsAvailableToUser(ServiceUserDetail user) {

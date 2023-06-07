@@ -1,9 +1,11 @@
 package uk.co.nstauthority.fieldconsents.workarea;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.ALL_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.MY_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.UNASSIGNED_APPLICATIONS;
 
+import java.util.EnumSet;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -21,6 +23,7 @@ import uk.co.nstauthority.fieldconsents.assets.fields.GeographicArea;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.AccessibleByServiceUsers;
 import uk.co.nstauthority.fieldconsents.authorisation.HasPermission;
+import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
@@ -44,15 +47,18 @@ public class WorkAreaController {
 
   private final TeamService teamService;
 
+  private final PermissionService permissionService;
+
 
   public WorkAreaController(WorkAreaService workAreaService,
                             WorkAreaFormService workAreaFormService,
                             WorkAreaFilterService workAreaFilterService,
-                            TeamService teamService) {
+                            TeamService teamService, PermissionService permissionService) {
     this.workAreaService = workAreaService;
     this.workAreaFormService = workAreaFormService;
     this.workAreaFilterService = workAreaFilterService;
     this.teamService = teamService;
+    this.permissionService = permissionService;
   }
 
   @GetMapping
@@ -60,7 +66,11 @@ public class WorkAreaController {
     var isRegulatorUser = teamService.isRegulatorUser(user);
 
     if (isRegulatorUser) {
-      return renderRegulatorWorkAreaOnTab(filter, user, MY_APPLICATIONS);
+      if (permissionService.hasPermission(user, EnumSet.of(RolePermission.PROCESS_FCS_APPLICATIONS))) {
+        return renderRegulatorWorkAreaOnTab(filter, user, MY_APPLICATIONS);
+      } else if (permissionService.hasPermission(user, EnumSet.of(RolePermission.ASSIGN_FCS_APPLICATIONS))) {
+        return renderRegulatorWorkAreaOnTab(filter, user, ALL_APPLICATIONS);
+      }
     }
 
     return getWorkAreaModelAndView(filter, user)
@@ -83,7 +93,7 @@ public class WorkAreaController {
   }
 
   @GetMapping("case-officer-unassigned")
-  @HasPermission(permissions = RolePermission.PROCESS_FCS_APPLICATIONS)
+  @HasPermission(permissions = {RolePermission.PROCESS_FCS_APPLICATIONS, RolePermission.ASSIGN_FCS_APPLICATIONS})
   public ModelAndView getWorkAreaCaseOfficerUnassignedApplications(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
                                                                    ServiceUserDetail user) {
     return renderRegulatorWorkAreaOnTab(filter, user, UNASSIGNED_APPLICATIONS);
@@ -94,6 +104,20 @@ public class WorkAreaController {
   public ModelAndView postWorkAreaCaseOfficerUnassignedApplications(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
                                                                     ServiceUserDetail user) {
     return ReverseRouter.redirect(on(WorkAreaController.class).getWorkAreaCaseOfficerUnassignedApplications(filter, user));
+  }
+
+  @GetMapping("regulator-all-applications")
+  @HasPermission(permissions = RolePermission.ASSIGN_FCS_APPLICATIONS)
+  public ModelAndView getWorkAreaRegulatorAllApplications(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
+                                                          ServiceUserDetail user) {
+    return renderRegulatorWorkAreaOnTab(filter, user, ALL_APPLICATIONS);
+  }
+
+  @PostMapping("regulator-all-applications")
+  @HasPermission(permissions = RolePermission.ASSIGN_FCS_APPLICATIONS)
+  public ModelAndView postWorkAreaRegulatorAllApplications(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
+                                                           ServiceUserDetail user) {
+    return ReverseRouter.redirect(on(WorkAreaController.class).getWorkAreaRegulatorAllApplications(filter, user));
   }
 
   private ModelAndView renderRegulatorWorkAreaOnTab(WorkAreaFilter filter, ServiceUserDetail user,
@@ -131,7 +155,6 @@ public class WorkAreaController {
         .addObject("form", form)
         .addObject("pageTitle", WORK_AREA_TITLE)
         .addObject("workAreaTabs", workAreaService.getTabsAvailableToUser(user));
-
   }
 
   @PostMapping
