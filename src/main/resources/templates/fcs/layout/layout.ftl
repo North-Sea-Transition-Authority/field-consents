@@ -78,15 +78,15 @@
       <#if flash?has_content>
 
         <#local bannerContent>
-          <#if flash.heading?has_content>
-            <#if flash.content?has_content>
-              <@fdsNotificationBanner.notificationBannerContent headingText=flash.heading moreContent=flash.content/>
+          <#if flash.headingContent?has_content>
+            <#if flash.otherContent?has_content>
+              <@fdsNotificationBanner.notificationBannerContent headingText=flash.headingContent moreContent=flash.otherContent/>
             <#else>
-              <@fdsNotificationBanner.notificationBannerContent>${flash.heading}</@fdsNotificationBanner.notificationBannerContent>
+              <@fdsNotificationBanner.notificationBannerContent>${flash.headingContent}</@fdsNotificationBanner.notificationBannerContent>
             </#if>
           <#else>
             <p class="govuk-body">
-              ${flash.content}
+              ${flash.otherContent}
             </p>
           </#if>
         </#local>

@@ -424,9 +424,8 @@ class IndustryRemoveMemberControllerTest extends AbstractControllerTest {
         .thenReturn(canRemoveTeamMember);
 
     var expectedNotificationBanner = NotificationBanner.builder()
-        .withTitle("Removed member from team")
         .withBannerType(NotificationBannerType.SUCCESS)
-        .withContent("%s has been removed from the team".formatted(teamMemberView.getDisplayName()))
+        .withHeadingContent("%s has been removed from the team".formatted(teamMemberView.getDisplayName()))
         .build();
 
     mockMvc.perform(post(ReverseRouter.route(on(IndustryRemoveMemberController.class)

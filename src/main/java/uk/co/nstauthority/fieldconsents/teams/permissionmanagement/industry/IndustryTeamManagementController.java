@@ -117,7 +117,6 @@ public class IndustryTeamManagementController extends AbstractTeamController {
                 );
 
                 NotificationBannerUtil.addSuccessNotification(redirectAttributes,
-                    "Added new organisation group team",
                     "Team for organisation group %s has been created".formatted(groupName));
 
                 return t;

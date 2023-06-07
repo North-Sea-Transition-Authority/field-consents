@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.energyportal.user;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -8,6 +9,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import jakarta.persistence.EntityNotFoundException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -247,5 +249,65 @@ class EnergyPortalUserServiceTest {
     )).thenReturn(Optional.empty());
 
     assertThat(energyPortalUserService.findByWuaId(webUserAccountId)).isEmpty();
+  }
+
+  @Test
+  void getByWuaId_whenFound_thenUserReturned() {
+
+    var expectedUser = EpaUserTestUtil.Builder().build();
+    var webUserAccountId = new WebUserAccountId(expectedUser.getWebUserAccountId());
+
+    var userProjectionRoot = EnergyPortalUserService.USER_PROJECT_ROOT;
+
+    when(userApi.findUserById(
+        eq(webUserAccountId.toInt()),
+        eq(userProjectionRoot),
+        any(RequestPurpose.class),
+        any(LogCorrelationId.class)
+    )).thenReturn(Optional.of(expectedUser));
+
+    var resultingUser = energyPortalUserService.getByWuaId(webUserAccountId);
+
+    assertThat(resultingUser)
+        .extracting(
+            EnergyPortalUserDto::webUserAccountId,
+            EnergyPortalUserDto::title,
+            EnergyPortalUserDto::forename,
+            EnergyPortalUserDto::surname,
+            EnergyPortalUserDto::emailAddress,
+            EnergyPortalUserDto::telephoneNumber,
+            EnergyPortalUserDto::isSharedAccount,
+            EnergyPortalUserDto::canLogin
+        )
+        .containsExactly(
+            Long.valueOf(expectedUser.getWebUserAccountId()),
+            expectedUser.getTitle(),
+            expectedUser.getForename(),
+            expectedUser.getSurname(),
+            expectedUser.getPrimaryEmailAddress(),
+            expectedUser.getTelephoneNumber(),
+            expectedUser.getIsAccountShared(),
+            expectedUser.getCanLogin()
+        );
+  }
+
+  @Test
+  void getByWuaId_whenNotFound_thenThrow() {
+
+    var webUserAccountId = new WebUserAccountId(123);
+
+    var userProjectionRoot = EnergyPortalUserService.USER_PROJECT_ROOT;
+
+    when(userApi.findUserById(
+        eq(webUserAccountId.toInt()),
+        eq(userProjectionRoot),
+        any(RequestPurpose.class),
+        any(LogCorrelationId.class)
+    )).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> energyPortalUserService.getByWuaId(webUserAccountId))
+        .isInstanceOf(EntityNotFoundException.class)
+        .hasMessage("Energy portal user with wua id %s not found"
+            .formatted(webUserAccountId.toString()));
   }
 }

@@ -1,7 +1,10 @@
 package uk.co.nstauthority.fieldconsents.energyportal.user;
 
+import uk.co.nstauthority.fieldconsents.util.userutil.UserDisplayNameUtil;
+
 public record EnergyPortalUserDto(
-    long webUserAccountId,
+    Long webUserAccountId,
+    Long personId,
     String title,
     String forename,
     String surname,
@@ -12,6 +15,6 @@ public record EnergyPortalUserDto(
 ) {
 
   public String displayName() {
-    return "%s %s".formatted(forename, surname);
+    return UserDisplayNameUtil.getUserDisplayName(forename, surname);
   }
 }

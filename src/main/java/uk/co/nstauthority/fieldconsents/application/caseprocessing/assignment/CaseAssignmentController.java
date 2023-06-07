@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
@@ -19,7 +20,8 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CasePr
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.AccessibleByServiceUsers;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
-import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
+import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
+import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @Controller
@@ -35,15 +37,19 @@ public class CaseAssignmentController {
 
   private final CaseAssignmentFormValidator caseAssignmentFormValidator;
 
+  private final EnergyPortalUserService energyPortalUserService;
+
   @Autowired
   CaseAssignmentController(ApplicationService applicationService,
                            ApplicationVersionService applicationVersionService,
                            CaseAssignmentService caseAssignmentService,
-                           CaseAssignmentFormValidator caseAssignmentFormValidator) {
+                           CaseAssignmentFormValidator caseAssignmentFormValidator,
+                           EnergyPortalUserService energyPortalUserService) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.caseAssignmentService = caseAssignmentService;
     this.caseAssignmentFormValidator = caseAssignmentFormValidator;
+    this.energyPortalUserService = energyPortalUserService;
   }
 
 
@@ -67,7 +73,7 @@ public class CaseAssignmentController {
         .addObject("caseOfficerCandidates", caseAssignmentService.getCaseOfficerCandidates(user))
         .addObject("assignCaseOfficerUrl",
             ReverseRouter.route(on(CaseAssignmentController.class)
-                .assignCaseOfficer(applicationId, null, null, null)))
+                .assignCaseOfficer(applicationId, null, null, null, null)))
         .addObject("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
                 .getApplicationCaseProcessing(applicationId, null)));
@@ -78,7 +84,8 @@ public class CaseAssignmentController {
   public ModelAndView assignCaseOfficer(@PathVariable Integer applicationId,
                                         @ModelAttribute("form") CaseAssignmentForm form,
                                         ServiceUserDetail user,
-                                        BindingResult bindingResult) {
+                                        BindingResult bindingResult,
+                                        RedirectAttributes redirectAttributes) {
 
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
 
@@ -88,19 +95,32 @@ public class CaseAssignmentController {
       return getCaseAssignmentModelAndView(applicationVersion, user);
     }
 
-    caseAssignmentService.assignCaseOfficer(applicationVersion, form.getCaseOfficerWuaId());
+    var caseOfficerUser = ServiceUserDetail.from(energyPortalUserService.getByWuaId(form.getCaseOfficerWuaId()));
 
-    return ReverseRouter.redirect(on(ApplicationCaseProcessingController.class)
-        .getApplicationCaseProcessing(applicationId, null));
+    caseAssignmentService.assignCaseOfficer(applicationVersion, caseOfficerUser);
+
+    NotificationBannerUtil.addSuccessNotification(
+        redirectAttributes,
+        "You have assigned this case to %s".formatted(caseOfficerUser.displayName())
+    );
+
+    return ReverseRouter
+        .redirect(on(ApplicationCaseProcessingController.class).getApplicationCaseProcessing(applicationId, null));
   }
 
   @PostMapping("take-ownership-case-officer")
   @ActionEndPoint(CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP)
   public ModelAndView takeOwnershipCaseOfficer(@PathVariable Integer applicationId,
-                                               ServiceUserDetail user) {
+                                               ServiceUserDetail user,
+                                               RedirectAttributes redirectAttributes) {
 
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
-    caseAssignmentService.assignCaseOfficer(applicationVersion, WebUserAccountId.from(user));
+    caseAssignmentService.assignCaseOfficer(applicationVersion, user);
+
+    NotificationBannerUtil.addSuccessNotification(
+        redirectAttributes,
+        "You have taken ownership of this case"
+    );
 
     return ReverseRouter
         .redirect(on(ApplicationCaseProcessingController.class).getApplicationCaseProcessing(applicationId, null));
@@ -108,10 +128,16 @@ public class CaseAssignmentController {
 
   @PostMapping("release-ownership-case-officer")
   @ActionEndPoint(CaseProcessingActionItem.CASE_OFFICER_RELEASE_OWNERSHIP)
-  public ModelAndView releaseOwnershipCaseOfficer(@PathVariable Integer applicationId) {
+  public ModelAndView releaseOwnershipCaseOfficer(@PathVariable Integer applicationId,
+                                                  RedirectAttributes redirectAttributes) {
 
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     caseAssignmentService.unassignCaseOfficer(applicationVersion);
+
+    NotificationBannerUtil.addSuccessNotification(
+        redirectAttributes,
+        "You have released ownership of this case"
+    );
 
     return ReverseRouter
         .redirect(on(ApplicationCaseProcessingController.class).getApplicationCaseProcessing(applicationId, null));

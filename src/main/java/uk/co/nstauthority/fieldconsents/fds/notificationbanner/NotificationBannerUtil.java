@@ -5,6 +5,8 @@ import uk.co.nstauthority.fieldconsents.exception.IllegalUtilClassInstantiationE
 
 public class NotificationBannerUtil {
 
+  static final String FLASH_ATTRIBUTE_NAME = "flash";
+
   private NotificationBannerUtil() {
     throw new IllegalUtilClassInstantiationException(this.getClass());
   }
@@ -12,16 +14,28 @@ public class NotificationBannerUtil {
   public static void applyNotificationBanner(RedirectAttributes redirectAttributes,
                                              NotificationBanner notificationBanner) {
 
-    redirectAttributes.addFlashAttribute("flash", notificationBanner);
+    redirectAttributes.addFlashAttribute(FLASH_ATTRIBUTE_NAME, notificationBanner);
   }
 
-  public static void addSuccessNotification(RedirectAttributes redirectAttributes, String heading, String content) {
+  public static void addSuccessNotification(RedirectAttributes redirectAttributes,
+                                            String headingContent) {
     var notificationBanner = NotificationBanner.builder()
         .withBannerType(NotificationBannerType.SUCCESS)
-        .withContent(content)
-        .withTitle(heading)
+        .withHeadingContent(headingContent)
         .build();
 
-    redirectAttributes.addFlashAttribute("flash", notificationBanner);
+    redirectAttributes.addFlashAttribute(FLASH_ATTRIBUTE_NAME, notificationBanner);
+  }
+
+  public static void addSuccessNotification(RedirectAttributes redirectAttributes,
+                                            String headingContent,
+                                            String otherContent) {
+    var notificationBanner = NotificationBanner.builder()
+        .withBannerType(NotificationBannerType.SUCCESS)
+        .withHeadingContent(headingContent)
+        .withOtherContent(otherContent)
+        .build();
+
+    redirectAttributes.addFlashAttribute(FLASH_ATTRIBUTE_NAME, notificationBanner);
   }
 }

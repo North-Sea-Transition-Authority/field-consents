@@ -50,7 +50,7 @@ class TeamMemberRoleServiceTest {
     var team = TeamTestUtil.Builder().build();
 
     var userToAdd = EnergyPortalUserDtoTestUtil.Builder()
-        .withWebUserAccountId(100)
+        .withWebUserAccountId(100L)
         .build();
 
     var role = "ROLE_NAME";
@@ -150,5 +150,4 @@ class TeamMemberRoleServiceTest {
         instigatingUser
     );
   }
-
 }

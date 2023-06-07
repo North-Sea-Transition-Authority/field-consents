@@ -68,8 +68,8 @@ class AddTeamMemberValidatorTest {
     var usernameToTest = "username";
 
     var matchingUsers = List.of(
-        EnergyPortalUserDtoTestUtil.Builder().withWebUserAccountId(1).build(),
-        EnergyPortalUserDtoTestUtil.Builder().withWebUserAccountId(2).build()
+        EnergyPortalUserDtoTestUtil.Builder().withWebUserAccountId(1L).build(),
+        EnergyPortalUserDtoTestUtil.Builder().withWebUserAccountId(2L).build()
     );
 
     when(energyPortalUserService.findUserByUsername(usernameToTest)).thenReturn(matchingUsers);

@@ -21,7 +21,7 @@ class TeamMemberViewTest {
         .withLastName("Surname")
         .build();
 
-    assertThat(teamMemberView.getDisplayName()).isEqualTo("Mr Forename Surname");
+    assertThat(teamMemberView.getDisplayName()).isEqualTo("Forename Surname");
   }
 
   @Test

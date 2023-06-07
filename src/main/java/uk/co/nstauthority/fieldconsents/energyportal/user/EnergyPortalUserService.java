@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.energyportal.user;
 
+import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,7 @@ public class EnergyPortalUserService {
 
   static final UsersProjectionRoot USERS_PROJECT_ROOT = new UsersProjectionRoot()
       .webUserAccountId()
+      .personId()
       .title()
       .forename()
       .surname()
@@ -28,6 +30,7 @@ public class EnergyPortalUserService {
 
   static final UserProjectionRoot USER_PROJECT_ROOT = new UserProjectionRoot()
       .webUserAccountId()
+      .personId()
       .title()
       .forename()
       .surname()
@@ -94,9 +97,17 @@ public class EnergyPortalUserService {
     ));
   }
 
+  public EnergyPortalUserDto getByWuaId(WebUserAccountId webUserAccountId) {
+    return findByWuaId(webUserAccountId)
+        .orElseThrow(() ->
+            new EntityNotFoundException("Energy portal user with wua id %s not found"
+                .formatted(webUserAccountId.toString())));
+  }
+
   private EnergyPortalUserDto convertToEnergyPortalUser(User user) {
     return new EnergyPortalUserDto(
-        user.getWebUserAccountId(),
+        user.getWebUserAccountId().longValue(),
+        user.getPersonId().longValue(),
         user.getTitle(),
         user.getForename(),
         user.getSurname(),

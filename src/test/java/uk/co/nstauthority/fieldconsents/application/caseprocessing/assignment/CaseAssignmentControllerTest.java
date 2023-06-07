@@ -16,6 +16,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_ASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.notificationBanner;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.Collections;
@@ -34,8 +35,14 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
+import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
+import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDtoTestUtil;
+import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
+import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
+import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @ContextConfiguration(classes = CaseAssignmentController.class)
@@ -43,8 +50,15 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
 
   private static final String DUMMY_APP_REF = "DUMMY_APP_REF";
 
+  private static final EnergyPortalUserDto ENERGY_PORTAL_USER_1 =
+      EnergyPortalUserDtoTestUtil.Builder().build();
+
+  private static final ServiceUserDetail SERVICE_USER_DETAIL_USER_1 =
+      ServiceUserDetail.from(ENERGY_PORTAL_USER_1);
+
   private static final Map<String, String> CASE_OFFICER_CANDIDATES =
-      Map.of("1", "user_a", "2", "user_b", "3", "user_c");
+      Map.of(String.valueOf(ENERGY_PORTAL_USER_1.webUserAccountId()), ENERGY_PORTAL_USER_1.displayName(),
+          "2", "user_b", "3", "user_c");
 
   @MockBean
   private ApplicationService applicationService;
@@ -54,6 +68,9 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
 
   @MockBean
   private CaseAssignmentFormValidator caseAssignmentFormValidator;
+
+  @MockBean
+  private EnergyPortalUserService energyPortalUserService;
 
   @SecurityTest
   void getCaseAssignment_noUser() throws Exception {
@@ -123,7 +140,7 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
         .andExpect(model().attribute("caseOfficerCandidates", CASE_OFFICER_CANDIDATES))
         .andExpect(model().attribute("assignCaseOfficerUrl",
                 ReverseRouter.route(on(CaseAssignmentController.class)
-                    .assignCaseOfficer(APPLICATION_ID, null, null, null))))
+                    .assignCaseOfficer(APPLICATION_ID, null, null, null, null))))
         .andExpect(model().attribute("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
                 .getApplicationCaseProcessing(APPLICATION_ID, null))));
@@ -132,7 +149,7 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
   @SecurityTest
   void assignCaseOfficer_noUser() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(CaseAssignmentController.class)
-            .assignCaseOfficer(APPLICATION_ID, null, null, null)))
+            .assignCaseOfficer(APPLICATION_ID, null, null, null, null)))
             .with(csrf()))
         .andExpect(redirectionToLoginUrl());
   }
@@ -147,19 +164,28 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
 
     doCallRealMethod().when(caseAssignmentFormValidator).validate(any(), any());
 
+    when(energyPortalUserService.getByWuaId(new WebUserAccountId(ENERGY_PORTAL_USER_1.webUserAccountId())))
+        .thenReturn(ENERGY_PORTAL_USER_1);
+
+    var expectedNotificationBanner = NotificationBanner.builder()
+        .withBannerType(NotificationBannerType.SUCCESS)
+        .withHeadingContent("You have assigned this case to %s".formatted(ENERGY_PORTAL_USER_1.displayName()))
+        .build();
+
     mockMvc.perform(
             post(ReverseRouter.route(on(CaseAssignmentController.class)
-                .assignCaseOfficer(APPLICATION_ID, null, null, null)))
+                .assignCaseOfficer(APPLICATION_ID, null, null, null, null)))
                 .with(csrf())
                 .with(user(user))
-                .param("caseOfficerWuaId", "1")
+                .param("caseOfficerWuaId", String.valueOf(ENERGY_PORTAL_USER_1.webUserAccountId()))
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .getApplicationCaseProcessing(APPLICATION_ID, null))));
+            .getApplicationCaseProcessing(APPLICATION_ID, null))))
+        .andExpect(notificationBanner(expectedNotificationBanner));
 
     verify(caseAssignmentService, times(1))
-        .assignCaseOfficer(applicationVersion, WebUserAccountId.from(user));
+        .assignCaseOfficer(applicationVersion, SERVICE_USER_DETAIL_USER_1);
   }
 
   @ParameterizedTest
@@ -179,7 +205,7 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
 
     mockMvc.perform(
             post(ReverseRouter.route(on(CaseAssignmentController.class)
-                .assignCaseOfficer(APPLICATION_ID, null, null, null)))
+                .assignCaseOfficer(APPLICATION_ID, null, null, null, null)))
                 .with(csrf())
                 .with(user(user))
         )
@@ -189,7 +215,7 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
         .andExpect(model().attribute("caseOfficerCandidates", CASE_OFFICER_CANDIDATES))
         .andExpect(model().attribute("assignCaseOfficerUrl",
             ReverseRouter.route(on(CaseAssignmentController.class)
-                .assignCaseOfficer(APPLICATION_ID, null, null, null))))
+                .assignCaseOfficer(APPLICATION_ID, null, null, null, null))))
         .andExpect(model().attribute("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
                 .getApplicationCaseProcessing(APPLICATION_ID, null))));
@@ -198,7 +224,7 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
   @SecurityTest
   void takeOwnershipCaseOfficer_noUser() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(CaseAssignmentController.class)
-            .takeOwnershipCaseOfficer(APPLICATION_ID, null)))
+            .takeOwnershipCaseOfficer(APPLICATION_ID, null, null)))
             .with(csrf()))
         .andExpect(redirectionToLoginUrl());
   }
@@ -211,24 +237,30 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
 
+    var expectedNotificationBanner = NotificationBanner.builder()
+        .withBannerType(NotificationBannerType.SUCCESS)
+        .withHeadingContent("You have taken ownership of this case")
+        .build();
+
     mockMvc.perform(
             post(ReverseRouter.route(on(CaseAssignmentController.class)
-                .takeOwnershipCaseOfficer(APPLICATION_ID, null)))
+                .takeOwnershipCaseOfficer(APPLICATION_ID, null, null)))
                 .with(csrf())
                 .with(user(user))
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .getApplicationCaseProcessing(APPLICATION_ID, null))));
+            .getApplicationCaseProcessing(APPLICATION_ID, null))))
+        .andExpect(notificationBanner(expectedNotificationBanner));
 
     verify(caseAssignmentService, times(1))
-        .assignCaseOfficer(applicationVersion, WebUserAccountId.from(user));
+        .assignCaseOfficer(applicationVersion, user);
   }
 
   @SecurityTest
   void releaseOwnershipCaseOfficer_noUser() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(CaseAssignmentController.class)
-            .releaseOwnershipCaseOfficer(APPLICATION_ID)))
+            .releaseOwnershipCaseOfficer(APPLICATION_ID, null)))
             .with(csrf()))
         .andExpect(redirectionToLoginUrl());
   }
@@ -241,15 +273,21 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
 
+    var expectedNotificationBanner = NotificationBanner.builder()
+        .withBannerType(NotificationBannerType.SUCCESS)
+        .withHeadingContent("You have released ownership of this case")
+        .build();
+
     mockMvc.perform(
             post(ReverseRouter.route(on(CaseAssignmentController.class)
-                .releaseOwnershipCaseOfficer(APPLICATION_ID)))
+                .releaseOwnershipCaseOfficer(APPLICATION_ID, null)))
                 .with(csrf())
                 .with(user(user))
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .getApplicationCaseProcessing(APPLICATION_ID, null))));
+            .getApplicationCaseProcessing(APPLICATION_ID, null))))
+        .andExpect(notificationBanner(expectedNotificationBanner));
 
     verify(caseAssignmentService, times(1))
         .unassignCaseOfficer(applicationVersion);

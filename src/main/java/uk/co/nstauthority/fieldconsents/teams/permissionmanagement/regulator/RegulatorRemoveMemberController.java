@@ -15,8 +15,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.fieldconsents.authorisation.HasTeamPermission;
 import uk.co.nstauthority.fieldconsents.branding.CustomerConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
-import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
-import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.TeamId;
@@ -117,16 +115,12 @@ public class RegulatorRemoveMemberController extends AbstractTeamController {
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN,
             "No roles found for user [%s] in team [%s]".formatted(wuaId, teamId)));
 
-    var banner = NotificationBanner.builder()
-        .withTitle("Removed member from team")
-        .withBannerType(NotificationBannerType.SUCCESS)
-        .withContent("%s has been removed from the team".formatted(userView.getDisplayName()))
-        .build();
-
-    NotificationBannerUtil.applyNotificationBanner(redirectAttributes, banner);
+    NotificationBannerUtil.addSuccessNotification(
+        redirectAttributes,
+        "%s has been removed from the team".formatted(userView.getDisplayName())
+    );
 
     return ReverseRouter.redirect(on(RegulatorTeamManagementController.class).renderMemberList(teamId));
-
   }
 
   private String getPageTitle(boolean canRemoveMember, TeamMemberView teamMemberView, String teamName) {

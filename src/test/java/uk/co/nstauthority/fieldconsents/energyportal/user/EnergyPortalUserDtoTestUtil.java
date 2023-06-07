@@ -14,7 +14,8 @@ public class EnergyPortalUserDtoTestUtil {
 
   public static class Builder {
 
-    private long webUserAccountId = 1;
+    private Long webUserAccountId = 1L;
+    private Long personId = 1L;
     private String title = "title";
     private String forename = "forename";
     private String surname = "surname";
@@ -25,8 +26,13 @@ public class EnergyPortalUserDtoTestUtil {
 
     private Builder() {}
 
-    public Builder withWebUserAccountId(long webUserAccountId) {
+    public Builder withWebUserAccountId(Long webUserAccountId) {
       this.webUserAccountId = webUserAccountId;
+      return this;
+    }
+
+    public Builder withPersonId(Long personId) {
+      this.personId = personId;
       return this;
     }
 
@@ -68,6 +74,7 @@ public class EnergyPortalUserDtoTestUtil {
     public EnergyPortalUserDto build() {
       return new EnergyPortalUserDto(
           webUserAccountId,
+          personId,
           title,
           forename,
           surname,
@@ -77,7 +84,5 @@ public class EnergyPortalUserDtoTestUtil {
           canLogin
       );
     }
-
   }
-
 }

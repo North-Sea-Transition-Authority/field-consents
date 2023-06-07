@@ -4,14 +4,14 @@ package uk.co.nstauthority.fieldconsents.fds.notificationbanner;
 public class NotificationBanner {
 
   private final String title;
-  private final String heading;
-  private final String content;
+  private final String headingContent;
+  private final String otherContent;
   private final NotificationBannerType type;
 
-  private NotificationBanner(String title, String heading, String content, NotificationBannerType type) {
+  private NotificationBanner(String title, String headingContent, String otherContent, NotificationBannerType type) {
     this.title = title;
-    this.heading = heading;
-    this.content = content;
+    this.headingContent = headingContent;
+    this.otherContent = otherContent;
     this.type = type;
   }
 
@@ -19,12 +19,12 @@ public class NotificationBanner {
     return title;
   }
 
-  public String getHeading() {
-    return heading;
+  public String getHeadingContent() {
+    return headingContent;
   }
 
-  public String getContent() {
-    return content;
+  public String getOtherContent() {
+    return otherContent;
   }
 
   public NotificationBannerType getType() {
@@ -38,8 +38,8 @@ public class NotificationBanner {
   public static class Builder {
 
     private String title = "";
-    private String heading = "";
-    private String content = "";
+    private String headingContent = "";
+    private String otherContent = "";
     private NotificationBannerType notificationBannerType = NotificationBannerType.INFO;
 
     private Builder() {
@@ -50,23 +50,26 @@ public class NotificationBanner {
       return this;
     }
 
-    public Builder withHeading(String heading) {
-      this.heading = heading;
+    public Builder withHeadingContent(String headingContent) {
+      this.headingContent = headingContent;
       return this;
     }
 
-    public Builder withContent(String content) {
-      this.content = content;
+    public Builder withOtherContent(String otherContent) {
+      this.otherContent = otherContent;
       return this;
     }
 
     public Builder withBannerType(NotificationBannerType notificationBannerType) {
       this.notificationBannerType = notificationBannerType;
+      if (NotificationBannerType.SUCCESS.equals(this.notificationBannerType)) {
+        this.title = "Success";
+      }
       return this;
     }
 
     public NotificationBanner build() {
-      return new NotificationBanner(title, heading, content, notificationBannerType);
+      return new NotificationBanner(title, headingContent, otherContent, notificationBannerType);
     }
   }
 }

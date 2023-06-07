@@ -16,8 +16,6 @@ import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummarySe
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
-import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
-import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
@@ -64,11 +62,10 @@ public class DeleteApplicationController {
     applicationVersionService.deleteApplicationVersion(applicationVersion);
 
     if (redirectAttributes != null) {
-      var notificationBanner = NotificationBanner.builder()
-          .withBannerType(NotificationBannerType.SUCCESS)
-          .withHeading("Draft application deleted successfully")
-          .build();
-      NotificationBannerUtil.applyNotificationBanner(redirectAttributes, notificationBanner);
+      NotificationBannerUtil.addSuccessNotification(
+          redirectAttributes,
+          "Draft application has been successfully deleted"
+      );
     }
 
     return ReverseRouter.redirect(on(WorkAreaController.class).getWorkArea(null, null));

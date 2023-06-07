@@ -45,7 +45,7 @@ class TeamMemberViewServiceTest {
     when(teamMemberService.getTeamMembers(team)).thenReturn(List.of(teamMember));
 
     var energyPortalUser = EnergyPortalUserDtoTestUtil.Builder()
-        .withWebUserAccountId(teamMember.wuaId().toInt())
+        .withWebUserAccountId(teamMember.wuaId().id())
         .build();
 
     when(energyPortalUserService.findByWuaIds(List.of(teamMember.wuaId()))).thenReturn(List.of(energyPortalUser));
@@ -90,13 +90,13 @@ class TeamMemberViewServiceTest {
     when(teamMemberService.getTeamMembers(team)).thenReturn(List.of(secondTeamMember, firstTeamMember));
 
     var firstAlphabeticallyEnergyPortalUser = EnergyPortalUserDtoTestUtil.Builder()
-        .withWebUserAccountId(firstTeamMember.wuaId().toInt())
+        .withWebUserAccountId(firstTeamMember.wuaId().id())
         .withForename("A forename")
         .withSurname("A surname")
         .build();
 
     var secondAlphabeticallyEnergyPortalUser = EnergyPortalUserDtoTestUtil.Builder()
-        .withWebUserAccountId(secondTeamMember.wuaId().toInt())
+        .withWebUserAccountId(secondTeamMember.wuaId().id())
         .withForename("B forename")
         .withSurname("B surname")
         .build();
@@ -132,13 +132,13 @@ class TeamMemberViewServiceTest {
     when(teamMemberService.getTeamMembers(team)).thenReturn(List.of(secondTeamMember, firstTeamMember));
 
     var firstAlphabeticallyEnergyPortalUser = EnergyPortalUserDtoTestUtil.Builder()
-        .withWebUserAccountId(firstTeamMember.wuaId().toInt())
+        .withWebUserAccountId(firstTeamMember.wuaId().id())
         .withForename("A forename")
         .withSurname("A surname")
         .build();
 
     var secondAlphabeticallyEnergyPortalUser = EnergyPortalUserDtoTestUtil.Builder()
-        .withWebUserAccountId(secondTeamMember.wuaId().toInt())
+        .withWebUserAccountId(secondTeamMember.wuaId().id())
         .withForename("A forename")
         .withSurname("B surname")
         .build();
@@ -171,7 +171,7 @@ class TeamMemberViewServiceTest {
     when(teamMemberService.getTeamMembers(team)).thenReturn(List.of(teamMemberWithMultipleRoles));
 
     var energyPortalUser = EnergyPortalUserDtoTestUtil.Builder()
-        .withWebUserAccountId(teamMemberWithMultipleRoles.wuaId().toInt())
+        .withWebUserAccountId(teamMemberWithMultipleRoles.wuaId().id())
         .build();
 
     when(energyPortalUserService.findByWuaIds(List.of(teamMemberWithMultipleRoles.wuaId())))

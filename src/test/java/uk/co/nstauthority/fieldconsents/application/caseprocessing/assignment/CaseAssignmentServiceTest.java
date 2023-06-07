@@ -107,7 +107,7 @@ class CaseAssignmentServiceTest {
     when(regulatorTeamService.isCaseOfficer(WEB_USER_ACCOUNT_ID))
         .thenReturn(false);
 
-    assertThatThrownBy(() -> caseAssignmentService.assignCaseOfficer(applicationVersion, WEB_USER_ACCOUNT_ID))
+    assertThatThrownBy(() -> caseAssignmentService.assignCaseOfficer(applicationVersion, USER))
         .isInstanceOf(IllegalStateException.class)
         .hasMessage("Cannot assign case officer as user with wua id %s is not in a regulator case officer role"
             .formatted(USER.wuaId()));
@@ -118,7 +118,7 @@ class CaseAssignmentServiceTest {
     when(regulatorTeamService.isCaseOfficer(WEB_USER_ACCOUNT_ID))
         .thenReturn(true);
 
-    caseAssignmentService.assignCaseOfficer(applicationVersion, WEB_USER_ACCOUNT_ID);
+    caseAssignmentService.assignCaseOfficer(applicationVersion, USER);
 
     var applicationVersionArgumentCaptor = ArgumentCaptor.forClass(ApplicationVersion.class);
 

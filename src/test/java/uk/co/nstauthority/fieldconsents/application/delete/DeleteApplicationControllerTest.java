@@ -112,7 +112,7 @@ class DeleteApplicationControllerTest extends AbstractApplicationControllerTest 
 
     var expectedNotificationBanner = NotificationBanner.builder()
         .withBannerType(NotificationBannerType.SUCCESS)
-        .withHeading("Draft application deleted successfully")
+        .withHeadingContent("Draft application has been successfully deleted")
         .build();
 
     var modelAndView = mockMvc.perform(post(ReverseRouter.route(on(DeleteApplicationController.class)
@@ -126,13 +126,13 @@ class DeleteApplicationControllerTest extends AbstractApplicationControllerTest 
     assertThat(actualNotificationBanner)
         .extracting(
             NotificationBanner::getTitle,
-            NotificationBanner::getHeading,
-            NotificationBanner::getContent,
+            NotificationBanner::getHeadingContent,
+            NotificationBanner::getOtherContent,
             NotificationBanner::getType
         ).containsExactly(
             expectedNotificationBanner.getTitle(),
-            expectedNotificationBanner.getHeading(),
-            expectedNotificationBanner.getContent(),
+            expectedNotificationBanner.getHeadingContent(),
+            expectedNotificationBanner.getOtherContent(),
             expectedNotificationBanner.getType()
         );
   }

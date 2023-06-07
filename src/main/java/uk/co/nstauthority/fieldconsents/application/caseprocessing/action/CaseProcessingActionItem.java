@@ -12,13 +12,13 @@ public enum CaseProcessingActionItem implements Displayable {
 
   CASE_OFFICER_TAKE_OWNERSHIP("Take ownership", 1, true,
       applicationId -> ReverseRouter.route(on(CaseAssignmentController.class)
-          .takeOwnershipCaseOfficer(applicationId, null)), null),
+          .takeOwnershipCaseOfficer(applicationId, null, null)), null),
   CHANGE_ACE_STATUS("Change ACE status", 1, false, null,
       applicationId -> ReverseRouter.route(on(AceFlagController.class)
           .getAceFlagForm(applicationId))),
   CASE_OFFICER_RELEASE_OWNERSHIP("Release ownership", 2, false,
       applicationId -> ReverseRouter.route(on(CaseAssignmentController.class)
-          .releaseOwnershipCaseOfficer(applicationId)), null),
+          .releaseOwnershipCaseOfficer(applicationId, null)), null),
   CASE_OFFICER_ASSIGN_OWNERSHIP("Assign ownership", 1, true, null,
       applicationId -> ReverseRouter.route(on(CaseAssignmentController.class)
           .getCaseAssignment(applicationId, null)));

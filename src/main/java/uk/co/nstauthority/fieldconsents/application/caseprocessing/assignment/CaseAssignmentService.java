@@ -34,13 +34,13 @@ public class CaseAssignmentService {
   }
 
   @Transactional
-  public void assignCaseOfficer(ApplicationVersion applicationVersion, WebUserAccountId caseOfficerWuaId) {
-    if (!regulatorTeamService.isCaseOfficer(caseOfficerWuaId)) {
+  public void assignCaseOfficer(ApplicationVersion applicationVersion, ServiceUserDetail caseOfficerUser) {
+    if (!regulatorTeamService.isCaseOfficer(WebUserAccountId.from(caseOfficerUser))) {
       throw new IllegalStateException(
           "Cannot assign case officer as user with wua id %s is not in a regulator case officer role"
-              .formatted(caseOfficerWuaId));
+              .formatted(caseOfficerUser.wuaId()));
     }
-    applicationVersion.setCaseOfficerWuaId(caseOfficerWuaId.id());
+    applicationVersion.setCaseOfficerWuaId(caseOfficerUser.wuaId());
     applicationVersionRepository.save(applicationVersion);
   }
 

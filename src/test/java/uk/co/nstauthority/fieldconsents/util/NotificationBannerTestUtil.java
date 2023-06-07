@@ -23,15 +23,15 @@ public class NotificationBannerTestUtil {
       );
       assertEquals(
           "Failed comparing notification banner heading [%s], [%s]"
-              .formatted(actualBanner.getHeading(), notificationBanner.getHeading()),
-          notificationBanner.getHeading(),
-          actualBanner.getHeading()
+              .formatted(actualBanner.getHeadingContent(), notificationBanner.getHeadingContent()),
+          notificationBanner.getHeadingContent(),
+          actualBanner.getHeadingContent()
       );
       assertEquals(
           "Failed comparing notification banner content [%s], [%s]"
-              .formatted(actualBanner.getContent(), notificationBanner.getContent()),
-          notificationBanner.getContent(),
-          actualBanner.getContent()
+              .formatted(actualBanner.getOtherContent(), notificationBanner.getOtherContent()),
+          notificationBanner.getOtherContent(),
+          actualBanner.getOtherContent()
       );
       assertEquals(
           "Failed comparing notification banner type [%s], [%s]"
