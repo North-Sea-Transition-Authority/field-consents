@@ -15,13 +15,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_ASSIGN_OWNERSHIP;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentTestUtil.CASE_OFFICER_ASSIGNMENT_CANDIDATES;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentTestUtil.CASE_OFFICER_ASSIGNMENT_CANDIDATES_MAP;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentTestUtil.ENERGY_PORTAL_USER_1;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentTestUtil.SERVICE_USER_DETAIL_USER_1;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.notificationBanner;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -35,11 +38,8 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
-import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
-import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
-import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
@@ -49,16 +49,6 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
 
   private static final String DUMMY_APP_REF = "DUMMY_APP_REF";
-
-  private static final EnergyPortalUserDto ENERGY_PORTAL_USER_1 =
-      EnergyPortalUserDtoTestUtil.Builder().build();
-
-  private static final ServiceUserDetail SERVICE_USER_DETAIL_USER_1 =
-      ServiceUserDetail.from(ENERGY_PORTAL_USER_1);
-
-  private static final Map<String, String> CASE_OFFICER_CANDIDATES =
-      Map.of(String.valueOf(ENERGY_PORTAL_USER_1.webUserAccountId()), ENERGY_PORTAL_USER_1.displayName(),
-          "2", "user_b", "3", "user_c");
 
   @MockBean
   private ApplicationService applicationService;
@@ -78,6 +68,7 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
             .getCaseAssignment(APPLICATION_ID, null))))
         .andExpect(redirectionToLoginUrl());
   }
+
 
   @SecurityTest
   void getCaseAssignment_checkEndPointSecurityOnly_forbidden() throws Exception {
@@ -104,8 +95,8 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(applicationVersion);
     when(applicationService.generateApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
-    when(caseAssignmentService.getCaseOfficerCandidates(user))
-        .thenReturn(CASE_OFFICER_CANDIDATES);
+    when(caseAssignmentService.getCaseOfficerAssignmentCandidates(applicationVersion, user))
+        .thenReturn(CASE_OFFICER_ASSIGNMENT_CANDIDATES);
 
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(CASE_OFFICER_ASSIGN_OWNERSHIP));
@@ -127,8 +118,8 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(applicationVersion);
     when(applicationService.generateApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
-    when(caseAssignmentService.getCaseOfficerCandidates(user))
-        .thenReturn(CASE_OFFICER_CANDIDATES);
+    when(caseAssignmentService.getCaseOfficerAssignmentCandidates(applicationVersion, user))
+        .thenReturn(CASE_OFFICER_ASSIGNMENT_CANDIDATES);
 
     mockMvc.perform(get(ReverseRouter.route(on(CaseAssignmentController.class)
             .getCaseAssignment(APPLICATION_ID, null)))
@@ -137,10 +128,7 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/application/caseAssignment"))
         .andExpect(model().attribute("pageTitle", DUMMY_APP_REF))
-        .andExpect(model().attribute("caseOfficerCandidates", CASE_OFFICER_CANDIDATES))
-        .andExpect(model().attribute("assignCaseOfficerUrl",
-                ReverseRouter.route(on(CaseAssignmentController.class)
-                    .assignCaseOfficer(APPLICATION_ID, null, null, null, null))))
+        .andExpect(model().attribute("caseOfficerAssignmentCandidates", CASE_OFFICER_ASSIGNMENT_CANDIDATES_MAP))
         .andExpect(model().attribute("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
                 .getApplicationCaseProcessing(APPLICATION_ID, null))));
@@ -200,8 +188,8 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
 
     when(applicationService.generateApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
-    when(caseAssignmentService.getCaseOfficerCandidates(user))
-        .thenReturn(CASE_OFFICER_CANDIDATES);
+    when(caseAssignmentService.getCaseOfficerAssignmentCandidates(applicationVersion, user))
+        .thenReturn(CASE_OFFICER_ASSIGNMENT_CANDIDATES);
 
     mockMvc.perform(
             post(ReverseRouter.route(on(CaseAssignmentController.class)
@@ -212,10 +200,7 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/application/caseAssignment"))
         .andExpect(model().attribute("pageTitle", DUMMY_APP_REF))
-        .andExpect(model().attribute("caseOfficerCandidates", CASE_OFFICER_CANDIDATES))
-        .andExpect(model().attribute("assignCaseOfficerUrl",
-            ReverseRouter.route(on(CaseAssignmentController.class)
-                .assignCaseOfficer(APPLICATION_ID, null, null, null, null))))
+        .andExpect(model().attribute("caseOfficerAssignmentCandidates", CASE_OFFICER_ASSIGNMENT_CANDIDATES_MAP))
         .andExpect(model().attribute("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
                 .getApplicationCaseProcessing(APPLICATION_ID, null))));

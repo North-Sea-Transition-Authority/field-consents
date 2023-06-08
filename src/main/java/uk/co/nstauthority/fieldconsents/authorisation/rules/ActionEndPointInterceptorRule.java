@@ -3,11 +3,16 @@ package uk.co.nstauthority.fieldconsents.authorisation.rules;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.lang.annotation.Annotation;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
@@ -35,18 +40,20 @@ public class ActionEndPointInterceptorRule implements ApplicationInterceptorSecu
                                   HttpServletResponse response,
                                   ServiceUserDetail user,
                                   ApplicationVersion applicationVersion) {
-    var expectedActionItem = ((ActionEndPoint) annotation).value();
+    var expectedActionItems = ((ActionEndPoint) annotation).value();
     var userActionItems = caseProcessingActionService.getUserActionItems(applicationVersion, user);
 
-    if (userActionItems.contains(expectedActionItem)) {
+    if (CollectionUtils.containsAny(userActionItems, Set.of(expectedActionItems))) {
       return SecurityRuleResult.continueAsNormal();
     }
 
     var errorMessage =
-        "User %s attempted to use action item %s on application version %s"
+        "User %s attempted to use action item(s) %s on application version %s"
         .formatted(
             user.wuaId(),
-            expectedActionItem,
+            Arrays.stream(expectedActionItems)
+                .map(CaseProcessingActionItem::name)
+                .collect(Collectors.joining(",")),
             applicationVersion.getId()
         );
 

@@ -10,5 +10,5 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CasePr
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Security
 public @interface ActionEndPoint {
-  CaseProcessingActionItem value();
+  CaseProcessingActionItem[] value();
 }

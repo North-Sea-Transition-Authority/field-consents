@@ -8,11 +8,11 @@
   pageSize=PageSize.TWO_THIRDS_COLUMN
   backLinkUrl=springUrl(backLinkUrl)
 >
-  <@fdsForm.htmlForm actionUrl=springUrl(assignCaseOfficerUrl)>
+  <@fdsForm.htmlForm>
     <@fdsSearchSelector.searchSelectorEnhanced
       path="form.caseOfficerWuaId"
-      options=caseOfficerCandidates
-      labelText="Select a case officer" />
+      options=caseOfficerAssignmentCandidates
+      labelText="Select a case officer"/>
     <@fdsAction.submitButtons
       linkSecondaryAction=true
       secondaryLinkText="Cancel"

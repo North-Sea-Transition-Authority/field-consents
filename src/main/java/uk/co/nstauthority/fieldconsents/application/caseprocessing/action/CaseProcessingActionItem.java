@@ -21,6 +21,9 @@ public enum CaseProcessingActionItem implements Displayable {
           .releaseOwnershipCaseOfficer(applicationId, null)), null),
   CASE_OFFICER_ASSIGN_OWNERSHIP("Assign ownership", 1, true, null,
       applicationId -> ReverseRouter.route(on(CaseAssignmentController.class)
+          .getCaseAssignment(applicationId, null))),
+  CASE_OFFICER_REASSIGN_OWNERSHIP("Reassign ownership", 1, true, null,
+      applicationId -> ReverseRouter.route(on(CaseAssignmentController.class)
           .getCaseAssignment(applicationId, null)));
 
   private final String displayName;

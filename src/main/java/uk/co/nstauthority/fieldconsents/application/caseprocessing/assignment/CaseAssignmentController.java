@@ -1,6 +1,10 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_ASSIGN_OWNERSHIP;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_REASSIGN_OWNERSHIP;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_RELEASE_OWNERSHIP;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -16,13 +20,14 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.AccessibleByServiceUsers;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.teams.TeamMemberView;
+import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 
 @Controller
 @RequestMapping("applications/{applicationId}")
@@ -52,9 +57,8 @@ public class CaseAssignmentController {
     this.energyPortalUserService = energyPortalUserService;
   }
 
-
   @GetMapping("assign")
-  @ActionEndPoint(CaseProcessingActionItem.CASE_OFFICER_ASSIGN_OWNERSHIP)
+  @ActionEndPoint({CASE_OFFICER_ASSIGN_OWNERSHIP, CASE_OFFICER_REASSIGN_OWNERSHIP})
   public ModelAndView getCaseAssignment(@PathVariable Integer applicationId,
                                         ServiceUserDetail user) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
@@ -68,25 +72,28 @@ public class CaseAssignmentController {
     var pageTitle = applicationService.generateApplicationReference(applicationVersion);
     var applicationId = applicationVersion.getApplication().getId();
 
+    var caseOfficerAssignmentCandidatesMap =
+        caseAssignmentService.getCaseOfficerAssignmentCandidates(applicationVersion, user)
+            .stream()
+            .collect(StreamUtils.toLinkedHashMap(
+                teamMemberView -> teamMemberView.wuaId().toString(),
+                TeamMemberView::getDisplayName));
+
     return new ModelAndView("fcs/application/caseAssignment")
         .addObject("pageTitle", pageTitle)
-        .addObject("caseOfficerCandidates", caseAssignmentService.getCaseOfficerCandidates(user))
-        .addObject("assignCaseOfficerUrl",
-            ReverseRouter.route(on(CaseAssignmentController.class)
-                .assignCaseOfficer(applicationId, null, null, null, null)))
+        .addObject("caseOfficerAssignmentCandidates", caseOfficerAssignmentCandidatesMap)
         .addObject("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
                 .getApplicationCaseProcessing(applicationId, null)));
   }
 
   @PostMapping("assign")
-  @ActionEndPoint(CaseProcessingActionItem.CASE_OFFICER_ASSIGN_OWNERSHIP)
+  @ActionEndPoint({CASE_OFFICER_ASSIGN_OWNERSHIP, CASE_OFFICER_REASSIGN_OWNERSHIP})
   public ModelAndView assignCaseOfficer(@PathVariable Integer applicationId,
                                         @ModelAttribute("form") CaseAssignmentForm form,
                                         ServiceUserDetail user,
                                         BindingResult bindingResult,
                                         RedirectAttributes redirectAttributes) {
-
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
 
     caseAssignmentFormValidator.validate(form, bindingResult);
@@ -109,7 +116,7 @@ public class CaseAssignmentController {
   }
 
   @PostMapping("take-ownership-case-officer")
-  @ActionEndPoint(CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP)
+  @ActionEndPoint(CASE_OFFICER_TAKE_OWNERSHIP)
   public ModelAndView takeOwnershipCaseOfficer(@PathVariable Integer applicationId,
                                                ServiceUserDetail user,
                                                RedirectAttributes redirectAttributes) {
@@ -127,7 +134,7 @@ public class CaseAssignmentController {
   }
 
   @PostMapping("release-ownership-case-officer")
-  @ActionEndPoint(CaseProcessingActionItem.CASE_OFFICER_RELEASE_OWNERSHIP)
+  @ActionEndPoint(CASE_OFFICER_RELEASE_OWNERSHIP)
   public ModelAndView releaseOwnershipCaseOfficer(@PathVariable Integer applicationId,
                                                   RedirectAttributes redirectAttributes) {
 

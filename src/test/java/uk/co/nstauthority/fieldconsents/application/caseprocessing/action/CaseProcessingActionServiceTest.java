@@ -33,6 +33,9 @@ class CaseProcessingActionServiceTest {
   private static final Set<RolePermission> CASE_OFFICER_PERMISSIONS =
       RegulatorTeamRole.CASE_OFFICER.getRolePermissions();
 
+  private static final Set<RolePermission> CASE_MANAGER_PERMISSIONS =
+      RegulatorTeamRole.CASE_MANAGER.getRolePermissions();
+
   @Mock
   private ApplicationAccessService applicationAccessService;
 
@@ -81,7 +84,7 @@ class CaseProcessingActionServiceTest {
   }
 
   @Test
-  void getUserActionItems_whenCaseOfficerUser_thenCanAssignCaseOfficer() {
+  void getUserActionItems_whenCaseOfficerUser_thenCanTakeOwnership() {
     when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .thenReturn(CASE_OFFICER_PERMISSIONS);
     when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
@@ -92,7 +95,7 @@ class CaseProcessingActionServiceTest {
   }
 
   @Test
-  void getUserActionItems_whenCaseOfficerUser_thenCanUnassignCaseOfficer() {
+  void getUserActionItems_whenCaseOfficerUser_thenCanReleaseOwnership() {
     when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .thenReturn(CASE_OFFICER_PERMISSIONS);
     when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
@@ -106,7 +109,7 @@ class CaseProcessingActionServiceTest {
   }
 
   @Test
-  void getUserActionViews_whenCaseOfficerUser_thenCanAssignCaseOfficer() {
+  void getUserActionViews_whenCaseOfficerUser_thenCanTakeOwnership() {
     when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .thenReturn(CASE_OFFICER_PERMISSIONS);
     when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
@@ -127,7 +130,7 @@ class CaseProcessingActionServiceTest {
   }
 
   @Test
-  void getUserActionViews_whenCaseOfficerUser_thenCanUnassignCaseOfficer() {
+  void getUserActionViews_whenCaseOfficerUser_thenCanReleaseOwnership() {
     when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .thenReturn(CASE_OFFICER_PERMISSIONS);
     when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
@@ -149,6 +152,70 @@ class CaseProcessingActionServiceTest {
                     CaseProcessingActionItem.CASE_OFFICER_RELEASE_OWNERSHIP,
                     applicationVersion
                 )
+            )
+        );
+  }
+
+  @Test
+  void getUserActionItems_whenCaseManagerUser_thenCanAssignCaseOfficer() {
+    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
+        .thenReturn(CASE_MANAGER_PERMISSIONS);
+    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
+        .thenReturn(Set.of(CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED));
+
+    assertThat(caseProcessingActionService.getUserActionItems(applicationVersion, USER))
+        .containsExactly(CaseProcessingActionItem.CASE_OFFICER_ASSIGN_OWNERSHIP);
+  }
+
+  @Test
+  void getUserActionItems_whenCaseManagerUser_thenCanReassignCaseOfficer() {
+    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
+        .thenReturn(CASE_MANAGER_PERMISSIONS);
+    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
+        .thenReturn(Set.of(CaseStatusFlag.CASE_OFFICER_ASSIGNED));
+
+    assertThat(caseProcessingActionService.getUserActionItems(applicationVersion, USER))
+        .containsExactly(CaseProcessingActionItem.CASE_OFFICER_REASSIGN_OWNERSHIP);
+  }
+
+  @Test
+  void getUserActionViews_whenCaseManagerUser_thenCanAssignCaseOfficer() {
+    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
+        .thenReturn(CASE_MANAGER_PERMISSIONS);
+    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
+        .thenReturn(Set.of(CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED));
+
+    var actionViews = caseProcessingActionService.getUserActionViews(applicationVersion, USER);
+
+    assertThat(actionViews).hasSize(1);
+
+    assertThat(actionViews.get(0))
+        .usingRecursiveComparison()
+        .isEqualTo(
+            CaseProcessingActionView.from(
+                CaseProcessingActionItem.CASE_OFFICER_ASSIGN_OWNERSHIP,
+                applicationVersion
+            )
+        );
+  }
+
+  @Test
+  void getUserActionViews_whenCaseManagerUser_thenCanReassignCaseOfficer() {
+    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
+        .thenReturn(CASE_MANAGER_PERMISSIONS);
+    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
+        .thenReturn(Set.of(CaseStatusFlag.CASE_OFFICER_ASSIGNED));
+
+    var actionViews = caseProcessingActionService.getUserActionViews(applicationVersion, USER);
+
+    assertThat(actionViews).hasSize(1);
+
+    assertThat(actionViews.get(0))
+        .usingRecursiveComparison()
+        .isEqualTo(
+            CaseProcessingActionView.from(
+                CaseProcessingActionItem.CASE_OFFICER_REASSIGN_OWNERSHIP,
+                applicationVersion
             )
         );
   }

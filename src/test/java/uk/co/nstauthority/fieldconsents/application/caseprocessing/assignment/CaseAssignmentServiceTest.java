@@ -2,13 +2,14 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.ACCESS_MANAGER;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CASE_OFFICER;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.VIEWER;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentTestUtil.ACCESS_MANGER_TEAM_MEMBER_VIEW;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentTestUtil.CASE_OFFICER_TEAM_MEMBER_VIEW_1;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentTestUtil.CASE_OFFICER_TEAM_MEMBER_VIEW_2;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentTestUtil.TEAM_MEMBER_VIEW_LIST;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentTestUtil.VIEWER_TEAM_MEMBER_VIEW;
 
 import java.util.Collections;
 import java.util.List;
@@ -28,9 +29,7 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.teams.Team;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberView;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamService;
 
@@ -42,46 +41,6 @@ class CaseAssignmentServiceTest {
   private static final WebUserAccountId WEB_USER_ACCOUNT_ID = WebUserAccountId.from(USER);
 
   private static final Team REGULATOR_TEAM = TeamTestUtil.Builder().build();
-
-  private static final TeamMemberView CASE_OFFICER_TEAM_MEMBER_VIEW_1 =
-      TeamMemberViewTestUtil.Builder()
-          .withRole(CASE_OFFICER)
-          .withWebUserAccountId(new WebUserAccountId(1L))
-          .withTitle("MR")
-          .withFirstName("A")
-          .withLastName("B")
-          .build();
-
-  private static final TeamMemberView VIEWER_TEAM_MEMBER_VIEW =
-      TeamMemberViewTestUtil.Builder()
-          .withRole(VIEWER)
-          .withWebUserAccountId(new WebUserAccountId(2L))
-          .withTitle("MR")
-          .withFirstName("C")
-          .withLastName("D")
-          .build();
-
-  private static final TeamMemberView CASE_OFFICER_TEAM_MEMBER_VIEW_2 =
-      TeamMemberViewTestUtil.Builder()
-          .withRole(CASE_OFFICER)
-          .withWebUserAccountId(new WebUserAccountId(3L))
-          .withTitle("MR")
-          .withFirstName("E")
-          .withLastName("F")
-          .build();
-
-  private static final TeamMemberView ACCESS_MANGER_TEAM_MEMBER_VIEW =
-      TeamMemberViewTestUtil.Builder()
-          .withRole(ACCESS_MANAGER)
-          .withWebUserAccountId(new WebUserAccountId(4L))
-          .withTitle("MR")
-          .withFirstName("G")
-          .withLastName("H")
-          .build();
-
-  private static final List<TeamMemberView> TEAM_MEMBER_VIEW_LIST =
-      List.of(CASE_OFFICER_TEAM_MEMBER_VIEW_1, VIEWER_TEAM_MEMBER_VIEW, CASE_OFFICER_TEAM_MEMBER_VIEW_2,
-          ACCESS_MANGER_TEAM_MEMBER_VIEW);
 
   @Mock
   private ApplicationVersionRepository applicationVersionRepository;
@@ -148,7 +107,7 @@ class CaseAssignmentServiceTest {
     when(regulatorTeamService.getRegulatorTeamForUser(USER))
         .thenReturn(Optional.empty());
 
-    assertThat(caseAssignmentService.getCaseOfficerCandidates(USER))
+    assertThat(caseAssignmentService.getCaseOfficerAssignmentCandidates(applicationVersion, USER))
         .isEmpty();
   }
 
@@ -159,11 +118,21 @@ class CaseAssignmentServiceTest {
     when(teamMemberViewService.getTeamMemberViewsForTeam(REGULATOR_TEAM))
         .thenReturn(TEAM_MEMBER_VIEW_LIST);
 
-    assertThat(caseAssignmentService.getCaseOfficerCandidates(USER))
-        .containsExactly(
-            entry(CASE_OFFICER_TEAM_MEMBER_VIEW_1.wuaId().toString(), CASE_OFFICER_TEAM_MEMBER_VIEW_1.getDisplayName()),
-            entry(CASE_OFFICER_TEAM_MEMBER_VIEW_2.wuaId().toString(), CASE_OFFICER_TEAM_MEMBER_VIEW_2.getDisplayName())
-        );
+    assertThat(caseAssignmentService.getCaseOfficerAssignmentCandidates(applicationVersion, USER))
+        .containsExactly(CASE_OFFICER_TEAM_MEMBER_VIEW_1, CASE_OFFICER_TEAM_MEMBER_VIEW_2);
+  }
+
+  @Test
+  void getCaseOfficerCandidates_whenRegulatorUserAndCaseOfficersExistAndExistingCaseOfficer() {
+    applicationVersion.setCaseOfficerWuaId(CASE_OFFICER_TEAM_MEMBER_VIEW_1.wuaId().id());
+
+    when(regulatorTeamService.getRegulatorTeamForUser(USER))
+        .thenReturn(Optional.of(REGULATOR_TEAM));
+    when(teamMemberViewService.getTeamMemberViewsForTeam(REGULATOR_TEAM))
+        .thenReturn(TEAM_MEMBER_VIEW_LIST);
+
+    assertThat(caseAssignmentService.getCaseOfficerAssignmentCandidates(applicationVersion, USER))
+        .containsExactly(CASE_OFFICER_TEAM_MEMBER_VIEW_2);
   }
 
   @Test
@@ -173,7 +142,7 @@ class CaseAssignmentServiceTest {
     when(teamMemberViewService.getTeamMemberViewsForTeam(REGULATOR_TEAM))
         .thenReturn(Collections.emptyList());
 
-    assertThat(caseAssignmentService.getCaseOfficerCandidates(USER))
+    assertThat(caseAssignmentService.getCaseOfficerAssignmentCandidates(applicationVersion, USER))
         .isEmpty();
   }
 
@@ -184,7 +153,7 @@ class CaseAssignmentServiceTest {
     when(teamMemberViewService.getTeamMemberViewsForTeam(REGULATOR_TEAM))
         .thenReturn(List.of(VIEWER_TEAM_MEMBER_VIEW, ACCESS_MANGER_TEAM_MEMBER_VIEW));
 
-    assertThat(caseAssignmentService.getCaseOfficerCandidates(USER))
+    assertThat(caseAssignmentService.getCaseOfficerAssignmentCandidates(applicationVersion, USER))
         .isEmpty();
   }
 }

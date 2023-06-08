@@ -2,7 +2,8 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment;
 
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Map;
+import java.util.List;
+import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,7 +15,6 @@ import uk.co.nstauthority.fieldconsents.teams.TeamMemberView;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamService;
-import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 
 @Service
 public class CaseAssignmentService {
@@ -50,17 +50,21 @@ public class CaseAssignmentService {
     applicationVersionRepository.save(applicationVersion);
   }
 
-  public Map<String, String> getCaseOfficerCandidates(ServiceUserDetail user) {
+  public List<TeamMemberView> getCaseOfficerAssignmentCandidates(ApplicationVersion applicationVersion,
+                                                                 ServiceUserDetail user) {
     return regulatorTeamService.getRegulatorTeamForUser(user)
         .map(team -> teamMemberViewService.getTeamMemberViewsForTeam(team)
             .stream()
-            .filter(teamMemberView -> teamMemberView.teamRoles().contains(RegulatorTeamRole.CASE_OFFICER))
+            .filter(teamMemberView -> teamMemberView.teamRoles().contains(RegulatorTeamRole.CASE_OFFICER)
+                && (
+                    Objects.isNull(applicationVersion.getCaseOfficerWuaId())
+                        || !applicationVersion.getCaseOfficerWuaId().equals(teamMemberView.wuaId().id())
+                )
+            )
             .toList())
         .orElse(Collections.emptyList())
         .stream()
         .sorted(Comparator.comparing(TeamMemberView::getDisplayName))
-        .collect(StreamUtils.toLinkedHashMap(
-            teamMemberView -> teamMemberView.wuaId().toString(),
-            TeamMemberView::getDisplayName));
+        .toList();
   }
 }
