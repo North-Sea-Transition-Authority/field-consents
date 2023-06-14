@@ -12,6 +12,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.IndustryCaseProcessingController;
 import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionController;
 import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionService;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
@@ -100,10 +101,14 @@ public class ApplicationSummaryController {
         .hasApplicationPermission(user, applicationVersion,
             RolePermission.PROCESS_FCS_APPLICATIONS, RolePermission.ASSIGN_FCS_APPLICATIONS);
 
-    if (ApplicationVersionStatus.SUBMITTED.equals(applicationVersion.getStatus())
-        && userHasProcessOrAssignPermission) {
-      return ReverseRouter.redirect(on(ApplicationCaseProcessingController.class)
-          .getApplicationCaseProcessing(applicationId, null));
+    if (ApplicationVersionStatus.SUBMITTED.equals(applicationVersion.getStatus())) {
+      if (userHasProcessOrAssignPermission) {
+        return ReverseRouter.redirect(on(ApplicationCaseProcessingController.class)
+            .getApplicationCaseProcessing(applicationId, null));
+      } else if (userHasEditPermission) {
+        return ReverseRouter.redirect(on(IndustryCaseProcessingController.class)
+            .getIndustryCaseProcessing(applicationId, null));
+      }
     }
 
     var pageTitle = ApplicationVersionStatus.IN_PROGRESS.equals(applicationVersion.getStatus())

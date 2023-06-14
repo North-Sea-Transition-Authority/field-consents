@@ -5,6 +5,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import java.util.function.Function;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.aceflag.AceFlagController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.util.enumutil.Displayable;
 
@@ -24,7 +25,10 @@ public enum CaseProcessingActionItem implements Displayable {
           .getCaseAssignment(applicationId, null))),
   CASE_OFFICER_REASSIGN_OWNERSHIP("Reassign ownership", 1, true, null,
       applicationId -> ReverseRouter.route(on(CaseAssignmentController.class)
-          .getCaseAssignment(applicationId, null)));
+          .getCaseAssignment(applicationId, null))),
+  OPERATOR_WITHDRAWAL_REQUEST("Request withdrawal", 1, true, null,
+      applicationId -> ReverseRouter.route(on(ApplicationWithdrawalController.class)
+          .getApplicationWithdrawalRequest(applicationId)));
 
   private final String displayName;
   private final int displayOrder;

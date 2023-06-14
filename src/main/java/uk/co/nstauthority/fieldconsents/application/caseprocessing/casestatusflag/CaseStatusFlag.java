@@ -2,5 +2,7 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusfl
 
 public enum CaseStatusFlag {
   CASE_OFFICER_NOT_ASSIGNED,
-  CASE_OFFICER_ASSIGNED
+  CASE_OFFICER_ASSIGNED,
+  WITHDRAWAL_OPEN,
+  NO_WITHDRAWAL_OPEN
 }

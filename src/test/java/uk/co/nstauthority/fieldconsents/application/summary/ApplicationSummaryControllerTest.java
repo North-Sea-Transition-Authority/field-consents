@@ -6,6 +6,7 @@ import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
@@ -29,6 +30,8 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.IndustryCaseProcessingController;
 import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionController;
 import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionService;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
@@ -105,7 +108,7 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
         .thenReturn(applicationVersion);
     when(applicationAccessService.hasApplicationPermission(
         user, applicationVersion, EDIT_FCS_APPLICATIONS
-    )).thenReturn(true);
+    )).thenReturn(false);
     when(applicationAccessService.hasApplicationPermission(
         user, applicationVersion, PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS
     )).thenReturn(false);
@@ -179,7 +182,31 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
 
   @ParameterizedTest
   @MethodSource("getSubmittedApplicationVersions")
-  void getApplicationSummary_whenSubmittedAndUserHasProcessPermission_thenRedirect(ApplicationVersion applicationVersion) throws Exception {
+  void getApplicationSummary_whenSubmittedAndUserHaEditPermission_thenRedirectToIndustryCaseProcessing(ApplicationVersion applicationVersion) throws Exception {
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
+    when(applicationAccessService.hasApplicationPermission(
+        user, applicationVersion, EDIT_FCS_APPLICATIONS
+    )).thenReturn(true);
+    when(applicationAccessService.hasApplicationPermission(
+        user, applicationVersion, PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS
+    )).thenReturn(false);
+
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationSummaryController.class)
+            .getApplicationSummary(APPLICATION_ID, null)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(ReverseRouter.route(on(IndustryCaseProcessingController.class)
+            .getIndustryCaseProcessing(APPLICATION_ID, null)))
+        );
+  }
+
+  @ParameterizedTest
+  @MethodSource("getSubmittedApplicationVersions")
+  void getApplicationSummary_whenSubmittedAndUserHasProcessPermission_thenRedirectToApplicationCaseProcessing(ApplicationVersion applicationVersion) throws Exception {
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
@@ -195,7 +222,10 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
             .getApplicationSummary(APPLICATION_ID, null)))
             .with(user(user))
             .with(csrf()))
-        .andExpect(status().is3xxRedirection());
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
+            .getApplicationCaseProcessing(APPLICATION_ID, null)))
+        );
   }
 
   @SecurityTest

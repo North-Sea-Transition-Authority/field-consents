@@ -22,7 +22,7 @@ import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @Controller
 @RequestMapping("applications/{applicationId}")
-public class ApplicationCaseProcessingController {
+public class IndustryCaseProcessingController {
 
   private final ApplicationService applicationService;
 
@@ -32,21 +32,21 @@ public class ApplicationCaseProcessingController {
 
   private final CaseProcessingActionService caseProcessingActionService;
 
-  ApplicationCaseProcessingController(ApplicationService applicationService,
-                                      ApplicationVersionService applicationVersionService,
-                                      ApplicationSummaryService applicationSummaryService,
-                                      CaseProcessingActionService caseProcessingActionService) {
+  IndustryCaseProcessingController(ApplicationService applicationService,
+                                   ApplicationVersionService applicationVersionService,
+                                   ApplicationSummaryService applicationSummaryService,
+                                   CaseProcessingActionService caseProcessingActionService) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.applicationSummaryService = applicationSummaryService;
     this.caseProcessingActionService = caseProcessingActionService;
   }
 
-  @GetMapping("case-processing")
+  @GetMapping("industry-case-processing")
   @HasApplicationStatus(statuses = ApplicationVersionStatus.SUBMITTED)
-  @HasApplicationPermission(permissions = {RolePermission.PROCESS_FCS_APPLICATIONS, RolePermission.ASSIGN_FCS_APPLICATIONS})
-  public ModelAndView getApplicationCaseProcessing(@PathVariable Integer applicationId,
-                                                   ServiceUserDetail user) {
+  @HasApplicationPermission(permissions = RolePermission.EDIT_FCS_APPLICATIONS)
+  public ModelAndView getIndustryCaseProcessing(@PathVariable Integer applicationId,
+                                                ServiceUserDetail user) {
 
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
 
@@ -61,7 +61,7 @@ public class ApplicationCaseProcessingController {
 
     var modelAndView = applicationSummaryService.getApplicationSummaryModelAndView(
         applicationVersion,
-        "fcs/application/applicationCaseProcessing",
+        "fcs/application/industryCaseProcessing",
         pageTitle,
         ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null))
     );

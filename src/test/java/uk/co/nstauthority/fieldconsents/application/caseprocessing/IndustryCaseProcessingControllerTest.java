@@ -34,8 +34,8 @@ import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
-@ContextConfiguration(classes = ApplicationCaseProcessingController.class)
-class ApplicationCaseProcessingControllerTest extends AbstractApplicationControllerTest {
+@ContextConfiguration(classes = IndustryCaseProcessingController.class)
+class IndustryCaseProcessingControllerTest extends AbstractApplicationControllerTest {
 
   private static final String DUMMY_APP_REF = "DUMMY_APP_REF";
 
@@ -46,17 +46,17 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   private ApplicationSummaryService applicationSummaryService;
 
   @SecurityTest
-  void getApplicationCaseProcessing_noUser() throws Exception {
-    mockMvc.perform(get(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .getApplicationCaseProcessing(APPLICATION_ID, null))))
+  void getIndustryCaseProcessing_noUser() throws Exception {
+    mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
+            .getIndustryCaseProcessing(APPLICATION_ID, null))))
         .andExpect(redirectionToLoginUrl());
   }
 
   @ParameterizedTest
   @MethodSource("getSubmittedApplicationVersions")
-  void getApplicationCaseProcessing(ApplicationVersion applicationVersion) throws Exception {
+  void getIndustryCaseProcessing(ApplicationVersion applicationVersion) throws Exception {
     var actionViews =
-        List.of(CaseProcessingActionView.from(CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP, applicationVersion));
+        List.of(CaseProcessingActionView.from(CaseProcessingActionItem.OPERATOR_WITHDRAWAL_REQUEST, applicationVersion));
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
@@ -69,12 +69,12 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
         .thenReturn(DUMMY_APP_REF);
 
     doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any(), any());
-    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .getApplicationCaseProcessing(APPLICATION_ID, null)))
+    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
+            .getIndustryCaseProcessing(APPLICATION_ID, null)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
-        .andExpect(view().name("fcs/application/applicationCaseProcessing"))
+        .andExpect(view().name("fcs/application/industryCaseProcessing"))
         .andReturn().getModelAndView();
 
     assert modelAndView != null;

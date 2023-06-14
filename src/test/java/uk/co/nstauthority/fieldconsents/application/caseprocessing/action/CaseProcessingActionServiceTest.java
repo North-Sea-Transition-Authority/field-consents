@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
@@ -218,5 +219,38 @@ class CaseProcessingActionServiceTest {
                 applicationVersion
             )
         );
+  }
+
+  @Test
+  void getUserActionViews_whenIndustryUser_thenCanRequestCaseWithdrawal() {
+    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
+        .thenReturn(EnumSet.of(RolePermission.EDIT_FCS_APPLICATIONS));
+    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
+        .thenReturn(Set.of(CaseStatusFlag.NO_WITHDRAWAL_OPEN));
+
+    var actionViews = caseProcessingActionService.getUserActionViews(applicationVersion, USER);
+
+    assertThat(actionViews).hasSize(1);
+
+    assertThat(actionViews.get(0))
+        .usingRecursiveComparison()
+        .isEqualTo(
+            CaseProcessingActionView.from(
+                CaseProcessingActionItem.OPERATOR_WITHDRAWAL_REQUEST,
+                applicationVersion
+            )
+        );
+  }
+
+  @Test
+  void getUserActionViews_whenIndustryUser_thenCannotRequestCaseWithdrawal() {
+    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
+        .thenReturn(EnumSet.of(RolePermission.EDIT_FCS_APPLICATIONS));
+    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
+        .thenReturn(Set.of(CaseStatusFlag.WITHDRAWAL_OPEN));
+
+    var actionViews = caseProcessingActionService.getUserActionViews(applicationVersion, USER);
+
+    assertThat(actionViews).isEmpty();
   }
 }
