@@ -10,6 +10,10 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assign
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentTestUtil.CASE_OFFICER_TEAM_MEMBER_VIEW_2;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentTestUtil.TEAM_MEMBER_VIEW_LIST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentTestUtil.VIEWER_TEAM_MEMBER_VIEW;
+import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.REGULATOR;
+import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CASE_OFFICER_ASSIGN_OWNERSHIP;
+import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CASE_OFFICER_RELEASE_OWNERSHIP;
+import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CASE_OFFICER_TAKE_OWNERSHIP;
 
 import java.util.Collections;
 import java.util.List;
@@ -25,6 +29,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionRepository;
+import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
@@ -38,6 +43,8 @@ class CaseAssignmentServiceTest {
 
   private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
 
+  private static final ServiceUserDetail USER2 = ServiceUserDetailTestUtil.Builder().withWuaId(2L).build();
+
   private static final WebUserAccountId WEB_USER_ACCOUNT_ID = WebUserAccountId.from(USER);
 
   private static final Team REGULATOR_TEAM = TeamTestUtil.Builder().build();
@@ -50,6 +57,9 @@ class CaseAssignmentServiceTest {
 
   @Mock
   private TeamMemberViewService teamMemberViewService;
+
+  @Mock
+  private ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
 
   @InjectMocks
   private CaseAssignmentService caseAssignmentService;
@@ -66,18 +76,19 @@ class CaseAssignmentServiceTest {
     when(regulatorTeamService.isCaseOfficer(WEB_USER_ACCOUNT_ID))
         .thenReturn(false);
 
-    assertThatThrownBy(() -> caseAssignmentService.assignCaseOfficer(applicationVersion, USER))
+    assertThatThrownBy(() ->
+        caseAssignmentService.assignCaseOfficer(applicationVersion, USER, USER))
         .isInstanceOf(IllegalStateException.class)
         .hasMessage("Cannot assign case officer as user with wua id %s is not in a regulator case officer role"
             .formatted(USER.wuaId()));
   }
 
   @Test
-  void assignCaseOfficer_whenInCaseOfficerRole_thenApplicationVersionCaseOfficerWuaUpdated() {
+  void assignCaseOfficer_whenInCaseOfficerRoleAndTakingOwnership_thenApplicationVersionCaseOfficerWuaUpdated() {
     when(regulatorTeamService.isCaseOfficer(WEB_USER_ACCOUNT_ID))
         .thenReturn(true);
 
-    caseAssignmentService.assignCaseOfficer(applicationVersion, USER);
+    caseAssignmentService.assignCaseOfficer(applicationVersion, USER, USER);
 
     var applicationVersionArgumentCaptor = ArgumentCaptor.forClass(ApplicationVersion.class);
 
@@ -86,12 +97,34 @@ class CaseAssignmentServiceTest {
 
     assertThat(applicationVersionArgumentCaptor.getValue().getCaseOfficerWuaId())
         .isEqualTo(WEB_USER_ACCOUNT_ID.id());
+
+    verify(applicationWorkAreaPriorityService, times(1))
+        .prioritiseApplicationInWorkArea(applicationVersion, USER, CASE_OFFICER_TAKE_OWNERSHIP, REGULATOR);
+  }
+
+  @Test
+  void assignCaseOfficer_whenInCaseOfficerRoleAndAssigningOwnership_thenApplicationVersionCaseOfficerWuaUpdated() {
+    when(regulatorTeamService.isCaseOfficer(WEB_USER_ACCOUNT_ID))
+        .thenReturn(true);
+
+    caseAssignmentService.assignCaseOfficer(applicationVersion, USER, USER2);
+
+    var applicationVersionArgumentCaptor = ArgumentCaptor.forClass(ApplicationVersion.class);
+
+    verify(applicationVersionRepository, times(1))
+        .save(applicationVersionArgumentCaptor.capture());
+
+    assertThat(applicationVersionArgumentCaptor.getValue().getCaseOfficerWuaId())
+        .isEqualTo(WEB_USER_ACCOUNT_ID.id());
+
+    verify(applicationWorkAreaPriorityService, times(1))
+        .prioritiseApplicationInWorkArea(applicationVersion, USER2, CASE_OFFICER_ASSIGN_OWNERSHIP, REGULATOR);
   }
 
   @Test
   void unassignCaseOfficer_thenApplicationVersionCaseOfficerWuaNulled() {
     applicationVersion.setCaseOfficerWuaId(1L);
-    caseAssignmentService.unassignCaseOfficer(applicationVersion);
+    caseAssignmentService.unassignCaseOfficer(applicationVersion, USER);
 
     var applicationVersionArgumentCaptor = ArgumentCaptor.forClass(ApplicationVersion.class);
 
@@ -100,6 +133,9 @@ class CaseAssignmentServiceTest {
 
     assertThat(applicationVersionArgumentCaptor.getValue().getCaseOfficerWuaId())
         .isNull();
+
+    verify(applicationWorkAreaPriorityService, times(1))
+        .prioritiseApplicationInWorkArea(applicationVersion, USER, CASE_OFFICER_RELEASE_OWNERSHIP, REGULATOR);
   }
 
   @Test

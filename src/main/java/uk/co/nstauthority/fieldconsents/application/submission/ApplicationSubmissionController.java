@@ -11,6 +11,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -39,11 +40,12 @@ public class ApplicationSubmissionController {
   }
 
   @PostMapping
-  public ModelAndView submitApplication(@PathVariable Integer applicationId) {
+  public ModelAndView submitApplication(@PathVariable Integer applicationId,
+                                        ServiceUserDetail user) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
 
     if (applicationSubmissionService.isSubmittable(applicationVersion)) {
-      applicationService.submitApplication(applicationVersion);
+      applicationService.submitApplication(applicationVersion, user);
     } else {
       throw new RuntimeException("The application with id %s cannot be submitted!".formatted(applicationId));
     }

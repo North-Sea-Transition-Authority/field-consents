@@ -85,7 +85,7 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
         .containsKey("summarySections")
         .containsKey("wideSummaryDisplay")
         .containsEntry("submitUrl", ReverseRouter.route(on(ApplicationSubmissionController.class)
-            .submitApplication(APPLICATION_ID)))
+            .submitApplication(APPLICATION_ID, null)))
         .containsEntry("backLinkUrl", ReverseRouter.route(on(ApplicationTaskListController.class)
             .getTaskList(APPLICATION_ID)))
         .containsEntry("isSubmittable", false)

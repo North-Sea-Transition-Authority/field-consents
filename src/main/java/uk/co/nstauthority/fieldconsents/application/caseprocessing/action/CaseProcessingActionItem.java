@@ -19,7 +19,7 @@ public enum CaseProcessingActionItem implements Displayable {
           .getAceFlagForm(applicationId))),
   CASE_OFFICER_RELEASE_OWNERSHIP("Release ownership", 2, false,
       applicationId -> ReverseRouter.route(on(CaseAssignmentController.class)
-          .releaseOwnershipCaseOfficer(applicationId, null)), null),
+          .releaseOwnershipCaseOfficer(applicationId, null, null)), null),
   CASE_OFFICER_ASSIGN_OWNERSHIP("Assign ownership", 1, true, null,
       applicationId -> ReverseRouter.route(on(CaseAssignmentController.class)
           .getCaseAssignment(applicationId, null))),

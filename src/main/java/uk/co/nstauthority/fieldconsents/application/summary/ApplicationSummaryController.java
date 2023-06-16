@@ -75,7 +75,7 @@ public class ApplicationSummaryController {
         .addObject("accordionId", applicationVersion.getId())
         .addObject("wideSummaryDisplay", wideSummaryDisplay)
         .addObject("submitUrl", ReverseRouter.route(on(ApplicationSubmissionController.class)
-            .submitApplication(applicationId)))
+            .submitApplication(applicationId, null)))
         .addObject("backLinkUrl", ReverseRouter.route(on(ApplicationTaskListController.class)
             .getTaskList(applicationId)))
         .addObject("isSubmittable", applicationSubmissionService.isSubmittable(applicationVersion))

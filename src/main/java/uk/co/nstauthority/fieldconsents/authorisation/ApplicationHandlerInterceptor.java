@@ -61,7 +61,8 @@ public class ApplicationHandlerInterceptor extends AbstractHandlerInterceptor {
           "Received request with no applicationId present");
     }
 
-    var applicationVersionOptional = applicationVersionService.findLatestApplicationVersion(Integer.valueOf(applicationId));
+    var applicationVersionOptional = applicationVersionService.findLatestApplicationVersion(
+        Integer.valueOf(applicationId));
     if (applicationVersionOptional.isEmpty()) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND,
           "Received request with non-existent application id %s".formatted(applicationId));

@@ -1,0 +1,10 @@
+package uk.co.nstauthority.fieldconsents.application.workareapriority;
+
+public enum ApplicationWorkAreaPriorityReason {
+  APPLICATION_CREATED,
+  APPLICATION_SUBMITTED,
+  OPERATOR_WITHDRAWAL_REQUEST,
+  CASE_OFFICER_TAKE_OWNERSHIP,
+  CASE_OFFICER_RELEASE_OWNERSHIP,
+  CASE_OFFICER_ASSIGN_OWNERSHIP
+}

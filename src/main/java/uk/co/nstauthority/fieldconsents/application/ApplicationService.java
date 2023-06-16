@@ -1,5 +1,10 @@
 package uk.co.nstauthority.fieldconsents.application;
 
+import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.INDUSTRY;
+import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.REGULATOR;
+import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.APPLICATION_CREATED;
+import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.APPLICATION_SUBMITTED;
+
 import jakarta.persistence.EntityNotFoundException;
 import java.time.Instant;
 import org.jetbrains.annotations.NotNull;
@@ -8,9 +13,10 @@ import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAssetLicenceService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.aceflag.AceFlagService;
+import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorAndLicencesJson;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalWithOperatorJson;
-import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 
 @Service
@@ -26,57 +32,66 @@ public class ApplicationService {
 
   private final ApplicationConfigurationProperties applicationConfigurationProperties;
 
-  private final UserDetailService userDetailService;
-
   private final AceFlagService aceFlagService;
+
+  private final ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
 
   public ApplicationService(ApplicationRepository applicationRepository,
                             ApplicationVersionRepository applicationVersionRepository,
                             ApplicationAssetService applicationAssetService,
                             ApplicationAssetLicenceService applicationAssetLicenceService,
                             ApplicationConfigurationProperties applicationConfigurationProperties,
-                            UserDetailService userDetailService,
-                            AceFlagService aceFlagService) {
+                            AceFlagService aceFlagService,
+                            ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService) {
     this.applicationRepository = applicationRepository;
     this.applicationVersionRepository = applicationVersionRepository;
     this.applicationAssetService = applicationAssetService;
     this.applicationAssetLicenceService = applicationAssetLicenceService;
     this.applicationConfigurationProperties = applicationConfigurationProperties;
-    this.userDetailService = userDetailService;
     this.aceFlagService = aceFlagService;
+    this.applicationWorkAreaPriorityService = applicationWorkAreaPriorityService;
   }
 
-  private ApplicationVersion createNewApplication(ApplicationType applicationType, OrganisationUnitJson operatorOuJson) {
-    Application application = createNewApplicationMasterRecord(applicationType);
-    return createNewApplicationVersionRecord(application, operatorOuJson);
+  private ApplicationVersion createNewApplication(ApplicationType applicationType,
+                                                  OrganisationUnitJson operatorOuJson,
+                                                  ServiceUserDetail user) {
+    Application application = createNewApplicationMasterRecord(applicationType, user);
+    return createNewApplicationVersionRecord(application, operatorOuJson, user);
   }
 
   @Transactional
   public ApplicationVersion createNewApplicationForField(ApplicationType type,
                                                          FieldWithOperatorAndLicencesJson field,
-                                                         OrganisationUnitJson operatorOuJson) {
-    ApplicationVersion applicationVersion = createNewApplication(type, operatorOuJson);
+                                                         OrganisationUnitJson operatorOuJson,
+                                                         ServiceUserDetail user) {
+    ApplicationVersion applicationVersion = createNewApplication(type, operatorOuJson, user);
     var applicationAsset = applicationAssetService.createPrimaryAsset(applicationVersion, field);
     applicationAssetLicenceService.createAssetLicences(applicationAsset, field);
+    applicationWorkAreaPriorityService
+        .prioritiseApplicationInWorkArea(applicationVersion, user, APPLICATION_CREATED, INDUSTRY);
     return applicationVersion;
   }
 
   @Transactional
   public ApplicationVersion createNewApplicationForTerminal(ApplicationType type,
                                                             TerminalWithOperatorJson terminalWithOperatorJson,
-                                                            OrganisationUnitJson operatorOuJson) {
-    ApplicationVersion applicationVersion = createNewApplication(type, operatorOuJson);
+                                                            OrganisationUnitJson operatorOuJson,
+                                                            ServiceUserDetail user) {
+    ApplicationVersion applicationVersion = createNewApplication(type, operatorOuJson, user);
     applicationAssetService.createPrimaryAsset(applicationVersion, terminalWithOperatorJson);
+    applicationWorkAreaPriorityService
+        .prioritiseApplicationInWorkArea(applicationVersion, user, APPLICATION_CREATED, INDUSTRY);
     return applicationVersion;
   }
 
   private ApplicationVersion createNewApplicationVersionRecord(Application application,
-                                                               OrganisationUnitJson operatorOuJson) {
+                                                               OrganisationUnitJson operatorOuJson,
+                                                               ServiceUserDetail user) {
     ApplicationVersion applicationVersion = new ApplicationVersion();
     applicationVersion.setApplication(application);
     applicationVersion.setVersion(1);
     applicationVersion.setCreatedDateTime(Instant.now());
-    applicationVersion.setCreatedByWuaId(userDetailService.getUserDetail().wuaId());
+    applicationVersion.setCreatedByWuaId(user.wuaId());
     applicationVersion.setStatus(ApplicationVersionStatus.IN_PROGRESS);
     applicationVersion.setPrimaryOperatorOuId(operatorOuJson.organisationUnitId());
     applicationVersion.setCachedPrimaryOperatorName(operatorOuJson.name());
@@ -84,21 +99,27 @@ public class ApplicationService {
   }
 
   @Transactional
-  public void submitApplication(ApplicationVersion applicationVersion) {
+  public void submitApplication(ApplicationVersion applicationVersion,
+                                ServiceUserDetail user) {
     var application = applicationVersion.getApplication();
     application.setApplicationNo(getApplicationNumber());
-    submitApplicationVersion(applicationVersion);
+    submitApplicationVersion(applicationVersion, user);
     applicationRepository.save(application);
+    applicationWorkAreaPriorityService
+        .prioritiseApplicationInWorkArea(applicationVersion, user, APPLICATION_SUBMITTED, INDUSTRY);
+    applicationWorkAreaPriorityService
+        .prioritiseApplicationInWorkArea(applicationVersion, user, APPLICATION_SUBMITTED, REGULATOR);
   }
 
-  protected void submitApplicationVersion(ApplicationVersion applicationVersion) {
+  protected void submitApplicationVersion(ApplicationVersion applicationVersion,
+                                          ServiceUserDetail user) {
     if (!applicationVersion.getStatus().equals(ApplicationVersionStatus.IN_PROGRESS)) {
       throw new IllegalStateException(String.format("Application with id %s cannot be submitted",
           applicationVersion.getApplication().getId()));
     }
     applicationVersion.setStatus(ApplicationVersionStatus.SUBMITTED);
     applicationVersion.setSubmittedDateTime(Instant.now());
-    applicationVersion.setSubmittedByWuaId(userDetailService.getUserDetail().wuaId());
+    applicationVersion.setSubmittedByWuaId(user.wuaId());
     applicationVersionRepository.save(applicationVersion);
     aceFlagService.autoSetAceFlag(applicationVersion);
   }
@@ -119,12 +140,13 @@ public class ApplicationService {
   }
 
   @NotNull
-  private Application createNewApplicationMasterRecord(ApplicationType applicationType) {
+  private Application createNewApplicationMasterRecord(ApplicationType applicationType,
+                                                       ServiceUserDetail user) {
     Application application = new Application();
     application.setType(applicationType);
     application.setCreatedDate(Instant.now());
     application.setVariationNo(0);
-    application.setCreatedByWuaId(userDetailService.getUserDetail().wuaId());
+    application.setCreatedByWuaId(user.wuaId());
     return applicationRepository.save(application);
   }
 

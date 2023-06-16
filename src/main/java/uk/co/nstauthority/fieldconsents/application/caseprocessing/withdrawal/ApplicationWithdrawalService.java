@@ -1,8 +1,13 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal;
 
+import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.INDUSTRY;
+import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.REGULATOR;
+import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.OPERATOR_WITHDRAWAL_REQUEST;
+
 import java.time.Clock;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 
 @Service
@@ -12,10 +17,14 @@ public class ApplicationWithdrawalService {
 
   private final ApplicationWithdrawalRepository applicationWithdrawalRepository;
 
+  private final ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
+
   public ApplicationWithdrawalService(Clock clock,
-                                      ApplicationWithdrawalRepository applicationWithdrawalRepository) {
+                                      ApplicationWithdrawalRepository applicationWithdrawalRepository,
+                                      ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService) {
     this.clock = clock;
     this.applicationWithdrawalRepository = applicationWithdrawalRepository;
+    this.applicationWorkAreaPriorityService = applicationWorkAreaPriorityService;
   }
 
   public boolean openWithdrawalExists(ApplicationVersion applicationVersion) {
@@ -44,5 +53,9 @@ public class ApplicationWithdrawalService {
     applicationWithdrawal.setRequestedByWuaId(user.wuaId());
     applicationWithdrawal.setRequestedDateTime(clock.instant());
     applicationWithdrawalRepository.save(applicationWithdrawal);
+    applicationWorkAreaPriorityService.prioritiseApplicationInWorkArea(applicationVersion, user,
+        OPERATOR_WITHDRAWAL_REQUEST, INDUSTRY);
+    applicationWorkAreaPriorityService.prioritiseApplicationInWorkArea(applicationVersion, user,
+        OPERATOR_WITHDRAWAL_REQUEST, REGULATOR);
   }
 }

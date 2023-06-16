@@ -104,7 +104,7 @@ public class CaseAssignmentController {
 
     var caseOfficerUser = ServiceUserDetail.from(energyPortalUserService.getByWuaId(form.getCaseOfficerWuaId()));
 
-    caseAssignmentService.assignCaseOfficer(applicationVersion, caseOfficerUser);
+    caseAssignmentService.assignCaseOfficer(applicationVersion, caseOfficerUser, user);
 
     NotificationBannerUtil.addSuccessNotification(
         redirectAttributes,
@@ -122,7 +122,7 @@ public class CaseAssignmentController {
                                                RedirectAttributes redirectAttributes) {
 
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
-    caseAssignmentService.assignCaseOfficer(applicationVersion, user);
+    caseAssignmentService.assignCaseOfficer(applicationVersion, user, user);
 
     NotificationBannerUtil.addSuccessNotification(
         redirectAttributes,
@@ -136,10 +136,11 @@ public class CaseAssignmentController {
   @PostMapping("release-ownership-case-officer")
   @ActionEndPoint(CASE_OFFICER_RELEASE_OWNERSHIP)
   public ModelAndView releaseOwnershipCaseOfficer(@PathVariable Integer applicationId,
-                                                  RedirectAttributes redirectAttributes) {
+                                                  RedirectAttributes redirectAttributes,
+                                                  ServiceUserDetail user) {
 
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
-    caseAssignmentService.unassignCaseOfficer(applicationVersion);
+    caseAssignmentService.unassignCaseOfficer(applicationVersion, user);
 
     NotificationBannerUtil.addSuccessNotification(
         redirectAttributes,

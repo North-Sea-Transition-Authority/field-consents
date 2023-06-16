@@ -23,6 +23,7 @@ import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldController;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorAndLicencesJson;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
@@ -121,7 +122,8 @@ public class StartApplicationFromFieldController {
             ReverseRouter.route(on(StartApplicationFromFieldController.class).createNewApplication(
                 fieldId,
                 null,
-                ReverseRouter.emptyBindingResult())
+                ReverseRouter.emptyBindingResult(),
+                null)
             )
         )
         .addObject("cancelUrl",
@@ -138,7 +140,8 @@ public class StartApplicationFromFieldController {
   @PostMapping("/start-application/operator")
   public ModelAndView createNewApplication(@PathVariable Integer fieldId,
                                            @ModelAttribute("form") StartApplicationOperatorForm form,
-                                           BindingResult bindingResult) {
+                                           BindingResult bindingResult,
+                                           ServiceUserDetail user) {
     operatorFormValidator.validate(form, bindingResult);
 
     if (bindingResult.hasErrors()) {
@@ -153,7 +156,8 @@ public class StartApplicationFromFieldController {
           "Lookup organisation unit prior to creating a field application");
       Application application = applicationService.createNewApplicationForField(type,
           fieldWithOperatorAndLicencesJson,
-          operatorOuJson).getApplication();
+          operatorOuJson,
+          user).getApplication();
       return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(application.getId()));
     }
   }

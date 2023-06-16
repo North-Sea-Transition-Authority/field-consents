@@ -23,6 +23,7 @@ import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalController;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalWithOperatorJson;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
@@ -123,7 +124,8 @@ public class StartApplicationFromTerminalController {
             ReverseRouter.route(on(StartApplicationFromTerminalController.class).createNewApplication(
                 terminalId,
                 null,
-                ReverseRouter.emptyBindingResult())
+                ReverseRouter.emptyBindingResult(),
+                null)
             )
         )
         .addObject("cancelUrl",
@@ -139,7 +141,8 @@ public class StartApplicationFromTerminalController {
   @PostMapping("/start-application/operator")
   public ModelAndView createNewApplication(@PathVariable Integer terminalId,
                                            @ModelAttribute("form") StartApplicationOperatorForm form,
-                                           BindingResult bindingResult) {
+                                           BindingResult bindingResult,
+                                           ServiceUserDetail user) {
     operatorFormValidator.validate(form, bindingResult);
 
     if (bindingResult.hasErrors()) {
@@ -151,8 +154,9 @@ public class StartApplicationFromTerminalController {
       Integer operatorOuId = form.getOrganisationUnitId().getAsInteger().orElseThrow(NoSuchElementException::new);
       OrganisationUnitJson operatorOuJson = organisationUnitService.getOrganisationUnitById(operatorOuId,
           "Lookup organisation unit prior to creating a terminal application");
-      Application application =
-          applicationService.createNewApplicationForTerminal(type, terminalWithOperatorJson, operatorOuJson).getApplication();
+      Application application = applicationService.createNewApplicationForTerminal(
+          type, terminalWithOperatorJson, operatorOuJson, user
+      ).getApplication();
       return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(application.getId()));
     }
   }

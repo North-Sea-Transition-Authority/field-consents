@@ -7,6 +7,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.INDUSTRY;
+import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.REGULATOR;
+import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.OPERATOR_WITHDRAWAL_REQUEST;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -21,6 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 
@@ -34,6 +38,9 @@ class ApplicationWithdrawalServiceTest {
 
   @Mock
   private ApplicationWithdrawalRepository applicationWithdrawalRepository;
+
+  @Mock
+  private ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
 
   @InjectMocks
   private ApplicationWithdrawalService applicationWithdrawalService;
@@ -110,5 +117,10 @@ class ApplicationWithdrawalServiceTest {
     ApplicationWithdrawal actualApplicationWithdrawal = applicationWithdrawalArgumentCaptor.getValue();
 
     assertThat(actualApplicationWithdrawal).usingRecursiveComparison().isEqualTo(applicationWithdrawal);
+
+    verify(applicationWorkAreaPriorityService, times(1))
+        .prioritiseApplicationInWorkArea(applicationVersion, user, OPERATOR_WITHDRAWAL_REQUEST, INDUSTRY);
+    verify(applicationWorkAreaPriorityService, times(1))
+        .prioritiseApplicationInWorkArea(applicationVersion, user, OPERATOR_WITHDRAWAL_REQUEST, REGULATOR);
   }
 }

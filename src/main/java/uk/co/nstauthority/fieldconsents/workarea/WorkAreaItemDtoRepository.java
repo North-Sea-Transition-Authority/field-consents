@@ -6,6 +6,7 @@ import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_ASSETS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_FLAGS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_VERSIONS;
+import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_WORK_AREA_PRIORITIES;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.CONSENT_LENGTHS;
 
 import java.util.List;
@@ -14,6 +15,7 @@ import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
+import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup;
 
 @Repository
 class WorkAreaItemDtoRepository {
@@ -25,7 +27,8 @@ class WorkAreaItemDtoRepository {
     this.context = context;
   }
 
-  public List<WorkAreaItemDto> runQuery(List<Condition> conditions) {
+  public List<WorkAreaItemDto> runQuery(List<Condition> conditions,
+                                        ApplicationWorkAreaPriorityGroup applicationWorkAreaPriorityGroup) {
     // Generates sub query to return application version ids that are applicable for work area, based on conditions.
     // Only allows one Application Version per Application
 
@@ -67,8 +70,15 @@ class WorkAreaItemDtoRepository {
         .leftJoin(CONSENT_LENGTHS).onKey(CONSENT_LENGTHS.APPLICATION_VERSION_ID)
         .leftJoin(APPLICATION_FLAGS).onKey(APPLICATION_FLAGS.APPLICATION_VERSION_ID)
             .and(APPLICATION_FLAGS.FLAG_TYPE.eq(IS_ACE_APPLICATION.name()))
+        .leftJoin(APPLICATION_WORK_AREA_PRIORITIES)
+            .onKey(APPLICATION_WORK_AREA_PRIORITIES.APPLICATION_VERSION_ID)
+            .and(APPLICATION_WORK_AREA_PRIORITIES.WORK_AREA_PRIORITY_GROUP.eq(applicationWorkAreaPriorityGroup.name()))
         .where(APPLICATION_VERSIONS.ID.in(detailsSubQuery))
-        .orderBy(greatest(APPLICATION_VERSIONS.SUBMITTED_DATE_TIME, APPLICATION_VERSIONS.CREATED_DATE_TIME).desc())
+        .orderBy(greatest(
+            // if the work area priority date is not set for the priority group then fallback to the other dates
+            APPLICATION_WORK_AREA_PRIORITIES.WORK_AREA_PRIORITY_DATE_TIME,
+            APPLICATION_VERSIONS.SUBMITTED_DATE_TIME,
+            APPLICATION_VERSIONS.CREATED_DATE_TIME).desc())
         .fetchInto(WorkAreaItemDto.class);
   }
 }

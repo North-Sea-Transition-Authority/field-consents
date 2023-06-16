@@ -14,6 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithOperator;
+import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem.EMPTY_REST_SEARCH_ITEM;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
@@ -22,7 +23,6 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
@@ -76,9 +76,7 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
     when(startApplicationControllerHelperService.getApplicationTypesMap(AssetType.TERMINAL)).thenReturn(applicationTypeMap);
   }
 
-
   @Test
-  @WithMockUser
   void getStartApplicationForm() throws Exception {
     String continueStartApplicationUrl = ReverseRouter.route(on(StartApplicationFromTerminalController.class)
         .continueStartApplicationOfType(
@@ -90,6 +88,7 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
     var modelAndView =
         mockMvc.perform(get(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
                 .getStartApplicationForm(TERMINAL_ID)))
+                .with(user(user))
                 .with(csrf()))
             .andExpect(status().isOk())
             .andExpect(view().name("fcs/startapplication/startApplication"))
@@ -111,11 +110,11 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
   }
 
   @Test
-  @WithMockUser
   void continueStartApplicationOfType() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
             .continueStartApplicationOfType(TERMINAL_ID, null, ReverseRouter.emptyBindingResult(), null)))
             .param("applicationType", ApplicationType.FLARE.name())
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(flash().attributeCount(1))
@@ -124,13 +123,13 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
   }
 
   @Test
-  @WithMockUser
   void continueStartApplicationOfType_formErrors() throws Exception {
     doCallRealMethod().when(formValidator).validate(any(), any());
 
     var modelAndView =
         mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
                 .continueStartApplicationOfType(TERMINAL_ID, null, ReverseRouter.emptyBindingResult(), null)))
+                .with(user(user))
                 .with(csrf()))
             .andExpect(status().isOk())
             .andExpect(view().name("fcs/startapplication/startApplication"))
@@ -152,7 +151,6 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
   }
 
   @Test
-  @WithMockUser
   void getStartApplicationOperatorForm() throws Exception {
     var orgUnitRestSearchItem = new RestSearchItem("1", "ORG_NAME");
     when(startApplicationOperatorFormService.getPrefilledOperatorForTerminal(TERMINAL_ID))
@@ -162,6 +160,7 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
         mockMvc.perform(get(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
                 .getStartApplicationOperatorForm(TERMINAL_ID, null)))
                 .flashAttr("applicationType", ApplicationType.FLARE)
+                .with(user(user))
                 .with(csrf()))
             .andExpect(status().isOk())
             .andExpect(view().name("fcs/startapplication/operatorForm"))
@@ -193,7 +192,6 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
   }
 
   @Test
-  @WithMockUser
   void createNewApplication() throws Exception {
     OrganisationUnitJson operatorOuJson = new OrganisationUnitJson(ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_1,
         ApplicationTestUtil.CACHED_PRIMARY_OPERATOR_NAME_1);
@@ -202,20 +200,20 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
         .thenReturn(operatorOuJson);
     when(terminalService.getTerminalWithOperator(TERMINAL_ID, "Lookup terminal prior to creating a terminal application"))
         .thenReturn(terminal1JsonWithOperator);
-    when(applicationService.createNewApplicationForTerminal(ApplicationType.FLARE, terminal1JsonWithOperator, operatorOuJson))
+    when(applicationService.createNewApplicationForTerminal(ApplicationType.FLARE, terminal1JsonWithOperator, operatorOuJson, user))
         .thenReturn(applicationVersion);
 
     mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
-            .createNewApplication(TERMINAL_ID, null, ReverseRouter.emptyBindingResult())))
+            .createNewApplication(TERMINAL_ID, null, ReverseRouter.emptyBindingResult(), null)))
             .param("applicationType", ApplicationType.FLARE.name())
             .param("organisationUnitId.inputValue", String.valueOf(ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_1))
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(view().name("redirect:/applications/1/task-list"));
   }
 
   @Test
-  @WithMockUser
   void createNewApplication_formErrors() throws Exception {
     doCallRealMethod().when(operatorFormValidator).validate(any(), any());
 
@@ -224,8 +222,9 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
 
     var modelAndView =
         mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
-                .createNewApplication(TERMINAL_ID, null, ReverseRouter.emptyBindingResult())))
+                .createNewApplication(TERMINAL_ID, null, ReverseRouter.emptyBindingResult(), null)))
                 .param("applicationType", ApplicationType.FLARE.name())
+                .with(user(user))
                 .with(csrf()))
             .andExpect(status().isOk())
             .andExpect(view().name("fcs/startapplication/operatorForm"))
@@ -247,9 +246,8 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
   @Test
   void createNewApplication_whenUnauthorized() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
-            .createNewApplication(TERMINAL_ID, null, ReverseRouter.emptyBindingResult())))
+            .createNewApplication(TERMINAL_ID, null, ReverseRouter.emptyBindingResult(), null)))
             .with(csrf()))
         .andExpect(redirectionToLoginUrl());
   }
-
 }

@@ -53,7 +53,7 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(APPLICATION_REFERENCE);
 
     var modelAndView = mockMvc.perform(post(ReverseRouter.route(on(ApplicationSubmissionController.class)
-            .submitApplication(APPLICATION_ID)))
+            .submitApplication(APPLICATION_ID, null)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
@@ -75,7 +75,7 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
 
     assertThatThrownBy(
         () -> mockMvc.perform(post(ReverseRouter.route(on(ApplicationSubmissionController.class)
-            .submitApplication(APPLICATION_ID)))
+            .submitApplication(APPLICATION_ID, null)))
             .with(user(user))
             .with(csrf()))
     ).hasMessageContaining("The application with id 1 cannot be submitted!");
@@ -84,7 +84,7 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
   @SecurityTest
   void submitApplication_withUnauthorizedUser() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(ApplicationSubmissionController.class)
-            .submitApplication(APPLICATION_ID)))
+            .submitApplication(APPLICATION_ID, null)))
             .with(csrf()))
         .andExpect(redirectionToLoginUrl());
   }

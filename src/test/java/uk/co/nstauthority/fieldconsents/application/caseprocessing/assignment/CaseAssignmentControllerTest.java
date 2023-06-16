@@ -173,7 +173,7 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
         .andExpect(notificationBanner(expectedNotificationBanner));
 
     verify(caseAssignmentService, times(1))
-        .assignCaseOfficer(applicationVersion, SERVICE_USER_DETAIL_USER_1);
+        .assignCaseOfficer(applicationVersion, SERVICE_USER_DETAIL_USER_1, user);
   }
 
   @ParameterizedTest
@@ -239,13 +239,13 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
         .andExpect(notificationBanner(expectedNotificationBanner));
 
     verify(caseAssignmentService, times(1))
-        .assignCaseOfficer(applicationVersion, user);
+        .assignCaseOfficer(applicationVersion, user, user);
   }
 
   @SecurityTest
   void releaseOwnershipCaseOfficer_noUser() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(CaseAssignmentController.class)
-            .releaseOwnershipCaseOfficer(APPLICATION_ID, null)))
+            .releaseOwnershipCaseOfficer(APPLICATION_ID, null, null)))
             .with(csrf()))
         .andExpect(redirectionToLoginUrl());
   }
@@ -265,7 +265,7 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
 
     mockMvc.perform(
             post(ReverseRouter.route(on(CaseAssignmentController.class)
-                .releaseOwnershipCaseOfficer(APPLICATION_ID, null)))
+                .releaseOwnershipCaseOfficer(APPLICATION_ID, null, null)))
                 .with(csrf())
                 .with(user(user))
         )
@@ -275,7 +275,7 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
         .andExpect(notificationBanner(expectedNotificationBanner));
 
     verify(caseAssignmentService, times(1))
-        .unassignCaseOfficer(applicationVersion);
+        .unassignCaseOfficer(applicationVersion, user);
   }
 
   private static Stream<Arguments> getSubmittedApplicationVersions() {

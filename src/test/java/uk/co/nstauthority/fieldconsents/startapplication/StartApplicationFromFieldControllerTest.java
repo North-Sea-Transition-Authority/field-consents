@@ -14,6 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperatorAndLicences;
+import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem.EMPTY_REST_SEARCH_ITEM;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
@@ -22,7 +23,6 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
@@ -76,9 +76,7 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
     when(startApplicationControllerHelperService.getApplicationTypesMap(AssetType.FIELD)).thenReturn(applicationTypeMap);
   }
 
-
   @Test
-  @WithMockUser
   void getStartApplicationForm() throws Exception {
     String continueStartApplicationUrl = ReverseRouter.route(on(StartApplicationFromFieldController.class)
         .continueStartApplicationOfType(
@@ -90,6 +88,7 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
     var modelAndView =
         mockMvc.perform(get(ReverseRouter.route(on(StartApplicationFromFieldController.class)
                 .getStartApplicationForm(FIELD_ID)))
+                .with(user(user))
                 .with(csrf()))
             .andExpect(status().isOk())
             .andExpect(view().name("fcs/startapplication/startApplication"))
@@ -111,12 +110,12 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void continueStartApplicationOfType() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromFieldController.class)
         .continueStartApplicationOfType(FIELD_ID, null, ReverseRouter.emptyBindingResult(), null)))
-        .param("applicationType", ApplicationType.FLARE.name())
-        .with(csrf()))
+            .param("applicationType", ApplicationType.FLARE.name())
+            .with(user(user))
+            .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(flash().attributeCount(1))
         .andExpect(flash().attribute("applicationType", ApplicationType.FLARE))
@@ -124,13 +123,13 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void continueStartApplicationOfType_formErrors() throws Exception {
     doCallRealMethod().when(formValidator).validate(any(), any());
 
     var modelAndView =
         mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromFieldController.class)
                 .continueStartApplicationOfType(FIELD_ID, null, ReverseRouter.emptyBindingResult(), null)))
+                .with(user(user))
                 .with(csrf()))
             .andExpect(status().isOk())
             .andExpect(view().name("fcs/startapplication/startApplication"))
@@ -152,7 +151,6 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void getStartApplicationOperatorForm() throws Exception {
     var orgUnitRestSearchItem = new RestSearchItem("1", "ORG_NAME");
     when(startApplicationOperatorFormService.getPrefilledOperatorForField(FIELD_ID))
@@ -162,6 +160,7 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
         mockMvc.perform(get(ReverseRouter.route(on(StartApplicationFromFieldController.class)
                 .getStartApplicationOperatorForm(FIELD_ID, null)))
                 .flashAttr("applicationType", ApplicationType.FLARE)
+                .with(user(user))
                 .with(csrf()))
             .andExpect(status().isOk())
             .andExpect(view().name("fcs/startapplication/operatorForm"))
@@ -193,7 +192,6 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @WithMockUser
   void createNewApplication() throws Exception {
     OrganisationUnitJson operatorOuJson = new OrganisationUnitJson(ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_1,
         ApplicationTestUtil.CACHED_PRIMARY_OPERATOR_NAME_1);
@@ -203,20 +201,20 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
     when(fieldService.getFieldWithOperatorAndLicences(FIELD_ID, "Lookup field prior to creating a field application"))
         .thenReturn(field1JsonWithOperatorAndLicences);
     when(applicationService.createNewApplicationForField(ApplicationType.FLARE,
-        field1JsonWithOperatorAndLicences, operatorOuJson))
+        field1JsonWithOperatorAndLicences, operatorOuJson, user))
         .thenReturn(applicationVersion);
 
     mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromFieldController.class)
-            .createNewApplication(FIELD_ID, null, ReverseRouter.emptyBindingResult())))
+            .createNewApplication(FIELD_ID, null, ReverseRouter.emptyBindingResult(), null)))
             .param("applicationType", ApplicationType.FLARE.name())
             .param("organisationUnitId.inputValue", String.valueOf(ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_1))
+            .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(view().name("redirect:/applications/1/task-list"));
   }
 
   @Test
-  @WithMockUser
   void createNewApplication_formErrors() throws Exception {
     doCallRealMethod().when(operatorFormValidator).validate(any(), any());
 
@@ -225,8 +223,9 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
 
     var modelAndView =
         mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromFieldController.class)
-                .createNewApplication(FIELD_ID, null, ReverseRouter.emptyBindingResult())))
+                .createNewApplication(FIELD_ID, null, ReverseRouter.emptyBindingResult(), null)))
                 .param("applicationType", ApplicationType.FLARE.name())
+                .with(user(user))
                 .with(csrf()))
             .andExpect(status().isOk())
             .andExpect(view().name("fcs/startapplication/operatorForm"))
@@ -248,7 +247,7 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
   @Test
   void createNewApplication_whenUnauthorized() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromFieldController.class)
-            .createNewApplication(FIELD_ID, null, ReverseRouter.emptyBindingResult())))
+            .createNewApplication(FIELD_ID, null, ReverseRouter.emptyBindingResult(), null)))
             .with(csrf()))
         .andExpect(redirectionToLoginUrl());
   }

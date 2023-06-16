@@ -1,5 +1,7 @@
 package uk.co.nstauthority.fieldconsents.workarea;
 
+import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.INDUSTRY;
+import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.REGULATOR;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_VERSIONS;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaFormService.FIELD_LOOKUP_PURPOSE;
 
@@ -109,7 +111,7 @@ public class WorkAreaService {
         .toList();
 
     conditions.add(APPLICATION_VERSIONS.PRIMARY_OPERATOR_OU_ID.in(organisationUnitIds));
-    var workAreaItemDtoList = workAreaItemDtoRepository.runQuery(conditions);
+    var workAreaItemDtoList = workAreaItemDtoRepository.runQuery(conditions, INDUSTRY);
 
     return getItemsFromDtoList(workAreaItemDtoList, organisationUnitJsons);
   }
@@ -128,7 +130,7 @@ public class WorkAreaService {
       return Collections.emptyList();
     }
 
-    var workAreaItemDtoList = workAreaItemDtoRepository.runQuery(conditions);
+    var workAreaItemDtoList = workAreaItemDtoRepository.runQuery(conditions, REGULATOR);
 
     var organisationUnitJsons = organisationUnitService.getOrganisationUnitsByIds(
         workAreaItemDtoList
