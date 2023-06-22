@@ -200,16 +200,18 @@ public class WorkAreaService {
             workAreaItemDto.fieldId() != null ? workAreaItemDto.fieldName() : workAreaItemDto.terminalName(),
             getAssetLocation(workAreaItemDto, fieldJsonsMap),
             workAreaItemDto.status().getDisplayName(),
-            workAreaItemDto.status().equals(ApplicationVersionStatus.SUBMITTED)
+            ApplicationVersionStatus.SUBMITTED.equals(workAreaItemDto.status())
                 ? "Submitted: %s".formatted(DateUtils.format(workAreaItemDto.submittedDateTime(), DateUtils.DATE_TIME))
                 : "",
-            workAreaItemDto.status().equals(ApplicationVersionStatus.SUBMITTED)
+            ApplicationVersionStatus.SUBMITTED.equals(workAreaItemDto.status())
                 ? getSubmitter(workAreaItemDto, portalUserDtosMap)
                 : "",
             getAceFlag(workAreaItemDto),
             Objects.nonNull(workAreaItemDto.caseOfficerWuaId())
                 ? getCaseOfficer(workAreaItemDto, portalUserDtosMap)
-                : ""
+                : "",
+            ApplicationVersionStatus.SUBMITTED.equals(workAreaItemDto.status())
+                && workAreaItemDto.withdrawalOpen()
         ))
         .toList();
   }

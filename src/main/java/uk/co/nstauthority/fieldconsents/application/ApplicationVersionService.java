@@ -45,4 +45,13 @@ public class ApplicationVersionService {
           .formatted(applicationVersion.getId(), ApplicationVersionStatus.IN_PROGRESS));
     }
   }
+
+  public void withdrawApplicationVersion(ApplicationVersion applicationVersion) {
+    if (!ApplicationVersionStatus.SUBMITTED.equals(applicationVersion.getStatus())) {
+      throw new IllegalStateException(String.format("Application with id %s and status %s cannot be withdrawn",
+          applicationVersion.getApplication().getId(), applicationVersion.getStatus().getDisplayName()));
+    }
+    applicationVersion.setStatus(ApplicationVersionStatus.WITHDRAWN);
+    applicationVersionRepository.save(applicationVersion);
+  }
 }

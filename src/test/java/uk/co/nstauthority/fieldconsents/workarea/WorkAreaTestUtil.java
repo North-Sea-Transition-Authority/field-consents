@@ -6,8 +6,8 @@ import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.A
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_VERSION_ID;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_VERSION_NUMBER;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.CACHED_PRIMARY_OPERATOR_NAME_1;
-import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_1;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.CASE_OFFICER_WUA_ID;
+import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_1;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.USER_WUA_ID;
 import static uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil.ANNUAL_CONSENT_YEAR;
 import static uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil.LONG_TERM_END_YEAR;
@@ -56,7 +56,8 @@ public class WorkAreaTestUtil {
         null,
         null,
         null,
-        null
+        null,
+        false
     );
   }
 
@@ -83,7 +84,8 @@ public class WorkAreaTestUtil {
         null,
         null,
         null,
-        null
+        null,
+        false
     );
   }
 
@@ -110,7 +112,8 @@ public class WorkAreaTestUtil {
         Instant.now(),
         USER_WUA_ID,
         null,
-        null
+        null,
+        false
     );
   }
 
@@ -137,7 +140,8 @@ public class WorkAreaTestUtil {
         Instant.now(),
         USER_WUA_ID,
         null,
-        CASE_OFFICER_WUA_ID
+        CASE_OFFICER_WUA_ID,
+        false
     );
   }
 
@@ -164,7 +168,36 @@ public class WorkAreaTestUtil {
         Instant.now(),
         USER_WUA_ID,
         null,
-        null
+        null,
+        false
+    );
+  }
+
+  public static WorkAreaItemDto getWorkAreaItemDtoForLongFlareSubmittedForTerminalWithOpenWithdrawalRequest() {
+    return new WorkAreaItemDto(
+        APPLICATION_ID,
+        APPLICATION_VERSION_ID,
+        ApplicationType.FLARE,
+        0,
+        APPLICATION_NO,
+        APPLICATION_VERSION_NUMBER,
+        PRIMARY_OPERATOR_OU_ID_1,
+        ApplicationVersionStatus.SUBMITTED,
+        null,
+        null,
+        TERMINAL_ID_1,
+        TERMINAL_NAME_1,
+        ConsentLengthType.LONG_TERM,
+        null,
+        null,
+        null,
+        LONG_TERM_START_YEAR,
+        LONG_TERM_END_YEAR,
+        Instant.now(),
+        USER_WUA_ID,
+        null,
+        null,
+        true
     );
   }
 
@@ -181,7 +214,8 @@ public class WorkAreaTestUtil {
         getSubmittedDateTime(workAreaItemDto),
         getSubmitter(workAreaItemDto),
         getAceFlag(workAreaItemDto),
-        getCaseOfficer(workAreaItemDto)
+        getCaseOfficer(workAreaItemDto),
+        getOpenWithdrawalRequest(workAreaItemDto)
     );
   }
 
@@ -255,6 +289,11 @@ public class WorkAreaTestUtil {
     return "";
   }
 
+  private static Boolean getOpenWithdrawalRequest(WorkAreaItemDto workAreaItemDto) {
+    return ApplicationVersionStatus.SUBMITTED.equals(workAreaItemDto.status())
+        && workAreaItemDto.withdrawalOpen();
+  }
+
   private static String getCaseReference(WorkAreaItemDto workAreaItemDto) {
     return workAreaItemDto.status().equals(ApplicationVersionStatus.SUBMITTED)
         ? "%s/%d/%d (Version %d)".formatted(workAreaItemDto.type().getReferenceMnemonic(),
@@ -277,7 +316,8 @@ public class WorkAreaTestUtil {
         SUBMITTED_DATE_TIME,
         String.valueOf(USER_WUA_ID),
         "",
-        ""
+        "",
+        false
     );
   }
 }

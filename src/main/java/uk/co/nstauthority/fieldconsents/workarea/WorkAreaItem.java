@@ -17,7 +17,8 @@ public record WorkAreaItem(
     String submittedDateTime,
     String submittedBy,
     String aceFlag,
-    String caseOfficer
+    String caseOfficer,
+    Boolean withdrawalOpen
 ) {
   public String url() {
     return ReverseRouter.route(on(ApplicationSummaryController.class).getApplicationSummary(applicationId, null));

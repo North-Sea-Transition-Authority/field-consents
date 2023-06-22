@@ -28,6 +28,7 @@ public record WorkAreaItemDto(
     Instant submittedDateTime,
     Long submittedByWuaId,
     Boolean aceFlag,
-    Long caseOfficerWuaId
+    Long caseOfficerWuaId,
+    Boolean withdrawalOpen
 ) {
 }

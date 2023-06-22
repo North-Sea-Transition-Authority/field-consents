@@ -281,6 +281,24 @@ class WorkAreaServiceTest {
   }
 
   @Test
+  void getWorkAreaItems_forIndustry_withFlareSubmitted_forTerminal_longTerm_openWithdrawalRequest() {
+    when(workAreaFilterService.getConditions(filter, user, null)).thenReturn(new ArrayList<>());
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.INDUSTRY, Set.of(RolePermission.EDIT_FCS_APPLICATIONS))).thenReturn(List.of(shell1IndustryTeam));
+    var workAreaItemDto = WorkAreaTestUtil.getWorkAreaItemDtoForLongFlareSubmittedForTerminalWithOpenWithdrawalRequest();
+    when(workAreaItemDtoRepository.runQuery(any(), any())).thenReturn(List.of(workAreaItemDto));
+    when(applicationVersionService.getApplicationVersionById(workAreaItemDto.applicationVersionId())).thenReturn(
+        flareVersionSubmitted);
+    when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(workAreaItemDto.submittedByWuaId())))).thenReturn(List.of(submitter));
+    when(organisationGroupQueryService.getOrganisationUnitsByOrganisationGroupIds(List.of(ORG_GROUP_ID_1))).thenReturn(List.of(field1JsonWithOperator.getOperatorJson()));
+    doCallRealMethod().when(applicationService).generateApplicationReference(flareVersionSubmitted);
+
+    var workAreaItems = workAreaService.getIndustryWorkAreaItems(filter, user);
+
+    assertThat(workAreaItems).hasSize(1);
+    assertThat(workAreaItems.stream().toList().get(0)).usingRecursiveComparison().isEqualTo(WorkAreaTestUtil.getWorkAreaItemFromDto(workAreaItemDto));
+  }
+
+  @Test
   void getTabsAvailableToUser_withNoPermissionForAnyTab() {
     when(permissionService.hasPermission(any(), any()))
         .thenReturn(false);

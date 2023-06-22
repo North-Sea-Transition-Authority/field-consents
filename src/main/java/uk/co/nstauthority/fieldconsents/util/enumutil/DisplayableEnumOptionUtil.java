@@ -3,6 +3,7 @@ package uk.co.nstauthority.fieldconsents.util.enumutil;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
+import java.util.stream.Stream;
 import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 
 public class DisplayableEnumOptionUtil {
@@ -19,6 +20,12 @@ public class DisplayableEnumOptionUtil {
         .collect(StreamUtils.toLinkedHashMap(Displayable::getEnumName, Displayable::getDisplayName));
   }
 
+  public static Map<String, String> getDisplayableOptionsFromStream(Stream<? extends Displayable> displayableStream) {
+    return displayableStream
+        .sorted(Comparator.comparingInt(Displayable::getDisplayOrder))
+        .collect(StreamUtils.toLinkedHashMap(Displayable::getEnumName, Displayable::getDisplayName));
+  }
+
   public static Map<String, String> getDisplayableOptionsWithDescription(
       Class<? extends DisplayableEnumWithDescription> displayableOptionEnum
   ) {
@@ -29,6 +36,4 @@ public class DisplayableEnumOptionUtil {
             opt -> "%s (%s)".formatted(opt.getDescription(), opt.getDisplayName())
         ));
   }
-
-
 }

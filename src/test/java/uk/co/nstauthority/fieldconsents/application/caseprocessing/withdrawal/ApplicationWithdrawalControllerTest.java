@@ -13,13 +13,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_WITHDRAWAL_RESPONSE;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_WITHDRAWAL_REQUEST;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalTestUtil.DUMMY_APP_REF;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalTestUtil.getWithdrawalRequestView;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.notificationBanner;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -33,17 +35,16 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.IndustryCaseProcessingController;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @ContextConfiguration(classes = ApplicationWithdrawalController.class)
 class ApplicationWithdrawalControllerTest extends AbstractApplicationControllerTest {
-
-  private static final String DUMMY_APP_REF = "DUMMY_APP_REF";
 
   @MockBean
   private ApplicationService applicationService;
@@ -54,25 +55,17 @@ class ApplicationWithdrawalControllerTest extends AbstractApplicationControllerT
   @MockBean
   private WithdrawalRequestFormValidator withdrawalRequestFormValidator;
 
+  @MockBean
+  private WithdrawalResponseFormValidator withdrawalResponseFormValidator;
+
+  @MockBean
+  private WithdrawalRequestViewService withdrawalRequestViewService;
+
   @SecurityTest
   void getApplicationWithdrawalRequest_noUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationWithdrawalController.class)
             .getApplicationWithdrawalRequest(APPLICATION_ID))))
         .andExpect(redirectionToLoginUrl());
-  }
-
-  @SecurityTest
-  void getApplicationWithdrawalRequest_checkUserPermissionSecurityOnly_forbidden() throws Exception {
-    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersion));
-    when(permissionService.hasPermission(user, EnumSet.of(RolePermission.EDIT_FCS_APPLICATIONS))).thenReturn(false);
-
-    mockMvc.perform(get(ReverseRouter.route(on(ApplicationWithdrawalController.class)
-            .getApplicationWithdrawalRequest(APPLICATION_ID)))
-            .with(user(user))
-            .with(csrf()))
-        .andExpect(status().isForbidden());
   }
 
   @SecurityTest
@@ -101,7 +94,6 @@ class ApplicationWithdrawalControllerTest extends AbstractApplicationControllerT
         .thenReturn(DUMMY_APP_REF);
     when(applicationWithdrawalService.getWithdrawalRequestForm(applicationVersion)).thenReturn(new WithdrawalRequestForm());
 
-    when(permissionService.hasPermission(user, EnumSet.of(RolePermission.EDIT_FCS_APPLICATIONS))).thenReturn(true);
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(OPERATOR_WITHDRAWAL_REQUEST));
 
@@ -112,7 +104,6 @@ class ApplicationWithdrawalControllerTest extends AbstractApplicationControllerT
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/application/withdrawalRequestForm"));
   }
-
 
   @ParameterizedTest
   @MethodSource("getSubmittedApplicationVersions")
@@ -126,7 +117,6 @@ class ApplicationWithdrawalControllerTest extends AbstractApplicationControllerT
         .thenReturn(DUMMY_APP_REF);
     when(applicationWithdrawalService.getWithdrawalRequestForm(applicationVersion)).thenReturn(form);
 
-    when(permissionService.hasPermission(user, EnumSet.of(RolePermission.EDIT_FCS_APPLICATIONS))).thenReturn(true);
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(OPERATOR_WITHDRAWAL_REQUEST));
 
@@ -140,7 +130,7 @@ class ApplicationWithdrawalControllerTest extends AbstractApplicationControllerT
         .andExpect(model().attribute("form", form))
         .andExpect(model().attribute("submitUrl",
             ReverseRouter.route(on(ApplicationWithdrawalController.class)
-                .getApplicationWithdrawalRequest(APPLICATION_ID))))
+                .submitApplicationWithdrawalRequest(APPLICATION_ID, null, null, null, null))))
         .andExpect(model().attribute("backLinkUrl",
             ReverseRouter.route(on(IndustryCaseProcessingController.class)
                 .getIndustryCaseProcessing(APPLICATION_ID, null))));
@@ -163,7 +153,6 @@ class ApplicationWithdrawalControllerTest extends AbstractApplicationControllerT
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
 
-    when(permissionService.hasPermission(user, EnumSet.of(RolePermission.EDIT_FCS_APPLICATIONS))).thenReturn(true);
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(OPERATOR_WITHDRAWAL_REQUEST));
 
@@ -190,7 +179,6 @@ class ApplicationWithdrawalControllerTest extends AbstractApplicationControllerT
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
 
-    when(permissionService.hasPermission(user, EnumSet.of(RolePermission.EDIT_FCS_APPLICATIONS))).thenReturn(true);
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(OPERATOR_WITHDRAWAL_REQUEST));
 
@@ -211,6 +199,194 @@ class ApplicationWithdrawalControllerTest extends AbstractApplicationControllerT
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(IndustryCaseProcessingController.class)
             .getIndustryCaseProcessing(APPLICATION_ID, null))))
+        .andExpect(notificationBanner(expectedNotificationBanner));
+  }
+
+  @SecurityTest
+  void getApplicationWithdrawalResponse_noUser() throws Exception {
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationWithdrawalController.class)
+            .getApplicationWithdrawalResponse(APPLICATION_ID))))
+        .andExpect(redirectionToLoginUrl());
+  }
+
+  @SecurityTest
+  void getApplicationWithdrawalResponse_checkEndPointSecurityOnly_forbidden() throws Exception {
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion));
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(Collections.emptyList());
+
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationWithdrawalController.class)
+            .getApplicationWithdrawalResponse(APPLICATION_ID)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void getApplicationWithdrawalResponse_checkEndPointSecurityOnly_allowed() throws Exception {
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion));
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
+    when(applicationService.generateApplicationReference(applicationVersion))
+        .thenReturn(DUMMY_APP_REF);
+    when(applicationWithdrawalService.getWithdrawalResponseForm(applicationVersion))
+        .thenReturn(new WithdrawalResponseForm());
+    when(withdrawalRequestViewService.getWithdrawalRequestView(applicationVersion))
+        .thenReturn(getWithdrawalRequestView());
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CASE_OFFICER_WITHDRAWAL_RESPONSE));
+
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationWithdrawalController.class)
+            .getApplicationWithdrawalResponse(APPLICATION_ID)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/withdrawalResponseForm"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("getSubmittedApplicationVersions")
+  void getApplicationWithdrawalResponse(ApplicationVersion applicationVersion) throws Exception {
+    var form = new WithdrawalResponseForm();
+    var withdrawalRequestView = getWithdrawalRequestView();
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion));
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
+    when(applicationService.generateApplicationReference(applicationVersion))
+        .thenReturn(DUMMY_APP_REF);
+    when(applicationWithdrawalService.getWithdrawalResponseForm(applicationVersion))
+        .thenReturn(form);
+    when(withdrawalRequestViewService.getWithdrawalRequestView(applicationVersion))
+        .thenReturn(withdrawalRequestView);
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CASE_OFFICER_WITHDRAWAL_RESPONSE));
+
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationWithdrawalController.class)
+            .getApplicationWithdrawalResponse(APPLICATION_ID)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/withdrawalResponseForm"))
+        .andExpect(model().attribute("form", form))
+        .andExpect(model().attribute("responseStatuses", WithdrawalStatus.getWithdrawalResponseOptions()))
+        .andExpect(model().attribute("withdrawalRequestView", withdrawalRequestView))
+        .andExpect(model().attribute("submitUrl",
+            ReverseRouter.route(on(ApplicationWithdrawalController.class)
+                .submitApplicationWithdrawalResponse(APPLICATION_ID, null, null, null, null))))
+        .andExpect(model().attribute("backLinkUrl",
+            ReverseRouter.route(on(ApplicationCaseProcessingController.class)
+                .getApplicationCaseProcessing(APPLICATION_ID, null))));
+  }
+
+  @SecurityTest
+  void submitApplicationWithdrawalResponse_noUser() throws Exception {
+    mockMvc.perform(post(ReverseRouter.route(on(ApplicationWithdrawalController.class)
+            .submitApplicationWithdrawalResponse(APPLICATION_ID, null, null, user, null)))
+            .with(csrf()))
+        .andExpect(redirectionToLoginUrl());
+  }
+
+  @ParameterizedTest
+  @MethodSource("getSubmittedApplicationVersions")
+  void submitApplicationWithdrawalResponse_withEmptyForm(ApplicationVersion applicationVersion) throws Exception {
+    var form = new WithdrawalResponseForm();
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion));
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
+
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CASE_OFFICER_WITHDRAWAL_RESPONSE));
+    when(withdrawalRequestViewService.getWithdrawalRequestView(applicationVersion))
+        .thenReturn(getWithdrawalRequestView());
+
+    doCallRealMethod().when(withdrawalResponseFormValidator).validate(any(), any());
+
+    mockMvc.perform(
+            post(ReverseRouter.route(on(ApplicationWithdrawalController.class)
+                .submitApplicationWithdrawalResponse(APPLICATION_ID, form, null, user, null)))
+                .with(csrf())
+                .with(user(user))
+        )
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/withdrawalResponseForm"));
+
+    verifyNoInteractions(applicationWithdrawalService);
+  }
+
+  @ParameterizedTest
+  @MethodSource("getSubmittedApplicationVersions")
+  void submitApplicationWithdrawalResponse_withNonEmptyForm_andRequestAccepted(ApplicationVersion applicationVersion) throws Exception {
+    var form = new WithdrawalResponseForm();
+    var withdrawalRequestView = getWithdrawalRequestView();
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion));
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
+
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CASE_OFFICER_WITHDRAWAL_RESPONSE));
+    when(withdrawalRequestViewService.getWithdrawalRequestView(applicationVersion))
+        .thenReturn(withdrawalRequestView);
+
+    doCallRealMethod().when(withdrawalResponseFormValidator).validate(any(), any());
+
+    var expectedNotificationBanner = NotificationBanner.builder()
+        .withBannerType(NotificationBannerType.SUCCESS)
+        .withHeadingContent("Withdrawal accepted")
+        .build();
+
+    mockMvc.perform(
+            post(ReverseRouter.route(on(ApplicationWithdrawalController.class)
+                .submitApplicationWithdrawalResponse(APPLICATION_ID, form, null, user, null)))
+                .with(csrf())
+                .with(user(user))
+                .param("responseStatus", WithdrawalStatus.ACCEPTED.getEnumName())
+        )
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(ReverseRouter.route(on(WorkAreaController.class)
+            .getWorkArea(null, null))))
+        .andExpect(notificationBanner(expectedNotificationBanner));
+  }
+
+  @ParameterizedTest
+  @MethodSource("getSubmittedApplicationVersions")
+  void submitApplicationWithdrawalResponse_withNonEmptyForm_andRequestRejected(ApplicationVersion applicationVersion) throws Exception {
+    var form = new WithdrawalResponseForm();
+    var withdrawalRequestView = getWithdrawalRequestView();
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion));
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
+
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CASE_OFFICER_WITHDRAWAL_RESPONSE));
+    when(withdrawalRequestViewService.getWithdrawalRequestView(applicationVersion))
+        .thenReturn(withdrawalRequestView);
+
+    doCallRealMethod().when(withdrawalResponseFormValidator).validate(any(), any());
+
+    var expectedNotificationBanner = NotificationBanner.builder()
+        .withBannerType(NotificationBannerType.SUCCESS)
+        .withHeadingContent("Withdrawal rejected")
+        .build();
+
+    mockMvc.perform(
+            post(ReverseRouter.route(on(ApplicationWithdrawalController.class)
+                .submitApplicationWithdrawalResponse(APPLICATION_ID, form, null, user, null)))
+                .with(csrf())
+                .with(user(user))
+                .param("responseStatus", WithdrawalStatus.REJECTED.getEnumName())
+                .param("responseText.inputValue", "response text")
+        )
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(ReverseRouter.route(on(WorkAreaController.class)
+            .getWorkArea(null, null))))
         .andExpect(notificationBanner(expectedNotificationBanner));
   }
 

@@ -13,9 +13,9 @@ import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDtoTes
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberView;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewTestUtil;
 
-class CaseAssignmentTestUtil {
+public class CaseAssignmentTestUtil {
 
-  static final EnergyPortalUserDto ENERGY_PORTAL_USER_1 =
+  public static final EnergyPortalUserDto ENERGY_PORTAL_USER_1 =
       EnergyPortalUserDtoTestUtil.Builder()
           .withWebUserAccountId(1L)
           .withForename("Forename1")

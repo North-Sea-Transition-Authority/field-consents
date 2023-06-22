@@ -7,12 +7,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalService.NO_OPEN_WITHDRAWAL_FOUND_FOR_APPLICATION_WITH_ID;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalService.OPEN_WITHDRAWAL_FOUND_FOR_APPLICATION_WITH_ID;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalTestUtil.CURRENT_INSTANT;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalTestUtil.WITHDRAWAL_REQUEST_TEXT;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalTestUtil.getOpenApplicationWithdrawal;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.INDUSTRY;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.REGULATOR;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.OPERATOR_WITHDRAWAL_REQUEST;
+import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.REGULATOR_REJECT_WITHDRAWAL_REQUEST;
 
 import java.time.Clock;
-import java.time.Instant;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,14 +29,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationWithdrawalServiceTest {
-
-  private static final Instant CURRENT_INSTANT = Instant.now();
 
   @Mock
   private Clock clock;
@@ -42,6 +46,9 @@ class ApplicationWithdrawalServiceTest {
   @Mock
   private ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
 
+  @Mock
+  private ApplicationVersionService applicationVersionService;
+
   @InjectMocks
   private ApplicationWithdrawalService applicationWithdrawalService;
 
@@ -49,14 +56,10 @@ class ApplicationWithdrawalServiceTest {
 
   private ServiceUserDetail user;
 
-  private WithdrawalRequestForm form;
-
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.FLARE);
     user = ServiceUserDetailTestUtil.Builder().build();
-    form = new WithdrawalRequestForm();
-    form.setRequestText("test");
   }
 
   @Test
@@ -79,8 +82,8 @@ class ApplicationWithdrawalServiceTest {
 
   @Test
   void getWithdrawalRequestForm_noOpenWithdrawalRequest() {
-    when(applicationWithdrawalRepository.findByApplicationVersionAndWithdrawalStatus(applicationVersion, WithdrawalStatus.OPEN))
-        .thenReturn(Optional.empty());
+    when(applicationWithdrawalRepository.existsByApplicationVersionAndWithdrawalStatus(applicationVersion, WithdrawalStatus.OPEN))
+        .thenReturn(false);
 
     var form = applicationWithdrawalService.getWithdrawalRequestForm(applicationVersion);
     assertThat(form)
@@ -90,31 +93,23 @@ class ApplicationWithdrawalServiceTest {
 
   @Test
   void getWithdrawalRequestForm_withdrawalRequestAlreadyOpen() {
-    when(applicationWithdrawalRepository.findByApplicationVersionAndWithdrawalStatus(applicationVersion, WithdrawalStatus.OPEN))
-        .thenReturn(Optional.of(new ApplicationWithdrawal()));
+    when(applicationWithdrawalRepository.existsByApplicationVersionAndWithdrawalStatus(applicationVersion, WithdrawalStatus.OPEN))
+        .thenReturn(true);
 
     assertThatThrownBy(() -> applicationWithdrawalService.getWithdrawalRequestForm(applicationVersion))
         .isInstanceOf(IllegalStateException.class)
-        .hasMessage("A withdrawal request has already been submitted for the application with id 1");
+        .hasMessage(String.format(OPEN_WITHDRAWAL_FOUND_FOR_APPLICATION_WITH_ID, 1));
   }
 
   @Test
   void saveWithdrawalRequest() {
     when(clock.instant()).thenReturn(CURRENT_INSTANT);
-    var applicationWithdrawal = new ApplicationWithdrawal();
-    applicationWithdrawal.setApplicationVersion(applicationVersion);
-    applicationWithdrawal.setRequestedDateTime(CURRENT_INSTANT);
-    applicationWithdrawal.setRequestText("test");
-    applicationWithdrawal.setRequestedByWuaId(user.wuaId());
-    applicationWithdrawal.setWithdrawalStatus(WithdrawalStatus.OPEN);
 
-    applicationWithdrawalService.saveWithdrawalRequest(applicationVersion, form, user);
+    var applicationWithdrawal = getOpenApplicationWithdrawal(applicationVersion);
 
-    ArgumentCaptor<ApplicationWithdrawal> applicationWithdrawalArgumentCaptor = ArgumentCaptor.forClass(ApplicationWithdrawal.class);
+    applicationWithdrawalService.saveWithdrawalRequest(applicationVersion, WITHDRAWAL_REQUEST_TEXT, user);
 
-    verify(applicationWithdrawalRepository, times(1)).save(applicationWithdrawalArgumentCaptor.capture());
-
-    ApplicationWithdrawal actualApplicationWithdrawal = applicationWithdrawalArgumentCaptor.getValue();
+    ApplicationWithdrawal actualApplicationWithdrawal = getCapturedApplicationWithdrawal();
 
     assertThat(actualApplicationWithdrawal).usingRecursiveComparison().isEqualTo(applicationWithdrawal);
 
@@ -122,5 +117,90 @@ class ApplicationWithdrawalServiceTest {
         .prioritiseApplicationInWorkArea(applicationVersion, user, OPERATOR_WITHDRAWAL_REQUEST, INDUSTRY);
     verify(applicationWorkAreaPriorityService, times(1))
         .prioritiseApplicationInWorkArea(applicationVersion, user, OPERATOR_WITHDRAWAL_REQUEST, REGULATOR);
+  }
+
+  @Test
+  void getOpenApplicationWithdrawal_whenItExists() {
+    var applicationWithdrawal = getOpenApplicationWithdrawal(applicationVersion);
+    when(applicationWithdrawalRepository.findByApplicationVersionAndWithdrawalStatus(applicationVersion, WithdrawalStatus.OPEN))
+        .thenReturn(Optional.of(applicationWithdrawal));
+
+    assertThat(applicationWithdrawalService.getOpenApplicationWithdrawal(applicationVersion))
+        .isEqualTo(applicationWithdrawal);
+  }
+
+  @Test
+  void getOpenApplicationWithdrawal_whenItDoesNotExist() {
+    when(applicationWithdrawalRepository.findByApplicationVersionAndWithdrawalStatus(applicationVersion, WithdrawalStatus.OPEN))
+        .thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> applicationWithdrawalService.getOpenApplicationWithdrawal(applicationVersion))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage(String.format(NO_OPEN_WITHDRAWAL_FOUND_FOR_APPLICATION_WITH_ID, 1));
+  }
+
+  @Test
+  void getWithdrawalResponseForm_withOpenWithdrawalRequest() {
+    when(applicationWithdrawalRepository.findByApplicationVersionAndWithdrawalStatus(applicationVersion, WithdrawalStatus.OPEN))
+        .thenReturn(Optional.of(new ApplicationWithdrawal()));
+
+    var form = applicationWithdrawalService.getWithdrawalResponseForm(applicationVersion);
+    assertThat(form)
+        .usingRecursiveComparison()
+        .isEqualTo(new WithdrawalResponseForm());
+  }
+
+  @Test
+  void getWithdrawalResponseForm_withNoOpenWithdrawalRequest() {
+    when(applicationWithdrawalRepository.findByApplicationVersionAndWithdrawalStatus(applicationVersion, WithdrawalStatus.OPEN))
+        .thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> applicationWithdrawalService.getWithdrawalResponseForm(applicationVersion))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage(String.format(NO_OPEN_WITHDRAWAL_FOUND_FOR_APPLICATION_WITH_ID, 1));
+  }
+
+  @Test
+  void saveWithdrawalResponse_whenRequestAccepted() {
+    when(clock.instant()).thenReturn(CURRENT_INSTANT);
+
+    var applicationWithdrawal = getOpenApplicationWithdrawal(applicationVersion);
+    when(applicationWithdrawalRepository.findByApplicationVersionAndWithdrawalStatus(applicationVersion, WithdrawalStatus.OPEN))
+        .thenReturn(Optional.of(applicationWithdrawal));
+
+    applicationWithdrawalService.saveWithdrawalResponse(applicationVersion, WithdrawalStatus.ACCEPTED, null, user);
+
+    ApplicationWithdrawal actualApplicationWithdrawal = getCapturedApplicationWithdrawal();
+
+    assertThat(actualApplicationWithdrawal).usingRecursiveComparison().isEqualTo(applicationWithdrawal);
+
+    verify(applicationVersionService, times(1)).withdrawApplicationVersion(applicationVersion);
+  }
+
+  @Test
+  void saveWithdrawalResponse_whenRequestRejected() {
+    when(clock.instant()).thenReturn(CURRENT_INSTANT);
+
+    var applicationWithdrawal = getOpenApplicationWithdrawal(applicationVersion);
+    when(applicationWithdrawalRepository.findByApplicationVersionAndWithdrawalStatus(applicationVersion,
+        WithdrawalStatus.OPEN))
+        .thenReturn(Optional.of(applicationWithdrawal));
+
+    applicationWithdrawalService.saveWithdrawalResponse(applicationVersion, WithdrawalStatus.REJECTED, "request rejected", user);
+
+    ApplicationWithdrawal actualApplicationWithdrawal = getCapturedApplicationWithdrawal();
+
+    assertThat(actualApplicationWithdrawal).usingRecursiveComparison().isEqualTo(applicationWithdrawal);
+
+    verify(applicationWorkAreaPriorityService, times(1))
+        .prioritiseApplicationInWorkArea(applicationVersion, user, REGULATOR_REJECT_WITHDRAWAL_REQUEST, INDUSTRY);
+  }
+
+  private ApplicationWithdrawal getCapturedApplicationWithdrawal() {
+    ArgumentCaptor<ApplicationWithdrawal> applicationWithdrawalArgumentCaptor = ArgumentCaptor.forClass(ApplicationWithdrawal.class);
+
+    verify(applicationWithdrawalRepository, times(1)).save(applicationWithdrawalArgumentCaptor.capture());
+
+    return applicationWithdrawalArgumentCaptor.getValue();
   }
 }

@@ -326,7 +326,10 @@ class WorkAreaFilterServiceTest {
     var conditions = workAreaFilterService.getConditions(filter, user, null);
 
     assertThat(conditions).containsExactly(
-        APPLICATION_VERSIONS.STATUS.notEqual(ApplicationVersionStatus.COMPLETED.name())
+        APPLICATION_VERSIONS.STATUS.in(
+            ApplicationVersionStatus.IN_PROGRESS.name(),
+            ApplicationVersionStatus.SUBMITTED.name()
+        )
     );
   }
 

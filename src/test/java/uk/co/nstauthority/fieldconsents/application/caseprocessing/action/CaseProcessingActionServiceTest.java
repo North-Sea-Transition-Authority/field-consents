@@ -253,4 +253,37 @@ class CaseProcessingActionServiceTest {
 
     assertThat(actionViews).isEmpty();
   }
+
+  @Test
+  void getUserActionViews_whenCaseOfficerUser_andOpenWithdrawal_thenCanRespondToCaseWithdrawal() {
+    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
+        .thenReturn(CASE_OFFICER_PERMISSIONS);
+    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
+        .thenReturn(Set.of(CaseStatusFlag.WITHDRAWAL_OPEN));
+
+    var actionViews = caseProcessingActionService.getUserActionViews(applicationVersion, USER);
+
+    assertThat(actionViews).hasSize(1);
+
+    assertThat(actionViews.get(0))
+        .usingRecursiveComparison()
+        .isEqualTo(
+            CaseProcessingActionView.from(
+                CaseProcessingActionItem.CASE_OFFICER_WITHDRAWAL_RESPONSE,
+                applicationVersion
+            )
+        );
+  }
+
+  @Test
+  void getUserActionViews_whenCaseOfficerUser_andNotOpenWithdrawal_thenCannotRespondToCaseWithdrawal() {
+    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
+        .thenReturn(CASE_OFFICER_PERMISSIONS);
+    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
+        .thenReturn(Set.of(CaseStatusFlag.NO_WITHDRAWAL_OPEN));
+
+    var actionViews = caseProcessingActionService.getUserActionViews(applicationVersion, USER);
+
+    assertThat(actionViews).isEmpty();
+  }
 }

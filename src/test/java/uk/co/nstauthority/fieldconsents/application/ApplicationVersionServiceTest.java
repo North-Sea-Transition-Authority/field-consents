@@ -142,4 +142,29 @@ class ApplicationVersionServiceTest {
       verify(applicationVersionRepository, never()).save(applicationVersion);
     }
   }
+
+  @Test
+  void withdrawApplicationVersion_whenCalled_thenVerifyEntityUpdatedAndSaved() {
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
+    applicationVersionService.withdrawApplicationVersion(applicationVersion);
+
+    assertThat(applicationVersion.getStatus()).isEqualTo(ApplicationVersionStatus.WITHDRAWN);
+    verify(applicationVersionRepository).save(applicationVersion);
+  }
+
+  @ParameterizedTest
+  @EnumSource(ApplicationVersionStatus.class)
+  void withdrawApplicationVersion_ensureOnlySubmittedApplicationsCanBeWithdrawn(ApplicationVersionStatus applicationVersionStatus) {
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
+    if (applicationVersionStatus == ApplicationVersionStatus.SUBMITTED) {
+      applicationVersionService.withdrawApplicationVersion(applicationVersion);
+      verify(applicationVersionRepository).save(applicationVersion);
+    } else {
+      applicationVersion.setStatus(applicationVersionStatus);
+
+      assertThrows(IllegalStateException.class,
+          () -> applicationVersionService.withdrawApplicationVersion(applicationVersion));
+      verify(applicationVersionRepository, never()).save(applicationVersion);
+    }
+  }
 }

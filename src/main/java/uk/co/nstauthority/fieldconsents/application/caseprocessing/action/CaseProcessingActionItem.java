@@ -20,6 +20,9 @@ public enum CaseProcessingActionItem implements Displayable {
   CASE_OFFICER_RELEASE_OWNERSHIP("Release ownership", 2, false,
       applicationId -> ReverseRouter.route(on(CaseAssignmentController.class)
           .releaseOwnershipCaseOfficer(applicationId, null, null)), null),
+  CASE_OFFICER_WITHDRAWAL_RESPONSE("Respond to withdrawal", 3, false, null,
+      applicationId -> ReverseRouter.route(on(ApplicationWithdrawalController.class)
+          .getApplicationWithdrawalResponse(applicationId))),
   CASE_OFFICER_ASSIGN_OWNERSHIP("Assign ownership", 1, true, null,
       applicationId -> ReverseRouter.route(on(CaseAssignmentController.class)
           .getCaseAssignment(applicationId, null))),

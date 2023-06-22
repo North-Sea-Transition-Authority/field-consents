@@ -113,7 +113,7 @@ public class ApplicationService {
 
   protected void submitApplicationVersion(ApplicationVersion applicationVersion,
                                           ServiceUserDetail user) {
-    if (!applicationVersion.getStatus().equals(ApplicationVersionStatus.IN_PROGRESS)) {
+    if (!ApplicationVersionStatus.IN_PROGRESS.equals(applicationVersion.getStatus())) {
       throw new IllegalStateException(String.format("Application with id %s cannot be submitted",
           applicationVersion.getApplication().getId()));
     }

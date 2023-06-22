@@ -228,7 +228,10 @@ public class WorkAreaFilterService {
   }
 
   private Condition getIndustryApplicationStatusCondition() {
-    return APPLICATION_VERSIONS.STATUS.notEqual(ApplicationVersionStatus.COMPLETED.name());
+    return APPLICATION_VERSIONS.STATUS.in(
+        ApplicationVersionStatus.IN_PROGRESS.name(),
+        ApplicationVersionStatus.SUBMITTED.name()
+    );
   }
 
   private Condition getRegulatorApplicationStatusCondition() {

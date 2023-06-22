@@ -127,10 +127,16 @@
 </#macro>
 
 <#macro fcsWorkAreaItem workAreaItem>
+  <#assign workAreaItemTagContent>
+    <#if workAreaItem.withdrawalOpen()>
+      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Withdrawal requested"/>
+    </#if>
+  </#assign>
   <@fdsResultList.resultListItem
     linkHeadingText=workAreaItem.reference()
     linkHeadingUrl=springUrl(workAreaItem.url())
     captionHeadingText=workAreaItem.operator()
+    itemTag=workAreaItemTagContent
   >
     <@fdsResultList.resultListDataItem>
         <#assign consentType>
