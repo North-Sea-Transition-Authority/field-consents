@@ -13,16 +13,24 @@ import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 public class SupportingInformationService {
 
   private final SupportingInformationRepository supportingInformationRepository;
+  private final SupportingInformationDocumentService supportingInformationDocumentService;
 
   @Autowired
-  public SupportingInformationService(SupportingInformationRepository supportingInformationRepository) {
+  public SupportingInformationService(SupportingInformationRepository supportingInformationRepository,
+                                      SupportingInformationDocumentService supportingInformationDocumentService) {
     this.supportingInformationRepository = supportingInformationRepository;
+    this.supportingInformationDocumentService = supportingInformationDocumentService;
   }
 
   public SupportingInformationForm getSupportingInformationForm(ApplicationVersion applicationVersion) {
     return supportingInformationRepository.findByApplicationVersion(applicationVersion)
-        .map(SupportingInformationForm::from)
-        .orElseGet(SupportingInformationForm::new);
+        .map(supportingInformation ->
+            SupportingInformationForm.from(
+                supportingInformation,
+                supportingInformationDocumentService.getUploadedFiles(applicationVersion)
+            )
+        )
+        .orElse(new SupportingInformationForm());
   }
 
   public Optional<SupportingInformation> findSupportingInformation(ApplicationVersion applicationVersion) {
@@ -30,9 +38,9 @@ public class SupportingInformationService {
   }
 
   @Transactional
-  public void saveSupportingInformation(ApplicationVersion applicationVersion,
-                                        SupportingInformationForm form) {
+  public void saveSupportingInformation(ApplicationVersion applicationVersion, SupportingInformationForm form) {
     supportingInformationRepository.deleteByApplicationVersion(applicationVersion);
+    supportingInformationDocumentService.saveDocuments(applicationVersion, form.getSupportingDocuments());
     supportingInformationRepository.save(SupportingInformation.from(applicationVersion, form));
   }
 
@@ -53,4 +61,5 @@ public class SupportingInformationService {
 
     return SummaryCard.simpleSummaryCard(summaryData);
   }
+
 }

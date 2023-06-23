@@ -14,5 +14,17 @@ services:
       - db-volume:/var/lib/postgresql/data
       - ./create_db_user.sh:/docker-entrypoint-initdb.d/create_db_user.sh
 
+  clamav:
+    image: clamav/clamav:stable
+    ports:
+    - "3310:3310"
+
+  s3mock:
+    image: adobe/s3mock:latest
+    ports:
+      - "9090:9090"
+    environment:
+      initialBuckets: field-consents
+
 volumes:
   db-volume:

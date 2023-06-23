@@ -13,6 +13,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ValidationUtils;
+import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.validation.ValidatorTestingUtil;
@@ -84,5 +85,25 @@ class SupportingInformationFormValidatorTest {
         .containsExactly(
             entry("notes.inputValue", Collections.singletonList("Enter notes"))
         );
+  }
+
+  @Test
+  void validate_form_hasFilesWithNoDescriptions() {
+    var productionApplicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    form.setApplicationVersion(productionApplicationVersion);
+    form.setNotes("Test notes");
+
+    var fileFormWithDescription = new UploadedFileForm();
+    fileFormWithDescription.setFileDescription("description");
+    var documentForms = List.of(fileFormWithDescription, new UploadedFileForm());
+
+    form.setSupportingDocuments(documentForms);
+
+    ValidationUtils.invokeValidator(validator, form, errors);
+
+    assertThat(ValidatorTestingUtil.getErrorsFieldsAndMessages(errors))
+        .containsExactlyEntriesOf(Map.of(
+            "supportingDocuments[1].uploadedFileDescription", Collections.singletonList("Enter a file description")
+        ));
   }
 }

@@ -2,7 +2,9 @@ package uk.co.nstauthority.fieldconsents.application.supportinginformation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -16,25 +18,39 @@ import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.A
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
-import java.util.Map;
+import java.time.Instant;
+import java.util.Collections;
 import java.util.Optional;
-import org.jetbrains.annotations.NotNull;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Stream;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.util.unit.DataSize;
+import org.springframework.validation.BindingResult;
+import uk.co.fivium.fileuploadlibrary.fds.FileUploadComponentAttributes;
+import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionFileService;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @ContextConfiguration(classes = SupportingInformationController.class)
 class SupportingInformationControllerTest extends AbstractApplicationControllerTest {
+
+  private static final String VIEW_NAME = "fcs/application/supportingInformationForm";
 
   @MockBean
   private ApplicationService applicationService;
@@ -43,11 +59,27 @@ class SupportingInformationControllerTest extends AbstractApplicationControllerT
   private SupportingInformationService supportingInformationService;
 
   @MockBean
+  private SupportingInformationDocumentService supportingInformationDocumentService;
+
+  @MockBean
   private SupportingInformationFormValidator supportingInformationFormValidator;
+
+  @MockBean
+  private ApplicationVersionFileService applicationVersionFileService;
 
   private ApplicationVersion applicationVersion;
 
   private SupportingInformationForm form;
+
+  private final FileUploadComponentAttributes fileUploadComponentAttributes = FileUploadComponentAttributes.newBuilder()
+      .withPath("form.supportingDocuments")
+      .withMaximumSize(DataSize.ofMegabytes(50))
+      .withUploadUrl("/upload")
+      .withDownloadUrl("/download")
+      .withDeleteUrl("/delete")
+      .withAllowedExtensions(Set.of("csv", "pdf"))
+      .withExistingFiles(Collections.emptyList())
+      .build();
 
   @BeforeEach
   void setUp() {
@@ -62,65 +94,54 @@ class SupportingInformationControllerTest extends AbstractApplicationControllerT
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(applicationVersion.getApplication());
   }
 
-  @Test
-  void getSupportingInformationForm_withValidUserAndFlareApplication() throws Exception {
-    Map<String, Object> model = getSupportingInformationFormModel();
+  @ParameterizedTest
+  @MethodSource("getSupportingInformationForm_withValidUserAndApplication_arguments")
+  void getSupportingInformationForm_withValidUserAndApplication(
+      ApplicationType applicationType,
+      String applicationTypeString,
+      boolean erapInformationAllowed
+  ) throws Exception {
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
 
-    assertThat(model)
-        .containsEntry("applicationType", "flaring")
-        .containsEntry("erapInformationAllowed", true)
-        .containsEntry("submitUrl", ReverseRouter.route(on(SupportingInformationController.class).getSupportingInformationForm(APPLICATION_ID)))
-        .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID)));
+    when(applicationService.getApplicationById(APPLICATION_ID))
+        .thenReturn(applicationVersion.getApplication());
 
-    assertThat((SupportingInformationForm) model.get("form"))
-        .isEqualTo(form);
-  }
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(applicationVersion.getApplication().getId()))
+        .thenReturn(applicationVersion);
 
-  @Test
-  void getSupportingInformationForm_withValidUserAndVentApplication() throws Exception {
-    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
-    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(applicationVersion.getApplication());
+    when(supportingInformationService.getSupportingInformationForm(applicationVersion))
+        .thenReturn(form);
 
-    Map<String, Object> model = getSupportingInformationFormModel();
+    when(supportingInformationDocumentService.fileUploadComponentAttributes(eq(applicationVersion), anyList()))
+        .thenReturn(fileUploadComponentAttributes);
 
-    assertThat(model)
-        .containsEntry("applicationType", "venting")
-        .containsEntry("erapInformationAllowed", true)
-        .containsEntry("submitUrl", ReverseRouter.route(on(SupportingInformationController.class).getSupportingInformationForm(APPLICATION_ID)))
-        .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID)));
-
-    assertThat((SupportingInformationForm) model.get("form"))
-        .isEqualTo(form);
-  }
-
-  @Test
-  void getSupportingInformationForm_withValidUserAndProductionApplication() throws Exception {
-    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
-    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(applicationVersion.getApplication());
-
-    Map<String, Object> model = getSupportingInformationFormModel();
-
-    assertThat(model)
-        .containsEntry("erapInformationAllowed", false)
-        .containsEntry("submitUrl", ReverseRouter.route(on(SupportingInformationController.class).getSupportingInformationForm(APPLICATION_ID)))
-        .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID)));
-
-    assertThat((SupportingInformationForm) model.get("form"))
-        .isEqualTo(form);
-  }
-
-  @NotNull
-  private Map<String, Object> getSupportingInformationFormModel() throws Exception {
-    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(SupportingInformationController.class)
+    var model = mockMvc.perform(get(ReverseRouter.route(on(SupportingInformationController.class)
             .getSupportingInformationForm(ApplicationTestUtil.APPLICATION_ID)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
-        .andExpect(view().name("fcs/application/supportingInformationForm"))
-        .andReturn().getModelAndView();
+        .andExpect(view().name(VIEW_NAME))
+        .andReturn()
+        .getModelAndView()
+        .getModel();
 
-    assert modelAndView != null;
-    return modelAndView.getModel();
+    assertThat(model)
+        .isNotNull()
+        .containsEntry("erapInformationAllowed", erapInformationAllowed)
+        .containsEntry("submitUrl", ReverseRouter.route(on(SupportingInformationController.class).getSupportingInformationForm(APPLICATION_ID)))
+        .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID)));
+
+    // applicationType is nullable
+    assertThat(model.get("applicationType")).isEqualTo(applicationTypeString);
+    assertThat(model).containsEntry("form", form);
+  }
+
+  private static Stream<Arguments> getSupportingInformationForm_withValidUserAndApplication_arguments() {
+    return Stream.of(
+        Arguments.of(ApplicationType.FLARE, "flaring", true),
+        Arguments.of(ApplicationType.VENT, "venting", true),
+        Arguments.of(ApplicationType.PRODUCTION, null, false)
+    );
   }
 
   @SecurityTest
@@ -157,18 +178,74 @@ class SupportingInformationControllerTest extends AbstractApplicationControllerT
   }
 
   @Test
-  void saveSupportingInformation_withEmptyForm() throws Exception {
-    doCallRealMethod().when(supportingInformationFormValidator).validate(any(), any());
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(ApplicationTestUtil.APPLICATION_ID)).thenReturn(applicationVersion);
+  void saveSupportingInformation_validationFailure() throws Exception {
+    doAnswer(invocation -> {
+      var bindingResult = invocation.getArgument(1, BindingResult.class);
+      bindingResult.rejectValue("notes", "invalid", "example message");
+      return null;
+    })
+        .when(supportingInformationFormValidator)
+        .validate(any(), any());
+
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(ApplicationTestUtil.APPLICATION_ID))
+        .thenReturn(applicationVersion);
+    when(supportingInformationDocumentService.fileUploadComponentAttributes(eq(applicationVersion), anyList()))
+        .thenReturn(fileUploadComponentAttributes);
 
     mockMvc.perform(post(ReverseRouter.route(on(SupportingInformationController.class)
             .saveSupportingInformation(ApplicationTestUtil.APPLICATION_ID, null, null)))
             .with(user(user))
-            .with(csrf())
-            .param("notes", "")
-            .param("erapNotes", ""))
+            .with(csrf()))
         .andExpect(status().isOk())
-        .andExpect(view().name("fcs/application/supportingInformationForm"))
-        .andReturn().getModelAndView();
+        .andExpect(view().name(VIEW_NAME));
   }
+
+  @Test
+  void saveSupportingInformation_validationFailure_checkFileDescription() throws Exception {
+    doAnswer(invocation -> {
+      var bindingResult = invocation.getArgument(1, BindingResult.class);
+      bindingResult.rejectValue("notes", "invalid", "example message");
+      return null;
+    })
+        .when(supportingInformationFormValidator)
+        .validate(any(), any());
+
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(ApplicationTestUtil.APPLICATION_ID))
+        .thenReturn(applicationVersion);
+
+    when(supportingInformationDocumentService.fileUploadComponentAttributes(eq(applicationVersion), anyList()))
+        .thenReturn(fileUploadComponentAttributes);
+
+    // when the form is put back into the model and view, it will need to fetch the file name, file size etc.
+    // it also gets back the file description, but we want to use the file description that's in the form
+    // because it may have been updated as part of this form submission.
+    var fileId = UUID.randomUUID();
+    var persistedFileAsForm = new UploadedFileForm();
+    persistedFileAsForm.setFileId(fileId);
+    persistedFileAsForm.setFileDescription("old description");
+
+    when(applicationVersionFileService.getUploadedFileForms(Collections.singleton(fileId)))
+        .thenReturn(Collections.singletonList(persistedFileAsForm));
+
+    var modelAndView = mockMvc.perform(post(ReverseRouter.route(on(SupportingInformationController.class)
+            .saveSupportingInformation(ApplicationTestUtil.APPLICATION_ID, null, null)))
+            .with(user(user))
+            .with(csrf())
+            .param("supportingDocuments[0].uploadedFileId", fileId.toString())
+            .param("supportingDocuments[0].uploadedFileInstant", Instant.now().toString())
+            .param("supportingDocuments[0].uploadedFileDescription", "new description"))
+        .andExpect(status().isOk())
+        .andExpect(view().name(VIEW_NAME))
+        .andReturn()
+        .getModelAndView();
+
+    assertThat(modelAndView.getModel().get("form"))
+        .isInstanceOf(SupportingInformationForm.class)
+        .asInstanceOf(InstanceOfAssertFactories.type(SupportingInformationForm.class))
+        .extracting(SupportingInformationForm::getSupportingDocuments)
+        .extracting(list -> list.get(0))
+        .extracting(UploadedFileForm::getFileDescription)
+        .isEqualTo("new description"); // the description was copied forward into the new form
+  }
+
 }

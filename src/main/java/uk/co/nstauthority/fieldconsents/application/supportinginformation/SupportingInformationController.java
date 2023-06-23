@@ -11,10 +11,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.fivium.fileuploadlibrary.FileUploadLibraryUtils;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionFileService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
@@ -30,58 +32,34 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
 public class SupportingInformationController {
 
   private final ApplicationService applicationService;
-
   private final ApplicationVersionService applicationVersionService;
-
   private final SupportingInformationService supportingInformationService;
-
+  private final SupportingInformationDocumentService supportingInformationDocumentService;
   private final SupportingInformationFormValidator supportingInformationFormValidator;
+  private final ApplicationVersionFileService applicationVersionFileService;
 
   @Autowired
   public SupportingInformationController(ApplicationService applicationService,
                                          ApplicationVersionService applicationVersionService,
                                          SupportingInformationService supportingInformationService,
-                                         SupportingInformationFormValidator supportingInformationFormValidator) {
+                                         SupportingInformationDocumentService supportingInformationDocumentService,
+                                         SupportingInformationFormValidator supportingInformationFormValidator,
+                                         ApplicationVersionFileService applicationVersionFileService) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.supportingInformationService = supportingInformationService;
+    this.supportingInformationDocumentService = supportingInformationDocumentService;
     this.supportingInformationFormValidator = supportingInformationFormValidator;
+    this.applicationVersionFileService = applicationVersionFileService;
   }
-
 
   @GetMapping
   public ModelAndView getSupportingInformationForm(@PathVariable Integer applicationId) {
-    ApplicationVersion applicationVersion = applicationVersionService
-        .getLatestApplicationVersionByApplicationId(applicationId);
+    var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
+    var supportingInformationForm = supportingInformationService.getSupportingInformationForm(applicationVersion);
+    var modelAndView = getSupportingInformationModelAndView(applicationVersion, supportingInformationForm);
 
-    SupportingInformationForm supportingInformationForm = supportingInformationService
-        .getSupportingInformationForm(applicationVersion);
-
-    var modelAndView = getSupportingInformationModelAndView(applicationId);
     modelAndView.addObject("form", supportingInformationForm);
-    return modelAndView;
-  }
-
-  private ModelAndView getSupportingInformationModelAndView(Integer applicationId) {
-    var modelAndView = new ModelAndView("fcs/application/supportingInformationForm");
-    ApplicationType applicationType = applicationService.getApplicationById(applicationId).getType();
-
-    boolean erapInformationAllowed = ApplicationTypeFeature.ERAP_SUPPORTING_INFORMATION.allowed(applicationType);
-    if (erapInformationAllowed) {
-      modelAndView
-          .addObject("applicationType",
-              applicationType.equals(ApplicationType.FLARE)
-                  ? "flaring"
-                  : "venting"
-      );
-    }
-    modelAndView
-        .addObject("erapInformationAllowed", erapInformationAllowed)
-        .addObject("submitUrl", ReverseRouter.route(on(SupportingInformationController.class)
-            .saveSupportingInformation(applicationId, null, null)))
-        .addObject("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class)
-            .getTaskList(applicationId)));
-
     return modelAndView;
   }
 
@@ -89,19 +67,47 @@ public class SupportingInformationController {
   public ModelAndView saveSupportingInformation(@PathVariable Integer applicationId,
                                                 @ModelAttribute("form") SupportingInformationForm form,
                                                 BindingResult bindingResult) {
-
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     form.setApplicationVersion(applicationVersion);
 
     supportingInformationFormValidator.validate(form, bindingResult);
 
     if (bindingResult.hasErrors()) {
-      return getSupportingInformationModelAndView(applicationId);
+      var descriptionsByFileId = FileUploadLibraryUtils.getFileDescriptionsByFileId(form.getSupportingDocuments());
+
+      // TODO: https://jira.fivium.co.uk/browse/FDS-460
+      form.setSupportingDocuments(applicationVersionFileService.getUploadedFileForms(descriptionsByFileId.keySet()));
+      form.getSupportingDocuments().forEach(uploadedFileForm -> uploadedFileForm
+          .setFileDescription(descriptionsByFileId.get(uploadedFileForm.getFileId())));
+      return getSupportingInformationModelAndView(applicationVersion, form);
     }
 
-    supportingInformationService.saveSupportingInformation(
-        applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId), form);
+    supportingInformationService.saveSupportingInformation(applicationVersion, form);
 
     return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
   }
+
+  private ModelAndView getSupportingInformationModelAndView(ApplicationVersion applicationVersion,
+                                                            SupportingInformationForm form) {
+    var applicationId = applicationVersion.getApplication().getId();
+    var modelAndView = new ModelAndView("fcs/application/supportingInformationForm");
+    var applicationType = applicationService.getApplicationById(applicationId).getType();
+
+    boolean erapInformationAllowed = ApplicationTypeFeature.ERAP_SUPPORTING_INFORMATION.allowed(applicationType);
+    if (erapInformationAllowed) {
+      modelAndView.addObject("applicationType", applicationType.equals(ApplicationType.FLARE) ? "flaring" : "venting");
+    }
+
+    modelAndView
+        .addObject("form", form)
+        .addObject("erapInformationAllowed", erapInformationAllowed)
+        .addObject("submitUrl", ReverseRouter.route(on(SupportingInformationController.class)
+            .saveSupportingInformation(applicationId, null, null)))
+        .addObject("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId)))
+        .addObject("fileUploadAttributes", supportingInformationDocumentService
+            .fileUploadComponentAttributes(applicationVersion, form.getSupportingDocuments()));
+
+    return modelAndView;
+  }
+
 }

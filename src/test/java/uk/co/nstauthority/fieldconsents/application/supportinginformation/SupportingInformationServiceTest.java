@@ -1,10 +1,10 @@
 package uk.co.nstauthority.fieldconsents.application.supportinginformation;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.jetbrains.annotations.NotNull;
@@ -14,6 +14,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
@@ -35,18 +37,22 @@ class SupportingInformationServiceTest {
   @Mock
   private SupportingInformationRepository supportingInformationRepository;
 
+  @Mock
+  private SupportingInformationDocumentService supportingInformationDocumentService;
+
   private ApplicationVersion applicationVersion;
 
   private SupportingInformation supportingInformation;
 
+  @InjectMocks
   private SupportingInformationService supportingInformationService;
 
+  @Captor
+  private ArgumentCaptor<SupportingInformation> supportingInformationCaptor;
 
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
-    supportingInformationService = new SupportingInformationService(supportingInformationRepository);
-
     supportingInformation = getSupportingInformation();
   }
 
@@ -105,24 +111,40 @@ class SupportingInformationServiceTest {
   void saveSupportingInformation_whenNonProductionApplication() {
     SupportingInformationForm form = getSupportingInformationForm();
 
-    ArgumentCaptor<SupportingInformation> supportingInformationArgumentCaptor = getSupportingInformationArgumentCaptor(form);
+    supportingInformationService.saveSupportingInformation(applicationVersion, form);
 
-    SupportingInformation savedSupportingInformation = supportingInformationArgumentCaptor.getValue();
+    verify(supportingInformationRepository).deleteByApplicationVersion(applicationVersion);
+    verify(supportingInformationDocumentService).saveDocuments(applicationVersion, form.getSupportingDocuments());
+    verify(supportingInformationRepository).save(supportingInformationCaptor.capture());
 
-    assertThat(savedSupportingInformation.getNotes()).isEqualTo(supportingInformation.getNotes());
-    assertThat(savedSupportingInformation.getErapNotes()).isEqualTo(supportingInformation.getErapNotes());
+    assertThat(supportingInformationCaptor.getValue())
+        .extracting(
+            SupportingInformation::getNotes,
+            SupportingInformation::getErapNotes
+        ).containsExactly(
+            supportingInformation.getNotes(),
+            supportingInformation.getErapNotes()
+        );
   }
 
   @Test
   void saveSupportingInformation_whenProductionApplication() {
     SupportingInformationForm form = getSupportingInformationProductionForm();
 
-    ArgumentCaptor<SupportingInformation> supportingInformationArgumentCaptor = getSupportingInformationArgumentCaptor(form);
+    supportingInformationService.saveSupportingInformation(applicationVersion, form);
 
-    SupportingInformation savedSupportingInformation = supportingInformationArgumentCaptor.getValue();
+    verify(supportingInformationRepository).deleteByApplicationVersion(applicationVersion);
+    verify(supportingInformationRepository).save(supportingInformationCaptor.capture());
 
-    assertThat(savedSupportingInformation.getNotes()).isEqualTo(supportingInformation.getNotes());
-    assertThat(savedSupportingInformation.getErapNotes()).isNull();
+    assertThat(supportingInformationCaptor.getValue())
+        .extracting(
+            SupportingInformation::getNotes,
+            SupportingInformation::getErapNotes
+        )
+        .containsExactly(
+            supportingInformation.getNotes(),
+            null
+        );
   }
 
   @Test
@@ -170,17 +192,6 @@ class SupportingInformationServiceTest {
         ));
   }
 
-  @NotNull
-  private ArgumentCaptor<SupportingInformation> getSupportingInformationArgumentCaptor(SupportingInformationForm form) {
-    supportingInformationService.saveSupportingInformation(applicationVersion, form);
-
-    verify(supportingInformationRepository, times(1)).deleteByApplicationVersion(applicationVersion);
-
-    ArgumentCaptor<SupportingInformation> supportingInformationArgumentCaptor = ArgumentCaptor.forClass(SupportingInformation.class);
-    verify(supportingInformationRepository, times(1)).save(supportingInformationArgumentCaptor.capture());
-    return supportingInformationArgumentCaptor;
-  }
-
   private SupportingInformationForm getSupportingInformationForm() {
     SupportingInformationForm supportingInformationForm = getSupportingInformationProductionForm();
     supportingInformationForm.setErapNotes(ERAP_NOTES);
@@ -190,6 +201,7 @@ class SupportingInformationServiceTest {
   private SupportingInformationForm getSupportingInformationProductionForm() {
     SupportingInformationForm supportingInformationForm = new SupportingInformationForm();
     supportingInformationForm.setNotes(APPLICATION_NOTES);
+    supportingInformationForm.setSupportingDocuments(Collections.emptyList());
     return supportingInformationForm;
   }
 

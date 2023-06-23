@@ -29,11 +29,10 @@ steps:
         from_secret: bitbucket_ssh_key
 
   - name: build-frontend
-    image: node:10
+    image: node:18
     commands:
       - cd fivium-design-system-core && npm install && npx gulp build && cd ..
-      - npm install
-      - npx gulp buildAll
+      - npm install && npx gulp buildAll
 
   - name: build-backend
     image: quay.io/testcontainers/dind-drone-plugin
@@ -253,11 +252,10 @@ steps:
         from_secret: bitbucket_ssh_key
 
   - name: build-frontend
-    image: node:10
+    image: node:18
     commands:
       - cd fivium-design-system-core && npm install && npx gulp build && cd ..
-      - npm install
-      - npx gulp buildAll
+      - npm install && npx gulp buildAll
 
   # This is in the PR pipeline so the code-analysis below can access the test data (to see coverage)
   - name: build-backend

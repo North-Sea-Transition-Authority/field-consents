@@ -5,35 +5,28 @@ const sourcemaps = require('gulp-sourcemaps');
 const autoprefixer = require('autoprefixer');
 const rename = require("gulp-rename");
 
+const sassGlobPattern = "src/main/resources/scss/*.scss";
 const sassOptions = {
   outputStyle: 'compressed',
   includePath: 'src/main/resources/scss'
 };
 
 function compileSass(exitOnError) {
-  const plugins = [
-    autoprefixer({
-      browsers: ['last 3 versions', '> 0.1%', 'Firefox ESR'],
-      grid: true
-    })
-  ];
-
   let sassTask = sass(sassOptions);
-  if (!exitOnError) {
-    //Without an error handler specified, the task will exit on error, which we want for the "buildAll" task
-    sassTask = sassTask.on('error', sass.logError);
-  }
 
-  return gulp.src('src/main/resources/scss/*.scss', {base: "."})
+  // Without an error handler specified, the task will exit on error, which we want for the "buildAll" task
+  if(!exitOnError) sassTask = sassTask.on('error', sass.logError);
+
+  return gulp.src(sassGlobPattern, {base: '.'})
     .pipe(sourcemaps.init())
     .pipe(sassTask)
-    .pipe(postcss(plugins))
-    .pipe(sourcemaps.write())
+    .pipe(postcss([autoprefixer({ grid: true })])) // Add the plugin here instead
+    .pipe(sourcemaps.write('./'))
     .pipe(rename(path => {
-      //E.g. src\main\resources\sass\core -> src\main\resources\public\assets\static\css
-      path.dirname = path.dirname.replace(/([\/\\])scss[\/\\]?/, '$1public$1assets$1static$1css');
+      // E.g. src\main\resources\scss -> src\main\resources\public\assets\static\css
+      path.dirname = path.dirname.replace(/([\/\\])templates([\/\\])docs/, '$1public$1assets$1static$1css');
     }))
-    .pipe(gulp.dest('./'));
+    .pipe(gulp.dest('./'))
 }
 
 // copy FDS into public/assets
