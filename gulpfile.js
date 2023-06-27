@@ -24,7 +24,7 @@ function compileSass(exitOnError) {
     .pipe(sourcemaps.write('./'))
     .pipe(rename(path => {
       // E.g. src\main\resources\scss -> src\main\resources\public\assets\static\css
-      path.dirname = path.dirname.replace(/([\/\\])templates([\/\\])docs/, '$1public$1assets$1static$1css');
+      path.dirname = path.dirname.replace(/([\/\\])scss[\/\\]?/, '$1public$1assets$1static$1css');
     }))
     .pipe(gulp.dest('./'))
 }
