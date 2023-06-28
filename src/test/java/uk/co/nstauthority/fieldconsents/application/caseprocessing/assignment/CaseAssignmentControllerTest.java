@@ -15,10 +15,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_ASSIGN_OWNERSHIP;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentTestUtil.CASE_OFFICER_ASSIGNMENT_CANDIDATES;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentTestUtil.CASE_OFFICER_ASSIGNMENT_CANDIDATES_MAP;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentTestUtil.ENERGY_PORTAL_USER_1;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentTestUtil.SERVICE_USER_DETAIL_USER_1;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.CASE_OFFICER_ASSIGNMENT_CANDIDATES;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.CASE_OFFICER_ASSIGNMENT_CANDIDATES_MAP;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.ENERGY_PORTAL_USER_1;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.SERVICE_USER_DETAIL_USER_1;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.notificationBanner;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
@@ -44,6 +44,7 @@ import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserServic
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
 
 @ContextConfiguration(classes = CaseAssignmentController.class)
 class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
@@ -61,6 +62,9 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
 
   @MockBean
   private EnergyPortalUserService energyPortalUserService;
+
+  @MockBean
+  private TeamMemberViewService teamMemberViewService;
 
   @SecurityTest
   void getCaseAssignment_noUser() throws Exception {
@@ -120,6 +124,8 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(DUMMY_APP_REF);
     when(caseAssignmentService.getCaseOfficerAssignmentCandidates(applicationVersion, user))
         .thenReturn(CASE_OFFICER_ASSIGNMENT_CANDIDATES);
+    when(teamMemberViewService.getUsersMap(CASE_OFFICER_ASSIGNMENT_CANDIDATES))
+        .thenReturn(CASE_OFFICER_ASSIGNMENT_CANDIDATES_MAP);
 
     mockMvc.perform(get(ReverseRouter.route(on(CaseAssignmentController.class)
             .getCaseAssignment(APPLICATION_ID, null)))
@@ -190,6 +196,8 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(DUMMY_APP_REF);
     when(caseAssignmentService.getCaseOfficerAssignmentCandidates(applicationVersion, user))
         .thenReturn(CASE_OFFICER_ASSIGNMENT_CANDIDATES);
+    when(teamMemberViewService.getUsersMap(CASE_OFFICER_ASSIGNMENT_CANDIDATES))
+        .thenReturn(CASE_OFFICER_ASSIGNMENT_CANDIDATES_MAP);
 
     mockMvc.perform(
             post(ReverseRouter.route(on(CaseAssignmentController.class)

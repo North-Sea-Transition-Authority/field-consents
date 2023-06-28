@@ -7,8 +7,10 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_WITHDRAWAL_RESPONSE;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CHANGE_ACE_STATUS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_WITHDRAWAL_REQUEST;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEW_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_TECHNICAL_REVIEW_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_WITHDRAWAL_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.WITHDRAWAL_OPEN;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ASSIGN_FCS_APPLICATIONS;
@@ -46,6 +48,7 @@ public class CaseProcessingActionService {
               CHANGE_ACE_STATUS,
               CASE_OFFICER_RELEASE_OWNERSHIP,
               CASE_OFFICER_WITHDRAWAL_RESPONSE,
+              TECHNICAL_REVIEW_REQUEST,
               CASE_OFFICER_ASSIGN_OWNERSHIP,
               CASE_OFFICER_REASSIGN_OWNERSHIP,
               OPERATOR_WITHDRAWAL_REQUEST)
@@ -57,6 +60,7 @@ public class CaseProcessingActionService {
           CHANGE_ACE_STATUS, EnumSet.of(PROCESS_FCS_APPLICATIONS),
           CASE_OFFICER_RELEASE_OWNERSHIP, EnumSet.of(PROCESS_FCS_APPLICATIONS),
           CASE_OFFICER_WITHDRAWAL_RESPONSE, EnumSet.of(PROCESS_FCS_APPLICATIONS),
+          TECHNICAL_REVIEW_REQUEST, EnumSet.of(PROCESS_FCS_APPLICATIONS),
           CASE_OFFICER_ASSIGN_OWNERSHIP, EnumSet.of(ASSIGN_FCS_APPLICATIONS),
           CASE_OFFICER_REASSIGN_OWNERSHIP, EnumSet.of(ASSIGN_FCS_APPLICATIONS),
           OPERATOR_WITHDRAWAL_REQUEST, EnumSet.of(EDIT_FCS_APPLICATIONS)
@@ -67,7 +71,8 @@ public class CaseProcessingActionService {
           CASE_OFFICER_TAKE_OWNERSHIP, EnumSet.of(CASE_OFFICER_NOT_ASSIGNED),
           CHANGE_ACE_STATUS, EnumSet.of(CASE_OFFICER_ASSIGNED),
           CASE_OFFICER_RELEASE_OWNERSHIP, EnumSet.of(CASE_OFFICER_ASSIGNED),
-          CASE_OFFICER_WITHDRAWAL_RESPONSE, EnumSet.of(WITHDRAWAL_OPEN),
+          CASE_OFFICER_WITHDRAWAL_RESPONSE, EnumSet.of(CASE_OFFICER_ASSIGNED, WITHDRAWAL_OPEN),
+          TECHNICAL_REVIEW_REQUEST, EnumSet.of(CASE_OFFICER_ASSIGNED, NO_TECHNICAL_REVIEW_OPEN),
           CASE_OFFICER_ASSIGN_OWNERSHIP, EnumSet.of(CASE_OFFICER_NOT_ASSIGNED),
           CASE_OFFICER_REASSIGN_OWNERSHIP, EnumSet.of(CASE_OFFICER_ASSIGNED),
           OPERATOR_WITHDRAWAL_REQUEST, EnumSet.of(NO_WITHDRAWAL_OPEN)
@@ -95,8 +100,8 @@ public class CaseProcessingActionService {
     return actions.stream()
         // filter actions that the user has permissions for
         .filter(action -> CollectionUtils.containsAny(actionsToPermissions.get(action), userRolePermissions))
-        // filter actions that the application version has status flag for
-        .filter(action -> CollectionUtils.containsAny(actionsToStatusFlags.get(action), caseStatusFlags))
+        // filter actions that the application version has all the status flags for
+        .filter(action -> caseStatusFlags.containsAll(actionsToStatusFlags.get(action)))
         .toList();
   }
 

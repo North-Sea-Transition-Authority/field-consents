@@ -1,7 +1,9 @@
 package uk.co.nstauthority.fieldconsents.formatting;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.Period;
 import java.time.YearMonth;
@@ -20,6 +22,10 @@ public class DateUtils {
   public static final String DATE_TIME = "d MMM yyyy HH:mm";
 
   public static final String LONG_MONTH_YEAR = "MMMM yyyy";
+
+  public static final String DATE_PICKER_FORMAT = "dd/MM/yyyy";
+
+  public static final String DATE_PICKER_WITH_TIME_FORMAT = DATE_PICKER_FORMAT + " H:m";
 
   private DateUtils() {
     throw new IllegalStateException("Utility class");
@@ -91,4 +97,35 @@ public class DateUtils {
     }
   }
 
+
+  public static LocalDate datePickerStringToDate(String dateStr) {
+    return LocalDate.parse(dateStr, DateTimeFormatter.ofPattern(DATE_PICKER_FORMAT));
+  }
+
+  public static String constructDatePickerWithTimeString(String dateStr, String hoursStr, String minutesStr) {
+    return "%s %s:%s".formatted(dateStr, hoursStr, minutesStr);
+  }
+
+  public static LocalDateTime datePickerWithTimeStringToDateTime(String dateStr, String hoursStr, String minutesStr) {
+    var dateTimeStr = constructDatePickerWithTimeString(dateStr, hoursStr, minutesStr);
+    return datePickerWithTimeStringToDateTime(dateTimeStr);
+  }
+
+  public static LocalDateTime datePickerWithTimeStringToDateTime(String dateTimeStr) {
+    return LocalDateTime.parse(dateTimeStr, DateTimeFormatter.ofPattern(DATE_PICKER_WITH_TIME_FORMAT));
+  }
+
+  public static Instant datePickerWithTimeStringToInstant(String dateStr,
+                                                          String hoursStr,
+                                                          String minutesStr,
+                                                          Clock clock) {
+    var dateTimeStr = constructDatePickerWithTimeString(dateStr, hoursStr, minutesStr);
+    return datePickerWithTimeStringToInstant(dateTimeStr, clock);
+  }
+
+  public static Instant datePickerWithTimeStringToInstant(String dateTimeStr,
+                                                          Clock clock) {
+    var zoneOffset = ZoneId.systemDefault().getRules().getOffset(clock.instant());
+    return datePickerWithTimeStringToDateTime(dateTimeStr).toInstant(zoneOffset);
+  }
 }

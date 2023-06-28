@@ -4,6 +4,7 @@ import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePe
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.GRANT_ROLES;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.MANAGE_INDUSTRY_TEAMS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_CONSENTS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_PERMISSIONS;
@@ -30,7 +31,7 @@ public enum RegulatorTeamRole implements TeamRole {
   ),
   CASE_OFFICER(
       "Case officer",
-      "Can process applications and run consultations",
+      "Can process applications and run technical reviews and consultations",
       30,
       EnumSet.of(
           PROCESS_FCS_APPLICATIONS,
@@ -48,10 +49,20 @@ public enum RegulatorTeamRole implements TeamRole {
           VIEW_FCS_CONSENTS
       )
   ),
+  TECHNICAL_REVIEWER(
+      "Technical reviewer",
+      "Can perform technical reviews and view all applications and consents",
+      50,
+      EnumSet.of(
+          TECHNICAL_REVIEW_FCS_APPLICATIONS,
+          VIEW_FCS_APPLICATIONS,
+          VIEW_FCS_CONSENTS
+      )
+  ),
   VIEWER(
       "Viewer",
       "Can view all applications and consents",
-      50,
+      60,
       VIEW_PERMISSIONS
   );
 

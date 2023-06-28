@@ -5,6 +5,7 @@ import static uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlag
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_ASSETS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_FLAGS;
+import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_TECHNICAL_REVIEWS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_VERSIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_WITHDRAWALS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_WORK_AREA_PRIORITIES;
@@ -16,6 +17,7 @@ import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.WithdrawalStatus;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup;
 
@@ -62,7 +64,8 @@ class WorkAreaItemDtoRepository {
             APPLICATION_VERSIONS.SUBMITTED_BY_WUA_ID,
             APPLICATION_FLAGS.FLAG_VALUE.as("aceFlag"),
             APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID,
-            APPLICATION_WITHDRAWALS.WITHDRAWAL_STATUS.isNotNull()
+            APPLICATION_WITHDRAWALS.WITHDRAWAL_STATUS.isNotNull(),
+            APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEWER_WUA_ID
         )
         .from(APPLICATIONS)
         .join(APPLICATION_VERSIONS).onKey(APPLICATION_VERSIONS.APPLICATION_ID)
@@ -77,6 +80,8 @@ class WorkAreaItemDtoRepository {
             .and(APPLICATION_WORK_AREA_PRIORITIES.WORK_AREA_PRIORITY_GROUP.eq(applicationWorkAreaPriorityGroup.name()))
         .leftJoin(APPLICATION_WITHDRAWALS).onKey(APPLICATION_WITHDRAWALS.APPLICATION_VERSION_ID)
             .and(APPLICATION_WITHDRAWALS.WITHDRAWAL_STATUS.eq(WithdrawalStatus.OPEN.name()))
+        .leftJoin(APPLICATION_TECHNICAL_REVIEWS).onKey(APPLICATION_TECHNICAL_REVIEWS.APPLICATION_VERSION_ID)
+            .and(APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEW_STATUS.eq(TechnicalReviewStatus.OPEN.name()))
         .where(APPLICATION_VERSIONS.ID.in(detailsSubQuery))
         .orderBy(greatest(
             // if the work area priority date is not set for the priority group then fallback to the other dates

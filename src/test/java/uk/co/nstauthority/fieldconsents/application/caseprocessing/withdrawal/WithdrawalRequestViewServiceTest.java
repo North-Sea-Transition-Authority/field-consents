@@ -3,7 +3,7 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentTestUtil.ENERGY_PORTAL_USER_1;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.ENERGY_PORTAL_USER_1;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalTestUtil.DUMMY_APP_REF;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalTestUtil.getOpenApplicationWithdrawal;
 

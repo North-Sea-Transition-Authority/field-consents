@@ -14,6 +14,7 @@ import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePe
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaFormService.FIELD_LOOKUP_PURPOSE;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaService.ALL_ORG_UNITS_WORK_AREA_PURPOSE;
+import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTestUtil.TECHNICAL_REVIEWER_WUA_ID;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -99,6 +100,8 @@ class WorkAreaServiceTest {
 
   private EnergyPortalUserDto caseOfficer;
 
+  private EnergyPortalUserDto technicalReviewer;
+
   @BeforeEach
   void setUp() {
     user = ServiceUserDetailTestUtil.Builder().build();
@@ -118,6 +121,9 @@ class WorkAreaServiceTest {
     submitter = EnergyPortalUserDtoTestUtil.Builder().build();
     caseOfficer = EnergyPortalUserDtoTestUtil.Builder()
         .withWebUserAccountId(CASE_OFFICER_WUA_ID)
+        .build();
+    technicalReviewer = EnergyPortalUserDtoTestUtil.Builder()
+        .withWebUserAccountId(TECHNICAL_REVIEWER_WUA_ID)
         .build();
   }
 
@@ -192,11 +198,12 @@ class WorkAreaServiceTest {
     var workAreaItems = workAreaService.getRegulatorWorkAreaItems(filter, user, WorkAreaTab.MY_APPLICATIONS);
 
     assertThat(workAreaItems).hasSize(1);
-    assertThat(workAreaItems.stream().toList().get(0)).usingRecursiveComparison().isEqualTo(WorkAreaTestUtil.getWorkAreaItemFromDto(workAreaItemDto));
+    assertThat(workAreaItems.stream().toList().get(0)).usingRecursiveComparison()
+        .isEqualTo(WorkAreaTestUtil.getWorkAreaItemFromDto(workAreaItemDto, WorkAreaGroup.REGULATOR));
   }
 
   @Test
-  void getWorkAreaItems_forRegulator_withCaseAssigned() {
+  void getWorkAreaItems_forRegulator_withCaseAssignedAndTechnicalReviewer() {
     when(workAreaFilterService.getConditions(filter, user, WorkAreaTab.MY_APPLICATIONS)).thenReturn(new ArrayList<>());
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, Set.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS))).thenReturn(
         List.of(regulatorTeam));
@@ -204,8 +211,13 @@ class WorkAreaServiceTest {
     when(workAreaItemDtoRepository.runQuery(any(), any())).thenReturn(List.of(workAreaItemDto));
     when(organisationUnitService.getOrganisationUnitsByIds(List.of(PRIMARY_OPERATOR_OU_ID_1), ALL_ORG_UNITS_WORK_AREA_PURPOSE))
         .thenReturn(List.of(field1JsonWithOperator.getOperatorJson()));
-    var portalUserWuaIdList = List.of(new WebUserAccountId(workAreaItemDto.submittedByWuaId()), new WebUserAccountId(workAreaItemDto.caseOfficerWuaId()));
-    when(energyPortalUserService.findByWuaIds(portalUserWuaIdList)).thenReturn(List.of(submitter, caseOfficer));
+    var portalUserWuaIdList = List.of(
+        WebUserAccountId.from(workAreaItemDto.submittedByWuaId()),
+        WebUserAccountId.from(workAreaItemDto.caseOfficerWuaId()),
+        WebUserAccountId.from(workAreaItemDto.technicalReviewerWuaId())
+    );
+    when(energyPortalUserService.findByWuaIds(portalUserWuaIdList))
+        .thenReturn(List.of(submitter, caseOfficer, technicalReviewer));
     when(applicationVersionService.getApplicationVersionById(workAreaItemDto.applicationVersionId())).thenReturn(
         ventVersionSubmitted);
     doCallRealMethod().when(applicationService).generateApplicationReference(ventVersionSubmitted);
@@ -213,7 +225,9 @@ class WorkAreaServiceTest {
     var workAreaItems = workAreaService.getRegulatorWorkAreaItems(filter, user, WorkAreaTab.MY_APPLICATIONS);
 
     assertThat(workAreaItems).hasSize(1);
-    assertThat(workAreaItems.stream().toList().get(0)).usingRecursiveComparison().isEqualTo(WorkAreaTestUtil.getWorkAreaItemFromDto(workAreaItemDto));
+    assertThat(workAreaItems.stream().toList().get(0))
+        .usingRecursiveComparison()
+        .isEqualTo(WorkAreaTestUtil.getWorkAreaItemFromDto(workAreaItemDto, WorkAreaGroup.REGULATOR));
   }
 
   @Test
@@ -227,7 +241,9 @@ class WorkAreaServiceTest {
     var workAreaItems = workAreaService.getIndustryWorkAreaItems(filter, user);
 
     assertThat(workAreaItems).hasSize(1);
-    assertThat(workAreaItems.stream().toList().get(0)).usingRecursiveComparison().isEqualTo(WorkAreaTestUtil.getWorkAreaItemFromDto(workAreaItemDto));
+    assertThat(workAreaItems.stream().toList().get(0))
+        .usingRecursiveComparison()
+        .isEqualTo(WorkAreaTestUtil.getWorkAreaItemFromDto(workAreaItemDto, WorkAreaGroup.INDUSTRY));
   }
 
   @Test
@@ -241,7 +257,9 @@ class WorkAreaServiceTest {
     var workAreaItems = workAreaService.getIndustryWorkAreaItems(filter, user);
 
     assertThat(workAreaItems).hasSize(1);
-    assertThat(workAreaItems.stream().toList().get(0)).usingRecursiveComparison().isEqualTo(WorkAreaTestUtil.getWorkAreaItemFromDto(workAreaItemDto));
+    assertThat(workAreaItems.stream().toList().get(0))
+        .usingRecursiveComparison()
+        .isEqualTo(WorkAreaTestUtil.getWorkAreaItemFromDto(workAreaItemDto, WorkAreaGroup.INDUSTRY));
   }
 
   @Test
@@ -259,7 +277,9 @@ class WorkAreaServiceTest {
     var workAreaItems = workAreaService.getIndustryWorkAreaItems(filter, user);
 
     assertThat(workAreaItems).hasSize(1);
-    assertThat(workAreaItems.stream().toList().get(0)).usingRecursiveComparison().isEqualTo(WorkAreaTestUtil.getWorkAreaItemFromDto(workAreaItemDto));
+    assertThat(workAreaItems.stream().toList().get(0))
+        .usingRecursiveComparison()
+        .isEqualTo(WorkAreaTestUtil.getWorkAreaItemFromDto(workAreaItemDto, WorkAreaGroup.INDUSTRY));
   }
 
   @Test
@@ -277,7 +297,9 @@ class WorkAreaServiceTest {
     var workAreaItems = workAreaService.getIndustryWorkAreaItems(filter, user);
 
     assertThat(workAreaItems).hasSize(1);
-    assertThat(workAreaItems.stream().toList().get(0)).usingRecursiveComparison().isEqualTo(WorkAreaTestUtil.getWorkAreaItemFromDto(workAreaItemDto));
+    assertThat(workAreaItems.stream().toList().get(0))
+        .usingRecursiveComparison()
+        .isEqualTo(WorkAreaTestUtil.getWorkAreaItemFromDto(workAreaItemDto, WorkAreaGroup.INDUSTRY));
   }
 
   @Test
@@ -295,7 +317,9 @@ class WorkAreaServiceTest {
     var workAreaItems = workAreaService.getIndustryWorkAreaItems(filter, user);
 
     assertThat(workAreaItems).hasSize(1);
-    assertThat(workAreaItems.stream().toList().get(0)).usingRecursiveComparison().isEqualTo(WorkAreaTestUtil.getWorkAreaItemFromDto(workAreaItemDto));
+    assertThat(workAreaItems.stream().toList().get(0))
+        .usingRecursiveComparison()
+        .isEqualTo(WorkAreaTestUtil.getWorkAreaItemFromDto(workAreaItemDto, WorkAreaGroup.INDUSTRY));
   }
 
   @Test

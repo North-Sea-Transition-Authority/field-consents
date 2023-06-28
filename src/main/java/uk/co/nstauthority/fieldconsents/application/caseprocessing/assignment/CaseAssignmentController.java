@@ -26,8 +26,7 @@ import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberView;
-import uk.co.nstauthority.fieldconsents.util.StreamUtils;
+import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
 
 @Controller
 @RequestMapping("applications/{applicationId}")
@@ -44,17 +43,21 @@ public class CaseAssignmentController {
 
   private final EnergyPortalUserService energyPortalUserService;
 
+  private final TeamMemberViewService teamMemberViewService;
+
   @Autowired
   CaseAssignmentController(ApplicationService applicationService,
                            ApplicationVersionService applicationVersionService,
                            CaseAssignmentService caseAssignmentService,
                            CaseAssignmentFormValidator caseAssignmentFormValidator,
-                           EnergyPortalUserService energyPortalUserService) {
+                           EnergyPortalUserService energyPortalUserService,
+                           TeamMemberViewService teamMemberViewService) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.caseAssignmentService = caseAssignmentService;
     this.caseAssignmentFormValidator = caseAssignmentFormValidator;
     this.energyPortalUserService = energyPortalUserService;
+    this.teamMemberViewService = teamMemberViewService;
   }
 
   @GetMapping("assign")
@@ -72,12 +75,8 @@ public class CaseAssignmentController {
     var pageTitle = applicationService.generateApplicationReference(applicationVersion);
     var applicationId = applicationVersion.getApplication().getId();
 
-    var caseOfficerAssignmentCandidatesMap =
-        caseAssignmentService.getCaseOfficerAssignmentCandidates(applicationVersion, user)
-            .stream()
-            .collect(StreamUtils.toLinkedHashMap(
-                teamMemberView -> teamMemberView.wuaId().toString(),
-                TeamMemberView::getDisplayName));
+    var caseOfficerAssignmentCandidatesMap = teamMemberViewService
+        .getUsersMap(caseAssignmentService.getCaseOfficerAssignmentCandidates(applicationVersion, user));
 
     return new ModelAndView("fcs/application/caseAssignment")
         .addObject("pageTitle", pageTitle)

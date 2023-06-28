@@ -2,9 +2,16 @@ package uk.co.nstauthority.fieldconsents.teams;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.entry;
 import static org.assertj.core.api.AssertionsForClassTypes.tuple;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.ACCESS_MANGER_TEAM_MEMBER_VIEW;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.CASE_OFFICER_TEAM_MEMBER_VIEW_1;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.CASE_OFFICER_TEAM_MEMBER_VIEW_2;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.TECHNICAL_REVIEWER_TEAM_MEMBER_VIEW_1;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.TECHNICAL_REVIEWER_TEAM_MEMBER_VIEW_2;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.VIEWER_TEAM_MEMBER_VIEW;
 
 import java.util.Collections;
 import java.util.List;
@@ -15,6 +22,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
@@ -208,6 +216,39 @@ class TeamMemberViewServiceTest {
             "Did not find an Energy Portal User with WUA ID %s when converting team members"
             .formatted(teamMember.wuaId())
         );
+  }
+
+  @Test
+  void getUsersMap_many() {
+    assertThat(teamMemberViewService.getUsersMap(AssignmentTestUtil.TEAM_MEMBER_VIEW_LIST))
+        .containsOnly(
+            entry(CASE_OFFICER_TEAM_MEMBER_VIEW_1.wuaId().toString(),
+                CASE_OFFICER_TEAM_MEMBER_VIEW_1.getDisplayName()),
+            entry(VIEWER_TEAM_MEMBER_VIEW.wuaId().toString(),
+                VIEWER_TEAM_MEMBER_VIEW.getDisplayName()),
+            entry(CASE_OFFICER_TEAM_MEMBER_VIEW_2.wuaId().toString(),
+                CASE_OFFICER_TEAM_MEMBER_VIEW_2.getDisplayName()),
+            entry(ACCESS_MANGER_TEAM_MEMBER_VIEW.wuaId().toString(),
+                ACCESS_MANGER_TEAM_MEMBER_VIEW.getDisplayName()),
+            entry(TECHNICAL_REVIEWER_TEAM_MEMBER_VIEW_1.wuaId().toString(),
+                TECHNICAL_REVIEWER_TEAM_MEMBER_VIEW_1.getDisplayName()),
+            entry(TECHNICAL_REVIEWER_TEAM_MEMBER_VIEW_2.wuaId().toString(),
+                TECHNICAL_REVIEWER_TEAM_MEMBER_VIEW_2.getDisplayName())
+        );
+  }
+
+  @Test
+  void getUsersMap_one() {
+    assertThat(teamMemberViewService.getUsersMap(List.of(CASE_OFFICER_TEAM_MEMBER_VIEW_1)))
+        .containsOnly(
+            entry(CASE_OFFICER_TEAM_MEMBER_VIEW_1.wuaId().toString(), CASE_OFFICER_TEAM_MEMBER_VIEW_1.getDisplayName())
+        );
+  }
+
+  @Test
+  void getUsersMap_none() {
+    assertThat(teamMemberViewService.getUsersMap(Collections.emptyList()))
+        .isEmpty();
   }
 
   enum TestTeamRole implements TeamRole {

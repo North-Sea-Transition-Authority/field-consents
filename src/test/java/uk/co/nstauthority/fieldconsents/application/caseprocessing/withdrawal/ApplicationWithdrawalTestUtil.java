@@ -1,6 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal;
 
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentTestUtil.ENERGY_PORTAL_USER_1;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.ENERGY_PORTAL_USER_1;
 
 import java.time.Instant;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;

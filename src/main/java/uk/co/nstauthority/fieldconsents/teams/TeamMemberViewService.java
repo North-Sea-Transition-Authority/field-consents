@@ -14,6 +14,7 @@ import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.TeamRole;
+import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 
 @Service
 public class TeamMemberViewService {
@@ -91,4 +92,11 @@ public class TeamMemberViewService {
     }
   }
 
+  public Map<String, String> getUsersMap(List<TeamMemberView> teamMemberViews) {
+    return teamMemberViews
+        .stream()
+        .collect(StreamUtils.toLinkedHashMap(
+            teamMemberView -> teamMemberView.wuaId().toString(),
+            TeamMemberView::getDisplayName));
+  }
 }

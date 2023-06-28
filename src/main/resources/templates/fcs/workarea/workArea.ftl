@@ -146,7 +146,7 @@
           ${workAreaItem.asset()} <br/> ${workAreaItem.geographicArea()}
         </#assign>
         <#assign status>
-            ${workAreaItem.status()} <br/> ${workAreaItem.caseOfficer()}
+            ${workAreaItem.status()} <br/> ${workAreaItem.caseOfficer()} <br/> ${workAreaItem.technicalReviewer()}
         </#assign>
         <#assign otherInformation>
           ${workAreaItem.submittedDateTime()} <br/> ${workAreaItem.submittedBy()}

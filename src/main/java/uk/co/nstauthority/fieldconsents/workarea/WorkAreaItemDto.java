@@ -29,6 +29,7 @@ public record WorkAreaItemDto(
     Long submittedByWuaId,
     Boolean aceFlag,
     Long caseOfficerWuaId,
-    Boolean withdrawalOpen
+    Boolean withdrawalOpen,
+    Long technicalReviewerWuaId
 ) {
 }

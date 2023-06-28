@@ -33,6 +33,8 @@ public class WorkAreaTestUtil {
 
   private static final String SUBMITTED_DATE_TIME = "1 Oct 2022 12:00";
 
+  static final Long TECHNICAL_REVIEWER_WUA_ID = 99L;
+
   public static WorkAreaItemDto getWorkAreaItemDtoForAnnualProductionInProgressForField() {
     return new WorkAreaItemDto(
         APPLICATION_ID,
@@ -57,7 +59,8 @@ public class WorkAreaTestUtil {
         null,
         null,
         null,
-        false
+        false,
+        null
     );
   }
 
@@ -85,7 +88,8 @@ public class WorkAreaTestUtil {
         null,
         null,
         null,
-        false
+        false,
+        TECHNICAL_REVIEWER_WUA_ID
     );
   }
 
@@ -113,7 +117,8 @@ public class WorkAreaTestUtil {
         USER_WUA_ID,
         null,
         null,
-        false
+        false,
+        null
     );
   }
 
@@ -141,7 +146,8 @@ public class WorkAreaTestUtil {
         USER_WUA_ID,
         null,
         CASE_OFFICER_WUA_ID,
-        false
+        false,
+        TECHNICAL_REVIEWER_WUA_ID
     );
   }
 
@@ -169,7 +175,8 @@ public class WorkAreaTestUtil {
         USER_WUA_ID,
         null,
         null,
-        false
+        false,
+        null
     );
   }
 
@@ -197,11 +204,12 @@ public class WorkAreaTestUtil {
         USER_WUA_ID,
         null,
         null,
-        true
+        true,
+        null
     );
   }
 
-  static WorkAreaItem getWorkAreaItemFromDto(WorkAreaItemDto workAreaItemDto) {
+  static WorkAreaItem getWorkAreaItemFromDto(WorkAreaItemDto workAreaItemDto, WorkAreaGroup workAreaGroup) {
     return new WorkAreaItem(
         workAreaItemDto.applicationId(),
         workAreaItemDto.type().getDisplayName(),
@@ -215,7 +223,8 @@ public class WorkAreaTestUtil {
         getSubmitter(workAreaItemDto),
         getAceFlag(workAreaItemDto),
         getCaseOfficer(workAreaItemDto),
-        getOpenWithdrawalRequest(workAreaItemDto)
+        getOpenWithdrawalRequest(workAreaItemDto),
+        getTechnicalReviewer(workAreaItemDto, workAreaGroup)
     );
   }
 
@@ -283,7 +292,7 @@ public class WorkAreaTestUtil {
   private static String getCaseOfficer(WorkAreaItemDto workAreaItemDto) {
     if (workAreaItemDto.caseOfficerWuaId() != null) {
       var caseOfficer = EnergyPortalUserDtoTestUtil.Builder().build();
-      return "Case Officer: %s".formatted(caseOfficer.displayName());
+      return "Case officer: %s".formatted(caseOfficer.displayName());
     }
 
     return "";
@@ -292,6 +301,18 @@ public class WorkAreaTestUtil {
   private static Boolean getOpenWithdrawalRequest(WorkAreaItemDto workAreaItemDto) {
     return ApplicationVersionStatus.SUBMITTED.equals(workAreaItemDto.status())
         && workAreaItemDto.withdrawalOpen();
+  }
+
+  private static String getTechnicalReviewer(WorkAreaItemDto workAreaItemDto, WorkAreaGroup workAreaGroup) {
+    if (workAreaItemDto.technicalReviewerWuaId() != null
+        && WorkAreaGroup.REGULATOR.equals(workAreaGroup)) {
+      var technicalReviewer = EnergyPortalUserDtoTestUtil.Builder()
+          .withWebUserAccountId(workAreaItemDto.technicalReviewerWuaId())
+          .build();
+      return "Technical reviewer: %s".formatted(technicalReviewer.displayName());
+    }
+
+    return "";
   }
 
   private static String getCaseReference(WorkAreaItemDto workAreaItemDto) {
@@ -317,7 +338,8 @@ public class WorkAreaTestUtil {
         String.valueOf(USER_WUA_ID),
         "",
         "",
-        false
+        false,
+        ""
     );
   }
 }

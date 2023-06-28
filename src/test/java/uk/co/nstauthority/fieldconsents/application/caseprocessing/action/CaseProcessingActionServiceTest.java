@@ -3,6 +3,10 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.action;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_RELEASE_OWNERSHIP;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_WITHDRAWAL_RESPONSE;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CHANGE_ACE_STATUS;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEW_REQUEST;
 
 import java.util.Collections;
 import java.util.EnumSet;
@@ -255,24 +259,35 @@ class CaseProcessingActionServiceTest {
   }
 
   @Test
-  void getUserActionViews_whenCaseOfficerUser_andOpenWithdrawal_thenCanRespondToCaseWithdrawal() {
+  void getUserActionViews_canRespondToCaseWithdrawalAndStartTechnicalReview() {
     when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .thenReturn(CASE_OFFICER_PERMISSIONS);
     when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(CaseStatusFlag.WITHDRAWAL_OPEN));
+        .thenReturn(Set.of(
+            CaseStatusFlag.CASE_OFFICER_ASSIGNED,
+            CaseStatusFlag.WITHDRAWAL_OPEN,
+            CaseStatusFlag.NO_TECHNICAL_REVIEW_OPEN
+        ));
 
     var actionViews = caseProcessingActionService.getUserActionViews(applicationVersion, USER);
 
-    assertThat(actionViews).hasSize(1);
+    assertThat(actionViews).hasSize(4);
 
     assertThat(actionViews.get(0))
         .usingRecursiveComparison()
-        .isEqualTo(
-            CaseProcessingActionView.from(
-                CaseProcessingActionItem.CASE_OFFICER_WITHDRAWAL_RESPONSE,
-                applicationVersion
-            )
-        );
+        .isEqualTo(CaseProcessingActionView.from(CHANGE_ACE_STATUS, applicationVersion));
+
+    assertThat(actionViews.get(1))
+        .usingRecursiveComparison()
+        .isEqualTo(CaseProcessingActionView.from(CASE_OFFICER_RELEASE_OWNERSHIP, applicationVersion));
+
+    assertThat(actionViews.get(2))
+        .usingRecursiveComparison()
+        .isEqualTo(CaseProcessingActionView.from(CASE_OFFICER_WITHDRAWAL_RESPONSE, applicationVersion));
+
+    assertThat(actionViews.get(3))
+        .usingRecursiveComparison()
+        .isEqualTo(CaseProcessingActionView.from(TECHNICAL_REVIEW_REQUEST, applicationVersion));
   }
 
   @Test

@@ -7,13 +7,20 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeParseException;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class DateUtilsTest {
 
@@ -26,6 +33,8 @@ class DateUtilsTest {
   private static final LocalDateTime FIRST_DATE_TIME = LocalDateTime.of(2022, Month.OCTOBER, 1, 12, 0);
 
   private static final ZonedDateTime FIRST_ZONED_DATE_TIME = FIRST_DATE_TIME.atZone(ZoneId.systemDefault());
+
+  private final Clock clock = Clock.systemDefaultZone();
 
   @Test
   void format_shortDate() {
@@ -143,4 +152,177 @@ class DateUtilsTest {
         .hasMessage("The start date 2022-10-01 and end date 2023-10-20 should be in the same month and year");
   }
 
+  @ParameterizedTest
+  @MethodSource("getInvalidDatePickerDateStrings")
+  void datePickerStringToDate_invalid(String dateStr) {
+    assertThatThrownBy(() -> DateUtils.datePickerStringToDate(dateStr))
+        .isInstanceOf(DateTimeParseException.class);
+  }
+
+  private static Stream<Arguments> getInvalidDatePickerDateStrings() {
+    return Stream.of(
+        Arguments.of("ab/11/2023"),
+        Arguments.of("01/ab/2023"),
+        Arguments.of("01/11/abcd"),
+        Arguments.of("32/11/2023"),
+        Arguments.of("01.11.2023"),
+        Arguments.of("01112023"),
+        Arguments.of("01-11-2023")
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource("getValidDatePickerDateElements")
+  void datePickerStringToDate_valid(int day, int month, int year) {
+    assertThat(DateUtils.datePickerStringToDate(
+        String.format("%02d", day) + "/" +
+            String.format("%02d", month) + "/" +
+            String.format("%04d", year)))
+        .isEqualTo(LocalDate.of(year, month, day));
+  }
+
+  private static Stream<Arguments> getValidDatePickerDateElements() {
+    return Stream.of(
+        Arguments.of(1, 2, 2023),
+        Arguments.of(11, 12, 23),
+        Arguments.of(23, 9, 1),
+        Arguments.of(30, 12, 230),
+        Arguments.of(1, 1, 1),
+        Arguments.of(1, 1, 2023),
+        Arguments.of(31, 12, 2023)
+    );
+  }
+
+  @Test
+  void constructDatePickerWithTimeString() {
+    var dateStr = "01/02/2023";
+    var hoursStr = "12";
+    var minutesStr = "59";
+    assertThat(DateUtils.constructDatePickerWithTimeString(dateStr, hoursStr, minutesStr))
+        .isEqualTo(dateStr + " " + hoursStr + ":" + minutesStr);
+  }
+
+  @ParameterizedTest
+  @MethodSource("getInvalidDatePickerWithTimeStrings")
+  void datePickerWithTimeStringToDateTime_invalid(String dateTimeStr) {
+    assertThatThrownBy(() -> DateUtils.datePickerWithTimeStringToDateTime(dateTimeStr))
+        .isInstanceOf(DateTimeParseException.class);
+  }
+
+  private static Stream<Arguments> getInvalidDatePickerWithTimeStrings() {
+    return Stream.of(
+        Arguments.of("ab/11/2023 1212"),
+        Arguments.of("01/ab/2023 12:12"),
+        Arguments.of("01/11/abcd 12:1c"),
+        Arguments.of("32/11/202312:12"),
+        Arguments.of("01.11.2023 12:12"),
+        Arguments.of("01112023 12:12"),
+        Arguments.of("01-11-2023 12:12"),
+        Arguments.of("01/11/2023 12:61"),
+        Arguments.of("01/11/2023 25:15")
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource("getValidDatePickerWithTimeElements")
+  void datePickerWithTimeStringToDateTime_valid(int day, int month, int year, int hours, int minutes) {
+    assertThat(DateUtils.datePickerWithTimeStringToDateTime(
+        String.format("%02d", day) + "/" +
+            String.format("%02d", month) + "/" +
+            String.format("%04d", year) + " " +
+            hours + ":" + minutes))
+        .isEqualTo(LocalDateTime.of(year, month, day, hours, minutes));
+  }
+
+  private static Stream<Arguments> getValidDatePickerWithTimeElements() {
+    return Stream.of(
+        Arguments.of(1, 2, 2023, 0, 0),
+        Arguments.of(11, 12, 23, 23, 59),
+        Arguments.of(23, 9, 1, 1, 1),
+        Arguments.of(30, 12, 230, 10, 10),
+        Arguments.of(1, 1, 1, 20, 50),
+        Arguments.of(1, 1, 2023, 23, 0),
+        Arguments.of(31, 12, 2023, 10, 0)
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource("getInvalidDatePickerAndTimeStrings")
+  void datePickerWithTimeStringToDateTime_individualStringElements_invalid(String dateStr,
+                                                                          String hoursStr,
+                                                                          String minutesStr) {
+    assertThatThrownBy(() -> DateUtils.datePickerWithTimeStringToDateTime(dateStr, hoursStr, minutesStr))
+        .isInstanceOf(DateTimeParseException.class);
+  }
+
+  private static Stream<Arguments> getInvalidDatePickerAndTimeStrings() {
+    return Stream.of(
+        Arguments.of("ab/11/2023", "12", "12"),
+        Arguments.of("01/ab/2023", "12", "12"),
+        Arguments.of("01/11/abcd", "12", "1c"),
+        Arguments.of("32/11/2023", "12", "12"),
+        Arguments.of("01.11.2023", "12", "12"),
+        Arguments.of("01112023", "12", "12"),
+        Arguments.of("01-11-2023", "12", "12"),
+        Arguments.of("01/11/2023", "12", "61"),
+        Arguments.of("01/11/2023", "25", "15")
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource("getValidDatePickerWithTimeElements")
+  void datePickerWithTimeStringToDateTime_individualStringElements_valid(int day, int month, int year,
+                                                                        int hours,
+                                                                        int minutes) {
+    assertThat(DateUtils.datePickerWithTimeStringToDateTime(
+        String.format("%02d", day) + "/" +
+            String.format("%02d", month) + "/" +
+            String.format("%04d", year),
+            String.valueOf(hours),
+            String.valueOf(minutes)))
+        .isEqualTo(LocalDateTime.of(year, month, day, hours, minutes));
+  }
+
+  @ParameterizedTest
+  @MethodSource("getInvalidDatePickerWithTimeStrings")
+  void datePickerWithTimeStringToInstant_invalid(String dateTimeStr) {
+    assertThatThrownBy(() -> DateUtils.datePickerWithTimeStringToInstant(dateTimeStr, clock))
+        .isInstanceOf(DateTimeParseException.class);
+  }
+
+  @ParameterizedTest
+  @MethodSource("getValidDatePickerWithTimeElements")
+  void datePickerWithTimeStringToInstant_valid(int day, int month, int year, int hours, int minutes) {
+    assertThat(DateUtils.datePickerWithTimeStringToInstant(
+        String.format("%02d", day) + "/" +
+            String.format("%02d", month) + "/" +
+            String.format("%04d", year) + " " +
+            hours + ":" + minutes, clock))
+        .isEqualTo(LocalDateTime.of(year, month, day, hours, minutes)
+            .toInstant(ZoneId.systemDefault().getRules().getOffset(Instant.now())));
+  }
+
+  @ParameterizedTest
+  @MethodSource("getInvalidDatePickerAndTimeStrings")
+  void datePickerWithTimeStringToInstant_individualStringElements_invalid(String dateStr,
+                                                                          String hoursStr,
+                                                                          String minutesStr) {
+    assertThatThrownBy(() -> DateUtils.datePickerWithTimeStringToInstant(dateStr, hoursStr, minutesStr, clock))
+        .isInstanceOf(DateTimeParseException.class);
+  }
+
+  @ParameterizedTest
+  @MethodSource("getValidDatePickerWithTimeElements")
+  void datePickerWithTimeStringToInstant_individualStringElements_valid(int day, int month, int year,
+                                                                        int hours,
+                                                                        int minutes) {
+    assertThat(DateUtils.datePickerWithTimeStringToInstant(
+        String.format("%02d", day) + "/" +
+            String.format("%02d", month) + "/" +
+            String.format("%04d", year),
+            String.valueOf(hours),
+            String.valueOf(minutes), clock))
+        .isEqualTo(LocalDateTime.of(year, month, day, hours, minutes)
+            .toInstant(ZoneId.systemDefault().getRules().getOffset(Instant.now())));
+  }
 }

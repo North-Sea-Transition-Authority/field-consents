@@ -113,7 +113,7 @@ public class WorkAreaService {
     conditions.add(APPLICATION_VERSIONS.PRIMARY_OPERATOR_OU_ID.in(organisationUnitIds));
     var workAreaItemDtoList = workAreaItemDtoRepository.runQuery(conditions, INDUSTRY);
 
-    return getItemsFromDtoList(workAreaItemDtoList, organisationUnitJsons);
+    return getItemsFromDtoList(workAreaItemDtoList, organisationUnitJsons, WorkAreaGroup.INDUSTRY);
   }
 
   public List<WorkAreaItem> getRegulatorWorkAreaItems(WorkAreaFilter filter, ServiceUserDetail user,
@@ -139,11 +139,12 @@ public class WorkAreaService {
             .toList(),
         ALL_ORG_UNITS_WORK_AREA_PURPOSE);
 
-    return getItemsFromDtoList(workAreaItemDtoList, organisationUnitJsons);
+    return getItemsFromDtoList(workAreaItemDtoList, organisationUnitJsons, WorkAreaGroup.REGULATOR);
   }
 
   private List<WorkAreaItem> getItemsFromDtoList(List<WorkAreaItemDto> workAreaItemDtoList,
-                                                 List<OrganisationUnitJson> organisationUnitJsons) {
+                                                 List<OrganisationUnitJson> organisationUnitJsons,
+                                                 WorkAreaGroup workAreaGroup) {
     if (workAreaItemDtoList.isEmpty()) {
       return Collections.emptyList();
     }
@@ -178,9 +179,14 @@ public class WorkAreaService {
         .filter(workAreaItemDto -> workAreaItemDto.caseOfficerWuaId() != null)
         .map(workAreaItemDto -> new WebUserAccountId(workAreaItemDto.caseOfficerWuaId()));
 
+    var technicalReviewerWuaIdsStream = workAreaItemDtoList
+        .stream()
+        .filter(workAreaItemDto -> workAreaItemDto.technicalReviewerWuaId() != null)
+        .map(workAreaItemDto -> new WebUserAccountId(workAreaItemDto.technicalReviewerWuaId()));
+
     var portalUserDtosMap =
         energyPortalUserService.findByWuaIds(
-            Stream.concat(submitterWuaIdsStream, caseOfficerWuaIdsStream)
+            Stream.concat(Stream.concat(submitterWuaIdsStream, caseOfficerWuaIdsStream), technicalReviewerWuaIdsStream)
                 .distinct()
                 .toList()
             )
@@ -207,11 +213,10 @@ public class WorkAreaService {
                 ? getSubmitter(workAreaItemDto, portalUserDtosMap)
                 : "",
             getAceFlag(workAreaItemDto),
-            Objects.nonNull(workAreaItemDto.caseOfficerWuaId())
-                ? getCaseOfficer(workAreaItemDto, portalUserDtosMap)
-                : "",
+            getCaseOfficer(workAreaItemDto, portalUserDtosMap),
             ApplicationVersionStatus.SUBMITTED.equals(workAreaItemDto.status())
-                && workAreaItemDto.withdrawalOpen()
+                && workAreaItemDto.withdrawalOpen(),
+            getTechnicalReviewer(workAreaItemDto, portalUserDtosMap, workAreaGroup)
         ))
         .toList();
   }
@@ -273,9 +278,22 @@ public class WorkAreaService {
     return Boolean.TRUE.equals(workAreaItemDto.aceFlag()) ? "ACE" : "";
   }
 
-  private String getCaseOfficer(WorkAreaItemDto workAreaItemDto, Map<Long, EnergyPortalUserDto> portalUserDtosMap) {
-    var matchingPortalUserDto = portalUserDtosMap.get(workAreaItemDto.caseOfficerWuaId());
-    return "Case Officer: %s".formatted(matchingPortalUserDto.displayName());
+  private String getCaseOfficer(WorkAreaItemDto workAreaItemDto,
+                                Map<Long, EnergyPortalUserDto> portalUserDtosMap) {
+    return Objects.nonNull(workAreaItemDto.caseOfficerWuaId())
+        ? "Case officer: %s".formatted(
+            portalUserDtosMap.get(workAreaItemDto.caseOfficerWuaId()).displayName())
+        : "";
+  }
+
+  private String getTechnicalReviewer(WorkAreaItemDto workAreaItemDto,
+                                      Map<Long, EnergyPortalUserDto> portalUserDtosMap,
+                                      WorkAreaGroup workAreaGroup) {
+    return WorkAreaGroup.REGULATOR.equals(workAreaGroup)
+        && Objects.nonNull(workAreaItemDto.technicalReviewerWuaId())
+        ? "Technical reviewer: %s".formatted(
+            portalUserDtosMap.get(workAreaItemDto.technicalReviewerWuaId()).displayName())
+        : "";
   }
 
   public List<WorkAreaTab> getTabsAvailableToUser(ServiceUserDetail user) {
