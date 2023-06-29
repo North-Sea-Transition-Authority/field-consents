@@ -6,6 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.DOCUMENT_TYPE;
+import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.FILE_DESCRIPTION_1;
+import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.FILE_ID;
+import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.USAGE_TYPE;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,11 +33,6 @@ import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationVersionFileServiceTest {
-
-  private static final UUID FILE_ID = UUID.randomUUID();
-  private static final String FILE_DESCRIPTION = "file description";
-  private static final String DOCUMENT_TYPE = "document-type";
-  private static final String USAGE_TYPE = "ApplicationVersion";
 
   @Mock
   private FileService fileService;
@@ -61,7 +60,7 @@ class ApplicationVersionFileServiceTest {
 
     var form = new UploadedFileForm();
     form.setFileId(FILE_ID);
-    form.setFileDescription(FILE_DESCRIPTION);
+    form.setFileDescription(FILE_DESCRIPTION_1);
     documentForms.add(form);
 
     applicationVersionFileService.saveDocuments(applicationVersion, documentForms, DOCUMENT_TYPE);
@@ -69,7 +68,7 @@ class ApplicationVersionFileServiceTest {
     verify(fileService).updateUsageAndDescription(
         eq(uploadedFile),
         fileUsageFunctionCaptor.capture(),
-        eq(FILE_DESCRIPTION)
+        eq(FILE_DESCRIPTION_1)
     );
     var fileUsage = fileUsageFunctionCaptor.getValue().apply(FileUsage.newBuilder());
     assertThat(fileUsage)
@@ -96,7 +95,7 @@ class ApplicationVersionFileServiceTest {
 
     var form = new UploadedFileForm();
     form.setFileId(FILE_ID);
-    form.setFileDescription(FILE_DESCRIPTION);
+    form.setFileDescription(FILE_DESCRIPTION_1);
     documentForms.add(form);
 
     assertThatThrownBy(

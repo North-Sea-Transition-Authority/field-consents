@@ -1,11 +1,13 @@
 package uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator;
 
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ASSIGN_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_CASE_PROCESSING_DOCUMENTS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.GRANT_ROLES;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.MANAGE_INDUSTRY_TEAMS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_CASE_PROCESSING_DOCUMENTS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_CONSENTS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_PERMISSIONS;
 
@@ -36,7 +38,9 @@ public enum RegulatorTeamRole implements TeamRole {
       EnumSet.of(
           PROCESS_FCS_APPLICATIONS,
           VIEW_FCS_APPLICATIONS,
-          VIEW_FCS_CONSENTS
+          VIEW_FCS_CONSENTS,
+          VIEW_FCS_CASE_PROCESSING_DOCUMENTS,
+          EDIT_FCS_CASE_PROCESSING_DOCUMENTS
       )
   ),
   CASE_MANAGER(
@@ -46,7 +50,9 @@ public enum RegulatorTeamRole implements TeamRole {
       EnumSet.of(
           ASSIGN_FCS_APPLICATIONS,
           VIEW_FCS_APPLICATIONS,
-          VIEW_FCS_CONSENTS
+          VIEW_FCS_CONSENTS,
+          VIEW_FCS_CASE_PROCESSING_DOCUMENTS,
+          EDIT_FCS_CASE_PROCESSING_DOCUMENTS
       )
   ),
   TECHNICAL_REVIEWER(
@@ -56,7 +62,9 @@ public enum RegulatorTeamRole implements TeamRole {
       EnumSet.of(
           TECHNICAL_REVIEW_FCS_APPLICATIONS,
           VIEW_FCS_APPLICATIONS,
-          VIEW_FCS_CONSENTS
+          VIEW_FCS_CONSENTS,
+          VIEW_FCS_CASE_PROCESSING_DOCUMENTS,
+          EDIT_FCS_CASE_PROCESSING_DOCUMENTS
       )
   ),
   VIEWER(

@@ -16,13 +16,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.FILE_ID;
+import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.FILE_NAME_1;
+import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.getFileUploadComponentAttributesWithPath;
+import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.getUploadedFileFormWithDescription;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Stream;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,7 +35,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.util.unit.DataSize;
 import org.springframework.validation.BindingResult;
 import uk.co.fivium.fileuploadlibrary.fds.FileUploadComponentAttributes;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
@@ -71,15 +72,7 @@ class SupportingInformationControllerTest extends AbstractApplicationControllerT
 
   private SupportingInformationForm form;
 
-  private final FileUploadComponentAttributes fileUploadComponentAttributes = FileUploadComponentAttributes.newBuilder()
-      .withPath("form.supportingDocuments")
-      .withMaximumSize(DataSize.ofMegabytes(50))
-      .withUploadUrl("/upload")
-      .withDownloadUrl("/download")
-      .withDeleteUrl("/delete")
-      .withAllowedExtensions(Set.of("csv", "pdf"))
-      .withExistingFiles(Collections.emptyList())
-      .build();
+  private FileUploadComponentAttributes fileUploadComponentAttributes;
 
   @BeforeEach
   void setUp() {
@@ -112,6 +105,7 @@ class SupportingInformationControllerTest extends AbstractApplicationControllerT
     when(supportingInformationService.getSupportingInformationForm(applicationVersion))
         .thenReturn(form);
 
+    fileUploadComponentAttributes = getFileUploadComponentAttributesWithPath("form.supportingDocuments");
     when(supportingInformationDocumentService.fileUploadComponentAttributes(eq(applicationVersion), anyList()))
         .thenReturn(fileUploadComponentAttributes);
 
@@ -189,6 +183,8 @@ class SupportingInformationControllerTest extends AbstractApplicationControllerT
 
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(ApplicationTestUtil.APPLICATION_ID))
         .thenReturn(applicationVersion);
+
+    fileUploadComponentAttributes = getFileUploadComponentAttributesWithPath("form.supportingDocuments");
     when(supportingInformationDocumentService.fileUploadComponentAttributes(eq(applicationVersion), anyList()))
         .thenReturn(fileUploadComponentAttributes);
 
@@ -213,25 +209,23 @@ class SupportingInformationControllerTest extends AbstractApplicationControllerT
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(ApplicationTestUtil.APPLICATION_ID))
         .thenReturn(applicationVersion);
 
+    fileUploadComponentAttributes = getFileUploadComponentAttributesWithPath("form.supportingDocuments");
     when(supportingInformationDocumentService.fileUploadComponentAttributes(eq(applicationVersion), anyList()))
         .thenReturn(fileUploadComponentAttributes);
 
     // when the form is put back into the model and view, it will need to fetch the file name, file size etc.
     // it also gets back the file description, but we want to use the file description that's in the form
     // because it may have been updated as part of this form submission.
-    var fileId = UUID.randomUUID();
-    var persistedFileAsForm = new UploadedFileForm();
-    persistedFileAsForm.setFileId(fileId);
-    persistedFileAsForm.setFileDescription("old description");
+    var persistedFileAsForm = getUploadedFileFormWithDescription(FILE_NAME_1, "old description");
 
-    when(applicationVersionFileService.getUploadedFileForms(Collections.singleton(fileId)))
+    when(applicationVersionFileService.getUploadedFileForms(Collections.singleton(FILE_ID)))
         .thenReturn(Collections.singletonList(persistedFileAsForm));
 
     var modelAndView = mockMvc.perform(post(ReverseRouter.route(on(SupportingInformationController.class)
             .saveSupportingInformation(ApplicationTestUtil.APPLICATION_ID, null, null)))
             .with(user(user))
             .with(csrf())
-            .param("supportingDocuments[0].uploadedFileId", fileId.toString())
+            .param("supportingDocuments[0].uploadedFileId", FILE_ID.toString())
             .param("supportingDocuments[0].uploadedFileInstant", Instant.now().toString())
             .param("supportingDocuments[0].uploadedFileDescription", "new description"))
         .andExpect(status().isOk())

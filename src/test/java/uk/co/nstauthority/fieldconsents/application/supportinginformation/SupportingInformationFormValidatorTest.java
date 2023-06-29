@@ -13,9 +13,9 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ValidationUtils;
-import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
+import uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil;
 import uk.co.nstauthority.fieldconsents.validation.ValidatorTestingUtil;
 
 class SupportingInformationFormValidatorTest {
@@ -93,11 +93,7 @@ class SupportingInformationFormValidatorTest {
     form.setApplicationVersion(productionApplicationVersion);
     form.setNotes("Test notes");
 
-    var fileFormWithDescription = new UploadedFileForm();
-    fileFormWithDescription.setFileDescription("description");
-    var documentForms = List.of(fileFormWithDescription, new UploadedFileForm());
-
-    form.setSupportingDocuments(documentForms);
+    form.setSupportingDocuments(FileUploadTestUtil.documentFormsWithMissingDescription);
 
     ValidationUtils.invokeValidator(validator, form, errors);
 

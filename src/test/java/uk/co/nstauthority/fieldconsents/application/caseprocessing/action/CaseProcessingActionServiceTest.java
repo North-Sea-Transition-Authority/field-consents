@@ -41,6 +41,9 @@ class CaseProcessingActionServiceTest {
   private static final Set<RolePermission> CASE_MANAGER_PERMISSIONS =
       RegulatorTeamRole.CASE_MANAGER.getRolePermissions();
 
+  private static final Set<RolePermission> TECHNICAL_REVIEWER_PERMISSIONS =
+      RegulatorTeamRole.TECHNICAL_REVIEWER.getRolePermissions();
+
   @Mock
   private ApplicationAccessService applicationAccessService;
 
@@ -300,5 +303,80 @@ class CaseProcessingActionServiceTest {
     var actionViews = caseProcessingActionService.getUserActionViews(applicationVersion, USER);
 
     assertThat(actionViews).isEmpty();
+  }
+
+  @Test
+  void getUserActionViews_whenIndustryUser_thenCannotAddCaseNotes() {
+    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
+        .thenReturn(EnumSet.of(RolePermission.EDIT_FCS_APPLICATIONS));
+    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
+        .thenReturn(Set.of());
+
+    var actionViews = caseProcessingActionService.getUserActionViews(applicationVersion, USER);
+
+    assertThat(actionViews).isEmpty();
+  }
+
+  @Test
+  void getUserActionViews_whenCaseOfficer_thenCanAddCaseNotes() {
+    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
+        .thenReturn(CASE_OFFICER_PERMISSIONS);
+    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
+        .thenReturn(Set.of(CaseStatusFlag.CASE_NOTES_ALLOWED));
+
+    var actionViews = caseProcessingActionService.getUserActionViews(applicationVersion, USER);
+
+    assertThat(actionViews).hasSize(1);
+
+    assertThat(actionViews.get(0))
+        .usingRecursiveComparison()
+        .isEqualTo(
+            CaseProcessingActionView.from(
+                CaseProcessingActionItem.REGULATOR_ADD_CASE_NOTE,
+                applicationVersion
+            )
+        );
+  }
+
+  @Test
+  void getUserActionViews_whenCaseManager_thenCanAddCaseNotes() {
+    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
+        .thenReturn(CASE_MANAGER_PERMISSIONS);
+    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
+        .thenReturn(Set.of(CaseStatusFlag.CASE_NOTES_ALLOWED));
+
+    var actionViews = caseProcessingActionService.getUserActionViews(applicationVersion, USER);
+
+    assertThat(actionViews).hasSize(1);
+
+    assertThat(actionViews.get(0))
+        .usingRecursiveComparison()
+        .isEqualTo(
+            CaseProcessingActionView.from(
+                CaseProcessingActionItem.REGULATOR_ADD_CASE_NOTE,
+                applicationVersion
+            )
+        );
+  }
+
+  @Test
+  void getUserActionViews_whenTechnicalReviewer_thenCanAddCaseNotes() {
+    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
+        .thenReturn(TECHNICAL_REVIEWER_PERMISSIONS);
+    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
+        .thenReturn(Set.of(CaseStatusFlag.CASE_NOTES_ALLOWED));
+
+    var actionViews = caseProcessingActionService.getUserActionViews(applicationVersion, USER);
+
+    assertThat(actionViews).hasSize(1);
+
+    assertThat(actionViews.get(0))
+        .usingRecursiveComparison()
+        .isEqualTo(
+            CaseProcessingActionView.from(
+                CaseProcessingActionItem.REGULATOR_ADD_CASE_NOTE,
+                applicationVersion
+            )
+        );
   }
 }

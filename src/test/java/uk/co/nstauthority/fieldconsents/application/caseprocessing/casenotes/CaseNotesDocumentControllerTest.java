@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.application.supportinginformation;
+package uk.co.nstauthority.fieldconsents.application.caseprocessing.casenotes;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -47,17 +47,17 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionFileServic
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
-@ContextConfiguration(classes = SupportingInformationDocumentController.class)
-class SupportingInformationDocumentControllerTest extends AbstractControllerTest {
+@ContextConfiguration(classes = CaseNotesDocumentController.class)
+class CaseNotesDocumentControllerTest extends AbstractControllerTest {
 
   private static final int APPLICATION_ID = 1;
-  private static final Class<SupportingInformationDocumentController> CONTROLLER = SupportingInformationDocumentController.class;
+  private static final Class<CaseNotesDocumentController> CONTROLLER = CaseNotesDocumentController.class;
 
   @MockBean
   private FileService fileService;
 
   @MockBean
-  private SupportingInformationDocumentService supportingInformationDocumentService;
+  private CaseNotesDocumentService caseNotesDocumentService;
 
   @MockBean
   private ApplicationVersionFileService applicationVersionFileService;
@@ -158,11 +158,11 @@ class SupportingInformationDocumentControllerTest extends AbstractControllerTest
     when(fileService.download(uploadedFile)).thenReturn(ResponseEntity.ok().build());
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER)
-        .download(APPLICATION_ID, FILE_ID)))
-        .with(user(user)))
+            .download(APPLICATION_ID, FILE_ID)))
+            .with(user(user)))
         .andExpect(status().isOk());
 
-    verify(supportingInformationDocumentService).throwIfFileDoesNotBelongToApplicationVersion(uploadedFile, applicationVersion);
+    verify(caseNotesDocumentService).throwIfFileDoesNotBelongToApplicationVersion(uploadedFile, applicationVersion);
     verify(fileService).download(uploadedFile);
   }
 
@@ -187,7 +187,7 @@ class SupportingInformationDocumentControllerTest extends AbstractControllerTest
     when(fileService.find(FILE_ID)).thenReturn(Optional.of(uploadedFile));
 
     doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND))
-        .when(supportingInformationDocumentService)
+        .when(caseNotesDocumentService)
         .throwIfFileDoesNotBelongToApplicationVersion(uploadedFile, applicationVersion);
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER)
@@ -195,7 +195,7 @@ class SupportingInformationDocumentControllerTest extends AbstractControllerTest
             .with(user(user)))
         .andExpect(status().isNotFound());
 
-    verify(supportingInformationDocumentService).throwIfFileDoesNotBelongToApplicationVersion(uploadedFile, applicationVersion);
+    verify(caseNotesDocumentService).throwIfFileDoesNotBelongToApplicationVersion(uploadedFile, applicationVersion);
   }
 
   @Test
@@ -213,7 +213,7 @@ class SupportingInformationDocumentControllerTest extends AbstractControllerTest
             .with(csrf()))
         .andExpect(status().isOk());
 
-    verify(supportingInformationDocumentService).throwIfFileDoesNotBelongToApplicationVersion(uploadedFile, applicationVersion);
+    verify(caseNotesDocumentService).throwIfFileDoesNotBelongToApplicationVersion(uploadedFile, applicationVersion);
     verify(fileService).delete(uploadedFile);
   }
 
@@ -239,7 +239,7 @@ class SupportingInformationDocumentControllerTest extends AbstractControllerTest
     when(fileService.find(FILE_ID)).thenReturn(Optional.of(uploadedFile));
 
     doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND))
-        .when(supportingInformationDocumentService)
+        .when(caseNotesDocumentService)
         .throwIfFileDoesNotBelongToApplicationVersion(uploadedFile, applicationVersion);
 
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER)
@@ -248,6 +248,6 @@ class SupportingInformationDocumentControllerTest extends AbstractControllerTest
             .with(csrf()))
         .andExpect(status().isNotFound());
 
-    verify(supportingInformationDocumentService).throwIfFileDoesNotBelongToApplicationVersion(uploadedFile, applicationVersion);
+    verify(caseNotesDocumentService).throwIfFileDoesNotBelongToApplicationVersion(uploadedFile, applicationVersion);
   }
 }

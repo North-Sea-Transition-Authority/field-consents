@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusfl
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_NOTES_ALLOWED;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,14 +23,14 @@ class CaseStatusFlagServiceTest {
 
   private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
 
+  @InjectMocks
+  private CaseStatusFlagService caseStatusFlagService;
+
   @Mock
   private ApplicationWithdrawalService applicationWithdrawalService;
 
   @Mock
   private TechnicalReviewService technicalReviewService;
-
-  @InjectMocks
-  private CaseStatusFlagService caseStatusFlagService;
 
   private ApplicationVersion applicationVersion;
 
@@ -46,7 +47,8 @@ class CaseStatusFlagServiceTest {
         .containsOnly(
             CaseStatusFlag.CASE_OFFICER_ASSIGNED,
             CaseStatusFlag.NO_WITHDRAWAL_OPEN,
-            CaseStatusFlag.NO_TECHNICAL_REVIEW_OPEN
+            CaseStatusFlag.NO_TECHNICAL_REVIEW_OPEN,
+            CASE_NOTES_ALLOWED
         );
   }
 
@@ -56,7 +58,8 @@ class CaseStatusFlagServiceTest {
         .containsOnly(
             CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED,
             CaseStatusFlag.NO_WITHDRAWAL_OPEN,
-            CaseStatusFlag.NO_TECHNICAL_REVIEW_OPEN
+            CaseStatusFlag.NO_TECHNICAL_REVIEW_OPEN,
+            CASE_NOTES_ALLOWED
         );
   }
 
@@ -67,7 +70,8 @@ class CaseStatusFlagServiceTest {
         .containsOnly(
             CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED,
             CaseStatusFlag.WITHDRAWAL_OPEN,
-            CaseStatusFlag.NO_TECHNICAL_REVIEW_OPEN
+            CaseStatusFlag.NO_TECHNICAL_REVIEW_OPEN,
+            CaseStatusFlag.CASE_NOTES_ALLOWED
         );
   }
 
@@ -78,7 +82,8 @@ class CaseStatusFlagServiceTest {
         .containsOnly(
             CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED,
             CaseStatusFlag.NO_WITHDRAWAL_OPEN,
-            CaseStatusFlag.TECHNICAL_REVIEW_OPEN
+            CaseStatusFlag.TECHNICAL_REVIEW_OPEN,
+            CaseStatusFlag.CASE_NOTES_ALLOWED
         );
   }
 }

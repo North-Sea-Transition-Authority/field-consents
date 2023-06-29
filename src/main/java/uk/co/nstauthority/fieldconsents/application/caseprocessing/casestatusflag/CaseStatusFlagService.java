@@ -12,7 +12,6 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.Ap
 public class CaseStatusFlagService {
 
   private final ApplicationWithdrawalService applicationWithdrawalService;
-
   private final TechnicalReviewService technicalReviewService;
 
   public CaseStatusFlagService(ApplicationWithdrawalService applicationWithdrawalService,
@@ -29,6 +28,8 @@ public class CaseStatusFlagService {
     addWithdrawalFlag(applicationVersion, caseStatusFlags);
 
     addTechnicalReviewFlag(applicationVersion, caseStatusFlags);
+
+    caseStatusFlags.add(CaseStatusFlag.CASE_NOTES_ALLOWED);
 
     return caseStatusFlags;
   }

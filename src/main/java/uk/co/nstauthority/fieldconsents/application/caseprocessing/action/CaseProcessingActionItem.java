@@ -5,6 +5,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import java.util.function.Function;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.aceflag.AceFlagController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.casenotes.CaseNotesController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -34,6 +35,10 @@ public enum CaseProcessingActionItem implements Displayable {
   CASE_OFFICER_REASSIGN_OWNERSHIP("Reassign ownership", 1, true, null,
       applicationId -> ReverseRouter.route(on(CaseAssignmentController.class)
           .getCaseAssignment(applicationId, null))),
+  // Regulator user actions
+  REGULATOR_ADD_CASE_NOTE("Add case note", 99, false, null,
+      applicationId -> ReverseRouter.route(on(CaseNotesController.class)
+          .getNewCaseNote(applicationId))),
   // Operator actions
   OPERATOR_WITHDRAWAL_REQUEST("Request withdrawal", 1, true, null,
       applicationId -> ReverseRouter.route(on(ApplicationWithdrawalController.class)
