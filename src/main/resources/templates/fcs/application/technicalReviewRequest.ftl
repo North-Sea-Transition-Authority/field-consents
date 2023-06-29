@@ -1,12 +1,15 @@
 <#include '../layout/layout.ftl'>
 
+<#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
+
 <#assign pageTitle = "Request a technical review"/>
 
 <@defaultPage
 htmlTitle=pageTitle
 pageHeading=pageTitle
 caption=applicationReference
-backLinkUrl=springUrl(backLinkUrl)>
+backLinkUrl=springUrl(backLinkUrl)
+errorItems=errorList>
   <@fdsForm.htmlForm>
     <@fdsSearchSelector.searchSelectorEnhanced
       path="form.technicalReviewerWuaId"

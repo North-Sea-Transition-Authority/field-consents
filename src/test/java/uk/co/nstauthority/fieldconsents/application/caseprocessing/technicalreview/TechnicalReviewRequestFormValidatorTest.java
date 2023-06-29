@@ -8,6 +8,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.techni
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewRequestFormValidator.DEADLINE_MINUTES_FIELD_NAME;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewRequestFormValidator.TECHNICAL_REVIEWER_EMPTY;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewRequestFormValidator.TECHNICAL_REVIEWER_FIELD_NAME;
+import static uk.co.nstauthority.fieldconsents.validation.ValidatorUtils.EMPTY_STRING;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -21,12 +22,14 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ValidationUtils;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.validation.ValidatorTestingUtil;
+import uk.co.nstauthority.fieldconsents.validation.ValidatorUtils;
 
 @ExtendWith(MockitoExtension.class)
 class TechnicalReviewRequestFormValidatorTest {
@@ -35,16 +38,28 @@ class TechnicalReviewRequestFormValidatorTest {
 
   private static final Instant CURRENT_INSTANT = Instant.now();
 
-  private static final String DEADLINE_DATE_EMPTY = "Pick a deadline date";
+  private static final String DEADLINE_LOWER = "deadline";
 
-  private static final String DEADLINE_DATE_IN_PAST = "Deadline date must be on or after today";
+  private static final String DEADLINE_INITCAP = StringUtils.capitalize(DEADLINE_LOWER);
 
-  private static final String DEADLINE_DATE_TIME_NOT_AHEAD = "Deadline must be at least 1 hour ahead of now";
+  private static final String DEADLINE_REQUIRED_ERROR_MESSAGE =
+      ValidatorUtils.DATE_REQUIRED_ERROR_MESSAGE.formatted(DEADLINE_LOWER);
 
-  private static final String DEADLINE_DATE_TIME_NOT_VALID =
-      "Deadline must be a valid date in the format dd/mm/yyyy and time in hours and minutes";
+  private static final String DEADLINE_BEFORE_TODAY_ERROR_MESSAGE =
+      ValidatorUtils.DATE_BEFORE_TODAY_ERROR_MESSAGE.formatted(DEADLINE_INITCAP);
 
-  private static final String DEADLINE_TIME_EMPTY = "Enter the deadline time";
+  private static final String DEADLINE_INVALID_ERROR_MESSAGE =
+      ValidatorUtils.DATE_INVALID_ERROR_MESSAGE.formatted(DEADLINE_INITCAP);
+
+  private static final String DEADLINE_TIME_REQUIRED_ERROR_MESSAGE =
+      ValidatorUtils.TIME_REQUIRED_ERROR_MESSAGE.formatted(DEADLINE_LOWER);
+
+  private static final String DEADLINE_TIME_INVALID_ERROR_MESSAGE =
+      ValidatorUtils.TIME_INVALID_ERROR_MESSAGE.formatted(DEADLINE_INITCAP);
+
+  private static final String DEADLINE_AHEAD_ERROR_MESSAGE =
+      ValidatorUtils.DATE_TIME_HOURS_AHEAD_ERROR_MESSAGE.formatted(DEADLINE_INITCAP, "1", EMPTY_STRING);
+
   private static final Long TECHNICAL_REVIEWER_WUA_ID = 99L;
 
   private static final WebUserAccountId TECHNICAL_REVIEWER_WEB_USER_ACCOUNT_ID
@@ -121,9 +136,7 @@ class TechnicalReviewRequestFormValidatorTest {
 
     var errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     assertThat(errorMap).containsOnly(
-        entry(DEADLINE_DATE_FIELD_NAME, Collections.singletonList(DEADLINE_DATE_IN_PAST)),
-        entry(DEADLINE_HOURS_FIELD_NAME, Collections.singletonList(DEADLINE_DATE_TIME_NOT_AHEAD)),
-        entry(DEADLINE_MINUTES_FIELD_NAME, Collections.singletonList(""))
+        entry(DEADLINE_DATE_FIELD_NAME, Collections.singletonList(DEADLINE_BEFORE_TODAY_ERROR_MESSAGE))
     );
   }
 
@@ -141,8 +154,8 @@ class TechnicalReviewRequestFormValidatorTest {
 
     var errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     assertThat(errorMap).containsOnly(
-        entry(DEADLINE_HOURS_FIELD_NAME, Collections.singletonList(DEADLINE_DATE_TIME_NOT_AHEAD)),
-        entry(DEADLINE_MINUTES_FIELD_NAME, Collections.singletonList(""))
+        entry(DEADLINE_HOURS_FIELD_NAME, Collections.singletonList(DEADLINE_AHEAD_ERROR_MESSAGE)),
+        entry(DEADLINE_MINUTES_FIELD_NAME, Collections.singletonList(EMPTY_STRING))
     );
   }
 
@@ -170,9 +183,9 @@ class TechnicalReviewRequestFormValidatorTest {
 
     var errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     assertThat(errorMap).containsOnly(
-        entry(DEADLINE_DATE_FIELD_NAME, Collections.singletonList(DEADLINE_DATE_EMPTY)),
-        entry(DEADLINE_HOURS_FIELD_NAME, Collections.singletonList(DEADLINE_TIME_EMPTY)),
-        entry(DEADLINE_MINUTES_FIELD_NAME, Collections.singletonList(""))
+        entry(DEADLINE_DATE_FIELD_NAME, Collections.singletonList(DEADLINE_REQUIRED_ERROR_MESSAGE)),
+        entry(DEADLINE_HOURS_FIELD_NAME, Collections.singletonList(DEADLINE_TIME_REQUIRED_ERROR_MESSAGE)),
+        entry(DEADLINE_MINUTES_FIELD_NAME, Collections.singletonList(EMPTY_STRING))
     );
   }
 
@@ -188,9 +201,9 @@ class TechnicalReviewRequestFormValidatorTest {
 
     var errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     assertThat(errorMap).containsOnly(
-        entry(DEADLINE_DATE_FIELD_NAME, Collections.singletonList(DEADLINE_DATE_IN_PAST)),
-        entry(DEADLINE_HOURS_FIELD_NAME, Collections.singletonList(DEADLINE_TIME_EMPTY)),
-        entry(DEADLINE_MINUTES_FIELD_NAME, Collections.singletonList(""))
+        entry(DEADLINE_DATE_FIELD_NAME, Collections.singletonList(DEADLINE_BEFORE_TODAY_ERROR_MESSAGE)),
+        entry(DEADLINE_HOURS_FIELD_NAME, Collections.singletonList(DEADLINE_TIME_REQUIRED_ERROR_MESSAGE)),
+        entry(DEADLINE_MINUTES_FIELD_NAME, Collections.singletonList(EMPTY_STRING))
     );
   }
 
@@ -205,8 +218,8 @@ class TechnicalReviewRequestFormValidatorTest {
 
     var errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     assertThat(errorMap).containsOnly(
-        entry(DEADLINE_HOURS_FIELD_NAME, Collections.singletonList(DEADLINE_TIME_EMPTY)),
-        entry(DEADLINE_MINUTES_FIELD_NAME, Collections.singletonList(""))
+        entry(DEADLINE_HOURS_FIELD_NAME, Collections.singletonList(DEADLINE_TIME_REQUIRED_ERROR_MESSAGE)),
+        entry(DEADLINE_MINUTES_FIELD_NAME, Collections.singletonList(EMPTY_STRING))
     );
   }
 
@@ -225,9 +238,7 @@ class TechnicalReviewRequestFormValidatorTest {
 
     var errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     assertThat(errorMap).containsOnly(
-        entry(DEADLINE_DATE_FIELD_NAME, Collections.singletonList(DEADLINE_DATE_IN_PAST)),
-        entry(DEADLINE_HOURS_FIELD_NAME, Collections.singletonList(DEADLINE_DATE_TIME_NOT_AHEAD)),
-        entry(DEADLINE_MINUTES_FIELD_NAME, Collections.singletonList(""))
+        entry(DEADLINE_DATE_FIELD_NAME, Collections.singletonList(DEADLINE_BEFORE_TODAY_ERROR_MESSAGE))
     );
   }
 
@@ -244,18 +255,17 @@ class TechnicalReviewRequestFormValidatorTest {
 
     var errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     assertThat(errorMap).containsOnly(
-        entry(DEADLINE_DATE_FIELD_NAME, Collections.singletonList(DEADLINE_DATE_TIME_NOT_VALID)),
-        entry(DEADLINE_HOURS_FIELD_NAME, Collections.singletonList(DEADLINE_DATE_TIME_NOT_VALID)),
-        entry(DEADLINE_MINUTES_FIELD_NAME, Collections.singletonList(""))
+        entry(DEADLINE_DATE_FIELD_NAME, Collections.singletonList(DEADLINE_INVALID_ERROR_MESSAGE))
     );
   }
 
-  @Test
-  void validate_whenDateCurrentAndTimeInvalid_thenError() {
+  @ParameterizedTest
+  @ValueSource(strings = {"x", "-1", "24"})
+  void validate_whenDateCurrentAndHoursInvalid_thenError(String hoursStr) {
     when(clock.instant()).thenReturn(CURRENT_INSTANT);
     form.setTechnicalReviewerWuaId(TECHNICAL_REVIEWER_WEB_USER_ACCOUNT_ID);
     form.setDeadlineDate(DateUtils.format(CURRENT_DATE_TIME.toLocalDate(), DateUtils.DATE_PICKER_FORMAT));
-    form.setDeadlineHours("x");
+    form.setDeadlineHours(hoursStr);
     form.setDeadlineMinutes("30");
     errors = new BeanPropertyBindingResult(form, "form");
 
@@ -263,8 +273,25 @@ class TechnicalReviewRequestFormValidatorTest {
 
     var errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     assertThat(errorMap).containsOnly(
-        entry(DEADLINE_HOURS_FIELD_NAME, Collections.singletonList(DEADLINE_DATE_TIME_NOT_VALID)),
-        entry(DEADLINE_MINUTES_FIELD_NAME, Collections.singletonList(""))
+        entry(DEADLINE_HOURS_FIELD_NAME, Collections.singletonList(DEADLINE_TIME_INVALID_ERROR_MESSAGE))
+    );
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"x", "-1", "60"})
+  void validate_whenDateCurrentAndMinutesInvalid_thenError(String minutesStr) {
+    when(clock.instant()).thenReturn(CURRENT_INSTANT);
+    form.setTechnicalReviewerWuaId(TECHNICAL_REVIEWER_WEB_USER_ACCOUNT_ID);
+    form.setDeadlineDate(DateUtils.format(CURRENT_DATE_TIME.toLocalDate(), DateUtils.DATE_PICKER_FORMAT));
+    form.setDeadlineHours("23");
+    form.setDeadlineMinutes(minutesStr);
+    errors = new BeanPropertyBindingResult(form, "form");
+
+    ValidationUtils.invokeValidator(formValidator, form, errors);
+
+    var errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
+    assertThat(errorMap).containsOnly(
+        entry(DEADLINE_MINUTES_FIELD_NAME, Collections.singletonList(DEADLINE_TIME_INVALID_ERROR_MESSAGE))
     );
   }
 
@@ -282,9 +309,8 @@ class TechnicalReviewRequestFormValidatorTest {
 
     var errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     assertThat(errorMap).containsOnly(
-        entry(DEADLINE_DATE_FIELD_NAME, Collections.singletonList(DEADLINE_DATE_IN_PAST)),
-        entry(DEADLINE_HOURS_FIELD_NAME, Collections.singletonList(DEADLINE_DATE_TIME_NOT_VALID)),
-        entry(DEADLINE_MINUTES_FIELD_NAME, Collections.singletonList(""))
+        entry(DEADLINE_DATE_FIELD_NAME, Collections.singletonList(DEADLINE_BEFORE_TODAY_ERROR_MESSAGE)),
+        entry(DEADLINE_HOURS_FIELD_NAME, Collections.singletonList(DEADLINE_TIME_INVALID_ERROR_MESSAGE))
     );
   }
 
@@ -292,7 +318,7 @@ class TechnicalReviewRequestFormValidatorTest {
   void validate_whenDateAndTimeInvalid_thenError() {
     form.setTechnicalReviewerWuaId(TECHNICAL_REVIEWER_WEB_USER_ACCOUNT_ID);
     form.setDeadlineDate("xx/06/2023");
-    form.setDeadlineHours("12");
+    form.setDeadlineHours("24");
     form.setDeadlineMinutes("x");
     errors = new BeanPropertyBindingResult(form, "form");
 
@@ -300,9 +326,41 @@ class TechnicalReviewRequestFormValidatorTest {
 
     var errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     assertThat(errorMap).containsOnly(
-        entry(DEADLINE_DATE_FIELD_NAME, Collections.singletonList(DEADLINE_DATE_TIME_NOT_VALID)),
-        entry(DEADLINE_HOURS_FIELD_NAME, Collections.singletonList(DEADLINE_DATE_TIME_NOT_VALID)),
-        entry(DEADLINE_MINUTES_FIELD_NAME, Collections.singletonList(""))
+        entry(DEADLINE_DATE_FIELD_NAME, Collections.singletonList(DEADLINE_INVALID_ERROR_MESSAGE)),
+        entry(DEADLINE_HOURS_FIELD_NAME, Collections.singletonList(DEADLINE_TIME_INVALID_ERROR_MESSAGE)),
+        entry(DEADLINE_MINUTES_FIELD_NAME, Collections.singletonList(EMPTY_STRING))
+    );
+  }
+
+  @Test
+  void validate_whenHoursMissing_thenError() {
+    when(clock.instant()).thenReturn(CURRENT_INSTANT);
+    form.setTechnicalReviewerWuaId(TECHNICAL_REVIEWER_WEB_USER_ACCOUNT_ID);
+    form.setDeadlineDate(DateUtils.format(CURRENT_DATE_TIME.toLocalDate(), DateUtils.DATE_PICKER_FORMAT));
+    form.setDeadlineMinutes("30");
+    errors = new BeanPropertyBindingResult(form, "form");
+
+    ValidationUtils.invokeValidator(formValidator, form, errors);
+
+    var errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
+    assertThat(errorMap).containsOnly(
+        entry(DEADLINE_HOURS_FIELD_NAME, Collections.singletonList(DEADLINE_TIME_REQUIRED_ERROR_MESSAGE))
+    );
+  }
+
+  @Test
+  void validate_whenMinutesMissing_thenError() {
+    when(clock.instant()).thenReturn(CURRENT_INSTANT);
+    form.setTechnicalReviewerWuaId(TECHNICAL_REVIEWER_WEB_USER_ACCOUNT_ID);
+    form.setDeadlineDate(DateUtils.format(CURRENT_DATE_TIME.toLocalDate(), DateUtils.DATE_PICKER_FORMAT));
+    form.setDeadlineHours("10");
+    errors = new BeanPropertyBindingResult(form, "form");
+
+    ValidationUtils.invokeValidator(formValidator, form, errors);
+
+    var errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
+    assertThat(errorMap).containsOnly(
+        entry(DEADLINE_MINUTES_FIELD_NAME, Collections.singletonList(DEADLINE_TIME_REQUIRED_ERROR_MESSAGE))
     );
   }
 }
