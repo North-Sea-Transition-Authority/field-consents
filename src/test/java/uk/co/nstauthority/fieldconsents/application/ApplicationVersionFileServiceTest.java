@@ -9,7 +9,7 @@ import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.DOCUMENT_TYPE;
 import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.FILE_DESCRIPTION_1;
 import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.FILE_ID;
-import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.USAGE_TYPE;
+import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.APPLICATION_VERSION_USAGE_TYPE;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -79,7 +79,7 @@ class ApplicationVersionFileServiceTest {
         )
         .containsExactly(
             applicationVersion.getId().toString(),
-            USAGE_TYPE,
+            APPLICATION_VERSION_USAGE_TYPE,
             DOCUMENT_TYPE
         );
   }
@@ -121,11 +121,11 @@ class ApplicationVersionFileServiceTest {
   void getUploadedFiles() {
     var usageId = applicationVersion.getId().toString();
 
-    when(fileService.findAll(usageId, USAGE_TYPE, DOCUMENT_TYPE)).thenReturn(Collections.emptyList());
+    when(fileService.findAll(usageId, APPLICATION_VERSION_USAGE_TYPE, DOCUMENT_TYPE)).thenReturn(Collections.emptyList());
 
     applicationVersionFileService.getUploadedFiles(applicationVersion, DOCUMENT_TYPE);
 
-    verify(fileService).findAll(usageId, USAGE_TYPE, DOCUMENT_TYPE);
+    verify(fileService).findAll(usageId, APPLICATION_VERSION_USAGE_TYPE, DOCUMENT_TYPE);
   }
 
   @Test
@@ -155,7 +155,7 @@ class ApplicationVersionFileServiceTest {
 
     var uploadedFile = new UploadedFile();
     uploadedFile.setUsageId(applicationVersion.getApplication().getId().toString());
-    uploadedFile.setUsageType(USAGE_TYPE);
+    uploadedFile.setUsageType(APPLICATION_VERSION_USAGE_TYPE);
     uploadedFile.setDocumentType(DOCUMENT_TYPE);
 
     assertDoesNotThrow(() ->
@@ -174,7 +174,7 @@ class ApplicationVersionFileServiceTest {
     var uploadedFile = new UploadedFile();
     uploadedFile.setId(FILE_ID);
     uploadedFile.setUsageId(String.valueOf(applicationVersionId));
-    uploadedFile.setUsageType(USAGE_TYPE);
+    uploadedFile.setUsageType(APPLICATION_VERSION_USAGE_TYPE);
     uploadedFile.setDocumentType(DOCUMENT_TYPE);
 
     assertThatThrownBy(() ->
@@ -195,7 +195,7 @@ class ApplicationVersionFileServiceTest {
     var uploadedFile = new UploadedFile();
     uploadedFile.setId(FILE_ID);
     uploadedFile.setUsageId(String.valueOf(applicationVersionId));
-    uploadedFile.setUsageType(USAGE_TYPE + "_different");
+    uploadedFile.setUsageType(APPLICATION_VERSION_USAGE_TYPE + "_different");
     uploadedFile.setDocumentType(DOCUMENT_TYPE);
 
     assertThatThrownBy(() ->
@@ -216,7 +216,7 @@ class ApplicationVersionFileServiceTest {
     var uploadedFile = new UploadedFile();
     uploadedFile.setId(FILE_ID);
     uploadedFile.setUsageId(String.valueOf(applicationVersionId));
-    uploadedFile.setUsageType(USAGE_TYPE);
+    uploadedFile.setUsageType(APPLICATION_VERSION_USAGE_TYPE);
     uploadedFile.setDocumentType(DOCUMENT_TYPE + "_different");
 
     assertThatThrownBy(() ->

@@ -23,7 +23,6 @@ import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionFileService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,42 +33,45 @@ class CaseNotesDocumentServiceTest {
   private FileService fileService;
 
   @Mock
-  private ApplicationVersionFileService applicationVersionFileService;
+  private CaseNotesFileService caseNotesFileService;
 
   @InjectMocks
   private CaseNotesDocumentService caseNotesDocumentService;
 
   private ApplicationVersion applicationVersion;
 
+  private CaseNote caseNote;
+
   @BeforeEach
   void setUp() {
+    caseNote = new CaseNote();
     this.applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
   }
 
   @Test
   void saveDocuments() {
     var forms = Collections.<UploadedFileForm>emptyList();
-    caseNotesDocumentService.saveDocuments(applicationVersion, forms);
-    verify(applicationVersionFileService).saveDocuments(applicationVersion, forms, DOCUMENT_TYPE);
+    caseNotesDocumentService.saveDocuments(caseNote, forms);
+    verify(caseNotesFileService).saveDocuments(caseNote, forms, DOCUMENT_TYPE);
   }
 
   @Test
-  void throwIfFileDoesNotBelongToApplicationVersion() {
+  void throwIfFileDoesNotBelongToCaseNote() {
     assertDoesNotThrow(() ->
-        caseNotesDocumentService.throwIfFileDoesNotBelongToApplicationVersion(new UploadedFile(), applicationVersion)
+        caseNotesDocumentService.throwIfFileDoesNotBelongToCaseNote(new UploadedFile(), caseNote)
     );
   }
 
   @Test
-  void throwIfFileDoesNotBelongToApplicationVersion_doesThrow() {
+  void throwIfFileDoesNotBelongToCaseNote_doesThrow() {
     var uploadedFile = new UploadedFile();
 
     doThrow(new RuntimeException("exception message"))
-        .when(applicationVersionFileService)
-        .throwIfFileDoesNotBelongToApplicationVersion(uploadedFile, applicationVersion, DOCUMENT_TYPE);
+        .when(caseNotesFileService)
+        .throwIfFileDoesNotBelongToCaseNote(uploadedFile, caseNote, DOCUMENT_TYPE);
 
     assertThatThrownBy(() -> caseNotesDocumentService
-        .throwIfFileDoesNotBelongToApplicationVersion(uploadedFile, applicationVersion))
+        .throwIfFileDoesNotBelongToCaseNote(uploadedFile, caseNote))
         .isInstanceOf(RuntimeException.class)
         .hasMessage("exception message");
   }

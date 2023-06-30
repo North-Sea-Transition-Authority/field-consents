@@ -17,7 +17,8 @@ public class FileUploadTestUtil {
   public static final String FILE_DESCRIPTION_2 = "This is a description of the file_name_2";
   public static final String DOCUMENT_TYPE = "document-type";
   public static final String CONTENT_TYPE = "application/pdf";
-  public static final String USAGE_TYPE = "ApplicationVersion";
+  public static final String APPLICATION_VERSION_USAGE_TYPE = "ApplicationVersion";
+  public static final String CASE_NOTE_USAGE_TYPE = "CaseNote";
 
   public static final List<UploadedFileForm> validDocumentForms =
       List.of(

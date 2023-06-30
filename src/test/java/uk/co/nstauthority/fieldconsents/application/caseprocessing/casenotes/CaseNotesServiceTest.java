@@ -1,6 +1,8 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.casenotes;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -63,7 +65,7 @@ class CaseNotesServiceTest {
     caseNotesService.saveCaseNote(applicationVersion, caseNoteText, caseNoteDocuments, user);
 
     ArgumentCaptor<CaseNote> caseNoteArgumentCaptor = ArgumentCaptor.forClass(CaseNote.class);
-    verify(caseNotesDocumentService).saveDocuments(applicationVersion, caseNoteForm.getCaseNoteDocuments());
+    verify(caseNotesDocumentService).saveDocuments(any(CaseNote.class), anyList());
     verify(caseNotesRepository, times(1)).save(caseNoteArgumentCaptor.capture());
     CaseNote actualCaseNote = caseNoteArgumentCaptor.getValue();
 

@@ -43,7 +43,6 @@ import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionFileService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
@@ -60,7 +59,7 @@ class CaseNotesDocumentControllerTest extends AbstractControllerTest {
   private CaseNotesDocumentService caseNotesDocumentService;
 
   @MockBean
-  private ApplicationVersionFileService applicationVersionFileService;
+  private CaseNotesFileService caseNotesFileService;
 
   @Captor
   private ArgumentCaptor<Function<FileUploadRequest.Builder, FileUploadRequest>> fileUploadRequestFunctionCaptor;
@@ -162,7 +161,7 @@ class CaseNotesDocumentControllerTest extends AbstractControllerTest {
             .with(user(user)))
         .andExpect(status().isOk());
 
-    verify(caseNotesDocumentService).throwIfFileDoesNotBelongToApplicationVersion(uploadedFile, applicationVersion);
+    verify(caseNotesDocumentService).throwIfFileDoesNotBelongToCaseNote(uploadedFile, null);
     verify(fileService).download(uploadedFile);
   }
 
@@ -170,7 +169,7 @@ class CaseNotesDocumentControllerTest extends AbstractControllerTest {
   void download_invalidFileId() throws Exception {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(fileService.find(FILE_ID)).thenReturn(Optional.empty());
-    when(applicationVersionFileService.getFileNotFoundException(FILE_ID, applicationVersion))
+    when(caseNotesFileService.getFileNotFoundException(any(), any()))
         .thenReturn(new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER)
@@ -180,7 +179,7 @@ class CaseNotesDocumentControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  void download_fileNotLinkedToApplication() throws Exception {
+  void download_fileNotLinkedToCaseNote_andNoteIsNotSavedYet() throws Exception {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
 
     var uploadedFile = new UploadedFile();
@@ -188,14 +187,14 @@ class CaseNotesDocumentControllerTest extends AbstractControllerTest {
 
     doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND))
         .when(caseNotesDocumentService)
-        .throwIfFileDoesNotBelongToApplicationVersion(uploadedFile, applicationVersion);
+        .throwIfFileDoesNotBelongToCaseNote(uploadedFile, null);
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER)
             .download(APPLICATION_ID, FILE_ID)))
             .with(user(user)))
         .andExpect(status().isNotFound());
 
-    verify(caseNotesDocumentService).throwIfFileDoesNotBelongToApplicationVersion(uploadedFile, applicationVersion);
+    verify(caseNotesDocumentService).throwIfFileDoesNotBelongToCaseNote(uploadedFile, null);
   }
 
   @Test
@@ -213,7 +212,7 @@ class CaseNotesDocumentControllerTest extends AbstractControllerTest {
             .with(csrf()))
         .andExpect(status().isOk());
 
-    verify(caseNotesDocumentService).throwIfFileDoesNotBelongToApplicationVersion(uploadedFile, applicationVersion);
+    verify(caseNotesDocumentService).throwIfFileDoesNotBelongToCaseNote(uploadedFile, null);
     verify(fileService).delete(uploadedFile);
   }
 
@@ -221,7 +220,7 @@ class CaseNotesDocumentControllerTest extends AbstractControllerTest {
   void delete_invalidFileId() throws Exception {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(fileService.find(FILE_ID)).thenReturn(Optional.empty());
-    when(applicationVersionFileService.getFileNotFoundException(FILE_ID, applicationVersion))
+    when(caseNotesFileService.getFileNotFoundException(any(), any()))
         .thenReturn(new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER)
@@ -232,7 +231,7 @@ class CaseNotesDocumentControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  void delete_fileNotLinkedToApplication() throws Exception {
+  void delete_fileNotLinkedToCaseNote_andNoteIsNotSavedYet() throws Exception {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
 
     var uploadedFile = new UploadedFile();
@@ -240,7 +239,7 @@ class CaseNotesDocumentControllerTest extends AbstractControllerTest {
 
     doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND))
         .when(caseNotesDocumentService)
-        .throwIfFileDoesNotBelongToApplicationVersion(uploadedFile, applicationVersion);
+        .throwIfFileDoesNotBelongToCaseNote(uploadedFile, null);
 
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER)
             .delete(APPLICATION_ID, FILE_ID)))
@@ -248,6 +247,6 @@ class CaseNotesDocumentControllerTest extends AbstractControllerTest {
             .with(csrf()))
         .andExpect(status().isNotFound());
 
-    verify(caseNotesDocumentService).throwIfFileDoesNotBelongToApplicationVersion(uploadedFile, applicationVersion);
+    verify(caseNotesDocumentService).throwIfFileDoesNotBelongToCaseNote(uploadedFile, null);
   }
 }

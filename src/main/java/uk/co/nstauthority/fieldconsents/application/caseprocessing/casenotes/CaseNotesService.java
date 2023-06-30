@@ -32,7 +32,7 @@ public class CaseNotesService {
     caseNote.setCaseNoteText(caseNoteText);
     caseNote.setAddedByWuaId(user.wuaId());
     caseNote.setAddedDateTime(clock.instant());
-    caseNotesDocumentService.saveDocuments(applicationVersion, caseNoteDocuments);
     caseNotesRepository.save(caseNote);
+    caseNotesDocumentService.saveDocuments(caseNote, caseNoteDocuments);
   }
 }

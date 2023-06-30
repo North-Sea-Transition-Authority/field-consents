@@ -28,6 +28,13 @@ public class CaseNote {
 
   private String caseNoteText;
 
+  public CaseNote() {
+  }
+
+  public CaseNote(Integer id) {
+    this.id = id;
+  }
+
   public Integer getId() {
     return id;
   }

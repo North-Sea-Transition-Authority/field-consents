@@ -16,8 +16,6 @@ import uk.co.fivium.fileuploadlibrary.core.FileService;
 import uk.co.fivium.fileuploadlibrary.core.UploadedFile;
 import uk.co.fivium.fileuploadlibrary.fds.FileDeleteResponse;
 import uk.co.fivium.fileuploadlibrary.fds.FileUploadResponse;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionFileService;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
@@ -32,19 +30,14 @@ public class CaseNotesDocumentController {
 
   private final CaseNotesDocumentService caseNoteDocumentService;
 
-  private final ApplicationVersionService applicationVersionService;
-
-  private final ApplicationVersionFileService applicationVersionFileService;
-
+  private final CaseNotesFileService caseNotesFileService;
 
   public CaseNotesDocumentController(FileService fileService,
                                      CaseNotesDocumentService caseNoteDocumentService,
-                                     ApplicationVersionService applicationVersionService,
-                                     ApplicationVersionFileService applicationVersionFileService) {
+                                     CaseNotesFileService caseNotesFileService) {
     this.fileService = fileService;
     this.caseNoteDocumentService = caseNoteDocumentService;
-    this.applicationVersionService = applicationVersionService;
-    this.applicationVersionFileService = applicationVersionFileService;
+    this.caseNotesFileService = caseNotesFileService;
   }
 
   @PostMapping
@@ -60,22 +53,22 @@ public class CaseNotesDocumentController {
 
   @GetMapping("{fileId}")
   @HasApplicationPermission(permissions = RolePermission.VIEW_FCS_CASE_PROCESSING_DOCUMENTS)
-  ResponseEntity<InputStreamResource> download(@PathVariable Integer applicationId, @PathVariable UUID fileId) {
-    return findFileAndThen(applicationId, fileId, fileService::download);
+  ResponseEntity<InputStreamResource> download(@PathVariable Integer applicationId,
+                                               @PathVariable UUID fileId) {
+    return findFileAndThen(fileId, fileService::download);
   }
 
   @PostMapping("{fileId}")
   @ActionEndPoint(REGULATOR_ADD_CASE_NOTE)
-  FileDeleteResponse delete(@PathVariable Integer applicationId, @PathVariable UUID fileId) {
-    return findFileAndThen(applicationId, fileId, fileService::delete);
+  FileDeleteResponse delete(@PathVariable Integer applicationId,
+                            @PathVariable UUID fileId) {
+    return findFileAndThen(fileId, fileService::delete);
   }
 
-  private <T> T findFileAndThen(Integer applicationId, UUID fileId, Function<UploadedFile, T> andThen) {
-    var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
+  private <T> T findFileAndThen(UUID fileId, Function<UploadedFile, T> andThen) {
     var uploadedFile = fileService.find(fileId)
-        .orElseThrow(() -> applicationVersionFileService.getFileNotFoundException(fileId, applicationVersion));
-
-    caseNoteDocumentService.throwIfFileDoesNotBelongToApplicationVersion(uploadedFile, applicationVersion);
+        .orElseThrow(() -> caseNotesFileService.getFileNotFoundException(fileId, null));
+    caseNoteDocumentService.throwIfFileDoesNotBelongToCaseNote(uploadedFile, null);
 
     return andThen.apply(uploadedFile);
   }

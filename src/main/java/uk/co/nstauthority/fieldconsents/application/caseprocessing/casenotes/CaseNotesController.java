@@ -15,7 +15,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.fivium.fileuploadlibrary.FileUploadLibraryUtils;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionFileService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
@@ -37,7 +36,7 @@ public class CaseNotesController {
 
   private final ApplicationVersionService applicationVersionService;
 
-  private final ApplicationVersionFileService applicationVersionFileService;
+  private final CaseNotesFileService caseNotesFileService;
 
 
   public CaseNotesController(CaseNotesService caseNotesService,
@@ -45,13 +44,13 @@ public class CaseNotesController {
                              CaseNoteFormValidator caseNoteFormValidator,
                              CaseNotesDocumentService caseNotesDocumentService,
                              ApplicationVersionService applicationVersionService,
-                             ApplicationVersionFileService applicationVersionFileService) {
+                             CaseNotesFileService caseNotesFileService) {
     this.caseNotesService = caseNotesService;
     this.applicationService = applicationService;
     this.caseNoteFormValidator = caseNoteFormValidator;
     this.caseNotesDocumentService = caseNotesDocumentService;
     this.applicationVersionService = applicationVersionService;
-    this.applicationVersionFileService = applicationVersionFileService;
+    this.caseNotesFileService = caseNotesFileService;
   }
 
   @GetMapping
@@ -96,7 +95,7 @@ public class CaseNotesController {
       var descriptionsByFileId = FileUploadLibraryUtils.getFileDescriptionsByFileId(form.getCaseNoteDocuments());
 
       // TODO: https://jira.fivium.co.uk/browse/FDS-460
-      form.setCaseNoteDocuments(applicationVersionFileService.getUploadedFileForms(descriptionsByFileId.keySet()));
+      form.setCaseNoteDocuments(caseNotesFileService.getUploadedFileForms(descriptionsByFileId.keySet()));
       form.getCaseNoteDocuments().forEach(uploadedFileForm -> uploadedFileForm
           .setFileDescription(descriptionsByFileId.get(uploadedFileForm.getFileId())));
       return getNewCaseNoteModelAndView(applicationVersion, form);

@@ -40,7 +40,6 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionFileService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
@@ -66,7 +65,7 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
   private CaseNotesDocumentService caseNotesDocumentService;
 
   @MockBean
-  private ApplicationVersionFileService applicationVersionFileService;
+  private CaseNotesFileService caseNotesFileService;
 
   private ApplicationVersion applicationVersion;
 
@@ -205,7 +204,7 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
 
     var persistedFileAsForm = FileUploadTestUtil.getUploadedFileFormWithDescription(FILE_NAME_1, "old description");
 
-    when(applicationVersionFileService.getUploadedFileForms(Collections.singleton(FILE_ID)))
+    when(caseNotesFileService.getUploadedFileForms(Collections.singleton(FILE_ID)))
         .thenReturn(Collections.singletonList(persistedFileAsForm));
 
     mockMvc.perform(

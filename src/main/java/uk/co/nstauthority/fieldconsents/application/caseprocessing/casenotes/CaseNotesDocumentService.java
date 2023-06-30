@@ -10,7 +10,6 @@ import uk.co.fivium.fileuploadlibrary.core.UploadedFile;
 import uk.co.fivium.fileuploadlibrary.fds.FileUploadComponentAttributes;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionFileService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @Service
@@ -20,22 +19,22 @@ public class CaseNotesDocumentService {
 
   private final FileService fileService;
 
-  private final ApplicationVersionFileService applicationVersionFileService;
+  private final CaseNotesFileService caseNotesFileService;
 
   CaseNotesDocumentService(FileService fileService,
-                           ApplicationVersionFileService applicationVersionFileService) {
+                           CaseNotesFileService caseNotesFileService) {
     this.fileService = fileService;
-    this.applicationVersionFileService = applicationVersionFileService;
+    this.caseNotesFileService = caseNotesFileService;
   }
 
-  void saveDocuments(ApplicationVersion applicationVersion, Collection<UploadedFileForm> uploadedFileForms) {
-    applicationVersionFileService.saveDocuments(applicationVersion, uploadedFileForms, DOCUMENT_TYPE);
+  void saveDocuments(CaseNote caseNote, Collection<UploadedFileForm> uploadedFileForms) {
+    caseNotesFileService.saveDocuments(caseNote, uploadedFileForms, DOCUMENT_TYPE);
   }
 
-  void throwIfFileDoesNotBelongToApplicationVersion(UploadedFile uploadedFile, ApplicationVersion applicationVersion) {
-    applicationVersionFileService.throwIfFileDoesNotBelongToApplicationVersion(
+  void throwIfFileDoesNotBelongToCaseNote(UploadedFile uploadedFile, CaseNote caseNote) {
+    caseNotesFileService.throwIfFileDoesNotBelongToCaseNote(
         uploadedFile,
-        applicationVersion,
+        caseNote,
         DOCUMENT_TYPE
     );
   }
