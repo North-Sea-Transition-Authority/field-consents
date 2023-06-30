@@ -12,6 +12,7 @@ import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTes
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ASSIGN_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaFormService.FIELD_LOOKUP_PURPOSE;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaService.ALL_ORG_UNITS_WORK_AREA_PURPOSE;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTestUtil.TECHNICAL_REVIEWER_WUA_ID;
@@ -128,7 +129,7 @@ class WorkAreaServiceTest {
   }
 
   @Test
-  void getWorkAreaItems_forIndustryNoOrganisationGroup() {
+  void getIndustryWorkAreaItems_withNoOrganisationGroup() {
     when(workAreaFilterService.getConditions(filter, user, null)).thenReturn(new ArrayList<>());
     shell1IndustryTeam.setOrganisationGroupId(null);
 
@@ -136,14 +137,14 @@ class WorkAreaServiceTest {
   }
 
   @Test
-  void getWorkAreaItems_forIndustry_withEmptyResults() {
+  void getIndustryWorkAreaItems_withEmptyResults() {
     when(workAreaFilterService.getConditions(filter, user, null)).thenReturn(new ArrayList<>());
 
     assertThat(workAreaService.getIndustryWorkAreaItems(filter, user)).isEmpty();
   }
 
   @Test
-  void getWorkAreaItems_forIndustry_withNoEditPermission() {
+  void getIndustryWorkAreaItems_withNoEditPermission() {
     when(workAreaFilterService.getConditions(filter, user, null)).thenReturn(new ArrayList<>());
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.INDUSTRY, Set.of(RolePermission.EDIT_FCS_APPLICATIONS))).thenReturn(
         Collections.emptyList());
@@ -152,7 +153,7 @@ class WorkAreaServiceTest {
   }
 
   @Test
-  void getWorkAreaItems_forIndustry_withWorkAreaItemsToDisplay() {
+  void getIndustryWorkAreaItems_withWorkAreaItemsToDisplay() {
     when(workAreaFilterService.getConditions(filter, user, null)).thenReturn(new ArrayList<>());
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.INDUSTRY, Set.of(EDIT_FCS_APPLICATIONS))).thenReturn(
         List.of(shell1IndustryTeam));
@@ -162,30 +163,32 @@ class WorkAreaServiceTest {
   }
 
   @Test
-  void getWorkAreaItems_forRegulator_withNoPermission() {
+  void getRegulatorWorkAreaItems_withNoPermission() {
     when(workAreaFilterService.getConditions(filter, user, WorkAreaTab.MY_APPLICATIONS)).thenReturn(new ArrayList<>());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, Set.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS))).thenReturn(
-        Collections.emptyList());
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR,
+        Set.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS, TECHNICAL_REVIEW_FCS_APPLICATIONS)))
+        .thenReturn(Collections.emptyList());
 
     assertThat(workAreaService.getRegulatorWorkAreaItems(filter, user, WorkAreaTab.MY_APPLICATIONS)).isEmpty();
   }
 
   @Test
-  void getWorkAreaItems_forRegulator_withNoWorkAreaItemsToDisplay() {
+  void getRegulatorWorkAreaItems_withNoWorkAreaItemsToDisplay() {
     when(workAreaFilterService.getConditions(filter, user, WorkAreaTab.MY_APPLICATIONS)).thenReturn(new ArrayList<>());
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR,
-        Set.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS))).thenReturn(
-        List.of(regulatorTeam));
+        Set.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS, TECHNICAL_REVIEW_FCS_APPLICATIONS)))
+        .thenReturn(List.of(regulatorTeam));
     when(workAreaItemDtoRepository.runQuery(any(), any())).thenReturn(Collections.emptyList());
 
     assertThat(workAreaService.getRegulatorWorkAreaItems(filter, user, WorkAreaTab.MY_APPLICATIONS)).isEmpty();
   }
 
   @Test
-  void getWorkAreaItems_forRegulator_withSubmittedApplication() {
+  void getRegulatorWorkAreaItems_withSubmittedApplication() {
     when(workAreaFilterService.getConditions(filter, user, WorkAreaTab.MY_APPLICATIONS)).thenReturn(new ArrayList<>());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, Set.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS))).thenReturn(
-        List.of(regulatorTeam));
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR,
+        Set.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS, TECHNICAL_REVIEW_FCS_APPLICATIONS)))
+        .thenReturn(List.of(regulatorTeam));
     var workAreaItemDto = WorkAreaTestUtil.getWorkAreaItemDtoForShortVentSubmittedForTerminal();
     when(workAreaItemDtoRepository.runQuery(any(), any())).thenReturn(List.of(workAreaItemDto));
     when(organisationUnitService.getOrganisationUnitsByIds(List.of(PRIMARY_OPERATOR_OU_ID_1), ALL_ORG_UNITS_WORK_AREA_PURPOSE))
@@ -203,10 +206,11 @@ class WorkAreaServiceTest {
   }
 
   @Test
-  void getWorkAreaItems_forRegulator_withCaseAssignedAndTechnicalReviewer() {
+  void getRegulatorWorkAreaItems_withCaseAssignedAndTechnicalReviewer() {
     when(workAreaFilterService.getConditions(filter, user, WorkAreaTab.MY_APPLICATIONS)).thenReturn(new ArrayList<>());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, Set.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS))).thenReturn(
-        List.of(regulatorTeam));
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR,
+        Set.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS, TECHNICAL_REVIEW_FCS_APPLICATIONS)))
+        .thenReturn(List.of(regulatorTeam));
     var workAreaItemDto = WorkAreaTestUtil.getWorkAreaItemDtoForShortVentAssignedForTerminal();
     when(workAreaItemDtoRepository.runQuery(any(), any())).thenReturn(List.of(workAreaItemDto));
     when(organisationUnitService.getOrganisationUnitsByIds(List.of(PRIMARY_OPERATOR_OU_ID_1), ALL_ORG_UNITS_WORK_AREA_PURPOSE))
@@ -231,7 +235,7 @@ class WorkAreaServiceTest {
   }
 
   @Test
-  void getWorkAreaItems_forIndustry_withProductionInProgress_forField_noDuration() {
+  void getIndustryWorkAreaItems_withProductionInProgress_forField_noDuration() {
     when(workAreaFilterService.getConditions(filter, user, null)).thenReturn(new ArrayList<>());
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.INDUSTRY, Set.of(RolePermission.EDIT_FCS_APPLICATIONS))).thenReturn(List.of(shell1IndustryTeam));
     var workAreaItemDto = WorkAreaTestUtil.getWorkAreaItemDtoForProductionInProgressForFieldNoDuration();
@@ -247,7 +251,7 @@ class WorkAreaServiceTest {
   }
 
   @Test
-  void getWorkAreaItems_forIndustry_withProductionInProgress_forField_annual() {
+  void getIndustryWorkAreaItems_withProductionInProgress_forField_annual() {
     when(workAreaFilterService.getConditions(filter, user, null)).thenReturn(new ArrayList<>());
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.INDUSTRY, Set.of(RolePermission.EDIT_FCS_APPLICATIONS))).thenReturn(List.of(shell1IndustryTeam));
     var workAreaItemDto = WorkAreaTestUtil.getWorkAreaItemDtoForAnnualProductionInProgressForField();
@@ -263,7 +267,7 @@ class WorkAreaServiceTest {
   }
 
   @Test
-  void getWorkAreaItems_forIndustry_withVentSubmitted_forTerminal_shortTerm() {
+  void getIndustryWorkAreaItems_withVentSubmitted_forTerminal_shortTerm() {
     when(workAreaFilterService.getConditions(filter, user, null)).thenReturn(new ArrayList<>());
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.INDUSTRY, Set.of(RolePermission.EDIT_FCS_APPLICATIONS))).thenReturn(List.of(shell1IndustryTeam));
     var workAreaItemDto = WorkAreaTestUtil.getWorkAreaItemDtoForShortVentSubmittedForTerminal();
@@ -283,7 +287,7 @@ class WorkAreaServiceTest {
   }
 
   @Test
-  void getWorkAreaItems_forIndustry_withFlareSubmitted_forTerminal_longTerm() {
+  void getIndustryWorkAreaItems_withFlareSubmitted_forTerminal_longTerm() {
     when(workAreaFilterService.getConditions(filter, user, null)).thenReturn(new ArrayList<>());
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.INDUSTRY, Set.of(RolePermission.EDIT_FCS_APPLICATIONS))).thenReturn(List.of(shell1IndustryTeam));
     var workAreaItemDto = WorkAreaTestUtil.getWorkAreaItemDtoForLongFlareSubmittedForTerminal();
@@ -303,7 +307,7 @@ class WorkAreaServiceTest {
   }
 
   @Test
-  void getWorkAreaItems_forIndustry_withFlareSubmitted_forTerminal_longTerm_openWithdrawalRequest() {
+  void getIndustryWorkAreaItems_withFlareSubmitted_forTerminal_longTerm_openWithdrawalRequest() {
     when(workAreaFilterService.getConditions(filter, user, null)).thenReturn(new ArrayList<>());
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.INDUSTRY, Set.of(RolePermission.EDIT_FCS_APPLICATIONS))).thenReturn(List.of(shell1IndustryTeam));
     var workAreaItemDto = WorkAreaTestUtil.getWorkAreaItemDtoForLongFlareSubmittedForTerminalWithOpenWithdrawalRequest();
@@ -334,6 +338,8 @@ class WorkAreaServiceTest {
   void getTabsAvailableToUser_withProcessFcsApplications() {
     when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS)))
         .thenReturn(true);
+    when(permissionService.hasPermission(user, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)))
+        .thenReturn(false);
     when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS)))
         .thenReturn(false);
     when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS)))
@@ -350,12 +356,115 @@ class WorkAreaServiceTest {
   void getTabsAvailableToUser_withAssignFcsApplications() {
     when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS)))
         .thenReturn(false);
+    when(permissionService.hasPermission(user, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)))
+        .thenReturn(false);
     when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS)))
+        .thenReturn(true);
+    when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS)))
         .thenReturn(true);
 
     assertThat(workAreaService.getTabsAvailableToUser(user))
         .containsExactly(
-            WorkAreaTab.ALL_APPLICATIONS
+            WorkAreaTab.ALL_APPLICATIONS,
+            WorkAreaTab.UNASSIGNED_APPLICATIONS
+        );
+  }
+
+  @Test
+  void getTabsAvailableToUser_withTechnicalReviewFcsApplications() {
+    when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS)))
+        .thenReturn(false);
+    when(permissionService.hasPermission(user, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)))
+        .thenReturn(true);
+    when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS)))
+        .thenReturn(false);
+    when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS)))
+        .thenReturn(false);
+
+    assertThat(workAreaService.getTabsAvailableToUser(user))
+        .containsExactly(
+            WorkAreaTab.MY_TECHNICAL_REVIEWS,
+            WorkAreaTab.ALL_TECHNICAL_REVIEWS
+        );
+  }
+
+  @Test
+  void getTabsAvailableToUser_withProcessFcsApplicationsAndAssignFcsApplications() {
+    when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS)))
+        .thenReturn(true);
+    when(permissionService.hasPermission(user, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)))
+        .thenReturn(false);
+    when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS)))
+        .thenReturn(true);
+    when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS)))
+        .thenReturn(true);
+
+    assertThat(workAreaService.getTabsAvailableToUser(user))
+        .containsExactly(
+            WorkAreaTab.MY_APPLICATIONS,
+            WorkAreaTab.ALL_APPLICATIONS,
+            WorkAreaTab.UNASSIGNED_APPLICATIONS
+        );
+  }
+
+  @Test
+  void getTabsAvailableToUser_withProcessFcsApplicationsAndTechnicalReviewFcsApplications() {
+    when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS)))
+        .thenReturn(true);
+    when(permissionService.hasPermission(user, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)))
+        .thenReturn(true);
+    when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS)))
+        .thenReturn(false);
+    when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS)))
+        .thenReturn(true);
+
+    assertThat(workAreaService.getTabsAvailableToUser(user))
+        .containsExactly(
+            WorkAreaTab.MY_APPLICATIONS,
+            WorkAreaTab.MY_TECHNICAL_REVIEWS,
+            WorkAreaTab.ALL_TECHNICAL_REVIEWS,
+            WorkAreaTab.UNASSIGNED_APPLICATIONS
+        );
+  }
+
+  @Test
+  void getTabsAvailableToUser_withAssignFcsApplicationsAndTechnicalReviewFcsApplications() {
+    when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS)))
+        .thenReturn(false);
+    when(permissionService.hasPermission(user, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)))
+        .thenReturn(true);
+    when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS)))
+        .thenReturn(true);
+    when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS)))
+        .thenReturn(true);
+
+    assertThat(workAreaService.getTabsAvailableToUser(user))
+        .containsExactly(
+            WorkAreaTab.MY_TECHNICAL_REVIEWS,
+            WorkAreaTab.ALL_TECHNICAL_REVIEWS,
+            WorkAreaTab.ALL_APPLICATIONS,
+            WorkAreaTab.UNASSIGNED_APPLICATIONS
+        );
+  }
+
+  @Test
+  void getTabsAvailableToUser_withProcessFcsApplicationsAndAssignFcsApplicationsAndTechnicalReviewFcsApplications() {
+    when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS)))
+        .thenReturn(true);
+    when(permissionService.hasPermission(user, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)))
+        .thenReturn(true);
+    when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS)))
+        .thenReturn(true);
+    when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS)))
+        .thenReturn(true);
+
+    assertThat(workAreaService.getTabsAvailableToUser(user))
+        .containsExactly(
+            WorkAreaTab.MY_APPLICATIONS,
+            WorkAreaTab.MY_TECHNICAL_REVIEWS,
+            WorkAreaTab.ALL_TECHNICAL_REVIEWS,
+            WorkAreaTab.ALL_APPLICATIONS,
+            WorkAreaTab.UNASSIGNED_APPLICATIONS
         );
   }
 }

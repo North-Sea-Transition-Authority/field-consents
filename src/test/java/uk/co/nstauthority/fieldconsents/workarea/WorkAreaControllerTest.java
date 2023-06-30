@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
@@ -128,23 +129,13 @@ class WorkAreaControllerTest extends AbstractControllerTest {
   }
 
   @SecurityTest
-  void getWorkAreaRegulatorAllApplications_whenUserDoesNotHaveAssignFcsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.ASSIGN_FCS_APPLICATIONS)))
+  void postWorkAreaCaseOfficerApplications_whenUserDoesNotHaveProcessFcsPermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS)))
         .thenReturn(false);
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(WorkAreaController.class)
-                .getWorkAreaRegulatorAllApplications(filter, user)))
-                .with(user(user))
-        )
-        .andExpect(status().isForbidden());
-  }
-
-  @SecurityTest
-  void postWorkAreaRegulatorAllApplications_whenUserDoesNotHaveAssignFcsPermission() throws Exception {
-    mockMvc.perform(
             post(ReverseRouter.route(on(WorkAreaController.class)
-                .postWorkAreaRegulatorAllApplications(filter, user)))
+                .postWorkAreaCaseOfficerMyApplications(filter, user)))
                 .with(user(user))
                 .with(csrf())
         )
@@ -152,13 +143,13 @@ class WorkAreaControllerTest extends AbstractControllerTest {
   }
 
   @SecurityTest
-  void postWorkAreaRegulatorAllApplications_whenUserDoesHaveAssignFcsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.ASSIGN_FCS_APPLICATIONS)))
+  void postWorkAreaCaseOfficerApplications_whenUserDoesHaveProcessFcsPermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS)))
         .thenReturn(true);
 
     mockMvc.perform(
             post(ReverseRouter.route(on(WorkAreaController.class)
-                .postWorkAreaRegulatorAllApplications(filter, user)))
+                .postWorkAreaCaseOfficerMyApplications(filter, user)))
                 .with(user(user))
                 .with(csrf())
         )
@@ -166,21 +157,62 @@ class WorkAreaControllerTest extends AbstractControllerTest {
   }
 
   @SecurityTest
-  void getWorkAreaCaseOfficerApplications_whenUserDoesHaveAssignFcsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.ASSIGN_FCS_APPLICATIONS)))
+  void getWorkAreaMyTechnicalReviews_whenUserDoesNotHaveTechnicalReviewFcsPermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS)))
+        .thenReturn(false);
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(WorkAreaController.class)
+                .getWorkAreaMyTechnicalReviews(filter, user)))
+                .with(user(user))
+        )
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void getWorkAreaMyTechnicalReviews_whenUserDoesHaveTechnicalReviewFcsPermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS)))
         .thenReturn(true);
 
     mockMvc.perform(
             get(ReverseRouter.route(on(WorkAreaController.class)
-                .getWorkAreaRegulatorAllApplications(filter, user)))
+                .getWorkAreaMyTechnicalReviews(filter, user)))
                 .with(user(user))
         )
         .andExpect(status().isOk());
   }
 
   @SecurityTest
+  void postWorkAreaMyTechnicalReviews_whenUserDoesNotHaveTechnicalReviewFcsPermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS)))
+        .thenReturn(false);
+
+    mockMvc.perform(
+            post(ReverseRouter.route(on(WorkAreaController.class)
+                .postWorkAreaMyTechnicalReviews(filter, user)))
+                .with(user(user))
+                .with(csrf())
+        )
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void postWorkAreaMyTechnicalReviews_whenUserDoesHaveTechnicalReviewFcsPermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS)))
+        .thenReturn(true);
+
+    mockMvc.perform(
+            post(ReverseRouter.route(on(WorkAreaController.class)
+                .postWorkAreaMyTechnicalReviews(filter, user)))
+                .with(user(user))
+                .with(csrf())
+        )
+        .andExpect(status().is3xxRedirection());
+  }
+
+  @SecurityTest
   void getWorkAreaCaseOfficerUnassignedApplications_whenUserDoesNotHaveProcessFcsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS)))
+    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS, RolePermission.ASSIGN_FCS_APPLICATIONS)))
         .thenReturn(false);
 
     mockMvc.perform(
@@ -205,50 +237,137 @@ class WorkAreaControllerTest extends AbstractControllerTest {
   }
 
   @SecurityTest
-  void postWorkAreaCaseOfficerApplications_whenUserDoesNotHaveProcessFcsPermission() throws Exception {
-    mockMvc.perform(
-        post(ReverseRouter.route(on(WorkAreaController.class)
-            .postWorkAreaCaseOfficerMyApplications(filter, user)))
-            .with(user(user))
-            .with(csrf())
-        )
-        .andExpect(status().isForbidden());
-  }
-
-  @SecurityTest
-  void postWorkAreaCaseOfficerApplications_whenUserDoesHaveProcessFcsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS)))
-        .thenReturn(true);
-
-    mockMvc.perform(
-        post(ReverseRouter.route(on(WorkAreaController.class)
-            .postWorkAreaCaseOfficerMyApplications(filter, user)))
-            .with(user(user))
-            .with(csrf())
-        )
-        .andExpect(status().is3xxRedirection());
-  }
-
-  @SecurityTest
   void postWorkAreaCaseOfficerUnassignedApplications_whenUserDoesNotHaveProcessFcsPermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS, RolePermission.ASSIGN_FCS_APPLICATIONS)))
+        .thenReturn(false);
+
     mockMvc.perform(
-        post(ReverseRouter.route(on(WorkAreaController.class)
-            .postWorkAreaCaseOfficerUnassignedApplications(filter, user)))
-            .with(user(user))
-            .with(csrf())
+            post(ReverseRouter.route(on(WorkAreaController.class)
+                .postWorkAreaCaseOfficerUnassignedApplications(filter, user)))
+                .with(user(user))
+                .with(csrf())
         )
         .andExpect(status().isForbidden());
   }
 
   @SecurityTest
   void postWorkAreaCaseOfficerUnassignedApplications_whenUserDoesHaveProcessFcsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS)))
+    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS, RolePermission.ASSIGN_FCS_APPLICATIONS)))
         .thenReturn(true);
+
     mockMvc.perform(
-        post(ReverseRouter.route(on(WorkAreaController.class)
-            .postWorkAreaCaseOfficerUnassignedApplications(filter, user)))
-            .with(user(user))
-            .with(csrf())
+            post(ReverseRouter.route(on(WorkAreaController.class)
+                .postWorkAreaCaseOfficerUnassignedApplications(filter, user)))
+                .with(user(user))
+                .with(csrf())
+        )
+        .andExpect(status().is3xxRedirection());
+  }
+
+  @SecurityTest
+  void getWorkAreaAllTechnicalReviews_whenUserDoesNotHaveTechnicalReviewFcsPermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS)))
+        .thenReturn(false);
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(WorkAreaController.class)
+                .getWorkAreaAllTechnicalReviews(filter, user)))
+                .with(user(user))
+        )
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void getWorkAreaAllTechnicalReviews_whenUserDoesHaveTechnicalReviewFcsPermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS)))
+        .thenReturn(true);
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(WorkAreaController.class)
+                .getWorkAreaAllTechnicalReviews(filter, user)))
+                .with(user(user))
+        )
+        .andExpect(status().isOk());
+  }
+
+  @SecurityTest
+  void postWorkAreaAllTechnicalReviews_whenUserDoesNotHaveTechnicalReviewFcsPermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS)))
+        .thenReturn(false);
+
+    mockMvc.perform(
+            post(ReverseRouter.route(on(WorkAreaController.class)
+                .postWorkAreaAllTechnicalReviews(filter, user)))
+                .with(user(user))
+                .with(csrf())
+        )
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void postWorkAreaAllTechnicalReviews_whenUserDoesHaveTechnicalReviewFcsPermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS)))
+        .thenReturn(true);
+
+    mockMvc.perform(
+            post(ReverseRouter.route(on(WorkAreaController.class)
+                .postWorkAreaAllTechnicalReviews(filter, user)))
+                .with(user(user))
+                .with(csrf())
+        )
+        .andExpect(status().is3xxRedirection());
+  }
+
+  @SecurityTest
+  void getWorkAreaRegulatorAllApplications_whenUserDoesNotHaveAssignFcsPermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.ASSIGN_FCS_APPLICATIONS)))
+        .thenReturn(false);
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(WorkAreaController.class)
+                .getWorkAreaRegulatorAllApplications(filter, user)))
+                .with(user(user))
+        )
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void getWorkAreaRegulatorAllApplications_whenUserDoesHaveAssignFcsPermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.ASSIGN_FCS_APPLICATIONS)))
+        .thenReturn(true);
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(WorkAreaController.class)
+                .getWorkAreaRegulatorAllApplications(filter, user)))
+                .with(user(user))
+        )
+        .andExpect(status().isOk());
+  }
+
+  @SecurityTest
+  void postWorkAreaRegulatorAllApplications_whenUserDoesNotHaveAssignFcsPermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.ASSIGN_FCS_APPLICATIONS)))
+        .thenReturn(false);
+
+    mockMvc.perform(
+            post(ReverseRouter.route(on(WorkAreaController.class)
+                .postWorkAreaRegulatorAllApplications(filter, user)))
+                .with(user(user))
+                .with(csrf())
+        )
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void postWorkAreaRegulatorAllApplications_whenUserDoesHaveAssignFcsPermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.ASSIGN_FCS_APPLICATIONS)))
+        .thenReturn(true);
+
+    mockMvc.perform(
+            post(ReverseRouter.route(on(WorkAreaController.class)
+                .postWorkAreaRegulatorAllApplications(filter, user)))
+                .with(user(user))
+                .with(csrf())
         )
         .andExpect(status().is3xxRedirection());
   }
@@ -305,6 +424,32 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
     var actualForm = (WorkAreaForm) model.get("form");
     assertThat(actualForm).usingRecursiveComparison().isEqualTo(form);
+  }
+
+  @Test
+  void getWorkArea_RegulatorUser_TechnicalReviewer() throws Exception {
+    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    when(permissionService.hasPermission(user, EnumSet.of(RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS)))
+        .thenReturn(true);
+    when(workAreaService.getRegulatorWorkAreaItems(any(WorkAreaFilter.class), any(ServiceUserDetail.class), any(WorkAreaTab.class)))
+        .thenReturn(workAreaItems);
+    var technicalReviewerTabs = List.of(WorkAreaTab.MY_TECHNICAL_REVIEWS, WorkAreaTab.ALL_TECHNICAL_REVIEWS);
+    when(workAreaService.getTabsAvailableToUser(user)).thenReturn(technicalReviewerTabs);
+
+    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)))
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(view().name(WORK_AREA_VIEW_NAME))
+        .andExpect(model().attribute("selectedTab", WorkAreaTab.MY_TECHNICAL_REVIEWS.getValue()))
+        .andExpect(model().attribute("isRegulatorUser", true))
+        .andExpect(model().attribute("workAreaTabs", technicalReviewerTabs))
+        .andExpect(model().attribute("form", form))
+        .andReturn().getModelAndView();
+
+    assert modelAndView != null;
+    var model = modelAndView.getModel();
+
+    assertWorkAreaModel(model);
   }
 
   private void assertWorkAreaModel(Map<String, Object> model) {

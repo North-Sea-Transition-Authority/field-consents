@@ -2,7 +2,9 @@ package uk.co.nstauthority.fieldconsents.workarea;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.ALL_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.ALL_TECHNICAL_REVIEWS;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.MY_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.MY_TECHNICAL_REVIEWS;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.UNASSIGNED_APPLICATIONS;
 
 import java.util.EnumSet;
@@ -70,6 +72,8 @@ public class WorkAreaController {
         return renderRegulatorWorkAreaOnTab(filter, user, MY_APPLICATIONS);
       } else if (permissionService.hasPermission(user, EnumSet.of(RolePermission.ASSIGN_FCS_APPLICATIONS))) {
         return renderRegulatorWorkAreaOnTab(filter, user, ALL_APPLICATIONS);
+      } else if (permissionService.hasPermission(user, EnumSet.of(RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS))) {
+        return renderRegulatorWorkAreaOnTab(filter, user, MY_TECHNICAL_REVIEWS);
       }
     }
 
@@ -92,6 +96,20 @@ public class WorkAreaController {
     return ReverseRouter.redirect(on(WorkAreaController.class).getWorkAreaCaseOfficerMyApplications(filter, user));
   }
 
+  @GetMapping("my-technical-reviews")
+  @HasPermission(permissions = RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS)
+  public ModelAndView getWorkAreaMyTechnicalReviews(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
+                                                    ServiceUserDetail user) {
+    return renderRegulatorWorkAreaOnTab(filter, user, MY_TECHNICAL_REVIEWS);
+  }
+
+  @PostMapping("my-technical-reviews")
+  @HasPermission(permissions = RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS)
+  public ModelAndView postWorkAreaMyTechnicalReviews(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
+                                                     ServiceUserDetail user) {
+    return ReverseRouter.redirect(on(WorkAreaController.class).getWorkAreaMyTechnicalReviews(filter, user));
+  }
+
   @GetMapping("case-officer-unassigned")
   @HasPermission(permissions = {RolePermission.PROCESS_FCS_APPLICATIONS, RolePermission.ASSIGN_FCS_APPLICATIONS})
   public ModelAndView getWorkAreaCaseOfficerUnassignedApplications(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
@@ -100,10 +118,24 @@ public class WorkAreaController {
   }
 
   @PostMapping("case-officer-unassigned")
-  @HasPermission(permissions = RolePermission.PROCESS_FCS_APPLICATIONS)
+  @HasPermission(permissions = {RolePermission.PROCESS_FCS_APPLICATIONS, RolePermission.ASSIGN_FCS_APPLICATIONS})
   public ModelAndView postWorkAreaCaseOfficerUnassignedApplications(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
                                                                     ServiceUserDetail user) {
     return ReverseRouter.redirect(on(WorkAreaController.class).getWorkAreaCaseOfficerUnassignedApplications(filter, user));
+  }
+
+  @GetMapping("all-technical-reviews")
+  @HasPermission(permissions = RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS)
+  public ModelAndView getWorkAreaAllTechnicalReviews(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
+                                                     ServiceUserDetail user) {
+    return renderRegulatorWorkAreaOnTab(filter, user, ALL_TECHNICAL_REVIEWS);
+  }
+
+  @PostMapping("all-technical-reviews")
+  @HasPermission(permissions = RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS)
+  public ModelAndView postWorkAreaAllTechnicalReviews(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
+                                                      ServiceUserDetail user) {
+    return ReverseRouter.redirect(on(WorkAreaController.class).getWorkAreaAllTechnicalReviews(filter, user));
   }
 
   @GetMapping("regulator-all-applications")

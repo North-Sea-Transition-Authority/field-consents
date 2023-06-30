@@ -12,6 +12,7 @@ import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.TERMINAL_ID_1;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.TERMINAL_ID_2;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationAssets.APPLICATION_ASSETS;
+import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationTechnicalReviews.APPLICATION_TECHNICAL_REVIEWS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.Applications.APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ConsentLengths.CONSENT_LENGTHS;
@@ -296,6 +297,24 @@ class WorkAreaFilterServiceTest {
 
     assertThat(conditions).containsExactly(
         APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.eq(user.wuaId().intValue())
+    );
+  }
+
+  @Test
+  void getConditions_MyTechnicalReviews() {
+    var conditions = workAreaFilterService.getConditions(filter, user, WorkAreaTab.MY_TECHNICAL_REVIEWS);
+
+    assertThat(conditions).containsExactly(
+        APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEWER_WUA_ID.eq(user.wuaId().intValue())
+    );
+  }
+
+  @Test
+  void getConditions_AllTechnicalReviews() {
+    var conditions = workAreaFilterService.getConditions(filter, user, WorkAreaTab.ALL_TECHNICAL_REVIEWS);
+
+    assertThat(conditions).containsExactly(
+        APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEWER_WUA_ID.isNotNull()
     );
   }
 

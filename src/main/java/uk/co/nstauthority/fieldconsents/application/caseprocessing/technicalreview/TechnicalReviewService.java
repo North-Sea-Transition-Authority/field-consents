@@ -1,6 +1,8 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview;
 
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewStatus.OPEN;
+import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.REGULATOR_TECHNICAL_REVIEWER;
+import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.TECHNICAL_REVIEW_REQUEST;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -12,6 +14,7 @@ import java.util.function.UnaryOperator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberView;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
@@ -32,14 +35,18 @@ public class TechnicalReviewService {
 
   private final TeamMemberViewService teamMemberViewService;
 
+  private final ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
+
   public TechnicalReviewService(Clock clock,
                                 TechnicalReviewRepository technicalReviewRepository,
                                 RegulatorTeamService regulatorTeamService,
-                                TeamMemberViewService teamMemberViewService) {
+                                TeamMemberViewService teamMemberViewService,
+                                ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService) {
     this.clock = clock;
     this.technicalReviewRepository = technicalReviewRepository;
     this.regulatorTeamService = regulatorTeamService;
     this.teamMemberViewService = teamMemberViewService;
+    this.applicationWorkAreaPriorityService = applicationWorkAreaPriorityService;
   }
 
   public List<TeamMemberView> getTechnicalReviewerAssignmentCandidates(ApplicationVersion applicationVersion,
@@ -92,8 +99,7 @@ public class TechnicalReviewService {
     technicalReview.setRequestText(requestText);
     technicalReview.setDeadlineDateTime(deadlineInstant);
     technicalReviewRepository.save(technicalReview);
-    // TODO - FCS-344 and FCS-80: add call to prioritise in work area for a new REGULATOR_TECHNICAL_REVIEWER group
-    //applicationWorkAreaPriorityService.prioritiseApplicationInWorkArea(applicationVersion, user,
-    //    TECHNICAL_REVIEW_STARTED, REGULATOR_TECHNICAL_REVIEWER);
+    applicationWorkAreaPriorityService
+        .prioritiseApplicationInWorkArea(applicationVersion, user, TECHNICAL_REVIEW_REQUEST, REGULATOR_TECHNICAL_REVIEWER);
   }
 }

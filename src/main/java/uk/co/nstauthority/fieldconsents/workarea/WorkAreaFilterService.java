@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.workarea;
 
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationAssets.APPLICATION_ASSETS;
+import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationTechnicalReviews.APPLICATION_TECHNICAL_REVIEWS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.Applications.APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ConsentLengths.CONSENT_LENGTHS;
@@ -89,6 +90,14 @@ public class WorkAreaFilterService {
 
     if (Objects.nonNull(workAreaTab) && WorkAreaTab.MY_APPLICATIONS.equals(workAreaTab)) {
       conditions.add(getMyApplicationsCaseOfficerCondition(user));
+    }
+
+    if (Objects.nonNull(workAreaTab) && WorkAreaTab.MY_TECHNICAL_REVIEWS.equals(workAreaTab)) {
+      conditions.add(getMyTechnicalReviewsCondition(user));
+    }
+
+    if (Objects.nonNull(workAreaTab) && WorkAreaTab.ALL_TECHNICAL_REVIEWS.equals(workAreaTab)) {
+      conditions.add(getAllTechnicalReviewsCondition());
     }
 
     if (Objects.nonNull(workAreaTab) && WorkAreaTab.UNASSIGNED_APPLICATIONS.equals(workAreaTab)) {
@@ -221,6 +230,14 @@ public class WorkAreaFilterService {
 
   private Condition getMyApplicationsCaseOfficerCondition(ServiceUserDetail user) {
     return APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.eq(user.wuaId().intValue());
+  }
+
+  private Condition getMyTechnicalReviewsCondition(ServiceUserDetail user) {
+    return APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEWER_WUA_ID.eq(user.wuaId().intValue());
+  }
+
+  private Condition getAllTechnicalReviewsCondition() {
+    return APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEWER_WUA_ID.isNotNull();
   }
 
   private Condition getUnassignedApplicationsCaseOfficerCondition() {

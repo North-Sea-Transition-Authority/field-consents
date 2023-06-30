@@ -20,6 +20,8 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.techni
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.REGULATOR_TEAM;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.TECHNICAL_REVIEW_REQUEST_TEXT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.USER;
+import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.REGULATOR_TECHNICAL_REVIEWER;
+import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.TECHNICAL_REVIEW_REQUEST;
 
 import java.time.Clock;
 import java.time.temporal.ChronoUnit;
@@ -36,6 +38,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamService;
 
@@ -53,6 +56,9 @@ class TechnicalReviewServiceTest {
 
   @Mock
   private TeamMemberViewService teamMemberViewService;
+
+  @Mock
+  private ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
 
   @InjectMocks
   private TechnicalReviewService technicalReviewService;
@@ -200,5 +206,8 @@ class TechnicalReviewServiceTest {
     assertThat(actualTechnicalReview)
         .usingRecursiveComparison()
         .isEqualTo(technicalReview);
+
+    verify(applicationWorkAreaPriorityService, times(1))
+        .prioritiseApplicationInWorkArea(applicationVersion, USER, TECHNICAL_REVIEW_REQUEST, REGULATOR_TECHNICAL_REVIEWER);
   }
 }
