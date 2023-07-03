@@ -10,6 +10,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.Assign
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.CASE_OFFICER_TEAM_MEMBER_VIEW_2;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.TEAM_MEMBER_VIEW_LIST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.VIEWER_TEAM_MEMBER_VIEW;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentService.USER_NOT_IN_CASE_OFFICER_ROLE;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.REGULATOR;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CASE_OFFICER_ASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CASE_OFFICER_RELEASE_OWNERSHIP;
@@ -78,9 +79,8 @@ class CaseAssignmentServiceTest {
 
     assertThatThrownBy(() ->
         caseAssignmentService.assignCaseOfficer(applicationVersion, USER, USER))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("Cannot assign case officer as user with wua id %s is not in a regulator case officer role"
-            .formatted(USER.wuaId()));
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage(USER_NOT_IN_CASE_OFFICER_ROLE.apply(String.valueOf(USER.wuaId())));
   }
 
   @Test

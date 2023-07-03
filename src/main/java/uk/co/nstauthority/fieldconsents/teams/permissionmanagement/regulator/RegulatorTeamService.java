@@ -54,6 +54,14 @@ public class RegulatorTeamService {
         );
   }
 
+  public boolean isTechnicalReviewer(WebUserAccountId wuaId) {
+    return teamService.getTeamsOfTypeThatUserBelongsTo(wuaId, TeamType.REGULATOR)
+        .stream()
+        .anyMatch(regulatorTeam -> teamMemberService
+            .isMemberOfTeamWithAnyRoleOf(regulatorTeam.toTeamId(), wuaId, Set.of(RegulatorTeamRole.TECHNICAL_REVIEWER.name()))
+        );
+  }
+
   void addUserTeamRoles(Team team, EnergyPortalUserDto userToAdd, Set<RegulatorTeamRole> roles) {
     var rolesAsStrings = roles
         .stream()

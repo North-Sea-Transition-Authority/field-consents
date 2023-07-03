@@ -133,7 +133,7 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
             .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/application/caseAssignment"))
-        .andExpect(model().attribute("pageTitle", DUMMY_APP_REF))
+        .andExpect(model().attribute("applicationReference", DUMMY_APP_REF))
         .andExpect(model().attribute("caseOfficerAssignmentCandidates", CASE_OFFICER_ASSIGNMENT_CANDIDATES_MAP))
         .andExpect(model().attribute("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
@@ -207,7 +207,7 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
         )
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/application/caseAssignment"))
-        .andExpect(model().attribute("pageTitle", DUMMY_APP_REF))
+        .andExpect(model().attribute("applicationReference", DUMMY_APP_REF))
         .andExpect(model().attribute("caseOfficerAssignmentCandidates", CASE_OFFICER_ASSIGNMENT_CANDIDATES_MAP))
         .andExpect(model().attribute("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)

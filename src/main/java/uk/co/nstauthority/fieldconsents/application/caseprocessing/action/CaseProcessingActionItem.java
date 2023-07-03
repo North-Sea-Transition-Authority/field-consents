@@ -6,6 +6,7 @@ import java.util.function.Function;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.aceflag.AceFlagController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casenotes.CaseNotesController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewAssignmentController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -39,6 +40,10 @@ public enum CaseProcessingActionItem implements Displayable {
   REGULATOR_ADD_CASE_NOTE("Add case note", 99, false, null,
       applicationId -> ReverseRouter.route(on(CaseNotesController.class)
           .getNewCaseNote(applicationId))),
+  // Technical reviewer actions
+  TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP("Reassign technical reviewer", 1, false, null,
+      applicationId -> ReverseRouter.route(on(TechnicalReviewAssignmentController.class)
+          .getTechnicalReviewAssignment(applicationId, null))),
   // Operator actions
   OPERATOR_WITHDRAWAL_REQUEST("Request withdrawal", 1, true, null,
       applicationId -> ReverseRouter.route(on(ApplicationWithdrawalController.class)

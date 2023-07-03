@@ -2,7 +2,7 @@
 
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
 
-<#assign pageTitle = "Assign case officer"/>
+<#assign pageTitle = "Assign technical reviewer"/>
 
 <@defaultPage
   htmlTitle=pageTitle
@@ -10,16 +10,16 @@
   errorItems=errorList>
   <@fdsForm.htmlForm>
     <@fdsSearchSelector.searchSelectorEnhanced
-      path="form.caseOfficerWuaId"
-      options=caseOfficerAssignmentCandidates
-      labelText="Select a case officer"
+      path="form.technicalReviewerWuaId"
+      options=technicalReviewerAssignmentCandidates
+      labelText="Select a technical reviewer"
       caption=applicationReference
       pageHeading=true
       labelHeadingClass="govuk-label--xl"/>
     <@fdsAction.submitButtons
       linkSecondaryAction=true
       secondaryLinkText="Cancel"
-      primaryButtonText="Assign case officer"
+      primaryButtonText="Assign technical reviewer"
       linkSecondaryActionUrl="${springUrl(backLinkUrl)}"/>
   </@fdsForm.htmlForm>
 </@defaultPage>

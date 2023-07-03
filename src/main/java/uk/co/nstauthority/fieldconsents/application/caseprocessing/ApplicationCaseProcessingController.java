@@ -44,7 +44,10 @@ public class ApplicationCaseProcessingController {
 
   @GetMapping("case-processing")
   @HasApplicationStatus(statuses = ApplicationVersionStatus.SUBMITTED)
-  @HasApplicationPermission(permissions = {RolePermission.PROCESS_FCS_APPLICATIONS, RolePermission.ASSIGN_FCS_APPLICATIONS})
+  @HasApplicationPermission(permissions = {
+      RolePermission.PROCESS_FCS_APPLICATIONS,
+      RolePermission.ASSIGN_FCS_APPLICATIONS,
+      RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS})
   public ModelAndView getApplicationCaseProcessing(@PathVariable Integer applicationId,
                                                    ServiceUserDetail user) {
 

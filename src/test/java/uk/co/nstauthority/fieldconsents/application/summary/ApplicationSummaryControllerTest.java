@@ -15,6 +15,7 @@ import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.u
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ASSIGN_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.Collections;
@@ -110,7 +111,7 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
         user, applicationVersion, EDIT_FCS_APPLICATIONS
     )).thenReturn(false);
     when(applicationAccessService.hasApplicationPermission(
-        user, applicationVersion, PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS
+        user, applicationVersion, PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS, TECHNICAL_REVIEW_FCS_APPLICATIONS
     )).thenReturn(false);
 
     when(applicationSummaryService.getSummarySections(applicationVersion))
@@ -133,7 +134,7 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
         user, applicationVersion, EDIT_FCS_APPLICATIONS
     )).thenReturn(false);
     when(applicationAccessService.hasApplicationPermission(
-        user, applicationVersion, PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS
+        user, applicationVersion, PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS, TECHNICAL_REVIEW_FCS_APPLICATIONS
     )).thenReturn(true);
 
     getApplicationSummaryAndCheckModel(applicationVersion, "Application summary");
@@ -191,7 +192,7 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
         user, applicationVersion, EDIT_FCS_APPLICATIONS
     )).thenReturn(true);
     when(applicationAccessService.hasApplicationPermission(
-        user, applicationVersion, PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS
+        user, applicationVersion, PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS, TECHNICAL_REVIEW_FCS_APPLICATIONS
     )).thenReturn(false);
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationSummaryController.class)
@@ -215,7 +216,7 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
         user, applicationVersion, EDIT_FCS_APPLICATIONS
     )).thenReturn(true);
     when(applicationAccessService.hasApplicationPermission(
-        user, applicationVersion, PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS
+        user, applicationVersion, PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS, TECHNICAL_REVIEW_FCS_APPLICATIONS
     )).thenReturn(true);
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationSummaryController.class)

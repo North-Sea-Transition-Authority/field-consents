@@ -72,14 +72,14 @@ public class CaseAssignmentController {
 
   private ModelAndView getCaseAssignmentModelAndView(ApplicationVersion applicationVersion,
                                                      ServiceUserDetail user) {
-    var pageTitle = applicationService.generateApplicationReference(applicationVersion);
+    var applicationReference = applicationService.generateApplicationReference(applicationVersion);
     var applicationId = applicationVersion.getApplication().getId();
 
     var caseOfficerAssignmentCandidatesMap = teamMemberViewService
         .getUsersMap(caseAssignmentService.getCaseOfficerAssignmentCandidates(applicationVersion, user));
 
     return new ModelAndView("fcs/application/caseAssignment")
-        .addObject("pageTitle", pageTitle)
+        .addObject("applicationReference", applicationReference)
         .addObject("caseOfficerAssignmentCandidates", caseOfficerAssignmentCandidatesMap)
         .addObject("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)

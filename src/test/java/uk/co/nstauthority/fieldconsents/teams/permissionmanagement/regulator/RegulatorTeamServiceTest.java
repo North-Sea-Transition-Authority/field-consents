@@ -132,6 +132,34 @@ class RegulatorTeamServiceTest {
   }
 
   @Test
+  void isTechnicalReviewer_whenNoTeamsOfRegulatorType_thenFalse() {
+    when(teamService.getTeamsOfTypeThatUserBelongsTo(WEB_USER_ACCOUNT_ID, TeamType.REGULATOR))
+        .thenReturn(Collections.emptyList());
+
+    assertFalse(regulatorTeamService.isTechnicalReviewer(WEB_USER_ACCOUNT_ID));
+  }
+
+  @Test
+  void isTechnicalReviewer_whenTechnicalReviewer_thenTrue() {
+    when(teamService.getTeamsOfTypeThatUserBelongsTo(WEB_USER_ACCOUNT_ID, TeamType.REGULATOR))
+        .thenReturn(List.of(team));
+    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, WEB_USER_ACCOUNT_ID, Set.of(RegulatorTeamRole.TECHNICAL_REVIEWER.name())))
+        .thenReturn(true);
+
+    assertTrue(regulatorTeamService.isTechnicalReviewer(WEB_USER_ACCOUNT_ID));
+  }
+
+  @Test
+  void isTechnicalReviewer_whenNotTechnicalReviewer_thenFalse() {
+    when(teamService.getTeamsOfTypeThatUserBelongsTo(WEB_USER_ACCOUNT_ID, TeamType.REGULATOR))
+        .thenReturn(List.of(team));
+    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, WEB_USER_ACCOUNT_ID, Set.of(RegulatorTeamRole.TECHNICAL_REVIEWER.name())))
+        .thenReturn(false);
+
+    assertFalse(regulatorTeamService.isTechnicalReviewer(WEB_USER_ACCOUNT_ID));
+  }
+
+  @Test
   void isCaseOfficer_whenNoTeamsOfRegulatorType_thenFalse() {
     when(teamService.getTeamsOfTypeThatUserBelongsTo(WEB_USER_ACCOUNT_ID, TeamType.REGULATOR))
         .thenReturn(Collections.emptyList());

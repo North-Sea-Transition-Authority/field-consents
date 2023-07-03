@@ -105,6 +105,9 @@ public class AssignmentTestUtil {
           .withLastName(ENERGY_PORTAL_USER_5.surname())
           .build();
 
+  public static final ServiceUserDetail SERVICE_USER_DETAIL_USER_6 =
+      ServiceUserDetail.from(ENERGY_PORTAL_USER_6);
+
   public static final TeamMemberView TECHNICAL_REVIEWER_TEAM_MEMBER_VIEW_2 =
       TeamMemberViewTestUtil.Builder()
           .withRole(TECHNICAL_REVIEWER)

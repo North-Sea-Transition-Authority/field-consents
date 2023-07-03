@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.UnaryOperator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +25,9 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.Reg
 
 @Service
 public class CaseAssignmentService {
+
+  static final UnaryOperator<String> USER_NOT_IN_CASE_OFFICER_ROLE =
+      "Cannot assign case officer as user with wua id %s is not in a regulator case officer role"::formatted;
 
   private final ApplicationVersionRepository applicationVersionRepository;
 
@@ -49,9 +53,8 @@ public class CaseAssignmentService {
                                 ServiceUserDetail caseOfficerUser,
                                 ServiceUserDetail actionUser) {
     if (!regulatorTeamService.isCaseOfficer(WebUserAccountId.from(caseOfficerUser))) {
-      throw new IllegalStateException(
-          "Cannot assign case officer as user with wua id %s is not in a regulator case officer role"
-              .formatted(caseOfficerUser.wuaId()));
+      throw new IllegalArgumentException(
+          USER_NOT_IN_CASE_OFFICER_ROLE.apply(String.valueOf(caseOfficerUser.wuaId())));
     }
     applicationVersion.setCaseOfficerWuaId(caseOfficerUser.wuaId());
     applicationVersionRepository.save(applicationVersion);

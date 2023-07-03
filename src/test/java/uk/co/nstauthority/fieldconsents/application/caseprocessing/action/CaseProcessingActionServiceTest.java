@@ -187,6 +187,29 @@ class CaseProcessingActionServiceTest {
   }
 
   @Test
+  void getUserActionItems_whenTechnicalReviewerAndReviewOpen_thenCanReassignTechnicalReviewer() {
+    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
+        .thenReturn(TECHNICAL_REVIEWER_PERMISSIONS);
+    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
+        .thenReturn(Set.of(CaseStatusFlag.TECHNICAL_REVIEW_OPEN));
+
+    assertThat(caseProcessingActionService.getUserActionItems(applicationVersion, USER))
+        .containsExactly(CaseProcessingActionItem.TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP);
+
+  }
+
+  @Test
+  void getUserActionItems_whenTechnicalReviewerAndNoReviewOpen_thenCannotReassignTechnicalReviewer() {
+    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
+        .thenReturn(TECHNICAL_REVIEWER_PERMISSIONS);
+    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
+        .thenReturn(Set.of(CaseStatusFlag.NO_TECHNICAL_REVIEW_OPEN));
+
+    assertThat(caseProcessingActionService.getUserActionItems(applicationVersion, USER))
+        .isEmpty();
+  }
+
+  @Test
   void getUserActionViews_whenCaseManagerUser_thenCanAssignCaseOfficer() {
     when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .thenReturn(CASE_MANAGER_PERMISSIONS);

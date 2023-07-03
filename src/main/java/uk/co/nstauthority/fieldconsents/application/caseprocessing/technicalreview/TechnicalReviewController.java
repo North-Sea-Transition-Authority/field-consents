@@ -36,6 +36,8 @@ public class TechnicalReviewController {
 
   private final TechnicalReviewService technicalReviewService;
 
+  private final TechnicalReviewAssignmentService technicalReviewAssignmentService;
+
   private final TechnicalReviewRequestFormValidator technicalReviewRequestFormValidator;
 
   private final TeamMemberViewService teamMemberViewService;
@@ -48,6 +50,7 @@ public class TechnicalReviewController {
   public TechnicalReviewController(ApplicationService applicationService,
                                    ApplicationVersionService applicationVersionService,
                                    TechnicalReviewService technicalReviewService,
+                                   TechnicalReviewAssignmentService technicalReviewAssignmentService,
                                    TechnicalReviewRequestFormValidator technicalReviewRequestFormValidator,
                                    TeamMemberViewService teamMemberViewService,
                                    EnergyPortalUserService energyPortalUserService,
@@ -55,6 +58,7 @@ public class TechnicalReviewController {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.technicalReviewService = technicalReviewService;
+    this.technicalReviewAssignmentService = technicalReviewAssignmentService;
     this.technicalReviewRequestFormValidator = technicalReviewRequestFormValidator;
     this.teamMemberViewService = teamMemberViewService;
     this.energyPortalUserService = energyPortalUserService;
@@ -81,7 +85,7 @@ public class TechnicalReviewController {
     var applicationId = applicationVersion.getApplication().getId();
 
     var technicalReviewerAssignmentCandidatesMap = teamMemberViewService
-        .getUsersMap(technicalReviewService.getTechnicalReviewerAssignmentCandidates(applicationVersion, user));
+        .getUsersMap(technicalReviewAssignmentService.getTechnicalReviewerAssignmentCandidates(user));
 
     return new ModelAndView("fcs/application/technicalReviewRequest")
         .addObject("applicationReference", applicationReference)
