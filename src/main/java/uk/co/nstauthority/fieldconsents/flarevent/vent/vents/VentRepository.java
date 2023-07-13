@@ -5,9 +5,14 @@ import java.util.Optional;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.duplication.DuplicateThisOnUpdate;
+import uk.co.nstauthority.fieldconsents.application.duplication.DuplicationSource;
 
 @Repository
-public interface VentRepository extends CrudRepository<Vent, Integer> {
+public interface VentRepository extends CrudRepository<Vent, Integer>, DuplicationSource {
+
+  @DuplicateThisOnUpdate
+  List<Vent> findAllByApplicationVersion(ApplicationVersion applicationVersion);
 
   List<Vent> findAllByApplicationVersionOrderByIdAsc(ApplicationVersion applicationVersion);
 

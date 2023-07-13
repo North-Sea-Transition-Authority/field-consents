@@ -6,7 +6,7 @@ import static uk.co.nstauthority.fieldconsents.application.workareapriority.Appl
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.APPLICATION_SUBMITTED;
 
 import jakarta.persistence.EntityNotFoundException;
-import java.time.Instant;
+import java.time.Clock;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +22,12 @@ import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 @Service
 public class ApplicationService {
 
+  static final String NOT_LATEST_APPLICATION_VERSION_ERROR_MESSAGE =
+      "Cannot start update for application version id %s as this is not the latest application version id %s";
+
+  static final String START_APPLICATION_UPDATE_ERROR_MESSAGE =
+      "Cannot start update for application version id %s and status %s (status must be %s)";
+
   private final ApplicationRepository applicationRepository;
 
   private final ApplicationVersionRepository applicationVersionRepository;
@@ -36,13 +42,19 @@ public class ApplicationService {
 
   private final ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
 
+  private final Clock clock;
+
+  private final ApplicationVersionService applicationVersionService;
+
   public ApplicationService(ApplicationRepository applicationRepository,
                             ApplicationVersionRepository applicationVersionRepository,
                             ApplicationAssetService applicationAssetService,
                             ApplicationAssetLicenceService applicationAssetLicenceService,
                             ApplicationConfigurationProperties applicationConfigurationProperties,
                             AceFlagService aceFlagService,
-                            ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService) {
+                            ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService,
+                            Clock clock,
+                            ApplicationVersionService applicationVersionService) {
     this.applicationRepository = applicationRepository;
     this.applicationVersionRepository = applicationVersionRepository;
     this.applicationAssetService = applicationAssetService;
@@ -50,6 +62,8 @@ public class ApplicationService {
     this.applicationConfigurationProperties = applicationConfigurationProperties;
     this.aceFlagService = aceFlagService;
     this.applicationWorkAreaPriorityService = applicationWorkAreaPriorityService;
+    this.clock = clock;
+    this.applicationVersionService = applicationVersionService;
   }
 
   private ApplicationVersion createNewApplication(ApplicationType applicationType,
@@ -90,7 +104,7 @@ public class ApplicationService {
     ApplicationVersion applicationVersion = new ApplicationVersion();
     applicationVersion.setApplication(application);
     applicationVersion.setVersion(1);
-    applicationVersion.setCreatedDateTime(Instant.now());
+    applicationVersion.setCreatedDateTime(clock.instant());
     applicationVersion.setCreatedByWuaId(user.wuaId());
     applicationVersion.setStatus(ApplicationVersionStatus.IN_PROGRESS);
     applicationVersion.setPrimaryOperatorOuId(operatorOuJson.organisationUnitId());
@@ -111,6 +125,37 @@ public class ApplicationService {
         .prioritiseApplicationInWorkArea(applicationVersion, user, APPLICATION_SUBMITTED, REGULATOR);
   }
 
+  @Transactional
+  public ApplicationVersion startApplicationUpdate(ApplicationVersion applicationVersion,
+                                                   ServiceUserDetail user) {
+    var latestApplicationVersion =
+        applicationVersionService.getLatestApplicationVersionByApplicationId(applicationVersion.getId());
+
+    if (!applicationVersion.equals(latestApplicationVersion)) {
+      throw new IllegalStateException(NOT_LATEST_APPLICATION_VERSION_ERROR_MESSAGE.formatted(
+          applicationVersion.getId(),
+          latestApplicationVersion.getId()));
+    }
+
+    if (!ApplicationVersionStatus.SUBMITTED.equals(applicationVersion.getStatus())) {
+      throw new IllegalStateException(START_APPLICATION_UPDATE_ERROR_MESSAGE.formatted(
+          applicationVersion.getId(),
+          applicationVersion.getStatus().getDisplayName(),
+          ApplicationVersionStatus.SUBMITTED.name()));
+    }
+
+    var newApplicationVersion = new ApplicationVersion();
+    newApplicationVersion.setApplication(applicationVersion.getApplication());
+    newApplicationVersion.setVersion(applicationVersion.getVersion() + 1);
+    newApplicationVersion.setCreatedDateTime(clock.instant());
+    newApplicationVersion.setCreatedByWuaId(user.wuaId());
+    newApplicationVersion.setStatus(ApplicationVersionStatus.IN_PROGRESS);
+    newApplicationVersion.setPrimaryOperatorOuId(applicationVersion.getPrimaryOperatorOuId());
+    newApplicationVersion.setCachedPrimaryOperatorName(applicationVersion.getCachedPrimaryOperatorName());
+    newApplicationVersion.setCaseOfficerWuaId(applicationVersion.getCaseOfficerWuaId());
+    return applicationVersionRepository.save(newApplicationVersion);
+  }
+
   protected void submitApplicationVersion(ApplicationVersion applicationVersion,
                                           ServiceUserDetail user) {
     if (!ApplicationVersionStatus.IN_PROGRESS.equals(applicationVersion.getStatus())) {
@@ -118,7 +163,7 @@ public class ApplicationService {
           applicationVersion.getApplication().getId()));
     }
     applicationVersion.setStatus(ApplicationVersionStatus.SUBMITTED);
-    applicationVersion.setSubmittedDateTime(Instant.now());
+    applicationVersion.setSubmittedDateTime(clock.instant());
     applicationVersion.setSubmittedByWuaId(user.wuaId());
     applicationVersionRepository.save(applicationVersion);
     aceFlagService.autoSetAceFlag(applicationVersion);
@@ -144,7 +189,7 @@ public class ApplicationService {
                                                        ServiceUserDetail user) {
     Application application = new Application();
     application.setType(applicationType);
-    application.setCreatedDate(Instant.now());
+    application.setCreatedDate(clock.instant());
     application.setVariationNo(0);
     application.setCreatedByWuaId(user.wuaId());
     return applicationRepository.save(application);

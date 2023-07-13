@@ -4,10 +4,13 @@ import java.util.List;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.duplication.DuplicateThisOnUpdate;
+import uk.co.nstauthority.fieldconsents.application.duplication.DuplicationSource;
 
 @Repository
-public interface VentShortTermMonthRepository extends CrudRepository<VentShortTermMonth, Integer> {
+public interface VentShortTermMonthRepository extends CrudRepository<VentShortTermMonth, Integer>, DuplicationSource {
 
+  @DuplicateThisOnUpdate
   List<VentShortTermMonth> findAllByApplicationVersion(ApplicationVersion applicationVersion);
 
   boolean existsByApplicationVersion(ApplicationVersion applicationVersion);

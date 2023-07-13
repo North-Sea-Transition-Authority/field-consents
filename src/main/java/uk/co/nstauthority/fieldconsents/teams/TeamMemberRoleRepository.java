@@ -4,8 +4,10 @@ import java.util.List;
 import java.util.Set;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
+import uk.co.nstauthority.fieldconsents.application.duplication.NotDuplicationSource;
 
 @Repository
+@NotDuplicationSource
 interface TeamMemberRoleRepository extends CrudRepository<TeamMemberRole, Integer> {
 
   List<TeamMemberRole> findAllByTeam(Team team);

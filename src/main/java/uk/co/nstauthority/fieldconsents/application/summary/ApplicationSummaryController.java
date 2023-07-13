@@ -94,7 +94,9 @@ public class ApplicationSummaryController {
 
     if (ApplicationVersionStatus.IN_PROGRESS.equals(applicationVersion.getStatus())
         && userHasEditPermission) {
-      return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+      return applicationVersion.getVersion() > 1
+          ? ReverseRouter.redirect(on(IndustryCaseProcessingController.class).getIndustryCaseProcessing(applicationId, null))
+          : ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
     }
 
     var userHasRegulatorCaseProcessingPermission = applicationAccessService

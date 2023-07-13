@@ -14,7 +14,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionFileServic
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @Service
-class SupportingInformationDocumentService {
+public class SupportingInformationDocumentService {
 
   private static final String DOCUMENT_TYPE = "supporting-document";
 
@@ -59,4 +59,8 @@ class SupportingInformationDocumentService {
         .build();
   }
 
+  public void copyUploadedFiles(ApplicationVersion sourceApplicationVersion,
+                                ApplicationVersion targetApplicationVersion) {
+    applicationVersionFileService.copyUploadedFiles(sourceApplicationVersion, targetApplicationVersion, DOCUMENT_TYPE);
+  }
 }

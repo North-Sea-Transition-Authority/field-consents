@@ -27,11 +27,13 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionView;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @ContextConfiguration(classes = IndustryCaseProcessingController.class)
@@ -52,8 +54,67 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
         .andExpect(redirectionToLoginUrl());
   }
 
+  @SecurityTest
+  void getIndustryCaseProcessing_checkEndPointSecurityOnly_whenCompletedStatus_thenForbidden() throws Exception {
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
+    applicationVersion.setStatus(ApplicationVersionStatus.COMPLETED);
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(Collections.emptyList());
+
+    mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
+            .getIndustryCaseProcessing(APPLICATION_ID, null)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void getIndustryCaseProcessing_checkEndPointSecurityOnly_whenDeletedStatus_thenForbidden() throws Exception {
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
+    applicationVersion.setStatus(ApplicationVersionStatus.DELETED);
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+
+    mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
+            .getIndustryCaseProcessing(APPLICATION_ID, null)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void getIndustryCaseProcessing_checkEndPointSecurityOnly_whenWithdrawnStatus_thenForbidden() throws Exception {
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
+    applicationVersion.setStatus(ApplicationVersionStatus.WITHDRAWN);
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+
+    mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
+            .getIndustryCaseProcessing(APPLICATION_ID, null)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void getIndustryCaseProcessing_checkEndPointSecurityOnly_whenMissingEditPermission_thenForbidden() throws Exception {
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, RolePermission.EDIT_FCS_APPLICATIONS))
+        .thenReturn(false);
+
+    mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
+            .getIndustryCaseProcessing(APPLICATION_ID, null)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().isForbidden());
+  }
+
   @ParameterizedTest
-  @MethodSource("getSubmittedApplicationVersions")
+  @MethodSource("getInProgressAndSubmittedApplicationVersions")
   void getIndustryCaseProcessing(ApplicationVersion applicationVersion) throws Exception {
     var actionViews =
         List.of(CaseProcessingActionView.from(CaseProcessingActionItem.OPERATOR_WITHDRAWAL_REQUEST, applicationVersion));
@@ -90,8 +151,11 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
             .getWorkArea(null, null)));
   }
 
-  private static Stream<Arguments> getSubmittedApplicationVersions() {
+  private static Stream<Arguments> getInProgressAndSubmittedApplicationVersions() {
     return Stream.of(
+        Arguments.of(ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION)),
+        Arguments.of(ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE)),
+        Arguments.of(ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT)),
         Arguments.of(ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION)),
         Arguments.of(ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.FLARE)),
         Arguments.of(ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.VENT))

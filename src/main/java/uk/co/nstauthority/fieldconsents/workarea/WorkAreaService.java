@@ -202,7 +202,7 @@ public class WorkAreaService {
 
     return workAreaItemDtoList.stream()
         .map(workAreaItemDto -> new WorkAreaItem(
-            workAreaItemDto.applicationVersionId(),
+            workAreaItemDto.applicationId(),
             workAreaItemDto.type().getDisplayName(),
             getConsentDuration(workAreaItemDto),
             getApplicationReference(workAreaItemDto),
@@ -226,13 +226,18 @@ public class WorkAreaService {
   }
 
   private String getApplicationReference(WorkAreaItemDto workAreaItemDto) {
-    if (workAreaItemDto.status().equals(ApplicationVersionStatus.IN_PROGRESS)) {
+    if (workAreaItemDto.status().equals(ApplicationVersionStatus.IN_PROGRESS)
+        && workAreaItemDto.versionNo() == 1) {
       return "Resume application";
+    } else if (workAreaItemDto.status().equals(ApplicationVersionStatus.IN_PROGRESS)
+        && workAreaItemDto.versionNo() > 1) {
+      return "Resume %s".formatted(
+          applicationService.generateApplicationReference(
+              applicationVersionService.getApplicationVersionById(workAreaItemDto.applicationVersionId())));
     }
 
     return applicationService.generateApplicationReference(
-        applicationVersionService.getApplicationVersionById(workAreaItemDto.applicationVersionId())
-    );
+        applicationVersionService.getApplicationVersionById(workAreaItemDto.applicationVersionId()));
   }
 
   private String getConsentDuration(WorkAreaItemDto workAreaItemDto) {

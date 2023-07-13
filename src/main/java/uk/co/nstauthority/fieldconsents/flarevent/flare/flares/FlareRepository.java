@@ -5,9 +5,14 @@ import java.util.Optional;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.duplication.DuplicateThisOnUpdate;
+import uk.co.nstauthority.fieldconsents.application.duplication.DuplicationSource;
 
 @Repository
-public interface FlareRepository extends CrudRepository<Flare, Integer> {
+public interface FlareRepository extends CrudRepository<Flare, Integer>, DuplicationSource {
+
+  @DuplicateThisOnUpdate
+  List<Flare> findAllByApplicationVersion(ApplicationVersion applicationVersion);
 
   List<Flare> findAllByApplicationVersionOrderByIdAsc(ApplicationVersion applicationVersion);
 

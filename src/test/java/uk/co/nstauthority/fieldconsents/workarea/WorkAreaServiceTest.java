@@ -287,6 +287,27 @@ class WorkAreaServiceTest {
   }
 
   @Test
+  void getIndustryWorkAreaItems_withVentVersion2InProgress_forTerminal_shortTerm() {
+    ventVersionSubmitted.setVersion(2);
+    when(workAreaFilterService.getConditions(filter, user, null)).thenReturn(new ArrayList<>());
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.INDUSTRY, Set.of(RolePermission.EDIT_FCS_APPLICATIONS))).thenReturn(List.of(shell1IndustryTeam));
+    var workAreaItemDto = WorkAreaTestUtil.getWorkAreaItemDtoForShortVentVersion2InProgressForTerminal();
+    when(workAreaItemDtoRepository.runQuery(any(), any())).thenReturn(List.of(workAreaItemDto));
+    when(applicationVersionService.getApplicationVersionById(workAreaItemDto.applicationVersionId())).thenReturn(
+        ventVersionSubmitted);
+    when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(workAreaItemDto.submittedByWuaId())))).thenReturn(List.of(submitter));
+    when(organisationGroupQueryService.getOrganisationUnitsByOrganisationGroupIds(List.of(ORG_GROUP_ID_1))).thenReturn(List.of(field1JsonWithOperator.getOperatorJson()));
+    doCallRealMethod().when(applicationService).generateApplicationReference(ventVersionSubmitted);
+
+    var workAreaItems = workAreaService.getIndustryWorkAreaItems(filter, user);
+
+    assertThat(workAreaItems).hasSize(1);
+    assertThat(workAreaItems.stream().toList().get(0))
+        .usingRecursiveComparison()
+        .isEqualTo(WorkAreaTestUtil.getWorkAreaItemFromDto(workAreaItemDto, WorkAreaGroup.INDUSTRY));
+  }
+
+  @Test
   void getIndustryWorkAreaItems_withFlareSubmitted_forTerminal_longTerm() {
     when(workAreaFilterService.getConditions(filter, user, null)).thenReturn(new ArrayList<>());
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.INDUSTRY, Set.of(RolePermission.EDIT_FCS_APPLICATIONS))).thenReturn(List.of(shell1IndustryTeam));

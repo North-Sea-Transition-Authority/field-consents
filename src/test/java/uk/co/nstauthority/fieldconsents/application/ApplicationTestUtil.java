@@ -30,34 +30,51 @@ public class ApplicationTestUtil {
   }
 
   public static ApplicationVersion getNewApplicationVersionWithType(ApplicationType applicationType) {
+    return getNewApplicationVersionWithTypeIdAndVersionNumber(applicationType, APPLICATION_VERSION_ID, APPLICATION_VERSION_NUMBER);
+  }
+
+  public static ApplicationVersion getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType applicationType,
+                                                                                      Integer applicationVersionId,
+                                                                                      Integer applicationVersionNumber) {
     var newApplication = getNewApplicationWithType(applicationType);
     return new ApplicationVersion(
-        APPLICATION_VERSION_ID,
+        applicationVersionId,
         newApplication,
-        APPLICATION_VERSION_NUMBER,
+        applicationVersionNumber,
         PRIMARY_OPERATOR_OU_ID_1,
         CACHED_PRIMARY_OPERATOR_NAME_1,
         Instant.now(),
         USER_WUA_ID,
-        ApplicationVersionStatus.IN_PROGRESS);
+        null,
+        null,
+        ApplicationVersionStatus.IN_PROGRESS,
+        null);
   }
 
   private static Application getSubmittedApplicationWithType(ApplicationType applicationType) {
     return new Application(APPLICATION_ID, applicationType, Instant.now(), USER_WUA_ID, 0, APPLICATION_NO);
   }
 
-
   public static ApplicationVersion getSubmittedApplicationVersionWithType(ApplicationType applicationType) {
+    return getSubmittedApplicationVersionWithTypeIdAndVersionNumber(applicationType, APPLICATION_VERSION_ID, APPLICATION_VERSION_NUMBER);
+  }
+
+  public static ApplicationVersion getSubmittedApplicationVersionWithTypeIdAndVersionNumber(ApplicationType applicationType,
+                                                                                            Integer applicationVersionId,
+                                                                                            Integer applicationVersionNumber) {
     var submittedApplication = getSubmittedApplicationWithType(applicationType);
     var submittedApplicationVersion = new ApplicationVersion(
-        APPLICATION_VERSION_ID,
+        applicationVersionId,
         submittedApplication,
-        APPLICATION_VERSION_NUMBER,
+        applicationVersionNumber,
         PRIMARY_OPERATOR_OU_ID_1,
         CACHED_PRIMARY_OPERATOR_NAME_1,
+        Instant.now().minusSeconds(60),
+        USER_WUA_ID,
         Instant.now(),
         USER_WUA_ID,
-        ApplicationVersionStatus.SUBMITTED);
+        ApplicationVersionStatus.SUBMITTED,
+        null);
 
     submittedApplicationVersion.setSubmittedDateTime(Instant.now().plus(3, ChronoUnit.DAYS));
     submittedApplicationVersion.setSubmittedByWuaId(USER_WUA_ID);

@@ -6,8 +6,10 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
+import uk.co.nstauthority.fieldconsents.application.duplication.NotDuplicationSource;
 
 @Repository
+@NotDuplicationSource
 interface TeamRepository extends CrudRepository<Team, Integer> {
 
   Optional<Team> findByIdAndTeamType(Integer id, TeamType teamType);

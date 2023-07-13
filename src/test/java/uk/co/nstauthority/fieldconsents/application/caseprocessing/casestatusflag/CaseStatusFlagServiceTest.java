@@ -3,6 +3,13 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusfl
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_NOTES_ALLOWED;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_ASSIGNED;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_TECHNICAL_REVIEW_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_WITHDRAWAL_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.TECHNICAL_REVIEW_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.UPDATE_REQUEST_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.WITHDRAWAL_OPEN;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,10 +52,11 @@ class CaseStatusFlagServiceTest {
     applicationVersion.setCaseOfficerWuaId(USER.wuaId());
     assertThat(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
         .containsOnly(
-            CaseStatusFlag.CASE_OFFICER_ASSIGNED,
-            CaseStatusFlag.NO_WITHDRAWAL_OPEN,
-            CaseStatusFlag.NO_TECHNICAL_REVIEW_OPEN,
-            CASE_NOTES_ALLOWED
+            CASE_OFFICER_ASSIGNED,
+            NO_WITHDRAWAL_OPEN,
+            NO_TECHNICAL_REVIEW_OPEN,
+            CASE_NOTES_ALLOWED,
+            UPDATE_REQUEST_OPEN
         );
   }
 
@@ -56,10 +64,11 @@ class CaseStatusFlagServiceTest {
   void getCaseStatusFlags_whenCaseOfficerNotAssigned() {
     assertThat(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
         .containsOnly(
-            CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED,
-            CaseStatusFlag.NO_WITHDRAWAL_OPEN,
-            CaseStatusFlag.NO_TECHNICAL_REVIEW_OPEN,
-            CASE_NOTES_ALLOWED
+            CASE_OFFICER_NOT_ASSIGNED,
+            NO_WITHDRAWAL_OPEN,
+            NO_TECHNICAL_REVIEW_OPEN,
+            CASE_NOTES_ALLOWED,
+            UPDATE_REQUEST_OPEN
         );
   }
 
@@ -68,10 +77,11 @@ class CaseStatusFlagServiceTest {
     when(applicationWithdrawalService.openWithdrawalExists(applicationVersion)).thenReturn(true);
     assertThat(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
         .containsOnly(
-            CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED,
-            CaseStatusFlag.WITHDRAWAL_OPEN,
-            CaseStatusFlag.NO_TECHNICAL_REVIEW_OPEN,
-            CaseStatusFlag.CASE_NOTES_ALLOWED
+            CASE_OFFICER_NOT_ASSIGNED,
+            WITHDRAWAL_OPEN,
+            NO_TECHNICAL_REVIEW_OPEN,
+            CASE_NOTES_ALLOWED,
+            UPDATE_REQUEST_OPEN
         );
   }
 
@@ -80,10 +90,11 @@ class CaseStatusFlagServiceTest {
     when(technicalReviewService.openTechnicalReviewExists(applicationVersion)).thenReturn(true);
     assertThat(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
         .containsOnly(
-            CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED,
-            CaseStatusFlag.NO_WITHDRAWAL_OPEN,
-            CaseStatusFlag.TECHNICAL_REVIEW_OPEN,
-            CaseStatusFlag.CASE_NOTES_ALLOWED
+            CASE_OFFICER_NOT_ASSIGNED,
+            NO_WITHDRAWAL_OPEN,
+            TECHNICAL_REVIEW_OPEN,
+            CASE_NOTES_ALLOWED,
+            UPDATE_REQUEST_OPEN
         );
   }
 }

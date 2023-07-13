@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
@@ -110,5 +111,14 @@ class SupportingInformationDocumentServiceTest {
             ReverseRouter.route(on(SupportingInformationDocumentController.class).delete(applicationId, null)),
             existingFiles
         );
+  }
+
+  @Test
+  void copyUploadedFiles() {
+    var targetApplicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    supportingInformationDocumentService.copyUploadedFiles(applicationVersion, targetApplicationVersion);
+
+    verify(applicationVersionFileService, times(1))
+        .copyUploadedFiles(applicationVersion, targetApplicationVersion, DOCUMENT_TYPE);
   }
 }

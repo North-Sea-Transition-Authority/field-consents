@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.workarea;
 
 import static org.jooq.impl.DSL.greatest;
+import static org.jooq.impl.DSL.max;
 import static uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType.IS_ACE_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_ASSETS;
@@ -16,10 +17,12 @@ import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.WithdrawalStatus;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup;
+import uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions;
 
 @Repository
 class WorkAreaItemDtoRepository {
@@ -38,7 +41,14 @@ class WorkAreaItemDtoRepository {
 
     var detailsSubQuery = context.select(APPLICATION_VERSIONS.ID)
         .from(APPLICATIONS)
-        .join(APPLICATION_VERSIONS).onKey(APPLICATION_VERSIONS.APPLICATION_ID)
+        .join(APPLICATION_VERSIONS)
+            .onKey(APPLICATION_VERSIONS.APPLICATION_ID)
+            .and(APPLICATION_VERSIONS.ID.eq(
+                context.select(max(APPLICATION_VERSIONS.ID))
+                .from(APPLICATION_VERSIONS)
+                .where(APPLICATION_VERSIONS.APPLICATION_ID.eq(APPLICATIONS.ID))
+                    .and(ApplicationVersions.APPLICATION_VERSIONS.STATUS.ne(ApplicationVersionStatus.DELETED.name()))
+            ))
         .where(conditions);
 
     return context.select(

@@ -79,6 +79,26 @@ class ApplicationVersionServiceTest {
   }
 
   @Test
+  void getLatestApplicationVersionByApplicationId_whenManyApplicationVersionsExistsSomeDeleted() {
+    var applicationVersion2 = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    applicationVersion2.setVersion(2);
+    applicationVersion2.setStatus(ApplicationVersionStatus.DELETED);
+    var applicationVersion2i = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    applicationVersion2i.setVersion(2);
+    var applicationVersion3 = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    applicationVersion3.setVersion(3);
+    applicationVersion3.setStatus(ApplicationVersionStatus.DELETED);
+    var applicationVersion3i = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    applicationVersion3i.setVersion(3);
+
+    when(applicationVersionRepository.findAllByApplicationIdOrderByVersion(APPLICATION_ID))
+        .thenReturn(List.of(applicationVersion3, applicationVersion, applicationVersion2i, applicationVersion2, applicationVersion3i));
+
+    assertThat(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .isEqualTo(applicationVersion3i);
+  }
+
+  @Test
   void getLatestApplicationVersionByApplicationId_whenApplicationVersionsNotFound() {
     when(applicationVersionRepository.findAllByApplicationIdOrderByVersion(APPLICATION_ID))
         .thenReturn(Collections.emptyList());

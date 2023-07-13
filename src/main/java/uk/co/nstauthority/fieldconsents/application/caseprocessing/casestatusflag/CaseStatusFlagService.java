@@ -1,5 +1,14 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag;
 
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_ASSIGNED;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_TECHNICAL_REVIEW_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_UPDATE_REQUEST_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_WITHDRAWAL_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.TECHNICAL_REVIEW_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.UPDATE_REQUEST_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.WITHDRAWAL_OPEN;
+
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -24,11 +33,9 @@ public class CaseStatusFlagService {
     var caseStatusFlags = new HashSet<CaseStatusFlag>();
 
     addCaseOfficerAssignmentFlag(applicationVersion, caseStatusFlags);
-
     addWithdrawalFlag(applicationVersion, caseStatusFlags);
-
     addTechnicalReviewFlag(applicationVersion, caseStatusFlags);
-
+    addUpdateRequestFlag(applicationVersion, caseStatusFlags);
     caseStatusFlags.add(CaseStatusFlag.CASE_NOTES_ALLOWED);
 
     return caseStatusFlags;
@@ -37,27 +44,37 @@ public class CaseStatusFlagService {
   private void addCaseOfficerAssignmentFlag(ApplicationVersion applicationVersion,
                                             HashSet<CaseStatusFlag> caseStatusFlags) {
     if (Objects.nonNull(applicationVersion.getCaseOfficerWuaId())) {
-      caseStatusFlags.add(CaseStatusFlag.CASE_OFFICER_ASSIGNED);
+      caseStatusFlags.add(CASE_OFFICER_ASSIGNED);
     } else {
-      caseStatusFlags.add(CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED);
+      caseStatusFlags.add(CASE_OFFICER_NOT_ASSIGNED);
     }
   }
 
   private void addWithdrawalFlag(ApplicationVersion applicationVersion,
                                  HashSet<CaseStatusFlag> caseStatusFlags) {
     if (applicationWithdrawalService.openWithdrawalExists(applicationVersion)) {
-      caseStatusFlags.add(CaseStatusFlag.WITHDRAWAL_OPEN);
+      caseStatusFlags.add(WITHDRAWAL_OPEN);
     } else {
-      caseStatusFlags.add(CaseStatusFlag.NO_WITHDRAWAL_OPEN);
+      caseStatusFlags.add(NO_WITHDRAWAL_OPEN);
     }
   }
 
   private void addTechnicalReviewFlag(ApplicationVersion applicationVersion,
                                       HashSet<CaseStatusFlag> caseStatusFlags) {
     if (technicalReviewService.openTechnicalReviewExists(applicationVersion)) {
-      caseStatusFlags.add(CaseStatusFlag.TECHNICAL_REVIEW_OPEN);
+      caseStatusFlags.add(TECHNICAL_REVIEW_OPEN);
     } else {
-      caseStatusFlags.add(CaseStatusFlag.NO_TECHNICAL_REVIEW_OPEN);
+      caseStatusFlags.add(NO_TECHNICAL_REVIEW_OPEN);
+    }
+  }
+
+  private void addUpdateRequestFlag(ApplicationVersion applicationVersion,
+                                    HashSet<CaseStatusFlag> caseStatusFlags) {
+    // TODO add condition when update requests implemented
+    if (true) {
+      caseStatusFlags.add(UPDATE_REQUEST_OPEN);
+    } else {
+      caseStatusFlags.add(NO_UPDATE_REQUEST_OPEN);
     }
   }
 }

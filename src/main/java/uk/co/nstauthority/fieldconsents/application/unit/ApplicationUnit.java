@@ -15,7 +15,7 @@ import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 
 @Entity
 @Table(name = "application_units")
-class ApplicationUnit {
+public class ApplicationUnit {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

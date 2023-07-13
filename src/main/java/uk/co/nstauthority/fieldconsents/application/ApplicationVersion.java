@@ -12,6 +12,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.util.Objects;
 import org.hibernate.envers.Audited;
 
 @Entity
@@ -54,7 +55,8 @@ public class ApplicationVersion {
   @VisibleForTesting
   public ApplicationVersion(Integer id, Application application, Integer version, Integer primaryOperatorOuId,
                             String cachedPrimaryOperatorName, Instant createdDateTime, Long createdByWuaId,
-                            ApplicationVersionStatus status) {
+                            Instant submittedDateTime, Long submittedByWuaId, ApplicationVersionStatus status,
+                            Long caseOfficerWuaId) {
     this.id = id;
     this.application = application;
     this.version = version;
@@ -62,15 +64,14 @@ public class ApplicationVersion {
     this.cachedPrimaryOperatorName = cachedPrimaryOperatorName;
     this.createdDateTime = createdDateTime;
     this.createdByWuaId = createdByWuaId;
+    this.submittedDateTime = submittedDateTime;
+    this.submittedByWuaId = submittedByWuaId;
     this.status = status;
+    this.caseOfficerWuaId = caseOfficerWuaId;
   }
 
   public Integer getId() {
     return id;
-  }
-
-  public void setId(Integer id) {
-    this.id = id;
   }
 
   public Application getApplication() {
@@ -151,5 +152,21 @@ public class ApplicationVersion {
 
   public void setCaseOfficerWuaId(Long caseOfficerWuaId) {
     this.caseOfficerWuaId = caseOfficerWuaId;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof ApplicationVersion that)) {
+      return false;
+    }
+    return id != null && id.equals(that.id);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id);
   }
 }

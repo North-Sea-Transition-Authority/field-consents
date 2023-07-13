@@ -165,7 +165,7 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
 
   @ParameterizedTest
   @MethodSource("getInProgressApplicationVersions")
-  void getApplicationSummary_whenInProgressApplication_thenRedirect(ApplicationVersion applicationVersion) throws Exception {
+  void getApplicationSummary_whenInProgressApplication_thenRedirectToTaskList(ApplicationVersion applicationVersion) throws Exception {
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
@@ -178,7 +178,29 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
             .getApplicationSummary(APPLICATION_ID, null)))
             .with(user(user))
             .with(csrf()))
-        .andExpect(status().is3xxRedirection());
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationTaskListController.class)
+            .getTaskList(APPLICATION_ID))));
+  }
+
+  @ParameterizedTest
+  @MethodSource("getInProgressV2ApplicationVersions")
+  void getApplicationSummary_whenInProgressV2Application_thenRedirect(ApplicationVersion applicationVersion) throws Exception {
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
+    when(applicationAccessService.hasApplicationPermission(
+        user, applicationVersion, EDIT_FCS_APPLICATIONS
+    )).thenReturn(true);
+
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationSummaryController.class)
+            .getApplicationSummary(APPLICATION_ID, null)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(ReverseRouter.route(on(IndustryCaseProcessingController.class)
+            .getIndustryCaseProcessing(APPLICATION_ID, null))));
   }
 
   @ParameterizedTest
@@ -241,6 +263,14 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
         Arguments.of(ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION)),
         Arguments.of(ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE)),
         Arguments.of(ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT))
+    );
+  }
+
+  private static Stream<Arguments> getInProgressV2ApplicationVersions() {
+    return Stream.of(
+        Arguments.of(ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.PRODUCTION, 2, 2)),
+        Arguments.of(ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.FLARE, 2, 2)),
+        Arguments.of(ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.VENT, 2, 2))
     );
   }
 

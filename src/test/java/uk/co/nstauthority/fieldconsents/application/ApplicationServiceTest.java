@@ -1,11 +1,14 @@
 package uk.co.nstauthority.fieldconsents.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.application.ApplicationService.NOT_LATEST_APPLICATION_VERSION_ERROR_MESSAGE;
+import static uk.co.nstauthority.fieldconsents.application.ApplicationService.START_APPLICATION_UPDATE_ERROR_MESSAGE;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.USER_WUA_ID;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.INDUSTRY;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.REGULATOR;
@@ -15,7 +18,9 @@ import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithOperator;
 
 import jakarta.persistence.EntityNotFoundException;
+import java.time.Clock;
 import java.time.Instant;
+import java.util.Objects;
 import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +42,8 @@ import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationServiceTest {
+
+  private static final Instant CURRENT_INSTANT = Instant.now();
 
   private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
 
@@ -65,6 +72,12 @@ class ApplicationServiceTest {
   @Mock
   private ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
 
+  @Mock
+  private Clock clock;
+
+  @Mock
+  private ApplicationVersionService applicationVersionService;
+
   @BeforeEach
   void setup() {
     ApplicationConfigurationProperties applicationConfigurationProperties = new ApplicationConfigurationProperties(
@@ -77,7 +90,9 @@ class ApplicationServiceTest {
         applicationAssetLicenceService,
         applicationConfigurationProperties,
         aceFlagService,
-        applicationWorkAreaPriorityService);
+        applicationWorkAreaPriorityService,
+        clock,
+        applicationVersionService);
     newApplication = new Application(1, ApplicationType.PRODUCTION, Instant.now(), USER_WUA_ID, 0, null);
   }
 
@@ -88,7 +103,7 @@ class ApplicationServiceTest {
     when(applicationRepository.save(any(Application.class))).thenReturn(newApplication);
 
     ApplicationVersion newApplicationVersion = new ApplicationVersion(1, newApplication, 1, organisationUnitJson.organisationUnitId(),
-        organisationUnitJson.name(), Instant.now(), USER_WUA_ID, ApplicationVersionStatus.IN_PROGRESS);
+        organisationUnitJson.name(), Instant.now(), USER_WUA_ID, null, null, ApplicationVersionStatus.IN_PROGRESS, null);
     when(applicationVersionRepository.save(any(ApplicationVersion.class))).thenReturn(newApplicationVersion);
 
     ApplicationAsset applicationAsset = ApplicationAssetTestUtil.fieldAsset1;
@@ -122,7 +137,7 @@ class ApplicationServiceTest {
     when(applicationRepository.save(any(Application.class))).thenReturn(newApplication);
 
     ApplicationVersion newApplicationVersion = new ApplicationVersion(1, newApplication, 1, organisationUnitJson.organisationUnitId(),
-        organisationUnitJson.name(), Instant.now(), USER_WUA_ID, ApplicationVersionStatus.IN_PROGRESS);
+        organisationUnitJson.name(), Instant.now(), USER_WUA_ID, null, null, ApplicationVersionStatus.IN_PROGRESS, null);
     when(applicationVersionRepository.save(any(ApplicationVersion.class))).thenReturn(newApplicationVersion);
 
     ApplicationVersion expectedApplicationVersion = applicationService.createNewApplicationForTerminal(
@@ -150,11 +165,26 @@ class ApplicationServiceTest {
         .isEqualTo(newApplicationVersion.getPrimaryOperatorOuId());
     assertThat(expectedApplicationVersion.getCachedPrimaryOperatorName())
         .isEqualTo(newApplicationVersion.getCachedPrimaryOperatorName());
-    assertThat(expectedApplicationVersion.getCreatedByWuaId()).isEqualTo(USER_WUA_ID);
+    assertThat(expectedApplicationVersion.getCreatedByWuaId()).isEqualTo(newApplicationVersion.getCreatedByWuaId());
     assertThat(expectedApplicationVersion.getCreatedDateTime()).isAfterOrEqualTo(newApplicationVersion.getCreatedDateTime());
-    assertThat(expectedApplicationVersion.getStatus()).isEqualTo(ApplicationVersionStatus.IN_PROGRESS);
+    assertThat(expectedApplicationVersion.getStatus()).isEqualTo(newApplicationVersion.getStatus());
 
-    Application expectedApplication = expectedApplicationVersion.getApplication();
+    if (ApplicationVersionStatus.SUBMITTED.equals(expectedApplicationVersion.getStatus())) {
+      assertThat(expectedApplicationVersion.getSubmittedByWuaId()).isEqualTo(newApplicationVersion.getSubmittedByWuaId());
+      assertThat(expectedApplicationVersion.getSubmittedDateTime()).isAfterOrEqualTo(newApplicationVersion.getSubmittedDateTime());
+    } else {
+      assertThat(expectedApplicationVersion.getSubmittedByWuaId()).isNull();
+      assertThat(expectedApplicationVersion.getSubmittedDateTime()).isNull();
+    }
+
+    if (Objects.isNull((newApplicationVersion.getCaseOfficerWuaId()))) {
+      assertThat(expectedApplicationVersion.getCaseOfficerWuaId()).isNull();
+    } else {
+      assertThat(expectedApplicationVersion.getCaseOfficerWuaId()).isEqualTo(newApplicationVersion.getCaseOfficerWuaId());
+    }
+
+    var expectedApplication = expectedApplicationVersion.getApplication();
+    var newApplication = newApplicationVersion.getApplication();
     assertThat(expectedApplication.getType()).isEqualTo(newApplication.getType());
     assertThat(expectedApplication.getCreatedByWuaId()).isEqualTo(newApplication.getCreatedByWuaId());
     assertThat(expectedApplication.getCreatedDate()).isEqualTo(newApplication.getCreatedDate());
@@ -202,6 +232,61 @@ class ApplicationServiceTest {
         .prioritiseApplicationInWorkArea(applicationVersion, USER, APPLICATION_SUBMITTED, INDUSTRY);
     verify(applicationWorkAreaPriorityService, times(1))
         .prioritiseApplicationInWorkArea(applicationVersion, USER, APPLICATION_SUBMITTED, REGULATOR);
+  }
+
+  @Test
+  void startApplicationUpdate_whenNotLatestAppVersionSupplied_thenError() {
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var latestApplicationVersion =
+        ApplicationTestUtil.getSubmittedApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.PRODUCTION, 2, 2);
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(applicationVersion.getId()))
+        .thenReturn(latestApplicationVersion);
+
+    assertThatThrownBy(() -> applicationService.startApplicationUpdate(applicationVersion, USER))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage(NOT_LATEST_APPLICATION_VERSION_ERROR_MESSAGE.formatted(
+            applicationVersion.getId(),
+            latestApplicationVersion.getId()));
+  }
+
+  @Test
+  void startApplicationUpdate_whenUnexpectedStatus_thenError() {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(applicationVersion.getId()))
+        .thenReturn(applicationVersion);
+
+    assertThatThrownBy(() -> applicationService.startApplicationUpdate(applicationVersion, USER))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage(START_APPLICATION_UPDATE_ERROR_MESSAGE.formatted(
+            applicationVersion.getId(),
+            applicationVersion.getStatus().getDisplayName(),
+            ApplicationVersionStatus.SUBMITTED.name()));
+  }
+
+  @Test
+  void startApplicationUpdate() {
+    when(clock.instant()).thenReturn(CURRENT_INSTANT);
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(applicationVersion.getId()))
+        .thenReturn(applicationVersion);
+    var expectedApplicationVersion = new ApplicationVersion();
+    expectedApplicationVersion.setApplication(applicationVersion.getApplication());
+    expectedApplicationVersion.setVersion(applicationVersion.getVersion() + 1);
+    expectedApplicationVersion.setCreatedDateTime(clock.instant());
+    expectedApplicationVersion.setCreatedByWuaId(USER.wuaId());
+    expectedApplicationVersion.setStatus(ApplicationVersionStatus.IN_PROGRESS);
+    expectedApplicationVersion.setPrimaryOperatorOuId(applicationVersion.getPrimaryOperatorOuId());
+    expectedApplicationVersion.setCachedPrimaryOperatorName(applicationVersion.getCachedPrimaryOperatorName());
+    expectedApplicationVersion.setCaseOfficerWuaId(applicationVersion.getCaseOfficerWuaId());
+    when(applicationVersionRepository.save(any())).thenReturn(expectedApplicationVersion);
+
+    ArgumentCaptor<ApplicationVersion> applicationVersionArgumentCaptor =
+        ArgumentCaptor.forClass(ApplicationVersion.class);
+
+    var newApplicationVersion = applicationService.startApplicationUpdate(applicationVersion, USER);
+    verify(applicationVersionRepository, times(1)).save(applicationVersionArgumentCaptor.capture());
+
+    assertApplicationVersion(newApplicationVersion, expectedApplicationVersion);
   }
 
   @Test

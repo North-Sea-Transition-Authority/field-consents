@@ -4,15 +4,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.APPLICATION_VERSION_USAGE_TYPE;
 import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.DOCUMENT_TYPE;
 import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.FILE_DESCRIPTION_1;
 import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.FILE_ID;
-import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.APPLICATION_VERSION_USAGE_TYPE;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 import org.junit.jupiter.api.BeforeEach;
@@ -126,6 +128,43 @@ class ApplicationVersionFileServiceTest {
     applicationVersionFileService.getUploadedFiles(applicationVersion, DOCUMENT_TYPE);
 
     verify(fileService).findAll(usageId, APPLICATION_VERSION_USAGE_TYPE, DOCUMENT_TYPE);
+  }
+
+  @Test
+  void copyUploadedFiles() {
+    var usageId = applicationVersion.getId().toString();
+    var file1 = new UploadedFile();
+    var file2 = new UploadedFile();
+    var file3 = new UploadedFile();
+    var originalUploadedFiles = List.of(file1, file2, file3);
+    var targetApplicationVersion = ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.PRODUCTION, 2, 2);
+
+    when(fileService.findAll(usageId, APPLICATION_VERSION_USAGE_TYPE, DOCUMENT_TYPE))
+        .thenReturn(originalUploadedFiles);
+
+    applicationVersionFileService.copyUploadedFiles(applicationVersion, targetApplicationVersion, DOCUMENT_TYPE);
+
+    verify(fileService, times(1)).findAll(usageId, APPLICATION_VERSION_USAGE_TYPE, DOCUMENT_TYPE);
+    var targetUsageId = targetApplicationVersion.getId().toString();
+    verifyCopyCall(file1, targetUsageId);
+    verifyCopyCall(file2, targetUsageId);
+    verifyCopyCall(file3, targetUsageId);
+  }
+
+  private void verifyCopyCall(UploadedFile uploadedFile, String usageId) {
+    verify(fileService, times(1)).copy(eq(uploadedFile), fileUsageFunctionCaptor.capture());
+    var fileUsage = fileUsageFunctionCaptor.getValue().apply(FileUsage.newBuilder());
+    assertThat(fileUsage)
+        .extracting(
+            FileUsage::usageId,
+            FileUsage::usageType,
+            FileUsage::documentType
+        )
+        .containsExactly(
+            usageId,
+            APPLICATION_VERSION_USAGE_TYPE,
+            DOCUMENT_TYPE
+        );
   }
 
   @Test

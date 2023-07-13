@@ -8,6 +8,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.Ca
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casenotes.CaseNotesController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewAssignmentController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationStartUpdateController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.util.enumutil.Displayable;
@@ -45,9 +46,12 @@ public enum CaseProcessingActionItem implements Displayable {
       applicationId -> ReverseRouter.route(on(TechnicalReviewAssignmentController.class)
           .getTechnicalReviewAssignment(applicationId, null))),
   // Operator actions
-  OPERATOR_WITHDRAWAL_REQUEST("Request withdrawal", 1, true, null,
+  OPERATOR_WITHDRAWAL_REQUEST("Request withdrawal", 1, false, null,
       applicationId -> ReverseRouter.route(on(ApplicationWithdrawalController.class)
-          .getApplicationWithdrawalRequest(applicationId)));
+          .getApplicationWithdrawalRequest(applicationId))),
+  OPERATOR_UPDATE_APPLICATION("Update application", 999, false, null,
+      applicationId -> ReverseRouter.route(on(ApplicationStartUpdateController.class)
+          .updateApplicationEntryPoint(applicationId)));
 
   private final String displayName;
   private final int displayOrder;

@@ -61,6 +61,14 @@ public class ApplicationVersionFileService {
     return fileService.findAll(getUsageId(applicationVersion), getUsageType(applicationVersion), documentType);
   }
 
+  public void copyUploadedFiles(ApplicationVersion sourceApplicationVersion,
+                                ApplicationVersion targetApplicationVersion,
+                                String documentType) {
+    getUploadedFiles(sourceApplicationVersion, documentType)
+        .forEach(uploadedFile -> fileService.copy(uploadedFile,
+            usageBuilder -> buildFileUsage(usageBuilder, targetApplicationVersion, documentType)));
+  }
+
   public ResponseStatusException getFileNotFoundException(UUID fileId, ApplicationVersion applicationVersion) {
     return new ResponseStatusException(NOT_FOUND, "File %s does not exist for application version %s"
         .formatted(fileId, applicationVersion.getId()));

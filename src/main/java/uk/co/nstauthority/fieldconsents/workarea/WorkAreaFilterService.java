@@ -104,13 +104,8 @@ public class WorkAreaFilterService {
       conditions.add(getUnassignedApplicationsCaseOfficerCondition());
     }
 
-    if (teamService.isRegulatorUser(user)) {
-      conditions.add(getRegulatorApplicationStatusCondition());
-    }
+    addApplicationStatusCondition(conditions, user);
 
-    if (teamService.isIndustryUser(user)) {
-      conditions.add(getIndustryApplicationStatusCondition());
-    }
     return conditions;
   }
 
@@ -242,6 +237,14 @@ public class WorkAreaFilterService {
 
   private Condition getUnassignedApplicationsCaseOfficerCondition() {
     return APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.isNull();
+  }
+
+  private void addApplicationStatusCondition(List<Condition> conditions, ServiceUserDetail user) {
+    if (teamService.isRegulatorUser(user)) {
+      conditions.add(getRegulatorApplicationStatusCondition());
+    } else if (teamService.isIndustryUser(user)) {
+      conditions.add(getIndustryApplicationStatusCondition());
+    }
   }
 
   private Condition getIndustryApplicationStatusCondition() {

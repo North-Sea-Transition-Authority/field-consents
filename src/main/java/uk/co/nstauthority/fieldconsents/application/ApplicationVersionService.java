@@ -33,6 +33,7 @@ public class ApplicationVersionService {
   public Optional<ApplicationVersion> findLatestApplicationVersion(Integer applicationId) {
     return applicationVersionRepository.findAllByApplicationIdOrderByVersion(applicationId)
         .stream()
+        .filter(applicationVersion -> !ApplicationVersionStatus.DELETED.equals(applicationVersion.getStatus()))
         .max(Comparator.comparing(ApplicationVersion::getVersion));
   }
 

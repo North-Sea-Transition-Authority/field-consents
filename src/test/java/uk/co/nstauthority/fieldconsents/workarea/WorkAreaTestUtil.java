@@ -122,6 +122,35 @@ public class WorkAreaTestUtil {
     );
   }
 
+  public static WorkAreaItemDto getWorkAreaItemDtoForShortVentVersion2InProgressForTerminal() {
+    return new WorkAreaItemDto(
+        APPLICATION_ID,
+        APPLICATION_VERSION_ID,
+        ApplicationType.VENT,
+        0,
+        APPLICATION_NO,
+        2,
+        PRIMARY_OPERATOR_OU_ID_1,
+        ApplicationVersionStatus.IN_PROGRESS,
+        null,
+        null,
+        TERMINAL_ID_1,
+        TERMINAL_NAME_1,
+        ConsentLengthType.SHORT_TERM,
+        null,
+        SHORT_TERM_START_DATE,
+        SHORT_TERM_END_DATE,
+        null,
+        null,
+        Instant.now(),
+        USER_WUA_ID,
+        null,
+        null,
+        false,
+        null
+    );
+  }
+
   public static WorkAreaItemDto getWorkAreaItemDtoForShortVentAssignedForTerminal() {
     return new WorkAreaItemDto(
         APPLICATION_ID,
@@ -316,12 +345,24 @@ public class WorkAreaTestUtil {
   }
 
   private static String getCaseReference(WorkAreaItemDto workAreaItemDto) {
-    return workAreaItemDto.status().equals(ApplicationVersionStatus.SUBMITTED)
-        ? "%s/%d/%d (Version %d)".formatted(workAreaItemDto.type().getReferenceMnemonic(),
+    if (workAreaItemDto.status().equals(ApplicationVersionStatus.IN_PROGRESS)
+        && workAreaItemDto.versionNo() == 1) {
+      return "Resume application";
+    } else if (workAreaItemDto.status().equals(ApplicationVersionStatus.IN_PROGRESS)
+        && workAreaItemDto.versionNo() > 1) {
+      return "Resume %s".formatted(generateApplicationReference(workAreaItemDto));
+    }
+
+    return generateApplicationReference(workAreaItemDto);
+  }
+
+  private static String generateApplicationReference(WorkAreaItemDto workAreaItemDto) {
+    return "%s/%d/%d (Version %d)".formatted(
+        workAreaItemDto.type().getReferenceMnemonic(),
         workAreaItemDto.applicationNo(),
         workAreaItemDto.variationNo(),
-        workAreaItemDto.versionNo())
-        : "Resume application";
+        workAreaItemDto.versionNo()
+    );
   }
 
   public static WorkAreaItem getWorkAreaItem() {

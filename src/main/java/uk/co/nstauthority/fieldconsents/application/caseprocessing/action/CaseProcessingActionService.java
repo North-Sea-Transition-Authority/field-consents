@@ -1,11 +1,13 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.action;
 
+import static java.util.Map.entry;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_ASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_REASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_RELEASE_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_WITHDRAWAL_RESPONSE;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CHANGE_ACE_STATUS;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_UPDATE_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_WITHDRAWAL_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.REGULATOR_ADD_CASE_NOTE;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP;
@@ -16,6 +18,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casest
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_TECHNICAL_REVIEW_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_WITHDRAWAL_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.TECHNICAL_REVIEW_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.UPDATE_REQUEST_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.WITHDRAWAL_OPEN;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ASSIGN_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
@@ -48,6 +51,8 @@ public class CaseProcessingActionService {
 
   private final Map<ApplicationVersionStatus, Set<CaseProcessingActionItem>> caseStatusToActions =
       Map.of(
+          ApplicationVersionStatus.IN_PROGRESS,
+          EnumSet.of(OPERATOR_UPDATE_APPLICATION),
           ApplicationVersionStatus.SUBMITTED,
           EnumSet.of(
               CASE_OFFICER_TAKE_OWNERSHIP,
@@ -59,35 +64,38 @@ public class CaseProcessingActionService {
               CASE_OFFICER_REASSIGN_OWNERSHIP,
               REGULATOR_ADD_CASE_NOTE,
               TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP,
-              OPERATOR_WITHDRAWAL_REQUEST)
+              OPERATOR_WITHDRAWAL_REQUEST,
+              OPERATOR_UPDATE_APPLICATION)
       );
 
   private final Map<CaseProcessingActionItem, Set<RolePermission>> actionsToPermissions =
-      Map.of(
-          CASE_OFFICER_TAKE_OWNERSHIP, EnumSet.of(PROCESS_FCS_APPLICATIONS),
-          CHANGE_ACE_STATUS, EnumSet.of(PROCESS_FCS_APPLICATIONS),
-          CASE_OFFICER_RELEASE_OWNERSHIP, EnumSet.of(PROCESS_FCS_APPLICATIONS),
-          CASE_OFFICER_WITHDRAWAL_RESPONSE, EnumSet.of(PROCESS_FCS_APPLICATIONS),
-          TECHNICAL_REVIEW_REQUEST, EnumSet.of(PROCESS_FCS_APPLICATIONS),
-          CASE_OFFICER_ASSIGN_OWNERSHIP, EnumSet.of(ASSIGN_FCS_APPLICATIONS),
-          CASE_OFFICER_REASSIGN_OWNERSHIP, EnumSet.of(ASSIGN_FCS_APPLICATIONS),
-          REGULATOR_ADD_CASE_NOTE, EnumSet.of(EDIT_FCS_CASE_PROCESSING_DOCUMENTS),
-          TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS),
-          OPERATOR_WITHDRAWAL_REQUEST, EnumSet.of(EDIT_FCS_APPLICATIONS)
+      Map.ofEntries(
+          entry(CASE_OFFICER_TAKE_OWNERSHIP, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
+          entry(CHANGE_ACE_STATUS, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
+          entry(CASE_OFFICER_RELEASE_OWNERSHIP, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
+          entry(CASE_OFFICER_WITHDRAWAL_RESPONSE, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
+          entry(TECHNICAL_REVIEW_REQUEST, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
+          entry(CASE_OFFICER_ASSIGN_OWNERSHIP, EnumSet.of(ASSIGN_FCS_APPLICATIONS)),
+          entry(CASE_OFFICER_REASSIGN_OWNERSHIP, EnumSet.of(ASSIGN_FCS_APPLICATIONS)),
+          entry(REGULATOR_ADD_CASE_NOTE, EnumSet.of(EDIT_FCS_CASE_PROCESSING_DOCUMENTS)),
+          entry(TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)),
+          entry(OPERATOR_WITHDRAWAL_REQUEST, EnumSet.of(EDIT_FCS_APPLICATIONS)),
+          entry(OPERATOR_UPDATE_APPLICATION, EnumSet.of(EDIT_FCS_APPLICATIONS))
       );
 
   private final Map<CaseProcessingActionItem, Set<CaseStatusFlag>> actionsToStatusFlags =
-      Map.of(
-          CASE_OFFICER_TAKE_OWNERSHIP, EnumSet.of(CASE_OFFICER_NOT_ASSIGNED),
-          CHANGE_ACE_STATUS, EnumSet.of(CASE_OFFICER_ASSIGNED),
-          CASE_OFFICER_RELEASE_OWNERSHIP, EnumSet.of(CASE_OFFICER_ASSIGNED),
-          CASE_OFFICER_WITHDRAWAL_RESPONSE, EnumSet.of(CASE_OFFICER_ASSIGNED, WITHDRAWAL_OPEN),
-          TECHNICAL_REVIEW_REQUEST, EnumSet.of(CASE_OFFICER_ASSIGNED, NO_TECHNICAL_REVIEW_OPEN),
-          CASE_OFFICER_ASSIGN_OWNERSHIP, EnumSet.of(CASE_OFFICER_NOT_ASSIGNED),
-          CASE_OFFICER_REASSIGN_OWNERSHIP, EnumSet.of(CASE_OFFICER_ASSIGNED),
-          REGULATOR_ADD_CASE_NOTE, EnumSet.of(CASE_NOTES_ALLOWED),
-          TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP, EnumSet.of(TECHNICAL_REVIEW_OPEN),
-          OPERATOR_WITHDRAWAL_REQUEST, EnumSet.of(NO_WITHDRAWAL_OPEN)
+      Map.ofEntries(
+          entry(CASE_OFFICER_TAKE_OWNERSHIP, EnumSet.of(CASE_OFFICER_NOT_ASSIGNED)),
+          entry(CHANGE_ACE_STATUS, EnumSet.of(CASE_OFFICER_ASSIGNED)),
+          entry(CASE_OFFICER_RELEASE_OWNERSHIP, EnumSet.of(CASE_OFFICER_ASSIGNED)),
+          entry(CASE_OFFICER_WITHDRAWAL_RESPONSE, EnumSet.of(CASE_OFFICER_ASSIGNED, WITHDRAWAL_OPEN)),
+          entry(TECHNICAL_REVIEW_REQUEST, EnumSet.of(CASE_OFFICER_ASSIGNED, NO_TECHNICAL_REVIEW_OPEN)),
+          entry(CASE_OFFICER_ASSIGN_OWNERSHIP, EnumSet.of(CASE_OFFICER_NOT_ASSIGNED)),
+          entry(CASE_OFFICER_REASSIGN_OWNERSHIP, EnumSet.of(CASE_OFFICER_ASSIGNED)),
+          entry(REGULATOR_ADD_CASE_NOTE, EnumSet.of(CASE_NOTES_ALLOWED)),
+          entry(TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP, EnumSet.of(TECHNICAL_REVIEW_OPEN)),
+          entry(OPERATOR_WITHDRAWAL_REQUEST, EnumSet.of(NO_WITHDRAWAL_OPEN)),
+          entry(OPERATOR_UPDATE_APPLICATION, EnumSet.of(UPDATE_REQUEST_OPEN))
       );
 
   @Autowired
