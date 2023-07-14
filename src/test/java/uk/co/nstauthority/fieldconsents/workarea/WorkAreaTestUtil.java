@@ -60,7 +60,8 @@ public class WorkAreaTestUtil {
         null,
         null,
         false,
-        null
+        null,
+        false
     );
   }
 
@@ -89,7 +90,8 @@ public class WorkAreaTestUtil {
         null,
         null,
         false,
-        TECHNICAL_REVIEWER_WUA_ID
+        TECHNICAL_REVIEWER_WUA_ID,
+        false
     );
   }
 
@@ -118,7 +120,8 @@ public class WorkAreaTestUtil {
         null,
         null,
         false,
-        null
+        null,
+        false
     );
   }
 
@@ -147,7 +150,8 @@ public class WorkAreaTestUtil {
         null,
         null,
         false,
-        null
+        null,
+        false
     );
   }
 
@@ -176,7 +180,8 @@ public class WorkAreaTestUtil {
         null,
         CASE_OFFICER_WUA_ID,
         false,
-        TECHNICAL_REVIEWER_WUA_ID
+        TECHNICAL_REVIEWER_WUA_ID,
+        false
     );
   }
 
@@ -205,7 +210,8 @@ public class WorkAreaTestUtil {
         null,
         null,
         false,
-        null
+        null,
+        false
     );
   }
 
@@ -234,7 +240,8 @@ public class WorkAreaTestUtil {
         null,
         null,
         true,
-        null
+        null,
+        false
     );
   }
 
@@ -252,8 +259,9 @@ public class WorkAreaTestUtil {
         getSubmitter(workAreaItemDto),
         getAceFlag(workAreaItemDto),
         getCaseOfficer(workAreaItemDto),
-        getOpenWithdrawalRequest(workAreaItemDto),
-        getTechnicalReviewer(workAreaItemDto, workAreaGroup)
+        workAreaItemDto.withdrawalOpen(),
+        getTechnicalReviewer(workAreaItemDto, workAreaGroup),
+        workAreaItemDto.applicationUpdateOpen()
     );
   }
 
@@ -327,11 +335,6 @@ public class WorkAreaTestUtil {
     return "";
   }
 
-  private static Boolean getOpenWithdrawalRequest(WorkAreaItemDto workAreaItemDto) {
-    return ApplicationVersionStatus.SUBMITTED.equals(workAreaItemDto.status())
-        && workAreaItemDto.withdrawalOpen();
-  }
-
   private static String getTechnicalReviewer(WorkAreaItemDto workAreaItemDto, WorkAreaGroup workAreaGroup) {
     if (workAreaItemDto.technicalReviewerWuaId() != null
         && WorkAreaGroup.REGULATOR.equals(workAreaGroup)) {
@@ -380,7 +383,8 @@ public class WorkAreaTestUtil {
         "",
         "",
         false,
-        ""
+        "",
+        false
     );
   }
 }

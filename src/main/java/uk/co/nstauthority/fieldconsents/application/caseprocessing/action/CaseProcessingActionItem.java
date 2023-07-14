@@ -9,6 +9,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.casenotes.Cas
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewAssignmentController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationStartUpdateController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.util.enumutil.Displayable;
@@ -45,11 +46,14 @@ public enum CaseProcessingActionItem implements Displayable {
   TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP("Reassign technical reviewer", 1, false, null,
       applicationId -> ReverseRouter.route(on(TechnicalReviewAssignmentController.class)
           .getTechnicalReviewAssignment(applicationId, null))),
+  APPLICATION_UPDATE_REQUEST("Request application update", 2, false, null,
+      applicationId -> ReverseRouter.route(on(ApplicationUpdateController.class)
+          .getApplicationUpdateRequest(applicationId))),
   // Operator actions
-  OPERATOR_WITHDRAWAL_REQUEST("Request withdrawal", 1, false, null,
+  OPERATOR_WITHDRAWAL_REQUEST("Request withdrawal", 1, true, null,
       applicationId -> ReverseRouter.route(on(ApplicationWithdrawalController.class)
           .getApplicationWithdrawalRequest(applicationId))),
-  OPERATOR_UPDATE_APPLICATION("Update application", 999, false, null,
+  OPERATOR_UPDATE_APPLICATION("Update application", 1, true, null,
       applicationId -> ReverseRouter.route(on(ApplicationStartUpdateController.class)
           .updateApplicationEntryPoint(applicationId)));
 

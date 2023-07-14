@@ -131,6 +131,9 @@
     <#if workAreaItem.withdrawalOpen()>
       <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Withdrawal requested"/>
     </#if>
+    <#if workAreaItem.applicationUpdateOpen()>
+      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Application update requested"/>
+    </#if>
   </#assign>
   <@fdsResultList.resultListItem
     linkHeadingText=workAreaItem.reference()

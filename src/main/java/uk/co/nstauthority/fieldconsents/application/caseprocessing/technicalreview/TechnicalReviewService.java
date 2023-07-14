@@ -37,11 +37,12 @@ public class TechnicalReviewService {
 
   public boolean openTechnicalReviewExists(ApplicationVersion applicationVersion) {
     return technicalReviewRepository
-        .existsByApplicationVersionAndTechnicalReviewStatus(applicationVersion, OPEN);
+        .existsByApplicationVersion_ApplicationAndTechnicalReviewStatus(applicationVersion.getApplication(), OPEN);
   }
 
   public Optional<TechnicalReview> findOpenTechnicalReview(ApplicationVersion applicationVersion) {
-    return technicalReviewRepository.findByApplicationVersionAndTechnicalReviewStatus(applicationVersion, OPEN);
+    return technicalReviewRepository
+        .findByApplicationVersion_ApplicationAndTechnicalReviewStatus(applicationVersion.getApplication(), OPEN);
   }
 
   public TechnicalReview getOpenTechnicalReview(ApplicationVersion applicationVersion) {

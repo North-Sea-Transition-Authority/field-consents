@@ -3,7 +3,7 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal;
 import java.util.Optional;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.duplication.NotDuplicationSource;
 
 @Repository
@@ -11,10 +11,10 @@ import uk.co.nstauthority.fieldconsents.application.duplication.NotDuplicationSo
 public interface ApplicationWithdrawalRepository extends CrudRepository<ApplicationWithdrawal, Integer> {
 
 
-  boolean existsByApplicationVersionAndWithdrawalStatus(ApplicationVersion applicationVersion, WithdrawalStatus status);
+  boolean existsByApplicationVersion_ApplicationAndWithdrawalStatus(Application application, WithdrawalStatus status);
 
-  Optional<ApplicationWithdrawal> findByApplicationVersionAndWithdrawalStatus(
-      ApplicationVersion applicationVersion,
+  Optional<ApplicationWithdrawal> findByApplicationVersion_ApplicationAndWithdrawalStatus(
+      Application application,
       WithdrawalStatus status
   );
 }

@@ -42,7 +42,7 @@ public class ApplicationWithdrawalService {
 
   public boolean openWithdrawalExists(ApplicationVersion applicationVersion) {
     return applicationWithdrawalRepository
-        .existsByApplicationVersionAndWithdrawalStatus(applicationVersion, WithdrawalStatus.OPEN);
+        .existsByApplicationVersion_ApplicationAndWithdrawalStatus(applicationVersion.getApplication(), WithdrawalStatus.OPEN);
   }
 
   public WithdrawalRequestForm getWithdrawalRequestForm(ApplicationVersion applicationVersion) {
@@ -72,7 +72,8 @@ public class ApplicationWithdrawalService {
   }
 
   private Optional<ApplicationWithdrawal> findOpenApplicationWithdrawal(ApplicationVersion applicationVersion) {
-    return applicationWithdrawalRepository.findByApplicationVersionAndWithdrawalStatus(applicationVersion, WithdrawalStatus.OPEN);
+    return applicationWithdrawalRepository
+        .findByApplicationVersion_ApplicationAndWithdrawalStatus(applicationVersion.getApplication(), WithdrawalStatus.OPEN);
   }
 
   public ApplicationWithdrawal getOpenApplicationWithdrawal(ApplicationVersion applicationVersion) {

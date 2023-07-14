@@ -2,13 +2,14 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusfl
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.APPLICATION_UPDATE_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_NOTES_ALLOWED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_APPLICATION_UPDATE_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_TECHNICAL_REVIEW_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_WITHDRAWAL_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.TECHNICAL_REVIEW_OPEN;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.UPDATE_REQUEST_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.WITHDRAWAL_OPEN;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -21,6 +22,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
@@ -30,14 +32,17 @@ class CaseStatusFlagServiceTest {
 
   private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
 
-  @InjectMocks
-  private CaseStatusFlagService caseStatusFlagService;
-
   @Mock
   private ApplicationWithdrawalService applicationWithdrawalService;
 
   @Mock
   private TechnicalReviewService technicalReviewService;
+
+  @Mock
+  private ApplicationUpdateService applicationUpdateService;
+
+  @InjectMocks
+  private CaseStatusFlagService caseStatusFlagService;
 
   private ApplicationVersion applicationVersion;
 
@@ -56,7 +61,7 @@ class CaseStatusFlagServiceTest {
             NO_WITHDRAWAL_OPEN,
             NO_TECHNICAL_REVIEW_OPEN,
             CASE_NOTES_ALLOWED,
-            UPDATE_REQUEST_OPEN
+            NO_APPLICATION_UPDATE_OPEN
         );
   }
 
@@ -68,7 +73,7 @@ class CaseStatusFlagServiceTest {
             NO_WITHDRAWAL_OPEN,
             NO_TECHNICAL_REVIEW_OPEN,
             CASE_NOTES_ALLOWED,
-            UPDATE_REQUEST_OPEN
+            NO_APPLICATION_UPDATE_OPEN
         );
   }
 
@@ -81,7 +86,7 @@ class CaseStatusFlagServiceTest {
             WITHDRAWAL_OPEN,
             NO_TECHNICAL_REVIEW_OPEN,
             CASE_NOTES_ALLOWED,
-            UPDATE_REQUEST_OPEN
+            NO_APPLICATION_UPDATE_OPEN
         );
   }
 
@@ -94,7 +99,21 @@ class CaseStatusFlagServiceTest {
             NO_WITHDRAWAL_OPEN,
             TECHNICAL_REVIEW_OPEN,
             CASE_NOTES_ALLOWED,
-            UPDATE_REQUEST_OPEN
+            NO_APPLICATION_UPDATE_OPEN
+        );
+  }
+
+
+  @Test
+  void getCaseStatusFlags_whenApplicationUpdateOpen() {
+    when(applicationUpdateService.openApplicationUpdateExists(applicationVersion)).thenReturn(true);
+    assertThat(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
+        .containsOnly(
+            CASE_OFFICER_NOT_ASSIGNED,
+            NO_WITHDRAWAL_OPEN,
+            NO_TECHNICAL_REVIEW_OPEN,
+            CASE_NOTES_ALLOWED,
+            APPLICATION_UPDATE_OPEN
         );
   }
 }

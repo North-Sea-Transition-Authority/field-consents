@@ -62,7 +62,7 @@ class TechnicalReviewServiceTest {
   @Test
   void openTechnicalReviewExists_whenExists() {
     when(technicalReviewRepository
-        .existsByApplicationVersionAndTechnicalReviewStatus(applicationVersion, OPEN))
+        .existsByApplicationVersion_ApplicationAndTechnicalReviewStatus(applicationVersion.getApplication(), OPEN))
         .thenReturn(true);
 
     assertTrue(technicalReviewService.openTechnicalReviewExists(applicationVersion));
@@ -71,7 +71,7 @@ class TechnicalReviewServiceTest {
   @Test
   void openWithdrawalExists_whenDoesNotExist() {
     when(technicalReviewRepository
-        .existsByApplicationVersionAndTechnicalReviewStatus(applicationVersion, OPEN))
+        .existsByApplicationVersion_ApplicationAndTechnicalReviewStatus(applicationVersion.getApplication(), OPEN))
         .thenReturn(false);
 
     assertFalse(technicalReviewService.openTechnicalReviewExists(applicationVersion));
@@ -80,7 +80,7 @@ class TechnicalReviewServiceTest {
   @Test
   void findOpenTechnicalReview_whenExists() {
     when(technicalReviewRepository
-        .findByApplicationVersionAndTechnicalReviewStatus(applicationVersion, OPEN))
+        .findByApplicationVersion_ApplicationAndTechnicalReviewStatus(applicationVersion.getApplication(), OPEN))
         .thenReturn(Optional.of(technicalReview));
 
     assertThat(technicalReviewService.findOpenTechnicalReview(applicationVersion))
@@ -90,7 +90,7 @@ class TechnicalReviewServiceTest {
   @Test
   void findOpenTechnicalReview_whenDoesNotExist() {
     when(technicalReviewRepository
-        .findByApplicationVersionAndTechnicalReviewStatus(applicationVersion, OPEN))
+        .findByApplicationVersion_ApplicationAndTechnicalReviewStatus(applicationVersion.getApplication(), OPEN))
         .thenReturn(Optional.empty());
 
     assertThat(technicalReviewService.findOpenTechnicalReview(applicationVersion))
@@ -100,7 +100,7 @@ class TechnicalReviewServiceTest {
   @Test
   void getOpenTechnicalReview_whenExists() {
     when(technicalReviewRepository
-        .findByApplicationVersionAndTechnicalReviewStatus(applicationVersion, OPEN))
+        .findByApplicationVersion_ApplicationAndTechnicalReviewStatus(applicationVersion.getApplication(), OPEN))
         .thenReturn(Optional.of(technicalReview));
 
     assertThat(technicalReviewService.getOpenTechnicalReview(applicationVersion))
@@ -110,7 +110,7 @@ class TechnicalReviewServiceTest {
   @Test
   void getOpenTechnicalReview_whenDoesNotExist() {
     when(technicalReviewRepository
-        .findByApplicationVersionAndTechnicalReviewStatus(applicationVersion, OPEN))
+        .findByApplicationVersion_ApplicationAndTechnicalReviewStatus(applicationVersion.getApplication(), OPEN))
         .thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> technicalReviewService.getOpenTechnicalReview(applicationVersion))
@@ -120,7 +120,7 @@ class TechnicalReviewServiceTest {
 
   @Test
   void getTechnicalReviewRequestForm_noOpenTechnicalReviewExists() {
-    when(technicalReviewRepository.existsByApplicationVersionAndTechnicalReviewStatus(applicationVersion, OPEN))
+    when(technicalReviewRepository.existsByApplicationVersion_ApplicationAndTechnicalReviewStatus(applicationVersion.getApplication(), OPEN))
         .thenReturn(false);
 
     assertThat(technicalReviewService.getTechnicalReviewRequestForm(applicationVersion))
@@ -130,7 +130,7 @@ class TechnicalReviewServiceTest {
 
   @Test
   void getTechnicalReviewRequestForm_technicalReviewAlreadyOpen() {
-    when(technicalReviewRepository.existsByApplicationVersionAndTechnicalReviewStatus(applicationVersion, OPEN))
+    when(technicalReviewRepository.existsByApplicationVersion_ApplicationAndTechnicalReviewStatus(applicationVersion.getApplication(), OPEN))
         .thenReturn(true);
 
     assertThatThrownBy(() -> technicalReviewService.getTechnicalReviewRequestForm(applicationVersion))

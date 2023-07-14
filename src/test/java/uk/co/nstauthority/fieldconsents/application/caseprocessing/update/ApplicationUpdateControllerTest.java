@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview;
+package uk.co.nstauthority.fieldconsents.application.caseprocessing.update;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doCallRealMethod;
@@ -14,16 +14,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.ENERGY_PORTAL_USER_5;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.SERVICE_USER_DETAIL_USER_5;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.TECHNICAL_REVIEWER_ASSIGNMENT_CANDIDATES;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.TECHNICAL_REVIEWER_ASSIGNMENT_CANDIDATES_MAP;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEW_REQUEST;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.CURRENT_DATE;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.CURRENT_DATE_TIME;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.CURRENT_INSTANT;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.DEADLINE_AHEAD_HOURS;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.TECHNICAL_REVIEW_REQUEST_TEXT;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.APPLICATION_UPDATE_REQUEST;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateController.REQUEST_PAGE_TITLE;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateTestUtil.APPLICATION_UPDATE_REQUEST_TEXT;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateTestUtil.CURRENT_DATE;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateTestUtil.CURRENT_DATE_TIME;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateTestUtil.CURRENT_INSTANT;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateTestUtil.DEADLINE_AHEAD_HOURS;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.notificationBanner;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
@@ -42,19 +39,18 @@ import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
+import uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
+import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
-import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
-import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
 
-@ContextConfiguration(classes = TechnicalReviewController.class)
-class TechnicalReviewControllerTest extends AbstractApplicationControllerTest {
+@ContextConfiguration(classes = ApplicationUpdateController.class)
+class ApplicationUpdateControllerTest extends AbstractApplicationControllerTest {
 
   private static final String DUMMY_APP_REF = "DUMMY_APP_REF";
 
@@ -62,32 +58,26 @@ class TechnicalReviewControllerTest extends AbstractApplicationControllerTest {
   private ApplicationService applicationService;
 
   @MockBean
-  private TechnicalReviewService technicalReviewService;
+  private ApplicationUpdateService applicationUpdateService;
 
   @MockBean
-  private TechnicalReviewAssignmentService technicalReviewAssignmentService;
+  private ApplicationSummaryService applicationSummaryService;
 
   @MockBean
-  private TechnicalReviewRequestFormValidator technicalReviewRequestFormValidator;
-
-  @MockBean
-  private TeamMemberViewService teamMemberViewService;
-
-  @MockBean
-  private EnergyPortalUserService energyPortalUserService;
+  private ApplicationUpdateRequestFormValidator applicationUpdateRequestFormValidator;
 
   @MockBean
   private Clock clock;
 
   @SecurityTest
-  void getTechnicalReviewRequest_noUser() throws Exception {
-    mockMvc.perform(get(ReverseRouter.route(on(TechnicalReviewController.class)
-            .getTechnicalReviewRequest(APPLICATION_ID, null))))
+  void getApplicationUpdateRequest_noUser() throws Exception {
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationUpdateController.class)
+            .getApplicationUpdateRequest(APPLICATION_ID))))
         .andExpect(redirectionToLoginUrl());
   }
 
   @SecurityTest
-  void getTechnicalReviewRequest_checkEndPointSecurityOnly_forbidden() throws Exception {
+  void getApplicationUpdateRequest_checkEndPointSecurityOnly_forbidden() throws Exception {
     var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
@@ -95,88 +85,86 @@ class TechnicalReviewControllerTest extends AbstractApplicationControllerTest {
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(Collections.emptyList());
 
-    mockMvc.perform(get(ReverseRouter.route(on(TechnicalReviewController.class)
-            .getTechnicalReviewRequest(APPLICATION_ID, null)))
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationUpdateController.class)
+            .getApplicationUpdateRequest(APPLICATION_ID)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isForbidden());
   }
 
   @SecurityTest
-  void getTechnicalReviewRequest_checkEndPointSecurityOnly_allowed() throws Exception {
+  void getApplicationUpdateRequest_checkEndPointSecurityOnly_allowed() throws Exception {
     var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
-    when(technicalReviewService.getTechnicalReviewRequestForm(applicationVersion))
-        .thenReturn(new TechnicalReviewRequestForm());
+    when(applicationUpdateService.getApplicationUpdateRequestForm(applicationVersion))
+        .thenReturn(new ApplicationUpdateRequestForm());
     when(applicationService.generateApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
+    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any(), any());
 
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(TECHNICAL_REVIEW_REQUEST));
+        .thenReturn(List.of(APPLICATION_UPDATE_REQUEST));
 
-    mockMvc.perform(get(ReverseRouter.route(on(TechnicalReviewController.class)
-            .getTechnicalReviewRequest(APPLICATION_ID, null)))
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationUpdateController.class)
+            .getApplicationUpdateRequest(APPLICATION_ID)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
-        .andExpect(view().name("fcs/application/technicalReviewRequest"));
+        .andExpect(view().name("fcs/application/applicationUpdateRequest"));
   }
 
   @ParameterizedTest
   @MethodSource("getSubmittedApplicationVersions")
-  void getTechnicalReviewRequest(ApplicationVersion applicationVersion) throws Exception {
+  void getApplicationUpdateRequest(ApplicationVersion applicationVersion) throws Exception {
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
-    when(technicalReviewService.getTechnicalReviewRequestForm(applicationVersion))
-        .thenReturn(new TechnicalReviewRequestForm());
+    when(applicationUpdateService.getApplicationUpdateRequestForm(applicationVersion))
+        .thenReturn(new ApplicationUpdateRequestForm());
     when(applicationService.generateApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
-    when(technicalReviewAssignmentService.getTechnicalReviewerAssignmentCandidates(user))
-        .thenReturn(TECHNICAL_REVIEWER_ASSIGNMENT_CANDIDATES);
-    when(teamMemberViewService.getUsersMap(TECHNICAL_REVIEWER_ASSIGNMENT_CANDIDATES))
-        .thenReturn(TECHNICAL_REVIEWER_ASSIGNMENT_CANDIDATES_MAP);
+    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any(), any());
 
-    mockMvc.perform(get(ReverseRouter.route(on(TechnicalReviewController.class)
-            .getTechnicalReviewRequest(APPLICATION_ID, null)))
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationUpdateController.class)
+            .getApplicationUpdateRequest(APPLICATION_ID)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
-        .andExpect(view().name("fcs/application/technicalReviewRequest"))
+        .andExpect(view().name("fcs/application/applicationUpdateRequest"))
+        .andExpect(model().attribute("pageTitle", REQUEST_PAGE_TITLE))
+        .andExpect(model().attributeExists("summarySections"))
+        .andExpect(model().attribute("accordionId", applicationVersion.getId()))
+        .andExpect(model().attribute("wideSummaryDisplay",
+            ApplicationTypeFeature.WIDE_SUMMARY_DISPLAY.allowed(applicationVersion.getApplication().getType())))
         .andExpect(model().attribute("applicationReference", DUMMY_APP_REF))
-        .andExpect(model().attribute("technicalReviewerAssignmentCandidates",
-            TECHNICAL_REVIEWER_ASSIGNMENT_CANDIDATES_MAP))
         .andExpect(model().attribute("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
                 .getApplicationCaseProcessing(APPLICATION_ID, null))));
   }
 
   @SecurityTest
-  void startTechnicalReview_noUser() throws Exception {
-    mockMvc.perform(post(ReverseRouter.route(on(TechnicalReviewController.class)
-            .startTechnicalReview(APPLICATION_ID, null, null, null, null)))
+  void sendApplicationUpdateRequest_noUser() throws Exception {
+    mockMvc.perform(post(ReverseRouter.route(on(ApplicationUpdateController.class)
+            .sendApplicationUpdateRequest(APPLICATION_ID, null, null, null, null)))
             .with(csrf()))
         .andExpect(redirectionToLoginUrl());
   }
 
   @ParameterizedTest
   @MethodSource("getSubmittedApplicationVersions")
-  void startTechnicalReview_valid(ApplicationVersion applicationVersion) throws Exception {
+  void sendApplicationUpdateRequest_valid(ApplicationVersion applicationVersion) throws Exception {
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
 
-    when(energyPortalUserService.getByWuaId(new WebUserAccountId(ENERGY_PORTAL_USER_5.webUserAccountId())))
-        .thenReturn(ENERGY_PORTAL_USER_5);
-
     var expectedNotificationBanner = NotificationBanner.builder()
         .withBannerType(NotificationBannerType.SUCCESS)
-        .withHeadingContent("Technical review sent to %s".formatted(ENERGY_PORTAL_USER_5.displayName()))
+        .withHeadingContent("Application update request sent to operator")
         .build();
 
     when(clock.instant()).thenReturn(CURRENT_INSTANT);
@@ -187,54 +175,53 @@ class TechnicalReviewControllerTest extends AbstractApplicationControllerTest {
         DateUtils.datePickerWithTimeStringToInstant(deadlineDateStr, deadlineHoursStr, deadlineMinutesStr, clock);
 
     mockMvc.perform(
-            post(ReverseRouter.route(on(TechnicalReviewController.class)
-                .startTechnicalReview(APPLICATION_ID, null, null, null, null)))
+            post(ReverseRouter.route(on(ApplicationUpdateController.class)
+                .sendApplicationUpdateRequest(APPLICATION_ID, null, null, null, null)))
                 .with(csrf())
                 .with(user(user))
-                .param("technicalReviewerWuaId", String.valueOf(ENERGY_PORTAL_USER_5.webUserAccountId()))
                 .param("deadlineDate", deadlineDateStr)
                 .param("deadlineHours", deadlineHoursStr)
                 .param("deadlineMinutes", deadlineMinutesStr)
-                .param("requestText", TECHNICAL_REVIEW_REQUEST_TEXT)
+                .param("requestText", APPLICATION_UPDATE_REQUEST_TEXT)
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
             .getApplicationCaseProcessing(APPLICATION_ID, null))))
         .andExpect(notificationBanner(expectedNotificationBanner));
 
-    verify(technicalReviewService, times(1))
-        .saveTechnicalReviewRequest(applicationVersion, deadlineInstant,
-            TECHNICAL_REVIEW_REQUEST_TEXT, SERVICE_USER_DETAIL_USER_5, user);
+    verify(applicationUpdateService, times(1))
+        .saveApplicationUpdateRequest(applicationVersion, deadlineInstant,
+            APPLICATION_UPDATE_REQUEST_TEXT, user);
   }
 
   @ParameterizedTest
   @MethodSource("getSubmittedApplicationVersions")
-  void startTechnicalReview_invalid(ApplicationVersion applicationVersion) throws Exception {
+  void sendApplicationUpdateRequest_invalid(ApplicationVersion applicationVersion) throws Exception {
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
 
-    doCallRealMethod().when(technicalReviewRequestFormValidator).validate(any(), any());
+    doCallRealMethod().when(applicationUpdateRequestFormValidator).validate(any(), any());
 
     when(applicationService.generateApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
-    when(technicalReviewAssignmentService.getTechnicalReviewerAssignmentCandidates(user))
-        .thenReturn(TECHNICAL_REVIEWER_ASSIGNMENT_CANDIDATES);
-    when(teamMemberViewService.getUsersMap(TECHNICAL_REVIEWER_ASSIGNMENT_CANDIDATES))
-        .thenReturn(TECHNICAL_REVIEWER_ASSIGNMENT_CANDIDATES_MAP);
+    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any(), any());
 
     mockMvc.perform(
-            post(ReverseRouter.route(on(TechnicalReviewController.class)
-                .startTechnicalReview(APPLICATION_ID, null, null, null, null)))
+            post(ReverseRouter.route(on(ApplicationUpdateController.class)
+                .sendApplicationUpdateRequest(APPLICATION_ID, null, null, null, null)))
                 .with(csrf())
                 .with(user(user))
         )
         .andExpect(status().isOk())
-        .andExpect(view().name("fcs/application/technicalReviewRequest"))
+        .andExpect(view().name("fcs/application/applicationUpdateRequest"))
+        .andExpect(model().attribute("pageTitle", REQUEST_PAGE_TITLE))
+        .andExpect(model().attributeExists("summarySections"))
+        .andExpect(model().attribute("accordionId", applicationVersion.getId()))
+        .andExpect(model().attribute("wideSummaryDisplay",
+            ApplicationTypeFeature.WIDE_SUMMARY_DISPLAY.allowed(applicationVersion.getApplication().getType())))
         .andExpect(model().attribute("applicationReference", DUMMY_APP_REF))
-        .andExpect(model().attribute("technicalReviewerAssignmentCandidates",
-            TECHNICAL_REVIEWER_ASSIGNMENT_CANDIDATES_MAP))
         .andExpect(model().attribute("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
                 .getApplicationCaseProcessing(APPLICATION_ID, null))));

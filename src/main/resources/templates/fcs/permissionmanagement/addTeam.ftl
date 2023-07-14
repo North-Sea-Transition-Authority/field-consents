@@ -18,7 +18,7 @@
           selectorMinInputLength=2
           preselectedItems={}
           />
-        <@fdsAction.button buttonText="Creat team for organisation group"/>
+        <@fdsAction.button buttonText="Create team for organisation group"/>
     </@fdsForm.htmlForm>
     <@fdsDetails.summaryDetails summaryTitle="The organisation group I want to create a team for is not listed">
       <p class="govuk-body">

@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview;
+package uk.co.nstauthority.fieldconsents.application.caseprocessing.update;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -15,8 +15,8 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 
 @Audited
 @Entity
-@Table(name = "application_technical_reviews")
-public class TechnicalReview {
+@Table(name = "application_updates")
+public class ApplicationUpdate {
 
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Id
@@ -34,8 +34,6 @@ public class TechnicalReview {
 
   private Instant deadlineDateTime;
 
-  private Long technicalReviewerWuaId;
-
   private Long respondedByWuaId;
 
   private Instant respondedDateTime;
@@ -43,10 +41,10 @@ public class TechnicalReview {
   private String responseText;
 
   @Enumerated(EnumType.STRING)
-  private TechnicalReviewResponseType responseType;
+  private ApplicationUpdateResponseType responseType;
 
   @Enumerated(EnumType.STRING)
-  private TechnicalReviewStatus technicalReviewStatus;
+  private ApplicationUpdateStatus applicationUpdateStatus;
 
   public ApplicationVersion getApplicationVersion() {
     return applicationVersion;
@@ -84,16 +82,8 @@ public class TechnicalReview {
     return deadlineDateTime;
   }
 
-  public void setDeadlineDateTime(Instant requestDeadlineDateTime) {
-    this.deadlineDateTime = requestDeadlineDateTime;
-  }
-
-  public Long getTechnicalReviewerWuaId() {
-    return technicalReviewerWuaId;
-  }
-
-  public void setTechnicalReviewerWuaId(Long technicalReviewerWuaId) {
-    this.technicalReviewerWuaId = technicalReviewerWuaId;
+  public void setDeadlineDateTime(Instant deadlineDateTime) {
+    this.deadlineDateTime = deadlineDateTime;
   }
 
   public Long getRespondedByWuaId() {
@@ -120,21 +110,21 @@ public class TechnicalReview {
     this.responseText = responseText;
   }
 
-  public TechnicalReviewResponseType getResponseType() {
+  public ApplicationUpdateResponseType getResponseType() {
     return responseType;
   }
 
   public void setResponseType(
-      TechnicalReviewResponseType responseType) {
+      ApplicationUpdateResponseType responseType) {
     this.responseType = responseType;
   }
 
-  public TechnicalReviewStatus getTechnicalReviewStatus() {
-    return technicalReviewStatus;
+  public ApplicationUpdateStatus getApplicationUpdateStatus() {
+    return applicationUpdateStatus;
   }
 
-  public void setTechnicalReviewStatus(
-      TechnicalReviewStatus technicalReviewStatus) {
-    this.technicalReviewStatus = technicalReviewStatus;
+  public void setApplicationUpdateStatus(
+      ApplicationUpdateStatus applicationUpdateStatus) {
+    this.applicationUpdateStatus = applicationUpdateStatus;
   }
 }

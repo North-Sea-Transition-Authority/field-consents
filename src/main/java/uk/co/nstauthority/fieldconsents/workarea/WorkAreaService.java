@@ -218,9 +218,9 @@ public class WorkAreaService {
                 : "",
             getAceFlag(workAreaItemDto),
             getCaseOfficer(workAreaItemDto, portalUserDtosMap),
-            ApplicationVersionStatus.SUBMITTED.equals(workAreaItemDto.status())
-                && workAreaItemDto.withdrawalOpen(),
-            getTechnicalReviewer(workAreaItemDto, portalUserDtosMap, workAreaGroup)
+            workAreaItemDto.withdrawalOpen(),
+            getTechnicalReviewer(workAreaItemDto, portalUserDtosMap, workAreaGroup),
+            workAreaItemDto.applicationUpdateOpen()
         ))
         .toList();
   }

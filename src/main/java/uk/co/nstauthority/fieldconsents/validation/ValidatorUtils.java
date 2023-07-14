@@ -18,6 +18,7 @@ public class ValidatorUtils {
 
   public static final int MAX_DECIMAL_PLACES = 6;
   public static final String EMPTY_STRING = "";
+  public static final String PLURAL_STRING = "s";
   public static final String DATE_REQUIRED_ERROR_MESSAGE = "Pick a %s date";
   public static final String DATE_BEFORE_TODAY_ERROR_MESSAGE = "%s date must be on or after today";
   public static final String DATE_INVALID_ERROR_MESSAGE = "%s date must be a valid date in the format dd/mm/yyyy";
@@ -163,6 +164,6 @@ public class ValidatorUtils {
   }
 
   private static String addConditionalPlural(int count) {
-    return count > 1 ? "s" : EMPTY_STRING;
+    return count > 1 ? PLURAL_STRING : EMPTY_STRING;
   }
 }

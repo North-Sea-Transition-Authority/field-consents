@@ -12,6 +12,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.withdr
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalTestUtil.CURRENT_INSTANT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalTestUtil.WITHDRAWAL_REQUEST_TEXT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalTestUtil.getOpenApplicationWithdrawal;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.WithdrawalStatus.OPEN;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.INDUSTRY;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.REGULATOR;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.OPERATOR_WITHDRAWAL_REQUEST;
@@ -65,7 +66,7 @@ class ApplicationWithdrawalServiceTest {
   @Test
   void openWithdrawalExists_whenExists() {
     when(applicationWithdrawalRepository
-        .existsByApplicationVersionAndWithdrawalStatus(applicationVersion, WithdrawalStatus.OPEN))
+        .existsByApplicationVersion_ApplicationAndWithdrawalStatus(applicationVersion.getApplication(), OPEN))
         .thenReturn(true);
 
     assertTrue(applicationWithdrawalService.openWithdrawalExists(applicationVersion));
@@ -74,7 +75,7 @@ class ApplicationWithdrawalServiceTest {
   @Test
   void openWithdrawalExists_whenDoesNotExist() {
     when(applicationWithdrawalRepository
-        .existsByApplicationVersionAndWithdrawalStatus(applicationVersion, WithdrawalStatus.OPEN))
+        .existsByApplicationVersion_ApplicationAndWithdrawalStatus(applicationVersion.getApplication(), OPEN))
         .thenReturn(false);
 
     assertFalse(applicationWithdrawalService.openWithdrawalExists(applicationVersion));
@@ -82,7 +83,8 @@ class ApplicationWithdrawalServiceTest {
 
   @Test
   void getWithdrawalRequestForm_noOpenWithdrawalRequest() {
-    when(applicationWithdrawalRepository.existsByApplicationVersionAndWithdrawalStatus(applicationVersion, WithdrawalStatus.OPEN))
+    when(applicationWithdrawalRepository
+        .existsByApplicationVersion_ApplicationAndWithdrawalStatus(applicationVersion.getApplication(), OPEN))
         .thenReturn(false);
 
     var form = applicationWithdrawalService.getWithdrawalRequestForm(applicationVersion);
@@ -93,7 +95,8 @@ class ApplicationWithdrawalServiceTest {
 
   @Test
   void getWithdrawalRequestForm_withdrawalRequestAlreadyOpen() {
-    when(applicationWithdrawalRepository.existsByApplicationVersionAndWithdrawalStatus(applicationVersion, WithdrawalStatus.OPEN))
+    when(applicationWithdrawalRepository
+        .existsByApplicationVersion_ApplicationAndWithdrawalStatus(applicationVersion.getApplication(), OPEN))
         .thenReturn(true);
 
     assertThatThrownBy(() -> applicationWithdrawalService.getWithdrawalRequestForm(applicationVersion))
@@ -122,7 +125,8 @@ class ApplicationWithdrawalServiceTest {
   @Test
   void getOpenApplicationWithdrawal_whenItExists() {
     var applicationWithdrawal = getOpenApplicationWithdrawal(applicationVersion);
-    when(applicationWithdrawalRepository.findByApplicationVersionAndWithdrawalStatus(applicationVersion, WithdrawalStatus.OPEN))
+    when(applicationWithdrawalRepository
+        .findByApplicationVersion_ApplicationAndWithdrawalStatus(applicationVersion.getApplication(), OPEN))
         .thenReturn(Optional.of(applicationWithdrawal));
 
     assertThat(applicationWithdrawalService.getOpenApplicationWithdrawal(applicationVersion))
@@ -131,7 +135,8 @@ class ApplicationWithdrawalServiceTest {
 
   @Test
   void getOpenApplicationWithdrawal_whenItDoesNotExist() {
-    when(applicationWithdrawalRepository.findByApplicationVersionAndWithdrawalStatus(applicationVersion, WithdrawalStatus.OPEN))
+    when(applicationWithdrawalRepository
+        .findByApplicationVersion_ApplicationAndWithdrawalStatus(applicationVersion.getApplication(), OPEN))
         .thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> applicationWithdrawalService.getOpenApplicationWithdrawal(applicationVersion))
@@ -141,7 +146,8 @@ class ApplicationWithdrawalServiceTest {
 
   @Test
   void getWithdrawalResponseForm_withOpenWithdrawalRequest() {
-    when(applicationWithdrawalRepository.findByApplicationVersionAndWithdrawalStatus(applicationVersion, WithdrawalStatus.OPEN))
+    when(applicationWithdrawalRepository
+        .findByApplicationVersion_ApplicationAndWithdrawalStatus(applicationVersion.getApplication(), OPEN))
         .thenReturn(Optional.of(new ApplicationWithdrawal()));
 
     var form = applicationWithdrawalService.getWithdrawalResponseForm(applicationVersion);
@@ -152,7 +158,8 @@ class ApplicationWithdrawalServiceTest {
 
   @Test
   void getWithdrawalResponseForm_withNoOpenWithdrawalRequest() {
-    when(applicationWithdrawalRepository.findByApplicationVersionAndWithdrawalStatus(applicationVersion, WithdrawalStatus.OPEN))
+    when(applicationWithdrawalRepository
+        .findByApplicationVersion_ApplicationAndWithdrawalStatus(applicationVersion.getApplication(), OPEN))
         .thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> applicationWithdrawalService.getWithdrawalResponseForm(applicationVersion))
@@ -165,7 +172,8 @@ class ApplicationWithdrawalServiceTest {
     when(clock.instant()).thenReturn(CURRENT_INSTANT);
 
     var applicationWithdrawal = getOpenApplicationWithdrawal(applicationVersion);
-    when(applicationWithdrawalRepository.findByApplicationVersionAndWithdrawalStatus(applicationVersion, WithdrawalStatus.OPEN))
+    when(applicationWithdrawalRepository
+        .findByApplicationVersion_ApplicationAndWithdrawalStatus(applicationVersion.getApplication(), OPEN))
         .thenReturn(Optional.of(applicationWithdrawal));
 
     applicationWithdrawalService.saveWithdrawalResponse(applicationVersion, WithdrawalStatus.ACCEPTED, null, user);
@@ -182,8 +190,8 @@ class ApplicationWithdrawalServiceTest {
     when(clock.instant()).thenReturn(CURRENT_INSTANT);
 
     var applicationWithdrawal = getOpenApplicationWithdrawal(applicationVersion);
-    when(applicationWithdrawalRepository.findByApplicationVersionAndWithdrawalStatus(applicationVersion,
-        WithdrawalStatus.OPEN))
+    when(applicationWithdrawalRepository
+        .findByApplicationVersion_ApplicationAndWithdrawalStatus(applicationVersion.getApplication(), OPEN))
         .thenReturn(Optional.of(applicationWithdrawal));
 
     applicationWithdrawalService.saveWithdrawalResponse(applicationVersion, WithdrawalStatus.REJECTED, "request rejected", user);

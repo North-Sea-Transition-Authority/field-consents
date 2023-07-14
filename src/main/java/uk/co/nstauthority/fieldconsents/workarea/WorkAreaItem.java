@@ -19,7 +19,8 @@ public record WorkAreaItem(
     String aceFlag,
     String caseOfficer,
     Boolean withdrawalOpen,
-    String technicalReviewer
+    String technicalReviewer,
+    Boolean applicationUpdateOpen
 ) {
   public String url() {
     return ReverseRouter.route(on(ApplicationSummaryController.class).getApplicationSummary(applicationId, null));

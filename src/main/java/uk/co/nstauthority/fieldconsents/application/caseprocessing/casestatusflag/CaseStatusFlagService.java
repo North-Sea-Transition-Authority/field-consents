@@ -1,12 +1,12 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag;
 
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.APPLICATION_UPDATE_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_APPLICATION_UPDATE_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_TECHNICAL_REVIEW_OPEN;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_UPDATE_REQUEST_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_WITHDRAWAL_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.TECHNICAL_REVIEW_OPEN;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.UPDATE_REQUEST_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.WITHDRAWAL_OPEN;
 
 import java.util.HashSet;
@@ -15,6 +15,7 @@ import java.util.Set;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalService;
 
 @Service
@@ -22,11 +23,14 @@ public class CaseStatusFlagService {
 
   private final ApplicationWithdrawalService applicationWithdrawalService;
   private final TechnicalReviewService technicalReviewService;
+  private final ApplicationUpdateService applicationUpdateService;
 
   public CaseStatusFlagService(ApplicationWithdrawalService applicationWithdrawalService,
-                               TechnicalReviewService technicalReviewService) {
+                               TechnicalReviewService technicalReviewService,
+                               ApplicationUpdateService applicationUpdateService) {
     this.applicationWithdrawalService = applicationWithdrawalService;
     this.technicalReviewService = technicalReviewService;
+    this.applicationUpdateService = applicationUpdateService;
   }
 
   public Set<CaseStatusFlag> getCaseStatusFlags(ApplicationVersion applicationVersion) {
@@ -70,11 +74,10 @@ public class CaseStatusFlagService {
 
   private void addUpdateRequestFlag(ApplicationVersion applicationVersion,
                                     HashSet<CaseStatusFlag> caseStatusFlags) {
-    // TODO add condition when update requests implemented
-    if (true) {
-      caseStatusFlags.add(UPDATE_REQUEST_OPEN);
+    if (applicationUpdateService.openApplicationUpdateExists(applicationVersion)) {
+      caseStatusFlags.add(APPLICATION_UPDATE_OPEN);
     } else {
-      caseStatusFlags.add(NO_UPDATE_REQUEST_OPEN);
+      caseStatusFlags.add(NO_APPLICATION_UPDATE_OPEN);
     }
   }
 }
