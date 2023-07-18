@@ -47,8 +47,16 @@ public class CaseNote {
     this.applicationVersion = applicationVersion;
   }
 
+  public Long getAddedByWuaId() {
+    return addedByWuaId;
+  }
+
   public void setAddedByWuaId(Long addedByWuaId) {
     this.addedByWuaId = addedByWuaId;
+  }
+
+  public Instant getAddedDateTime() {
+    return addedDateTime;
   }
 
   public void setAddedDateTime(Instant addedDateTime) {

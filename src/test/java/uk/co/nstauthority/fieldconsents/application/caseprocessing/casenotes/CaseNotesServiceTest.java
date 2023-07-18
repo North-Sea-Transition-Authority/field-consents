@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,7 +19,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
@@ -60,7 +60,6 @@ class CaseNotesServiceTest {
     var caseNoteText = "case note text";
     var caseNoteDocuments = FileUploadTestUtil.validDocumentForms;
     var caseNote = getCaseNote(currentTime, caseNoteText);
-    var caseNoteForm = getCaseNoteForm(caseNoteText, caseNoteDocuments);
 
     caseNotesService.saveCaseNote(applicationVersion, caseNoteText, caseNoteDocuments, user);
 
@@ -72,12 +71,41 @@ class CaseNotesServiceTest {
     assertThat(actualCaseNote).usingRecursiveComparison().isEqualTo(caseNote);
   }
 
-  @NotNull
-  private CaseNoteForm getCaseNoteForm(String caseNoteText, List<UploadedFileForm> caseNoteDocuments) {
-    var caseNoteForm = new CaseNoteForm();
-    caseNoteForm.setCaseNoteText(caseNoteText);
-    caseNoteForm.setCaseNoteDocuments(caseNoteDocuments);
-    return caseNoteForm;
+  @Test
+  void getCaseNotesByApplication_whenNoNote() {
+    when(caseNotesRepository.findByApplicationVersion_Application(applicationVersion.getApplication())).thenReturn(
+        Collections.emptyList()
+    );
+
+    assertThat(caseNotesService.getCaseNotesByApplication(applicationVersion.getApplication())).isEmpty();
+  }
+
+  @Test
+  void getCaseNotesByApplication_whenNoteExists() {
+    var caseNote1 = new CaseNote();
+    caseNote1.setCaseNoteText("This is a case note.");
+    caseNote1.setAddedByWuaId(user.wuaId());
+    caseNote1.setAddedDateTime(Instant.now());
+    caseNote1.setApplicationVersion(applicationVersion);
+
+    var caseNote2 = new CaseNote();
+    caseNote2.setCaseNoteText("This is another case note.");
+    caseNote2.setAddedByWuaId(user.wuaId());
+    caseNote2.setAddedDateTime(Instant.now());
+    caseNote2.setApplicationVersion(applicationVersion);
+
+    when(caseNotesRepository.findByApplicationVersion_Application(applicationVersion.getApplication())).thenReturn(
+        List.of(
+            caseNote1,
+            caseNote2
+        )
+    );
+
+    assertThat(caseNotesService.getCaseNotesByApplication(applicationVersion.getApplication()))
+        .containsExactly(
+            caseNote1,
+            caseNote2
+        );
   }
 
   @NotNull

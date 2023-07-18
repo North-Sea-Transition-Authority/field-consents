@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview;
 
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
@@ -15,4 +16,6 @@ public interface TechnicalReviewRepository extends CrudRepository<TechnicalRevie
 
   Optional<TechnicalReview> findByApplicationVersion_ApplicationAndTechnicalReviewStatus(Application application,
                                                                                          TechnicalReviewStatus status);
+
+  List<TechnicalReview> findByApplicationVersion_Application(Application application);
 }

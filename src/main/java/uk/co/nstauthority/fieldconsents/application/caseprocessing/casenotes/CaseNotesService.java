@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
+import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 
@@ -34,5 +35,9 @@ public class CaseNotesService {
     caseNote.setAddedDateTime(clock.instant());
     caseNotesRepository.save(caseNote);
     caseNotesDocumentService.saveDocuments(caseNote, caseNoteDocuments);
+  }
+
+  public List<CaseNote> getCaseNotesByApplication(Application application) {
+    return caseNotesRepository.findByApplicationVersion_Application(application);
   }
 }

@@ -5,10 +5,12 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.techni
 import jakarta.persistence.EntityNotFoundException;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 
@@ -73,5 +75,9 @@ public class TechnicalReviewService {
     technicalReview.setDeadlineDateTime(deadlineInstant);
     technicalReviewRepository.save(technicalReview);
     technicalReviewAssignmentService.assignTechnicalReviewer(technicalReview, technicalReviewerUser, user);
+  }
+
+  public List<TechnicalReview> getTechnicalReviewsByApplication(Application application) {
+    return technicalReviewRepository.findByApplicationVersion_Application(application);
   }
 }

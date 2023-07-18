@@ -1,6 +1,8 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseProcessingTab.CASE_HISTORY;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseProcessingTab.VIEW_APPLICATION;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -8,10 +10,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseHistoryTabContentService;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
@@ -22,6 +24,10 @@ import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @Controller
 @RequestMapping("applications/{applicationId}")
+@HasApplicationPermission(permissions = {
+    RolePermission.PROCESS_FCS_APPLICATIONS,
+    RolePermission.ASSIGN_FCS_APPLICATIONS,
+    RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS})
 public class ApplicationCaseProcessingController {
 
   private final ApplicationService applicationService;
@@ -32,33 +38,47 @@ public class ApplicationCaseProcessingController {
 
   private final CaseProcessingActionService caseProcessingActionService;
 
+  private final CaseProcessingTabService caseProcessingTabService;
+
+  private final CaseHistoryTabContentService caseHistoryTabContentService;
+
   ApplicationCaseProcessingController(ApplicationService applicationService,
                                       ApplicationVersionService applicationVersionService,
                                       ApplicationSummaryService applicationSummaryService,
-                                      CaseProcessingActionService caseProcessingActionService) {
+                                      CaseProcessingActionService caseProcessingActionService,
+                                      CaseProcessingTabService caseProcessingTabService,
+                                      CaseHistoryTabContentService caseHistoryTabContentService) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.applicationSummaryService = applicationSummaryService;
     this.caseProcessingActionService = caseProcessingActionService;
+    this.caseProcessingTabService = caseProcessingTabService;
+    this.caseHistoryTabContentService = caseHistoryTabContentService;
   }
 
   @GetMapping("case-processing")
   @HasApplicationStatus(statuses = ApplicationVersionStatus.SUBMITTED)
-  @HasApplicationPermission(permissions = {
-      RolePermission.PROCESS_FCS_APPLICATIONS,
-      RolePermission.ASSIGN_FCS_APPLICATIONS,
-      RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS})
   public ModelAndView getApplicationCaseProcessing(@PathVariable Integer applicationId,
                                                    ServiceUserDetail user) {
-
-    var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
-
-    return getApplicationSummaryModelAndView(applicationVersion, user);
+    return renderCaseProcessingOnTab(applicationId, user, VIEW_APPLICATION);
   }
 
-  private ModelAndView getApplicationSummaryModelAndView(ApplicationVersion applicationVersion,
-                                                         ServiceUserDetail user) {
+  @GetMapping("case-history")
+  @HasApplicationStatus(statuses = ApplicationVersionStatus.SUBMITTED)
+  public ModelAndView getCaseHistoryTab(@PathVariable Integer applicationId, ServiceUserDetail user) {
+    return renderCaseProcessingOnTab(applicationId, user, CASE_HISTORY);
+  }
 
+  @GetMapping("view-application")
+  @HasApplicationStatus(statuses = ApplicationVersionStatus.SUBMITTED)
+  public ModelAndView getViewApplicationTab(@PathVariable Integer applicationId, ServiceUserDetail user) {
+    return renderCaseProcessingOnTab(applicationId, user, VIEW_APPLICATION);
+  }
+
+  private ModelAndView renderCaseProcessingOnTab(@PathVariable Integer applicationId,
+                                                 ServiceUserDetail user,
+                                                 CaseProcessingTab caseProcessingTab) {
+    var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var caseProcessingActions = caseProcessingActionService.getUserActionViews(applicationVersion, user);
     var pageTitle = applicationService.generateApplicationReference(applicationVersion);
 
@@ -69,6 +89,11 @@ public class ApplicationCaseProcessingController {
         ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null))
     );
 
-    return modelAndView.addObject("actionList", caseProcessingActions);
+    return modelAndView.addObject("actionList", caseProcessingActions)
+        .addObject("caseProcessingTabs", caseProcessingTabService.getTabsAvailableToUser(user))
+        .addObject("applicationId", applicationId)
+        .addObject("selectedTab", caseProcessingTab.getValue())
+        .addObject("caseHistoryEvents",
+            caseHistoryTabContentService.getCaseHistoryTabContent(applicationVersion.getApplication()));
   }
 }

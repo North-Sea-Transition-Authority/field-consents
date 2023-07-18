@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.application;
 
 import jakarta.persistence.EntityNotFoundException;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -31,10 +32,14 @@ public class ApplicationVersionService {
   }
 
   public Optional<ApplicationVersion> findLatestApplicationVersion(Integer applicationId) {
-    return applicationVersionRepository.findAllByApplicationIdOrderByVersion(applicationId)
+    return getAllApplicationVersionsByApplicationId(applicationId)
         .stream()
         .filter(applicationVersion -> !ApplicationVersionStatus.DELETED.equals(applicationVersion.getStatus()))
         .max(Comparator.comparing(ApplicationVersion::getVersion));
+  }
+
+  public List<ApplicationVersion> getAllApplicationVersionsByApplicationId(Integer applicationId) {
+    return applicationVersionRepository.findAllByApplicationIdOrderByVersion(applicationId);
   }
 
   public void deleteApplicationVersion(ApplicationVersion applicationVersion) {

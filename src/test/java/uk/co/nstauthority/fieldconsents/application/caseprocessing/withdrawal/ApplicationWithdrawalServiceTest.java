@@ -11,6 +11,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.withdr
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalService.OPEN_WITHDRAWAL_FOUND_FOR_APPLICATION_WITH_ID;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalTestUtil.CURRENT_INSTANT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalTestUtil.WITHDRAWAL_REQUEST_TEXT;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalTestUtil.getApplicationWithdrawalWithStatus;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalTestUtil.getOpenApplicationWithdrawal;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.WithdrawalStatus.OPEN;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.INDUSTRY;
@@ -19,6 +20,8 @@ import static uk.co.nstauthority.fieldconsents.application.workareapriority.Appl
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.REGULATOR_REJECT_WITHDRAWAL_REQUEST;
 
 import java.time.Clock;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -142,6 +145,35 @@ class ApplicationWithdrawalServiceTest {
     assertThatThrownBy(() -> applicationWithdrawalService.getOpenApplicationWithdrawal(applicationVersion))
         .isInstanceOf(IllegalStateException.class)
         .hasMessage(String.format(NO_OPEN_WITHDRAWAL_FOUND_FOR_APPLICATION_WITH_ID, 1));
+  }
+
+  @Test
+  void getApplicationWithdrawalsByApplication_whenNoWithdrawals() {
+    when(applicationWithdrawalRepository.findByApplicationVersion_Application(applicationVersion.getApplication()))
+        .thenReturn(Collections.emptyList());
+
+    assertThat(applicationWithdrawalService.getApplicationWithdrawalsByApplication(applicationVersion.getApplication()))
+        .isEmpty();
+  }
+
+  @Test
+  void getApplicationWithdrawalsByApplication_whenMultipleWithdrawals() {
+    var rejectedWithdrawalRequest = getApplicationWithdrawalWithStatus(
+        applicationVersion,
+        WithdrawalStatus.REJECTED
+    );
+    var newWithdrawalRequest = getOpenApplicationWithdrawal(applicationVersion);
+    when(applicationWithdrawalRepository.findByApplicationVersion_Application(applicationVersion.getApplication()))
+        .thenReturn(List.of(
+            rejectedWithdrawalRequest,
+            newWithdrawalRequest)
+        );
+
+    assertThat(applicationWithdrawalService.getApplicationWithdrawalsByApplication(applicationVersion.getApplication()))
+        .containsExactly(
+          rejectedWithdrawalRequest,
+          newWithdrawalRequest
+        );
   }
 
   @Test

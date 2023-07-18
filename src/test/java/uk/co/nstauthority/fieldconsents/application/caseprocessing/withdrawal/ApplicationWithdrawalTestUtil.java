@@ -3,6 +3,7 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.ENERGY_PORTAL_USER_1;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 
@@ -13,6 +14,10 @@ public class ApplicationWithdrawalTestUtil {
   static final String WITHDRAWAL_REQUEST_TEXT = "test request";
 
   static final Long WITHDRAWAL_REQUEST_USER_WUA_ID = 1L;
+
+  static final Long WITHDRAWAL_RESPONSE_USER_WUA_ID = 2L;
+
+  static final String WITHDRAWAL_RESPONSE_TEXT = "test response";
 
   static final String DUMMY_APP_REF = "DUMMY_APP_REF";
 
@@ -33,5 +38,14 @@ public class ApplicationWithdrawalTestUtil {
         DateUtils.format(CURRENT_INSTANT, DateUtils.DATE_TIME),
         WITHDRAWAL_REQUEST_TEXT
         );
+  }
+
+  static ApplicationWithdrawal getApplicationWithdrawalWithStatus(ApplicationVersion applicationVersion, WithdrawalStatus withdrawalStatus) {
+    var applicationWithdrawal = getOpenApplicationWithdrawal(applicationVersion);
+    applicationWithdrawal.setRespondedDateTime(CURRENT_INSTANT.plus(1, ChronoUnit.DAYS));
+    applicationWithdrawal.setRespondedByWuaId(WITHDRAWAL_RESPONSE_USER_WUA_ID);
+    applicationWithdrawal.setResponseText(WITHDRAWAL_RESPONSE_TEXT);
+    applicationWithdrawal.setWithdrawalStatus(withdrawalStatus);
+    return applicationWithdrawal;
   }
 }

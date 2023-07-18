@@ -6,8 +6,10 @@ import static uk.co.nstauthority.fieldconsents.application.workareapriority.Appl
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.REGULATOR_REJECT_WITHDRAWAL_REQUEST;
 
 import java.time.Clock;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
+import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
@@ -82,6 +84,10 @@ public class ApplicationWithdrawalService {
             new IllegalStateException(
                 String.format(NO_OPEN_WITHDRAWAL_FOUND_FOR_APPLICATION_WITH_ID, applicationVersion.getApplication().getId()))
         );
+  }
+
+  public List<ApplicationWithdrawal> getApplicationWithdrawalsByApplication(Application application) {
+    return applicationWithdrawalRepository.findByApplicationVersion_Application(application);
   }
 
   public WithdrawalResponseForm getWithdrawalResponseForm(ApplicationVersion applicationVersion) {

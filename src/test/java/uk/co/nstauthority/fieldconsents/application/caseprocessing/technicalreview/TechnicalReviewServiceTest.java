@@ -19,6 +19,8 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.techni
 import jakarta.persistence.EntityNotFoundException;
 import java.time.Clock;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -118,6 +120,34 @@ class TechnicalReviewServiceTest {
         .hasMessage(NO_OPEN_TECHNICAL_REVIEW_EXISTS.apply(String.valueOf(applicationVersion.getId())));
   }
 
+  @Test
+  void getTechnicalReviewsByApplication_whenNoReviews() {
+    when(technicalReviewRepository.findByApplicationVersion_Application(applicationVersion.getApplication()))
+        .thenReturn(Collections.emptyList());
+
+    assertThat(technicalReviewService.getTechnicalReviewsByApplication(applicationVersion.getApplication()))
+        .isEmpty();
+  }
+
+  @Test
+  void getTechnicalReviewsByApplication_whenMultipleReviews() {
+    var closedTechnicalReview = TechnicalReviewTestUtil
+        .getClosedTechnicalReview(applicationVersion, SERVICE_USER_DETAIL_USER_5, clock);
+
+    when(technicalReviewRepository.findByApplicationVersion_Application(applicationVersion.getApplication()))
+        .thenReturn(List.of(
+            closedTechnicalReview,
+            technicalReview
+          )
+        );
+
+    assertThat(technicalReviewService.getTechnicalReviewsByApplication(applicationVersion.getApplication()))
+        .containsExactly(
+            closedTechnicalReview,
+            technicalReview
+        );
+  }
+  
   @Test
   void getTechnicalReviewRequestForm_noOpenTechnicalReviewExists() {
     when(technicalReviewRepository.existsByApplicationVersion_ApplicationAndTechnicalReviewStatus(applicationVersion.getApplication(), OPEN))

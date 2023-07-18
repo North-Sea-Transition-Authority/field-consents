@@ -13,6 +13,7 @@ import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.A
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -22,6 +23,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
@@ -29,6 +31,8 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionView;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventView;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseHistoryTabContentService;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -45,6 +49,12 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   @MockBean
   private ApplicationSummaryService applicationSummaryService;
 
+  @MockBean
+  private CaseProcessingTabService caseProcessingTabService;
+
+  @MockBean
+  private CaseHistoryTabContentService caseHistoryTabContentService;
+
   @SecurityTest
   void getApplicationCaseProcessing_noUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
@@ -52,9 +62,28 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
         .andExpect(redirectionToLoginUrl());
   }
 
+  @SecurityTest
+  void getViewApplicationTab_noUser() throws Exception {
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
+            .getViewApplicationTab(APPLICATION_ID, null))))
+        .andExpect(redirectionToLoginUrl());
+  }
+
+  @SecurityTest
+  void getCaseHistoryTab_noUser() throws Exception {
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
+            .getCaseHistoryTab(APPLICATION_ID, null))))
+        .andExpect(redirectionToLoginUrl());
+  }
+
   @ParameterizedTest
   @MethodSource("getSubmittedApplicationVersions")
   void getApplicationCaseProcessing(ApplicationVersion applicationVersion) throws Exception {
+    when(caseProcessingTabService.getTabsAvailableToUser(user)).thenReturn(Arrays.asList(CaseProcessingTab.values()));
+    var caseHistoryEvents = CaseHistoryEventTestUtil.getMockCaseEventViews();
+    when(caseHistoryTabContentService.getCaseHistoryTabContent(applicationVersion.getApplication()))
+        .thenReturn(caseHistoryEvents);
+
     var actionViews =
         List.of(CaseProcessingActionView.from(CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP, applicationVersion));
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
@@ -78,6 +107,82 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
         .andReturn().getModelAndView();
 
     assert modelAndView != null;
+    assertModel(applicationVersion, caseHistoryEvents, actionViews, modelAndView, CaseProcessingTab.VIEW_APPLICATION);
+  }
+
+  @ParameterizedTest
+  @MethodSource("getSubmittedApplicationVersions")
+  void getViewApplicationTab(ApplicationVersion applicationVersion) throws Exception {
+    when(caseProcessingTabService.getTabsAvailableToUser(user)).thenReturn(Arrays.asList(CaseProcessingTab.values()));
+    var caseHistoryEvents = CaseHistoryEventTestUtil.getMockCaseEventViews();
+    when(caseHistoryTabContentService.getCaseHistoryTabContent(applicationVersion.getApplication()))
+        .thenReturn(caseHistoryEvents);
+
+    var actionViews =
+        List.of(CaseProcessingActionView.from(CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP, applicationVersion));
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
+    when(caseProcessingActionService.getUserActionViews(applicationVersion, user))
+        .thenReturn(actionViews);
+    when(applicationSummaryService.getSummarySections(applicationVersion))
+        .thenReturn(Collections.emptyList());
+    when(applicationService.generateApplicationReference(applicationVersion))
+        .thenReturn(DUMMY_APP_REF);
+
+    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any(), any());
+    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
+            .getViewApplicationTab(APPLICATION_ID, null)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/applicationCaseProcessing"))
+        .andReturn().getModelAndView();
+
+    assert modelAndView != null;
+    assertModel(applicationVersion, caseHistoryEvents, actionViews, modelAndView, CaseProcessingTab.VIEW_APPLICATION);
+  }
+
+  @ParameterizedTest
+  @MethodSource("getSubmittedApplicationVersions")
+  void getCaseHistoryTab(ApplicationVersion applicationVersion) throws Exception {
+    when(caseProcessingTabService.getTabsAvailableToUser(user)).thenReturn(Arrays.asList(CaseProcessingTab.values()));
+    var caseHistoryEvents = CaseHistoryEventTestUtil.getMockCaseEventViews();
+    when(caseHistoryTabContentService.getCaseHistoryTabContent(applicationVersion.getApplication()))
+        .thenReturn(caseHistoryEvents);
+
+    var actionViews =
+        List.of(CaseProcessingActionView.from(CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP, applicationVersion));
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
+    when(caseProcessingActionService.getUserActionViews(applicationVersion, user))
+        .thenReturn(actionViews);
+    when(applicationSummaryService.getSummarySections(applicationVersion))
+        .thenReturn(Collections.emptyList());
+    when(applicationService.generateApplicationReference(applicationVersion))
+        .thenReturn(DUMMY_APP_REF);
+
+    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any(), any());
+    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
+            .getCaseHistoryTab(APPLICATION_ID, null)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/applicationCaseProcessing"))
+        .andReturn().getModelAndView();
+
+    assert modelAndView != null;
+    assertModel(applicationVersion, caseHistoryEvents, actionViews, modelAndView, CaseProcessingTab.CASE_HISTORY);
+  }
+
+  private static void assertModel(ApplicationVersion applicationVersion,
+                           List<CaseEventView> caseHistoryEvents,
+                           List<CaseProcessingActionView> actionViews,
+                           ModelAndView modelAndView,
+                           CaseProcessingTab caseHistory) {
     var model = modelAndView.getModel();
 
     assertThat(model)
@@ -87,7 +192,10 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
         .containsKey("wideSummaryDisplay")
         .containsEntry("actionList", actionViews)
         .containsEntry("backLinkUrl", ReverseRouter.route(on(WorkAreaController.class)
-            .getWorkArea(null, null)));
+            .getWorkArea(null, null)))
+        .containsEntry("applicationId", applicationVersion.getApplication().getId())
+        .containsEntry("selectedTab", caseHistory.getValue())
+        .containsEntry("caseHistoryEvents", caseHistoryEvents);
   }
 
   private static Stream<Arguments> getSubmittedApplicationVersions() {
