@@ -401,7 +401,7 @@ class CaseProcessingActionServiceTest {
   }
 
   @Test
-  void getUserActionViews_whenAssignedCaseOfficer_thenCanStartTechnicalReview() {
+  void getUserActionViews_whenAssignedCaseOfficer_thenCanStartTechnicalReviewAndAppUpdate() {
     when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .thenReturn(CASE_OFFICER_PERMISSIONS);
     when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
@@ -410,17 +410,18 @@ class CaseProcessingActionServiceTest {
         .thenReturn(Optional.of(USER_WUA_ID));
 
     assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
-        .hasSize(3)
+        .hasSize(4)
         .usingRecursiveFieldByFieldElementComparator()
         .containsExactly(
             CaseProcessingActionView.from(CHANGE_ACE_STATUS, applicationVersion),
             CaseProcessingActionView.from(CASE_OFFICER_RELEASE_OWNERSHIP, applicationVersion),
-            CaseProcessingActionView.from(TECHNICAL_REVIEW_REQUEST, applicationVersion)
+            CaseProcessingActionView.from(TECHNICAL_REVIEW_REQUEST, applicationVersion),
+            CaseProcessingActionView.from(APPLICATION_UPDATE_REQUEST, applicationVersion)
         );
   }
 
   @Test
-  void getUserActionViews_whenAssignedCaseOfficerNotCurrentUser_thenCannotStartTechnicalReview() {
+  void getUserActionViews_whenAssignedCaseOfficerNotCurrentUser_thenCannotStartTechnicalReviewOrAppUpdate() {
     when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .thenReturn(CASE_OFFICER_PERMISSIONS);
     when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
@@ -433,7 +434,7 @@ class CaseProcessingActionServiceTest {
   }
 
   @Test
-  void getUserActionViews_whenAssignedCaseOfficerAndAppUpdateOpen_thenCannotStartTechnicalReview() {
+  void getUserActionViews_whenAssignedCaseOfficerAndAppUpdateOpen_thenCannotStartTechnicalReviewOrAppUpdate() {
     when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .thenReturn(CASE_OFFICER_PERMISSIONS);
     when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
@@ -451,7 +452,7 @@ class CaseProcessingActionServiceTest {
   }
 
   @Test
-  void getUserActionViews_whenAssignedCaseOfficerAndTechReviewOpenAndAppUpdateOpen_thenCannotStartTechnicalReview() {
+  void getUserActionViews_whenAssignedCaseOfficerAndTechReviewOpenAndAppUpdateOpen_thenCannotStartTechnicalReviewOrAppUpdate() {
     when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .thenReturn(CASE_OFFICER_PERMISSIONS);
     when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
