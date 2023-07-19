@@ -4,9 +4,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.APPLICATION_UPDATE_REQUEST;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_ASSIGN_OWNERSHIP;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_REASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_RELEASE_OWNERSHIP;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_WITHDRAWAL_RESPONSE;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CHANGE_ACE_STATUS;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_WITHDRAWAL_REQUEST;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.REGULATOR_ADD_CASE_NOTE;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEW_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.APPLICATION_UPDATE_OPEN;
@@ -15,9 +20,10 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casest
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_TECHNICAL_REVIEW_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_WITHDRAWAL_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.TECHNICAL_REVIEW_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.WITHDRAWAL_OPEN;
 
 import java.util.Collections;
-import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,12 +34,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlagService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.authorisation.ApplicationAccessService;
+import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
@@ -42,6 +51,10 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.Reg
 class CaseProcessingActionServiceTest {
 
   private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
+
+  private static final WebUserAccountId USER_WUA_ID = WebUserAccountId.from(USER.wuaId());
+
+  private static final WebUserAccountId OTHER_USER_WUA_ID = WebUserAccountId.from(999L);
 
   private static final Set<RolePermission> CASE_OFFICER_PERMISSIONS =
       RegulatorTeamRole.CASE_OFFICER.getRolePermissions();
@@ -60,6 +73,12 @@ class CaseProcessingActionServiceTest {
 
   @Mock
   private CaseStatusFlagService caseStatusFlagService;
+
+  @Mock
+  private ApplicationVersionService applicationVersionService;
+
+  @Mock
+  private TechnicalReviewService technicalReviewService;
 
   @InjectMocks
   private CaseProcessingActionService caseProcessingActionService;
@@ -110,21 +129,36 @@ class CaseProcessingActionServiceTest {
         .thenReturn(Set.of(CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED));
 
     assertThat(caseProcessingActionService.getUserActionItems(applicationVersion, USER))
-        .containsExactly(CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP);
+        .containsExactly(CASE_OFFICER_TAKE_OWNERSHIP);
   }
 
   @Test
-  void getUserActionItems_whenCaseOfficerUser_thenCanReleaseOwnership() {
+  void getUserActionItems_whenAssignedCaseOfficerUser_thenCanReleaseOwnershipAndChangeAceStatus() {
     when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .thenReturn(CASE_OFFICER_PERMISSIONS);
     when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
         .thenReturn(Set.of(CASE_OFFICER_ASSIGNED));
+    when(applicationVersionService.findCaseOfficerWuaId(applicationVersion))
+        .thenReturn(Optional.of(USER_WUA_ID));
 
     assertThat(caseProcessingActionService.getUserActionItems(applicationVersion, USER))
         .containsOnly(
-            CaseProcessingActionItem.CHANGE_ACE_STATUS,
-            CaseProcessingActionItem.CASE_OFFICER_RELEASE_OWNERSHIP
+            CHANGE_ACE_STATUS,
+            CASE_OFFICER_RELEASE_OWNERSHIP
         );
+  }
+
+  @Test
+  void getUserActionItems_whenAssignedCaseOfficerUserNotCurrentUser_thenCannotReleaseOwnershipOrChangeAceStatus() {
+    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
+        .thenReturn(CASE_OFFICER_PERMISSIONS);
+    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
+        .thenReturn(Set.of(CASE_OFFICER_ASSIGNED));
+    when(applicationVersionService.findCaseOfficerWuaId(applicationVersion))
+        .thenReturn(Optional.of(OTHER_USER_WUA_ID));
+
+    assertThat(caseProcessingActionService.getUserActionItems(applicationVersion, USER))
+        .isEmpty();
   }
 
   @Test
@@ -134,45 +168,41 @@ class CaseProcessingActionServiceTest {
     when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
         .thenReturn(Set.of(CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED));
 
-    var actionViews = caseProcessingActionService.getUserActionViews(applicationVersion, USER);
-
-    assertThat(actionViews).hasSize(1);
-
-    assertThat(actionViews.get(0))
-        .usingRecursiveComparison()
-        .isEqualTo(
-            CaseProcessingActionView.from(
-                CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP,
-                applicationVersion
-            )
-        );
+    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
+        .hasSize(1)
+        .usingRecursiveFieldByFieldElementComparator()
+        .containsExactly(CaseProcessingActionView.from(CASE_OFFICER_TAKE_OWNERSHIP, applicationVersion));
   }
 
   @Test
-  void getUserActionViews_whenCaseOfficerUser_thenCanReleaseOwnership() {
+  void getUserActionViews_whenAssignedCaseOfficerUser_thenCanReleaseOwnership() {
     when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .thenReturn(CASE_OFFICER_PERMISSIONS);
     when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
         .thenReturn(Set.of(CASE_OFFICER_ASSIGNED));
+    when(applicationVersionService.findCaseOfficerWuaId(applicationVersion))
+        .thenReturn(Optional.of(USER_WUA_ID));
 
-    var actionViews = caseProcessingActionService.getUserActionViews(applicationVersion, USER);
-
-    assertThat(actionViews).hasSize(2);
-
-    assertThat(actionViews)
-        .usingRecursiveComparison()
-        .isEqualTo(
-            List.of(
-                CaseProcessingActionView.from(
-                    CaseProcessingActionItem.CHANGE_ACE_STATUS,
-                    applicationVersion
-                ),
-                CaseProcessingActionView.from(
-                    CaseProcessingActionItem.CASE_OFFICER_RELEASE_OWNERSHIP,
-                    applicationVersion
-                )
-            )
+    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
+        .hasSize(2)
+        .usingRecursiveFieldByFieldElementComparator()
+        .containsExactly(
+            CaseProcessingActionView.from(CHANGE_ACE_STATUS, applicationVersion),
+            CaseProcessingActionView.from(CASE_OFFICER_RELEASE_OWNERSHIP, applicationVersion)
         );
+  }
+
+  @Test
+  void getUserActionViews_whenAssignedCaseOfficerUserNotCurrentUser_thenCannotReleaseOwnershipOrChangeAceStatus() {
+    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
+        .thenReturn(CASE_OFFICER_PERMISSIONS);
+    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
+        .thenReturn(Set.of(CASE_OFFICER_ASSIGNED));
+    when(applicationVersionService.findCaseOfficerWuaId(applicationVersion))
+        .thenReturn(Optional.of(OTHER_USER_WUA_ID));
+
+    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
+        .isEmpty();
   }
 
   @Test
@@ -183,7 +213,7 @@ class CaseProcessingActionServiceTest {
         .thenReturn(Set.of(CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED));
 
     assertThat(caseProcessingActionService.getUserActionItems(applicationVersion, USER))
-        .containsExactly(CaseProcessingActionItem.CASE_OFFICER_ASSIGN_OWNERSHIP);
+        .containsExactly(CASE_OFFICER_ASSIGN_OWNERSHIP);
   }
 
   @Test
@@ -194,7 +224,7 @@ class CaseProcessingActionServiceTest {
         .thenReturn(Set.of(CASE_OFFICER_ASSIGNED));
 
     assertThat(caseProcessingActionService.getUserActionItems(applicationVersion, USER))
-        .containsExactly(CaseProcessingActionItem.CASE_OFFICER_REASSIGN_OWNERSHIP);
+        .containsExactly(CASE_OFFICER_REASSIGN_OWNERSHIP);
   }
 
   @Test
@@ -227,18 +257,10 @@ class CaseProcessingActionServiceTest {
     when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
         .thenReturn(Set.of(CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED));
 
-    var actionViews = caseProcessingActionService.getUserActionViews(applicationVersion, USER);
-
-    assertThat(actionViews).hasSize(1);
-
-    assertThat(actionViews.get(0))
-        .usingRecursiveComparison()
-        .isEqualTo(
-            CaseProcessingActionView.from(
-                CaseProcessingActionItem.CASE_OFFICER_ASSIGN_OWNERSHIP,
-                applicationVersion
-            )
-        );
+    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
+        .hasSize(1)
+        .usingRecursiveFieldByFieldElementComparator()
+        .containsExactly(CaseProcessingActionView.from(CASE_OFFICER_ASSIGN_OWNERSHIP, applicationVersion));
   }
 
   @Test
@@ -248,18 +270,10 @@ class CaseProcessingActionServiceTest {
     when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
         .thenReturn(Set.of(CASE_OFFICER_ASSIGNED));
 
-    var actionViews = caseProcessingActionService.getUserActionViews(applicationVersion, USER);
-
-    assertThat(actionViews).hasSize(1);
-
-    assertThat(actionViews.get(0))
-        .usingRecursiveComparison()
-        .isEqualTo(
-            CaseProcessingActionView.from(
-                CaseProcessingActionItem.CASE_OFFICER_REASSIGN_OWNERSHIP,
-                applicationVersion
-            )
-        );
+    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
+        .hasSize(1)
+        .usingRecursiveFieldByFieldElementComparator()
+        .containsExactly(CaseProcessingActionView.from(CASE_OFFICER_REASSIGN_OWNERSHIP, applicationVersion));
   }
 
   @Test
@@ -269,18 +283,10 @@ class CaseProcessingActionServiceTest {
     when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
         .thenReturn(Set.of(NO_WITHDRAWAL_OPEN, NO_APPLICATION_UPDATE_OPEN));
 
-    var actionViews = caseProcessingActionService.getUserActionViews(applicationVersion, USER);
-
-    assertThat(actionViews).hasSize(1);
-
-    assertThat(actionViews.get(0))
-        .usingRecursiveComparison()
-        .isEqualTo(
-            CaseProcessingActionView.from(
-                CaseProcessingActionItem.OPERATOR_WITHDRAWAL_REQUEST,
-                applicationVersion
-            )
-        );
+    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
+        .hasSize(1)
+        .usingRecursiveFieldByFieldElementComparator()
+        .containsExactly(CaseProcessingActionView.from(OPERATOR_WITHDRAWAL_REQUEST, applicationVersion));
   }
 
   @Test
@@ -288,51 +294,60 @@ class CaseProcessingActionServiceTest {
     when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .thenReturn(INDUSTRY_EDITOR_PERMISSIONS);
     when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(CaseStatusFlag.WITHDRAWAL_OPEN));
+        .thenReturn(Set.of(WITHDRAWAL_OPEN));
 
-    var actionViews = caseProcessingActionService.getUserActionViews(applicationVersion, USER);
-
-    assertThat(actionViews).isEmpty();
+    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
+        .isEmpty();
   }
 
   @Test
-  void getUserActionViews_canRespondToCaseWithdrawalButNotStartTechnicalReview() {
+  void getUserActionViews_whenAssignedCaseOfficerAndWithdrawalOpen_canRespondToCaseWithdrawal() {
     when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .thenReturn(CASE_OFFICER_PERMISSIONS);
     when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(
-            CASE_OFFICER_ASSIGNED,
-            CaseStatusFlag.WITHDRAWAL_OPEN,
-            NO_TECHNICAL_REVIEW_OPEN
-        ));
+        .thenReturn(Set.of(CASE_OFFICER_ASSIGNED, WITHDRAWAL_OPEN));
+    when(applicationVersionService.findCaseOfficerWuaId(applicationVersion))
+        .thenReturn(Optional.of(USER_WUA_ID));
 
-    var actionViews = caseProcessingActionService.getUserActionViews(applicationVersion, USER);
-
-    assertThat(actionViews).hasSize(3);
-
-    assertThat(actionViews.get(0))
-        .usingRecursiveComparison()
-        .isEqualTo(CaseProcessingActionView.from(CHANGE_ACE_STATUS, applicationVersion));
-
-    assertThat(actionViews.get(1))
-        .usingRecursiveComparison()
-        .isEqualTo(CaseProcessingActionView.from(CASE_OFFICER_RELEASE_OWNERSHIP, applicationVersion));
-
-    assertThat(actionViews.get(2))
-        .usingRecursiveComparison()
-        .isEqualTo(CaseProcessingActionView.from(CASE_OFFICER_WITHDRAWAL_RESPONSE, applicationVersion));
+    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
+        .hasSize(3)
+        .usingRecursiveFieldByFieldElementComparator()
+        .containsExactly(
+            CaseProcessingActionView.from(CHANGE_ACE_STATUS, applicationVersion),
+            CaseProcessingActionView.from(CASE_OFFICER_RELEASE_OWNERSHIP, applicationVersion),
+            CaseProcessingActionView.from(CASE_OFFICER_WITHDRAWAL_RESPONSE, applicationVersion)
+        );
   }
 
   @Test
-  void getUserActionViews_whenCaseOfficerUser_andNotOpenWithdrawal_thenCannotRespondToCaseWithdrawal() {
+  void getUserActionViews_whenAssignedCaseOfficerNotCurrentUserAndWithdrawalOpen_cannotRespondToCaseWithdrawal() {
     when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .thenReturn(CASE_OFFICER_PERMISSIONS);
     when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(NO_WITHDRAWAL_OPEN));
+        .thenReturn(Set.of(CASE_OFFICER_ASSIGNED, WITHDRAWAL_OPEN));
+    when(applicationVersionService.findCaseOfficerWuaId(applicationVersion))
+        .thenReturn(Optional.of(OTHER_USER_WUA_ID));
 
-    var actionViews = caseProcessingActionService.getUserActionViews(applicationVersion, USER);
+    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
+        .isEmpty();
+  }
 
-    assertThat(actionViews).isEmpty();
+  @Test
+  void getUserActionViews_whenAssignedCaseOfficerUserAndNotOpenWithdrawal_thenCannotRespondToCaseWithdrawal() {
+    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
+        .thenReturn(CASE_OFFICER_PERMISSIONS);
+    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
+        .thenReturn(Set.of(CASE_OFFICER_ASSIGNED, NO_WITHDRAWAL_OPEN));
+    when(applicationVersionService.findCaseOfficerWuaId(applicationVersion))
+        .thenReturn(Optional.of(USER_WUA_ID));
+
+    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
+        .hasSize(2)
+        .usingRecursiveFieldByFieldElementComparator()
+        .containsExactly(
+            CaseProcessingActionView.from(CHANGE_ACE_STATUS, applicationVersion),
+            CaseProcessingActionView.from(CASE_OFFICER_RELEASE_OWNERSHIP, applicationVersion)
+        );
   }
 
   @Test
@@ -340,11 +355,10 @@ class CaseProcessingActionServiceTest {
     when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .thenReturn(INDUSTRY_EDITOR_PERMISSIONS);
     when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of());
+        .thenReturn(Collections.emptySet());
 
-    var actionViews = caseProcessingActionService.getUserActionViews(applicationVersion, USER);
-
-    assertThat(actionViews).isEmpty();
+    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
+        .isEmpty();
   }
 
   @Test
@@ -354,18 +368,10 @@ class CaseProcessingActionServiceTest {
     when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
         .thenReturn(Set.of(CaseStatusFlag.CASE_NOTES_ALLOWED));
 
-    var actionViews = caseProcessingActionService.getUserActionViews(applicationVersion, USER);
-
-    assertThat(actionViews).hasSize(1);
-
-    assertThat(actionViews.get(0))
-        .usingRecursiveComparison()
-        .isEqualTo(
-            CaseProcessingActionView.from(
-                CaseProcessingActionItem.REGULATOR_ADD_CASE_NOTE,
-                applicationVersion
-            )
-        );
+    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
+        .hasSize(1)
+        .usingRecursiveFieldByFieldElementComparator()
+        .containsExactly(CaseProcessingActionView.from(REGULATOR_ADD_CASE_NOTE, applicationVersion));
   }
 
   @Test
@@ -375,18 +381,10 @@ class CaseProcessingActionServiceTest {
     when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
         .thenReturn(Set.of(CaseStatusFlag.CASE_NOTES_ALLOWED));
 
-    var actionViews = caseProcessingActionService.getUserActionViews(applicationVersion, USER);
-
-    assertThat(actionViews).hasSize(1);
-
-    assertThat(actionViews.get(0))
-        .usingRecursiveComparison()
-        .isEqualTo(
-            CaseProcessingActionView.from(
-                CaseProcessingActionItem.REGULATOR_ADD_CASE_NOTE,
-                applicationVersion
-            )
-        );
+    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
+        .hasSize(1)
+        .usingRecursiveFieldByFieldElementComparator()
+        .containsExactly(CaseProcessingActionView.from(REGULATOR_ADD_CASE_NOTE, applicationVersion));
   }
 
   @Test
@@ -396,118 +394,126 @@ class CaseProcessingActionServiceTest {
     when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
         .thenReturn(Set.of(CaseStatusFlag.CASE_NOTES_ALLOWED));
 
-    var actionViews = caseProcessingActionService.getUserActionViews(applicationVersion, USER);
-
-    assertThat(actionViews).hasSize(1);
-
-    assertThat(actionViews.get(0))
-        .usingRecursiveComparison()
-        .isEqualTo(
-            CaseProcessingActionView.from(
-                CaseProcessingActionItem.REGULATOR_ADD_CASE_NOTE,
-                applicationVersion
-            )
-        );
+    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
+        .hasSize(1)
+        .usingRecursiveFieldByFieldElementComparator()
+        .containsExactly(CaseProcessingActionView.from(REGULATOR_ADD_CASE_NOTE, applicationVersion));
   }
 
   @Test
-  void getUserActionViews_whenCaseOfficer_thenCanStartTechnicalReview() {
+  void getUserActionViews_whenAssignedCaseOfficer_thenCanStartTechnicalReview() {
     when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .thenReturn(CASE_OFFICER_PERMISSIONS);
     when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
         .thenReturn(Set.of(CASE_OFFICER_ASSIGNED, NO_TECHNICAL_REVIEW_OPEN, NO_APPLICATION_UPDATE_OPEN));
+    when(applicationVersionService.findCaseOfficerWuaId(applicationVersion))
+        .thenReturn(Optional.of(USER_WUA_ID));
 
-    var actionViews = caseProcessingActionService.getUserActionViews(applicationVersion, USER);
-
-    assertThat(actionViews).hasSize(3);
-
-    assertThat(actionViews.get(0))
-        .usingRecursiveComparison()
-        .isEqualTo(CaseProcessingActionView.from(CHANGE_ACE_STATUS, applicationVersion));
-
-    assertThat(actionViews.get(1))
-        .usingRecursiveComparison()
-        .isEqualTo(CaseProcessingActionView.from(CASE_OFFICER_RELEASE_OWNERSHIP, applicationVersion));
-
-    assertThat(actionViews.get(2))
-        .usingRecursiveComparison()
-        .isEqualTo(CaseProcessingActionView.from(TECHNICAL_REVIEW_REQUEST, applicationVersion));
+    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
+        .hasSize(3)
+        .usingRecursiveFieldByFieldElementComparator()
+        .containsExactly(
+            CaseProcessingActionView.from(CHANGE_ACE_STATUS, applicationVersion),
+            CaseProcessingActionView.from(CASE_OFFICER_RELEASE_OWNERSHIP, applicationVersion),
+            CaseProcessingActionView.from(TECHNICAL_REVIEW_REQUEST, applicationVersion)
+        );
   }
 
   @Test
-  void getUserActionViews_whenCaseOfficerAndAppUpdateOpen_thenCannotStartTechnicalReview() {
+  void getUserActionViews_whenAssignedCaseOfficerNotCurrentUser_thenCannotStartTechnicalReview() {
+    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
+        .thenReturn(CASE_OFFICER_PERMISSIONS);
+    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
+        .thenReturn(Set.of(CASE_OFFICER_ASSIGNED, NO_TECHNICAL_REVIEW_OPEN, NO_APPLICATION_UPDATE_OPEN));
+    when(applicationVersionService.findCaseOfficerWuaId(applicationVersion))
+        .thenReturn(Optional.of(OTHER_USER_WUA_ID));
+
+    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
+        .isEmpty();
+  }
+
+  @Test
+  void getUserActionViews_whenAssignedCaseOfficerAndAppUpdateOpen_thenCannotStartTechnicalReview() {
     when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .thenReturn(CASE_OFFICER_PERMISSIONS);
     when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
         .thenReturn(Set.of(CASE_OFFICER_ASSIGNED, NO_TECHNICAL_REVIEW_OPEN, APPLICATION_UPDATE_OPEN));
+    when(applicationVersionService.findCaseOfficerWuaId(applicationVersion))
+        .thenReturn(Optional.of(USER_WUA_ID));
 
-    var actionViews = caseProcessingActionService.getUserActionViews(applicationVersion, USER);
-
-    assertThat(actionViews).hasSize(2);
-
-    assertThat(actionViews.get(0))
-        .usingRecursiveComparison()
-        .isEqualTo(CaseProcessingActionView.from(CHANGE_ACE_STATUS, applicationVersion));
-
-    assertThat(actionViews.get(1))
-        .usingRecursiveComparison()
-        .isEqualTo(CaseProcessingActionView.from(CASE_OFFICER_RELEASE_OWNERSHIP, applicationVersion));
+    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
+        .hasSize(2)
+        .usingRecursiveFieldByFieldElementComparator()
+        .containsExactly(
+            CaseProcessingActionView.from(CHANGE_ACE_STATUS, applicationVersion),
+            CaseProcessingActionView.from(CASE_OFFICER_RELEASE_OWNERSHIP, applicationVersion)
+        );
   }
 
   @Test
-  void getUserActionViews_whenCaseOfficerAndTechReviewOpenAndAppUpdateOpen_thenCannotStartTechnicalReview() {
+  void getUserActionViews_whenAssignedCaseOfficerAndTechReviewOpenAndAppUpdateOpen_thenCannotStartTechnicalReview() {
     when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .thenReturn(CASE_OFFICER_PERMISSIONS);
     when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
         .thenReturn(Set.of(CASE_OFFICER_ASSIGNED, TECHNICAL_REVIEW_OPEN, APPLICATION_UPDATE_OPEN));
+    when(applicationVersionService.findCaseOfficerWuaId(applicationVersion))
+        .thenReturn(Optional.of(USER_WUA_ID));
 
-    var actionViews = caseProcessingActionService.getUserActionViews(applicationVersion, USER);
-
-    assertThat(actionViews).hasSize(2);
-
-    assertThat(actionViews.get(0))
-        .usingRecursiveComparison()
-        .isEqualTo(CaseProcessingActionView.from(CHANGE_ACE_STATUS, applicationVersion));
-
-    assertThat(actionViews.get(1))
-        .usingRecursiveComparison()
-        .isEqualTo(CaseProcessingActionView.from(CASE_OFFICER_RELEASE_OWNERSHIP, applicationVersion));
+    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
+        .hasSize(2)
+        .usingRecursiveFieldByFieldElementComparator()
+        .containsExactly(
+            CaseProcessingActionView.from(CHANGE_ACE_STATUS, applicationVersion),
+            CaseProcessingActionView.from(CASE_OFFICER_RELEASE_OWNERSHIP, applicationVersion)
+        );
   }
 
   @Test
-  void getUserActionViews_whenTechnicalReviewer_thenCanRequestAppUpdate() {
+  void getUserActionViews_whenAssignedTechnicalReviewer_thenCanRequestAppUpdate() {
     when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .thenReturn(TECHNICAL_REVIEWER_PERMISSIONS);
     when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
         .thenReturn(Set.of(TECHNICAL_REVIEW_OPEN, NO_APPLICATION_UPDATE_OPEN));
+    when(technicalReviewService.findTechnicalReviewerWuaId(applicationVersion))
+        .thenReturn(Optional.of(USER_WUA_ID));
 
-    var actionViews = caseProcessingActionService.getUserActionViews(applicationVersion, USER);
-
-    assertThat(actionViews).hasSize(2);
-
-    assertThat(actionViews.get(0))
-        .usingRecursiveComparison()
-        .isEqualTo(CaseProcessingActionView.from(TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP, applicationVersion));
-
-    assertThat(actionViews.get(1))
-        .usingRecursiveComparison()
-        .isEqualTo(CaseProcessingActionView.from(APPLICATION_UPDATE_REQUEST, applicationVersion));
+    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
+        .hasSize(2)
+        .usingRecursiveFieldByFieldElementComparator()
+        .containsExactly(
+            CaseProcessingActionView.from(TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP, applicationVersion),
+            CaseProcessingActionView.from(APPLICATION_UPDATE_REQUEST, applicationVersion)
+        );
   }
 
   @Test
-  void getUserActionViews_whenTechnicalReviewerAndAppUpdateOpen_thenCannotRequestAppUpdate() {
+  void getUserActionViews_whenAssignedTechnicalReviewerNotCurrentUser_thenCannotRequestAppUpdate() {
+    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
+        .thenReturn(TECHNICAL_REVIEWER_PERMISSIONS);
+    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
+        .thenReturn(Set.of(TECHNICAL_REVIEW_OPEN, NO_APPLICATION_UPDATE_OPEN));
+    when(technicalReviewService.findTechnicalReviewerWuaId(applicationVersion))
+        .thenReturn(Optional.of(OTHER_USER_WUA_ID));
+
+    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
+        .hasSize(1)
+        .usingRecursiveFieldByFieldElementComparator()
+        .containsExactly(CaseProcessingActionView.from(TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP, applicationVersion));
+  }
+
+  @Test
+  void getUserActionViews_whenAssignedTechnicalReviewerAndAppUpdateOpen_thenCannotRequestAppUpdate() {
     when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .thenReturn(TECHNICAL_REVIEWER_PERMISSIONS);
     when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
         .thenReturn(Set.of(TECHNICAL_REVIEW_OPEN, APPLICATION_UPDATE_OPEN));
+    when(technicalReviewService.findTechnicalReviewerWuaId(applicationVersion))
+        .thenReturn(Optional.of(USER_WUA_ID));
 
-    var actionViews = caseProcessingActionService.getUserActionViews(applicationVersion, USER);
-
-    assertThat(actionViews).hasSize(1);
-
-    assertThat(actionViews.get(0))
-        .usingRecursiveComparison()
-        .isEqualTo(CaseProcessingActionView.from(TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP, applicationVersion));
+    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
+        .hasSize(1)
+        .usingRecursiveFieldByFieldElementComparator()
+        .containsExactly(CaseProcessingActionView.from(TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP, applicationVersion));
   }
 
   @Test
@@ -517,9 +523,8 @@ class CaseProcessingActionServiceTest {
     when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
         .thenReturn(Set.of(APPLICATION_UPDATE_OPEN));
 
-    var actionViews = caseProcessingActionService.getUserActionViews(applicationVersion, USER);
-
-    assertThat(actionViews).isEmpty();
+    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
+        .isEmpty();
   }
 
   @Test
@@ -529,8 +534,7 @@ class CaseProcessingActionServiceTest {
     when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
         .thenReturn(Set.of(NO_APPLICATION_UPDATE_OPEN));
 
-    var actionViews = caseProcessingActionService.getUserActionViews(applicationVersion, USER);
-
-    assertThat(actionViews).isEmpty();
+    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
+        .isEmpty();
   }
 }

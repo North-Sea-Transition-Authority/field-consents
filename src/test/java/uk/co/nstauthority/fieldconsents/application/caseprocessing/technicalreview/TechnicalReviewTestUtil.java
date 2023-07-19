@@ -11,14 +11,10 @@ import java.time.temporal.ChronoUnit;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
-import uk.co.nstauthority.fieldconsents.teams.Team;
-import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
 
 class TechnicalReviewTestUtil {
 
   static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
-
-  static final Team REGULATOR_TEAM = TeamTestUtil.Builder().build();
 
   static final LocalDate CURRENT_DATE = LocalDate.now();
 

@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 
 @Service
 public class TechnicalReviewService {
@@ -51,6 +52,11 @@ public class TechnicalReviewService {
     return findOpenTechnicalReview(applicationVersion)
         .orElseThrow(() -> new EntityNotFoundException(
             NO_OPEN_TECHNICAL_REVIEW_EXISTS.apply(String.valueOf(applicationVersion.getId()))));
+  }
+
+  public Optional<WebUserAccountId> findTechnicalReviewerWuaId(ApplicationVersion applicationVersion) {
+    return findOpenTechnicalReview(applicationVersion)
+        .map(technicalReview -> WebUserAccountId.from(technicalReview.getTechnicalReviewerWuaId()));
   }
 
   public TechnicalReviewRequestForm getTechnicalReviewRequestForm(ApplicationVersion applicationVersion) {

@@ -27,22 +27,30 @@ import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePe
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_CASE_PROCESSING_DOCUMENTS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CASE_OFFICER;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.TECHNICAL_REVIEWER;
 
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlagService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ApplicationAccessService;
+import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @Service
 public class CaseProcessingActionService {
@@ -50,6 +58,10 @@ public class CaseProcessingActionService {
   private final ApplicationAccessService applicationAccessService;
 
   private final CaseStatusFlagService caseStatusFlagService;
+
+  private final ApplicationVersionService applicationVersionService;
+
+  private final TechnicalReviewService technicalReviewService;
 
   private final Map<ApplicationVersionStatus, Set<CaseProcessingActionItem>> caseStatusToActions =
       Map.of(
@@ -115,11 +127,24 @@ public class CaseProcessingActionService {
           entry(OPERATOR_UPDATE_APPLICATION, EnumSet.of(APPLICATION_UPDATE_OPEN, NO_APPLICATION_UPDATE_OPEN))
       );
 
+  private final Map<CaseProcessingActionItem, Set<RegulatorTeamRole>> actionsToAssigneeOnlyRoles =
+      Map.of(
+          CHANGE_ACE_STATUS, EnumSet.of(CASE_OFFICER),
+          CASE_OFFICER_RELEASE_OWNERSHIP, EnumSet.of(CASE_OFFICER),
+          CASE_OFFICER_WITHDRAWAL_RESPONSE, EnumSet.of(CASE_OFFICER),
+          TECHNICAL_REVIEW_REQUEST, EnumSet.of(CASE_OFFICER),
+          APPLICATION_UPDATE_REQUEST, EnumSet.of(TECHNICAL_REVIEWER)
+      );
+
   @Autowired
   public CaseProcessingActionService(ApplicationAccessService applicationAccessService,
-                                     CaseStatusFlagService caseStatusFlagService) {
+                                     CaseStatusFlagService caseStatusFlagService,
+                                     ApplicationVersionService applicationVersionService,
+                                     TechnicalReviewService technicalReviewService) {
     this.applicationAccessService = applicationAccessService;
     this.caseStatusFlagService = caseStatusFlagService;
+    this.applicationVersionService = applicationVersionService;
+    this.technicalReviewService = technicalReviewService;
   }
 
   public List<CaseProcessingActionItem> getUserActionItems(ApplicationVersion applicationVersion,
@@ -133,12 +158,14 @@ public class CaseProcessingActionService {
 
     var userRolePermissions = applicationAccessService.getApplicationPermissionsForUser(applicationVersion, user);
     var caseStatusFlags = caseStatusFlagService.getCaseStatusFlags(applicationVersion);
+    var regulatorRoleCurrentAssigneeMap = constructAssigneeMap(applicationVersion);
 
     return actions.stream()
         // filter actions that the user has permissions for
         .filter(action -> CollectionUtils.containsAny(actionsToPermissions.get(action), userRolePermissions))
         // filter actions that the application version has all the status flags for
         .filter(action -> caseStatusFlags.containsAll(actionsToStatusFlags.get(action)))
+        .filter(action -> assigneeCheck(action, regulatorRoleCurrentAssigneeMap, user))
         .toList();
   }
 
@@ -149,5 +176,39 @@ public class CaseProcessingActionService {
         .map(action -> CaseProcessingActionView.from(action, applicationVersion))
         .sorted(Comparator.comparing(CaseProcessingActionView::getDisplayOrder))
         .toList();
+  }
+
+  private Map<RegulatorTeamRole, WebUserAccountId> constructAssigneeMap(ApplicationVersion applicationVersion) {
+    var assigneeMap = new EnumMap<RegulatorTeamRole, WebUserAccountId>(RegulatorTeamRole.class);
+
+    applicationVersionService.findCaseOfficerWuaId(applicationVersion)
+        .ifPresent(caseOfficerWuaId -> assigneeMap.put(CASE_OFFICER, caseOfficerWuaId));
+
+    technicalReviewService.findTechnicalReviewerWuaId(applicationVersion)
+        .ifPresent(technicalReviewerWuaId -> assigneeMap.put(TECHNICAL_REVIEWER, technicalReviewerWuaId));
+
+    return assigneeMap;
+  }
+
+  private boolean assigneeCheck(CaseProcessingActionItem action,
+                                Map<RegulatorTeamRole, WebUserAccountId> assigneeMap,
+                                ServiceUserDetail user) {
+
+    var assigneeRoles = actionsToAssigneeOnlyRoles.get(action);
+
+    if (!action.isAssigneeOnly() && Objects.isNull(assigneeRoles)) {
+      return true;
+    } else if (action.isAssigneeOnly() && Objects.isNull(assigneeRoles)) {
+      throw new IllegalArgumentException("Action " + action.name() + " is assignee only but no roles are defined for the action");
+    }
+
+    for (var assigneeRole : assigneeRoles) {
+      var assigneeWuaId = assigneeMap.get(assigneeRole);
+      if (Objects.nonNull(assigneeWuaId) && user.wuaId().equals(assigneeWuaId.id())) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }

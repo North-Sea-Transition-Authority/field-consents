@@ -32,6 +32,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 
 @ExtendWith(MockitoExtension.class)
 class TechnicalReviewServiceTest {
@@ -121,6 +122,27 @@ class TechnicalReviewServiceTest {
   }
 
   @Test
+  void findTechnicalReviewerWuaId_whenExists() {
+    technicalReview.setTechnicalReviewerWuaId(USER.wuaId());
+    when(technicalReviewRepository
+        .findByApplicationVersion_ApplicationAndTechnicalReviewStatus(applicationVersion.getApplication(), OPEN))
+        .thenReturn(Optional.of(technicalReview));
+
+    assertThat(technicalReviewService.findTechnicalReviewerWuaId(applicationVersion))
+        .contains(WebUserAccountId.from(technicalReview.getTechnicalReviewerWuaId()));
+  }
+
+  @Test
+  void findTechnicalReviewerWuaId_whenDoesNotExist() {
+    when(technicalReviewRepository
+        .findByApplicationVersion_ApplicationAndTechnicalReviewStatus(applicationVersion.getApplication(), OPEN))
+        .thenReturn(Optional.empty());
+
+    assertThat(technicalReviewService.findTechnicalReviewerWuaId(applicationVersion))
+        .isEmpty();
+  }
+
+  @Test
   void getTechnicalReviewsByApplication_whenNoReviews() {
     when(technicalReviewRepository.findByApplicationVersion_Application(applicationVersion.getApplication()))
         .thenReturn(Collections.emptyList());
@@ -147,7 +169,7 @@ class TechnicalReviewServiceTest {
             technicalReview
         );
   }
-  
+
   @Test
   void getTechnicalReviewRequestForm_noOpenTechnicalReviewExists() {
     when(technicalReviewRepository.existsByApplicationVersion_ApplicationAndTechnicalReviewStatus(applicationVersion.getApplication(), OPEN))
