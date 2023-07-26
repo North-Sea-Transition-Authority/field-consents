@@ -1,7 +1,5 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing;
 
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.ENERGY_PORTAL_USER_1;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.ENERGY_PORTAL_USER_2;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.WithdrawalStatus.REJECTED;
 
 import java.time.Instant;
@@ -43,15 +41,21 @@ public class CaseHistoryEventTestUtil {
   }
 
   public static CaseEventView getCaseEventViewForType(CaseEventType eventType) {
-    return CaseEventView
-        .builder()
-        .withApplicationVersionNumber(APPLICATION_VERSION_NUMBER)
-        .withHeaderText(eventType.getCaseEventHeader())
-        .withMainUserInvolvedLabel(eventType.getCaseEventUserLabel())
-        .withMainUserInvolvedFullName(MAIN_USER_INVOLVED_FULL_NAME)
-        .withEventDateTimeLabel(eventType.getCaseEventDateTimeLabel())
-        .withEventDateTimeText(DateUtils.format(Instant.now(), DateUtils.DATE_TIME))
-        .build();
+    var appVersion = new ApplicationVersion();
+    appVersion.setVersion(1);
+    return new CaseEventView(
+        eventType.getCaseEventHeader(),
+        eventType.getCaseEventUserLabel(),
+        MAIN_USER_INVOLVED_FULL_NAME,
+        eventType.getOtherEventUserLabel(),
+        null,
+        eventType.getCaseEventDateTimeLabel(),
+        DateUtils.format(Instant.now(), DateUtils.DATE_TIME),
+        APPLICATION_VERSION_NUMBER,
+        null,
+        null,
+        List.of()
+    );
   }
 
   public static CaseEvent getCaseEventForApplicationCreated(ApplicationVersion applicationVersion) {
@@ -148,7 +152,7 @@ public class CaseHistoryEventTestUtil {
     applicationWithdrawal.setApplicationVersion(applicationVersion);
     applicationWithdrawal.setRequestedDateTime(applicationVersion.getSubmittedDateTime().plus(3, ChronoUnit.DAYS));
     applicationWithdrawal.setRequestText(WITHDRAWAL_REQUEST_EVENT_TEXT);
-    applicationWithdrawal.setRequestedByWuaId(ENERGY_PORTAL_USER_1.webUserAccountId());
+    applicationWithdrawal.setRequestedByWuaId(AssignmentTestUtil.ENERGY_PORTAL_USER_1.webUserAccountId());
     applicationWithdrawal.setWithdrawalStatus(WithdrawalStatus.OPEN);
     return applicationWithdrawal;
   }
@@ -156,7 +160,7 @@ public class CaseHistoryEventTestUtil {
   public static ApplicationWithdrawal getApplicationWithdrawalWithResponse(ApplicationVersion applicationVersion) {
     var applicationWithdrawal = getApplicationWithdrawalRequest(applicationVersion);
     applicationWithdrawal.setRespondedDateTime(applicationVersion.getSubmittedDateTime().plus(4, ChronoUnit.DAYS));
-    applicationWithdrawal.setRespondedByWuaId(ENERGY_PORTAL_USER_2.webUserAccountId());
+    applicationWithdrawal.setRespondedByWuaId(AssignmentTestUtil.ENERGY_PORTAL_USER_2.webUserAccountId());
     applicationWithdrawal.setWithdrawalStatus(WithdrawalStatus.ACCEPTED);
     return applicationWithdrawal;
   }
@@ -164,7 +168,7 @@ public class CaseHistoryEventTestUtil {
   public static CaseNote getCaseNote(ApplicationVersion applicationVersion) {
     var caseNote = new CaseNote();
     caseNote.setCaseNoteText(CASE_NOTE_EVENT_TEXT);
-    caseNote.setAddedByWuaId(ENERGY_PORTAL_USER_1.webUserAccountId());
+    caseNote.setAddedByWuaId(AssignmentTestUtil.ENERGY_PORTAL_USER_1.webUserAccountId());
     caseNote.setAddedDateTime(applicationVersion.getSubmittedDateTime().plus(2, ChronoUnit.DAYS));
     caseNote.setApplicationVersion(applicationVersion);
     return caseNote;
@@ -175,8 +179,8 @@ public class CaseHistoryEventTestUtil {
     technicalReview.setApplicationVersion(applicationVersion);
     technicalReview.setRequestedDateTime(applicationVersion.getSubmittedDateTime().plus(5, ChronoUnit.DAYS));
     technicalReview.setRequestText(TECHNICAL_REVIEW_REQUEST_EVENT_TEXT);
-    technicalReview.setRequestedByWuaId(ENERGY_PORTAL_USER_1.webUserAccountId());
-    technicalReview.setTechnicalReviewerWuaId(ENERGY_PORTAL_USER_2.webUserAccountId());
+    technicalReview.setRequestedByWuaId(AssignmentTestUtil.ENERGY_PORTAL_USER_1.webUserAccountId());
+    technicalReview.setTechnicalReviewerWuaId(AssignmentTestUtil.ENERGY_PORTAL_USER_2.webUserAccountId());
     technicalReview.setTechnicalReviewStatus(TechnicalReviewStatus.OPEN);
     return technicalReview;
   }
@@ -186,7 +190,7 @@ public class CaseHistoryEventTestUtil {
     var technicalReview = getTechnicalReviewRequest(applicationVersion);
     technicalReview.setRespondedDateTime(applicationVersion.getSubmittedDateTime().plus(6, ChronoUnit.DAYS));
     technicalReview.setResponseText(TECHNICAL_REVIEW_RESPONSE_EVENT_TEXT);
-    technicalReview.setRespondedByWuaId(ENERGY_PORTAL_USER_2.webUserAccountId());
+    technicalReview.setRespondedByWuaId(AssignmentTestUtil.ENERGY_PORTAL_USER_2.webUserAccountId());
     technicalReview.setTechnicalReviewStatus(TechnicalReviewStatus.CLOSED);
     technicalReview.setResponseType(technicalReviewResponseType);
     return technicalReview;
@@ -194,16 +198,9 @@ public class CaseHistoryEventTestUtil {
 
   public static Map<Long, EnergyPortalUserDto> getPortalUsersDtosMap() {
     return Map.of(
-        ENERGY_PORTAL_USER_1.webUserAccountId(), ENERGY_PORTAL_USER_1,
-        ENERGY_PORTAL_USER_2.webUserAccountId(), ENERGY_PORTAL_USER_2
+        AssignmentTestUtil.ENERGY_PORTAL_USER_1.webUserAccountId(), AssignmentTestUtil.ENERGY_PORTAL_USER_1,
+        AssignmentTestUtil.ENERGY_PORTAL_USER_2.webUserAccountId(), AssignmentTestUtil.ENERGY_PORTAL_USER_2,
+        AssignmentTestUtil.ENERGY_PORTAL_USER_3.webUserAccountId(), AssignmentTestUtil.ENERGY_PORTAL_USER_3
     );
-  }
-
-  public static CaseEvent getCaseEventForType(ApplicationVersion applicationVersion, CaseEventType eventType) {
-    return CaseEvent.builder(applicationVersion)
-        .withEventType(eventType)
-        .withMainEventUserWuaId(ENERGY_PORTAL_USER_1.webUserAccountId())
-        .withOtherEventUserWuaId(ENERGY_PORTAL_USER_2.webUserAccountId())
-        .build();
   }
 }

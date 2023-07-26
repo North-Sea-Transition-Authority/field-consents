@@ -8,7 +8,8 @@ public enum CaseEventType {
   APPLICATION_WITHDRAWAL_RESPONDED("Application withdrawal responded", "Responded by", "Responded on", "Withdrawal response"),
   CASE_OFFICER_ASSIGNED("Application assigned", "Assigned to", "Assigned on", null),
   CASE_NOTE_ADDED("Case note added", "Added by", "Added on", "Case note"),
-  TECHNICAL_REVIEW_REQUESTED("Technical review requested", "Requested by", "Requested on", "Request details"),
+  TECHNICAL_REVIEW_REQUESTED("Technical review requested", "Requested by",
+      "Requested on", "Request details", "Technical reviewer"),
   TECHNICAL_REVIEW_COMPLETED("Technical review completed", "Completed by", "Completed on", "Technical review");
 
   private final String caseEventHeader;
@@ -18,15 +19,25 @@ public enum CaseEventType {
   private final String caseEventDateTimeLabel;
 
   private final String caseEventTextLabel;
+  private final String otherEventUserLabel;
 
   CaseEventType(String caseEventHeader,
                 String caseEventUserLabel,
                 String caseEventDateTimeLabel,
                 String caseEventTextLabel) {
+    this(caseEventHeader, caseEventUserLabel, caseEventDateTimeLabel, caseEventTextLabel, null);
+  }
+
+  CaseEventType(String caseEventHeader,
+                String caseEventUserLabel,
+                String caseEventDateTimeLabel,
+                String caseEventTextLabel,
+                String otherEventUserLabel) {
     this.caseEventHeader = caseEventHeader;
     this.caseEventUserLabel = caseEventUserLabel;
     this.caseEventDateTimeLabel = caseEventDateTimeLabel;
     this.caseEventTextLabel = caseEventTextLabel;
+    this.otherEventUserLabel = otherEventUserLabel;
   }
 
   public String getCaseEventHeader() {
@@ -43,5 +54,9 @@ public enum CaseEventType {
 
   public String getCaseEventTextLabel() {
     return caseEventTextLabel;
+  }
+
+  public String getOtherEventUserLabel() {
+    return otherEventUserLabel;
   }
 }

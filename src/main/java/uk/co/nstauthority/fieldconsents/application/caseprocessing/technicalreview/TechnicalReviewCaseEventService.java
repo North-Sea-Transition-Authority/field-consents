@@ -2,15 +2,12 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalrev
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEvent;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventType;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventView;
-import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 
 @Service
@@ -76,47 +73,13 @@ public class TechnicalReviewCaseEventService implements CaseEventService<Applica
   }
 
   private String getTechnicalReviewResponseText(TechnicalReview technicalReview) {
-    var technicalReviewDecisionText = "Decision: %s.".formatted(technicalReview.getResponseType().getDisplayName());
+    var technicalReviewDecisionText = "Decision: " + technicalReview.getResponseType().getDisplayName();
 
     var technicalReviewResponseText =
         Objects.nonNull(technicalReview.getResponseText())
-            ? " %s: %s".formatted(technicalReview.getResponseType().getResponseTextLabel(), technicalReview.getResponseText())
+            ? ". %s: %s".formatted(technicalReview.getResponseType().getResponseTextLabel(), technicalReview.getResponseText())
             : "";
 
-    return technicalReviewDecisionText.concat(technicalReviewResponseText);
-  }
-
-  public CaseEventView getCaseEventViewForTechnicalReviewRequest(CaseEvent caseEvent,
-                                                                 Map<Long, EnergyPortalUserDto> portalUserDtosMap) {
-    var eventType = caseEvent.eventType();
-    return CaseEventView.builder()
-        .withApplicationVersionNumber(String.valueOf(caseEvent.applicationVersion().getVersion()))
-        .withHeaderText(eventType.getCaseEventHeader())
-        .withMainUserInvolvedLabel(eventType.getCaseEventUserLabel())
-        .withMainUserInvolvedFullName(portalUserDtosMap.get(caseEvent.mainEventUserWuaId()).displayName())
-        .withEventDateTimeLabel(eventType.getCaseEventDateTimeLabel())
-        .withEventDateTimeText(DateUtils.format(caseEvent.eventDateTime(), DateUtils.DATE_TIME))
-        .withOtherUserInvolvedLabel("Technical reviewer")
-        .withOtherUserInvolvedFullName(
-            portalUserDtosMap.get(caseEvent.otherEventUserWuaId()).displayName()
-        )
-        .withEventTextLabel(eventType.getCaseEventTextLabel())
-        .withEventText(caseEvent.eventText())
-        .build();
-  }
-
-  public CaseEventView getCaseEventViewForTechnicalReviewResponse(CaseEvent caseEvent,
-                                                                  Map<Long, EnergyPortalUserDto> portalUserDtosMap) {
-    var eventType = caseEvent.eventType();
-    return CaseEventView.builder()
-        .withApplicationVersionNumber(String.valueOf(caseEvent.applicationVersion().getVersion()))
-        .withHeaderText(String.format(eventType.getCaseEventHeader()))
-        .withMainUserInvolvedLabel(eventType.getCaseEventUserLabel())
-        .withMainUserInvolvedFullName(portalUserDtosMap.get(caseEvent.mainEventUserWuaId()).displayName())
-        .withEventDateTimeLabel(eventType.getCaseEventDateTimeLabel())
-        .withEventDateTimeText(DateUtils.format(caseEvent.eventDateTime(), DateUtils.DATE_TIME))
-        .withEventTextLabel(eventType.getCaseEventTextLabel())
-        .withEventText(caseEvent.eventText())
-        .build();
+    return technicalReviewDecisionText + technicalReviewResponseText;
   }
 }

@@ -33,7 +33,7 @@ class CaseNoteEventServiceTest {
   private ApplicationVersion applicationVersion;
 
   private CaseNote firstCaseNote;
-  
+
   private CaseEvent firstCaseNoteAddedEvent;
 
 
@@ -65,7 +65,7 @@ class CaseNoteEventServiceTest {
                 secondCaseNote
             )
         );
-    
+
     var secondCaseNoteAddedEvent = CaseHistoryEventTestUtil.getCaseEventForCaseNoteAdded(secondCaseNote);
 
     List<CaseEvent> caseEvents = caseNoteEventService.getCaseEvents(applicationVersion.getApplication());
@@ -74,31 +74,6 @@ class CaseNoteEventServiceTest {
         .containsExactly(
             firstCaseNoteAddedEvent,
             secondCaseNoteAddedEvent
-        );
-  }
-
-  @Test
-  void getCaseEventViewForNewCaseNote() {
-    var portalUsersDtoMap = getPortalUsersDtosMap();
-    var caseEventView = caseNoteEventService.getCaseEventViewForNewCaseNote(
-        firstCaseNoteAddedEvent, portalUsersDtoMap);
-
-    assertThat(caseEventView)
-        .usingRecursiveComparison()
-        .isEqualTo(
-            new CaseEventView(
-                CASE_NOTE_ADDED.getCaseEventHeader(),
-                CASE_NOTE_ADDED.getCaseEventUserLabel(),
-                portalUsersDtoMap.get(firstCaseNoteAddedEvent.mainEventUserWuaId()).displayName(),
-                null,
-                null,
-                CASE_NOTE_ADDED.getCaseEventDateTimeLabel(),
-                DateUtils.format(firstCaseNoteAddedEvent.eventDateTime(), DateUtils.DATE_TIME),
-                String.valueOf(firstCaseNoteAddedEvent.applicationVersion().getVersion()),
-                CASE_NOTE_ADDED.getCaseEventTextLabel(),
-                firstCaseNoteAddedEvent.eventText(),
-                null
-            )
         );
   }
 }

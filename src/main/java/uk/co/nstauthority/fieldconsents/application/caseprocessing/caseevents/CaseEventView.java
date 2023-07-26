@@ -1,7 +1,11 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents;
 
+import java.time.Instant;
 import java.util.List;
 import uk.co.fivium.fileuploadlibrary.core.UploadedFile;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
+import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 
 public class CaseEventView {
 
@@ -124,33 +128,18 @@ public class CaseEventView {
 
     private String eventText;
 
-    private List<UploadedFile> uploadedFiles;
+    private List<UploadedFile> uploadedFiles = List.of();
 
     private Builder() {
     }
 
-    public Builder withApplicationVersionNumber(String applicationVersionNumber) {
-      this.applicationVersionNumber = applicationVersionNumber;
+    public Builder withApplicationVersion(ApplicationVersion applicationVersion) {
+      this.applicationVersionNumber = applicationVersion.getVersion().toString();
       return this;
     }
 
-    public Builder withHeaderText(String headerText) {
-      this.headerText = headerText;
-      return this;
-    }
-
-    public Builder withEventDateTimeLabel(String eventDateTimeLabel) {
-      this.eventDateTimeLabel = eventDateTimeLabel;
-      return this;
-    }
-
-    public Builder withEventDateTimeText(String eventDateTimeText) {
-      this.eventDateTimeText = eventDateTimeText;
-      return this;
-    }
-
-    public Builder withEventTextLabel(String eventTextLabel) {
-      this.eventTextLabel = eventTextLabel;
+    public Builder withEventDateTime(Instant eventInstant) {
+      this.eventDateTimeText = DateUtils.format(eventInstant, DateUtils.DATE_TIME);
       return this;
     }
 
@@ -159,28 +148,30 @@ public class CaseEventView {
       return this;
     }
 
-    public Builder withMainUserInvolvedLabel(String mainUserInvolvedLabel) {
-      this.mainUserInvolvedLabel = mainUserInvolvedLabel;
+    public Builder withMainUser(EnergyPortalUserDto mainUser) {
+      this.mainUserInvolvedFullName = mainUser.displayName();
       return this;
     }
 
-    public Builder withMainUserInvolvedFullName(String mainUserInvolvedFullName) {
-      this.mainUserInvolvedFullName = mainUserInvolvedFullName;
+    public Builder withOtherUser(EnergyPortalUserDto otherUser) {
+      this.otherUserInvolvedFullName = otherUser.displayName();
       return this;
     }
 
-    public Builder withOtherUserInvolvedLabel(String otherUserInvolvedLabel) {
-      this.otherUserInvolvedLabel = otherUserInvolvedLabel;
+    public Builder withEventType(CaseEventType caseEventType) {
+      this.headerText = caseEventType.getCaseEventHeader();
+      this.mainUserInvolvedLabel = caseEventType.getCaseEventUserLabel();
+      this.otherUserInvolvedLabel = caseEventType.getOtherEventUserLabel();
+      this.eventDateTimeLabel = caseEventType.getCaseEventDateTimeLabel();
+      this.eventTextLabel = caseEventType.getCaseEventTextLabel();
       return this;
     }
 
-    public Builder withOtherUserInvolvedFullName(String otherUserInvolvedFullName) {
-      this.otherUserInvolvedFullName = otherUserInvolvedFullName;
-      return this;
-    }
-
-    public Builder withUploadedFiles(List<UploadedFile> uploadedFiles) {
-      this.uploadedFiles = uploadedFiles;
+    public Builder withFiles(List<UploadedFile> files) {
+      if (files != null) {
+        //Want to preserve the empty list
+        this.uploadedFiles = files;
+      }
       return this;
     }
 

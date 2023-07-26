@@ -63,15 +63,18 @@ class ApplicationCaseEventServiceTest {
 
   @Test
   void getCaseEvents_withApplicationUpdateSubmitted() {
-    var applicationUpdateCreatedEvent = CaseHistoryEventTestUtil.getCaseEventForApplicationCreated(applicationVersionUpdate);
-    var applicationUpdateSubmittedEvent = CaseHistoryEventTestUtil.getCaseEventForApplicationSubmitted(applicationVersionUpdate);
+    var applicationUpdateCreatedEvent = CaseHistoryEventTestUtil.getCaseEventForApplicationCreated(
+        applicationVersionUpdate);
+    var applicationUpdateSubmittedEvent = CaseHistoryEventTestUtil.getCaseEventForApplicationSubmitted(
+        applicationVersionUpdate);
 
-    when(applicationVersionService.getAllApplicationVersionsByApplicationId(applicationVersion.getApplication().getId()))
+    when(
+        applicationVersionService.getAllApplicationVersionsByApplicationId(applicationVersion.getApplication().getId()))
         .thenReturn(List.of(
-            applicationVersion,
-            applicationVersionUpdate
-        )
-    );
+                applicationVersion,
+                applicationVersionUpdate
+            )
+        );
 
     List<CaseEvent> caseEvents = applicationCaseEventService.getCaseEvents(applicationVersion.getApplication());
 
@@ -81,54 +84,6 @@ class ApplicationCaseEventServiceTest {
             applicationSubmittedEvent,
             applicationUpdateCreatedEvent,
             applicationUpdateSubmittedEvent
-        );
-  }
-
-  @Test
-  void getCaseEventViewForApplication_whenApplicationCreated() {
-    var portalUsersDtoMap = getPortalUsersDtosMap();
-    var caseEventView = applicationCaseEventService.getCaseEventViewForApplication(applicationCreatedEvent, portalUsersDtoMap);
-
-    assertThat(caseEventView)
-        .usingRecursiveComparison()
-        .isEqualTo(
-            new CaseEventView(
-                APPLICATION_CREATED.getCaseEventHeader(),
-                APPLICATION_CREATED.getCaseEventUserLabel(),
-                portalUsersDtoMap.get(applicationCreatedEvent.mainEventUserWuaId()).displayName(),
-                null,
-                null,
-                APPLICATION_CREATED.getCaseEventDateTimeLabel(),
-                DateUtils.format(applicationCreatedEvent.eventDateTime(), DateUtils.DATE_TIME),
-                String.valueOf(applicationCreatedEvent.applicationVersion().getVersion()),
-                null,
-                null,
-                null
-            )
-        );
-  }
-
-  @Test
-  void getCaseEventViewForApplication_whenApplicationSubmitted() {
-    var portalUsersDtoMap = getPortalUsersDtosMap();
-    var caseEventView = applicationCaseEventService.getCaseEventViewForApplication(applicationSubmittedEvent, portalUsersDtoMap);
-
-    assertThat(caseEventView)
-        .usingRecursiveComparison()
-        .isEqualTo(
-            new CaseEventView(
-                APPLICATION_SUBMITTED.getCaseEventHeader(),
-                APPLICATION_SUBMITTED.getCaseEventUserLabel(),
-                portalUsersDtoMap.get(applicationSubmittedEvent.mainEventUserWuaId()).displayName(),
-                null,
-                null,
-                APPLICATION_SUBMITTED.getCaseEventDateTimeLabel(),
-                DateUtils.format(applicationSubmittedEvent.eventDateTime(), DateUtils.DATE_TIME),
-                String.valueOf(applicationSubmittedEvent.applicationVersion().getVersion()),
-                null,
-                null,
-                null
-            )
         );
   }
 }
