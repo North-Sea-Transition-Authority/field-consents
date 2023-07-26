@@ -16,7 +16,7 @@ public class TechnicalReviewRequestForm {
   private final StringInput requestText;
 
   public TechnicalReviewRequestForm() {
-    this.requestText = new StringInput("requestText", "notes for the reviewer");
+    this.requestText = new StringInput("requestText", "note for the reviewer");
   }
 
   public WebUserAccountId getTechnicalReviewerWuaId() {

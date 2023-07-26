@@ -14,6 +14,8 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseHistoryTabContentService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewSummaryView;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
@@ -42,18 +44,22 @@ public class ApplicationCaseProcessingController {
 
   private final CaseHistoryTabContentService caseHistoryTabContentService;
 
+  private final TechnicalReviewService technicalReviewService;
+
   ApplicationCaseProcessingController(ApplicationService applicationService,
                                       ApplicationVersionService applicationVersionService,
                                       ApplicationSummaryService applicationSummaryService,
                                       CaseProcessingActionService caseProcessingActionService,
                                       CaseProcessingTabService caseProcessingTabService,
-                                      CaseHistoryTabContentService caseHistoryTabContentService) {
+                                      CaseHistoryTabContentService caseHistoryTabContentService,
+                                      TechnicalReviewService technicalReviewService) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.applicationSummaryService = applicationSummaryService;
     this.caseProcessingActionService = caseProcessingActionService;
     this.caseProcessingTabService = caseProcessingTabService;
     this.caseHistoryTabContentService = caseHistoryTabContentService;
+    this.technicalReviewService = technicalReviewService;
   }
 
   @GetMapping("case-processing")
@@ -89,11 +95,18 @@ public class ApplicationCaseProcessingController {
         ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null))
     );
 
-    return modelAndView.addObject("actionList", caseProcessingActions)
+    technicalReviewService.findOpenTechnicalReview(applicationVersion)
+        .ifPresent(technicalReview -> modelAndView
+            .addObject("technicalReviewSummaryView", TechnicalReviewSummaryView.from(technicalReview))
+        );
+
+    modelAndView.addObject("actionList", caseProcessingActions)
         .addObject("caseProcessingTabs", caseProcessingTabService.getTabsAvailableToUser(user))
         .addObject("applicationId", applicationId)
         .addObject("selectedTab", caseProcessingTab.getValue())
         .addObject("caseHistoryEvents",
             caseHistoryTabContentService.getCaseHistoryTabContent(applicationVersion.getApplication()));
+
+    return modelAndView;
   }
 }

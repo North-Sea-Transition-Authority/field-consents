@@ -25,17 +25,25 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.response.document.TechnicalReviewFileUsage;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
+import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
 
 @ExtendWith(MockitoExtension.class)
 class TechnicalReviewServiceTest {
+
+  private static final int TECHNICAL_REVIEW_ID = 1;
 
   @Mock
   private Clock clock;
@@ -46,12 +54,18 @@ class TechnicalReviewServiceTest {
   @Mock
   private TechnicalReviewAssignmentService technicalReviewAssignmentService;
 
+  @Mock
+  private FieldConsentsFileService fieldConsentsFileService;
+
   @InjectMocks
   private TechnicalReviewService technicalReviewService;
 
   private ApplicationVersion applicationVersion;
 
   private TechnicalReview technicalReview;
+
+  @Captor
+  private ArgumentCaptor<TechnicalReview> technicalReviewCaptor;
 
   @BeforeEach
   void setUp() {
@@ -201,9 +215,8 @@ class TechnicalReviewServiceTest {
         USER
     );
 
-    ArgumentCaptor<TechnicalReview> technicalReviewArgumentCaptor = ArgumentCaptor.forClass(TechnicalReview.class);
-    verify(technicalReviewRepository, times(1)).save(technicalReviewArgumentCaptor.capture());
-    var actualTechnicalReview = technicalReviewArgumentCaptor.getValue();
+    verify(technicalReviewRepository).save(technicalReviewCaptor.capture());
+    var actualTechnicalReview = technicalReviewCaptor.getValue();
 
     assertThat(actualTechnicalReview)
         .usingRecursiveComparison()
@@ -212,4 +225,39 @@ class TechnicalReviewServiceTest {
     verify(technicalReviewAssignmentService, times(1))
         .assignTechnicalReviewer(actualTechnicalReview, SERVICE_USER_DETAIL_USER_5, USER);
   }
+
+  @ParameterizedTest
+  @EnumSource(TechnicalReviewResponseType.class)
+  void saveTechnicalReviewResponse(TechnicalReviewResponseType responseType) {
+    var consentCondition = "consent condition";
+    var rejectionReason = "rejection reason";
+    var uploadedFileForms = Collections.singletonList(new UploadedFileForm());
+
+    technicalReview.setId(TECHNICAL_REVIEW_ID);
+    technicalReviewService.saveTechnicalReviewResponse(
+        technicalReview,
+        SERVICE_USER_DETAIL_USER_5,
+        responseType,
+        consentCondition,
+        rejectionReason,
+        uploadedFileForms
+    );
+
+    verify(fieldConsentsFileService).saveDocuments(TechnicalReviewFileUsage.responseFrom(technicalReview), uploadedFileForms);
+
+    verify(technicalReviewRepository).save(technicalReviewCaptor.capture());
+    assertThat(technicalReviewCaptor.getValue())
+        .extracting(
+            TechnicalReview::getRespondedByWuaId,
+            TechnicalReview::getRespondedDateTime,
+            TechnicalReview::getResponseText,
+            TechnicalReview::getTechnicalReviewStatus
+        ).containsExactly(
+            SERVICE_USER_DETAIL_USER_5.wuaId(),
+            CURRENT_INSTANT,
+            TechnicalReviewResponseType.REJECT.equals(responseType) ? rejectionReason : consentCondition,
+            TechnicalReviewStatus.CLOSED
+        );
+  }
+
 }

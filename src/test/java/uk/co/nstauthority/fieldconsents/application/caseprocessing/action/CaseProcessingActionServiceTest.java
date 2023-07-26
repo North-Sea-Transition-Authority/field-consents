@@ -13,6 +13,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_WITHDRAWAL_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.REGULATOR_ADD_CASE_NOTE;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWER_SUBMIT_REVIEW;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEW_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.APPLICATION_UPDATE_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_ASSIGNED;
@@ -479,9 +480,9 @@ class CaseProcessingActionServiceTest {
         .thenReturn(Optional.of(USER_WUA_ID));
 
     assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
-        .hasSize(2)
         .usingRecursiveFieldByFieldElementComparator()
         .containsExactly(
+            CaseProcessingActionView.from(TECHNICAL_REVIEWER_SUBMIT_REVIEW, applicationVersion),
             CaseProcessingActionView.from(TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP, applicationVersion),
             CaseProcessingActionView.from(APPLICATION_UPDATE_REQUEST, applicationVersion)
         );
@@ -512,9 +513,11 @@ class CaseProcessingActionServiceTest {
         .thenReturn(Optional.of(USER_WUA_ID));
 
     assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
-        .hasSize(1)
         .usingRecursiveFieldByFieldElementComparator()
-        .containsExactly(CaseProcessingActionView.from(TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP, applicationVersion));
+        .containsExactly(
+            CaseProcessingActionView.from(TECHNICAL_REVIEWER_SUBMIT_REVIEW, applicationVersion),
+            CaseProcessingActionView.from(TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP, applicationVersion)
+        );
   }
 
   @Test

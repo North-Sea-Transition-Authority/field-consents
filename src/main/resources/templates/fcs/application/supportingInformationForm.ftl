@@ -9,7 +9,7 @@ htmlTitle=pageTitle
 pageHeading=pageTitle
 errorItems=errorList
 pageSize=PageSize.TWO_THIRDS_COLUMN>
-  <@fdsForm.htmlForm actionUrl=springUrl(submitUrl)>
+  <@fdsForm.htmlForm>
     <@fdsTextarea.textarea
       path="form.notes.inputValue"
       labelText="Notes"

@@ -13,11 +13,14 @@ import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.A
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -33,6 +36,8 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CasePr
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseHistoryTabContentService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReview;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -54,6 +59,18 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
 
   @MockBean
   private CaseHistoryTabContentService caseHistoryTabContentService;
+
+  @MockBean
+  private TechnicalReviewService technicalReviewService;
+
+  private TechnicalReview technicalReview;
+
+  @BeforeEach
+  void setUp() {
+    technicalReview = new TechnicalReview();
+    technicalReview.setDeadlineDateTime(Instant.now().plus(1, ChronoUnit.DAYS));
+    technicalReview.setRequestText("request text");
+  }
 
   @SecurityTest
   void getApplicationCaseProcessing_noUser() throws Exception {
@@ -83,6 +100,8 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     var caseHistoryEvents = CaseHistoryEventTestUtil.getMockCaseEventViews();
     when(caseHistoryTabContentService.getCaseHistoryTabContent(applicationVersion.getApplication()))
         .thenReturn(caseHistoryEvents);
+    when(technicalReviewService.findOpenTechnicalReview(applicationVersion))
+        .thenReturn(Optional.of(technicalReview));
 
     var actionViews =
         List.of(CaseProcessingActionView.from(CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP, applicationVersion));

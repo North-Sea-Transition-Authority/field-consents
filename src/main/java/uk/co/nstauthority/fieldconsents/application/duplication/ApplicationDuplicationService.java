@@ -11,9 +11,10 @@ import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionFileUsage;
 import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAssetLicenceRepository;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetRepository;
-import uk.co.nstauthority.fieldconsents.application.supportinginformation.SupportingInformationDocumentService;
+import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
 import uk.co.nstauthority.fieldconsents.util.ReflectionUtil;
 
 @Service
@@ -43,19 +44,19 @@ public class ApplicationDuplicationService {
 
   private final ApplicationAssetLicenceRepository applicationAssetLicenceRepository;
 
-  private final SupportingInformationDocumentService supportingInformationDocumentService;
+  private final FieldConsentsFileService fieldConsentsFileService;
 
   @Autowired
   public ApplicationDuplicationService(EntityManager entityManager,
                                        List<DuplicationSource> duplicationSources,
                                        ApplicationAssetRepository applicationAssetRepository,
                                        ApplicationAssetLicenceRepository applicationAssetLicenceRepository,
-                                       SupportingInformationDocumentService supportingInformationDocumentService) {
+                                       FieldConsentsFileService fieldConsentsFileService) {
     this.entityManager = entityManager;
     this.duplicationSources = duplicationSources;
     this.applicationAssetRepository = applicationAssetRepository;
     this.applicationAssetLicenceRepository = applicationAssetLicenceRepository;
-    this.supportingInformationDocumentService = supportingInformationDocumentService;
+    this.fieldConsentsFileService = fieldConsentsFileService;
   }
 
   @Transactional
@@ -96,7 +97,14 @@ public class ApplicationDuplicationService {
     duplicateApplicationAssetsData(sourceApplicationVersion, targetApplicationVersion);
 
     // duplicate the supporting information file uploads
-    supportingInformationDocumentService.copyUploadedFiles(sourceApplicationVersion, targetApplicationVersion);
+    duplicateSupportingDocuments(sourceApplicationVersion, targetApplicationVersion);
+  }
+
+  private void duplicateSupportingDocuments(ApplicationVersion source, ApplicationVersion target) {
+    var sourceUsage = ApplicationVersionFileUsage.supportingDocumentFrom(source);
+    var targetUsage = ApplicationVersionFileUsage.supportingDocumentFrom(target);
+
+    fieldConsentsFileService.copyUploadedFiles(sourceUsage, targetUsage);
   }
 
   @SuppressWarnings("unchecked")

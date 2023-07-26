@@ -8,6 +8,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.Ca
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casenotes.CaseNotesController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewAssignmentController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.response.TechnicalReviewResponseController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationStartUpdateController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalController;
@@ -43,7 +44,9 @@ public enum CaseProcessingActionItem implements Displayable {
       applicationId -> ReverseRouter.route(on(CaseNotesController.class)
           .getNewCaseNote(applicationId))),
   // Technical reviewer actions
-  TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP("Reassign technical reviewer", 1, false, false, null,
+  TECHNICAL_REVIEWER_SUBMIT_REVIEW("Submit technical review", 1, true, true, null,
+      applicationId -> ReverseRouter.route(on(TechnicalReviewResponseController.class).getForm(applicationId))),
+  TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP("Reassign technical reviewer", 2, false, false, null,
       applicationId -> ReverseRouter.route(on(TechnicalReviewAssignmentController.class)
           .getTechnicalReviewAssignment(applicationId, null))),
   // Case officer and Technical reviewer actions

@@ -10,10 +10,13 @@ import java.util.Optional;
 import java.util.function.UnaryOperator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.response.document.TechnicalReviewFileUsage;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
+import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
 
 @Service
 public class TechnicalReviewService {
@@ -30,12 +33,16 @@ public class TechnicalReviewService {
 
   private final TechnicalReviewAssignmentService technicalReviewAssignmentService;
 
+  private final FieldConsentsFileService fieldConsentsFileService;
+
   public TechnicalReviewService(Clock clock,
                                 TechnicalReviewRepository technicalReviewRepository,
-                                TechnicalReviewAssignmentService technicalReviewAssignmentService) {
+                                TechnicalReviewAssignmentService technicalReviewAssignmentService,
+                                FieldConsentsFileService fieldConsentsFileService) {
     this.clock = clock;
     this.technicalReviewRepository = technicalReviewRepository;
     this.technicalReviewAssignmentService = technicalReviewAssignmentService;
+    this.fieldConsentsFileService = fieldConsentsFileService;
   }
 
   public boolean openTechnicalReviewExists(ApplicationVersion applicationVersion) {
@@ -86,4 +93,27 @@ public class TechnicalReviewService {
   public List<TechnicalReview> getTechnicalReviewsByApplication(Application application) {
     return technicalReviewRepository.findByApplicationVersion_Application(application);
   }
+
+  @Transactional
+  public void saveTechnicalReviewResponse(
+      TechnicalReview technicalReview,
+      ServiceUserDetail serviceUserDetail,
+      TechnicalReviewResponseType technicalReviewResponseType,
+      String consentConditions,
+      String rejectionReason,
+      List<UploadedFileForm> documents
+  ) {
+    technicalReview.setRespondedByWuaId(serviceUserDetail.wuaId());
+    technicalReview.setRespondedDateTime(clock.instant());
+    technicalReview.setResponseType(technicalReviewResponseType);
+
+    var isRejected = TechnicalReviewResponseType.REJECT.equals(technicalReviewResponseType);
+    technicalReview.setResponseText(isRejected ? rejectionReason : consentConditions);
+    technicalReview.setTechnicalReviewStatus(TechnicalReviewStatus.CLOSED);
+
+    var fileUsage = TechnicalReviewFileUsage.responseFrom(technicalReview);
+    fieldConsentsFileService.saveDocuments(fileUsage, documents);
+    technicalReviewRepository.save(technicalReview);
+  }
+
 }

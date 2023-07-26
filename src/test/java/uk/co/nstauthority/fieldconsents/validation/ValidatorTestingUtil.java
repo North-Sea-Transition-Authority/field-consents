@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.FieldError;
@@ -71,4 +72,13 @@ public class ValidatorTestingUtil {
         ));
 
   }
+
+  public static BindingResult getBindingResult(Object form, String objectName) {
+    return new BeanPropertyBindingResult(form, objectName);
+  }
+
+  public static BindingResult getBindingResult(Object form) {
+    return getBindingResult(form, "form");
+  }
+
 }

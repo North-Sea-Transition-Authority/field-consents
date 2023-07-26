@@ -21,6 +21,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionFileUsage;
+import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
@@ -38,9 +40,11 @@ class SupportingInformationServiceTest {
   private SupportingInformationRepository supportingInformationRepository;
 
   @Mock
-  private SupportingInformationDocumentService supportingInformationDocumentService;
+  private FieldConsentsFileService fieldConsentsFileService;
 
   private ApplicationVersion applicationVersion;
+
+  private ApplicationVersionFileUsage fileUsage;
 
   private SupportingInformation supportingInformation;
 
@@ -53,6 +57,7 @@ class SupportingInformationServiceTest {
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
+    fileUsage = ApplicationVersionFileUsage.supportingDocumentFrom(applicationVersion);
     supportingInformation = getSupportingInformation();
   }
 
@@ -114,7 +119,7 @@ class SupportingInformationServiceTest {
     supportingInformationService.saveSupportingInformation(applicationVersion, form);
 
     verify(supportingInformationRepository).deleteByApplicationVersion(applicationVersion);
-    verify(supportingInformationDocumentService).saveDocuments(applicationVersion, form.getSupportingDocuments());
+    verify(fieldConsentsFileService).saveDocuments(fileUsage, form.getSupportingDocuments());
     verify(supportingInformationRepository).save(supportingInformationCaptor.capture());
 
     assertThat(supportingInformationCaptor.getValue())

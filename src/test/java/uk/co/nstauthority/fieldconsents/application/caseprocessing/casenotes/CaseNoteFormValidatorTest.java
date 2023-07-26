@@ -62,7 +62,7 @@ class CaseNoteFormValidatorTest {
 
   @Test
   void validate_form_hasFilesWithNoDescriptions() {
-    form.setCaseNoteText("Test notes");
+    form.setCaseNoteText("Test note");
     form.setCaseNoteDocuments(FileUploadTestUtil.documentFormsWithMissingDescription);
 
     ValidationUtils.invokeValidator(formValidator, form, errors);

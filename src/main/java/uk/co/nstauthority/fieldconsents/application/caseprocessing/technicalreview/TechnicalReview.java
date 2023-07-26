@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview;
 
+import com.google.common.annotations.VisibleForTesting;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -47,6 +48,15 @@ public class TechnicalReview {
 
   @Enumerated(EnumType.STRING)
   private TechnicalReviewStatus technicalReviewStatus;
+
+  @VisibleForTesting
+  public void setId(Integer id) {
+    this.id = id;
+  }
+
+  public Integer getId() {
+    return id;
+  }
 
   public ApplicationVersion getApplicationVersion() {
     return applicationVersion;

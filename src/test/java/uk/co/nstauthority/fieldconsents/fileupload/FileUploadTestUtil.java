@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.fileupload;
 
+import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -11,6 +12,7 @@ import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 public class FileUploadTestUtil {
 
   public static final UUID FILE_ID = UUID.randomUUID();
+  public static final Instant FILE_UPLOADED_AT = Instant.now();
   public static final String FILE_NAME_1 = "file_name_1.pdf";
   public static final String FILE_NAME_2 = "file_name_2.doc";
   public static final String FILE_DESCRIPTION_1 = "This is a description of the file_name_1";
@@ -42,20 +44,25 @@ public class FileUploadTestUtil {
   public static UploadedFileForm getUploadedFileFormWithDescription(String fileName, String fileDescription) {
     var fileFormWithDescription = getUploadedFileWithFileName(fileName);
     fileFormWithDescription.setFileDescription(fileDescription);
+    fileFormWithDescription.setFileSize("1.3MB");
+    fileFormWithDescription.setFileUploadedAt(FILE_UPLOADED_AT);
     return fileFormWithDescription;
   }
 
   public static FileUploadComponentAttributes getFileUploadComponentAttributesWithPath(String bindingPath) {
-    return FileUploadComponentAttributes.newBuilder()
+    return getFileUploadComponentAttributesBuilder()
         .withPath(bindingPath)
+        .build();
+  }
+
+  public static FileUploadComponentAttributes.Builder getFileUploadComponentAttributesBuilder() {
+    return FileUploadComponentAttributes.newBuilder()
         .withMaximumSize(DataSize.ofMegabytes(50))
         .withUploadUrl("/upload")
         .withDownloadUrl("/download")
         .withDeleteUrl("/delete")
         .withAllowedExtensions(Set.of("csv", "pdf"))
-        .withExistingFiles(Collections.emptyList())
-        .build();
+        .withExistingFiles(Collections.emptyList());
   }
-
 
 }

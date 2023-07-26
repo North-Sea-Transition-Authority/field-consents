@@ -6,6 +6,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionFileUsage;
+import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
+import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileUsage;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 
@@ -13,13 +16,13 @@ import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 public class SupportingInformationService {
 
   private final SupportingInformationRepository supportingInformationRepository;
-  private final SupportingInformationDocumentService supportingInformationDocumentService;
+  private final FieldConsentsFileService fieldConsentsFileService;
 
   @Autowired
   public SupportingInformationService(SupportingInformationRepository supportingInformationRepository,
-                                      SupportingInformationDocumentService supportingInformationDocumentService) {
+                                      FieldConsentsFileService fieldConsentsFileService) {
     this.supportingInformationRepository = supportingInformationRepository;
-    this.supportingInformationDocumentService = supportingInformationDocumentService;
+    this.fieldConsentsFileService = fieldConsentsFileService;
   }
 
   public SupportingInformationForm getSupportingInformationForm(ApplicationVersion applicationVersion) {
@@ -27,7 +30,7 @@ public class SupportingInformationService {
         .map(supportingInformation ->
             SupportingInformationForm.from(
                 supportingInformation,
-                supportingInformationDocumentService.getUploadedFiles(applicationVersion)
+                fieldConsentsFileService.getUploadedFiles(getFileUsage(applicationVersion))
             )
         )
         .orElse(new SupportingInformationForm());
@@ -40,7 +43,7 @@ public class SupportingInformationService {
   @Transactional
   public void saveSupportingInformation(ApplicationVersion applicationVersion, SupportingInformationForm form) {
     supportingInformationRepository.deleteByApplicationVersion(applicationVersion);
-    supportingInformationDocumentService.saveDocuments(applicationVersion, form.getSupportingDocuments());
+    fieldConsentsFileService.saveDocuments(getFileUsage(applicationVersion), form.getSupportingDocuments());
     supportingInformationRepository.save(SupportingInformation.from(applicationVersion, form));
   }
 
@@ -60,6 +63,10 @@ public class SupportingInformationService {
     }
 
     return SummaryCard.simpleSummaryCard(summaryData);
+  }
+
+  private FieldConsentsFileUsage getFileUsage(ApplicationVersion applicationVersion) {
+    return ApplicationVersionFileUsage.supportingDocumentFrom(applicationVersion);
   }
 
 }

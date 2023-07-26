@@ -31,12 +31,13 @@ import org.springframework.data.repository.CrudRepository;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionFileUsage;
 import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAssetLicence;
 import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAssetLicenceRepository;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetRepository;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil;
-import uk.co.nstauthority.fieldconsents.application.supportinginformation.SupportingInformationDocumentService;
+import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationDuplicationServiceTest {
@@ -88,7 +89,7 @@ class ApplicationDuplicationServiceTest {
   private ApplicationAssetLicenceRepository applicationAssetLicenceRepository;
 
   @Mock
-  private SupportingInformationDocumentService supportingInformationDocumentService;
+  private FieldConsentsFileService fieldConsentsFileService;
 
   private ApplicationDuplicationService applicationDuplicationService;
 
@@ -116,7 +117,7 @@ class ApplicationDuplicationServiceTest {
     duplicationSources.add(testDuplicationSource2);
     applicationDuplicationService = new ApplicationDuplicationService(
         entityManager, duplicationSources, applicationAssetRepository,
-        applicationAssetLicenceRepository, supportingInformationDocumentService);
+        applicationAssetLicenceRepository, fieldConsentsFileService);
 
     when(testDuplicationSource1.findAllByApplicationVersion(applicationVersion))
         .thenReturn(List.of(TEST_BASE_ENTITY_1, TEST_BASE_ENTITY_2));
@@ -192,8 +193,11 @@ class ApplicationDuplicationServiceTest {
         );
 
     // check file copy is called
-    verify(supportingInformationDocumentService, times(1))
-        .copyUploadedFiles(applicationVersion, targetApplicationVersion);
+    verify(fieldConsentsFileService, times(1))
+        .copyUploadedFiles(
+            ApplicationVersionFileUsage.supportingDocumentFrom(applicationVersion),
+            ApplicationVersionFileUsage.supportingDocumentFrom(targetApplicationVersion)
+        );
   }
 
   @ParameterizedTest
@@ -202,7 +206,7 @@ class ApplicationDuplicationServiceTest {
     duplicationSources.add(badDuplicationSource);
     applicationDuplicationService = new ApplicationDuplicationService(
         entityManager, duplicationSources, applicationAssetRepository,
-        applicationAssetLicenceRepository, supportingInformationDocumentService);
+        applicationAssetLicenceRepository, fieldConsentsFileService);
 
     assertThatThrownBy(() ->
         applicationDuplicationService
@@ -225,7 +229,7 @@ class ApplicationDuplicationServiceTest {
     duplicationSources.add(testDuplicationSource5);
     applicationDuplicationService = new ApplicationDuplicationService(
         entityManager, duplicationSources, applicationAssetRepository,
-        applicationAssetLicenceRepository, supportingInformationDocumentService);
+        applicationAssetLicenceRepository, fieldConsentsFileService);
 
     var repoMethod = testDuplicationSource5.getClass().getMethod("getFirstByApplicationVersion", ApplicationVersion.class);
 
@@ -242,7 +246,7 @@ class ApplicationDuplicationServiceTest {
     duplicationSources.add(testDuplicationSource6);
     applicationDuplicationService = new ApplicationDuplicationService(
         entityManager, duplicationSources, applicationAssetRepository,
-        applicationAssetLicenceRepository, supportingInformationDocumentService);
+        applicationAssetLicenceRepository, fieldConsentsFileService);
 
     when(testDuplicationSource6.findAllByApplicationVersion(applicationVersion))
         .thenReturn(List.of(BAD_TEST_BASE_ENTITY_1));
@@ -260,7 +264,7 @@ class ApplicationDuplicationServiceTest {
     duplicationSources.add(testDuplicationSource7);
     applicationDuplicationService = new ApplicationDuplicationService(
         entityManager, duplicationSources, applicationAssetRepository,
-        applicationAssetLicenceRepository, supportingInformationDocumentService);
+        applicationAssetLicenceRepository, fieldConsentsFileService);
 
     when(testDuplicationSource7.findByApplicationVersion(applicationVersion))
         .thenReturn(Optional.of(BAD_TEST_BASE_ENTITY_2));
@@ -278,7 +282,7 @@ class ApplicationDuplicationServiceTest {
     duplicationSources.add(testDuplicationSource8);
     applicationDuplicationService = new ApplicationDuplicationService(
         entityManager, duplicationSources, applicationAssetRepository,
-        applicationAssetLicenceRepository, supportingInformationDocumentService);
+        applicationAssetLicenceRepository, fieldConsentsFileService);
 
     when(testDuplicationSource8.findAllByApplicationVersion(applicationVersion))
         .thenReturn(List.of(BAD_TEST_BASE_ENTITY_3));
@@ -296,7 +300,7 @@ class ApplicationDuplicationServiceTest {
     duplicationSources.add(testDuplicationSource9);
     applicationDuplicationService = new ApplicationDuplicationService(
         entityManager, duplicationSources, applicationAssetRepository,
-        applicationAssetLicenceRepository, supportingInformationDocumentService);
+        applicationAssetLicenceRepository, fieldConsentsFileService);
 
     when(testDuplicationSource9.findByApplicationVersion(applicationVersion))
         .thenReturn(Optional.of(BAD_TEST_BASE_ENTITY_4));

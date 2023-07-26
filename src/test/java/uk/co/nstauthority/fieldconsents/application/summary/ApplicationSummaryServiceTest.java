@@ -12,14 +12,19 @@ import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUt
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.getProductionInformationSummarySection;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
+import uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.summary.production.ProductionInformationSummarySectionService;
 import uk.co.nstauthority.fieldconsents.application.summary.shared.AdditionalInformationSummarySectionService;
@@ -91,5 +96,36 @@ class ApplicationSummaryServiceTest {
         .containsEntry("wideSummaryDisplay", false)
         .containsEntry("backLinkUrl", ReverseRouter.route(on(WorkAreaController.class)
             .getWorkArea(null, null)));
+  }
+
+  @ParameterizedTest
+  @EnumSource(ApplicationType.class)
+  void addSummarySectionsToModelAndView(ApplicationType applicationType) {
+    // it doesn't actually matter what the sections here are...
+    var consentDetailSection = getConsentDetailsSummarySection(null);
+    when(consentDetailsSummarySectionService.getSummarySection(applicationVersion))
+        .thenReturn(Optional.of(consentDetailSection));
+
+    var productionDetailSection = getProductionInformationSummarySection(null);
+    when(productionInformationSummarySectionService.getSummarySection(applicationVersion))
+        .thenReturn(Optional.of(productionDetailSection));
+
+    var additionalDetailSection = getAdditionalInformationSummarySection(null);
+    when(additionalInformationSummarySectionService.getSummarySection(applicationVersion))
+        .thenReturn(Optional.of(additionalDetailSection));
+
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
+    var modelAndView = new ModelAndView();
+
+    applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView);
+
+    var wideSummaryDisplay = ApplicationTypeFeature.WIDE_SUMMARY_DISPLAY.allowed(applicationType);
+
+    assertThat(modelAndView.getModel())
+        .containsExactlyInAnyOrderEntriesOf(Map.of(
+            "summarySections", List.of(consentDetailSection, productionDetailSection, additionalDetailSection),
+            "accordionId", applicationVersion.getId(),
+            "wideSummaryDisplay", wideSummaryDisplay
+        ));
   }
 }

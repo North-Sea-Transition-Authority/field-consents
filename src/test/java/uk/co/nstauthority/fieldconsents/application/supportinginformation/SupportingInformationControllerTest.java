@@ -2,8 +2,6 @@ package uk.co.nstauthority.fieldconsents.application.supportinginformation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -16,13 +14,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.FILE_DESCRIPTION_1;
 import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.FILE_ID;
 import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.FILE_NAME_1;
-import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.getFileUploadComponentAttributesWithPath;
+import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.FILE_UPLOADED_AT;
+import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.getFileUploadComponentAttributesBuilder;
 import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.getUploadedFileFormWithDescription;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
-import java.time.Instant;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -36,22 +35,22 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
-import uk.co.fivium.fileuploadlibrary.fds.FileUploadComponentAttributes;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionFileService;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
+import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @ContextConfiguration(classes = SupportingInformationController.class)
 class SupportingInformationControllerTest extends AbstractApplicationControllerTest {
 
   private static final String VIEW_NAME = "fcs/application/supportingInformationForm";
+  private static final String FORM_DOCUMENT_PATH = "form.supportingDocuments";
 
   @MockBean
   private ApplicationService applicationService;
@@ -60,19 +59,14 @@ class SupportingInformationControllerTest extends AbstractApplicationControllerT
   private SupportingInformationService supportingInformationService;
 
   @MockBean
-  private SupportingInformationDocumentService supportingInformationDocumentService;
+  private FieldConsentsFileService fieldConsentsFileService;
 
   @MockBean
   private SupportingInformationFormValidator supportingInformationFormValidator;
 
-  @MockBean
-  private ApplicationVersionFileService applicationVersionFileService;
-
   private ApplicationVersion applicationVersion;
 
   private SupportingInformationForm form;
-
-  private FileUploadComponentAttributes fileUploadComponentAttributes;
 
   @BeforeEach
   void setUp() {
@@ -105,14 +99,12 @@ class SupportingInformationControllerTest extends AbstractApplicationControllerT
     when(supportingInformationService.getSupportingInformationForm(applicationVersion))
         .thenReturn(form);
 
-    fileUploadComponentAttributes = getFileUploadComponentAttributesWithPath("form.supportingDocuments");
-    when(supportingInformationDocumentService.fileUploadComponentAttributes(eq(applicationVersion), anyList()))
-        .thenReturn(fileUploadComponentAttributes);
+    when(fieldConsentsFileService.fileUploadComponentAttributesBuilder())
+        .thenReturn(getFileUploadComponentAttributesBuilder().withPath(FORM_DOCUMENT_PATH));
 
     var model = mockMvc.perform(get(ReverseRouter.route(on(SupportingInformationController.class)
             .getSupportingInformationForm(ApplicationTestUtil.APPLICATION_ID)))
-            .with(user(user))
-            .with(csrf()))
+            .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name(VIEW_NAME))
         .andReturn()
@@ -122,7 +114,6 @@ class SupportingInformationControllerTest extends AbstractApplicationControllerT
     assertThat(model)
         .isNotNull()
         .containsEntry("erapInformationAllowed", erapInformationAllowed)
-        .containsEntry("submitUrl", ReverseRouter.route(on(SupportingInformationController.class).getSupportingInformationForm(APPLICATION_ID)))
         .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID)));
 
     // applicationType is nullable
@@ -184,9 +175,8 @@ class SupportingInformationControllerTest extends AbstractApplicationControllerT
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(ApplicationTestUtil.APPLICATION_ID))
         .thenReturn(applicationVersion);
 
-    fileUploadComponentAttributes = getFileUploadComponentAttributesWithPath("form.supportingDocuments");
-    when(supportingInformationDocumentService.fileUploadComponentAttributes(eq(applicationVersion), anyList()))
-        .thenReturn(fileUploadComponentAttributes);
+    when(fieldConsentsFileService.fileUploadComponentAttributesBuilder())
+        .thenReturn(getFileUploadComponentAttributesBuilder().withPath(FORM_DOCUMENT_PATH));
 
     mockMvc.perform(post(ReverseRouter.route(on(SupportingInformationController.class)
             .saveSupportingInformation(ApplicationTestUtil.APPLICATION_ID, null, null)))
@@ -209,16 +199,15 @@ class SupportingInformationControllerTest extends AbstractApplicationControllerT
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(ApplicationTestUtil.APPLICATION_ID))
         .thenReturn(applicationVersion);
 
-    fileUploadComponentAttributes = getFileUploadComponentAttributesWithPath("form.supportingDocuments");
-    when(supportingInformationDocumentService.fileUploadComponentAttributes(eq(applicationVersion), anyList()))
-        .thenReturn(fileUploadComponentAttributes);
+    when(fieldConsentsFileService.fileUploadComponentAttributesBuilder())
+        .thenReturn(getFileUploadComponentAttributesBuilder().withPath(FORM_DOCUMENT_PATH));
 
     // when the form is put back into the model and view, it will need to fetch the file name, file size etc.
     // it also gets back the file description, but we want to use the file description that's in the form
     // because it may have been updated as part of this form submission.
     var persistedFileAsForm = getUploadedFileFormWithDescription(FILE_NAME_1, "old description");
 
-    when(applicationVersionFileService.getUploadedFileForms(Collections.singleton(FILE_ID)))
+    when(fieldConsentsFileService.getUploadedFileForms(Collections.singleton(FILE_ID)))
         .thenReturn(Collections.singletonList(persistedFileAsForm));
 
     var modelAndView = mockMvc.perform(post(ReverseRouter.route(on(SupportingInformationController.class)
@@ -226,8 +215,8 @@ class SupportingInformationControllerTest extends AbstractApplicationControllerT
             .with(user(user))
             .with(csrf())
             .param("supportingDocuments[0].uploadedFileId", FILE_ID.toString())
-            .param("supportingDocuments[0].uploadedFileInstant", Instant.now().toString())
-            .param("supportingDocuments[0].uploadedFileDescription", "new description"))
+            .param("supportingDocuments[0].uploadedFileInstant", FILE_UPLOADED_AT.toString())
+            .param("supportingDocuments[0].uploadedFileDescription", FILE_DESCRIPTION_1))
         .andExpect(status().isOk())
         .andExpect(view().name(VIEW_NAME))
         .andReturn()
@@ -239,7 +228,7 @@ class SupportingInformationControllerTest extends AbstractApplicationControllerT
         .extracting(SupportingInformationForm::getSupportingDocuments)
         .extracting(list -> list.get(0))
         .extracting(UploadedFileForm::getFileDescription)
-        .isEqualTo("new description"); // the description was copied forward into the new form
+        .isEqualTo(FILE_DESCRIPTION_1); // the description was copied forward into the new form
   }
 
 }

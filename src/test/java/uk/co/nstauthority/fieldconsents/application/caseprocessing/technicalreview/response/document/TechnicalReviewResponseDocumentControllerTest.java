@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.application.supportinginformation;
+package uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.response.document;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.CONTENT_TYPE;
 import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.FILE_ID;
@@ -43,19 +44,23 @@ import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionFileUsage;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReview;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
-@ContextConfiguration(classes = SupportingInformationDocumentController.class)
-class SupportingInformationDocumentControllerTest extends AbstractControllerTest {
+@ContextConfiguration(classes = TechnicalReviewResponseDocumentController.class)
+class TechnicalReviewResponseDocumentControllerTest extends AbstractControllerTest {
 
-  private static final int APPLICATION_ID = 1;
-  private static final Class<SupportingInformationDocumentController> CONTROLLER = SupportingInformationDocumentController.class;
+  private static final int TECHNICAL_REVIEW_ID = 1;
+  private static final Class<TechnicalReviewResponseDocumentController> CONTROLLER = TechnicalReviewResponseDocumentController.class;
 
   @MockBean
   private FileService fileService;
+
+  @MockBean
+  private TechnicalReviewService technicalReviewService;
 
   @MockBean
   private FieldConsentsFileService fieldConsentsFileService;
@@ -67,12 +72,16 @@ class SupportingInformationDocumentControllerTest extends AbstractControllerTest
 
   private ApplicationVersion applicationVersion;
 
-  private ApplicationVersionFileUsage fileUsage;
+  private TechnicalReview technicalReview;
+
+  private TechnicalReviewFileUsage fileUsage;
 
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
-    fileUsage = ApplicationVersionFileUsage.supportingDocumentFrom(applicationVersion);
+    technicalReview = new TechnicalReview();
+    technicalReview.setId(TECHNICAL_REVIEW_ID);
+    fileUsage = TechnicalReviewFileUsage.responseFrom(technicalReview);
 
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
@@ -152,6 +161,7 @@ class SupportingInformationDocumentControllerTest extends AbstractControllerTest
   @Test
   void download() throws Exception {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(technicalReviewService.getOpenTechnicalReview(applicationVersion)).thenReturn(technicalReview);
 
     var uploadedFile = new UploadedFile();
     when(fileService.find(FILE_ID)).thenReturn(Optional.of(uploadedFile));
@@ -159,8 +169,8 @@ class SupportingInformationDocumentControllerTest extends AbstractControllerTest
     when(fileService.download(uploadedFile)).thenReturn(ResponseEntity.ok().build());
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER)
-        .download(APPLICATION_ID, FILE_ID)))
-        .with(user(user)))
+            .download(APPLICATION_ID, FILE_ID)))
+            .with(user(user)))
         .andExpect(status().isOk());
 
     verify(fieldConsentsFileService).throwIfFileDoesNotBelongToUsage(uploadedFile, fileUsage);
@@ -170,6 +180,7 @@ class SupportingInformationDocumentControllerTest extends AbstractControllerTest
   @Test
   void download_invalidFileId() throws Exception {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(technicalReviewService.getOpenTechnicalReview(applicationVersion)).thenReturn(technicalReview);
     when(fileService.find(FILE_ID)).thenReturn(Optional.empty());
     when(fieldConsentsFileService.getFileNotFoundException(FILE_ID, fileUsage))
         .thenReturn(new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -183,6 +194,7 @@ class SupportingInformationDocumentControllerTest extends AbstractControllerTest
   @Test
   void download_fileNotLinkedToApplication() throws Exception {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(technicalReviewService.getOpenTechnicalReview(applicationVersion)).thenReturn(technicalReview);
 
     var uploadedFile = new UploadedFile();
     when(fileService.find(FILE_ID)).thenReturn(Optional.of(uploadedFile));
@@ -202,6 +214,7 @@ class SupportingInformationDocumentControllerTest extends AbstractControllerTest
   @Test
   void delete() throws Exception {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(technicalReviewService.getOpenTechnicalReview(applicationVersion)).thenReturn(technicalReview);
 
     var uploadedFile = new UploadedFile();
     when(fileService.find(FILE_ID)).thenReturn(Optional.of(uploadedFile));
@@ -221,6 +234,7 @@ class SupportingInformationDocumentControllerTest extends AbstractControllerTest
   @Test
   void delete_invalidFileId() throws Exception {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(technicalReviewService.getOpenTechnicalReview(applicationVersion)).thenReturn(technicalReview);
     when(fileService.find(FILE_ID)).thenReturn(Optional.empty());
     when(fieldConsentsFileService.getFileNotFoundException(FILE_ID, fileUsage))
         .thenReturn(new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -235,6 +249,7 @@ class SupportingInformationDocumentControllerTest extends AbstractControllerTest
   @Test
   void delete_fileNotLinkedToApplication() throws Exception {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(technicalReviewService.getOpenTechnicalReview(applicationVersion)).thenReturn(technicalReview);
 
     var uploadedFile = new UploadedFile();
     when(fileService.find(FILE_ID)).thenReturn(Optional.of(uploadedFile));
