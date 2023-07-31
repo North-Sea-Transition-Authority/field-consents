@@ -1,49 +1,55 @@
 package uk.co.nstauthority.fieldconsents.application.tasklist.shared;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
 import static uk.co.nstauthority.fieldconsents.application.tasklist.shared.AdditionalInformationTaskListSectionService.FIELD_LOOKUP_PURPOSE;
 import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.assertTaskListItem;
-import static uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil.assertTaskListSection;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil;
-import uk.co.nstauthority.fieldconsents.application.eiadirection.EiaDirection;
-import uk.co.nstauthority.fieldconsents.application.eiadirection.EiaDirectionController;
 import uk.co.nstauthority.fieldconsents.application.eiadirection.EiaDirectionService;
-import uk.co.nstauthority.fieldconsents.application.supportinginformation.SupportingInformation;
+import uk.co.nstauthority.fieldconsents.application.eiadirection.projectpurpose.ProjectPurposeController;
 import uk.co.nstauthority.fieldconsents.application.supportinginformation.SupportingInformationController;
 import uk.co.nstauthority.fieldconsents.application.supportinginformation.SupportingInformationService;
+import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListItem;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListLabel;
-import uk.co.nstauthority.fieldconsents.tasklist.TaskListSection;
 
 @ExtendWith(MockitoExtension.class)
 class AdditionalInformationTaskListSectionServiceTest {
 
   public static final String ADDITIONAL_INFORMATION_SECTION = "Additional information";
-  
+
   public static final int ADDITIONAL_INFORMATION_DISPLAY_ORDER = 30;
 
   public static final String EIA_DIRECTION_TASK_LIST_ITEM = "EIA screening direction";
 
   public static final String SUPPORTING_INFORMATION_TASK_LIST_ITEM = "Supporting information";
-
-  private AdditionalInformationTaskListSectionService additionalInformationTaskListSectionService;
 
   @Mock
   private SupportingInformationService supportingInformationService;
@@ -57,121 +63,107 @@ class AdditionalInformationTaskListSectionServiceTest {
   @Mock
   private EiaDirectionService eiaDirectionService;
 
-  private ApplicationVersion applicationVersion;
+  @InjectMocks
+  private AdditionalInformationTaskListSectionService additionalInformationTaskListSectionService;
 
+  private ApplicationVersion productionApplicationVersion;
 
   @BeforeEach
   void setUp() {
-    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
-    additionalInformationTaskListSectionService = new AdditionalInformationTaskListSectionService(supportingInformationService,
-        applicationAssetService, fieldService, eiaDirectionService);
+    productionApplicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
   }
 
-  @Test
-  void getSection_additionalInformationSection() {
-    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.fieldAsset1);
-    when(fieldService.getField(ApplicationAssetTestUtil.fieldAsset1.getFieldId(), FIELD_LOOKUP_PURPOSE))
-        .thenReturn(FieldTestUtil.field1Json);
-    when(eiaDirectionService.findEiaDirection(applicationVersion)).thenReturn(Optional.of(new EiaDirection()));
-    when(supportingInformationService.findSupportingInformation(applicationVersion)).thenReturn(Optional.of(new SupportingInformation()));
+  @ParameterizedTest
+  @MethodSource("getSectionParams")
+  void getSection_production_nonEia(ApplicationAsset asset, FieldJson fieldJson, List<TaskListItem> expectedTaskListItems) {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
 
-    Optional<TaskListSection> taskListSectionOptional = additionalInformationTaskListSectionService.getSection(applicationVersion);
-
-    assertThat(taskListSectionOptional).isNotEmpty();
-    TaskListSection taskListSection = taskListSectionOptional.orElseThrow(RuntimeException::new);
-
-    assertTaskListSection(taskListSection, ADDITIONAL_INFORMATION_SECTION, ADDITIONAL_INFORMATION_DISPLAY_ORDER);
-  }
-
-  @Test
-  void getSection_withTaskListItemsNotStarted() {
-    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.fieldAsset1);
-    when(fieldService.getField(ApplicationAssetTestUtil.fieldAsset1.getFieldId(), FIELD_LOOKUP_PURPOSE))
-        .thenReturn(FieldTestUtil.field1Json);
-    when(eiaDirectionService.findEiaDirection(applicationVersion)).thenReturn(Optional.empty());
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(asset);
+    when(fieldService.getField(asset.getFieldId(), FIELD_LOOKUP_PURPOSE)).thenReturn(fieldJson);
     when(supportingInformationService.findSupportingInformation(applicationVersion)).thenReturn(Optional.empty());
 
-    Optional<TaskListSection> taskListSectionOptional = additionalInformationTaskListSectionService.getSection(applicationVersion);
-    TaskListSection taskListSection = taskListSectionOptional.orElseThrow(RuntimeException::new);
-    List<TaskListItem> taskListItems = taskListSection.items();
+    var taskListSection = additionalInformationTaskListSectionService.getSection(applicationVersion).orElseThrow();
+    var taskListItems = taskListSection.items();
 
-    assertThat(taskListItems).hasSize(2);
+    assertThat(taskListItems).hasSize(expectedTaskListItems.size());
 
-    assertTaskListItem(
-        taskListItems.get(0),
-        EIA_DIRECTION_TASK_LIST_ITEM,
-        TaskListLabel.NOT_STARTED,
-        ReverseRouter.route(on(EiaDirectionController.class).getEiaDirectionForm(applicationVersion.getApplication().getId()))
-    );
+    for (var i = 0; i < expectedTaskListItems.size(); i++) {
+      assertTaskListItem(
+          taskListItems.get(i),
+          expectedTaskListItems.get(i).displayName(),
+          expectedTaskListItems.get(i).label(),
+          expectedTaskListItems.get(i).actionUrl()
+      );
+    }
+  }
 
-    assertTaskListItem(
-        taskListItems.get(1),
-        SUPPORTING_INFORMATION_TASK_LIST_ITEM,
-        TaskListLabel.NOT_STARTED,
-        ReverseRouter.route(on(SupportingInformationController.class).getSupportingInformationForm(applicationVersion.getApplication().getId()))
+  private static Stream<Arguments> getSectionParams() {
+    return Stream.of(
+        Arguments.of(
+            ApplicationAssetTestUtil.fieldAsset2, // onshore
+            FieldTestUtil.field2Json,
+            Collections.singletonList(
+                new TaskListItem(
+                    SUPPORTING_INFORMATION_TASK_LIST_ITEM,
+                    TaskListLabel.NOT_STARTED,
+                    ReverseRouter.route(on(SupportingInformationController.class).getSupportingInformationForm(APPLICATION_ID))
+                )
+            )
+        ),
+        Arguments.of(
+            ApplicationAssetTestUtil.fieldAsset3, // unknown shore?
+            FieldTestUtil.field3Json,
+            Collections.singletonList(
+                new TaskListItem(
+                    SUPPORTING_INFORMATION_TASK_LIST_ITEM,
+                    TaskListLabel.NOT_STARTED,
+                    ReverseRouter.route(on(SupportingInformationController.class).getSupportingInformationForm(APPLICATION_ID))
+                )
+            )
+        )
     );
   }
 
-  @Test
-  void getSection_withTaskListItemsCompleted() {
+  @ParameterizedTest
+  @CsvSource({
+      "false, false, NOT_STARTED",
+      "false, true, IN_PROGRESS",
+      "true, false, COMPLETED", // completed takes precedence over started
+      "true, true, COMPLETED"
+  })
+  void getSection_production_eia(boolean isCompleted, boolean isStarted, String expectedLabel) {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.fieldAsset1);
-    when(fieldService.getField(ApplicationAssetTestUtil.fieldAsset1.getFieldId(), FIELD_LOOKUP_PURPOSE))
-        .thenReturn(FieldTestUtil.field1Json);
-    when(eiaDirectionService.findEiaDirection(applicationVersion)).thenReturn(Optional.of(new EiaDirection()));
-    when(supportingInformationService.findSupportingInformation(applicationVersion)).thenReturn(Optional.of(new SupportingInformation()));
+    when(fieldService.getField(ApplicationAssetTestUtil.fieldAsset1.getFieldId(), FIELD_LOOKUP_PURPOSE)).thenReturn(FieldTestUtil.field1Json);
+    when(supportingInformationService.findSupportingInformation(applicationVersion)).thenReturn(Optional.empty());
 
-    Optional<TaskListSection> taskListSectionOptional = additionalInformationTaskListSectionService.getSection(applicationVersion);
-    TaskListSection taskListSection = taskListSectionOptional.orElseThrow(RuntimeException::new);
-    List<TaskListItem> taskListItems = taskListSection.items();
+    lenient().when(eiaDirectionService.isEiaDirectionStarted(applicationVersion)).thenReturn(isStarted);
+    lenient().when(eiaDirectionService.isEiaDirectionCompleted(applicationVersion)).thenReturn(isCompleted);
+
+    var taskListSection = additionalInformationTaskListSectionService.getSection(applicationVersion).orElseThrow();
+    var taskListItems = taskListSection.items();
 
     assertThat(taskListItems).hasSize(2);
+    var eiaTaskListItem = taskListItems.get(0);
 
     assertTaskListItem(
-        taskListItems.get(0),
+        eiaTaskListItem,
         EIA_DIRECTION_TASK_LIST_ITEM,
-        TaskListLabel.COMPLETED,
-        ReverseRouter.route(on(EiaDirectionController.class).getEiaDirectionForm(applicationVersion.getApplication().getId()))
-    );
-
-    assertTaskListItem(
-        taskListItems.get(1),
-        SUPPORTING_INFORMATION_TASK_LIST_ITEM,
-        TaskListLabel.COMPLETED,
-        ReverseRouter.route(on(SupportingInformationController.class).getSupportingInformationForm(applicationVersion.getApplication().getId()))
+        TaskListLabel.valueOf(expectedLabel),
+        ReverseRouter.route(on(ProjectPurposeController.class).getForm(APPLICATION_ID))
     );
   }
 
-  @Test
-  void getSection_withNoEiaItem_Onshore() {
+  @ParameterizedTest
+  @EnumSource(value = ApplicationType.class, names = "PRODUCTION", mode = EnumSource.Mode.EXCLUDE)
+  void getSection_nonProductionApplication_noEiaTaskListItem(ApplicationType applicationType) {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
+
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.fieldAsset2);
-    when(fieldService.getField(ApplicationAssetTestUtil.fieldAsset2.getFieldId(), FIELD_LOOKUP_PURPOSE))
-        .thenReturn(FieldTestUtil.field2Json);
-    when(supportingInformationService.findSupportingInformation(applicationVersion)).thenReturn(Optional.empty());
 
-    Optional<TaskListSection> taskListSectionOptional = additionalInformationTaskListSectionService.getSection(applicationVersion);
-    TaskListSection taskListSection = taskListSectionOptional.orElseThrow(RuntimeException::new);
-    List<TaskListItem> taskListItems = taskListSection.items();
-
-    assertThat(taskListItems).hasSize(1);
-
-    assertTaskListItem(
-        taskListItems.get(0),
-        SUPPORTING_INFORMATION_TASK_LIST_ITEM,
-        TaskListLabel.NOT_STARTED,
-        ReverseRouter.route(on(SupportingInformationController.class).getSupportingInformationForm(applicationVersion.getApplication().getId()))
-    );
-  }
-
-  @Test
-  void getSection_withNoEiaItem_UnknownShore() {
-    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.fieldAsset3);
-    when(fieldService.getField(ApplicationAssetTestUtil.fieldAsset3.getFieldId(), FIELD_LOOKUP_PURPOSE))
-        .thenReturn(FieldTestUtil.field3Json);
-    when(supportingInformationService.findSupportingInformation(applicationVersion)).thenReturn(Optional.empty());
-
-    Optional<TaskListSection> taskListSectionOptional = additionalInformationTaskListSectionService.getSection(applicationVersion);
-    TaskListSection taskListSection = taskListSectionOptional.orElseThrow(RuntimeException::new);
-    List<TaskListItem> taskListItems = taskListSection.items();
+    var taskListSection = additionalInformationTaskListSectionService.getSection(applicationVersion).orElseThrow();
+    var taskListItems = taskListSection.items();
 
     assertThat(taskListItems).hasSize(1);
 
@@ -185,12 +177,11 @@ class AdditionalInformationTaskListSectionServiceTest {
 
   @Test
   void getSection_withNoEiaItem_Terminal() {
-    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.terminalAsset1);
-    when(supportingInformationService.findSupportingInformation(applicationVersion)).thenReturn(Optional.empty());
+    when(applicationAssetService.getPrimaryAsset(productionApplicationVersion)).thenReturn(ApplicationAssetTestUtil.terminalAsset1);
+    when(supportingInformationService.findSupportingInformation(productionApplicationVersion)).thenReturn(Optional.empty());
 
-    Optional<TaskListSection> taskListSectionOptional = additionalInformationTaskListSectionService.getSection(applicationVersion);
-    TaskListSection taskListSection = taskListSectionOptional.orElseThrow(RuntimeException::new);
-    List<TaskListItem> taskListItems = taskListSection.items();
+    var taskListSection = additionalInformationTaskListSectionService.getSection(productionApplicationVersion).orElseThrow();
+    var taskListItems = taskListSection.items();
 
     assertThat(taskListItems).hasSize(1);
 
@@ -198,7 +189,7 @@ class AdditionalInformationTaskListSectionServiceTest {
         taskListItems.get(0),
         SUPPORTING_INFORMATION_TASK_LIST_ITEM,
         TaskListLabel.NOT_STARTED,
-        ReverseRouter.route(on(SupportingInformationController.class).getSupportingInformationForm(applicationVersion.getApplication().getId()))
+        ReverseRouter.route(on(SupportingInformationController.class).getSupportingInformationForm(productionApplicationVersion.getApplication().getId()))
     );
   }
 }

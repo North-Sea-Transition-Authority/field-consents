@@ -3,14 +3,14 @@ package uk.co.nstauthority.fieldconsents.application.tasklist.shared;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
-import uk.co.nstauthority.fieldconsents.application.eiadirection.EiaDirectionController;
 import uk.co.nstauthority.fieldconsents.application.eiadirection.EiaDirectionService;
+import uk.co.nstauthority.fieldconsents.application.eiadirection.projectpurpose.ProjectPurposeController;
 import uk.co.nstauthority.fieldconsents.application.supportinginformation.SupportingInformationController;
 import uk.co.nstauthority.fieldconsents.application.supportinginformation.SupportingInformationService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
@@ -48,32 +48,38 @@ public class AdditionalInformationTaskListSectionService implements TaskListSect
 
   @Override
   public Optional<TaskListSection> getSection(ApplicationVersion applicationVersion) {
-    List<TaskListItem> items = new ArrayList<>();
+    var taskListItems = new ArrayList<TaskListItem>();
 
+    var applicationType = applicationVersion.getApplication().getType();
     var primaryAsset = applicationAssetService.getPrimaryAsset(applicationVersion);
 
-    if (primaryAsset.isField()) {
+    if (primaryAsset.isField() && ApplicationTypeFeature.EIA_SCREENING_DIRECTION.allowed(applicationType)) {
       var primaryFieldJson = fieldService.getField(primaryAsset.getFieldId(), FIELD_LOOKUP_PURPOSE);
       if (Shore.OFFSHORE.equals(primaryFieldJson.getShore())) {
-        items.add(getEiaDirectionTaskListItem(applicationVersion));
+        taskListItems.add(getEiaDirectionTaskListItem(applicationVersion));
       }
     }
 
-    items.add(getSupportingInformationTaskListItem(applicationVersion));
+    taskListItems.add(getSupportingInformationTaskListItem(applicationVersion));
 
-    return Optional.of(new TaskListSection("Additional information", 30, items));
+    return Optional.of(new TaskListSection("Additional information", 30, taskListItems));
   }
 
   private TaskListItem getEiaDirectionTaskListItem(ApplicationVersion applicationVersion) {
     return new TaskListItem("EIA screening direction",
-        TaskListLabel.notStartedOrCompleteByOptional(eiaDirectionService.findEiaDirection(applicationVersion)),
-        ReverseRouter.route(on(EiaDirectionController.class).getEiaDirectionForm(
-            applicationVersion.getApplication().getId())));
+        TaskListLabel.getTaskListLabelFor(
+            applicationVersion,
+            eiaDirectionService::isEiaDirectionCompleted,
+            eiaDirectionService::isEiaDirectionStarted
+        ),
+        ReverseRouter.route(on(ProjectPurposeController.class).getForm(applicationVersion.getApplication().getId()))
+    );
   }
 
   private TaskListItem getSupportingInformationTaskListItem(ApplicationVersion applicationVersion) {
     return new TaskListItem("Supporting information",
-        TaskListLabel.notStartedOrCompleteByOptional(supportingInformationService.findSupportingInformation(applicationVersion)),
+        TaskListLabel.notStartedOrCompleteByOptional(
+            supportingInformationService.findSupportingInformation(applicationVersion)),
         ReverseRouter.route(on(SupportingInformationController.class).getSupportingInformationForm(
             applicationVersion.getApplication().getId())));
   }

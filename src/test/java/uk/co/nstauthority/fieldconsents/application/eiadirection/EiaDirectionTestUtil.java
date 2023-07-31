@@ -9,32 +9,6 @@ class EiaDirectionTestUtil {
 
   static final LocalDate TOMORROW = LocalDate.now().plusDays(1);
 
-  static EiaDirectionForm getEiaDirectionFormWithSat(Integer satId) {
-    var eiaDirectionForm = new EiaDirectionForm();
-    eiaDirectionForm.setHaveSubmittedEiaDirection(Boolean.TRUE);
-    eiaDirectionForm.setSatId(satId);
-    return eiaDirectionForm;
-  }
-
-  static EiaDirection getEiaDirectionWithSat(ApplicationVersion applicationVersion,
-                                             Integer satId,
-                                             String satRef) {
-    var eiaDirection = new EiaDirection();
-    eiaDirection.setApplicationVersion(applicationVersion);
-    eiaDirection.setHaveSubmittedEiaDirection(Boolean.TRUE);
-    eiaDirection.setSatId(satId);
-    eiaDirection.setCachedSatRef(satRef);
-    return eiaDirection;
-  }
-
-  static EiaDirectionForm getEiaDirectionFormWithSatToSubmit() {
-    var eiaDirectionForm = new EiaDirectionForm();
-    eiaDirectionForm.setHaveSubmittedEiaDirection(Boolean.FALSE);
-    eiaDirectionForm.setHaveEiaDirectionToSubmit(Boolean.TRUE);
-    eiaDirectionForm.getLatestDateToBeSubmitted().setDate(TOMORROW);
-    return eiaDirectionForm;
-  }
-
 
   static EiaDirection getEiaDirectionWithSatToSubmit(ApplicationVersion applicationVersion) {
     var eiaDirection = new EiaDirection();
@@ -45,44 +19,4 @@ class EiaDirectionTestUtil {
     return eiaDirection;
   }
 
-  static EiaDirectionForm getEiaDirectionFormWithNoSatToSubmit() {
-    var eiaDirectionForm = new EiaDirectionForm();
-    eiaDirectionForm.setHaveSubmittedEiaDirection(Boolean.FALSE);
-    eiaDirectionForm.setHaveEiaDirectionToSubmit(Boolean.FALSE);
-    eiaDirectionForm.getWhyNoEiaDirection().setInputValue(WHY_NO_EIA_DIRECTION);
-    return eiaDirectionForm;
-  }
-
-  static EiaDirection getEiaDirectionWithNoSatToSubmit(ApplicationVersion applicationVersion) {
-    var eiaDirection = new EiaDirection();
-    eiaDirection.setApplicationVersion(applicationVersion);
-    eiaDirection.setHaveSubmittedEiaDirection(Boolean.FALSE);
-    eiaDirection.setHaveEiaDirectionToSubmit(Boolean.FALSE);
-    eiaDirection.setWhyNoEiaDirection(WHY_NO_EIA_DIRECTION);
-    return eiaDirection;
-  }
-
-  static EiaDirectionForm getEiaDirectionFormWithAllDataSet(Integer satId) {
-    var eiaDirectionForm = new EiaDirectionForm();
-    eiaDirectionForm.setHaveSubmittedEiaDirection(Boolean.FALSE);
-    eiaDirectionForm.setSatId(satId);
-    eiaDirectionForm.setHaveEiaDirectionToSubmit(Boolean.FALSE);
-    eiaDirectionForm.getLatestDateToBeSubmitted().setDate(TOMORROW);
-    eiaDirectionForm.getWhyNoEiaDirection().setInputValue(WHY_NO_EIA_DIRECTION);
-    return eiaDirectionForm;
-  }
-
-  static EiaDirection getEiaDirectionWithAllDataSet(ApplicationVersion applicationVersion,
-                                                    Integer satId,
-                                                    String satRef) {
-    var eiaDirection = new EiaDirection();
-    eiaDirection.setApplicationVersion(applicationVersion);
-    eiaDirection.setHaveSubmittedEiaDirection(Boolean.FALSE);
-    eiaDirection.setSatId(satId);
-    eiaDirection.setCachedSatRef(satRef);
-    eiaDirection.setHaveEiaDirectionToSubmit(Boolean.FALSE);
-    eiaDirection.setLatestDateToBeSubmitted(TOMORROW);
-    eiaDirection.setWhyNoEiaDirection(WHY_NO_EIA_DIRECTION);
-    return eiaDirection;
-  }
 }

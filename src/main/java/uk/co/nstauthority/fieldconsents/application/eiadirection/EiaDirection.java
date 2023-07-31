@@ -8,7 +8,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
-import java.util.NoSuchElementException;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 
 @Entity
@@ -29,39 +28,37 @@ public class EiaDirection {
 
   private String cachedSatRef;
 
+  private Boolean forPurposeOfEiaRegs;
+
   private Boolean haveEiaDirectionToSubmit;
 
   private LocalDate latestDateToBeSubmitted;
 
   private String whyNoEiaDirection;
 
-  public static EiaDirection from(ApplicationVersion applicationVersion,
-                                  EiaDirectionForm eiaDirectionForm,
-                                  String cachedSatRef) {
-    var eiaDirection = new EiaDirection();
-    eiaDirection.setApplicationVersion(applicationVersion);
-    eiaDirection.setHaveSubmittedEiaDirection(eiaDirectionForm.getHaveSubmittedEiaDirection());
+  public EiaDirection() {
+  }
 
-    // only set the appropriate data from the form (just in case extra data has been entered)
-
-    if (Boolean.TRUE.equals(eiaDirectionForm.getHaveSubmittedEiaDirection())) {
-      eiaDirection.setSatId(eiaDirectionForm.getSatId());
-      eiaDirection.setCachedSatRef(cachedSatRef);
-      return eiaDirection;
-    }
-
-    eiaDirection.setHaveEiaDirectionToSubmit(eiaDirectionForm.getHaveEiaDirectionToSubmit());
-
-    if (Boolean.TRUE.equals(eiaDirectionForm.getHaveEiaDirectionToSubmit())) {
-      eiaDirection.setLatestDateToBeSubmitted(
-          eiaDirectionForm.getLatestDateToBeSubmitted().getAsLocalDate().orElseThrow(NoSuchElementException::new)
-      );
-      return eiaDirection;
-    }
-
-    eiaDirection.setWhyNoEiaDirection(eiaDirectionForm.getWhyNoEiaDirection().getInputValue());
-
-    return eiaDirection;
+  public EiaDirection(
+      Integer id,
+      ApplicationVersion applicationVersion,
+      Boolean haveSubmittedEiaDirection,
+      Integer satId,
+      String cachedSatRef,
+      Boolean forPurposeOfEiaRegs,
+      Boolean haveEiaDirectionToSubmit,
+      LocalDate latestDateToBeSubmitted,
+      String whyNoEiaDirection
+  ) {
+    this.id = id;
+    this.applicationVersion = applicationVersion;
+    this.haveSubmittedEiaDirection = haveSubmittedEiaDirection;
+    this.satId = satId;
+    this.cachedSatRef = cachedSatRef;
+    this.forPurposeOfEiaRegs = forPurposeOfEiaRegs;
+    this.haveEiaDirectionToSubmit = haveEiaDirectionToSubmit;
+    this.latestDateToBeSubmitted = latestDateToBeSubmitted;
+    this.whyNoEiaDirection = whyNoEiaDirection;
   }
 
   public Integer getId() {
@@ -98,6 +95,14 @@ public class EiaDirection {
 
   public void setCachedSatRef(String cachedSatRef) {
     this.cachedSatRef = cachedSatRef;
+  }
+
+  public Boolean getForPurposeOfEiaRegs() {
+    return forPurposeOfEiaRegs;
+  }
+
+  public void setForPurposeOfEiaRegs(Boolean forPurposeOfEiaRegs) {
+    this.forPurposeOfEiaRegs = forPurposeOfEiaRegs;
   }
 
   public Boolean getHaveEiaDirectionToSubmit() {

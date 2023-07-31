@@ -28,6 +28,8 @@ repositories {
 
 dependencies {
 
+  developmentOnly("org.springframework.boot:spring-boot-devtools")
+
   // OpenSAML 4.1+ is required for most SAML functionality
   // See the Spring samples e.g. https://github.com/spring-projects/spring-security-samples/blob/main/servlet/spring-boot/java/saml2/login/build.gradle
   constraints {

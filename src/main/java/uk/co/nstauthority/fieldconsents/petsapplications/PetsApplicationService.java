@@ -64,4 +64,5 @@ public class PetsApplicationService {
     return findPetsApplicationById(satId, purpose)
         .orElseGet(() -> PetsApplicationJson.fromCachedInformation(satId, cachedSatRef));
   }
+
 }

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.eiadirection.EiaDirectionService;
@@ -41,11 +42,12 @@ public class AdditionalInformationSummarySectionService implements SummarySectio
 
   @Override
   public Optional<SummarySection> getSummarySection(ApplicationVersion applicationVersion) {
-    List<SummaryItem> summaryItems = new ArrayList<>();
+    var summaryItems = new ArrayList<SummaryItem>();
 
+    var applicationType = applicationVersion.getApplication().getType();
     var primaryAsset = applicationAssetService.getPrimaryAsset(applicationVersion);
 
-    if (primaryAsset.isField()) {
+    if (primaryAsset.isField() && ApplicationTypeFeature.EIA_SCREENING_DIRECTION.allowed(applicationType)) {
       var primaryFieldJson = fieldService.getField(primaryAsset.getFieldId(), FIELD_LOOKUP_PURPOSE);
       if (Shore.OFFSHORE.equals(primaryFieldJson.getShore())) {
         summaryItems.add(getEiaDirectionSummaryItem(applicationVersion));

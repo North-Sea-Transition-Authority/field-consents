@@ -77,6 +77,9 @@ public abstract class AbstractControllerTest {
   @Autowired
   protected FormErrorSummaryService formErrorSummaryService;
 
+  @Autowired
+  protected ValidationErrorOrderingService validationErrorOrderingService;
+
   @MockBean
   protected TeamMemberService teamMemberService;
 
@@ -103,6 +106,7 @@ public abstract class AbstractControllerTest {
 
   @MockBean
   protected CaseProcessingActionService caseProcessingActionService;
+
 
   protected ServiceUserDetail user;
 

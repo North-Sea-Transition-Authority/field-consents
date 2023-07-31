@@ -9,6 +9,7 @@ import static uk.co.nstauthority.fieldconsents.application.summary.shared.Additi
 
 import java.util.List;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -51,15 +52,12 @@ class AdditionalInformationSummarySectionServiceTest {
   private AdditionalInformationSummarySectionService additionalInformationSummarySectionService;
 
   @ParameterizedTest
-  @MethodSource("getAppTypeSummaryCard")
-  void getSummarySection_offshore(ApplicationType applicationType, SummaryCard summaryCard) {
+  @MethodSource("getProductionTypeSummaryCard")
+  void getSummarySection_production_offshore(ApplicationType applicationType, SummaryCard summaryCard) {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
-    when(eiaDirectionService.getEiaDirectionSummaryCard(applicationVersion))
-        .thenReturn(summaryCard);
-    when(supportingInformationService.getSupportingInformationSummaryCard(applicationVersion))
-        .thenReturn(summaryCard);
-    when(supportingInformationService.getSupportingDocumentsSummaryCard(applicationVersion))
-        .thenReturn(summaryCard);
+    when(eiaDirectionService.getEiaDirectionSummaryCard(applicationVersion)).thenReturn(summaryCard);
+    when(supportingInformationService.getSupportingInformationSummaryCard(applicationVersion)).thenReturn(summaryCard);
+    when(supportingInformationService.getSupportingDocumentsSummaryCard(applicationVersion)).thenReturn(summaryCard);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.fieldAsset1);
     when(fieldService.getField(ApplicationAssetTestUtil.fieldAsset1.getFieldId(), FIELD_LOOKUP_PURPOSE))
         .thenReturn(FieldTestUtil.field1Json);
@@ -73,21 +71,16 @@ class AdditionalInformationSummarySectionServiceTest {
         );
   }
 
-  private static Stream<Arguments> getAppTypeSummaryCard() {
+  private static Stream<Arguments> getProductionTypeSummaryCard() {
     return Stream.of(
         Arguments.of(ApplicationType.PRODUCTION, SummaryCard.emptySummaryCard()),
-        Arguments.of(ApplicationType.FLARE, SummaryCard.emptySummaryCard()),
-        Arguments.of(ApplicationType.VENT, SummaryCard.emptySummaryCard()),
-        Arguments.of(ApplicationType.PRODUCTION, simpleSummaryCard),
-        Arguments.of(ApplicationType.FLARE, simpleSummaryCard),
-        Arguments.of(ApplicationType.VENT, simpleSummaryCard)
+        Arguments.of(ApplicationType.PRODUCTION, simpleSummaryCard)
     );
   }
 
-  @ParameterizedTest
-  @EnumSource(ApplicationType.class)
-  void getSummarySection_onshore(ApplicationType applicationType) {
-    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
+  @Test
+  void getSummarySection_production_onshore() {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
     when(supportingInformationService.getSupportingInformationSummaryCard(applicationVersion))
         .thenReturn(simpleSummaryCard);
     when(supportingInformationService.getSupportingDocumentsSummaryCard(applicationVersion))
@@ -105,16 +98,27 @@ class AdditionalInformationSummarySectionServiceTest {
   }
 
   @ParameterizedTest
-  @EnumSource(ApplicationType.class)
-  void getSummarySection_unknownShore(ApplicationType applicationType) {
+  @EnumSource(value = ApplicationType.class, names = "PRODUCTION", mode = EnumSource.Mode.EXCLUDE)
+  void getSummarySection_nonProduction_onshore(ApplicationType applicationType) {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
-    when(supportingInformationService.getSupportingInformationSummaryCard(applicationVersion))
-        .thenReturn(simpleSummaryCard);
-    when(supportingInformationService.getSupportingDocumentsSummaryCard(applicationVersion))
-        .thenReturn(simpleSummaryCard);
+    when(supportingInformationService.getSupportingInformationSummaryCard(applicationVersion)).thenReturn(simpleSummaryCard);
+    when(supportingInformationService.getSupportingDocumentsSummaryCard(applicationVersion)).thenReturn(simpleSummaryCard);
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.fieldAsset2);
+
+    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion).orElseThrow();
+    assertThat(summarySection.summaryItems())
+        .containsExactly(
+            SummaryItem.withCards(SUPPORTING_INFORMATION_ITEM, List.of(simpleSummaryCard, simpleSummaryCard))
+        );
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = ApplicationType.class, names = "PRODUCTION", mode = EnumSource.Mode.EXCLUDE)
+  void getSummarySection_nonProduction_unknownShore(ApplicationType applicationType) {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
+    when(supportingInformationService.getSupportingInformationSummaryCard(applicationVersion)).thenReturn(simpleSummaryCard);
+    when(supportingInformationService.getSupportingDocumentsSummaryCard(applicationVersion)).thenReturn(simpleSummaryCard);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.fieldAsset3);
-    when(fieldService.getField(ApplicationAssetTestUtil.fieldAsset3.getFieldId(), FIELD_LOOKUP_PURPOSE))
-        .thenReturn(FieldTestUtil.field3Json);
 
     var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion).orElseThrow();
     assertSummarySection(summarySection, ADDITIONAL_INFORMATION_DISPLAY_ORDER);
@@ -128,12 +132,9 @@ class AdditionalInformationSummarySectionServiceTest {
   @EnumSource(ApplicationType.class)
   void getSummarySection_terminal(ApplicationType applicationType) {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
-    when(supportingInformationService.getSupportingInformationSummaryCard(applicationVersion))
-        .thenReturn(simpleSummaryCard);
-    when(supportingInformationService.getSupportingDocumentsSummaryCard(applicationVersion))
-        .thenReturn(simpleSummaryCard);
-    when(applicationAssetService.getPrimaryAsset(applicationVersion))
-        .thenReturn(ApplicationAssetTestUtil.terminalAsset1);
+    when(supportingInformationService.getSupportingInformationSummaryCard(applicationVersion)).thenReturn(simpleSummaryCard);
+    when(supportingInformationService.getSupportingDocumentsSummaryCard(applicationVersion)).thenReturn(simpleSummaryCard);
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.terminalAsset1);
 
     var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion).orElseThrow();
     assertSummarySection(summarySection, ADDITIONAL_INFORMATION_DISPLAY_ORDER);
