@@ -49,15 +49,18 @@ public class FileUploadTestUtil {
     return fileFormWithDescription;
   }
 
-  public static FileUploadComponentAttributes getFileUploadComponentAttributesWithPath(String bindingPath) {
-    return getFileUploadComponentAttributesBuilder()
-        .withPath(bindingPath)
-        .build();
-  }
-
   public static FileUploadComponentAttributes.Builder getFileUploadComponentAttributesBuilder() {
     return FileUploadComponentAttributes.newBuilder()
         .withMaximumSize(DataSize.ofMegabytes(50))
+        .withUploadUrl("/upload")
+        .withDownloadUrl("/download")
+        .withDeleteUrl("/delete")
+        .withAllowedExtensions(Set.of("csv", "pdf"))
+        .withExistingFiles(Collections.emptyList());
+  }
+
+  public static FileUploadComponentAttributes.Builder applyDefaults(FileUploadComponentAttributes.Builder builder) {
+    return builder.withMaximumSize(DataSize.ofMegabytes(50))
         .withUploadUrl("/upload")
         .withDownloadUrl("/download")
         .withDeleteUrl("/delete")

@@ -19,7 +19,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.FILE_ID;
 import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.FILE_NAME_1;
-import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.getFileUploadComponentAttributesWithPath;
+import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.applyDefaults;
 import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.notificationBanner;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
@@ -74,6 +74,9 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    fileUploadComponentAttributes = applyDefaults(FileUploadComponentAttributes.newBuilder())
+        .withPath("form.caseNoteDocuments")
+        .build();
 
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
@@ -106,8 +109,6 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(DUMMY_APP_REF);
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(REGULATOR_ADD_CASE_NOTE));
-
-    fileUploadComponentAttributes = getFileUploadComponentAttributesWithPath("form.caseNoteDocuments");
     when(caseNotesDocumentService.fileUploadComponentAttributes(eq(applicationVersion), anyList()))
         .thenReturn(fileUploadComponentAttributes);
 
@@ -130,8 +131,6 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(DUMMY_APP_REF);
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(REGULATOR_ADD_CASE_NOTE));
-
-    fileUploadComponentAttributes = getFileUploadComponentAttributesWithPath("form.caseNoteDocuments");
     when(caseNotesDocumentService.fileUploadComponentAttributes(eq(applicationVersion), anyList()))
         .thenReturn(fileUploadComponentAttributes);
 
@@ -166,8 +165,6 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(applicationVersion);
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(REGULATOR_ADD_CASE_NOTE));
-
-    fileUploadComponentAttributes = getFileUploadComponentAttributesWithPath("form.caseNoteDocuments");
     when(caseNotesDocumentService.fileUploadComponentAttributes(eq(applicationVersion), anyList()))
         .thenReturn(fileUploadComponentAttributes);
 
@@ -195,8 +192,6 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(applicationVersion);
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(REGULATOR_ADD_CASE_NOTE));
-
-    fileUploadComponentAttributes = getFileUploadComponentAttributesWithPath("form.caseNoteDocuments");
     when(caseNotesDocumentService.fileUploadComponentAttributes(eq(applicationVersion), anyList()))
         .thenReturn(fileUploadComponentAttributes);
 
@@ -231,8 +226,6 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(applicationVersion);
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(REGULATOR_ADD_CASE_NOTE));
-
-    fileUploadComponentAttributes = getFileUploadComponentAttributesWithPath("form.caseNoteDocuments");
     when(caseNotesDocumentService.fileUploadComponentAttributes(eq(applicationVersion), anyList()))
         .thenReturn(fileUploadComponentAttributes);
 

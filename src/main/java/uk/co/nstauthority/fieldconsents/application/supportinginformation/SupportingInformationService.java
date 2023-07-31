@@ -1,5 +1,7 @@
 package uk.co.nstauthority.fieldconsents.application.supportinginformation;
 
+import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -9,8 +11,10 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionFileUsage;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileUsage;
+import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
+import uk.co.nstauthority.fieldconsents.summary.SummaryFileView;
 
 @Service
 public class SupportingInformationService {
@@ -63,6 +67,20 @@ public class SupportingInformationService {
     }
 
     return SummaryCard.simpleSummaryCard(summaryData);
+  }
+
+  public SummaryCard getSupportingDocumentsSummaryCard(ApplicationVersion applicationVersion) {
+    var applicationId = applicationVersion.getApplication().getId();
+    var fileUsage = ApplicationVersionFileUsage.supportingDocumentFrom(applicationVersion);
+    var filesSummary = fieldConsentsFileService.getUploadedFiles(fileUsage)
+        .stream()
+        .map(uploadedFile -> SummaryFileView.from(
+            uploadedFile,
+            ReverseRouter.route(on(SupportingInformationDocumentController.class).download(applicationId, uploadedFile.getId())))
+        )
+        .toList();
+
+    return SummaryCard.filesSummaryCardWithHeading("Supporting information documents", filesSummary);
   }
 
   private FieldConsentsFileUsage getFileUsage(ApplicationVersion applicationVersion) {

@@ -64,8 +64,11 @@ public class AdditionalInformationSummarySectionService implements SummarySectio
   }
 
   private SummaryItem getSupportingInformationSummaryItem(ApplicationVersion applicationVersion) {
-    return SummaryItem.withCard("Supporting information",
-        supportingInformationService.getSupportingInformationSummaryCard(applicationVersion)
+    return SummaryItem.withCards("Supporting information",
+        List.of(
+            supportingInformationService.getSupportingInformationSummaryCard(applicationVersion),
+            supportingInformationService.getSupportingDocumentsSummaryCard(applicationVersion)
+        )
     );
   }
 }

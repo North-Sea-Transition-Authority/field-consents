@@ -3,10 +3,12 @@ package uk.co.nstauthority.fieldconsents.application.supportinginformation;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,13 +20,17 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.fileuploadlibrary.core.UploadedFile;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionFileUsage;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
+import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCardType;
 import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
+import uk.co.nstauthority.fieldconsents.summary.SummaryFileView;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
 @ExtendWith(MockitoExtension.class)
@@ -193,6 +199,42 @@ class SupportingInformationServiceTest {
             new SummaryDataView(List.of(
                 new SummaryKeyValue(APPLICATION_NOTES_PROMPT, APPLICATION_NOTES),
                 new SummaryKeyValue("ERAP alignment studies and projects", ERAP_NOTES)
+            ))
+        ));
+  }
+
+  @Test
+  void getSupportingDocumentsSummaryCard_noFiles() {
+    var fileUsage = ApplicationVersionFileUsage.supportingDocumentFrom(applicationVersion);
+    when(fieldConsentsFileService.getUploadedFiles(fileUsage)).thenReturn(Collections.emptyList());
+
+    assertThat(supportingInformationService.getSupportingDocumentsSummaryCard(applicationVersion))
+        .isEqualTo(new SummaryCard(
+            "Supporting information documents",
+            SummaryCardType.FILES_SUMMARY,
+            Collections.emptyList()
+        ));
+  }
+
+  @Test
+  void getSupportingDocumentsSummaryCard() {
+    var fileUsage = ApplicationVersionFileUsage.supportingDocumentFrom(applicationVersion);
+    var uploadedFile = new UploadedFile();
+    uploadedFile.setId(UUID.randomUUID());
+    uploadedFile.setName("document.pdf");
+    uploadedFile.setDescription("a file description");
+
+    when(fieldConsentsFileService.getUploadedFiles(fileUsage)).thenReturn(Collections.singletonList(uploadedFile));
+
+    var applicationId = applicationVersion.getApplication().getId();
+    assertThat(supportingInformationService.getSupportingDocumentsSummaryCard(applicationVersion))
+        .isEqualTo(new SummaryCard(
+            "Supporting information documents",
+            SummaryCardType.FILES_SUMMARY,
+            Collections.singletonList(new SummaryFileView(
+                uploadedFile.getName(),
+                uploadedFile.getDescription(),
+                ReverseRouter.route(on(SupportingInformationDocumentController.class).download(applicationId, uploadedFile.getId()))
             ))
         ));
   }

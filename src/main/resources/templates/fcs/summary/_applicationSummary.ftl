@@ -2,6 +2,7 @@
 <#import '_simpleSummary.ftl' as simpleSummary>
 <#import '_tableSummary.ftl' as tableSummary>
 <#import '_emptySummary.ftl' as emptySummary>
+<#import '_filesSummary.ftl' as filesSummary>
 
 <#-- @ftlvariable name="summarySections" type="java.util.List<uk.co.nstauthority.fieldconsents.summary.SummarySection>" -->
 <#-- @ftlvariable name="summaryItem" type="java.util.List<uk.co.nstauthority.fieldconsents.summary.SummaryItem>" -->
@@ -18,6 +19,10 @@
               <@simpleSummary.simpleSummary
                 summaryDataView=summaryCard.summaryData()
                 summaryHeading=summaryCard.displayName()!""/>
+            <#elseif summaryCard.summaryCardType() == "FILES_SUMMARY">
+              <@filesSummary.summary
+                heading=summaryCard.displayName()!""
+                fileViews=summaryCard.summaryData()/>
             <#elseif summaryCard.summaryCardType() == "TABLE_SUMMARY">
               <@tableSummary.tableSummary
                 summaryTableView=summaryCard.summaryData()

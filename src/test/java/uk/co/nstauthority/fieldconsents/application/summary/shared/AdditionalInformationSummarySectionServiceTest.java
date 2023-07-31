@@ -3,15 +3,11 @@ package uk.co.nstauthority.fieldconsents.application.summary.shared;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.ADDITIONAL_INFORMATION_DISPLAY_ORDER;
-import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertEmptySummaryCard;
-import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertSummaryCard;
-import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertSummaryItem;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.assertSummarySection;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.simpleSummaryCard;
 import static uk.co.nstauthority.fieldconsents.application.summary.shared.AdditionalInformationSummarySectionService.FIELD_LOOKUP_PURPOSE;
-import static uk.co.nstauthority.fieldconsents.summary.SummaryCardType.SIMPLE_SUMMARY;
 
-import java.util.Optional;
+import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -30,9 +26,7 @@ import uk.co.nstauthority.fieldconsents.application.supportinginformation.Suppor
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
-import uk.co.nstauthority.fieldconsents.summary.SummaryCardType;
-import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
-import uk.co.nstauthority.fieldconsents.summary.SummarySection;
+import uk.co.nstauthority.fieldconsents.summary.SummaryItem;
 
 @ExtendWith(MockitoExtension.class)
 class AdditionalInformationSummarySectionServiceTest {
@@ -64,28 +58,19 @@ class AdditionalInformationSummarySectionServiceTest {
         .thenReturn(summaryCard);
     when(supportingInformationService.getSupportingInformationSummaryCard(applicationVersion))
         .thenReturn(summaryCard);
+    when(supportingInformationService.getSupportingDocumentsSummaryCard(applicationVersion))
+        .thenReturn(summaryCard);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.fieldAsset1);
     when(fieldService.getField(ApplicationAssetTestUtil.fieldAsset1.getFieldId(), FIELD_LOOKUP_PURPOSE))
         .thenReturn(FieldTestUtil.field1Json);
 
-    var summarySectionOptional = additionalInformationSummarySectionService.getSummarySection(applicationVersion);
-
-    assertThat(summarySectionOptional).isNotEmpty();
-    var summarySection = summarySectionOptional.get();
+    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion).orElseThrow();
     assertSummarySection(summarySection, ADDITIONAL_INFORMATION_DISPLAY_ORDER);
-
-    var summaryItems = summarySection.summaryItems();
-    assertThat(summaryItems).hasSize(2);
-    assertSummaryItem(summaryItems.get(0), EIA_SCREENING_DIRECTION_ITEM, 1);
-    assertSummaryItem(summaryItems.get(1), SUPPORTING_INFORMATION_ITEM, 1);
-
-    if (SummaryCardType.EMPTY_SUMMARY.equals(summaryCard.summaryCardType())) {
-      assertEmptySummaryCard(summaryItems.get(0).summaryCards().get(0));
-      assertEmptySummaryCard(summaryItems.get(1).summaryCards().get(0));
-    } else {
-      assertSummaryCard(summaryItems.get(0).summaryCards().get(0), null, SIMPLE_SUMMARY, SummaryDataView.class);
-      assertSummaryCard(summaryItems.get(1).summaryCards().get(0), null, SIMPLE_SUMMARY, SummaryDataView.class);
-    }
+    assertThat(summarySection.summaryItems())
+        .containsExactly(
+            SummaryItem.withCard(EIA_SCREENING_DIRECTION_ITEM, summaryCard),
+            SummaryItem.withCards(SUPPORTING_INFORMATION_ITEM, List.of(summaryCard, summaryCard))
+        );
   }
 
   private static Stream<Arguments> getAppTypeSummaryCard() {
@@ -105,13 +90,18 @@ class AdditionalInformationSummarySectionServiceTest {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
     when(supportingInformationService.getSupportingInformationSummaryCard(applicationVersion))
         .thenReturn(simpleSummaryCard);
+    when(supportingInformationService.getSupportingDocumentsSummaryCard(applicationVersion))
+        .thenReturn(simpleSummaryCard);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.fieldAsset2);
     when(fieldService.getField(ApplicationAssetTestUtil.fieldAsset2.getFieldId(), FIELD_LOOKUP_PURPOSE))
         .thenReturn(FieldTestUtil.field2Json);
 
-    var summarySectionOptional = additionalInformationSummarySectionService.getSummarySection(applicationVersion);
-
-    assertSectionAndSingleItem(summarySectionOptional);
+    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion).orElseThrow();
+    assertSummarySection(summarySection, ADDITIONAL_INFORMATION_DISPLAY_ORDER);
+    assertThat(summarySection.summaryItems())
+        .containsExactly(
+            SummaryItem.withCards(SUPPORTING_INFORMATION_ITEM, List.of(simpleSummaryCard, simpleSummaryCard))
+        );
   }
 
   @ParameterizedTest
@@ -120,13 +110,18 @@ class AdditionalInformationSummarySectionServiceTest {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
     when(supportingInformationService.getSupportingInformationSummaryCard(applicationVersion))
         .thenReturn(simpleSummaryCard);
+    when(supportingInformationService.getSupportingDocumentsSummaryCard(applicationVersion))
+        .thenReturn(simpleSummaryCard);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.fieldAsset3);
     when(fieldService.getField(ApplicationAssetTestUtil.fieldAsset3.getFieldId(), FIELD_LOOKUP_PURPOSE))
         .thenReturn(FieldTestUtil.field3Json);
 
-    var summarySectionOptional = additionalInformationSummarySectionService.getSummarySection(applicationVersion);
-
-    assertSectionAndSingleItem(summarySectionOptional);
+    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion).orElseThrow();
+    assertSummarySection(summarySection, ADDITIONAL_INFORMATION_DISPLAY_ORDER);
+    assertThat(summarySection.summaryItems())
+        .containsExactly(
+            SummaryItem.withCards(SUPPORTING_INFORMATION_ITEM, List.of(simpleSummaryCard, simpleSummaryCard))
+        );
   }
 
   @ParameterizedTest
@@ -135,21 +130,16 @@ class AdditionalInformationSummarySectionServiceTest {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
     when(supportingInformationService.getSupportingInformationSummaryCard(applicationVersion))
         .thenReturn(simpleSummaryCard);
-    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.terminalAsset1);
+    when(supportingInformationService.getSupportingDocumentsSummaryCard(applicationVersion))
+        .thenReturn(simpleSummaryCard);
+    when(applicationAssetService.getPrimaryAsset(applicationVersion))
+        .thenReturn(ApplicationAssetTestUtil.terminalAsset1);
 
-    var summarySectionOptional = additionalInformationSummarySectionService.getSummarySection(applicationVersion);
-
-    assertSectionAndSingleItem(summarySectionOptional);
-  }
-
-  private void assertSectionAndSingleItem(Optional<SummarySection> summarySectionOptional) {
-    assertThat(summarySectionOptional).isNotEmpty();
-    var summarySection = summarySectionOptional.get();
+    var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion).orElseThrow();
     assertSummarySection(summarySection, ADDITIONAL_INFORMATION_DISPLAY_ORDER);
-
-    var summaryItems = summarySection.summaryItems();
-    assertThat(summaryItems).hasSize(1);
-    assertSummaryItem(summaryItems.get(0), SUPPORTING_INFORMATION_ITEM, 1);
-    assertSummaryCard(summaryItems.get(0).summaryCards().get(0), null, SIMPLE_SUMMARY, SummaryDataView.class);
+    assertThat(summarySection.summaryItems())
+        .containsExactly(
+            SummaryItem.withCards(SUPPORTING_INFORMATION_ITEM, List.of(simpleSummaryCard, simpleSummaryCard))
+        );
   }
 }
