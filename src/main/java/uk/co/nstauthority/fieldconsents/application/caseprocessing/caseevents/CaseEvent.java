@@ -2,8 +2,8 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents;
 
 import java.time.Instant;
 import java.util.List;
-import uk.co.fivium.fileuploadlibrary.core.UploadedFile;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.summary.SummaryFileView;
 
 public record CaseEvent(ApplicationVersion applicationVersion,
                         CaseEventType eventType,
@@ -11,7 +11,7 @@ public record CaseEvent(ApplicationVersion applicationVersion,
                         Long otherEventUserWuaId,
                         Instant eventDateTime,
                         String eventText,
-                        List<UploadedFile> eventFiles) {
+                        List<SummaryFileView> summaryFileViews) {
 
   public static Builder builder(ApplicationVersion applicationVersion) {
     return new Builder(applicationVersion);
@@ -31,7 +31,7 @@ public record CaseEvent(ApplicationVersion applicationVersion,
 
     private String eventText;
 
-    private List<UploadedFile> eventFiles;
+    private List<SummaryFileView> summaryFileViews;
 
     private Builder(ApplicationVersion applicationVersion) {
       this.applicationVersion = applicationVersion;
@@ -62,8 +62,8 @@ public record CaseEvent(ApplicationVersion applicationVersion,
       return this;
     }
 
-    public Builder withEventFiles(List<UploadedFile> eventFiles) {
-      this.eventFiles = eventFiles;
+    public Builder withFileSummaryViews(List<SummaryFileView> summaryFileViews) {
+      this.summaryFileViews = summaryFileViews;
       return this;
     }
 
@@ -75,7 +75,7 @@ public record CaseEvent(ApplicationVersion applicationVersion,
           otherEventUserWuaId,
           eventDateTime,
           eventText,
-          eventFiles
+          summaryFileViews
       );
     }
   }

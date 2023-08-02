@@ -2,7 +2,7 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.casenotes;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -40,37 +40,52 @@ import uk.co.fivium.fileuploadlibrary.core.UploadedFile;
 import uk.co.fivium.fileuploadlibrary.fds.FileDeleteResponse;
 import uk.co.fivium.fileuploadlibrary.fds.FileUploadResponse;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
+import uk.co.nstauthority.fieldconsents.application.Application;
+import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
+import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
+import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileUsage;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @ContextConfiguration(classes = CaseNotesDocumentController.class)
 class CaseNotesDocumentControllerTest extends AbstractControllerTest {
 
   private static final int APPLICATION_ID = 1;
+  private static final int CASE_NOTE_ID = 1;
   private static final Class<CaseNotesDocumentController> CONTROLLER = CaseNotesDocumentController.class;
 
   @MockBean
   private FileService fileService;
 
   @MockBean
-  private CaseNotesDocumentService caseNotesDocumentService;
+  private CaseNotesService caseNotesService;
 
   @MockBean
-  private CaseNotesFileService caseNotesFileService;
+  private ApplicationService applicationService;
+
+  @MockBean
+  private FieldConsentsFileService fieldConsentsFileService;
 
   @Captor
   private ArgumentCaptor<Function<FileUploadRequest.Builder, FileUploadRequest>> fileUploadRequestFunctionCaptor;
 
   private final ObjectMapper objectMapper = new ObjectMapper();
 
-  private ApplicationVersion applicationVersion;
+  private Application application;
+
+  private CaseNote caseNote;
+
+  private FieldConsentsFileUsage fileUsage;
 
   @BeforeEach
   void setUp() {
-    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    application = applicationVersion.getApplication();
+    caseNote = new CaseNote(CASE_NOTE_ID);
+    caseNote.setId(1);
+    fileUsage = CaseNoteFileUsage.fromCaseNote(caseNote);
 
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
@@ -88,14 +103,14 @@ class CaseNotesDocumentControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void download_noUser() throws Exception {
-    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER).download(APPLICATION_ID, FILE_ID))))
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER).download(APPLICATION_ID, CASE_NOTE_ID, FILE_ID))))
         .andExpect(redirectionToLoginUrl());
   }
 
   @SecurityTest
   void delete_noUser() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER)
-            .delete(APPLICATION_ID, FILE_ID)))
+            .delete(APPLICATION_ID, CASE_NOTE_ID, FILE_ID)))
             .with(csrf()))
         .andExpect(redirectionToLoginUrl());
   }
@@ -149,7 +164,8 @@ class CaseNotesDocumentControllerTest extends AbstractControllerTest {
 
   @Test
   void download() throws Exception {
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(caseNotesService.getCaseNoteByIdAndApplication(CASE_NOTE_ID, application)).thenReturn(caseNote);
 
     var uploadedFile = new UploadedFile();
     when(fileService.find(FILE_ID)).thenReturn(Optional.of(uploadedFile));
@@ -157,49 +173,32 @@ class CaseNotesDocumentControllerTest extends AbstractControllerTest {
     when(fileService.download(uploadedFile)).thenReturn(ResponseEntity.ok().build());
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER)
-            .download(APPLICATION_ID, FILE_ID)))
+            .download(APPLICATION_ID, CASE_NOTE_ID, FILE_ID)))
             .with(user(user)))
         .andExpect(status().isOk());
 
-    verify(caseNotesDocumentService).throwIfFileDoesNotBelongToCaseNote(uploadedFile, null);
+    verify(fieldConsentsFileService).throwIfFileDoesNotBelongToUsage(uploadedFile, fileUsage);
     verify(fileService).download(uploadedFile);
   }
 
   @Test
   void download_invalidFileId() throws Exception {
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(caseNotesService.getCaseNoteByIdAndApplication(CASE_NOTE_ID, application)).thenReturn(caseNote);
     when(fileService.find(FILE_ID)).thenReturn(Optional.empty());
-    when(caseNotesFileService.getFileNotFoundException(any(), any()))
+    when(fieldConsentsFileService.getFileNotFoundException(any(), any()))
         .thenReturn(new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER)
-            .download(APPLICATION_ID, FILE_ID)))
+            .download(APPLICATION_ID, CASE_NOTE_ID, FILE_ID)))
             .with(user(user)))
         .andExpect(status().isNotFound());
-  }
-
-  @Test
-  void download_fileNotLinkedToCaseNote_andNoteIsNotSavedYet() throws Exception {
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
-
-    var uploadedFile = new UploadedFile();
-    when(fileService.find(FILE_ID)).thenReturn(Optional.of(uploadedFile));
-
-    doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND))
-        .when(caseNotesDocumentService)
-        .throwIfFileDoesNotBelongToCaseNote(uploadedFile, null);
-
-    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER)
-            .download(APPLICATION_ID, FILE_ID)))
-            .with(user(user)))
-        .andExpect(status().isNotFound());
-
-    verify(caseNotesDocumentService).throwIfFileDoesNotBelongToCaseNote(uploadedFile, null);
   }
 
   @Test
   void delete() throws Exception {
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(caseNotesService.getCaseNoteByIdAndApplication(CASE_NOTE_ID, application)).thenReturn(caseNote);
 
     var uploadedFile = new UploadedFile();
     when(fileService.find(FILE_ID)).thenReturn(Optional.of(uploadedFile));
@@ -207,46 +206,27 @@ class CaseNotesDocumentControllerTest extends AbstractControllerTest {
     when(fileService.delete(uploadedFile)).thenReturn(FileDeleteResponse.success(FILE_ID));
 
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER)
-            .delete(APPLICATION_ID, FILE_ID)))
+            .delete(APPLICATION_ID, CASE_NOTE_ID, FILE_ID)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk());
 
-    verify(caseNotesDocumentService).throwIfFileDoesNotBelongToCaseNote(uploadedFile, null);
+    verify(fieldConsentsFileService).throwIfFileDoesNotBelongToUsage(uploadedFile, fileUsage);
     verify(fileService).delete(uploadedFile);
   }
 
   @Test
   void delete_invalidFileId() throws Exception {
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(caseNotesService.getCaseNoteByIdAndApplication(CASE_NOTE_ID, application)).thenReturn(caseNote);
     when(fileService.find(FILE_ID)).thenReturn(Optional.empty());
-    when(caseNotesFileService.getFileNotFoundException(any(), any()))
+    when(fieldConsentsFileService.getFileNotFoundException(any(), eq(fileUsage)))
         .thenReturn(new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER)
-            .delete(APPLICATION_ID, FILE_ID)))
+            .delete(APPLICATION_ID, CASE_NOTE_ID, FILE_ID)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isNotFound());
-  }
-
-  @Test
-  void delete_fileNotLinkedToCaseNote_andNoteIsNotSavedYet() throws Exception {
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
-
-    var uploadedFile = new UploadedFile();
-    when(fileService.find(FILE_ID)).thenReturn(Optional.of(uploadedFile));
-
-    doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND))
-        .when(caseNotesDocumentService)
-        .throwIfFileDoesNotBelongToCaseNote(uploadedFile, null);
-
-    mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER)
-            .delete(APPLICATION_ID, FILE_ID)))
-            .with(user(user))
-            .with(csrf()))
-        .andExpect(status().isNotFound());
-
-    verify(caseNotesDocumentService).throwIfFileDoesNotBelongToCaseNote(uploadedFile, null);
   }
 }

@@ -59,13 +59,4 @@ public class FileUploadTestUtil {
         .withExistingFiles(Collections.emptyList());
   }
 
-  public static FileUploadComponentAttributes.Builder applyDefaults(FileUploadComponentAttributes.Builder builder) {
-    return builder.withMaximumSize(DataSize.ofMegabytes(50))
-        .withUploadUrl("/upload")
-        .withDownloadUrl("/download")
-        .withDeleteUrl("/delete")
-        .withAllowedExtensions(Set.of("csv", "pdf"))
-        .withExistingFiles(Collections.emptyList());
-  }
-
 }

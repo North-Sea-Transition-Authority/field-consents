@@ -12,21 +12,55 @@
       <#assign headingWithScreenReaderText>
         ${item.headerText}
       </#assign>
-      <@fdsTimeline.timelineTimeStamp timeStampHeading=headingWithScreenReaderText nodeNumber=" " timeStampClass=stampClass>
+      <@fdsTimeline.timelineTimeStamp
+        nodeNumber="${item?counter}"
+        timeStampHeading=headingWithScreenReaderText
+        timeStampHeadingHint=item.eventDateTimeText
+        timeStampClass=stampClass>
         <@fdsTimeline.timelineEvent>
-          <@fdsDataItems.dataItem dataItemListClasses="fds-data-items-list--tight">
-            <@fdsDataItems.dataValues key=item.eventDateTimeLabel value=item.eventDateTimeText/>
-            <@fdsDataItems.dataValues key=item.mainUserInvolvedLabel value=item.mainUserInvolvedFullName/>
-            <#if item.otherUserInvolvedFullName?has_content>
-              <@fdsDataItems.dataValues key=item.otherUserInvolvedLabel value=item.otherUserInvolvedFullName/>
-            </#if>
-            <@fdsDataItems.dataValues key="Application version" value=item.applicationVersion/>
-          </@fdsDataItems.dataItem>
-          <#if item.eventText?has_content>
-            <@fdsDataItems.dataItem dataItemListClasses="fds-data-items-list--tight">
-              <@fdsDataItems.dataValues key=item.eventTextLabel value=item.eventText/>
-            </@fdsDataItems.dataItem>
-          </#if>
+          <@fdsSummaryList.summaryListWrapper
+            headingText=""
+            headingClass="govuk-!-display-none"
+            summaryListId="summary-list-${item?counter}">
+            <@fdsSummaryList.summaryList>
+              <@fdsSummaryList.summaryListRowNoAction keyText="Application version">
+                ${item.applicationVersion}
+              </@fdsSummaryList.summaryListRowNoAction>
+
+              <@fdsSummaryList.summaryListRowNoAction keyText=item.mainUserInvolvedLabel>
+                ${item.mainUserInvolvedFullName}
+              </@fdsSummaryList.summaryListRowNoAction>
+
+              <#if item.otherUserInvolvedFullName?has_content>
+                <@fdsSummaryList.summaryListRowNoAction keyText=item.otherUserInvolvedLabel>
+                  ${item.otherUserInvolvedFullName}
+                </@fdsSummaryList.summaryListRowNoAction>
+              </#if>
+
+              <#if item.eventText?has_content>
+                <@fdsSummaryList.summaryListRowNoAction keyText=item.eventTextLabel>
+                  ${item.eventText}
+                </@fdsSummaryList.summaryListRowNoAction>
+              </#if>
+
+              <#if item.summaryFileViews?has_content>
+                <@fdsSummaryList.summaryListRowNoAction keyText="Uploaded files">
+                  <ul class="govuk-list">
+                    <#list item.summaryFileViews as summaryFileView>
+                      <li>
+                        <@fdsAction.link
+                          linkUrl=springUrl(summaryFileView.downloadUrl())
+                          linkText=summaryFileView.filename()/>
+                          <#if summaryFileView.description()?has_content>
+                            <div>${summaryFileView.description()}</div>
+                          </#if>
+                      </li>
+                    </#list>
+                  </ul>
+                </@fdsSummaryList.summaryListRowNoAction>
+              </#if>
+            </@fdsSummaryList.summaryList>
+          </@fdsSummaryList.summaryListWrapper>
         </@fdsTimeline.timelineEvent>
       </@fdsTimeline.timelineTimeStamp>
     </#list>

@@ -16,59 +16,69 @@ import uk.co.fivium.fileuploadlibrary.core.FileService;
 import uk.co.fivium.fileuploadlibrary.core.UploadedFile;
 import uk.co.fivium.fileuploadlibrary.fds.FileDeleteResponse;
 import uk.co.fivium.fileuploadlibrary.fds.FileUploadResponse;
+import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
+import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 
 @RestController
-@RequestMapping("applications/{applicationId}/add-case-note/documents")
+@RequestMapping("applications/{applicationId}")
 public class CaseNotesDocumentController {
 
   private final FileService fileService;
+  private final ApplicationService applicationService;
+  private final CaseNotesService caseNotesService;
+  private final FieldConsentsFileService fieldConsentsFileService;
 
-  private final CaseNotesDocumentService caseNoteDocumentService;
-
-  private final CaseNotesFileService caseNotesFileService;
-
-  public CaseNotesDocumentController(FileService fileService,
-                                     CaseNotesDocumentService caseNoteDocumentService,
-                                     CaseNotesFileService caseNotesFileService) {
+  CaseNotesDocumentController(
+      FileService fileService,
+      ApplicationService applicationService,
+      CaseNotesService caseNotesService,
+      FieldConsentsFileService fieldConsentsFileService
+  ) {
     this.fileService = fileService;
-    this.caseNoteDocumentService = caseNoteDocumentService;
-    this.caseNotesFileService = caseNotesFileService;
+    this.applicationService = applicationService;
+    this.caseNotesService = caseNotesService;
+    this.fieldConsentsFileService = fieldConsentsFileService;
   }
 
-  @PostMapping
+  @PostMapping("case-note-documents")
   @ActionEndPoint(REGULATOR_ADD_CASE_NOTE)
-  FileUploadResponse upload(@PathVariable Integer applicationId,
-                            MultipartFile file,
-                            ServiceUserDetail userDetail) {
+  FileUploadResponse upload(@PathVariable Integer applicationId, MultipartFile file, ServiceUserDetail userDetail) {
     return fileService.upload(builder -> builder
         .withMultipartFile(file)
         .withUploadedBy(userDetail.wuaId().toString())
         .build());
   }
 
-  @GetMapping("{fileId}")
+  @GetMapping("case-notes/{caseNoteId}/documents/{fileId}")
   @HasApplicationPermission(permissions = RolePermission.VIEW_FCS_CASE_PROCESSING_DOCUMENTS)
   ResponseEntity<InputStreamResource> download(@PathVariable Integer applicationId,
+                                               @PathVariable Integer caseNoteId,
                                                @PathVariable UUID fileId) {
-    return findFileAndThen(fileId, fileService::download);
+    return findFileAndThen(applicationId, caseNoteId, fileId, fileService::download);
   }
 
-  @PostMapping("{fileId}")
+  @PostMapping("case-notes/{caseNoteId}/documents/delete/{fileId}")
   @ActionEndPoint(REGULATOR_ADD_CASE_NOTE)
   FileDeleteResponse delete(@PathVariable Integer applicationId,
+                            @PathVariable Integer caseNoteId,
                             @PathVariable UUID fileId) {
-    return findFileAndThen(fileId, fileService::delete);
+    return findFileAndThen(applicationId, caseNoteId, fileId, fileService::delete);
   }
 
-  private <T> T findFileAndThen(UUID fileId, Function<UploadedFile, T> andThen) {
+  private <T> T findFileAndThen(Integer applicationId, Integer caseNoteId, UUID fileId,
+                                Function<UploadedFile, T> andThen) {
+    var application = applicationService.getApplicationById(applicationId);
+    var caseNote = caseNotesService.getCaseNoteByIdAndApplication(caseNoteId, application);
+    var fileUsage = CaseNoteFileUsage.fromCaseNote(caseNote);
     var uploadedFile = fileService.find(fileId)
-        .orElseThrow(() -> caseNotesFileService.getFileNotFoundException(fileId, null));
-    caseNoteDocumentService.throwIfFileDoesNotBelongToCaseNote(uploadedFile, null);
+        .orElseThrow(() -> fieldConsentsFileService.getFileNotFoundException(fileId, fileUsage));
+
+    fieldConsentsFileService.throwIfFileDoesNotBelongToUsage(uploadedFile, fileUsage);
 
     return andThen.apply(uploadedFile);
   }

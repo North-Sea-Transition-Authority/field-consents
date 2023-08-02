@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.file;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
+import jakarta.transaction.Transactional;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -16,6 +17,7 @@ import uk.co.fivium.fileuploadlibrary.core.FileUsage;
 import uk.co.fivium.fileuploadlibrary.core.UploadedFile;
 import uk.co.fivium.fileuploadlibrary.fds.FileUploadComponentAttributes;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 
 @Service
 public class FieldConsentsFileService {
@@ -28,6 +30,7 @@ public class FieldConsentsFileService {
     this.fileService = fileService;
   }
 
+  @Transactional
   public void saveDocuments(FieldConsentsFileUsage fileUsage, Collection<UploadedFileForm> uploadedFileForms) {
     var fileIds = uploadedFileForms.stream().map(UploadedFileForm::getFileId).toList();
     var uploadedFiles = fileService.findAll(fileIds);
@@ -63,9 +66,7 @@ public class FieldConsentsFileService {
   }
 
   public void throwIfFileDoesNotBelongToUsage(UploadedFile uploadedFile, FieldConsentsFileUsage fileUsage) {
-    if (Objects.isNull(uploadedFile.getUsageId())
-        && Objects.isNull(uploadedFile.getUsageType())
-        && Objects.isNull(uploadedFile.getDocumentType())) {
+    if (!fileHasUsage(uploadedFile)) {
       return;
     }
 
@@ -75,6 +76,16 @@ public class FieldConsentsFileService {
       LOGGER.warn("Access was attempted to a file not linked to the correct {}", fileUsage.usageType());
       throw getFileNotFoundException(uploadedFile.getId(), fileUsage);
     }
+  }
+
+  public boolean fileHasUsage(UploadedFile uploadedFile) {
+    return Objects.nonNull(uploadedFile.getUsageId())
+        || Objects.nonNull(uploadedFile.getUsageType())
+        || Objects.nonNull(uploadedFile.getDocumentType());
+  }
+
+  public boolean fileBelongsToUser(UploadedFile uploadedFile, ServiceUserDetail serviceUserDetail) {
+    return Objects.equals(uploadedFile.getUploadedBy(), serviceUserDetail.wuaId().toString());
   }
 
   private FileUsage buildFileUsage(FileUsage.Builder fileUsageBuilder, FieldConsentsFileUsage fileUsage) {

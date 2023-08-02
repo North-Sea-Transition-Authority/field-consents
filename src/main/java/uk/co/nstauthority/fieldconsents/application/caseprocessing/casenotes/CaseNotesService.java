@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.casenotes;
 
+import jakarta.persistence.EntityNotFoundException;
 import java.time.Clock;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -8,19 +9,23 @@ import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
 
 @Service
 public class CaseNotesService {
 
   private final Clock clock;
   private final CaseNotesRepository caseNotesRepository;
-  private final CaseNotesDocumentService caseNotesDocumentService;
+  private final FieldConsentsFileService fieldConsentsFileService;
 
-  public CaseNotesService(Clock clock, CaseNotesRepository caseNotesRepository,
-                          CaseNotesDocumentService caseNotesDocumentService) {
+  CaseNotesService(
+      Clock clock,
+      CaseNotesRepository caseNotesRepository,
+      FieldConsentsFileService fieldConsentsFileService
+  ) {
     this.clock = clock;
     this.caseNotesRepository = caseNotesRepository;
-    this.caseNotesDocumentService = caseNotesDocumentService;
+    this.fieldConsentsFileService = fieldConsentsFileService;
   }
 
   @Transactional
@@ -33,11 +38,21 @@ public class CaseNotesService {
     caseNote.setCaseNoteText(caseNoteText);
     caseNote.setAddedByWuaId(user.wuaId());
     caseNote.setAddedDateTime(clock.instant());
-    caseNotesRepository.save(caseNote);
-    caseNotesDocumentService.saveDocuments(caseNote, caseNoteDocuments);
+    caseNote = caseNotesRepository.save(caseNote);
+
+    var fileUsage = CaseNoteFileUsage.fromCaseNote(caseNote);
+    fieldConsentsFileService.saveDocuments(fileUsage, caseNoteDocuments);
   }
 
   public List<CaseNote> getCaseNotesByApplication(Application application) {
     return caseNotesRepository.findByApplicationVersion_Application(application);
   }
+
+  public CaseNote getCaseNoteByIdAndApplication(Integer caseNoteId, Application application) {
+    return caseNotesRepository.findByIdAndApplicationVersion_Application(caseNoteId, application)
+        .orElseThrow(() -> new EntityNotFoundException("Case note [%s] not found for application [%s]".formatted(
+            caseNoteId, application.getId()
+        )));
+  }
+
 }

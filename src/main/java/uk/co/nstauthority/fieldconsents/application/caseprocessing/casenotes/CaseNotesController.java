@@ -3,6 +3,7 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.casenotes;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.REGULATOR_ADD_CASE_NOTE;
 
+import java.util.List;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.fivium.fileuploadlibrary.FileUploadLibraryUtils;
+import uk.co.fivium.fileuploadlibrary.fds.FileUploadComponentAttributes;
+import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
@@ -20,6 +23,8 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCa
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
+import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
+import uk.co.nstauthority.fieldconsents.file.UnlinkedFileController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @Controller
@@ -27,44 +32,31 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 public class CaseNotesController {
 
   private final CaseNotesService caseNotesService;
-
   private final ApplicationService applicationService;
-
   private final CaseNoteFormValidator caseNoteFormValidator;
-
-  private final CaseNotesDocumentService caseNotesDocumentService;
-
   private final ApplicationVersionService applicationVersionService;
+  private final FieldConsentsFileService fieldConsentsFileService;
 
-  private final CaseNotesFileService caseNotesFileService;
-
-
-  public CaseNotesController(CaseNotesService caseNotesService,
-                             ApplicationService applicationService,
-                             CaseNoteFormValidator caseNoteFormValidator,
-                             CaseNotesDocumentService caseNotesDocumentService,
-                             ApplicationVersionService applicationVersionService,
-                             CaseNotesFileService caseNotesFileService) {
+  CaseNotesController(CaseNotesService caseNotesService,
+                      ApplicationService applicationService,
+                      CaseNoteFormValidator caseNoteFormValidator,
+                      ApplicationVersionService applicationVersionService,
+                      FieldConsentsFileService fieldConsentsFileService) {
     this.caseNotesService = caseNotesService;
     this.applicationService = applicationService;
     this.caseNoteFormValidator = caseNoteFormValidator;
-    this.caseNotesDocumentService = caseNotesDocumentService;
     this.applicationVersionService = applicationVersionService;
-    this.caseNotesFileService = caseNotesFileService;
+    this.fieldConsentsFileService = fieldConsentsFileService;
   }
 
   @GetMapping
   @ActionEndPoint(REGULATOR_ADD_CASE_NOTE)
   public ModelAndView getNewCaseNote(@PathVariable Integer applicationId) {
-    var applicationVersion = applicationVersionService
-        .getLatestApplicationVersionByApplicationId(applicationId);
-
+    var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var caseNoteForm = new CaseNoteForm();
 
-    var modelAndView = getNewCaseNoteModelAndView(applicationVersion, caseNoteForm);
-    modelAndView.addObject("form", caseNoteForm);
-
-    return modelAndView;
+    return getNewCaseNoteModelAndView(applicationVersion, caseNoteForm)
+        .addObject("form", caseNoteForm);
   }
 
   private ModelAndView getNewCaseNoteModelAndView(ApplicationVersion applicationVersion, CaseNoteForm form) {
@@ -75,8 +67,7 @@ public class CaseNotesController {
         .addObject("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class)
             .getApplicationCaseProcessing(applicationId, null)))
         .addObject("applicationReference", applicationReference)
-        .addObject("fileUploadAttributes", caseNotesDocumentService
-            .fileUploadComponentAttributes(applicationVersion, form.getCaseNoteDocuments()));
+        .addObject("fileUploadAttributes", fileUploadComponentAttributes(applicationId, form.getCaseNoteDocuments()));
   }
 
   @PostMapping
@@ -95,7 +86,7 @@ public class CaseNotesController {
       var descriptionsByFileId = FileUploadLibraryUtils.getFileDescriptionsByFileId(form.getCaseNoteDocuments());
 
       // TODO: https://jira.fivium.co.uk/browse/FDS-460
-      form.setCaseNoteDocuments(caseNotesFileService.getUploadedFileForms(descriptionsByFileId.keySet()));
+      form.setCaseNoteDocuments(fieldConsentsFileService.getUploadedFileForms(descriptionsByFileId.keySet()));
       form.getCaseNoteDocuments().forEach(uploadedFileForm -> uploadedFileForm
           .setFileDescription(descriptionsByFileId.get(uploadedFileForm.getFileId())));
       return getNewCaseNoteModelAndView(applicationVersion, form);
@@ -112,5 +103,16 @@ public class CaseNotesController {
     return ReverseRouter
         .redirect(on(ApplicationCaseProcessingController.class).getApplicationCaseProcessing(applicationId, null));
   }
-  
+
+  private FileUploadComponentAttributes fileUploadComponentAttributes(Integer applicationId,
+                                                                      List<UploadedFileForm> uploadedFileForms) {
+    return fieldConsentsFileService.fileUploadComponentAttributesBuilder()
+        .withPath("form.caseNoteDocuments")
+        .withUploadUrl(ReverseRouter.route(on(CaseNotesDocumentController.class).upload(applicationId, null, null)))
+        .withDownloadUrl(ReverseRouter.route(on(UnlinkedFileController.class).download(null, null)))
+        .withDeleteUrl(ReverseRouter.route(on(UnlinkedFileController.class).delete(null, null)))
+        .withExistingFiles(uploadedFileForms)
+        .build();
+  }
+
 }

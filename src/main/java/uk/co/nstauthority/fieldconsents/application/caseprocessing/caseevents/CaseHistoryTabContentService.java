@@ -50,14 +50,13 @@ public class CaseHistoryTabContentService {
   }
 
   private CaseEventView convertToCaseEventView(CaseEvent caseEvent, Map<Long, EnergyPortalUserDto> portalUserDtosMap) {
-
     var view = CaseEventView.builder()
         .withApplicationVersion(caseEvent.applicationVersion())
         .withEventType(caseEvent.eventType())
         .withEventText(caseEvent.eventText())
         .withMainUser(portalUserDtosMap.get(caseEvent.mainEventUserWuaId()))
         .withEventDateTime(caseEvent.eventDateTime())
-        .withFiles(caseEvent.eventFiles());
+        .withFileSummaryViews(caseEvent.summaryFileViews());
 
     if (caseEvent.otherEventUserWuaId() != null) {
       view.withOtherUser(portalUserDtosMap.get(caseEvent.otherEventUserWuaId()));

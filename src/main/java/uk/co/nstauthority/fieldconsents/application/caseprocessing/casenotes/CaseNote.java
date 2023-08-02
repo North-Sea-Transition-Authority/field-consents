@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.casenotes;
 
+import com.google.common.annotations.VisibleForTesting;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -37,6 +38,11 @@ public class CaseNote {
 
   public Integer getId() {
     return id;
+  }
+
+  @VisibleForTesting
+  public void setId(Integer id) {
+    this.id = id;
   }
 
   public ApplicationVersion getApplicationVersion() {

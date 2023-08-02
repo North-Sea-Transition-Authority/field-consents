@@ -1,35 +1,27 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
-import uk.co.fivium.fileuploadlibrary.core.UploadedFile;
+import java.util.Objects;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
+import uk.co.nstauthority.fieldconsents.summary.SummaryFileView;
 
 public class CaseEventView {
 
   private String headerText;
-
   private String mainUserInvolvedLabel;
-
   private String mainUserInvolvedFullName;
-
   private String otherUserInvolvedLabel;
-
   private String otherUserInvolvedFullName;
-
   private String eventDateTimeLabel;
-
   private String eventDateTimeText;
-
   private String applicationVersionNumber;
-
   private String eventTextLabel;
-
   private String eventText;
-
-  private List<UploadedFile> uploadedFiles;
+  private List<SummaryFileView> summaryFileViews;
 
   public CaseEventView(String headerText,
                        String mainUserInvolvedLabel,
@@ -41,7 +33,7 @@ public class CaseEventView {
                        String applicationVersionNumber,
                        String eventTextLabel,
                        String eventText,
-                       List<UploadedFile> uploadedFiles) {
+                       List<SummaryFileView> summaryFileViews) {
     this.headerText = headerText;
     this.mainUserInvolvedLabel = mainUserInvolvedLabel;
     this.mainUserInvolvedFullName = mainUserInvolvedFullName;
@@ -52,7 +44,7 @@ public class CaseEventView {
     this.applicationVersionNumber = applicationVersionNumber;
     this.eventTextLabel = eventTextLabel;
     this.eventText = eventText;
-    this.uploadedFiles = uploadedFiles;
+    this.summaryFileViews = summaryFileViews;
   }
 
   public CaseEventView() {
@@ -98,8 +90,8 @@ public class CaseEventView {
     return eventText;
   }
 
-  public List<UploadedFile> getUploadedFiles() {
-    return uploadedFiles;
+  public List<SummaryFileView> getSummaryFileViews() {
+    return summaryFileViews;
   }
 
   public static Builder builder() {
@@ -128,7 +120,7 @@ public class CaseEventView {
 
     private String eventText;
 
-    private List<UploadedFile> uploadedFiles = List.of();
+    private List<SummaryFileView> summaryFileViews = new ArrayList<>();
 
     private Builder() {
     }
@@ -167,10 +159,9 @@ public class CaseEventView {
       return this;
     }
 
-    public Builder withFiles(List<UploadedFile> files) {
-      if (files != null) {
-        //Want to preserve the empty list
-        this.uploadedFiles = files;
+    public Builder withFileSummaryViews(List<SummaryFileView> summaryFileViews) {
+      if (Objects.nonNull(summaryFileViews)) {
+        this.summaryFileViews = summaryFileViews;
       }
       return this;
     }
@@ -187,7 +178,7 @@ public class CaseEventView {
           applicationVersionNumber,
           eventTextLabel,
           eventText,
-          uploadedFiles
+          summaryFileViews
       );
     }
   }

@@ -7,6 +7,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseHi
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,9 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.fivium.fileuploadlibrary.core.UploadedFile;
 import uk.co.nstauthority.fieldconsents.application.Application;
-import uk.co.nstauthority.fieldconsents.application.ApplicationCaseEventService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
@@ -64,7 +63,6 @@ class CaseHistoryTabContentServiceTest {
             .withEventText("Testing")
             .withMainEventUserWuaId(AssignmentTestUtil.ENERGY_PORTAL_USER_1.webUserAccountId())
             .withOtherEventUserWuaId(AssignmentTestUtil.ENERGY_PORTAL_USER_2.webUserAccountId())
-            .withEventFiles(List.of())
             .build(),
         CaseEvent.builder(applicationVersion)
             .withEventType(CaseEventType.CASE_NOTE_ADDED)
@@ -84,13 +82,13 @@ class CaseHistoryTabContentServiceTest {
                 AssignmentTestUtil.ENERGY_PORTAL_USER_1.displayName(), "Technical reviewer",
                 AssignmentTestUtil.ENERGY_PORTAL_USER_2.displayName(), "Requested on",
                 DateUtils.format(caseEvents.get(0).eventDateTime(), DateUtils.DATE_TIME), "1", "Request details",
-                "Testing", List.of()),
+                "Testing",Collections.emptyList()),
             new CaseEventView(
                 "Case note added", "Added by",
                 AssignmentTestUtil.ENERGY_PORTAL_USER_3.displayName(), null,
                 null,  "Added on",
                 DateUtils.format(caseEvents.get(1).eventDateTime(), DateUtils.DATE_TIME), "1", "Case note",
-                null, List.of())
+                null, Collections.emptyList())
         );
   }
 

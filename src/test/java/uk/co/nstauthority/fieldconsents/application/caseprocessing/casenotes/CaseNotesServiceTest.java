@@ -1,21 +1,24 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.casenotes;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import jakarta.persistence.EntityNotFoundException;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -24,6 +27,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
 import uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil;
 
 @ExtendWith(MockitoExtension.class)
@@ -36,15 +40,17 @@ class CaseNotesServiceTest {
   private CaseNotesRepository caseNotesRepository;
   
   @Mock
-  private CaseNotesDocumentService caseNotesDocumentService;
+  private FieldConsentsFileService fieldConsentsFileService;
 
   @InjectMocks
   private CaseNotesService caseNotesService;
 
+  @Captor
+  private ArgumentCaptor<CaseNote> caseNoteCaptor;
+
   private ApplicationVersion applicationVersion;
 
   private ServiceUserDetail user;
-
 
   @BeforeEach
   void setUp() {
@@ -55,18 +61,28 @@ class CaseNotesServiceTest {
   @Test
   void saveCaseNoteForm() {
     var currentTime = Instant.now();
+    var caseNoteId = 1;
+
     when(clock.instant()).thenReturn(currentTime);
+    doAnswer(invocation -> {
+      var caseNote = invocation.getArgument(0, CaseNote.class);
+      caseNote.setId(caseNoteId); // the id is needed for the file usage
+      return caseNote;
+    })
+        .when(caseNotesRepository)
+        .save(any(CaseNote.class));
 
     var caseNoteText = "case note text";
     var caseNoteDocuments = FileUploadTestUtil.validDocumentForms;
     var caseNote = getCaseNote(currentTime, caseNoteText);
+    caseNote.setId(caseNoteId);
 
     caseNotesService.saveCaseNote(applicationVersion, caseNoteText, caseNoteDocuments, user);
 
-    ArgumentCaptor<CaseNote> caseNoteArgumentCaptor = ArgumentCaptor.forClass(CaseNote.class);
-    verify(caseNotesDocumentService).saveDocuments(any(CaseNote.class), anyList());
-    verify(caseNotesRepository, times(1)).save(caseNoteArgumentCaptor.capture());
-    CaseNote actualCaseNote = caseNoteArgumentCaptor.getValue();
+    var fileUsage = CaseNoteFileUsage.fromCaseNote(caseNote);
+    verify(fieldConsentsFileService).saveDocuments(fileUsage, caseNoteDocuments);
+    verify(caseNotesRepository).save(caseNoteCaptor.capture());
+    var actualCaseNote = caseNoteCaptor.getValue();
 
     assertThat(actualCaseNote).usingRecursiveComparison().isEqualTo(caseNote);
   }
@@ -94,18 +110,38 @@ class CaseNotesServiceTest {
     caseNote2.setAddedDateTime(Instant.now());
     caseNote2.setApplicationVersion(applicationVersion);
 
-    when(caseNotesRepository.findByApplicationVersion_Application(applicationVersion.getApplication())).thenReturn(
-        List.of(
-            caseNote1,
-            caseNote2
-        )
+    when(caseNotesRepository.findByApplicationVersion_Application(applicationVersion.getApplication()))
+        .thenReturn(List.of(caseNote1, caseNote2)
     );
 
     assertThat(caseNotesService.getCaseNotesByApplication(applicationVersion.getApplication()))
-        .containsExactly(
-            caseNote1,
-            caseNote2
-        );
+        .containsExactly(caseNote1, caseNote2);
+  }
+
+  @Test
+  void getByIdAndApplication() {
+    var application = applicationVersion.getApplication();
+    var caseNote = new CaseNote();
+    var caseNoteId = 1;
+
+    when(caseNotesRepository.findByIdAndApplicationVersion_Application(caseNoteId, application))
+        .thenReturn(Optional.of(caseNote));
+
+    assertThat(caseNotesService.getCaseNoteByIdAndApplication(caseNoteId, application))
+        .isEqualTo(caseNote);
+  }
+
+  @Test
+  void getByIdAndApplication_notFound() {
+    var application = applicationVersion.getApplication();
+    var caseNoteId = 1;
+
+    when(caseNotesRepository.findByIdAndApplicationVersion_Application(caseNoteId, application))
+        .thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> caseNotesService.getCaseNoteByIdAndApplication(caseNoteId, application))
+        .isInstanceOf(EntityNotFoundException.class)
+        .hasMessage("Case note [%s] not found for application [%s]".formatted(caseNoteId, application.getId()));
   }
 
   @NotNull
