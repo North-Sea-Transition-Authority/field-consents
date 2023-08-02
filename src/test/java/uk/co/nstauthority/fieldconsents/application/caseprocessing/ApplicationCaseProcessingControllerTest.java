@@ -13,8 +13,6 @@ import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.A
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -68,8 +66,6 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   @BeforeEach
   void setUp() {
     technicalReview = new TechnicalReview();
-    technicalReview.setDeadlineDateTime(Instant.now().plus(1, ChronoUnit.DAYS));
-    technicalReview.setRequestText("request text");
   }
 
   @SecurityTest
