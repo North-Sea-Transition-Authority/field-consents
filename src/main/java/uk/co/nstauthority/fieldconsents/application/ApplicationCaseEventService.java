@@ -44,8 +44,6 @@ public class ApplicationCaseEventService implements CaseEventService<Application
                 .build()
         );
       }
-
-      // TODO: The CASE_OFFICER_ASSIGNED event needs to be worked out by using envers on FCS-397
     }
     return caseEvents;
   }

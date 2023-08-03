@@ -1,5 +1,7 @@
 package uk.co.nstauthority.fieldconsents.application;
 
+import static org.hibernate.envers.RelationTargetAuditMode.NOT_AUDITED;
+
 import com.google.common.annotations.VisibleForTesting;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -16,13 +18,14 @@ import java.util.Objects;
 import org.hibernate.envers.Audited;
 
 @Entity
+@Audited
 @Table(name = "application_versions")
 public class ApplicationVersion {
   @Id
-  @Audited
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Integer id;
 
+  @Audited(targetAuditMode = NOT_AUDITED)
   @ManyToOne
   @JoinColumn(name = "application_id")
   private Application application;
@@ -42,11 +45,9 @@ public class ApplicationVersion {
 
   private Long submittedByWuaId;
 
-  @Audited
   @Enumerated(EnumType.STRING)
   private ApplicationVersionStatus status;
 
-  @Audited
   private Long caseOfficerWuaId;
 
   public ApplicationVersion() {
