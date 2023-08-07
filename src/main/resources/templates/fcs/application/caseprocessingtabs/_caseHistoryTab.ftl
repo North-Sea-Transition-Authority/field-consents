@@ -13,7 +13,7 @@
         ${item.headerText}
       </#assign>
       <@fdsTimeline.timelineTimeStamp
-        nodeNumber="${item?counter}"
+        nodeNumber="${caseHistoryEvents?size - item?index}"
         timeStampHeading=headingWithScreenReaderText
         timeStampHeadingHint=item.eventDateTimeText
         timeStampClass=stampClass>
