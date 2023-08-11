@@ -53,6 +53,7 @@ import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
 @ContextConfiguration(classes = TechnicalReviewAssignmentController.class)
 class TechnicalReviewAssignmentControllerTest extends AbstractApplicationControllerTest {
 
+  private static final String VIEW_NAME = "fcs/application/review/technicalReviewAssignment";
   private static final String DUMMY_APP_REF = "DUMMY_APP_REF";
 
   @MockBean
@@ -125,7 +126,7 @@ class TechnicalReviewAssignmentControllerTest extends AbstractApplicationControl
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
-        .andExpect(view().name("fcs/application/technicalReviewAssignment"));
+        .andExpect(view().name(VIEW_NAME));
   }
 
   @ParameterizedTest
@@ -153,7 +154,7 @@ class TechnicalReviewAssignmentControllerTest extends AbstractApplicationControl
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
-        .andExpect(view().name("fcs/application/technicalReviewAssignment"))
+        .andExpect(view().name(VIEW_NAME))
         .andExpect(model().attribute("applicationReference", DUMMY_APP_REF))
         .andExpect(model().attribute("technicalReviewerAssignmentCandidates", TECHNICAL_REVIEWER_ASSIGNMENT_CANDIDATES_MAP))
         .andExpect(model().attribute("backLinkUrl",
@@ -279,7 +280,7 @@ class TechnicalReviewAssignmentControllerTest extends AbstractApplicationControl
                 .with(user(user))
         )
         .andExpect(status().isOk())
-        .andExpect(view().name("fcs/application/technicalReviewAssignment"))
+        .andExpect(view().name(VIEW_NAME))
         .andExpect(model().attribute("applicationReference", DUMMY_APP_REF))
         .andExpect(model().attribute("technicalReviewerAssignmentCandidates", TECHNICAL_REVIEWER_ASSIGNMENT_CANDIDATES_MAP))
         .andExpect(model().attribute("backLinkUrl",

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.fivium.fileuploadlibrary.FileUploadLibraryUtils;
 import uk.co.fivium.fileuploadlibrary.fds.FileUploadComponentAttributes;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
@@ -27,8 +28,10 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalrevi
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
+import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @Controller
 @RequestMapping("applications/{applicationId}/technical-review-response")
@@ -58,7 +61,7 @@ public class TechnicalReviewResponseController {
 
   @GetMapping
   public ModelAndView getForm(@PathVariable Integer applicationId) {
-    var applicationVersion = applicationVersionService.getApplicationVersionById(applicationId);
+    var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var technicalReview = technicalReviewService.getOpenTechnicalReview(applicationVersion);
     var form = TechnicalReviewResponseForm.empty();
 
@@ -69,10 +72,11 @@ public class TechnicalReviewResponseController {
   ModelAndView submitForm(@PathVariable Integer applicationId,
                           @ModelAttribute("form") TechnicalReviewResponseForm form,
                           BindingResult bindingResult,
-                          ServiceUserDetail serviceUserDetail) {
+                          ServiceUserDetail serviceUserDetail,
+                          RedirectAttributes redirectAttributes) {
     validator.validate(form, bindingResult);
 
-    var applicationVersion = applicationVersionService.getApplicationVersionById(applicationId);
+    var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var technicalReview = technicalReviewService.getOpenTechnicalReview(applicationVersion);
 
     if (bindingResult.hasErrors()) {
@@ -93,7 +97,13 @@ public class TechnicalReviewResponseController {
         form.documents()
     );
 
-    return ReverseRouter.redirect(on(ApplicationCaseProcessingController.class).getViewApplicationTab(applicationId, null));
+    var applicationReference = applicationService.generateApplicationReference(applicationVersion);
+    NotificationBannerUtil.addSuccessNotification(
+        redirectAttributes,
+        "Technical review submitted for application %s".formatted(applicationReference)
+    );
+
+    return ReverseRouter.redirect(on(WorkAreaController.class).getWorkArea(null, null));
   }
 
   private ModelAndView getModelAndView(ApplicationVersion applicationVersion,
@@ -104,7 +114,9 @@ public class TechnicalReviewResponseController {
     var backLinkUrl = ReverseRouter.route(on(ApplicationCaseProcessingController.class)
         .getApplicationCaseProcessing(applicationId, null));
 
-    var modelAndView = new ModelAndView("fcs/application/technicalReviewResponse")
+    var modelAndView = new ModelAndView("fcs/application/review/technicalReviewResponse");
+
+    modelAndView
         .addObject("form", form)
         .addObject("technicalReviewSummaryView", TechnicalReviewSummaryView.from(technicalReview))
         .addObject("applicationReference", applicationReference)

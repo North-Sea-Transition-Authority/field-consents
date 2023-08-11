@@ -1,4 +1,4 @@
-<#include '../layout/layout.ftl'>
+<#include '../../layout/layout.ftl'>
 
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
 

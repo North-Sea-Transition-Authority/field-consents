@@ -3,7 +3,9 @@
 <#import '../summary/_applicationSummary.ftl' as applicationSummary>
 <#import '_caseProcessingActions.ftl' as caseProcessingActions>
 <#import './caseprocessingtabs/_caseHistoryTab.ftl' as caseHistoryTab>
-<#include '../application/review/reviewDetails.ftl'/>
+<#import 'review/technicalReviewDetails.ftl' as technicalReviewDetails/>
+
+<#-- @ftlvariable name="technicalReviewSummaryView" type="uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewSummaryView" -->
 
 <@defaultPage
 htmlTitle=pageTitle
@@ -11,9 +13,7 @@ pageHeading=pageTitle
 pageSize=getPageSize.getPageSize(wideSummaryDisplay)
 backLinkUrl=springUrl(backLinkUrl)
 >
-  <#if technicalReviewSummaryView??>
-    <@reviewDetails technicalReviewSummaryView=technicalReviewSummaryView/>
-  </#if>
+  <@technicalReviewDetails.notificaitonBanner technicalReviewSummaryView=technicalReviewSummaryView/>
   <@caseProcessingActions.caseActions actions=actionList/>
   <@fdsBackendTabs.tabs tabsHeading="case processing tabs">
     <@fdsBackendTabs.tabList>

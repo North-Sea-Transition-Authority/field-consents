@@ -87,7 +87,7 @@ public class TechnicalReviewController {
     var technicalReviewerAssignmentCandidatesMap = teamMemberViewService
         .getUsersMap(technicalReviewAssignmentService.getTechnicalReviewerAssignmentCandidates(user));
 
-    return new ModelAndView("fcs/application/technicalReviewRequest")
+    return new ModelAndView("fcs/application/review/technicalReviewRequest")
         .addObject("applicationReference", applicationReference)
         .addObject("technicalReviewerAssignmentCandidates", technicalReviewerAssignmentCandidatesMap)
         .addObject("backLinkUrl",

@@ -17,7 +17,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWER_SUBMIT_REVIEW;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
-import static uk.co.nstauthority.fieldconsents.formatting.DateUtils.DATE_TIME;
+import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.notificationBanner;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -47,9 +47,11 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalrevi
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewSummaryView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.response.document.TechnicalReviewResponseDocumentController;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
+import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
+import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
-import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @ContextConfiguration(classes = TechnicalReviewResponseController.class)
 class TechnicalReviewResponseControllerTest extends AbstractApplicationControllerTest {
@@ -57,7 +59,7 @@ class TechnicalReviewResponseControllerTest extends AbstractApplicationControlle
   private static final Instant NOW = Instant.now();
   private static final FileUploadComponentAttributes.Builder DEFAULT_FILE_ATTRIBUTES_BUILDER = FileUploadComponentAttributes.newBuilder().withMaximumSize(DataSize.ofMegabytes(1));
 
-  private static final String VIEW_NAME = "fcs/application/technicalReviewResponse";
+  private static final String VIEW_NAME = "fcs/application/review/technicalReviewResponse";
   private static final Class<TechnicalReviewResponseController> CONTROLLER_CLASS = TechnicalReviewResponseController.class;
 
   private static final int TECHNICAL_REVIEW_ID = 1;
@@ -125,7 +127,6 @@ class TechnicalReviewResponseControllerTest extends AbstractApplicationControlle
 
     assertThat(model)
         .containsAllEntriesOf(Map.of(
-            "technicalReviewSummaryView", new TechnicalReviewSummaryView(DateUtils.format(TECHNICAL_REVIEW_DEADLINE, DATE_TIME), TECHNICAL_REVIEW_REQUEST_TEXT),
             "applicationReference", APPLICATION_REFERENCE,
             "backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class).getApplicationCaseProcessing(APPLICATION_ID, null)),
             "approveRadio", TechnicalReviewResponseType.APPROVE,
@@ -133,7 +134,8 @@ class TechnicalReviewResponseControllerTest extends AbstractApplicationControlle
             "fileUploadAttributes", fileUploadAttributes,
             "summarySections", Collections.emptyList(),
             "accordionId", applicationVersion.getId(),
-            "wideSummaryDisplay", false
+            "wideSummaryDisplay", false,
+            "technicalReviewSummaryView", TechnicalReviewSummaryView.from(technicalReview)
         ))
         .extracting(m -> m.get("form"))
         .usingRecursiveComparison()
@@ -142,20 +144,24 @@ class TechnicalReviewResponseControllerTest extends AbstractApplicationControlle
 
   @Test
   void submitForm() throws Exception {
-    when(applicationVersionService.getApplicationVersionById(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(technicalReviewService.getOpenTechnicalReview(applicationVersion)).thenReturn(technicalReview);
+    when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(APPLICATION_REFERENCE);
 
     var rejectionReason = "rejection reason";
 
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER_CLASS)
-        .submitForm(APPLICATION_ID, null, null, null)))
+        .submitForm(APPLICATION_ID, null, null, null, null)))
         .with(user(user))
         .with(csrf())
         .param("responseType", TechnicalReviewResponseType.REJECT.toString())
         .param("rejectionReason.inputValue", rejectionReason)
     )
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationCaseProcessingController.class).getViewApplicationTab(APPLICATION_ID, null))));
+        .andExpect(redirectedUrl(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null))))
+        .andExpect(notificationBanner(NotificationBanner.builder()
+            .withBannerType(NotificationBannerType.SUCCESS)
+            .withHeadingContent("Technical review submitted for application " + APPLICATION_REFERENCE).build()));
 
     verify(validator).validate(formCaptor.capture(), any(BindingResult.class));
     assertThat(formCaptor.getValue())
@@ -191,7 +197,7 @@ class TechnicalReviewResponseControllerTest extends AbstractApplicationControlle
     mockGetFormInteractions();
 
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .submitForm(APPLICATION_ID, null, null, null)))
+            .submitForm(APPLICATION_ID, null, null, null, null)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
@@ -208,7 +214,7 @@ class TechnicalReviewResponseControllerTest extends AbstractApplicationControlle
   }
 
   private void mockGetFormInteractions() {
-    when(applicationVersionService.getApplicationVersionById(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(technicalReviewService.getOpenTechnicalReview(applicationVersion)).thenReturn(technicalReview);
     when(fieldConsentsFileService.fileUploadComponentAttributesBuilder()).thenReturn(DEFAULT_FILE_ATTRIBUTES_BUILDER);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(APPLICATION_REFERENCE);

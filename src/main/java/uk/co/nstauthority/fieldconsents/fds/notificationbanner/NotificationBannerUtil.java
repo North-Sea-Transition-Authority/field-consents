@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.fds.notificationbanner;
 
+import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.fieldconsents.exception.IllegalUtilClassInstantiationException;
 
@@ -15,6 +16,10 @@ public class NotificationBannerUtil {
                                              NotificationBanner notificationBanner) {
 
     redirectAttributes.addFlashAttribute(FLASH_ATTRIBUTE_NAME, notificationBanner);
+  }
+
+  public static void applyNotificationBanner(ModelAndView modelAndView, NotificationBanner notificationBanner) {
+    modelAndView.addObject(FLASH_ATTRIBUTE_NAME, notificationBanner);
   }
 
   public static void addSuccessNotification(RedirectAttributes redirectAttributes,

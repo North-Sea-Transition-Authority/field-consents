@@ -20,8 +20,10 @@ import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummarySe
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
+import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamService;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @Controller
@@ -46,13 +48,16 @@ public class ApplicationCaseProcessingController {
 
   private final TechnicalReviewService technicalReviewService;
 
+  private final RegulatorTeamService regulatorTeamService;
+
   ApplicationCaseProcessingController(ApplicationService applicationService,
                                       ApplicationVersionService applicationVersionService,
                                       ApplicationSummaryService applicationSummaryService,
                                       CaseProcessingActionService caseProcessingActionService,
                                       CaseProcessingTabService caseProcessingTabService,
                                       CaseHistoryTabContentService caseHistoryTabContentService,
-                                      TechnicalReviewService technicalReviewService) {
+                                      TechnicalReviewService technicalReviewService,
+                                      RegulatorTeamService regulatorTeamService) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.applicationSummaryService = applicationSummaryService;
@@ -60,6 +65,7 @@ public class ApplicationCaseProcessingController {
     this.caseProcessingTabService = caseProcessingTabService;
     this.caseHistoryTabContentService = caseHistoryTabContentService;
     this.technicalReviewService = technicalReviewService;
+    this.regulatorTeamService = regulatorTeamService;
   }
 
   @GetMapping("case-processing")
@@ -95,10 +101,12 @@ public class ApplicationCaseProcessingController {
         ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null))
     );
 
-    technicalReviewService.findOpenTechnicalReview(applicationVersion)
-        .ifPresent(technicalReview -> modelAndView
-            .addObject("technicalReviewSummaryView", TechnicalReviewSummaryView.from(technicalReview))
-        );
+    if (regulatorTeamService.isTechnicalReviewer(WebUserAccountId.from(user))) {
+      technicalReviewService.findOpenTechnicalReview(applicationVersion)
+          .ifPresent(technicalReview ->
+              modelAndView.addObject("technicalReviewSummaryView", TechnicalReviewSummaryView.from(technicalReview))
+          );
+    }
 
     modelAndView.addObject("actionList", caseProcessingActions)
         .addObject("caseProcessingTabs", caseProcessingTabService.getTabsAvailableToUser(user))

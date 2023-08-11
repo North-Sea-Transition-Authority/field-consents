@@ -1,7 +1,7 @@
-<#include '../layout/layout.ftl'>
-<#include '../application/review/reviewDetails.ftl'/>
-<#import '../functions/_getPageSize.ftl' as getPageSize>
-<#import '../summary/_applicationSummary.ftl' as applicationSummary>
+<#include '../../layout/layout.ftl'>
+<#include 'technicalReviewDetails.ftl'/>
+<#import '../../functions/_getPageSize.ftl' as getPageSize>
+<#import '../../summary/_applicationSummary.ftl' as applicationSummary>
 
 <#-- @ftlvariable name="pageTitle" type="java.lang.String" -->
 <#-- @ftlvariable name="technicalReviewDeadline" type="java.lang.String" -->
@@ -21,10 +21,12 @@ caption=applicationReference
 pageSize=getPageSize.getPageSize(wideSummaryDisplay)
 backLinkUrl=springUrl(backLinkUrl)
 errorItems=errorList>
+    <@technicalReviewDetails
+      technicalReviewSummaryView=technicalReviewSummaryView/>
+
     <@fdsDetails.summaryDetails summaryTitle="View application">
         <@applicationSummary.applicationSummary accordionId=accordionId/>
     </@fdsDetails.summaryDetails>
-    <@reviewDetails technicalReviewSummaryView=technicalReviewSummaryView/>
     <@fdsForm.htmlForm>
         <@fdsRadio.radioGroup
         path="form.responseType"

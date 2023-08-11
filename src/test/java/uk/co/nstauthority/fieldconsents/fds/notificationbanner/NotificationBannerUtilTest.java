@@ -1,10 +1,12 @@
 package uk.co.nstauthority.fieldconsents.fds.notificationbanner;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.data.MapEntry.entry;
 import static uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil.FLASH_ATTRIBUTE_NAME;
 
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 
 class NotificationBannerUtilTest {
@@ -20,6 +22,17 @@ class NotificationBannerUtilTest {
     @SuppressWarnings(SUPPRESS_WARNINGS_UNCHECKED)
     var flashAttributes = (Map<String, Object>) redirectAttributes.getFlashAttributes();
     assertThat(flashAttributes).containsEntry(FLASH_ATTRIBUTE_NAME, notificationBanner);
+  }
+
+  @Test
+  void applyNotificationBanner_modelAndView() {
+    var modelAndView = new ModelAndView();
+    var notificationBanner = NotificationBanner.builder().build();
+    NotificationBannerUtil.applyNotificationBanner(modelAndView, notificationBanner);
+
+    assertThat(modelAndView.getModel()).containsExactly(entry(
+        FLASH_ATTRIBUTE_NAME, notificationBanner
+    ));
   }
 
   @Test
