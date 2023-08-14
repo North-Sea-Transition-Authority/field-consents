@@ -1,6 +1,10 @@
 package uk.co.nstauthority.fieldconsents.application.tasklist.shared;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.fieldconsents.application.assets.AssetRole.HOST;
+import static uk.co.nstauthority.fieldconsents.application.assets.AssetRole.LOCATION;
+import static uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType.HAS_SECONDARY_ASSETS;
+import static uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType.WILL_GAS_BE_INJECTED;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +18,8 @@ import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetServi
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthController;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService;
-import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
+import uk.co.nstauthority.fieldconsents.application.rationale.flare.ApplicationRationaleFlareController;
+import uk.co.nstauthority.fieldconsents.application.rationale.flare.ApplicationRationaleFlareService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.production.gasinjection.GasInjectionController;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListItem;
@@ -31,78 +36,129 @@ public class ConsentDetailsTaskListSectionService implements TaskListSectionServ
 
   private final ApplicationFlagService applicationFlagService;
 
+  private final ApplicationRationaleFlareService applicationRationaleFlareService;
+
   ConsentDetailsTaskListSectionService(ConsentLengthService consentLengthService,
                                        ApplicationAssetService applicationAssetService,
-                                       ApplicationFlagService applicationFlagService) {
+                                       ApplicationFlagService applicationFlagService,
+                                       ApplicationRationaleFlareService applicationRationaleFlareService) {
     this.consentLengthService = consentLengthService;
     this.applicationAssetService = applicationAssetService;
     this.applicationFlagService = applicationFlagService;
+    this.applicationRationaleFlareService = applicationRationaleFlareService;
   }
 
   @Override
   public Optional<TaskListSection> getSection(ApplicationVersion applicationVersion) {
+    var items = new ArrayList<TaskListItem>();
 
-    List<TaskListItem> items = new ArrayList<>();
-    items.add(
-        new TaskListItem("Consent duration",
-            TaskListLabel.notStartedOrCompleteByOptional(consentLengthService.findConsentLengthDetails(applicationVersion)),
-            ReverseRouter.route(on(ConsentLengthController.class)
-                .getConsentLengthForm(applicationVersion.getApplication().getId())))
-    );
+    getApplicationRationaleTaskListItem(applicationVersion).ifPresent(items::add);
+    getConsentDurationTaskListItem(applicationVersion).ifPresent(items::add);
+    getAdditionalAssetsTaskListItem(applicationVersion).ifPresent(items::add);
+    getGasInjectionTaskListItem(applicationVersion).ifPresent(items::add);
 
-    var primaryAsset = applicationAssetService.getPrimaryAsset(applicationVersion);
-    var applicationType = applicationVersion.getApplication().getType();
-
-    // Additional assets and licences can be added to Field consent applications only for Flares and Vents types
-    if (ApplicationTypeFeature.SECONDARY_ASSETS.allowed(applicationType) && primaryAsset.isField()) {
-      items.add(getAdditionalAssetsTaskListItem(applicationVersion));
-    }
-
-    // Gas injection section only available for Production applications
-    if (ApplicationTypeFeature.GAS_INJECTION.allowed(applicationType)) {
-      items.add(getGasInjectionTaskListItem(applicationVersion));
+    if (items.isEmpty()) {
+      return Optional.empty();
     }
 
     return Optional.of(new TaskListSection("Consent details", 10, items));
   }
 
-  private TaskListItem getAdditionalAssetsTaskListItem(ApplicationVersion applicationVersion) {
-    var additionalAssets = applicationAssetService.getSecondaryAssets(applicationVersion);
-    var hasSecondaryAssetsFlag = applicationFlagService.findFlagValue(
-        applicationVersion,
-        ApplicationFlagType.HAS_SECONDARY_ASSETS
-    );
+  Optional<TaskListItem> getApplicationRationaleTaskListItem(ApplicationVersion applicationVersion) {
+    var application = applicationVersion.getApplication();
 
-    var additionalAssetsUrl = additionalAssets.isEmpty()
-        ? ReverseRouter.route(on(AdditionalAssetsController.class)
-          .getAdditionalAssetsRequiredForm(applicationVersion.getApplication().getId()))
-        : ReverseRouter.route(on(AdditionalAssetsController.class)
-          .viewAdditionalAssetsSummary(applicationVersion.getApplication().getId()));
-
-    return new TaskListItem("Additional fields and licences",
-        getAdditionalAssetsTaskListLabel(additionalAssets, hasSecondaryAssetsFlag),
-        additionalAssetsUrl);
+    return switch (application.getType()) {
+      case FLARE -> Optional.of(new TaskListItem(
+          "Application rationale",
+          getApplicationRationaleTaskListLabel(applicationVersion),
+          ReverseRouter.route(on(ApplicationRationaleFlareController.class).getForm(application.getId()))
+      ));
+      case VENT -> Optional.empty(); // TODO: FCS-378
+      case PRODUCTION -> Optional.empty(); // TODO: FCS-376
+    };
   }
 
-  private TaskListLabel getAdditionalAssetsTaskListLabel(List<ApplicationAsset> additionalAssets,
-                                                         Optional<Boolean> secondaryAssetsRequired) {
-    TaskListLabel additionalAssetsLabel;
-    if (secondaryAssetsRequired.isEmpty()) {
-      additionalAssetsLabel = TaskListLabel.NOT_STARTED;
-    } else if (additionalAssets.isEmpty() && Boolean.TRUE.equals(secondaryAssetsRequired.get())) {
-      additionalAssetsLabel = TaskListLabel.IN_PROGRESS;
-    } else {
-      additionalAssetsLabel = TaskListLabel.COMPLETED;
+  private TaskListLabel getApplicationRationaleTaskListLabel(ApplicationVersion applicationVersion) {
+    var applicationRationaleExists = applicationRationaleFlareService.doesApplicationRationaleExistFor(applicationVersion);
+    var hasFlaringLocation = applicationAssetService.assetExistsForApplicationVersionAndAssetRole(applicationVersion, LOCATION);
+    var hasHostLocation = applicationAssetService.assetExistsForApplicationVersionAndAssetRole(applicationVersion, HOST);
+
+    if (!applicationRationaleExists && !hasFlaringLocation && !hasHostLocation) {
+      return TaskListLabel.NOT_STARTED;
     }
-    return additionalAssetsLabel;
+
+    if (applicationRationaleExists && hasFlaringLocation && hasHostLocation) {
+      return TaskListLabel.COMPLETED;
+    }
+
+    return TaskListLabel.IN_PROGRESS;
   }
 
-  private TaskListItem getGasInjectionTaskListItem(ApplicationVersion applicationVersion) {
-    return new TaskListItem("Gas injection",
-        TaskListLabel.notStartedOrCompleteByOptional(
-            applicationFlagService.findFlagValue(applicationVersion, ApplicationFlagType.WILL_GAS_BE_INJECTED)),
-        ReverseRouter.route(on(GasInjectionController.class)
-            .getGasInjectionForm(applicationVersion.getApplication().getId()))
+  Optional<TaskListItem> getConsentDurationTaskListItem(ApplicationVersion applicationVersion) {
+    var applicationId = applicationVersion.getApplication().getId();
+
+    return Optional.of(new TaskListItem(
+        "Consent duration",
+        TaskListLabel.notStartedOrCompleteByOptional(consentLengthService.findConsentLengthDetails(applicationVersion)),
+        ReverseRouter.route(on(ConsentLengthController.class).getConsentLengthForm(applicationId)))
     );
+  }
+
+  Optional<TaskListItem> getAdditionalAssetsTaskListItem(ApplicationVersion applicationVersion) {
+    var application = applicationVersion.getApplication();
+
+    if (!ApplicationTypeFeature.SECONDARY_ASSETS.allowed(application.getType())) {
+      return Optional.empty();
+    }
+
+    if (!applicationAssetService.getPrimaryAsset(applicationVersion).isField()) {
+      return Optional.empty();
+    }
+
+    var applicationId = application.getId();
+    var secondaryAssets = applicationAssetService.getSecondaryAssets(applicationVersion);
+    var secondaryAssetsUrl = secondaryAssets.isEmpty()
+        ? ReverseRouter.route(on(AdditionalAssetsController.class).getAdditionalAssetsRequiredForm(applicationId))
+        : ReverseRouter.route(on(AdditionalAssetsController.class).viewAdditionalAssetsSummary(applicationId));
+
+    var taskListLabel = getAdditionalAssetsTaskListLabel(applicationVersion, secondaryAssets);
+
+    return Optional.of(new TaskListItem(
+        "Additional fields and licences",
+        taskListLabel,
+        secondaryAssetsUrl
+    ));
+  }
+
+  private TaskListLabel getAdditionalAssetsTaskListLabel(
+      ApplicationVersion applicationVersion,
+      List<ApplicationAsset> additionalAssets
+  ) {
+    var hasSecondaryAssetsFlag = applicationFlagService.findFlagValue(applicationVersion, HAS_SECONDARY_ASSETS);
+
+    if (hasSecondaryAssetsFlag.isEmpty()) {
+      return TaskListLabel.NOT_STARTED;
+    }
+
+    if (additionalAssets.isEmpty() && Boolean.TRUE.equals(hasSecondaryAssetsFlag.get())) {
+      return TaskListLabel.IN_PROGRESS;
+    }
+
+    return TaskListLabel.COMPLETED;
+  }
+
+  Optional<TaskListItem> getGasInjectionTaskListItem(ApplicationVersion applicationVersion) {
+    var application = applicationVersion.getApplication();
+
+    if (!ApplicationTypeFeature.GAS_INJECTION.allowed(application.getType())) {
+      return Optional.empty();
+    }
+
+    var flagValueOptional = applicationFlagService.findFlagValue(applicationVersion, WILL_GAS_BE_INJECTED);
+    return Optional.of(new TaskListItem(
+        "Gas injection",
+        TaskListLabel.notStartedOrCompleteByOptional(flagValueOptional),
+        ReverseRouter.route(on(GasInjectionController.class).getGasInjectionForm(application.getId()))
+    ));
   }
 }

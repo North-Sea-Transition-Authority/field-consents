@@ -8,7 +8,9 @@ public enum ApplicationTypeFeature {
   ERAP_SUPPORTING_INFORMATION(EnumSet.of(ApplicationType.FLARE, ApplicationType.VENT)),
   GAS_INJECTION(EnumSet.of(ApplicationType.PRODUCTION)),
   EIA_SCREENING_DIRECTION(EnumSet.of(ApplicationType.PRODUCTION)),
-  WIDE_SUMMARY_DISPLAY(EnumSet.of(ApplicationType.FLARE, ApplicationType.VENT));
+  WIDE_SUMMARY_DISPLAY(EnumSet.of(ApplicationType.FLARE, ApplicationType.VENT)),
+  APPLICATION_RATIONALE(EnumSet.of(ApplicationType.FLARE))
+  ;
 
   private final EnumSet<ApplicationType> applicationTypes;
 

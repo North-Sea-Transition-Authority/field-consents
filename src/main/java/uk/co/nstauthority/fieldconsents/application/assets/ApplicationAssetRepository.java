@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.application.assets;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
@@ -20,6 +21,10 @@ public interface ApplicationAssetRepository extends CrudRepository<ApplicationAs
       ApplicationVersion applicationVersion,
       AssetRole assetRole
   );
+
+  boolean existsByApplicationVersionAndAssetRole(ApplicationVersion applicationVersion, AssetRole assetRole);
+
+  void deleteAllByApplicationVersionAndAssetRoleIn(ApplicationVersion applicationVersion, Set<AssetRole> assetRoles);
 
   List<ApplicationAsset> findAllByAssetRoleAndFieldIdIsNotNull(AssetRole assetRole);
 

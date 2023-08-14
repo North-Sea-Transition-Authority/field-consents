@@ -6,8 +6,8 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import java.util.ArrayList;
 import java.util.List;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthController;
-import uk.co.nstauthority.fieldconsents.flarevent.flare.flares.FlareController;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportPeriodController;
+import uk.co.nstauthority.fieldconsents.flarevent.flare.flares.FlareController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 
@@ -28,6 +28,8 @@ public class TaskListTestUtil {
   public static final int PRODUCTION_INFORMATION_DISPLAY_ORDER = 20;
 
   public static final String CONSENT_LENGTH_TASK_LIST_ITEM = "Consent duration";
+
+  public static final String APPLICATION_RATIONALE_TASK_LIST_ITEM = "Application rationale";
 
   public static final String ADDITIONAL_ASSETS_TASK_LIST_ITEM = "Additional fields and licences";
 

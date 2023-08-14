@@ -18,11 +18,12 @@ import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal2JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal3JsonWithOperator;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
@@ -33,29 +34,27 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil
 @ExtendWith(MockitoExtension.class)
 public class AssetServiceTest {
 
+  private static final String SEARCH_FIELDS_PURPOSE = "Assets search selector (search fields)";
+  private static final String SEARCH_TERMINALS_PURPOSE = "Assets search selector (search terminals)";
+
   @Mock
   private FieldService fieldService;
 
   @Mock
   private TerminalService terminalService;
 
+  @InjectMocks
   private AssetService assetService;
 
-  private ServiceUserDetail user;
-
-  @BeforeEach
-  void setup() {
-    assetService = new AssetService(fieldService, terminalService);
-    user = ServiceUserDetailTestUtil.Builder().build();
-  }
+  private final ServiceUserDetail user = ServiceUserDetailTestUtil.Builder().build();
 
   @Test
   void searchAssetsForUser_verifyListAndOrder() {
     when(fieldService
-        .searchFieldsWithOperatorForUser("1", "Assets search selector (search fields)", user))
+        .searchFieldsWithOperatorForUser("1", SEARCH_FIELDS_PURPOSE, user))
         .thenReturn(List.of(field1JsonWithOperator));
     when(terminalService
-        .searchTerminalsWithOperatorForUser("1", "Assets search selector (search terminals)", user))
+        .searchTerminalsWithOperatorForUser("1", SEARCH_TERMINALS_PURPOSE, user))
         .thenReturn(List.of(terminal1JsonWithOperator));
 
     var searchAssetsResults = assetService.searchAssetsForUser("1", user);
@@ -68,10 +67,10 @@ public class AssetServiceTest {
   @Test
   void searchAssetsForUser_verifyListAndOrderFieldsOnly() {
     when(fieldService
-        .searchFieldsWithOperatorForUser("F", "Assets search selector (search fields)", user))
+        .searchFieldsWithOperatorForUser("F", SEARCH_FIELDS_PURPOSE, user))
         .thenReturn(List.of(field3JsonWithOperator, field1JsonWithOperator, field2JsonWithOperator));
     when(terminalService
-        .searchTerminalsWithOperatorForUser("F", "Assets search selector (search terminals)", user))
+        .searchTerminalsWithOperatorForUser("F", SEARCH_TERMINALS_PURPOSE, user))
         .thenReturn(List.of());
 
     var searchAssetsResults = assetService.searchAssetsForUser("F", user);
@@ -85,10 +84,10 @@ public class AssetServiceTest {
   @Test
   void searchAssetsForUser_verifyListAndOrderTerminalsOnly() {
     when(fieldService
-        .searchFieldsWithOperatorForUser("T", "Assets search selector (search fields)", user))
+        .searchFieldsWithOperatorForUser("T", SEARCH_FIELDS_PURPOSE, user))
         .thenReturn(List.of());
     when(terminalService
-        .searchTerminalsWithOperatorForUser("T", "Assets search selector (search terminals)", user))
+        .searchTerminalsWithOperatorForUser("T", SEARCH_TERMINALS_PURPOSE, user))
         .thenReturn(List.of(terminal2JsonWithOperator, terminal3JsonWithOperator, terminal1JsonWithOperator));
 
     var searchAssetsResults = assetService.searchAssetsForUser("T", user);
@@ -100,8 +99,32 @@ public class AssetServiceTest {
   }
 
   @Test
+  void searchAssets_verifyListAndOrder() {
+    when(fieldService.searchFields("1", SEARCH_FIELDS_PURPOSE)).thenReturn(List.of(field1Json));
+    when(terminalService.searchTerminals("1", SEARCH_TERMINALS_PURPOSE)).thenReturn(List.of(terminal1Json));
+
+    assertThat(assetService.searchAssets("1")).containsExactly(field1Json, terminal1Json);
+  }
+
+  @Test
+  void searchAssets_verifyListAndOrderFieldsOnly() {
+    when(fieldService.searchFields("1", SEARCH_FIELDS_PURPOSE)).thenReturn(List.of(field1Json));
+    when(terminalService.searchTerminals("1", SEARCH_TERMINALS_PURPOSE)).thenReturn(Collections.emptyList());
+
+    assertThat(assetService.searchAssets("1")).containsExactly(field1Json);
+  }
+
+  @Test
+  void searchAssets_verifyListAndOrderTerminalsOnly() {
+    when(fieldService.searchFields("1", SEARCH_FIELDS_PURPOSE)).thenReturn(Collections.emptyList());
+    when(terminalService.searchTerminals("1", SEARCH_TERMINALS_PURPOSE)).thenReturn(List.of(terminal1Json));
+
+    assertThat(assetService.searchAssets("1")).containsExactly(terminal1Json);
+  }
+
+  @Test
   void searchFields_verifyListAndOrderFieldsOnly() {
-    when(fieldService.searchFields("F", "Assets search selector (search fields)"))
+    when(fieldService.searchFields("F", SEARCH_FIELDS_PURPOSE))
         .thenReturn(List.of(field1Json, field2Json, field3Json));
 
     List<AssetJson> searchAssetsResults = assetService.searchFields("F");
@@ -149,7 +172,7 @@ public class AssetServiceTest {
   }
 
   @Test
-  void getAsset_validKey() {
+  void getAssetOld_validKey() {
     when(fieldService.findField(FIELD_ID_1, "Field asset picked from search selector"))
         .thenReturn(Optional.of(field1Json));
 
@@ -158,11 +181,43 @@ public class AssetServiceTest {
   }
 
   @Test
-  void getAsset_invalidKey_thenException() {
+  void getAssetOld_invalidKey_thenException() {
 
     assertThatThrownBy(() -> assetService.getAsset(BAD_ASSET_KEY))
         .isInstanceOf(RuntimeException.class)
         .hasMessageContaining("Not a valid AssetKey: " + BAD_ASSET_KEY);
 
   }
+
+  @Test
+  void getAsset_field() {
+    var assetKey = new AssetKey(1, AssetType.FIELD);
+    var requestPurpose = "request purpose";
+
+    when(fieldService.findField(assetKey.assetId(), requestPurpose)).thenReturn(Optional.of(field1Json));
+
+    assertThat(assetService.getAsset(assetKey, requestPurpose))
+        .isPresent()
+        .get()
+        .isEqualTo(field1Json);
+  }
+
+  @Test
+  void getAsset_terminal() {
+    var assetKey = new AssetKey(1, AssetType.TERMINAL);
+    var requestPurpose = "request purpose";
+
+    when(terminalService.findTerminal(assetKey.assetId(), requestPurpose)).thenReturn(Optional.of(terminal2JsonWithOperator));
+
+    assertThat(assetService.getAsset(assetKey, requestPurpose))
+        .isPresent()
+        .get()
+        .isEqualTo(terminal2JsonWithOperator);
+  }
+
+  @Test
+  void getAsset_nullAssetKey() {
+    assertThat(assetService.getAsset(null, "request purpose")).isEmpty();
+  }
+
 }

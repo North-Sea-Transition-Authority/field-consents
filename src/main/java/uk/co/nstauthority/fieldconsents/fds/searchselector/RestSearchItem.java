@@ -6,4 +6,9 @@ package uk.co.nstauthority.fieldconsents.fds.searchselector;
  */
 public record RestSearchItem(String id, String text) {
   public static final RestSearchItem EMPTY_REST_SEARCH_ITEM = new RestSearchItem("", "");
+
+  public static RestSearchItem from(SearchSelectable searchSelectable) {
+    return new RestSearchItem(searchSelectable.getSelectionId(), searchSelectable.getSelectionText());
+  }
+
 }

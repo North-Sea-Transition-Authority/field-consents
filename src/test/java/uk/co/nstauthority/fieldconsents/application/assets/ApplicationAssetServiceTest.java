@@ -3,6 +3,7 @@ package uk.co.nstauthority.fieldconsents.application.assets;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -25,9 +26,12 @@ import jakarta.persistence.EntityNotFoundException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
@@ -38,6 +42,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
+import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
@@ -57,6 +62,9 @@ class ApplicationAssetServiceTest {
   @Mock
   private ApplicationFlagService applicationFlagService;
 
+  @Mock
+  private AssetService assetService;
+
   @Captor
   private ArgumentCaptor<ApplicationAsset> assetArgumentCaptor;
 
@@ -70,7 +78,9 @@ class ApplicationAssetServiceTest {
         fieldService,
         terminalService,
         applicationAssetRepository,
-        applicationFlagService);
+        applicationFlagService,
+        assetService
+    );
     applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
   }
 
@@ -302,6 +312,20 @@ class ApplicationAssetServiceTest {
     assertThat(applicationAssetService.secondaryAssetsExist(applicationVersion)).isTrue();
   }
 
+  @ParameterizedTest
+  @EnumSource(AssetRole.class)
+  void assetExistsForApplicationVersionAndAssetRole_exists(AssetRole assetRole) {
+    when(applicationAssetRepository.existsByApplicationVersionAndAssetRole(applicationVersion, assetRole)).thenReturn(true);
+    assertThat(applicationAssetService.assetExistsForApplicationVersionAndAssetRole(applicationVersion, assetRole)).isTrue();
+  }
+
+  @ParameterizedTest
+  @EnumSource(AssetRole.class)
+  void assetExistsForApplicationVersionAndAssetRole_doesNotExist(AssetRole assetRole) {
+    when(applicationAssetRepository.existsByApplicationVersionAndAssetRole(applicationVersion, assetRole)).thenReturn(false);
+    assertThat(applicationAssetService.assetExistsForApplicationVersionAndAssetRole(applicationVersion, assetRole)).isFalse();
+  }
+
   @Test
   void deleteSecondaryAsset_primaryFails() {
     assertThatThrownBy(() -> applicationAssetService.deleteSecondaryAsset(fieldAsset1))
@@ -466,5 +490,87 @@ class ApplicationAssetServiceTest {
 
     assertThat(primaryFieldAssets).hasSize(1);
     assertThat(primaryFieldAssets.get(0)).usingRecursiveComparison().isEqualTo(terminalAsset1);
+  }
+
+  @ParameterizedTest
+  @EnumSource(AssetRole.class)
+  void findAssetJsonListFor_field(AssetRole assetRole) {
+    when(applicationAssetRepository.findAllByApplicationVersionAndAssetRoleOrderByIdAsc(applicationVersion, assetRole))
+        .thenReturn(Collections.singletonList(fieldAsset1));
+    when(fieldService.getField(eq(fieldAsset1.getId()), anyString()))
+        .thenReturn(field1Json);
+
+    assertThat(applicationAssetService.findAssetJsonListFor(applicationVersion, assetRole))
+        .isEqualTo(Collections.singletonList(field1Json));
+  }
+
+  @ParameterizedTest
+  @EnumSource(AssetRole.class)
+  void findAssetJsonListFor_terminal(AssetRole assetRole) {
+    when(applicationAssetRepository.findAllByApplicationVersionAndAssetRoleOrderByIdAsc(applicationVersion, assetRole))
+        .thenReturn(Collections.singletonList(terminalAsset1));
+    when(terminalService.getTerminal(eq(terminalAsset1.getId()), anyString()))
+        .thenReturn(terminal1Json);
+
+    assertThat(applicationAssetService.findAssetJsonListFor(applicationVersion, assetRole))
+        .isEqualTo(Collections.singletonList(terminal1Json));
+  }
+
+  @ParameterizedTest
+  @EnumSource(AssetRole.class)
+  void createAssetForApplicationVersion_field(AssetRole assetRole) {
+    var assetKey = "assetKey";
+
+    when(assetService.getAsset(assetKey)).thenReturn(field1Json);
+    when(fieldService.getFieldWithOperator(eq(field1.getFieldId()), anyString())).thenReturn(field1JsonWithOperator);
+
+    applicationAssetService.createAssetForApplicationVersion(applicationVersion, assetKey, assetRole);
+
+    var applicationAssetCaptor = ArgumentCaptor.forClass(ApplicationAsset.class);
+    verify(applicationAssetRepository).save(applicationAssetCaptor.capture());
+
+    assertThat(applicationAssetCaptor.getValue())
+        .extracting(
+            ApplicationAsset::getApplicationVersion,
+            ApplicationAsset::getFieldId,
+            ApplicationAsset::getAssetRole
+        ).containsExactly(
+            applicationVersion,
+            field1.getFieldId(),
+            assetRole
+        );
+  }
+
+  @ParameterizedTest
+  @EnumSource(AssetRole.class)
+  void createAssetForApplicationVersion_terminal(AssetRole assetRole) {
+    var assetKey = "assetKey";
+
+    when(assetService.getAsset(assetKey)).thenReturn(terminal1Json);
+    when(terminalService.getTerminalWithOperator(eq(terminal1.getTerminalId()), anyString())).thenReturn(terminal1JsonWithOperator);
+
+    applicationAssetService.createAssetForApplicationVersion(applicationVersion, assetKey, assetRole);
+
+    var applicationAssetCaptor = ArgumentCaptor.forClass(ApplicationAsset.class);
+    verify(applicationAssetRepository).save(applicationAssetCaptor.capture());
+
+    assertThat(applicationAssetCaptor.getValue())
+        .extracting(
+            ApplicationAsset::getApplicationVersion,
+            ApplicationAsset::getTerminalId,
+            ApplicationAsset::getAssetRole
+        ).containsExactly(
+            applicationVersion,
+            terminal1.getTerminalId(),
+            assetRole
+        );
+  }
+
+  @Test
+  void deleteAssetsByApplicationVersionAndAssetRoles() {
+    var assetRoles = Set.of(AssetRole.HOST, AssetRole.LOCATION);
+    applicationAssetService.deleteAssetsByApplicationVersionAndAssetRoles(applicationVersion, assetRoles);
+
+    verify(applicationAssetRepository).deleteAllByApplicationVersionAndAssetRoleIn(applicationVersion, assetRoles);
   }
 }

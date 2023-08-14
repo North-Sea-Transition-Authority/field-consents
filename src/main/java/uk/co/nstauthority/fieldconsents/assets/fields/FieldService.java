@@ -68,6 +68,10 @@ public class FieldService {
       fieldWithOperatorProjectionRoot
           .licences().id().licenceRef().root();
 
+  static final FieldsProjectionRoot fieldsWithOperatorsAndLicensesProjectionRoot =
+      fieldsWithOperatorsProjectionRoot
+          .licences().id().licenceRef().root();
+
   @Autowired
   public FieldService(FieldApi fieldApi,
                       TeamService teamService,
@@ -152,6 +156,15 @@ public class FieldService {
                                                                                      String requestPurpose) {
     return fieldApi.findFieldById(fieldId, fieldWithOperatorLicencesProjectionRoot, new RequestPurpose(requestPurpose))
         .map(FieldWithOperatorAndLicencesJson::from);
+  }
+
+  public List<FieldWithOperatorAndLicencesJson> findFieldsWithOperatorAndLicences(List<Integer> fieldIds,
+                                                                                  String epaRequestPurpose) {
+    return fieldApi
+        .getFieldsByIds(fieldIds, fieldsWithOperatorsAndLicensesProjectionRoot, new RequestPurpose(epaRequestPurpose))
+        .stream()
+        .map(FieldWithOperatorAndLicencesJson::from)
+        .toList();
   }
 
   public FieldWithOperatorAndLicencesJson getFieldWithOperatorAndLicences(Integer fieldId, String requestPurpose) {

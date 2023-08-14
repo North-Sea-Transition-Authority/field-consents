@@ -5,12 +5,14 @@ import jakarta.transaction.Transactional;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
+import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.AssetWithOperatorJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
@@ -27,18 +29,21 @@ public class ApplicationAssetService {
 
   private final ApplicationAssetRepository applicationAssetRepository;
 
-
   private final ApplicationFlagService applicationFlagService;
+
+  private final AssetService assetService;
 
   @Autowired
   public ApplicationAssetService(FieldService fieldService,
                                  TerminalService terminalService,
                                  ApplicationAssetRepository applicationAssetRepository,
-                                 ApplicationFlagService applicationFlagService) {
+                                 ApplicationFlagService applicationFlagService,
+                                 AssetService assetService) {
     this.fieldService = fieldService;
     this.terminalService = terminalService;
     this.applicationAssetRepository = applicationAssetRepository;
     this.applicationFlagService = applicationFlagService;
+    this.assetService = assetService;
   }
 
   private ApplicationAsset createAsset(ApplicationVersion applicationVersion,
@@ -108,13 +113,21 @@ public class ApplicationAssetService {
         );
   }
 
+  public List<ApplicationAsset> findAssetsByApplicationVersionAndAssetRole(ApplicationVersion applicationVersion,
+                                                                           AssetRole assetRole) {
+    return applicationAssetRepository.findAllByApplicationVersionAndAssetRoleOrderByIdAsc(applicationVersion, assetRole);
+  }
+
   public List<ApplicationAsset> getSecondaryAssets(ApplicationVersion applicationVersion) {
-    return applicationAssetRepository
-        .findAllByApplicationVersionAndAssetRoleOrderByIdAsc(applicationVersion, AssetRole.SECONDARY);
+    return findAssetsByApplicationVersionAndAssetRole(applicationVersion, AssetRole.SECONDARY);
   }
 
   public boolean secondaryAssetsExist(ApplicationVersion applicationVersion) {
     return !getSecondaryAssets(applicationVersion).isEmpty();
+  }
+
+  public boolean assetExistsForApplicationVersionAndAssetRole(ApplicationVersion applicationVersion, AssetRole assetRole) {
+    return applicationAssetRepository.existsByApplicationVersionAndAssetRole(applicationVersion, assetRole);
   }
 
   @Transactional
@@ -165,4 +178,52 @@ public class ApplicationAssetService {
   public List<ApplicationAsset> findAllPrimaryTerminalAssets() {
     return applicationAssetRepository.findAllByAssetRoleAndTerminalIdIsNotNull(AssetRole.PRIMARY);
   }
+
+  public List<AssetJson> findAssetJsonListFor(ApplicationVersion applicationVersion, AssetRole assetRole) {
+    return findAssetsByApplicationVersionAndAssetRole(applicationVersion, assetRole)
+        .stream()
+        .map(this::getAssetJsonFromApplicationAsset)
+        .toList();
+  }
+
+  private AssetJson getAssetJsonFromApplicationAsset(ApplicationAsset applicationAsset) {
+    if (applicationAsset.isTerminal()) {
+      return terminalService.getTerminal(applicationAsset.getTerminalId(), "Looking up terminal reference");
+    }
+
+    if (applicationAsset.isField()) {
+      return fieldService.getField(applicationAsset.getFieldId(), "Looking up field reference");
+    }
+
+    throw new UnsupportedOperationException(
+        "ApplicationAsset role [%s] is unsupported".formatted(applicationAsset.getAssetRole()));
+  }
+
+  @Transactional
+  public void createAssetForApplicationVersion(ApplicationVersion applicationVersion, String assetKey, AssetRole assetRole) {
+    var purpose = "Adding ApplicationAsset to ApplicationVersion [%s]".formatted(applicationVersion.getId());
+    var asset = assetService.getAsset(assetKey);
+
+    if (AssetType.FIELD.equals(asset.getAssetType())) {
+      var field = fieldService.getFieldWithOperator(asset.getId(), purpose);
+      var applicationAsset = createAsset(applicationVersion, field, assetRole);
+      applicationAssetRepository.save(applicationAsset);
+      return;
+    }
+
+    if (AssetType.TERMINAL.equals(asset.getAssetType())) {
+      var terminal = terminalService.getTerminalWithOperator(asset.getId(), purpose);
+      var applicationAsset = createAsset(applicationVersion, terminal, assetRole);
+      applicationAssetRepository.save(applicationAsset);
+      return;
+    }
+
+    throw new UnsupportedOperationException("Cannot create ApplicationAsset of role [%s]".formatted(assetRole));
+  }
+
+  @Transactional
+  public void deleteAssetsByApplicationVersionAndAssetRoles(ApplicationVersion applicationVersion, Set<AssetRole> assetRoles) {
+    applicationAssetRepository.deleteAllByApplicationVersionAndAssetRoleIn(applicationVersion, assetRoles);
+  }
+
 }

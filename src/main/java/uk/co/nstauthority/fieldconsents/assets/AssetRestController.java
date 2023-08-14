@@ -31,6 +31,16 @@ public class AssetRestController {
     );
   }
 
+  @GetMapping("/data-sources/all-assets")
+  public RestSearchResult searchAllAssets(@RequestParam(value = "term", required = false) String assetName) {
+    return searchSelectorService.search(assetName, assetService::searchAssets);
+  }
+
+  @GetMapping("/data-sources/terminal-assets")
+  public RestSearchResult searchTerminalAssets(@RequestParam(value = "term", required = false) String assetName) {
+    return searchSelectorService.search(assetName, assetService::searchTerminals);
+  }
+
   @GetMapping("/data-sources/fields")
   RestSearchResult searchFields(@RequestParam("term") String fieldName) {
     return searchSelectorService.search(fieldName, assetService::searchFields);

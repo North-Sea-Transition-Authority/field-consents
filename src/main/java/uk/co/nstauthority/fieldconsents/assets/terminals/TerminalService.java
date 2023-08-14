@@ -118,4 +118,15 @@ public class TerminalService {
     return findTerminalWithOperator(terminalId, requestPurpose)
         .orElseThrow(() -> new EntityNotFoundException("Terminal not found for terminal id %s".formatted(terminalId)));
   }
+
+  // TODO: FCS-427 (remove n+1)
+  public List<TerminalWithOperatorJson> findTerminalsWithOperator(List<Integer> terminalIds, String epaRequestPurpose) {
+    return terminalIds
+        .stream()
+        .map(id -> terminalApi.findTerminalById(id, terminalWithOperatorProjectionRoot, new RequestPurpose(epaRequestPurpose)))
+        .flatMap(Optional::stream)
+        .map(TerminalWithOperatorJson::from)
+        .toList();
+  }
+
 }
