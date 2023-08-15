@@ -19,6 +19,10 @@ public record ApplicationContextJson(
     return primaryAsset.getName();
   }
 
+  public String getPrimaryOperatorPrompt() {
+    return "Primary operator";
+  }
+
   public String getPrimaryOperatorName() {
     return primaryOperator.name();
   }

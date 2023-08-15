@@ -2,9 +2,6 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalrev
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseHistoryEventTestUtil.getPortalUsersDtosMap;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventType.TECHNICAL_REVIEW_COMPLETED;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventType.TECHNICAL_REVIEW_REQUESTED;
 
 import java.util.Collections;
 import java.util.List;
@@ -19,8 +16,6 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseHistoryEventTestUtil;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEvent;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventView;
-import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 
 @ExtendWith(MockitoExtension.class)
 class TechnicalReviewCaseEventServiceTest {
@@ -97,7 +92,7 @@ class TechnicalReviewCaseEventServiceTest {
             )
         );
 
-    List<CaseEvent> caseEvents = technicalReviewCaseEventService.getCaseEvents(
+    var caseEvents = technicalReviewCaseEventService.getCaseEvents(
         applicationVersionForProduction.getApplication()
     );
 
@@ -117,7 +112,7 @@ class TechnicalReviewCaseEventServiceTest {
             )
         );
 
-    List<CaseEvent> caseEvents = technicalReviewCaseEventService.getCaseEvents(applicationVersion.getApplication());
+    var caseEvents = technicalReviewCaseEventService.getCaseEvents(applicationVersion.getApplication());
 
     assertThat(caseEvents)
         .containsExactly(

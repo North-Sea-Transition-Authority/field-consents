@@ -12,6 +12,7 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import org.hibernate.envers.Audited;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.response.ApplicationUpdateResponseType;
 
 @Audited
 @Entity
@@ -45,6 +46,10 @@ public class ApplicationUpdate {
 
   @Enumerated(EnumType.STRING)
   private ApplicationUpdateStatus applicationUpdateStatus;
+
+  @OneToOne
+  @JoinColumn(name = "response_application_version_id")
+  private ApplicationVersion responseApplicationVersion;
 
   public ApplicationVersion getApplicationVersion() {
     return applicationVersion;
@@ -114,8 +119,7 @@ public class ApplicationUpdate {
     return responseType;
   }
 
-  public void setResponseType(
-      ApplicationUpdateResponseType responseType) {
+  public void setResponseType(ApplicationUpdateResponseType responseType) {
     this.responseType = responseType;
   }
 
@@ -126,5 +130,14 @@ public class ApplicationUpdate {
   public void setApplicationUpdateStatus(
       ApplicationUpdateStatus applicationUpdateStatus) {
     this.applicationUpdateStatus = applicationUpdateStatus;
+  }
+
+  public ApplicationVersion getResponseApplicationVersion() {
+    return responseApplicationVersion;
+  }
+
+  public void setResponseApplicationVersion(
+      ApplicationVersion responseApplicationVersion) {
+    this.responseApplicationVersion = responseApplicationVersion;
   }
 }

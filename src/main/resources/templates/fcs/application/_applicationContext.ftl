@@ -5,5 +5,6 @@
 <#macro applicationContextInfo applicationContext>
   <@fdsDataItems.dataItem>
     <@fdsDataItems.dataValues key=applicationContext.getPrimaryAssetPrompt() value=applicationContext.getPrimaryAssetName()/>
+    <@fdsDataItems.dataValues key=applicationContext.getPrimaryOperatorPrompt() value=applicationContext.getPrimaryOperatorName()/>
   </@fdsDataItems.dataItem>
 </#macro>

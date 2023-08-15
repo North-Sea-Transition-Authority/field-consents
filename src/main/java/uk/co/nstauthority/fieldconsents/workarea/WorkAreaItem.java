@@ -20,7 +20,8 @@ public record WorkAreaItem(
     String caseOfficer,
     Boolean withdrawalOpen,
     String technicalReviewer,
-    Boolean applicationUpdateOpen
+    Boolean applicationUpdateOpen,
+    String applicationUpdateDeadline
 ) {
   public String url() {
     return ReverseRouter.route(on(ApplicationSummaryController.class).getApplicationSummary(applicationId, null));

@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag;
 
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.APPLICATION_UPDATE_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.APPLICATION_UPDATE_STARTED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_APPLICATION_UPDATE_OPEN;
@@ -14,6 +15,7 @@ import java.util.Objects;
 import java.util.Set;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalService;
@@ -76,6 +78,10 @@ public class CaseStatusFlagService {
                                     HashSet<CaseStatusFlag> caseStatusFlags) {
     if (applicationUpdateService.openApplicationUpdateExists(applicationVersion)) {
       caseStatusFlags.add(APPLICATION_UPDATE_OPEN);
+      // if the case status is IN_PROGRESS then the update must have been started
+      if (ApplicationVersionStatus.IN_PROGRESS.equals(applicationVersion.getStatus())) {
+        caseStatusFlags.add(APPLICATION_UPDATE_STARTED);
+      }
     } else {
       caseStatusFlags.add(NO_APPLICATION_UPDATE_OPEN);
     }

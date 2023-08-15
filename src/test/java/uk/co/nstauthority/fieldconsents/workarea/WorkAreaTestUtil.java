@@ -61,7 +61,8 @@ public class WorkAreaTestUtil {
         null,
         false,
         null,
-        false
+        false,
+        null
     );
   }
 
@@ -91,7 +92,8 @@ public class WorkAreaTestUtil {
         null,
         false,
         TECHNICAL_REVIEWER_WUA_ID,
-        false
+        false,
+        null
     );
   }
 
@@ -121,7 +123,8 @@ public class WorkAreaTestUtil {
         null,
         false,
         null,
-        false
+        false,
+        null
     );
   }
 
@@ -151,7 +154,8 @@ public class WorkAreaTestUtil {
         null,
         false,
         null,
-        false
+        false,
+        null
     );
   }
 
@@ -181,7 +185,8 @@ public class WorkAreaTestUtil {
         CASE_OFFICER_WUA_ID,
         false,
         TECHNICAL_REVIEWER_WUA_ID,
-        false
+        false,
+        null
     );
   }
 
@@ -211,7 +216,8 @@ public class WorkAreaTestUtil {
         null,
         false,
         null,
-        false
+        false,
+        null
     );
   }
 
@@ -241,7 +247,8 @@ public class WorkAreaTestUtil {
         null,
         true,
         null,
-        false
+        false,
+        null
     );
   }
 
@@ -261,7 +268,8 @@ public class WorkAreaTestUtil {
         getCaseOfficer(workAreaItemDto),
         workAreaItemDto.withdrawalOpen(),
         getTechnicalReviewer(workAreaItemDto, workAreaGroup),
-        workAreaItemDto.applicationUpdateOpen()
+        workAreaItemDto.applicationUpdateOpen(),
+        getApplicationUpdateDeadline(workAreaItemDto)
     );
   }
 
@@ -368,6 +376,12 @@ public class WorkAreaTestUtil {
     );
   }
 
+  private static String getApplicationUpdateDeadline(WorkAreaItemDto workAreaItemDto) {
+    return workAreaItemDto.applicationUpdateOpen()
+        ? DateUtils.format(workAreaItemDto.applicationUpdateDeadline(), DateUtils.DATE_TIME)
+        : "";
+  }
+
   public static WorkAreaItem getWorkAreaItem() {
     return new WorkAreaItem(
         APPLICATION_ID,
@@ -384,7 +398,8 @@ public class WorkAreaTestUtil {
         "",
         false,
         "",
-        false
+        false,
+        ""
     );
   }
 }

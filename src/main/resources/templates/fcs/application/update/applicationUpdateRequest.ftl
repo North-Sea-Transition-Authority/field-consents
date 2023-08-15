@@ -1,6 +1,6 @@
-<#include '../layout/layout.ftl'>
-<#import '../functions/_getPageSize.ftl' as getPageSize>
-<#import '../summary/_applicationSummary.ftl' as applicationSummary>
+<#include '../../layout/layout.ftl'>
+<#import '../../functions/_getPageSize.ftl' as getPageSize>
+<#import '../../summary/_applicationSummary.ftl' as applicationSummary>
 
 <#-- @ftlvariable name="pageTitle" type="java.lang.String" -->
 <#-- @ftlvariable name="applicationReference" type="java.lang.String" -->

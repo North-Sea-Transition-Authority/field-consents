@@ -4,6 +4,11 @@ public enum CaseEventType {
 
   APPLICATION_CREATED("Application created", "Created by", "Created on", null),
   APPLICATION_SUBMITTED("Application submitted", "Submitted by", "Submitted on", null),
+  APPLICATION_DELETED("Application deleted", "Deleted by", "Deleted on", null),
+  APPLICATION_UPDATE_REQUESTED("Application update requested", "Requested by", "Requested on", "Update request"),
+  APPLICATION_UPDATE_STARTED("Application update started", "Started by", "Started on", null),
+  APPLICATION_UPDATE_SUBMITTED("Application update submitted", "Submitted by", "Submitted on", "Update response"),
+  DRAFT_APPLICATION_UPDATE_DELETED("Draft application update deleted", "Deleted by", "Deleted on", null),
   APPLICATION_WITHDRAWAL_REQUESTED("Application withdrawal requested", "Requested by", "Requested on", "Withdrawal request"),
   APPLICATION_WITHDRAWAL_RESPONDED("Application withdrawal responded", "Responded by", "Responded on", "Withdrawal response"),
   CASE_OFFICER_ASSIGNED("Case officer assigned", "Assigned by", "Assigned on", null, "Case officer"),

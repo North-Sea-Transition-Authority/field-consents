@@ -125,10 +125,7 @@ public class CaseProcessingActionService {
           entry(TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP, EnumSet.of(TECHNICAL_REVIEW_OPEN)),
           entry(APPLICATION_UPDATE_REQUEST, EnumSet.of(NO_APPLICATION_UPDATE_OPEN)),
           entry(OPERATOR_WITHDRAWAL_REQUEST, EnumSet.of(NO_WITHDRAWAL_OPEN, NO_APPLICATION_UPDATE_OPEN)),
-          // TODO FCS-381
-          //  the below flags set will never happen together so this effectively disables the operator starting the update
-          //  this needs to changed when we do FCS-381
-          entry(OPERATOR_UPDATE_APPLICATION, EnumSet.of(APPLICATION_UPDATE_OPEN, NO_APPLICATION_UPDATE_OPEN))
+          entry(OPERATOR_UPDATE_APPLICATION, EnumSet.of(APPLICATION_UPDATE_OPEN))
       );
 
   private final Map<CaseProcessingActionItem, Set<RegulatorTeamRole>> actionsToAssigneeOnlyRoles =

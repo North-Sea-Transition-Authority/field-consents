@@ -4,16 +4,19 @@ import java.time.Clock;
 import java.time.Instant;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionAudit;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEvent;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventType;
 
-public class CaseAssignmentEventTestUtil {
+public class ApplicationVersionAuditTestUtil {
 
   static final Long CASE_OFFICER_WUA_ID_1 = 1L;
 
   static final Long CASE_OFFICER_WUA_ID_2 = 2L;
 
   static final Long AUDIT_USER_WUA_ID = 1000L;
+
+  static final Long OPERATOR_WUA_ID = 1L;
 
   static final Instant DUMMY_INSTANT = Clock.systemDefaultZone().instant();
 
@@ -22,7 +25,8 @@ public class CaseAssignmentEventTestUtil {
         applicationVersion.getId(),
         CASE_OFFICER_WUA_ID_1,
         DUMMY_INSTANT,
-        CASE_OFFICER_WUA_ID_1
+        CASE_OFFICER_WUA_ID_1,
+        ApplicationVersionStatus.SUBMITTED
     );
   }
 
@@ -39,7 +43,8 @@ public class CaseAssignmentEventTestUtil {
         applicationVersion.getId(),
         null,
         DUMMY_INSTANT,
-        CASE_OFFICER_WUA_ID_1
+        CASE_OFFICER_WUA_ID_1,
+        ApplicationVersionStatus.SUBMITTED
     );
   }
 
@@ -56,7 +61,8 @@ public class CaseAssignmentEventTestUtil {
         applicationVersion.getId(),
         caseOfficerWuaId,
         DUMMY_INSTANT,
-        AUDIT_USER_WUA_ID
+        AUDIT_USER_WUA_ID,
+        ApplicationVersionStatus.SUBMITTED
     );
   }
 
@@ -67,5 +73,16 @@ public class CaseAssignmentEventTestUtil {
         .withEventDateTime(DUMMY_INSTANT)
         .withOtherEventUserWuaId(caseOfficerWuaId)
         .build();
+  }
+
+  public static ApplicationVersionAudit getApplicationVersionAuditApplicationDeleted(
+      ApplicationVersion applicationVersion) {
+    return new ApplicationVersionAudit(
+        applicationVersion.getId(),
+        OPERATOR_WUA_ID,
+        DUMMY_INSTANT,
+        OPERATOR_WUA_ID,
+        ApplicationVersionStatus.DELETED
+    );
   }
 }

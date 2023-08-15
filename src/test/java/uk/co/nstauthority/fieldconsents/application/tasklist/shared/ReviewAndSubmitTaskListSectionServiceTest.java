@@ -15,7 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryController;
+import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListItem;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListLabel;
@@ -53,7 +53,7 @@ class ReviewAndSubmitTaskListSectionServiceTest {
         taskListItems.get(0),
         REVIEW_SUBMIT_ITEM_NAME,
         TaskListLabel.NO_LABEL,
-        ReverseRouter.route(on(ApplicationSummaryController.class).getReviewAndSubmit(
+        ReverseRouter.route(on(ApplicationSubmissionController.class).getReviewAndSubmit(
             applicationVersion.getApplication().getId(), null))
     );
   }

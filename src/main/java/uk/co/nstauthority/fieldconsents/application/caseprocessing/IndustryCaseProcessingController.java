@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,6 +13,8 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateRequestViewService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
@@ -32,14 +35,23 @@ public class IndustryCaseProcessingController {
 
   private final CaseProcessingActionService caseProcessingActionService;
 
+  private final ApplicationUpdateService applicationUpdateService;
+
+  private final ApplicationUpdateRequestViewService applicationUpdateRequestViewService;
+
+  @Autowired
   IndustryCaseProcessingController(ApplicationService applicationService,
                                    ApplicationVersionService applicationVersionService,
                                    ApplicationSummaryService applicationSummaryService,
-                                   CaseProcessingActionService caseProcessingActionService) {
+                                   CaseProcessingActionService caseProcessingActionService,
+                                   ApplicationUpdateService applicationUpdateService,
+                                   ApplicationUpdateRequestViewService applicationUpdateRequestViewService) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.applicationSummaryService = applicationSummaryService;
     this.caseProcessingActionService = caseProcessingActionService;
+    this.applicationUpdateService = applicationUpdateService;
+    this.applicationUpdateRequestViewService = applicationUpdateRequestViewService;
   }
 
   @GetMapping("industry-case-processing")
@@ -65,6 +77,12 @@ public class IndustryCaseProcessingController {
         pageTitle,
         ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null))
     );
+
+    if (applicationUpdateService.openApplicationUpdateExists(applicationVersion)) {
+      modelAndView.addObject("applicationUpdateRequestView",
+          applicationUpdateRequestViewService.getOpenApplicationUpdateRequestView(applicationVersion)
+      );
+    }
 
     return modelAndView.addObject("actionList", caseProcessingActions);
   }

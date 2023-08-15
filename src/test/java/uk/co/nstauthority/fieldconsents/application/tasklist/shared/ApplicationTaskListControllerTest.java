@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateTestUtil.applicationUpdateRequestView;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
@@ -21,9 +22,12 @@ import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationContextJson;
 import uk.co.nstauthority.fieldconsents.application.ApplicationContextService;
+import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateRequestViewService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -39,6 +43,15 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
 
   @MockBean
   private ApplicationContextService applicationContextService;
+
+  @MockBean
+  private ApplicationUpdateService applicationUpdateService;
+
+  @MockBean
+  private ApplicationUpdateRequestViewService applicationUpdateRequestViewService;
+
+  @MockBean
+  private ApplicationService applicationService;
 
   private List<TaskListSection> flareTaskListSections;
 
@@ -138,6 +151,39 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
             entry("pageTitle", "Production application"),
             entry("applicationContext", applicationContext)
         )
+        .containsKey("taskListSections");
+  }
+
+  @Test
+  void getTaskList_withApplicationUpdateInProgress() throws Exception {
+    ApplicationVersion applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationTaskListService.getAllSections(applicationVersion)).thenReturn(flareTaskListSections);
+    when(applicationContextService.getApplicationContextJson(applicationVersion)).thenReturn(applicationContext);
+    when(applicationUpdateService.openApplicationUpdateExists(applicationVersion))
+        .thenReturn(true);
+    when(applicationUpdateRequestViewService.getOpenApplicationUpdateRequestView(applicationVersion))
+        .thenReturn(applicationUpdateRequestView);
+
+    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ApplicationTaskListController.class)
+            .getTaskList(APPLICATION_ID)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/applicationTaskList"))
+        .andReturn().getModelAndView();
+
+    assert modelAndView != null;
+    var model = modelAndView.getModel();
+
+    assertThat(model)
+        .contains(
+            entry("pageTitle", "Production application"),
+            entry("applicationContext", applicationContext)
+        )
+        .containsEntry("applicationUpdateRequestView", applicationUpdateRequestView)
         .containsKey("taskListSections");
   }
 }

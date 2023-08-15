@@ -132,7 +132,7 @@
       <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Withdrawal requested"/>
     </#if>
     <#if workAreaItem.applicationUpdateOpen()>
-      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Application update requested"/>
+      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Update due by ${workAreaItem.applicationUpdateDeadline()}"/>
     </#if>
   </#assign>
   <@fdsResultList.resultListItem

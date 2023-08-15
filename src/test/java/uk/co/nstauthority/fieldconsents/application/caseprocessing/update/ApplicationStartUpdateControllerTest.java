@@ -13,12 +13,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_UPDATE_APPLICATION;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.APPLICATION_UPDATE_STARTED;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateTestUtil.applicationUpdateRequestView;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -30,6 +33,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlagService;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryController;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
@@ -45,6 +49,12 @@ class ApplicationStartUpdateControllerTest extends AbstractApplicationController
 
   @MockBean
   private ApplicationUpdateService applicationUpdateService;
+
+  @MockBean
+  private ApplicationUpdateRequestViewService applicationUpdateRequestViewService;
+
+  @MockBean
+  private CaseStatusFlagService caseStatusFlagService;
 
   @SecurityTest
   void startUpdateEntryPoint_noUser() throws Exception {
@@ -94,6 +104,8 @@ class ApplicationStartUpdateControllerTest extends AbstractApplicationController
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
+    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
+        .thenReturn(Set.of(APPLICATION_UPDATE_STARTED));
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationStartUpdateController.class)
             .updateApplicationEntryPoint(APPLICATION_ID)))
@@ -167,13 +179,15 @@ class ApplicationStartUpdateControllerTest extends AbstractApplicationController
         .thenReturn(applicationVersion);
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(OPERATOR_UPDATE_APPLICATION));
+    when(applicationUpdateRequestViewService.getOpenApplicationUpdateRequestView(applicationVersion))
+        .thenReturn(applicationUpdateRequestView);
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationStartUpdateController.class)
             .renderStartUpdate(APPLICATION_ID)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
-        .andExpect(view().name("fcs/application/startApplicationUpdate"));
+        .andExpect(view().name("fcs/application/update/startApplicationUpdate"));
   }
 
   @ParameterizedTest
@@ -185,13 +199,15 @@ class ApplicationStartUpdateControllerTest extends AbstractApplicationController
         .thenReturn(applicationVersion);
     when(applicationService.generateApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
+    when(applicationUpdateRequestViewService.getOpenApplicationUpdateRequestView(applicationVersion))
+        .thenReturn(applicationUpdateRequestView);
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationStartUpdateController.class)
             .renderStartUpdate(APPLICATION_ID)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
-        .andExpect(view().name("fcs/application/startApplicationUpdate"))
+        .andExpect(view().name("fcs/application/update/startApplicationUpdate"))
         .andExpect(model().attribute("startActionUrl",
             ReverseRouter.route(on(ApplicationStartUpdateController.class)
                 .startUpdate(APPLICATION_ID, null))))

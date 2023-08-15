@@ -1,9 +1,11 @@
-<#include '../layout/layout.ftl'>
+<#include '../../layout/layout.ftl'>
+<#import '_applicationUpdateRequestSummary.ftl' as applicationUpdateRequestSummary>
 
+<#-- @ftlvariable name="applicationUpdateRequestView" type="uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateRequestView" -->
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
 <#-- @ftlvariable name="customerBranding" type="uk.co.nstauthority.fieldconsents.branding.CustomerConfigurationProperties" -->
 
-<#assign pageTitle = "Update application" />
+<#assign pageTitle = "Update application"/>
 
 <@defaultPage
   htmlTitle=pageTitle
@@ -17,10 +19,6 @@
       <p class="govuk-body">
         Update your application with the information requested by ${customerBranding.mnemonic()}. This may involve correcting details of the application or providing updated supporting documentation.
       </p>
-      <@fdsDetails.summaryDetails summaryTitle="What information have I been asked to update?">
-        <p class="govuk-body">
-          TODO
-        </p>
-      </@fdsDetails.summaryDetails>
+      <@applicationUpdateRequestSummary.applicationUpdateRequestSummary applicationUpdateRequestView=applicationUpdateRequestView/>
     </@fdsStartPage.startPage>
 </@defaultPage>

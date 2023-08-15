@@ -6,5 +6,6 @@ public record ApplicationVersionAudit(
     Integer applicationVersionId,
     Long caseOfficerWuaId,
     Instant auditDateTime,
-    Long auditUserWuaId) {
+    Long auditUserWuaId,
+    ApplicationVersionStatus status) {
 }

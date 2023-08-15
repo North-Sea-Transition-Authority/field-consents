@@ -1,6 +1,10 @@
 <#include '../layout/layout.ftl'>
 <#import '../functions/_getPageSize.ftl' as getPageSize>
 <#import '../summary/_applicationSummary.ftl' as applicationSummary>
+<#import 'update/_applicationUpdateRequestHiddenSummary.ftl' as applicationUpdateRequestHiddenSummary>
+
+<#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
+<#-- @ftlvariable name="applicationUpdateRequestView" type="uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateRequestView" -->
 
 <#if !isSubmittable || !userHasSubmitPermission>
   <#assign warningBanner>
@@ -27,12 +31,36 @@
   htmlTitle=pageTitle
   pageHeading=pageTitle
   pageSize=getPageSize.getPageSize(wideSummaryDisplay)
+  caption=applicationReference!""
   notificationBannerContentOverride=warningBanner
+  errorItems=errorList
   backLinkUrl=springUrl(backLinkUrl)
 >
   <@fdsForm.htmlForm actionUrl=springUrl(submitUrl)>
     <@applicationSummary.applicationSummary accordionId=accordionId/>
     <#if isSubmittable && userHasSubmitPermission>
+      <#if applicationUpdateRequestView?has_content>
+        <@fdsRadio.radioGroup
+          path="form.responseType"
+          labelText="Describe the update"
+          fieldsetHeadingSize="h2"
+          fieldsetHeadingClass="govuk-fieldset__legend--l"
+          hiddenContent=true>
+          <@fdsRadio.radioItem
+            path="form.responseType"
+            itemMap={requestedChangesOnlyRadio.toString(): requestedChangesOnlyRadio.getDisplayName()} isFirstItem=true/>
+          <@fdsRadio.radioItem
+            path="form.responseType"
+            itemMap={otherChangesRadio.toString(): otherChangesRadio.getDisplayName()}>
+            <@fdsTextarea.textarea
+              path="form.otherChangesDescription.inputValue"
+              nestingPath="form.responseType"
+              labelText=otherChangesRadio.getResponseTextLabel()
+              hintText=otherChangesRadio.getResponseTextLabelHint()/>
+          </@fdsRadio.radioItem>
+        </@fdsRadio.radioGroup>
+        <@applicationUpdateRequestHiddenSummary.applicationUpdateRequestHiddenSummary applicationUpdateRequestView=applicationUpdateRequestView!""/>
+      </#if>
       <@fdsAction.submitButtons
         primaryButtonText="Submit"
         secondaryLinkText="Back to task list"

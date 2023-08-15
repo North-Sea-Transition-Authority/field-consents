@@ -3,6 +3,8 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -10,11 +12,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateTestUtil.applicationUpdateRequestView;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -30,6 +34,8 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionView;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateRequestViewService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -46,6 +52,12 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
 
   @MockBean
   private ApplicationSummaryService applicationSummaryService;
+
+  @MockBean
+  private ApplicationUpdateService applicationUpdateService;
+
+  @MockBean
+  private ApplicationUpdateRequestViewService applicationUpdateRequestViewService;
 
   @SecurityTest
   void getIndustryCaseProcessing_noUser() throws Exception {
@@ -128,8 +140,8 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
         .thenReturn(Collections.emptyList());
     when(applicationService.generateApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
-
     doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any(), any());
+
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
             .getIndustryCaseProcessing(APPLICATION_ID, null)))
             .with(user(user))
@@ -141,6 +153,55 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
     assert modelAndView != null;
     var model = modelAndView.getModel();
 
+    assertIndustryCaseProcessingModel(applicationVersion, actionViews, model);
+
+    verifyNoInteractions(applicationUpdateRequestViewService);
+  }
+
+  @ParameterizedTest
+  @MethodSource("getInProgressAndSubmittedApplicationVersions")
+  void getIndustryCaseProcessingWithApplicationUpdateStarted(ApplicationVersion applicationVersion) throws Exception {
+    var actionViews =
+        List.of(CaseProcessingActionView.from(CaseProcessingActionItem.OPERATOR_WITHDRAWAL_REQUEST, applicationVersion));
+
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
+    when(caseProcessingActionService.getUserActionViews(applicationVersion, user))
+        .thenReturn(actionViews);
+    when(applicationSummaryService.getSummarySections(applicationVersion))
+        .thenReturn(Collections.emptyList());
+    when(applicationService.generateApplicationReference(applicationVersion))
+        .thenReturn(DUMMY_APP_REF);
+    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any(), any());
+    when(applicationUpdateService.openApplicationUpdateExists(applicationVersion))
+        .thenReturn(true);
+    when(applicationUpdateRequestViewService.getOpenApplicationUpdateRequestView(applicationVersion))
+        .thenReturn(applicationUpdateRequestView);
+
+    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
+            .getIndustryCaseProcessing(APPLICATION_ID, null)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/industryCaseProcessing"))
+        .andReturn().getModelAndView();
+
+    assert modelAndView != null;
+    var model = modelAndView.getModel();
+
+    assertIndustryCaseProcessingModel(applicationVersion, actionViews, model);
+
+    assertThat(model)
+        .containsEntry("applicationUpdateRequestView", applicationUpdateRequestView);
+
+    verify(applicationUpdateRequestViewService).getOpenApplicationUpdateRequestView(applicationVersion);
+  }
+
+  private void assertIndustryCaseProcessingModel(ApplicationVersion applicationVersion,
+                                                 List<CaseProcessingActionView> actionViews,
+                                                 Map<String, Object> model) {
     assertThat(model)
         .containsEntry("pageTitle", DUMMY_APP_REF)
         .containsKey("summarySections")

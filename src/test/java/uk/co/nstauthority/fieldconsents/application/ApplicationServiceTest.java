@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationService.NOT_LATEST_APPLICATION_VERSION_ERROR_MESSAGE;
@@ -12,8 +11,10 @@ import static uk.co.nstauthority.fieldconsents.application.ApplicationService.ST
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.USER_WUA_ID;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.INDUSTRY;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.REGULATOR;
+import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.REGULATOR_TECHNICAL_REVIEWER;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.APPLICATION_CREATED;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.APPLICATION_SUBMITTED;
+import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.UPDATE_SUBMITTED;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithOperator;
 
@@ -34,6 +35,7 @@ import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.aceflag.AceFlagService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
@@ -50,9 +52,6 @@ class ApplicationServiceTest {
   private static final String APPLICATION_NUMBER_START_VALUE = "50";
 
   private Application newApplication;
-
-  @Mock
-  private ApplicationService applicationService;
 
   @Mock
   private ApplicationRepository applicationRepository;
@@ -78,6 +77,11 @@ class ApplicationServiceTest {
   @Mock
   private ApplicationVersionService applicationVersionService;
 
+  @Mock
+  private TechnicalReviewService technicalReviewService;
+
+  private ApplicationService applicationService;
+
   @BeforeEach
   void setup() {
     ApplicationConfigurationProperties applicationConfigurationProperties = new ApplicationConfigurationProperties(
@@ -92,10 +96,12 @@ class ApplicationServiceTest {
         aceFlagService,
         applicationWorkAreaPriorityService,
         clock,
-        applicationVersionService);
+        applicationVersionService,
+        technicalReviewService
+    );
+
     newApplication = new Application(1, ApplicationType.PRODUCTION, Instant.now(), USER_WUA_ID, 0, null);
   }
-
 
   @Test
   void createNewApplicationForField() {
@@ -119,15 +125,15 @@ class ApplicationServiceTest {
 
     assertApplicationVersion(newApplicationVersion, expectedApplicationVersion);
 
-    verify(applicationAssetService, times(1)).createPrimaryAsset(
+    verify(applicationAssetService).createPrimaryAsset(
         newApplicationVersion,
         field1JsonWithOperatorAndLicences
     );
 
-    verify(applicationAssetLicenceService, times(1))
+    verify(applicationAssetLicenceService)
         .createAssetLicences(applicationAsset, field1JsonWithOperatorAndLicences);
 
-    verify(applicationWorkAreaPriorityService, times(1))
+    verify(applicationWorkAreaPriorityService)
         .prioritiseApplicationInWorkArea(expectedApplicationVersion, USER, APPLICATION_CREATED, INDUSTRY);
   }
 
@@ -149,12 +155,12 @@ class ApplicationServiceTest {
 
     assertApplicationVersion(newApplicationVersion, expectedApplicationVersion);
 
-    verify(applicationAssetService, times(1)).createPrimaryAsset(
+    verify(applicationAssetService).createPrimaryAsset(
         newApplicationVersion,
         terminal1JsonWithOperator
     );
 
-    verify(applicationWorkAreaPriorityService, times(1))
+    verify(applicationWorkAreaPriorityService)
         .prioritiseApplicationInWorkArea(expectedApplicationVersion, USER, APPLICATION_CREATED, INDUSTRY);
   }
 
@@ -221,17 +227,49 @@ class ApplicationServiceTest {
     applicationService.submitApplication(applicationVersion, USER);
 
     ArgumentCaptor<Application> applicationArgumentCaptor = ArgumentCaptor.forClass(Application.class);
-    verify(applicationRepository, times(1)).save(applicationArgumentCaptor.capture());
+    verify(applicationRepository).save(applicationArgumentCaptor.capture());
 
     var actualApplication = applicationArgumentCaptor.getValue();
 
     assertThat(actualApplication.getApplicationNo()).isEqualTo(2);
     assertThat(actualApplication.getVariationNo()).isEqualTo(0);
 
-    verify(applicationWorkAreaPriorityService, times(1))
+    verify(applicationWorkAreaPriorityService)
         .prioritiseApplicationInWorkArea(applicationVersion, USER, APPLICATION_SUBMITTED, INDUSTRY);
-    verify(applicationWorkAreaPriorityService, times(1))
+    verify(applicationWorkAreaPriorityService)
         .prioritiseApplicationInWorkArea(applicationVersion, USER, APPLICATION_SUBMITTED, REGULATOR);
+    verify(aceFlagService)
+        .autoSetAceFlag(applicationVersion);
+  }
+
+  @Test
+  void submitApplicationUpdate_withNoOpenTechnicalReview() {
+    var draftApplicationVersion = ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.PRODUCTION, 2, 2);
+    when(technicalReviewService.openTechnicalReviewExists(draftApplicationVersion))
+        .thenReturn(false);
+
+    applicationService.submitApplicationUpdate(draftApplicationVersion, USER);
+
+    verify(applicationWorkAreaPriorityService)
+        .prioritiseApplicationInWorkArea(draftApplicationVersion, USER, UPDATE_SUBMITTED, INDUSTRY);
+    verify(applicationWorkAreaPriorityService)
+        .prioritiseApplicationInWorkArea(draftApplicationVersion, USER, UPDATE_SUBMITTED, REGULATOR);
+  }
+
+  @Test
+  void submitApplicationUpdate_withTechnicalReviewOpen() {
+    var draftApplicationVersion = ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.PRODUCTION, 2, 2);
+    when(technicalReviewService.openTechnicalReviewExists(draftApplicationVersion))
+        .thenReturn(true);
+
+    applicationService.submitApplicationUpdate(draftApplicationVersion, USER);
+
+    verify(applicationWorkAreaPriorityService)
+        .prioritiseApplicationInWorkArea(draftApplicationVersion, USER, UPDATE_SUBMITTED, INDUSTRY);
+    verify(applicationWorkAreaPriorityService)
+        .prioritiseApplicationInWorkArea(draftApplicationVersion, USER, UPDATE_SUBMITTED, REGULATOR);
+    verify(applicationWorkAreaPriorityService)
+        .prioritiseApplicationInWorkArea(draftApplicationVersion, USER, UPDATE_SUBMITTED, REGULATOR_TECHNICAL_REVIEWER);
   }
 
   @Test
@@ -284,7 +322,7 @@ class ApplicationServiceTest {
         ArgumentCaptor.forClass(ApplicationVersion.class);
 
     var newApplicationVersion = applicationService.startApplicationUpdate(applicationVersion, USER);
-    verify(applicationVersionRepository, times(1)).save(applicationVersionArgumentCaptor.capture());
+    verify(applicationVersionRepository).save(applicationVersionArgumentCaptor.capture());
 
     assertApplicationVersion(newApplicationVersion, expectedApplicationVersion);
   }
@@ -308,7 +346,7 @@ class ApplicationServiceTest {
     applicationService.submitApplicationVersion(applicationVersion, USER);
 
     ArgumentCaptor<ApplicationVersion> applicationVersionArgumentCaptor = ArgumentCaptor.forClass(ApplicationVersion.class);
-    verify(applicationVersionRepository, times(1)).save(applicationVersionArgumentCaptor.capture());
+    verify(applicationVersionRepository).save(applicationVersionArgumentCaptor.capture());
 
     var actualApplicationVersion = applicationVersionArgumentCaptor.getValue();
 
@@ -320,9 +358,6 @@ class ApplicationServiceTest {
     assertThat(actualApplicationVersion.getCachedPrimaryOperatorName()).isEqualTo(applicationVersion.getCachedPrimaryOperatorName());
     assertThat(actualApplicationVersion.getStatus()).isEqualTo(ApplicationVersionStatus.SUBMITTED);
     assertThat(actualApplicationVersion.getSubmittedByWuaId()).isEqualTo(USER_WUA_ID);
-
-    verify(aceFlagService, times(1))
-        .autoSetAceFlag(actualApplicationVersion);
   }
 
   @Test
@@ -344,6 +379,20 @@ class ApplicationServiceTest {
     var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.FLARE);
 
     assertThat(applicationService.generateApplicationReference(applicationVersion)).isEqualTo("FCON/500/0 (Version 1)");
+  }
+
+  @Test
+  void getApplicationReference_withInProgressApplication() {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
+
+    assertThat(applicationService.getApplicationReference(applicationVersion)).isEqualTo("");
+  }
+
+  @Test
+  void getApplicationReference_withSubmittedApplication() {
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.FLARE);
+
+    assertThat(applicationService.getApplicationReference(applicationVersion)).isEqualTo("FCON/500/0 (Version 1)");
   }
 
   @Test

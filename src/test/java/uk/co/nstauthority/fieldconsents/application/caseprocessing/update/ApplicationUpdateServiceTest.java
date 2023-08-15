@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService.OPEN_APPLICATION_UPDATE_EXISTS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateStatus.OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateTestUtil.APPLICATION_UPDATE_REQUEST_TEXT;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateTestUtil.APPLICATION_UPDATE_RESPONSE_TEXT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateTestUtil.CURRENT_INSTANT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateTestUtil.DEADLINE_AHEAD_HOURS;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.INDUSTRY;
@@ -18,6 +19,8 @@ import static uk.co.nstauthority.fieldconsents.application.workareapriority.Appl
 import jakarta.persistence.EntityNotFoundException;
 import java.time.Clock;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,6 +33,8 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.response.ApplicationUpdateResponseType;
 import uk.co.nstauthority.fieldconsents.application.duplication.ApplicationDuplicationService;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
@@ -60,13 +65,27 @@ class ApplicationUpdateServiceTest {
 
   private ApplicationVersion applicationVersion;
 
+  private ApplicationVersion applicationVersionUpdate;
+
   private ApplicationUpdate applicationUpdate;
+
+  private ApplicationUpdate closedApplicationUpdate;
 
   @BeforeEach
   void setup() {
     applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
+    applicationVersionUpdate = ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(
+        ApplicationType.PRODUCTION, 2, 2
+    );
     when(clock.instant()).thenReturn(CURRENT_INSTANT);
     applicationUpdate = ApplicationUpdateTestUtil.getOpenApplicationUpdate(applicationVersion, clock);
+    closedApplicationUpdate = ApplicationUpdateTestUtil.getClosedApplicationUpdate(
+        applicationVersion,
+        applicationVersionUpdate,
+        ApplicationUpdateResponseType.REQUESTED_CHANGES_ONLY,
+        APPLICATION_UPDATE_RESPONSE_TEXT,
+        clock
+    );
   }
 
   @Test
@@ -180,5 +199,84 @@ class ApplicationUpdateServiceTest {
 
     verify(applicationDuplicationService, times(1))
         .duplicateApplicationSections(applicationVersion, newApplicationVersion);
+  }
+
+  @Test
+  void getApplicationUpdatesByApplication_whenNoUpdate() {
+    when(applicationUpdateRepository.findByApplicationVersion_Application(applicationVersion.getApplication()))
+        .thenReturn(Collections.emptyList());
+    assertThat(applicationUpdateService.getApplicationUpdatesByApplication(applicationVersion.getApplication()))
+        .isEmpty();
+  }
+
+  @Test
+  void getApplicationUpdatesByApplication_whenUpdateExists() {
+    when(applicationUpdateRepository.findByApplicationVersion_Application(applicationVersion.getApplication()))
+        .thenReturn(List.of(applicationUpdate));
+    assertThat(applicationUpdateService.getApplicationUpdatesByApplication(applicationVersion.getApplication()))
+        .containsExactly(applicationUpdate);
+  }
+
+  @Test
+  void saveApplicationUpdateResponseAndSubmitApplicationUpdate_throwsIllegalStateExceptionWhenApplicationNotInProgress() {
+    applicationVersionUpdate.setStatus(ApplicationVersionStatus.SUBMITTED);
+
+    assertThatThrownBy(() -> applicationUpdateService.saveApplicationUpdateResponseAndSubmitApplicationUpdate(
+        applicationVersionUpdate,
+        ApplicationUpdateResponseType.REQUESTED_CHANGES_ONLY,
+        APPLICATION_UPDATE_RESPONSE_TEXT,
+        USER
+    ))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Application update for application version id %s with status %s cannot be submitted (status %s expected)"
+            .formatted(applicationVersionUpdate.getId(), applicationVersionUpdate.getStatus().name(),
+                ApplicationVersionStatus.IN_PROGRESS.name()));
+  }
+
+  @Test
+  void saveApplicationUpdateResponseAndSubmitApplicationUpdate() {
+    when(applicationUpdateRepository
+        .findByApplicationVersion_ApplicationAndApplicationUpdateStatus(applicationVersionUpdate.getApplication(), OPEN))
+        .thenReturn(Optional.of(closedApplicationUpdate));
+
+    applicationUpdateService.saveApplicationUpdateResponseAndSubmitApplicationUpdate(
+        applicationVersionUpdate,
+        ApplicationUpdateResponseType.REQUESTED_CHANGES_ONLY,
+        APPLICATION_UPDATE_RESPONSE_TEXT,
+        USER
+    );
+
+    assertSavedApplicationUpdate();
+  }
+
+  @Test
+  void saveApplicationUpdateResponseAndSubmitApplicationUpdate_withOtherChanges() {
+    closedApplicationUpdate.setResponseType(ApplicationUpdateResponseType.OTHER_CHANGES);
+
+    when(applicationUpdateRepository
+        .findByApplicationVersion_ApplicationAndApplicationUpdateStatus(applicationVersionUpdate.getApplication(), OPEN))
+        .thenReturn(Optional.of(closedApplicationUpdate));
+
+    applicationUpdateService.saveApplicationUpdateResponseAndSubmitApplicationUpdate(
+        applicationVersionUpdate,
+        ApplicationUpdateResponseType.OTHER_CHANGES,
+        APPLICATION_UPDATE_RESPONSE_TEXT,
+        USER
+    );
+
+    assertSavedApplicationUpdate();
+  }
+
+  private void assertSavedApplicationUpdate() {
+    ArgumentCaptor<ApplicationUpdate> applicationUpdateArgumentCaptor = ArgumentCaptor.forClass(ApplicationUpdate.class);
+    verify(applicationUpdateRepository, times(1)).save(applicationUpdateArgumentCaptor.capture());
+    var actualApplicationUpdate = applicationUpdateArgumentCaptor.getValue();
+
+    assertThat(actualApplicationUpdate)
+        .usingRecursiveComparison()
+        .isEqualTo(closedApplicationUpdate);
+
+    verify(applicationService, times(1))
+        .submitApplicationUpdate(applicationVersionUpdate, USER);
   }
 }

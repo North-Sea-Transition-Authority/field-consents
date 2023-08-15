@@ -10,9 +10,10 @@
   <@fdsForm.htmlForm>
     <@fdsTextarea.textarea
       path="form.caseNoteText.inputValue"
-      pageHeading=true
       labelText="Case note"
-      caption=applicationReference/>
+      caption=applicationReference
+      pageHeading=true
+      labelHeadingClass="govuk-label--xl"/>
     <@fdsFieldset.fieldset
       legendHeading="Case note documents"
       legendHeadingClass="govuk-heading-m"

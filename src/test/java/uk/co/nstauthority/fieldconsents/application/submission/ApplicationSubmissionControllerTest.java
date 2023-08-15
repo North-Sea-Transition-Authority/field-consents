@@ -1,22 +1,33 @@
 package uk.co.nstauthority.fieldconsents.application.submission;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
-import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_REFERENCE;
-import static uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionController.PAGE_TITLE;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateTestUtil.applicationUpdateRequestView;
+import static uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionController.APPLICATION_SUBMITTED_TITLE;
+import static uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionController.UPDATE_SUBMITTED_TITLE;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
+import java.util.Collections;
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
@@ -24,18 +35,41 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateRequestViewService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.response.ApplicationUpdateResponseFormValidator;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.response.ApplicationUpdateResponseType;
+import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
+import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @ContextConfiguration(classes = ApplicationSubmissionController.class)
 class ApplicationSubmissionControllerTest extends AbstractApplicationControllerTest {
+
+  private static final String DUMMY_APP_REF = "DUMMY_APP_REF";
+
+  private static final String NO_APP_REF = "";
 
   @MockBean
   private ApplicationSubmissionService applicationSubmissionService;
 
   @MockBean
   private ApplicationService applicationService;
+
+  @MockBean
+  private ApplicationSummaryService applicationSummaryService;
+
+  @MockBean
+  private ApplicationUpdateService applicationUpdateService;
+
+  @MockBean
+  private ApplicationUpdateRequestViewService applicationUpdateRequestViewService;
+
+  @MockBean
+  private ApplicationUpdateResponseFormValidator applicationUpdateResponseFormValidator;
 
   private ApplicationVersion applicationVersion;
 
@@ -47,26 +81,207 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
   }
 
+  @SecurityTest
+  void getReviewAndSubmit_noUser() throws Exception {
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationSubmissionController.class)
+            .getReviewAndSubmit(APPLICATION_ID, null))))
+        .andExpect(redirectionToLoginUrl());
+  }
+
+  @SecurityTest
+  void getReviewAndSubmit_checkEndPointSecurityOnly_whenSubmittedApplication_thenForbidden() throws Exception {
+    applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.FLARE);
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationSubmissionController.class)
+            .getReviewAndSubmit(APPLICATION_ID, null)))
+            .with(user(user)))
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void getReviewAndSubmit_checkEndPointSecurityOnly_whenUserDoesNotHaveEditPermission_thenForbidden() throws Exception {
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+    when(applicationAccessService.hasApplicationPermission(
+        user, applicationVersion, RolePermission.EDIT_FCS_APPLICATIONS
+    )).thenReturn(false);
+
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationSubmissionController.class)
+            .getReviewAndSubmit(APPLICATION_ID, null)))
+            .with(user(user)))
+        .andExpect(status().isForbidden());
+  }
+
+  @ParameterizedTest
+  @MethodSource("getInProgressApplicationVersions")
+  void getReviewAndSubmit_whenInProgressAndUserHasSubmitPermission(ApplicationVersion applicationVersion) throws Exception {
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
+    doCallRealMethod().when(applicationSummaryService).addSummarySectionsToModelAndView(any(), any());
+    when(applicationSummaryService.getSummarySections(applicationVersion))
+        .thenReturn(Collections.emptyList());
+    when(applicationSubmissionService.isSubmittable(applicationVersion)).thenReturn(false);
+    when(applicationAccessService.hasApplicationPermission(
+        user, applicationVersion, RolePermission.SUBMIT_FCS_APPLICATIONS
+    )).thenReturn(true);
+    when(applicationService.getApplicationReference(applicationVersion))
+        .thenReturn(NO_APP_REF);
+    when(applicationUpdateService.openApplicationUpdateExists(applicationVersion))
+        .thenReturn(false);
+
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationSubmissionController.class)
+            .getReviewAndSubmit(APPLICATION_ID, null)))
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/reviewAndSubmit"))
+        .andExpect(model().attribute("pageTitle", "Check your answers before submitting"))
+        .andExpect(model().attribute("accordionId", applicationVersion.getId()))
+        .andExpect(model().attribute("submitUrl", ReverseRouter.route(on(ApplicationSubmissionController.class)
+            .submitApplication(APPLICATION_ID, null, null, null))))
+        .andExpect(model().attribute("backLinkUrl", ReverseRouter.route(on(ApplicationTaskListController.class)
+            .getTaskList(APPLICATION_ID))))
+        .andExpect(model().attribute("isSubmittable", false))
+        .andExpect(model().attribute("userHasSubmitPermission", true))
+        .andExpect(model().attribute("applicationReference", NO_APP_REF))
+        .andExpect(model().attributeExists("summarySections", "wideSummaryDisplay"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("getInProgressV2ApplicationVersions")
+  void getReviewAndSubmit_whenInProgressUpdatesAndUserHasSubmitPermission(ApplicationVersion applicationVersion) throws Exception {
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
+    doCallRealMethod().when(applicationSummaryService).addSummarySectionsToModelAndView(any(), any());
+    when(applicationSummaryService.getSummarySections(applicationVersion))
+        .thenReturn(Collections.emptyList());
+    when(applicationSubmissionService.isSubmittable(applicationVersion)).thenReturn(false);
+    when(applicationAccessService.hasApplicationPermission(
+        user, applicationVersion, RolePermission.SUBMIT_FCS_APPLICATIONS
+    )).thenReturn(true);
+    when(applicationService.getApplicationReference(applicationVersion))
+        .thenReturn(DUMMY_APP_REF);
+    when(applicationUpdateService.openApplicationUpdateExists(applicationVersion))
+        .thenReturn(true);
+    when(applicationUpdateRequestViewService.getOpenApplicationUpdateRequestView(applicationVersion))
+        .thenReturn(applicationUpdateRequestView);
+
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationSubmissionController.class)
+            .getReviewAndSubmit(APPLICATION_ID, null)))
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/reviewAndSubmit"))
+        .andExpect(model().attribute("pageTitle", "Check your answers before submitting"))
+        .andExpect(model().attribute("accordionId", applicationVersion.getId()))
+        .andExpect(model().attribute("submitUrl", ReverseRouter.route(on(ApplicationSubmissionController.class)
+            .submitApplication(APPLICATION_ID, null, null, null))))
+        .andExpect(model().attribute("backLinkUrl", ReverseRouter.route(on(ApplicationTaskListController.class)
+            .getTaskList(APPLICATION_ID))))
+        .andExpect(model().attribute("isSubmittable", false))
+        .andExpect(model().attribute("userHasSubmitPermission", true))
+        .andExpect(model().attribute("applicationReference", DUMMY_APP_REF))
+        .andExpect(model().attribute("applicationUpdateRequestView", applicationUpdateRequestView))
+        .andExpect(model().attribute("requestedChangesOnlyRadio", ApplicationUpdateResponseType.REQUESTED_CHANGES_ONLY))
+        .andExpect(model().attribute("otherChangesRadio", ApplicationUpdateResponseType.OTHER_CHANGES))
+        .andExpect(model().attributeExists("summarySections", "wideSummaryDisplay", "form"));
+  }
+
   @Test
   void submitApplication() throws Exception {
     when(applicationSubmissionService.isSubmittable(applicationVersion)).thenReturn(true);
-    when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(APPLICATION_REFERENCE);
+    when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(DUMMY_APP_REF);
+    when(applicationUpdateService.openApplicationUpdateExists(applicationVersion)).thenReturn(false);
 
-    var modelAndView = mockMvc.perform(post(ReverseRouter.route(on(ApplicationSubmissionController.class)
-            .submitApplication(APPLICATION_ID, null)))
+    mockMvc.perform(post(ReverseRouter.route(on(ApplicationSubmissionController.class)
+            .submitApplication(APPLICATION_ID, null, null, null)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/application/submissionConfirmation"))
-        .andReturn().getModelAndView();
+        .andExpect(model().attribute("pageTitle", APPLICATION_SUBMITTED_TITLE))
+        .andExpect(model().attribute("applicationReference", DUMMY_APP_REF))
+        .andExpect(model().attribute("workAreaUrl",
+                ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null))));
 
-    assert modelAndView != null;
-    var model = modelAndView.getModel();
+    verify(applicationService, times(1)).submitApplication(applicationVersion, user);
+  }
 
-    assertThat(model)
-        .containsEntry("pageTitle", PAGE_TITLE)
-        .containsEntry("applicationReference", APPLICATION_REFERENCE)
-        .containsEntry("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)));
+  @ParameterizedTest
+  @MethodSource("getInProgressV2ApplicationVersions")
+  void submitApplication_whenAppUpdate_formValid(ApplicationVersion applicationVersion) throws Exception {
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
+    when(applicationSubmissionService.isSubmittable(applicationVersion)).thenReturn(true);
+    when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(DUMMY_APP_REF);
+    when(applicationUpdateService.openApplicationUpdateExists(applicationVersion)).thenReturn(true);
+    doCallRealMethod().when(applicationUpdateResponseFormValidator).validate(any(), any());
+
+    mockMvc.perform(post(ReverseRouter.route(on(ApplicationSubmissionController.class)
+            .submitApplication(APPLICATION_ID, null, null, null)))
+            .with(user(user))
+            .with(csrf())
+            .param("responseType", ApplicationUpdateResponseType.REQUESTED_CHANGES_ONLY.name())
+        )
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/submissionConfirmation"))
+        .andExpect(model().attribute("pageTitle", UPDATE_SUBMITTED_TITLE))
+        .andExpect(model().attribute("applicationReference", DUMMY_APP_REF))
+        .andExpect(model().attribute("workAreaUrl",
+            ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null))));
+
+    verify(applicationUpdateService, times(1))
+        .saveApplicationUpdateResponseAndSubmitApplicationUpdate(applicationVersion,
+            ApplicationUpdateResponseType.REQUESTED_CHANGES_ONLY, null, user);
+  }
+
+  @ParameterizedTest
+  @MethodSource("getInProgressV2ApplicationVersions")
+  void submitApplication_whenAppUpdate_formInvalid(ApplicationVersion applicationVersion) throws Exception {
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
+    when(applicationSubmissionService.isSubmittable(applicationVersion)).thenReturn(true);
+    when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(DUMMY_APP_REF);
+    when(applicationUpdateService.openApplicationUpdateExists(applicationVersion)).thenReturn(true);
+    doCallRealMethod().when(applicationUpdateResponseFormValidator).validate(any(), any());
+
+    when(applicationAccessService.hasApplicationPermission(
+        user, applicationVersion, RolePermission.SUBMIT_FCS_APPLICATIONS
+    )).thenReturn(true);
+    when(applicationService.getApplicationReference(applicationVersion))
+        .thenReturn(DUMMY_APP_REF);
+    when(applicationSummaryService.getSummarySections(applicationVersion))
+        .thenReturn(Collections.emptyList());
+    when(applicationUpdateService.openApplicationUpdateExists(applicationVersion))
+        .thenReturn(true);
+    when(applicationUpdateRequestViewService.getOpenApplicationUpdateRequestView(applicationVersion))
+        .thenReturn(applicationUpdateRequestView);
+    doCallRealMethod().when(applicationSummaryService).addSummarySectionsToModelAndView(any(), any());
+
+    mockMvc.perform(post(ReverseRouter.route(on(ApplicationSubmissionController.class)
+            .submitApplication(APPLICATION_ID, null, null, null)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/reviewAndSubmit"))
+        .andExpect(model().attribute("pageTitle", "Check your answers before submitting"))
+        .andExpect(model().attribute("accordionId", applicationVersion.getId()))
+        .andExpect(model().attribute("submitUrl", ReverseRouter.route(on(ApplicationSubmissionController.class)
+            .submitApplication(APPLICATION_ID, null, null, null))))
+        .andExpect(model().attribute("backLinkUrl", ReverseRouter.route(on(ApplicationTaskListController.class)
+            .getTaskList(APPLICATION_ID))))
+        .andExpect(model().attribute("isSubmittable", true))
+            .andExpect(model().attribute("userHasSubmitPermission", true))
+        .andExpect(model().attribute("applicationReference", DUMMY_APP_REF))
+        .andExpect(model().attribute("applicationUpdateRequestView", applicationUpdateRequestView))
+        .andExpect(model().attribute("requestedChangesOnlyRadio", ApplicationUpdateResponseType.REQUESTED_CHANGES_ONLY))
+        .andExpect(model().attribute("otherChangesRadio", ApplicationUpdateResponseType.OTHER_CHANGES))
+        .andExpect(model().attributeExists(
+            "summarySections", "wideSummaryDisplay", "form"));
   }
 
   @Test
@@ -75,7 +290,7 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
 
     assertThatThrownBy(
         () -> mockMvc.perform(post(ReverseRouter.route(on(ApplicationSubmissionController.class)
-            .submitApplication(APPLICATION_ID, null)))
+            .submitApplication(APPLICATION_ID, null, null, null)))
             .with(user(user))
             .with(csrf()))
     ).hasMessageContaining("The application with id 1 cannot be submitted!");
@@ -84,8 +299,24 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
   @SecurityTest
   void submitApplication_withUnauthorizedUser() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(ApplicationSubmissionController.class)
-            .submitApplication(APPLICATION_ID, null)))
+            .submitApplication(APPLICATION_ID, null, null, null)))
             .with(csrf()))
         .andExpect(redirectionToLoginUrl());
+  }
+
+  private static Stream<Arguments> getInProgressApplicationVersions() {
+    return Stream.of(
+        Arguments.of(ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION)),
+        Arguments.of(ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE)),
+        Arguments.of(ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT))
+    );
+  }
+
+  private static Stream<Arguments> getInProgressV2ApplicationVersions() {
+    return Stream.of(
+        Arguments.of(ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.PRODUCTION, 2, 2)),
+        Arguments.of(ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.FLARE, 2, 2)),
+        Arguments.of(ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.VENT, 2, 2))
+    );
   }
 }

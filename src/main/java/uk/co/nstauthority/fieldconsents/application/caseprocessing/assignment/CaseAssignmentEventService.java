@@ -38,16 +38,17 @@ public class CaseAssignmentEventService implements CaseEventService<Application>
   public List<CaseEvent> getCaseEvents(Application application) {
     var caseAssignmentEvents = new ArrayList<CaseEvent>();
 
-    var applicationVersionsMap =
-        applicationVersionService.getAllApplicationVersionsByApplicationId(application.getId())
-            .stream()
-            .collect(Collectors.toMap(
-                ApplicationVersion::getId,
-                Function.identity()
-            ));
+    var applicationVersions = applicationVersionService.getAllApplicationVersionsByApplicationId(application.getId());
+
+    var applicationVersionsMap = applicationVersions
+        .stream()
+        .collect(Collectors.toMap(
+            ApplicationVersion::getId,
+            Function.identity()
+        ));
 
     List<ApplicationVersionAudit> applicationVersionAudits =
-        applicationVersionAuditService.getApplicationVersionAudits(applicationVersionsMap);
+        applicationVersionAuditService.getApplicationVersionAudits(applicationVersions);
 
     for (int index = 0; index < applicationVersionAudits.size(); index++) {
       var applicationVersionAudit = applicationVersionAudits.get(index);

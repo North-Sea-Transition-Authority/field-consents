@@ -113,7 +113,7 @@ class ApplicationUpdateControllerTest extends AbstractApplicationControllerTest 
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
-        .andExpect(view().name("fcs/application/applicationUpdateRequest"));
+        .andExpect(view().name("fcs/application/update/applicationUpdateRequest"));
   }
 
   @ParameterizedTest
@@ -134,7 +134,7 @@ class ApplicationUpdateControllerTest extends AbstractApplicationControllerTest 
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
-        .andExpect(view().name("fcs/application/applicationUpdateRequest"))
+        .andExpect(view().name("fcs/application/update/applicationUpdateRequest"))
         .andExpect(model().attribute("pageTitle", REQUEST_PAGE_TITLE))
         .andExpect(model().attributeExists("summarySections"))
         .andExpect(model().attribute("accordionId", applicationVersion.getId()))
@@ -215,7 +215,7 @@ class ApplicationUpdateControllerTest extends AbstractApplicationControllerTest 
                 .with(user(user))
         )
         .andExpect(status().isOk())
-        .andExpect(view().name("fcs/application/applicationUpdateRequest"))
+        .andExpect(view().name("fcs/application/update/applicationUpdateRequest"))
         .andExpect(model().attribute("pageTitle", REQUEST_PAGE_TITLE))
         .andExpect(model().attributeExists("summarySections"))
         .andExpect(model().attribute("accordionId", applicationVersion.getId()))

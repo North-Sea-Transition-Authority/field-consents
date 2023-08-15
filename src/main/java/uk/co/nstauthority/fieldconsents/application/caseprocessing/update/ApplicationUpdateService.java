@@ -7,13 +7,17 @@ import static uk.co.nstauthority.fieldconsents.application.workareapriority.Appl
 import jakarta.persistence.EntityNotFoundException;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.response.ApplicationUpdateResponseType;
 import uk.co.nstauthority.fieldconsents.application.duplication.ApplicationDuplicationService;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
@@ -99,5 +103,42 @@ public class ApplicationUpdateService {
   public void startApplicationUpdate(ApplicationVersion applicationVersion, ServiceUserDetail user) {
     var newApplicationVersion = applicationService.startApplicationUpdate(applicationVersion, user);
     applicationDuplicationService.duplicateApplicationSections(applicationVersion, newApplicationVersion);
+  }
+
+  public List<ApplicationUpdate> getApplicationUpdatesByApplication(Application application) {
+    return applicationUpdateRepository.findByApplicationVersion_Application(application);
+  }
+
+  @Transactional
+  public void saveApplicationUpdateResponseAndSubmitApplicationUpdate(
+      ApplicationVersion applicationVersion,
+      ApplicationUpdateResponseType responseType,
+      String otherChangesDescription,
+      ServiceUserDetail user
+  ) {
+    if (!ApplicationVersionStatus.IN_PROGRESS.equals(applicationVersion.getStatus())) {
+      throw new IllegalStateException(
+          "Application update for application version id %s with status %s cannot be submitted (status %s expected)"
+              .formatted(
+                  applicationVersion.getId(),
+                  applicationVersion.getStatus().name(),
+                  ApplicationVersionStatus.IN_PROGRESS.name()
+              )
+      );
+    }
+
+    var applicationUpdate = getOpenApplicationUpdate(applicationVersion);
+    applicationUpdate.setRespondedByWuaId(user.wuaId());
+    applicationUpdate.setRespondedDateTime(clock.instant());
+    applicationUpdate.setResponseType(responseType);
+    if (ApplicationUpdateResponseType.OTHER_CHANGES.equals(responseType)) {
+      applicationUpdate.setResponseText(otherChangesDescription);
+    }
+    applicationUpdate.setApplicationUpdateStatus(ApplicationUpdateStatus.CLOSED);
+    applicationUpdate.setResponseApplicationVersion(applicationVersion);
+
+    applicationUpdateRepository.save(applicationUpdate);
+
+    applicationService.submitApplicationUpdate(applicationVersion, user);
   }
 }

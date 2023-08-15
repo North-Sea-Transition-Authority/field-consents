@@ -78,7 +78,7 @@ public class ApplicationUpdateController {
 
     var modelAndView = applicationSummaryService.getApplicationSummaryModelAndView(
         applicationVersion,
-        "fcs/application/applicationUpdateRequest",
+        "fcs/application/update/applicationUpdateRequest",
         REQUEST_PAGE_TITLE,
         ReverseRouter.route(on(ApplicationCaseProcessingController.class)
             .getApplicationCaseProcessing(applicationId, null))

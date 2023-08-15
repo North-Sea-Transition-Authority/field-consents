@@ -3,7 +3,6 @@ package uk.co.nstauthority.fieldconsents.application;
 import jakarta.persistence.EntityManager;
 import java.sql.Timestamp;
 import java.util.List;
-import java.util.Map;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.query.AuditQuery;
@@ -22,12 +21,15 @@ public class ApplicationVersionAuditService {
     this.transactionTemplate = transactionTemplate;
   }
 
-  public List<ApplicationVersionAudit> getApplicationVersionAudits(Map<Integer, ApplicationVersion> applicationVersionsMap) {
-    var applicationVersionIds = applicationVersionsMap
-        .keySet();
+  public List<ApplicationVersionAudit> getApplicationVersionAudits(List<ApplicationVersion> applicationVersions) {
+    var applicationVersionIds = applicationVersions
+        .stream()
+        .map(ApplicationVersion::getId)
+        .toList();
 
     // NOTE: At the moment this is getting all the application_version_aud rows but only projecting the columns needed
-    //       to filter the case assignment events in the CaseAssignmentEventService.
+    //       to filter the case assignment events in the CaseAssignmentEventService
+    //       and delete events in ApplicationCaseEventService.
     return transactionTemplate.execute(status -> {
       var auditReader = AuditReaderFactory.get(entityManager);
       AuditQuery updatedQuery = auditReader.createQuery()
@@ -37,6 +39,7 @@ public class ApplicationVersionAuditService {
           .addProjection(AuditEntity.property("caseOfficerWuaId"))
           .addProjection(AuditEntity.revisionProperty("createdDateTime"))
           .addProjection(AuditEntity.revisionProperty("userWuaId"))
+          .addProjection(AuditEntity.property("status"))
           .addOrder(AuditEntity.revisionProperty("createdDateTime").asc());
 
       List<Object[]> resultList = updatedQuery.getResultList();
@@ -45,7 +48,8 @@ public class ApplicationVersionAuditService {
               (Integer) objects[0],
               (Long) objects[1],
               ((Timestamp) objects[2]).toInstant(),
-              (Long) objects[3]
+              (Long) objects[3],
+              (ApplicationVersionStatus) objects[4]
           )).toList();
     });
   }

@@ -1,9 +1,11 @@
 <#include '../layout/layout.ftl'>
 <#import './_applicationContext.ftl' as applicationContextInfo>
+<#import 'update/_applicationUpdateRequestHiddenSummary.ftl' as applicationUpdateRequestHiddenSummary>
 
 <#-- @ftlvariable name="successfulDeleteBanner" type="String" -->
 <#-- @ftlvariable name="taskListSections" type="java.util.List<uk.co.nstauthority.fieldconsents.tasklist.TaskListSection>" -->
 <#-- @ftlvariable name="applicationContext" type="java.util.List<uk.co.nstauthority.fieldconsents.application.ApplicationContextJson>" -->
+<#-- @ftlvariable name="applicationUpdateRequestView" type="uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateRequestView" -->
 
 <#if successfulDeleteBanner?has_content>
   <#assign deleteBanner>
@@ -18,10 +20,11 @@
 <@defaultPage
   htmlTitle=pageTitle
   pageHeading=pageTitle
-  caption=applicationContext.getPrimaryOperatorName()!""
-  notificationBannerContentOverride=deleteBanner
->
+  caption=applicationReference!""
+  backLinkUrl=springUrl(backLinkUrl)
+  notificationBannerContentOverride=deleteBanner>
   <@applicationContextInfo.applicationContextInfo applicationContext=applicationContext/>
+  <@applicationUpdateRequestHiddenSummary.applicationUpdateRequestHiddenSummary applicationUpdateRequestView=applicationUpdateRequestView!""/>
   <@fdsAction.link
     linkText="Delete application"
     linkUrl=springUrl(deleteApplicationUrl)

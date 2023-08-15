@@ -1,12 +1,15 @@
 <#include '../layout/layout.ftl'>
 <#import '_withdrawalRequestSummary.ftl' as withdrawalRequestSummary>
 
+<#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
+
 <#assign pageTitle = "Respond to withdrawal request"/>
 
 <@defaultPage
 htmlTitle=pageTitle
 pageHeading=pageTitle
-backLinkUrl=springUrl(backLinkUrl)>
+backLinkUrl=springUrl(backLinkUrl)
+errorItems=errorList>
 
   <@withdrawalRequestSummary.withdrawalRequestSummary withdrawalRequest=withdrawalRequestView/>
   <@fdsForm.htmlForm actionUrl=springUrl(submitUrl)>

@@ -12,7 +12,7 @@ backLinkUrl=springUrl(backLinkUrl)
       path="form.aceFlag"
       labelText="Is this an ACE application?"
       fieldsetHeadingSize="h1"
-      fieldsetHeadingClass="govuk-fieldset__legend--l">
+      fieldsetHeadingClass="govuk-fieldset__legend--xl">
       <@fdsRadio.radioYes path="form.aceFlag"/>
       <@fdsRadio.radioNo path="form.aceFlag"/>
     </@fdsRadio.radioGroup>

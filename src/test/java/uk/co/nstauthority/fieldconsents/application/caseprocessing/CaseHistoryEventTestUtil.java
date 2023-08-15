@@ -15,6 +15,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.casenotes.Cas
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReview;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewResponseType;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewStatus;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdate;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawal;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.WithdrawalStatus;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
@@ -73,6 +74,61 @@ public class CaseHistoryEventTestUtil {
         .withEventType(CaseEventType.APPLICATION_SUBMITTED)
         .withMainEventUserWuaId(applicationVersion.getSubmittedByWuaId())
         .withEventDateTime(applicationVersion.getSubmittedDateTime())
+        .build();
+  }
+
+  public static CaseEvent getCaseEventForApplicationUpdateStarted(ApplicationVersion applicationVersion) {
+    return CaseEvent
+        .builder(applicationVersion)
+        .withEventType(CaseEventType.APPLICATION_UPDATE_STARTED)
+        .withMainEventUserWuaId(applicationVersion.getCreatedByWuaId())
+        .withEventDateTime(applicationVersion.getCreatedDateTime())
+        .build();
+  }
+
+  public static CaseEvent getApplicationUpdateRequestedEvent(ApplicationUpdate applicationUpdate) {
+    var requestText = String.format("Deadline: %s. Update request details: %s",
+        DateUtils.format(applicationUpdate.getDeadlineDateTime(), DateUtils.DATE_TIME),
+        applicationUpdate.getRequestText());
+
+    return CaseEvent.builder(applicationUpdate.getApplicationVersion())
+        .withEventType(CaseEventType.APPLICATION_UPDATE_REQUESTED)
+        .withMainEventUserWuaId(applicationUpdate.getRequestedByWuaId())
+        .withEventDateTime(applicationUpdate.getRequestedDateTime())
+        .withEventText(requestText)
+        .build();
+  }
+
+  public static CaseEvent getApplicationUpdateSubmittedEvent(ApplicationUpdate applicationUpdate) {
+    var responseTypeText = "Update type: " + applicationUpdate.getResponseType().getDisplayName();
+
+    var responseText = Objects.nonNull(applicationUpdate.getResponseText())
+        ? ". Update description: %s".formatted(applicationUpdate.getResponseText())
+        : "";
+
+    return CaseEvent.builder(applicationUpdate.getResponseApplicationVersion())
+        .withEventType(CaseEventType.APPLICATION_UPDATE_SUBMITTED)
+        .withMainEventUserWuaId(applicationUpdate.getRespondedByWuaId())
+        .withEventDateTime(applicationUpdate.getRespondedDateTime())
+        .withEventText(responseTypeText + responseText)
+        .build();
+  }
+
+  public static CaseEvent getCaseEventForApplicationDeleted(ApplicationVersion applicationVersion, Instant eventDateTime) {
+    return CaseEvent
+        .builder(applicationVersion)
+        .withEventType(CaseEventType.APPLICATION_DELETED)
+        .withMainEventUserWuaId(applicationVersion.getCreatedByWuaId())
+        .withEventDateTime(eventDateTime)
+        .build();
+  }
+
+  public static CaseEvent getCaseEventForApplicationUpdateDeleted(ApplicationVersion applicationVersion, Instant eventDateTime) {
+    return CaseEvent
+        .builder(applicationVersion)
+        .withEventType(CaseEventType.DRAFT_APPLICATION_UPDATE_DELETED)
+        .withMainEventUserWuaId(applicationVersion.getCreatedByWuaId())
+        .withEventDateTime(eventDateTime)
         .build();
   }
 

@@ -2,9 +2,6 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseHistoryEventTestUtil.getPortalUsersDtosMap;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventType.APPLICATION_WITHDRAWAL_REQUESTED;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventType.APPLICATION_WITHDRAWAL_RESPONDED;
 
 import java.util.Collections;
 import java.util.List;
@@ -19,8 +16,6 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseHistoryEventTestUtil;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEvent;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventView;
-import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 
 @ExtendWith(MockitoExtension.class)
 class WithdrawalCaseEventServiceTest {
@@ -102,7 +97,7 @@ class WithdrawalCaseEventServiceTest {
             )
         );
 
-    List<CaseEvent> caseEvents = withdrawalCaseEventService.getCaseEvents(applicationVersion.getApplication());
+    var caseEvents = withdrawalCaseEventService.getCaseEvents(applicationVersion.getApplication());
 
     assertThat(caseEvents)
         .containsExactly(
@@ -120,7 +115,7 @@ class WithdrawalCaseEventServiceTest {
             )
         );
 
-    List<CaseEvent> caseEvents = withdrawalCaseEventService.getCaseEvents(applicationVersion.getApplication());
+    var caseEvents = withdrawalCaseEventService.getCaseEvents(applicationVersion.getApplication());
 
     assertThat(caseEvents)
         .containsExactly(

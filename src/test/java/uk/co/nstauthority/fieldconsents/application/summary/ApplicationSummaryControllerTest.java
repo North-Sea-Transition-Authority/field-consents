@@ -33,12 +33,9 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.IndustryCaseProcessingController;
-import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionController;
-import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionService;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @ContextConfiguration(classes = ApplicationSummaryController.class)
@@ -50,55 +47,7 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
   private ApplicationSummaryService applicationSummaryService;
 
   @MockBean
-  private ApplicationSubmissionService applicationSubmissionService;
-
-  @MockBean
   private ApplicationService applicationService;
-
-  @ParameterizedTest
-  @MethodSource("getInProgressApplicationVersions")
-  void getReviewAndSubmit_whenInProgressAndUserHasSubmitPermission(ApplicationVersion applicationVersion) throws Exception {
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
-        .thenReturn(applicationVersion);
-    when(applicationSummaryService.getSummarySections(applicationVersion))
-        .thenReturn(Collections.emptyList());
-    when(applicationSubmissionService.isSubmittable(applicationVersion)).thenReturn(false);
-    when(applicationAccessService.hasApplicationPermission(
-        user, applicationVersion, RolePermission.SUBMIT_FCS_APPLICATIONS
-    )).thenReturn(true);
-
-    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ApplicationSummaryController.class)
-            .getReviewAndSubmit(APPLICATION_ID, null)))
-            .with(user(user))
-            .with(csrf()))
-        .andExpect(status().isOk())
-        .andExpect(view().name("fcs/application/reviewAndSubmit"))
-        .andReturn().getModelAndView();
-
-    assert modelAndView != null;
-    var model = modelAndView.getModel();
-
-    assertThat(model)
-        .containsEntry("pageTitle", "Check your answers before submitting")
-        .containsEntry("accordionId", applicationVersion.getId())
-        .containsKey("summarySections")
-        .containsKey("wideSummaryDisplay")
-        .containsEntry("submitUrl", ReverseRouter.route(on(ApplicationSubmissionController.class)
-            .submitApplication(APPLICATION_ID, null)))
-        .containsEntry("backLinkUrl", ReverseRouter.route(on(ApplicationTaskListController.class)
-            .getTaskList(APPLICATION_ID)))
-        .containsEntry("isSubmittable", false)
-        .containsEntry("userHasSubmitPermission", true);
-  }
-
-  @SecurityTest
-  void getReviewAndSubmit_noUser() throws Exception {
-    mockMvc.perform(get(ReverseRouter.route(on(ApplicationSummaryController.class)
-            .getReviewAndSubmit(APPLICATION_ID, null))))
-        .andExpect(redirectionToLoginUrl());
-  }
 
   @ParameterizedTest
   @MethodSource("getSubmittedApplicationVersions")

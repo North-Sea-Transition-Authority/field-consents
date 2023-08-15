@@ -2,18 +2,17 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentEventTestUtil.CASE_OFFICER_WUA_ID_1;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentEventTestUtil.CASE_OFFICER_WUA_ID_2;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentEventTestUtil.getApplicationVersionAuditCaseOfficerNotAssigned;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentEventTestUtil.getApplicationVersionAuditCaseOfficerAssigned;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentEventTestUtil.getApplicationVersionAuditCaseOwnershipTaken;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentEventTestUtil.getCaseEventOfficerAssigned;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentEventTestUtil.getCaseEventOwnershipReleased;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentEventTestUtil.getCaseEventOwnershipTaken;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.CASE_OFFICER_WUA_ID_1;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.CASE_OFFICER_WUA_ID_2;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.getApplicationVersionAuditCaseOfficerAssigned;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.getApplicationVersionAuditCaseOfficerNotAssigned;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.getApplicationVersionAuditCaseOwnershipTaken;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.getCaseEventOfficerAssigned;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.getCaseEventOwnershipReleased;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.getCaseEventOwnershipTaken;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,16 +42,13 @@ class CaseAssignmentEventServiceTest {
 
   private Application application;
 
-  private Map<Integer, ApplicationVersion> applicationVersionMap;
+  private List<ApplicationVersion> applicationVersions;
 
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.VENT);
     application = applicationVersion.getApplication();
-    applicationVersionMap = Map.of(
-        applicationVersion.getId(),
-        applicationVersion
-    );
+    applicationVersions = List.of(applicationVersion);
 
     when(applicationVersionService.getAllApplicationVersionsByApplicationId(application.getId()))
         .thenReturn(Collections.singletonList(applicationVersion));
@@ -61,7 +57,7 @@ class CaseAssignmentEventServiceTest {
   @Test
   void getCaseEvents_caseOfficerOwnershipTaken_firstAssignmentEvent() {
     var applicationVersionAudits = List.of(getApplicationVersionAuditCaseOwnershipTaken(applicationVersion));
-    when(applicationVersionAuditService.getApplicationVersionAudits(applicationVersionMap)).thenReturn(applicationVersionAudits);
+    when(applicationVersionAuditService.getApplicationVersionAudits(applicationVersions)).thenReturn(applicationVersionAudits);
 
     var caseEvents = caseAssignmentEventService.getCaseEvents(application);
 
@@ -76,7 +72,7 @@ class CaseAssignmentEventServiceTest {
     var applicationVersionAudits = List.of(
         getApplicationVersionAuditCaseOfficerAssigned(applicationVersion, CASE_OFFICER_WUA_ID_1)
     );
-    when(applicationVersionAuditService.getApplicationVersionAudits(applicationVersionMap)).thenReturn(applicationVersionAudits);
+    when(applicationVersionAuditService.getApplicationVersionAudits(applicationVersions)).thenReturn(applicationVersionAudits);
 
     var caseEvents = caseAssignmentEventService.getCaseEvents(application);
 
@@ -92,7 +88,7 @@ class CaseAssignmentEventServiceTest {
         getApplicationVersionAuditCaseOwnershipTaken(applicationVersion),
         getApplicationVersionAuditCaseOfficerNotAssigned(applicationVersion)
     );
-    when(applicationVersionAuditService.getApplicationVersionAudits(applicationVersionMap)).thenReturn(applicationVersionAudits);
+    when(applicationVersionAuditService.getApplicationVersionAudits(applicationVersions)).thenReturn(applicationVersionAudits);
 
     var caseEvents = caseAssignmentEventService.getCaseEvents(application);
 
@@ -110,7 +106,7 @@ class CaseAssignmentEventServiceTest {
         getApplicationVersionAuditCaseOfficerNotAssigned(applicationVersion),
         getApplicationVersionAuditCaseOwnershipTaken(applicationVersion)
     );
-    when(applicationVersionAuditService.getApplicationVersionAudits(applicationVersionMap)).thenReturn(applicationVersionAudits);
+    when(applicationVersionAuditService.getApplicationVersionAudits(applicationVersions)).thenReturn(applicationVersionAudits);
 
     var caseEvents = caseAssignmentEventService.getCaseEvents(application);
 
@@ -129,7 +125,7 @@ class CaseAssignmentEventServiceTest {
         getApplicationVersionAuditCaseOfficerNotAssigned(applicationVersion),
         getApplicationVersionAuditCaseOfficerAssigned(applicationVersion, CASE_OFFICER_WUA_ID_1)
     );
-    when(applicationVersionAuditService.getApplicationVersionAudits(applicationVersionMap)).thenReturn(applicationVersionAudits);
+    when(applicationVersionAuditService.getApplicationVersionAudits(applicationVersions)).thenReturn(applicationVersionAudits);
 
     var caseEvents = caseAssignmentEventService.getCaseEvents(application);
 
@@ -147,7 +143,7 @@ class CaseAssignmentEventServiceTest {
         getApplicationVersionAuditCaseOwnershipTaken(applicationVersion),
         getApplicationVersionAuditCaseOfficerAssigned(applicationVersion, CASE_OFFICER_WUA_ID_2)
     );
-    when(applicationVersionAuditService.getApplicationVersionAudits(applicationVersionMap)).thenReturn(applicationVersionAudits);
+    when(applicationVersionAuditService.getApplicationVersionAudits(applicationVersions)).thenReturn(applicationVersionAudits);
 
     var caseEvents = caseAssignmentEventService.getCaseEvents(application);
 
@@ -165,7 +161,7 @@ class CaseAssignmentEventServiceTest {
         getApplicationVersionAuditCaseOfficerAssigned(applicationVersion, CASE_OFFICER_WUA_ID_2),
         getApplicationVersionAuditCaseOfficerAssigned(applicationVersion, CASE_OFFICER_WUA_ID_2)
     );
-    when(applicationVersionAuditService.getApplicationVersionAudits(applicationVersionMap)).thenReturn(applicationVersionAudits);
+    when(applicationVersionAuditService.getApplicationVersionAudits(applicationVersions)).thenReturn(applicationVersionAudits);
 
     var caseEvents = caseAssignmentEventService.getCaseEvents(application);
 
@@ -182,7 +178,7 @@ class CaseAssignmentEventServiceTest {
         getApplicationVersionAuditCaseOwnershipTaken(applicationVersion),
         getApplicationVersionAuditCaseOwnershipTaken(applicationVersion)
     );
-    when(applicationVersionAuditService.getApplicationVersionAudits(applicationVersionMap)).thenReturn(applicationVersionAudits);
+    when(applicationVersionAuditService.getApplicationVersionAudits(applicationVersions)).thenReturn(applicationVersionAudits);
 
     var caseEvents = caseAssignmentEventService.getCaseEvents(application);
 
@@ -199,7 +195,7 @@ class CaseAssignmentEventServiceTest {
         getApplicationVersionAuditCaseOfficerNotAssigned(applicationVersion),
         getApplicationVersionAuditCaseOfficerNotAssigned(applicationVersion)
     );
-    when(applicationVersionAuditService.getApplicationVersionAudits(applicationVersionMap)).thenReturn(applicationVersionAudits);
+    when(applicationVersionAuditService.getApplicationVersionAudits(applicationVersions)).thenReturn(applicationVersionAudits);
 
     var caseEvents = caseAssignmentEventService.getCaseEvents(application);
 
@@ -224,7 +220,7 @@ class CaseAssignmentEventServiceTest {
         getApplicationVersionAuditCaseOfficerAssigned(applicationVersion, CASE_OFFICER_WUA_ID_1),
         getApplicationVersionAuditCaseOfficerAssigned(applicationVersion, CASE_OFFICER_WUA_ID_1)
     );
-    when(applicationVersionAuditService.getApplicationVersionAudits(applicationVersionMap)).thenReturn(applicationVersionAudits);
+    when(applicationVersionAuditService.getApplicationVersionAudits(applicationVersions)).thenReturn(applicationVersionAudits);
 
     var caseEvents = caseAssignmentEventService.getCaseEvents(application);
 

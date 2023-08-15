@@ -31,6 +31,7 @@ public record WorkAreaItemDto(
     Long caseOfficerWuaId,
     Boolean withdrawalOpen,
     Long technicalReviewerWuaId,
-    Boolean applicationUpdateOpen
+    Boolean applicationUpdateOpen,
+    Instant applicationUpdateDeadline
 ) {
 }

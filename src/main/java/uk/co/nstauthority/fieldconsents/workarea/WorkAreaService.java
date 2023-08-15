@@ -220,16 +220,19 @@ public class WorkAreaService {
             getCaseOfficer(workAreaItemDto, portalUserDtosMap),
             workAreaItemDto.withdrawalOpen(),
             getTechnicalReviewer(workAreaItemDto, portalUserDtosMap, workAreaGroup),
+            workAreaItemDto.applicationUpdateOpen(),
             workAreaItemDto.applicationUpdateOpen()
+                ? DateUtils.format(workAreaItemDto.applicationUpdateDeadline(), DateUtils.DATE_TIME)
+                : ""
         ))
         .toList();
   }
 
   private String getApplicationReference(WorkAreaItemDto workAreaItemDto) {
-    if (workAreaItemDto.status().equals(ApplicationVersionStatus.IN_PROGRESS)
+    if (ApplicationVersionStatus.IN_PROGRESS.equals(workAreaItemDto.status())
         && workAreaItemDto.versionNo() == 1) {
       return "Resume application";
-    } else if (workAreaItemDto.status().equals(ApplicationVersionStatus.IN_PROGRESS)
+    } else if (ApplicationVersionStatus.IN_PROGRESS.equals(workAreaItemDto.status())
         && workAreaItemDto.versionNo() > 1) {
       return "Resume %s".formatted(
           applicationService.generateApplicationReference(

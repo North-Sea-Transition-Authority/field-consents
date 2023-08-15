@@ -91,6 +91,14 @@ public class ApplicationVersion {
     this.version = version;
   }
 
+  public boolean isFirstVersion() {
+    return this.version == 1;
+  }
+
+  public boolean isUpdateVersion() {
+    return this.version > 1;
+  }
+
   public Integer getPrimaryOperatorOuId() {
     return primaryOperatorOuId;
   }

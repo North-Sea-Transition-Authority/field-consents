@@ -1,27 +1,21 @@
-package uk.co.nstauthority.fieldconsents.application.caseprocessing.update;
+package uk.co.nstauthority.fieldconsents.application.caseprocessing.update.response;
 
 import java.util.Map;
 import uk.co.nstauthority.fieldconsents.util.enumutil.Displayable;
 import uk.co.nstauthority.fieldconsents.util.enumutil.DisplayableEnumOptionUtil;
 
 public enum ApplicationUpdateResponseType implements Displayable {
-  UPDATED_EXACTLY(
-      "Updated application exactly as requested",
+  REQUESTED_CHANGES_ONLY(
+      "Requested changes only",
       1,
       null,
       null
   ),
-  UPDATED(
-      "Updated application as follows",
+  OTHER_CHANGES(
+      "Other changes",
       2,
-      "Update summary",
+      "Describe the changes that have been made",
       "Provide a brief summary of the updates made to the application"
-  ),
-  NOT_UPDATED(
-      "Not updated application",
-      3,
-      "Reason for not updating the application",
-      "Provide details of why the application has not been updated"
   );
 
   private final String displayName;

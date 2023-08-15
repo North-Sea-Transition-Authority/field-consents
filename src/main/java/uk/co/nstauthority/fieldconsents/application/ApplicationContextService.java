@@ -43,7 +43,7 @@ public class ApplicationContextService {
     var summaryData = SummaryDataView
         .newWithKeyValue("Application type", applicationVersion.getApplication().getType().getDisplayName())
         .addKeyValue(applicationContextJson.getPrimaryAssetPrompt(), applicationContextJson.getPrimaryAssetName())
-        .addKeyValue("Primary operator", applicationContextJson.getPrimaryOperatorName());
+        .addKeyValue(applicationContextJson.getPrimaryOperatorPrompt(), applicationContextJson.getPrimaryOperatorName());
 
     return SummaryCard.simpleSummaryCard(summaryData);
   }
