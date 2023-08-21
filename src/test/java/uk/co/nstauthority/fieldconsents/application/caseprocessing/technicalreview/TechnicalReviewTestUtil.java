@@ -30,7 +30,7 @@ class TechnicalReviewTestUtil {
 
   static TechnicalReview getOpenTechnicalReview(ApplicationVersion applicationVersion) {
     var technicalReview = new TechnicalReview();
-    technicalReview.setApplicationVersion(applicationVersion);
+    technicalReview.setRequestApplicationVersion(applicationVersion);
     technicalReview.setTechnicalReviewStatus(OPEN);
     technicalReview.setTechnicalReviewerWuaId(2L);
     technicalReview.setRequestedByWuaId(USER.wuaId());
@@ -44,7 +44,7 @@ class TechnicalReviewTestUtil {
                                                 ServiceUserDetail technicalReviewerUser,
                                                 Clock clock) {
     var technicalReview = new TechnicalReview();
-    technicalReview.setApplicationVersion(applicationVersion);
+    technicalReview.setRequestApplicationVersion(applicationVersion);
     technicalReview.setTechnicalReviewStatus(OPEN);
     technicalReview.setTechnicalReviewerWuaId(technicalReviewerUser.wuaId());
     technicalReview.setRequestedByWuaId(USER.wuaId());

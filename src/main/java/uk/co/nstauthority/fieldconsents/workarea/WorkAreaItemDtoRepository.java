@@ -100,7 +100,7 @@ class WorkAreaItemDtoRepository {
             .on(APPLICATION_WITHDRAWALS.APPLICATION_VERSION_ID.in(allAppVersionsForAppSubQuery))
             .and(APPLICATION_WITHDRAWALS.WITHDRAWAL_STATUS.eq(WithdrawalStatus.OPEN.name()))
         .leftJoin(APPLICATION_TECHNICAL_REVIEWS)
-            .on(APPLICATION_TECHNICAL_REVIEWS.APPLICATION_VERSION_ID.in(allAppVersionsForAppSubQuery))
+            .on(APPLICATION_TECHNICAL_REVIEWS.REQUEST_APPLICATION_VERSION_ID.in(allAppVersionsForAppSubQuery))
             .and(APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEW_STATUS.eq(TechnicalReviewStatus.OPEN.name()))
         .leftJoin(APPLICATION_UPDATES)
             .on(APPLICATION_UPDATES.APPLICATION_VERSION_ID.in(allAppVersionsForAppSubQuery))

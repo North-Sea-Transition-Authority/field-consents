@@ -172,7 +172,7 @@ public class CaseHistoryEventTestUtil {
 
   public static CaseEvent getCaseEventForTechnicalReviewRequested(TechnicalReview technicalReview) {
     return CaseEvent
-        .builder(technicalReview.getApplicationVersion())
+        .builder(technicalReview.getRequestApplicationVersion())
         .withEventType(CaseEventType.TECHNICAL_REVIEW_REQUESTED)
         .withMainEventUserWuaId(technicalReview.getRequestedByWuaId())
         .withOtherEventUserWuaId(technicalReview.getTechnicalReviewerWuaId())
@@ -192,7 +192,7 @@ public class CaseHistoryEventTestUtil {
             : "";
 
     return CaseEvent
-        .builder(technicalReview.getApplicationVersion())
+        .builder(technicalReview.getResponseApplicationVersion())
         .withEventType(CaseEventType.TECHNICAL_REVIEW_COMPLETED)
         .withMainEventUserWuaId(technicalReview.getRespondedByWuaId())
         .withEventText(String.format("Decision: %s. %s",
@@ -232,7 +232,7 @@ public class CaseHistoryEventTestUtil {
 
   public static TechnicalReview getTechnicalReviewRequest(ApplicationVersion applicationVersion) {
     var technicalReview = new TechnicalReview();
-    technicalReview.setApplicationVersion(applicationVersion);
+    technicalReview.setRequestApplicationVersion(applicationVersion);
     technicalReview.setRequestedDateTime(applicationVersion.getSubmittedDateTime().plus(5, ChronoUnit.DAYS));
     technicalReview.setRequestText(TECHNICAL_REVIEW_REQUEST_EVENT_TEXT);
     technicalReview.setRequestedByWuaId(AssignmentTestUtil.ENERGY_PORTAL_USER_1.webUserAccountId());

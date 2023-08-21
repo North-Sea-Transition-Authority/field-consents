@@ -43,16 +43,20 @@ class TechnicalReviewCaseEventServiceTest {
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.VENT);
+    var newerApplicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.VENT);
+    newerApplicationVersion.setId(applicationVersion.getId() + 1);
 
     technicalReviewRejected = TechnicalReviewTestUtil.getClosedTechnicalReviewWithResponseType(
         applicationVersion,
         TechnicalReviewResponseType.REJECT
     );
+    technicalReviewRejected.setResponseApplicationVersion(newerApplicationVersion);
 
     technicalReviewApproved = TechnicalReviewTestUtil.getClosedTechnicalReviewWithResponseType(
         applicationVersion,
         TechnicalReviewResponseType.APPROVE
     );
+    technicalReviewApproved.setResponseApplicationVersion(newerApplicationVersion);
 
     firstTechnicalReviewRequestedEvent = CaseHistoryEventTestUtil
         .getCaseEventForTechnicalReviewRequested(technicalReviewRejected);

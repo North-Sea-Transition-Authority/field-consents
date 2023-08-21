@@ -89,6 +89,7 @@ public class TechnicalReviewResponseController {
     }
 
     technicalReviewService.saveTechnicalReviewResponse(
+        applicationVersion,
         technicalReview,
         serviceUserDetail,
         form.responseType(),

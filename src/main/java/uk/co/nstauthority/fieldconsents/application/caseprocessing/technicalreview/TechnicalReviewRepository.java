@@ -11,11 +11,15 @@ import uk.co.nstauthority.fieldconsents.application.duplication.NotDuplicationSo
 @NotDuplicationSource
 public interface TechnicalReviewRepository extends CrudRepository<TechnicalReview, Integer> {
 
-  boolean existsByApplicationVersion_ApplicationAndTechnicalReviewStatus(Application application,
-                                                                         TechnicalReviewStatus status);
+  boolean existsByRequestApplicationVersion_ApplicationAndTechnicalReviewStatus(
+      Application application,
+      TechnicalReviewStatus status
+  );
 
-  Optional<TechnicalReview> findByApplicationVersion_ApplicationAndTechnicalReviewStatus(Application application,
-                                                                                         TechnicalReviewStatus status);
+  Optional<TechnicalReview> findByRequestApplicationVersion_ApplicationAndTechnicalReviewStatus(
+      Application application,
+      TechnicalReviewStatus status
+  );
 
-  List<TechnicalReview> findByApplicationVersion_Application(Application application);
+  List<TechnicalReview> findByRequestApplicationVersion_Application(Application application);
 }

@@ -40,7 +40,7 @@ public class TechnicalReviewCaseEventService implements CaseEventService<Applica
   }
 
   private CaseEvent getTechnicalReviewRequestedEvent(TechnicalReview technicalReview) {
-    return CaseEvent.builder(technicalReview.getApplicationVersion())
+    return CaseEvent.builder(technicalReview.getRequestApplicationVersion())
         .withEventType(CaseEventType.TECHNICAL_REVIEW_REQUESTED)
         .withMainEventUserWuaId(technicalReview.getRequestedByWuaId())
         .withEventDateTime(technicalReview.getRequestedDateTime())
@@ -64,7 +64,7 @@ public class TechnicalReviewCaseEventService implements CaseEventService<Applica
   }
 
   private CaseEvent getTechnicalReviewCompletedEvent(TechnicalReview technicalReview) {
-    return CaseEvent.builder(technicalReview.getApplicationVersion())
+    return CaseEvent.builder(technicalReview.getResponseApplicationVersion())
         .withEventType(CaseEventType.TECHNICAL_REVIEW_COMPLETED)
         .withMainEventUserWuaId(technicalReview.getRespondedByWuaId())
         .withEventDateTime(technicalReview.getRespondedDateTime())

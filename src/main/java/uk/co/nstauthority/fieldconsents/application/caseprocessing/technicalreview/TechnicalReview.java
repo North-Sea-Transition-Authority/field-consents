@@ -24,8 +24,12 @@ public class TechnicalReview {
   private Integer id;
 
   @OneToOne
-  @JoinColumn(name = "application_version_id")
-  private ApplicationVersion applicationVersion;
+  @JoinColumn(name = "request_application_version_id")
+  private ApplicationVersion requestApplicationVersion;
+
+  @OneToOne
+  @JoinColumn(name = "response_application_version_id")
+  private ApplicationVersion responseApplicationVersion;
 
   private Long requestedByWuaId;
 
@@ -58,12 +62,20 @@ public class TechnicalReview {
     return id;
   }
 
-  public ApplicationVersion getApplicationVersion() {
-    return applicationVersion;
+  public ApplicationVersion getRequestApplicationVersion() {
+    return requestApplicationVersion;
   }
 
-  public void setApplicationVersion(ApplicationVersion applicationVersion) {
-    this.applicationVersion = applicationVersion;
+  public void setRequestApplicationVersion(ApplicationVersion applicationVersion) {
+    this.requestApplicationVersion = applicationVersion;
+  }
+
+  public ApplicationVersion getResponseApplicationVersion() {
+    return responseApplicationVersion;
+  }
+
+  public void setResponseApplicationVersion(ApplicationVersion responseApplicationVersion) {
+    this.responseApplicationVersion = responseApplicationVersion;
   }
 
   public Long getRequestedByWuaId() {

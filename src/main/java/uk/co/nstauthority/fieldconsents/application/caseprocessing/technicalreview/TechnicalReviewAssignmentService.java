@@ -60,7 +60,7 @@ public class TechnicalReviewAssignmentService {
     technicalReviewRepository.save(technicalReview);
 
     applicationWorkAreaPriorityService.prioritiseApplicationInWorkArea(
-        technicalReview.getApplicationVersion(),
+        technicalReview.getRequestApplicationVersion(),
         actionUser,
         priorityReason,
         REGULATOR_TECHNICAL_REVIEWER

@@ -75,6 +75,11 @@ public class ApplicationVersion {
     return id;
   }
 
+  @VisibleForTesting
+  public void setId(Integer id) {
+    this.id = id;
+  }
+
   public Application getApplication() {
     return application;
   }

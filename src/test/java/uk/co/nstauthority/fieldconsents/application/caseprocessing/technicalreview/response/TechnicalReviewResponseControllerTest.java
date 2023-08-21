@@ -175,6 +175,7 @@ class TechnicalReviewResponseControllerTest extends AbstractApplicationControlle
         );
 
     verify(technicalReviewService).saveTechnicalReviewResponse(
+        applicationVersion,
         technicalReview,
         user,
         TechnicalReviewResponseType.REJECT,
@@ -203,7 +204,7 @@ class TechnicalReviewResponseControllerTest extends AbstractApplicationControlle
         .andExpect(status().isOk())
         .andExpect(view().name(VIEW_NAME));
 
-    verify(technicalReviewService, never()).saveTechnicalReviewResponse(any(), any(), any(), any(), any(), any());
+    verify(technicalReviewService, never()).saveTechnicalReviewResponse(any(), any(), any(), any(), any(), any(), any());
   }
 
   private void addTechnicalReviewAttributes(ModelAndView modelAndView) {

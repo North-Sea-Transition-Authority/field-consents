@@ -47,12 +47,12 @@ public class TechnicalReviewService {
 
   public boolean openTechnicalReviewExists(ApplicationVersion applicationVersion) {
     return technicalReviewRepository
-        .existsByApplicationVersion_ApplicationAndTechnicalReviewStatus(applicationVersion.getApplication(), OPEN);
+        .existsByRequestApplicationVersion_ApplicationAndTechnicalReviewStatus(applicationVersion.getApplication(), OPEN);
   }
 
   public Optional<TechnicalReview> findOpenTechnicalReview(ApplicationVersion applicationVersion) {
     return technicalReviewRepository
-        .findByApplicationVersion_ApplicationAndTechnicalReviewStatus(applicationVersion.getApplication(), OPEN);
+        .findByRequestApplicationVersion_ApplicationAndTechnicalReviewStatus(applicationVersion.getApplication(), OPEN);
   }
 
   public TechnicalReview getOpenTechnicalReview(ApplicationVersion applicationVersion) {
@@ -74,13 +74,15 @@ public class TechnicalReviewService {
   }
 
   @Transactional
-  public void saveTechnicalReviewRequest(ApplicationVersion applicationVersion,
-                                         Instant deadlineInstant,
-                                         String requestText,
-                                         ServiceUserDetail technicalReviewerUser,
-                                         ServiceUserDetail user) {
+  public void saveTechnicalReviewRequest(
+      ApplicationVersion requestForApplicationVersion,
+      Instant deadlineInstant,
+      String requestText,
+      ServiceUserDetail technicalReviewerUser,
+      ServiceUserDetail user
+  ) {
     var technicalReview = new TechnicalReview();
-    technicalReview.setApplicationVersion(applicationVersion);
+    technicalReview.setRequestApplicationVersion(requestForApplicationVersion);
     technicalReview.setTechnicalReviewStatus(OPEN);
     technicalReview.setRequestedByWuaId(user.wuaId());
     technicalReview.setRequestedDateTime(clock.instant());
@@ -91,11 +93,12 @@ public class TechnicalReviewService {
   }
 
   public List<TechnicalReview> getTechnicalReviewsByApplication(Application application) {
-    return technicalReviewRepository.findByApplicationVersion_Application(application);
+    return technicalReviewRepository.findByRequestApplicationVersion_Application(application);
   }
 
   @Transactional
   public void saveTechnicalReviewResponse(
+      ApplicationVersion responseForApplicationVersion,
       TechnicalReview technicalReview,
       ServiceUserDetail serviceUserDetail,
       TechnicalReviewResponseType technicalReviewResponseType,
@@ -103,6 +106,7 @@ public class TechnicalReviewService {
       String rejectionReason,
       List<UploadedFileForm> documents
   ) {
+    technicalReview.setResponseApplicationVersion(responseForApplicationVersion);
     technicalReview.setRespondedByWuaId(serviceUserDetail.wuaId());
     technicalReview.setRespondedDateTime(clock.instant());
     technicalReview.setResponseType(technicalReviewResponseType);

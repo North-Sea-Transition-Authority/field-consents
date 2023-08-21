@@ -106,7 +106,7 @@ class TechnicalReviewAssignmentServiceTest {
         .isEqualTo(USER_WEB_USER_ACCOUNT_ID.id());
 
     verify(applicationWorkAreaPriorityService, times(1))
-        .prioritiseApplicationInWorkArea(updatedTechnicalReview.getApplicationVersion(), USER,
+        .prioritiseApplicationInWorkArea(updatedTechnicalReview.getRequestApplicationVersion(), USER,
             TECHNICAL_REVIEW_REQUEST, REGULATOR_TECHNICAL_REVIEWER);
   }
 
@@ -127,7 +127,7 @@ class TechnicalReviewAssignmentServiceTest {
         .isEqualTo(USER2_WEB_USER_ACCOUNT_ID.id());
 
     verify(applicationWorkAreaPriorityService, times(1))
-        .prioritiseApplicationInWorkArea(updatedTechnicalReview.getApplicationVersion(), USER2,
+        .prioritiseApplicationInWorkArea(updatedTechnicalReview.getRequestApplicationVersion(), USER2,
             TECHNICAL_REVIEWER_ASSIGN_OWNERSHIP, REGULATOR_TECHNICAL_REVIEWER);
   }
 
@@ -148,7 +148,7 @@ class TechnicalReviewAssignmentServiceTest {
         .isEqualTo(USER2_WEB_USER_ACCOUNT_ID.id());
 
     verify(applicationWorkAreaPriorityService, times(1))
-        .prioritiseApplicationInWorkArea(updatedTechnicalReview.getApplicationVersion(), USER,
+        .prioritiseApplicationInWorkArea(updatedTechnicalReview.getRequestApplicationVersion(), USER,
             TECHNICAL_REVIEWER_ASSIGN_OWNERSHIP, REGULATOR_TECHNICAL_REVIEWER);
   }
 
