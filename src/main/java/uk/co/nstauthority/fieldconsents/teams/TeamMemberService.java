@@ -12,6 +12,7 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.TeamRole;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.opred.OpredTeamRole;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @Service
@@ -91,6 +92,7 @@ public class TeamMemberService {
         .map(teamMemberRole -> switch (team.getTeamType()) {
           case REGULATOR -> RegulatorTeamRole.valueOf(teamMemberRole.getRole());
           case INDUSTRY -> IndustryTeamRole.valueOf(teamMemberRole.getRole());
+          case OPRED -> OpredTeamRole.valueOf(teamMemberRole.getRole());
         })
         .collect(Collectors.toSet());
   }

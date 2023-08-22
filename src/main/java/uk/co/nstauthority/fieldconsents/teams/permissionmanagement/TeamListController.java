@@ -17,6 +17,7 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.Team;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamManagementController;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.opred.OpredTeamManagementController;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamManagementController;
 
 @Controller
@@ -62,6 +63,8 @@ public class TeamListController {
           ReverseRouter.redirect(on(RegulatorTeamManagementController.class).renderMemberList(team.toTeamId()));
       case INDUSTRY ->
           ReverseRouter.redirect(on(IndustryTeamManagementController.class).renderMemberList(team.toTeamId()));
+      case OPRED ->
+          ReverseRouter.redirect(on(OpredTeamManagementController.class).renderMemberList(team.toTeamId()));
     };
   }
 

@@ -5,6 +5,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import uk.co.nstauthority.fieldconsents.branding.CustomerConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamManagementController;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.opred.OpredTeamManagementController;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamManagementController;
 
 public record TeamView(TeamId teamId, TeamType teamType, String displayName) {
@@ -13,6 +14,7 @@ public record TeamView(TeamId teamId, TeamType teamType, String displayName) {
     return switch (teamType) {
       case REGULATOR -> ReverseRouter.route(on(RegulatorTeamManagementController.class).renderMemberList(teamId));
       case INDUSTRY -> ReverseRouter.route(on(IndustryTeamManagementController.class).renderMemberList(teamId));
+      case OPRED -> ReverseRouter.route(on(OpredTeamManagementController.class).renderMemberList(teamId));
     };
   }
 
@@ -20,7 +22,7 @@ public record TeamView(TeamId teamId, TeamType teamType, String displayName) {
     var teamId = new TeamId(team.getId());
     var teamName = switch (team.getTeamType()) {
       case REGULATOR -> customerConfigurationProperties.mnemonic();
-      case INDUSTRY -> team.getDisplayName();
+      case INDUSTRY, OPRED -> team.getDisplayName();
     };
     return new TeamView(teamId, team.getTeamType(), teamName);
   }
