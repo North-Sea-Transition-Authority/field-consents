@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.teams;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -30,6 +31,10 @@ public class TeamService {
 
   public Optional<Team> getTeam(TeamId teamId, TeamType teamType) {
     return teamRepository.findByIdAndTeamType(teamId.id(), teamType);
+  }
+
+  public List<Team> getTeamsByType(TeamType teamType) {
+    return teamRepository.findAllByTeamTypeIn(Collections.singleton(teamType));
   }
 
   public List<Team> getTeamsOfTypeThatUserBelongsTo(ServiceUserDetail user, TeamType teamType) {

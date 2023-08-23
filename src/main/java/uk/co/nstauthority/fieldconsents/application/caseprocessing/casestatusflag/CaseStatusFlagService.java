@@ -16,6 +16,7 @@ import java.util.Set;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalService;
@@ -26,13 +27,16 @@ public class CaseStatusFlagService {
   private final ApplicationWithdrawalService applicationWithdrawalService;
   private final TechnicalReviewService technicalReviewService;
   private final ApplicationUpdateService applicationUpdateService;
+  private final ConsultationService consultationService;
 
   public CaseStatusFlagService(ApplicationWithdrawalService applicationWithdrawalService,
                                TechnicalReviewService technicalReviewService,
-                               ApplicationUpdateService applicationUpdateService) {
+                               ApplicationUpdateService applicationUpdateService,
+                               ConsultationService consultationService) {
     this.applicationWithdrawalService = applicationWithdrawalService;
     this.technicalReviewService = technicalReviewService;
     this.applicationUpdateService = applicationUpdateService;
+    this.consultationService = consultationService;
   }
 
   public Set<CaseStatusFlag> getCaseStatusFlags(ApplicationVersion applicationVersion) {
@@ -42,6 +46,7 @@ public class CaseStatusFlagService {
     addWithdrawalFlag(applicationVersion, caseStatusFlags);
     addTechnicalReviewFlag(applicationVersion, caseStatusFlags);
     addUpdateRequestFlag(applicationVersion, caseStatusFlags);
+    addConsultationOpenFlag(applicationVersion, caseStatusFlags);
     caseStatusFlags.add(CaseStatusFlag.CASE_NOTES_ALLOWED);
 
     return caseStatusFlags;
@@ -86,4 +91,13 @@ public class CaseStatusFlagService {
       caseStatusFlags.add(NO_APPLICATION_UPDATE_OPEN);
     }
   }
+
+  void addConsultationOpenFlag(ApplicationVersion applicationVersion, HashSet<CaseStatusFlag> caseStatusFlags) {
+    var flag = consultationService.openConsultationExistsForApplicationVersion(applicationVersion)
+        ? CaseStatusFlag.CONSULTATION_OPEN
+        : CaseStatusFlag.NO_CONSULTATION_OPEN;
+
+    caseStatusFlags.add(flag);
+  }
+
 }

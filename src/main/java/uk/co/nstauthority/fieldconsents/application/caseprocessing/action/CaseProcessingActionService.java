@@ -1,10 +1,12 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.action;
 
 import static java.util.Map.entry;
+import static uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature.CONSULTATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.APPLICATION_UPDATE_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_ASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_REASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_RELEASE_OWNERSHIP;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_REQUEST_CONSULTATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_WITHDRAWAL_RESPONSE;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CHANGE_ACE_STATUS;
@@ -19,6 +21,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casest
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_APPLICATION_UPDATE_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_CONSULTATION_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_TECHNICAL_REVIEW_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_WITHDRAWAL_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.TECHNICAL_REVIEW_OPEN;
@@ -41,6 +44,7 @@ import java.util.Set;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
@@ -82,6 +86,7 @@ public class CaseProcessingActionService {
               CASE_OFFICER_TAKE_OWNERSHIP,
               CASE_OFFICER_RELEASE_OWNERSHIP,
               CASE_OFFICER_WITHDRAWAL_RESPONSE,
+              CASE_OFFICER_REQUEST_CONSULTATION,
               TECHNICAL_REVIEW_REQUEST,
               CASE_OFFICER_ASSIGN_OWNERSHIP,
               CASE_OFFICER_REASSIGN_OWNERSHIP,
@@ -102,6 +107,7 @@ public class CaseProcessingActionService {
           entry(TECHNICAL_REVIEW_REQUEST, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
           entry(CASE_OFFICER_ASSIGN_OWNERSHIP, EnumSet.of(ASSIGN_FCS_APPLICATIONS)),
           entry(CASE_OFFICER_REASSIGN_OWNERSHIP, EnumSet.of(ASSIGN_FCS_APPLICATIONS)),
+          entry(CASE_OFFICER_REQUEST_CONSULTATION, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
           entry(REGULATOR_ADD_CASE_NOTE, EnumSet.of(EDIT_FCS_CASE_PROCESSING_DOCUMENTS)),
           entry(TECHNICAL_REVIEWER_SUBMIT_REVIEW, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)),
           entry(TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)),
@@ -117,13 +123,16 @@ public class CaseProcessingActionService {
           entry(CASE_OFFICER_RELEASE_OWNERSHIP, EnumSet.of(CASE_OFFICER_ASSIGNED)),
           entry(CASE_OFFICER_WITHDRAWAL_RESPONSE, EnumSet.of(CASE_OFFICER_ASSIGNED, WITHDRAWAL_OPEN)),
           entry(TECHNICAL_REVIEW_REQUEST,
-              EnumSet.of(CASE_OFFICER_ASSIGNED, NO_TECHNICAL_REVIEW_OPEN, NO_APPLICATION_UPDATE_OPEN)),
+              EnumSet.of(CASE_OFFICER_ASSIGNED, NO_TECHNICAL_REVIEW_OPEN, NO_APPLICATION_UPDATE_OPEN,
+                  NO_CONSULTATION_OPEN)),
           entry(CASE_OFFICER_ASSIGN_OWNERSHIP, EnumSet.of(CASE_OFFICER_NOT_ASSIGNED)),
           entry(CASE_OFFICER_REASSIGN_OWNERSHIP, EnumSet.of(CASE_OFFICER_ASSIGNED)),
+          entry(CASE_OFFICER_REQUEST_CONSULTATION,
+              EnumSet.of(CASE_OFFICER_ASSIGNED, NO_TECHNICAL_REVIEW_OPEN, NO_CONSULTATION_OPEN)),
           entry(REGULATOR_ADD_CASE_NOTE, EnumSet.of(CASE_NOTES_ALLOWED)),
           entry(TECHNICAL_REVIEWER_SUBMIT_REVIEW, EnumSet.of(TECHNICAL_REVIEW_OPEN)),
           entry(TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP, EnumSet.of(TECHNICAL_REVIEW_OPEN)),
-          entry(APPLICATION_UPDATE_REQUEST, EnumSet.of(NO_APPLICATION_UPDATE_OPEN)),
+          entry(APPLICATION_UPDATE_REQUEST, EnumSet.of(NO_APPLICATION_UPDATE_OPEN, NO_CONSULTATION_OPEN)),
           entry(OPERATOR_WITHDRAWAL_REQUEST, EnumSet.of(NO_WITHDRAWAL_OPEN, NO_APPLICATION_UPDATE_OPEN)),
           entry(OPERATOR_UPDATE_APPLICATION, EnumSet.of(APPLICATION_UPDATE_OPEN))
       );
@@ -137,6 +146,14 @@ public class CaseProcessingActionService {
           TECHNICAL_REVIEWER_SUBMIT_REVIEW, EnumSet.of(TECHNICAL_REVIEWER),
           APPLICATION_UPDATE_REQUEST, EnumSet.of(CASE_OFFICER, TECHNICAL_REVIEWER)
       );
+
+  /*
+   * If an actionItem is not here, it will be allowed by default. If multiple features are present for an action,
+   * one of them must match for the action to be allowed.
+   */
+  private final Map<CaseProcessingActionItem, Set<ApplicationTypeFeature>> actionItemsToFeatures = Map.of(
+      CASE_OFFICER_REQUEST_CONSULTATION, EnumSet.of(CONSULTATION)
+  );
 
   @Autowired
   public CaseProcessingActionService(ApplicationAccessService applicationAccessService,
@@ -163,6 +180,7 @@ public class CaseProcessingActionService {
     var regulatorRoleCurrentAssigneeMap = constructAssigneeMap(applicationVersion);
 
     return actions.stream()
+        .filter(action -> applicationTypeFeatureFlagAllowed(applicationVersion, action))
         // filter actions that the user has permissions for
         .filter(action -> CollectionUtils.containsAny(actionsToPermissions.get(action), userRolePermissions))
         // filter actions that the application version has all the status flags for
@@ -213,4 +231,16 @@ public class CaseProcessingActionService {
 
     return false;
   }
+
+  private boolean applicationTypeFeatureFlagAllowed(ApplicationVersion applicationVersion, CaseProcessingActionItem actionItem) {
+    var applicationType = applicationVersion.getApplication().getType();
+
+    var features = actionItemsToFeatures.get(actionItem);
+    if (Objects.isNull(features)) {
+      return true; // if nothing is found, assume it's allowed
+    }
+
+    return features.stream().anyMatch(feature -> feature.allowed(applicationType));
+  }
+  
 }

@@ -6,6 +6,7 @@ import java.util.function.Function;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.aceflag.AceFlagController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casenotes.CaseNotesController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.request.ConsultationRequestController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewAssignmentController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.response.TechnicalReviewResponseController;
@@ -39,6 +40,8 @@ public enum CaseProcessingActionItem implements Displayable {
   CASE_OFFICER_REASSIGN_OWNERSHIP("Reassign ownership", 1, false, true, null,
       applicationId -> ReverseRouter.route(on(CaseAssignmentController.class)
           .getCaseAssignment(applicationId, null))),
+  CASE_OFFICER_REQUEST_CONSULTATION("Request consultation", 99, false, false, null,
+      applicationId -> ReverseRouter.route(on(ConsultationRequestController.class).getConsultationRequestForm(applicationId))),
   // Regulator user actions
   REGULATOR_ADD_CASE_NOTE("Add case note", 99, false, false, null,
       applicationId -> ReverseRouter.route(on(CaseNotesController.class)

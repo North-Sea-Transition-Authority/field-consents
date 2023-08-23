@@ -384,4 +384,15 @@ class TeamServiceTest {
     assertThat(teamService.getUserPermissionsForTeam(team, user))
         .containsAll(Collections.emptySet());
   }
+
+  @ParameterizedTest
+  @EnumSource(TeamType.class)
+  void getTeamsByType(TeamType teamType) {
+    var team1 = new TeamTestUtil.TeamBuilder().build();
+    var team2 = new TeamTestUtil.TeamBuilder().build();
+
+    when(teamRepository.findAllByTeamTypeIn(Collections.singleton(teamType))).thenReturn(List.of(team1, team2));
+
+    assertThat(teamService.getTeamsByType(teamType)).containsExactly(team1, team2);
+  }
 }

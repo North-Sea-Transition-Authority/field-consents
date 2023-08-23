@@ -8,20 +8,25 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casest
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_APPLICATION_UPDATE_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_CONSULTATION_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_TECHNICAL_REVIEW_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_WITHDRAWAL_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.TECHNICAL_REVIEW_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.WITHDRAWAL_OPEN;
 
+import java.util.HashSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalService;
@@ -41,6 +46,9 @@ class CaseStatusFlagServiceTest {
 
   @Mock
   private ApplicationUpdateService applicationUpdateService;
+
+  @Mock
+  private ConsultationService consultationService;
 
   @InjectMocks
   private CaseStatusFlagService caseStatusFlagService;
@@ -62,7 +70,8 @@ class CaseStatusFlagServiceTest {
             NO_WITHDRAWAL_OPEN,
             NO_TECHNICAL_REVIEW_OPEN,
             CASE_NOTES_ALLOWED,
-            NO_APPLICATION_UPDATE_OPEN
+            NO_APPLICATION_UPDATE_OPEN,
+            NO_CONSULTATION_OPEN
         );
   }
 
@@ -75,7 +84,8 @@ class CaseStatusFlagServiceTest {
             NO_WITHDRAWAL_OPEN,
             NO_TECHNICAL_REVIEW_OPEN,
             CASE_NOTES_ALLOWED,
-            NO_APPLICATION_UPDATE_OPEN
+            NO_APPLICATION_UPDATE_OPEN,
+            NO_CONSULTATION_OPEN
         );
   }
 
@@ -88,7 +98,8 @@ class CaseStatusFlagServiceTest {
             WITHDRAWAL_OPEN,
             NO_TECHNICAL_REVIEW_OPEN,
             CASE_NOTES_ALLOWED,
-            NO_APPLICATION_UPDATE_OPEN
+            NO_APPLICATION_UPDATE_OPEN,
+            NO_CONSULTATION_OPEN
         );
   }
 
@@ -102,7 +113,8 @@ class CaseStatusFlagServiceTest {
             NO_WITHDRAWAL_OPEN,
             TECHNICAL_REVIEW_OPEN,
             CASE_NOTES_ALLOWED,
-            NO_APPLICATION_UPDATE_OPEN
+            NO_APPLICATION_UPDATE_OPEN,
+            NO_CONSULTATION_OPEN
         );
   }
 
@@ -117,7 +129,8 @@ class CaseStatusFlagServiceTest {
             NO_WITHDRAWAL_OPEN,
             NO_TECHNICAL_REVIEW_OPEN,
             CASE_NOTES_ALLOWED,
-            APPLICATION_UPDATE_OPEN
+            APPLICATION_UPDATE_OPEN,
+            NO_CONSULTATION_OPEN
         );
   }
 
@@ -134,7 +147,25 @@ class CaseStatusFlagServiceTest {
             NO_TECHNICAL_REVIEW_OPEN,
             CASE_NOTES_ALLOWED,
             APPLICATION_UPDATE_OPEN,
-            APPLICATION_UPDATE_STARTED
+            APPLICATION_UPDATE_STARTED,
+            NO_CONSULTATION_OPEN
         );
   }
+
+  @ParameterizedTest
+  @CsvSource({
+      "true, CONSULTATION_OPEN",
+      "false, NO_CONSULTATION_OPEN"
+  })
+  void addConsultationOpenFlag(boolean hasOpenConsultation, CaseStatusFlag expectedCaseStatusFlag) {
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var caseStatusFlags = new HashSet<CaseStatusFlag>();
+
+    when(consultationService.openConsultationExistsForApplicationVersion(applicationVersion)).thenReturn(hasOpenConsultation);
+
+    caseStatusFlagService.addConsultationOpenFlag(applicationVersion, caseStatusFlags);
+
+    assertThat(caseStatusFlags).containsOnly(expectedCaseStatusFlag);
+  }
+
 }

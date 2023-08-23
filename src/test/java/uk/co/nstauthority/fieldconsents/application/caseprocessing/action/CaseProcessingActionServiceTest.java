@@ -7,6 +7,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_ASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_REASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_RELEASE_OWNERSHIP;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_REQUEST_CONSULTATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_WITHDRAWAL_RESPONSE;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CHANGE_ACE_STATUS;
@@ -19,6 +20,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.APPLICATION_UPDATE_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_APPLICATION_UPDATE_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_CONSULTATION_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_TECHNICAL_REVIEW_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_WITHDRAWAL_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.TECHNICAL_REVIEW_OPEN;
@@ -407,18 +409,19 @@ class CaseProcessingActionServiceTest {
     when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .thenReturn(CASE_OFFICER_PERMISSIONS);
     when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(CASE_OFFICER_ASSIGNED, NO_TECHNICAL_REVIEW_OPEN, NO_APPLICATION_UPDATE_OPEN));
+        .thenReturn(Set.of(CASE_OFFICER_ASSIGNED, NO_TECHNICAL_REVIEW_OPEN, NO_APPLICATION_UPDATE_OPEN,
+            NO_CONSULTATION_OPEN));
     when(applicationVersionService.findCaseOfficerWuaId(applicationVersion))
         .thenReturn(Optional.of(USER_WUA_ID));
 
     assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
-        .hasSize(4)
         .usingRecursiveFieldByFieldElementComparator()
         .containsExactly(
             CaseProcessingActionView.from(CHANGE_ACE_STATUS, applicationVersion),
             CaseProcessingActionView.from(CASE_OFFICER_RELEASE_OWNERSHIP, applicationVersion),
             CaseProcessingActionView.from(TECHNICAL_REVIEW_REQUEST, applicationVersion),
-            CaseProcessingActionView.from(APPLICATION_UPDATE_REQUEST, applicationVersion)
+            CaseProcessingActionView.from(APPLICATION_UPDATE_REQUEST, applicationVersion),
+            CaseProcessingActionView.from(CASE_OFFICER_REQUEST_CONSULTATION, applicationVersion)
         );
   }
 
@@ -427,12 +430,16 @@ class CaseProcessingActionServiceTest {
     when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .thenReturn(CASE_OFFICER_PERMISSIONS);
     when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(CASE_OFFICER_ASSIGNED, NO_TECHNICAL_REVIEW_OPEN, NO_APPLICATION_UPDATE_OPEN));
+        .thenReturn(Set.of(CASE_OFFICER_ASSIGNED, NO_TECHNICAL_REVIEW_OPEN, NO_APPLICATION_UPDATE_OPEN,
+            NO_CONSULTATION_OPEN));
     when(applicationVersionService.findCaseOfficerWuaId(applicationVersion))
         .thenReturn(Optional.of(OTHER_USER_WUA_ID));
 
     assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
-        .isEmpty();
+        .usingRecursiveFieldByFieldElementComparator()
+        .containsExactly(
+            CaseProcessingActionView.from(CASE_OFFICER_REQUEST_CONSULTATION, applicationVersion)
+        );
   }
 
   @Test
@@ -476,7 +483,7 @@ class CaseProcessingActionServiceTest {
     when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .thenReturn(TECHNICAL_REVIEWER_PERMISSIONS);
     when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(TECHNICAL_REVIEW_OPEN, NO_APPLICATION_UPDATE_OPEN));
+        .thenReturn(Set.of(TECHNICAL_REVIEW_OPEN, NO_APPLICATION_UPDATE_OPEN, NO_CONSULTATION_OPEN));
     when(technicalReviewService.findTechnicalReviewerWuaId(applicationVersion))
         .thenReturn(Optional.of(USER_WUA_ID));
 
