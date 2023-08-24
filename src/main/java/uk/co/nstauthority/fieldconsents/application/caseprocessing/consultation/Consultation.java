@@ -31,7 +31,7 @@ public class Consultation {
 
   private Instant requestDeadline;
 
-  private Instant requestedAtDateTime;
+  private Instant requestedAtDatetime;
 
   private Long requestedByWuaId;
 
@@ -68,12 +68,12 @@ public class Consultation {
     this.requestDeadline = requestDeadline;
   }
 
-  public Instant getRequestedAtDateTime() {
-    return requestedAtDateTime;
+  public Instant getRequestedAtDatetime() {
+    return requestedAtDatetime;
   }
 
-  public void setRequestedAtDateTime(Instant requestedAtTimestamp) {
-    this.requestedAtDateTime = requestedAtTimestamp;
+  public void setRequestedAtDatetime(Instant requestedAtTimestamp) {
+    this.requestedAtDatetime = requestedAtTimestamp;
   }
 
   public Long getRequestedByWuaId() {

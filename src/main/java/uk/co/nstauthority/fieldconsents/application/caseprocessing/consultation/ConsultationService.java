@@ -40,7 +40,7 @@ public class ConsultationService {
     consultation.setRequestDeadline(deadline);
     consultation.setConsultationTeam(getConsultationTeam());
 
-    consultation.setRequestedAtDateTime(clock.instant());
+    consultation.setRequestedAtDatetime(clock.instant());
     consultation.setRequestedByWuaId(userDetail.wuaId());
 
     repository.save(consultation);

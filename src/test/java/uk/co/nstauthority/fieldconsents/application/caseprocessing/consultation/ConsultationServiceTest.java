@@ -78,7 +78,7 @@ class ConsultationServiceTest {
             Consultation::getRequestApplicationVersion,
             Consultation::getRequestDeadline,
             Consultation::getConsultationTeam,
-            Consultation::getRequestedAtDateTime,
+            Consultation::getRequestedAtDatetime,
             Consultation::getRequestedByWuaId
         ).containsExactly(
             applicationVersion,
