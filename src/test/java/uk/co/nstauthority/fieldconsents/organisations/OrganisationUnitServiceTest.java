@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_1;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_2;
+import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDtoService.ALL_ORG_UNITS_DATA_ITEM_PURPOSE;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.ORG_GROUP_ID_1;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.ORG_GROUP_ID_2;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit1;
@@ -19,7 +20,6 @@ import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTes
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnits;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.CREATE_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.SUBMIT_FCS_APPLICATIONS;
-import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaService.ALL_ORG_UNITS_WORK_AREA_PURPOSE;
 
 import jakarta.persistence.EntityNotFoundException;
 import java.util.Collections;
@@ -318,7 +318,7 @@ class OrganisationUnitServiceTest {
 
     assertThat(organisationUnitService.getOrganisationUnitsByIds(
         List.of(PRIMARY_OPERATOR_OU_ID_1, PRIMARY_OPERATOR_OU_ID_2),
-        ALL_ORG_UNITS_WORK_AREA_PURPOSE)
+        ALL_ORG_UNITS_DATA_ITEM_PURPOSE)
     ).isEqualTo(Collections.emptyList());
   }
 
@@ -332,7 +332,7 @@ class OrganisationUnitServiceTest {
 
     assertThat(organisationUnitService.getOrganisationUnitsByIds(
         List.of(PRIMARY_OPERATOR_OU_ID_1, PRIMARY_OPERATOR_OU_ID_2),
-        ALL_ORG_UNITS_WORK_AREA_PURPOSE)
+        ALL_ORG_UNITS_DATA_ITEM_PURPOSE)
     ).isEqualTo(List.of(orgUnit1Json, orgUnit2Json));
   }
 }

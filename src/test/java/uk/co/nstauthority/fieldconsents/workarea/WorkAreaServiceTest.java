@@ -2,25 +2,22 @@ package uk.co.nstauthority.fieldconsents.workarea;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.when;
-import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.CASE_OFFICER_WUA_ID;
-import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_1;
-import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_ID_1;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperator;
+import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.portalUserDtosMap;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.ORG_GROUP_ID_1;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ASSIGN_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.REGULATOR_PERMISSIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS;
-import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaFormService.FIELD_LOOKUP_PURPOSE;
-import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaService.ALL_ORG_UNITS_WORK_AREA_PURPOSE;
-import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTestUtil.TECHNICAL_REVIEWER_WUA_ID;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,21 +25,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.nstauthority.fieldconsents.application.ApplicationService;
-import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
-import uk.co.nstauthority.fieldconsents.application.ApplicationType;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
-import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
+import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
-import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDtoService;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil;
 import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupQueryService;
-import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
-import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDtoTestUtil;
-import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
-import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 import uk.co.nstauthority.fieldconsents.teams.Team;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
@@ -53,7 +42,7 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
 class WorkAreaServiceTest {
 
   @Mock
-  private WorkAreaItemDtoRepository workAreaItemDtoRepository;
+  private WorkAreaItemDtoService workAreaItemDtoService;
 
   @Mock
   private WorkAreaFilterService workAreaFilterService;
@@ -62,25 +51,13 @@ class WorkAreaServiceTest {
   private OrganisationGroupQueryService organisationGroupQueryService;
 
   @Mock
-  private EnergyPortalUserService energyPortalUserService;
-
-  @Mock
-  private ApplicationService applicationService;
-
-  @Mock
-  private ApplicationVersionService applicationVersionService;
-
-  @Mock
-  private OrganisationUnitService organisationUnitService;
-
-  @Mock
   private TeamService teamService;
 
   @Mock
-  private FieldService fieldService;
+  private PermissionService permissionService;
 
   @Mock
-  PermissionService permissionService;
+  private ApplicationDataItemDtoService applicationDataItemDtoService;
 
   @InjectMocks
   private WorkAreaService workAreaService;
@@ -93,15 +70,7 @@ class WorkAreaServiceTest {
 
   private Team regulatorTeam;
 
-  private ApplicationVersion ventVersionSubmitted;
-
-  private ApplicationVersion flareVersionSubmitted;
-
-  private EnergyPortalUserDto submitter;
-
-  private EnergyPortalUserDto caseOfficer;
-
-  private EnergyPortalUserDto technicalReviewer;
+  private Map<Integer, FieldJson> fieldJsonMap;
 
   @BeforeEach
   void setUp() {
@@ -116,16 +85,9 @@ class WorkAreaServiceTest {
         .withTeamType(TeamType.REGULATOR)
         .build();
 
-    ventVersionSubmitted = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.VENT);
-    flareVersionSubmitted = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.FLARE);
     filter = new WorkAreaFilter();
-    submitter = EnergyPortalUserDtoTestUtil.Builder().build();
-    caseOfficer = EnergyPortalUserDtoTestUtil.Builder()
-        .withWebUserAccountId(CASE_OFFICER_WUA_ID)
-        .build();
-    technicalReviewer = EnergyPortalUserDtoTestUtil.Builder()
-        .withWebUserAccountId(TECHNICAL_REVIEWER_WUA_ID)
-        .build();
+
+    fieldJsonMap = Map.of(field1Json.getId(), field1Json);
   }
 
   @Test
@@ -146,8 +108,8 @@ class WorkAreaServiceTest {
   @Test
   void getIndustryWorkAreaItems_withNoEditPermission() {
     when(workAreaFilterService.getConditions(filter, user, null)).thenReturn(new ArrayList<>());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.INDUSTRY, Set.of(RolePermission.EDIT_FCS_APPLICATIONS))).thenReturn(
-        Collections.emptyList());
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.INDUSTRY, Set.of(RolePermission.EDIT_FCS_APPLICATIONS)))
+        .thenReturn(Collections.emptyList());
 
     assertThat(workAreaService.getIndustryWorkAreaItems(filter, user)).isEmpty();
   }
@@ -157,7 +119,7 @@ class WorkAreaServiceTest {
     when(workAreaFilterService.getConditions(filter, user, null)).thenReturn(new ArrayList<>());
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.INDUSTRY, Set.of(EDIT_FCS_APPLICATIONS))).thenReturn(
         List.of(shell1IndustryTeam));
-    when(workAreaItemDtoRepository.runQuery(any(), any())).thenReturn(Collections.emptyList());
+    when(workAreaItemDtoService.runWorkAreaQuery(any(), any())).thenReturn(Collections.emptyList());
 
     assertThat(workAreaService.getIndustryWorkAreaItems(filter, user)).isEmpty();
   }
@@ -165,8 +127,7 @@ class WorkAreaServiceTest {
   @Test
   void getRegulatorWorkAreaItems_withNoPermission() {
     when(workAreaFilterService.getConditions(filter, user, WorkAreaTab.MY_APPLICATIONS)).thenReturn(new ArrayList<>());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR,
-        Set.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS, TECHNICAL_REVIEW_FCS_APPLICATIONS)))
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, REGULATOR_PERMISSIONS))
         .thenReturn(Collections.emptyList());
 
     assertThat(workAreaService.getRegulatorWorkAreaItems(filter, user, WorkAreaTab.MY_APPLICATIONS)).isEmpty();
@@ -175,176 +136,86 @@ class WorkAreaServiceTest {
   @Test
   void getRegulatorWorkAreaItems_withNoWorkAreaItemsToDisplay() {
     when(workAreaFilterService.getConditions(filter, user, WorkAreaTab.MY_APPLICATIONS)).thenReturn(new ArrayList<>());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR,
-        Set.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS, TECHNICAL_REVIEW_FCS_APPLICATIONS)))
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, REGULATOR_PERMISSIONS))
         .thenReturn(List.of(regulatorTeam));
-    when(workAreaItemDtoRepository.runQuery(any(), any())).thenReturn(Collections.emptyList());
+    when(workAreaItemDtoService.runWorkAreaQuery(any(), any())).thenReturn(Collections.emptyList());
 
     assertThat(workAreaService.getRegulatorWorkAreaItems(filter, user, WorkAreaTab.MY_APPLICATIONS)).isEmpty();
   }
 
   @Test
-  void getRegulatorWorkAreaItems_withSubmittedApplication() {
+  void getRegulatorWorkAreaItems_withFlareSubmitted_forTerminal() {
     when(workAreaFilterService.getConditions(filter, user, WorkAreaTab.MY_APPLICATIONS)).thenReturn(new ArrayList<>());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR,
-        Set.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS, TECHNICAL_REVIEW_FCS_APPLICATIONS)))
+    var workAreaItemDto = ApplicationDataItemUtil.getApplicationDataItemDtoForShortVentSubmittedForTerminal();
+    when(workAreaItemDtoService.runWorkAreaQuery(any(), any())).thenReturn(List.of(workAreaItemDto));
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, REGULATOR_PERMISSIONS))
         .thenReturn(List.of(regulatorTeam));
-    var workAreaItemDto = WorkAreaTestUtil.getWorkAreaItemDtoForShortVentSubmittedForTerminal();
-    when(workAreaItemDtoRepository.runQuery(any(), any())).thenReturn(List.of(workAreaItemDto));
-    when(organisationUnitService.getOrganisationUnitsByIds(List.of(PRIMARY_OPERATOR_OU_ID_1), ALL_ORG_UNITS_WORK_AREA_PURPOSE))
+    when(applicationDataItemDtoService.getFieldJsonMapFromApplicationDataItemDtos(
+        List.of(workAreaItemDto))).thenReturn(fieldJsonMap);
+    when(applicationDataItemDtoService
+        .getOrganisationUnitJsonsFromApplicationDataItemDtos(List.of(workAreaItemDto)))
         .thenReturn(List.of(field1JsonWithOperator.getOperatorJson()));
-    when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(workAreaItemDto.submittedByWuaId())))).thenReturn(List.of(submitter));
-    when(applicationVersionService.getApplicationVersionById(workAreaItemDto.applicationVersionId())).thenReturn(
-        ventVersionSubmitted);
-    doCallRealMethod().when(applicationService).generateApplicationReference(ventVersionSubmitted);
+    when(applicationDataItemDtoService
+        .getEnergyPortalUserDtoMapFromApplicationDataItemDtos(List.of(workAreaItemDto)))
+        .thenReturn(portalUserDtosMap);
+    when(applicationDataItemDtoService.getDisplayReference(workAreaItemDto))
+        .thenReturn(ApplicationDataItemUtil.getCaseReference(workAreaItemDto));
+    when(applicationDataItemDtoService.getDisplayConsentDuration(workAreaItemDto))
+        .thenReturn(ApplicationDataItemUtil.getDuration(workAreaItemDto));
+    when(applicationDataItemDtoService.getDisplayCaseOfficer(workAreaItemDto, portalUserDtosMap))
+        .thenReturn(ApplicationDataItemUtil.getCaseOfficer(workAreaItemDto));
+    when(applicationDataItemDtoService.getDisplayAceFlag(workAreaItemDto))
+        .thenReturn(ApplicationDataItemUtil.getAceFlag(workAreaItemDto));
+    when(applicationDataItemDtoService.getDisplaySubmitter(workAreaItemDto, portalUserDtosMap))
+        .thenReturn(ApplicationDataItemUtil.getSubmitter(workAreaItemDto));
+    when(applicationDataItemDtoService.getDisplayAssetLocation(workAreaItemDto, fieldJsonMap))
+        .thenReturn(ApplicationDataItemUtil.getGeographicArea(workAreaItemDto));
+    when(applicationDataItemDtoService.getDisplayTechnicalReviewer(workAreaItemDto, portalUserDtosMap, TeamType.REGULATOR))
+        .thenReturn(ApplicationDataItemUtil.getTechnicalReviewer(workAreaItemDto, TeamType.REGULATOR));
 
     var workAreaItems = workAreaService.getRegulatorWorkAreaItems(filter, user, WorkAreaTab.MY_APPLICATIONS);
 
     assertThat(workAreaItems).hasSize(1);
     assertThat(workAreaItems.stream().toList().get(0)).usingRecursiveComparison()
-        .isEqualTo(WorkAreaTestUtil.getWorkAreaItemFromDto(workAreaItemDto, WorkAreaGroup.REGULATOR));
+        .isEqualTo(ApplicationDataItemUtil.getApplicationDataItemFromDto(workAreaItemDto, TeamType.REGULATOR));
   }
 
   @Test
-  void getRegulatorWorkAreaItems_withCaseAssignedAndTechnicalReviewer() {
-    when(workAreaFilterService.getConditions(filter, user, WorkAreaTab.MY_APPLICATIONS)).thenReturn(new ArrayList<>());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR,
-        Set.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS, TECHNICAL_REVIEW_FCS_APPLICATIONS)))
-        .thenReturn(List.of(regulatorTeam));
-    var workAreaItemDto = WorkAreaTestUtil.getWorkAreaItemDtoForShortVentAssignedForTerminal();
-    when(workAreaItemDtoRepository.runQuery(any(), any())).thenReturn(List.of(workAreaItemDto));
-    when(organisationUnitService.getOrganisationUnitsByIds(List.of(PRIMARY_OPERATOR_OU_ID_1), ALL_ORG_UNITS_WORK_AREA_PURPOSE))
+  void getIndustryWorkAreaItems_withProductionInProgress_forField() {
+    when(workAreaFilterService.getConditions(filter, user, null)).thenReturn(new ArrayList<>());
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.INDUSTRY, Set.of(RolePermission.EDIT_FCS_APPLICATIONS)))
+        .thenReturn(List.of(shell1IndustryTeam));
+    when(organisationGroupQueryService.getOrganisationUnitsByOrganisationGroupIds(List.of(ORG_GROUP_ID_1)))
         .thenReturn(List.of(field1JsonWithOperator.getOperatorJson()));
-    var portalUserWuaIdList = List.of(
-        WebUserAccountId.from(workAreaItemDto.submittedByWuaId()),
-        WebUserAccountId.from(workAreaItemDto.caseOfficerWuaId()),
-        WebUserAccountId.from(workAreaItemDto.technicalReviewerWuaId())
-    );
-    when(energyPortalUserService.findByWuaIds(portalUserWuaIdList))
-        .thenReturn(List.of(submitter, caseOfficer, technicalReviewer));
-    when(applicationVersionService.getApplicationVersionById(workAreaItemDto.applicationVersionId())).thenReturn(
-        ventVersionSubmitted);
-    doCallRealMethod().when(applicationService).generateApplicationReference(ventVersionSubmitted);
+    var workAreaItemDto = ApplicationDataItemUtil.getApplicationDataItemDtoForAnnualProductionInProgressForField();
+    when(workAreaItemDtoService.runWorkAreaQuery(any(), any())).thenReturn(List.of(workAreaItemDto));
+    when(applicationDataItemDtoService.getFieldJsonMapFromApplicationDataItemDtos(
+        List.of(workAreaItemDto))).thenReturn(fieldJsonMap);
+    when(organisationGroupQueryService.getOrganisationUnitsByOrganisationGroupIds(List.of(ORG_GROUP_ID_1)))
+        .thenReturn(List.of(field1JsonWithOperator.getOperatorJson()));
+    when(applicationDataItemDtoService
+        .getEnergyPortalUserDtoMapFromApplicationDataItemDtos(List.of(workAreaItemDto)))
+        .thenReturn(portalUserDtosMap);
+    when(applicationDataItemDtoService.getDisplayReference(workAreaItemDto))
+        .thenReturn(ApplicationDataItemUtil.getCaseReference(workAreaItemDto));
+    when(applicationDataItemDtoService.getDisplayConsentDuration(workAreaItemDto))
+        .thenReturn(ApplicationDataItemUtil.getDuration(workAreaItemDto));
+    when(applicationDataItemDtoService.getDisplayCaseOfficer(workAreaItemDto, portalUserDtosMap))
+        .thenReturn(ApplicationDataItemUtil.getCaseOfficer(workAreaItemDto));
+    when(applicationDataItemDtoService.getDisplayAceFlag(workAreaItemDto))
+        .thenReturn(ApplicationDataItemUtil.getAceFlag(workAreaItemDto));
+    when(applicationDataItemDtoService.getDisplayAssetLocation(workAreaItemDto, fieldJsonMap))
+        .thenReturn(ApplicationDataItemUtil.getGeographicArea(workAreaItemDto));
+    when(applicationDataItemDtoService.getDisplayTechnicalReviewer(workAreaItemDto, portalUserDtosMap, TeamType.INDUSTRY))
+        .thenReturn(ApplicationDataItemUtil.getTechnicalReviewer(workAreaItemDto, TeamType.INDUSTRY));
 
-    var workAreaItems = workAreaService.getRegulatorWorkAreaItems(filter, user, WorkAreaTab.MY_APPLICATIONS);
-
-    assertThat(workAreaItems).hasSize(1);
-    assertThat(workAreaItems.stream().toList().get(0))
-        .usingRecursiveComparison()
-        .isEqualTo(WorkAreaTestUtil.getWorkAreaItemFromDto(workAreaItemDto, WorkAreaGroup.REGULATOR));
-  }
-
-  @Test
-  void getIndustryWorkAreaItems_withProductionInProgress_forField_noDuration() {
-    when(workAreaFilterService.getConditions(filter, user, null)).thenReturn(new ArrayList<>());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.INDUSTRY, Set.of(RolePermission.EDIT_FCS_APPLICATIONS))).thenReturn(List.of(shell1IndustryTeam));
-    var workAreaItemDto = WorkAreaTestUtil.getWorkAreaItemDtoForProductionInProgressForFieldNoDuration();
-    when(workAreaItemDtoRepository.runQuery(any(), any())).thenReturn(List.of(workAreaItemDto));
-    when(fieldService.findFieldsByIds(List.of(FIELD_ID_1), FIELD_LOOKUP_PURPOSE)).thenReturn(List.of(field1JsonWithOperator));
-    when(organisationGroupQueryService.getOrganisationUnitsByOrganisationGroupIds(List.of(ORG_GROUP_ID_1))).thenReturn(List.of(field1JsonWithOperator.getOperatorJson()));
-    var workAreaItems = workAreaService.getIndustryWorkAreaItems(filter, user);
-
-    assertThat(workAreaItems).hasSize(1);
-    assertThat(workAreaItems.stream().toList().get(0))
-        .usingRecursiveComparison()
-        .isEqualTo(WorkAreaTestUtil.getWorkAreaItemFromDto(workAreaItemDto, WorkAreaGroup.INDUSTRY));
-  }
-
-  @Test
-  void getIndustryWorkAreaItems_withProductionInProgress_forField_annual() {
-    when(workAreaFilterService.getConditions(filter, user, null)).thenReturn(new ArrayList<>());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.INDUSTRY, Set.of(RolePermission.EDIT_FCS_APPLICATIONS))).thenReturn(List.of(shell1IndustryTeam));
-    var workAreaItemDto = WorkAreaTestUtil.getWorkAreaItemDtoForAnnualProductionInProgressForField();
-    when(workAreaItemDtoRepository.runQuery(any(), any())).thenReturn(List.of(workAreaItemDto));
-    when(fieldService.findFieldsByIds(List.of(FIELD_ID_1), FIELD_LOOKUP_PURPOSE)).thenReturn(List.of(field1JsonWithOperator));
-    when(organisationGroupQueryService.getOrganisationUnitsByOrganisationGroupIds(List.of(ORG_GROUP_ID_1))).thenReturn(List.of(field1JsonWithOperator.getOperatorJson()));
-    var workAreaItems = workAreaService.getIndustryWorkAreaItems(filter, user);
-
-    assertThat(workAreaItems).hasSize(1);
-    assertThat(workAreaItems.stream().toList().get(0))
-        .usingRecursiveComparison()
-        .isEqualTo(WorkAreaTestUtil.getWorkAreaItemFromDto(workAreaItemDto, WorkAreaGroup.INDUSTRY));
-  }
-
-  @Test
-  void getIndustryWorkAreaItems_withVentSubmitted_forTerminal_shortTerm() {
-    when(workAreaFilterService.getConditions(filter, user, null)).thenReturn(new ArrayList<>());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.INDUSTRY, Set.of(RolePermission.EDIT_FCS_APPLICATIONS))).thenReturn(List.of(shell1IndustryTeam));
-    var workAreaItemDto = WorkAreaTestUtil.getWorkAreaItemDtoForShortVentSubmittedForTerminal();
-    when(workAreaItemDtoRepository.runQuery(any(), any())).thenReturn(List.of(workAreaItemDto));
-    when(applicationVersionService.getApplicationVersionById(workAreaItemDto.applicationVersionId())).thenReturn(
-        ventVersionSubmitted);
-    when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(workAreaItemDto.submittedByWuaId())))).thenReturn(List.of(submitter));
-    when(organisationGroupQueryService.getOrganisationUnitsByOrganisationGroupIds(List.of(ORG_GROUP_ID_1))).thenReturn(List.of(field1JsonWithOperator.getOperatorJson()));
-    doCallRealMethod().when(applicationService).generateApplicationReference(ventVersionSubmitted);
 
     var workAreaItems = workAreaService.getIndustryWorkAreaItems(filter, user);
 
     assertThat(workAreaItems).hasSize(1);
     assertThat(workAreaItems.stream().toList().get(0))
         .usingRecursiveComparison()
-        .isEqualTo(WorkAreaTestUtil.getWorkAreaItemFromDto(workAreaItemDto, WorkAreaGroup.INDUSTRY));
-  }
-
-  @Test
-  void getIndustryWorkAreaItems_withVentVersion2InProgress_forTerminal_shortTerm() {
-    ventVersionSubmitted.setVersion(2);
-    when(workAreaFilterService.getConditions(filter, user, null)).thenReturn(new ArrayList<>());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.INDUSTRY, Set.of(RolePermission.EDIT_FCS_APPLICATIONS))).thenReturn(List.of(shell1IndustryTeam));
-    var workAreaItemDto = WorkAreaTestUtil.getWorkAreaItemDtoForShortVentVersion2InProgressForTerminal();
-    when(workAreaItemDtoRepository.runQuery(any(), any())).thenReturn(List.of(workAreaItemDto));
-    when(applicationVersionService.getApplicationVersionById(workAreaItemDto.applicationVersionId())).thenReturn(
-        ventVersionSubmitted);
-    when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(workAreaItemDto.submittedByWuaId())))).thenReturn(List.of(submitter));
-    when(organisationGroupQueryService.getOrganisationUnitsByOrganisationGroupIds(List.of(ORG_GROUP_ID_1))).thenReturn(List.of(field1JsonWithOperator.getOperatorJson()));
-    doCallRealMethod().when(applicationService).generateApplicationReference(ventVersionSubmitted);
-
-    var workAreaItems = workAreaService.getIndustryWorkAreaItems(filter, user);
-
-    assertThat(workAreaItems).hasSize(1);
-    assertThat(workAreaItems.stream().toList().get(0))
-        .usingRecursiveComparison()
-        .isEqualTo(WorkAreaTestUtil.getWorkAreaItemFromDto(workAreaItemDto, WorkAreaGroup.INDUSTRY));
-  }
-
-  @Test
-  void getIndustryWorkAreaItems_withFlareSubmitted_forTerminal_longTerm() {
-    when(workAreaFilterService.getConditions(filter, user, null)).thenReturn(new ArrayList<>());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.INDUSTRY, Set.of(RolePermission.EDIT_FCS_APPLICATIONS))).thenReturn(List.of(shell1IndustryTeam));
-    var workAreaItemDto = WorkAreaTestUtil.getWorkAreaItemDtoForLongFlareSubmittedForTerminal();
-    when(workAreaItemDtoRepository.runQuery(any(), any())).thenReturn(List.of(workAreaItemDto));
-    when(applicationVersionService.getApplicationVersionById(workAreaItemDto.applicationVersionId())).thenReturn(
-        flareVersionSubmitted);
-    when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(workAreaItemDto.submittedByWuaId())))).thenReturn(List.of(submitter));
-    when(organisationGroupQueryService.getOrganisationUnitsByOrganisationGroupIds(List.of(ORG_GROUP_ID_1))).thenReturn(List.of(field1JsonWithOperator.getOperatorJson()));
-    doCallRealMethod().when(applicationService).generateApplicationReference(flareVersionSubmitted);
-
-    var workAreaItems = workAreaService.getIndustryWorkAreaItems(filter, user);
-
-    assertThat(workAreaItems).hasSize(1);
-    assertThat(workAreaItems.stream().toList().get(0))
-        .usingRecursiveComparison()
-        .isEqualTo(WorkAreaTestUtil.getWorkAreaItemFromDto(workAreaItemDto, WorkAreaGroup.INDUSTRY));
-  }
-
-  @Test
-  void getIndustryWorkAreaItems_withFlareSubmitted_forTerminal_longTerm_openWithdrawalRequest() {
-    when(workAreaFilterService.getConditions(filter, user, null)).thenReturn(new ArrayList<>());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.INDUSTRY, Set.of(RolePermission.EDIT_FCS_APPLICATIONS))).thenReturn(List.of(shell1IndustryTeam));
-    var workAreaItemDto = WorkAreaTestUtil.getWorkAreaItemDtoForLongFlareSubmittedForTerminalWithOpenWithdrawalRequest();
-    when(workAreaItemDtoRepository.runQuery(any(), any())).thenReturn(List.of(workAreaItemDto));
-    when(applicationVersionService.getApplicationVersionById(workAreaItemDto.applicationVersionId())).thenReturn(
-        flareVersionSubmitted);
-    when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(workAreaItemDto.submittedByWuaId())))).thenReturn(List.of(submitter));
-    when(organisationGroupQueryService.getOrganisationUnitsByOrganisationGroupIds(List.of(ORG_GROUP_ID_1))).thenReturn(List.of(field1JsonWithOperator.getOperatorJson()));
-    doCallRealMethod().when(applicationService).generateApplicationReference(flareVersionSubmitted);
-
-    var workAreaItems = workAreaService.getIndustryWorkAreaItems(filter, user);
-
-    assertThat(workAreaItems).hasSize(1);
-    assertThat(workAreaItems.stream().toList().get(0))
-        .usingRecursiveComparison()
-        .isEqualTo(WorkAreaTestUtil.getWorkAreaItemFromDto(workAreaItemDto, WorkAreaGroup.INDUSTRY));
+        .isEqualTo(ApplicationDataItemUtil.getApplicationDataItemFromDto(workAreaItemDto, TeamType.INDUSTRY));
   }
 
   @Test

@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.workarea;
+package uk.co.nstauthority.fieldconsents.query;
 
 import java.util.List;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
@@ -6,8 +6,10 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
+import uk.co.nstauthority.fieldconsents.workarea.WorkAreaFilter;
+import uk.co.nstauthority.fieldconsents.workarea.WorkAreaFilterForm;
 
-public class WorkAreaFormServiceTestUtil {
+public class ApplicationDataFilterFormTestUtil {
 
   public static final int ORGANISATION_UNIT_ID = 1;
 
@@ -29,36 +31,46 @@ public class WorkAreaFormServiceTestUtil {
 
   public static final String APPLICATION_NO = "10";
 
-  static WorkAreaFilter getDefaultFilter() {
+  public static WorkAreaFilter getDefaultFilter() {
     var workAreaFilter = new WorkAreaFilter();
     workAreaFilter.setStatuses(List.of(ApplicationVersionStatus.IN_PROGRESS, ApplicationVersionStatus.SUBMITTED));
     workAreaFilter.setApplicationTypes(List.of(ApplicationType.PRODUCTION, ApplicationType.FLARE, ApplicationType.VENT));
     return workAreaFilter;
   }
 
-  static WorkAreaFilter getFilterWithDurationTypes() {
+  public static WorkAreaFilter getFilterWithDurationTypes() {
     var workAreaFilter = new WorkAreaFilter();
     workAreaFilter.setDurationTypes(List.of(ConsentLengthType.ANNUAL, ConsentLengthType.SHORT_TERM, ConsentLengthType.LONG_TERM));
     return workAreaFilter;
   }
 
-  static WorkAreaForm getWorkAreaFormForDefaultFilter() {
-    var workAreaForm = new WorkAreaForm();
+  public static WorkAreaFilterForm getWorkAreaFormForDefaultFilter() {
+    var workAreaForm = new WorkAreaFilterForm();
     workAreaForm.setStatuses(List.of(ApplicationVersionStatus.IN_PROGRESS, ApplicationVersionStatus.SUBMITTED));
     workAreaForm.setApplicationTypes(List.of(ApplicationType.PRODUCTION, ApplicationType.FLARE, ApplicationType.VENT));
     return workAreaForm;
   }
 
-  static WorkAreaForm getWorkAreaFormForFilterWithDurationTypes() {
-    var workAreaForm = new WorkAreaForm();
+  public static WorkAreaFilterForm getWorkAreaFormForFilterWithDurationTypes() {
+    var workAreaForm = new WorkAreaFilterForm();
     workAreaForm.setDurationTypes(List.of(ConsentLengthType.ANNUAL, ConsentLengthType.SHORT_TERM, ConsentLengthType.LONG_TERM));
     return workAreaForm;
   }
 
-  static WorkAreaForm getWorkAreaFormForFilterWithFieldAndOperator() {
-    var workAreaForm = new WorkAreaForm();
+  static WorkAreaFilterForm getWorkAreaFormForFilterWithFieldAndOperator() {
+    var workAreaForm = new WorkAreaFilterForm();
     workAreaForm.setAssetKey("%s%s".formatted(TERMINAL_ASSET_ID_INTEGER, AssetType.FIELD.name()));
     workAreaForm.setOperatorId(ORGANISATION_UNIT_ID);
     return workAreaForm;
+  }
+
+  public static ApplicationDataFilterForm getCompleteApplicationDataFilterForm() {
+    var form = new ApplicationDataFilterForm();
+    form.setReferenceNumber(APPLICATION_NO);
+    form.setStatuses(List.of(ApplicationVersionStatus.SUBMITTED, ApplicationVersionStatus.IN_PROGRESS));
+    form.setApplicationTypes(List.of(ApplicationType.PRODUCTION, ApplicationType.VENT));
+    form.setDurationTypes(List.of(ConsentLengthType.ANNUAL, ConsentLengthType.SHORT_TERM, ConsentLengthType.LONG_TERM));
+    form.setOperatorId(ORGANISATION_UNIT_ID);
+    return form;
   }
 }

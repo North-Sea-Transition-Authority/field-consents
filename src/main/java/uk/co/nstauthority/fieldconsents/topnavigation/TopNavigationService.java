@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.topnavigation;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.assets.AssetSelectionController.ASSET_SELECTION_TITLE;
+import static uk.co.nstauthority.fieldconsents.search.SearchController.SEARCH_TITLE;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaController.WORK_AREA_TITLE;
 
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.assets.AssetSelectionController;
 import uk.co.nstauthority.fieldconsents.fds.navigation.TopNavigationItem;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.search.SearchController;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.TeamListController;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
@@ -28,6 +30,13 @@ public class TopNavigationService {
         new TopNavigationItem(
             ASSET_SELECTION_TITLE,
             ReverseRouter.route(on(AssetSelectionController.class).getAssetSelection())
+        )
+    );
+
+    navigationItems.add(
+        new TopNavigationItem(
+            SEARCH_TITLE,
+            ReverseRouter.route(on(SearchController.class).getSearch(null, null))
         )
     );
 

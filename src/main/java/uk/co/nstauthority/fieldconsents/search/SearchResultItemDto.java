@@ -1,0 +1,37 @@
+package uk.co.nstauthority.fieldconsents.search;
+
+import java.time.Instant;
+import java.time.LocalDate;
+import uk.co.nstauthority.fieldconsents.application.ApplicationType;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDto;
+
+public class SearchResultItemDto extends ApplicationDataItemDto {
+
+  private final String licences;
+
+  public SearchResultItemDto(Integer applicationId, Integer applicationVersionId,
+                             ApplicationType type, Integer variationNo,
+                             Integer applicationNo, Integer versionNo, Integer operatorId,
+                             ApplicationVersionStatus status,
+                             Integer fieldId, String fieldName, Integer terminalId, String terminalName,
+                             ConsentLengthType duration,
+                             Integer consentYear, LocalDate shortTermStartDate,
+                             LocalDate shortTermEndDate, Integer longTermStartYear, Integer longTermEndYear,
+                             Instant submittedDateTime, Long submittedByWuaId, Boolean aceFlag,
+                             Long caseOfficerWuaId, Boolean withdrawalOpen, Long technicalReviewerWuaId,
+                             Boolean applicationUpdateOpen, Instant applicationUpdateDeadline, String licences) {
+
+    super(applicationId, applicationVersionId, type, variationNo, applicationNo, versionNo, operatorId, status, fieldId,
+        fieldName, terminalId, terminalName, duration, consentYear, shortTermStartDate, shortTermEndDate,
+        longTermStartYear, longTermEndYear, submittedDateTime, submittedByWuaId, aceFlag, caseOfficerWuaId,
+        withdrawalOpen, technicalReviewerWuaId, applicationUpdateOpen, applicationUpdateDeadline);
+
+    this.licences = licences;
+  }
+
+  public String getLicences() {
+    return licences;
+  }
+}

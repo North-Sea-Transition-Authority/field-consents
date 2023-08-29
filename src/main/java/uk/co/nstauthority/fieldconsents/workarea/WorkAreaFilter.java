@@ -5,30 +5,19 @@ import java.io.Serializable;
 import org.springframework.web.bind.annotation.SessionAttributes;
 
 @SessionAttributes({"workAreaFilter"})
-public class WorkAreaFilter extends WorkAreaForm implements Serializable {
+public class WorkAreaFilter extends WorkAreaFilterForm implements Serializable {
 
   @Serial
   private static final long serialVersionUID = 8791625085927579692L;
 
+  @Override
   public void clearFilter() {
-    referenceNumber = null;
-    statuses = null;
-    applicationTypes = null;
-    durationTypes = null;
+    super.clearFilter();
     assetKey = null;
-    operatorId = null;
-    geographicAreas = null;
-    assetTypesWithShore = null;
   }
 
-  public void update(WorkAreaForm form) {
-    referenceNumber = form.getReferenceNumber();
-    statuses = form.getStatuses();
-    applicationTypes = form.getApplicationTypes();
-    durationTypes = form.getDurationTypes();
+  public void update(WorkAreaFilterForm form) {
+    super.update(form);
     assetKey = form.getAssetKey();
-    operatorId = form.getOperatorId();
-    geographicAreas = form.getGeographicAreas();
-    assetTypesWithShore = form.getAssetTypesWithShore();
   }
 }

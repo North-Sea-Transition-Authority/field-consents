@@ -53,7 +53,7 @@ public enum ConsentLengthType implements Displayable {
         .collect(Collectors.toCollection(LinkedHashSet::new));
   }
 
-  public static Map<String, String> getWorkAreaOptions() {
+  public static Map<String, String> getConsentLengthOptions() {
     return Arrays.stream(ConsentLengthType.values())
         .sorted(Comparator.comparingInt(Displayable::getDisplayOrder))
         .collect(StreamUtils.toLinkedHashMap(Displayable::getEnumName, ConsentLengthType::getShortDisplayName));

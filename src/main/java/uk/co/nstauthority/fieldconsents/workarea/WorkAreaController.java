@@ -43,7 +43,7 @@ public class WorkAreaController {
 
   private final WorkAreaService workAreaService;
 
-  private final WorkAreaFormService workAreaFormService;
+  private final WorkAreaFilterFormService workAreaFormService;
 
   private final WorkAreaFilterService workAreaFilterService;
 
@@ -53,7 +53,7 @@ public class WorkAreaController {
 
 
   public WorkAreaController(WorkAreaService workAreaService,
-                            WorkAreaFormService workAreaFormService,
+                            WorkAreaFilterFormService workAreaFormService,
                             WorkAreaFilterService workAreaFilterService,
                             TeamService teamService, PermissionService permissionService) {
     this.workAreaService = workAreaService;
@@ -163,7 +163,7 @@ public class WorkAreaController {
   private ModelAndView getWorkAreaModelAndView(WorkAreaFilter filter, ServiceUserDetail user) {
     var appStatuses = ApplicationVersionStatus.getWorkAreaOptions();
     var appTypes = ApplicationType.getDisplayableOptions();
-    var durationTypes = ConsentLengthType.getWorkAreaOptions();
+    var durationTypes = ConsentLengthType.getConsentLengthOptions();
     var form = workAreaFormService.getFromFilter(filter);
     var prefilledOperator = workAreaFormService.getPrefilledOrganisation(form.getOperatorId());
     var prefilledAsset = workAreaFormService.getPrefilledAsset(form.getAssetKey());
@@ -190,7 +190,7 @@ public class WorkAreaController {
   }
 
   @PostMapping
-  ModelAndView filterWorkArea(@ModelAttribute("form") WorkAreaForm form,
+  ModelAndView filterWorkArea(@ModelAttribute("form") WorkAreaFilterForm form,
                               @ModelAttribute("workAreaFilter") WorkAreaFilter filter) {
     filter.update(form);
     return ReverseRouter.redirect(on(WorkAreaController.class).getWorkArea(null, null));

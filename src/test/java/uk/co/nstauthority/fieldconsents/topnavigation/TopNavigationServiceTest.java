@@ -11,6 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.assets.AssetSelectionController;
 import uk.co.nstauthority.fieldconsents.fds.navigation.TopNavigationItem;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.search.SearchController;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.TeamListController;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
@@ -37,6 +38,10 @@ class TopNavigationServiceTest {
             tuple(
                 AssetSelectionController.ASSET_SELECTION_TITLE,
                 ReverseRouter.route(on(AssetSelectionController.class).getAssetSelection())
+            ),
+            tuple(
+                SearchController.SEARCH_TITLE,
+                ReverseRouter.route(on(SearchController.class).getSearch(null, null))
             ),
             tuple(
                 TopNavigationService.TEAM_MANAGEMENT_NAVIGATION_ITEM_TITLE,

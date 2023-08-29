@@ -3,11 +3,7 @@ package uk.co.nstauthority.fieldconsents.workarea;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationAssets.APPLICATION_ASSETS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationTechnicalReviews.APPLICATION_TECHNICAL_REVIEWS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
-import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.Applications.APPLICATIONS;
-import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ConsentLengths.CONSENT_LENGTHS;
-import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaFormService.FIELD_LOOKUP_PURPOSE;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import org.jooq.Condition;
@@ -16,7 +12,6 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationFieldService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationTerminalService;
-import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
@@ -25,55 +20,37 @@ import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.fields.GeographicArea;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterService;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 
 @Service
 public class WorkAreaFilterService {
 
+  public static final String FIELD_LOOKUP_PURPOSE = "Lookup field for the work-area";
+
   private final AssetService assetService;
-
   private final FieldService fieldService;
-
   private final ApplicationFieldService applicationFieldService;
-
   private final ApplicationTerminalService applicationTerminalService;
-
   private final TeamService teamService;
+  private final ApplicationDataFilterService applicationDataFilterService;
 
   public WorkAreaFilterService(AssetService assetService,
                                FieldService fieldService,
                                ApplicationFieldService applicationFieldService,
                                ApplicationTerminalService applicationTerminalService,
-                               TeamService teamService) {
+                               TeamService teamService,
+                               ApplicationDataFilterService applicationDataFilterService) {
     this.assetService = assetService;
     this.fieldService = fieldService;
     this.applicationFieldService = applicationFieldService;
     this.applicationTerminalService = applicationTerminalService;
     this.teamService = teamService;
+    this.applicationDataFilterService = applicationDataFilterService;
   }
 
-  ArrayList<Condition> getConditions(WorkAreaFilter filter, ServiceUserDetail user, WorkAreaTab workAreaTab)  {
-    var conditions = new ArrayList<Condition>();
-
-    if (Objects.nonNull(filter.getStatuses())) {
-      conditions.add(getStatusQueryCondition(filter.getStatuses()));
-    }
-
-    if (Objects.nonNull(filter.getReferenceNumber())) {
-      conditions.add(getReferenceNumberQueryCondition(filter.getReferenceNumber()));
-    }
-
-    if (Objects.nonNull(filter.getApplicationTypes())) {
-      conditions.add(getApplicationTypesQueryCondition(filter.getApplicationTypes()));
-    }
-
-    if (Objects.nonNull(filter.getDurationTypes())) {
-      conditions.add(getDurationTypesQueryCondition(filter.getDurationTypes()));
-    }
-
-    if (Objects.nonNull(filter.getOperatorId())) {
-      conditions.add(getOperatorCondition(filter.getOperatorId()));
-    }
+  List<Condition> getConditions(WorkAreaFilter filter, ServiceUserDetail user, WorkAreaTab workAreaTab)  {
+    var conditions = applicationDataFilterService.getConditions(filter);
 
     if (Objects.nonNull(filter.getAssetKey())) {
       var assetJsonOptional = assetService.getAssetFromKey(filter.getAssetKey());
@@ -81,7 +58,9 @@ public class WorkAreaFilterService {
     }
 
     if (Objects.nonNull(filter.getGeographicAreas())) {
-      conditions.add(getGeographicAreasQueryCondition(filter.getGeographicAreas()));
+      conditions.add(
+          getGeographicAreasQueryCondition(filter.getGeographicAreas())
+      );
     }
 
     if (Objects.nonNull(filter.getAssetTypesWithShore())) {
@@ -109,35 +88,7 @@ public class WorkAreaFilterService {
     return conditions;
   }
 
-  private Condition getReferenceNumberQueryCondition(String referenceNumber) {
-    return APPLICATIONS.APPLICATION_NO.cast(String.class).eq(referenceNumber);
-  }
-
-  private Condition getStatusQueryCondition(List<ApplicationVersionStatus> statuses) {
-    var statusStrings = statuses
-        .stream()
-        .map(ApplicationVersionStatus::getEnumName)
-        .toList();
-    return APPLICATION_VERSIONS.STATUS.in(statusStrings);
-  }
-
-  private Condition getApplicationTypesQueryCondition(List<ApplicationType> applicationTypes) {
-    var applicationTypeStrings = applicationTypes
-        .stream()
-        .map(ApplicationType::getEnumName)
-        .toList();
-    return APPLICATIONS.TYPE.in(applicationTypeStrings);
-  }
-
-  private Condition getDurationTypesQueryCondition(List<ConsentLengthType> durationTypes) {
-    var consentLengthStrings = durationTypes
-        .stream()
-        .map(ConsentLengthType::getEnumName)
-        .toList();
-    return CONSENT_LENGTHS.CONSENT_LENGTH.in(consentLengthStrings);
-  }
-
-  private Condition getGeographicAreasQueryCondition(List<GeographicArea> geographicAreas) {
+  public Condition getGeographicAreasQueryCondition(List<GeographicArea> geographicAreas) {
     var primaryFieldIdsInGeographicAreas = fieldService
         .findFieldsByIds(
             applicationFieldService.findDistinctPrimaryFieldIds(),
@@ -206,10 +157,6 @@ public class WorkAreaFilterService {
     } else {
       throw new RuntimeException("Not a valid Asset Type: " + assetJson.getAssetType());
     }
-  }
-
-  private Condition getOperatorCondition(Integer operatorId) {
-    return APPLICATION_VERSIONS.PRIMARY_OPERATOR_OU_ID.eq(operatorId);
   }
 
   public WorkAreaFilter getDefaultFilter(ServiceUserDetail user) {

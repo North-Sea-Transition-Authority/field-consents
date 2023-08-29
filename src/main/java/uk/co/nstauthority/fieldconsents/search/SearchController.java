@@ -1,0 +1,95 @@
+package uk.co.nstauthority.fieldconsents.search;
+
+import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.ModelAndView;
+import uk.co.nstauthority.fieldconsents.application.ApplicationType;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
+import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
+import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterForm;
+import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+
+@Controller
+@RequestMapping("/search")
+@HasApplicationPermission(permissions = {
+    RolePermission.EDIT_FCS_APPLICATIONS,
+    RolePermission.PROCESS_FCS_APPLICATIONS,
+    RolePermission.ASSIGN_FCS_APPLICATIONS,
+    RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS
+})
+public class SearchController {
+
+  public static final String SEARCH_TITLE = "Search";
+
+  private final TeamService teamService;
+
+  private final SearchService searchService;
+
+  private final SearchFilterFormService searchFilterFormService;
+
+  SearchController(TeamService teamService,
+                   SearchService searchService,
+                   SearchFilterFormService searchFilterFormService) {
+    this.teamService = teamService;
+    this.searchService = searchService;
+    this.searchFilterFormService = searchFilterFormService;
+  }
+
+  @GetMapping
+  public ModelAndView getSearch(@ModelAttribute("form") ApplicationDataFilterForm form, ServiceUserDetail user) {
+    var isRegulatorUser = teamService.isRegulatorUser(user);
+
+    if (isRegulatorUser) {
+      return getSearchModelAndView(form);
+    } else {
+      // TODO FCS-425: Search screen for industry users
+      return null;
+    }
+  }
+
+  private ModelAndView getSearchModelAndView(ApplicationDataFilterForm form) {
+    var appStatuses = ApplicationVersionStatus.getSearchOptions();
+    var appTypes = ApplicationType.getDisplayableOptions();
+    var durationTypes = ConsentLengthType.getConsentLengthOptions();
+    var prefilledOperator = searchFilterFormService.getPrefilledOrganisation(form.getOperatorId());
+    var assetTypesWithShore = AssetTypeWithShore.getDisplayableOptions();
+
+    return new ModelAndView("fcs/search/search")
+        .addObject("clearFiltersUrl",
+            ReverseRouter.route(on(SearchController.class).clearSearchFilter(null)))
+        .addObject("appStatuses", appStatuses)
+        .addObject("appTypes", appTypes)
+        .addObject("durationTypes", durationTypes)
+        .addObject("prefilledOperator", prefilledOperator)
+        .addObject("operatorSearchRestUrl",
+            ReverseRouter.route(on(OrganisationUnitRestController.class).getOrganisationUnitsForEditor(null, null)))
+        .addObject("assetTypesWithShore", assetTypesWithShore)
+        .addObject("form", form)
+        .addObject("pageTitle", SEARCH_TITLE);
+  }
+
+  @PostMapping
+  ModelAndView searchApplications(@ModelAttribute("form") ApplicationDataFilterForm form,
+                                  ServiceUserDetail user) {
+    return getSearchModelAndView(form)
+        .addObject("showResults", true)
+        .addObject("searchResultItems", searchService.getRegulatorSearchResultItems(form, user));
+  }
+
+  @GetMapping("/clear-filters")
+  public ModelAndView clearSearchFilter(@ModelAttribute("form") ApplicationDataFilterForm form) {
+    form.clearFilter();
+    return ReverseRouter.redirect(on(SearchController.class).getSearch(null, null));
+  }
+}

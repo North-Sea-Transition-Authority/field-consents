@@ -14,13 +14,8 @@ import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationAssets.APPLICATION_ASSETS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationTechnicalReviews.APPLICATION_TECHNICAL_REVIEWS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
-import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.Applications.APPLICATIONS;
-import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ConsentLengths.CONSENT_LENGTHS;
-import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaFormService.FIELD_LOOKUP_PURPOSE;
-import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaFormServiceTestUtil.APPLICATION_NO;
-import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaFormServiceTestUtil.ORGANISATION_UNIT_ID;
+import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaFilterService.FIELD_LOOKUP_PURPOSE;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,7 +27,6 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationFieldService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationTerminalService;
-import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.assets.AssetTestUtil;
 import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
@@ -40,6 +34,8 @@ import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.fields.GeographicArea;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterService;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 
 @ExtendWith(MockitoExtension.class)
@@ -60,10 +56,14 @@ class WorkAreaFilterServiceTest {
   @Mock
   private TeamService teamService;
 
+  @Mock
+  private ApplicationDataFilterService applicationDataFilterService;
+
   private WorkAreaFilterService workAreaFilterService;
 
   private WorkAreaFilter filter;
-  private WorkAreaForm form;
+
+  private WorkAreaFilterForm form;
 
   private ServiceUserDetail user;
 
@@ -74,12 +74,12 @@ class WorkAreaFilterServiceTest {
         fieldService,
         applicationFieldService,
         applicationTerminalService,
-        teamService
-    );
+        teamService,
+        applicationDataFilterService);
 
     user = ServiceUserDetailTestUtil.Builder().build();
     filter = new WorkAreaFilter();
-    form = new WorkAreaForm();
+    form = new WorkAreaFilterForm();
   }
 
   @Test
@@ -89,47 +89,8 @@ class WorkAreaFilterServiceTest {
   }
 
   @Test
-  void getConditions_StatusesSelected() {
-    var status = ApplicationVersionStatus.IN_PROGRESS;
-    form.setStatuses(Collections.singletonList(status));
-    filter.update(form);
-
-    var conditions = workAreaFilterService.getConditions(filter, user, null);
-
-    assertThat(conditions).containsExactly(
-        APPLICATION_VERSIONS.STATUS.in(Collections.singletonList(status.getEnumName()))
-    );
-  }
-
-  @Test
-  void getConditions_ApplicationTypesSelected() {
-    var applicationType = ApplicationType.PRODUCTION;
-    form.setApplicationTypes(Collections.singletonList(applicationType));
-    filter.update(form);
-
-    var conditions = workAreaFilterService.getConditions(filter, user, null);
-
-    assertThat(conditions).containsExactly(
-        APPLICATIONS.TYPE.in(Collections.singletonList(applicationType.getEnumName()))
-    );
-  }
-
-  @Test
-  void getConditions_DurationTypesSelected() {
-    var durationTypes = ConsentLengthType.LONG_TERM;
-    form.setDurationTypes(Collections.singletonList(durationTypes));
-    filter.update(form);
-
-    var conditions = workAreaFilterService.getConditions(filter, user, null);
-
-    assertThat(conditions).containsExactly(
-        CONSENT_LENGTHS.CONSENT_LENGTH.in(Collections.singletonList(durationTypes.getEnumName()))
-    );
-  }
-
-  @Test
   void getConditions_AssetNotFound() {
-    form.setAssetKey(WorkAreaFormServiceTestUtil.FIELD_ASSET_KEY);
+    form.setAssetKey(ApplicationDataFilterFormTestUtil.FIELD_ASSET_KEY);
     filter.update(form);
 
     when(assetService.getAssetFromKey(filter.getAssetKey())).thenReturn(Optional.empty());
@@ -140,7 +101,7 @@ class WorkAreaFilterServiceTest {
 
   @Test
   void getConditions_FieldSelected() {
-    form.setAssetKey(WorkAreaFormServiceTestUtil.FIELD_ASSET_KEY);
+    form.setAssetKey(ApplicationDataFilterFormTestUtil.FIELD_ASSET_KEY);
     filter.update(form);
 
     when(assetService.getAssetFromKey(filter.getAssetKey())).thenReturn(Optional.of(AssetTestUtil.field1AssetJson));
@@ -153,7 +114,7 @@ class WorkAreaFilterServiceTest {
 
   @Test
   void getConditions_TerminalSelected() {
-    form.setAssetKey(WorkAreaFormServiceTestUtil.TERMINAL_ASSET_KEY);
+    form.setAssetKey(ApplicationDataFilterFormTestUtil.TERMINAL_ASSET_KEY);
     filter.update(form);
 
     when(assetService.getAssetFromKey(filter.getAssetKey())).thenReturn(Optional.of(AssetTestUtil.terminal1AssetJson));
@@ -161,30 +122,6 @@ class WorkAreaFilterServiceTest {
 
     assertThat(conditions).containsExactly(
         APPLICATION_ASSETS.TERMINAL_ID.eq(TERMINAL_ID_1)
-    );
-  }
-
-  @Test
-  void getConditions_OperatorSelected() {
-    form.setOperatorId(ORGANISATION_UNIT_ID);
-    filter.update(form);
-
-    var conditions = workAreaFilterService.getConditions(filter, user, null);
-
-    assertThat(conditions).containsExactly(
-        APPLICATION_VERSIONS.PRIMARY_OPERATOR_OU_ID.eq(ORGANISATION_UNIT_ID)
-    );
-  }
-
-  @Test
-  void getConditions_ReferenceNumberSelected() {
-    form.setReferenceNumber(APPLICATION_NO);
-    filter.update(form);
-
-    var conditions = workAreaFilterService.getConditions(filter, user, null);
-
-    assertThat(conditions).containsExactly(
-        APPLICATIONS.APPLICATION_NO.cast(String.class).eq(APPLICATION_NO)
     );
   }
 
@@ -363,8 +300,8 @@ class WorkAreaFilterServiceTest {
 
     var workAreaFilter = workAreaFilterService.getDefaultFilter(serviceUser);
 
-    assertThat(workAreaFilter.statuses).isEqualTo(expectedStatuses);
-    assertThat(workAreaFilter.applicationTypes).isEqualTo(expectedApplicationTypes);
+    assertThat(workAreaFilter.getStatuses()).isEqualTo(expectedStatuses);
+    assertThat(workAreaFilter.getApplicationTypes()).isEqualTo(expectedApplicationTypes);
 
     assertNonDefaultFilter(workAreaFilter);
   }
@@ -379,18 +316,18 @@ class WorkAreaFilterServiceTest {
 
     var workAreaFilter = workAreaFilterService.getDefaultFilter(serviceUser);
 
-    assertThat(workAreaFilter.statuses).isNull();
-    assertThat(workAreaFilter.applicationTypes).isEqualTo(expectedApplicationTypes);
+    assertThat(workAreaFilter.getStatuses()).isNull();
+    assertThat(workAreaFilter.getApplicationTypes()).isEqualTo(expectedApplicationTypes);
 
     assertNonDefaultFilter(workAreaFilter);
   }
 
   private void assertNonDefaultFilter(WorkAreaFilter workAreaFilter) {
-    assertThat(workAreaFilter.referenceNumber).isNull();
-    assertThat(workAreaFilter.durationTypes).isNull();
+    assertThat(workAreaFilter.getReferenceNumber()).isNull();
+    assertThat(workAreaFilter.getDurationTypes()).isNull();
     assertThat(workAreaFilter.assetKey).isNull();
-    assertThat(workAreaFilter.operatorId).isNull();
-    assertThat(workAreaFilter.geographicAreas).isNull();
-    assertThat(workAreaFilter.assetTypesWithShore).isNull();
+    assertThat(workAreaFilter.getOperatorId()).isNull();
+    assertThat(workAreaFilter.getGeographicAreas()).isNull();
+    assertThat(workAreaFilter.getAssetTypesWithShore()).isNull();
   }
 }

@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.teams.permissionmanagement;
 
+import java.util.EnumSet;
 import java.util.Set;
 
 public enum RolePermission {
@@ -21,4 +22,11 @@ public enum RolePermission {
 
   public static final Set<RolePermission> VIEW_PERMISSIONS =
       Set.of(RolePermission.VIEW_FCS_APPLICATIONS, RolePermission.VIEW_FCS_CONSENTS);
+
+  public static final Set<RolePermission> REGULATOR_PERMISSIONS =
+      EnumSet.of(
+            RolePermission.PROCESS_FCS_APPLICATIONS,
+            RolePermission.ASSIGN_FCS_APPLICATIONS,
+            RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS
+          );
 }

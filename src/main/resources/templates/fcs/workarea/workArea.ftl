@@ -1,4 +1,5 @@
 <#include '../layout/layout.ftl'>
+<#import '../dataitems/_dataItemFilter.ftl' as dataItemFilter>
 
 <@defaultPage
   htmlTitle=pageTitle
@@ -8,12 +9,12 @@
   <@fdsSearch.searchPage>
     <@fdsSearch.searchFilter oneThirdWidth=true>
       <@fdsSearch.searchFilterList clearFilterUrl=springUrl(clearFiltersUrl) filterButtonClass="govuk-button govuk-button--secondary">
-        <@referenceNumberFilter form=form/>
-        <@statusFilter form=form statusCheckboxes=appStatuses/>
-        <@applicationTypeFilter form=form applicationTypeCheckboxes=appTypes/>
-        <@durationFilter form=form durationCheckboxes=durationTypes/>
+        <@dataItemFilter.referenceNumberFilter form=form/>
+        <@dataItemFilter.statusFilter form=form statusCheckboxes=appStatuses/>
+        <@dataItemFilter.applicationTypeFilter form=form applicationTypeCheckboxes=appTypes/>
+        <@dataItemFilter.durationFilter form=form durationCheckboxes=durationTypes/>
         <@assetFilter form=form prefilledAsset=prefilledAsset assetSearchRestUrl=assetSearchRestUrl/>
-        <@operatorFilter form=form prefilledOperator=prefilledOperator operatorSearchRestUrl=operatorSearchRestUrl/>
+        <@dataItemFilter.operatorFilter form=form prefilledOperator=prefilledOperator operatorSearchRestUrl=operatorSearchRestUrl/>
         <@geographicAreaFilter form=form geographicAreaCheckboxes=geographicAreas/>
         <@assetTypeWithShoreFilter form=form assetTypeWithShoreCheckboxes=assetTypesWithShore/>
       </@fdsSearch.searchFilterList>
@@ -30,7 +31,7 @@
             <@fdsBackendTabs.tabContent tabAnchor=tab.anchor currentTab=selectedTab tabValue=tab.value>
               <@fdsResultList.resultList resultCount=workAreaItems?size>
                 <#list workAreaItems as workAreaItem>
-                  <@fcsWorkAreaItem workAreaItem=workAreaItem/>
+                  <@fcsApplicationDataItem dataItem=workAreaItem pageTitle=pageTitle/>
                 </#list>
               </@fdsResultList.resultList>
             </@fdsBackendTabs.tabContent>
@@ -39,50 +40,13 @@
       <#else>
         <@fdsResultList.resultList resultCount=workAreaItems?size>
           <#list workAreaItems as workAreaItem>
-            <@fcsWorkAreaItem workAreaItem=workAreaItem/>
+            <@fcsApplicationDataItem dataItem=workAreaItem pageTitle=pageTitle/>
           </#list>
         </@fdsResultList.resultList>
       </#if>
     </@fdsSearch.searchPageContent>
   </@fdsSearch.searchPage>
 </@defaultPage>
-
-<#macro referenceNumberFilter form>
-  <@fdsSearch.searchFilterItem itemName="Reference number" expanded=form.referenceSearchTerm?has_content>
-    <@fdsSearch.searchTextInput
-      path="form.referenceNumber"
-      labelText=""
-      suffixScreenReaderPrompt="Application reference number"
-    />
-  </@fdsSearch.searchFilterItem>
-</#macro>
-
-<#macro statusFilter form statusCheckboxes>
-  <@fdsSearch.searchFilterItem itemName="Status" expanded=form.statuses?has_content>
-    <@fdsSearch.searchCheckboxes
-      path="form.statuses"
-      checkboxes=statusCheckboxes
-    />
-  </@fdsSearch.searchFilterItem>
-</#macro>
-
-<#macro applicationTypeFilter form applicationTypeCheckboxes>
-  <@fdsSearch.searchFilterItem itemName="Application type" expanded=form.applicationTypes?has_content>
-    <@fdsSearch.searchCheckboxes
-      path="form.applicationTypes"
-      checkboxes=applicationTypeCheckboxes
-    />
-  </@fdsSearch.searchFilterItem>
-</#macro>
-
-<#macro durationFilter form durationCheckboxes>
-  <@fdsSearch.searchFilterItem itemName="Duration" expanded=form.durationTypes?has_content>
-    <@fdsSearch.searchCheckboxes
-      path="form.durationTypes"
-      checkboxes=durationCheckboxes
-    />
-  </@fdsSearch.searchFilterItem>
-</#macro>
 
 <#macro assetFilter form prefilledAsset assetSearchRestUrl>
   <@fdsSearch.searchFilterItem itemName="Primary field / facility" expanded=prefilledAsset.id()?has_content>
@@ -91,18 +55,6 @@
       restUrl=springUrl(assetSearchRestUrl)
       labelText=""
       preselectedItems={prefilledAsset.id() : prefilledAsset.text()}
-      inputClass="govuk-input--width-10"
-    />
-  </@fdsSearch.searchFilterItem>
-</#macro>
-
-<#macro operatorFilter form prefilledOperator operatorSearchRestUrl>
-  <@fdsSearch.searchFilterItem itemName="Primary operator" expanded=prefilledOperator.id()?has_content>
-    <@fdsSearchSelector.searchSelectorRest
-      path="form.operatorId"
-      restUrl=springUrl(operatorSearchRestUrl)
-      labelText=""
-      preselectedItems={prefilledOperator.id() : prefilledOperator.text()}
       inputClass="govuk-input--width-10"
     />
   </@fdsSearch.searchFilterItem>
@@ -126,36 +78,36 @@
   </@fdsSearch.searchFilterItem>
 </#macro>
 
-<#macro fcsWorkAreaItem workAreaItem>
+<#macro fcsApplicationDataItem dataItem pageTitle>
   <#assign workAreaItemTagContent>
-    <#if workAreaItem.withdrawalOpen()>
+    <#if dataItem.isWithdrawalOpen()>
       <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Withdrawal requested"/>
     </#if>
-    <#if workAreaItem.applicationUpdateOpen()>
-      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Update due by ${workAreaItem.applicationUpdateDeadline()}"/>
+    <#if dataItem.isApplicationUpdateOpen()>
+      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Update due by ${dataItem.getApplicationUpdateDeadline()}"/>
     </#if>
   </#assign>
   <@fdsResultList.resultListItem
-    linkHeadingText=workAreaItem.reference()
-    linkHeadingUrl=springUrl(workAreaItem.url())
-    captionHeadingText=workAreaItem.operator()
+    linkHeadingText=dataItem.getReference()
+    linkHeadingUrl=springUrl(dataItem.url())
+    captionHeadingText=dataItem.getOperator()
     itemTag=workAreaItemTagContent
   >
     <@fdsResultList.resultListDataItem>
-        <#assign consentType>
-          ${workAreaItem.type()} <br/> ${workAreaItem.duration()} <br/> ${workAreaItem.aceFlag()}
-        </#assign>
-        <#assign location>
-          ${workAreaItem.asset()} <br/> ${workAreaItem.geographicArea()}
-        </#assign>
-        <#assign status>
-            ${workAreaItem.status()} <br/> ${workAreaItem.caseOfficer()} <br/> ${workAreaItem.technicalReviewer()}
-        </#assign>
-        <#assign otherInformation>
-          ${workAreaItem.submittedDateTime()} <br/> ${workAreaItem.submittedBy()}
-        </#assign>
+      <#assign consentType>
+        ${dataItem.getType()} <br/> ${dataItem.getDuration()} <br/> ${dataItem.getAceFlag()}
+      </#assign>
+      <#assign location>
+        ${dataItem.getAsset()} <br/> ${dataItem.getGeographicArea()}
+      </#assign>
+      <#assign status>
+        ${dataItem.getStatus()} <br/> ${dataItem.getCaseOfficer()} <br/> ${dataItem.getTechnicalReviewer()}
+      </#assign>
+      <#assign otherInformation>
+        ${dataItem.getSubmittedDateTime()} <br/> ${dataItem.getSubmittedBy()}
+      </#assign>
       <@fdsResultList.resultListDataValue key="Consent type" value=consentType/>
-      <@fdsResultList.resultListDataValue key="Location" value=location/>
+      <@fdsResultList.resultListDataValue key="Licence info" value=location/>
       <@fdsResultList.resultListDataValue key="Status" value=status/>
       <@fdsResultList.resultListDataValue key="Other information" value=otherInformation/>
     </@fdsResultList.resultListDataItem>

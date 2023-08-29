@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.workarea;
+package uk.co.nstauthority.fieldconsents.query;
 
 import java.util.List;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
@@ -7,14 +7,12 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthT
 import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.assets.fields.GeographicArea;
 
-public class WorkAreaForm {
-
+public class ApplicationDataFilterForm {
   String referenceNumber;
   List<ApplicationVersionStatus> statuses;
   List<ApplicationType> applicationTypes;
   List<ConsentLengthType> durationTypes;
   Integer operatorId;
-  String assetKey;
   List<GeographicArea> geographicAreas;
   List<AssetTypeWithShore> assetTypesWithShore;
 
@@ -59,14 +57,6 @@ public class WorkAreaForm {
     this.operatorId = operatorId;
   }
 
-  public String getAssetKey() {
-    return assetKey;
-  }
-
-  public void setAssetKey(String assetKey) {
-    this.assetKey = assetKey;
-  }
-
   public List<GeographicArea> getGeographicAreas() {
     return geographicAreas;
   }
@@ -81,5 +71,25 @@ public class WorkAreaForm {
 
   public void setAssetTypesWithShore(List<AssetTypeWithShore> assetTypes) {
     this.assetTypesWithShore = assetTypes;
+  }
+
+  public void clearFilter() {
+    setReferenceNumber(null);
+    setStatuses(null);
+    setApplicationTypes(null);
+    setDurationTypes(null);
+    setOperatorId(null);
+    setGeographicAreas(null);
+    setAssetTypesWithShore(null);
+  }
+
+  public void update(ApplicationDataFilterForm form) {
+    setReferenceNumber(form.getReferenceNumber());
+    setStatuses(form.getStatuses());
+    setApplicationTypes(form.getApplicationTypes());
+    setDurationTypes(form.getDurationTypes());
+    setOperatorId(form.getOperatorId());
+    setGeographicAreas(form.getGeographicAreas());
+    setAssetTypesWithShore(form.getAssetTypesWithShore());
   }
 }

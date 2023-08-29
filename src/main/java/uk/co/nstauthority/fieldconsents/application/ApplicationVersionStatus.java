@@ -29,6 +29,17 @@ public enum ApplicationVersionStatus implements Displayable {
     );
   }
 
+  public static Map<String, String> getSearchOptions() {
+    return DisplayableEnumOptionUtil.getDisplayableOptionsFromStream(
+        Stream.of(
+            IN_PROGRESS,
+            SUBMITTED,
+            COMPLETED,
+            WITHDRAWN
+        )
+    );
+  }
+
   @Override
   public String getDisplayName() {
     return displayName;

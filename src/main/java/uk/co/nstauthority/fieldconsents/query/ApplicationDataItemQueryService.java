@@ -1,6 +1,5 @@
-package uk.co.nstauthority.fieldconsents.workarea;
+package uk.co.nstauthority.fieldconsents.query;
 
-import static org.jooq.impl.DSL.greatest;
 import static org.jooq.impl.DSL.max;
 import static uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType.IS_ACE_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATIONS;
@@ -10,35 +9,32 @@ import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_UPDATES;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_VERSIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_WITHDRAWALS;
-import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_WORK_AREA_PRIORITIES;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.CONSENT_LENGTHS;
 
 import java.util.List;
+import java.util.function.Consumer;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Repository;
+import org.jooq.Record;
+import org.jooq.SelectQuery;
+import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.WithdrawalStatus;
-import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup;
 import uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions;
 
-@Repository
-class WorkAreaItemDtoRepository {
+@Service
+public class ApplicationDataItemQueryService {
 
   private final DSLContext context;
 
-  @Autowired
-  WorkAreaItemDtoRepository(DSLContext context) {
+  public ApplicationDataItemQueryService(DSLContext context) {
     this.context = context;
   }
 
-  public List<WorkAreaItemDto> runQuery(List<Condition> conditions,
-                                        ApplicationWorkAreaPriorityGroup applicationWorkAreaPriorityGroup) {
-
+  public SelectQuery<Record> getApplicationDataItemsQuery(List<Condition> conditions) {
     var allAppVersionsForAppSubQuery = context.select(APPLICATION_VERSIONS.ID)
         .from(APPLICATION_VERSIONS)
         .where(APPLICATION_VERSIONS.APPLICATION_ID.eq(APPLICATIONS.ID));
@@ -48,16 +44,16 @@ class WorkAreaItemDtoRepository {
         .where(APPLICATION_VERSIONS.APPLICATION_ID.eq(APPLICATIONS.ID))
         .and(ApplicationVersions.APPLICATION_VERSIONS.STATUS.ne(ApplicationVersionStatus.DELETED.name()));
 
-    // Generates sub query to return application version ids that are applicable for work area, based on conditions.
+    // Generates sub query to return application version ids that are applicable for work area and search, based on conditions.
     // Only allows one Application Version per Application
     var detailsSubQuery = context.select(APPLICATION_VERSIONS.ID)
         .from(APPLICATIONS)
         .join(APPLICATION_VERSIONS)
-            .onKey(APPLICATION_VERSIONS.APPLICATION_ID)
-            .and(APPLICATION_VERSIONS.ID.eq(latestAppVersionForAppSubQuery))
+        .onKey(APPLICATION_VERSIONS.APPLICATION_ID)
+        .and(APPLICATION_VERSIONS.ID.eq(latestAppVersionForAppSubQuery))
         .where(conditions);
 
-    return context.select(
+    var applicationDataItemsSelectStatement = context.select(
             APPLICATIONS.ID,
             APPLICATION_VERSIONS.ID,
             APPLICATIONS.TYPE,
@@ -88,29 +84,29 @@ class WorkAreaItemDtoRepository {
         .from(APPLICATIONS)
         .join(APPLICATION_VERSIONS).onKey(APPLICATION_VERSIONS.APPLICATION_ID)
         .leftJoin(APPLICATION_ASSETS)
-            .on(APPLICATION_ASSETS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID)
+        .on(APPLICATION_ASSETS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID)
             .and(APPLICATION_ASSETS.ASSET_ROLE.eq(AssetRole.PRIMARY.name())))
         .leftJoin(CONSENT_LENGTHS).onKey(CONSENT_LENGTHS.APPLICATION_VERSION_ID)
         .leftJoin(APPLICATION_FLAGS).onKey(APPLICATION_FLAGS.APPLICATION_VERSION_ID)
-            .and(APPLICATION_FLAGS.FLAG_TYPE.eq(IS_ACE_APPLICATION.name()))
-        .leftJoin(APPLICATION_WORK_AREA_PRIORITIES)
-            .onKey(APPLICATION_WORK_AREA_PRIORITIES.APPLICATION_VERSION_ID)
-            .and(APPLICATION_WORK_AREA_PRIORITIES.WORK_AREA_PRIORITY_GROUP.eq(applicationWorkAreaPriorityGroup.name()))
+        .and(APPLICATION_FLAGS.FLAG_TYPE.eq(IS_ACE_APPLICATION.name()))
         .leftJoin(APPLICATION_WITHDRAWALS)
-            .on(APPLICATION_WITHDRAWALS.APPLICATION_VERSION_ID.in(allAppVersionsForAppSubQuery))
-            .and(APPLICATION_WITHDRAWALS.WITHDRAWAL_STATUS.eq(WithdrawalStatus.OPEN.name()))
+        .on(APPLICATION_WITHDRAWALS.APPLICATION_VERSION_ID.in(allAppVersionsForAppSubQuery))
+        .and(APPLICATION_WITHDRAWALS.WITHDRAWAL_STATUS.eq(WithdrawalStatus.OPEN.name()))
         .leftJoin(APPLICATION_TECHNICAL_REVIEWS)
-            .on(APPLICATION_TECHNICAL_REVIEWS.REQUEST_APPLICATION_VERSION_ID.in(allAppVersionsForAppSubQuery))
-            .and(APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEW_STATUS.eq(TechnicalReviewStatus.OPEN.name()))
+        .on(APPLICATION_TECHNICAL_REVIEWS.REQUEST_APPLICATION_VERSION_ID.in(allAppVersionsForAppSubQuery))
+        .and(APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEW_STATUS.eq(TechnicalReviewStatus.OPEN.name()))
         .leftJoin(APPLICATION_UPDATES)
-            .on(APPLICATION_UPDATES.APPLICATION_VERSION_ID.in(allAppVersionsForAppSubQuery))
-            .and(APPLICATION_UPDATES.APPLICATION_UPDATE_STATUS.eq(ApplicationUpdateStatus.OPEN.name()))
-        .where(APPLICATION_VERSIONS.ID.in(detailsSubQuery))
-        .orderBy(greatest(
-            // if the work area priority date is not set for the priority group then fallback to the other dates
-            APPLICATION_WORK_AREA_PRIORITIES.WORK_AREA_PRIORITY_DATE_TIME,
-            APPLICATION_VERSIONS.SUBMITTED_DATE_TIME,
-            APPLICATION_VERSIONS.CREATED_DATE_TIME).desc())
-        .fetchInto(WorkAreaItemDto.class);
+        .on(APPLICATION_UPDATES.APPLICATION_VERSION_ID.in(allAppVersionsForAppSubQuery))
+        .and(APPLICATION_UPDATES.APPLICATION_UPDATE_STATUS.eq(ApplicationUpdateStatus.OPEN.name()))
+        .where(APPLICATION_VERSIONS.ID.in(detailsSubQuery));
+    return applicationDataItemsSelectStatement.getQuery();
+  }
+
+  public List<ApplicationDataItemDto> runQueryWithCustom(List<Condition> conditions,
+                                                         Consumer<SelectQuery<Record>> selectQueryConsumer) {
+    var selectQuery = getApplicationDataItemsQuery(conditions);
+    selectQueryConsumer.accept(selectQuery);
+
+    return selectQuery.fetchInto(ApplicationDataItemDto.class);
   }
 }
