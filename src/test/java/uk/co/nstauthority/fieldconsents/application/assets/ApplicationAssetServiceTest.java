@@ -494,25 +494,25 @@ class ApplicationAssetServiceTest {
 
   @ParameterizedTest
   @EnumSource(AssetRole.class)
-  void findAssetJsonListFor_field(AssetRole assetRole) {
+  void getAssetJsonListFor_field(AssetRole assetRole) {
     when(applicationAssetRepository.findAllByApplicationVersionAndAssetRoleOrderByIdAsc(applicationVersion, assetRole))
         .thenReturn(Collections.singletonList(fieldAsset1));
     when(fieldService.getField(eq(fieldAsset1.getId()), anyString()))
         .thenReturn(field1Json);
 
-    assertThat(applicationAssetService.findAssetJsonListFor(applicationVersion, assetRole))
+    assertThat(applicationAssetService.getAssetJsonListFor(applicationVersion, assetRole))
         .isEqualTo(Collections.singletonList(field1Json));
   }
 
   @ParameterizedTest
   @EnumSource(AssetRole.class)
-  void findAssetJsonListFor_terminal(AssetRole assetRole) {
+  void getAssetJsonListFor_terminal(AssetRole assetRole) {
     when(applicationAssetRepository.findAllByApplicationVersionAndAssetRoleOrderByIdAsc(applicationVersion, assetRole))
         .thenReturn(Collections.singletonList(terminalAsset1));
     when(terminalService.getTerminal(eq(terminalAsset1.getId()), anyString()))
         .thenReturn(terminal1Json);
 
-    assertThat(applicationAssetService.findAssetJsonListFor(applicationVersion, assetRole))
+    assertThat(applicationAssetService.getAssetJsonListFor(applicationVersion, assetRole))
         .isEqualTo(Collections.singletonList(terminal1Json));
   }
 

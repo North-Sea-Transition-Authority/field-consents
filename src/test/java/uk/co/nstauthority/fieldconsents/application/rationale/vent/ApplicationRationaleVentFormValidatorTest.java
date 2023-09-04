@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.application.rationale.flare;
+package uk.co.nstauthority.fieldconsents.application.rationale.vent;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
@@ -22,26 +22,27 @@ import uk.co.nstauthority.fieldconsents.application.rationale.common.Application
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 
 @ExtendWith(MockitoExtension.class)
-class ApplicationRationaleFlareFormValidatorTest {
+class ApplicationRationaleVentFormValidatorTest {
 
   @Mock
   private ApplicationRationaleFormValidatorHelper validatorHelper;
 
   @InjectMocks
-  private ApplicationRationaleFlareFormValidator validator;
+  private ApplicationRationaleVentFormValidator validator;
 
   @Test
   void supports() {
-    assertThat(validator.supports(ApplicationRationaleFlareForm.class)).isTrue();
+    assertThat(validator.supports(ApplicationRationaleVentForm.class)).isTrue();
   }
 
   @Test
   void validate_increase_withoutComment() {
     var hostLocationAssetKey = "hostKey";
+    var hostLocationAssetKeyField = "hostLocationAssetKey";
     var nonHostLocationAssetKeys = List.of("first", "second", "third");
-    var nonHostLocationAssetKeysSelectorField = "flaringLocationAssetKeysSelector";
+    var nonHostLocationAssetKeysSelectorField = "ventingLocationAssetKeysSelector";
 
-    var form = new ApplicationRationaleFlareForm(
+    var form = new ApplicationRationaleVentForm(
         ApplicationRationaleType.INCREASE,
         null,
         nonHostLocationAssetKeysSelectorField,
@@ -75,10 +76,11 @@ class ApplicationRationaleFlareFormValidatorTest {
   @EnumSource(value = ApplicationRationaleType.class, names = "INCREASE", mode = Mode.EXCLUDE)
   void validate_notIncrease_withoutComment(ApplicationRationaleType applicationRationaleType) {
     var hostLocationAssetKey = "hostKey";
+    var hostLocationAssetKeyField = "hostLocationAssetKey";
     var nonHostLocationAssetKeys = List.of("first", "second", "third");
-    var nonHostLocationAssetKeysSelectorField = "flaringLocationAssetKeysSelector";
+    var nonHostLocationAssetKeysSelectorField = "ventingLocationAssetKeysSelector";
 
-    var form = new ApplicationRationaleFlareForm(
+    var form = new ApplicationRationaleVentForm(
         applicationRationaleType,
         null,
         nonHostLocationAssetKeysSelectorField,

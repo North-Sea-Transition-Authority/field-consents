@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.application.rationale.flare;
+package uk.co.nstauthority.fieldconsents.application.rationale.vent;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem.EMPTY_REST_SEARCH_ITEM;
@@ -29,26 +29,26 @@ import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @Controller
-@RequestMapping("applications/{applicationId}/application-rationale/flare")
+@RequestMapping("applications/{applicationId}/application-rationale/vent")
 @HasApplicationStatus(statuses = ApplicationVersionStatus.IN_PROGRESS)
-public class ApplicationRationaleFlareController {
+public class ApplicationRationaleVentController {
 
-  private final ApplicationRationaleFlareService applicationRationaleFlareService;
+  private final ApplicationRationaleVentService applicationRationaleVentService;
   private final ApplicationAssetService applicationAssetService;
   private final ApplicationVersionService applicationVersionService;
-  private final ApplicationRationaleFlareFormValidator validator;
+  private final ApplicationRationaleVentFormValidator validator;
   private final ApplicationRationaleService applicationRationaleService;
   private final AssetService assetService;
 
-  ApplicationRationaleFlareController(
-      ApplicationRationaleFlareService applicationRationaleFlareService,
+  ApplicationRationaleVentController(
+      ApplicationRationaleVentService applicationRationaleVentService,
       ApplicationAssetService applicationAssetService,
       ApplicationVersionService applicationVersionService,
-      ApplicationRationaleFlareFormValidator validator,
+      ApplicationRationaleVentFormValidator validator,
       ApplicationRationaleService applicationRationaleService,
       AssetService assetService
   ) {
-    this.applicationRationaleFlareService = applicationRationaleFlareService;
+    this.applicationRationaleVentService = applicationRationaleVentService;
     this.applicationAssetService = applicationAssetService;
     this.applicationVersionService = applicationVersionService;
     this.validator = validator;
@@ -61,8 +61,8 @@ public class ApplicationRationaleFlareController {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var form = applicationRationaleService
         .findByApplicationVersion(applicationVersion)
-        .map(ApplicationRationaleFlareForm::from)
-        .orElseGet(ApplicationRationaleFlareForm::empty);
+        .map(ApplicationRationaleVentForm::from)
+        .orElseGet(ApplicationRationaleVentForm::empty);
 
     return getModelAndView(
         applicationVersion,
@@ -74,23 +74,23 @@ public class ApplicationRationaleFlareController {
 
   @PostMapping
   ModelAndView saveForm(@PathVariable Integer applicationId,
-                        @ModelAttribute("form") ApplicationRationaleFlareForm form,
+                        @ModelAttribute("form") ApplicationRationaleVentForm form,
                         BindingResult bindingResult) {
     validator.validate(form, bindingResult);
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
 
     if (bindingResult.hasErrors()) {
       var flaringLocations = getFlaringLocationsFromForm(form);
-      var hostLocation = getHostLocationFormForm(form);
+      var hostLocation = getHostLocationFromForm(form);
       return getModelAndView(applicationVersion, flaringLocations, hostLocation, form);
     }
 
     var isIncrease = ApplicationRationaleType.INCREASE.equals(form.rationaleType());
-    applicationRationaleFlareService.saveApplicationRationale(
+    applicationRationaleVentService.saveApplicationRationale(
         applicationVersion,
         form.rationaleType(),
         isIncrease ? form.increaseComment().getInputValue() : null,
-        form.flaringLocationAssetKeys(),
+        form.ventingLocationAssetKeys(),
         form.hostLocationAssetKey()
     );
 
@@ -99,22 +99,22 @@ public class ApplicationRationaleFlareController {
 
   private ModelAndView getModelAndView(
       ApplicationVersion applicationVersion,
-      List<ApplicationAssetView> flaringLocations,
+      List<ApplicationAssetView> ventingLocations,
       RestSearchItem hostLocation,
-      ApplicationRationaleFlareForm form
+      ApplicationRationaleVentForm form
   ) {
     var applicationId = applicationVersion.getApplication().getId();
     var isTerminal = applicationAssetService.getPrimaryAsset(applicationVersion).isTerminal();
     var assetSearchRestUrl = getAssetSearchUrl(isTerminal);
 
-    return new ModelAndView("fcs/application/application-rationale/flare-form")
+    return new ModelAndView("fcs/application/application-rationale/vent-form")
         .addObject("form", form)
         .addObject("increaseRadio", ApplicationRationaleType.INCREASE)
         .addObject("decreaseRadio", ApplicationRationaleType.DECREASE)
         .addObject("noChangeRadio", ApplicationRationaleType.NO_CHANGE)
-        .addObject("flaringLocations", flaringLocations)
+        .addObject("ventingLocations", ventingLocations)
         .addObject("hostLocation", hostLocation)
-        .addObject("flaringLocationSearchUrl", assetSearchRestUrl)
+        .addObject("ventingLocationSearchUrl", assetSearchRestUrl)
         .addObject("hostLocationSearchUrl", assetSearchRestUrl)
         .addObject("cancelUrl",
             ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId)));
@@ -128,22 +128,22 @@ public class ApplicationRationaleFlareController {
     return restUrl.replace("?term", "");
   }
 
-  private List<ApplicationAssetView> getFlaringLocationsFromForm(ApplicationRationaleFlareForm form) {
-    return form.flaringLocationAssetKeys()
+  private List<ApplicationAssetView> getFlaringLocationsFromForm(ApplicationRationaleVentForm form) {
+    return form.ventingLocationAssetKeys()
         .stream()
         .map(AssetKey::parse)
         .flatMap(Optional::stream)
-        .map(assetKey -> assetService.getAsset(assetKey, "prefilling flaring locations for application rationale"))
+        .map(assetKey -> assetService.getAsset(assetKey, "prefilling venting locations for application rationale"))
         .flatMap(Optional::stream)
         .map(ApplicationAssetView::from)
         .toList();
   }
 
-  private RestSearchItem getHostLocationFormForm(ApplicationRationaleFlareForm form) {
+  private RestSearchItem getHostLocationFromForm(ApplicationRationaleVentForm form) {
     return AssetKey.parse(form.hostLocationAssetKey())
         .flatMap(assetKey -> assetService.getAsset(assetKey, "prefilling host location for application rationale"))
         .map(RestSearchItem::from)
-        .orElse(RestSearchItem.EMPTY_REST_SEARCH_ITEM);
+        .orElse(EMPTY_REST_SEARCH_ITEM);
   }
 
 }

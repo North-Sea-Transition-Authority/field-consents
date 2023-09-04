@@ -179,7 +179,7 @@ public class ApplicationAssetService {
     return applicationAssetRepository.findAllByAssetRoleAndTerminalIdIsNotNull(AssetRole.PRIMARY);
   }
 
-  public List<AssetJson> findAssetJsonListFor(ApplicationVersion applicationVersion, AssetRole assetRole) {
+  public List<AssetJson> getAssetJsonListFor(ApplicationVersion applicationVersion, AssetRole assetRole) {
     return findAssetsByApplicationVersionAndAssetRole(applicationVersion, assetRole)
         .stream()
         .map(this::getAssetJsonFromApplicationAsset)

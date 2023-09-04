@@ -28,14 +28,14 @@ backLinkUrl=springUrl(cancelUrl)
     </@fdsRadio.radioGroup>
     <@fdsFieldset.fieldset
       legendHeadingSize="h2"
-      legendHeading="Where does the flaring take place?"
+      legendHeading="Where does the venting take place?"
       legendHeadingClass="govuk-fieldset__legend--m">
       <@fdsAddToList.addToList
-        pathForList="form.flaringLocationAssetKeys"
-        pathForSelector="form.flaringLocationAssetKeysSelector"
-        restUrl=springUrl(flaringLocationSearchUrl)
-        alreadyAdded=flaringLocations
-        itemName="Flaring locations"/>
+        pathForList="form.ventingLocationAssetKeys"
+        pathForSelector="form.ventingLocationAssetKeysSelector"
+        restUrl=springUrl(ventingLocationSearchUrl)
+        alreadyAdded=ventingLocations
+        itemName="Venting locations"/>
     </@fdsFieldset.fieldset>
     <@fdsFieldset.fieldset
       legendHeadingSize="h2"

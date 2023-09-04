@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.application.rationale.flare;
+package uk.co.nstauthority.fieldconsents.application.rationale.vent;
 
 import static uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationaleType.INCREASE;
 
@@ -12,17 +12,17 @@ import uk.co.nstauthority.fieldconsents.application.rationale.common.Application
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 
 @Component
-class ApplicationRationaleFlareFormValidator implements Validator {
+class ApplicationRationaleVentFormValidator implements Validator {
 
   private final ApplicationRationaleFormValidatorHelper validatorHelper;
 
-  ApplicationRationaleFlareFormValidator(ApplicationRationaleFormValidatorHelper validatorHelper) {
+  ApplicationRationaleVentFormValidator(ApplicationRationaleFormValidatorHelper validatorHelper) {
     this.validatorHelper = validatorHelper;
   }
 
   @Override
   public boolean supports(Class<?> clazz) {
-    return ApplicationRationaleFlareForm.class.equals(clazz);
+    return ApplicationRationaleVentForm.class.equals(clazz);
   }
 
   @Override
@@ -34,21 +34,21 @@ class ApplicationRationaleFlareFormValidator implements Validator {
         "Select whether this application is for an increase, decrease or no change"
     );
 
-    var form = (ApplicationRationaleFlareForm) target;
+    var form = (ApplicationRationaleVentForm) target;
 
     if (INCREASE.equals(form.rationaleType())) {
       StringInputValidator.builder().validate(form.increaseComment(), errors);
     }
 
     validatorHelper.validateLocationAssets(
-        form.flaringLocationAssetKeys(),
-        "flaringLocationAssetKeysSelector",
+        form.ventingLocationAssetKeys(),
+        "ventingLocationAssetKeysSelector",
         errors
     );
 
     validatorHelper.validateHostLocationAsset(
         form.hostLocationAssetKey(),
-        form.flaringLocationAssetKeys().stream().map(AssetKey::parse).flatMap(Optional::stream).toList(),
+        form.ventingLocationAssetKeys().stream().map(AssetKey::parse).flatMap(Optional::stream).toList(),
         errors
     );
   }

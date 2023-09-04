@@ -23,6 +23,7 @@ import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetServi
 import uk.co.nstauthority.fieldconsents.application.assets.AssetSummaryService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.rationale.flare.ApplicationRationaleFlareService;
+import uk.co.nstauthority.fieldconsents.application.rationale.vent.ApplicationRationaleVentService;
 import uk.co.nstauthority.fieldconsents.production.gasinjection.GasInjectionService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryItem;
@@ -52,6 +53,9 @@ class ConsentDetailsSummarySectionServiceTest {
   @Mock
   private ApplicationRationaleFlareService applicationRationaleFlareService;
 
+  @Mock
+  private ApplicationRationaleVentService applicationRationaleVentService;
+
   @Spy
   @InjectMocks
   private ConsentDetailsSummarySectionService consentDetailsSummarySectionService;
@@ -61,8 +65,8 @@ class ConsentDetailsSummarySectionServiceTest {
   void getSummarySection_allEmpty(ApplicationType applicationType) {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
 
-    doReturn(Optional.empty()).when(consentDetailsSummarySectionService).getApplicationRationaleSummaryItem(applicationVersion);
     doReturn(Optional.empty()).when(consentDetailsSummarySectionService).getApplicationContextSummaryItem(applicationVersion);
+    doReturn(Optional.empty()).when(consentDetailsSummarySectionService).getApplicationRationaleSummaryItem(applicationVersion);
     doReturn(Optional.empty()).when(consentDetailsSummarySectionService).getConsentDurationSummaryItem(applicationVersion);
     doReturn(Optional.empty()).when(consentDetailsSummarySectionService).getAdditionalAssetsSummaryItem(applicationVersion);
     doReturn(Optional.empty()).when(consentDetailsSummarySectionService).getGasInjectionSummaryItem(applicationVersion);
@@ -75,8 +79,8 @@ class ConsentDetailsSummarySectionServiceTest {
   void getSummarySection(ApplicationType applicationType) {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
 
-    doReturn(Optional.of(SUMMARY_ITEM)).when(consentDetailsSummarySectionService).getApplicationRationaleSummaryItem(applicationVersion);
     doReturn(Optional.of(SUMMARY_ITEM)).when(consentDetailsSummarySectionService).getApplicationContextSummaryItem(applicationVersion);
+    doReturn(Optional.of(SUMMARY_ITEM)).when(consentDetailsSummarySectionService).getApplicationRationaleSummaryItem(applicationVersion);
     doReturn(Optional.of(SUMMARY_ITEM)).when(consentDetailsSummarySectionService).getConsentDurationSummaryItem(applicationVersion);
     doReturn(Optional.of(SUMMARY_ITEM)).when(consentDetailsSummarySectionService).getAdditionalAssetsSummaryItem(applicationVersion);
     doReturn(Optional.of(SUMMARY_ITEM)).when(consentDetailsSummarySectionService).getGasInjectionSummaryItem(applicationVersion);
@@ -93,18 +97,6 @@ class ConsentDetailsSummarySectionServiceTest {
         )));
   }
 
-  @Test
-  void getApplicationRationaleSummaryItem_flare() {
-    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
-
-    when(applicationRationaleFlareService.getApplicationRationaleFlareSummaryCard(applicationVersion)).thenReturn(SUMMARY_CARD);
-
-    assertThat(consentDetailsSummarySectionService.getApplicationRationaleSummaryItem(applicationVersion))
-        .isPresent()
-        .get()
-        .isEqualTo(SummaryItem.withCard("Application rationale", SUMMARY_CARD));
-  }
-
   @ParameterizedTest
   @EnumSource(ApplicationType.class)
   void getApplicationContextSummaryItem(ApplicationType applicationType) {
@@ -116,6 +108,30 @@ class ConsentDetailsSummarySectionServiceTest {
         .isPresent()
         .get()
         .isEqualTo(SummaryItem.withCard("Application details", SUMMARY_CARD));
+  }
+
+  @Test
+  void getApplicationRationaleSummaryItem_flare() {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
+
+    when(applicationRationaleFlareService.getSummaryCard(applicationVersion)).thenReturn(SUMMARY_CARD);
+
+    assertThat(consentDetailsSummarySectionService.getApplicationRationaleSummaryItem(applicationVersion))
+        .isPresent()
+        .get()
+        .isEqualTo(SummaryItem.withCard("Application rationale", SUMMARY_CARD));
+  }
+
+  @Test
+  void getApplicationRationaleSummaryItem_vent() {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
+
+    when(applicationRationaleVentService.getSummaryCard(applicationVersion)).thenReturn(SUMMARY_CARD);
+
+    assertThat(consentDetailsSummarySectionService.getApplicationRationaleSummaryItem(applicationVersion))
+        .isPresent()
+        .get()
+        .isEqualTo(SummaryItem.withCard("Application rationale", SUMMARY_CARD));
   }
 
   @ParameterizedTest

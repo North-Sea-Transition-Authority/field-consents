@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.application.rationale.flare;
+package uk.co.nstauthority.fieldconsents.application.rationale.vent;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.type;
@@ -48,14 +48,14 @@ import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
-@ContextConfiguration(classes = ApplicationRationaleFlareController.class)
-class ApplicationRationaleFlareControllerTest extends AbstractApplicationControllerTest {
+@ContextConfiguration(classes = ApplicationRationaleVentController.class)
+class ApplicationRationaleVentControllerTest extends AbstractApplicationControllerTest {
 
-  private static final Class<ApplicationRationaleFlareController> CONTROLLER_CLASS = ApplicationRationaleFlareController.class;
-  private static final String VIEW_NAME = "fcs/application/application-rationale/flare-form";
+  private static final Class<ApplicationRationaleVentController> CONTROLLER_CLASS = ApplicationRationaleVentController.class;
+  private static final String VIEW_NAME = "fcs/application/application-rationale/vent-form";
 
   @MockBean
-  private ApplicationRationaleFlareService applicationRationaleFlareService;
+  private ApplicationRationaleVentService applicationRationaleVentService;
 
   @MockBean
   private ApplicationRationaleService applicationRationaleService;
@@ -64,7 +64,7 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
   private ApplicationAssetService applicationAssetService;
 
   @MockBean
-  private ApplicationRationaleFlareFormValidator applicationRationaleFlareFormValidator;
+  private ApplicationRationaleVentFormValidator applicationRationaleVentFormValidator;
 
   @MockBean
   private AssetService assetService;
@@ -73,7 +73,7 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
 
   private ApplicationRationale applicationRationale;
 
-  private List<AssetJson> flaringLocations;
+  private List<AssetJson> ventingLocations;
 
   private AssetJson hostLocation;
 
@@ -81,11 +81,11 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
 
   @BeforeEach
   void setUp() {
-    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
     applicationRationale = new ApplicationRationale();
 
-    flaringLocations = new ArrayList<>();
-    flaringLocations.add(terminal1Json);
+    ventingLocations = new ArrayList<>();
+    ventingLocations.add(terminal1Json);
 
     hostLocation = terminal1Json;
 
@@ -101,7 +101,7 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
   @Test
   void getForm_applicationRationaleDoesNotExist_primaryAssetIsField() throws Exception {
     when(applicationRationaleService.findByApplicationVersion(applicationVersion)).thenReturn(Optional.empty());
-    when(applicationRationaleService.getLocations(applicationVersion)).thenReturn(flaringLocations);
+    when(applicationRationaleService.getLocations(applicationVersion)).thenReturn(ventingLocations);
     when(applicationRationaleService.getHostLocation(applicationVersion)).thenReturn(Optional.of(hostLocation));
 
     primaryApplicationAsset.setFieldId(1);
@@ -123,24 +123,24 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
         .containsEntry("increaseRadio", ApplicationRationaleType.INCREASE)
         .containsEntry("decreaseRadio", ApplicationRationaleType.DECREASE)
         .containsEntry("noChangeRadio", ApplicationRationaleType.NO_CHANGE)
-        .containsEntry("flaringLocations", flaringLocations.stream().map(ApplicationAssetView::from).toList())
+        .containsEntry("ventingLocations", ventingLocations.stream().map(ApplicationAssetView::from).toList())
         .containsEntry("hostLocation", RestSearchItem.from(hostLocation))
-        .containsEntry("flaringLocationSearchUrl", assetSearchRestUrl)
+        .containsEntry("ventingLocationSearchUrl", assetSearchRestUrl)
         .containsEntry("hostLocationSearchUrl", assetSearchRestUrl)
         .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID)));
 
     assertThat(model)
         .containsKey("form")
         .extracting(m -> m.get("form"))
-        .asInstanceOf(type(ApplicationRationaleFlareForm.class))
+        .asInstanceOf(type(ApplicationRationaleVentForm.class))
         .usingRecursiveComparison()
-        .isEqualTo(ApplicationRationaleFlareForm.empty());
+        .isEqualTo(ApplicationRationaleVentForm.empty());
   }
 
   @Test
   void getForm_applicationRationaleDoesNotExist_primaryAssetIsTerminal() throws Exception {
     when(applicationRationaleService.findByApplicationVersion(applicationVersion)).thenReturn(Optional.empty());
-    when(applicationRationaleService.getLocations(applicationVersion)).thenReturn(flaringLocations);
+    when(applicationRationaleService.getLocations(applicationVersion)).thenReturn(ventingLocations);
     when(applicationRationaleService.getHostLocation(applicationVersion)).thenReturn(Optional.of(hostLocation));
 
     primaryApplicationAsset.setTerminalId(1);
@@ -162,18 +162,18 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
         .containsEntry("increaseRadio", ApplicationRationaleType.INCREASE)
         .containsEntry("decreaseRadio", ApplicationRationaleType.DECREASE)
         .containsEntry("noChangeRadio", ApplicationRationaleType.NO_CHANGE)
-        .containsEntry("flaringLocations", flaringLocations.stream().map(ApplicationAssetView::from).toList())
+        .containsEntry("ventingLocations", ventingLocations.stream().map(ApplicationAssetView::from).toList())
         .containsEntry("hostLocation", RestSearchItem.from(hostLocation))
-        .containsEntry("flaringLocationSearchUrl", assetSearchRestUrl)
+        .containsEntry("ventingLocationSearchUrl", assetSearchRestUrl)
         .containsEntry("hostLocationSearchUrl", assetSearchRestUrl)
         .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID)));
 
     assertThat(model)
         .containsKey("form")
         .extracting(m -> m.get("form"))
-        .asInstanceOf(type(ApplicationRationaleFlareForm.class))
+        .asInstanceOf(type(ApplicationRationaleVentForm.class))
         .usingRecursiveComparison()
-        .isEqualTo(ApplicationRationaleFlareForm.empty());
+        .isEqualTo(ApplicationRationaleVentForm.empty());
   }
 
   @Test
@@ -187,7 +187,7 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
     applicationRationale.setComment(comment);
 
     when(applicationRationaleService.findByApplicationVersion(applicationVersion)).thenReturn(Optional.of(applicationRationale));
-    when(applicationRationaleService.getLocations(applicationVersion)).thenReturn(flaringLocations);
+    when(applicationRationaleService.getLocations(applicationVersion)).thenReturn(ventingLocations);
     when(applicationRationaleService.getHostLocation(applicationVersion)).thenReturn(Optional.of(hostLocation));
 
     primaryApplicationAsset.setTerminalId(1);
@@ -209,19 +209,19 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
         .containsEntry("increaseRadio", ApplicationRationaleType.INCREASE)
         .containsEntry("decreaseRadio", ApplicationRationaleType.DECREASE)
         .containsEntry("noChangeRadio", ApplicationRationaleType.NO_CHANGE)
-        .containsEntry("flaringLocations", flaringLocations.stream().map(ApplicationAssetView::from).toList())
+        .containsEntry("ventingLocations", ventingLocations.stream().map(ApplicationAssetView::from).toList())
         .containsEntry("hostLocation", RestSearchItem.from(hostLocation))
-        .containsEntry("flaringLocationSearchUrl", assetSearchRestUrl)
+        .containsEntry("ventingLocationSearchUrl", assetSearchRestUrl)
         .containsEntry("hostLocationSearchUrl", assetSearchRestUrl)
         .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID)));
 
-    var expectedForm = new ApplicationRationaleFlareForm(rationaleType, null, null, null, null);
+    var expectedForm = new ApplicationRationaleVentForm(rationaleType, null, null, null, null);
     expectedForm.increaseComment().setInputValue(comment);
 
     assertThat(model)
         .containsKey("form")
         .extracting(m -> m.get("form"))
-        .asInstanceOf(type(ApplicationRationaleFlareForm.class))
+        .asInstanceOf(type(ApplicationRationaleVentForm.class))
         .usingRecursiveComparison()
         .isEqualTo(expectedForm);
   }
@@ -230,46 +230,46 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
   void saveForm() throws Exception {
     var rationaleType = ApplicationRationaleType.INCREASE;
     var comment = "comment";
-    var flaringAssetKeys = List.of("assetKey1", "assetKey2", "assetKey3");
+    var ventingAssetKeys = List.of("assetKey1", "assetKey2", "assetKey3");
     var hostAssetKey = "assetKey1";
 
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .saveForm(APPLICATION_ID, null, null)))
+            .getForm(APPLICATION_ID)))
             .param("rationaleType", rationaleType.toString())
             .param("increaseComment.inputValue", comment)
-            .param("flaringLocationAssetKeys", String.join(",", flaringAssetKeys))
+            .param("ventingLocationAssetKeys", String.join(",", ventingAssetKeys))
             .param("hostLocationAssetKey", hostAssetKey)
             .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID))));
 
-    var expectedForm = new ApplicationRationaleFlareForm(
+    var expectedForm = new ApplicationRationaleVentForm(
         rationaleType,
         null,
         null,
-        flaringAssetKeys,
+        ventingAssetKeys,
         hostAssetKey
     );
     expectedForm.increaseComment().setInputValue(comment);
 
     // We can't use `eq()` because the StringInput in the form is a different object
-    verify(applicationRationaleFlareFormValidator).validate(
+    verify(applicationRationaleVentFormValidator).validate(
         argThat(o -> {
-          var form = (ApplicationRationaleFlareForm) o;
+          var form = (ApplicationRationaleVentForm) o;
           return Objects.equals(expectedForm.increaseComment().getInputValue(), form.increaseComment().getInputValue())
               && Objects.equals(expectedForm.rationaleType(), form.rationaleType())
-              && expectedForm.flaringLocationAssetKeys().containsAll(form.flaringLocationAssetKeys())
+              && expectedForm.ventingLocationAssetKeys().containsAll(form.ventingLocationAssetKeys())
               && Objects.equals(expectedForm.hostLocationAssetKey(), form.hostLocationAssetKey());
         }),
         any(BindingResult.class)
     );
 
-    verify(applicationRationaleFlareService).saveApplicationRationale(
+    verify(applicationRationaleVentService).saveApplicationRationale(
         applicationVersion,
         ApplicationRationaleType.INCREASE,
         comment,
-        flaringAssetKeys,
+        ventingAssetKeys,
         hostAssetKey
     );
   }
@@ -278,31 +278,31 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
   void saveForm_validationFailed() throws Exception {
     var rationaleType = ApplicationRationaleType.INCREASE;
     var comment = "comment";
-    var flaringAssetKeys = List.of("123FIELD");
-    var hostAssetKey = flaringAssetKeys.get(0);
+    var ventingAssetKeys = List.of("123FIELD");
+    var hostAssetKey = ventingAssetKeys.get(0);
 
     doAnswer(invocation -> {
       var bindingResult = invocation.getArgument(1, BindingResult.class);
       bindingResult.rejectValue("rationaleType", "errorCode", "message");
       return null;
     })
-        .when(applicationRationaleFlareFormValidator)
-        .validate(any(ApplicationRationaleFlareForm.class), any(BindingResult.class));
+        .when(applicationRationaleVentFormValidator)
+        .validate(any(ApplicationRationaleVentForm.class), any(BindingResult.class));
 
     when(assetService.getAsset(eq(AssetKey.from(hostAssetKey)), anyString())).thenReturn(Optional.empty());
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
 
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .saveForm(APPLICATION_ID, null, null)))
+            .getForm(APPLICATION_ID)))
             .param("rationaleType", rationaleType.toString())
             .param("increaseComment.inputValue", comment)
-            .param("flaringLocationAssetKeys", String.join(",", flaringAssetKeys))
+            .param("ventingLocationAssetKeys", String.join(",", ventingAssetKeys))
             .param("hostLocationAssetKey", hostAssetKey)
             .with(user(user))
             .with(csrf()))
         .andExpect(status().is2xxSuccessful())
         .andExpect(view().name(VIEW_NAME));
 
-    verify(applicationRationaleFlareService, never()).saveApplicationRationale(any(), any(), any(), any(), any());
+    verify(applicationRationaleVentService, never()).saveApplicationRationale(any(), any(), any(), any(), any());
   }
 }

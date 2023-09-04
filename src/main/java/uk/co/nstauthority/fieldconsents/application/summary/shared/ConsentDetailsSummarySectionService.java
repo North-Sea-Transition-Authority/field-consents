@@ -11,6 +11,7 @@ import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetServi
 import uk.co.nstauthority.fieldconsents.application.assets.AssetSummaryService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.rationale.flare.ApplicationRationaleFlareService;
+import uk.co.nstauthority.fieldconsents.application.rationale.vent.ApplicationRationaleVentService;
 import uk.co.nstauthority.fieldconsents.production.gasinjection.GasInjectionService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryItem;
 import uk.co.nstauthority.fieldconsents.summary.SummarySection;
@@ -31,27 +32,31 @@ public class ConsentDetailsSummarySectionService implements SummarySectionServic
 
   private final ApplicationRationaleFlareService applicationRationaleFlareService;
 
+  private final ApplicationRationaleVentService applicationRationaleVentService;
+
   @Autowired
   ConsentDetailsSummarySectionService(ApplicationContextService applicationContextService,
                                       ConsentLengthService consentLengthService,
                                       GasInjectionService gasInjectionService,
                                       ApplicationAssetService applicationAssetService,
                                       AssetSummaryService assetSummaryService,
-                                      ApplicationRationaleFlareService applicationRationaleFlareService) {
+                                      ApplicationRationaleFlareService applicationRationaleFlareService,
+                                      ApplicationRationaleVentService applicationRationaleVentService) {
     this.applicationContextService = applicationContextService;
     this.consentLengthService = consentLengthService;
     this.gasInjectionService = gasInjectionService;
     this.applicationAssetService = applicationAssetService;
     this.assetSummaryService = assetSummaryService;
     this.applicationRationaleFlareService = applicationRationaleFlareService;
+    this.applicationRationaleVentService = applicationRationaleVentService;
   }
 
   @Override
   public Optional<SummarySection> getSummarySection(ApplicationVersion applicationVersion) {
     var summaryItems = new ArrayList<SummaryItem>();
 
-    getApplicationRationaleSummaryItem(applicationVersion).ifPresent(summaryItems::add);
     getApplicationContextSummaryItem(applicationVersion).ifPresent(summaryItems::add);
+    getApplicationRationaleSummaryItem(applicationVersion).ifPresent(summaryItems::add);
     getConsentDurationSummaryItem(applicationVersion).ifPresent(summaryItems::add);
     getAdditionalAssetsSummaryItem(applicationVersion).ifPresent(summaryItems::add);
     getGasInjectionSummaryItem(applicationVersion).ifPresent(summaryItems::add);
@@ -64,15 +69,13 @@ public class ConsentDetailsSummarySectionService implements SummarySectionServic
   }
 
   Optional<SummaryItem> getApplicationRationaleSummaryItem(ApplicationVersion applicationVersion) {
-    var applicationType = applicationVersion.getApplication().getType();
-    return switch (applicationType) {
-      case FLARE -> Optional.of(SummaryItem.withCard(
-          "Application rationale",
-          applicationRationaleFlareService.getApplicationRationaleFlareSummaryCard(applicationVersion))
-      );
-      case VENT -> Optional.empty(); // TODO: FCS-378
-      case PRODUCTION -> Optional.empty(); // TODO: FCS-376
+    var summaryCard = switch (applicationVersion.getApplication().getType()) {
+      case FLARE -> applicationRationaleFlareService.getSummaryCard(applicationVersion);
+      case VENT -> applicationRationaleVentService.getSummaryCard(applicationVersion);
+      case PRODUCTION -> null; // TODO: FCS-376
     };
+
+    return Optional.of(SummaryItem.withCard("Application rationale", summaryCard));
   }
 
   Optional<SummaryItem> getApplicationContextSummaryItem(ApplicationVersion applicationVersion) {

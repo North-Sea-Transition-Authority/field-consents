@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.application.rationale.flare;
+package uk.co.nstauthority.fieldconsents.application.rationale.vent;
 
 import static uk.co.nstauthority.fieldconsents.application.assets.AssetRole.HOST;
 import static uk.co.nstauthority.fieldconsents.application.assets.AssetRole.LOCATION;
@@ -23,13 +23,13 @@ import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 
 @Service
-public class ApplicationRationaleFlareService {
+public class ApplicationRationaleVentService {
 
   private final ApplicationRationaleRepository repository;
   private final ApplicationAssetService applicationAssetService;
   private final ApplicationRationaleService applicationRationaleService;
 
-  ApplicationRationaleFlareService(
+  ApplicationRationaleVentService(
       ApplicationRationaleRepository repository,
       ApplicationAssetService applicationAssetService,
       ApplicationRationaleService applicationRationaleService
@@ -44,7 +44,7 @@ public class ApplicationRationaleFlareService {
       ApplicationVersion applicationVersion,
       ApplicationRationaleType rationaleType,
       String comment,
-      List<String> flaringLocationAssetKeys,
+      List<String> ventingLocationAssetKeys,
       String hostLocationAssetKey
   ) {
     var isIncrease = ApplicationRationaleType.INCREASE.equals(rationaleType);
@@ -64,7 +64,7 @@ public class ApplicationRationaleFlareService {
 
     applicationAssetService.deleteAssetsByApplicationVersionAndAssetRoles(applicationVersion, Set.of(LOCATION, HOST));
 
-    for (var assetKey : flaringLocationAssetKeys) {
+    for (var assetKey : ventingLocationAssetKeys) {
       applicationAssetService.createAssetForApplicationVersion(applicationVersion, assetKey, LOCATION);
     }
     applicationAssetService.createAssetForApplicationVersion(applicationVersion, hostLocationAssetKey, HOST);
@@ -92,7 +92,7 @@ public class ApplicationRationaleFlareService {
         .stream()
         .map(assetJson -> ApplicationAssetView.from(assetJson).getName())
         .collect(Collectors.joining(", "));
-    summaryDataView.addKeyValue("Where does the flaring take place?", flaringLocations);
+    summaryDataView.addKeyValue("Where does the venting take place?", flaringLocations);
 
     var hostLocation = applicationAssetService.getAssetJsonListFor(applicationVersion, AssetRole.HOST)
         .stream()

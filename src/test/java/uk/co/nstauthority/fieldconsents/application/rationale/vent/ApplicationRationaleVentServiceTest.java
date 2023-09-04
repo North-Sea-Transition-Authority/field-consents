@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.application.rationale.flare;
+package uk.co.nstauthority.fieldconsents.application.rationale.vent;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -44,7 +44,7 @@ import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
 @ExtendWith(MockitoExtension.class)
-class ApplicationRationaleFlareServiceTest {
+class ApplicationRationaleVentServiceTest {
 
   @Mock
   private ApplicationRationaleRepository repository;
@@ -56,7 +56,7 @@ class ApplicationRationaleFlareServiceTest {
   private ApplicationRationaleService applicationRationaleService;
 
   @InjectMocks
-  private ApplicationRationaleFlareService applicationRationaleFlareService;
+  private ApplicationRationaleVentService applicationRationaleVentService;
 
   @Captor
   private ArgumentCaptor<ApplicationRationale> applicationRationaletCaptor;
@@ -79,7 +79,7 @@ class ApplicationRationaleFlareServiceTest {
     var flaringLocationAssetKeys = List.of("assetKey1", "assetKey2");
     var hostLocationAssetKey = "assetKey1";
 
-    assertThatThrownBy(() -> applicationRationaleFlareService.saveApplicationRationale(
+    assertThatThrownBy(() -> applicationRationaleVentService.saveApplicationRationale(
         applicationVersion,
         rationaleType,
         comment,
@@ -96,7 +96,7 @@ class ApplicationRationaleFlareServiceTest {
     var flaringLocationAssetKeys = List.of("assetKey1", "assetKey2");
     var hostLocationAssetKey = "assetKey1";
 
-    applicationRationaleFlareService.saveApplicationRationale(
+    applicationRationaleVentService.saveApplicationRationale(
         applicationVersion,
         rationaleType,
         null,
@@ -136,18 +136,6 @@ class ApplicationRationaleFlareServiceTest {
     );
   }
 
-  @ParameterizedTest
-  @EnumSource(ApplicationRationaleType.class)
-  void getSummaryCard_rationaleType(ApplicationRationaleType applicationRationaleType) {
-    when(applicationRationaleService.findByApplicationVersion(applicationVersion)).thenReturn(Optional.of(applicationRationale));
-
-    applicationRationale.setRationaleType(applicationRationaleType);
-
-    getSummaryKeyValuesFrom(applicationRationaleFlareService.getSummaryCard(applicationVersion))
-        .extracting(SummaryKeyValue::key, SummaryKeyValue::value)
-        .contains(tuple("Is this application for an increase or decrease?", applicationRationaleType.getDisplayName()));
-  }
-
   @Test
   void getSummaryCard_increase_withComment() {
     when(applicationRationaleService.findByApplicationVersion(applicationVersion)).thenReturn(Optional.of(applicationRationale));
@@ -155,7 +143,7 @@ class ApplicationRationaleFlareServiceTest {
     applicationRationale.setRationaleType(ApplicationRationaleType.INCREASE);
     applicationRationale.setComment("comment");
 
-    getSummaryKeyValuesFrom(applicationRationaleFlareService.getSummaryCard(applicationVersion))
+    getSummaryKeyValuesFrom(applicationRationaleVentService.getSummaryCard(applicationVersion))
         .extracting(SummaryKeyValue::key, SummaryKeyValue::value)
         .contains(
             tuple("Is this application for an increase or decrease?", ApplicationRationaleType.INCREASE.getDisplayName()),
@@ -171,7 +159,7 @@ class ApplicationRationaleFlareServiceTest {
     applicationRationale.setRationaleType(applicationRationaleType);
     applicationRationale.setComment("comment");
 
-    getSummaryKeyValuesFrom(applicationRationaleFlareService.getSummaryCard(applicationVersion))
+    getSummaryKeyValuesFrom(applicationRationaleVentService.getSummaryCard(applicationVersion))
         .extracting(SummaryKeyValue::key, SummaryKeyValue::value)
         .contains(tuple("Is this application for an increase or decrease?", applicationRationaleType.getDisplayName()));
   }
@@ -189,10 +177,9 @@ class ApplicationRationaleFlareServiceTest {
         .stream()
         .map(assetJson -> ApplicationAssetView.from(assetJson).getName())
         .collect(Collectors.joining(", "));
-
-    getSummaryKeyValuesFrom(applicationRationaleFlareService.getSummaryCard(applicationVersion))
+    getSummaryKeyValuesFrom(applicationRationaleVentService.getSummaryCard(applicationVersion))
         .extracting(SummaryKeyValue::key, SummaryKeyValue::value)
-        .contains(tuple("Where does the flaring take place?", expectedLocationsString));
+        .contains(tuple("Where does the venting take place?", expectedLocationsString));
   }
 
   @Test
@@ -204,7 +191,7 @@ class ApplicationRationaleFlareServiceTest {
     when(applicationAssetService.getAssetJsonListFor(applicationVersion, AssetRole.HOST))
         .thenReturn(Collections.singletonList(field1Json));
 
-    getSummaryKeyValuesFrom(applicationRationaleFlareService.getSummaryCard(applicationVersion))
+    getSummaryKeyValuesFrom(applicationRationaleVentService.getSummaryCard(applicationVersion))
         .extracting(SummaryKeyValue::key, SummaryKeyValue::value)
         .contains(tuple("What is the host?", field1Json.getSelectionText()));
   }

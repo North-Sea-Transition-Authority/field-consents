@@ -18,8 +18,9 @@ import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetServi
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthController;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService;
+import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationaleService;
 import uk.co.nstauthority.fieldconsents.application.rationale.flare.ApplicationRationaleFlareController;
-import uk.co.nstauthority.fieldconsents.application.rationale.flare.ApplicationRationaleFlareService;
+import uk.co.nstauthority.fieldconsents.application.rationale.vent.ApplicationRationaleVentController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.production.gasinjection.GasInjectionController;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListItem;
@@ -36,16 +37,16 @@ public class ConsentDetailsTaskListSectionService implements TaskListSectionServ
 
   private final ApplicationFlagService applicationFlagService;
 
-  private final ApplicationRationaleFlareService applicationRationaleFlareService;
+  private final ApplicationRationaleService applicationRationaleService;
 
   ConsentDetailsTaskListSectionService(ConsentLengthService consentLengthService,
                                        ApplicationAssetService applicationAssetService,
                                        ApplicationFlagService applicationFlagService,
-                                       ApplicationRationaleFlareService applicationRationaleFlareService) {
+                                       ApplicationRationaleService applicationRationaleService) {
     this.consentLengthService = consentLengthService;
     this.applicationAssetService = applicationAssetService;
     this.applicationFlagService = applicationFlagService;
-    this.applicationRationaleFlareService = applicationRationaleFlareService;
+    this.applicationRationaleService = applicationRationaleService;
   }
 
   @Override
@@ -66,20 +67,19 @@ public class ConsentDetailsTaskListSectionService implements TaskListSectionServ
 
   Optional<TaskListItem> getApplicationRationaleTaskListItem(ApplicationVersion applicationVersion) {
     var application = applicationVersion.getApplication();
+    var taskListLabel = getApplicationRationaleTaskListLabel(applicationVersion);
 
-    return switch (application.getType()) {
-      case FLARE -> Optional.of(new TaskListItem(
-          "Application rationale",
-          getApplicationRationaleTaskListLabel(applicationVersion),
-          ReverseRouter.route(on(ApplicationRationaleFlareController.class).getForm(application.getId()))
-      ));
-      case VENT -> Optional.empty(); // TODO: FCS-378
-      case PRODUCTION -> Optional.empty(); // TODO: FCS-376
+    var url = switch (application.getType()) {
+      case FLARE -> ReverseRouter.route(on(ApplicationRationaleFlareController.class).getForm(application.getId()));
+      case VENT -> ReverseRouter.route(on(ApplicationRationaleVentController.class).getForm(application.getId()));
+      case PRODUCTION -> "#"; // TODO: FCS-376
     };
+
+    return Optional.of(new TaskListItem("Application rationale", taskListLabel, url));
   }
 
   private TaskListLabel getApplicationRationaleTaskListLabel(ApplicationVersion applicationVersion) {
-    var applicationRationaleExists = applicationRationaleFlareService.doesApplicationRationaleExistFor(applicationVersion);
+    var applicationRationaleExists = applicationRationaleService.doesApplicationRationaleExistFor(applicationVersion);
     var hasFlaringLocation = applicationAssetService.assetExistsForApplicationVersionAndAssetRole(applicationVersion, LOCATION);
     var hasHostLocation = applicationAssetService.assetExistsForApplicationVersionAndAssetRole(applicationVersion, HOST);
 

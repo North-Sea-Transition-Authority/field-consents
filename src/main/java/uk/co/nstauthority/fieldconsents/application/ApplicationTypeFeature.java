@@ -9,7 +9,7 @@ public enum ApplicationTypeFeature {
   GAS_INJECTION(EnumSet.of(ApplicationType.PRODUCTION)),
   EIA_SCREENING_DIRECTION(EnumSet.of(ApplicationType.PRODUCTION)),
   WIDE_SUMMARY_DISPLAY(EnumSet.of(ApplicationType.FLARE, ApplicationType.VENT)),
-  APPLICATION_RATIONALE(EnumSet.of(ApplicationType.FLARE)),
+  APPLICATION_RATIONALE(EnumSet.of(ApplicationType.FLARE, ApplicationType.VENT)),
   CONSULTATION(EnumSet.of(ApplicationType.PRODUCTION, ApplicationType.FLARE))
   ;
 
