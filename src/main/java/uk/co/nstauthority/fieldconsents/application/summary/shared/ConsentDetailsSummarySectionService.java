@@ -11,6 +11,7 @@ import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetServi
 import uk.co.nstauthority.fieldconsents.application.assets.AssetSummaryService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.rationale.flare.ApplicationRationaleFlareService;
+import uk.co.nstauthority.fieldconsents.application.rationale.production.ApplicationRationaleProductionService;
 import uk.co.nstauthority.fieldconsents.application.rationale.vent.ApplicationRationaleVentService;
 import uk.co.nstauthority.fieldconsents.production.gasinjection.GasInjectionService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryItem;
@@ -34,6 +35,8 @@ public class ConsentDetailsSummarySectionService implements SummarySectionServic
 
   private final ApplicationRationaleVentService applicationRationaleVentService;
 
+  private final ApplicationRationaleProductionService applicationRationaleProductionService;
+
   @Autowired
   ConsentDetailsSummarySectionService(ApplicationContextService applicationContextService,
                                       ConsentLengthService consentLengthService,
@@ -41,7 +44,8 @@ public class ConsentDetailsSummarySectionService implements SummarySectionServic
                                       ApplicationAssetService applicationAssetService,
                                       AssetSummaryService assetSummaryService,
                                       ApplicationRationaleFlareService applicationRationaleFlareService,
-                                      ApplicationRationaleVentService applicationRationaleVentService) {
+                                      ApplicationRationaleVentService applicationRationaleVentService,
+                                      ApplicationRationaleProductionService applicationRationaleProductionService) {
     this.applicationContextService = applicationContextService;
     this.consentLengthService = consentLengthService;
     this.gasInjectionService = gasInjectionService;
@@ -49,6 +53,7 @@ public class ConsentDetailsSummarySectionService implements SummarySectionServic
     this.assetSummaryService = assetSummaryService;
     this.applicationRationaleFlareService = applicationRationaleFlareService;
     this.applicationRationaleVentService = applicationRationaleVentService;
+    this.applicationRationaleProductionService = applicationRationaleProductionService;
   }
 
   @Override
@@ -72,7 +77,7 @@ public class ConsentDetailsSummarySectionService implements SummarySectionServic
     var summaryCard = switch (applicationVersion.getApplication().getType()) {
       case FLARE -> applicationRationaleFlareService.getSummaryCard(applicationVersion);
       case VENT -> applicationRationaleVentService.getSummaryCard(applicationVersion);
-      case PRODUCTION -> null; // TODO: FCS-376
+      case PRODUCTION -> applicationRationaleProductionService.getSummaryCard(applicationVersion);
     };
 
     return Optional.of(SummaryItem.withCard("Application rationale", summaryCard));

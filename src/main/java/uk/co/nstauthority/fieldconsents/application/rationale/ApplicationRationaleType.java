@@ -7,6 +7,8 @@ public enum ApplicationRationaleType implements Displayable {
   INCREASE("Increase", 10),
   DECREASE("Decrease", 20),
   NO_CHANGE("No change", 30),
+  EXTENSION("Extension", 40),
+  OTHER("Other", 50)
   ;
 
   private final String displayName;

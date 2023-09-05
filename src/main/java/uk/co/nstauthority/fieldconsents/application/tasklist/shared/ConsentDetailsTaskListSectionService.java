@@ -20,6 +20,7 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthS
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService;
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationaleService;
 import uk.co.nstauthority.fieldconsents.application.rationale.flare.ApplicationRationaleFlareController;
+import uk.co.nstauthority.fieldconsents.application.rationale.production.ApplicationRationaleProductionController;
 import uk.co.nstauthority.fieldconsents.application.rationale.vent.ApplicationRationaleVentController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.production.gasinjection.GasInjectionController;
@@ -72,7 +73,7 @@ public class ConsentDetailsTaskListSectionService implements TaskListSectionServ
     var url = switch (application.getType()) {
       case FLARE -> ReverseRouter.route(on(ApplicationRationaleFlareController.class).getForm(application.getId()));
       case VENT -> ReverseRouter.route(on(ApplicationRationaleVentController.class).getForm(application.getId()));
-      case PRODUCTION -> "#"; // TODO: FCS-376
+      case PRODUCTION -> ReverseRouter.route(on(ApplicationRationaleProductionController.class).getForm(application.getId()));
     };
 
     return Optional.of(new TaskListItem("Application rationale", taskListLabel, url));

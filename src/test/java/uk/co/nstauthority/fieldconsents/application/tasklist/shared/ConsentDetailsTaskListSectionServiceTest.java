@@ -38,6 +38,7 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthS
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService;
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationaleService;
 import uk.co.nstauthority.fieldconsents.application.rationale.flare.ApplicationRationaleFlareController;
+import uk.co.nstauthority.fieldconsents.application.rationale.production.ApplicationRationaleProductionController;
 import uk.co.nstauthority.fieldconsents.application.rationale.vent.ApplicationRationaleVentController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.production.gasinjection.GasInjectionController;
@@ -114,7 +115,7 @@ class ConsentDetailsTaskListSectionServiceTest {
       "false, false, IN_PROGRESS"
   })
   void getApplicationRationaleTaskListItem_flare_rationaleExists(
-      boolean flaringLocationExists,
+      boolean locationExists,
       boolean hostLocationExists,
       TaskListLabel taskListLabel
   ) {
@@ -124,7 +125,7 @@ class ConsentDetailsTaskListSectionServiceTest {
     when(applicationRationaleService.doesApplicationRationaleExistFor(applicationVersion))
         .thenReturn(true);
     when(applicationAssetService.assetExistsForApplicationVersionAndAssetRole(applicationVersion, AssetRole.LOCATION))
-        .thenReturn(flaringLocationExists);
+        .thenReturn(locationExists);
     when(applicationAssetService.assetExistsForApplicationVersionAndAssetRole(applicationVersion, AssetRole.HOST))
         .thenReturn(hostLocationExists);
 
@@ -146,7 +147,7 @@ class ConsentDetailsTaskListSectionServiceTest {
       "false, false, NOT_STARTED"
   })
   void getApplicationRationaleTaskListItem_flare_rationaleDoesNotExist(
-      boolean flaringLocationExists,
+      boolean locationExists,
       boolean hostLocationExists,
       TaskListLabel taskListLabel
   ) {
@@ -156,7 +157,7 @@ class ConsentDetailsTaskListSectionServiceTest {
     when(applicationRationaleService.doesApplicationRationaleExistFor(applicationVersion))
         .thenReturn(false);
     when(applicationAssetService.assetExistsForApplicationVersionAndAssetRole(applicationVersion, AssetRole.LOCATION))
-        .thenReturn(flaringLocationExists);
+        .thenReturn(locationExists);
     when(applicationAssetService.assetExistsForApplicationVersionAndAssetRole(applicationVersion, AssetRole.HOST))
         .thenReturn(hostLocationExists);
 
@@ -178,7 +179,7 @@ class ConsentDetailsTaskListSectionServiceTest {
       "false, false, IN_PROGRESS"
   })
   void getApplicationRationaleTaskListItem_vent_rationaleExists(
-      boolean flaringLocationExists,
+      boolean locationExists,
       boolean hostLocationExists,
       TaskListLabel taskListLabel
   ) {
@@ -188,7 +189,7 @@ class ConsentDetailsTaskListSectionServiceTest {
     when(applicationRationaleService.doesApplicationRationaleExistFor(applicationVersion))
         .thenReturn(true);
     when(applicationAssetService.assetExistsForApplicationVersionAndAssetRole(applicationVersion, AssetRole.LOCATION))
-        .thenReturn(flaringLocationExists);
+        .thenReturn(locationExists);
     when(applicationAssetService.assetExistsForApplicationVersionAndAssetRole(applicationVersion, AssetRole.HOST))
         .thenReturn(hostLocationExists);
 
@@ -210,11 +211,75 @@ class ConsentDetailsTaskListSectionServiceTest {
       "false, false, NOT_STARTED"
   })
   void getApplicationRationaleTaskListItem_vent_rationaleDoesNotExist(
-      boolean flaringLocationExists,
+      boolean locationExists,
       boolean hostLocationExists,
       TaskListLabel taskListLabel
   ) {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
+    var applicationId = applicationVersion.getApplication().getId();
+
+    when(applicationRationaleService.doesApplicationRationaleExistFor(applicationVersion))
+        .thenReturn(false);
+    when(applicationAssetService.assetExistsForApplicationVersionAndAssetRole(applicationVersion, AssetRole.LOCATION))
+        .thenReturn(locationExists);
+    when(applicationAssetService.assetExistsForApplicationVersionAndAssetRole(applicationVersion, AssetRole.HOST))
+        .thenReturn(hostLocationExists);
+
+    assertThat(taskListSectionService.getApplicationRationaleTaskListItem(applicationVersion))
+        .isPresent()
+        .get()
+        .isEqualTo(new TaskListItem(
+            APPLICATION_RATIONALE_TASK_LIST_ITEM_NAME,
+            taskListLabel,
+            ReverseRouter.route(on(ApplicationRationaleVentController.class).getForm(applicationId))
+        ));
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+      "true, true, COMPLETED",
+      "true, false, IN_PROGRESS",
+      "false, true, IN_PROGRESS",
+      "false, false, IN_PROGRESS"
+  })
+  void getApplicationRationaleTaskListItem_production_rationaleExists(
+      boolean locationExists,
+      boolean hostLocationExists,
+      TaskListLabel taskListLabel
+  ) {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var applicationId = applicationVersion.getApplication().getId();
+
+    when(applicationRationaleService.doesApplicationRationaleExistFor(applicationVersion))
+        .thenReturn(true);
+    when(applicationAssetService.assetExistsForApplicationVersionAndAssetRole(applicationVersion, AssetRole.LOCATION))
+        .thenReturn(locationExists);
+    when(applicationAssetService.assetExistsForApplicationVersionAndAssetRole(applicationVersion, AssetRole.HOST))
+        .thenReturn(hostLocationExists);
+
+    assertThat(taskListSectionService.getApplicationRationaleTaskListItem(applicationVersion))
+        .isPresent()
+        .get()
+        .isEqualTo(new TaskListItem(
+            APPLICATION_RATIONALE_TASK_LIST_ITEM_NAME,
+            taskListLabel,
+            ReverseRouter.route(on(ApplicationRationaleProductionController.class).getForm(applicationId))
+        ));
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+      "true, true, IN_PROGRESS",
+      "true, false, IN_PROGRESS",
+      "false, true, IN_PROGRESS",
+      "false, false, NOT_STARTED"
+  })
+  void getApplicationRationaleTaskListItem_production_rationaleDoesNotExist(
+      boolean flaringLocationExists,
+      boolean hostLocationExists,
+      TaskListLabel taskListLabel
+  ) {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
     var applicationId = applicationVersion.getApplication().getId();
 
     when(applicationRationaleService.doesApplicationRationaleExistFor(applicationVersion))
@@ -230,7 +295,7 @@ class ConsentDetailsTaskListSectionServiceTest {
         .isEqualTo(new TaskListItem(
             APPLICATION_RATIONALE_TASK_LIST_ITEM_NAME,
             taskListLabel,
-            ReverseRouter.route(on(ApplicationRationaleVentController.class).getForm(applicationId))
+            ReverseRouter.route(on(ApplicationRationaleProductionController.class).getForm(applicationId))
         ));
   }
 
