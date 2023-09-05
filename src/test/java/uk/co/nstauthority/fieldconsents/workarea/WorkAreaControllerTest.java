@@ -98,7 +98,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
     assertWorkAreaModel(model);
     assertThat(model)
-        .containsEntry("isRegulatorUser", false)
+        .containsEntry("isWorkAreaWithTabs", false)
         .containsEntry("workAreaTabs", Collections.emptyList());
 
     var actualForm = (WorkAreaFilterForm) model.get("form");
@@ -375,6 +375,114 @@ class WorkAreaControllerTest extends AbstractControllerTest {
         .andExpect(status().is3xxRedirection());
   }
 
+  @SecurityTest
+  void getWorkAreaAllConsultations_whenUserDoesNotHavePermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.ALLOCATE_CONSULTATION)))
+        .thenReturn(false);
+
+    mockMvc.perform(
+        get(ReverseRouter.route(on(WorkAreaController.class)
+            .getWorkAreaAllConsultations(filter, user)))
+            .with(user(user))
+        )
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void getWorkAreaAllConsultations_whenUserDoesHavePermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.ALLOCATE_CONSULTATION)))
+        .thenReturn(true);
+
+    mockMvc.perform(
+        get(ReverseRouter.route(on(WorkAreaController.class)
+            .getWorkAreaAllConsultations(filter, user)))
+            .with(user(user))
+        )
+        .andExpect(status().isOk());
+  }
+
+  @SecurityTest
+  void postWorkAreaAllConsultations_whenUserDoesNotHavePermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.ALLOCATE_CONSULTATION)))
+        .thenReturn(false);
+
+    mockMvc.perform(
+        post(ReverseRouter.route(on(WorkAreaController.class)
+            .postWorkAreaAllConsultations(filter, user)))
+            .with(user(user))
+            .with(csrf())
+        )
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void postWorkAreaAllConsultations_whenUserDoesHavePermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.ALLOCATE_CONSULTATION)))
+        .thenReturn(true);
+
+    mockMvc.perform(
+        post(ReverseRouter.route(on(WorkAreaController.class)
+            .postWorkAreaAllConsultations(filter, user)))
+            .with(user(user))
+            .with(csrf())
+        )
+        .andExpect(status().is3xxRedirection());
+  }
+
+  @SecurityTest
+  void getWorkAreaUnassignedConsultations_whenUserDoesNotHavePermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.ALLOCATE_CONSULTATION)))
+        .thenReturn(false);
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(WorkAreaController.class)
+                .getWorkAreaUnassignedConsultations(filter, user)))
+                .with(user(user))
+        )
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void getWorkAreaUnassignedConsultations_whenUserDoesHavePermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.ALLOCATE_CONSULTATION)))
+        .thenReturn(true);
+
+    mockMvc.perform(
+        get(ReverseRouter.route(on(WorkAreaController.class)
+            .getWorkAreaUnassignedConsultations(filter, user)))
+            .with(user(user))
+        )
+        .andExpect(status().isOk());
+  }
+
+  @SecurityTest
+  void postWorkAreaUnassignedConsultations_whenUserDoesNotHavePermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.ALLOCATE_CONSULTATION)))
+        .thenReturn(false);
+
+    mockMvc.perform(
+        post(ReverseRouter.route(on(WorkAreaController.class)
+            .postWorkAreaUnassignedConsultations(filter, user)))
+            .with(user(user))
+            .with(csrf())
+        )
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void postWorkAreaUnassignedConsultations_whenUserDoesHavePermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.ALLOCATE_CONSULTATION)))
+        .thenReturn(true);
+
+    mockMvc.perform(
+        post(ReverseRouter.route(on(WorkAreaController.class)
+            .postWorkAreaUnassignedConsultations(filter, user)))
+            .with(user(user))
+            .with(csrf())
+        )
+        .andExpect(status().is3xxRedirection());
+  }
+
   @Test
   void getWorkArea_RegulatorUser_CaseOfficer() throws Exception {
     when(teamService.isRegulatorUser(user)).thenReturn(true);
@@ -394,7 +502,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
     assertWorkAreaModel(model);
     assertThat(model)
-        .containsEntry("isRegulatorUser", true)
+        .containsEntry("isWorkAreaWithTabs", true)
         .containsEntry("selectedTab", WorkAreaTab.MY_APPLICATIONS.getValue())
         .containsEntry("workAreaTabs", caseOfficerTabs);
 
@@ -421,7 +529,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
     assertWorkAreaModel(model);
     assertThat(model)
-        .containsEntry("isRegulatorUser", true)
+        .containsEntry("isWorkAreaWithTabs", true)
         .containsEntry("selectedTab", WorkAreaTab.ALL_APPLICATIONS.getValue())
         .containsEntry("workAreaTabs", caseManagerTabs);
 
@@ -444,8 +552,67 @@ class WorkAreaControllerTest extends AbstractControllerTest {
         .andExpect(status().isOk())
         .andExpect(view().name(WORK_AREA_VIEW_NAME))
         .andExpect(model().attribute("selectedTab", WorkAreaTab.MY_TECHNICAL_REVIEWS.getValue()))
-        .andExpect(model().attribute("isRegulatorUser", true))
+        .andExpect(model().attribute("isWorkAreaWithTabs", true))
         .andExpect(model().attribute("workAreaTabs", technicalReviewerTabs))
+        .andExpect(model().attribute("form", form))
+        .andReturn().getModelAndView();
+
+    assert modelAndView != null;
+    var model = modelAndView.getModel();
+
+    assertWorkAreaModel(model);
+  }
+
+  @Test
+  void getWorkArea_ConsulteeUser_Allocator() throws Exception {
+    when(teamService.isRegulatorUser(user)).thenReturn(false);
+    when(teamService.isConsulteeUser(user)).thenReturn(true);
+    when(permissionService.hasPermission(user, EnumSet.of(RolePermission.ALLOCATE_CONSULTATION)))
+        .thenReturn(true);
+    when(workAreaService.getConsulteeWorkAreaItems(any(WorkAreaFilter.class), any(ServiceUserDetail.class), any(WorkAreaTab.class)))
+        .thenReturn(workAreaItems);
+    var consulteeAllocatorTabs = List.of(WorkAreaTab.ALL_CONSULTATIONS, WorkAreaTab.UNASSIGNED_CONSULTATIONS);
+    when(workAreaService.getTabsAvailableToUser(user)).thenReturn(consulteeAllocatorTabs);
+
+    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)))
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(view().name(WORK_AREA_VIEW_NAME))
+        .andExpect(model().attribute("selectedTab", WorkAreaTab.ALL_CONSULTATIONS.getValue()))
+        .andExpect(model().attribute("isWorkAreaWithTabs", true))
+        .andExpect(model().attribute("workAreaTabs", consulteeAllocatorTabs))
+        .andExpect(model().attribute("form", form))
+        .andReturn().getModelAndView();
+
+    assert modelAndView != null;
+    var model = modelAndView.getModel();
+
+    assertWorkAreaModel(model);
+  }
+
+  @Test
+  void getWorkArea_regulatorUserAndConsulteeUser_withoutPermissions() throws Exception {
+    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    when(permissionService.hasPermission(user, EnumSet.of(RolePermission.PROCESS_FCS_APPLICATIONS)))
+        .thenReturn(false);
+    when(permissionService.hasPermission(user, EnumSet.of(RolePermission.ASSIGN_FCS_APPLICATIONS)))
+        .thenReturn(false);
+    when(permissionService.hasPermission(user, EnumSet.of(RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS)))
+        .thenReturn(false);
+
+    when(teamService.isConsulteeUser(user)).thenReturn(true);
+    when(permissionService.hasPermission(user, EnumSet.of(RolePermission.ALLOCATE_CONSULTATION)))
+        .thenReturn(false);
+
+    when(workAreaService.getIndustryWorkAreaItems(any(WorkAreaFilter.class), any(ServiceUserDetail.class)))
+        .thenReturn(workAreaItems);
+
+    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)))
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(view().name(WORK_AREA_VIEW_NAME))
+        .andExpect(model().attribute("isWorkAreaWithTabs", false))
+        .andExpect(model().attribute("workAreaTabs", Collections.emptyList()))
         .andExpect(model().attribute("form", form))
         .andReturn().getModelAndView();
 

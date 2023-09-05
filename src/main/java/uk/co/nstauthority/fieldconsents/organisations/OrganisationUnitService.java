@@ -46,9 +46,6 @@ public class OrganisationUnitService {
                                                                    RolePermission... requiredPermissions) {
     var requiredPermissionsSet = Set.of(requiredPermissions);
 
-    var userRegulatorTeamsWithPermission =
-        teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, requiredPermissionsSet);
-
     var requestPurpose = new RequestPurpose(purpose);
     var requestedFields = new OrganisationUnitsProjectionRoot()
         .organisationUnitId().name();
@@ -58,7 +55,19 @@ public class OrganisationUnitService {
         .map(OrganisationUnitJson::from)
         .toList();
 
+    var userRegulatorTeamsWithPermission =
+        teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, requiredPermissionsSet);
+
+    // short circuit and return all org units found is the user is a regulator with the required permissions
     if (!userRegulatorTeamsWithPermission.isEmpty()) {
+      return organisationUnitJsons;
+    }
+
+    var userConsulteeTeamsWithPermission =
+        teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.OPRED, requiredPermissionsSet);
+
+    // short circuit and return all org units found is the user is a consultee with the required permissions
+    if (!userConsulteeTeamsWithPermission.isEmpty()) {
       return organisationUnitJsons;
     }
 

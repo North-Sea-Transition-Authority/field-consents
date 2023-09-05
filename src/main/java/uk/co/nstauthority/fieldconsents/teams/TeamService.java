@@ -53,6 +53,10 @@ public class TeamService {
     return !getTeamsOfTypeThatUserBelongsTo(user, TeamType.INDUSTRY).isEmpty();
   }
 
+  public boolean isConsulteeUser(ServiceUserDetail user) {
+    return !getTeamsOfTypeThatUserBelongsTo(user, TeamType.OPRED).isEmpty();
+  }
+
   public List<Team> getTeamsOfTypeThatUserHasPermissionFor(ServiceUserDetail user,
                                                            TeamType teamType,
                                                            Set<RolePermission> requiredPermissions) {

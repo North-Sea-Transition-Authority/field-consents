@@ -5,8 +5,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.CONSULTEE;
+import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CONSULTATION_REQUEST;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -24,6 +27,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.Team;
@@ -45,6 +49,9 @@ class ConsultationServiceTest {
   @Mock
   private ConsultationRepository repository;
 
+  @Mock
+  private ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
+
   private ConsultationService consultationService;
 
   private ApplicationVersion applicationVersion;
@@ -52,7 +59,8 @@ class ConsultationServiceTest {
 
   @BeforeEach
   void setUp() {
-    consultationService = spy(new ConsultationService(teamService, repository, CLOCK));
+    consultationService = spy(new ConsultationService(teamService, repository, CLOCK,
+        applicationWorkAreaPriorityService));
     applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
   }
 
@@ -72,6 +80,8 @@ class ConsultationServiceTest {
 
     var consultationCaptor = ArgumentCaptor.forClass(Consultation.class);
     verify(repository).save(consultationCaptor.capture());
+    verify(applicationWorkAreaPriorityService, times(1))
+        .prioritiseApplicationInWorkArea(applicationVersion, USER, CONSULTATION_REQUEST, CONSULTEE);
 
     assertThat(consultationCaptor.getValue())
         .extracting(

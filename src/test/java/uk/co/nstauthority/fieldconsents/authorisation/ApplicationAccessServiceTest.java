@@ -2,6 +2,10 @@ package uk.co.nstauthority.fieldconsents.authorisation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ALLOCATE_CONSULTATION;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.SUBMIT_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_APPLICATIONS;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -50,57 +54,70 @@ class ApplicationAccessServiceTest {
   @Test
   void hasApplicationPermission_whenDoesntHasPermission_thenFalse() {
     when(teamService
-        .getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, Set.of(RolePermission.SUBMIT_FCS_APPLICATIONS)))
+        .getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, Set.of(SUBMIT_FCS_APPLICATIONS)))
+        .thenReturn(Collections.emptyList());
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, Set.of(SUBMIT_FCS_APPLICATIONS)))
         .thenReturn(Collections.emptyList());
 
     when(organisationUnitPermissionService
         .hasOperatorPermission(
             USER,
             applicationVersion.getPrimaryOperatorOuId(),
-            RolePermission.SUBMIT_FCS_APPLICATIONS))
+            SUBMIT_FCS_APPLICATIONS))
         .thenReturn(false);
 
     assertThat(
         applicationAccessService
-            .hasApplicationPermission(USER, applicationVersion, RolePermission.SUBMIT_FCS_APPLICATIONS)
+            .hasApplicationPermission(USER, applicationVersion, SUBMIT_FCS_APPLICATIONS)
     ).isFalse();
   }
 
   @Test
   void hasApplicationPermission_whenPermissionForTeam_thenTrue() {
-    when(teamService
-        .getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, Set.of(RolePermission.SUBMIT_FCS_APPLICATIONS)))
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, Set.of(SUBMIT_FCS_APPLICATIONS)))
+        .thenReturn(Collections.emptyList());
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, Set.of(SUBMIT_FCS_APPLICATIONS)))
         .thenReturn(Collections.emptyList());
 
     when(organisationUnitPermissionService
         .hasOperatorPermission(
             USER,
             applicationVersion.getPrimaryOperatorOuId(),
-            RolePermission.SUBMIT_FCS_APPLICATIONS))
+            SUBMIT_FCS_APPLICATIONS))
         .thenReturn(true);
 
     assertThat(
         applicationAccessService
-            .hasApplicationPermission(USER, applicationVersion, RolePermission.SUBMIT_FCS_APPLICATIONS)
+            .hasApplicationPermission(USER, applicationVersion, SUBMIT_FCS_APPLICATIONS)
     ).isTrue();
   }
 
   @Test
-  void hasApplicationPermission_whenUserHasPermissionForTeamRegulatorTeam_thenTrue() {
+  void hasApplicationPermission_whenUserHasPermissionForRegulatorTeam_thenTrue() {
     var regulatorTeam = TeamTestUtil.Builder().withTeamType(TeamType.REGULATOR).build();
-    when(teamService
-        .getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, Set.of(RolePermission.SUBMIT_FCS_APPLICATIONS)))
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, Set.of(PROCESS_FCS_APPLICATIONS)))
         .thenReturn(List.of(regulatorTeam));
 
-    assertThat(
-        applicationAccessService
-            .hasApplicationPermission(USER, applicationVersion, RolePermission.SUBMIT_FCS_APPLICATIONS)
-    ).isTrue();
+    assertThat(applicationAccessService.hasApplicationPermission(USER, applicationVersion, PROCESS_FCS_APPLICATIONS))
+        .isTrue();
+  }
+
+  @Test
+  void hasApplicationPermission_whenUserHasPermissionForConsulteeTeam_thenTrue() {
+    var consulteeTeam = TeamTestUtil.Builder().withTeamType(TeamType.OPRED).build();
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, Set.of(ALLOCATE_CONSULTATION)))
+        .thenReturn(Collections.emptyList());
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, Set.of(ALLOCATE_CONSULTATION)))
+        .thenReturn(List.of(consulteeTeam));
+
+    assertThat(applicationAccessService.hasApplicationPermission(USER, applicationVersion, ALLOCATE_CONSULTATION))
+        .isTrue();
   }
 
   @Test
   void getApplicationPermissionsForUser_whenNotRegulatorAndNoOperatorPermissions_thenEmpty() {
     when(teamService.isRegulatorUser(USER)).thenReturn(false);
+    when(teamService.isConsulteeUser(USER)).thenReturn(false);
     when(organisationUnitPermissionService
         .getUserPermissionsForOperator(USER, applicationVersion.getPrimaryOperatorOuId()))
         .thenReturn(Collections.emptySet());
@@ -117,6 +134,7 @@ class ApplicationAccessServiceTest {
         .thenReturn(List.of(regulatorTeam));
     when(teamService.getUserPermissionsForTeam(regulatorTeam, USER))
         .thenReturn(Collections.emptySet());
+    when(teamService.isConsulteeUser(USER)).thenReturn(false);
     when(organisationUnitPermissionService
         .getUserPermissionsForOperator(USER, applicationVersion.getPrimaryOperatorOuId()))
         .thenReturn(Collections.emptySet());
@@ -128,12 +146,13 @@ class ApplicationAccessServiceTest {
   @Test
   void getApplicationPermissionsForUser_whenRegulatorWithPermissionsAndNoOperatorPermissions_thenReturnPermissions() {
     var regulatorTeam = TeamTestUtil.Builder().build();
-    var regulatorPermissions = Set.of(RolePermission.PROCESS_FCS_APPLICATIONS, RolePermission.VIEW_FCS_APPLICATIONS);
+    var regulatorPermissions = Set.of(RolePermission.PROCESS_FCS_APPLICATIONS, VIEW_FCS_APPLICATIONS);
     when(teamService.isRegulatorUser(USER)).thenReturn(true);
     when(teamService.getTeamsOfTypeThatUserBelongsTo(USER, TeamType.REGULATOR))
         .thenReturn(List.of(regulatorTeam));
     when(teamService.getUserPermissionsForTeam(regulatorTeam, USER))
         .thenReturn(regulatorPermissions);
+    when(teamService.isConsulteeUser(USER)).thenReturn(false);
     when(organisationUnitPermissionService
         .getUserPermissionsForOperator(USER, applicationVersion.getPrimaryOperatorOuId()))
         .thenReturn(Collections.emptySet());
@@ -145,12 +164,13 @@ class ApplicationAccessServiceTest {
   @Test
   void getApplicationPermissionsForUser_whenRegulatorWithNoPermissionsButWithOperatorPermissions_thenReturnPermissions() {
     var regulatorTeam = TeamTestUtil.Builder().build();
-    var operatorPermissions = Set.of(RolePermission.EDIT_FCS_APPLICATIONS, RolePermission.VIEW_FCS_APPLICATIONS);
+    var operatorPermissions = Set.of(RolePermission.EDIT_FCS_APPLICATIONS, VIEW_FCS_APPLICATIONS);
     when(teamService.isRegulatorUser(USER)).thenReturn(true);
     when(teamService.getTeamsOfTypeThatUserBelongsTo(USER, TeamType.REGULATOR))
         .thenReturn(List.of(regulatorTeam));
     when(teamService.getUserPermissionsForTeam(regulatorTeam, USER))
         .thenReturn(Collections.emptySet());
+    when(teamService.isConsulteeUser(USER)).thenReturn(false);
     when(organisationUnitPermissionService
         .getUserPermissionsForOperator(USER, applicationVersion.getPrimaryOperatorOuId()))
         .thenReturn(operatorPermissions);
@@ -162,8 +182,8 @@ class ApplicationAccessServiceTest {
   @Test
   void getApplicationPermissionsForUser_whenRegulatorWithPermissionsAndWithOperatorPermissions_thenReturnPermissions() {
     var regulatorTeam = TeamTestUtil.Builder().build();
-    var regulatorPermissions = Set.of(RolePermission.PROCESS_FCS_APPLICATIONS, RolePermission.VIEW_FCS_APPLICATIONS);
-    var operatorPermissions = Set.of(RolePermission.EDIT_FCS_APPLICATIONS, RolePermission.VIEW_FCS_APPLICATIONS);
+    var regulatorPermissions = Set.of(RolePermission.PROCESS_FCS_APPLICATIONS, VIEW_FCS_APPLICATIONS);
+    var operatorPermissions = Set.of(RolePermission.EDIT_FCS_APPLICATIONS, VIEW_FCS_APPLICATIONS);
     var allPermissions = Stream.of(regulatorPermissions, operatorPermissions)
         .flatMap(Collection::stream)
         .collect(Collectors.toSet());
@@ -172,11 +192,30 @@ class ApplicationAccessServiceTest {
         .thenReturn(List.of(regulatorTeam));
     when(teamService.getUserPermissionsForTeam(regulatorTeam, USER))
         .thenReturn(regulatorPermissions);
+    when(teamService.isConsulteeUser(USER)).thenReturn(false);
     when(organisationUnitPermissionService
         .getUserPermissionsForOperator(USER, applicationVersion.getPrimaryOperatorOuId()))
         .thenReturn(operatorPermissions);
 
     assertThat(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .containsAll(allPermissions);
+  }
+
+  @Test
+  void getApplicationPermissionsForUser_whenConsulteeWithPermissionsAndNoOperatorPermissions_thenReturnPermissions() {
+    var consulteeTeam = TeamTestUtil.Builder().withTeamType(TeamType.OPRED).build();
+    var consulteePermissions = Set.of(ALLOCATE_CONSULTATION, VIEW_FCS_APPLICATIONS);
+    when(teamService.isRegulatorUser(USER)).thenReturn(false);
+    when(teamService.isConsulteeUser(USER)).thenReturn(true);
+    when(teamService.getTeamsOfTypeThatUserBelongsTo(USER, TeamType.OPRED))
+        .thenReturn(List.of(consulteeTeam));
+    when(teamService.getUserPermissionsForTeam(consulteeTeam, USER))
+        .thenReturn(consulteePermissions);
+    when(organisationUnitPermissionService
+        .getUserPermissionsForOperator(USER, applicationVersion.getPrimaryOperatorOuId()))
+        .thenReturn(Collections.emptySet());
+
+    assertThat(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
+        .containsAll(consulteePermissions);
   }
 }

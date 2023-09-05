@@ -10,11 +10,12 @@ public class SearchResultItem extends ApplicationDataItem {
                           String asset, String geographicArea, String status, String submittedDateTime,
                           String submittedBy, String aceFlag, String caseOfficer, Boolean withdrawalOpen,
                           String technicalReviewer, Boolean applicationUpdateOpen, String applicationUpdateDeadline,
+                          Boolean consultationOpen, String consultationDeadline,
                           String licences) {
 
     super(applicationId, type, duration, reference, operator, asset, geographicArea, status, submittedDateTime,
         submittedBy, aceFlag, caseOfficer, withdrawalOpen, technicalReviewer, applicationUpdateOpen,
-        applicationUpdateDeadline);
+        applicationUpdateDeadline, consultationOpen, consultationDeadline);
 
     this.licences = licences;
   }

@@ -104,9 +104,6 @@ public class FieldService {
   public List<FieldWithOperatorJson> searchFieldsWithOperatorForUser(String fieldName,
                                                                      String requestPurpose,
                                                                      ServiceUserDetail user) {
-    var userRegulatorTeamsWithPermission =
-        teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS);
-
     var fieldWithOperatorJsons = fieldApi.searchFields(
             fieldName,
             fieldStatusesAllowed,
@@ -117,7 +114,19 @@ public class FieldService {
         .map(FieldWithOperatorJson::from)
         .toList();
 
+    var userRegulatorTeamsWithPermission =
+        teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS);
+
+    // short circuit and return all found fields if the user is a regulator with view permissions
     if (!userRegulatorTeamsWithPermission.isEmpty()) {
+      return fieldWithOperatorJsons;
+    }
+
+    var userConsulteeTeamsWithPermission =
+        teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS);
+
+    // short circuit and return all found fields if the user is a consultee with view permissions
+    if (!userConsulteeTeamsWithPermission.isEmpty()) {
       return fieldWithOperatorJsons;
     }
 

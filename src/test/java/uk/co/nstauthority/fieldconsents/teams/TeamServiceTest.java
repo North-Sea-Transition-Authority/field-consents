@@ -369,6 +369,21 @@ class TeamServiceTest {
   }
 
   @Test
+  void isConsulteeUser_whenUserIsNotConsultee_thenFalse() {
+    when(teamRepository.findAllTeamsOfTypeThatUserIsMemberOf(user.wuaId(), TeamType.OPRED)).thenReturn(
+        Collections.emptyList());
+
+    assertThat(teamService.isConsulteeUser(user)).isFalse();
+  }
+
+  @Test
+  void isConsulteeUser_whenUserIsConsultee_thenTrue() {
+    when(teamRepository.findAllTeamsOfTypeThatUserIsMemberOf(user.wuaId(), TeamType.OPRED)).thenReturn(List.of(team));
+
+    assertThat(teamService.isConsulteeUser(user)).isTrue();
+  }
+
+  @Test
   void getUserPermissionsForTeam_whenPermissions_thenPermissionsReturned() {
     var expectedPermissions = Set.of(RolePermission.PROCESS_FCS_APPLICATIONS, RolePermission.VIEW_FCS_APPLICATIONS);
     when(permissionService.getUserPermissionsForTeam(team, user))

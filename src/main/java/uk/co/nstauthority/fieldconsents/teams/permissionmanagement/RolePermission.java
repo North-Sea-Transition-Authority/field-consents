@@ -25,8 +25,8 @@ public enum RolePermission {
 
   public static final Set<RolePermission> REGULATOR_PERMISSIONS =
       EnumSet.of(
-            RolePermission.PROCESS_FCS_APPLICATIONS,
-            RolePermission.ASSIGN_FCS_APPLICATIONS,
-            RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS
-          );
+          RolePermission.PROCESS_FCS_APPLICATIONS,
+          RolePermission.ASSIGN_FCS_APPLICATIONS,
+          RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS
+      );
 }

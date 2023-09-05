@@ -67,7 +67,9 @@ public class FieldServiceTest {
 
   private final RequestPurpose requestPurpose = new RequestPurpose(REQUEST_PURPOSE);
 
-  private final Team regulatorTeam = TeamTestUtil.Builder().build();
+  private final Team regulatorTeam = TeamTestUtil.Builder().withTeamType(TeamType.REGULATOR).build();
+
+  private final Team consulteeTeam = TeamTestUtil.Builder().withTeamType(TeamType.OPRED).build();
 
   @Test
   void searchFields_allTestFields() {
@@ -86,22 +88,31 @@ public class FieldServiceTest {
   }
 
   @Test
-  void searchFieldsWithOperatorForUser_allTestFields() {
+  void searchFieldsWithOperatorForUser_regulatorUser_allTestFields() {
     when(fieldApi.searchFields(eq("F"), eq(fieldStatusesAllowed),
         any(FieldsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(fieldsWithOperatorList);
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(List.of(regulatorTeam));
 
-    List<FieldWithOperatorJson> allTestFields =
-        fieldService.searchFieldsWithOperatorForUser("F", REQUEST_PURPOSE, USER);
-    assertThat(allTestFields).hasSize(3);
-    assertThat(allTestFields.get(0)).usingRecursiveComparison()
-        .isEqualTo(field1JsonWithOperator);
-    assertThat(allTestFields.get(1)).usingRecursiveComparison()
-        .isEqualTo(field2JsonWithOperator);
-    assertThat(allTestFields.get(2)).usingRecursiveComparison()
-        .isEqualTo(field3JsonWithOperator);
+    assertThat(fieldService.searchFieldsWithOperatorForUser("F", REQUEST_PURPOSE, USER))
+        .usingRecursiveComparison()
+        .isEqualTo(List.of(field1JsonWithOperator, field2JsonWithOperator, field3JsonWithOperator));
+  }
+
+  @Test
+  void searchFieldsWithOperatorForUser_consulteeUser_allTestFields() {
+    when(fieldApi.searchFields(eq("F"), eq(fieldStatusesAllowed),
+        any(FieldsProjectionRoot.class), eq(requestPurpose)))
+        .thenReturn(fieldsWithOperatorList);
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
+        .thenReturn(Collections.emptyList());
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS))
+        .thenReturn(List.of(consulteeTeam));
+
+    assertThat(fieldService.searchFieldsWithOperatorForUser("F", REQUEST_PURPOSE, USER))
+        .usingRecursiveComparison()
+        .isEqualTo(List.of(field1JsonWithOperator, field2JsonWithOperator, field3JsonWithOperator));
   }
 
   @Test
@@ -132,18 +143,31 @@ public class FieldServiceTest {
   }
 
   @Test
-  void searchFieldsWithOperatorForUser_singleTestField() {
+  void searchFieldsWithOperatorForUser_regulatorUser_singleTestField() {
     when(fieldApi.searchFields(eq("F2"), eq(fieldStatusesAllowed),
         any(FieldsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(List.of(field2WithOperator));
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(List.of(regulatorTeam));
 
-    List<FieldWithOperatorJson> singleTestField =
-        fieldService.searchFieldsWithOperatorForUser("F2", REQUEST_PURPOSE, USER);
-    assertThat(singleTestField).hasSize(1);
-    assertThat(singleTestField.get(0)).usingRecursiveComparison()
-        .isEqualTo(field2JsonWithOperator);
+    assertThat(fieldService.searchFieldsWithOperatorForUser("F2", REQUEST_PURPOSE, USER))
+        .usingRecursiveComparison()
+        .isEqualTo(List.of(field2JsonWithOperator));
+  }
+
+  @Test
+  void searchFieldsWithOperatorForUser_consulteeUser_singleTestField() {
+    when(fieldApi.searchFields(eq("F2"), eq(fieldStatusesAllowed),
+        any(FieldsProjectionRoot.class), eq(requestPurpose)))
+        .thenReturn(List.of(field2WithOperator));
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
+        .thenReturn(Collections.emptyList());
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS))
+        .thenReturn(List.of(consulteeTeam));
+
+    assertThat(fieldService.searchFieldsWithOperatorForUser("F2", REQUEST_PURPOSE, USER))
+        .usingRecursiveComparison()
+        .isEqualTo(List.of(field2JsonWithOperator));
   }
 
   @Test
@@ -153,6 +177,9 @@ public class FieldServiceTest {
         .thenReturn(fieldsWithOperatorList);
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(Collections.emptyList());
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS))
+        .thenReturn(Collections.emptyList());
+
     when(organisationUnitService.getOperatorsUserHasPermissionsFor(USER, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(List.of(orgUnit1Json));
 
@@ -168,6 +195,8 @@ public class FieldServiceTest {
         .thenReturn(List.of(field1WithOperator));
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(Collections.emptyList());
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS))
+        .thenReturn(Collections.emptyList());
     when(organisationUnitService.getOperatorsUserHasPermissionsFor(USER, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(List.of(orgUnit2Json));
 
@@ -182,6 +211,8 @@ public class FieldServiceTest {
         any(FieldsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(List.of(field1WithNoOperatorButLicences));
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
+        .thenReturn(Collections.emptyList());
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(Collections.emptyList());
     when(organisationUnitService.getOperatorsUserHasPermissionsFor(USER, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(List.of(orgUnit1Json));

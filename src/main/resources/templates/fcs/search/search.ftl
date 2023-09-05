@@ -37,6 +37,9 @@
     <#if dataItem.isApplicationUpdateOpen()>
       <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Update due by ${dataItem.getApplicationUpdateDeadline()}"/>
     </#if>
+    <#if dataItem.isConsultationOpen()>
+      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Consultation due by ${dataItem.getConsultationDeadline()}"/>
+    </#if>
   </#assign>
   <@fdsResultList.resultListItem
     linkHeadingText=dataItem.getReference()

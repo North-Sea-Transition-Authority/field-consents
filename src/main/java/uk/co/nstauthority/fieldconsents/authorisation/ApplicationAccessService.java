@@ -38,6 +38,14 @@ public class ApplicationAccessService {
       return true;
     }
 
+    var userConsulteeTeamsWithPermission =
+        teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.OPRED, requiredPermissionsSet);
+
+    // user has permission as a consultee so has access to all applications
+    if (!userConsulteeTeamsWithPermission.isEmpty()) {
+      return true;
+    }
+
     return organisationUnitPermissionService
         .hasOperatorPermission(user, applicationVersion.getPrimaryOperatorOuId(), requiredPermissions);
   }
@@ -49,6 +57,14 @@ public class ApplicationAccessService {
 
     if (teamService.isRegulatorUser(user)) {
       teamService.getTeamsOfTypeThatUserBelongsTo(user, TeamType.REGULATOR)
+          .stream()
+          .map(team -> teamService.getUserPermissionsForTeam(team, user))
+          .flatMap(Collection::stream)
+          .forEach(userRolePermissions::add);
+    }
+
+    if (teamService.isConsulteeUser(user)) {
+      teamService.getTeamsOfTypeThatUserBelongsTo(user, TeamType.OPRED)
           .stream()
           .map(team -> teamService.getUserPermissionsForTeam(team, user))
           .flatMap(Collection::stream)

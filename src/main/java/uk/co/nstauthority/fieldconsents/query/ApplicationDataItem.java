@@ -22,11 +22,14 @@ public class ApplicationDataItem {
   private final String technicalReviewer;
   private final Boolean applicationUpdateOpen;
   private final String applicationUpdateDeadline;
+  private final Boolean consultationOpen;
+  private final String consultationDeadline;
 
   public ApplicationDataItem(Integer applicationId, String type, String duration, String reference, String operator,
                              String asset, String geographicArea, String status, String submittedDateTime,
                              String submittedBy, String aceFlag, String caseOfficer, Boolean withdrawalOpen,
-                             String technicalReviewer, Boolean applicationUpdateOpen, String applicationUpdateDeadline) {
+                             String technicalReviewer, Boolean applicationUpdateOpen, String applicationUpdateDeadline,
+                             Boolean consultationOpen, String consultationDeadline) {
     this.applicationId = applicationId;
     this.type = type;
     this.duration = duration;
@@ -43,6 +46,8 @@ public class ApplicationDataItem {
     this.technicalReviewer = technicalReviewer;
     this.applicationUpdateOpen = applicationUpdateOpen;
     this.applicationUpdateDeadline = applicationUpdateDeadline;
+    this.consultationOpen = consultationOpen;
+    this.consultationDeadline = consultationDeadline;
   }
 
   public Integer getApplicationId() {
@@ -107,6 +112,14 @@ public class ApplicationDataItem {
 
   public String getApplicationUpdateDeadline() {
     return applicationUpdateDeadline;
+  }
+
+  public Boolean isConsultationOpen() {
+    return consultationOpen;
+  }
+
+  public String getConsultationDeadline() {
+    return consultationDeadline;
   }
 
   public String url() {

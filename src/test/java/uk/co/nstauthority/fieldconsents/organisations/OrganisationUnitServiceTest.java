@@ -8,7 +8,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_1;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_2;
-import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDtoService.ALL_ORG_UNITS_DATA_ITEM_PURPOSE;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.ORG_GROUP_ID_1;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.ORG_GROUP_ID_2;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit1;
@@ -18,6 +17,8 @@ import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTes
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit2Json;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit3Json;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnits;
+import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDtoService.ALL_ORG_UNITS_DATA_ITEM_PURPOSE;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ALLOCATE_CONSULTATION;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.CREATE_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.SUBMIT_FCS_APPLICATIONS;
 
@@ -52,6 +53,7 @@ class OrganisationUnitServiceTest {
 
   private static final Set<RolePermission> CREATOR_PERMISSION_SET = Set.of(CREATE_FCS_APPLICATIONS);
   private static final Set<RolePermission> SUBMIT_PERMISSION_SET = Set.of(SUBMIT_FCS_APPLICATIONS);
+  private static final Set<RolePermission> ALLOCATOR_PERMISSION_SET = Set.of(ALLOCATE_CONSULTATION);
 
   private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
 
@@ -72,11 +74,14 @@ class OrganisationUnitServiceTest {
 
   private Team regulatorTeam;
 
+  private Team consulteeTeam;
+
   private Team industryTeam;
 
   @BeforeEach
   void setup() {
     regulatorTeam = TeamTestUtil.Builder().withOrganisationGroupId(null).build();
+    consulteeTeam = TeamTestUtil.Builder().withTeamType(TeamType.OPRED).withOrganisationGroupId(null).build();
     industryTeam = TeamTestUtil.Builder()
         .withTeamType(TeamType.INDUSTRY)
         .withOrganisationGroupId(ORG_GROUP_ID_1)
@@ -84,7 +89,7 @@ class OrganisationUnitServiceTest {
   }
 
   @Test
-  void searchOrganisationUnitsForUser_allTestOus() {
+  void searchOrganisationUnitsForUser_regulatorUser_allTestOus() {
     when(organisationApi.searchOrganisationUnits(eq("oU"), any(), any()))
         .thenReturn(orgUnits);
 
@@ -97,7 +102,7 @@ class OrganisationUnitServiceTest {
   }
 
   @Test
-  void searchOrganisationUnitsForUser_singleTestOu() {
+  void searchOrganisationUnitsForUser_regulatorUser_singleTestOu() {
     when(organisationApi.searchOrganisationUnits(eq("2"), any(), any()))
         .thenReturn(List.of(orgUnit2));
 
@@ -106,6 +111,36 @@ class OrganisationUnitServiceTest {
 
     List<OrganisationUnitJson> singleTestOu = organisationUnitService.searchOrganisationUnitsForUser("2",
         ORG_UNITS_SERVICE_PURPOSE, USER, CREATE_FCS_APPLICATIONS);
+    assertThat(singleTestOu).containsExactly(orgUnit2Json);
+  }
+
+  @Test
+  void searchOrganisationUnitsForUser_consulteeUser_allTestOus() {
+    when(organisationApi.searchOrganisationUnits(eq("oU"), any(), any()))
+        .thenReturn(orgUnits);
+
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, ALLOCATOR_PERMISSION_SET))
+        .thenReturn(Collections.emptyList());
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, ALLOCATOR_PERMISSION_SET))
+        .thenReturn(List.of(consulteeTeam));
+
+    List<OrganisationUnitJson> allTestOus = organisationUnitService.searchOrganisationUnitsForUser("oU",
+        ORG_UNITS_SERVICE_PURPOSE, USER, ALLOCATE_CONSULTATION);
+    assertThat(allTestOus).containsExactly(orgUnit1Json, orgUnit2Json, orgUnit3Json);
+  }
+
+  @Test
+  void searchOrganisationUnitsForUser_consulteeUser_singleTestOu() {
+    when(organisationApi.searchOrganisationUnits(eq("2"), any(), any()))
+        .thenReturn(List.of(orgUnit2));
+
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, ALLOCATOR_PERMISSION_SET))
+        .thenReturn(Collections.emptyList());
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, ALLOCATOR_PERMISSION_SET))
+        .thenReturn(List.of(consulteeTeam));
+
+    List<OrganisationUnitJson> singleTestOu = organisationUnitService.searchOrganisationUnitsForUser("2",
+        ORG_UNITS_SERVICE_PURPOSE, USER, ALLOCATE_CONSULTATION);
     assertThat(singleTestOu).containsExactly(orgUnit2Json);
   }
 

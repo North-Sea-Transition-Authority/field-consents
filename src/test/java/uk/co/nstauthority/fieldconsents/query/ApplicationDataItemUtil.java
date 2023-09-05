@@ -81,8 +81,9 @@ public class ApplicationDataItemUtil {
         false,
         null,
         false,
-        null
-    );
+        null,
+        false,
+        null);
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForProductionInProgressForFieldNoDuration() {
@@ -112,8 +113,9 @@ public class ApplicationDataItemUtil {
         false,
         TECHNICAL_REVIEWER_WUA_ID,
         false,
-        null
-    );
+        null,
+        false,
+        null);
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForShortVentSubmittedForTerminal() {
@@ -143,8 +145,9 @@ public class ApplicationDataItemUtil {
         false,
         null,
         false,
-        null
-    );
+        null,
+        false,
+        null);
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForShortVentVersion2InProgressForTerminal() {
@@ -174,8 +177,9 @@ public class ApplicationDataItemUtil {
         false,
         null,
         false,
-        null
-    );
+        null,
+        false,
+        null);
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForShortVentAssignedForTerminal() {
@@ -205,8 +209,9 @@ public class ApplicationDataItemUtil {
         false,
         TECHNICAL_REVIEWER_WUA_ID,
         false,
-        null
-    );
+        null,
+        false,
+        null);
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForLongFlareSubmittedForTerminal() {
@@ -236,8 +241,9 @@ public class ApplicationDataItemUtil {
         false,
         null,
         false,
-        null
-    );
+        null,
+        false,
+        null);
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForLongFlareSubmittedForField() {
@@ -267,8 +273,41 @@ public class ApplicationDataItemUtil {
         false,
         TECHNICAL_REVIEWER_WUA_ID,
         false,
-        null
-    );
+        null,
+        false,
+        null);
+  }
+
+  public static ApplicationDataItemDto getApplicationDataItemDtoForAnnualFlareSubmittedForFieldConsultationOpen() {
+    return new ApplicationDataItemDto(
+        APPLICATION_ID,
+        APPLICATION_VERSION_ID,
+        ApplicationType.FLARE,
+        0,
+        APPLICATION_NO,
+        APPLICATION_VERSION_NUMBER,
+        PRIMARY_OPERATOR_OU_ID_1,
+        ApplicationVersionStatus.SUBMITTED,
+        FIELD_ID_1,
+        FIELD_NAME_1,
+        null,
+        null,
+        ConsentLengthType.ANNUAL,
+        2024,
+        null,
+        null,
+        null,
+        null,
+        Instant.now(),
+        USER_WUA_ID,
+        true,
+        null,
+        false,
+        null,
+        false,
+        null,
+        true,
+        Instant.now().plusSeconds(2*60*60));
   }
 
   public static SearchResultItemDto getSearchResultItemDtoForLongFlareSubmittedForTerminalWithOpenWithdrawalRequest() {
@@ -296,6 +335,8 @@ public class ApplicationDataItemUtil {
         null,
         null,
         true,
+        null,
+        false,
         null,
         false,
         null,
@@ -331,6 +372,8 @@ public class ApplicationDataItemUtil {
         null,
         false,
         null,
+        false,
+        null,
         "P1, P2, P3"
     );
   }
@@ -352,8 +395,9 @@ public class ApplicationDataItemUtil {
         applicationDataItemDto.getWithdrawalOpen(),
         getTechnicalReviewer(applicationDataItemDto, teamType),
         applicationDataItemDto.getApplicationUpdateOpen(),
-        getApplicationUpdateDeadline(applicationDataItemDto)
-    );
+        getApplicationUpdateDeadline(applicationDataItemDto),
+        applicationDataItemDto.getConsultationOpen(),
+        getConsultationDeadline(applicationDataItemDto));
   }
 
   public static SearchResultItem getSearchResultItemFromDto(SearchResultItemDto searchResultItemDto, TeamType teamType) {
@@ -374,6 +418,8 @@ public class ApplicationDataItemUtil {
         getTechnicalReviewer(searchResultItemDto, teamType),
         searchResultItemDto.getApplicationUpdateOpen(),
         getApplicationUpdateDeadline(searchResultItemDto),
+        searchResultItemDto.getConsultationOpen(),
+        getConsultationDeadline(searchResultItemDto),
         searchResultItemDto.getLicences()
     );
   }
@@ -487,6 +533,12 @@ public class ApplicationDataItemUtil {
         : "";
   }
 
+  private static String getConsultationDeadline(ApplicationDataItemDto applicationDataItemDto) {
+    return applicationDataItemDto.getConsultationOpen()
+        ? DateUtils.format(applicationDataItemDto.getConsultationDeadline(), DateUtils.DATE_TIME)
+        : "";
+  }
+
   public static ApplicationDataItem getApplicationDataItem() {
     return new ApplicationDataItem(
         APPLICATION_ID,
@@ -500,6 +552,8 @@ public class ApplicationDataItemUtil {
         SUBMITTED_DATE_TIME,
         String.valueOf(USER_WUA_ID),
         "",
+        "",
+        false,
         "",
         false,
         "",
@@ -521,6 +575,8 @@ public class ApplicationDataItemUtil {
         SUBMITTED_DATE_TIME,
         String.valueOf(USER_WUA_ID),
         "",
+        "",
+        false,
         "",
         false,
         "",

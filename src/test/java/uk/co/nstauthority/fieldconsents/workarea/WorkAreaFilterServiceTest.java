@@ -11,6 +11,7 @@ import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field3Json;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.TERMINAL_ID_1;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.TERMINAL_ID_2;
+import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_CONSULTATIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationAssets.APPLICATION_ASSETS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationTechnicalReviews.APPLICATION_TECHNICAL_REVIEWS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
@@ -265,10 +266,40 @@ class WorkAreaFilterServiceTest {
   }
 
   @Test
+  void getConditions_AllConsultations() {
+    var conditions = workAreaFilterService.getConditions(filter, user, WorkAreaTab.ALL_CONSULTATIONS);
+
+    assertThat(conditions).containsExactly(
+        APPLICATION_CONSULTATIONS.CONSULTATION_TEAM_ID.isNotNull()
+    );
+  }
+
+  // TODO FCS-394 this needs changing when allocation is done
+  @Test
+  void getConditions_UnassignedConsultations() {
+    var conditions = workAreaFilterService.getConditions(filter, user, WorkAreaTab.UNASSIGNED_CONSULTATIONS);
+
+    assertThat(conditions).containsExactly(
+        APPLICATION_CONSULTATIONS.CONSULTATION_TEAM_ID.isNotNull()
+    );
+  }
+
+  @Test
   void getConditions_RegulatorApplicationStatusCondition() {
     when(teamService.isRegulatorUser(user)).thenReturn(true);
 
     var conditions = workAreaFilterService.getConditions(filter, user, WorkAreaTab.MY_APPLICATIONS);
+
+    assertThat(conditions).contains(
+        APPLICATION_VERSIONS.STATUS.eq(ApplicationVersionStatus.SUBMITTED.name())
+    );
+  }
+
+  @Test
+  void getConditions_ConsulteeApplicationStatusCondition() {
+    when(teamService.isConsulteeUser(user)).thenReturn(true);
+
+    var conditions = workAreaFilterService.getConditions(filter, user, WorkAreaTab.ALL_CONSULTATIONS);
 
     assertThat(conditions).contains(
         APPLICATION_VERSIONS.STATUS.eq(ApplicationVersionStatus.SUBMITTED.name())
@@ -294,7 +325,7 @@ class WorkAreaFilterServiceTest {
     var serviceUser = ServiceUserDetailTestUtil.Builder()
         .withWuaId(USER_WUA_ID)
         .build();
-    when(teamService.isRegulatorUser(serviceUser)).thenReturn(false);
+    when(teamService.isIndustryUser(serviceUser)).thenReturn(true);
     var expectedStatuses = List.of(ApplicationVersionStatus.IN_PROGRESS, ApplicationVersionStatus.SUBMITTED);
     var expectedApplicationTypes = List.of(ApplicationType.PRODUCTION, ApplicationType.FLARE, ApplicationType.VENT);
 
@@ -307,11 +338,11 @@ class WorkAreaFilterServiceTest {
   }
 
   @Test
-  void getDefaultFilter_forRegulatorUser() {
+  void getDefaultFilter_forNonIndustryUser() {
     var serviceUser = ServiceUserDetailTestUtil.Builder()
         .withWuaId(USER_WUA_ID)
         .build();
-    when(teamService.isRegulatorUser(serviceUser)).thenReturn(true);
+    when(teamService.isIndustryUser(serviceUser)).thenReturn(false);
     var expectedApplicationTypes = List.of(ApplicationType.PRODUCTION, ApplicationType.FLARE, ApplicationType.VENT);
 
     var workAreaFilter = workAreaFilterService.getDefaultFilter(serviceUser);

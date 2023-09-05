@@ -2,10 +2,12 @@ package uk.co.nstauthority.fieldconsents.workarea;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.ALL_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.ALL_CONSULTATIONS;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.ALL_TECHNICAL_REVIEWS;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.MY_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.MY_TECHNICAL_REVIEWS;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.UNASSIGNED_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.UNASSIGNED_CONSULTATIONS;
 
 import java.util.EnumSet;
 import org.springframework.stereotype.Controller;
@@ -40,6 +42,8 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
 public class WorkAreaController {
 
   public static final String WORK_AREA_TITLE = "Work area";
+  private static final String IS_WORK_AREA_WITH_TABS = "isWorkAreaWithTabs";
+  private static final String WORK_AREA_ITEMS = "workAreaItems";
 
   private final WorkAreaService workAreaService;
 
@@ -65,9 +69,7 @@ public class WorkAreaController {
 
   @GetMapping
   public ModelAndView getWorkArea(@ModelAttribute("workAreaFilter") WorkAreaFilter filter, ServiceUserDetail user) {
-    var isRegulatorUser = teamService.isRegulatorUser(user);
-
-    if (isRegulatorUser) {
+    if (teamService.isRegulatorUser(user)) {
       if (permissionService.hasPermission(user, EnumSet.of(RolePermission.PROCESS_FCS_APPLICATIONS))) {
         return renderRegulatorWorkAreaOnTab(filter, user, MY_APPLICATIONS);
       } else if (permissionService.hasPermission(user, EnumSet.of(RolePermission.ASSIGN_FCS_APPLICATIONS))) {
@@ -77,9 +79,15 @@ public class WorkAreaController {
       }
     }
 
+    if (teamService.isConsulteeUser(user)) {
+      if (permissionService.hasPermission(user, EnumSet.of(RolePermission.ALLOCATE_CONSULTATION))) {
+        return renderConsulteeWorkAreaOnTab(filter, user, ALL_CONSULTATIONS);
+      }
+    }
+
     return getWorkAreaModelAndView(filter, user)
-        .addObject("isRegulatorUser", isRegulatorUser)
-        .addObject("workAreaItems", workAreaService.getIndustryWorkAreaItems(filter, user));
+        .addObject(IS_WORK_AREA_WITH_TABS, false)
+        .addObject(WORK_AREA_ITEMS, workAreaService.getIndustryWorkAreaItems(filter, user));
   }
 
   @GetMapping("case-officer-my-applications")
@@ -152,12 +160,50 @@ public class WorkAreaController {
     return ReverseRouter.redirect(on(WorkAreaController.class).getWorkAreaRegulatorAllApplications(filter, user));
   }
 
-  private ModelAndView renderRegulatorWorkAreaOnTab(WorkAreaFilter filter, ServiceUserDetail user,
+  @GetMapping("all-consultations")
+  @HasPermission(permissions = RolePermission.ALLOCATE_CONSULTATION)
+  public ModelAndView getWorkAreaAllConsultations(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
+                                                  ServiceUserDetail user) {
+    return renderConsulteeWorkAreaOnTab(filter, user, ALL_CONSULTATIONS);
+  }
+
+  @PostMapping("all-consultations")
+  @HasPermission(permissions = RolePermission.ALLOCATE_CONSULTATION)
+  public ModelAndView postWorkAreaAllConsultations(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
+                                                   ServiceUserDetail user) {
+    return ReverseRouter.redirect(on(WorkAreaController.class).getWorkAreaAllConsultations(filter, user));
+  }
+
+  @GetMapping("unassigned-consultations")
+  @HasPermission(permissions = RolePermission.ALLOCATE_CONSULTATION)
+  public ModelAndView getWorkAreaUnassignedConsultations(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
+                                                         ServiceUserDetail user) {
+    return renderConsulteeWorkAreaOnTab(filter, user, UNASSIGNED_CONSULTATIONS);
+  }
+
+  @PostMapping("unassigned-consultations")
+  @HasPermission(permissions = RolePermission.ALLOCATE_CONSULTATION)
+  public ModelAndView postWorkAreaUnassignedConsultations(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
+                                                          ServiceUserDetail user) {
+    return ReverseRouter.redirect(on(WorkAreaController.class).getWorkAreaUnassignedConsultations(filter, user));
+  }
+
+  private ModelAndView renderRegulatorWorkAreaOnTab(WorkAreaFilter filter,
+                                                    ServiceUserDetail user,
                                                     WorkAreaTab workAreaTab) {
     return getWorkAreaModelAndView(filter, user)
         .addObject("selectedTab", workAreaTab.getValue())
-        .addObject("workAreaItems", workAreaService.getRegulatorWorkAreaItems(filter, user, workAreaTab))
-        .addObject("isRegulatorUser", true);
+        .addObject(WORK_AREA_ITEMS, workAreaService.getRegulatorWorkAreaItems(filter, user, workAreaTab))
+        .addObject(IS_WORK_AREA_WITH_TABS, true);
+  }
+
+  private ModelAndView renderConsulteeWorkAreaOnTab(WorkAreaFilter filter,
+                                                    ServiceUserDetail user,
+                                                    WorkAreaTab workAreaTab) {
+    return getWorkAreaModelAndView(filter, user)
+        .addObject("selectedTab", workAreaTab.getValue())
+        .addObject(WORK_AREA_ITEMS, workAreaService.getConsulteeWorkAreaItems(filter, user, workAreaTab))
+        .addObject(IS_WORK_AREA_WITH_TABS, true);
   }
 
   private ModelAndView getWorkAreaModelAndView(WorkAreaFilter filter, ServiceUserDetail user) {

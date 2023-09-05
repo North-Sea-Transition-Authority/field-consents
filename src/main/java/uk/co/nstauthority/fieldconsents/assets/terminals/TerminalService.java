@@ -66,9 +66,6 @@ public class TerminalService {
   public List<TerminalWithOperatorJson> searchTerminalsWithOperatorForUser(String terminalName,
                                                                            String requestPurpose,
                                                                            ServiceUserDetail user) {
-    var userRegulatorTeams =
-        teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS);
-
     var terminalWithOperatorJsons = terminalApi.searchTerminals(
             terminalName,
             true,
@@ -79,7 +76,19 @@ public class TerminalService {
         .map(TerminalWithOperatorJson::from)
         .toList();
 
-    if (!userRegulatorTeams.isEmpty()) {
+    var userRegulatorTeamsWithPermission =
+        teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS);
+
+    // short circuit and return all found terminals if the user is a regulator with view permissions
+    if (!userRegulatorTeamsWithPermission.isEmpty()) {
+      return terminalWithOperatorJsons;
+    }
+
+    var userConsulteeTeamsWithPermission =
+        teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS);
+
+    // short circuit and return all found terminals if the user is a consultee with view permissions
+    if (!userConsulteeTeamsWithPermission.isEmpty()) {
       return terminalWithOperatorJsons;
     }
 

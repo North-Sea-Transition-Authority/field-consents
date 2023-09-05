@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.workarea;
 
+import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_CONSULTATIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationAssets.APPLICATION_ASSETS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationTechnicalReviews.APPLICATION_TECHNICAL_REVIEWS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
@@ -83,6 +84,14 @@ public class WorkAreaFilterService {
       conditions.add(getUnassignedApplicationsCaseOfficerCondition());
     }
 
+    if (Objects.nonNull(workAreaTab) && WorkAreaTab.ALL_CONSULTATIONS.equals(workAreaTab)) {
+      conditions.add(getAllConsultationsCondition());
+    }
+
+    if (Objects.nonNull(workAreaTab) && WorkAreaTab.UNASSIGNED_CONSULTATIONS.equals(workAreaTab)) {
+      conditions.add(getUnassignedConsultationsCondition());
+    }
+
     addApplicationStatusCondition(conditions, user);
 
     return conditions;
@@ -162,7 +171,7 @@ public class WorkAreaFilterService {
   public WorkAreaFilter getDefaultFilter(ServiceUserDetail user) {
     var defaultFilter = new WorkAreaFilter();
 
-    if (!teamService.isRegulatorUser(user)) {
+    if (teamService.isIndustryUser(user)) {
       defaultFilter.setStatuses(List.of(ApplicationVersionStatus.IN_PROGRESS, ApplicationVersionStatus.SUBMITTED));
     }
 
@@ -186,9 +195,19 @@ public class WorkAreaFilterService {
     return APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.isNull();
   }
 
+  private Condition getAllConsultationsCondition() {
+    return APPLICATION_CONSULTATIONS.CONSULTATION_TEAM_ID.isNotNull();
+  }
+
+  // TODO FCS-394 this needs changing when allocation is done
+  // i.e. check that the consultation has null responder
+  private Condition getUnassignedConsultationsCondition() {
+    return APPLICATION_CONSULTATIONS.CONSULTATION_TEAM_ID.isNotNull();
+  }
+
   private void addApplicationStatusCondition(List<Condition> conditions, ServiceUserDetail user) {
-    if (teamService.isRegulatorUser(user)) {
-      conditions.add(getRegulatorApplicationStatusCondition());
+    if (teamService.isRegulatorUser(user) || teamService.isConsulteeUser(user)) {
+      conditions.add(getSubmittedApplicationStatusCondition());
     } else if (teamService.isIndustryUser(user)) {
       conditions.add(getIndustryApplicationStatusCondition());
     }
@@ -201,7 +220,7 @@ public class WorkAreaFilterService {
     );
   }
 
-  private Condition getRegulatorApplicationStatusCondition() {
+  private Condition getSubmittedApplicationStatusCondition() {
     return APPLICATION_VERSIONS.STATUS.eq(ApplicationVersionStatus.SUBMITTED.name());
   }
 }

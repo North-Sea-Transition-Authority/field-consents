@@ -115,6 +115,28 @@ public class WorkAreaService {
     return getItemsFromDtoList(applicationDataItemDtos, organisationUnitJsons, TeamType.REGULATOR);
   }
 
+  public List<ApplicationDataItem> getConsulteeWorkAreaItems(WorkAreaFilter filter, ServiceUserDetail user,
+                                                             WorkAreaTab workAreaTab) {
+    var conditions = workAreaFilterService.getConditions(filter, user, workAreaTab);
+    var consulteeTeams = teamService.getTeamsOfTypeThatUserHasPermissionFor(
+        user,
+        TeamType.OPRED,
+        EnumSet.of(RolePermission.ALLOCATE_CONSULTATION, RolePermission.RESPOND_TO_CONSULTATION)
+    );
+
+    if (consulteeTeams.isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    var applicationDataItemDtos =
+        workAreaItemDtoService.runWorkAreaQuery(conditions, workAreaTab.getApplicationWorkAreaPriorityGroup());
+
+    var organisationUnitJsons = applicationDataItemDtoService
+        .getOrganisationUnitJsonsFromApplicationDataItemDtos(applicationDataItemDtos);
+
+    return getItemsFromDtoList(applicationDataItemDtos, organisationUnitJsons, TeamType.OPRED);
+  }
+
   List<ApplicationDataItem> getItemsFromDtoList(List<ApplicationDataItemDto> applicationDataItemDtos,
                                                 List<OrganisationUnitJson> organisationUnitJsons,
                                                 TeamType teamType) {
@@ -156,9 +178,14 @@ public class WorkAreaService {
             dataItemDto.getWithdrawalOpen(),
             applicationDataItemDtoService.getDisplayTechnicalReviewer(dataItemDto, portalUserDtosMap, teamType),
             dataItemDto.getApplicationUpdateOpen(),
-            dataItemDto.getApplicationUpdateOpen()
+            Boolean.TRUE.equals(dataItemDto.getApplicationUpdateOpen())
                 ? DateUtils.format(dataItemDto.getApplicationUpdateDeadline(), DateUtils.DATE_TIME)
-                : ""))
+                : "",
+            dataItemDto.getConsultationOpen(),
+            Boolean.TRUE.equals(dataItemDto.getConsultationOpen())
+                ? DateUtils.format(dataItemDto.getConsultationDeadline(), DateUtils.DATE_TIME)
+                : ""
+        ))
         .toList();
   }
 

@@ -33,6 +33,8 @@ public class ApplicationDataItemDto {
   private final Long technicalReviewerWuaId;
   private final Boolean applicationUpdateOpen;
   private final Instant applicationUpdateDeadline;
+  private final Boolean consultationOpen;
+  private final Instant consultationDeadline;
 
   public ApplicationDataItemDto(Integer applicationId, Integer applicationVersionId, ApplicationType type,
                                 Integer variationNo, Integer applicationNo, Integer versionNo, Integer operatorId,
@@ -41,8 +43,9 @@ public class ApplicationDataItemDto {
                                 LocalDate shortTermStartDate, LocalDate shortTermEndDate, Integer longTermStartYear,
                                 Integer longTermEndYear, Instant submittedDateTime, Long submittedByWuaId,
                                 Boolean aceFlag, Long caseOfficerWuaId, Boolean withdrawalOpen,
-                                Long technicalReviewerWuaId, Boolean applicationUpdateOpen,
-                                Instant applicationUpdateDeadline) {
+                                Long technicalReviewerWuaId,
+                                Boolean applicationUpdateOpen, Instant applicationUpdateDeadline,
+                                Boolean consultationOpen, Instant consultationDeadline) {
     this.applicationId = applicationId;
     this.applicationVersionId = applicationVersionId;
     this.type = type;
@@ -69,6 +72,8 @@ public class ApplicationDataItemDto {
     this.technicalReviewerWuaId = technicalReviewerWuaId;
     this.applicationUpdateOpen = applicationUpdateOpen;
     this.applicationUpdateDeadline = applicationUpdateDeadline;
+    this.consultationOpen = consultationOpen;
+    this.consultationDeadline = consultationDeadline;
   }
 
   public Integer getApplicationId() {
@@ -173,5 +178,13 @@ public class ApplicationDataItemDto {
 
   public Instant getApplicationUpdateDeadline() {
     return applicationUpdateDeadline;
+  }
+
+  public Boolean getConsultationOpen() {
+    return consultationOpen;
+  }
+
+  public Instant getConsultationDeadline() {
+    return consultationDeadline;
   }
 }

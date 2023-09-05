@@ -20,7 +20,7 @@
       </@fdsSearch.searchFilterList>
     </@fdsSearch.searchFilter>
     <@fdsSearch.searchPageContent twoThirdsWidth=true>
-      <#if isRegulatorUser>
+      <#if isWorkAreaWithTabs>
         <@fdsBackendTabs.tabs tabsHeading="work-area tabs">
           <@fdsBackendTabs.tabList>
             <#list workAreaTabs as tab>
@@ -85,6 +85,9 @@
     </#if>
     <#if dataItem.isApplicationUpdateOpen()>
       <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Update due by ${dataItem.getApplicationUpdateDeadline()}"/>
+    </#if>
+    <#if dataItem.isConsultationOpen()>
+      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Consultation due by ${dataItem.getConsultationDeadline()}"/>
     </#if>
   </#assign>
   <@fdsResultList.resultListItem

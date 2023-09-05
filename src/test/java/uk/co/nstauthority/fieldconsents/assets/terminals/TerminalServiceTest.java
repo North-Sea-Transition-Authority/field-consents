@@ -64,7 +64,9 @@ public class TerminalServiceTest {
 
   private final RequestPurpose requestPurpose = new RequestPurpose(REQUEST_PURPOSE);
 
-  private final Team regulatorTeam = TeamTestUtil.Builder().build();
+  private final Team regulatorTeam = TeamTestUtil.Builder().withTeamType(TeamType.REGULATOR).build();
+
+  private final Team consulteeTeam = TeamTestUtil.Builder().withTeamType(TeamType.OPRED).build();
 
   @Test
   void searchTerminals_allTestTerminals() {
@@ -123,12 +125,46 @@ public class TerminalServiceTest {
   }
 
   @Test
+  void searchTerminalsWithOperatorForUser_whenConsultee_allTestTerminals() {
+    when(terminalApi.searchTerminals(eq("T"), eq(Boolean.TRUE),
+        any(TerminalsProjectionRoot.class), eq(requestPurpose)))
+        .thenReturn(terminalsWithOperatorList);
+
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
+        .thenReturn(Collections.emptyList());
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS))
+        .thenReturn(List.of(consulteeTeam));
+
+    assertThat(terminalService.searchTerminalsWithOperatorForUser("T", REQUEST_PURPOSE, USER))
+        .usingRecursiveComparison()
+        .isEqualTo(List.of(terminal1JsonWithOperator, terminal2JsonWithOperator, terminal3JsonWithOperator));
+  }
+
+  @Test
+  void searchTerminalsWithOperatorForUser_whenConsultee_singleTestTerminal() {
+    when(terminalApi.searchTerminals(eq("T3"), eq(Boolean.TRUE),
+        any(TerminalsProjectionRoot.class), eq(requestPurpose)))
+        .thenReturn(List.of(terminal3WithOperator));
+
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
+        .thenReturn(Collections.emptyList());
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS))
+        .thenReturn(List.of(consulteeTeam));
+
+    assertThat(terminalService.searchTerminalsWithOperatorForUser("T3", REQUEST_PURPOSE, USER))
+        .usingRecursiveComparison()
+        .isEqualTo(List.of(terminal3JsonWithOperator));
+  }
+
+  @Test
   void searchTerminalsWithOperatorForUser_whenIndustryUser_twoTerminals() {
     when(terminalApi.searchTerminals(eq("T"), eq(Boolean.TRUE),
         any(TerminalsProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(terminalsWithOperatorList);
 
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
+        .thenReturn(Collections.emptyList());
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(Collections.emptyList());
 
     when(organisationUnitService.getOperatorsUserHasPermissionsFor(USER, RolePermission.VIEW_PERMISSIONS))
@@ -147,6 +183,8 @@ public class TerminalServiceTest {
 
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(Collections.emptyList());
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS))
+        .thenReturn(Collections.emptyList());
 
     when(organisationUnitService.getOperatorsUserHasPermissionsFor(USER, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(List.of(orgUnit2Json));
@@ -164,6 +202,8 @@ public class TerminalServiceTest {
 
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(Collections.emptyList());
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS))
+        .thenReturn(Collections.emptyList());
 
     when(organisationUnitService.getOperatorsUserHasPermissionsFor(USER, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(List.of(orgUnit2Json));
@@ -180,6 +220,8 @@ public class TerminalServiceTest {
         .thenReturn(List.of(terminal1WithNoOperator));
 
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS))
+        .thenReturn(Collections.emptyList());
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(Collections.emptyList());
 
     when(organisationUnitService.getOperatorsUserHasPermissionsFor(USER, RolePermission.VIEW_PERMISSIONS))

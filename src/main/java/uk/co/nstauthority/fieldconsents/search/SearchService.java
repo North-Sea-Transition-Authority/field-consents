@@ -95,8 +95,12 @@ public class SearchService {
             dataItemDto.getWithdrawalOpen(),
             applicationDataItemDtoService.getDisplayTechnicalReviewer(dataItemDto, portalUserDtosMap, teamType),
             dataItemDto.getApplicationUpdateOpen(),
-            dataItemDto.getApplicationUpdateOpen()
+            Boolean.TRUE.equals(dataItemDto.getApplicationUpdateOpen())
                 ? DateUtils.format(dataItemDto.getApplicationUpdateDeadline(), DateUtils.DATE_TIME)
+                : "",
+            dataItemDto.getConsultationOpen(),
+            Boolean.TRUE.equals(dataItemDto.getConsultationOpen())
+                ? DateUtils.format(dataItemDto.getConsultationDeadline(), DateUtils.DATE_TIME)
                 : "",
             ((SearchResultItemDto)dataItemDto).getLicences()
         ))
