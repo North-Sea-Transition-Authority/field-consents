@@ -113,9 +113,15 @@ public class ApplicationDataItemQueryService {
 
   public List<ApplicationDataItemDto> runQueryWithCustom(List<Condition> conditions,
                                                          Consumer<SelectQuery<Record>> selectQueryConsumer) {
+    return runQueryWithCustom(conditions, selectQueryConsumer, ApplicationDataItemDto.class);
+  }
+
+  public <X extends ApplicationDataItemDto> List<X> runQueryWithCustom(List<Condition> conditions,
+                                                                       Consumer<SelectQuery<Record>> selectQueryConsumer,
+                                                                       Class<X> fetchIntoClass) {
     var selectQuery = getApplicationDataItemsQuery(conditions);
     selectQueryConsumer.accept(selectQuery);
 
-    return selectQuery.fetchInto(ApplicationDataItemDto.class);
+    return selectQuery.fetchInto(fetchIntoClass);
   }
 }

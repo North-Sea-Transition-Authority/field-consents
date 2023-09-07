@@ -1,10 +1,13 @@
 package uk.co.nstauthority.fieldconsents.search;
 
+import static org.jooq.impl.DSL.greatest;
 import static org.jooq.impl.DSL.listAggDistinct;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationAssetLicences.APPLICATION_ASSET_LICENCES;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationAssets.APPLICATION_ASSETS;
+import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
 
 import java.util.List;
+import java.util.Objects;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.JoinType;
@@ -23,9 +26,7 @@ public class SearchResultItemDtoService {
     this.applicationDataItemQueryService = applicationDataItemQueryService;
   }
 
-  public List<SearchResultItemDto> runSearchQuery(List<Condition> conditions) {
-    var applicationDataItemQuery = applicationDataItemQueryService.getApplicationDataItemsQuery(conditions);
-
+  List<SearchResultItemDto> runSearchQuery(List<Condition> conditions) {
     // Get the CSV for the licences associated to the field when this is the primary application asset
     var fieldLicencesQuery =
         context.select(
@@ -39,14 +40,16 @@ public class SearchResultItemDtoService {
         .where(APPLICATION_ASSETS.FIELD_ID.isNotNull())
         .groupBy(APPLICATION_ASSET_LICENCES.APPLICATION_ASSET_ID);
 
-    applicationDataItemQuery
-        .addSelect(
-            fieldLicencesQuery.field("fieldLicences"));
-    applicationDataItemQuery
-        .addJoin(fieldLicencesQuery, JoinType.LEFT_OUTER_JOIN,
-            fieldLicencesQuery.field(APPLICATION_ASSET_LICENCES.APPLICATION_ASSET_ID).eq(APPLICATION_ASSETS.ID)
-                .and(APPLICATION_ASSETS.FIELD_ID.isNotNull()));
-
-    return applicationDataItemQuery.fetchInto(SearchResultItemDto.class);
+    return applicationDataItemQueryService.runQueryWithCustom(conditions, selectQuery -> {
+      selectQuery.addSelect(
+          fieldLicencesQuery.field("fieldLicences"));
+      selectQuery.addJoin(fieldLicencesQuery, JoinType.LEFT_OUTER_JOIN,
+          Objects.requireNonNull(fieldLicencesQuery.field(APPLICATION_ASSET_LICENCES.APPLICATION_ASSET_ID))
+              .eq(APPLICATION_ASSETS.ID)
+              .and(APPLICATION_ASSETS.FIELD_ID.isNotNull()));
+      selectQuery.addOrderBy(greatest(
+          APPLICATION_VERSIONS.SUBMITTED_DATE_TIME,
+          APPLICATION_VERSIONS.CREATED_DATE_TIME).desc());
+    }, SearchResultItemDto.class);
   }
 }

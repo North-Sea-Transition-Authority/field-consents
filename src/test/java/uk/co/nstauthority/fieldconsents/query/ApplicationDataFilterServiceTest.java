@@ -8,6 +8,7 @@ import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTe
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.ORGANISATION_UNIT_ID;
 
 import java.util.Collections;
+import org.jooq.impl.DSL;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,12 +32,23 @@ class ApplicationDataFilterServiceTest {
 
   @Test
   void getConditions_ReferenceNumberSelected() {
-    dataFilterForm.setReferenceNumber(APPLICATION_NO);
+    dataFilterForm.setReferenceNumber(String.valueOf(APPLICATION_NO));
 
     var conditions = applicationDataFilterService.getConditions(dataFilterForm);
 
     assertThat(conditions).containsExactly(
-        APPLICATIONS.APPLICATION_NO.cast(String.class).eq(APPLICATION_NO)
+        APPLICATIONS.APPLICATION_NO.eq(APPLICATION_NO)
+    );
+  }
+
+  @Test
+  void getConditions_whenReferenceNumberSelectedIsNotAValidNumber() {
+    dataFilterForm.setReferenceNumber("abc");
+
+    var conditions = applicationDataFilterService.getConditions(dataFilterForm);
+
+    assertThat(conditions).containsExactly(
+        DSL.falseCondition()
     );
   }
 

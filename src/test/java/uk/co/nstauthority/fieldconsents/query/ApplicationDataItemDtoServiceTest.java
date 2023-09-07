@@ -9,6 +9,8 @@ import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDtoService.ALL_ORG_UNITS_DATA_ITEM_PURPOSE;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDtoService.FIELD_LOOKUP_PURPOSE;
+import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUserAction.RESUME_APPLICATION;
+import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUserAction.VIEW_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.caseOfficer;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.getApplicationDataItemDtoForAnnualProductionInProgressForField;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.getApplicationDataItemDtoForLongFlareSubmittedForField;
@@ -19,8 +21,10 @@ import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.get
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.portalUserDtosMap;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.submitter;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.technicalReviewer;
+import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.viewer;
 
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -33,12 +37,15 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationDataItemDtoServiceTest {
@@ -53,6 +60,8 @@ class ApplicationDataItemDtoServiceTest {
   private ApplicationService applicationService;
   @Mock
   private ApplicationVersionService applicationVersionService;
+  @Mock
+  private PermissionService permissionService;
   @InjectMocks
   private ApplicationDataItemDtoService applicationDataItemDtoService;
 
@@ -114,22 +123,22 @@ class ApplicationDataItemDtoServiceTest {
   }
 
   @Test
-  void getDisplayReference_whenApplicationInProgress() {
+  void getDisplayReference_whenApplicationInProgressAndUserCanResume() {
     var applicationDataItemDto = getApplicationDataItemDtoForAnnualProductionInProgressForField();
 
-    assertThat(applicationDataItemDtoService.getDisplayReference(applicationDataItemDto))
+    assertThat(applicationDataItemDtoService.getDisplayReference(applicationDataItemDto, RESUME_APPLICATION))
         .isEqualTo("Resume application");
   }
 
   @Test
-  void getDisplayReference_whenApplicationVersion2InProgress() {
+  void getDisplayReference_whenApplicationVersion2InProgressAndUserCanResume() {
     var ventAppVersion = ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.VENT, 1, 2);
     when(applicationService.generateApplicationReference(ventAppVersion)).thenReturn("VCON/500/0 (Version 2)");
     when(applicationVersionService.getApplicationVersionById(ventAppVersion.getId())).thenReturn(ventAppVersion);
 
     var applicationDataItemDto = getApplicationDataItemDtoForShortVentVersion2InProgressForTerminal();
 
-    assertThat(applicationDataItemDtoService.getDisplayReference(applicationDataItemDto))
+    assertThat(applicationDataItemDtoService.getDisplayReference(applicationDataItemDto, RESUME_APPLICATION))
         .isEqualTo("Resume VCON/500/0 (Version 2)");
   }
 
@@ -141,8 +150,48 @@ class ApplicationDataItemDtoServiceTest {
 
     var applicationDataItemDto = getApplicationDataItemDtoForShortVentSubmittedForTerminal();
 
-    assertThat(applicationDataItemDtoService.getDisplayReference(applicationDataItemDto))
+    assertThat(applicationDataItemDtoService.getDisplayReference(applicationDataItemDto, RESUME_APPLICATION))
         .isEqualTo("VCON/500/0 (Version 1)");
+  }
+
+  @Test
+  void getDisplayReference_whenApplicationInProgressAndUserCanView() {
+    var applicationDataItemDto = getApplicationDataItemDtoForAnnualProductionInProgressForField();
+
+    assertThat(applicationDataItemDtoService.getDisplayReference(applicationDataItemDto, VIEW_APPLICATION))
+        .isEqualTo("View application");
+  }
+
+  @Test
+  void getDisplayReference_whenApplicationVersion2InProgressAndUserCanView() {
+    var ventAppVersion = ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.VENT, 1, 2);
+    when(applicationService.generateApplicationReference(ventAppVersion)).thenReturn("VCON/500/0 (Version 2)");
+    when(applicationVersionService.getApplicationVersionById(ventAppVersion.getId())).thenReturn(ventAppVersion);
+
+    var applicationDataItemDto = getApplicationDataItemDtoForShortVentVersion2InProgressForTerminal();
+
+    assertThat(applicationDataItemDtoService.getDisplayReference(applicationDataItemDto, VIEW_APPLICATION))
+        .isEqualTo("View VCON/500/0 (Version 2)");
+  }
+
+  @Test
+  void getApplicationDataItemUserActionFromUser_whenUserHasViewPermissions() {
+    var viewerUser = ServiceUserDetail.from(viewer);
+    when(permissionService.hasPermission(viewerUser, EnumSet.of(RolePermission.EDIT_FCS_APPLICATIONS)))
+        .thenReturn(false);
+
+    assertThat(applicationDataItemDtoService.getApplicationDataItemUserActionFromUser(viewerUser))
+        .isEqualTo(VIEW_APPLICATION);
+  }
+
+  @Test
+  void getApplicationDataItemUserActionFromUser_whenUserHasEditPermissions() {
+    var editUser = ServiceUserDetail.from(submitter);
+    when(permissionService.hasPermission(editUser, EnumSet.of(RolePermission.EDIT_FCS_APPLICATIONS)))
+        .thenReturn(true);
+
+    assertThat(applicationDataItemDtoService.getApplicationDataItemUserActionFromUser(editUser))
+        .isEqualTo(RESUME_APPLICATION);
   }
 
   @Test

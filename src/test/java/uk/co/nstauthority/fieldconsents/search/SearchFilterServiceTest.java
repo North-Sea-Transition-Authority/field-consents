@@ -40,7 +40,7 @@ class SearchFilterServiceTest {
     var filter = ApplicationDataFilterFormTestUtil.getCompleteApplicationDataFilterForm();
     when(applicationDataFilterService.getConditions(filter)).thenReturn(
         List.of(
-            APPLICATIONS.APPLICATION_NO.cast(String.class).eq(APPLICATION_NO),
+            APPLICATIONS.APPLICATION_NO.eq(APPLICATION_NO),
             APPLICATION_VERSIONS.STATUS.in(List.of(ApplicationVersionStatus.SUBMITTED, ApplicationVersionStatus.IN_PROGRESS)),
             APPLICATIONS.TYPE.in(List.of(ApplicationType.PRODUCTION, ApplicationType.VENT)),
             CONSENT_LENGTHS.CONSENT_LENGTH.in(List.of(ConsentLengthType.ANNUAL, ConsentLengthType.SHORT_TERM, ConsentLengthType.LONG_TERM)),
@@ -50,7 +50,7 @@ class SearchFilterServiceTest {
 
     assertThat(searchFilterService.getConditions(filter))
         .containsExactly(
-            APPLICATIONS.APPLICATION_NO.cast(String.class).eq(APPLICATION_NO),
+            APPLICATIONS.APPLICATION_NO.eq(APPLICATION_NO),
             APPLICATION_VERSIONS.STATUS.in(List.of(ApplicationVersionStatus.SUBMITTED, ApplicationVersionStatus.IN_PROGRESS)),
             APPLICATIONS.TYPE.in(List.of(ApplicationType.PRODUCTION, ApplicationType.VENT)),
             CONSENT_LENGTHS.CONSENT_LENGTH.in(List.of(ConsentLengthType.ANNUAL, ConsentLengthType.SHORT_TERM, ConsentLengthType.LONG_TERM)),

@@ -29,7 +29,7 @@ public class ApplicationDataFilterFormTestUtil {
 
   public static final String TERMINAL_ASSET_KEY = TERMINAL_ASSET_ID_STRING + AssetType.TERMINAL.name();
 
-  public static final String APPLICATION_NO = "10";
+  public static final Integer APPLICATION_NO = 10;
 
   public static WorkAreaFilter getDefaultFilter() {
     var workAreaFilter = new WorkAreaFilter();
@@ -66,7 +66,7 @@ public class ApplicationDataFilterFormTestUtil {
 
   public static ApplicationDataFilterForm getCompleteApplicationDataFilterForm() {
     var form = new ApplicationDataFilterForm();
-    form.setReferenceNumber(APPLICATION_NO);
+    form.setReferenceNumber(String.valueOf(APPLICATION_NO));
     form.setStatuses(List.of(ApplicationVersionStatus.SUBMITTED, ApplicationVersionStatus.IN_PROGRESS));
     form.setApplicationTypes(List.of(ApplicationType.PRODUCTION, ApplicationType.VENT));
     form.setDurationTypes(List.of(ConsentLengthType.ANNUAL, ConsentLengthType.SHORT_TERM, ConsentLengthType.LONG_TERM));

@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.search;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import java.util.Collections;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -13,7 +14,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
+import uk.co.nstauthority.fieldconsents.authorisation.HasPermission;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterForm;
@@ -22,15 +23,12 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
 
 @Controller
 @RequestMapping("/search")
-@HasApplicationPermission(permissions = {
-    RolePermission.EDIT_FCS_APPLICATIONS,
-    RolePermission.PROCESS_FCS_APPLICATIONS,
-    RolePermission.ASSIGN_FCS_APPLICATIONS,
-    RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS
-})
+@HasPermission(permissions = {RolePermission.VIEW_FCS_APPLICATIONS, RolePermission.VIEW_FCS_CONSENTS})
 public class SearchController {
 
   public static final String SEARCH_TITLE = "Search";
+
+  private static final String SEARCH_RESULT_ITEMS = "searchResultItems";
 
   private final TeamService teamService;
 
@@ -47,15 +45,8 @@ public class SearchController {
   }
 
   @GetMapping
-  public ModelAndView getSearch(@ModelAttribute("form") ApplicationDataFilterForm form, ServiceUserDetail user) {
-    var isRegulatorUser = teamService.isRegulatorUser(user);
-
-    if (isRegulatorUser) {
-      return getSearchModelAndView(form);
-    } else {
-      // TODO FCS-425: Search screen for industry users
-      return null;
-    }
+  public ModelAndView getSearch(@ModelAttribute("form") ApplicationDataFilterForm form) {
+    return getSearchModelAndView(form);
   }
 
   private ModelAndView getSearchModelAndView(ApplicationDataFilterForm form) {
@@ -82,14 +73,24 @@ public class SearchController {
   @PostMapping
   ModelAndView searchApplications(@ModelAttribute("form") ApplicationDataFilterForm form,
                                   ServiceUserDetail user) {
-    return getSearchModelAndView(form)
-        .addObject("showResults", true)
-        .addObject("searchResultItems", searchService.getRegulatorSearchResultItems(form, user));
+
+    var modelAndView = getSearchModelAndView(form)
+        .addObject("showResults", true);
+
+    if (teamService.isRegulatorUser(user)) {
+      return modelAndView.addObject(SEARCH_RESULT_ITEMS, searchService.getRegulatorSearchResultItems(form, user));
+    }
+
+    if (teamService.isIndustryUser(user)) {
+      return modelAndView.addObject(SEARCH_RESULT_ITEMS, searchService.getIndustrySearchResultItems(form, user));
+    }
+
+    return modelAndView.addObject(SEARCH_RESULT_ITEMS, Collections.emptyList());
   }
 
   @GetMapping("/clear-filters")
   public ModelAndView clearSearchFilter(@ModelAttribute("form") ApplicationDataFilterForm form) {
     form.clearFilter();
-    return ReverseRouter.redirect(on(SearchController.class).getSearch(null, null));
+    return ReverseRouter.redirect(on(SearchController.class).getSearch(null));
   }
 }

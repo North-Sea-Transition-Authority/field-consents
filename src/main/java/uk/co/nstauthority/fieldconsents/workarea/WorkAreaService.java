@@ -90,7 +90,7 @@ public class WorkAreaService {
     conditions.add(APPLICATION_VERSIONS.PRIMARY_OPERATOR_OU_ID.in(organisationUnitIds));
     var workAreaItemDtoList = workAreaItemDtoService.runWorkAreaQuery(conditions, INDUSTRY);
 
-    return getItemsFromDtoList(workAreaItemDtoList, organisationUnitJsons, TeamType.INDUSTRY);
+    return getItemsFromDtoList(workAreaItemDtoList, organisationUnitJsons, TeamType.INDUSTRY, user);
   }
 
   public List<ApplicationDataItem> getRegulatorWorkAreaItems(WorkAreaFilter filter, ServiceUserDetail user,
@@ -112,7 +112,7 @@ public class WorkAreaService {
     var organisationUnitJsons = applicationDataItemDtoService
         .getOrganisationUnitJsonsFromApplicationDataItemDtos(applicationDataItemDtos);
 
-    return getItemsFromDtoList(applicationDataItemDtos, organisationUnitJsons, TeamType.REGULATOR);
+    return getItemsFromDtoList(applicationDataItemDtos, organisationUnitJsons, TeamType.REGULATOR, user);
   }
 
   public List<ApplicationDataItem> getConsulteeWorkAreaItems(WorkAreaFilter filter, ServiceUserDetail user,
@@ -134,12 +134,12 @@ public class WorkAreaService {
     var organisationUnitJsons = applicationDataItemDtoService
         .getOrganisationUnitJsonsFromApplicationDataItemDtos(applicationDataItemDtos);
 
-    return getItemsFromDtoList(applicationDataItemDtos, organisationUnitJsons, TeamType.OPRED);
+    return getItemsFromDtoList(applicationDataItemDtos, organisationUnitJsons, TeamType.OPRED, user);
   }
 
   List<ApplicationDataItem> getItemsFromDtoList(List<ApplicationDataItemDto> applicationDataItemDtos,
                                                 List<OrganisationUnitJson> organisationUnitJsons,
-                                                TeamType teamType) {
+                                                TeamType teamType, ServiceUserDetail user) {
     if (applicationDataItemDtos.isEmpty()) {
       return Collections.emptyList();
     }
@@ -157,12 +157,14 @@ public class WorkAreaService {
     Map<Long, EnergyPortalUserDto> portalUserDtosMap = applicationDataItemDtoService
         .getEnergyPortalUserDtoMapFromApplicationDataItemDtos(applicationDataItemDtos);
 
+    var userAction = applicationDataItemDtoService.getApplicationDataItemUserActionFromUser(user);
+
     return applicationDataItemDtos.stream()
         .map(dataItemDto -> new ApplicationDataItem(
             dataItemDto.getApplicationId(),
             dataItemDto.getType().getDisplayName(),
             applicationDataItemDtoService.getDisplayConsentDuration(dataItemDto),
-            applicationDataItemDtoService.getDisplayReference(dataItemDto),
+            applicationDataItemDtoService.getDisplayReference(dataItemDto, userAction),
             organisationUnitsMap.getOrDefault(dataItemDto.getOperatorId(), "MISSING OPERATOR"),
             dataItemDto.getFieldId() != null ? dataItemDto.getFieldName() : dataItemDto.getTerminalName(),
             applicationDataItemDtoService.getDisplayAssetLocation(dataItemDto, fieldJsonsMap),

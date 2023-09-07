@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.query;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -12,6 +13,8 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
@@ -19,6 +22,7 @@ import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 /**
  * Implements the common security rules used by both work-area and search screen for user accessibility.
@@ -36,17 +40,20 @@ public class ApplicationDataItemDtoService {
   private final OrganisationUnitService organisationUnitService;
   private final ApplicationService applicationService;
   private final ApplicationVersionService applicationVersionService;
+  private final PermissionService permissionService;
 
   ApplicationDataItemDtoService(FieldService fieldService,
                                 EnergyPortalUserService energyPortalUserService,
                                 OrganisationUnitService organisationUnitService,
                                 ApplicationService applicationService,
-                                ApplicationVersionService applicationVersionService) {
+                                ApplicationVersionService applicationVersionService,
+                                PermissionService permissionService) {
     this.fieldService = fieldService;
     this.energyPortalUserService = energyPortalUserService;
     this.organisationUnitService = organisationUnitService;
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
+    this.permissionService = permissionService;
   }
 
   public List<OrganisationUnitJson> getOrganisationUnitJsonsFromApplicationDataItemDtos(
@@ -95,21 +102,28 @@ public class ApplicationDataItemDtoService {
         .collect(Collectors.toMap(EnergyPortalUserDto::webUserAccountId, Function.identity()));
   }
 
-  public String getDisplayReference(ApplicationDataItemDto dataItemDto) {
+  public String getDisplayReference(ApplicationDataItemDto dataItemDto, ApplicationDataItemUserAction userAction) {
+    var applicationVersion = applicationVersionService.getApplicationVersionById(dataItemDto.getApplicationVersionId());
+
     if (dataItemDto.getStatus().equals(ApplicationVersionStatus.IN_PROGRESS)
         && dataItemDto.getVersionNo() == 1) {
-      return "Resume application";
+      return "%s application".formatted(userAction.getDisplayName());
     }
 
     if (dataItemDto.getStatus().equals(ApplicationVersionStatus.IN_PROGRESS)
         && dataItemDto.getVersionNo() > 1) {
-      return "Resume %s".formatted(
-          applicationService.generateApplicationReference(
-              applicationVersionService.getApplicationVersionById(dataItemDto.getApplicationVersionId())));
+      return "%s %s".formatted(
+          userAction.getDisplayName(),
+          applicationService.generateApplicationReference(applicationVersion));
     }
 
-    return applicationService.generateApplicationReference(
-        applicationVersionService.getApplicationVersionById(dataItemDto.getApplicationVersionId()));
+    return applicationService.generateApplicationReference(applicationVersion);
+  }
+
+  public ApplicationDataItemUserAction getApplicationDataItemUserActionFromUser(ServiceUserDetail user) {
+    return permissionService.hasPermission(user, EnumSet.of(RolePermission.EDIT_FCS_APPLICATIONS))
+        ? ApplicationDataItemUserAction.RESUME_APPLICATION
+        : ApplicationDataItemUserAction.VIEW_APPLICATION;
   }
 
   public String getDisplayConsentDuration(ApplicationDataItemDto dataItemDto) {

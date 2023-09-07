@@ -5,8 +5,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperator;
-import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.portalUserDtosMap;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.ORG_GROUP_ID_1;
+import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUserAction.RESUME_APPLICATION;
+import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.portalUserDtosMap;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ALLOCATE_CONSULTATION;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ASSIGN_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
@@ -31,9 +32,9 @@ import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
+import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupQueryService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDtoService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil;
-import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupQueryService;
 import uk.co.nstauthority.fieldconsents.teams.Team;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
@@ -169,7 +170,8 @@ class WorkAreaServiceTest {
     when(applicationDataItemDtoService
         .getEnergyPortalUserDtoMapFromApplicationDataItemDtos(List.of(workAreaItemDto)))
         .thenReturn(portalUserDtosMap);
-    when(applicationDataItemDtoService.getDisplayReference(workAreaItemDto))
+    when(applicationDataItemDtoService.getApplicationDataItemUserActionFromUser(user)).thenReturn(RESUME_APPLICATION);
+    when(applicationDataItemDtoService.getDisplayReference(workAreaItemDto, RESUME_APPLICATION))
         .thenReturn(ApplicationDataItemUtil.getCaseReference(workAreaItemDto));
     when(applicationDataItemDtoService.getDisplayConsentDuration(workAreaItemDto))
         .thenReturn(ApplicationDataItemUtil.getDuration(workAreaItemDto));
@@ -202,12 +204,11 @@ class WorkAreaServiceTest {
     when(workAreaItemDtoService.runWorkAreaQuery(any(), any())).thenReturn(List.of(workAreaItemDto));
     when(applicationDataItemDtoService.getFieldJsonMapFromApplicationDataItemDtos(
         List.of(workAreaItemDto))).thenReturn(fieldJsonMap);
-    when(organisationGroupQueryService.getOrganisationUnitsByOrganisationGroupIds(List.of(ORG_GROUP_ID_1)))
-        .thenReturn(List.of(field1JsonWithOperator.getOperatorJson()));
     when(applicationDataItemDtoService
         .getEnergyPortalUserDtoMapFromApplicationDataItemDtos(List.of(workAreaItemDto)))
         .thenReturn(portalUserDtosMap);
-    when(applicationDataItemDtoService.getDisplayReference(workAreaItemDto))
+    when(applicationDataItemDtoService.getApplicationDataItemUserActionFromUser(user)).thenReturn(RESUME_APPLICATION);
+    when(applicationDataItemDtoService.getDisplayReference(workAreaItemDto, RESUME_APPLICATION))
         .thenReturn(ApplicationDataItemUtil.getCaseReference(workAreaItemDto));
     when(applicationDataItemDtoService.getDisplayConsentDuration(workAreaItemDto))
         .thenReturn(ApplicationDataItemUtil.getDuration(workAreaItemDto));
@@ -219,7 +220,6 @@ class WorkAreaServiceTest {
         .thenReturn(ApplicationDataItemUtil.getGeographicArea(workAreaItemDto));
     when(applicationDataItemDtoService.getDisplayTechnicalReviewer(workAreaItemDto, portalUserDtosMap, TeamType.INDUSTRY))
         .thenReturn(ApplicationDataItemUtil.getTechnicalReviewer(workAreaItemDto, TeamType.INDUSTRY));
-
 
     var workAreaItems = workAreaService.getIndustryWorkAreaItems(filter, user);
 
@@ -266,7 +266,8 @@ class WorkAreaServiceTest {
     when(applicationDataItemDtoService
         .getEnergyPortalUserDtoMapFromApplicationDataItemDtos(List.of(workAreaItemDto)))
         .thenReturn(portalUserDtosMap);
-    when(applicationDataItemDtoService.getDisplayReference(workAreaItemDto))
+    when(applicationDataItemDtoService.getApplicationDataItemUserActionFromUser(user)).thenReturn(RESUME_APPLICATION);
+    when(applicationDataItemDtoService.getDisplayReference(workAreaItemDto, RESUME_APPLICATION))
         .thenReturn(ApplicationDataItemUtil.getCaseReference(workAreaItemDto));
     when(applicationDataItemDtoService.getDisplayConsentDuration(workAreaItemDto))
         .thenReturn(ApplicationDataItemUtil.getDuration(workAreaItemDto));

@@ -40,6 +40,7 @@ public class ApplicationDataItemUtil {
 
   public static final Long TECHNICAL_REVIEWER_WUA_ID = 99L;
 
+  public static EnergyPortalUserDto viewer = EnergyPortalUserDtoTestUtil.Builder().build();
   public static EnergyPortalUserDto submitter = EnergyPortalUserDtoTestUtil.Builder().build();
   public static EnergyPortalUserDto caseOfficer = EnergyPortalUserDtoTestUtil.Builder()
       .withWebUserAccountId(CASE_OFFICER_WUA_ID)
