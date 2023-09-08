@@ -24,7 +24,6 @@ import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupQueryService;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterForm;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDtoService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil;
 import uk.co.nstauthority.fieldconsents.teams.Team;
@@ -56,7 +55,7 @@ class SearchServiceTest {
 
   private ServiceUserDetail user;
 
-  private ApplicationDataFilterForm form;
+  private SearchFilterForm form;
 
   private Map<Integer, FieldJson> fieldJsonMap;
 
@@ -76,7 +75,7 @@ class SearchServiceTest {
     regulatorTeam = TeamTestUtil.Builder()
         .withTeamType(TeamType.REGULATOR)
         .build();
-    form = new ApplicationDataFilterForm();
+    form = new SearchFilterForm();
     fieldJsonMap = Map.of(field1Json.getId(), field1Json);
   }
 

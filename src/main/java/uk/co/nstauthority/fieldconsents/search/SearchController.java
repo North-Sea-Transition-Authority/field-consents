@@ -17,7 +17,6 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.HasPermission;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterForm;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
@@ -45,21 +44,23 @@ public class SearchController {
   }
 
   @GetMapping
-  public ModelAndView getSearch(@ModelAttribute("form") ApplicationDataFilterForm form) {
+  public ModelAndView getSearch(@ModelAttribute("form") SearchFilterForm form) {
     return getSearchModelAndView(form);
   }
 
-  private ModelAndView getSearchModelAndView(ApplicationDataFilterForm form) {
+  private ModelAndView getSearchModelAndView(SearchFilterForm form) {
     var appStatuses = ApplicationVersionStatus.getSearchOptions();
     var appTypes = ApplicationType.getDisplayableOptions();
     var durationTypes = ConsentLengthType.getConsentLengthOptions();
     var prefilledOperator = searchFilterFormService.getPrefilledOrganisation(form.getOperatorId());
     var assetTypesWithShore = AssetTypeWithShore.getDisplayableOptions();
+    var aceStatuses = AceFlagStatus.getDisplayableOptions();
 
     return new ModelAndView("fcs/search/search")
         .addObject("clearFiltersUrl",
             ReverseRouter.route(on(SearchController.class).clearSearchFilter(null)))
         .addObject("appStatuses", appStatuses)
+        .addObject("aceStatuses", aceStatuses)
         .addObject("appTypes", appTypes)
         .addObject("durationTypes", durationTypes)
         .addObject("prefilledOperator", prefilledOperator)
@@ -71,7 +72,7 @@ public class SearchController {
   }
 
   @PostMapping
-  ModelAndView searchApplications(@ModelAttribute("form") ApplicationDataFilterForm form,
+  ModelAndView searchApplications(@ModelAttribute("form") SearchFilterForm form,
                                   ServiceUserDetail user) {
 
     var modelAndView = getSearchModelAndView(form)
@@ -89,7 +90,7 @@ public class SearchController {
   }
 
   @GetMapping("/clear-filters")
-  public ModelAndView clearSearchFilter(@ModelAttribute("form") ApplicationDataFilterForm form) {
+  public ModelAndView clearSearchFilter(@ModelAttribute("form") SearchFilterForm form) {
     form.clearFilter();
     return ReverseRouter.redirect(on(SearchController.class).getSearch(null));
   }

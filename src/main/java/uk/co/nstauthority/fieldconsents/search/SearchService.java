@@ -15,7 +15,6 @@ import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.Organisat
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterForm;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDto;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDtoService;
 import uk.co.nstauthority.fieldconsents.teams.Team;
@@ -44,7 +43,7 @@ public class SearchService {
     this.teamService = teamService;
   }
 
-  public List<SearchResultItem> getRegulatorSearchResultItems(ApplicationDataFilterForm form, ServiceUserDetail user) {
+  public List<SearchResultItem> getRegulatorSearchResultItems(SearchFilterForm form, ServiceUserDetail user) {
     var conditions = searchFilterService.getConditions(form);
     var regulatorTeams = teamService.getTeamsOfTypeThatUserHasPermissionFor(
         user,
@@ -64,7 +63,7 @@ public class SearchService {
     return getItemsFromDtoList(applicationDataItemDtos, organisationUnitJsons, TeamType.REGULATOR, user);
   }
 
-  public List<SearchResultItem> getIndustrySearchResultItems(ApplicationDataFilterForm form, ServiceUserDetail user) {
+  public List<SearchResultItem> getIndustrySearchResultItems(SearchFilterForm form, ServiceUserDetail user) {
     var conditions = searchFilterService.getConditions(form);
 
     var industryTeams = teamService.getTeamsOfTypeThatUserHasPermissionFor(

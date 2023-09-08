@@ -1,11 +1,14 @@
 package uk.co.nstauthority.fieldconsents.query;
 
+import java.util.Collections;
 import java.util.List;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.search.AceFlagStatus;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
+import uk.co.nstauthority.fieldconsents.search.SearchFilterForm;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaFilter;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaFilterForm;
 
@@ -71,6 +74,17 @@ public class ApplicationDataFilterFormTestUtil {
     form.setApplicationTypes(List.of(ApplicationType.PRODUCTION, ApplicationType.VENT));
     form.setDurationTypes(List.of(ConsentLengthType.ANNUAL, ConsentLengthType.SHORT_TERM, ConsentLengthType.LONG_TERM));
     form.setOperatorId(ORGANISATION_UNIT_ID);
+    return form;
+  }
+
+  public static SearchFilterForm getCompleteSearchFilterForm() {
+    var form = new SearchFilterForm();
+    form.setReferenceNumber(String.valueOf(APPLICATION_NO));
+    form.setStatuses(List.of(ApplicationVersionStatus.SUBMITTED, ApplicationVersionStatus.IN_PROGRESS));
+    form.setApplicationTypes(List.of(ApplicationType.PRODUCTION, ApplicationType.VENT));
+    form.setDurationTypes(List.of(ConsentLengthType.ANNUAL, ConsentLengthType.SHORT_TERM, ConsentLengthType.LONG_TERM));
+    form.setOperatorId(ORGANISATION_UNIT_ID);
+    form.setAceFlagStatuses(Collections.singletonList(AceFlagStatus.ACE));
     return form;
   }
 }

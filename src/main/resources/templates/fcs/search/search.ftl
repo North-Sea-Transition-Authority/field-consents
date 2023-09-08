@@ -13,6 +13,7 @@
       <@dataItemFilter.statusFilter form=form statusCheckboxes=appStatuses/>
       <@dataItemFilter.applicationTypeFilter form=form applicationTypeCheckboxes=appTypes/>
       <@dataItemFilter.durationFilter form=form durationCheckboxes=durationTypes/>
+      <@aceFilter form=form aceCheckboxes=aceStatuses/>
 <#--         TODO: temporarely disabled until FCS-426 is fixed -->
 <#--      <@dataItemFilter.operatorFilter form=form prefilledOperator=prefilledOperator operatorSearchRestUrl=operatorSearchRestUrl/>-->
     </@fdsSearch.searchFilterList>
@@ -69,4 +70,13 @@
     <@fdsResultList.resultListDataValue key="Other information" value=otherInformation/>
   </@fdsResultList.resultListDataItem>
 </@fdsResultList.resultListItem>
+</#macro>
+
+<#macro aceFilter form aceCheckboxes>
+  <@fdsSearch.searchFilterItem itemName="ACE status" expanded=form.aceFlagStatuses?has_content>
+    <@fdsSearch.searchCheckboxes
+      path="form.aceFlagStatuses"
+      checkboxes=aceCheckboxes
+    />
+  </@fdsSearch.searchFilterItem>
 </#macro>

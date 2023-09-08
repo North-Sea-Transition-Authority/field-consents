@@ -31,7 +31,6 @@ import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterForm;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
@@ -46,7 +45,7 @@ class SearchControllerTest extends AbstractControllerTest {
   @MockBean
   private SearchFilterFormService searchFilterFormService;
 
-  private ApplicationDataFilterForm form;
+  private SearchFilterForm form;
 
   private List<SearchResultItem> searchResultItems;
 
@@ -54,7 +53,7 @@ class SearchControllerTest extends AbstractControllerTest {
 
   @BeforeEach
   void setUp() {
-    form = new ApplicationDataFilterForm();
+    form = new SearchFilterForm();
     searchResultItems = List.of(ApplicationDataItemUtil.getSearchResultItem());
     orgUnitRestSearchItem = ApplicationDataFilterFormTestUtil.ORGANISATION_REST_SEARCH_ITEM;
     when(searchFilterFormService.getPrefilledOrganisation(any())).thenReturn(orgUnitRestSearchItem);
@@ -159,7 +158,7 @@ class SearchControllerTest extends AbstractControllerTest {
     when(teamService.isRegulatorUser(user)).thenReturn(true);
     when(permissionService.hasPermission(user, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(true);
-    when(searchService.getRegulatorSearchResultItems(any(ApplicationDataFilterForm.class), any(ServiceUserDetail.class)))
+    when(searchService.getRegulatorSearchResultItems(any(SearchFilterForm.class), any(ServiceUserDetail.class)))
         .thenReturn(searchResultItems);
 
     var modelAndView = mockMvc.perform(post(ReverseRouter.route(on(SearchController.class).searchApplications(null, user)))
@@ -183,7 +182,7 @@ class SearchControllerTest extends AbstractControllerTest {
     when(teamService.isIndustryUser(user)).thenReturn(true);
     when(permissionService.hasPermission(user, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(true);
-    when(searchService.getIndustrySearchResultItems(any(ApplicationDataFilterForm.class), any(ServiceUserDetail.class)))
+    when(searchService.getIndustrySearchResultItems(any(SearchFilterForm.class), any(ServiceUserDetail.class)))
         .thenReturn(searchResultItems);
 
     var modelAndView = mockMvc.perform(post(ReverseRouter.route(on(SearchController.class).searchApplications(null, user)))

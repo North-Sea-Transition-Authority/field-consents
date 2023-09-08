@@ -18,6 +18,4 @@ public interface ApplicationFlagRepository extends CrudRepository<ApplicationFla
       ApplicationVersion applicationVersion,
       ApplicationFlagType flagType
   );
-
-  void deleteByApplicationVersionAndFlagType(ApplicationVersion applicationVersion, ApplicationFlagType flagType);
 }
