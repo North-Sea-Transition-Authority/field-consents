@@ -65,7 +65,7 @@ public class SearchController {
         .addObject("durationTypes", durationTypes)
         .addObject("prefilledOperator", prefilledOperator)
         .addObject("operatorSearchRestUrl",
-            ReverseRouter.route(on(OrganisationUnitRestController.class).getOrganisationUnitsForEditor(null, null)))
+            ReverseRouter.route(on(OrganisationUnitRestController.class).getOrganisationUnitsForViewer(null, null)))
         .addObject("assetTypesWithShore", assetTypesWithShore)
         .addObject("form", form)
         .addObject("pageTitle", SEARCH_TITLE);

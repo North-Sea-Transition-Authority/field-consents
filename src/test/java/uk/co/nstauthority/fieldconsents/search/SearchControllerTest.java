@@ -149,7 +149,7 @@ class SearchControllerTest extends AbstractControllerTest {
         .containsEntry("durationTypes", ConsentLengthType.getConsentLengthOptions())
         .containsEntry("prefilledOperator", orgUnitRestSearchItem)
         .containsEntry("operatorSearchRestUrl",
-            ReverseRouter.route(on(OrganisationUnitRestController.class).getOrganisationUnitsForEditor(null, null)))
+            ReverseRouter.route(on(OrganisationUnitRestController.class).getOrganisationUnitsForViewer(null, null)))
         .containsEntry("pageTitle", SEARCH_TITLE);
   }
 

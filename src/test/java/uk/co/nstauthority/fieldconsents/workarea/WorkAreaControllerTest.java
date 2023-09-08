@@ -634,7 +634,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
             ReverseRouter.route(on(AssetRestController.class).searchAssetsForUser(null, null)))
         .containsEntry("prefilledOperator", orgUnitRestSearchItem)
         .containsEntry("operatorSearchRestUrl",
-            ReverseRouter.route(on(OrganisationUnitRestController.class).getOrganisationUnitsForEditor(null, null)))
+            ReverseRouter.route(on(OrganisationUnitRestController.class).getOrganisationUnitsForViewer(null, null)))
         .containsEntry("pageTitle", WORK_AREA_TITLE);
   }
 

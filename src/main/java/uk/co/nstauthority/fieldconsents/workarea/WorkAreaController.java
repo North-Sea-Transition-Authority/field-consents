@@ -224,7 +224,7 @@ public class WorkAreaController {
         .addObject("durationTypes", durationTypes)
         .addObject("prefilledOperator", prefilledOperator)
         .addObject("operatorSearchRestUrl",
-            ReverseRouter.route(on(OrganisationUnitRestController.class).getOrganisationUnitsForEditor(null, null)))
+            ReverseRouter.route(on(OrganisationUnitRestController.class).getOrganisationUnitsForViewer(null, null)))
         .addObject("prefilledAsset", prefilledAsset)
         .addObject("assetSearchRestUrl",
             ReverseRouter.route(on(AssetRestController.class).searchAssetsForUser(null, null)))

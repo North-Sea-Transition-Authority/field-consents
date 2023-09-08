@@ -60,23 +60,6 @@ public class ApplicationDataFilterFormTestUtil {
     return workAreaForm;
   }
 
-  static WorkAreaFilterForm getWorkAreaFormForFilterWithFieldAndOperator() {
-    var workAreaForm = new WorkAreaFilterForm();
-    workAreaForm.setAssetKey("%s%s".formatted(TERMINAL_ASSET_ID_INTEGER, AssetType.FIELD.name()));
-    workAreaForm.setOperatorId(ORGANISATION_UNIT_ID);
-    return workAreaForm;
-  }
-
-  public static ApplicationDataFilterForm getCompleteApplicationDataFilterForm() {
-    var form = new ApplicationDataFilterForm();
-    form.setReferenceNumber(String.valueOf(APPLICATION_NO));
-    form.setStatuses(List.of(ApplicationVersionStatus.SUBMITTED, ApplicationVersionStatus.IN_PROGRESS));
-    form.setApplicationTypes(List.of(ApplicationType.PRODUCTION, ApplicationType.VENT));
-    form.setDurationTypes(List.of(ConsentLengthType.ANNUAL, ConsentLengthType.SHORT_TERM, ConsentLengthType.LONG_TERM));
-    form.setOperatorId(ORGANISATION_UNIT_ID);
-    return form;
-  }
-
   public static SearchFilterForm getCompleteSearchFilterForm() {
     var form = new SearchFilterForm();
     form.setReferenceNumber(String.valueOf(APPLICATION_NO));

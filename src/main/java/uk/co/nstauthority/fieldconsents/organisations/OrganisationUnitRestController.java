@@ -40,15 +40,15 @@ public class OrganisationUnitRestController {
     );
   }
 
-  @GetMapping("/data-sources/organisation-units-editor")
-  public RestSearchResult getOrganisationUnitsForEditor(@RequestParam(value = "term", required = false) String term,
+  @GetMapping("/data-sources/organisation-units-viewer")
+  public RestSearchResult getOrganisationUnitsForViewer(@RequestParam(value = "term", required = false) String term,
                                                         ServiceUserDetail user) {
     return searchSelectorService.search(term, searchTerm -> organisationUnitService
         .searchOrganisationUnitsForUser(
             searchTerm,
             ORG_UNIT_WORK_AREA_PURPOSE,
             user,
-            RolePermission.EDIT_FCS_APPLICATIONS
+            RolePermission.VIEW_FCS_APPLICATIONS, RolePermission.VIEW_FCS_CONSENTS
         )
     );
   }

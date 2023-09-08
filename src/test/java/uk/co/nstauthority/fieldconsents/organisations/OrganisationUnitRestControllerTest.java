@@ -10,7 +10,8 @@ import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTes
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit2Json;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit3Json;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.CREATE_FCS_APPLICATIONS;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_CONSENTS;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -54,14 +55,14 @@ class OrganisationUnitRestControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  void getOrganisationUnitsForEditor_assertHttpOk() throws Exception {
+  void getOrganisationUnitsForViewer_assertHttpOk() throws Exception {
     var searchTerm = "1";
     when(organisationUnitService.searchOrganisationUnitsForUser(searchTerm,
-        OrganisationUnitRestController.ORG_UNIT_WORK_AREA_PURPOSE, user, EDIT_FCS_APPLICATIONS))
+        OrganisationUnitRestController.ORG_UNIT_WORK_AREA_PURPOSE, user, VIEW_FCS_APPLICATIONS, VIEW_FCS_CONSENTS))
         .thenReturn(List.of(orgUnit1Json));
 
     mockMvc.perform(get(ReverseRouter.route(on(OrganisationUnitRestController.class)
-            .getOrganisationUnitsForEditor(searchTerm, null)))
+            .getOrganisationUnitsForViewer(searchTerm, null)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(content().json("""
@@ -70,14 +71,14 @@ class OrganisationUnitRestControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  void getOrganisationUnitsForEditor_assertHttpOk_manyOrgUnits() throws Exception {
+  void getOrganisationUnitsForViewer_assertHttpOk_manyOrgUnits() throws Exception {
     var searchTerm = "OrG UnIt";
     when(organisationUnitService.searchOrganisationUnitsForUser(searchTerm,
-        OrganisationUnitRestController.ORG_UNIT_WORK_AREA_PURPOSE, user, EDIT_FCS_APPLICATIONS))
+        OrganisationUnitRestController.ORG_UNIT_WORK_AREA_PURPOSE, user, VIEW_FCS_APPLICATIONS, VIEW_FCS_CONSENTS))
         .thenReturn(List.of(orgUnit1Json, orgUnit2Json, orgUnit3Json));
 
     mockMvc.perform(get(ReverseRouter.route(on(OrganisationUnitRestController.class)
-            .getOrganisationUnitsForEditor(searchTerm, null)))
+            .getOrganisationUnitsForViewer(searchTerm, null)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(content().json("""

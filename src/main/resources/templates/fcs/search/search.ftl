@@ -13,9 +13,8 @@
       <@dataItemFilter.statusFilter form=form statusCheckboxes=appStatuses/>
       <@dataItemFilter.applicationTypeFilter form=form applicationTypeCheckboxes=appTypes/>
       <@dataItemFilter.durationFilter form=form durationCheckboxes=durationTypes/>
+      <@dataItemFilter.operatorFilter form=form prefilledOperator=prefilledOperator operatorSearchRestUrl=operatorSearchRestUrl/>
       <@aceFilter form=form aceCheckboxes=aceStatuses/>
-<#--         TODO: temporarely disabled until FCS-426 is fixed -->
-<#--      <@dataItemFilter.operatorFilter form=form prefilledOperator=prefilledOperator operatorSearchRestUrl=operatorSearchRestUrl/>-->
     </@fdsSearch.searchFilterList>
   </@fdsSearch.searchFilter>
   <@fdsSearch.searchPageContent twoThirdsWidth=true>
