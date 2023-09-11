@@ -17,6 +17,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.time.LocalDate;
 import java.util.Optional;
@@ -25,7 +27,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
-import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
+import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
@@ -34,10 +36,11 @@ import uk.co.nstauthority.fieldconsents.application.eiadirection.EiaDirectionBui
 import uk.co.nstauthority.fieldconsents.application.eiadirection.EiaDirectionService;
 import uk.co.nstauthority.fieldconsents.application.eiadirection.havesubmitted.HaveSubmittedController;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
+import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @ContextConfiguration(classes = NeedsSubmittingController.class)
-class NeedsSubmittingControllerTest extends AbstractControllerTest {
+class NeedsSubmittingControllerTest extends AbstractApplicationControllerTest {
 
   private static final String VIEW_NAME = "fcs/application/eia-screening/needs-submitting-form";
   private static final int DAY = 23;
@@ -67,6 +70,24 @@ class NeedsSubmittingControllerTest extends AbstractControllerTest {
         .thenReturn(applicationVersion);
     when(applicationVersionService.findLatestApplicationVersion(applicationId))
         .thenReturn(Optional.ofNullable(applicationVersion));
+  }
+
+  @SecurityTest
+  void getForm_whenNotAuthenticated_thenRedirectedToLogin() throws Exception {
+    mockMvc.perform(get(ReverseRouter.route(on(NeedsSubmittingController.class)
+            .getForm(applicationId))))
+        .andExpect(redirectionToLoginUrl());
+  }
+
+  @SecurityTest
+  void getForm_whenUserDoesNotHavePermission_thenIsForbidden() throws Exception {
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, EDIT_FCS_APPLICATIONS))
+        .thenReturn(false);
+
+    mockMvc.perform(get(ReverseRouter.route(on(NeedsSubmittingController.class)
+            .getForm(applicationId)))
+            .with(user(user)))
+        .andExpect(status().isForbidden());
   }
 
   @Test
@@ -109,6 +130,26 @@ class NeedsSubmittingControllerTest extends AbstractControllerTest {
             eiaDirection.getLatestDateToBeSubmitted().getYear(),
             eiaDirection.getWhyNoEiaDirection()
         );
+  }
+
+  @SecurityTest
+  void saveForm_whenNotAuthenticated_thenRedirectedToLogin() throws Exception {
+    mockMvc.perform(post(ReverseRouter.route(on(NeedsSubmittingController.class)
+            .saveForm(applicationId, null, null)))
+            .with(csrf()))
+        .andExpect(redirectionToLoginUrl());
+  }
+
+  @SecurityTest
+  void saveForm_whenUserDoesNotHavePermission_thenIsForbidden() throws Exception {
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, EDIT_FCS_APPLICATIONS))
+        .thenReturn(false);
+
+    mockMvc.perform(post(ReverseRouter.route(on(NeedsSubmittingController.class)
+            .saveForm(applicationId, null, null)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().isForbidden());
   }
 
   @Test

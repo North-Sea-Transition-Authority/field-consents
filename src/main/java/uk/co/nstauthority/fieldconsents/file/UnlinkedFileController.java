@@ -17,9 +17,11 @@ import uk.co.fivium.fileuploadlibrary.core.FileService;
 import uk.co.fivium.fileuploadlibrary.core.UploadedFile;
 import uk.co.fivium.fileuploadlibrary.fds.FileDeleteResponse;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.authorisation.AccessibleByServiceUsers;
 
 @RestController
 @RequestMapping("unlinked-files")
+@AccessibleByServiceUsers
 public class UnlinkedFileController {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(UnlinkedFileController.class);

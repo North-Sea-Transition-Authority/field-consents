@@ -16,6 +16,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -36,6 +38,7 @@ import uk.co.nstauthority.fieldconsents.application.eiadirection.EiaDirectionBui
 import uk.co.nstauthority.fieldconsents.application.eiadirection.EiaDirectionService;
 import uk.co.nstauthority.fieldconsents.application.eiadirection.havesubmitted.HaveSubmittedController;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
+import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @ContextConfiguration(classes = ProjectPurposeController.class)
@@ -67,6 +70,24 @@ class ProjectPurposeControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(Optional.of(APPLICATION_VERSION));
   }
 
+  @SecurityTest
+  void getForm_whenNotAuthenticated_thenRedirectedToLogin() throws Exception {
+    mockMvc.perform(get(ReverseRouter.route(on(ProjectPurposeController.class)
+            .getForm(APPLICATION_ID))))
+        .andExpect(redirectionToLoginUrl());
+  }
+
+  @SecurityTest
+  void getForm_whenUserDoesNotHavePermission_thenIsForbidden() throws Exception {
+    when(applicationAccessService.hasApplicationPermission(user, APPLICATION_VERSION, EDIT_FCS_APPLICATIONS))
+        .thenReturn(false);
+
+    mockMvc.perform(get(ReverseRouter.route(on(ProjectPurposeController.class)
+            .getForm(APPLICATION_ID)))
+            .with(user(user)))
+        .andExpect(status().isForbidden());
+  }
+
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
   void getForm(boolean forPurposeOfEiaRegs) throws Exception {
@@ -92,6 +113,26 @@ class ProjectPurposeControllerTest extends AbstractApplicationControllerTest {
         entry("cancelUrl", taskListUrl),
         entry("backLinkUrl", taskListUrl)
     );
+  }
+
+  @SecurityTest
+  void saveForm_whenNotAuthenticated_thenRedirectedToLogin() throws Exception {
+    mockMvc.perform(post(ReverseRouter.route(on(ProjectPurposeController.class)
+            .saveForm(APPLICATION_ID, null, null)))
+            .with(csrf()))
+        .andExpect(redirectionToLoginUrl());
+  }
+
+  @SecurityTest
+  void saveForm_whenUserDoesNotHavePermission_thenIsForbidden() throws Exception {
+    when(applicationAccessService.hasApplicationPermission(user, APPLICATION_VERSION, EDIT_FCS_APPLICATIONS))
+        .thenReturn(false);
+
+    mockMvc.perform(post(ReverseRouter.route(on(ProjectPurposeController.class)
+            .saveForm(APPLICATION_ID, null, null)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().isForbidden());
   }
 
   @ParameterizedTest

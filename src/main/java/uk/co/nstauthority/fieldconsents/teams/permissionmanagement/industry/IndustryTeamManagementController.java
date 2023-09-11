@@ -16,7 +16,6 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
-import uk.co.nstauthority.fieldconsents.authorisation.AccessibleByServiceUsers;
 import uk.co.nstauthority.fieldconsents.authorisation.HasPermission;
 import uk.co.nstauthority.fieldconsents.authorisation.IsMemberOfTeamOrHasRegulatorRole;
 import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
@@ -37,7 +36,6 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.Reg
 
 @Controller
 @RequestMapping("/permission-management/industry")
-@AccessibleByServiceUsers
 public class IndustryTeamManagementController extends AbstractTeamController {
 
   static final TeamType TEAM_TYPE = TeamType.INDUSTRY;

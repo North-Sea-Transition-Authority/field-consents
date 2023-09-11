@@ -11,7 +11,9 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithNullOperator;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -19,6 +21,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
+import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
 import uk.co.nstauthority.fieldconsents.startapplication.StartApplicationFromTerminalController;
@@ -37,6 +40,25 @@ public class TerminalControllerTest extends AbstractControllerTest {
   void setUp() {
     when(permissionService.hasPermission(user, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(true);
+  }
+
+  @SecurityTest
+  void manageTerminal_whenNotAuthenticated_thenRedirectedToLogin() throws Exception {
+    mockMvc.perform(get(ReverseRouter.route(on(TerminalController.class)
+            .manageTerminal(terminal1JsonWithOperator.getId(), null))))
+        .andExpect(redirectionToLoginUrl());
+  }
+
+  @SecurityTest
+  void manageTerminal_whenUserDoesNotHavePermission_thenIsForbidden() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.VIEW_FCS_APPLICATIONS, RolePermission.VIEW_FCS_CONSENTS)))
+        .thenReturn(false);
+
+    mockMvc.perform(get(ReverseRouter.route(on(TerminalController.class)
+            .manageTerminal(terminal1JsonWithOperator.getId(), null)))
+            .with(user(user))
+        )
+        .andExpect(status().isForbidden());
   }
 
   @ParameterizedTest

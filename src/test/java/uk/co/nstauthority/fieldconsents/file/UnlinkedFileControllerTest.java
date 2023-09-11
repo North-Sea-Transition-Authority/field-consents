@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -19,6 +20,7 @@ import uk.co.fivium.fileuploadlibrary.core.FileService;
 import uk.co.fivium.fileuploadlibrary.core.UploadedFile;
 import uk.co.fivium.fileuploadlibrary.fds.FileDeleteResponse;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
+import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @ContextConfiguration(classes = UnlinkedFileController.class)
@@ -40,6 +42,13 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
     uploadedFile.setId(FILE_ID);
   }
 
+  @SecurityTest
+  void download_whenNotAuthenticated_thenRedirectedToLogin() throws Exception {
+    mockMvc.perform(get(ReverseRouter.route(on(UnlinkedFileController.class)
+            .download(FILE_ID, null))))
+        .andExpect(redirectionToLoginUrl());
+  }
+
   @Test
   void download_fileDoesNotBelongToUser() throws Exception {
     when(fileService.find(FILE_ID)).thenReturn(Optional.of(uploadedFile));
@@ -47,7 +56,7 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(get(ReverseRouter.route(on(UnlinkedFileController.class)
             .download(FILE_ID, null)))
-        .with(user(user)))
+            .with(user(user)))
         .andExpect(status().is4xxClientError());
   }
 
@@ -83,6 +92,14 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
             .download(FILE_ID, null)))
             .with(user(user)))
         .andExpect(status().is2xxSuccessful());
+  }
+
+  @SecurityTest
+  void delete_whenNotAuthenticated_thenRedirectedToLogin() throws Exception {
+    mockMvc.perform(post(ReverseRouter.route(on(UnlinkedFileController.class)
+            .delete(FILE_ID, null)))
+            .with(csrf()))
+        .andExpect(redirectionToLoginUrl());
   }
 
   @Test

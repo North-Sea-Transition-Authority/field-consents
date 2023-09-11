@@ -19,7 +19,6 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.authorisation.AccessibleByServiceUsers;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
@@ -28,7 +27,6 @@ import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
 
 @Controller
 @RequestMapping("applications/{applicationId}/assign-technical-reviewer")
-@AccessibleByServiceUsers
 public class TechnicalReviewAssignmentController {
 
   static final UnaryOperator<String> TECHNICAL_REVIEW_ASSIGNMENT_SUCCESS_MESSAGE =

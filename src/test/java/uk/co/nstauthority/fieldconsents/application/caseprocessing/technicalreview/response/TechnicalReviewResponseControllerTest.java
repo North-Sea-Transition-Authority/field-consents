@@ -18,6 +18,7 @@ import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.A
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWER_SUBMIT_REVIEW;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.notificationBanner;
+import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -47,6 +48,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalrevi
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewSummaryView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.response.document.TechnicalReviewResponseDocumentController;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
+import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
@@ -102,6 +104,24 @@ class TechnicalReviewResponseControllerTest extends AbstractApplicationControlle
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of(TECHNICAL_REVIEWER_SUBMIT_REVIEW));
   }
 
+  @SecurityTest
+  void getForm_whenNotAuthenticated_thenRedirectedToLogin() throws Exception {
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .getForm(APPLICATION_ID))))
+        .andExpect(redirectionToLoginUrl());
+  }
+
+  @SecurityTest
+  void getForm_whenUserDoesNotHavePermission_thenIsForbidden() throws Exception {
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(Collections.emptyList());
+
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .getForm(APPLICATION_ID)))
+            .with(user(user)))
+        .andExpect(status().isForbidden());
+  }
+
   @Test
   void getForm() throws Exception {
     mockGetFormInteractions();
@@ -140,6 +160,24 @@ class TechnicalReviewResponseControllerTest extends AbstractApplicationControlle
         .extracting(m -> m.get("form"))
         .usingRecursiveComparison()
         .isEqualTo(TechnicalReviewResponseForm.empty());
+  }
+
+  @SecurityTest
+  void submitForm_whenNotAuthenticated_thenRedirectedToLogin() throws Exception {
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .submitForm(APPLICATION_ID, null, null, null, null))))
+        .andExpect(redirectionToLoginUrl());
+  }
+
+  @SecurityTest
+  void submitForm_whenUserDoesNotHavePermission_thenIsForbidden() throws Exception {
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(Collections.emptyList());
+
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .submitForm(APPLICATION_ID, null, null, null, null)))
+            .with(user(user)))
+        .andExpect(status().isForbidden());
   }
 
   @Test

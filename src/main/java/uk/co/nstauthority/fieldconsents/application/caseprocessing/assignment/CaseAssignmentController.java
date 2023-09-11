@@ -21,7 +21,6 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.authorisation.AccessibleByServiceUsers;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
@@ -30,7 +29,6 @@ import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
 
 @Controller
 @RequestMapping("applications/{applicationId}")
-@AccessibleByServiceUsers
 public class CaseAssignmentController {
 
   private final ApplicationService applicationService;

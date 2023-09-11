@@ -20,6 +20,7 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -32,10 +33,12 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
+import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 
 @ContextConfiguration(classes = StartApplicationFromTerminalController.class)
@@ -74,6 +77,8 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
 
     applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
     when(startApplicationControllerHelperService.getApplicationTypesMap(AssetType.TERMINAL)).thenReturn(applicationTypeMap);
+    when(permissionService.hasPermission(user, Set.of(RolePermission.CREATE_FCS_APPLICATIONS)))
+        .thenReturn(true);
   }
 
   @Test
@@ -88,8 +93,7 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
     var modelAndView =
         mockMvc.perform(get(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
                 .getStartApplicationForm(TERMINAL_ID)))
-                .with(user(user))
-                .with(csrf()))
+                .with(user(user)))
             .andExpect(status().isOk())
             .andExpect(view().name("fcs/startapplication/startApplication"))
             .andReturn().getModelAndView();
@@ -101,12 +105,22 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
     assertEquals(continueStartApplicationUrl, model.get("continueStartApplicationUrl"));
   }
 
-  @Test
+  @SecurityTest
   void getStartApplicationForm_notAuthorized() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
-            .getStartApplicationForm(TERMINAL_ID)))
-            .with(csrf()))
+            .getStartApplicationForm(TERMINAL_ID))))
         .andExpect(redirectionToLoginUrl());
+  }
+
+  @SecurityTest
+  void getStartApplicationForm_whenUserDoesNotHavePermission_thenIsForbidden() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.CREATE_FCS_APPLICATIONS)))
+        .thenReturn(false);
+
+    mockMvc.perform(get(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
+            .getStartApplicationForm(TERMINAL_ID)))
+            .with(user(user)))
+        .andExpect(status().isForbidden());
   }
 
   @Test
@@ -142,12 +156,24 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
     assertEquals(MANAGE_TERMINAL_URL_BASE + "/start-application", model.get("continueStartApplicationUrl"));
   }
 
-  @Test
+  @SecurityTest
   void continueStartApplicationOfType_whenUnauthorized() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
             .continueStartApplicationOfType(TERMINAL_ID, null, ReverseRouter.emptyBindingResult(), null)))
             .with(csrf()))
         .andExpect(redirectionToLoginUrl());
+  }
+
+  @SecurityTest
+  void continueStartApplicationOfType_whenUserDoesNotHavePermission_thenIsForbidden() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.CREATE_FCS_APPLICATIONS)))
+        .thenReturn(false);
+
+    mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
+            .continueStartApplicationOfType(TERMINAL_ID, null, ReverseRouter.emptyBindingResult(), null)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().isForbidden());
   }
 
   @Test
@@ -160,8 +186,7 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
         mockMvc.perform(get(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
                 .getStartApplicationOperatorForm(TERMINAL_ID, null)))
                 .flashAttr("applicationType", ApplicationType.FLARE)
-                .with(user(user))
-                .with(csrf()))
+                .with(user(user)))
             .andExpect(status().isOk())
             .andExpect(view().name("fcs/startapplication/operatorForm"))
             .andReturn().getModelAndView();
@@ -183,12 +208,22 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
     assertThat(form.getOrganisationUnitId().getInputValue()).isNull();
   }
 
-  @Test
+  @SecurityTest
   void getStartApplicationOperatorForm_notAuthorized() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
-            .getStartApplicationOperatorForm(TERMINAL_ID, null)))
-            .with(csrf()))
+            .getStartApplicationOperatorForm(TERMINAL_ID, null))))
         .andExpect(redirectionToLoginUrl());
+  }
+
+  @SecurityTest
+  void getStartApplicationOperatorForm_whenUserDoesNotHavePermission_thenIsForbidden() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.CREATE_FCS_APPLICATIONS)))
+        .thenReturn(false);
+
+    mockMvc.perform(get(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
+            .getStartApplicationOperatorForm(TERMINAL_ID, null)))
+            .with(user(user)))
+        .andExpect(status().isForbidden());
   }
 
   @Test
@@ -243,11 +278,23 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
     assertThat(form.getOrganisationUnitId().getInputValue()).isNull();
   }
 
-  @Test
+  @SecurityTest
   void createNewApplication_whenUnauthorized() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
             .createNewApplication(TERMINAL_ID, null, ReverseRouter.emptyBindingResult(), null)))
             .with(csrf()))
         .andExpect(redirectionToLoginUrl());
+  }
+
+  @SecurityTest
+  void createNewApplication_whenUserDoesNotHavePermission_thenIsForbidden() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.CREATE_FCS_APPLICATIONS)))
+        .thenReturn(false);
+
+    mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromTerminalController.class)
+            .createNewApplication(TERMINAL_ID, null, ReverseRouter.emptyBindingResult(), null)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().isForbidden());
   }
 }

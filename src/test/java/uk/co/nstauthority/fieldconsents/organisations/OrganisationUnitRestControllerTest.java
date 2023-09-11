@@ -12,15 +12,24 @@ import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTes
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.CREATE_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_CONSENTS;
+import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
+import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @ContextConfiguration(classes = OrganisationUnitRestController.class)
 class OrganisationUnitRestControllerTest extends AbstractControllerTest {
+
+  @SecurityTest
+  void getOrganisationUnitsForCreator_whenNotAuthenticated_thenRedirectedToLogin() throws Exception {
+    mockMvc.perform(get(ReverseRouter.route(on(OrganisationUnitRestController.class)
+            .getOrganisationUnitsForCreator("test", null))))
+        .andExpect(redirectionToLoginUrl());
+  }
 
   @Test
   void getOrganisationUnitsForCreator_assertHttpOk() throws Exception {
@@ -52,6 +61,13 @@ class OrganisationUnitRestControllerTest extends AbstractControllerTest {
         .andExpect(content().json("""
            {"results":[{"id":"1","text":"TEST ORG UNIT 1"}, {"id":"2","text":"TEST ORG UNIT 2"}, {"id":"3","text":"TEST ORG UNIT 3"}]}
          """));
+  }
+
+  @SecurityTest
+  void getOrganisationUnitsForViewer_whenNotAuthenticated_thenRedirectedToLogin() throws Exception {
+    mockMvc.perform(get(ReverseRouter.route(on(OrganisationUnitRestController.class)
+            .getOrganisationUnitsForViewer("test", null))))
+        .andExpect(redirectionToLoginUrl());
   }
 
   @Test

@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
-import uk.co.nstauthority.fieldconsents.authorisation.AccessibleByServiceUsers;
 import uk.co.nstauthority.fieldconsents.authorisation.IsMemberOfTeam;
 import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -24,7 +23,6 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.TeamListContr
 
 @Controller
 @RequestMapping("/permission-management/opred")
-@AccessibleByServiceUsers
 public class OpredTeamManagementController extends AbstractTeamController {
 
   static final TeamType TEAM_TYPE = TeamType.OPRED;

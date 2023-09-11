@@ -20,6 +20,8 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1Json;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,6 +51,7 @@ import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 import uk.co.nstauthority.fieldconsents.assets.AssetRestController;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
+import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
@@ -100,6 +103,24 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
 
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(ApplicationTestUtil.APPLICATION_ID))
         .thenReturn(applicationVersion);
+  }
+
+  @SecurityTest
+  void getForm_whenNotAuthenticated_thenRedirectedToLogin() throws Exception {
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .getForm(APPLICATION_ID))))
+        .andExpect(redirectionToLoginUrl());
+  }
+
+  @SecurityTest
+  void getForm_whenUserDoesNotHavePermission_thenIsForbidden() throws Exception {
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, EDIT_FCS_APPLICATIONS))
+        .thenReturn(false);
+
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .getForm(APPLICATION_ID)))
+            .with(user(user)))
+        .andExpect(status().isForbidden());
   }
 
   @Test
@@ -243,6 +264,26 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
         );
   }
 
+  @SecurityTest
+  void saveForm_whenNotAuthenticated_thenRedirectedToLogin() throws Exception {
+    mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .saveForm(APPLICATION_ID, null, null)))
+            .with(csrf()))
+        .andExpect(redirectionToLoginUrl());
+  }
+
+  @SecurityTest
+  void saveForm_whenUserDoesNotHavePermission_thenIsForbidden() throws Exception {
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, EDIT_FCS_APPLICATIONS))
+        .thenReturn(false);
+
+    mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .saveForm(APPLICATION_ID, null, null)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().isForbidden());
+  }
+
   @ParameterizedTest
   @EnumSource(value = ApplicationRationaleType.class, names = {"INCREASE", "DECREASE"}, mode = Mode.INCLUDE)
   void saveForm_increase_decrease(ApplicationRationaleType rationaleType) throws Exception {
@@ -250,7 +291,7 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
     var hostAssetKey = "assetKey1";
 
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .getForm(APPLICATION_ID)))
+            .saveForm(APPLICATION_ID, null, null)))
             .param("rationaleType", rationaleType.toString())
             .param("productionLocationAssetKeys", String.join(",", flaringAssetKeys))
             .param("hostLocationAssetKey", hostAssetKey)
@@ -297,7 +338,7 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
     var comment = "comment";
 
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .getForm(APPLICATION_ID)))
+            .saveForm(APPLICATION_ID, null, null)))
             .param("rationaleType", rationaleType.toString())
             .param("extensionComment.inputValue", comment)
             .param("productionLocationAssetKeys", String.join(",", productionLocationAssetKeys))

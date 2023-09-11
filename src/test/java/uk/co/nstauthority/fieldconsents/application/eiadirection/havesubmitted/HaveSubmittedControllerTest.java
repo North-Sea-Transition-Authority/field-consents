@@ -17,6 +17,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,7 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
-import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
+import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
@@ -33,13 +35,14 @@ import uk.co.nstauthority.fieldconsents.application.eiadirection.EiaDirectionBui
 import uk.co.nstauthority.fieldconsents.application.eiadirection.EiaDirectionService;
 import uk.co.nstauthority.fieldconsents.application.eiadirection.projectpurpose.ProjectPurposeController;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
+import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationJson;
 import uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationService;
 
 @ContextConfiguration(classes = HaveSubmittedController.class)
-class HaveSubmittedControllerTest extends AbstractControllerTest {
+class HaveSubmittedControllerTest extends AbstractApplicationControllerTest {
 
   private static final String VIEW_NAME = "fcs/application/eia-screening/have-submitted-form";
   private static final String PETS_URL = "/pets";
@@ -73,6 +76,24 @@ class HaveSubmittedControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.ofNullable(applicationVersion));
   }
 
+  @SecurityTest
+  void getForm_whenNotAuthenticated_thenRedirectedToLogin() throws Exception {
+    mockMvc.perform(get(ReverseRouter.route(on(HaveSubmittedController.class)
+            .getForm(applicationId))))
+        .andExpect(redirectionToLoginUrl());
+  }
+
+  @SecurityTest
+  void getForm_whenUserDoesNotHavePermission_thenIsForbidden() throws Exception {
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, EDIT_FCS_APPLICATIONS))
+        .thenReturn(false);
+
+    mockMvc.perform(get(ReverseRouter.route(on(HaveSubmittedController.class)
+            .getForm(applicationId)))
+            .with(user(user)))
+        .andExpect(status().isForbidden());
+  }
+
   @Test
   void getForm() throws Exception {
     when(eiaDirectionService.findEiaDirection(applicationVersion))
@@ -101,6 +122,26 @@ class HaveSubmittedControllerTest extends AbstractControllerTest {
         entry("petsSearchRestUrl", PETS_URL),
         entry("prefilledEiaDirectionRef", RestSearchItem.EMPTY_REST_SEARCH_ITEM)
     );
+  }
+
+  @SecurityTest
+  void saveForm_whenNotAuthenticated_thenRedirectedToLogin() throws Exception {
+    mockMvc.perform(post(ReverseRouter.route(on(HaveSubmittedController.class)
+            .saveForm(applicationId, null, null)))
+            .with(csrf()))
+        .andExpect(redirectionToLoginUrl());
+  }
+
+  @SecurityTest
+  void saveForm_whenUserDoesNotHavePermission_thenIsForbidden() throws Exception {
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, EDIT_FCS_APPLICATIONS))
+        .thenReturn(false);
+
+    mockMvc.perform(post(ReverseRouter.route(on(HaveSubmittedController.class)
+            .saveForm(applicationId, null, null)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().isForbidden());
   }
 
   @Test

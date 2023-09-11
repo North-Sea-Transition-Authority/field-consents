@@ -4,10 +4,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import uk.co.nstauthority.fieldconsents.authorisation.AccessibleByServiceUsers;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchResult;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.SearchSelectorService;
 
 @RestController
+@AccessibleByServiceUsers
 public class PetsApplicationRestController {
 
   static final String EIA_DIRECTION_SEARCH_PURPOSE = "EIA directions search selector";

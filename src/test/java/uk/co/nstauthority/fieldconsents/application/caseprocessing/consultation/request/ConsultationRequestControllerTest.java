@@ -17,11 +17,13 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.notificationBanner;
+import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.sql.Date;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.Optional;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,6 +38,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
+import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -91,6 +94,24 @@ class ConsultationRequestControllerTest extends AbstractApplicationControllerTes
         Optional.of(applicationVersion));
   }
 
+  @SecurityTest
+  void getConsultationRequestForm_whenNotAuthenticated_thenRedirectedToLogin() throws Exception {
+    mockMvc.perform(get(ReverseRouter.route(on(ConsultationRequestController.class)
+            .getConsultationRequestForm(applicationId))))
+        .andExpect(redirectionToLoginUrl());
+  }
+
+  @SecurityTest
+  void getConsultationRequestForm_whenUserDoesNotHavePermission_thenIsForbidden() throws Exception {
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(Collections.emptyList());
+
+    mockMvc.perform(get(ReverseRouter.route(on(ConsultationRequestController.class)
+            .getConsultationRequestForm(applicationId)))
+            .with(user(user)))
+        .andExpect(status().isForbidden());
+  }
+
   @Test
   void getConsultationRequestForm() throws Exception {
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(APPLICATION_REFERENCE);
@@ -110,6 +131,26 @@ class ConsultationRequestControllerTest extends AbstractApplicationControllerTes
         .containsEntry("pageTitle", "Request consultation from %s".formatted(TEAM.getDisplayName()))
         .containsEntry("applicationReference", APPLICATION_REFERENCE)
         .containsEntry("form", ConsultationRequestForm.empty());
+  }
+
+  @SecurityTest
+  void submitConsultationRequestForm_whenNotAuthenticated_thenRedirectedToLogin() throws Exception {
+    mockMvc.perform(post(ReverseRouter.route(on(ConsultationRequestController.class)
+            .submitConsultationRequestForm(applicationId, null, null, null, null)))
+            .with(csrf()))
+        .andExpect(redirectionToLoginUrl());
+  }
+
+  @SecurityTest
+  void submitConsultationRequestForm_whenUserDoesNotHavePermission_thenIsForbidden() throws Exception {
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(Collections.emptyList());
+
+    mockMvc.perform(post(ReverseRouter.route(on(ConsultationRequestController.class)
+            .submitConsultationRequestForm(applicationId, null, null, null, null)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().isForbidden());
   }
 
   @Test

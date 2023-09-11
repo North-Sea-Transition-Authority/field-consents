@@ -24,13 +24,16 @@ import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationT
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 import uk.co.nstauthority.fieldconsents.assets.AssetRestController;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
+import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Controller
 @RequestMapping("applications/{applicationId}/application-rationale/production")
 @HasApplicationStatus(statuses = ApplicationVersionStatus.IN_PROGRESS)
+@HasApplicationPermission(permissions = RolePermission.EDIT_FCS_APPLICATIONS)
 public class ApplicationRationaleProductionController {
 
   private final ApplicationRationaleProductionService applicationRationaleProductionService;
