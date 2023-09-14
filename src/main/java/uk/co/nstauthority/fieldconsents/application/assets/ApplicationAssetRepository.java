@@ -26,6 +26,8 @@ public interface ApplicationAssetRepository extends CrudRepository<ApplicationAs
 
   void deleteAllByApplicationVersionAndAssetRoleIn(ApplicationVersion applicationVersion, Set<AssetRole> assetRoles);
 
+  List<ApplicationAsset> findAllByFieldIdIsNotNullAndAssetRoleIn(Set<AssetRole> assetRoles);
+
   List<ApplicationAsset> findAllByAssetRoleAndFieldIdIsNotNull(AssetRole assetRole);
 
   List<ApplicationAsset> findAllByAssetRoleAndTerminalIdIsNotNull(AssetRole assetRole);

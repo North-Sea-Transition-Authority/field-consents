@@ -48,3 +48,12 @@
     />
   </@fdsSearch.searchFilterItem>
 </#macro>
+
+<#macro assetTypeWithShoreFilter form assetTypeWithShoreCheckboxes>
+  <@fdsSearch.searchFilterItem itemName="Asset type" expanded=form.assetTypesWithShore?has_content>
+    <@fdsSearch.searchCheckboxes
+      path="form.assetTypesWithShore"
+      checkboxes=assetTypeWithShoreCheckboxes
+    />
+  </@fdsSearch.searchFilterItem>
+</#macro>

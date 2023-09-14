@@ -4,6 +4,7 @@ import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationAssets.APPLICATION_ASSETS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationTechnicalReviews.APPLICATION_TECHNICAL_REVIEWS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
+import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterService.FIELD_LOOKUP_PURPOSE;
 
 import java.util.List;
 import java.util.Objects;
@@ -12,11 +13,9 @@ import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationFieldService;
-import uk.co.nstauthority.fieldconsents.application.assets.ApplicationTerminalService;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
-import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.fields.GeographicArea;
@@ -27,30 +26,25 @@ import uk.co.nstauthority.fieldconsents.teams.TeamService;
 @Service
 public class WorkAreaFilterService {
 
-  public static final String FIELD_LOOKUP_PURPOSE = "Lookup field for the work-area";
-
   private final AssetService assetService;
   private final FieldService fieldService;
   private final ApplicationFieldService applicationFieldService;
-  private final ApplicationTerminalService applicationTerminalService;
   private final TeamService teamService;
   private final ApplicationDataFilterService applicationDataFilterService;
 
   public WorkAreaFilterService(AssetService assetService,
                                FieldService fieldService,
                                ApplicationFieldService applicationFieldService,
-                               ApplicationTerminalService applicationTerminalService,
                                TeamService teamService,
                                ApplicationDataFilterService applicationDataFilterService) {
     this.assetService = assetService;
     this.fieldService = fieldService;
     this.applicationFieldService = applicationFieldService;
-    this.applicationTerminalService = applicationTerminalService;
     this.teamService = teamService;
     this.applicationDataFilterService = applicationDataFilterService;
   }
 
-  List<Condition> getConditions(WorkAreaFilter filter, ServiceUserDetail user, WorkAreaTab workAreaTab)  {
+  List<Condition> getConditions(WorkAreaFilter filter, ServiceUserDetail user, WorkAreaTab workAreaTab) {
     var conditions = applicationDataFilterService.getConditions(filter);
 
     if (Objects.nonNull(filter.getAssetKey())) {
@@ -62,10 +56,6 @@ public class WorkAreaFilterService {
       conditions.add(
           getGeographicAreasQueryCondition(filter.getGeographicAreas())
       );
-    }
-
-    if (Objects.nonNull(filter.getAssetTypesWithShore())) {
-      conditions.add(getAssetTypesQueryCondition(filter.getAssetTypesWithShore()));
     }
 
     if (Objects.nonNull(workAreaTab) && WorkAreaTab.MY_APPLICATIONS.equals(workAreaTab)) {
@@ -108,54 +98,6 @@ public class WorkAreaFilterService {
         .map(FieldJson::getId)
         .toList();
     return APPLICATION_ASSETS.FIELD_ID.in(primaryFieldIdsInGeographicAreas);
-  }
-
-  private Condition getAssetTypesQueryCondition(List<AssetTypeWithShore> assetTypes) {
-    if (containsTerminalOnly(assetTypes)) {
-
-      return APPLICATION_ASSETS.TERMINAL_ID.in(applicationTerminalService.findDistinctPrimaryTerminalIds());
-
-    } else if (containsFieldsOnly(assetTypes)) {
-
-      return APPLICATION_ASSETS.FIELD_ID.in(getPrimaryFieldIdsOfShoreType(assetTypes));
-    } else {
-
-      return APPLICATION_ASSETS.FIELD_ID.in(getPrimaryFieldIdsOfShoreType(assetTypes))
-          .or(APPLICATION_ASSETS.TERMINAL_ID.in(applicationTerminalService.findDistinctPrimaryTerminalIds()));
-    }
-  }
-
-  private static boolean containsFieldsOnly(List<AssetTypeWithShore> assetTypeWithShores) {
-    var terminalOnly = assetTypeWithShores
-        .stream()
-        .filter(AssetTypeWithShore::isTerminal)
-        .toList();
-
-    return terminalOnly.isEmpty();
-  }
-
-  private static boolean containsTerminalOnly(List<AssetTypeWithShore> assetTypeWithShores) {
-    var fieldsOnly = assetTypeWithShores
-        .stream()
-        .filter(AssetTypeWithShore::isField)
-        .toList();
-
-    return fieldsOnly.isEmpty();
-  }
-
-  private List<Integer> getPrimaryFieldIdsOfShoreType(List<AssetTypeWithShore> assetTypes) {
-    return fieldService
-        .findFieldsByIds(
-            applicationFieldService.findDistinctPrimaryFieldIds(),
-            FIELD_LOOKUP_PURPOSE
-        )
-        .stream()
-        .filter(fieldJson -> assetTypes.stream()
-            .map(AssetTypeWithShore::getShore)
-            .toList()
-            .contains(fieldJson.getShore()))
-        .map(FieldJson::getId)
-        .toList();
   }
 
   private Condition getAssetCondition(AssetJson assetJson) {

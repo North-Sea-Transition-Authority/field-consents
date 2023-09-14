@@ -18,12 +18,14 @@ import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithNullOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperator;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2Json;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1Json;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithOperator;
 
 import jakarta.persistence.EntityNotFoundException;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -44,6 +46,7 @@ import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
+import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
 
@@ -572,5 +575,52 @@ class ApplicationAssetServiceTest {
     applicationAssetService.deleteAssetsByApplicationVersionAndAssetRoles(applicationVersion, assetRoles);
 
     verify(applicationAssetRepository).deleteAllByApplicationVersionAndAssetRoleIn(applicationVersion, assetRoles);
+  }
+
+  @Test
+  void getPrimaryAndSecondaryFieldJsonsOfShoreType_withNoPrimaryOrSecondaryFields() {
+    var requestPurpose = "lookup fields";
+    when(applicationAssetRepository.findAllByFieldIdIsNotNullAndAssetRoleIn(EnumSet.of(AssetRole.PRIMARY, AssetRole.SECONDARY)))
+        .thenReturn(Collections.emptyList());
+    var assetTypesWithShore = List.of(AssetTypeWithShore.FIELD_OFFSHORE, AssetTypeWithShore.TERMINAL);
+
+    assertThat(applicationAssetService.getPrimaryAndSecondaryFieldJsonsOfShoreType(assetTypesWithShore, requestPurpose))
+        .isEmpty();
+  }
+
+  @Test
+  void getPrimaryAndSecondaryFieldJsonsOfShoreType_withOnlyOneFieldMatchingAssetTypeWithShore() {
+    var requestPurpose = "lookup fields";
+    var fieldAssets = List.of(fieldAsset1, fieldAsset2);
+    when(applicationAssetRepository.findAllByFieldIdIsNotNullAndAssetRoleIn(EnumSet.of(AssetRole.PRIMARY, AssetRole.SECONDARY)))
+        .thenReturn(fieldAssets);
+
+    var fieldIds = fieldAssets.stream().map(ApplicationAsset::getFieldId)
+        .distinct()
+        .toList();
+    var assetTypesWithShore = List.of(AssetTypeWithShore.FIELD_OFFSHORE, AssetTypeWithShore.TERMINAL);
+    when(fieldService.findFieldsByIds(fieldIds, requestPurpose))
+        .thenReturn(List.of(field1Json, field2Json));
+
+    assertThat(applicationAssetService.getPrimaryAndSecondaryFieldJsonsOfShoreType(assetTypesWithShore, requestPurpose))
+        .containsExactly(field1Json);
+  }
+
+  @Test
+  void getPrimaryAndSecondaryFieldJsonsOfShoreType_withAllFieldsMatchingAssetTypeWithShore() {
+    var requestPurpose = "lookup fields";
+    var fieldAssets = List.of(fieldAsset1, fieldAsset2);
+    when(applicationAssetRepository.findAllByFieldIdIsNotNullAndAssetRoleIn(EnumSet.of(AssetRole.PRIMARY, AssetRole.SECONDARY)))
+        .thenReturn(fieldAssets);
+
+    var fieldIds = fieldAssets.stream().map(ApplicationAsset::getFieldId)
+        .distinct()
+        .toList();
+    var assetTypesWithShore = List.of(AssetTypeWithShore.FIELD_OFFSHORE, AssetTypeWithShore.FIELD_ONSHORE);
+    when(fieldService.findFieldsByIds(fieldIds, requestPurpose))
+        .thenReturn(List.of(field1Json, field2Json));
+
+    assertThat(applicationAssetService.getPrimaryAndSecondaryFieldJsonsOfShoreType(assetTypesWithShore, requestPurpose))
+        .containsExactly(field1Json, field2Json);
   }
 }

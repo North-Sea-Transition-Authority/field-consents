@@ -13,7 +13,9 @@ import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_NAME_2;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_NAME_3;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.TERMINAL_ID_1;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.TERMINAL_ID_2;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.TERMINAL_NAME_1;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.TERMINAL_NAME_2;
 
 import java.util.List;
 import java.util.Map;
@@ -130,6 +132,19 @@ public class ApplicationAssetTestUtil {
       TERMINAL_NAME_1,
       AssetRole.PRIMARY,
       1,
+      PRIMARY_OPERATOR_OU_ID_1,
+      CACHED_PRIMARY_OPERATOR_NAME_1
+  );
+
+  public static final ApplicationAsset terminalAsset2 = new ApplicationAsset(
+      2,
+      ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE),
+      null,
+      null,
+      TERMINAL_ID_2,
+      TERMINAL_NAME_2,
+      AssetRole.PRIMARY,
+      2,
       PRIMARY_OPERATOR_OU_ID_1,
       CACHED_PRIMARY_OPERATOR_NAME_1
   );

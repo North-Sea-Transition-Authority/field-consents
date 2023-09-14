@@ -3,6 +3,7 @@ package uk.co.nstauthority.fieldconsents.application.assets;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -14,6 +15,7 @@ import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
+import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.assets.AssetWithOperatorJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
@@ -179,6 +181,25 @@ public class ApplicationAssetService {
     return applicationAssetRepository.findAllByAssetRoleAndTerminalIdIsNotNull(AssetRole.PRIMARY);
   }
 
+  public List<FieldJson> getPrimaryAndSecondaryFieldJsonsOfShoreType(List<AssetTypeWithShore> assetTypeWithShores,
+                                                                     String requestPurpose) {
+    var shores = assetTypeWithShores.stream()
+        .map(AssetTypeWithShore::getShore)
+        .toList();
+
+    var primaryAndSecondaryFieldIds = applicationAssetRepository
+        .findAllByFieldIdIsNotNullAndAssetRoleIn(EnumSet.of(AssetRole.PRIMARY, AssetRole.SECONDARY))
+        .stream()
+        .map(ApplicationAsset::getFieldId)
+        .distinct()
+        .toList();
+
+    return fieldService.findFieldsByIds(primaryAndSecondaryFieldIds, requestPurpose)
+        .stream()
+        .filter(fieldJson -> shores.contains(fieldJson.getShore()))
+        .toList();
+  }
+
   public List<AssetJson> getAssetJsonListFor(ApplicationVersion applicationVersion, AssetRole assetRole) {
     return findAssetsByApplicationVersionAndAssetRole(applicationVersion, assetRole)
         .stream()
@@ -225,5 +246,4 @@ public class ApplicationAssetService {
   public void deleteAssetsByApplicationVersionAndAssetRoles(ApplicationVersion applicationVersion, Set<AssetRole> assetRoles) {
     applicationAssetRepository.deleteAllByApplicationVersionAndAssetRoleIn(applicationVersion, assetRoles);
   }
-
 }
