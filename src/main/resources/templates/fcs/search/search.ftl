@@ -17,6 +17,7 @@
       <@aceFilter form=form aceCheckboxes=aceStatuses/>
       <@dataItemFilter.assetTypeWithShoreFilter form=form assetTypeWithShoreCheckboxes=assetTypesWithShore/>
       <@fieldAssetFilter form=form prefilledField=prefilledField fieldAssetSearchRestUrl=fieldAssetSearchRestUrl/>
+      <@terminalAssetFilter form=form prefilledTerminal=prefilledTerminal terminalAssetSearchRestUrl=terminalAssetSearchRestUrl/>
     </@fdsSearch.searchFilterList>
   </@fdsSearch.searchFilter>
   <@fdsSearch.searchPageContent twoThirdsWidth=true>
@@ -89,6 +90,18 @@
       restUrl=springUrl(fieldAssetSearchRestUrl)
       labelText=""
       preselectedItems={prefilledField.id() : prefilledField.text()}
+      inputClass="govuk-input--width-10"
+    />
+  </@fdsSearch.searchFilterItem>
+</#macro>
+
+<#macro terminalAssetFilter form prefilledTerminal terminalAssetSearchRestUrl>
+  <@fdsSearch.searchFilterItem itemName="Facility" expanded=prefilledTerminal.id()?has_content>
+    <@fdsSearchSelector.searchSelectorRest
+      path="form.terminalAssetKey"
+      restUrl=springUrl(terminalAssetSearchRestUrl)
+      labelText=""
+      preselectedItems={prefilledTerminal.id() : prefilledTerminal.text()}
       inputClass="govuk-input--width-10"
     />
   </@fdsSearch.searchFilterItem>

@@ -7,6 +7,7 @@ public class SearchFilterForm extends ApplicationDataFilterForm {
 
   List<AceFlagStatus> aceFlagStatuses;
   String fieldAssetKey;
+  String terminalAssetKey;
 
   @Override
   public void clearFilter() {
@@ -29,5 +30,13 @@ public class SearchFilterForm extends ApplicationDataFilterForm {
 
   public void setFieldAssetKey(String fieldKey) {
     this.fieldAssetKey = fieldKey;
+  }
+
+  public String getTerminalAssetKey() {
+    return terminalAssetKey;
+  }
+
+  public void setTerminalAssetKey(String terminalAssetKey) {
+    this.terminalAssetKey = terminalAssetKey;
   }
 }

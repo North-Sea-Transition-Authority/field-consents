@@ -55,6 +55,7 @@ public class SearchController {
     var appTypes = ApplicationType.getDisplayableOptions();
     var durationTypes = ConsentLengthType.getConsentLengthOptions();
     var prefilledField = applicationDataFilterFormService.getPrefilledAsset(form.getFieldAssetKey());
+    var prefilledTerminal = applicationDataFilterFormService.getPrefilledAsset(form.getTerminalAssetKey());
     var prefilledOperator = applicationDataFilterFormService.getPrefilledOrganisation(form.getOperatorId());
     var assetTypesWithShore = AssetTypeWithShore.getDisplayableOptions();
     var aceStatuses = AceFlagStatus.getDisplayableOptions();
@@ -71,6 +72,8 @@ public class SearchController {
             ReverseRouter.route(on(OrganisationUnitRestController.class).getOrganisationUnitsForViewer(null, null)))
         .addObject("prefilledField", prefilledField)
         .addObject("fieldAssetSearchRestUrl", ReverseRouter.route(on(AssetRestController.class).searchFieldAssets(null)))
+        .addObject("prefilledTerminal", prefilledTerminal)
+        .addObject("terminalAssetSearchRestUrl", ReverseRouter.route(on(AssetRestController.class).searchTerminalAssets(null)))
         .addObject("assetTypesWithShore", assetTypesWithShore)
         .addObject("form", form)
         .addObject("pageTitle", SEARCH_TITLE);
