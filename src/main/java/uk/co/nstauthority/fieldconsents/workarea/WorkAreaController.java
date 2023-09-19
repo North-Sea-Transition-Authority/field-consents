@@ -30,6 +30,7 @@ import uk.co.nstauthority.fieldconsents.authorisation.HasPermission;
 import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormService;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
@@ -55,16 +56,21 @@ public class WorkAreaController {
 
   private final PermissionService permissionService;
 
+  private final ApplicationDataFilterFormService applicationDataFilterFormService;
+
 
   public WorkAreaController(WorkAreaService workAreaService,
                             WorkAreaFilterFormService workAreaFormService,
                             WorkAreaFilterService workAreaFilterService,
-                            TeamService teamService, PermissionService permissionService) {
+                            TeamService teamService,
+                            PermissionService permissionService,
+                            ApplicationDataFilterFormService applicationDataFilterFormService) {
     this.workAreaService = workAreaService;
     this.workAreaFormService = workAreaFormService;
     this.workAreaFilterService = workAreaFilterService;
     this.teamService = teamService;
     this.permissionService = permissionService;
+    this.applicationDataFilterFormService = applicationDataFilterFormService;
   }
 
   @GetMapping
@@ -211,8 +217,8 @@ public class WorkAreaController {
     var appTypes = ApplicationType.getDisplayableOptions();
     var durationTypes = ConsentLengthType.getConsentLengthOptions();
     var form = workAreaFormService.getFromFilter(filter);
-    var prefilledOperator = workAreaFormService.getPrefilledOrganisation(form.getOperatorId());
-    var prefilledAsset = workAreaFormService.getPrefilledAsset(form.getAssetKey());
+    var prefilledOperator = applicationDataFilterFormService.getPrefilledOrganisation(form.getOperatorId());
+    var prefilledAsset = applicationDataFilterFormService.getPrefilledAsset(form.getAssetKey());
     var geographicAreas = GeographicArea.getDisplayableOptions();
     var assetTypesWithShore = AssetTypeWithShore.getDisplayableOptions();
 

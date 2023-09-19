@@ -111,7 +111,7 @@ public class AssetRestControllerTest extends AbstractControllerTest {
   @SecurityTest
   void searchFields_whenNotAuthenticated_thenRedirectedToLogin() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(AssetRestController.class)
-            .searchFields("test"))))
+            .searchFieldAssets("test"))))
         .andExpect(redirectionToLoginUrl());
   }
 
@@ -120,7 +120,7 @@ public class AssetRestControllerTest extends AbstractControllerTest {
     when(assetService.searchFields("brent"))
         .thenReturn(List.of(brentAssetJson));
 
-    mockMvc.perform(get(ReverseRouter.route(on(AssetRestController.class).searchFields("brent")))
+    mockMvc.perform(get(ReverseRouter.route(on(AssetRestController.class).searchFieldAssets("brent")))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(content().json("""

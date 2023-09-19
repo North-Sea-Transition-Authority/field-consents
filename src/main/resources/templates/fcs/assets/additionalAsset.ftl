@@ -8,7 +8,7 @@
   <@fdsForm.htmlForm>
     <@fdsSearchSelector.searchSelectorRest
       path="form.assetKey"
-      restUrl=springUrl("/data-sources/fields")
+      restUrl=springUrl("/data-sources/field-assets")
       labelText="Add another field"
       pageHeading=true
       labelHeadingClass="govuk-label--xl"/>

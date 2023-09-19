@@ -16,6 +16,7 @@
       <@dataItemFilter.operatorFilter form=form prefilledOperator=prefilledOperator operatorSearchRestUrl=operatorSearchRestUrl/>
       <@aceFilter form=form aceCheckboxes=aceStatuses/>
       <@dataItemFilter.assetTypeWithShoreFilter form=form assetTypeWithShoreCheckboxes=assetTypesWithShore/>
+      <@fieldAssetFilter form=form prefilledField=prefilledField fieldAssetSearchRestUrl=fieldAssetSearchRestUrl/>
     </@fdsSearch.searchFilterList>
   </@fdsSearch.searchFilter>
   <@fdsSearch.searchPageContent twoThirdsWidth=true>
@@ -77,6 +78,18 @@
     <@fdsSearch.searchCheckboxes
       path="form.aceFlagStatuses"
       checkboxes=aceCheckboxes
+    />
+  </@fdsSearch.searchFilterItem>
+</#macro>
+
+<#macro fieldAssetFilter form prefilledField fieldAssetSearchRestUrl>
+  <@fdsSearch.searchFilterItem itemName="Field" expanded=prefilledField.id()?has_content>
+    <@fdsSearchSelector.searchSelectorRest
+      path="form.fieldAssetKey"
+      restUrl=springUrl(fieldAssetSearchRestUrl)
+      labelText=""
+      preselectedItems={prefilledField.id() : prefilledField.text()}
+      inputClass="govuk-input--width-10"
     />
   </@fdsSearch.searchFilterItem>
 </#macro>

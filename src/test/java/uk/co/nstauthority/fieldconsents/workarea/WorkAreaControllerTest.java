@@ -31,6 +31,7 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthT
 import uk.co.nstauthority.fieldconsents.assets.AssetRestController;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItem;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil;
@@ -49,6 +50,9 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @MockBean
   private WorkAreaFilterFormService workAreaFormService;
+
+  @MockBean
+  private ApplicationDataFilterFormService applicationDataFilterFormService;
 
   @MockBean
   private WorkAreaFilterService workAreaFilterService;
@@ -78,9 +82,9 @@ class WorkAreaControllerTest extends AbstractControllerTest {
     when(workAreaFormService.getFromFilter(any(WorkAreaFilter.class))).thenReturn(form);
     workAreaItems = List.of(ApplicationDataItemUtil.getApplicationDataItem());
     orgUnitRestSearchItem = ApplicationDataFilterFormTestUtil.ORGANISATION_REST_SEARCH_ITEM;
-    when(workAreaFormService.getPrefilledOrganisation(any())).thenReturn(orgUnitRestSearchItem);
+    when(applicationDataFilterFormService.getPrefilledOrganisation(any())).thenReturn(orgUnitRestSearchItem);
     assetRestSearchItem = ApplicationDataFilterFormTestUtil.FIELD_REST_SEARCH_ITEM;
-    when(workAreaFormService.getPrefilledAsset(any())).thenReturn(assetRestSearchItem);
+    when(applicationDataFilterFormService.getPrefilledAsset(any())).thenReturn(assetRestSearchItem);
   }
 
   @Test

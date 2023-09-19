@@ -26,11 +26,13 @@ import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
+import uk.co.nstauthority.fieldconsents.assets.AssetRestController;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
@@ -43,7 +45,7 @@ class SearchControllerTest extends AbstractControllerTest {
   @MockBean
   private SearchService searchService;
   @MockBean
-  private SearchFilterFormService searchFilterFormService;
+  private ApplicationDataFilterFormService applicationDataFilterFormService;
 
   private SearchFilterForm form;
 
@@ -51,12 +53,16 @@ class SearchControllerTest extends AbstractControllerTest {
 
   private RestSearchItem orgUnitRestSearchItem;
 
+  private RestSearchItem assetFieldRestSearchItem;
+
   @BeforeEach
   void setUp() {
     form = new SearchFilterForm();
     searchResultItems = List.of(ApplicationDataItemUtil.getSearchResultItem());
     orgUnitRestSearchItem = ApplicationDataFilterFormTestUtil.ORGANISATION_REST_SEARCH_ITEM;
-    when(searchFilterFormService.getPrefilledOrganisation(any())).thenReturn(orgUnitRestSearchItem);
+    when(applicationDataFilterFormService.getPrefilledOrganisation(any())).thenReturn(orgUnitRestSearchItem);
+    assetFieldRestSearchItem = ApplicationDataFilterFormTestUtil.FIELD_REST_SEARCH_ITEM;
+    when(applicationDataFilterFormService.getPrefilledAsset(any())).thenReturn(assetFieldRestSearchItem);
     when(permissionService.hasPermission(user, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(true);
   }
@@ -150,6 +156,9 @@ class SearchControllerTest extends AbstractControllerTest {
         .containsEntry("prefilledOperator", orgUnitRestSearchItem)
         .containsEntry("operatorSearchRestUrl",
             ReverseRouter.route(on(OrganisationUnitRestController.class).getOrganisationUnitsForViewer(null, null)))
+        .containsEntry("prefilledField", assetFieldRestSearchItem)
+        .containsEntry("fieldAssetSearchRestUrl",
+            ReverseRouter.route(on(AssetRestController.class).searchFieldAssets(null)))
         .containsEntry("pageTitle", SEARCH_TITLE);
   }
 

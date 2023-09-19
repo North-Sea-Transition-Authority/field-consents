@@ -12,11 +12,13 @@ import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
+import uk.co.nstauthority.fieldconsents.assets.AssetRestController;
 import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.HasPermission;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormService;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
@@ -33,14 +35,14 @@ public class SearchController {
 
   private final SearchService searchService;
 
-  private final SearchFilterFormService searchFilterFormService;
+  private final ApplicationDataFilterFormService applicationDataFilterFormService;
 
   SearchController(TeamService teamService,
                    SearchService searchService,
-                   SearchFilterFormService searchFilterFormService) {
+                   ApplicationDataFilterFormService applicationDataFilterFormService) {
     this.teamService = teamService;
     this.searchService = searchService;
-    this.searchFilterFormService = searchFilterFormService;
+    this.applicationDataFilterFormService = applicationDataFilterFormService;
   }
 
   @GetMapping
@@ -52,7 +54,8 @@ public class SearchController {
     var appStatuses = ApplicationVersionStatus.getSearchOptions();
     var appTypes = ApplicationType.getDisplayableOptions();
     var durationTypes = ConsentLengthType.getConsentLengthOptions();
-    var prefilledOperator = searchFilterFormService.getPrefilledOrganisation(form.getOperatorId());
+    var prefilledField = applicationDataFilterFormService.getPrefilledAsset(form.getFieldAssetKey());
+    var prefilledOperator = applicationDataFilterFormService.getPrefilledOrganisation(form.getOperatorId());
     var assetTypesWithShore = AssetTypeWithShore.getDisplayableOptions();
     var aceStatuses = AceFlagStatus.getDisplayableOptions();
 
@@ -66,6 +69,8 @@ public class SearchController {
         .addObject("prefilledOperator", prefilledOperator)
         .addObject("operatorSearchRestUrl",
             ReverseRouter.route(on(OrganisationUnitRestController.class).getOrganisationUnitsForViewer(null, null)))
+        .addObject("prefilledField", prefilledField)
+        .addObject("fieldAssetSearchRestUrl", ReverseRouter.route(on(AssetRestController.class).searchFieldAssets(null)))
         .addObject("assetTypesWithShore", assetTypesWithShore)
         .addObject("form", form)
         .addObject("pageTitle", SEARCH_TITLE);
