@@ -38,6 +38,7 @@ steps:
     image: quay.io/testcontainers/dind-drone-plugin
     privileged: true
     environment:
+      TZ: Europe/London
       CI_WORKSPACE: /drone/src
       GRADLE_USER_HOME: /drone/src/gradle_cache
       DOCKER_CONFIG_JSON:
@@ -263,6 +264,7 @@ steps:
     privileged: true
     # See https://confluence.fivium.co.uk/display/JAVA/Testcontainers
     environment:
+      TZ: Europe/London
       CI_WORKSPACE: /drone/src
       GRADLE_USER_HOME: /drone/src/gradle_cache
       DOCKER_CONFIG_JSON:

@@ -1,7 +1,6 @@
 package uk.co.nstauthority.fieldconsents;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -11,8 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
-import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.authorisation.ApplicationAccessService;
 import uk.co.nstauthority.fieldconsents.authorisation.ApplicationHandlerInterceptor;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
@@ -42,13 +39,8 @@ public abstract class AbstractApplicationControllerTest extends AbstractControll
   @MockBean
   protected ApplicationAccessService applicationAccessService;
 
-  protected ServiceUserDetail user;
-
   @BeforeEach
   void setupAbstractApplicationControllerTest(TestInfo testInfo) {
-    doCallRealMethod().when(userDetailService).getUserDetail();
-    user = ServiceUserDetailTestUtil.Builder().build();
-
     var securityTestAnnotation = testInfo
         .getTestMethod().map(method -> method.getAnnotation(SecurityTest.class));
 

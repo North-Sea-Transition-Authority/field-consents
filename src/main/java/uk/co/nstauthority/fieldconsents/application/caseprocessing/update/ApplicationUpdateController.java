@@ -3,7 +3,6 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.update;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.APPLICATION_UPDATE_REQUEST;
 
-import java.time.Clock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
@@ -41,21 +40,17 @@ public class ApplicationUpdateController {
 
   private final ApplicationUpdateRequestFormValidator applicationUpdateRequestFormValidator;
 
-  private final Clock clock;
-
   @Autowired
   public ApplicationUpdateController(ApplicationService applicationService,
                                      ApplicationVersionService applicationVersionService,
                                      ApplicationUpdateService applicationUpdateService,
                                      ApplicationSummaryService applicationSummaryService,
-                                     ApplicationUpdateRequestFormValidator applicationUpdateRequestFormValidator,
-                                     Clock clock) {
+                                     ApplicationUpdateRequestFormValidator applicationUpdateRequestFormValidator) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.applicationUpdateService = applicationUpdateService;
     this.applicationSummaryService = applicationSummaryService;
     this.applicationUpdateRequestFormValidator = applicationUpdateRequestFormValidator;
-    this.clock = clock;
   }
 
   @GetMapping("application-update-request")
@@ -103,7 +98,7 @@ public class ApplicationUpdateController {
     }
 
     var deadlineInstant = DateUtils.datePickerWithTimeStringToInstant(
-        form.getDeadlineDate(), form.getDeadlineHours(), form.getDeadlineMinutes(), clock);
+        form.getDeadlineDate(), form.getDeadlineHours(), form.getDeadlineMinutes());
 
     applicationUpdateService.saveApplicationUpdateRequest(applicationVersion, deadlineInstant,
         form.getRequestText().getInputValue(), user);

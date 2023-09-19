@@ -1,11 +1,11 @@
 package uk.co.nstauthority.fieldconsents.validation;
 
+import static uk.co.nstauthority.fieldconsents.formatting.DateUtils.DEFAULT_ZONE_ID;
 import static uk.co.nstauthority.fieldconsents.validation.FieldValidationErrorCodes.REQUIRED;
 
 import java.time.Clock;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.Objects;
 import org.springframework.util.StringUtils;
@@ -68,9 +68,11 @@ public class ValidatorUtils {
     if (errors.getFieldErrors(dateFieldName).isEmpty()
         && errors.getFieldErrors(hoursFieldName).isEmpty()
         && errors.getFieldErrors(minutesFieldName).isEmpty()) {
-      var dateTime = DateUtils.datePickerWithTimeStringToDateTime(dateStr, hoursStr, minutesStr);
-      if (dateTime
-          .isBefore(LocalDateTime.ofInstant(clock.instant(), ZoneId.systemDefault()).plusHours(mustBeHoursAhead))) {
+
+      var selectedDateTime = DateUtils.datePickerWithTimeStringToDateTime(dateStr, hoursStr, minutesStr);
+      var futureDateTime = ZonedDateTime.ofInstant(clock.instant(), DEFAULT_ZONE_ID).plusHours(mustBeHoursAhead);
+
+      if (selectedDateTime.isBefore(futureDateTime)) {
         errors.rejectValue(hoursFieldName, FieldValidationErrorCodes.BEFORE_SOME_DATE_TIME.errorCode(hoursFieldName),
             DATE_TIME_HOURS_AHEAD_ERROR_MESSAGE.formatted(
                 StringUtils.capitalize(displayName), mustBeHoursAhead, addConditionalPlural(mustBeHoursAhead)));
@@ -92,7 +94,7 @@ public class ValidatorUtils {
     try {
       if (errors.getFieldErrors(dateFieldName).isEmpty()) {
         var date = DateUtils.datePickerStringToDate(dateStr);
-        if (date.isBefore(LocalDate.ofInstant(clock.instant(), ZoneId.systemDefault()))) {
+        if (date.isBefore(LocalDate.ofInstant(clock.instant(), DEFAULT_ZONE_ID))) {
           errors.rejectValue(dateFieldName, FieldValidationErrorCodes.BEFORE_TODAY.errorCode(dateFieldName),
               DATE_BEFORE_TODAY_ERROR_MESSAGE.formatted(StringUtils.capitalize(displayName)));
         }

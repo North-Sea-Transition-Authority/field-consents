@@ -3,7 +3,7 @@ package uk.co.nstauthority.fieldconsents.assets.fields;
 import uk.co.fivium.energyportalapi.generated.types.Field;
 import uk.co.fivium.energyportalapi.generated.types.FieldStatus;
 
-record FieldStatusJson(
+public record FieldStatusJson(
     FieldStatus status,
     String statusDisplayName
 ) {

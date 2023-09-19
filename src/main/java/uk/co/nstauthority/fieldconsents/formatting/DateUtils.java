@@ -1,6 +1,5 @@
 package uk.co.nstauthority.fieldconsents.formatting;
 
-import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -8,16 +7,23 @@ import java.time.Month;
 import java.time.Period;
 import java.time.YearMonth;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
+import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 
 public class DateUtils {
 
+  public static final ZoneId DEFAULT_ZONE_ID = ZoneId.systemDefault();
+  public static final Locale DEFAULT_LOCALE = Locale.UK;
+
   public static final String SHORT_DATE = uk.co.fivium.formlibrary.validator.date.DateUtils.SHORT_DATE;
+  public static final String LONG_DATE = uk.co.fivium.formlibrary.validator.date.DateUtils.LONG_DATE;
 
   public static final String DATE_TIME = "d MMM yyyy HH:mm";
 
@@ -31,22 +37,20 @@ public class DateUtils {
     throw new IllegalStateException("Utility class");
   }
 
-  public static String format(LocalDate date, String format) {
-    DateTimeFormatter customFormatter = DateTimeFormatter.ofPattern(format).withZone(ZoneId.systemDefault());
-    return date != null ? customFormatter.format(date) : "";
-  }
-
-  public static String format(YearMonth yearMonth, String format) {
-    return yearMonth != null ? yearMonth.format(DateTimeFormatter.ofPattern(format).withZone(ZoneId.systemDefault())) : "";
-  }
-
   public static String format(Month month, TextStyle textStyle) {
-    return month.getDisplayName(textStyle, Locale.ENGLISH);
+    return month.getDisplayName(textStyle, DEFAULT_LOCALE);
   }
 
-  public static String format(Instant instant, String format) {
-    DateTimeFormatter customFormatter = DateTimeFormatter.ofPattern(format).withZone(ZoneId.systemDefault());
-    return instant != null ? customFormatter.format(instant) : "";
+  public static String format(TemporalAccessor temporalAccessor, String format) {
+    if (Objects.isNull(temporalAccessor)) {
+      return "";
+    }
+
+    return DateTimeFormatter
+        .ofPattern(format)
+        .withZone(DEFAULT_ZONE_ID)
+        .withLocale(DEFAULT_LOCALE)
+        .format(temporalAccessor);
   }
 
   public static String formatShort(Month month) {
@@ -106,26 +110,22 @@ public class DateUtils {
     return "%s %s:%s".formatted(dateStr, hoursStr, minutesStr);
   }
 
-  public static LocalDateTime datePickerWithTimeStringToDateTime(String dateStr, String hoursStr, String minutesStr) {
+  public static ZonedDateTime datePickerWithTimeStringToDateTime(String dateStr, String hoursStr, String minutesStr) {
     var dateTimeStr = constructDatePickerWithTimeString(dateStr, hoursStr, minutesStr);
     return datePickerWithTimeStringToDateTime(dateTimeStr);
   }
 
-  public static LocalDateTime datePickerWithTimeStringToDateTime(String dateTimeStr) {
-    return LocalDateTime.parse(dateTimeStr, DateTimeFormatter.ofPattern(DATE_PICKER_WITH_TIME_FORMAT));
+  public static ZonedDateTime datePickerWithTimeStringToDateTime(String dateTimeStr) {
+    var formatter = DateTimeFormatter.ofPattern(DATE_PICKER_WITH_TIME_FORMAT);
+    return LocalDateTime.parse(dateTimeStr, formatter).atZone(DEFAULT_ZONE_ID);
   }
 
-  public static Instant datePickerWithTimeStringToInstant(String dateStr,
-                                                          String hoursStr,
-                                                          String minutesStr,
-                                                          Clock clock) {
+  public static Instant datePickerWithTimeStringToInstant(String dateStr, String hoursStr, String minutesStr) {
     var dateTimeStr = constructDatePickerWithTimeString(dateStr, hoursStr, minutesStr);
-    return datePickerWithTimeStringToInstant(dateTimeStr, clock);
+    return datePickerWithTimeStringToInstant(dateTimeStr);
   }
 
-  public static Instant datePickerWithTimeStringToInstant(String dateTimeStr,
-                                                          Clock clock) {
-    var zoneOffset = ZoneId.systemDefault().getRules().getOffset(clock.instant());
-    return datePickerWithTimeStringToDateTime(dateTimeStr).toInstant(zoneOffset);
+  public static Instant datePickerWithTimeStringToInstant(String dateTimeStr) {
+    return datePickerWithTimeStringToDateTime(dateTimeStr).toInstant();
   }
 }

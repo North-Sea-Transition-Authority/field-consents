@@ -185,7 +185,7 @@ class TechnicalReviewControllerTest extends AbstractApplicationControllerTest {
     var deadlineHoursStr = String.valueOf(CURRENT_DATE_TIME.plusHours(DEADLINE_AHEAD_HOURS).getHour());
     var deadlineMinutesStr = String.valueOf(CURRENT_DATE_TIME.getMinute());
     var deadlineInstant =
-        DateUtils.datePickerWithTimeStringToInstant(deadlineDateStr, deadlineHoursStr, deadlineMinutesStr, clock);
+        DateUtils.datePickerWithTimeStringToInstant(deadlineDateStr, deadlineHoursStr, deadlineMinutesStr);
 
     mockMvc.perform(
             post(ReverseRouter.route(on(TechnicalReviewController.class)

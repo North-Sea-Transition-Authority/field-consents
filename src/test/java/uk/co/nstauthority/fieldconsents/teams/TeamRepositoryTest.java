@@ -34,7 +34,7 @@ class TeamRepositoryTest extends AbstractIntegrationTest {
         .build();
 
     var otherTeam = TeamTestUtil.Builder()
-        .withTeamType(null)
+        .withTeamType(TeamType.OPRED)
         .withId(null)
         .build();
 

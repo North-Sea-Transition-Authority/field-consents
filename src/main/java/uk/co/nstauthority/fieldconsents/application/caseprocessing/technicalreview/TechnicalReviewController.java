@@ -3,7 +3,6 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalrev
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEW_REQUEST;
 
-import java.time.Clock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
@@ -44,8 +43,6 @@ public class TechnicalReviewController {
 
   private final EnergyPortalUserService energyPortalUserService;
 
-  private final Clock clock;
-
   @Autowired
   public TechnicalReviewController(ApplicationService applicationService,
                                    ApplicationVersionService applicationVersionService,
@@ -53,8 +50,7 @@ public class TechnicalReviewController {
                                    TechnicalReviewAssignmentService technicalReviewAssignmentService,
                                    TechnicalReviewRequestFormValidator technicalReviewRequestFormValidator,
                                    TeamMemberViewService teamMemberViewService,
-                                   EnergyPortalUserService energyPortalUserService,
-                                   Clock clock) {
+                                   EnergyPortalUserService energyPortalUserService) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.technicalReviewService = technicalReviewService;
@@ -62,7 +58,6 @@ public class TechnicalReviewController {
     this.technicalReviewRequestFormValidator = technicalReviewRequestFormValidator;
     this.teamMemberViewService = teamMemberViewService;
     this.energyPortalUserService = energyPortalUserService;
-    this.clock = clock;
   }
 
   @GetMapping("technical-review-request")
@@ -114,7 +109,7 @@ public class TechnicalReviewController {
         ServiceUserDetail.from(energyPortalUserService.getByWuaId(form.getTechnicalReviewerWuaId()));
 
     var deadlineInstant = DateUtils.datePickerWithTimeStringToInstant(
-        form.getDeadlineDate(), form.getDeadlineHours(), form.getDeadlineMinutes(), clock);
+        form.getDeadlineDate(), form.getDeadlineHours(), form.getDeadlineMinutes());
 
     technicalReviewService.saveTechnicalReviewRequest(applicationVersion, deadlineInstant,
         form.getRequestText().getInputValue(), technicalReviewerUser, user);

@@ -2,7 +2,6 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
-import java.time.Clock;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,20 +33,17 @@ public class ConsultationRequestController {
   private final ApplicationVersionService applicationVersionService;
   private final ConsultationRequestFormValidator validator;
   private final ConsultationService consultationService;
-  private final Clock clock;
 
   ConsultationRequestController(
       ApplicationService applicationService,
       ApplicationVersionService applicationVersionService,
       ConsultationRequestFormValidator validator,
-      ConsultationService consultationService,
-      Clock clock
+      ConsultationService consultationService
   ) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.validator = validator;
     this.consultationService = consultationService;
-    this.clock = clock;
   }
 
   @GetMapping
@@ -75,8 +71,7 @@ public class ConsultationRequestController {
     var deadline = DateUtils.datePickerWithTimeStringToInstant(
         form.deadlineDate(),
         form.deadlineHours(),
-        form.deadlineMinutes(),
-        clock
+        form.deadlineMinutes()
     );
 
     consultationService.requestConsultation(applicationVersion, deadline, userDetail);

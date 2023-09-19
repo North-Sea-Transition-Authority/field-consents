@@ -9,7 +9,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 
 @SuppressWarnings("rawtypes")
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("integration-test")
+@ActiveProfiles({"development", "integration-test"})
 @AutoConfigureFileUploadLibrary
 public abstract class AbstractIntegrationTest {
   protected static PostgreSQLContainer fcsDb;

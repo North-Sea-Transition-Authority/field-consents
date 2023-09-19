@@ -23,7 +23,7 @@ public class Containers {
   }
 
   private static PostgreSQLContainer startUpDbContainer(Slf4jLogConsumer logConsumer) {
-    PostgreSQLContainer dbContainer = new PostgreSQLContainer(DockerImageName.parse("postgres:14.2-alpine"))
+    PostgreSQLContainer dbContainer = new PostgreSQLContainer(DockerImageName.parse("postgres:14.3-alpine"))
         .withDatabaseName("fcs")
         .withUsername("fcs_app");
     dbContainer.withNetwork(Containers.NETWORK).withNetworkAliases("database");

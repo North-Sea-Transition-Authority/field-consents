@@ -5,7 +5,6 @@ import static org.mockito.Mockito.doCallRealMethod;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -45,12 +44,11 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.PermissionMan
 import uk.co.nstauthority.fieldconsents.validation.FormErrorSummaryService;
 import uk.co.nstauthority.fieldconsents.validation.ValidationErrorOrderingService;
 
+@WebMvcTest
 @ActiveProfiles("test")
-@AutoConfigureMockMvc
 @IncludeServiceBrandingConfigurationProperties
 @IncludeEnergyPortalConfigurationProperties
 @WithDefaultPageControllerAdvice
-@WebMvcTest
 @Import({
     AbstractControllerTest.TestConfig.class,
     WebMvcConfiguration.class,
@@ -106,7 +104,6 @@ public abstract class AbstractControllerTest {
 
   @MockBean
   protected CaseProcessingActionService caseProcessingActionService;
-
 
   protected ServiceUserDetail user;
 

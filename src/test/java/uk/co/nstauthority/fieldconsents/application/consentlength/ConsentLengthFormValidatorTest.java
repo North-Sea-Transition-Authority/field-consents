@@ -232,7 +232,7 @@ class ConsentLengthFormValidatorTest {
         entry("shortTermStartDate.monthInput.inputValue", Collections.singletonList("")),
         entry("shortTermStartDate.yearInput.inputValue", Collections.singletonList("")),
         entry("shortTermEndDate.dayInput.inputValue", Collections.singletonList(SHORT_TERM_END_DATE_AFTER
-            .formatted(DateUtils.format(today, DateUtils.SHORT_DATE)))),
+            .formatted(DateUtils.format(today, DateUtils.LONG_DATE)))),
         entry("shortTermEndDate.monthInput.inputValue", Collections.singletonList("")),
         entry("shortTermEndDate.yearInput.inputValue", Collections.singletonList(""))
     );
@@ -259,7 +259,7 @@ class ConsentLengthFormValidatorTest {
         entry("shortTermStartDate.monthInput.inputValue", Collections.singletonList("")),
         entry("shortTermStartDate.yearInput.inputValue", Collections.singletonList("")),
         entry("shortTermEndDate.dayInput.inputValue", Collections.singletonList(SHORT_TERM_END_DATE_AFTER
-            .formatted(DateUtils.format(LocalDate.now(), DateUtils.SHORT_DATE)))),
+            .formatted(DateUtils.format(LocalDate.now(), DateUtils.LONG_DATE)))),
         entry("shortTermEndDate.monthInput.inputValue", Collections.singletonList("")),
         entry("shortTermEndDate.yearInput.inputValue", Collections.singletonList(""))
     );
