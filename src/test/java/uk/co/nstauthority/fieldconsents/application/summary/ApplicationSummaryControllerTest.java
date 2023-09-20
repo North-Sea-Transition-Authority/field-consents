@@ -12,9 +12,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ALLOCATE_CONSULTATION;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ASSIGN_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.RESPOND_TO_CONSULTATION;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
@@ -32,16 +34,30 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.ConsulteeCaseProcessingController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.IndustryCaseProcessingController;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @ContextConfiguration(classes = ApplicationSummaryController.class)
 class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest {
 
   private static final String DUMMY_APP_REF = "DUMMY_APP_REF";
+
+  private static final RolePermission[] REGULATOR_CASE_PROCESSING_ROLES = new RolePermission[] {
+      PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS, TECHNICAL_REVIEW_FCS_APPLICATIONS
+  };
+
+  private static final RolePermission[] CONSULTEE_CASE_PROCESSING_ROLES = new RolePermission[] {
+      ALLOCATE_CONSULTATION, RESPOND_TO_CONSULTATION
+  };
+
+  private static final RolePermission[] INDUSTRY_CASE_PROCESSING_RULES = new RolePermission[] {
+      EDIT_FCS_APPLICATIONS
+  };
 
   @MockBean
   private ApplicationSummaryService applicationSummaryService;
@@ -52,39 +68,46 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
   @ParameterizedTest
   @MethodSource("getSubmittedApplicationVersions")
   void getApplicationSummary_whenSubmittedApplicationAndUserHasNoProcessPermission_thenGetSummaryView(ApplicationVersion applicationVersion) throws Exception {
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
-        .thenReturn(applicationVersion);
-    when(applicationAccessService.hasApplicationPermission(
-        user, applicationVersion, EDIT_FCS_APPLICATIONS
-    )).thenReturn(false);
-    when(applicationAccessService.hasApplicationPermission(
-        user, applicationVersion, PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS, TECHNICAL_REVIEW_FCS_APPLICATIONS
-    )).thenReturn(false);
-
-    when(applicationSummaryService.getSummarySections(applicationVersion))
-        .thenReturn(Collections.emptyList());
-
-    when(applicationService.generateApplicationReference(applicationVersion))
-        .thenReturn(DUMMY_APP_REF);
+    // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, INDUSTRY_CASE_PROCESSING_RULES)).thenReturn(false);
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, REGULATOR_CASE_PROCESSING_ROLES)).thenReturn(false);
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, CONSULTEE_CASE_PROCESSING_ROLES)).thenReturn(false);
+    when(applicationSummaryService.getSummarySections(applicationVersion)).thenReturn(Collections.emptyList());
+    when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(DUMMY_APP_REF);
 
     getApplicationSummaryAndCheckModel(applicationVersion, DUMMY_APP_REF);
   }
 
   @ParameterizedTest
+  @MethodSource("getSubmittedApplicationVersions")
+  void getApplicationSummary_whenSubmittedApplicationAndUserIsConsultee_thenGetConsulteeCaseProcessing(ApplicationVersion applicationVersion) throws Exception {
+    // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, REGULATOR_CASE_PROCESSING_ROLES)).thenReturn(false);
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, CONSULTEE_CASE_PROCESSING_ROLES)).thenReturn(true);
+    when(applicationSummaryService.getSummarySections(applicationVersion)).thenReturn(Collections.emptyList());
+    when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(DUMMY_APP_REF);
+
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationSummaryController.class)
+            .getApplicationSummary(APPLICATION_ID, null)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(ReverseRouter.route(on(ConsulteeCaseProcessingController.class)
+            .getApplicationCaseProcessing(APPLICATION_ID, null))));
+  }
+
+  @ParameterizedTest
   @MethodSource("getInProgressApplicationVersions")
   void getApplicationSummary_whenInProgressAndUserHasNoEditPermission_thenGetSummaryView(ApplicationVersion applicationVersion) throws Exception {
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
-        .thenReturn(applicationVersion);
-    when(applicationAccessService.hasApplicationPermission(
-        user, applicationVersion, EDIT_FCS_APPLICATIONS
-    )).thenReturn(false);
-    when(applicationAccessService.hasApplicationPermission(
-        user, applicationVersion, PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS, TECHNICAL_REVIEW_FCS_APPLICATIONS
-    )).thenReturn(true);
+    // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, INDUSTRY_CASE_PROCESSING_RULES)).thenReturn(false);
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, REGULATOR_CASE_PROCESSING_ROLES)).thenReturn(true);
 
     getApplicationSummaryAndCheckModel(applicationVersion, "Application summary");
   }
@@ -115,13 +138,10 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
   @ParameterizedTest
   @MethodSource("getInProgressApplicationVersions")
   void getApplicationSummary_whenInProgressApplication_thenRedirectToTaskList(ApplicationVersion applicationVersion) throws Exception {
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
-        .thenReturn(applicationVersion);
-    when(applicationAccessService.hasApplicationPermission(
-        user, applicationVersion, EDIT_FCS_APPLICATIONS
-    )).thenReturn(true);
+    // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, INDUSTRY_CASE_PROCESSING_RULES)).thenReturn(true);
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationSummaryController.class)
             .getApplicationSummary(APPLICATION_ID, null)))
@@ -135,13 +155,10 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
   @ParameterizedTest
   @MethodSource("getInProgressV2ApplicationVersions")
   void getApplicationSummary_whenInProgressV2Application_thenRedirect(ApplicationVersion applicationVersion) throws Exception {
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
-        .thenReturn(applicationVersion);
-    when(applicationAccessService.hasApplicationPermission(
-        user, applicationVersion, EDIT_FCS_APPLICATIONS
-    )).thenReturn(true);
+    // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, INDUSTRY_CASE_PROCESSING_RULES)).thenReturn(true);
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationSummaryController.class)
             .getApplicationSummary(APPLICATION_ID, null)))
@@ -155,16 +172,12 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
   @ParameterizedTest
   @MethodSource("getSubmittedApplicationVersions")
   void getApplicationSummary_whenSubmittedAndUserHaEditPermission_thenRedirectToIndustryCaseProcessing(ApplicationVersion applicationVersion) throws Exception {
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
-        .thenReturn(applicationVersion);
-    when(applicationAccessService.hasApplicationPermission(
-        user, applicationVersion, EDIT_FCS_APPLICATIONS
-    )).thenReturn(true);
-    when(applicationAccessService.hasApplicationPermission(
-        user, applicationVersion, PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS, TECHNICAL_REVIEW_FCS_APPLICATIONS
-    )).thenReturn(false);
+    // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, CONSULTEE_CASE_PROCESSING_ROLES)).thenReturn(false);
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, INDUSTRY_CASE_PROCESSING_RULES)).thenReturn(true);
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, REGULATOR_CASE_PROCESSING_ROLES)).thenReturn(false);
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationSummaryController.class)
             .getApplicationSummary(APPLICATION_ID, null)))
@@ -172,23 +185,17 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(IndustryCaseProcessingController.class)
-            .getIndustryCaseProcessing(APPLICATION_ID, null)))
-        );
+            .getIndustryCaseProcessing(APPLICATION_ID, null))));
   }
 
   @ParameterizedTest
   @MethodSource("getSubmittedApplicationVersions")
   void getApplicationSummary_whenSubmittedAndUserHasProcessPermission_thenRedirectToApplicationCaseProcessing(ApplicationVersion applicationVersion) throws Exception {
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
-        .thenReturn(applicationVersion);
-    when(applicationAccessService.hasApplicationPermission(
-        user, applicationVersion, EDIT_FCS_APPLICATIONS
-    )).thenReturn(true);
-    when(applicationAccessService.hasApplicationPermission(
-        user, applicationVersion, PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS, TECHNICAL_REVIEW_FCS_APPLICATIONS
-    )).thenReturn(true);
+    // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, INDUSTRY_CASE_PROCESSING_RULES)).thenReturn(true);
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, REGULATOR_CASE_PROCESSING_ROLES)).thenReturn(true);
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationSummaryController.class)
             .getApplicationSummary(APPLICATION_ID, null)))
@@ -196,8 +203,7 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .getApplicationCaseProcessing(APPLICATION_ID, null)))
-        );
+            .getApplicationCaseProcessing(APPLICATION_ID, null))));
   }
 
   @SecurityTest

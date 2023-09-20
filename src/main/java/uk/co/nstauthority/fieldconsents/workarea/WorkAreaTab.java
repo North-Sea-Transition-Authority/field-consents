@@ -4,6 +4,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ALLOCATE_CONSULTATION;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ASSIGN_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.RESPOND_TO_CONSULTATION;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS;
 
 import java.util.EnumSet;
@@ -68,7 +69,16 @@ public enum WorkAreaTab {
       ReverseRouter.route(on(WorkAreaController.class).getWorkAreaUnassignedConsultations(null, null)),
       70,
       EnumSet.of(ALLOCATE_CONSULTATION),
-      ApplicationWorkAreaPriorityGroup.CONSULTEE);
+      ApplicationWorkAreaPriorityGroup.CONSULTEE),
+  MY_CONSULTATIONS(
+      "My consultations",
+      "myConsultations",
+      "my-consultations",
+      ReverseRouter.route(on(WorkAreaController.class).getWorkAreaMyConsultations(null, null)),
+      80,
+      EnumSet.of(RESPOND_TO_CONSULTATION),
+      ApplicationWorkAreaPriorityGroup.CONSULTEE)
+  ;
 
   private final String label;
   private final String value;

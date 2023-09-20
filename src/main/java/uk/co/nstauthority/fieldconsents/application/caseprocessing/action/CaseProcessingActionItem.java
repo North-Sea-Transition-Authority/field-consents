@@ -6,6 +6,7 @@ import java.util.function.Function;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.aceflag.AceFlagController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casenotes.CaseNotesController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.allocation.ConsultationAllocationController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.request.ConsultationRequestController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewAssignmentController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewController;
@@ -40,8 +41,6 @@ public enum CaseProcessingActionItem implements Displayable {
   CASE_OFFICER_REASSIGN_OWNERSHIP("Reassign ownership", 1, false, true, null,
       applicationId -> ReverseRouter.route(on(CaseAssignmentController.class)
           .getCaseAssignment(applicationId, null))),
-  CASE_OFFICER_REQUEST_CONSULTATION("Request consultation", 99, false, false, null,
-      applicationId -> ReverseRouter.route(on(ConsultationRequestController.class).getConsultationRequestForm(applicationId))),
   // Regulator user actions
   REGULATOR_ADD_CASE_NOTE("Add case note", 99, false, false, null,
       applicationId -> ReverseRouter.route(on(CaseNotesController.class)
@@ -62,7 +61,14 @@ public enum CaseProcessingActionItem implements Displayable {
           .getApplicationWithdrawalRequest(applicationId))),
   OPERATOR_UPDATE_APPLICATION("Update application", 1, false, true, null,
       applicationId -> ReverseRouter.route(on(ApplicationStartUpdateController.class)
-          .updateApplicationEntryPoint(applicationId)));
+          .updateApplicationEntryPoint(applicationId))),
+  // Consultation actions
+  CONSULTATION_REQUEST("Request consultation", 99, true, false, null,
+      applicationId -> ReverseRouter.route(on(ConsultationRequestController.class).getConsultationRequestForm(applicationId))),
+  CONSULTATION_MANAGE_RESPONDER("Manage consultation responder", 1, false, true, null,
+      applicationId -> ReverseRouter.route(on(ConsultationAllocationController.class)
+          .getResponderAllocationForm(applicationId)))
+  ;
 
   private final String displayName;
   private final int displayOrder;

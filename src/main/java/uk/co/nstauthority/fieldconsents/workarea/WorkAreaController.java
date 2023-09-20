@@ -5,6 +5,7 @@ import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.ALL_APPLICAT
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.ALL_CONSULTATIONS;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.ALL_TECHNICAL_REVIEWS;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.MY_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.MY_CONSULTATIONS;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.MY_TECHNICAL_REVIEWS;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.UNASSIGNED_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.UNASSIGNED_CONSULTATIONS;
@@ -88,6 +89,9 @@ public class WorkAreaController {
     if (teamService.isConsulteeUser(user)) {
       if (permissionService.hasPermission(user, EnumSet.of(RolePermission.ALLOCATE_CONSULTATION))) {
         return renderConsulteeWorkAreaOnTab(filter, user, ALL_CONSULTATIONS);
+      }
+      if (permissionService.hasPermission(user, EnumSet.of(RolePermission.RESPOND_TO_CONSULTATION))) {
+        return renderConsulteeWorkAreaOnTab(filter, user, MY_CONSULTATIONS);
       }
     }
 
@@ -192,6 +196,19 @@ public class WorkAreaController {
   public ModelAndView postWorkAreaUnassignedConsultations(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
                                                           ServiceUserDetail user) {
     return ReverseRouter.redirect(on(WorkAreaController.class).getWorkAreaUnassignedConsultations(filter, user));
+  }
+
+  @GetMapping("my-consultations")
+  @HasPermission(permissions = RolePermission.RESPOND_TO_CONSULTATION)
+  public ModelAndView getWorkAreaMyConsultations(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
+                                                 ServiceUserDetail user) {
+    return renderConsulteeWorkAreaOnTab(filter, user, MY_CONSULTATIONS);
+  }
+
+  @PostMapping("my-consultations")
+  @HasPermission(permissions = RolePermission.RESPOND_TO_CONSULTATION)
+  public ModelAndView postWorkAreaMyConsultations(@ModelAttribute("workAreaFilter") WorkAreaFilter filter) {
+    return ReverseRouter.redirect(on(WorkAreaController.class).getWorkAreaMyConsultations(null, null));
   }
 
   private ModelAndView renderRegulatorWorkAreaOnTab(WorkAreaFilter filter,

@@ -26,7 +26,7 @@ import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @Controller
 @RequestMapping("applications/{applicationId}/request-consultation")
-@ActionEndPoint(CaseProcessingActionItem.CASE_OFFICER_REQUEST_CONSULTATION)
+@ActionEndPoint(CaseProcessingActionItem.CONSULTATION_REQUEST)
 public class ConsultationRequestController {
 
   private final ApplicationService applicationService;

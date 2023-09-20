@@ -1,12 +1,16 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation;
 
+import java.util.Optional;
 import org.springframework.data.repository.CrudRepository;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.duplication.NotDuplicationSource;
 
 @NotDuplicationSource
 interface ConsultationRepository extends CrudRepository<Consultation, Integer> {
 
-  boolean existsByRequestApplicationVersion(ApplicationVersion applicationVersion);
+  Optional<Consultation> findByRequestApplicationVersion_ApplicationAndStatus(
+      Application application,
+      ConsultationStatus status
+  );
 
 }

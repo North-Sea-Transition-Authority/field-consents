@@ -1,6 +1,12 @@
 package uk.co.nstauthority.fieldconsents.application.summary;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ALLOCATE_CONSULTATION;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ASSIGN_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.RESPOND_TO_CONSULTATION;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -8,9 +14,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.ConsulteeCaseProcessingController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.IndustryCaseProcessingController;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
@@ -25,17 +33,16 @@ import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 public class ApplicationSummaryController {
 
   private final ApplicationVersionService applicationVersionService;
-
   private final ApplicationSummaryService applicationSummaryService;
-
   private final ApplicationAccessService applicationAccessService;
-
   private final ApplicationService applicationService;
 
-  ApplicationSummaryController(ApplicationVersionService applicationVersionService,
-                               ApplicationSummaryService applicationSummaryService,
-                               ApplicationAccessService applicationAccessService,
-                               ApplicationService applicationService) {
+  ApplicationSummaryController(
+      ApplicationVersionService applicationVersionService,
+      ApplicationSummaryService applicationSummaryService,
+      ApplicationAccessService applicationAccessService,
+      ApplicationService applicationService
+  ) {
     this.applicationVersionService = applicationVersionService;
     this.applicationSummaryService = applicationSummaryService;
     this.applicationAccessService = applicationAccessService;
@@ -44,37 +51,17 @@ public class ApplicationSummaryController {
 
   @GetMapping("summary")
   @HasApplicationPermission(permissions = RolePermission.VIEW_FCS_APPLICATIONS)
-  public ModelAndView getApplicationSummary(@PathVariable Integer applicationId,
-                                            ServiceUserDetail user) {
-
+  public ModelAndView getApplicationSummary(@PathVariable Integer applicationId, ServiceUserDetail user) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
 
-    var userHasEditPermission = applicationAccessService
-        .hasApplicationPermission(user, applicationVersion, RolePermission.EDIT_FCS_APPLICATIONS);
+    return switch (applicationVersion.getStatus()) {
+      case IN_PROGRESS -> getInProgressModelAndView(applicationVersion, user);
+      case SUBMITTED -> getSubmittedModelAndView(applicationVersion, user);
+      default -> getSummaryModelAndView(applicationVersion);
+    };
+  }
 
-    if (ApplicationVersionStatus.IN_PROGRESS.equals(applicationVersion.getStatus())
-        && userHasEditPermission) {
-      return applicationVersion.isUpdateVersion()
-          ? ReverseRouter.redirect(on(IndustryCaseProcessingController.class).getIndustryCaseProcessing(applicationId, null))
-          : ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
-    }
-
-    var userHasRegulatorCaseProcessingPermission = applicationAccessService
-        .hasApplicationPermission(user, applicationVersion,
-            RolePermission.PROCESS_FCS_APPLICATIONS,
-            RolePermission.ASSIGN_FCS_APPLICATIONS,
-            RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS);
-
-    if (ApplicationVersionStatus.SUBMITTED.equals(applicationVersion.getStatus())) {
-      if (userHasRegulatorCaseProcessingPermission) {
-        return ReverseRouter.redirect(on(ApplicationCaseProcessingController.class)
-            .getApplicationCaseProcessing(applicationId, null));
-      } else if (userHasEditPermission) {
-        return ReverseRouter.redirect(on(IndustryCaseProcessingController.class)
-            .getIndustryCaseProcessing(applicationId, null));
-      }
-    }
-
+  private ModelAndView getSummaryModelAndView(ApplicationVersion applicationVersion) {
     var pageTitle = ApplicationVersionStatus.IN_PROGRESS.equals(applicationVersion.getStatus())
         ? "Application summary"
         : applicationService.generateApplicationReference(applicationVersion);
@@ -86,4 +73,63 @@ public class ApplicationSummaryController {
         ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null))
     );
   }
+
+  private ModelAndView getSubmittedModelAndView(ApplicationVersion applicationVersion, ServiceUserDetail user) {
+    var applicationId = applicationVersion.getApplication().getId();
+
+    if (isRegulatorCaseProcessingUser(user, applicationVersion)) {
+      return ReverseRouter.redirect(on(ApplicationCaseProcessingController.class)
+          .getApplicationCaseProcessing(applicationId, null));
+    }
+
+    if (isConsulteeCaseProcessingUser(user, applicationVersion)) {
+      return ReverseRouter.redirect(on(ConsulteeCaseProcessingController.class)
+          .getApplicationCaseProcessing(applicationId, null));
+    }
+
+    if (isIndustryCaseProcessingUser(user, applicationVersion)) {
+      return ReverseRouter.redirect(on(IndustryCaseProcessingController.class)
+          .getIndustryCaseProcessing(applicationId, null));
+    }
+
+    return getSummaryModelAndView(applicationVersion);
+  }
+
+  private ModelAndView getInProgressModelAndView(ApplicationVersion applicationVersion, ServiceUserDetail user) {
+    var applicationId = applicationVersion.getApplication().getId();
+
+    if (!isIndustryCaseProcessingUser(user, applicationVersion)) {
+      return getSummaryModelAndView(applicationVersion);
+    }
+
+    if (applicationVersion.isUpdateVersion()) {
+      return ReverseRouter.redirect(on(IndustryCaseProcessingController.class).getIndustryCaseProcessing(applicationId, null));
+    }
+
+    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+  }
+
+  private boolean isRegulatorCaseProcessingUser(ServiceUserDetail userDetail, ApplicationVersion applicationVersion) {
+    return applicationAccessService.hasApplicationPermission(
+        userDetail,
+        applicationVersion,
+        PROCESS_FCS_APPLICATIONS,
+        ASSIGN_FCS_APPLICATIONS,
+        TECHNICAL_REVIEW_FCS_APPLICATIONS
+    );
+  }
+
+  private boolean isConsulteeCaseProcessingUser(ServiceUserDetail userDetail, ApplicationVersion applicationVersion) {
+    return applicationAccessService.hasApplicationPermission(
+        userDetail,
+        applicationVersion,
+        ALLOCATE_CONSULTATION,
+        RESPOND_TO_CONSULTATION
+    );
+  }
+
+  private boolean isIndustryCaseProcessingUser(ServiceUserDetail userDetail, ApplicationVersion applicationVersion) {
+    return applicationAccessService.hasApplicationPermission(userDetail, applicationVersion, EDIT_FCS_APPLICATIONS);
+  }
+
 }

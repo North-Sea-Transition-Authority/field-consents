@@ -7,6 +7,8 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casest
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_NOTES_ALLOWED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_UNASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_APPLICATION_UPDATE_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_CONSULTATION_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_TECHNICAL_REVIEW_OPEN;
@@ -15,17 +17,17 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casest
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.WITHDRAWAL_OPEN;
 
 import java.util.HashSet;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
@@ -152,20 +154,46 @@ class CaseStatusFlagServiceTest {
         );
   }
 
-  @ParameterizedTest
-  @CsvSource({
-      "true, CONSULTATION_OPEN",
-      "false, NO_CONSULTATION_OPEN"
-  })
-  void addConsultationOpenFlag(boolean hasOpenConsultation, CaseStatusFlag expectedCaseStatusFlag) {
+  @Test
+  void addConsultationFlags_consultationExists_withResponder() {
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var caseStatusFlags = new HashSet<CaseStatusFlag>();
+    var consultation = new Consultation();
+    consultation.setResponderWuaId(123L);
+
+    when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication()))
+        .thenReturn(Optional.of(consultation));
+
+    caseStatusFlagService.addConsultationFlags(applicationVersion, caseStatusFlags);
+
+    assertThat(caseStatusFlags).containsExactly(CONSULTATION_OPEN);
+  }
+
+  @Test
+  void addConsultationFlags_consultationExists_withoutResponder() {
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var caseStatusFlags = new HashSet<CaseStatusFlag>();
+    var consultation = new Consultation();
+
+    when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication()))
+        .thenReturn(Optional.of(consultation));
+
+    caseStatusFlagService.addConsultationFlags(applicationVersion, caseStatusFlags);
+
+    assertThat(caseStatusFlags).containsExactlyInAnyOrder(CONSULTATION_OPEN, CONSULTATION_UNASSIGNED);
+  }
+
+  @Test
+  void addConsultationFlags_consultationDoesNotExist() {
     var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
     var caseStatusFlags = new HashSet<CaseStatusFlag>();
 
-    when(consultationService.openConsultationExistsForApplicationVersion(applicationVersion)).thenReturn(hasOpenConsultation);
+    when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication()))
+        .thenReturn(Optional.empty());
 
-    caseStatusFlagService.addConsultationOpenFlag(applicationVersion, caseStatusFlags);
+    caseStatusFlagService.addConsultationFlags(applicationVersion, caseStatusFlags);
 
-    assertThat(caseStatusFlags).containsOnly(expectedCaseStatusFlag);
+    assertThat(caseStatusFlags).containsExactly(NO_CONSULTATION_OPEN);
   }
 
 }

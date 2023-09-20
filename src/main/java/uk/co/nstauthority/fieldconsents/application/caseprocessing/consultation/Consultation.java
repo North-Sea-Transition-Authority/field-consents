@@ -2,6 +2,8 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation
 
 import com.google.common.annotations.VisibleForTesting;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -29,11 +31,16 @@ public class Consultation {
   @JoinColumn(name = "consultation_team_id")
   private Team consultationTeam;
 
+  @Enumerated(EnumType.STRING)
+  private ConsultationStatus status;
+
   private Instant requestDeadline;
 
   private Instant requestedAtDatetime;
 
   private Long requestedByWuaId;
+
+  private Long responderWuaId;
 
   public Integer getId() {
     return id;
@@ -60,6 +67,14 @@ public class Consultation {
     this.consultationTeam = consultationTeam;
   }
 
+  public ConsultationStatus getStatus() {
+    return status;
+  }
+
+  public void setStatus(ConsultationStatus status) {
+    this.status = status;
+  }
+
   public Instant getRequestDeadline() {
     return requestDeadline;
   }
@@ -82,5 +97,13 @@ public class Consultation {
 
   public void setRequestedByWuaId(Long requestedByWuaId) {
     this.requestedByWuaId = requestedByWuaId;
+  }
+
+  public Long getResponderWuaId() {
+    return responderWuaId;
+  }
+
+  public void setResponderWuaId(Long responderWuaId) {
+    this.responderWuaId = responderWuaId;
   }
 }

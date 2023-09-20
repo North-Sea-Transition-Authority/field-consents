@@ -8,6 +8,10 @@ public record TeamId(Integer id) implements Serializable {
   @Serial
   private static final long serialVersionUID = -5692556481153190999L;
 
+  public static TeamId valueOf(Team team) {
+    return new TeamId(team.getId());
+  }
+
   public static TeamId valueOf(Integer value) {
     return new TeamId(value);
   }

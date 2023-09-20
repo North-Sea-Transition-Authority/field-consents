@@ -31,13 +31,13 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthT
 import uk.co.nstauthority.fieldconsents.assets.AssetRestController;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
+import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
+import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItem;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil;
-import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
-import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @ContextConfiguration(classes = WorkAreaController.class)
@@ -483,6 +483,60 @@ class WorkAreaControllerTest extends AbstractControllerTest {
             .postWorkAreaUnassignedConsultations(filter, user)))
             .with(user(user))
             .with(csrf())
+        )
+        .andExpect(status().is3xxRedirection());
+  }
+
+  @SecurityTest
+  void getWorkAreaMyConsultations_whenUserDoesNotHavePermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.RESPOND_TO_CONSULTATION)))
+        .thenReturn(false);
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(WorkAreaController.class)
+                .getWorkAreaMyConsultations(filter, user)))
+                .with(user(user))
+        )
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void getWorkAreaMyConsultations_whenUserDoesHavePermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.RESPOND_TO_CONSULTATION)))
+        .thenReturn(true);
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(WorkAreaController.class)
+                .getWorkAreaMyConsultations(filter, user)))
+                .with(user(user))
+        )
+        .andExpect(status().isOk());
+  }
+
+  @SecurityTest
+  void postWorkAreaMyConsultations_whenUserDoesNotHavePermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.RESPOND_TO_CONSULTATION)))
+        .thenReturn(false);
+
+    mockMvc.perform(
+            post(ReverseRouter.route(on(WorkAreaController.class)
+                .postWorkAreaMyConsultations(filter)))
+                .with(user(user))
+                .with(csrf())
+        )
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void postWorkAreaMyConsultations_whenUserDoesHavePermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.RESPOND_TO_CONSULTATION)))
+        .thenReturn(true);
+
+    mockMvc.perform(
+            post(ReverseRouter.route(on(WorkAreaController.class)
+                .postWorkAreaMyConsultations(filter)))
+                .with(user(user))
+                .with(csrf())
         )
         .andExpect(status().is3xxRedirection());
   }

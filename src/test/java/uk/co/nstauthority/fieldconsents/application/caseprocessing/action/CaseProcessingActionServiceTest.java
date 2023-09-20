@@ -7,10 +7,11 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_ASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_REASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_RELEASE_OWNERSHIP;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_REQUEST_CONSULTATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_WITHDRAWAL_RESPONSE;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CHANGE_ACE_STATUS;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_MANAGE_RESPONDER;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_UPDATE_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_WITHDRAWAL_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.REGULATOR_ADD_CASE_NOTE;
@@ -19,6 +20,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEW_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.APPLICATION_UPDATE_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_ASSIGNED;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_APPLICATION_UPDATE_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_CONSULTATION_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_TECHNICAL_REVIEW_OPEN;
@@ -49,6 +51,7 @@ import uk.co.nstauthority.fieldconsents.authorisation.ApplicationAccessService;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.opred.OpredTeamRole;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @ExtendWith(MockitoExtension.class)
@@ -421,8 +424,22 @@ class CaseProcessingActionServiceTest {
             CaseProcessingActionView.from(CASE_OFFICER_RELEASE_OWNERSHIP, applicationVersion),
             CaseProcessingActionView.from(TECHNICAL_REVIEW_REQUEST, applicationVersion),
             CaseProcessingActionView.from(APPLICATION_UPDATE_REQUEST, applicationVersion),
-            CaseProcessingActionView.from(CASE_OFFICER_REQUEST_CONSULTATION, applicationVersion)
+            CaseProcessingActionView.from(CONSULTATION_REQUEST, applicationVersion)
         );
+  }
+
+  @Test
+  void getUserActionViews_whenConsultationAllocator_thenCanAssignResponder() {
+    var allocatorRoles = OpredTeamRole.ALLOCATOR.getRolePermissions();
+    var caseFlags = Set.of(CASE_OFFICER_ASSIGNED, NO_TECHNICAL_REVIEW_OPEN, NO_APPLICATION_UPDATE_OPEN, CONSULTATION_OPEN);
+
+    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER)).thenReturn(allocatorRoles);
+    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion)).thenReturn(caseFlags);
+    when(applicationVersionService.findCaseOfficerWuaId(applicationVersion)).thenReturn(Optional.of(USER_WUA_ID));
+
+    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
+        .usingRecursiveFieldByFieldElementComparator()
+        .containsExactly(CaseProcessingActionView.from(CONSULTATION_MANAGE_RESPONDER, applicationVersion));
   }
 
   @Test
@@ -430,16 +447,11 @@ class CaseProcessingActionServiceTest {
     when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .thenReturn(CASE_OFFICER_PERMISSIONS);
     when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(CASE_OFFICER_ASSIGNED, NO_TECHNICAL_REVIEW_OPEN, NO_APPLICATION_UPDATE_OPEN,
-            NO_CONSULTATION_OPEN));
+        .thenReturn(Set.of(CASE_OFFICER_ASSIGNED, NO_TECHNICAL_REVIEW_OPEN, NO_APPLICATION_UPDATE_OPEN, NO_CONSULTATION_OPEN));
     when(applicationVersionService.findCaseOfficerWuaId(applicationVersion))
         .thenReturn(Optional.of(OTHER_USER_WUA_ID));
 
-    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
-        .usingRecursiveFieldByFieldElementComparator()
-        .containsExactly(
-            CaseProcessingActionView.from(CASE_OFFICER_REQUEST_CONSULTATION, applicationVersion)
-        );
+    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER)).isEmpty();
   }
 
   @Test

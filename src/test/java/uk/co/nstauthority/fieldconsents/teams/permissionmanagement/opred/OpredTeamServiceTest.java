@@ -6,12 +6,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -72,6 +75,13 @@ class OpredTeamServiceTest {
   void isAccessManager_whenAccessManager_thenFalse() {
     when(teamMemberService.isMemberOfTeamWithAnyRoleOf(TEAM_ID, USER, Set.of(OpredTeamRole.ACCESS_MANAGER.name()))).thenReturn(false);
     assertFalse(opredTeamService.isAccessManager(TEAM_ID, USER));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void isResponder(boolean isResponderInTeam) {
+    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(TEAM_ID, USER, Collections.singleton(OpredTeamRole.RESPONDER.name()))).thenReturn(isResponderInTeam);
+    assertThat(opredTeamService.isResponder(TEAM_ID, USER)).isEqualTo(isResponderInTeam);
   }
 
   @Test

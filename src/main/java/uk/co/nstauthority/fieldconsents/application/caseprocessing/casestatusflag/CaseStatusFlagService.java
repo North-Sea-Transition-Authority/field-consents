@@ -4,7 +4,10 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casest
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.APPLICATION_UPDATE_STARTED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_UNASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_APPLICATION_UPDATE_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_CONSULTATION_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_TECHNICAL_REVIEW_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_WITHDRAWAL_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.TECHNICAL_REVIEW_OPEN;
@@ -46,7 +49,7 @@ public class CaseStatusFlagService {
     addWithdrawalFlag(applicationVersion, caseStatusFlags);
     addTechnicalReviewFlag(applicationVersion, caseStatusFlags);
     addUpdateRequestFlag(applicationVersion, caseStatusFlags);
-    addConsultationOpenFlag(applicationVersion, caseStatusFlags);
+    addConsultationFlags(applicationVersion, caseStatusFlags);
     caseStatusFlags.add(CaseStatusFlag.CASE_NOTES_ALLOWED);
 
     return caseStatusFlags;
@@ -92,12 +95,20 @@ public class CaseStatusFlagService {
     }
   }
 
-  void addConsultationOpenFlag(ApplicationVersion applicationVersion, HashSet<CaseStatusFlag> caseStatusFlags) {
-    var flag = consultationService.openConsultationExistsForApplicationVersion(applicationVersion)
-        ? CaseStatusFlag.CONSULTATION_OPEN
-        : CaseStatusFlag.NO_CONSULTATION_OPEN;
+  void addConsultationFlags(ApplicationVersion applicationVersion, HashSet<CaseStatusFlag> caseStatusFlags) {
+    var consultationOptional = consultationService.findLatestOpenConsultation(applicationVersion.getApplication());
 
-    caseStatusFlags.add(flag);
+    if (consultationOptional.isEmpty()) {
+      caseStatusFlags.add(NO_CONSULTATION_OPEN);
+      return;
+    }
+
+    caseStatusFlags.add(CONSULTATION_OPEN);
+
+    var responder = consultationOptional.get().getResponderWuaId();
+    if (Objects.isNull(responder)) {
+      caseStatusFlags.add(CONSULTATION_UNASSIGNED);
+    }
   }
 
 }

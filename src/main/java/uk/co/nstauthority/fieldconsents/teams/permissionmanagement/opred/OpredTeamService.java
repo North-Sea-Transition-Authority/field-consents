@@ -36,11 +36,15 @@ public class OpredTeamService {
     return teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, Set.of(OpredTeamRole.ACCESS_MANAGER.name()));
   }
 
+  public boolean isResponder(TeamId teamId, ServiceUserDetail user) {
+    return teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, Set.of(OpredTeamRole.RESPONDER.name()));
+  }
+
   Optional<Team> getTeam(TeamId teamId) {
     return teamService.getTeam(teamId, TeamType.OPRED);
   }
 
-  List<Team> getTeamsForUser(ServiceUserDetail userDetail) {
+  public List<Team> getTeamsForUser(ServiceUserDetail userDetail) {
     return teamService.getTeamsOfTypeThatUserBelongsTo(userDetail, TeamType.OPRED);
   }
 

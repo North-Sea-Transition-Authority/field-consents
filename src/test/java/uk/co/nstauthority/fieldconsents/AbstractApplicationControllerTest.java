@@ -72,7 +72,7 @@ public abstract class AbstractApplicationControllerTest extends AbstractControll
             CaseProcessingActionItem.TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP,
             CaseProcessingActionItem.OPERATOR_UPDATE_APPLICATION,
             CaseProcessingActionItem.APPLICATION_UPDATE_REQUEST,
-            CaseProcessingActionItem.CASE_OFFICER_REQUEST_CONSULTATION
+            CaseProcessingActionItem.CONSULTATION_REQUEST
         ));
   }
 }

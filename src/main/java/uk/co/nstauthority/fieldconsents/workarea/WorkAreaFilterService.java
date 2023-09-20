@@ -4,18 +4,20 @@ import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationAssets.APPLICATION_ASSETS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationTechnicalReviews.APPLICATION_TECHNICAL_REVIEWS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
-import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterService.FIELD_LOOKUP_PURPOSE;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import org.jooq.Condition;
+import org.jooq.impl.DSL;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationFieldService;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
+import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
-import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.fields.GeographicArea;
@@ -25,6 +27,8 @@ import uk.co.nstauthority.fieldconsents.teams.TeamService;
 
 @Service
 public class WorkAreaFilterService {
+
+  public static final String FIELD_LOOKUP_PURPOSE = "Lookup field for the work-area";
 
   private final AssetService assetService;
   private final FieldService fieldService;
@@ -45,69 +49,66 @@ public class WorkAreaFilterService {
   }
 
   List<Condition> getConditions(WorkAreaFilter filter, ServiceUserDetail user, WorkAreaTab workAreaTab) {
-    var conditions = applicationDataFilterService.getConditions(filter);
+    var conditions = new ArrayList<Condition>();
 
-    if (Objects.nonNull(filter.getAssetKey())) {
-      var assetJsonOptional = assetService.getAssetFromKey(filter.getAssetKey());
-      assetJsonOptional.ifPresent(assetJson -> conditions.add(getAssetCondition(assetJson)));
+    conditions.add(getApplicationStatusCondition(user));
+    conditions.addAll(applicationDataFilterService.getConditions(filter));
+    conditions.addAll(getFieldAssetConditions(filter));
+
+    if (Objects.isNull(workAreaTab)) {
+      return conditions;
     }
 
-    if (Objects.nonNull(filter.getGeographicAreas())) {
-      conditions.add(
-          getGeographicAreasQueryCondition(filter.getGeographicAreas())
-      );
-    }
+    conditions.add(getWorkAreaTabCondition(workAreaTab, user));
 
-    if (Objects.nonNull(workAreaTab) && WorkAreaTab.MY_APPLICATIONS.equals(workAreaTab)) {
-      conditions.add(getMyApplicationsCaseOfficerCondition(user));
-    }
+    return conditions;
+  }
 
-    if (Objects.nonNull(workAreaTab) && WorkAreaTab.MY_TECHNICAL_REVIEWS.equals(workAreaTab)) {
-      conditions.add(getMyTechnicalReviewsCondition(user));
-    }
+  private Condition getWorkAreaTabCondition(WorkAreaTab workAreaTab, ServiceUserDetail user) {
+    return switch (workAreaTab) {
+      case MY_APPLICATIONS -> APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.eq(user.wuaId().intValue());
+      case MY_TECHNICAL_REVIEWS -> APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEWER_WUA_ID.eq(user.wuaId().intValue());
+      case ALL_TECHNICAL_REVIEWS -> APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEWER_WUA_ID.isNotNull();
+      case ALL_APPLICATIONS -> DSL.trueCondition();
+      case UNASSIGNED_APPLICATIONS -> APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.isNull();
+      case ALL_CONSULTATIONS -> APPLICATION_CONSULTATIONS.CONSULTATION_TEAM_ID.isNotNull();
+      case UNASSIGNED_CONSULTATIONS -> APPLICATION_CONSULTATIONS.RESPONDER_WUA_ID.isNull();
+      case MY_CONSULTATIONS -> APPLICATION_CONSULTATIONS.RESPONDER_WUA_ID.eq(user.wuaId().intValue());
+    };
+  }
 
-    if (Objects.nonNull(workAreaTab) && WorkAreaTab.ALL_TECHNICAL_REVIEWS.equals(workAreaTab)) {
-      conditions.add(getAllTechnicalReviewsCondition());
-    }
+  private List<Condition> getFieldAssetConditions(WorkAreaFilter filter) {
+    var conditions = new ArrayList<Condition>();
 
-    if (Objects.nonNull(workAreaTab) && WorkAreaTab.UNASSIGNED_APPLICATIONS.equals(workAreaTab)) {
-      conditions.add(getUnassignedApplicationsCaseOfficerCondition());
-    }
+    Optional.ofNullable(filter.getAssetKey())
+        .map(AssetKey::from)
+        .flatMap(assetKey -> assetService.getAsset(assetKey, FIELD_LOOKUP_PURPOSE))
+        .map(this::getAssetCondition)
+        .ifPresent(conditions::add);
 
-    if (Objects.nonNull(workAreaTab) && WorkAreaTab.ALL_CONSULTATIONS.equals(workAreaTab)) {
-      conditions.add(getAllConsultationsCondition());
-    }
-
-    if (Objects.nonNull(workAreaTab) && WorkAreaTab.UNASSIGNED_CONSULTATIONS.equals(workAreaTab)) {
-      conditions.add(getUnassignedConsultationsCondition());
-    }
-
-    addApplicationStatusCondition(conditions, user);
+    Optional.ofNullable(filter.getGeographicAreas())
+        .map(this::getGeographicAreasQueryCondition)
+        .ifPresent(conditions::add);
 
     return conditions;
   }
 
   public Condition getGeographicAreasQueryCondition(List<GeographicArea> geographicAreas) {
     var primaryFieldIdsInGeographicAreas = fieldService
-        .findFieldsByIds(
-            applicationFieldService.findDistinctPrimaryFieldIds(),
-            FIELD_LOOKUP_PURPOSE
-        )
+        .findFieldsByIds(applicationFieldService.findDistinctPrimaryFieldIds(), FIELD_LOOKUP_PURPOSE)
         .stream()
         .filter(fieldJson -> geographicAreas.contains(fieldJson.getGeographicArea()))
         .map(FieldJson::getId)
         .toList();
+
     return APPLICATION_ASSETS.FIELD_ID.in(primaryFieldIdsInGeographicAreas);
   }
 
   private Condition getAssetCondition(AssetJson assetJson) {
-    if (AssetType.FIELD.equals(assetJson.getAssetType())) {
-      return APPLICATION_ASSETS.FIELD_ID.eq(assetJson.getId());
-    } else if (AssetType.TERMINAL.equals(assetJson.getAssetType())) {
-      return APPLICATION_ASSETS.TERMINAL_ID.eq(assetJson.getId());
-    } else {
-      throw new RuntimeException("Not a valid Asset Type: " + assetJson.getAssetType());
-    }
+    return switch (assetJson.getAssetType()) {
+      case FIELD ->  APPLICATION_ASSETS.FIELD_ID.eq(assetJson.getId());
+      case TERMINAL -> APPLICATION_ASSETS.TERMINAL_ID.eq(assetJson.getId());
+    };
   }
 
   public WorkAreaFilter getDefaultFilter(ServiceUserDetail user) {
@@ -121,38 +122,22 @@ public class WorkAreaFilterService {
     return defaultFilter;
   }
 
-  private Condition getMyApplicationsCaseOfficerCondition(ServiceUserDetail user) {
-    return APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.eq(user.wuaId().intValue());
-  }
-
-  private Condition getMyTechnicalReviewsCondition(ServiceUserDetail user) {
-    return APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEWER_WUA_ID.eq(user.wuaId().intValue());
-  }
-
-  private Condition getAllTechnicalReviewsCondition() {
-    return APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEWER_WUA_ID.isNotNull();
-  }
-
-  private Condition getUnassignedApplicationsCaseOfficerCondition() {
-    return APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.isNull();
-  }
-
-  private Condition getAllConsultationsCondition() {
-    return APPLICATION_CONSULTATIONS.CONSULTATION_TEAM_ID.isNotNull();
-  }
-
-  // TODO FCS-394 this needs changing when allocation is done
-  // i.e. check that the consultation has null responder
-  private Condition getUnassignedConsultationsCondition() {
-    return APPLICATION_CONSULTATIONS.CONSULTATION_TEAM_ID.isNotNull();
-  }
-
-  private void addApplicationStatusCondition(List<Condition> conditions, ServiceUserDetail user) {
-    if (teamService.isRegulatorUser(user) || teamService.isConsulteeUser(user)) {
-      conditions.add(getSubmittedApplicationStatusCondition());
-    } else if (teamService.isIndustryUser(user)) {
-      conditions.add(getIndustryApplicationStatusCondition());
+  private Condition getApplicationStatusCondition(ServiceUserDetail user) {
+    if (teamService.isRegulatorUser(user)) {
+      return getSubmittedApplicationStatusCondition();
     }
+
+    if (teamService.isConsulteeUser(user)) {
+      return getSubmittedApplicationStatusCondition();
+    }
+
+    if (teamService.isIndustryUser(user)) {
+      return getIndustryApplicationStatusCondition();
+    }
+
+    throw new IllegalStateException(
+        "Expected user [%s] to be regulator, consultee or industry but was none of these.".formatted(user.wuaId())
+    );
   }
 
   private Condition getIndustryApplicationStatusCondition() {
