@@ -9,13 +9,6 @@ public class SearchFilterForm extends ApplicationDataFilterForm {
   String fieldAssetKey;
   String terminalAssetKey;
 
-  @Override
-  public void clearFilter() {
-    super.clearFilter();
-    aceFlagStatuses = null;
-    fieldAssetKey = null;
-  }
-
   public List<AceFlagStatus> getAceFlagStatuses() {
     return aceFlagStatuses;
   }

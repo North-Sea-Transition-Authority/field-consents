@@ -36,7 +36,7 @@ public class TopNavigationService {
     navigationItems.add(
         new TopNavigationItem(
             SEARCH_TITLE,
-            ReverseRouter.route(on(SearchController.class).getSearch(null))
+            ReverseRouter.route(on(SearchController.class).getSearch(null, null))
         )
     );
 

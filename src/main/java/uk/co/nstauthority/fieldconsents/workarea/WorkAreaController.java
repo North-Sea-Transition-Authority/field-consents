@@ -269,7 +269,7 @@ public class WorkAreaController {
   public ModelAndView clearWorkAreaFilter(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
                                           SessionStatus sessionStatus) {
     sessionStatus.setComplete();
-    filter.clearFilter();
+    filter.clearSession();
     return ReverseRouter.redirect(on(WorkAreaController.class).getWorkArea(null, null));
   }
 

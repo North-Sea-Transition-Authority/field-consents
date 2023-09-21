@@ -10,8 +10,7 @@ public class WorkAreaFilter extends WorkAreaFilterForm implements Serializable {
   @Serial
   private static final long serialVersionUID = 8791625085927579692L;
 
-  @Override
-  public void clearFilter() {
+  public void clearSession() {
     super.clearFilter();
     assetKey = null;
   }

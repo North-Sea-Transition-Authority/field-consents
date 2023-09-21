@@ -6,12 +6,14 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.FIELD_ASSET_KEY;
+import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.TERMINAL_ASSET_KEY;
+import static uk.co.nstauthority.fieldconsents.search.SearchController.SEARCH_RESULT_ITEMS;
 import static uk.co.nstauthority.fieldconsents.search.SearchController.SEARCH_TITLE;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
@@ -27,6 +29,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.assets.AssetRestController;
+import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
@@ -40,7 +43,9 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
 @ContextConfiguration(classes = SearchController.class)
 class SearchControllerTest extends AbstractControllerTest {
 
-  public static final String SEARCH_VIEW_NAME = "fcs/search/search";
+  private static final String SEARCH_VIEW_NAME = "fcs/search/search";
+
+  private static final String EXPECTED_REDIRECT_URL = ReverseRouter.route(on(SearchController.class).getSearch(null, null));
 
   @MockBean
   private SearchService searchService;
@@ -49,107 +54,188 @@ class SearchControllerTest extends AbstractControllerTest {
 
   private SearchFilterForm form;
 
+  private SearchSession searchSession;
+
   private List<SearchResultItem> searchResultItems;
 
   private RestSearchItem orgUnitRestSearchItem;
 
   private RestSearchItem assetFieldRestSearchItem;
 
+  private RestSearchItem assetTerminalRestSearchItem;
+
   @BeforeEach
   void setUp() {
     form = new SearchFilterForm();
+    form.setFieldAssetKey(FIELD_ASSET_KEY);
+    form.setTerminalAssetKey(TERMINAL_ASSET_KEY);
+    searchSession = new SearchSession(form);
     searchResultItems = List.of(ApplicationDataItemUtil.getSearchResultItem());
     orgUnitRestSearchItem = ApplicationDataFilterFormTestUtil.ORGANISATION_REST_SEARCH_ITEM;
     when(applicationDataFilterFormService.getPrefilledOrganisation(any())).thenReturn(orgUnitRestSearchItem);
     assetFieldRestSearchItem = ApplicationDataFilterFormTestUtil.FIELD_REST_SEARCH_ITEM;
-    when(applicationDataFilterFormService.getPrefilledAsset(any())).thenReturn(assetFieldRestSearchItem);
+    when(applicationDataFilterFormService.getPrefilledAsset(FIELD_ASSET_KEY)).thenReturn(assetFieldRestSearchItem);
+    assetTerminalRestSearchItem = ApplicationDataFilterFormTestUtil.TERMINAL_REST_SEARCH_ITEM;
+    when(applicationDataFilterFormService.getPrefilledAsset(TERMINAL_ASSET_KEY)).thenReturn(assetTerminalRestSearchItem);
     when(permissionService.hasPermission(user, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(true);
   }
 
   @SecurityTest
   void getSearch_whenNotAuthenticated_thenRedirectedToLogin() throws Exception {
-    mockMvc.perform(get(ReverseRouter.route(on(SearchController.class).getSearch(null))))
+    mockMvc.perform(get(ReverseRouter.route(on(SearchController.class).getSearch(null, null))))
         .andExpect(redirectionToLoginUrl());
   }
 
   @SecurityTest
-  void getSearch_whenRegulatorUser() throws Exception {
+  void getSearch_whenUserHasPermissions() throws Exception {
     when(permissionService.hasPermission(user, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(true);
     when(teamService.isRegulatorUser(user)).thenReturn(true);
+    searchSession.update(form);
 
     mockMvc.perform(
             get(ReverseRouter.route(on(SearchController.class)
-                .getSearch(form)))
+                .getSearch(searchSession, user)))
                 .with(user(user))
+                .flashAttr("form", form)
+                .flashAttr("searchSession", searchSession)
         )
         .andExpect(status().isOk());
   }
 
   @SecurityTest
-  void searchApplications_whenIndustryUser() throws Exception {
+  void getSearch_whenUserDoesNotHavePermissions() throws Exception {
     when(permissionService.hasPermission(user, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(true);
-    when(teamService.isRegulatorUser(user)).thenReturn(false);
-    when(teamService.isIndustryUser(user)).thenReturn(true);
+        .thenReturn(false);
 
     mockMvc.perform(
-            post(ReverseRouter.route(on(SearchController.class)
-                .searchApplications(form, user)))
+            get(ReverseRouter.route(on(SearchController.class)
+                .getSearch(searchSession, user)))
                 .with(user(user))
-                .with(csrf())
         )
-        .andExpect(status().isOk());
+        .andExpect(status().isForbidden());
   }
 
   @SecurityTest
-  void searchApplications_whenNeitherRegulatorNorIndustryUser() throws Exception {
-    when(permissionService.hasPermission(user, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(true);
-    when(teamService.isRegulatorUser(user)).thenReturn(false);
-    when(teamService.isIndustryUser(user)).thenReturn(false);
-
+  void searchApplications_whenUserHasPermissions() throws Exception {
     mockMvc.perform(
             post(ReverseRouter.route(on(SearchController.class)
-                .searchApplications(form, user)))
+                .searchApplications(form, searchSession)))
                 .with(user(user))
                 .with(csrf())
         )
-        .andExpect(status().isOk());
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(EXPECTED_REDIRECT_URL));
+  }
+
+  @SecurityTest
+  void searchApplications_whenUserDoesNotHavePermissions() throws Exception {
+    when(permissionService.hasPermission(user, RolePermission.VIEW_PERMISSIONS))
+        .thenReturn(false);
+
+    mockMvc.perform(
+            post(ReverseRouter.route(on(SearchController.class)
+                .searchApplications(form, searchSession)))
+                .with(user(user))
+                .with(csrf())
+        )
+        .andExpect(status().isForbidden());
   }
 
   @Test
   void getSearch_IndustryUser() throws Exception {
-    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(SearchController.class).getSearch(null)))
-            .with(user(user)))
+    when(teamService.isRegulatorUser(user)).thenReturn(false);
+    when(teamService.isIndustryUser(user)).thenReturn(true);
+    when(searchService.getIndustrySearchResultItems(any(SearchFilterForm.class), any(ServiceUserDetail.class)))
+        .thenReturn(searchResultItems);
+    searchSession.update(form);
+
+    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(SearchController.class).getSearch(searchSession, null)))
+        .with(user(user))
+        .flashAttr("form", form)
+        .flashAttr("searchSession", searchSession))
         .andExpect(status().isOk())
         .andExpect(view().name(SEARCH_VIEW_NAME))
         .andReturn().getModelAndView();
 
     assert modelAndView != null;
     var model = modelAndView.getModel();
-
+    assertThat(model)
+        .containsEntry(SEARCH_RESULT_ITEMS, searchResultItems);
     assertSearchModel(model);
   }
 
   @Test
   void getSearch_RegulatorUser() throws Exception {
-    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(SearchController.class).getSearch(null)))
-            .with(user(user)))
+    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    when(searchService.getRegulatorSearchResultItems(any(SearchFilterForm.class), any(ServiceUserDetail.class)))
+        .thenReturn(searchResultItems);
+    searchSession.update(form);
+
+    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(SearchController.class).getSearch(searchSession, null)))
+        .with(user(user))
+        .flashAttr("form", form)
+        .flashAttr("searchSession", searchSession))
         .andExpect(status().isOk())
         .andExpect(view().name(SEARCH_VIEW_NAME))
         .andReturn().getModelAndView();
 
     assert modelAndView != null;
     var model = modelAndView.getModel();
+    assertThat(model)
+        .containsEntry(SEARCH_RESULT_ITEMS, searchResultItems);
+    assertSearchModel(model);
+  }
 
+  @Test
+  void getSearch_neitherRegulatorNorIndustryUser() throws Exception {
+    when(teamService.isRegulatorUser(user)).thenReturn(false);
+    when(teamService.isIndustryUser(user)).thenReturn(false);
+    searchResultItems = Collections.emptyList();
+    searchSession.update(form);
+
+    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(SearchController.class).getSearch(searchSession, null)))
+            .with(user(user))
+            .flashAttr("form", form)
+            .flashAttr("searchSession", searchSession))
+        .andExpect(status().isOk())
+        .andExpect(view().name(SEARCH_VIEW_NAME))
+        .andReturn().getModelAndView();
+
+    assert modelAndView != null;
+    var model = modelAndView.getModel();
+    assertThat(model)
+        .containsEntry(SEARCH_RESULT_ITEMS, searchResultItems);
+    assertSearchModel(model);
+  }
+
+  @Test
+  void getSearch_withSearchNotInvoked() throws Exception {
+    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    assetFieldRestSearchItem = RestSearchItem.EMPTY_REST_SEARCH_ITEM;
+    assetTerminalRestSearchItem = RestSearchItem.EMPTY_REST_SEARCH_ITEM;
+    when(applicationDataFilterFormService.getPrefilledAsset(null)).thenReturn(assetFieldRestSearchItem);
+    searchSession.clearSession();
+
+    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(SearchController.class).getSearch(searchSession, null)))
+            .with(user(user))
+            .flashAttr("form", form)
+            .flashAttr("searchSession", searchSession))
+        .andExpect(status().isOk())
+        .andExpect(view().name(SEARCH_VIEW_NAME))
+        .andReturn().getModelAndView();
+
+    assert modelAndView != null;
+    var model = modelAndView.getModel();
+    assertThat(model)
+        .doesNotContainEntry(SEARCH_RESULT_ITEMS, searchResultItems);
     assertSearchModel(model);
   }
 
   private void assertSearchModel(Map<String, Object> model) {
     assertThat(model)
-        .containsEntry("clearFiltersUrl", ReverseRouter.route(on(SearchController.class).clearSearchFilter(null)))
+        .containsEntry("clearFiltersUrl", ReverseRouter.route(on(SearchController.class).clearSearchFilter(null, null)))
         .containsEntry("appStatuses", ApplicationVersionStatus.getSearchOptions())
         .containsEntry("appTypes", ApplicationType.getDisplayableOptions())
         .containsEntry("durationTypes", ConsentLengthType.getConsentLengthOptions())
@@ -159,86 +245,31 @@ class SearchControllerTest extends AbstractControllerTest {
         .containsEntry("prefilledField", assetFieldRestSearchItem)
         .containsEntry("fieldAssetSearchRestUrl",
             ReverseRouter.route(on(AssetRestController.class).searchFieldAssets(null)))
+        .containsEntry("aceStatuses", AceFlagStatus.getDisplayableOptions())
+        .containsEntry("prefilledTerminal", assetTerminalRestSearchItem)
+        .containsEntry("terminalAssetSearchRestUrl",
+            ReverseRouter.route(on(AssetRestController.class).searchTerminalAssets(null)))
+        .containsEntry("assetTypesWithShore", AssetTypeWithShore.getDisplayableOptions())
         .containsEntry("pageTitle", SEARCH_TITLE);
   }
 
   @Test
-  void searchApplications_RegulatorUser() throws Exception {
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
-    when(permissionService.hasPermission(user, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(true);
-    when(searchService.getRegulatorSearchResultItems(any(SearchFilterForm.class), any(ServiceUserDetail.class)))
-        .thenReturn(searchResultItems);
-
-    var modelAndView = mockMvc.perform(post(ReverseRouter.route(on(SearchController.class).searchApplications(null, user)))
-        .with(csrf())
-        .with(user(user)))
-        .andExpect(status().isOk())
-        .andExpect(view().name(SEARCH_VIEW_NAME))
-        .andExpect(model().attribute("showResults", true))
-        .andExpect(model().attribute("searchResultItems", searchResultItems))
-        .andReturn().getModelAndView();
-
-    assert modelAndView != null;
-    var model = modelAndView.getModel();
-
-    assertSearchModel(model);
-  }
-
-  @Test
-  void searchApplications_IndustryUser() throws Exception {
-    when(teamService.isRegulatorUser(user)).thenReturn(false);
-    when(teamService.isIndustryUser(user)).thenReturn(true);
-    when(permissionService.hasPermission(user, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(true);
-    when(searchService.getIndustrySearchResultItems(any(SearchFilterForm.class), any(ServiceUserDetail.class)))
-        .thenReturn(searchResultItems);
-
-    var modelAndView = mockMvc.perform(post(ReverseRouter.route(on(SearchController.class).searchApplications(null, user)))
+  void searchApplications() throws Exception {
+    mockMvc.perform(
+        post(ReverseRouter.route(on(SearchController.class)
+            .searchApplications(null, null)))
             .with(csrf())
             .with(user(user)))
-        .andExpect(status().isOk())
-        .andExpect(view().name(SEARCH_VIEW_NAME))
-        .andExpect(model().attribute("showResults", true))
-        .andExpect(model().attribute("searchResultItems", searchResultItems))
-        .andReturn().getModelAndView();
-
-    assert modelAndView != null;
-    var model = modelAndView.getModel();
-
-    assertSearchModel(model);
-  }
-
-  @Test
-  void searchApplications_neitherRegulatorNorIndustryUser() throws Exception {
-    when(teamService.isRegulatorUser(user)).thenReturn(false);
-    when(teamService.isIndustryUser(user)).thenReturn(false);
-    when(permissionService.hasPermission(user, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(true);
-
-    var modelAndView = mockMvc.perform(post(ReverseRouter.route(on(SearchController.class).searchApplications(null, user)))
-            .with(csrf())
-            .with(user(user)))
-        .andExpect(status().isOk())
-        .andExpect(view().name(SEARCH_VIEW_NAME))
-        .andExpect(model().attribute("showResults", true))
-        .andExpect(model().attribute("searchResultItems", Collections.emptyList()))
-        .andReturn().getModelAndView();
-
-    assert modelAndView != null;
-    var model = modelAndView.getModel();
-
-    assertSearchModel(model);
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl(EXPECTED_REDIRECT_URL));
   }
 
   @Test
   void clearSearchFilter() throws Exception {
-    var expectedRedirectUrl = ReverseRouter.route(on(SearchController.class).getSearch(null));
-
     mockMvc.perform(
-            get(ReverseRouter.route(on(SearchController.class).clearSearchFilter(form)))
+            get(ReverseRouter.route(on(SearchController.class).clearSearchFilter(null, null)))
                 .with(user(user)))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(expectedRedirectUrl));
+        .andExpect(redirectedUrl(EXPECTED_REDIRECT_URL));
   }
 }

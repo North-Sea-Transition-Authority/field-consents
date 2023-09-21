@@ -30,6 +30,8 @@ public class ApplicationDataFilterFormTestUtil {
 
   public static final String TERMINAL_ASSET_KEY = TERMINAL_ASSET_ID_STRING + AssetType.TERMINAL.name();
 
+  public static final RestSearchItem TERMINAL_REST_SEARCH_ITEM = new RestSearchItem(TERMINAL_ASSET_ID_STRING, AssetType.TERMINAL.name());
+
   public static final Integer APPLICATION_NO = 10;
 
   public static WorkAreaFilter getDefaultFilter() {

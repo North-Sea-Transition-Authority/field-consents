@@ -21,12 +21,22 @@
     </@fdsSearch.searchFilterList>
   </@fdsSearch.searchFilter>
   <@fdsSearch.searchPageContent twoThirdsWidth=true>
-    <#if showResults?has_content>
-      <@fdsResultList.resultList resultCount=searchResultItems?size>
-        <#list searchResultItems as searchResultItem>
-          <@fcsApplicationDataItem dataItem=searchResultItem pageTitle=pageTitle/>
-        </#list>
-      </@fdsResultList.resultList>
+    <#if searchInvoked>
+      <#if searchResultItems?has_content>
+        <@fdsResultList.resultList resultCount=searchResultItems?size>
+          <#list searchResultItems as searchResultItem>
+            <@fcsApplicationDataItem dataItem=searchResultItem pageTitle=pageTitle/>
+          </#list>
+        </@fdsResultList.resultList>
+      <#else>
+        <h3 class="govuk-heading-s">There are no results matching your search</h3>
+        <p class="govuk-body">Improve your search by:</p>
+        <ul class="govuk-list govuk-list--bullet">
+          <li>clearing filters</li>
+          <li>double-checking your reference number</li>
+          <li>searching for something less specific</li>
+        </ul>
+      </#if>
     </#if>
   </@fdsSearch.searchPageContent>
 </@fdsSearch.searchPage>

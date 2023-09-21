@@ -3,11 +3,14 @@ package uk.co.nstauthority.fieldconsents.search;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.util.Collections;
+import java.util.List;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.SessionAttributes;
+import org.springframework.web.bind.support.SessionStatus;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
@@ -24,12 +27,13 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
 
 @Controller
 @RequestMapping("/search")
+@SessionAttributes({"searchSession"})
 @HasPermission(permissions = {RolePermission.VIEW_FCS_APPLICATIONS, RolePermission.VIEW_FCS_CONSENTS})
 public class SearchController {
 
   public static final String SEARCH_TITLE = "Search";
 
-  private static final String SEARCH_RESULT_ITEMS = "searchResultItems";
+  static final String SEARCH_RESULT_ITEMS = "searchResultItems";
 
   private final TeamService teamService;
 
@@ -46,23 +50,28 @@ public class SearchController {
   }
 
   @GetMapping
-  public ModelAndView getSearch(@ModelAttribute("form") SearchFilterForm form) {
-    return getSearchModelAndView(form);
+  public ModelAndView getSearch(@ModelAttribute("searchSession") SearchSession searchSession,
+                                ServiceUserDetail user) {
+    if (searchSession.hasSearchBeenInvoked()) {
+      return getSearchModelAndView(searchSession)
+          .addObject(SEARCH_RESULT_ITEMS, getSearchResultItems(searchSession, user));
+    }
+    return getSearchModelAndView(searchSession);
   }
 
-  private ModelAndView getSearchModelAndView(SearchFilterForm form) {
+  private ModelAndView getSearchModelAndView(SearchSession searchSession) {
     var appStatuses = ApplicationVersionStatus.getSearchOptions();
     var appTypes = ApplicationType.getDisplayableOptions();
     var durationTypes = ConsentLengthType.getConsentLengthOptions();
-    var prefilledField = applicationDataFilterFormService.getPrefilledAsset(form.getFieldAssetKey());
-    var prefilledTerminal = applicationDataFilterFormService.getPrefilledAsset(form.getTerminalAssetKey());
-    var prefilledOperator = applicationDataFilterFormService.getPrefilledOrganisation(form.getOperatorId());
+    var searchFilterForm = searchSession.getSearchFilterForm();
+    var prefilledField = applicationDataFilterFormService.getPrefilledAsset(searchFilterForm.getFieldAssetKey());
+    var prefilledTerminal = applicationDataFilterFormService.getPrefilledAsset(searchFilterForm.getTerminalAssetKey());
+    var prefilledOperator = applicationDataFilterFormService.getPrefilledOrganisation(searchFilterForm.getOperatorId());
     var assetTypesWithShore = AssetTypeWithShore.getDisplayableOptions();
     var aceStatuses = AceFlagStatus.getDisplayableOptions();
-
     return new ModelAndView("fcs/search/search")
         .addObject("clearFiltersUrl",
-            ReverseRouter.route(on(SearchController.class).clearSearchFilter(null)))
+            ReverseRouter.route(on(SearchController.class).clearSearchFilter(null, null)))
         .addObject("appStatuses", appStatuses)
         .addObject("aceStatuses", aceStatuses)
         .addObject("appTypes", appTypes)
@@ -75,31 +84,40 @@ public class SearchController {
         .addObject("prefilledTerminal", prefilledTerminal)
         .addObject("terminalAssetSearchRestUrl", ReverseRouter.route(on(AssetRestController.class).searchTerminalAssets(null)))
         .addObject("assetTypesWithShore", assetTypesWithShore)
-        .addObject("form", form)
-        .addObject("pageTitle", SEARCH_TITLE);
+        .addObject("form", searchFilterForm)
+        .addObject("pageTitle", SEARCH_TITLE)
+        .addObject("searchInvoked", searchSession.hasSearchBeenInvoked());
   }
 
   @PostMapping
   ModelAndView searchApplications(@ModelAttribute("form") SearchFilterForm form,
-                                  ServiceUserDetail user) {
+                                  @ModelAttribute("searchSession") SearchSession searchSession) {
+    searchSession.update(form);
+    return ReverseRouter.redirect(on(SearchController.class).getSearch(null, null));
+  }
 
-    var modelAndView = getSearchModelAndView(form)
-        .addObject("showResults", true);
-
+  private List<SearchResultItem> getSearchResultItems(SearchSession searchSession, ServiceUserDetail user) {
     if (teamService.isRegulatorUser(user)) {
-      return modelAndView.addObject(SEARCH_RESULT_ITEMS, searchService.getRegulatorSearchResultItems(form, user));
+      return searchService.getRegulatorSearchResultItems(searchSession.getSearchFilterForm(), user);
     }
 
     if (teamService.isIndustryUser(user)) {
-      return modelAndView.addObject(SEARCH_RESULT_ITEMS, searchService.getIndustrySearchResultItems(form, user));
+      return searchService.getIndustrySearchResultItems(searchSession.getSearchFilterForm(), user);
     }
 
-    return modelAndView.addObject(SEARCH_RESULT_ITEMS, Collections.emptyList());
+    return Collections.emptyList();
   }
 
   @GetMapping("/clear-filters")
-  public ModelAndView clearSearchFilter(@ModelAttribute("form") SearchFilterForm form) {
-    form.clearFilter();
-    return ReverseRouter.redirect(on(SearchController.class).getSearch(null));
+  public ModelAndView clearSearchFilter(@ModelAttribute("searchSession") SearchSession searchSession,
+                                        SessionStatus sessionStatus) {
+    sessionStatus.setComplete();
+    searchSession.clearSession();
+    return ReverseRouter.redirect(on(SearchController.class).getSearch(null, null));
+  }
+
+  @ModelAttribute("searchSession")
+  private SearchSession getSearchSession(@ModelAttribute("form") SearchFilterForm searchFilterForm) {
+    return new SearchSession(searchFilterForm);
   }
 }

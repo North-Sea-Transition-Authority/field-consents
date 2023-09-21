@@ -41,7 +41,7 @@ class TopNavigationServiceTest {
             ),
             tuple(
                 SearchController.SEARCH_TITLE,
-                ReverseRouter.route(on(SearchController.class).getSearch( null))
+                ReverseRouter.route(on(SearchController.class).getSearch( null, null))
             ),
             tuple(
                 TopNavigationService.TEAM_MANAGEMENT_NAVIGATION_ITEM_TITLE,
