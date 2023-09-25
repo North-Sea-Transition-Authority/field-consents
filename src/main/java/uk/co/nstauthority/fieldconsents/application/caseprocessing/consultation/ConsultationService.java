@@ -63,6 +63,10 @@ public class ConsultationService {
     ));
   }
 
+  public List<Consultation> getConsultationsByApplication(Application application) {
+    return repository.findAllByRequestApplicationVersion_ApplicationOrderById(application);
+  }
+
   @Transactional
   public void requestConsultation(ApplicationVersion applicationVersion, Instant deadline, ServiceUserDetail user) {
     var consultation = new Consultation();

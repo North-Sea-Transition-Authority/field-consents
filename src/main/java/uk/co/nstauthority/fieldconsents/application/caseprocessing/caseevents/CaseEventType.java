@@ -17,7 +17,11 @@ public enum CaseEventType {
   CASE_NOTE_ADDED("Case note added", "Added by", "Added on", "Case note"),
   TECHNICAL_REVIEW_REQUESTED("Technical review requested", "Requested by",
       "Requested on", "Request details", "Technical reviewer"),
-  TECHNICAL_REVIEW_COMPLETED("Technical review completed", "Completed by", "Completed on", "Technical review");
+  TECHNICAL_REVIEW_COMPLETED("Technical review completed", "Completed by", "Completed on", "Technical review"),
+  CONSULTATION_REQUESTED("Consultation requested", "Requested by", "Requested on", "Deadline"),
+  CONSULTATION_ASSIGNED("Consultation assigned", "Assigned by", "Assigned on", "Deadline", "Responder"),
+  CONSULTATION_REASSIGNED("Consultation re-assigned", "Re-assigned by", "Assigned on", "Deadline", "Responder"),
+  ;
 
   private final String caseEventHeader;
 

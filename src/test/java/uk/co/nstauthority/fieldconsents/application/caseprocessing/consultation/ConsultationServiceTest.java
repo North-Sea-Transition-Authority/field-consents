@@ -133,6 +133,18 @@ class ConsultationServiceTest {
   }
 
   @Test
+  void getConsultationsByApplication() {
+    when(repository.findAllByRequestApplicationVersion_ApplicationOrderById(application)).thenReturn(Collections.singletonList(consultation));
+    assertThat(consultationService.getConsultationsByApplication(application)).containsExactly(consultation);
+  }
+
+  @Test
+  void getConsultationsByApplication_consultationsDontExist() {
+    when(repository.findAllByRequestApplicationVersion_ApplicationOrderById(application)).thenReturn(Collections.emptyList());
+    assertThat(consultationService.getConsultationsByApplication(application)).isEmpty();
+  }
+
+  @Test
   void requestConsultation() {
     when(teamService.getTeamsByType(CONSULTATION_TEAM_TYPE)).thenReturn(Collections.singletonList(CONSULTATION_TEAM));
 
