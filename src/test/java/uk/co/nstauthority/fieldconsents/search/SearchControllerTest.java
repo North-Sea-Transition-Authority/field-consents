@@ -38,7 +38,6 @@ import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestContro
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @ContextConfiguration(classes = SearchController.class)
 class SearchControllerTest extends AbstractControllerTest {
@@ -77,8 +76,6 @@ class SearchControllerTest extends AbstractControllerTest {
     when(applicationDataFilterFormService.getPrefilledAsset(FIELD_ASSET_KEY)).thenReturn(assetFieldRestSearchItem);
     assetTerminalRestSearchItem = ApplicationDataFilterFormTestUtil.TERMINAL_REST_SEARCH_ITEM;
     when(applicationDataFilterFormService.getPrefilledAsset(TERMINAL_ASSET_KEY)).thenReturn(assetTerminalRestSearchItem);
-    when(permissionService.hasPermission(user, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(true);
   }
 
   @SecurityTest
@@ -89,8 +86,6 @@ class SearchControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void getSearch_whenUserHasPermissions() throws Exception {
-    when(permissionService.hasPermission(user, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(true);
     when(teamService.isRegulatorUser(user)).thenReturn(true);
     searchSession.update(form);
 
@@ -105,19 +100,6 @@ class SearchControllerTest extends AbstractControllerTest {
   }
 
   @SecurityTest
-  void getSearch_whenUserDoesNotHavePermissions() throws Exception {
-    when(permissionService.hasPermission(user, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(false);
-
-    mockMvc.perform(
-            get(ReverseRouter.route(on(SearchController.class)
-                .getSearch(searchSession, user)))
-                .with(user(user))
-        )
-        .andExpect(status().isForbidden());
-  }
-
-  @SecurityTest
   void searchApplications_whenUserHasPermissions() throws Exception {
     mockMvc.perform(
             post(ReverseRouter.route(on(SearchController.class)
@@ -127,20 +109,6 @@ class SearchControllerTest extends AbstractControllerTest {
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(EXPECTED_REDIRECT_URL));
-  }
-
-  @SecurityTest
-  void searchApplications_whenUserDoesNotHavePermissions() throws Exception {
-    when(permissionService.hasPermission(user, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(false);
-
-    mockMvc.perform(
-            post(ReverseRouter.route(on(SearchController.class)
-                .searchApplications(form, searchSession)))
-                .with(user(user))
-                .with(csrf())
-        )
-        .andExpect(status().isForbidden());
   }
 
   @Test
@@ -189,9 +157,34 @@ class SearchControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  void getSearch_neitherRegulatorNorIndustryUser() throws Exception {
+  void getSearch_ConsulteeUser() throws Exception {
     when(teamService.isRegulatorUser(user)).thenReturn(false);
     when(teamService.isIndustryUser(user)).thenReturn(false);
+    when(teamService.isConsulteeUser(user)).thenReturn(true);
+    when(searchService.getConsulteeSearchResultItems(any(SearchFilterForm.class), any(ServiceUserDetail.class)))
+        .thenReturn(searchResultItems);
+    searchSession.update(form);
+
+    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(SearchController.class).getSearch(searchSession, null)))
+            .with(user(user))
+            .flashAttr("form", form)
+            .flashAttr("searchSession", searchSession))
+        .andExpect(status().isOk())
+        .andExpect(view().name(SEARCH_VIEW_NAME))
+        .andReturn().getModelAndView();
+
+    assert modelAndView != null;
+    var model = modelAndView.getModel();
+    assertThat(model)
+        .containsEntry(SEARCH_RESULT_ITEMS, searchResultItems);
+    assertSearchModel(model);
+  }
+
+  @Test
+  void getSearch_userNotRecognised() throws Exception {
+    when(teamService.isRegulatorUser(user)).thenReturn(false);
+    when(teamService.isIndustryUser(user)).thenReturn(false);
+    when(teamService.isConsulteeUser(user)).thenReturn(false);
     searchResultItems = Collections.emptyList();
     searchSession.update(form);
 

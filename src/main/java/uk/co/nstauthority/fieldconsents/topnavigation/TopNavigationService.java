@@ -20,6 +20,7 @@ public class TopNavigationService {
 
   static final String TEAM_MANAGEMENT_NAVIGATION_ITEM_TITLE = "Teams";
 
+
   public List<TopNavigationItem> getTopNavigationItems() {
     var navigationItems = new ArrayList<TopNavigationItem>();
     navigationItems.add(

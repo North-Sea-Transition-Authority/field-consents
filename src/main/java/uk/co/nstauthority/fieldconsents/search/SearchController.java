@@ -18,17 +18,16 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthT
 import uk.co.nstauthority.fieldconsents.assets.AssetRestController;
 import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.authorisation.HasPermission;
+import uk.co.nstauthority.fieldconsents.authorisation.AccessibleByServiceUsers;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormService;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Controller
 @RequestMapping("/search")
 @SessionAttributes({"searchSession"})
-@HasPermission(permissions = {RolePermission.VIEW_FCS_APPLICATIONS, RolePermission.VIEW_FCS_CONSENTS})
+@AccessibleByServiceUsers
 public class SearchController {
 
   public static final String SEARCH_TITLE = "Search";
@@ -103,6 +102,10 @@ public class SearchController {
 
     if (teamService.isIndustryUser(user)) {
       return searchService.getIndustrySearchResultItems(searchSession.getSearchFilterForm(), user);
+    }
+
+    if (teamService.isConsulteeUser(user)) {
+      return searchService.getConsulteeSearchResultItems(searchSession.getSearchFilterForm(), user);
     }
 
     return Collections.emptyList();

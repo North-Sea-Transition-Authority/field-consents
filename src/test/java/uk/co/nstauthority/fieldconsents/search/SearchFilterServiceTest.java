@@ -8,6 +8,7 @@ import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.TERMINAL1_AS
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1Json;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationAssets.APPLICATION_ASSETS;
+import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationConsultations.APPLICATION_CONSULTATIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationFlags.APPLICATION_FLAGS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.Applications.APPLICATIONS;
@@ -37,6 +38,7 @@ import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterService;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @ExtendWith(MockitoExtension.class)
 class SearchFilterServiceTest {
@@ -61,7 +63,7 @@ class SearchFilterServiceTest {
 
   @Test
   void getConditions_withEmptyFilter() {
-    assertThat(searchFilterService.getConditions(new SearchFilterForm())).isEmpty();
+    assertThat(searchFilterService.getConditions(new SearchFilterForm(), TeamType.INDUSTRY)).isEmpty();
   }
 
   @Test
@@ -77,7 +79,7 @@ class SearchFilterServiceTest {
         )
     );
 
-    assertThat(searchFilterService.getConditions(filter))
+    assertThat(searchFilterService.getConditions(filter, TeamType.INDUSTRY))
         .containsExactly(
             APPLICATIONS.APPLICATION_NO.eq(APPLICATION_NO),
             APPLICATION_VERSIONS.STATUS.in(List.of(ApplicationVersionStatus.SUBMITTED, ApplicationVersionStatus.IN_PROGRESS)),
@@ -93,7 +95,7 @@ class SearchFilterServiceTest {
 
     when(applicationDataFilterService.getConditions(filter)).thenReturn(Collections.emptyList());
 
-    assertThat(searchFilterService.getConditions(filter))
+    assertThat(searchFilterService.getConditions(filter, TeamType.REGULATOR))
         .containsExactly(
             exists(context.select(APPLICATION_FLAGS.FLAG_VALUE)
                 .from(APPLICATION_FLAGS)
@@ -109,7 +111,7 @@ class SearchFilterServiceTest {
 
     when(applicationDataFilterService.getConditions(filter)).thenReturn(Collections.emptyList());
 
-    assertThat(searchFilterService.getConditions(filter))
+    assertThat(searchFilterService.getConditions(filter, TeamType.REGULATOR))
         .containsExactly(
             exists(context.select(APPLICATION_FLAGS.FLAG_VALUE)
                 .from(APPLICATION_FLAGS)
@@ -126,7 +128,7 @@ class SearchFilterServiceTest {
     when(applicationDataFilterService.getConditions(filter)).thenReturn(Collections.emptyList());
     when(fieldService.getField(AssetKey.from(FIELD1_ASSET_KEY).assetId(), FIELD_LOOKUP_PURPOSE)).thenReturn(field1Json);
 
-    assertThat(searchFilterService.getConditions(filter))
+    assertThat(searchFilterService.getConditions(filter, TeamType.REGULATOR))
         .containsExactly(
             exists(context.select(APPLICATION_ASSETS.FIELD_ID)
                 .from(APPLICATION_ASSETS)
@@ -143,13 +145,27 @@ class SearchFilterServiceTest {
     when(applicationDataFilterService.getConditions(filter)).thenReturn(Collections.emptyList());
     when(terminalService.getTerminal(AssetKey.from(TERMINAL1_ASSET_KEY).assetId(), TERMINAL_LOOKUP_PURPOSE)).thenReturn(terminal1Json);
 
-    assertThat(searchFilterService.getConditions(filter))
+    assertThat(searchFilterService.getConditions(filter, TeamType.REGULATOR))
         .containsExactly(
             exists(context.select(APPLICATION_ASSETS.TERMINAL_ID)
                 .from(APPLICATION_ASSETS)
                 .where(APPLICATION_ASSETS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID)
                     .and(APPLICATION_ASSETS.ASSET_ROLE.eq(AssetRole.PRIMARY.name()))
                     .and(APPLICATION_ASSETS.TERMINAL_ID.eq(terminal1Json.getId()))))
+        );
+  }
+
+  @Test
+  void getConditions_withConsultationsCondition() {
+    when(applicationDataFilterService.getConditions(filter)).thenReturn(Collections.emptyList());
+
+    assertThat(searchFilterService.getConditions(filter, TeamType.OPRED))
+        .containsExactly(
+            exists(context.select(APPLICATION_CONSULTATIONS.ID)
+                .from(APPLICATION_CONSULTATIONS)
+                .join(APPLICATION_VERSIONS)
+                    .onKey(APPLICATION_CONSULTATIONS.REQUEST_APPLICATION_VERSION_ID)
+                .where(APPLICATION_VERSIONS.APPLICATION_ID.eq(APPLICATIONS.ID)))
         );
   }
 }

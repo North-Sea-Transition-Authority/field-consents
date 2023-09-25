@@ -44,7 +44,7 @@ public class SearchService {
   }
 
   public List<SearchResultItem> getRegulatorSearchResultItems(SearchFilterForm form, ServiceUserDetail user) {
-    var conditions = searchFilterService.getConditions(form);
+    var conditions = searchFilterService.getConditions(form, TeamType.REGULATOR);
     var regulatorTeams = teamService.getTeamsOfTypeThatUserHasPermissionFor(
         user,
         TeamType.REGULATOR,
@@ -64,7 +64,7 @@ public class SearchService {
   }
 
   public List<SearchResultItem> getIndustrySearchResultItems(SearchFilterForm form, ServiceUserDetail user) {
-    var conditions = searchFilterService.getConditions(form);
+    var conditions = searchFilterService.getConditions(form, TeamType.INDUSTRY);
 
     var industryTeams = teamService.getTeamsOfTypeThatUserHasPermissionFor(
         user,
@@ -95,6 +95,27 @@ public class SearchService {
     var applicationDataItemDtos = searchResultItemDtoService.runSearchQuery(conditions);
 
     return getItemsFromDtoList(applicationDataItemDtos, organisationUnitJsons, TeamType.INDUSTRY, user);
+  }
+
+  public List<SearchResultItem> getConsulteeSearchResultItems(SearchFilterForm form, ServiceUserDetail user) {
+    var conditions = searchFilterService.getConditions(form, TeamType.OPRED);
+
+    var consulteeTeams = teamService.getTeamsOfTypeThatUserHasPermissionFor(
+        user,
+        TeamType.OPRED,
+        RolePermission.VIEW_PERMISSIONS
+    );
+
+    if (consulteeTeams.isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    List<SearchResultItemDto> applicationDataItemDtos = searchResultItemDtoService.runSearchQuery(conditions);
+
+    var organisationUnitJsons = applicationDataItemDtoService
+        .getOrganisationUnitJsonsFromApplicationDataItemDtos(applicationDataItemDtos);
+
+    return getItemsFromDtoList(applicationDataItemDtos, organisationUnitJsons, TeamType.OPRED, user);
   }
 
   private List<SearchResultItem> getItemsFromDtoList(List<? extends ApplicationDataItemDto> applicationDataItemDtos,

@@ -43,6 +43,8 @@ public class ApplicationAccessService {
 
     // user has permission as a consultee so has access to all applications
     if (!userConsulteeTeamsWithPermission.isEmpty()) {
+      //TODO: we need to return true only if there's a consultation for the application
+      //      FCS-456: Add security to applications OPRED can see
       return true;
     }
 

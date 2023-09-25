@@ -82,7 +82,7 @@ class SearchServiceTest {
 
   @Test
   void getRegulatorSearchResultItems_withNoPermission() {
-    when(searchFilterService.getConditions(form)).thenReturn(new ArrayList<>());
+    when(searchFilterService.getConditions(form, TeamType.REGULATOR)).thenReturn(new ArrayList<>());
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, VIEW_PERMISSIONS))
         .thenReturn(Collections.emptyList());
 
@@ -91,7 +91,7 @@ class SearchServiceTest {
 
   @Test
   void getRegulatorSearchResultItems_withNoSearchResultItemsToDisplay() {
-    when(searchFilterService.getConditions(form)).thenReturn(new ArrayList<>());
+    when(searchFilterService.getConditions(form, TeamType.REGULATOR)).thenReturn(new ArrayList<>());
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, VIEW_PERMISSIONS))
         .thenReturn(List.of(regulatorTeam));
     when(searchResultItemDtoService.runSearchQuery(any())).thenReturn(Collections.emptyList());
@@ -101,7 +101,7 @@ class SearchServiceTest {
 
   @Test
   void getRegulatorSearchResultItems_withFlareSubmitted_forTerminal() {
-    when(searchFilterService.getConditions(form)).thenReturn(new ArrayList<>());
+    when(searchFilterService.getConditions(form, TeamType.REGULATOR)).thenReturn(new ArrayList<>());
     var searchResultItemDto = ApplicationDataItemUtil.getSearchResultItemDtoForLongFlareSubmittedForTerminalWithOpenWithdrawalRequest();
     when(searchResultItemDtoService.runSearchQuery(any())).thenReturn(List.of(searchResultItemDto));
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, VIEW_PERMISSIONS))
@@ -139,7 +139,7 @@ class SearchServiceTest {
 
   @Test
   void getRegulatorSearchResultItems_withProductionInProgress_forField() {
-    when(searchFilterService.getConditions(form)).thenReturn(new ArrayList<>());
+    when(searchFilterService.getConditions(form, TeamType.REGULATOR)).thenReturn(new ArrayList<>());
     var searchResultItemDto = ApplicationDataItemUtil.getSearchResultItemDtoForAnnualProductionInProgressForField();
     when(searchResultItemDtoService.runSearchQuery(any())).thenReturn(List.of(searchResultItemDto));
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, VIEW_PERMISSIONS))
@@ -175,7 +175,7 @@ class SearchServiceTest {
 
   @Test
   void getIndustrySearchResultItems_withNoOrganisationGroup() {
-    when(searchFilterService.getConditions(form)).thenReturn(new ArrayList<>());
+    when(searchFilterService.getConditions(form, TeamType.INDUSTRY)).thenReturn(new ArrayList<>());
     shell1IndustryTeam.setOrganisationGroupId(null);
 
     assertThat(searchService.getIndustrySearchResultItems(form, user)).isEmpty();
@@ -183,14 +183,14 @@ class SearchServiceTest {
 
   @Test
   void getIndustrySearchResultItems_withEmptyResults() {
-    when(searchFilterService.getConditions(form)).thenReturn(new ArrayList<>());
+    when(searchFilterService.getConditions(form, TeamType.INDUSTRY)).thenReturn(new ArrayList<>());
 
     assertThat(searchService.getIndustrySearchResultItems(form, user)).isEmpty();
   }
 
   @Test
   void getIndustrySearchResultItems_withNoViewPermission() {
-    when(searchFilterService.getConditions(form)).thenReturn(new ArrayList<>());
+    when(searchFilterService.getConditions(form, TeamType.INDUSTRY)).thenReturn(new ArrayList<>());
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.INDUSTRY, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(Collections.emptyList());
 
@@ -199,7 +199,7 @@ class SearchServiceTest {
 
   @Test
   void getIndustrySearchResultItems_withEmptySearchResultItemsToDisplay() {
-    when(searchFilterService.getConditions(form)).thenReturn(new ArrayList<>());
+    when(searchFilterService.getConditions(form, TeamType.INDUSTRY)).thenReturn(new ArrayList<>());
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.INDUSTRY, RolePermission.VIEW_PERMISSIONS)).thenReturn(
         List.of(shell1IndustryTeam));
     when(searchResultItemDtoService.runSearchQuery(any())).thenReturn(Collections.emptyList());
@@ -209,7 +209,7 @@ class SearchServiceTest {
 
   @Test
   void getIndustrySearchResultItems_withFlareSubmitted_forTerminal() {
-    when(searchFilterService.getConditions(form)).thenReturn(new ArrayList<>());
+    when(searchFilterService.getConditions(form, TeamType.INDUSTRY)).thenReturn(new ArrayList<>());
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.INDUSTRY, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(List.of(shell1IndustryTeam));
     when(organisationGroupQueryService.getOrganisationUnitsByOrganisationGroupIds(List.of(ORG_GROUP_ID_1)))
@@ -247,7 +247,7 @@ class SearchServiceTest {
 
   @Test
   void getIndustrySearchResultItems_withProductionInProgress_forField() {
-    when(searchFilterService.getConditions(form)).thenReturn(new ArrayList<>());
+    when(searchFilterService.getConditions(form, TeamType.INDUSTRY)).thenReturn(new ArrayList<>());
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.INDUSTRY, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(List.of(shell1IndustryTeam));
     when(organisationGroupQueryService.getOrganisationUnitsByOrganisationGroupIds(List.of(ORG_GROUP_ID_1)))
@@ -279,5 +279,24 @@ class SearchServiceTest {
     assertThat(searchResultItems.stream().toList().get(0))
         .usingRecursiveComparison()
         .isEqualTo(ApplicationDataItemUtil.getSearchResultItemFromDto(searchResultItemDto, TeamType.INDUSTRY));
+  }
+
+  @Test
+  void getConsulteeSearchResultItems_withNoPermission() {
+    when(searchFilterService.getConditions(form, TeamType.OPRED)).thenReturn(new ArrayList<>());
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.OPRED, VIEW_PERMISSIONS))
+        .thenReturn(Collections.emptyList());
+
+    assertThat(searchService.getConsulteeSearchResultItems(form, user)).isEmpty();
+  }
+
+  @Test
+  void getConsulteeSearchResultItems_withNoSearchResultItemsToDisplay() {
+    when(searchFilterService.getConditions(form, TeamType.OPRED)).thenReturn(new ArrayList<>());
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.OPRED, VIEW_PERMISSIONS))
+        .thenReturn(List.of(regulatorTeam));
+    when(searchResultItemDtoService.runSearchQuery(any())).thenReturn(Collections.emptyList());
+
+    assertThat(searchService.getConsulteeSearchResultItems(form, user)).isEmpty();
   }
 }

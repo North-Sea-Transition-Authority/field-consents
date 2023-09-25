@@ -21,6 +21,7 @@ import org.jooq.SelectQuery;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.WithdrawalStatus;
@@ -103,10 +104,7 @@ public class ApplicationDataItemQueryService {
             .and(APPLICATION_UPDATES.APPLICATION_UPDATE_STATUS.eq(ApplicationUpdateStatus.OPEN.name()))
         .leftJoin(APPLICATION_CONSULTATIONS)
             .on(APPLICATION_CONSULTATIONS.REQUEST_APPLICATION_VERSION_ID.in(allAppVersionsForAppSubQuery))
-        // TODO FCS-394 need to add join condition below when the status is added otherwise this consultation
-        // join could add cardinality when there are more that one consultation on an application (only 1 will
-        // be open at any time)
-        //    .and(APPLICATION_CONSULTATIONS.CONSULTATION_STATUS.eq(ConsultationStatus.OPEN.name()))
+            .and(APPLICATION_CONSULTATIONS.STATUS.eq(ConsultationStatus.OPEN.name()))
         .where(APPLICATION_VERSIONS.ID.in(detailsSubQuery));
     return applicationDataItemsSelectStatement.getQuery();
   }

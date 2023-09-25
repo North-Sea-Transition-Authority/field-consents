@@ -33,6 +33,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationFieldService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationStatus;
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
@@ -323,7 +324,7 @@ class WorkAreaFilterServiceTest {
 
     assertThat(conditions).containsExactly(
         SUBMITTED_APPLICATION_CONDITION,
-        APPLICATION_CONSULTATIONS.RESPONDER_WUA_ID.isNull()
+        APPLICATION_CONSULTATIONS.RESPONDER_WUA_ID.isNull().and(APPLICATION_CONSULTATIONS.STATUS.eq(ConsultationStatus.OPEN.name()))
     );
   }
 

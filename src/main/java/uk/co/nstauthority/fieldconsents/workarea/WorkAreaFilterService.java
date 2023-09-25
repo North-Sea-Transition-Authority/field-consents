@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationFieldService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationStatus;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
@@ -72,7 +73,8 @@ public class WorkAreaFilterService {
       case ALL_APPLICATIONS -> DSL.trueCondition();
       case UNASSIGNED_APPLICATIONS -> APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.isNull();
       case ALL_CONSULTATIONS -> APPLICATION_CONSULTATIONS.CONSULTATION_TEAM_ID.isNotNull();
-      case UNASSIGNED_CONSULTATIONS -> APPLICATION_CONSULTATIONS.RESPONDER_WUA_ID.isNull();
+      case UNASSIGNED_CONSULTATIONS -> APPLICATION_CONSULTATIONS.RESPONDER_WUA_ID.isNull()
+          .and(APPLICATION_CONSULTATIONS.STATUS.eq(ConsultationStatus.OPEN.name()));
       case MY_CONSULTATIONS -> APPLICATION_CONSULTATIONS.RESPONDER_WUA_ID.eq(user.wuaId().intValue());
     };
   }

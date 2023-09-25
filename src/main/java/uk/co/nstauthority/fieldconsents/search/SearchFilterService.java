@@ -2,8 +2,10 @@ package uk.co.nstauthority.fieldconsents.search;
 
 import static org.jooq.impl.DSL.exists;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationAssets.APPLICATION_ASSETS;
+import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationConsultations.APPLICATION_CONSULTATIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationFlags.APPLICATION_FLAGS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
+import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.Applications.APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterService.FIELD_LOOKUP_PURPOSE;
 
 import java.util.ArrayList;
@@ -21,6 +23,7 @@ import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalJson;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterService;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @Service
 public class SearchFilterService {
@@ -42,7 +45,7 @@ public class SearchFilterService {
     this.applicationDataFilterService = applicationDataFilterService;
   }
 
-  List<Condition> getConditions(SearchFilterForm form) {
+  List<Condition> getConditions(SearchFilterForm form, TeamType teamType) {
     var applicationDataFilterConditions = applicationDataFilterService.getConditions(form);
     List<Condition> searchFilterConditions = new ArrayList<>(applicationDataFilterConditions);
 
@@ -63,6 +66,9 @@ public class SearchFilterService {
       searchFilterConditions.add(getTerminalCondition(terminalJson));
     }
 
+    if (TeamType.OPRED.equals(teamType)) {
+      searchFilterConditions.add(getConsultationsCondition());
+    }
     return searchFilterConditions;
   }
 
@@ -93,5 +99,13 @@ public class SearchFilterService {
             .and(APPLICATION_FLAGS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID))
             .and(APPLICATION_FLAGS.FLAG_VALUE.in(aceFlagIsAceApplicationValues)))
     );
+  }
+
+  private Condition getConsultationsCondition() {
+    return exists(context.select(APPLICATION_CONSULTATIONS.ID)
+        .from(APPLICATION_CONSULTATIONS)
+        .join(APPLICATION_VERSIONS)
+          .onKey(APPLICATION_CONSULTATIONS.REQUEST_APPLICATION_VERSION_ID)
+        .where(APPLICATION_VERSIONS.APPLICATION_ID.eq(APPLICATIONS.ID)));
   }
 }
