@@ -1,20 +1,11 @@
 # com.fasterxml.woodstox:woodstox-core
 CVE-2022-40151
 CVE-2022-40152
-# org.springframework:spring-web
-CVE-2016-1000027
-# org.yaml:snakeyaml
-CVE-2022-1471
-CVE-2022-25857
-CVE-2022-38749
-CVE-2022-38750
-CVE-2022-38751
-CVE-2022-38752
-CVE-2022-41854
 # com.google.guava:guava
 CVE-2023-2976
-# org.springframework.security
-CVE-2023-34034
-CVE-2023-34035
 # org.bouncycastle:bcprov-jdk15on
 CVE-2023-33201
+# org.yaml:snakeyaml
+CVE-2022-1471
+CVE-2022-38752
+CVE-2022-41854
