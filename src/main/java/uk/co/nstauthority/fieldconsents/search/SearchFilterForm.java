@@ -5,9 +5,18 @@ import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterForm;
 
 public class SearchFilterForm extends ApplicationDataFilterForm {
 
+  String submittedYear;
   List<AceFlagStatus> aceFlagStatuses;
   String fieldAssetKey;
   String terminalAssetKey;
+
+  public String getSubmittedYear() {
+    return submittedYear;
+  }
+
+  public void setSubmittedYear(String submittedYear) {
+    this.submittedYear = submittedYear;
+  }
 
   public List<AceFlagStatus> getAceFlagStatuses() {
     return aceFlagStatuses;

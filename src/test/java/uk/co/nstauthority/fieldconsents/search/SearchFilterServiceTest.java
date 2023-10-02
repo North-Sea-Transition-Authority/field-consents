@@ -2,6 +2,8 @@ package uk.co.nstauthority.fieldconsents.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.jooq.impl.DSL.exists;
+import static org.jooq.impl.DSL.falseCondition;
+import static org.jooq.impl.DSL.year;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.FIELD1_ASSET_KEY;
 import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.TERMINAL1_ASSET_KEY;
@@ -52,11 +54,11 @@ class SearchFilterServiceTest {
   private ApplicationDataFilterService applicationDataFilterService;
 
   private SearchFilterService searchFilterService;
-  private SearchFilterForm filter;
+  private SearchFilterForm form;
 
   @BeforeEach
   void setUp() {
-    filter = new SearchFilterForm();
+    form = new SearchFilterForm();
     context = new DefaultDSLContext(SQLDialect.DEFAULT);
     searchFilterService = new SearchFilterService(context, fieldService, terminalService, applicationDataFilterService);
   }
@@ -68,8 +70,8 @@ class SearchFilterServiceTest {
 
   @Test
   void getConditions_withBasicSearchFilter() {
-    filter = ApplicationDataFilterFormTestUtil.getBasicSearchFilterForm();
-    when(applicationDataFilterService.getConditions(filter)).thenReturn(
+    form = ApplicationDataFilterFormTestUtil.getBasicSearchFilterForm();
+    when(applicationDataFilterService.getConditions(form)).thenReturn(
         List.of(
             APPLICATIONS.APPLICATION_NO.eq(APPLICATION_NO),
             APPLICATION_VERSIONS.STATUS.in(List.of(ApplicationVersionStatus.SUBMITTED, ApplicationVersionStatus.IN_PROGRESS)),
@@ -79,7 +81,7 @@ class SearchFilterServiceTest {
         )
     );
 
-    assertThat(searchFilterService.getConditions(filter, TeamType.INDUSTRY))
+    assertThat(searchFilterService.getConditions(form, TeamType.INDUSTRY))
         .containsExactly(
             APPLICATIONS.APPLICATION_NO.eq(APPLICATION_NO),
             APPLICATION_VERSIONS.STATUS.in(List.of(ApplicationVersionStatus.SUBMITTED, ApplicationVersionStatus.IN_PROGRESS)),
@@ -91,11 +93,11 @@ class SearchFilterServiceTest {
 
   @Test
   void getConditions_withAceFlagTrue() {
-    filter.setAceFlagStatuses(List.of(AceFlagStatus.ACE));
+    form.setAceFlagStatuses(List.of(AceFlagStatus.ACE));
 
-    when(applicationDataFilterService.getConditions(filter)).thenReturn(Collections.emptyList());
+    when(applicationDataFilterService.getConditions(form)).thenReturn(Collections.emptyList());
 
-    assertThat(searchFilterService.getConditions(filter, TeamType.REGULATOR))
+    assertThat(searchFilterService.getConditions(form, TeamType.REGULATOR))
         .containsExactly(
             exists(context.select(APPLICATION_FLAGS.FLAG_VALUE)
                 .from(APPLICATION_FLAGS)
@@ -107,11 +109,11 @@ class SearchFilterServiceTest {
 
   @Test
   void getConditions_withAceFlagFalse() {
-    filter.setAceFlagStatuses(List.of(AceFlagStatus.NON_ACE));
+    form.setAceFlagStatuses(List.of(AceFlagStatus.NON_ACE));
 
-    when(applicationDataFilterService.getConditions(filter)).thenReturn(Collections.emptyList());
+    when(applicationDataFilterService.getConditions(form)).thenReturn(Collections.emptyList());
 
-    assertThat(searchFilterService.getConditions(filter, TeamType.REGULATOR))
+    assertThat(searchFilterService.getConditions(form, TeamType.REGULATOR))
         .containsExactly(
             exists(context.select(APPLICATION_FLAGS.FLAG_VALUE)
                 .from(APPLICATION_FLAGS)
@@ -123,12 +125,12 @@ class SearchFilterServiceTest {
 
   @Test
   void getConditions_withFieldAsset() {
-    filter.setFieldAssetKey(FIELD1_ASSET_KEY);
+    form.setFieldAssetKey(FIELD1_ASSET_KEY);
 
-    when(applicationDataFilterService.getConditions(filter)).thenReturn(Collections.emptyList());
+    when(applicationDataFilterService.getConditions(form)).thenReturn(Collections.emptyList());
     when(fieldService.getField(AssetKey.from(FIELD1_ASSET_KEY).assetId(), FIELD_LOOKUP_PURPOSE)).thenReturn(field1Json);
 
-    assertThat(searchFilterService.getConditions(filter, TeamType.REGULATOR))
+    assertThat(searchFilterService.getConditions(form, TeamType.REGULATOR))
         .containsExactly(
             exists(context.select(APPLICATION_ASSETS.FIELD_ID)
                 .from(APPLICATION_ASSETS)
@@ -140,12 +142,12 @@ class SearchFilterServiceTest {
 
   @Test
   void getConditions_withTerminalAsset() {
-    filter.setTerminalAssetKey(TERMINAL1_ASSET_KEY);
+    form.setTerminalAssetKey(TERMINAL1_ASSET_KEY);
 
-    when(applicationDataFilterService.getConditions(filter)).thenReturn(Collections.emptyList());
+    when(applicationDataFilterService.getConditions(form)).thenReturn(Collections.emptyList());
     when(terminalService.getTerminal(AssetKey.from(TERMINAL1_ASSET_KEY).assetId(), TERMINAL_LOOKUP_PURPOSE)).thenReturn(terminal1Json);
 
-    assertThat(searchFilterService.getConditions(filter, TeamType.REGULATOR))
+    assertThat(searchFilterService.getConditions(form, TeamType.REGULATOR))
         .containsExactly(
             exists(context.select(APPLICATION_ASSETS.TERMINAL_ID)
                 .from(APPLICATION_ASSETS)
@@ -157,9 +159,9 @@ class SearchFilterServiceTest {
 
   @Test
   void getConditions_withConsultationsCondition() {
-    when(applicationDataFilterService.getConditions(filter)).thenReturn(Collections.emptyList());
+    when(applicationDataFilterService.getConditions(form)).thenReturn(Collections.emptyList());
 
-    assertThat(searchFilterService.getConditions(filter, TeamType.OPRED))
+    assertThat(searchFilterService.getConditions(form, TeamType.OPRED))
         .containsExactly(
             exists(context.select(APPLICATION_CONSULTATIONS.ID)
                 .from(APPLICATION_CONSULTATIONS)
@@ -167,5 +169,23 @@ class SearchFilterServiceTest {
                     .onKey(APPLICATION_CONSULTATIONS.REQUEST_APPLICATION_VERSION_ID)
                 .where(APPLICATION_VERSIONS.APPLICATION_ID.eq(APPLICATIONS.ID)))
         );
+  }
+
+  @Test
+  void getConditions_withSubmittedYearNonNumeric() {
+    form.setSubmittedYear("abc");
+    when(applicationDataFilterService.getConditions(form)).thenReturn(Collections.emptyList());
+
+    assertThat(searchFilterService.getConditions(form, TeamType.INDUSTRY)).containsExactly(falseCondition());
+  }
+
+  @Test
+  void getConditions_withValidSubmittedYear() {
+    form.setSubmittedYear("2023");
+    when(applicationDataFilterService.getConditions(form)).thenReturn(Collections.emptyList());
+
+    assertThat(searchFilterService.getConditions(form, TeamType.INDUSTRY)).containsExactly(
+        year(APPLICATION_VERSIONS.SUBMITTED_DATE_TIME).eq(2023)
+    );
   }
 }

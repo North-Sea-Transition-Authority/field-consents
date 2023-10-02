@@ -22,6 +22,7 @@ public class SearchSession implements Serializable {
 
   public void clearSession() {
     searchFilterForm.clearFilter();
+    searchFilterForm.setSubmittedYear(null);
     searchFilterForm.setAceFlagStatuses(null);
     searchFilterForm.setFieldAssetKey(null);
     searchFilterForm.setTerminalAssetKey(null);

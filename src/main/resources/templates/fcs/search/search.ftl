@@ -14,6 +14,7 @@
       <@dataItemFilter.applicationTypeFilter form=form applicationTypeCheckboxes=appTypes/>
       <@dataItemFilter.durationFilter form=form durationCheckboxes=durationTypes/>
       <@dataItemFilter.operatorFilter form=form prefilledOperator=prefilledOperator operatorSearchRestUrl=operatorSearchRestUrl/>
+      <@submittedYearFilter form=form/>
       <@aceFilter form=form aceCheckboxes=aceStatuses/>
       <@dataItemFilter.assetTypeWithShoreFilter form=form assetTypeWithShoreCheckboxes=assetTypesWithShore/>
       <@fieldAssetFilter form=form prefilledField=prefilledField fieldAssetSearchRestUrl=fieldAssetSearchRestUrl/>
@@ -82,6 +83,16 @@
     <@fdsResultList.resultListDataValue key="Other information" value=otherInformation/>
   </@fdsResultList.resultListDataItem>
 </@fdsResultList.resultListItem>
+</#macro>
+
+<#macro submittedYearFilter form>
+  <@fdsSearch.searchFilterItem itemName="Submission year" expanded=form.submittedYear?has_content>
+    <@fdsSearch.searchTextInput
+      path="form.submittedYear"
+      labelText=""
+      suffixScreenReaderPrompt="Application submission year"
+    />
+  </@fdsSearch.searchFilterItem>
 </#macro>
 
 <#macro aceFilter form aceCheckboxes>
