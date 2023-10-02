@@ -6,6 +6,7 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
@@ -19,10 +20,15 @@ public class ApplicationAccessService {
 
   private final TeamService teamService;
 
+  private final ConsultationService consultationService;
+
   @Autowired
-  ApplicationAccessService(OrganisationUnitPermissionService organisationUnitPermissionService, TeamService teamService) {
+  ApplicationAccessService(OrganisationUnitPermissionService organisationUnitPermissionService,
+                           TeamService teamService,
+                           ConsultationService consultationService) {
     this.organisationUnitPermissionService = organisationUnitPermissionService;
     this.teamService = teamService;
+    this.consultationService = consultationService;
   }
 
   public boolean hasApplicationPermission(ServiceUserDetail user,
@@ -41,11 +47,9 @@ public class ApplicationAccessService {
     var userConsulteeTeamsWithPermission =
         teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.OPRED, requiredPermissionsSet);
 
-    // user has permission as a consultee so has access to all applications
+    // user has permission as a consultee and there's a consultation for the application
     if (!userConsulteeTeamsWithPermission.isEmpty()) {
-      //TODO: we need to return true only if there's a consultation for the application
-      //      FCS-456: Add security to applications OPRED can see
-      return true;
+      return !consultationService.getConsultationsByApplication(applicationVersion.getApplication()).isEmpty();
     }
 
     return organisationUnitPermissionService
@@ -65,7 +69,9 @@ public class ApplicationAccessService {
           .forEach(userRolePermissions::add);
     }
 
-    if (teamService.isConsulteeUser(user)) {
+    var consultationsExistForApplication =
+        !consultationService.getConsultationsByApplication(applicationVersion.getApplication()).isEmpty();
+    if (teamService.isConsulteeUser(user) && consultationsExistForApplication) {
       teamService.getTeamsOfTypeThatUserBelongsTo(user, TeamType.OPRED)
           .stream()
           .map(team -> teamService.getUserPermissionsForTeam(team, user))

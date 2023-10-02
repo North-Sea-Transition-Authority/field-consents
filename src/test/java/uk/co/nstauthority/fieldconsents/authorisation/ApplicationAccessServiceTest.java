@@ -22,6 +22,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
@@ -40,6 +42,9 @@ class ApplicationAccessServiceTest {
 
   @Mock
   private TeamService teamService;
+
+  @Mock
+  private ConsultationService consultationService;
 
   @InjectMocks
   private ApplicationAccessService applicationAccessService;
@@ -109,9 +114,25 @@ class ApplicationAccessServiceTest {
         .thenReturn(Collections.emptyList());
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, Set.of(ALLOCATE_CONSULTATION)))
         .thenReturn(List.of(consulteeTeam));
+    when(consultationService.getConsultationsByApplication(applicationVersion.getApplication()))
+        .thenReturn(List.of(new Consultation()));
 
     assertThat(applicationAccessService.hasApplicationPermission(USER, applicationVersion, ALLOCATE_CONSULTATION))
         .isTrue();
+  }
+
+  @Test
+  void hasApplicationPermission_whenUserHasPermissionForConsulteeTeamButNotForApplication_thenFalse() {
+    var consulteeTeam = TeamTestUtil.Builder().withTeamType(TeamType.OPRED).build();
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, Set.of(ALLOCATE_CONSULTATION)))
+        .thenReturn(Collections.emptyList());
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, Set.of(ALLOCATE_CONSULTATION)))
+        .thenReturn(List.of(consulteeTeam));
+    when(consultationService.getConsultationsByApplication(applicationVersion.getApplication()))
+        .thenReturn(Collections.emptyList());
+
+    assertThat(applicationAccessService.hasApplicationPermission(USER, applicationVersion, ALLOCATE_CONSULTATION))
+        .isFalse();
   }
 
   @Test
@@ -214,8 +235,24 @@ class ApplicationAccessServiceTest {
     when(organisationUnitPermissionService
         .getUserPermissionsForOperator(USER, applicationVersion.getPrimaryOperatorOuId()))
         .thenReturn(Collections.emptySet());
+    when(consultationService.getConsultationsByApplication(applicationVersion.getApplication()))
+        .thenReturn(List.of(new Consultation()));
 
     assertThat(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .containsAll(consulteePermissions);
+  }
+
+  @Test
+  void getApplicationPermissionsForUser_whenConsulteeWithPermissionsButNoConsultationForApplication_thenEmpty() {
+    when(teamService.isRegulatorUser(USER)).thenReturn(false);
+    when(teamService.isConsulteeUser(USER)).thenReturn(true);
+    when(organisationUnitPermissionService
+        .getUserPermissionsForOperator(USER, applicationVersion.getPrimaryOperatorOuId()))
+        .thenReturn(Collections.emptySet());
+    when(consultationService.getConsultationsByApplication(applicationVersion.getApplication()))
+        .thenReturn(Collections.emptyList());
+
+    assertThat(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
+        .isEmpty();
   }
 }

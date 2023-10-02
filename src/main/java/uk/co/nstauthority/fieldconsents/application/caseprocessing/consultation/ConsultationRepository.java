@@ -15,5 +15,4 @@ interface ConsultationRepository extends CrudRepository<Consultation, Integer> {
   );
 
   List<Consultation> findAllByRequestApplicationVersion_ApplicationOrderById(Application application);
-
 }
