@@ -1,29 +1,12 @@
 package uk.co.nstauthority.fieldconsents.branding;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
+import jakarta.validation.constraints.NotNull;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
-@Configuration
-public class ServiceBrandingConfigurationProperties {
-
-  private final CustomerConfigurationProperties customerConfigurationProperties;
-
-  private final ServiceConfigurationProperties serviceConfigurationProperties;
-
-  @Autowired
-  ServiceBrandingConfigurationProperties(
-      CustomerConfigurationProperties customerConfigurationProperties,
-      ServiceConfigurationProperties serviceConfigurationProperties
-  ) {
-    this.customerConfigurationProperties = customerConfigurationProperties;
-    this.serviceConfigurationProperties = serviceConfigurationProperties;
-  }
-
-  public CustomerConfigurationProperties getCustomerConfigurationProperties() {
-    return customerConfigurationProperties;
-  }
-
-  public ServiceConfigurationProperties getServiceConfigurationProperties() {
-    return serviceConfigurationProperties;
-  }
-}
+@ConfigurationProperties(prefix = "branding.service")
+@Validated
+public record ServiceBrandingConfigurationProperties(
+    @NotNull String name,
+    @NotNull String mnemonic
+) {}

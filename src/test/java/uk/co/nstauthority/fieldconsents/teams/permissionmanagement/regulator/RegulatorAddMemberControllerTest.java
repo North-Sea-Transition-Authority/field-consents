@@ -30,7 +30,7 @@ import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
-import uk.co.nstauthority.fieldconsents.branding.CustomerConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.energyportal.EnergyPortalConfiguration;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
@@ -179,7 +179,7 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     when(teamService.getTeam(teamId, RegulatorAddMemberController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
-    var customerMnemonic = applicationContext.getBean(CustomerConfigurationProperties.class).mnemonic();
+    var customerMnemonic = applicationContext.getBean(CustomerBrandingConfigurationProperties.class).mnemonic();
     var registrationUrl = applicationContext.getBean(EnergyPortalConfiguration.class).registrationUrl();
 
     mockMvc.perform(

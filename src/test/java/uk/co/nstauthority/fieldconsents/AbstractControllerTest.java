@@ -26,7 +26,7 @@ import uk.co.nstauthority.fieldconsents.authorisation.ApplicationHandlerIntercep
 import uk.co.nstauthority.fieldconsents.authorisation.HasPermissionInterceptor;
 import uk.co.nstauthority.fieldconsents.authorisation.HasTeamPermissionInterceptor;
 import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
-import uk.co.nstauthority.fieldconsents.branding.IncludeServiceBrandingConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.branding.EnableAllBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.configuration.SamlProperties;
 import uk.co.nstauthority.fieldconsents.configuration.WebSecurityConfiguration;
 import uk.co.nstauthority.fieldconsents.controllerhelper.ControllerHelperService;
@@ -46,7 +46,7 @@ import uk.co.nstauthority.fieldconsents.validation.ValidationErrorOrderingServic
 
 @WebMvcTest
 @ActiveProfiles("test")
-@IncludeServiceBrandingConfigurationProperties
+@EnableAllBrandingConfigurationProperties
 @IncludeEnergyPortalConfigurationProperties
 @WithDefaultPageControllerAdvice
 @Import({

@@ -24,7 +24,7 @@ import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
-import uk.co.nstauthority.fieldconsents.branding.CustomerConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.TeamId;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
@@ -124,7 +124,7 @@ class RegulatorTeamManagementControllerTest extends AbstractControllerTest {
 
     when(teamMemberViewService.getTeamMemberViewsForTeam(team)).thenReturn(List.of(teamMemberView));
 
-    var mnemonic = applicationContext.getBean(CustomerConfigurationProperties.class).mnemonic();
+    var mnemonic = applicationContext.getBean(CustomerBrandingConfigurationProperties.class).mnemonic();
 
     mockMvc.perform(
             get(ReverseRouter.route(on(RegulatorTeamManagementController.class).renderMemberList(teamId)))
@@ -163,7 +163,7 @@ class RegulatorTeamManagementControllerTest extends AbstractControllerTest {
     when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, Set.of(RegulatorTeamRole.ACCESS_MANAGER.name())))
         .thenReturn(canRemoveUsers);
 
-    var mnemonic = applicationContext.getBean(CustomerConfigurationProperties.class).mnemonic();
+    var mnemonic = applicationContext.getBean(CustomerBrandingConfigurationProperties.class).mnemonic();
 
     when(teamService.canUserAccessMultipleTeams(user))
         .thenReturn(canAccessMultipleTeams);

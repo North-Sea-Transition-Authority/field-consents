@@ -3,7 +3,7 @@
 
 <#-- @ftlvariable name="applicationUpdateRequestView" type="uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateRequestView" -->
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
-<#-- @ftlvariable name="customerBranding" type="uk.co.nstauthority.fieldconsents.branding.CustomerConfigurationProperties" -->
+<#-- @ftlvariable name="customerBrandingConfigurationProperties" type="uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties" -->
 
 <#assign pageTitle = "Update application"/>
 
@@ -17,7 +17,7 @@
     startActionUrl=startActionUrl
     startActionText="Start update">
       <p class="govuk-body">
-        Update your application with the information requested by ${customerBranding.mnemonic()}. This may involve correcting details of the application or providing updated supporting documentation.
+        Update your application with the information requested by ${customerBrandingConfigurationProperties.mnemonic()}. This may involve correcting details of the application or providing updated supporting documentation.
       </p>
       <@applicationUpdateRequestSummary.applicationUpdateRequestSummary applicationUpdateRequestView=applicationUpdateRequestView/>
     </@fdsStartPage.startPage>

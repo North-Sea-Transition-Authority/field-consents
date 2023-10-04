@@ -20,15 +20,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
-import uk.co.nstauthority.fieldconsents.branding.CustomerConfigurationProperties;
-import uk.co.nstauthority.fieldconsents.branding.IncludeServiceBrandingConfigurationProperties;
-import uk.co.nstauthority.fieldconsents.branding.ServiceConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.branding.EnableAllBrandingConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.branding.ServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.topnavigation.TopNavigationService;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @WebMvcTest
 @ActiveProfiles("test")
-@IncludeServiceBrandingConfigurationProperties
+@EnableAllBrandingConfigurationProperties
 @ContextConfiguration(classes = {
     DefaultPageControllerAdviceTest.TestController.class,
     DefaultPageControllerAdvice.class,
@@ -57,10 +57,10 @@ class DefaultPageControllerAdviceTest {
     var modelMap = modelAndView.getModel();
 
     assertThat(modelMap).containsOnlyKeys(
-        "customerBranding",
-        "org.springframework.validation.BindingResult.customerBranding",
-        "serviceBranding",
-        "org.springframework.validation.BindingResult.serviceBranding",
+        "customerBrandingConfigurationProperties",
+        "org.springframework.validation.BindingResult.customerBrandingConfigurationProperties",
+        "serviceBrandingConfigurationProperties",
+        "org.springframework.validation.BindingResult.serviceBrandingConfigurationProperties",
         "serviceHomeUrl",
         "navigationItems",
         "currentEndPoint",
@@ -68,12 +68,12 @@ class DefaultPageControllerAdviceTest {
         "org.springframework.validation.BindingResult.loggedInUser"
     );
 
-    assertThat(modelMap.get("customerBranding"))
-        .asInstanceOf(type(CustomerConfigurationProperties.class))
+    assertThat(modelMap.get("customerBrandingConfigurationProperties"))
+        .asInstanceOf(type(CustomerBrandingConfigurationProperties.class))
         .hasNoNullFieldsOrProperties();
 
-    assertThat(modelMap.get("serviceBranding"))
-        .asInstanceOf(type(ServiceConfigurationProperties.class))
+    assertThat(modelMap.get("serviceBrandingConfigurationProperties"))
+        .asInstanceOf(type(ServiceBrandingConfigurationProperties.class))
         .hasNoNullFieldsOrProperties();
 
     assertThat(modelMap).contains(

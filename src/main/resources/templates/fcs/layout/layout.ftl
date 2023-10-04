@@ -3,15 +3,15 @@
 <#import '../macros/taskList.ftl' as taskList>
 <#import '_header.ftl' as pageHeader>
 
-<#-- @ftlvariable name="serviceBranding" type="uk.co.nstauthority.fieldconsents.branding.ServiceConfigurationProperties" -->
-<#-- @ftlvariable name="customerBranding" type="uk.co.nstauthority.fieldconsents.branding.CustomerConfigurationProperties" -->
+<#-- @ftlvariable name="serviceBrandingConfigurationProperties" type="uk.co.nstauthority.fieldconsents.branding.ServiceBrandingConfigurationProperties" -->
+<#-- @ftlvariable name="customerBrandingConfigurationProperties" type="uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties" -->
 <#-- @ftlvariable name="serviceHomeUrl" type="String" -->
 <#-- @ftlvariable name="singleErrorMessage" type="String" -->
 <#-- @ftlvariable name="loggedInUser" type="uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail" -->
 <#-- @ftlvariable name="flash" type="uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner" -->
 
-<#assign SERVICE_NAME = serviceBranding.name() />
-<#assign CUSTOMER_MNEMONIC = customerBranding.mnemonic() />
+<#assign SERVICE_NAME = serviceBrandingConfigurationProperties.name() />
+<#assign CUSTOMER_MNEMONIC = customerBrandingConfigurationProperties.mnemonic() />
 <#assign SERVICE_HOME_URL = springUrl(serviceHomeUrl) />
 
 <#macro defaultPage
@@ -28,8 +28,8 @@
   singleErrorMessage=""
   showNavigationItems=true
 >
-  <#local serviceName = serviceBranding.name() />
-  <#local customerMnemonic = customerBranding.mnemonic() />
+  <#local serviceName = serviceBrandingConfigurationProperties.name() />
+  <#local customerMnemonic = customerBrandingConfigurationProperties.mnemonic() />
   <#local serviceHomeUrl = springUrl(serviceHomeUrl) />
 
   <#assign fullPageWidth=false />

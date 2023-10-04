@@ -20,7 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.fivium.energyportalapi.client.LogCorrelationId;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.user.UserApi;
-import uk.co.nstauthority.fieldconsents.branding.ServiceConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.branding.ServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.api.EnergyPortalApiWrapper;
 
@@ -31,7 +31,7 @@ class EnergyPortalUserServiceTest {
 
   private static EnergyPortalUserService energyPortalUserService;
 
-  private static final ServiceConfigurationProperties serviceConfigurationProperties = new ServiceConfigurationProperties(
+  private static final ServiceBrandingConfigurationProperties SERVICE_BRANDING_CONFIGURATION_PROPERTIES = new ServiceBrandingConfigurationProperties(
       "name",
       "mnemonic"
   );
@@ -41,7 +41,7 @@ class EnergyPortalUserServiceTest {
     userApi = mock(UserApi.class);
     energyPortalUserService = new EnergyPortalUserService(
         userApi,
-        new EnergyPortalApiWrapper(serviceConfigurationProperties)
+        new EnergyPortalApiWrapper(SERVICE_BRANDING_CONFIGURATION_PROPERTIES)
     );
   }
 

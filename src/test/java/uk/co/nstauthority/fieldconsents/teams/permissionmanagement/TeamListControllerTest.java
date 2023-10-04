@@ -24,7 +24,7 @@ import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
-import uk.co.nstauthority.fieldconsents.branding.CustomerConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
@@ -39,7 +39,7 @@ class TeamListControllerTest extends AbstractControllerTest {
   private TeamManagementService teamManagementService;
 
   @Autowired
-  private CustomerConfigurationProperties customerConfigurationProperties;
+  private CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties;
 
   private ServiceUserDetail user;
 
@@ -145,12 +145,12 @@ class TeamListControllerTest extends AbstractControllerTest {
     var regulatorTeam = TeamTestUtil.Builder()
         .withTeamType(TeamType.REGULATOR)
         .build();
-    var regulatorTeamView = TeamView.fromTeam(regulatorTeam, customerConfigurationProperties);
+    var regulatorTeamView = TeamView.fromTeam(regulatorTeam, customerBrandingConfigurationProperties);
 
     var industryTeam = TeamTestUtil.Builder()
         .withTeamType(TeamType.INDUSTRY)
         .build();
-    var industryTeamView = TeamView.fromTeam(industryTeam, customerConfigurationProperties);
+    var industryTeamView = TeamView.fromTeam(industryTeam, customerBrandingConfigurationProperties);
 
     when(teamService.getUserAccessibleTeams(user))
         .thenReturn(List.of(industryTeam, regulatorTeam));

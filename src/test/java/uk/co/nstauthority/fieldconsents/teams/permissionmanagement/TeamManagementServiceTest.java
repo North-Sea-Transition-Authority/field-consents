@@ -7,7 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.nstauthority.fieldconsents.branding.CustomerConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
 import uk.co.nstauthority.fieldconsents.teams.TeamView;
@@ -15,15 +15,15 @@ import uk.co.nstauthority.fieldconsents.teams.TeamView;
 @ExtendWith(MockitoExtension.class)
 class TeamManagementServiceTest {
 
-  private CustomerConfigurationProperties customerConfigurationProperties;
+  private CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties;
   private TeamManagementService teamManagementService;
 
   @BeforeEach
   void setUp() {
-    customerConfigurationProperties = new CustomerConfigurationProperties(
+    customerBrandingConfigurationProperties = new CustomerBrandingConfigurationProperties(
         "name", "mnem", "business@email.com"
     );
-    teamManagementService = new TeamManagementService(customerConfigurationProperties);
+    teamManagementService = new TeamManagementService(customerBrandingConfigurationProperties);
   }
 
   @Test
@@ -38,8 +38,8 @@ class TeamManagementServiceTest {
 
     assertThat(teamViews)
         .containsExactly(
-            TeamView.fromTeam(firstTeam, customerConfigurationProperties),
-            TeamView.fromTeam(secondTeam, customerConfigurationProperties)
+            TeamView.fromTeam(firstTeam, customerBrandingConfigurationProperties),
+            TeamView.fromTeam(secondTeam, customerBrandingConfigurationProperties)
         );
   }
 }

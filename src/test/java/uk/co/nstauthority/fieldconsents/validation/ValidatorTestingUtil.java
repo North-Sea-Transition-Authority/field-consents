@@ -9,7 +9,7 @@ import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.FieldError;
-import uk.co.nstauthority.fieldconsents.branding.CustomerConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
 
 public class ValidatorTestingUtil {
 
@@ -42,8 +42,8 @@ public class ValidatorTestingUtil {
             Collectors.groupingBy(FieldError::getField, Collectors.mapping(FieldError::getDefaultMessage, Collectors.toList())));
   }
 
-  public static CustomerConfigurationProperties getCustomerConfigurationProperties() {
-    return new CustomerConfigurationProperties("Customer Name", "CUSTMNEM", "Customer Email");
+  public static CustomerBrandingConfigurationProperties getCustomerBrandingConfigurationProperties() {
+    return new CustomerBrandingConfigurationProperties("Customer Name", "CUSTMNEM", "Customer Email");
   }
 
   // Below methods extractErrors and extractErrorMessages copied from WIOS in the teams copy

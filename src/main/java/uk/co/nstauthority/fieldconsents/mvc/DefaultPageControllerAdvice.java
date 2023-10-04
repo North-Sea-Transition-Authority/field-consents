@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import uk.co.nstauthority.fieldconsents.authentication.InvalidAuthenticationException;
 import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
+import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.branding.ServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.topnavigation.TopNavigationService;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
@@ -20,13 +21,19 @@ import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 class DefaultPageControllerAdvice {
 
   private final ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties;
+  private final CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties;
   private final TopNavigationService topNavigationService;
   private final UserDetailService userDetailService;
 
   @Autowired
-  DefaultPageControllerAdvice(ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties,
-                              TopNavigationService topNavigationService, UserDetailService userDetailService) {
+  DefaultPageControllerAdvice(
+      ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties,
+      CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties,
+      TopNavigationService topNavigationService,
+      UserDetailService userDetailService
+  ) {
     this.serviceBrandingConfigurationProperties = serviceBrandingConfigurationProperties;
+    this.customerBrandingConfigurationProperties = customerBrandingConfigurationProperties;
     this.topNavigationService = topNavigationService;
     this.userDetailService = userDetailService;
   }
@@ -47,12 +54,12 @@ class DefaultPageControllerAdvice {
 
   private void addBrandingAttributes(Model model) {
     model.addAttribute(
-        "serviceBranding",
-        serviceBrandingConfigurationProperties.getServiceConfigurationProperties()
+        "serviceBrandingConfigurationProperties",
+        serviceBrandingConfigurationProperties
     );
     model.addAttribute(
-        "customerBranding",
-        serviceBrandingConfigurationProperties.getCustomerConfigurationProperties()
+        "customerBrandingConfigurationProperties",
+        customerBrandingConfigurationProperties
     );
   }
 

@@ -26,7 +26,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
-import uk.co.nstauthority.fieldconsents.branding.CustomerConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
@@ -56,7 +56,7 @@ class RegulatorRemoveMemberControllerTest extends AbstractControllerTest {
   private ApplicationContext applicationContext;
 
   @Autowired
-  private CustomerConfigurationProperties customerConfigurationProperties;
+  private CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties;
 
   @SecurityTest
   void renderRemoveMember_whenUserIsNotLoggedIn_thenRedirectedToLogin() throws Exception {
@@ -163,7 +163,7 @@ class RegulatorRemoveMemberControllerTest extends AbstractControllerTest {
             .renderRemoveMember(teamId, teamMember.wuaId())))
             .with(user(user)))
         .andExpect(status().isOk())
-        .andExpect(model().attribute("teamName", customerConfigurationProperties.mnemonic()))
+        .andExpect(model().attribute("teamName", customerBrandingConfigurationProperties.mnemonic()))
         .andExpect(model().attribute("teamMember", teamMemberView))
         .andExpect(model().attribute(
             "backLinkUrl",
@@ -179,7 +179,7 @@ class RegulatorRemoveMemberControllerTest extends AbstractControllerTest {
         .andExpect(model().attribute(
             "pageTitle",
             "Are you sure you want to remove %s from %s?".formatted(teamMemberView.getDisplayName(),
-                customerConfigurationProperties.mnemonic())
+                customerBrandingConfigurationProperties.mnemonic())
         ))
         .andReturn()
         .getModelAndView();
@@ -216,7 +216,7 @@ class RegulatorRemoveMemberControllerTest extends AbstractControllerTest {
             .renderRemoveMember(teamId, teamMember.wuaId())))
             .with(user(user)))
         .andExpect(status().isOk())
-        .andExpect(model().attribute("teamName", customerConfigurationProperties.mnemonic()))
+        .andExpect(model().attribute("teamName", customerBrandingConfigurationProperties.mnemonic()))
         .andExpect(model().attribute("teamMember", teamMemberView))
         .andExpect(model().attribute(
             "backLinkUrl",
@@ -232,7 +232,7 @@ class RegulatorRemoveMemberControllerTest extends AbstractControllerTest {
         .andExpect(model().attribute(
             "pageTitle",
             "You are unable to remove %s from %s".formatted(teamMemberView.getDisplayName(),
-                customerConfigurationProperties.mnemonic())
+                customerBrandingConfigurationProperties.mnemonic())
         ))
         .andReturn()
         .getModelAndView();

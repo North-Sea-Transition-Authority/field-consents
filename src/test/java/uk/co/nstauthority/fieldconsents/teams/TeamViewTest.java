@@ -5,18 +5,18 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import uk.co.nstauthority.fieldconsents.branding.CustomerConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamManagementController;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamManagementController;
 
 class TeamViewTest {
 
-  private CustomerConfigurationProperties customerConfigurationProperties;
+  private CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties;
 
   @BeforeEach
   void setUp() {
-    this.customerConfigurationProperties = new CustomerConfigurationProperties(
+    this.customerBrandingConfigurationProperties = new CustomerBrandingConfigurationProperties(
         "stub",
         "mnem",
         "email@fcs.co.uk"
@@ -28,7 +28,7 @@ class TeamViewTest {
     var team = TeamTestUtil.Builder()
         .withTeamType(TeamType.REGULATOR)
         .build();
-    var teamView = TeamView.fromTeam(team, customerConfigurationProperties);
+    var teamView = TeamView.fromTeam(team, customerBrandingConfigurationProperties);
     assertThat(teamView)
         .extracting(
             TeamView::teamUrl,
@@ -36,7 +36,7 @@ class TeamViewTest {
         )
         .containsExactly(
             ReverseRouter.route(on(RegulatorTeamManagementController.class).renderMemberList(team.toTeamId())),
-            customerConfigurationProperties.mnemonic()
+            customerBrandingConfigurationProperties.mnemonic()
         );
   }
 
@@ -47,7 +47,7 @@ class TeamViewTest {
         .withDisplayName(teamName)
         .withTeamType(TeamType.INDUSTRY)
         .build();
-    var teamView = TeamView.fromTeam(team, customerConfigurationProperties);
+    var teamView = TeamView.fromTeam(team, customerBrandingConfigurationProperties);
     assertThat(teamView)
         .extracting(
             TeamView::teamUrl,
@@ -64,10 +64,10 @@ class TeamViewTest {
     var team = TeamTestUtil.Builder()
         .withTeamType(TeamType.REGULATOR)
         .build();
-    var teamView = TeamView.fromTeam(team, customerConfigurationProperties);
+    var teamView = TeamView.fromTeam(team, customerBrandingConfigurationProperties);
     assertThat(teamView)
         .extracting(TeamView::displayName)
-        .isEqualTo(customerConfigurationProperties.mnemonic())
+        .isEqualTo(customerBrandingConfigurationProperties.mnemonic())
         .isNotEqualTo(team.getDisplayName());
   }
 
@@ -78,10 +78,10 @@ class TeamViewTest {
         .withTeamType(TeamType.INDUSTRY)
         .withDisplayName(teamName)
         .build();
-    var teamView = TeamView.fromTeam(team, customerConfigurationProperties);
+    var teamView = TeamView.fromTeam(team, customerBrandingConfigurationProperties);
     assertThat(teamView)
         .extracting(TeamView::displayName)
         .isEqualTo(teamName)
-        .isNotEqualTo(customerConfigurationProperties.mnemonic());
+        .isNotEqualTo(customerBrandingConfigurationProperties.mnemonic());
   }
 }

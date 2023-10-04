@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.nstauthority.fieldconsents.branding.CustomerConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
 
 @ExtendWith(MockitoExtension.class)
 class TeamViewComparatorTest {
@@ -17,7 +17,7 @@ class TeamViewComparatorTest {
 
   @Test
   void compare_byTypeDisplayOrder() {
-    var customerConfigurationProperties = new CustomerConfigurationProperties(
+    var customerBrandingConfigurationProperties = new CustomerBrandingConfigurationProperties(
         "stub",
         "mnem",
         "email@fcs.co.uk"
@@ -29,8 +29,8 @@ class TeamViewComparatorTest {
         .withTeamType(TeamType.INDUSTRY)
         .build();
 
-    var firstTeamView = TeamView.fromTeam(firstTeam, customerConfigurationProperties);
-    var secondTeamView = TeamView.fromTeam(secondTeam, customerConfigurationProperties);
+    var firstTeamView = TeamView.fromTeam(firstTeam, customerBrandingConfigurationProperties);
+    var secondTeamView = TeamView.fromTeam(secondTeam, customerBrandingConfigurationProperties);
 
     var sortResult = Stream.of(secondTeamView, firstTeamView)
         .sorted(teamViewComparator)
@@ -41,7 +41,7 @@ class TeamViewComparatorTest {
 
   @Test
   void compare_byTeamName() {
-    var customerConfigurationProperties = new CustomerConfigurationProperties(
+    var customerBrandingConfigurationProperties = new CustomerBrandingConfigurationProperties(
         "stub",
         "mnem",
         "email@fcs.co.uk"
@@ -55,8 +55,8 @@ class TeamViewComparatorTest {
         .withDisplayName("team 2")
         .build();
 
-    var firstTeamView = TeamView.fromTeam(firstTeam, customerConfigurationProperties);
-    var secondTeamView = TeamView.fromTeam(secondTeam, customerConfigurationProperties);
+    var firstTeamView = TeamView.fromTeam(firstTeam, customerBrandingConfigurationProperties);
+    var secondTeamView = TeamView.fromTeam(secondTeam, customerBrandingConfigurationProperties);
 
     var sortResult = Stream.of(secondTeamView, firstTeamView)
         .sorted(teamViewComparator)

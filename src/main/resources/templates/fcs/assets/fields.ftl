@@ -1,6 +1,6 @@
 <#include '../layout/layout.ftl'>
 
-<#-- @ftlvariable name="customerBranding" type="uk.co.nstauthority.fieldconsents.branding.CustomerConfigurationProperties" -->
+<#-- @ftlvariable name="customerBrandingConfigurationProperties" type="uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties" -->
 <#-- @ftlvariable name="fieldJson" type="uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorAndLicencesJson" -->
 
 <#assign pageTitle = fieldJson.getName()/>
@@ -20,7 +20,7 @@
                 <li>Associated licences</li>
               </#if>
             </ul>
-            Contact ${customerBranding.email()} if you think the field should have this information.
+            Contact ${customerBrandingConfigurationProperties.email()} if you think the field should have this information.
           </@fdsNotificationBanner.notificationBannerContent>
         </@fdsNotificationBanner.notificationBannerInfo>
       </@grid.twoThirdsColumn>

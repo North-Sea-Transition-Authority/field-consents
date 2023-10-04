@@ -15,7 +15,7 @@ import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorAndLicencesJson;
-import uk.co.nstauthority.fieldconsents.branding.CustomerConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
 
 @Service
 class AdditionalAssetSelectionFormValidator implements Validator {
@@ -46,18 +46,18 @@ class AdditionalAssetSelectionFormValidator implements Validator {
 
   private final FieldService fieldService;
 
-  private final CustomerConfigurationProperties customerConfigurationProperties;
+  private final CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties;
 
   private final ApplicationAssetService applicationAssetService;
 
   @Autowired
   AdditionalAssetSelectionFormValidator(AssetService assetService,
                                         FieldService fieldService,
-                                        CustomerConfigurationProperties customerConfigurationProperties,
+                                        CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties,
                                         ApplicationAssetService applicationAssetService) {
     this.assetService = assetService;
     this.fieldService = fieldService;
-    this.customerConfigurationProperties = customerConfigurationProperties;
+    this.customerBrandingConfigurationProperties = customerBrandingConfigurationProperties;
     this.applicationAssetService = applicationAssetService;
   }
 
@@ -86,15 +86,15 @@ class AdditionalAssetSelectionFormValidator implements Validator {
         if (!fieldJson.operatorExists() && !fieldJson.licencesExist()) {
           errors.rejectValue(ASSET_KEY_FIELD_NAME, ASSET_KEY_FIELD_NAME + ".assetMustHaveOperatorAndLicences",
               ASSET_MUST_HAVE_OPERATOR_LICENCES +
-              ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL.formatted(customerConfigurationProperties.email()));
+              ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL.formatted(customerBrandingConfigurationProperties.email()));
         } else if (!fieldJson.operatorExists()) {
           errors.rejectValue(ASSET_KEY_FIELD_NAME, ASSET_KEY_FIELD_NAME + ".assetMustHaveOperator",
               ASSET_MUST_HAVE_OPERATOR +
-              ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL.formatted(customerConfigurationProperties.email()));
+              ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL.formatted(customerBrandingConfigurationProperties.email()));
         } else if (!fieldJson.licencesExist()) {
           errors.rejectValue(ASSET_KEY_FIELD_NAME, ASSET_KEY_FIELD_NAME + ".assetMustHaveLicences",
               ASSET_MUST_HAVE_LICENCES +
-              ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL.formatted(customerConfigurationProperties.email()));
+              ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL.formatted(customerBrandingConfigurationProperties.email()));
         }
       } else if (assetJson.getAssetType() == AssetType.TERMINAL) {
         errors.rejectValue(ASSET_KEY_FIELD_NAME, ASSET_KEY_FIELD_NAME + ".assetMustBeAField",

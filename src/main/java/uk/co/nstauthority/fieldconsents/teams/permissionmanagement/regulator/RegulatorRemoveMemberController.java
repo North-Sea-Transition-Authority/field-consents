@@ -13,7 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.fieldconsents.authorisation.HasTeamPermission;
-import uk.co.nstauthority.fieldconsents.branding.CustomerConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -35,7 +35,7 @@ public class RegulatorRemoveMemberController extends AbstractTeamController {
   static final TeamType TEAM_TYPE = TeamType.REGULATOR;
 
   private final TeamMemberService teamMemberService;
-  private final CustomerConfigurationProperties customerConfigurationProperties;
+  private final CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties;
   private final TeamMemberViewService teamMemberViewService;
   private final TeamMemberRemovalService teamMemberRemovalService;
 
@@ -43,12 +43,12 @@ public class RegulatorRemoveMemberController extends AbstractTeamController {
   public RegulatorRemoveMemberController(
       TeamService teamService,
       TeamMemberService teamMemberService,
-      CustomerConfigurationProperties customerConfigurationProperties,
+      CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties,
       TeamMemberViewService teamMemberViewService,
       TeamMemberRemovalService teamMemberRemovalService) {
     super(teamService);
     this.teamMemberService = teamMemberService;
-    this.customerConfigurationProperties = customerConfigurationProperties;
+    this.customerBrandingConfigurationProperties = customerBrandingConfigurationProperties;
     this.teamMemberViewService = teamMemberViewService;
     this.teamMemberRemovalService = teamMemberRemovalService;
   }
@@ -71,7 +71,7 @@ public class RegulatorRemoveMemberController extends AbstractTeamController {
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
             "No roles found for user [%s] in team [%s]".formatted(wuaId, teamId)));
 
-    var teamName = customerConfigurationProperties.mnemonic();
+    var teamName = customerBrandingConfigurationProperties.mnemonic();
 
     var canRemoveTeamMember = teamMemberRemovalService.canRemoveTeamMember(team, wuaId,
         RegulatorTeamRole.ACCESS_MANAGER);

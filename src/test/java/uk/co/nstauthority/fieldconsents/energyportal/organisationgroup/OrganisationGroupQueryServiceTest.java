@@ -33,13 +33,13 @@ import uk.co.fivium.energyportalapi.client.organisation.OrganisationApi;
 import uk.co.fivium.energyportalapi.generated.client.OrganisationGroupProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.client.OrganisationGroupsProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.types.OrganisationGroup;
-import uk.co.nstauthority.fieldconsents.branding.ServiceConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.branding.ServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.energyportal.api.EnergyPortalApiWrapper;
 
 @ExtendWith(MockitoExtension.class)
 class OrganisationGroupQueryServiceTest {
 
-  private static final ServiceConfigurationProperties serviceConfigurationProperties = new ServiceConfigurationProperties(
+  private static final ServiceBrandingConfigurationProperties SERVICE_BRANDING_CONFIGURATION_PROPERTIES = new ServiceBrandingConfigurationProperties(
       "name",
       "mnemonic"
   );
@@ -56,7 +56,7 @@ class OrganisationGroupQueryServiceTest {
   void setup() {
     organisationGroupQueryService = new OrganisationGroupQueryService(
         organisationApi,
-        new EnergyPortalApiWrapper(serviceConfigurationProperties)
+        new EnergyPortalApiWrapper(SERVICE_BRANDING_CONFIGURATION_PROPERTIES)
     );
 
     groupList = List.of(

@@ -2,7 +2,7 @@ package uk.co.nstauthority.fieldconsents.teams;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
-import uk.co.nstauthority.fieldconsents.branding.CustomerConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamManagementController;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.opred.OpredTeamManagementController;
@@ -18,10 +18,10 @@ public record TeamView(TeamId teamId, TeamType teamType, String displayName) {
     };
   }
 
-  public static TeamView fromTeam(Team team, CustomerConfigurationProperties customerConfigurationProperties) {
+  public static TeamView fromTeam(Team team, CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties) {
     var teamId = new TeamId(team.getId());
     var teamName = switch (team.getTeamType()) {
-      case REGULATOR -> customerConfigurationProperties.mnemonic();
+      case REGULATOR -> customerBrandingConfigurationProperties.mnemonic();
       case INDUSTRY, OPRED -> team.getDisplayName();
     };
     return new TeamView(teamId, team.getTeamType(), teamName);

@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.authorisation.HasTeamPermission;
-import uk.co.nstauthority.fieldconsents.branding.CustomerConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.fieldconsents.energyportal.EnergyPortalConfiguration;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
@@ -40,7 +40,7 @@ class RegulatorAddMemberController extends AbstractTeamController {
 
   static final TeamType TEAM_TYPE = TeamType.REGULATOR;
 
-  private final CustomerConfigurationProperties customerConfigurationProperties;
+  private final CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties;
 
   private final EnergyPortalConfiguration energyPortalConfiguration;
 
@@ -56,7 +56,7 @@ class RegulatorAddMemberController extends AbstractTeamController {
 
   @Autowired
   RegulatorAddMemberController(RegulatorTeamService regulatorTeamService,
-                               CustomerConfigurationProperties customerConfigurationProperties,
+                               CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties,
                                EnergyPortalConfiguration energyPortalConfiguration,
                                ControllerHelperService controllerHelperService,
                                AddTeamMemberValidator addTeamMemberValidator,
@@ -65,7 +65,7 @@ class RegulatorAddMemberController extends AbstractTeamController {
                                TeamService teamService) {
     super(teamService);
     this.regulatorTeamService = regulatorTeamService;
-    this.customerConfigurationProperties = customerConfigurationProperties;
+    this.customerBrandingConfigurationProperties = customerBrandingConfigurationProperties;
     this.energyPortalConfiguration = energyPortalConfiguration;
     this.controllerHelperService = controllerHelperService;
     this.addTeamMemberValidator = addTeamMemberValidator;
@@ -140,7 +140,7 @@ class RegulatorAddMemberController extends AbstractTeamController {
 
   private ModelAndView getAddTeamMemberModelAndView(TeamId teamId, AddTeamMemberForm form) {
     return new ModelAndView("fcs/permissionmanagement/addTeamMemberPage")
-        .addObject("htmlTitle", "Add user to %s".formatted(customerConfigurationProperties.mnemonic()))
+        .addObject("htmlTitle", "Add user to %s".formatted(customerBrandingConfigurationProperties.mnemonic()))
         .addObject("registrationUrl", energyPortalConfiguration.registrationUrl())
         .addObject("form", form)
         .addObject(

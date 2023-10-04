@@ -1,6 +1,6 @@
 <#include '../layout/layout.ftl'>
 
-<#-- @ftlvariable name="customerBranding" type="uk.co.nstauthority.fieldconsents.branding.CustomerConfigurationProperties" -->
+<#-- @ftlvariable name="customerBrandingConfigurationProperties" type="uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties" -->
 <#-- @ftlvariable name="terminalJson" type="uk.co.nstauthority.fieldconsents.assets.terminals.TerminalWithOperatorJson" -->
 
 <#assign pageTitle = terminalJson.getName()/>
@@ -13,7 +13,7 @@
         <ul>
           <li>Facility operator</li>
         </ul>
-        Contact ${customerBranding.email()} if you think the facility should have this information.
+        Contact ${customerBrandingConfigurationProperties.email()} if you think the facility should have this information.
       </@fdsNotificationBanner.notificationBannerContent>
     </@fdsNotificationBanner.notificationBannerInfo>
   </#assign>

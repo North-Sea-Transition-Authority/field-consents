@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
 import uk.co.nstauthority.fieldconsents.authorisation.IsMemberOfTeam;
-import uk.co.nstauthority.fieldconsents.branding.CustomerConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.TeamId;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberService;
@@ -30,7 +30,7 @@ public class RegulatorTeamManagementController extends AbstractTeamController {
   private final TeamMemberViewService teamMemberViewService;
   private final RegulatorTeamService regulatorTeamService;
   private final UserDetailService userDetailService;
-  private final CustomerConfigurationProperties customerConfigurationProperties;
+  private final CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties;
   private final TeamMemberService teamMemberService;
   private final TeamService teamService;
 
@@ -38,14 +38,14 @@ public class RegulatorTeamManagementController extends AbstractTeamController {
   RegulatorTeamManagementController(TeamMemberViewService teamMemberViewService,
                                     RegulatorTeamService regulatorTeamService,
                                     UserDetailService userDetailService,
-                                    CustomerConfigurationProperties customerConfigurationProperties,
+                                    CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties,
                                     TeamMemberService teamMemberService,
                                     TeamService teamService) {
     super(teamService);
     this.teamMemberViewService = teamMemberViewService;
     this.regulatorTeamService = regulatorTeamService;
     this.userDetailService = userDetailService;
-    this.customerConfigurationProperties = customerConfigurationProperties;
+    this.customerBrandingConfigurationProperties = customerBrandingConfigurationProperties;
     this.teamMemberService = teamMemberService;
     this.teamService = teamService;
   }
@@ -59,8 +59,8 @@ public class RegulatorTeamManagementController extends AbstractTeamController {
     var user = userDetailService.getUserDetail();
 
     var modelAndView = new ModelAndView("fcs/permissionmanagement/teamMembersPage")
-        .addObject("pageTitle", "Manage %s".formatted(customerConfigurationProperties.mnemonic()))
-        .addObject("teamName", customerConfigurationProperties.mnemonic())
+        .addObject("pageTitle", "Manage %s".formatted(customerBrandingConfigurationProperties.mnemonic()))
+        .addObject("teamName", customerBrandingConfigurationProperties.mnemonic())
         .addObject("teamRoles", RegulatorTeamRole.values())
         .addObject("teamMembers", teamMemberViewService.getTeamMemberViewsForTeam(team));
 

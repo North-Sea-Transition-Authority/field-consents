@@ -6,18 +6,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.co.fivium.energyportalapi.client.LogCorrelationId;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
-import uk.co.nstauthority.fieldconsents.branding.ServiceConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.branding.ServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.logging.LoggerUtil;
 
 @Component
 public class EnergyPortalApiWrapper {
   static final String API_REQUEST_PREFIX = "EPA-request";
 
-  private final ServiceConfigurationProperties serviceConfigurationProperties;
+  private final ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties;
 
   @Autowired
-  public EnergyPortalApiWrapper(ServiceConfigurationProperties serviceConfigurationProperties) {
-    this.serviceConfigurationProperties = serviceConfigurationProperties;
+  public EnergyPortalApiWrapper(ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties) {
+    this.serviceBrandingConfigurationProperties = serviceBrandingConfigurationProperties;
   }
 
   public <T> T makeRequest(BiFunction<LogCorrelationId, RequestPurpose, T> request) {
@@ -53,7 +53,7 @@ public class EnergyPortalApiWrapper {
   }
 
   private String getServiceIdentifier() {
-    return serviceConfigurationProperties.mnemonic();
+    return serviceBrandingConfigurationProperties.mnemonic();
   }
 
 }

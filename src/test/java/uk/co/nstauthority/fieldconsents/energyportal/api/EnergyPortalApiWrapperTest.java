@@ -9,17 +9,17 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import uk.co.fivium.energyportalapi.client.LogCorrelationId;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
-import uk.co.nstauthority.fieldconsents.branding.ServiceConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.branding.ServiceBrandingConfigurationProperties;
 
 class EnergyPortalApiWrapperTest {
 
-  private final ServiceConfigurationProperties serviceConfigurationProperties = new ServiceConfigurationProperties(
+  private final ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties = new ServiceBrandingConfigurationProperties(
       "name",
       "mnemonic"
   );
 
   private final EnergyPortalApiWrapper energyPortalApiWrapper = new EnergyPortalApiWrapper(
-      serviceConfigurationProperties
+      serviceBrandingConfigurationProperties
   );
 
   @Test
@@ -30,7 +30,7 @@ class EnergyPortalApiWrapperTest {
     List<String> logCorrelationIdComponents = Arrays.asList(logCorrelationId.split(" "));
 
     assertThat(logCorrelationIdComponents).hasSize(3);
-    assertThat(logCorrelationIdComponents.get(0)).isEqualTo(serviceConfigurationProperties.mnemonic());
+    assertThat(logCorrelationIdComponents.get(0)).isEqualTo(serviceBrandingConfigurationProperties.mnemonic());
     assertThat(logCorrelationIdComponents.get(1)).isEqualTo(EnergyPortalApiWrapper.API_REQUEST_PREFIX + ":");
     assertThatNoException().isThrownBy(() -> UUID.fromString(logCorrelationIdComponents.get(2)));
   }
@@ -41,7 +41,7 @@ class EnergyPortalApiWrapperTest {
     var requestPurpose = energyPortalApiWrapper.makeRequest(this::returnRequestPurpose);
 
     assertThat(requestPurpose).isEqualTo("%s: %s.%s".formatted(
-        serviceConfigurationProperties.mnemonic(),
+        serviceBrandingConfigurationProperties.mnemonic(),
         this.getClass().getName(),
         "makeRequest_verifyRequestPurpose"
     ));
