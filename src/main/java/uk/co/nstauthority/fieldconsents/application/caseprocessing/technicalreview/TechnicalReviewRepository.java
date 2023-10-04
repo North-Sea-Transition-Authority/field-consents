@@ -22,4 +22,9 @@ public interface TechnicalReviewRepository extends CrudRepository<TechnicalRevie
   );
 
   List<TechnicalReview> findByRequestApplicationVersion_Application(Application application);
+
+  Optional<TechnicalReview> findByRequestApplicationVersion_ApplicationAndId(
+      Application application,
+      Integer technicalReviewId
+  );
 }

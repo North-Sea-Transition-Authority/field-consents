@@ -99,14 +99,14 @@ class TechnicalReviewResponseDocumentControllerTest extends AbstractControllerTe
 
   @SecurityTest
   void download_noUser() throws Exception {
-    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER).download(APPLICATION_ID, FILE_ID))))
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER).download(APPLICATION_ID, TECHNICAL_REVIEW_ID, FILE_ID))))
         .andExpect(redirectionToLoginUrl());
   }
 
   @SecurityTest
   void delete_noUser() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER)
-            .delete(APPLICATION_ID, FILE_ID)))
+            .delete(APPLICATION_ID, TECHNICAL_REVIEW_ID, FILE_ID)))
             .with(csrf()))
         .andExpect(redirectionToLoginUrl());
   }
@@ -161,7 +161,8 @@ class TechnicalReviewResponseDocumentControllerTest extends AbstractControllerTe
   @Test
   void download() throws Exception {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
-    when(technicalReviewService.getOpenTechnicalReview(applicationVersion)).thenReturn(technicalReview);
+    when(technicalReviewService.getTechnicalReviewByApplicationAndId(applicationVersion.getApplication(), TECHNICAL_REVIEW_ID))
+        .thenReturn(technicalReview);
 
     var uploadedFile = new UploadedFile();
     when(fileService.find(FILE_ID)).thenReturn(Optional.of(uploadedFile));
@@ -169,7 +170,7 @@ class TechnicalReviewResponseDocumentControllerTest extends AbstractControllerTe
     when(fileService.download(uploadedFile)).thenReturn(ResponseEntity.ok().build());
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER)
-            .download(APPLICATION_ID, FILE_ID)))
+            .download(APPLICATION_ID, TECHNICAL_REVIEW_ID, FILE_ID)))
             .with(user(user)))
         .andExpect(status().isOk());
 
@@ -180,13 +181,14 @@ class TechnicalReviewResponseDocumentControllerTest extends AbstractControllerTe
   @Test
   void download_invalidFileId() throws Exception {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
-    when(technicalReviewService.getOpenTechnicalReview(applicationVersion)).thenReturn(technicalReview);
+    when(technicalReviewService.getTechnicalReviewByApplicationAndId(applicationVersion.getApplication(), TECHNICAL_REVIEW_ID))
+        .thenReturn(technicalReview);
     when(fileService.find(FILE_ID)).thenReturn(Optional.empty());
     when(fieldConsentsFileService.getFileNotFoundException(FILE_ID, fileUsage))
         .thenReturn(new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER)
-            .download(APPLICATION_ID, FILE_ID)))
+            .download(APPLICATION_ID, TECHNICAL_REVIEW_ID, FILE_ID)))
             .with(user(user)))
         .andExpect(status().isNotFound());
   }
@@ -194,7 +196,8 @@ class TechnicalReviewResponseDocumentControllerTest extends AbstractControllerTe
   @Test
   void download_fileNotLinkedToApplication() throws Exception {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
-    when(technicalReviewService.getOpenTechnicalReview(applicationVersion)).thenReturn(technicalReview);
+    when(technicalReviewService.getTechnicalReviewByApplicationAndId(applicationVersion.getApplication(), TECHNICAL_REVIEW_ID))
+        .thenReturn(technicalReview);
 
     var uploadedFile = new UploadedFile();
     when(fileService.find(FILE_ID)).thenReturn(Optional.of(uploadedFile));
@@ -204,7 +207,7 @@ class TechnicalReviewResponseDocumentControllerTest extends AbstractControllerTe
         .throwIfFileDoesNotBelongToUsage(uploadedFile, fileUsage);
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER)
-            .download(APPLICATION_ID, FILE_ID)))
+            .download(APPLICATION_ID, TECHNICAL_REVIEW_ID, FILE_ID)))
             .with(user(user)))
         .andExpect(status().isNotFound());
 
@@ -214,7 +217,8 @@ class TechnicalReviewResponseDocumentControllerTest extends AbstractControllerTe
   @Test
   void delete() throws Exception {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
-    when(technicalReviewService.getOpenTechnicalReview(applicationVersion)).thenReturn(technicalReview);
+    when(technicalReviewService.getTechnicalReviewByApplicationAndId(applicationVersion.getApplication(), TECHNICAL_REVIEW_ID))
+        .thenReturn(technicalReview);
 
     var uploadedFile = new UploadedFile();
     when(fileService.find(FILE_ID)).thenReturn(Optional.of(uploadedFile));
@@ -222,7 +226,7 @@ class TechnicalReviewResponseDocumentControllerTest extends AbstractControllerTe
     when(fileService.delete(uploadedFile)).thenReturn(FileDeleteResponse.success(FILE_ID));
 
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER)
-            .delete(APPLICATION_ID, FILE_ID)))
+            .delete(APPLICATION_ID, TECHNICAL_REVIEW_ID, FILE_ID)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk());
@@ -234,13 +238,14 @@ class TechnicalReviewResponseDocumentControllerTest extends AbstractControllerTe
   @Test
   void delete_invalidFileId() throws Exception {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
-    when(technicalReviewService.getOpenTechnicalReview(applicationVersion)).thenReturn(technicalReview);
+    when(technicalReviewService.getTechnicalReviewByApplicationAndId(applicationVersion.getApplication(), TECHNICAL_REVIEW_ID))
+        .thenReturn(technicalReview);
     when(fileService.find(FILE_ID)).thenReturn(Optional.empty());
     when(fieldConsentsFileService.getFileNotFoundException(FILE_ID, fileUsage))
         .thenReturn(new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER)
-            .delete(APPLICATION_ID, FILE_ID)))
+            .delete(APPLICATION_ID, TECHNICAL_REVIEW_ID, FILE_ID)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isNotFound());
@@ -249,7 +254,8 @@ class TechnicalReviewResponseDocumentControllerTest extends AbstractControllerTe
   @Test
   void delete_fileNotLinkedToApplication() throws Exception {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
-    when(technicalReviewService.getOpenTechnicalReview(applicationVersion)).thenReturn(technicalReview);
+    when(technicalReviewService.getTechnicalReviewByApplicationAndId(applicationVersion.getApplication(), TECHNICAL_REVIEW_ID))
+        .thenReturn(technicalReview);
 
     var uploadedFile = new UploadedFile();
     when(fileService.find(FILE_ID)).thenReturn(Optional.of(uploadedFile));
@@ -259,7 +265,7 @@ class TechnicalReviewResponseDocumentControllerTest extends AbstractControllerTe
         .throwIfFileDoesNotBelongToUsage(uploadedFile, fileUsage);
 
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER)
-            .delete(APPLICATION_ID, FILE_ID)))
+            .delete(APPLICATION_ID, TECHNICAL_REVIEW_ID, FILE_ID)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isNotFound());

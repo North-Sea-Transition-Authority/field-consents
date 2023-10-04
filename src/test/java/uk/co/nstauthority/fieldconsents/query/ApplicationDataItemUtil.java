@@ -27,6 +27,7 @@ import java.util.Map;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
+import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
@@ -49,10 +50,10 @@ public class ApplicationDataItemUtil {
       .withWebUserAccountId(TECHNICAL_REVIEWER_WUA_ID)
       .build();
 
-  public static Map<Long, EnergyPortalUserDto> portalUserDtosMap = Map.of(
-      submitter.webUserAccountId(), submitter,
-      caseOfficer.webUserAccountId(), caseOfficer,
-      technicalReviewer.webUserAccountId(), technicalReviewer
+  public static Map<WebUserAccountId, EnergyPortalUserDto> portalUserDtosMap = Map.of(
+      WebUserAccountId.from(submitter.webUserAccountId()), submitter,
+      WebUserAccountId.from(caseOfficer.webUserAccountId()), caseOfficer,
+      WebUserAccountId.from(technicalReviewer.webUserAccountId()), technicalReviewer
     );
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForAnnualProductionInProgressForField() {

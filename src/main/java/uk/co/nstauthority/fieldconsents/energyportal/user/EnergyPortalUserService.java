@@ -2,7 +2,10 @@ package uk.co.nstauthority.fieldconsents.energyportal.user;
 
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.energyportalapi.client.LogCorrelationId;
@@ -59,7 +62,7 @@ public class EnergyPortalUserService {
         )
         .stream()
         .filter(User::getCanLogin)
-        .map(this::convertToEnergyPortalUser)
+        .map(EnergyPortalUserDto::from)
         .toList()
     ));
   }
@@ -79,9 +82,18 @@ public class EnergyPortalUserService {
               new LogCorrelationId(logCorrelationId.id())
           )
           .stream()
-          .map(this::convertToEnergyPortalUser)
+          .map(EnergyPortalUserDto::from)
           .toList();
     }));
+  }
+
+  public Map<WebUserAccountId, EnergyPortalUserDto> getEnergyPortalUserMap(List<WebUserAccountId> webUserAccountIds) {
+    return findByWuaIds(webUserAccountIds)
+        .stream()
+        .collect(Collectors.toMap(
+            energyPortalUser -> WebUserAccountId.from(energyPortalUser.webUserAccountId()),
+            Function.identity()
+        ));
   }
 
   public Optional<EnergyPortalUserDto> findByWuaId(WebUserAccountId webUserAccountId) {
@@ -92,7 +104,7 @@ public class EnergyPortalUserService {
             new LogCorrelationId(logCorrelationId.id())
         )
         .stream()
-        .map(this::convertToEnergyPortalUser)
+        .map(EnergyPortalUserDto::from)
         .findFirst()
     ));
   }
@@ -102,19 +114,5 @@ public class EnergyPortalUserService {
         .orElseThrow(() ->
             new EntityNotFoundException("Energy portal user with wua id %s not found"
                 .formatted(webUserAccountId.toString())));
-  }
-
-  private EnergyPortalUserDto convertToEnergyPortalUser(User user) {
-    return new EnergyPortalUserDto(
-        user.getWebUserAccountId().longValue(),
-        user.getPersonId().longValue(),
-        user.getTitle(),
-        user.getForename(),
-        user.getSurname(),
-        user.getPrimaryEmailAddress(),
-        user.getTelephoneNumber(),
-        user.getIsAccountShared(),
-        user.getCanLogin()
-    );
   }
 }

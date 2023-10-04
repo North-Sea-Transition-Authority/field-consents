@@ -18,6 +18,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalrevi
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdate;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawal;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.WithdrawalStatus;
+import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 
@@ -252,11 +253,14 @@ public class CaseHistoryEventTestUtil {
     return technicalReview;
   }
 
-  public static Map<Long, EnergyPortalUserDto> getPortalUsersDtosMap() {
+  public static Map<WebUserAccountId, EnergyPortalUserDto> getPortalUsersDtosMap() {
     return Map.of(
-        AssignmentTestUtil.ENERGY_PORTAL_USER_1.webUserAccountId(), AssignmentTestUtil.ENERGY_PORTAL_USER_1,
-        AssignmentTestUtil.ENERGY_PORTAL_USER_2.webUserAccountId(), AssignmentTestUtil.ENERGY_PORTAL_USER_2,
-        AssignmentTestUtil.ENERGY_PORTAL_USER_3.webUserAccountId(), AssignmentTestUtil.ENERGY_PORTAL_USER_3
+        WebUserAccountId.from(AssignmentTestUtil.ENERGY_PORTAL_USER_1.webUserAccountId()),
+        AssignmentTestUtil.ENERGY_PORTAL_USER_1,
+        WebUserAccountId.from(AssignmentTestUtil.ENERGY_PORTAL_USER_2.webUserAccountId()),
+        AssignmentTestUtil.ENERGY_PORTAL_USER_2,
+        WebUserAccountId.from(AssignmentTestUtil.ENERGY_PORTAL_USER_3.webUserAccountId()),
+        AssignmentTestUtil.ENERGY_PORTAL_USER_3
     );
   }
 }

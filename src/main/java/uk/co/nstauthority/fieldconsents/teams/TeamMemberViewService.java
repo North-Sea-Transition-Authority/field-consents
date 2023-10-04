@@ -6,7 +6,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -48,12 +47,7 @@ public class TeamMemberViewService {
         .toList();
 
     // Create map of Energy Portal users with WUA as the key for ease of lookup
-    Map<WebUserAccountId, EnergyPortalUserDto> energyPortalUsers = energyPortalUserService.findByWuaIds(webUserAccountIds)
-        .stream()
-        .collect(Collectors.toMap(energyPortalUser ->
-            new WebUserAccountId(energyPortalUser.webUserAccountId()),
-            Function.identity())
-        );
+    var energyPortalUsers = energyPortalUserService.getEnergyPortalUserMap(webUserAccountIds);
 
     return teamMembers
         .stream()

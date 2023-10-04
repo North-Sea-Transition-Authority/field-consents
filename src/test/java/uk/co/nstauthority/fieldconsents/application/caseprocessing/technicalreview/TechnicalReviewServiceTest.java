@@ -10,11 +10,12 @@ import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.SERVICE_USER_DETAIL_USER_5;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService.NO_OPEN_TECHNICAL_REVIEW_EXISTS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService.OPEN_TECHNICAL_REVIEW_EXISTS;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService.TECHNICAL_REVIEW_NOT_FOUND;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewStatus.OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.CURRENT_INSTANT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.DEADLINE_AHEAD_HOURS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.TECHNICAL_REVIEW_REQUEST_TEXT;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.USER;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.CASE_OFFICER_USER;
 
 import jakarta.persistence.EntityNotFoundException;
 import java.time.Clock;
@@ -95,6 +96,29 @@ class TechnicalReviewServiceTest {
   }
 
   @Test
+  void getTechnicalReviewByApplicationAndId_whenFound() {
+    var application = applicationVersion.getApplication();
+    when(technicalReviewRepository.findByRequestApplicationVersion_ApplicationAndId(
+        application, TECHNICAL_REVIEW_ID))
+        .thenReturn(Optional.of(technicalReview));
+
+    assertThat(technicalReviewService.getTechnicalReviewByApplicationAndId(application, TECHNICAL_REVIEW_ID))
+        .isEqualTo(technicalReview);
+  }
+
+  @Test
+  void getTechnicalReviewByApplicationAndId_whenNotFound() {
+    var application = applicationVersion.getApplication();
+    when(technicalReviewRepository.findByRequestApplicationVersion_ApplicationAndId(
+        application, TECHNICAL_REVIEW_ID))
+        .thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> technicalReviewService.getTechnicalReviewByApplicationAndId(application, TECHNICAL_REVIEW_ID))
+        .isInstanceOf(EntityNotFoundException.class)
+        .hasMessage(TECHNICAL_REVIEW_NOT_FOUND.formatted(TECHNICAL_REVIEW_ID, application.getId()));
+  }
+
+  @Test
   void findOpenTechnicalReview_whenExists() {
     when(technicalReviewRepository
         .findByRequestApplicationVersion_ApplicationAndTechnicalReviewStatus(applicationVersion.getApplication(), OPEN))
@@ -137,7 +161,7 @@ class TechnicalReviewServiceTest {
 
   @Test
   void findTechnicalReviewerWuaId_whenExists() {
-    technicalReview.setTechnicalReviewerWuaId(USER.wuaId());
+    technicalReview.setTechnicalReviewerWuaId(CASE_OFFICER_USER.wuaId());
     when(technicalReviewRepository
         .findByRequestApplicationVersion_ApplicationAndTechnicalReviewStatus(applicationVersion.getApplication(), OPEN))
         .thenReturn(Optional.of(technicalReview));
@@ -212,7 +236,7 @@ class TechnicalReviewServiceTest {
         clock.instant().plus(DEADLINE_AHEAD_HOURS, ChronoUnit.HOURS),
         TECHNICAL_REVIEW_REQUEST_TEXT,
         SERVICE_USER_DETAIL_USER_5,
-        USER
+        CASE_OFFICER_USER
     );
 
     verify(technicalReviewRepository).save(technicalReviewCaptor.capture());
@@ -223,7 +247,7 @@ class TechnicalReviewServiceTest {
         .isEqualTo(technicalReview);
 
     verify(technicalReviewAssignmentService, times(1))
-        .assignTechnicalReviewer(actualTechnicalReview, SERVICE_USER_DETAIL_USER_5, USER);
+        .assignTechnicalReviewer(actualTechnicalReview, SERVICE_USER_DETAIL_USER_5, CASE_OFFICER_USER);
   }
 
   @ParameterizedTest

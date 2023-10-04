@@ -9,6 +9,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.file.FieldConsentsFileTestUtil.GENERIC_FILE_DESCRIPTION;
+import static uk.co.nstauthority.fieldconsents.file.FieldConsentsFileTestUtil.createUploadedFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,8 +46,6 @@ class FieldConsentsFileServiceTest {
   private static final String DOCUMENT_TYPE = "supporting-document";
   private static final FieldConsentsFileUsage DEFAULT_USAGE = new TestFieldConsentsFileUsage(USAGE_ID, USAGE_TYPE, DOCUMENT_TYPE);
 
-  private static final String GENERIC_FILE_DESCRIPTION = "file description";
-
   @Mock
   private FileService fileService;
 
@@ -70,21 +70,6 @@ class FieldConsentsFileServiceTest {
 
     uploadedFileIds = uploadedFiles.stream().map(UploadedFile::getId).toList();
     uploadedFileForms = uploadedFiles.stream().map(FileUploadLibraryUtils::asForm).toList();
-  }
-
-  private static UploadedFile createUploadedFile() {
-    var uploadedFile = new UploadedFile();
-    uploadedFile.setId(UUID.randomUUID());
-    uploadedFile.setDescription(GENERIC_FILE_DESCRIPTION);
-    return uploadedFile;
-  }
-
-  private static UploadedFile createUploadedFile(FieldConsentsFileUsage fileUsage) {
-    var uploadedFile = createUploadedFile();
-    uploadedFile.setUsageId(fileUsage.usageId());
-    uploadedFile.setUsageType(fileUsage.usageType());
-    uploadedFile.setDocumentType(fileUsage.documentType());
-    return uploadedFile;
   }
 
   @Test

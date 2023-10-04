@@ -10,6 +10,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casest
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_CONSULTATION_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_TECHNICAL_REVIEW_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_WITHDRAWAL_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.TECHNICAL_REVIEWS_PAGE_ENABLED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.TECHNICAL_REVIEW_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.WITHDRAWAL_OPEN;
 
@@ -48,8 +49,8 @@ public class CaseStatusFlagService {
 
     addCaseOfficerAssignmentFlag(applicationVersion, caseStatusFlags);
     addWithdrawalFlag(applicationVersion, caseStatusFlags);
-    addTechnicalReviewFlag(applicationVersion, caseStatusFlags);
-    addUpdateRequestFlag(applicationVersion, caseStatusFlags);
+    addTechnicalReviewFlags(applicationVersion, caseStatusFlags);
+    addUpdateRequestFlags(applicationVersion, caseStatusFlags);
     addConsultationFlags(applicationVersion, caseStatusFlags);
     caseStatusFlags.add(CaseStatusFlag.CASE_NOTES_ALLOWED);
 
@@ -74,8 +75,9 @@ public class CaseStatusFlagService {
     }
   }
 
-  private void addTechnicalReviewFlag(ApplicationVersion applicationVersion,
-                                      HashSet<CaseStatusFlag> caseStatusFlags) {
+  private void addTechnicalReviewFlags(ApplicationVersion applicationVersion,
+                                       HashSet<CaseStatusFlag> caseStatusFlags) {
+    caseStatusFlags.add(TECHNICAL_REVIEWS_PAGE_ENABLED);
     if (technicalReviewService.openTechnicalReviewExists(applicationVersion)) {
       caseStatusFlags.add(TECHNICAL_REVIEW_OPEN);
     } else {
@@ -83,8 +85,8 @@ public class CaseStatusFlagService {
     }
   }
 
-  private void addUpdateRequestFlag(ApplicationVersion applicationVersion,
-                                    HashSet<CaseStatusFlag> caseStatusFlags) {
+  private void addUpdateRequestFlags(ApplicationVersion applicationVersion,
+                                     HashSet<CaseStatusFlag> caseStatusFlags) {
     if (applicationUpdateService.openApplicationUpdateExists(applicationVersion)) {
       caseStatusFlags.add(APPLICATION_UPDATE_OPEN);
       // if the case status is IN_PROGRESS then the update must have been started

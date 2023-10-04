@@ -8,7 +8,7 @@
     <@fdsSummaryList.summaryListRowNoAction keyText="Review deadline" >
       ${technicalReviewSummaryView.deadline()!""}
     </@fdsSummaryList.summaryListRowNoAction>
-    <@fdsSummaryList.summaryListRowNoAction keyText="Review note">
+    <@fdsSummaryList.summaryListRowNoAction keyText="Review notes">
       ${technicalReviewSummaryView.note()!""}
     </@fdsSummaryList.summaryListRowNoAction>
   </@fdsSummaryList.summaryListCard>

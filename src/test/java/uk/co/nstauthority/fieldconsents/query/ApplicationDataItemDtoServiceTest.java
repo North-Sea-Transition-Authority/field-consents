@@ -115,8 +115,8 @@ class ApplicationDataItemDtoServiceTest {
         WebUserAccountId.from(applicationDataItemDto.getTechnicalReviewerWuaId())
     );
 
-    when(energyPortalUserService.findByWuaIds(portalUserWuaIdList))
-        .thenReturn(List.of(submitter, caseOfficer, technicalReviewer));
+    when(energyPortalUserService.getEnergyPortalUserMap(portalUserWuaIdList))
+        .thenReturn(portalUserDtosMap);
 
     assertThat(applicationDataItemDtoService.getEnergyPortalUserDtoMapFromApplicationDataItemDtos(List.of(applicationDataItemDto)))
         .isEqualTo(portalUserDtosMap);

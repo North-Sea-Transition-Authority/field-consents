@@ -32,7 +32,7 @@ public enum CaseProcessingActionItem implements Displayable {
   CASE_OFFICER_WITHDRAWAL_RESPONSE("Respond to withdrawal", 3, true, false, null,
       applicationId -> ReverseRouter.route(on(ApplicationWithdrawalController.class)
           .getApplicationWithdrawalResponse(applicationId))),
-  TECHNICAL_REVIEW_REQUEST("Request technical review", 4, true, false, null,
+  TECHNICAL_REVIEW_REQUEST("Request technical review", 5, true, false, null,
       applicationId -> ReverseRouter.route(on(TechnicalReviewController.class)
           .getTechnicalReviewRequest(applicationId, null))),
   // Case manager actions
@@ -43,6 +43,9 @@ public enum CaseProcessingActionItem implements Displayable {
       applicationId -> ReverseRouter.route(on(CaseAssignmentController.class)
           .getCaseAssignment(applicationId, null))),
   // Regulator user actions
+  TECHNICAL_REVIEWS("Technical reviews", 4, false, false, null,
+      applicationId -> ReverseRouter.route(on(TechnicalReviewController.class)
+          .getTechnicalReviews(applicationId))),
   REGULATOR_ADD_CASE_NOTE("Add case note", 99, false, false, null,
       applicationId -> ReverseRouter.route(on(CaseNotesController.class)
           .getNewCaseNote(applicationId))),
@@ -53,7 +56,7 @@ public enum CaseProcessingActionItem implements Displayable {
       applicationId -> ReverseRouter.route(on(TechnicalReviewAssignmentController.class)
           .getTechnicalReviewAssignment(applicationId, null))),
   // Case officer and Technical reviewer actions
-  APPLICATION_UPDATE_REQUEST("Request application update", 5, true, false, null,
+  APPLICATION_UPDATE_REQUEST("Request application update", 6, true, false, null,
       applicationId -> ReverseRouter.route(on(ApplicationUpdateController.class)
           .getApplicationUpdateRequest(applicationId))),
   // Operator actions

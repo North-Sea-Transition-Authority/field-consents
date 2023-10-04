@@ -3,8 +3,6 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.Application;
@@ -37,11 +35,7 @@ public class CaseHistoryTabContentService {
         .map(WebUserAccountId::new)
         .toList();
 
-    var portalUserDtosMap = energyPortalUserService.findByWuaIds(allUsers).stream()
-        .collect(Collectors.toMap(
-            EnergyPortalUserDto::webUserAccountId,
-            Function.identity())
-        );
+    var portalUserDtosMap = energyPortalUserService.getEnergyPortalUserMap(allUsers);
 
     return allEvents
         .stream()
@@ -49,17 +43,18 @@ public class CaseHistoryTabContentService {
         .toList();
   }
 
-  private CaseEventView convertToCaseEventView(CaseEvent caseEvent, Map<Long, EnergyPortalUserDto> portalUserDtosMap) {
+  private CaseEventView convertToCaseEventView(CaseEvent caseEvent,
+                                               Map<WebUserAccountId, EnergyPortalUserDto> portalUserDtosMap) {
     var view = CaseEventView.builder()
         .withApplicationVersion(caseEvent.applicationVersion())
         .withEventType(caseEvent.eventType())
         .withEventText(caseEvent.eventText())
-        .withMainUser(portalUserDtosMap.get(caseEvent.mainEventUserWuaId()))
+        .withMainUser(portalUserDtosMap.get(WebUserAccountId.from(caseEvent.mainEventUserWuaId())))
         .withEventDateTime(caseEvent.eventDateTime())
         .withFileSummaryViews(caseEvent.summaryFileViews());
 
     if (caseEvent.otherEventUserWuaId() != null) {
-      view.withOtherUser(portalUserDtosMap.get(caseEvent.otherEventUserWuaId()));
+      view.withOtherUser(portalUserDtosMap.get(WebUserAccountId.from(caseEvent.otherEventUserWuaId())));
     }
 
     return view.build();

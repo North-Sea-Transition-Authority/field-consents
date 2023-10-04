@@ -82,7 +82,7 @@ public class ApplicationDataItemDtoService {
         );
   }
 
-  public Map<Long, EnergyPortalUserDto> getEnergyPortalUserDtoMapFromApplicationDataItemDtos(
+  public Map<WebUserAccountId, EnergyPortalUserDto> getEnergyPortalUserDtoMapFromApplicationDataItemDtos(
       List<? extends ApplicationDataItemDto> applicationDataItemDtos) {
 
     var wuaIds = applicationDataItemDtos
@@ -97,9 +97,7 @@ public class ApplicationDataItemDtoService {
         .distinct()
         .toList();
 
-    return energyPortalUserService.findByWuaIds(wuaIds)
-        .stream()
-        .collect(Collectors.toMap(EnergyPortalUserDto::webUserAccountId, Function.identity()));
+    return energyPortalUserService.getEnergyPortalUserMap(wuaIds);
   }
 
   public String getDisplayReference(ApplicationDataItemDto dataItemDto, ApplicationDataItemUserAction userAction) {
@@ -165,8 +163,9 @@ public class ApplicationDataItemDtoService {
         : "Unknown area";
   }
 
-  public String getDisplaySubmitter(ApplicationDataItemDto dataItemDto, Map<Long, EnergyPortalUserDto> portalUserDtosMap) {
-    var matchingPortalUserDto = portalUserDtosMap.get(dataItemDto.getSubmittedByWuaId());
+  public String getDisplaySubmitter(ApplicationDataItemDto dataItemDto,
+                                    Map<WebUserAccountId, EnergyPortalUserDto> portalUserDtosMap) {
+    var matchingPortalUserDto = portalUserDtosMap.get(WebUserAccountId.from(dataItemDto.getSubmittedByWuaId()));
     return "Submitter: %s".formatted(matchingPortalUserDto.displayName());
   }
 
@@ -174,17 +173,20 @@ public class ApplicationDataItemDtoService {
     return Boolean.TRUE.equals(dataItemDto.getAceFlag()) ? "ACE" : "";
   }
 
-  public String getDisplayCaseOfficer(ApplicationDataItemDto dataItemDto, Map<Long, EnergyPortalUserDto> portalUserDtosMap) {
+  public String getDisplayCaseOfficer(ApplicationDataItemDto dataItemDto,
+                                      Map<WebUserAccountId, EnergyPortalUserDto> portalUserDtosMap) {
     return Objects.nonNull(dataItemDto.getCaseOfficerWuaId())
-        ? "Case officer: %s".formatted(portalUserDtosMap.get(dataItemDto.getCaseOfficerWuaId()).displayName())
+        ? "Case officer: %s".formatted(
+            portalUserDtosMap.get(WebUserAccountId.from(dataItemDto.getCaseOfficerWuaId())).displayName())
         : "";
   }
 
   public String getDisplayTechnicalReviewer(ApplicationDataItemDto dataItemDto,
-                                            Map<Long, EnergyPortalUserDto> portalUserDtosMap,
+                                            Map<WebUserAccountId, EnergyPortalUserDto> portalUserDtosMap,
                                             TeamType teamType) {
     return TeamType.REGULATOR.equals(teamType) && Objects.nonNull(dataItemDto.getTechnicalReviewerWuaId())
-        ? "Technical reviewer: %s".formatted(portalUserDtosMap.get(dataItemDto.getTechnicalReviewerWuaId()).displayName())
+        ? "Technical reviewer: %s".formatted(
+            portalUserDtosMap.get(WebUserAccountId.from(dataItemDto.getTechnicalReviewerWuaId())).displayName())
         : "";
   }
 }

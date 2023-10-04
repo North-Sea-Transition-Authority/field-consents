@@ -12,7 +12,6 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupQueryService;
-import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDto;
@@ -131,7 +130,7 @@ public class SearchService {
     Map<Integer, FieldJson> fieldJsonsMap = applicationDataItemDtoService.getFieldJsonMapFromApplicationDataItemDtos(
         applicationDataItemDtos);
 
-    Map<Long, EnergyPortalUserDto> portalUserDtosMap = applicationDataItemDtoService
+    var portalUserDtosMap = applicationDataItemDtoService
         .getEnergyPortalUserDtoMapFromApplicationDataItemDtos(applicationDataItemDtos);
 
     var userAction = applicationDataItemDtoService.getApplicationDataItemUserActionFromUser(user);

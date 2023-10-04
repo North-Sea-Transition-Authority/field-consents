@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
@@ -56,8 +57,8 @@ class TeamMemberViewServiceTest {
         .withPhoneNumber("telephone")
         .build();
 
-    when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(wuaId))))
-        .thenReturn(List.of(portalUser));
+    when(energyPortalUserService.getEnergyPortalUserMap(List.of(new WebUserAccountId(wuaId))))
+        .thenReturn(Map.of(WebUserAccountId.from(portalUser.webUserAccountId()), portalUser));
 
     var result = teamMemberViewService.getTeamMemberViewsForTeam(team);
 
@@ -104,8 +105,8 @@ class TeamMemberViewServiceTest {
         .withPhoneNumber("telephone")
         .build();
 
-    when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(wuaId))))
-        .thenReturn(List.of(portalUser));
+    when(energyPortalUserService.getEnergyPortalUserMap(List.of(new WebUserAccountId(wuaId))))
+        .thenReturn(Map.of(WebUserAccountId.from(portalUser.webUserAccountId()), portalUser));
 
     var result = teamMemberViewService.getTeamMemberView(teamMember);
 

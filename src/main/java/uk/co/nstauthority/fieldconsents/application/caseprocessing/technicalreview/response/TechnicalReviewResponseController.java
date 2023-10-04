@@ -16,6 +16,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.fivium.fileuploadlibrary.FileUploadLibraryUtils;
 import uk.co.fivium.fileuploadlibrary.fds.FileUploadComponentAttributes;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
+import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
@@ -124,21 +125,26 @@ public class TechnicalReviewResponseController {
         .addObject("backLinkUrl", backLinkUrl)
         .addObject("approveRadio", TechnicalReviewResponseType.APPROVE)
         .addObject("rejectRadio", TechnicalReviewResponseType.REJECT)
-        .addObject("fileUploadAttributes", fileAttributes(applicationId, form.documents()));
+        .addObject("fileUploadAttributes",
+            getFileAttributes(applicationVersion.getApplication(), technicalReview, form.documents()));
 
     applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView);
 
     return modelAndView;
   }
 
-  private FileUploadComponentAttributes fileAttributes(Integer applicationId, List<UploadedFileForm> existingFiles) {
+  private FileUploadComponentAttributes getFileAttributes(Application application,
+                                                          TechnicalReview technicalReview,
+                                                          List<UploadedFileForm> existingFiles) {
     var controller = TechnicalReviewResponseDocumentController.class;
+    var applicationId = application.getId();
+    var technicalReviewId = technicalReview.getId();
 
     return fieldConsentsFileService.fileUploadComponentAttributesBuilder()
         .withPath("form.documents")
         .withUploadUrl(ReverseRouter.route(on(controller).upload(applicationId, null, null)))
-        .withDownloadUrl(ReverseRouter.route(on(controller).download(applicationId, null)))
-        .withDeleteUrl(ReverseRouter.route(on(controller).delete(applicationId, null)))
+        .withDownloadUrl(ReverseRouter.route(on(controller).download(applicationId, technicalReviewId, null)))
+        .withDeleteUrl(ReverseRouter.route(on(controller).delete(applicationId, technicalReviewId, null)))
         .withExistingFiles(existingFiles)
         .build();
   }

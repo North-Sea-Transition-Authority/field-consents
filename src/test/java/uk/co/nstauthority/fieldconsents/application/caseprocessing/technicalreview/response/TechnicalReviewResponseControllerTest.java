@@ -129,8 +129,8 @@ class TechnicalReviewResponseControllerTest extends AbstractApplicationControlle
     var fileUploadAttributes = DEFAULT_FILE_ATTRIBUTES_BUILDER
         .withPath("form.documents")
         .withUploadUrl(ReverseRouter.route(on(TechnicalReviewResponseDocumentController.class).upload(APPLICATION_ID, null, null)))
-        .withDownloadUrl(ReverseRouter.route(on(TechnicalReviewResponseDocumentController.class).download(APPLICATION_ID, null)))
-        .withDeleteUrl(ReverseRouter.route(on(TechnicalReviewResponseDocumentController.class).delete(APPLICATION_ID, null)))
+        .withDownloadUrl(ReverseRouter.route(on(TechnicalReviewResponseDocumentController.class).download(APPLICATION_ID, TECHNICAL_REVIEW_ID, null)))
+        .withDeleteUrl(ReverseRouter.route(on(TechnicalReviewResponseDocumentController.class).delete(APPLICATION_ID, TECHNICAL_REVIEW_ID, null)))
         .withMaximumSize(DataSize.ofMegabytes(1))
         .withExistingFiles(Collections.emptyList())
         .build();

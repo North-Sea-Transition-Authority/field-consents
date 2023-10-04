@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.entry;
 import static org.assertj.core.api.AssertionsForClassTypes.tuple;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.ACCESS_MANGER_TEAM_MEMBER_VIEW;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.CASE_OFFICER_TEAM_MEMBER_VIEW_1;
@@ -15,6 +14,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.Assign
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
@@ -23,6 +23,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil;
+import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
@@ -56,7 +57,8 @@ class TeamMemberViewServiceTest {
         .withWebUserAccountId(teamMember.wuaId().id())
         .build();
 
-    when(energyPortalUserService.findByWuaIds(List.of(teamMember.wuaId()))).thenReturn(List.of(energyPortalUser));
+    when(energyPortalUserService.getEnergyPortalUserMap(List.of(teamMember.wuaId())))
+        .thenReturn(Map.of(WebUserAccountId.from(energyPortalUser.webUserAccountId()), energyPortalUser));
 
     var resultingTeamMemberViews = teamMemberViewService.getTeamMemberViewsForTeam(team);
 
@@ -109,10 +111,11 @@ class TeamMemberViewServiceTest {
         .withSurname("B surname")
         .build();
 
-    when(energyPortalUserService.findByWuaIds(
-        argThat(wuaIds -> wuaIds.containsAll(List.of(firstTeamMember.wuaId(), secondTeamMember.wuaId())))
-    ))
-        .thenReturn(List.of(secondAlphabeticallyEnergyPortalUser, firstAlphabeticallyEnergyPortalUser));
+    when(energyPortalUserService.getEnergyPortalUserMap(List.of(secondTeamMember.wuaId(), firstTeamMember.wuaId())))
+        .thenReturn(Map.of(
+            WebUserAccountId.from(firstAlphabeticallyEnergyPortalUser.webUserAccountId()), firstAlphabeticallyEnergyPortalUser,
+            WebUserAccountId.from(secondAlphabeticallyEnergyPortalUser.webUserAccountId()), secondAlphabeticallyEnergyPortalUser
+        ));
 
     var resultingTeamMemberViews = teamMemberViewService.getTeamMemberViewsForTeam(team);
 
@@ -151,10 +154,11 @@ class TeamMemberViewServiceTest {
         .withSurname("B surname")
         .build();
 
-    when(energyPortalUserService.findByWuaIds(
-        argThat(wuaIds -> wuaIds.containsAll(List.of(firstTeamMember.wuaId(), secondTeamMember.wuaId())))
-    ))
-        .thenReturn(List.of(secondAlphabeticallyEnergyPortalUser, firstAlphabeticallyEnergyPortalUser));
+    when(energyPortalUserService.getEnergyPortalUserMap(List.of(secondTeamMember.wuaId(), firstTeamMember.wuaId())))
+        .thenReturn(Map.of(
+            WebUserAccountId.from(firstAlphabeticallyEnergyPortalUser.webUserAccountId()), firstAlphabeticallyEnergyPortalUser,
+            WebUserAccountId.from(secondAlphabeticallyEnergyPortalUser.webUserAccountId()), secondAlphabeticallyEnergyPortalUser
+        ));
 
     var resultingTeamMemberViews = teamMemberViewService.getTeamMemberViewsForTeam(team);
 
@@ -182,8 +186,8 @@ class TeamMemberViewServiceTest {
         .withWebUserAccountId(teamMemberWithMultipleRoles.wuaId().id())
         .build();
 
-    when(energyPortalUserService.findByWuaIds(List.of(teamMemberWithMultipleRoles.wuaId())))
-        .thenReturn(List.of(energyPortalUser));
+    when(energyPortalUserService.getEnergyPortalUserMap(List.of(teamMemberWithMultipleRoles.wuaId())))
+        .thenReturn(Map.of(WebUserAccountId.from(energyPortalUser.webUserAccountId()), energyPortalUser));
 
     var resultingTeamMemberViews = teamMemberViewService.getTeamMemberViewsForTeam(team);
 
@@ -205,8 +209,8 @@ class TeamMemberViewServiceTest {
 
     when(teamMemberService.getTeamMembers(team)).thenReturn(List.of(teamMember));
 
-    when(energyPortalUserService.findByWuaIds(List.of(teamMember.wuaId())))
-        .thenReturn(Collections.emptyList());
+    when(energyPortalUserService.getEnergyPortalUserMap(List.of(teamMember.wuaId())))
+        .thenReturn(Collections.emptyMap());
 
     assertThatThrownBy(
         () -> teamMemberViewService.getTeamMemberViewsForTeam(team)

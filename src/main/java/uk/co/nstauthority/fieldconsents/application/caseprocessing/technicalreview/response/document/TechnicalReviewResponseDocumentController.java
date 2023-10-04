@@ -17,17 +17,16 @@ import uk.co.fivium.fileuploadlibrary.core.UploadedFile;
 import uk.co.fivium.fileuploadlibrary.fds.FileDeleteResponse;
 import uk.co.fivium.fileuploadlibrary.fds.FileUploadResponse;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
-import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
+import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @RestController
 @RequestMapping("applications/{applicationId}/technical-review-response-documents")
-@ActionEndPoint(TECHNICAL_REVIEWER_SUBMIT_REVIEW)
-public class TechnicalReviewResponseDocumentController { // TODO: FCS-410 - add technical review ID to param
+public class TechnicalReviewResponseDocumentController {
 
   private final FileService fileService;
   private final ApplicationVersionService applicationVersionService;
@@ -46,13 +45,16 @@ public class TechnicalReviewResponseDocumentController { // TODO: FCS-410 - add 
     this.fieldConsentsFileService = fieldConsentsFileService;
   }
 
-  @GetMapping("{fileId}")
-  public ResponseEntity<InputStreamResource> download(@PathVariable Integer applicationId, @PathVariable UUID fileId) {
-    return findFileAndThen(applicationId, fileId, fileService::download);
+  @GetMapping("{technicalReviewId}/{fileId}")
+  @HasApplicationPermission(permissions = RolePermission.VIEW_FCS_CASE_PROCESSING_DOCUMENTS)
+  public ResponseEntity<InputStreamResource> download(@PathVariable Integer applicationId,
+                                                      @PathVariable Integer technicalReviewId,
+                                                      @PathVariable UUID fileId) {
+    return findFileAndThen(applicationId, technicalReviewId, fileId, fileService::download);
   }
 
   @PostMapping
-  @HasApplicationStatus(statuses = ApplicationVersionStatus.SUBMITTED)
+  @ActionEndPoint(TECHNICAL_REVIEWER_SUBMIT_REVIEW)
   public FileUploadResponse upload(@PathVariable Integer applicationId, MultipartFile file, ServiceUserDetail serviceUserDetail) {
     return fileService.upload(builder -> builder
         .withMultipartFile(file)
@@ -60,15 +62,21 @@ public class TechnicalReviewResponseDocumentController { // TODO: FCS-410 - add 
         .build());
   }
 
-  @PostMapping("delete/{fileId}")
-  @HasApplicationStatus(statuses = ApplicationVersionStatus.SUBMITTED)
-  public FileDeleteResponse delete(@PathVariable Integer applicationId, @PathVariable UUID fileId) {
-    return findFileAndThen(applicationId, fileId, fileService::delete);
+  @PostMapping("delete/{technicalReviewId}/{fileId}")
+  @ActionEndPoint(TECHNICAL_REVIEWER_SUBMIT_REVIEW)
+  public FileDeleteResponse delete(@PathVariable Integer applicationId,
+                                   @PathVariable Integer technicalReviewId,
+                                   @PathVariable UUID fileId) {
+    return findFileAndThen(applicationId, technicalReviewId, fileId, fileService::delete);
   }
 
-  private <T> T findFileAndThen(Integer applicationId, UUID fileId, Function<UploadedFile, T> andThen) {
+  private <T> T findFileAndThen(Integer applicationId,
+                                Integer technicalReviewId,
+                                UUID fileId,
+                                Function<UploadedFile, T> andThen) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
-    var technicalReview = technicalReviewService.getOpenTechnicalReview(applicationVersion);
+    var technicalReview = technicalReviewService
+        .getTechnicalReviewByApplicationAndId(applicationVersion.getApplication(), technicalReviewId);
     var usage = TechnicalReviewFileUsage.responseFrom(technicalReview);
     var uploadedFile = fileService.find(fileId)
         .orElseThrow(() -> fieldConsentsFileService.getFileNotFoundException(fileId, usage));

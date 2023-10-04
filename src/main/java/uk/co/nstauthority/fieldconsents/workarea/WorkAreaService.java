@@ -19,7 +19,6 @@ import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupQueryService;
-import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItem;
@@ -154,7 +153,7 @@ public class WorkAreaService {
 
     // Early call to API to get all energy portal users from applicationDataItemDtos at once
     // instead of calling the EPA for each item in loop.
-    Map<Long, EnergyPortalUserDto> portalUserDtosMap = applicationDataItemDtoService
+    var portalUserDtosMap = applicationDataItemDtoService
         .getEnergyPortalUserDtoMapFromApplicationDataItemDtos(applicationDataItemDtos);
 
     var userAction = applicationDataItemDtoService.getApplicationDataItemUserActionFromUser(user);

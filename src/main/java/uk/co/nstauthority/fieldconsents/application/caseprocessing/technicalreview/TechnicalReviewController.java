@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEW_REQUEST;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.summary.TechnicalReviewSummaryService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
@@ -43,6 +45,8 @@ public class TechnicalReviewController {
 
   private final EnergyPortalUserService energyPortalUserService;
 
+  private final TechnicalReviewSummaryService technicalReviewSummaryService;
+
   @Autowired
   public TechnicalReviewController(ApplicationService applicationService,
                                    ApplicationVersionService applicationVersionService,
@@ -50,7 +54,8 @@ public class TechnicalReviewController {
                                    TechnicalReviewAssignmentService technicalReviewAssignmentService,
                                    TechnicalReviewRequestFormValidator technicalReviewRequestFormValidator,
                                    TeamMemberViewService teamMemberViewService,
-                                   EnergyPortalUserService energyPortalUserService) {
+                                   EnergyPortalUserService energyPortalUserService,
+                                   TechnicalReviewSummaryService technicalReviewSummaryService) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.technicalReviewService = technicalReviewService;
@@ -58,6 +63,23 @@ public class TechnicalReviewController {
     this.technicalReviewRequestFormValidator = technicalReviewRequestFormValidator;
     this.teamMemberViewService = teamMemberViewService;
     this.energyPortalUserService = energyPortalUserService;
+    this.technicalReviewSummaryService = technicalReviewSummaryService;
+  }
+
+  @GetMapping("technical-reviews")
+  @ActionEndPoint(TECHNICAL_REVIEWS)
+  public ModelAndView getTechnicalReviews(@PathVariable Integer applicationId) {
+    var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
+    var applicationReference = applicationService.generateApplicationReference(applicationVersion);
+    var technicalReviewSummaryItems =
+        technicalReviewSummaryService.getTechnicalReviewSummaryItems(applicationVersion.getApplication());
+
+    return new ModelAndView("fcs/application/review/technicalReviews")
+        .addObject("applicationReference", applicationReference)
+        .addObject("technicalReviewSummaryItems", technicalReviewSummaryItems)
+        .addObject("backLinkUrl",
+            ReverseRouter.route(on(ApplicationCaseProcessingController.class)
+                .getApplicationCaseProcessing(applicationId, null)));
   }
 
   @GetMapping("technical-review-request")

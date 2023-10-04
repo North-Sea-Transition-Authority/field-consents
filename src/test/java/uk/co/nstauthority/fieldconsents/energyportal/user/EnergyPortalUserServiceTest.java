@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.energyportal.user;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.entry;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -190,6 +191,50 @@ class EnergyPortalUserServiceTest {
                 expectedUser.getIsAccountShared(),
                 expectedUser.getCanLogin()
             )
+        );
+  }
+
+  @Test
+  void getEnergyPortalUserMap_whenNoResults_thenEmptyMap() {
+
+    var webUserAccountId = new WebUserAccountId(123);
+
+    var userProjectionRoot = EnergyPortalUserService.USERS_PROJECT_ROOT;
+
+    when(userApi.searchUsersByIds(
+        eq(List.of(webUserAccountId.toInt())),
+        eq(userProjectionRoot),
+        any(RequestPurpose.class),
+        any(LogCorrelationId.class)
+    )).thenReturn(Collections.emptyList());
+
+    assertTrue(energyPortalUserService.getEnergyPortalUserMap(List.of(webUserAccountId)).isEmpty());
+  }
+
+  @Test
+  void getEnergyPortalUserMap_whenResults_thenPopulatedListCorrectlyMapped() {
+
+    var webUserAccountId1 = new WebUserAccountId(123);
+    var expectedUser1 = EpaUserTestUtil.Builder().withWebUserAccountId(webUserAccountId1.toInt()).build();
+    var webUserAccountId2 = new WebUserAccountId(456);
+    var expectedUser2 = EpaUserTestUtil.Builder().withWebUserAccountId(webUserAccountId2.toInt()).build();
+
+    var userProjectionRoot = EnergyPortalUserService.USERS_PROJECT_ROOT;
+
+    when(userApi.searchUsersByIds(
+        eq(List.of(webUserAccountId1.toInt(), webUserAccountId2.toInt())),
+        eq(userProjectionRoot),
+        any(RequestPurpose.class),
+        any(LogCorrelationId.class)
+    )).thenReturn(List.of(expectedUser1, expectedUser2));
+
+    var expectedEnergyPortalUser1 = EnergyPortalUserDto.from(expectedUser1);
+    var expectedEnergyPortalUser2 = EnergyPortalUserDto.from(expectedUser2);
+
+    assertThat(energyPortalUserService.getEnergyPortalUserMap(List.of(webUserAccountId1, webUserAccountId2)))
+        .containsOnly(
+            entry(WebUserAccountId.from(expectedEnergyPortalUser1.webUserAccountId()), expectedEnergyPortalUser1),
+            entry(WebUserAccountId.from(expectedEnergyPortalUser2.webUserAccountId()), expectedEnergyPortalUser2)
         );
   }
 

@@ -9,7 +9,6 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,7 +20,6 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil;
-import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 
@@ -41,14 +39,12 @@ class CaseHistoryTabContentServiceTest {
 
   private Application application;
 
-  private Map<Long, EnergyPortalUserDto> portalUsersDtoMap;
-
   @BeforeEach
   void setUp() {
-    portalUsersDtoMap = getPortalUsersDtosMap();
+    var portalUsersDtoMap = getPortalUsersDtosMap();
     applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
-    when(energyPortalUserService.findByWuaIds(anyList()))
-        .thenReturn(portalUsersDtoMap.values().stream().toList());
+    when(energyPortalUserService.getEnergyPortalUserMap(anyList()))
+        .thenReturn(portalUsersDtoMap);
 
     application = applicationVersion.getApplication();
   }

@@ -17,6 +17,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.REGULATOR_ADD_CASE_NOTE;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWER_SUBMIT_REVIEW;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEW_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.APPLICATION_UPDATE_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_ASSIGNED;
@@ -256,6 +257,50 @@ class CaseProcessingActionServiceTest {
         .thenReturn(TECHNICAL_REVIEWER_PERMISSIONS);
     when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
         .thenReturn(Set.of(NO_TECHNICAL_REVIEW_OPEN));
+
+    assertThat(caseProcessingActionService.getUserActionItems(applicationVersion, USER))
+        .isEmpty();
+  }
+
+  @Test
+  void getUserActionItems_whenCaseOfficer_thenCanSeeTechnicalReviewsPage() {
+    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
+        .thenReturn(CASE_OFFICER_PERMISSIONS);
+    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
+        .thenReturn(Set.of(CaseStatusFlag.TECHNICAL_REVIEWS_PAGE_ENABLED));
+
+    assertThat(caseProcessingActionService.getUserActionItems(applicationVersion, USER))
+        .containsExactly(TECHNICAL_REVIEWS);
+  }
+
+  @Test
+  void getUserActionItems_whenCaseManager_thenCanSeeTechnicalReviewsPage() {
+    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
+        .thenReturn(CASE_MANAGER_PERMISSIONS);
+    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
+        .thenReturn(Set.of(CaseStatusFlag.TECHNICAL_REVIEWS_PAGE_ENABLED));
+
+    assertThat(caseProcessingActionService.getUserActionItems(applicationVersion, USER))
+        .containsExactly(TECHNICAL_REVIEWS);
+  }
+
+  @Test
+  void getUserActionItems_whenTechnicalReviewer_thenCanSeeTechnicalReviewsPage() {
+    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
+        .thenReturn(TECHNICAL_REVIEWER_PERMISSIONS);
+    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
+        .thenReturn(Set.of(CaseStatusFlag.TECHNICAL_REVIEWS_PAGE_ENABLED));
+
+    assertThat(caseProcessingActionService.getUserActionItems(applicationVersion, USER))
+        .containsExactly(TECHNICAL_REVIEWS);
+  }
+
+  @Test
+  void getUserActionItems_whenIndustryEditor_thenCannotSeeTechnicalReviewsPage() {
+    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
+        .thenReturn(INDUSTRY_EDITOR_PERMISSIONS);
+    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
+        .thenReturn(Set.of(CaseStatusFlag.TECHNICAL_REVIEWS_PAGE_ENABLED));
 
     assertThat(caseProcessingActionService.getUserActionItems(applicationVersion, USER))
         .isEmpty();

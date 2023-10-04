@@ -18,6 +18,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.Assign
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.SERVICE_USER_DETAIL_USER_5;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.TECHNICAL_REVIEWER_ASSIGNMENT_CANDIDATES;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.TECHNICAL_REVIEWER_ASSIGNMENT_CANDIDATES_MAP;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEW_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.CURRENT_DATE;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.CURRENT_DATE_TIME;
@@ -44,6 +45,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.summary.TechnicalReviewSummaryService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
@@ -56,7 +58,8 @@ import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
 @ContextConfiguration(classes = TechnicalReviewController.class)
 class TechnicalReviewControllerTest extends AbstractApplicationControllerTest {
 
-  private static final String VIEW_NAME = "fcs/application/review/technicalReviewRequest";
+  private static final String TECHNICAL_REVIEWS_VIEW_NAME = "fcs/application/review/technicalReviews";
+  private static final String TECHNICAL_REVIEW_REQUEST_VIEW_NAME = "fcs/application/review/technicalReviewRequest";
   private static final String DUMMY_APP_REF = "DUMMY_APP_REF";
 
   @MockBean
@@ -78,7 +81,80 @@ class TechnicalReviewControllerTest extends AbstractApplicationControllerTest {
   private EnergyPortalUserService energyPortalUserService;
 
   @MockBean
+  private TechnicalReviewSummaryService technicalReviewSummaryService;
+
+  @MockBean
   private Clock clock;
+
+  @SecurityTest
+  void getTechnicalReviews_noUser() throws Exception {
+    mockMvc.perform(get(ReverseRouter.route(on(TechnicalReviewController.class)
+            .getTechnicalReviews(APPLICATION_ID))))
+        .andExpect(redirectionToLoginUrl());
+  }
+
+  @SecurityTest
+  void getTechnicalReviews_checkEndPointSecurityOnly_forbidden() throws Exception {
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(Collections.emptyList());
+
+    mockMvc.perform(get(ReverseRouter.route(on(TechnicalReviewController.class)
+            .getTechnicalReviews(APPLICATION_ID)))
+            .with(user(user)))
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void getTechnicalReviews_checkEndPointSecurityOnly_allowed() throws Exception {
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
+    when(applicationService.generateApplicationReference(applicationVersion))
+        .thenReturn(DUMMY_APP_REF);
+    when(technicalReviewSummaryService.getTechnicalReviewSummaryItems(applicationVersion.getApplication()))
+        .thenReturn(Collections.emptyList());
+
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(TECHNICAL_REVIEWS));
+
+    mockMvc.perform(get(ReverseRouter.route(on(TechnicalReviewController.class)
+            .getTechnicalReviews(APPLICATION_ID)))
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(view().name(TECHNICAL_REVIEWS_VIEW_NAME));
+  }
+
+  @ParameterizedTest
+  @MethodSource("getSubmittedApplicationVersions")
+  void getTechnicalReviews(ApplicationVersion applicationVersion) throws Exception {
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
+    when(applicationService.generateApplicationReference(applicationVersion))
+        .thenReturn(DUMMY_APP_REF);
+    when(technicalReviewSummaryService.getTechnicalReviewSummaryItems(applicationVersion.getApplication()))
+        .thenReturn(Collections.emptyList());
+
+    mockMvc.perform(get(ReverseRouter.route(on(TechnicalReviewController.class)
+            .getTechnicalReviews(APPLICATION_ID)))
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(view().name(TECHNICAL_REVIEWS_VIEW_NAME))
+        .andExpect(model().attribute("applicationReference", DUMMY_APP_REF))
+        .andExpect(model().attribute("technicalReviewSummaryItems", Collections.emptyList()))
+        .andExpect(model().attribute("backLinkUrl",
+            ReverseRouter.route(on(ApplicationCaseProcessingController.class)
+                .getApplicationCaseProcessing(APPLICATION_ID, null))));
+  }
 
   @SecurityTest
   void getTechnicalReviewRequest_noUser() throws Exception {
@@ -98,8 +174,7 @@ class TechnicalReviewControllerTest extends AbstractApplicationControllerTest {
 
     mockMvc.perform(get(ReverseRouter.route(on(TechnicalReviewController.class)
             .getTechnicalReviewRequest(APPLICATION_ID, null)))
-            .with(user(user))
-            .with(csrf()))
+            .with(user(user)))
         .andExpect(status().isForbidden());
   }
 
@@ -120,10 +195,9 @@ class TechnicalReviewControllerTest extends AbstractApplicationControllerTest {
 
     mockMvc.perform(get(ReverseRouter.route(on(TechnicalReviewController.class)
             .getTechnicalReviewRequest(APPLICATION_ID, null)))
-            .with(user(user))
-            .with(csrf()))
+            .with(user(user)))
         .andExpect(status().isOk())
-        .andExpect(view().name(VIEW_NAME));
+        .andExpect(view().name(TECHNICAL_REVIEW_REQUEST_VIEW_NAME));
   }
 
   @ParameterizedTest
@@ -144,10 +218,9 @@ class TechnicalReviewControllerTest extends AbstractApplicationControllerTest {
 
     mockMvc.perform(get(ReverseRouter.route(on(TechnicalReviewController.class)
             .getTechnicalReviewRequest(APPLICATION_ID, null)))
-            .with(user(user))
-            .with(csrf()))
+            .with(user(user)))
         .andExpect(status().isOk())
-        .andExpect(view().name(VIEW_NAME))
+        .andExpect(view().name(TECHNICAL_REVIEW_REQUEST_VIEW_NAME))
         .andExpect(model().attribute("applicationReference", DUMMY_APP_REF))
         .andExpect(model().attribute("technicalReviewerAssignmentCandidates",
             TECHNICAL_REVIEWER_ASSIGNMENT_CANDIDATES_MAP))
@@ -232,7 +305,7 @@ class TechnicalReviewControllerTest extends AbstractApplicationControllerTest {
                 .with(user(user))
         )
         .andExpect(status().isOk())
-        .andExpect(view().name(VIEW_NAME))
+        .andExpect(view().name(TECHNICAL_REVIEW_REQUEST_VIEW_NAME))
         .andExpect(model().attribute("applicationReference", DUMMY_APP_REF))
         .andExpect(model().attribute("technicalReviewerAssignmentCandidates",
             TECHNICAL_REVIEWER_ASSIGNMENT_CANDIDATES_MAP))

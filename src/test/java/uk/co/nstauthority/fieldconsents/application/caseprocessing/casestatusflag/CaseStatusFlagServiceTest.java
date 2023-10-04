@@ -13,6 +13,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casest
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_CONSULTATION_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_TECHNICAL_REVIEW_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_WITHDRAWAL_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.TECHNICAL_REVIEWS_PAGE_ENABLED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.TECHNICAL_REVIEW_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.WITHDRAWAL_OPEN;
 
@@ -71,6 +72,7 @@ class CaseStatusFlagServiceTest {
         .containsOnly(
             CASE_OFFICER_ASSIGNED,
             NO_WITHDRAWAL_OPEN,
+            TECHNICAL_REVIEWS_PAGE_ENABLED,
             NO_TECHNICAL_REVIEW_OPEN,
             CASE_NOTES_ALLOWED,
             NO_APPLICATION_UPDATE_OPEN,
@@ -85,6 +87,7 @@ class CaseStatusFlagServiceTest {
         .containsOnly(
             CASE_OFFICER_NOT_ASSIGNED,
             NO_WITHDRAWAL_OPEN,
+            TECHNICAL_REVIEWS_PAGE_ENABLED,
             NO_TECHNICAL_REVIEW_OPEN,
             CASE_NOTES_ALLOWED,
             NO_APPLICATION_UPDATE_OPEN,
@@ -99,6 +102,7 @@ class CaseStatusFlagServiceTest {
         .containsOnly(
             CASE_OFFICER_NOT_ASSIGNED,
             WITHDRAWAL_OPEN,
+            TECHNICAL_REVIEWS_PAGE_ENABLED,
             NO_TECHNICAL_REVIEW_OPEN,
             CASE_NOTES_ALLOWED,
             NO_APPLICATION_UPDATE_OPEN,
@@ -114,6 +118,7 @@ class CaseStatusFlagServiceTest {
         .containsOnly(
             CASE_OFFICER_NOT_ASSIGNED,
             NO_WITHDRAWAL_OPEN,
+            TECHNICAL_REVIEWS_PAGE_ENABLED,
             TECHNICAL_REVIEW_OPEN,
             CASE_NOTES_ALLOWED,
             NO_APPLICATION_UPDATE_OPEN,
@@ -130,6 +135,7 @@ class CaseStatusFlagServiceTest {
         .containsOnly(
             CASE_OFFICER_NOT_ASSIGNED,
             NO_WITHDRAWAL_OPEN,
+            TECHNICAL_REVIEWS_PAGE_ENABLED,
             NO_TECHNICAL_REVIEW_OPEN,
             CASE_NOTES_ALLOWED,
             APPLICATION_UPDATE_OPEN,
@@ -147,6 +153,7 @@ class CaseStatusFlagServiceTest {
         .containsOnly(
             CASE_OFFICER_NOT_ASSIGNED,
             NO_WITHDRAWAL_OPEN,
+            TECHNICAL_REVIEWS_PAGE_ENABLED,
             NO_TECHNICAL_REVIEW_OPEN,
             CASE_NOTES_ALLOWED,
             APPLICATION_UPDATE_OPEN,

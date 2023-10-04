@@ -27,6 +27,8 @@ public class TechnicalReviewService {
   static final UnaryOperator<String> OPEN_TECHNICAL_REVIEW_EXISTS =
       "A technical review is already open for the application with version id %s"::formatted;
 
+  static final String TECHNICAL_REVIEW_NOT_FOUND = "Technical review with id %s not found for application id %s";
+
   private final Clock clock;
 
   private final TechnicalReviewRepository technicalReviewRepository;
@@ -59,6 +61,13 @@ public class TechnicalReviewService {
     return findOpenTechnicalReview(applicationVersion)
         .orElseThrow(() -> new EntityNotFoundException(
             NO_OPEN_TECHNICAL_REVIEW_EXISTS.apply(String.valueOf(applicationVersion.getId()))));
+  }
+
+  public TechnicalReview getTechnicalReviewByApplicationAndId(Application application, Integer technicalReviewId) {
+    return technicalReviewRepository.findByRequestApplicationVersion_ApplicationAndId(application, technicalReviewId)
+        .orElseThrow(() ->
+            new EntityNotFoundException(TECHNICAL_REVIEW_NOT_FOUND.formatted(technicalReviewId, application.getId()))
+        );
   }
 
   public Optional<WebUserAccountId> findTechnicalReviewerWuaId(ApplicationVersion applicationVersion) {
