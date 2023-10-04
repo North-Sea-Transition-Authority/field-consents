@@ -52,13 +52,13 @@ public class SearchController {
   public ModelAndView getSearch(@ModelAttribute("searchSession") SearchSession searchSession,
                                 ServiceUserDetail user) {
     if (searchSession.hasSearchBeenInvoked()) {
-      return getSearchModelAndView(searchSession)
+      return getSearchModelAndView(searchSession, user)
           .addObject(SEARCH_RESULT_ITEMS, getSearchResultItems(searchSession, user));
     }
-    return getSearchModelAndView(searchSession);
+    return getSearchModelAndView(searchSession, user);
   }
 
-  private ModelAndView getSearchModelAndView(SearchSession searchSession) {
+  private ModelAndView getSearchModelAndView(SearchSession searchSession, ServiceUserDetail user) {
     var appStatuses = ApplicationVersionStatus.getSearchOptions();
     var appTypes = ApplicationType.getDisplayableOptions();
     var durationTypes = ConsentLengthType.getConsentLengthOptions();
@@ -67,12 +67,11 @@ public class SearchController {
     var prefilledTerminal = applicationDataFilterFormService.getPrefilledAsset(searchFilterForm.getTerminalAssetKey());
     var prefilledOperator = applicationDataFilterFormService.getPrefilledOrganisation(searchFilterForm.getOperatorId());
     var assetTypesWithShore = AssetTypeWithShore.getDisplayableOptions();
-    var aceStatuses = AceFlagStatus.getDisplayableOptions();
-    return new ModelAndView("fcs/search/search")
+    var isRegulatorOrConsultee = teamService.isRegulatorUser(user) || teamService.isConsulteeUser(user);
+    var modelAndView = new ModelAndView("fcs/search/search")
         .addObject("clearFiltersUrl",
             ReverseRouter.route(on(SearchController.class).clearSearchFilter(null, null)))
         .addObject("appStatuses", appStatuses)
-        .addObject("aceStatuses", aceStatuses)
         .addObject("appTypes", appTypes)
         .addObject("durationTypes", durationTypes)
         .addObject("prefilledOperator", prefilledOperator)
@@ -86,6 +85,12 @@ public class SearchController {
         .addObject("form", searchFilterForm)
         .addObject("pageTitle", SEARCH_TITLE)
         .addObject("searchInvoked", searchSession.hasSearchBeenInvoked());
+
+    if (isRegulatorOrConsultee) {
+      modelAndView.addObject("aceStatuses", AceFlagStatus.getDisplayableOptions());
+    }
+
+    return modelAndView;
   }
 
   @PostMapping

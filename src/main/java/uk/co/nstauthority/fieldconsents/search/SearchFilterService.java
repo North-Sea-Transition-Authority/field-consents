@@ -52,9 +52,11 @@ public class SearchFilterService {
     var applicationDataFilterConditions = applicationDataFilterService.getConditions(form);
     List<Condition> searchFilterConditions = new ArrayList<>(applicationDataFilterConditions);
 
-    Optional.ofNullable(form.getAceFlagStatuses())
-        .map(this::getAceStatusCondition)
-        .ifPresent(searchFilterConditions::add);
+    if (TeamType.REGULATOR.equals(teamType) || TeamType.OPRED.equals(teamType)) {
+      Optional.ofNullable(form.getAceFlagStatuses())
+          .map(this::getAceStatusCondition)
+          .ifPresent(searchFilterConditions::add);
+    }
 
     if (Objects.nonNull(form.getFieldAssetKey())) {
       var fieldJson = fieldService.getField(AssetKey.from(form.getFieldAssetKey()).assetId(), FIELD_LOOKUP_PURPOSE);

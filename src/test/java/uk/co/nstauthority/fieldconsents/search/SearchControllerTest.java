@@ -152,7 +152,8 @@ class SearchControllerTest extends AbstractControllerTest {
     assert modelAndView != null;
     var model = modelAndView.getModel();
     assertThat(model)
-        .containsEntry(SEARCH_RESULT_ITEMS, searchResultItems);
+        .containsEntry(SEARCH_RESULT_ITEMS, searchResultItems)
+        .containsEntry("aceStatuses", AceFlagStatus.getDisplayableOptions());
     assertSearchModel(model);
   }
 
@@ -176,7 +177,8 @@ class SearchControllerTest extends AbstractControllerTest {
     assert modelAndView != null;
     var model = modelAndView.getModel();
     assertThat(model)
-        .containsEntry(SEARCH_RESULT_ITEMS, searchResultItems);
+        .containsEntry(SEARCH_RESULT_ITEMS, searchResultItems)
+        .containsEntry("aceStatuses", AceFlagStatus.getDisplayableOptions());
     assertSearchModel(model);
   }
 
@@ -238,7 +240,6 @@ class SearchControllerTest extends AbstractControllerTest {
         .containsEntry("prefilledField", assetFieldRestSearchItem)
         .containsEntry("fieldAssetSearchRestUrl",
             ReverseRouter.route(on(AssetRestController.class).searchFieldAssets(null)))
-        .containsEntry("aceStatuses", AceFlagStatus.getDisplayableOptions())
         .containsEntry("prefilledTerminal", assetTerminalRestSearchItem)
         .containsEntry("terminalAssetSearchRestUrl",
             ReverseRouter.route(on(AssetRestController.class).searchTerminalAssets(null)))

@@ -124,6 +124,13 @@ class SearchFilterServiceTest {
   }
 
   @Test
+  void getConditions_withNoAceFlag() {
+    when(applicationDataFilterService.getConditions(form)).thenReturn(Collections.emptyList());
+
+    assertThat(searchFilterService.getConditions(form, TeamType.INDUSTRY)).isEmpty();
+  }
+
+  @Test
   void getConditions_withFieldAsset() {
     form.setFieldAssetKey(FIELD1_ASSET_KEY);
 

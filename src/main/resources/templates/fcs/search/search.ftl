@@ -15,7 +15,9 @@
       <@dataItemFilter.durationFilter form=form durationCheckboxes=durationTypes/>
       <@dataItemFilter.operatorFilter form=form prefilledOperator=prefilledOperator operatorSearchRestUrl=operatorSearchRestUrl/>
       <@submittedYearFilter form=form/>
-      <@aceFilter form=form aceCheckboxes=aceStatuses/>
+      <#if aceStatuses?has_content>
+        <@aceFilter form=form aceCheckboxes=aceStatuses/>
+      </#if>
       <@dataItemFilter.assetTypeWithShoreFilter form=form assetTypeWithShoreCheckboxes=assetTypesWithShore/>
       <@fieldAssetFilter form=form prefilledField=prefilledField fieldAssetSearchRestUrl=fieldAssetSearchRestUrl/>
       <@terminalAssetFilter form=form prefilledTerminal=prefilledTerminal terminalAssetSearchRestUrl=terminalAssetSearchRestUrl/>
