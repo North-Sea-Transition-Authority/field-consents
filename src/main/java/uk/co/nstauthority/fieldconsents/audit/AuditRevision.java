@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.audit;
 
+import com.google.common.annotations.VisibleForTesting;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -27,11 +28,29 @@ public class AuditRevision {
 
   private long userWuaId;
 
+  public long getId() {
+    return id;
+  }
+
+  @VisibleForTesting
+  public void setId(long id) {
+    this.id = id;
+  }
+
   public long getUserWuaId() {
     return userWuaId;
   }
 
   public void setUserWuaId(long webUserAccountId) {
     this.userWuaId = webUserAccountId;
+  }
+
+  public Date getCreatedDateTime() {
+    return createdDateTime;
+  }
+
+  @VisibleForTesting
+  public void setCreatedDateTime(Date createdDateTime) {
+    this.createdDateTime = createdDateTime;
   }
 }

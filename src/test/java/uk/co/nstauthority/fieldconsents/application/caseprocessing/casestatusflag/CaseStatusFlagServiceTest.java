@@ -29,6 +29,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalService;
@@ -155,11 +156,12 @@ class CaseStatusFlagServiceTest {
   }
 
   @Test
-  void addConsultationFlags_consultationExists_withResponder() {
+  void addConsultationFlags_openConsultationExists_withResponder() {
     var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
     var caseStatusFlags = new HashSet<CaseStatusFlag>();
     var consultation = new Consultation();
     consultation.setResponderWuaId(123L);
+    consultation.setStatus(ConsultationStatus.OPEN);
 
     when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication()))
         .thenReturn(Optional.of(consultation));
@@ -170,10 +172,11 @@ class CaseStatusFlagServiceTest {
   }
 
   @Test
-  void addConsultationFlags_consultationExists_withoutResponder() {
+  void addConsultationFlags_openConsultationExists_withoutResponder() {
     var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
     var caseStatusFlags = new HashSet<CaseStatusFlag>();
     var consultation = new Consultation();
+    consultation.setStatus(ConsultationStatus.OPEN);
 
     when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication()))
         .thenReturn(Optional.of(consultation));

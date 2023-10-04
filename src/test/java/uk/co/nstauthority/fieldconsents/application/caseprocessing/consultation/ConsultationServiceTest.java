@@ -3,14 +3,20 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation
 import static java.time.temporal.ChronoUnit.DAYS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.params.provider.EnumSource.Mode.EXCLUDE;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mock.Strictness.LENIENT;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationStatus.CLOSED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationStatus.OPEN;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.CONSULTEE;
+import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.REGULATOR;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CONSULTATION_REQUEST;
+import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CONSULTATION_RESPONDER_ASSIGNMENT;
+import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CONSULTATION_RESPONSE;
 
 import jakarta.persistence.EntityNotFoundException;
 import java.time.Clock;
@@ -22,11 +28,14 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
@@ -35,6 +44,7 @@ import uk.co.nstauthority.fieldconsents.application.workareapriority.Application
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
+import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
 import uk.co.nstauthority.fieldconsents.teams.Team;
 import uk.co.nstauthority.fieldconsents.teams.TeamId;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberView;
@@ -54,6 +64,7 @@ class ConsultationServiceTest {
   private static final ServiceUserDetail RESPONDER_USER = ServiceUserDetailTestUtil.Builder().withWuaId(WUA_ID).build();
   private static final ServiceUserDetail ASSIGNER_USER = ServiceUserDetailTestUtil.Builder().withWuaId(WUA_ID + 1).build();
   private static final TeamType CONSULTATION_TEAM_TYPE = TeamType.OPRED;
+  private static final Integer CONSULTATION_ID = 1;
   private static final Team CONSULTATION_TEAM = new TeamTestUtil.TeamBuilder()
       .withId(1)
       .withTeamType(TeamType.OPRED)
@@ -76,6 +87,9 @@ class ConsultationServiceTest {
 
   @Mock
   private TeamMemberViewService teamMemberViewService;
+
+  @Mock
+  private FieldConsentsFileService fieldConsentsFileService;
 
   @InjectMocks
   private ConsultationService consultationService;
@@ -130,6 +144,21 @@ class ConsultationServiceTest {
     assertThatThrownBy(() -> consultationService.getLatestOpenConsultation(application))
         .isInstanceOf(EntityNotFoundException.class)
         .hasMessage("Consultation not found for application [%s]".formatted(application.getId()));
+  }
+
+  @Test
+  void getConsultationByIdAndApplication() {
+    when(repository.findByIdAndRequestApplicationVersion_Application(CONSULTATION_ID, application)).thenReturn(Optional.of(consultation));
+    assertThat(consultationService.getConsultationByIdAndApplication(CONSULTATION_ID, application)).isEqualTo(consultation);
+  }
+
+  @Test
+  void getConsultationByIdAndApplication_doesNotExist() {
+    var consultationId = 1;
+    when(repository.findByIdAndRequestApplicationVersion_Application(consultationId, application)).thenReturn(Optional.empty());
+    assertThatThrownBy(() -> consultationService.getConsultationByIdAndApplication(consultationId, application))
+        .isInstanceOf(EntityNotFoundException.class)
+        .hasMessage("Consultation [%s] not found for application [%s]".formatted(consultationId, application.getId()));
   }
 
   @Test
@@ -254,7 +283,7 @@ class ConsultationServiceTest {
 
     verify(consultation).setResponderWuaId(RESPONDER_USER.wuaId());
     verify(consultation).getRequestApplicationVersion();
-    verify(applicationWorkAreaPriorityService).prioritiseApplicationInWorkArea(applicationVersion, ASSIGNER_USER, CONSULTATION_REQUEST, CONSULTEE);
+    verify(applicationWorkAreaPriorityService).prioritiseApplicationInWorkArea(applicationVersion, ASSIGNER_USER, CONSULTATION_RESPONDER_ASSIGNMENT, CONSULTEE);
     verifyNoMoreInteractions(consultation);
     verify(repository).save(consultation);
   }
@@ -270,6 +299,89 @@ class ConsultationServiceTest {
     assertThatThrownBy(() -> consultationService.assignResponderToConsultation(consultation, ASSIGNER_USER,RESPONDER_USER))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("Responder must be a member of team [%s]".formatted(consultation.getConsultationTeam().getId()));
+  }
+
+  @Test
+  void saveConsultationResponse() {
+    var habitatsRegsResponseType = HabitatsRegsResponseType.AGREE;
+    var habitatsRegsDescription = "habitats description";
+    var eiaRegsResponseType = EiaRegsResponseType.AGREE;
+    var eiaRegsDescription = "eia description";
+
+    var documents = Collections.<UploadedFileForm>emptyList();
+
+    var consultation = mock(Consultation.class);
+    when(consultation.getId()).thenReturn(CONSULTATION_ID);
+    when(consultation.getRequestApplicationVersion()).thenReturn(applicationVersion);
+
+    when(repository.save(consultation)).thenReturn(consultation);
+
+    consultationService.saveConsultationResponse(
+        applicationVersion,
+        consultation,
+        RESPONDER_USER,
+        habitatsRegsResponseType,
+        habitatsRegsDescription,
+        eiaRegsResponseType,
+        eiaRegsDescription,
+        documents
+    );
+
+    verify(consultation).setStatus(CLOSED);
+    verify(consultation).setResponseApplicationVersion(applicationVersion);
+    verify(consultation).setRespondedByWuaId(RESPONDER_USER.wuaId());
+    verify(consultation).setRespondedAtDatetime(clock.instant());
+    verify(consultation).setHabitatsRegsResponseType(habitatsRegsResponseType);
+    verify(consultation).setHabitatsRegsResponseDescription(habitatsRegsDescription);
+    verify(consultation).setEiaRegsResponseType(eiaRegsResponseType);
+    verify(consultation).setEiaRegsResponseDescription(eiaRegsDescription);
+    verify(repository).save(consultation);
+
+    verify(consultation).getId();
+
+    var fileUsageCaptor = ArgumentCaptor.forClass(ConsultationFileUsage.class);
+    verify(fieldConsentsFileService).saveDocuments(fileUsageCaptor.capture(), eq(documents));
+    assertThat(fileUsageCaptor.getValue()).extracting(
+        ConsultationFileUsage::usageId,
+        ConsultationFileUsage::usageType,
+        ConsultationFileUsage::documentType
+    ).containsExactly(
+        CONSULTATION_ID.toString(),
+        "Consultation",
+        "response-document"
+    );
+
+    verify(applicationWorkAreaPriorityService).prioritiseApplicationInWorkArea(
+        applicationVersion,
+        RESPONDER_USER,
+        CONSULTATION_RESPONSE,
+        REGULATOR
+    );
+
+    verifyNoMoreInteractions(consultation);
+  }
+
+  @Test
+  void requiresEiaResponse_production() {
+    var applicationVersion = mock(ApplicationVersion.class);
+    var application = mock(Application.class);
+
+    when(applicationVersion.getApplication()).thenReturn(application);
+    when(application.getType()).thenReturn(ApplicationType.PRODUCTION);
+
+    assertThat(consultationService.requiresEiaRegsResponse(applicationVersion)).isTrue();
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = ApplicationType.class, names = "PRODUCTION", mode = EXCLUDE)
+  void requiresEiaResponse_notProduction(ApplicationType applicationType) {
+    var applicationVersion = mock(ApplicationVersion.class);
+    var application = mock(Application.class);
+
+    when(applicationVersion.getApplication()).thenReturn(application);
+    when(application.getType()).thenReturn(applicationType);
+
+    assertThat(consultationService.requiresEiaRegsResponse(applicationVersion)).isFalse();
   }
 
 }

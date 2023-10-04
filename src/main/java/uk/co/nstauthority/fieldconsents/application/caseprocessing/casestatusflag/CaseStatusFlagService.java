@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalService;
@@ -103,10 +104,13 @@ public class CaseStatusFlagService {
       return;
     }
 
-    caseStatusFlags.add(CONSULTATION_OPEN);
+    var consultation = consultationOptional.get();
 
-    var responder = consultationOptional.get().getResponderWuaId();
-    if (Objects.isNull(responder)) {
+    if (ConsultationStatus.OPEN.equals(consultation.getStatus())) {
+      caseStatusFlags.add(CONSULTATION_OPEN);
+    }
+
+    if (Objects.isNull(consultation.getResponderWuaId())) {
       caseStatusFlags.add(CONSULTATION_UNASSIGNED);
     }
   }

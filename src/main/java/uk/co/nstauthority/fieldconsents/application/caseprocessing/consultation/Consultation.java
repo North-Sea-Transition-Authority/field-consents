@@ -30,6 +30,10 @@ public class Consultation {
   @JoinColumn(name = "request_application_version_id")
   private ApplicationVersion requestApplicationVersion;
 
+  @OneToOne
+  @JoinColumn(name = "response_application_version_id")
+  private ApplicationVersion responseApplicationVersion;
+
   @ManyToOne
   @JoinColumn(name = "consultation_team_id")
   @NotAudited
@@ -46,6 +50,20 @@ public class Consultation {
 
   private Long responderWuaId;
 
+  private Instant respondedAtDatetime;
+
+  private Long respondedByWuaId;
+
+  @Enumerated(EnumType.STRING)
+  private HabitatsRegsResponseType habitatsRegsResponseType;
+
+  private String habitatsRegsResponseDescription;
+
+  @Enumerated(EnumType.STRING)
+  private EiaRegsResponseType eiaRegsResponseType;
+
+  private String eiaRegsResponseDescription;
+
   public Integer getId() {
     return id;
   }
@@ -61,6 +79,14 @@ public class Consultation {
 
   public void setRequestApplicationVersion(ApplicationVersion requestApplicationVersion) {
     this.requestApplicationVersion = requestApplicationVersion;
+  }
+
+  public ApplicationVersion getResponseApplicationVersion() {
+    return responseApplicationVersion;
+  }
+
+  public void setResponseApplicationVersion(ApplicationVersion responseApplicationVersion) {
+    this.responseApplicationVersion = responseApplicationVersion;
   }
 
   public Team getConsultationTeam() {
@@ -109,5 +135,53 @@ public class Consultation {
 
   public void setResponderWuaId(Long responderWuaId) {
     this.responderWuaId = responderWuaId;
+  }
+
+  public Instant getRespondedAtDatetime() {
+    return respondedAtDatetime;
+  }
+
+  public void setRespondedAtDatetime(Instant respondedAtDatetime) {
+    this.respondedAtDatetime = respondedAtDatetime;
+  }
+
+  public Long getRespondedByWuaId() {
+    return respondedByWuaId;
+  }
+
+  public void setRespondedByWuaId(Long respondedByWuaId) {
+    this.respondedByWuaId = respondedByWuaId;
+  }
+
+  public HabitatsRegsResponseType getHabitatsRegsResponseType() {
+    return habitatsRegsResponseType;
+  }
+
+  public void setHabitatsRegsResponseType(HabitatsRegsResponseType responseType) {
+    this.habitatsRegsResponseType = responseType;
+  }
+
+  public String getHabitatsRegsResponseDescription() {
+    return habitatsRegsResponseDescription;
+  }
+
+  public void setHabitatsRegsResponseDescription(String responseHabitatsRegulationsDescription) {
+    this.habitatsRegsResponseDescription = responseHabitatsRegulationsDescription;
+  }
+
+  public EiaRegsResponseType getEiaRegsResponseType() {
+    return eiaRegsResponseType;
+  }
+
+  public void setEiaRegsResponseType(EiaRegsResponseType responseType) {
+    this.eiaRegsResponseType = responseType;
+  }
+
+  public String getEiaRegsResponseDescription() {
+    return eiaRegsResponseDescription;
+  }
+
+  public void setEiaRegsResponseDescription(String responseEiaRegulationsDescription) {
+    this.eiaRegsResponseDescription = responseEiaRegulationsDescription;
   }
 }

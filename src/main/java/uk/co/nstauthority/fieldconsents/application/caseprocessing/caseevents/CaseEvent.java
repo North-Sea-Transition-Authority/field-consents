@@ -3,6 +3,7 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents;
 import java.time.Instant;
 import java.util.List;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.audit.AuditRevision;
 import uk.co.nstauthority.fieldconsents.summary.SummaryFileView;
 
 public record CaseEvent(ApplicationVersion applicationVersion,
@@ -15,6 +16,12 @@ public record CaseEvent(ApplicationVersion applicationVersion,
 
   public static Builder builder(ApplicationVersion applicationVersion) {
     return new Builder(applicationVersion);
+  }
+
+  public static Builder newBuilderForAuditRevision(AuditRevision auditRevision, ApplicationVersion applicationVersion) {
+    return builder(applicationVersion)
+        .withEventDateTime(auditRevision.getCreatedDateTime().toInstant())
+        .withMainEventUserWuaId(auditRevision.getUserWuaId());
   }
 
   public static class Builder {

@@ -1,8 +1,12 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation;
 
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationStatus.CLOSED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationStatus.OPEN;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.CONSULTEE;
+import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.REGULATOR;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CONSULTATION_REQUEST;
+import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CONSULTATION_RESPONDER_ASSIGNMENT;
+import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CONSULTATION_RESPONSE;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -12,10 +16,13 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.fieldconsents.application.Application;
+import uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
 import uk.co.nstauthority.fieldconsents.teams.Team;
 import uk.co.nstauthority.fieldconsents.teams.TeamId;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberView;
@@ -36,6 +43,7 @@ public class ConsultationService {
   private final ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
   private final OpredTeamService opredTeamService;
   private final TeamMemberViewService teamMemberViewService;
+  private final FieldConsentsFileService fieldConsentsFileService;
 
   ConsultationService(
       TeamService teamService,
@@ -43,7 +51,8 @@ public class ConsultationService {
       Clock clock,
       ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService,
       OpredTeamService opredTeamService,
-      TeamMemberViewService teamMemberViewService
+      TeamMemberViewService teamMemberViewService,
+      FieldConsentsFileService fieldConsentsFileService
   ) {
     this.teamService = teamService;
     this.repository = repository;
@@ -51,6 +60,7 @@ public class ConsultationService {
     this.applicationWorkAreaPriorityService = applicationWorkAreaPriorityService;
     this.opredTeamService = opredTeamService;
     this.teamMemberViewService = teamMemberViewService;
+    this.fieldConsentsFileService = fieldConsentsFileService;
   }
 
   public Optional<Consultation> findLatestOpenConsultation(Application application) {
@@ -61,6 +71,13 @@ public class ConsultationService {
     return findLatestOpenConsultation(application).orElseThrow(() -> new EntityNotFoundException(
         "Consultation not found for application [%s]".formatted(application.getId())
     ));
+  }
+
+  public Consultation getConsultationByIdAndApplication(Integer consultationId, Application application) {
+    return repository.findByIdAndRequestApplicationVersion_Application(consultationId, application)
+        .orElseThrow(() -> new EntityNotFoundException("Consultation [%s] not found for application [%s]".formatted(
+            consultationId, application.getId()
+        )));
   }
 
   public List<Consultation> getConsultationsByApplication(Application application) {
@@ -120,9 +137,45 @@ public class ConsultationService {
     applicationWorkAreaPriorityService.prioritiseApplicationInWorkArea(
         consultation.getRequestApplicationVersion(),
         assigner,
-        CONSULTATION_REQUEST,
+        CONSULTATION_RESPONDER_ASSIGNMENT,
         CONSULTEE
     );
+  }
+
+  @Transactional
+  public void saveConsultationResponse(
+      ApplicationVersion applicationVersion,
+      Consultation consultation,
+      ServiceUserDetail responderUser,
+      HabitatsRegsResponseType habitatsRegsResponseType,
+      String habitatsRegsResponseDescription,
+      EiaRegsResponseType eiaRegsResponseType,
+      String eiaRegsResponseDescription,
+      List<UploadedFileForm> documents
+  ) {
+    consultation.setStatus(CLOSED);
+    consultation.setResponseApplicationVersion(applicationVersion);
+    consultation.setRespondedByWuaId(responderUser.wuaId());
+    consultation.setRespondedAtDatetime(clock.instant());
+    consultation.setHabitatsRegsResponseType(habitatsRegsResponseType);
+    consultation.setHabitatsRegsResponseDescription(habitatsRegsResponseDescription);
+    consultation.setEiaRegsResponseType(eiaRegsResponseType);
+    consultation.setEiaRegsResponseDescription(eiaRegsResponseDescription);
+    consultation = repository.save(consultation);
+
+    fieldConsentsFileService.saveDocuments(ConsultationFileUsage.responseUsageFrom(consultation), documents);
+
+    applicationWorkAreaPriorityService.prioritiseApplicationInWorkArea(
+        consultation.getRequestApplicationVersion(),
+        responderUser,
+        CONSULTATION_RESPONSE,
+        REGULATOR
+    );
+  }
+
+  public boolean requiresEiaRegsResponse(ApplicationVersion applicationVersion) {
+    var applicationType = applicationVersion.getApplication().getType();
+    return ApplicationTypeFeature.EIA_SCREENING_DIRECTION.allowed(applicationType);
   }
 
 }

@@ -5,14 +5,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import jakarta.persistence.EntityManager;
-import java.sql.Timestamp;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -24,7 +20,6 @@ import org.hibernate.envers.query.AuditQuery;
 import org.hibernate.envers.query.AuditQueryCreator;
 import org.hibernate.envers.query.criteria.AuditCriterion;
 import org.hibernate.envers.query.order.AuditOrder;
-import org.hibernate.envers.query.projection.AuditProjection;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,32 +34,10 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
+import uk.co.nstauthority.fieldconsents.audit.AuditRevision;
 
 @ExtendWith(MockitoExtension.class)
 class ConsultationAuditServiceTest {
-
-  private static final Instant REQUEST_DEADLINE = Instant.now().plus(14, ChronoUnit.DAYS);
-  private static final Instant AUDIT_TIMESTAMP = Instant.now();
-
-  private static final ConsultationAudit CONSULTATION_AUDIT = new ConsultationAudit(
-      RevisionType.ADD,
-      1,
-      2L,
-      3L,
-      4L,
-      REQUEST_DEADLINE,
-      AUDIT_TIMESTAMP
-  );
-
-  private static final Object[] RAW_CONSULTATION_AUDIT = new Object[]{
-      CONSULTATION_AUDIT.revisionType(),
-      CONSULTATION_AUDIT.consultationId(),
-      CONSULTATION_AUDIT.responderWuaId(),
-      CONSULTATION_AUDIT.requestedByWuaId(),
-      CONSULTATION_AUDIT.triggeredByWuaId(),
-      CONSULTATION_AUDIT.requestDeadline(),
-      Timestamp.from(CONSULTATION_AUDIT.createdDateTime())
-  };
 
   @Mock
   private EntityManager entityManager;
@@ -88,9 +61,6 @@ class ConsultationAuditServiceTest {
   private ArgumentCaptor<AuditCriterion> auditCriterionArgumentCaptor;
 
   @Captor
-  private ArgumentCaptor<AuditProjection> auditProjectionArgumentCaptor;
-
-  @Captor
   private ArgumentCaptor<AuditOrder> auditOrderArgumentCaptor;
 
   private MockedStatic<AuditReaderFactory> mockedStaticAuditReaderFactory;
@@ -111,7 +81,6 @@ class ConsultationAuditServiceTest {
 
     when(auditReader.createQuery()).thenReturn(auditQueryCreator);
     when(auditQueryCreator.forRevisionsOfEntity(Consultation.class, false, false)).thenReturn(auditQuery);
-    when(auditQuery.addProjection(any())).thenReturn(auditQuery);
     when(auditQuery.add(any())).thenReturn(auditQuery);
     when(auditQuery.addOrder(any())).thenReturn(auditQuery);
 
@@ -128,8 +97,12 @@ class ConsultationAuditServiceTest {
 
   @Test
   void getConsultationAudits() {
-    when(auditQuery.getResultList()).thenReturn(Collections.singletonList(RAW_CONSULTATION_AUDIT));
-    assertThat(consultationAuditService.getConsultationAudits(consultations)).containsExactly(CONSULTATION_AUDIT);
+    var audit = new ConsultationAudit(mock(Consultation.class), mock(AuditRevision.class), RevisionType.ADD);
+    var rawAuditProjection = new Object[]{audit.consultation(), audit.auditRevision(), audit.revisionType()};
+
+    when(auditQuery.getResultList()).thenReturn(Collections.singletonList(rawAuditProjection));
+
+    assertThat(consultationAuditService.getConsultationAudits(consultations)).containsExactly(audit);
     verifyAuditQueryCreation();
   }
 
@@ -149,25 +122,12 @@ class ConsultationAuditServiceTest {
 
   private void verifyAuditQueryCreation() {
     verify(auditQuery).add(auditCriterionArgumentCaptor.capture());
-    verify(auditQuery, times(7)).addProjection(auditProjectionArgumentCaptor.capture());
     verify(auditQuery).addOrder(auditOrderArgumentCaptor.capture());
 
     var consultationIds = consultations.stream().map(Consultation::getId).toList();
     assertThat(auditCriterionArgumentCaptor.getValue())
         .usingRecursiveComparison()
         .isEqualTo(AuditEntity.id().in(consultationIds));
-
-    assertThat(auditProjectionArgumentCaptor.getAllValues())
-        .usingRecursiveFieldByFieldElementComparator()
-        .containsExactlyInAnyOrder(
-            AuditEntity.revisionType(),
-            AuditEntity.property("id"),
-            AuditEntity.property("responderWuaId"),
-            AuditEntity.property("requestedByWuaId"),
-            AuditEntity.property("requestDeadline"),
-            AuditEntity.revisionProperty("createdDateTime"),
-            AuditEntity.revisionProperty("userWuaId")
-        );
 
     assertThat(auditOrderArgumentCaptor.getValue())
         .usingRecursiveComparison()

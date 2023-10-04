@@ -11,6 +11,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CHANGE_ACE_STATUS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_MANAGE_RESPONDER;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_REQUEST;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_RESPONSE;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_UPDATE_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_WITHDRAWAL_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.REGULATOR_ADD_CASE_NOTE;
@@ -33,13 +34,15 @@ import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePe
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_CASE_PROCESSING_DOCUMENTS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.RESPOND_TO_CONSULTATION;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.opred.OpredTeamRole.RESPONDER;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CASE_OFFICER;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.TECHNICAL_REVIEWER;
 
 import java.util.Comparator;
-import java.util.EnumMap;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -53,23 +56,23 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlagService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ApplicationAccessService;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.TeamRole;
 
 @Service
 public class CaseProcessingActionService {
 
   private final ApplicationAccessService applicationAccessService;
-
   private final CaseStatusFlagService caseStatusFlagService;
-
   private final ApplicationVersionService applicationVersionService;
-
   private final TechnicalReviewService technicalReviewService;
+  private final ConsultationService consultationService;
 
   private final Map<ApplicationVersionStatus, Set<CaseProcessingActionItem>> caseStatusToActions =
       Map.of(
@@ -90,6 +93,7 @@ public class CaseProcessingActionService {
               CASE_OFFICER_RELEASE_OWNERSHIP,
               CASE_OFFICER_WITHDRAWAL_RESPONSE,
               CONSULTATION_REQUEST,
+              CONSULTATION_RESPONSE,
               CONSULTATION_MANAGE_RESPONDER,
               TECHNICAL_REVIEW_REQUEST,
               CASE_OFFICER_ASSIGN_OWNERSHIP,
@@ -112,6 +116,7 @@ public class CaseProcessingActionService {
           entry(CASE_OFFICER_ASSIGN_OWNERSHIP, EnumSet.of(ASSIGN_FCS_APPLICATIONS)),
           entry(CASE_OFFICER_REASSIGN_OWNERSHIP, EnumSet.of(ASSIGN_FCS_APPLICATIONS)),
           entry(CONSULTATION_REQUEST, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
+          entry(CONSULTATION_RESPONSE, EnumSet.of(RESPOND_TO_CONSULTATION)),
           entry(CONSULTATION_MANAGE_RESPONDER, EnumSet.of(ALLOCATE_CONSULTATION)),
           entry(REGULATOR_ADD_CASE_NOTE, EnumSet.of(EDIT_FCS_CASE_PROCESSING_DOCUMENTS)),
           entry(TECHNICAL_REVIEWER_SUBMIT_REVIEW, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)),
@@ -134,6 +139,7 @@ public class CaseProcessingActionService {
           entry(CASE_OFFICER_REASSIGN_OWNERSHIP, EnumSet.of(CASE_OFFICER_ASSIGNED)),
           entry(CONSULTATION_REQUEST,
               EnumSet.of(CASE_OFFICER_ASSIGNED, NO_TECHNICAL_REVIEW_OPEN, NO_CONSULTATION_OPEN)),
+          entry(CONSULTATION_RESPONSE, EnumSet.of(CONSULTATION_OPEN)),
           entry(CONSULTATION_MANAGE_RESPONDER, EnumSet.of(CONSULTATION_OPEN)),
           entry(REGULATOR_ADD_CASE_NOTE, EnumSet.of(CASE_NOTES_ALLOWED)),
           entry(TECHNICAL_REVIEWER_SUBMIT_REVIEW, EnumSet.of(TECHNICAL_REVIEW_OPEN)),
@@ -143,7 +149,7 @@ public class CaseProcessingActionService {
           entry(OPERATOR_UPDATE_APPLICATION, EnumSet.of(APPLICATION_UPDATE_OPEN))
       );
 
-  private final Map<CaseProcessingActionItem, Set<RegulatorTeamRole>> actionsToAssigneeOnlyRoles =
+  private final Map<CaseProcessingActionItem, Set<? extends TeamRole>> actionsToAssigneeOnlyRoles =
       Map.of(
           CHANGE_ACE_STATUS, EnumSet.of(CASE_OFFICER),
           CASE_OFFICER_RELEASE_OWNERSHIP, EnumSet.of(CASE_OFFICER),
@@ -151,7 +157,8 @@ public class CaseProcessingActionService {
           TECHNICAL_REVIEW_REQUEST, EnumSet.of(CASE_OFFICER),
           TECHNICAL_REVIEWER_SUBMIT_REVIEW, EnumSet.of(TECHNICAL_REVIEWER),
           APPLICATION_UPDATE_REQUEST, EnumSet.of(CASE_OFFICER, TECHNICAL_REVIEWER),
-          CONSULTATION_REQUEST, EnumSet.of(CASE_OFFICER)
+          CONSULTATION_REQUEST, EnumSet.of(CASE_OFFICER),
+          CONSULTATION_RESPONSE, EnumSet.of(RESPONDER)
       );
 
   /*
@@ -166,11 +173,13 @@ public class CaseProcessingActionService {
   public CaseProcessingActionService(ApplicationAccessService applicationAccessService,
                                      CaseStatusFlagService caseStatusFlagService,
                                      ApplicationVersionService applicationVersionService,
-                                     TechnicalReviewService technicalReviewService) {
+                                     TechnicalReviewService technicalReviewService,
+                                     ConsultationService consultationService) {
     this.applicationAccessService = applicationAccessService;
     this.caseStatusFlagService = caseStatusFlagService;
     this.applicationVersionService = applicationVersionService;
     this.technicalReviewService = technicalReviewService;
+    this.consultationService = consultationService;
   }
 
   public List<CaseProcessingActionItem> getUserActionItems(ApplicationVersion applicationVersion,
@@ -184,7 +193,7 @@ public class CaseProcessingActionService {
 
     var userRolePermissions = applicationAccessService.getApplicationPermissionsForUser(applicationVersion, user);
     var caseStatusFlags = caseStatusFlagService.getCaseStatusFlags(applicationVersion);
-    var regulatorRoleCurrentAssigneeMap = constructAssigneeMap(applicationVersion);
+    var assigneeMap = constructAssigneeMap(applicationVersion);
 
     return actions.stream()
         .filter(action -> applicationTypeFeatureFlagAllowed(applicationVersion, action))
@@ -192,7 +201,7 @@ public class CaseProcessingActionService {
         .filter(action -> CollectionUtils.containsAny(actionsToPermissions.get(action), userRolePermissions))
         // filter actions that the application version has all the status flags for
         .filter(action -> caseStatusFlags.containsAll(actionsToStatusFlags.get(action)))
-        .filter(action -> assigneeCheck(action, regulatorRoleCurrentAssigneeMap, user))
+        .filter(action -> assigneeCheck(action, assigneeMap, user))
         .toList();
   }
 
@@ -205,8 +214,8 @@ public class CaseProcessingActionService {
         .toList();
   }
 
-  private Map<RegulatorTeamRole, WebUserAccountId> constructAssigneeMap(ApplicationVersion applicationVersion) {
-    var assigneeMap = new EnumMap<RegulatorTeamRole, WebUserAccountId>(RegulatorTeamRole.class);
+  private Map<TeamRole, WebUserAccountId> constructAssigneeMap(ApplicationVersion applicationVersion) {
+    var assigneeMap = new HashMap<TeamRole, WebUserAccountId>();
 
     applicationVersionService.findCaseOfficerWuaId(applicationVersion)
         .ifPresent(caseOfficerWuaId -> assigneeMap.put(CASE_OFFICER, caseOfficerWuaId));
@@ -214,11 +223,16 @@ public class CaseProcessingActionService {
     technicalReviewService.findTechnicalReviewerWuaId(applicationVersion)
         .ifPresent(technicalReviewerWuaId -> assigneeMap.put(TECHNICAL_REVIEWER, technicalReviewerWuaId));
 
+    consultationService.findLatestOpenConsultation(applicationVersion.getApplication())
+        .map(Consultation::getResponderWuaId)
+        .map(WebUserAccountId::from)
+        .ifPresent(responderWuaId -> assigneeMap.put(RESPONDER, responderWuaId));
+
     return assigneeMap;
   }
 
   private boolean assigneeCheck(CaseProcessingActionItem action,
-                                Map<RegulatorTeamRole, WebUserAccountId> assigneeMap,
+                                Map<TeamRole, WebUserAccountId> assigneeMap,
                                 ServiceUserDetail user) {
 
     var assigneeRoles = actionsToAssigneeOnlyRoles.get(action);

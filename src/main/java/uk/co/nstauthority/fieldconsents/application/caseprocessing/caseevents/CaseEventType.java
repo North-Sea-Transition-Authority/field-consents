@@ -21,14 +21,12 @@ public enum CaseEventType {
   CONSULTATION_REQUESTED("Consultation requested", "Requested by", "Requested on", "Deadline"),
   CONSULTATION_ASSIGNED("Consultation assigned", "Assigned by", "Assigned on", "Deadline", "Responder"),
   CONSULTATION_REASSIGNED("Consultation re-assigned", "Re-assigned by", "Assigned on", "Deadline", "Responder"),
+  CONSULTATION_RESPONDED("Consultation responded", "Responded by", "Responded at", "Responded")
   ;
 
   private final String caseEventHeader;
-
   private final String caseEventUserLabel;
-
   private final String caseEventDateTimeLabel;
-
   private final String caseEventTextLabel;
   private final String otherEventUserLabel;
 

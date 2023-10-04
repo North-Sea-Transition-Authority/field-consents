@@ -15,57 +15,55 @@
 <#assign pageTitle = "Submit technical review"/>
 
 <@defaultPage
-htmlTitle=pageTitle
-pageHeading=pageTitle
-caption=applicationReference
-pageSize=getPageSize.getPageSize(wideSummaryDisplay)
-backLinkUrl=springUrl(backLinkUrl)
-errorItems=errorList>
-    <@technicalReviewDetails
-      technicalReviewSummaryView=technicalReviewSummaryView/>
-
-    <@fdsDetails.summaryDetails summaryTitle="View application">
-        <@applicationSummary.applicationSummary accordionId=accordionId/>
-    </@fdsDetails.summaryDetails>
-    <@fdsForm.htmlForm>
-        <@fdsRadio.radioGroup
+  htmlTitle=pageTitle
+  pageHeading=pageTitle
+  caption=applicationReference
+  pageSize=getPageSize.getPageSize(wideSummaryDisplay)
+  backLinkUrl=springUrl(backLinkUrl)
+  errorItems=errorList>
+  <@technicalReviewDetails technicalReviewSummaryView=technicalReviewSummaryView/>
+  <@fdsDetails.summaryDetails summaryTitle="View application">
+    <@applicationSummary.applicationSummary accordionId=accordionId/>
+  </@fdsDetails.summaryDetails>
+  <@fdsForm.htmlForm>
+    <@fdsRadio.radioGroup
+      path="form.responseType"
+      labelText="Decision"
+      fieldsetHeadingSize="h2"
+      fieldsetHeadingClass="govuk-fieldset__legend--m"
+      hiddenContent=true>
+      <@fdsRadio.radioItem
         path="form.responseType"
-        labelText="Decision"
-        fieldsetHeadingSize="h2"
-        fieldsetHeadingClass="govuk-fieldset__legend--m"
-        hiddenContent=true>
-            <@fdsRadio.radioItem
-            path="form.responseType"
-            itemMap={approveRadio.toString(): approveRadio.getDisplayName()}>
-                <@fdsTextarea.textarea
-                path="form.consentConditions.inputValue"
-                nestingPath="form.responseType"
-                labelText=approveRadio.getResponseTextLabel()
-                hintText=approveRadio.getResponseTextLabelHint()
-                optionalLabel=true/>
-            </@fdsRadio.radioItem>
-            <@fdsRadio.radioItem path="form.responseType" itemMap={rejectRadio.toString(): rejectRadio.getDisplayName()}>
-                <@fdsTextarea.textarea
-                path="form.rejectionReason.inputValue"
-                nestingPath="form.responseType"
-                labelText=rejectRadio.getResponseTextLabel()
-                hintText=rejectRadio.getResponseTextLabelHint()/>
-            </@fdsRadio.radioItem>
-        </@fdsRadio.radioGroup>
-        <@fdsFieldset.fieldset
+        itemMap={approveRadio.toString(): approveRadio.getDisplayName()}>
+        <@fdsTextarea.textarea
+          path="form.consentConditions.inputValue"
+          nestingPath="form.responseType"
+          labelText=approveRadio.getResponseTextLabel()
+          hintText=approveRadio.getResponseTextLabelHint()
+          optionalLabel=true/>
+      </@fdsRadio.radioItem>
+      <@fdsRadio.radioItem path="form.responseType" itemMap={rejectRadio.toString(): rejectRadio.getDisplayName()}>
+        <@fdsTextarea.textarea
+          path="form.rejectionReason.inputValue"
+          nestingPath="form.responseType"
+          labelText=rejectRadio.getResponseTextLabel()
+          hintText=rejectRadio.getResponseTextLabelHint()/>
+      </@fdsRadio.radioItem>
+    </@fdsRadio.radioGroup>
+      <@fdsFieldset.fieldset
         legendHeading="Upload documents which support your response"
         legendHeadingClass="govuk-fieldset__legend--m"
         optionalLabel=true>
-            <@fdsFileUpload.fileUpload
-            path=fileUploadAttributes.path()
-            allowedExtensions=fileUploadAttributes.allowedExtensions()
-            uploadUrl=fileUploadAttributes.uploadUrl()
-            downloadUrl=fileUploadAttributes.downloadUrl()
-            deleteUrl=fileUploadAttributes.deleteUrl()
-            existingFiles=fileUploadAttributes.existingFiles()
-            maxAllowedSize=fileUploadAttributes.maxAllowedSize()/>
-        </@fdsFieldset.fieldset>
-        <@fdsAction.submitButtons
+        <@fdsFileUpload.fileUpload
+          path=fileUploadAttributes.path()
+          allowedExtensions=fileUploadAttributes.allowedExtensions()
+          uploadUrl=fileUploadAttributes.uploadUrl()
+          downloadUrl=fileUploadAttributes.downloadUrl()
+          deleteUrl=fileUploadAttributes.deleteUrl()
+          existingFiles=fileUploadAttributes.existingFiles()
+          maxAllowedSize=fileUploadAttributes.maxAllowedSize()/>
+      </@fdsFieldset.fieldset>
+      <@fdsAction.submitButtons
         primaryButtonText="Submit technical review"
         secondaryLinkText="Cancel"
         linkSecondaryAction=true

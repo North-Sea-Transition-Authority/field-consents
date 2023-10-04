@@ -8,6 +8,7 @@ import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTes
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,8 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.Ca
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventType;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.EiaRegsResponseType;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.HabitatsRegsResponseType;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
@@ -148,6 +151,46 @@ class ConsultationEventServiceIntegrationTest extends AbstractIntegrationTest {
         );
   }
 
+  @Test
+  void requestConsultation_assignResponder1_respondToConsultation() {
+    var applicationVersion = getSubmittedAndAssignedApplicationVersion();
+
+    var consultation = requestConsultation(applicationVersion);
+    assignResponder(consultation, ALLOCATOR_USER_1, RESPONDER_USER_1);
+    respondToConsultation(applicationVersion, consultation, RESPONDER_USER_1);
+
+    var caseEvents = getCaseEvents(applicationVersion);
+    assertThat(caseEvents).hasSize(3);
+
+    assertThatConsultationRequestedEventExists(caseEvents);
+
+    assertThat(caseEvents.get(1))
+        .extracting(
+            CaseEvent::eventType,
+            CaseEvent::mainEventUserWuaId,
+            CaseEvent::otherEventUserWuaId,
+            CaseEvent::eventText
+        ).containsExactly(
+            CaseEventType.CONSULTATION_ASSIGNED,
+            ALLOCATOR_USER_1.wuaId(),
+            RESPONDER_USER_1.wuaId(),
+            null
+        );
+
+    assertThat(caseEvents.get(2))
+        .extracting(
+            CaseEvent::eventType,
+            CaseEvent::mainEventUserWuaId,
+            CaseEvent::otherEventUserWuaId,
+            CaseEvent::eventText
+        ).containsExactly(
+            CaseEventType.CONSULTATION_RESPONDED,
+            RESPONDER_USER_1.wuaId(),
+            null,
+            null
+        );
+  }
+
   private ApplicationVersion getSubmittedAndAssignedApplicationVersion() {
     when(userDetailService.getUserDetail()).thenReturn(INDUSTRY_USER);
 
@@ -176,6 +219,25 @@ class ConsultationEventServiceIntegrationTest extends AbstractIntegrationTest {
     when(userDetailService.getUserDetail()).thenReturn(assigner);
     when(opredTeamService.isResponder(consultation.getConsultationTeam().toTeamId(), responder)).thenReturn(true);
     consultationService.assignResponderToConsultation(consultation, assigner, responder);
+  }
+
+  private void respondToConsultation(
+      ApplicationVersion applicationVersion,
+      Consultation consultation,
+      ServiceUserDetail responder
+  ) {
+    when(userDetailService.getUserDetail()).thenReturn(responder);
+    when(opredTeamService.isResponder(consultation.getConsultationTeam().toTeamId(), responder)).thenReturn(true);
+    consultationService.saveConsultationResponse(
+        applicationVersion,
+        consultation,
+        responder,
+        HabitatsRegsResponseType.AGREE,
+        "I agree because...",
+        EiaRegsResponseType.AGREE,
+        "I agree because...",
+        Collections.emptyList()
+    );
   }
 
   private List<CaseEvent> getCaseEvents(ApplicationVersion applicationVersion) {

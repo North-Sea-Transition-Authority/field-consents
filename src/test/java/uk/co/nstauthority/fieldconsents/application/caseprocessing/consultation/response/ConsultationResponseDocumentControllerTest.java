@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.application.supportinginformation;
+package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.response;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.CONTENT_TYPE;
 import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.FILE_ID;
@@ -40,22 +41,32 @@ import uk.co.fivium.fileuploadlibrary.core.UploadedFile;
 import uk.co.fivium.fileuploadlibrary.fds.FileDeleteResponse;
 import uk.co.fivium.fileuploadlibrary.fds.FileUploadResponse;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
+import uk.co.nstauthority.fieldconsents.application.Application;
+import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionFileUsage;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationFileUsage;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
-@ContextConfiguration(classes = SupportingInformationDocumentController.class)
-class SupportingInformationDocumentControllerTest extends AbstractControllerTest {
+@ContextConfiguration(classes = ConsultationResponseDocumentController.class)
+class ConsultationResponseDocumentControllerTest extends AbstractControllerTest {
 
-  private static final int APPLICATION_ID = 1;
-  private static final Class<SupportingInformationDocumentController> CONTROLLER = SupportingInformationDocumentController.class;
+  private static final int CONSULTATION_ID = 1;
+  private static final Class<ConsultationResponseDocumentController> CONTROLLER = ConsultationResponseDocumentController.class;
 
   @MockBean
   private FileService fileService;
+
+  @MockBean
+  private ApplicationService applicationService;
+
+  @MockBean
+  private ConsultationService consultationService;
 
   @MockBean
   private FieldConsentsFileService fieldConsentsFileService;
@@ -67,39 +78,45 @@ class SupportingInformationDocumentControllerTest extends AbstractControllerTest
 
   private ApplicationVersion applicationVersion;
 
-  private ApplicationVersionFileUsage fileUsage;
+  private Application application;
+
+  private Consultation consultation;
+
+  private ConsultationFileUsage fileUsage;
 
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
-    fileUsage = ApplicationVersionFileUsage.supportingDocumentFrom(applicationVersion);
+
+    application = applicationVersion.getApplication();
+
+    consultation = new Consultation();
+    consultation.setId(CONSULTATION_ID);
+
+    fileUsage = ConsultationFileUsage.responseUsageFrom(consultation);
 
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
-        .thenReturn(applicationVersion);
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
-        .thenReturn(applicationVersion);
   }
 
   @SecurityTest
   void upload_noUser() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER)
-            .upload(APPLICATION_ID, null, null)))
+            .upload(APPLICATION_ID, null, null, null)))
             .with(csrf()))
         .andExpect(redirectionToLoginUrl());
   }
 
   @SecurityTest
   void download_noUser() throws Exception {
-    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER).download(APPLICATION_ID, FILE_ID))))
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER).download(APPLICATION_ID, CONSULTATION_ID, FILE_ID))))
         .andExpect(redirectionToLoginUrl());
   }
 
   @SecurityTest
   void delete_noUser() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER)
-            .delete(APPLICATION_ID, FILE_ID)))
+            .delete(APPLICATION_ID, CONSULTATION_ID, FILE_ID)))
             .with(csrf()))
         .andExpect(redirectionToLoginUrl());
   }
@@ -112,7 +129,7 @@ class SupportingInformationDocumentControllerTest extends AbstractControllerTest
     when(fileService.upload(any())).thenReturn(response);
 
     var responseString = mockMvc.perform(multipart(ReverseRouter.route(on(CONTROLLER)
-            .upload(APPLICATION_ID, null, null)))
+            .upload(APPLICATION_ID, CONSULTATION_ID, null, null)))
             .file(file)
             .with(csrf())
             .with(user(user))
@@ -144,7 +161,7 @@ class SupportingInformationDocumentControllerTest extends AbstractControllerTest
             FileUploadRequest::documentType,
             FileUploadRequest::uploadedBy
         ).containsExactly(
-            null, // we add these on form submission
+            null,
             null,
             null,
             user.wuaId().toString()
@@ -154,15 +171,16 @@ class SupportingInformationDocumentControllerTest extends AbstractControllerTest
   @Test
   void download() throws Exception {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(consultationService.getConsultationByIdAndApplication(CONSULTATION_ID, application)).thenReturn(consultation);
 
     var uploadedFile = new UploadedFile();
     when(fileService.find(FILE_ID)).thenReturn(Optional.of(uploadedFile));
-
     when(fileService.download(uploadedFile)).thenReturn(ResponseEntity.ok().build());
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER)
-        .download(APPLICATION_ID, FILE_ID)))
-        .with(user(user)))
+            .download(APPLICATION_ID, CONSULTATION_ID, FILE_ID)))
+            .with(user(user)))
         .andExpect(status().isOk());
 
     verify(fieldConsentsFileService).throwIfFileDoesNotBelongToUsage(uploadedFile, fileUsage);
@@ -172,12 +190,13 @@ class SupportingInformationDocumentControllerTest extends AbstractControllerTest
   @Test
   void download_invalidFileId() throws Exception {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(consultationService.getConsultationByIdAndApplication(CONSULTATION_ID, application)).thenReturn(consultation);
     when(fileService.find(FILE_ID)).thenReturn(Optional.empty());
-    when(fieldConsentsFileService.getFileNotFoundException(FILE_ID, fileUsage))
-        .thenReturn(new ResponseStatusException(HttpStatus.NOT_FOUND));
+    when(fieldConsentsFileService.getFileNotFoundException(FILE_ID, fileUsage)).thenReturn(new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER)
-            .download(APPLICATION_ID, FILE_ID)))
+            .download(APPLICATION_ID, CONSULTATION_ID, FILE_ID)))
             .with(user(user)))
         .andExpect(status().isNotFound());
   }
@@ -185,6 +204,9 @@ class SupportingInformationDocumentControllerTest extends AbstractControllerTest
   @Test
   void download_fileNotLinkedToApplication() throws Exception {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(consultationService.getConsultationByIdAndApplication(CONSULTATION_ID, application)).thenReturn(consultation);
+    when(fieldConsentsFileService.getFileNotFoundException(FILE_ID, fileUsage)).thenReturn(new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     var uploadedFile = new UploadedFile();
     when(fileService.find(FILE_ID)).thenReturn(Optional.of(uploadedFile));
@@ -194,24 +216,23 @@ class SupportingInformationDocumentControllerTest extends AbstractControllerTest
         .throwIfFileDoesNotBelongToUsage(uploadedFile, fileUsage);
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER)
-            .download(APPLICATION_ID, FILE_ID)))
+            .download(APPLICATION_ID, CONSULTATION_ID, FILE_ID)))
             .with(user(user)))
         .andExpect(status().isNotFound());
-
-    verify(fieldConsentsFileService).throwIfFileDoesNotBelongToUsage(uploadedFile, fileUsage);
   }
 
   @Test
   void delete() throws Exception {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(consultationService.getConsultationByIdAndApplication(CONSULTATION_ID, application)).thenReturn(consultation);
 
     var uploadedFile = new UploadedFile();
     when(fileService.find(FILE_ID)).thenReturn(Optional.of(uploadedFile));
-
     when(fileService.delete(uploadedFile)).thenReturn(FileDeleteResponse.success(FILE_ID));
 
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER)
-            .delete(APPLICATION_ID, FILE_ID)))
+            .delete(APPLICATION_ID, CONSULTATION_ID, FILE_ID)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk());
@@ -223,12 +244,14 @@ class SupportingInformationDocumentControllerTest extends AbstractControllerTest
   @Test
   void delete_invalidFileId() throws Exception {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(consultationService.getConsultationByIdAndApplication(CONSULTATION_ID, application)).thenReturn(consultation);
     when(fileService.find(FILE_ID)).thenReturn(Optional.empty());
     when(fieldConsentsFileService.getFileNotFoundException(FILE_ID, fileUsage))
         .thenReturn(new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER)
-            .delete(APPLICATION_ID, FILE_ID)))
+            .delete(APPLICATION_ID, CONSULTATION_ID, FILE_ID)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isNotFound());
@@ -237,21 +260,22 @@ class SupportingInformationDocumentControllerTest extends AbstractControllerTest
   @Test
   void delete_fileNotLinkedToApplication() throws Exception {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(consultationService.getConsultationByIdAndApplication(CONSULTATION_ID, application)).thenReturn(consultation);
 
     var uploadedFile = new UploadedFile();
     when(fileService.find(FILE_ID)).thenReturn(Optional.of(uploadedFile));
+    when(fileService.delete(uploadedFile)).thenReturn(FileDeleteResponse.success(FILE_ID));
 
     doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND))
         .when(fieldConsentsFileService)
         .throwIfFileDoesNotBelongToUsage(uploadedFile, fileUsage);
 
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER)
-            .delete(APPLICATION_ID, FILE_ID)))
+            .delete(APPLICATION_ID, CONSULTATION_ID, FILE_ID)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isNotFound());
-
-    verify(fieldConsentsFileService).throwIfFileDoesNotBelongToUsage(uploadedFile, fileUsage);
   }
 
 }

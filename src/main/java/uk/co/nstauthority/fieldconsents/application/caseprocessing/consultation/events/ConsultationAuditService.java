@@ -1,8 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.events;
 
 import jakarta.persistence.EntityManager;
-import java.sql.Timestamp;
-import java.time.Instant;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -14,6 +12,7 @@ import org.hibernate.envers.query.AuditEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
+import uk.co.nstauthority.fieldconsents.audit.AuditRevision;
 
 @Service
 class ConsultationAuditService {
@@ -36,13 +35,6 @@ class ConsultationAuditService {
     List<Object[]> rawAuditProjections = transactionTemplate.execute(status -> AuditReaderFactory.get(entityManager).createQuery()
         .forRevisionsOfEntity(Consultation.class, SELECT_ENTITIES_ONLY, SELECT_DELETED_ENTITIES)
         .add(AuditEntity.id().in(consultationIds))
-        .addProjection(AuditEntity.revisionType())
-        .addProjection(AuditEntity.property("id"))
-        .addProjection(AuditEntity.property("responderWuaId"))
-        .addProjection(AuditEntity.property("requestedByWuaId"))
-        .addProjection(AuditEntity.revisionProperty("userWuaId"))
-        .addProjection(AuditEntity.property("requestDeadline"))
-        .addProjection(AuditEntity.revisionProperty("createdDateTime"))
         .addOrder(AuditEntity.revisionProperty("createdDateTime").asc())
         .getResultList());
 
@@ -55,13 +47,9 @@ class ConsultationAuditService {
 
   private ConsultationAudit toConsultationAudit(Object[] projection) {
     return new ConsultationAudit(
-        (RevisionType) projection[0],
-        (Integer) projection[1],
-        (Long) projection[2],
-        (Long) projection[3],
-        (Long) projection[4],
-        (Instant) projection[5],
-        ((Timestamp) projection[6]).toInstant()
+        (Consultation) projection[0],
+        (AuditRevision) projection[1],
+        (RevisionType) projection[2]
     );
   }
 
