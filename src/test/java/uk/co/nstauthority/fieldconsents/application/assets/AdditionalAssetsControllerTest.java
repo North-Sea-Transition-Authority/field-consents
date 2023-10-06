@@ -36,7 +36,6 @@ import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.assets.AssetSelectionForm;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
-import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
@@ -47,9 +46,6 @@ class AdditionalAssetsControllerTest extends AbstractApplicationControllerTest {
   
   @MockBean
   private AssetService assetService;
-
-  @MockBean
-  private FieldService fieldService;
 
   @MockBean
   private AssetSummaryService assetSummaryService;

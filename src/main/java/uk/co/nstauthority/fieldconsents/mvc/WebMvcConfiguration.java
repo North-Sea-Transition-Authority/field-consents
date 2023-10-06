@@ -14,6 +14,7 @@ import org.springframework.web.servlet.resource.ResourceUrlEncodingFilter;
 import org.springframework.web.servlet.resource.VersionResourceResolver;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailArgumentResolver;
 import uk.co.nstauthority.fieldconsents.authorisation.ApplicationHandlerInterceptor;
+import uk.co.nstauthority.fieldconsents.authorisation.HasAssetPermissionInterceptor;
 import uk.co.nstauthority.fieldconsents.authorisation.HasPermissionInterceptor;
 import uk.co.nstauthority.fieldconsents.authorisation.HasTeamPermissionInterceptor;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.PermissionManagementHandlerInterceptor;
@@ -37,6 +38,8 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
 
   private final ServiceUserDetailArgumentResolver serviceUserDetailArgumentResolver;
 
+  private final HasAssetPermissionInterceptor hasAssetPermissionInterceptor;
+
   @Autowired
   WebMvcConfiguration(ErrorListHandlerInterceptor errorListHandlerInterceptor,
                       ResponseBufferSizeHandlerInterceptor responseBufferSizeHandlerInterceptor,
@@ -44,7 +47,8 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
                       HasPermissionInterceptor hasPermissionInterceptor,
                       HasTeamPermissionInterceptor hasTeamPermissionInterceptor,
                       ApplicationHandlerInterceptor applicationHandlerInterceptor,
-                      ServiceUserDetailArgumentResolver serviceUserDetailArgumentResolver) {
+                      ServiceUserDetailArgumentResolver serviceUserDetailArgumentResolver,
+                      HasAssetPermissionInterceptor hasAssetPermissionInterceptor) {
     this.errorListHandlerInterceptor = errorListHandlerInterceptor;
     this.responseBufferSizeHandlerInterceptor = responseBufferSizeHandlerInterceptor;
     this.permissionManagementHandlerInterceptor = permissionManagementHandlerInterceptor;
@@ -52,6 +56,7 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
     this.hasTeamPermissionInterceptor = hasTeamPermissionInterceptor;
     this.applicationHandlerInterceptor = applicationHandlerInterceptor;
     this.serviceUserDetailArgumentResolver = serviceUserDetailArgumentResolver;
+    this.hasAssetPermissionInterceptor = hasAssetPermissionInterceptor;
   }
 
   @Override
@@ -77,6 +82,10 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
         .addPathPatterns("/applications/**");
     registry.addInterceptor(hasPermissionInterceptor)
         .excludePathPatterns(ASSETS_PATH);
+    registry.addInterceptor(hasAssetPermissionInterceptor)
+        .addPathPatterns("/manage-asset/fields/**");
+    registry.addInterceptor(hasAssetPermissionInterceptor)
+        .addPathPatterns("/manage-asset/facilities/**");
   }
 
   @Bean

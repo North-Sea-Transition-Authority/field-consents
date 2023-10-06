@@ -16,6 +16,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionService;
+import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
+import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
 import uk.co.nstauthority.fieldconsents.authentication.SamlResponseParser;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceLogoutSuccessHandler;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
@@ -23,6 +25,8 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailArgument
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
 import uk.co.nstauthority.fieldconsents.authorisation.ApplicationHandlerInterceptor;
+import uk.co.nstauthority.fieldconsents.authorisation.AssetAccessService;
+import uk.co.nstauthority.fieldconsents.authorisation.HasAssetPermissionInterceptor;
 import uk.co.nstauthority.fieldconsents.authorisation.HasPermissionInterceptor;
 import uk.co.nstauthority.fieldconsents.authorisation.HasTeamPermissionInterceptor;
 import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
@@ -58,6 +62,7 @@ import uk.co.nstauthority.fieldconsents.validation.ValidationErrorOrderingServic
     PermissionManagementHandlerInterceptor.class,
     HasTeamPermissionInterceptor.class,
     HasPermissionInterceptor.class,
+    HasAssetPermissionInterceptor.class,
     ApplicationHandlerInterceptor.class,
     PermissionService.class,
     WebSecurityConfiguration.class,
@@ -104,6 +109,16 @@ public abstract class AbstractControllerTest {
 
   @MockBean
   protected CaseProcessingActionService caseProcessingActionService;
+
+  @MockBean
+  protected FieldService fieldService;
+
+  @MockBean
+  protected TerminalService terminalService;
+
+  @MockBean
+  protected AssetAccessService assetAccessService;
+
 
   protected ServiceUserDetail user;
 

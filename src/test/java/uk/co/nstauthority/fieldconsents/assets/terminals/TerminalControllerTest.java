@@ -11,9 +11,10 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithNullOperator;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_CONSENTS;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
-import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -25,20 +26,16 @@ import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
 import uk.co.nstauthority.fieldconsents.startapplication.StartApplicationFromTerminalController;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @ContextConfiguration(classes = TerminalController.class)
 public class TerminalControllerTest extends AbstractControllerTest {
-
-  @MockBean
-  TerminalService terminalService;
 
   @MockBean
   private OrganisationUnitPermissionService organisationUnitPermissionService;
 
   @BeforeEach
   void setUp() {
-    when(permissionService.hasPermission(user, RolePermission.VIEW_PERMISSIONS))
+    when(assetAccessService.hasAssetPermission(user, terminal1JsonWithOperator, VIEW_FCS_APPLICATIONS, VIEW_FCS_CONSENTS))
         .thenReturn(true);
   }
 
@@ -51,7 +48,7 @@ public class TerminalControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void manageTerminal_whenUserDoesNotHavePermission_thenIsForbidden() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.VIEW_FCS_APPLICATIONS, RolePermission.VIEW_FCS_CONSENTS)))
+    when(assetAccessService.hasAssetPermission(user, terminal1JsonWithOperator, VIEW_FCS_APPLICATIONS, VIEW_FCS_CONSENTS))
         .thenReturn(false);
 
     mockMvc.perform(get(ReverseRouter.route(on(TerminalController.class)
@@ -64,7 +61,8 @@ public class TerminalControllerTest extends AbstractControllerTest {
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
   void manageTerminal_terminalNoOperator(boolean userHasCreatePermission) throws Exception {
-
+    when(assetAccessService.hasAssetPermission(user, terminal1JsonWithNullOperator, VIEW_FCS_APPLICATIONS, VIEW_FCS_CONSENTS))
+        .thenReturn(true);
     when(terminalService.getTerminalWithOperator(eq(terminal1JsonWithNullOperator.getId()), any()))
         .thenReturn(terminal1JsonWithNullOperator);
 

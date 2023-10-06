@@ -11,12 +11,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithNoOperatorButLicences;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithNullOperatorAndLicences;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperatorButEmptyLicences;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_CONSENTS;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
-import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -28,21 +30,17 @@ import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
 import uk.co.nstauthority.fieldconsents.startapplication.StartApplicationFromFieldController;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @ContextConfiguration(classes = FieldController.class)
 public class FieldControllerTest extends AbstractControllerTest {
-
-  @MockBean
-  private FieldService fieldService;
 
   @MockBean
   private OrganisationUnitPermissionService organisationUnitPermissionService;
 
   @BeforeEach
   void setUp() {
-    when(permissionService.hasPermission(user, RolePermission.VIEW_PERMISSIONS))
-        .thenReturn(true);
+    when(fieldService.getFieldWithOperator(field1JsonWithOperator.getId(), "Search field for asset permission")).thenReturn(field1JsonWithOperator);
+    when(assetAccessService.hasAssetPermission(user, field1JsonWithOperator, VIEW_FCS_APPLICATIONS, VIEW_FCS_CONSENTS)).thenReturn(true);
   }
 
   @SecurityTest
@@ -54,7 +52,7 @@ public class FieldControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void manageField_whenUserDoesNotHavePermission_thenIsForbidden() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.VIEW_FCS_APPLICATIONS, RolePermission.VIEW_FCS_CONSENTS)))
+    when(assetAccessService.hasAssetPermission(user, field1JsonWithOperator, VIEW_FCS_APPLICATIONS, VIEW_FCS_CONSENTS))
         .thenReturn(false);
 
     mockMvc.perform(get(ReverseRouter.route(on(FieldController.class)
