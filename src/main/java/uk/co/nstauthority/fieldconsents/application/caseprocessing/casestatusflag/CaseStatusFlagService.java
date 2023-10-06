@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusfl
 
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.APPLICATION_UPDATE_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.APPLICATION_UPDATE_STARTED;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_NOTES_ALLOWED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_OPEN;
@@ -14,6 +15,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casest
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.TECHNICAL_REVIEW_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.WITHDRAWAL_OPEN;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -34,10 +36,12 @@ public class CaseStatusFlagService {
   private final ApplicationUpdateService applicationUpdateService;
   private final ConsultationService consultationService;
 
-  public CaseStatusFlagService(ApplicationWithdrawalService applicationWithdrawalService,
-                               TechnicalReviewService technicalReviewService,
-                               ApplicationUpdateService applicationUpdateService,
-                               ConsultationService consultationService) {
+  CaseStatusFlagService(
+      ApplicationWithdrawalService applicationWithdrawalService,
+      TechnicalReviewService technicalReviewService,
+      ApplicationUpdateService applicationUpdateService,
+      ConsultationService consultationService
+  ) {
     this.applicationWithdrawalService = applicationWithdrawalService;
     this.technicalReviewService = technicalReviewService;
     this.applicationUpdateService = applicationUpdateService;
@@ -47,74 +51,80 @@ public class CaseStatusFlagService {
   public Set<CaseStatusFlag> getCaseStatusFlags(ApplicationVersion applicationVersion) {
     var caseStatusFlags = new HashSet<CaseStatusFlag>();
 
-    addCaseOfficerAssignmentFlag(applicationVersion, caseStatusFlags);
-    addWithdrawalFlag(applicationVersion, caseStatusFlags);
-    addTechnicalReviewFlags(applicationVersion, caseStatusFlags);
-    addUpdateRequestFlags(applicationVersion, caseStatusFlags);
-    addConsultationFlags(applicationVersion, caseStatusFlags);
-    caseStatusFlags.add(CaseStatusFlag.CASE_NOTES_ALLOWED);
+    caseStatusFlags.addAll(getDefaultFlags());
+    caseStatusFlags.addAll(getCaseOfficerAssignmentFlag(applicationVersion));
+    caseStatusFlags.addAll(getWithdrawalFlag(applicationVersion));
+    caseStatusFlags.addAll(getTechnicalReviewFlag(applicationVersion));
+    caseStatusFlags.addAll(getUpdateRequestFlag(applicationVersion));
+    caseStatusFlags.addAll(getConsultationFlags(applicationVersion));
 
     return caseStatusFlags;
   }
 
-  private void addCaseOfficerAssignmentFlag(ApplicationVersion applicationVersion,
-                                            HashSet<CaseStatusFlag> caseStatusFlags) {
+  Set<CaseStatusFlag> getDefaultFlags() {
+    return Set.of(CASE_NOTES_ALLOWED, TECHNICAL_REVIEWS_PAGE_ENABLED);
+  }
+
+  Set<CaseStatusFlag> getCaseOfficerAssignmentFlag(ApplicationVersion applicationVersion) {
     if (Objects.nonNull(applicationVersion.getCaseOfficerWuaId())) {
-      caseStatusFlags.add(CASE_OFFICER_ASSIGNED);
-    } else {
-      caseStatusFlags.add(CASE_OFFICER_NOT_ASSIGNED);
+      return Collections.singleton(CASE_OFFICER_ASSIGNED);
     }
+
+    return Collections.singleton(CASE_OFFICER_NOT_ASSIGNED);
   }
 
-  private void addWithdrawalFlag(ApplicationVersion applicationVersion,
-                                 HashSet<CaseStatusFlag> caseStatusFlags) {
+  Set<CaseStatusFlag> getWithdrawalFlag(ApplicationVersion applicationVersion) {
     if (applicationWithdrawalService.openWithdrawalExists(applicationVersion)) {
-      caseStatusFlags.add(WITHDRAWAL_OPEN);
-    } else {
-      caseStatusFlags.add(NO_WITHDRAWAL_OPEN);
+      return Collections.singleton(WITHDRAWAL_OPEN);
     }
+
+    return Collections.singleton(NO_WITHDRAWAL_OPEN);
   }
 
-  private void addTechnicalReviewFlags(ApplicationVersion applicationVersion,
-                                       HashSet<CaseStatusFlag> caseStatusFlags) {
-    caseStatusFlags.add(TECHNICAL_REVIEWS_PAGE_ENABLED);
+  Set<CaseStatusFlag> getTechnicalReviewFlag(ApplicationVersion applicationVersion) {
     if (technicalReviewService.openTechnicalReviewExists(applicationVersion)) {
-      caseStatusFlags.add(TECHNICAL_REVIEW_OPEN);
-    } else {
-      caseStatusFlags.add(NO_TECHNICAL_REVIEW_OPEN);
+      return Collections.singleton(TECHNICAL_REVIEW_OPEN);
     }
+
+    return Collections.singleton(NO_TECHNICAL_REVIEW_OPEN);
   }
 
-  private void addUpdateRequestFlags(ApplicationVersion applicationVersion,
-                                     HashSet<CaseStatusFlag> caseStatusFlags) {
-    if (applicationUpdateService.openApplicationUpdateExists(applicationVersion)) {
-      caseStatusFlags.add(APPLICATION_UPDATE_OPEN);
-      // if the case status is IN_PROGRESS then the update must have been started
-      if (ApplicationVersionStatus.IN_PROGRESS.equals(applicationVersion.getStatus())) {
-        caseStatusFlags.add(APPLICATION_UPDATE_STARTED);
-      }
-    } else {
-      caseStatusFlags.add(NO_APPLICATION_UPDATE_OPEN);
+  Set<CaseStatusFlag> getUpdateRequestFlag(ApplicationVersion applicationVersion) {
+    if (!applicationUpdateService.openApplicationUpdateExists(applicationVersion)) {
+      return Collections.singleton(NO_APPLICATION_UPDATE_OPEN);
     }
+
+    var flags = new HashSet<CaseStatusFlag>();
+
+    flags.add(APPLICATION_UPDATE_OPEN);
+
+    // if the case status is IN_PROGRESS then the update must have been started
+    if (ApplicationVersionStatus.IN_PROGRESS.equals(applicationVersion.getStatus())) {
+      flags.add(APPLICATION_UPDATE_STARTED);
+    }
+
+    return flags;
   }
 
-  void addConsultationFlags(ApplicationVersion applicationVersion, HashSet<CaseStatusFlag> caseStatusFlags) {
+  Set<CaseStatusFlag> getConsultationFlags(ApplicationVersion applicationVersion) {
     var consultationOptional = consultationService.findLatestOpenConsultation(applicationVersion.getApplication());
 
     if (consultationOptional.isEmpty()) {
-      caseStatusFlags.add(NO_CONSULTATION_OPEN);
-      return;
+      return Collections.singleton(NO_CONSULTATION_OPEN);
     }
 
     var consultation = consultationOptional.get();
+    var flags = new HashSet<CaseStatusFlag>();
 
     if (ConsultationStatus.OPEN.equals(consultation.getStatus())) {
-      caseStatusFlags.add(CONSULTATION_OPEN);
+      flags.add(CONSULTATION_OPEN);
     }
 
     if (Objects.isNull(consultation.getResponderWuaId())) {
-      caseStatusFlags.add(CONSULTATION_UNASSIGNED);
+      flags.add(CONSULTATION_UNASSIGNED);
     }
+
+    return flags;
   }
 
 }
