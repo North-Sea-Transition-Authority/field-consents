@@ -45,13 +45,14 @@ public class DeleteApplicationController {
     var modelAndView = applicationSummaryService.getApplicationSummaryModelAndView(
         applicationVersion,
         "fcs/application/deleteApplication",
-        PAGE_TITLE,
-        ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId))
+        PAGE_TITLE
     );
 
     return modelAndView
         .addObject("deleteUrl", ReverseRouter.route(on(DeleteApplicationController.class)
-            .deleteApplication(applicationId, null)));
+            .deleteApplication(applicationId, null)))
+        .addObject("backLinkUrl", ReverseRouter.route(on(ApplicationTaskListController.class)
+            .getTaskList(applicationId)));
   }
 
   @PostMapping

@@ -14,12 +14,10 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateRequestViewService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
 import uk.co.nstauthority.fieldconsents.application.delete.DeleteApplicationController;
-import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryController;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
-import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @Controller
 @RequestMapping("applications/{applicationId}/task-list")
@@ -71,17 +69,12 @@ public class ApplicationTaskListController {
         .addObject("deleteApplicationUrl", ReverseRouter.route(on(DeleteApplicationController.class)
             .getDeleteApplication(applicationId)));
 
-    String backLinkUrl;
     if (applicationUpdateService.openApplicationUpdateExists(applicationVersion)) {
       modelAndView.addObject("applicationUpdateRequestView",
           applicationUpdateRequestViewService.getOpenApplicationUpdateRequestView(applicationVersion));
-      backLinkUrl = ReverseRouter.route(on(ApplicationSummaryController.class).getApplicationSummary(applicationId, null));
-    } else {
-      backLinkUrl = ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null));
     }
 
     return modelAndView
-        .addObject("applicationReference", applicationService.getApplicationReference(applicationVersion))
-        .addObject("backLinkUrl", backLinkUrl);
+        .addObject("applicationReference", applicationService.getApplicationReference(applicationVersion));
   }
 }

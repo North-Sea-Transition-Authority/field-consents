@@ -40,7 +40,6 @@ import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummarySe
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamService;
-import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @ContextConfiguration(classes = ApplicationCaseProcessingController.class)
 class ApplicationCaseProcessingControllerTest extends AbstractApplicationControllerTest {
@@ -116,7 +115,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     when(applicationService.generateApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
 
-    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any(), any());
+    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any());
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
             .getApplicationCaseProcessing(APPLICATION_ID, null)))
             .with(user(user))
@@ -150,7 +149,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     when(applicationService.generateApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
 
-    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any(), any());
+    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any());
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
             .getViewApplicationTab(APPLICATION_ID, null)))
             .with(user(user))
@@ -184,7 +183,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     when(applicationService.generateApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
 
-    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any(), any());
+    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any());
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
             .getCaseHistoryTab(APPLICATION_ID, null)))
             .with(user(user))
@@ -210,8 +209,6 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
         .containsEntry("accordionId", applicationVersion.getId())
         .containsKey("wideSummaryDisplay")
         .containsEntry("actionList", actionViews)
-        .containsEntry("backLinkUrl", ReverseRouter.route(on(WorkAreaController.class)
-            .getWorkArea(null, null)))
         .containsEntry("applicationId", applicationVersion.getApplication().getId())
         .containsEntry("selectedTab", caseHistory.getValue())
         .containsEntry("caseHistoryEvents", caseHistoryEvents);

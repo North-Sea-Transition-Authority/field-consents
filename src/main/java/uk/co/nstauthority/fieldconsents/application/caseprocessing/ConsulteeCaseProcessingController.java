@@ -1,6 +1,5 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing;
 
-import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ALLOCATE_CONSULTATION;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.RESPOND_TO_CONSULTATION;
 
@@ -19,8 +18,6 @@ import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummarySe
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
-import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @Controller
 @RequestMapping("applications/{applicationId}/consultation-case-processing")
@@ -56,8 +53,7 @@ public class ConsulteeCaseProcessingController {
     var modelAndView = applicationSummaryService.getApplicationSummaryModelAndView(
         applicationVersion,
         "fcs/application/consultation/caseProcessing",
-        pageTitle,
-        ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null))
+        pageTitle
     );
 
     consultationService.findLatestOpenConsultation(applicationVersion.getApplication())

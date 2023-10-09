@@ -45,7 +45,7 @@ class DeleteApplicationControllerTest extends AbstractApplicationControllerTest 
         user, applicationVersion, RolePermission.CREATE_FCS_APPLICATIONS
     )).thenReturn(true);
 
-    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any(), any());
+    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any());
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(DeleteApplicationController.class)
             .getDeleteApplication(APPLICATION_ID)))
             .with(user(user))

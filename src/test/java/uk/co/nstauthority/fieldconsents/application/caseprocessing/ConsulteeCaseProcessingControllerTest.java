@@ -32,7 +32,6 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @ContextConfiguration(classes = ConsulteeCaseProcessingController.class)
 class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControllerTest {
@@ -120,8 +119,7 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
     when(applicationSummaryService.getApplicationSummaryModelAndView(
         applicationVersion,
         "fcs/application/consultation/caseProcessing",
-        PAGE_TITLE,
-        ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null))
+        PAGE_TITLE
     )).thenReturn(emptyModelAndView);
   }
 

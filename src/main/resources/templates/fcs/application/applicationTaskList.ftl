@@ -21,7 +21,6 @@
   htmlTitle=pageTitle
   pageHeading=pageTitle
   caption=applicationReference!""
-  backLinkUrl=springUrl(backLinkUrl)
   notificationBannerContentOverride=deleteBanner>
   <@applicationContextInfo.applicationContextInfo applicationContext=applicationContext/>
   <@applicationUpdateRequestHiddenSummary.applicationUpdateRequestHiddenSummary applicationUpdateRequestView=applicationUpdateRequestView!""/>

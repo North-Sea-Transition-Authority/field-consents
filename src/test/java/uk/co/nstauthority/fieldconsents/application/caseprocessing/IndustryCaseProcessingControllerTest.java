@@ -40,7 +40,6 @@ import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummarySe
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
-import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @ContextConfiguration(classes = IndustryCaseProcessingController.class)
 class IndustryCaseProcessingControllerTest extends AbstractApplicationControllerTest {
@@ -140,7 +139,7 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
         .thenReturn(Collections.emptyList());
     when(applicationService.generateApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
-    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any(), any());
+    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any());
 
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
             .getIndustryCaseProcessing(APPLICATION_ID, null)))
@@ -174,7 +173,7 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
         .thenReturn(Collections.emptyList());
     when(applicationService.generateApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
-    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any(), any());
+    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any());
     when(applicationUpdateService.openApplicationUpdateExists(applicationVersion))
         .thenReturn(true);
     when(applicationUpdateRequestViewService.getOpenApplicationUpdateRequestView(applicationVersion))
@@ -207,9 +206,7 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
         .containsKey("summarySections")
         .containsEntry("accordionId", applicationVersion.getId())
         .containsKey("wideSummaryDisplay")
-        .containsEntry("actionList", actionViews)
-        .containsEntry("backLinkUrl", ReverseRouter.route(on(WorkAreaController.class)
-            .getWorkArea(null, null)));
+        .containsEntry("actionList", actionViews);
   }
 
   private static Stream<Arguments> getInProgressAndSubmittedApplicationVersions() {

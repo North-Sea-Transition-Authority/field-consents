@@ -9,8 +9,7 @@
 <@defaultPage
   htmlTitle=pageTitle
   pageHeading=pageTitle
-  pageSize=getPageSize.getPageSize(wideSummaryDisplay)
-  backLinkUrl=springUrl(backLinkUrl)>
+  pageSize=getPageSize.getPageSize(wideSummaryDisplay)>
   <@applicationUpdateRequestBanner.applicationUpdateRequestBanner applicationUpdateRequestView=applicationUpdateRequestView!""/>
   <@caseProcessingActions.caseActions actions=actionList/>
   <@applicationSummary.applicationSummary accordionId=accordionId/>

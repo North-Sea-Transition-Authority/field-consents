@@ -41,7 +41,6 @@ import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationT
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
-import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @ContextConfiguration(classes = ApplicationSummaryController.class)
 class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest {
@@ -114,7 +113,7 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
   }
 
   private void getApplicationSummaryAndCheckModel(ApplicationVersion applicationVersion, String expectedPageTitle) throws Exception {
-    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any(), any());
+    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any());
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ApplicationSummaryController.class)
             .getApplicationSummary(APPLICATION_ID, null)))
             .with(user(user))
@@ -130,9 +129,7 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
         .containsEntry("pageTitle", expectedPageTitle)
         .containsKey("summarySections")
         .containsEntry("accordionId", applicationVersion.getId())
-        .containsKey("wideSummaryDisplay")
-        .containsEntry("backLinkUrl", ReverseRouter.route(on(WorkAreaController.class)
-            .getWorkArea(null, null)));
+        .containsKey("wideSummaryDisplay");
 
   }
 

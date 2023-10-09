@@ -103,7 +103,7 @@ class ApplicationUpdateControllerTest extends AbstractApplicationControllerTest 
         .thenReturn(new ApplicationUpdateRequestForm());
     when(applicationService.generateApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
-    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any(), any());
+    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any());
 
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(APPLICATION_UPDATE_REQUEST));
@@ -127,7 +127,7 @@ class ApplicationUpdateControllerTest extends AbstractApplicationControllerTest 
         .thenReturn(new ApplicationUpdateRequestForm());
     when(applicationService.generateApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
-    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any(), any());
+    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any());
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationUpdateController.class)
             .getApplicationUpdateRequest(APPLICATION_ID)))
@@ -206,7 +206,7 @@ class ApplicationUpdateControllerTest extends AbstractApplicationControllerTest 
 
     when(applicationService.generateApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
-    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any(), any());
+    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any());
 
     mockMvc.perform(
             post(ReverseRouter.route(on(ApplicationUpdateController.class)

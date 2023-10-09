@@ -74,12 +74,13 @@ public class ApplicationUpdateController {
     var modelAndView = applicationSummaryService.getApplicationSummaryModelAndView(
         applicationVersion,
         "fcs/application/update/applicationUpdateRequest",
-        REQUEST_PAGE_TITLE,
-        ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .getApplicationCaseProcessing(applicationId, null))
+        REQUEST_PAGE_TITLE
     );
 
-    return modelAndView.addObject("applicationReference", applicationReference);
+    return modelAndView
+        .addObject("applicationReference", applicationReference)
+        .addObject("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class)
+            .getApplicationCaseProcessing(applicationId, null)));
   }
 
   @PostMapping("application-update-request")

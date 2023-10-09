@@ -6,7 +6,6 @@
   htmlTitle=pageTitle
   pageHeading=pageTitle
   pageSize=getPageSize.getPageSize(wideSummaryDisplay)
-  backLinkUrl=springUrl(backLinkUrl)
 >
   <@applicationSummary.applicationSummary accordionId=accordionId/>
 </@defaultPage>

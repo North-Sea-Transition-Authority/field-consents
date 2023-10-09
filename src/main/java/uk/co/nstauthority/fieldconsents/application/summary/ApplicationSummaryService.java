@@ -31,7 +31,7 @@ public class ApplicationSummaryService {
   }
 
   public ModelAndView getApplicationSummaryModelAndView(ApplicationVersion applicationVersion, String viewName,
-                                                        String pageTitle, String backLinkUrl) {
+                                                        String pageTitle) {
 
     var summarySections = getSummarySections(applicationVersion);
     var wideSummaryDisplay = WIDE_SUMMARY_DISPLAY.allowed(applicationVersion.getApplication().getType());
@@ -40,8 +40,7 @@ public class ApplicationSummaryService {
         .addObject("pageTitle", pageTitle)
         .addObject("summarySections", summarySections)
         .addObject("accordionId", applicationVersion.getId())
-        .addObject("wideSummaryDisplay", wideSummaryDisplay)
-        .addObject("backLinkUrl", backLinkUrl);
+        .addObject("wideSummaryDisplay", wideSummaryDisplay);
   }
 
   public void addSummarySectionsToModelAndView(ApplicationVersion applicationVersion, ModelAndView modelAndView) {

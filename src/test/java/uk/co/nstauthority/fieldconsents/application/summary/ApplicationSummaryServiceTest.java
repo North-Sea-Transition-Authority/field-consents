@@ -2,7 +2,6 @@ package uk.co.nstauthority.fieldconsents.application.summary;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
-import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.ADDITIONAL_INFORMATION_DISPLAY_ORDER;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.CONSENT_DETAILS_DISPLAY_ORDER;
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.PRODUCTION_INFORMATION_DISPLAY_ORDER;
@@ -29,9 +28,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.summary.production.ProductionInformationSummarySectionService;
 import uk.co.nstauthority.fieldconsents.application.summary.shared.AdditionalInformationSummarySectionService;
 import uk.co.nstauthority.fieldconsents.application.summary.shared.ConsentDetailsSummarySectionService;
-import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.summary.SummarySection;
-import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationSummaryServiceTest {
@@ -80,22 +77,18 @@ class ApplicationSummaryServiceTest {
   void getApplicationSummaryModelAndView() {
     var viewName = "fcs/application/applicationSummary";
     var pageTitle = "Application summary";
-    var backLinkUrl = "/work-area";
 
     var modelAndView = applicationSummaryService.getApplicationSummaryModelAndView(
         applicationVersion,
         viewName,
-        pageTitle,
-        backLinkUrl
+        pageTitle
     );
 
     assertThat(modelAndView.getModel())
         .containsEntry("pageTitle", pageTitle)
         .containsKey("summarySections")
         .containsEntry("accordionId", applicationVersion.getId())
-        .containsEntry("wideSummaryDisplay", false)
-        .containsEntry("backLinkUrl", ReverseRouter.route(on(WorkAreaController.class)
-            .getWorkArea(null, null)));
+        .containsEntry("wideSummaryDisplay", false);
   }
 
   @ParameterizedTest

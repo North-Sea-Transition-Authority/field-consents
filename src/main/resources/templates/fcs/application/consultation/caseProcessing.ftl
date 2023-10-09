@@ -7,8 +7,7 @@
 <@defaultPage
   htmlTitle=pageTitle
   pageHeading=pageTitle
-  pageSize=getPageSize.getPageSize(wideSummaryDisplay)
-  backLinkUrl=springUrl(backLinkUrl)>
+  pageSize=getPageSize.getPageSize(wideSummaryDisplay)>
     <@consultationRequestInfoBanner.consulationInformationBanner consultationRequestView=consultationRequestView />
     <@caseProcessingActions.caseActions actions=actionList/>
     <@applicationSummary.applicationSummary accordionId=accordionId/>

@@ -27,7 +27,6 @@ import uk.co.nstauthority.fieldconsents.authorisation.ApplicationAccessService;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
-import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @Controller
 @RequestMapping("applications/{applicationId}")
@@ -71,8 +70,7 @@ public class ApplicationSummaryController {
     return applicationSummaryService.getApplicationSummaryModelAndView(
         applicationVersion,
         "fcs/application/applicationSummary",
-        pageTitle,
-        ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null))
+        pageTitle
     );
   }
 

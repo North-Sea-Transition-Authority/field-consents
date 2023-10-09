@@ -1,7 +1,5 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing;
 
-import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,9 +17,7 @@ import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummarySe
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
-import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
-import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @Controller
 @RequestMapping("applications/{applicationId}")
@@ -78,8 +74,7 @@ public class IndustryCaseProcessingController {
     var modelAndView = applicationSummaryService.getApplicationSummaryModelAndView(
         applicationVersion,
         "fcs/application/industryCaseProcessing",
-        pageTitle,
-        ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null))
+        pageTitle
     );
 
     if (applicationUpdateService.openApplicationUpdateExists(applicationVersion)) {
