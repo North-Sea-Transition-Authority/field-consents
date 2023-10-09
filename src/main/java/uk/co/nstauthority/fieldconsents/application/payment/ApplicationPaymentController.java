@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.application.payment;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_PAY_FOR_APPLICATION;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT;
 
 import java.util.UUID;
 import java.util.function.Function;
@@ -20,7 +21,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationContextService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
-import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryController;
+import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
@@ -41,6 +42,7 @@ import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 public class ApplicationPaymentController {
 
   static final String APPLICATION_SUBMITTED_TITLE = "Application paid and submitted";
+
   private final ApplicationService applicationService;
   private final ApplicationVersionService applicationVersionService;
   private final ApplicationContextService applicationContextService;
@@ -93,12 +95,12 @@ public class ApplicationPaymentController {
         .addObject("paymentDescription", applicationPaymentService.getPaymentDescription(applicationVersion))
         .addObject("formattedPaymentAmount", DecimalFormatUtils.formatMoney(1D))
         .addObject(
-            "backLinkUrl",
-            ReverseRouter.route(on(ApplicationSummaryController.class).getApplicationSummary(applicationId, null))
-        )
-        .addObject(
             "startPaymentUrl",
             ReverseRouter.route(on(ApplicationPaymentController.class).startPayment(applicationId, null))
+        )
+        .addObject(
+            "returnToInProgressUrl",
+            ReverseRouter.route(on(ApplicationPaymentController.class).returnToInProgress(applicationId))
         )
         .addObject("absoluteGetStartPaymentUrl", absoluteGetStartPaymentUrl)
         .addObject("sharePaymentMailToLink", sharePaymentMailToLink);
@@ -130,6 +132,16 @@ public class ApplicationPaymentController {
           "Unexpected CreateCardPaymentResult status %s".formatted(status)
       );
     }
+  }
+
+  @PostMapping("/return-to-in-progress")
+  @ActionEndPoint(OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT)
+  public ModelAndView returnToInProgress(@PathVariable Integer applicationId) {
+    var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
+
+    applicationService.returnApplicationToInProgressFromAwaitingPayment(applicationVersion);
+
+    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
   }
 
   @GetMapping("/payment-processed/{paymentId}")

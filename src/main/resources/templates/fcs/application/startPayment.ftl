@@ -4,7 +4,6 @@
 <@defaultPage
   htmlTitle="Pay for application ${applicationReference}"
   pageHeading="${applicationReference}"
-  backLinkUrl=springUrl(backLinkUrl)
   errorItems=errorList
 >
   <@applicationContextInfo.applicationContextInfo applicationContext=applicationContextJson />
@@ -40,15 +39,14 @@
     </tbody>
   </table>
 
-  <@fdsForm.htmlForm actionUrl=springUrl(startPaymentUrl)>
+  <div style="display: flex; flex-direction: row">
+    <@fdsForm.htmlForm actionUrl=springUrl(startPaymentUrl)>
+      <@fdsAction.button buttonText="Start payment" buttonClass="govuk-button govuk-!-margin-right-2" />
+    </@fdsForm.htmlForm>
 
-    <@fdsAction.submitButtons
-      primaryButtonText="Start payment"
-      secondaryLinkText="Back"
-      linkSecondaryAction=true
-      linkSecondaryActionUrl="${springUrl(backLinkUrl)}"
-    />
-
-  </@fdsForm.htmlForm>
+    <@fdsForm.htmlForm actionUrl=springUrl(returnToInProgressUrl)>
+      <@fdsAction.button buttonText="Edit application" buttonClass="govuk-button govuk-button--secondary" />
+    </@fdsForm.htmlForm>
+  </div>
 
 </@defaultPage>

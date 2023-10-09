@@ -257,6 +257,35 @@ class ApplicationServiceTest {
 
   @ParameterizedTest
   @EnumSource(value = ApplicationVersionStatus.class, names = "AWAITING_PAYMENT", mode = EnumSource.Mode.EXCLUDE)
+  void returnApplicationToInProgressFromAwaitingPayment_statusNotAwaitingPayment(ApplicationVersionStatus applicationVersionStatus) {
+    var applicationVersion
+        = ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.PRODUCTION, 1, 1);
+    applicationVersion.setStatus(applicationVersionStatus);
+
+    assertThatThrownBy(() -> applicationService.returnApplicationToInProgressFromAwaitingPayment(applicationVersion))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage(
+            String.format(
+                "Application %d cannot be returned to in progress as application version has status %s",
+                applicationVersion.getApplication().getId(),
+                applicationVersionStatus
+            )
+        );
+  }
+
+  @Test
+  void returnApplicationToInProgressFromAwaitingPayment() {
+    var applicationVersion = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
+
+    applicationService.returnApplicationToInProgressFromAwaitingPayment(applicationVersion);
+
+    assertThat(applicationVersion.getStatus()).isEqualTo(ApplicationVersionStatus.IN_PROGRESS);
+
+    verify(applicationVersionRepository).save(applicationVersion);
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = ApplicationVersionStatus.class, names = "AWAITING_PAYMENT", mode = EnumSource.Mode.EXCLUDE)
   void submitApplication_statusNotAwaitingPayment(ApplicationVersionStatus applicationVersionStatus) {
     var applicationVersion
         = ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.PRODUCTION, 1, 1);

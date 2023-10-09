@@ -16,6 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_PAY_FOR_APPLICATION;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.notificationBanner;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
@@ -42,7 +43,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
-import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryController;
+import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil;
 import uk.co.nstauthority.fieldconsents.authorisation.ParameterizedSecurityTest;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
@@ -147,10 +148,10 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
         .andExpect(model().attribute("applicationContextJson", applicationContextJson))
         .andExpect(model().attribute("paymentDescription", paymentDescription))
         .andExpect(model().attribute("formattedPaymentAmount", DecimalFormatUtils.formatMoney(1D)))
-        .andExpect(model().attribute("backLinkUrl", ReverseRouter.route(on(ApplicationSummaryController.class)
-            .getApplicationSummary(APPLICATION_ID, null))))
         .andExpect(model().attribute("startPaymentUrl", ReverseRouter.route(on(ApplicationPaymentController.class)
             .startPayment(APPLICATION_ID, null))))
+        .andExpect(model().attribute("returnToInProgressUrl", ReverseRouter.route(on(ApplicationPaymentController.class)
+            .returnToInProgress(APPLICATION_ID))))
         .andExpect(model().attribute("absoluteGetStartPaymentUrl", absoluteGetStartPaymentUrl))
         .andExpect(model().attribute("sharePaymentMailToLink", expectedSharePaymentMailToLink));
   }
@@ -221,6 +222,39 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
     assertThat(returnUrlArgumentCaptor.getValue().apply(paymentId)).isEqualTo(absoluteGetPaymentProcessedUrl);
 
     verify(applicationService, never()).submitApplication(any(), any());
+  }
+
+  @SecurityTest
+  void returnToInProgress_noUser() throws Exception {
+    mockMvc.perform(post(ReverseRouter.route(on(ApplicationPaymentController.class).returnToInProgress(APPLICATION_ID)))
+            .with(csrf()))
+        .andExpect(redirectionToLoginUrl());
+  }
+
+  @SecurityTest
+  void returnToInProgress_userDoesNotHaveOperatorReturnApplicationToInProgressFromAwaitingPaymentCaseProcessingAction()
+      throws Exception {
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of());
+
+    mockMvc.perform(post(ReverseRouter.route(on(ApplicationPaymentController.class).returnToInProgress(APPLICATION_ID)))
+            .with(csrf())
+            .with(user(user)))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void returnToInProgress() throws Exception {
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT));
+
+    mockMvc.perform(post(ReverseRouter.route(on(ApplicationPaymentController.class).returnToInProgress(APPLICATION_ID)))
+            .with(csrf())
+            .with(user(user)))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID))));
+
+    verify(applicationService).returnApplicationToInProgressFromAwaitingPayment(applicationVersion);
   }
 
   @SecurityTest

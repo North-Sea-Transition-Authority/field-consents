@@ -144,6 +144,24 @@ public class ApplicationService {
   }
 
   @Transactional
+  public void returnApplicationToInProgressFromAwaitingPayment(ApplicationVersion applicationVersion) {
+    var applicationVersionStatus = applicationVersion.getStatus();
+    if (!ApplicationVersionStatus.AWAITING_PAYMENT.equals(applicationVersionStatus)) {
+      throw new IllegalStateException(
+          String.format(
+              "Application %d cannot be returned to in progress as application version has status %s",
+              applicationVersion.getApplication().getId(),
+              applicationVersionStatus
+          )
+      );
+    }
+
+    applicationVersion.setStatus(ApplicationVersionStatus.IN_PROGRESS);
+
+    applicationVersionRepository.save(applicationVersion);
+  }
+
+  @Transactional
   public void submitApplication(ApplicationVersion applicationVersion, ServiceUserDetail user) {
     var applicationVersionStatus = applicationVersion.getStatus();
     if (!ApplicationVersionStatus.AWAITING_PAYMENT.equals(applicationVersionStatus)) {
