@@ -27,6 +27,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -219,10 +221,61 @@ class ApplicationServiceTest {
     Assertions.assertEquals("Application with id 1 not found", exception.getMessage());
   }
 
+  @ParameterizedTest
+  @EnumSource(value = ApplicationVersionStatus.class, names = "IN_PROGRESS", mode = EnumSource.Mode.EXCLUDE)
+  void prepareApplicationForPayment_statusNotInProgress(ApplicationVersionStatus applicationVersionStatus) {
+    var applicationVersion
+        = ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.PRODUCTION, 1, 1);
+    applicationVersion.setStatus(applicationVersionStatus);
+
+    assertThatThrownBy(() -> applicationService.prepareApplicationForPayment(applicationVersion))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage(
+            String.format(
+                "Application %d cannot be prepared for payment as application version has status %s",
+                applicationVersion.getApplication().getId(),
+                applicationVersionStatus
+            )
+        );
+  }
+
   @Test
-  void submitApplication() {
+  void prepareApplicationForPayment() {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
     when(applicationRepository.findLatestApplicationNumber()).thenReturn(Optional.of(1));
+
+    applicationService.prepareApplicationForPayment(applicationVersion);
+
+    ArgumentCaptor<Application> applicationArgumentCaptor = ArgumentCaptor.forClass(Application.class);
+    verify(applicationRepository).save(applicationArgumentCaptor.capture());
+    verify(applicationVersionRepository).save(applicationVersion);
+
+    var actualApplication = applicationArgumentCaptor.getValue();
+
+    assertThat(actualApplication.getApplicationNo()).isEqualTo(2);
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = ApplicationVersionStatus.class, names = "AWAITING_PAYMENT", mode = EnumSource.Mode.EXCLUDE)
+  void submitApplication_statusNotAwaitingPayment(ApplicationVersionStatus applicationVersionStatus) {
+    var applicationVersion
+        = ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.PRODUCTION, 1, 1);
+    applicationVersion.setStatus(applicationVersionStatus);
+
+    assertThatThrownBy(() -> applicationService.submitApplication(applicationVersion, USER))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage(
+            String.format(
+                "Application %d cannot be submitted as application version has status %s",
+                applicationVersion.getApplication().getId(),
+                applicationVersionStatus
+            )
+        );
+  }
+
+  @Test
+  void submitApplication() {
+    var applicationVersion = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
 
     applicationService.submitApplication(applicationVersion, USER);
 
@@ -231,7 +284,6 @@ class ApplicationServiceTest {
 
     var actualApplication = applicationArgumentCaptor.getValue();
 
-    assertThat(actualApplication.getApplicationNo()).isEqualTo(2);
     assertThat(actualApplication.getVariationNo()).isEqualTo(0);
 
     verify(applicationWorkAreaPriorityService)
@@ -240,6 +292,24 @@ class ApplicationServiceTest {
         .prioritiseApplicationInWorkArea(applicationVersion, USER, APPLICATION_SUBMITTED, REGULATOR);
     verify(aceFlagService)
         .autoSetAceFlag(applicationVersion);
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = ApplicationVersionStatus.class, names = "IN_PROGRESS", mode = EnumSource.Mode.EXCLUDE)
+  void submitApplicationUpdate_statusNotInProgress(ApplicationVersionStatus applicationVersionStatus) {
+    var applicationVersion
+        = ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.PRODUCTION, 1, 1);
+    applicationVersion.setStatus(applicationVersionStatus);
+
+    assertThatThrownBy(() -> applicationService.submitApplicationUpdate(applicationVersion, USER))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage(
+            String.format(
+                "Application update cannot be submitted for application %d as application version has status %s",
+                applicationVersion.getApplication().getId(),
+                applicationVersionStatus
+            )
+        );
   }
 
   @Test
@@ -327,18 +397,6 @@ class ApplicationServiceTest {
     assertApplicationVersion(newApplicationVersion, expectedApplicationVersion);
   }
 
-  @Test
-  void submitApplicationVersion_whenAlreadySubmitted() {
-    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
-
-    var exception = Assertions.assertThrows(
-        IllegalStateException.class,
-        () -> applicationService.submitApplicationVersion(applicationVersion, USER)
-    );
-
-    Assertions.assertEquals("Application with id 1 cannot be submitted", exception.getMessage());
-  }
-  
   @Test
   void submitApplicationVersion() {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);

@@ -51,6 +51,39 @@ public class ApplicationTestUtil {
         null);
   }
 
+  private static Application getAwaitingPaymentApplicationWithType(ApplicationType applicationType) {
+    return new Application(APPLICATION_ID, applicationType, Instant.now(), USER_WUA_ID, 0, null);
+  }
+
+  public static ApplicationVersion getAwaitingPaymentApplicationVersionWithType(ApplicationType applicationType) {
+    return getAwaitingPaymentApplicationVersionWithTypeIdAndVersionNumber(
+        applicationType,
+        APPLICATION_VERSION_ID,
+        APPLICATION_VERSION_NUMBER
+    );
+  }
+
+  public static ApplicationVersion getAwaitingPaymentApplicationVersionWithTypeIdAndVersionNumber(
+      ApplicationType applicationType,
+      Integer applicationVersionId,
+      Integer applicationVersionNumber
+  ) {
+    var newApplication = getNewApplicationWithType(applicationType);
+    return new ApplicationVersion(
+        applicationVersionId,
+        newApplication,
+        applicationVersionNumber,
+        PRIMARY_OPERATOR_OU_ID_1,
+        CACHED_PRIMARY_OPERATOR_NAME_1,
+        Instant.now(),
+        USER_WUA_ID,
+        null,
+        null,
+        ApplicationVersionStatus.AWAITING_PAYMENT,
+        null
+    );
+  }
+
   private static Application getSubmittedApplicationWithType(ApplicationType applicationType) {
     return new Application(APPLICATION_ID, applicationType, Instant.now(), USER_WUA_ID, 0, APPLICATION_NO);
   }

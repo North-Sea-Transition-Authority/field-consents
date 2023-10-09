@@ -10,12 +10,12 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateTestUtil.applicationUpdateRequestView;
-import static uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionController.APPLICATION_SUBMITTED_TITLE;
 import static uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionController.UPDATE_SUBMITTED_TITLE;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
@@ -39,6 +39,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.Applic
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.response.ApplicationUpdateResponseFormValidator;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.response.ApplicationUpdateResponseType;
+import uk.co.nstauthority.fieldconsents.application.payment.ApplicationPaymentController;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
@@ -147,6 +148,7 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
         .andExpect(model().attribute("isSubmittable", false))
         .andExpect(model().attribute("userHasSubmitPermission", true))
         .andExpect(model().attribute("applicationReference", NO_APP_REF))
+        .andExpect(model().attribute("submitButtonText", "Pay and submit"))
         .andExpect(model().attributeExists("summarySections", "wideSummaryDisplay"));
   }
 
@@ -188,27 +190,24 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
         .andExpect(model().attribute("applicationUpdateRequestView", applicationUpdateRequestView))
         .andExpect(model().attribute("requestedChangesOnlyRadio", ApplicationUpdateResponseType.REQUESTED_CHANGES_ONLY))
         .andExpect(model().attribute("otherChangesRadio", ApplicationUpdateResponseType.OTHER_CHANGES))
+        .andExpect(model().attribute("submitButtonText", "Submit"))
         .andExpect(model().attributeExists("summarySections", "wideSummaryDisplay", "form"));
   }
 
   @Test
   void submitApplication() throws Exception {
     when(applicationSubmissionService.isSubmittable(applicationVersion)).thenReturn(true);
-    when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(DUMMY_APP_REF);
     when(applicationUpdateService.openApplicationUpdateExists(applicationVersion)).thenReturn(false);
 
     mockMvc.perform(post(ReverseRouter.route(on(ApplicationSubmissionController.class)
             .submitApplication(APPLICATION_ID, null, null, null)))
             .with(user(user))
             .with(csrf()))
-        .andExpect(status().isOk())
-        .andExpect(view().name("fcs/application/submissionConfirmation"))
-        .andExpect(model().attribute("pageTitle", APPLICATION_SUBMITTED_TITLE))
-        .andExpect(model().attribute("applicationReference", DUMMY_APP_REF))
-        .andExpect(model().attribute("workAreaUrl",
-                ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null))));
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationPaymentController.class)
+            .getStartPayment(APPLICATION_ID))));
 
-    verify(applicationService, times(1)).submitApplication(applicationVersion, user);
+    verify(applicationService).prepareApplicationForPayment(applicationVersion);
   }
 
   @ParameterizedTest

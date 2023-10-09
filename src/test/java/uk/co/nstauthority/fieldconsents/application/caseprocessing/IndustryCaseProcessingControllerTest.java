@@ -217,6 +217,9 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
         Arguments.of(ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION)),
         Arguments.of(ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE)),
         Arguments.of(ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT)),
+        Arguments.of(ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION)),
+        Arguments.of(ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.FLARE)),
+        Arguments.of(ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.VENT)),
         Arguments.of(ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION)),
         Arguments.of(ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.FLARE)),
         Arguments.of(ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.VENT))

@@ -120,6 +120,10 @@ public class ApplicationAssetService {
     return applicationAssetRepository.findAllByApplicationVersionAndAssetRoleOrderByIdAsc(applicationVersion, assetRole);
   }
 
+  public List<ApplicationAsset> findAssetsByApplicationVersion(ApplicationVersion applicationVersion) {
+    return applicationAssetRepository.findAllByApplicationVersion(applicationVersion);
+  }
+
   public List<ApplicationAsset> getSecondaryAssets(ApplicationVersion applicationVersion) {
     return findAssetsByApplicationVersionAndAssetRole(applicationVersion, AssetRole.SECONDARY);
   }
@@ -245,5 +249,16 @@ public class ApplicationAssetService {
   @Transactional
   public void deleteAssetsByApplicationVersionAndAssetRoles(ApplicationVersion applicationVersion, Set<AssetRole> assetRoles) {
     applicationAssetRepository.deleteAllByApplicationVersionAndAssetRoleIn(applicationVersion, assetRoles);
+  }
+
+  public AssetType getAssetType(ApplicationAsset applicationAsset) {
+    if (applicationAsset.isField()) {
+      return AssetType.FIELD;
+    } else if (applicationAsset.isTerminal()) {
+      return AssetType.TERMINAL;
+    } else {
+      throw new IllegalStateException("Application asset %d is not a field or terminal"
+          .formatted(applicationAsset.getId()));
+    }
   }
 }

@@ -15,6 +15,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalrevi
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationStartUpdateController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalController;
+import uk.co.nstauthority.fieldconsents.application.payment.ApplicationPaymentController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.util.enumutil.Displayable;
 
@@ -60,6 +61,9 @@ public enum CaseProcessingActionItem implements Displayable {
       applicationId -> ReverseRouter.route(on(ApplicationUpdateController.class)
           .getApplicationUpdateRequest(applicationId))),
   // Operator actions
+  OPERATOR_PAY_FOR_APPLICATION("Pay for application", 1, false, true, null,
+      applicationId -> ReverseRouter.route(on(ApplicationPaymentController.class)
+          .getStartPayment(applicationId))),
   OPERATOR_WITHDRAWAL_REQUEST("Request withdrawal", 1, false, true, null,
       applicationId -> ReverseRouter.route(on(ApplicationWithdrawalController.class)
           .getApplicationWithdrawalRequest(applicationId))),

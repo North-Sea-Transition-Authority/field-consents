@@ -19,6 +19,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.Applic
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.response.ApplicationUpdateResponseForm;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.response.ApplicationUpdateResponseFormValidator;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.response.ApplicationUpdateResponseType;
+import uk.co.nstauthority.fieldconsents.application.payment.ApplicationPaymentController;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
@@ -34,7 +35,6 @@ import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 @HasApplicationStatus(statuses = ApplicationVersionStatus.IN_PROGRESS)
 public class ApplicationSubmissionController {
 
-  static final String APPLICATION_SUBMITTED_TITLE = "Application submitted";
   static final String UPDATE_SUBMITTED_TITLE = "Updated submitted";
   private final ApplicationService applicationService;
   private final ApplicationVersionService applicationVersionService;
@@ -93,7 +93,10 @@ public class ApplicationSubmissionController {
         .addObject("applicationReference",
             applicationService.getApplicationReference(applicationVersion));
 
-    if (applicationUpdateService.openApplicationUpdateExists(applicationVersion)) {
+
+    var applicationUpdateOpen = applicationUpdateService.openApplicationUpdateExists(applicationVersion);
+
+    if (applicationUpdateOpen) {
       modelAndView
           .addObject("applicationUpdateRequestView",
               applicationUpdateRequestViewService.getOpenApplicationUpdateRequestView(applicationVersion))
@@ -102,6 +105,8 @@ public class ApplicationSubmissionController {
           .addObject("otherChangesRadio", ApplicationUpdateResponseType.OTHER_CHANGES);
     }
 
+    modelAndView.addObject("submitButtonText", !applicationUpdateOpen ? "Pay and submit" : "Submit");
+
     applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView);
 
     return modelAndView;
@@ -109,10 +114,12 @@ public class ApplicationSubmissionController {
 
   @PostMapping
   @HasApplicationPermission(permissions = RolePermission.SUBMIT_FCS_APPLICATIONS)
-  ModelAndView submitApplication(@PathVariable Integer applicationId,
-                                        @ModelAttribute("form") ApplicationUpdateResponseForm form,
-                                        BindingResult bindingResult,
-                                        ServiceUserDetail user) {
+  ModelAndView submitApplication(
+      @PathVariable Integer applicationId,
+      @ModelAttribute("form") ApplicationUpdateResponseForm form,
+      BindingResult bindingResult,
+      ServiceUserDetail user
+  ) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
 
     if (!applicationSubmissionService.isSubmittable(applicationVersion)) {
@@ -134,19 +141,15 @@ public class ApplicationSubmissionController {
           form.otherChangesDescription().getInputValue(),
           user
       );
-    } else {
-      applicationService.submitApplication(applicationVersion, user);
+
+      return new ModelAndView("fcs/application/submissionConfirmation")
+          .addObject("pageTitle", UPDATE_SUBMITTED_TITLE)
+          .addObject("applicationReference", applicationService.generateApplicationReference(applicationVersion))
+          .addObject("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)));
     }
 
-    return applicationSubmittedModelAndView(applicationVersion, isApplicationUpdate);
-  }
+    applicationService.prepareApplicationForPayment(applicationVersion);
 
-  private ModelAndView applicationSubmittedModelAndView(ApplicationVersion applicationVersion,
-                                                        Boolean isApplicationUpdate) {
-    var pageTitle = isApplicationUpdate ? UPDATE_SUBMITTED_TITLE : APPLICATION_SUBMITTED_TITLE;
-    return new ModelAndView("fcs/application/submissionConfirmation")
-        .addObject("pageTitle", pageTitle)
-        .addObject("applicationReference", applicationService.generateApplicationReference(applicationVersion))
-        .addObject("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)));
+    return ReverseRouter.redirect(on(ApplicationPaymentController.class).getStartPayment(applicationId));
   }
 }

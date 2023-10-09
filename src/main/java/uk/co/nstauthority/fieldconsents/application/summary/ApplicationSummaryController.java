@@ -6,6 +6,7 @@ import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePe
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.RESPOND_TO_CONSULTATION;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.SUBMIT_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS;
 
 import org.springframework.stereotype.Controller;
@@ -56,6 +57,7 @@ public class ApplicationSummaryController {
 
     return switch (applicationVersion.getStatus()) {
       case IN_PROGRESS -> getInProgressModelAndView(applicationVersion, user);
+      case AWAITING_PAYMENT -> getAwaitingPaymentModelAndView(applicationVersion, user);
       case SUBMITTED -> getSubmittedModelAndView(applicationVersion, user);
       default -> getSummaryModelAndView(applicationVersion);
     };
@@ -93,6 +95,16 @@ public class ApplicationSummaryController {
     }
 
     return getSummaryModelAndView(applicationVersion);
+  }
+
+  private ModelAndView getAwaitingPaymentModelAndView(ApplicationVersion applicationVersion, ServiceUserDetail user) {
+    var applicationId = applicationVersion.getApplication().getId();
+
+    if (!applicationAccessService.hasApplicationPermission(user, applicationVersion, SUBMIT_FCS_APPLICATIONS)) {
+      return getSummaryModelAndView(applicationVersion);
+    }
+
+    return ReverseRouter.redirect(on(IndustryCaseProcessingController.class).getIndustryCaseProcessing(applicationId, null));
   }
 
   private ModelAndView getInProgressModelAndView(ApplicationVersion applicationVersion, ServiceUserDetail user) {

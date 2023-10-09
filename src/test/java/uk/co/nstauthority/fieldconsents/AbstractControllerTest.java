@@ -32,6 +32,7 @@ import uk.co.nstauthority.fieldconsents.authorisation.HasTeamPermissionIntercept
 import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.branding.EnableAllBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.configuration.SamlProperties;
+import uk.co.nstauthority.fieldconsents.configuration.ServiceConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.configuration.WebSecurityConfiguration;
 import uk.co.nstauthority.fieldconsents.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.fieldconsents.energyportal.IncludeEnergyPortalConfigurationProperties;
@@ -68,7 +69,10 @@ import uk.co.nstauthority.fieldconsents.validation.ValidationErrorOrderingServic
     WebSecurityConfiguration.class,
     ServiceUserDetailArgumentResolver.class
 })
-@EnableConfigurationProperties(SamlProperties.class)
+@EnableConfigurationProperties({
+    SamlProperties.class,
+    ServiceConfigurationProperties.class
+})
 public abstract class AbstractControllerTest {
 
   @Autowired

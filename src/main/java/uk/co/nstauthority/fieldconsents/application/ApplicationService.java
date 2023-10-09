@@ -121,10 +121,42 @@ public class ApplicationService {
   }
 
   @Transactional
-  public void submitApplication(ApplicationVersion applicationVersion,
-                                ServiceUserDetail user) {
+  public void prepareApplicationForPayment(ApplicationVersion applicationVersion) {
+    var applicationVersionStatus = applicationVersion.getStatus();
+    if (!ApplicationVersionStatus.IN_PROGRESS.equals(applicationVersionStatus)) {
+      throw new IllegalStateException(
+          String.format(
+              "Application %d cannot be prepared for payment as application version has status %s",
+              applicationVersion.getApplication().getId(),
+              applicationVersionStatus
+          )
+      );
+    }
+
     var application = applicationVersion.getApplication();
+
     application.setApplicationNo(getApplicationNumber());
+
+    applicationVersion.setStatus(ApplicationVersionStatus.AWAITING_PAYMENT);
+
+    applicationRepository.save(application);
+    applicationVersionRepository.save(applicationVersion);
+  }
+
+  @Transactional
+  public void submitApplication(ApplicationVersion applicationVersion, ServiceUserDetail user) {
+    var applicationVersionStatus = applicationVersion.getStatus();
+    if (!ApplicationVersionStatus.AWAITING_PAYMENT.equals(applicationVersionStatus)) {
+      throw new IllegalStateException(
+          String.format(
+              "Application %d cannot be submitted as application version has status %s",
+              applicationVersion.getApplication().getId(),
+              applicationVersionStatus
+          )
+      );
+    }
+
+    var application = applicationVersion.getApplication();
     submitApplicationVersion(applicationVersion, user);
     applicationRepository.save(application);
     aceFlagService.autoSetAceFlag(applicationVersion);
@@ -135,8 +167,18 @@ public class ApplicationService {
   }
 
   @Transactional
-  public void submitApplicationUpdate(ApplicationVersion applicationVersion,
-                                      ServiceUserDetail user) {
+  public void submitApplicationUpdate(ApplicationVersion applicationVersion, ServiceUserDetail user) {
+    var applicationVersionStatus = applicationVersion.getStatus();
+    if (!ApplicationVersionStatus.IN_PROGRESS.equals(applicationVersionStatus)) {
+      throw new IllegalStateException(
+          String.format(
+              "Application update cannot be submitted for application %d as application version has status %s",
+              applicationVersion.getApplication().getId(),
+              applicationVersionStatus
+          )
+      );
+    }
+
     submitApplicationVersion(applicationVersion, user);
 
     applicationWorkAreaPriorityService
@@ -150,8 +192,7 @@ public class ApplicationService {
   }
 
   @Transactional
-  public ApplicationVersion startApplicationUpdate(ApplicationVersion applicationVersion,
-                                                   ServiceUserDetail user) {
+  public ApplicationVersion startApplicationUpdate(ApplicationVersion applicationVersion, ServiceUserDetail user) {
     var latestApplicationVersion =
         applicationVersionService.getLatestApplicationVersionByApplicationId(applicationVersion.getApplication().getId());
 
@@ -182,10 +223,6 @@ public class ApplicationService {
 
   protected void submitApplicationVersion(ApplicationVersion applicationVersion,
                                           ServiceUserDetail user) {
-    if (!ApplicationVersionStatus.IN_PROGRESS.equals(applicationVersion.getStatus())) {
-      throw new IllegalStateException(String.format("Application with id %s cannot be submitted",
-          applicationVersion.getApplication().getId()));
-    }
     applicationVersion.setStatus(ApplicationVersionStatus.SUBMITTED);
     applicationVersion.setSubmittedDateTime(clock.instant());
     applicationVersion.setSubmittedByWuaId(user.wuaId());

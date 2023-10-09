@@ -38,6 +38,12 @@ docker-compose -f ./devtools/local-dev-compose.yml up -d
 
 #### Development
 - In your IntelliJ run configuration for the Spring app, include `development` in your active profiles
+- The following environment variables are required when using this profile:
+
+| Environment Variable         | Description            |
+|------------------------------|------------------------|
+| **Digital Payments Library** |                        |
+| `GOV_UK_PAY_API_KEY`         | API Key for GOV.UK Pay |
 
 #### Production
 - In your IntelliJ run configuration for the Spring app, include `production` in your active profiles
@@ -45,6 +51,10 @@ docker-compose -f ./devtools/local-dev-compose.yml up -d
 
 | Environment Variable             | Description                                                                                        |
 |----------------------------------|----------------------------------------------------------------------------------------------------|
+| **Service**                      |                                                                                                    |
+| `FCS_SERVICE_BASE_URL`           | The service base URL excluding the context path (e.g. https://itportal.dev.fivium.local)           |
+| `FCS_CONTEXT_PATH`               | The service URL context path (e.g. /fcs)                                                           |
+|                                  |                                                                                                    |
 | **Database**                     |                                                                                                    |
 | `FCS_DATABASE_URL`               | The URL to the database the service connect to                                                     |
 | `FCS_DATABASE_PASSWORD`          | Database schema password for the `fcs` user                                                        |
@@ -66,6 +76,9 @@ docker-compose -f ./devtools/local-dev-compose.yml up -d
 | `S3_PROXY_PORT`                  | Proxy port for Amazon S3                                                                           |
 | `CLAMAV_HOST`                    | Host for ClamAv virus scanner                                                                      |
 | `CLAMAV_PORT`                    | Port for ClamAv virus scanner                                                                      |
+|                                  |                                                                                                    |
+| **Digital Payments Library**     |                                                                                                    |
+| `GOV_UK_PAY_API_KEY`             | API Key for GOV.UK Pay                                                                             |
 
 ### 4. Initialise the Fivium Design System
 ```bash

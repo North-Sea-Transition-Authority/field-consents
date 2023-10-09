@@ -17,6 +17,7 @@ import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePe
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.RESPOND_TO_CONSULTATION;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.SUBMIT_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
@@ -170,8 +171,37 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
   }
 
   @ParameterizedTest
+  @MethodSource("getAwaitingPaymentApplicationVersions")
+  void getApplicationSummary_whenAwaitingPaymentApplicationAndUserDoesNotHaveSubmitPermission_thenGetSummaryView(ApplicationVersion applicationVersion) throws Exception {
+    // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, SUBMIT_FCS_APPLICATIONS)).thenReturn(false);
+    when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(DUMMY_APP_REF);
+
+    getApplicationSummaryAndCheckModel(applicationVersion, DUMMY_APP_REF);
+  }
+
+  @ParameterizedTest
+  @MethodSource("getAwaitingPaymentApplicationVersions")
+  void getApplicationSummary_whenAwaitingPaymentApplicationAndUserHasSubmitPermission_thenRedirectToIndustryCaseProcessing(ApplicationVersion applicationVersion) throws Exception {
+    // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, SUBMIT_FCS_APPLICATIONS)).thenReturn(true);
+
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationSummaryController.class)
+            .getApplicationSummary(APPLICATION_ID, null)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(ReverseRouter.route(on(IndustryCaseProcessingController.class)
+            .getIndustryCaseProcessing(APPLICATION_ID, null))));
+  }
+
+  @ParameterizedTest
   @MethodSource("getSubmittedApplicationVersions")
-  void getApplicationSummary_whenSubmittedAndUserHaEditPermission_thenRedirectToIndustryCaseProcessing(ApplicationVersion applicationVersion) throws Exception {
+  void getApplicationSummary_whenSubmittedAndUserHasEditPermission_thenRedirectToIndustryCaseProcessing(ApplicationVersion applicationVersion) throws Exception {
     // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
@@ -226,6 +256,14 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
         Arguments.of(ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.PRODUCTION, 2, 2)),
         Arguments.of(ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.FLARE, 2, 2)),
         Arguments.of(ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.VENT, 2, 2))
+    );
+  }
+
+  private static Stream<Arguments> getAwaitingPaymentApplicationVersions() {
+    return Stream.of(
+        Arguments.of(ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION)),
+        Arguments.of(ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.FLARE)),
+        Arguments.of(ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.VENT))
     );
   }
 

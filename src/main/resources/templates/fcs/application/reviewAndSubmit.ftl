@@ -62,10 +62,11 @@
         <@applicationUpdateRequestHiddenSummary.applicationUpdateRequestHiddenSummary applicationUpdateRequestView=applicationUpdateRequestView!""/>
       </#if>
       <@fdsAction.submitButtons
-        primaryButtonText="Submit"
+        primaryButtonText=submitButtonText
         secondaryLinkText="Back to task list"
         linkSecondaryAction=true
-        linkSecondaryActionUrl="${springUrl(backLinkUrl)}"/>
+        linkSecondaryActionUrl="${springUrl(backLinkUrl)}"
+      />
     <#else>
       <@fdsAction.link linkText="Back to task list" linkUrl="${springUrl(backLinkUrl)}"/>
     </#if>

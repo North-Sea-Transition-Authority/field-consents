@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Import;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
 import uk.co.nstauthority.fieldconsents.authorisation.ApplicationAccessService;
 import uk.co.nstauthority.fieldconsents.authorisation.ApplicationHandlerInterceptor;
+import uk.co.nstauthority.fieldconsents.authorisation.ParameterizedSecurityTest;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.authorisation.rules.ActionEndPointInterceptorRule;
 import uk.co.nstauthority.fieldconsents.authorisation.rules.ApplicationAccessInterceptorRule;
@@ -43,9 +44,11 @@ public abstract class AbstractApplicationControllerTest extends AbstractControll
   void setupAbstractApplicationControllerTest(TestInfo testInfo) {
     var securityTestAnnotation = testInfo
         .getTestMethod().map(method -> method.getAnnotation(SecurityTest.class));
+    var parameterizedSecurityTestAnnotation = testInfo
+        .getTestMethod().map(method -> method.getAnnotation(ParameterizedSecurityTest.class));
 
     // if the test doesn't have the @SecurityTest annotation ensure the security passes
-    if (securityTestAnnotation.isEmpty()) {
+    if (securityTestAnnotation.isEmpty() && parameterizedSecurityTestAnnotation.isEmpty()) {
       setupWhenUserHasApplicationAccessPermission();
       setupWhenUserCanCallAllActionEndPoints();
     }

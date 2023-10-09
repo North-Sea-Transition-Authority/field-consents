@@ -12,6 +12,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_MANAGE_RESPONDER;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_RESPONSE;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_PAY_FOR_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_UPDATE_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_WITHDRAWAL_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.REGULATOR_ADD_CASE_NOTE;
@@ -37,6 +38,7 @@ import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePe
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_CASE_PROCESSING_DOCUMENTS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.RESPOND_TO_CONSULTATION;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.SUBMIT_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_CASE_PROCESSING_DOCUMENTS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.opred.OpredTeamRole.RESPONDER;
@@ -88,7 +90,12 @@ public class CaseProcessingActionService {
               CASE_OFFICER_REASSIGN_OWNERSHIP,
               REGULATOR_ADD_CASE_NOTE,
               TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP,
-              OPERATOR_UPDATE_APPLICATION),
+              OPERATOR_UPDATE_APPLICATION
+          ),
+          ApplicationVersionStatus.AWAITING_PAYMENT,
+          EnumSet.of(
+              OPERATOR_PAY_FOR_APPLICATION
+          ),
           ApplicationVersionStatus.SUBMITTED,
           EnumSet.of(
               CHANGE_ACE_STATUS,
@@ -107,7 +114,8 @@ public class CaseProcessingActionService {
               TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP,
               APPLICATION_UPDATE_REQUEST,
               OPERATOR_WITHDRAWAL_REQUEST,
-              OPERATOR_UPDATE_APPLICATION)
+              OPERATOR_UPDATE_APPLICATION
+          )
       );
 
   private final Map<CaseProcessingActionItem, Set<RolePermission>> actionsToPermissions =
@@ -127,6 +135,7 @@ public class CaseProcessingActionService {
           entry(TECHNICAL_REVIEWER_SUBMIT_REVIEW, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)),
           entry(TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)),
           entry(APPLICATION_UPDATE_REQUEST, EnumSet.of(PROCESS_FCS_APPLICATIONS, TECHNICAL_REVIEW_FCS_APPLICATIONS)),
+          entry(OPERATOR_PAY_FOR_APPLICATION, EnumSet.of(SUBMIT_FCS_APPLICATIONS)),
           entry(OPERATOR_WITHDRAWAL_REQUEST, EnumSet.of(EDIT_FCS_APPLICATIONS)),
           entry(OPERATOR_UPDATE_APPLICATION, EnumSet.of(EDIT_FCS_APPLICATIONS))
       );
@@ -206,7 +215,7 @@ public class CaseProcessingActionService {
         // filter actions that the user has permissions for
         .filter(action -> CollectionUtils.containsAny(actionsToPermissions.get(action), userRolePermissions))
         // filter actions that the application version has all the status flags for
-        .filter(action -> caseStatusFlags.containsAll(actionsToStatusFlags.get(action)))
+        .filter(action -> caseStatusFlags.containsAll(actionsToStatusFlags.getOrDefault(action, Set.of())))
         .filter(action -> assigneeCheck(action, assigneeMap, user))
         .toList();
   }
@@ -269,5 +278,5 @@ public class CaseProcessingActionService {
 
     return features.stream().anyMatch(feature -> feature.allowed(applicationType));
   }
-  
+
 }

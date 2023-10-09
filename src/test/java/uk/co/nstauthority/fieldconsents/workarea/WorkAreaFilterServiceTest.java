@@ -133,6 +133,7 @@ class WorkAreaFilterServiceTest {
 
     assertThat(conditions).containsExactly(APPLICATION_VERSIONS.STATUS.in(
         ApplicationVersionStatus.IN_PROGRESS.name(),
+        ApplicationVersionStatus.AWAITING_PAYMENT.name(),
         ApplicationVersionStatus.SUBMITTED.name()
     ));
   }
@@ -361,6 +362,7 @@ class WorkAreaFilterServiceTest {
     assertThat(conditions).containsExactly(
         APPLICATION_VERSIONS.STATUS.in(
             ApplicationVersionStatus.IN_PROGRESS.name(),
+            ApplicationVersionStatus.AWAITING_PAYMENT.name(),
             ApplicationVersionStatus.SUBMITTED.name()
         )
     );
@@ -372,7 +374,11 @@ class WorkAreaFilterServiceTest {
         .withWuaId(USER_WUA_ID)
         .build();
     when(teamService.isIndustryUser(serviceUser)).thenReturn(true);
-    var expectedStatuses = List.of(ApplicationVersionStatus.IN_PROGRESS, ApplicationVersionStatus.SUBMITTED);
+    var expectedStatuses = List.of(
+        ApplicationVersionStatus.IN_PROGRESS,
+        ApplicationVersionStatus.AWAITING_PAYMENT,
+        ApplicationVersionStatus.SUBMITTED
+    );
     var expectedApplicationTypes = List.of(ApplicationType.PRODUCTION, ApplicationType.FLARE, ApplicationType.VENT);
 
     var workAreaFilter = workAreaFilterService.getDefaultFilter(serviceUser);

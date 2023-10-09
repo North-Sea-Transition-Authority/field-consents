@@ -7,10 +7,11 @@ import uk.co.nstauthority.fieldconsents.util.enumutil.DisplayableEnumOptionUtil;
 
 public enum ApplicationVersionStatus implements Displayable {
   IN_PROGRESS("In progress", 10),
-  SUBMITTED("Submitted", 20),
-  COMPLETED("Completed", 30),
-  DELETED("Deleted", 40),
-  WITHDRAWN("Withdrawn", 50);
+  AWAITING_PAYMENT("Awaiting payment", 20),
+  SUBMITTED("Submitted", 30),
+  COMPLETED("Completed", 40),
+  DELETED("Deleted", 50),
+  WITHDRAWN("Withdrawn", 60);
 
   private final String displayName;
   private final int displayOrder;
@@ -24,6 +25,7 @@ public enum ApplicationVersionStatus implements Displayable {
     return DisplayableEnumOptionUtil.getDisplayableOptionsFromStream(
         Stream.of(
             IN_PROGRESS,
+            AWAITING_PAYMENT,
             SUBMITTED
         )
     );
@@ -33,6 +35,7 @@ public enum ApplicationVersionStatus implements Displayable {
     return DisplayableEnumOptionUtil.getDisplayableOptionsFromStream(
         Stream.of(
             IN_PROGRESS,
+            AWAITING_PAYMENT,
             SUBMITTED,
             COMPLETED,
             WITHDRAWN

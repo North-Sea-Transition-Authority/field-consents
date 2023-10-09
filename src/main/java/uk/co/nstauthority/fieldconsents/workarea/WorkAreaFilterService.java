@@ -117,7 +117,13 @@ public class WorkAreaFilterService {
     var defaultFilter = new WorkAreaFilter();
 
     if (teamService.isIndustryUser(user)) {
-      defaultFilter.setStatuses(List.of(ApplicationVersionStatus.IN_PROGRESS, ApplicationVersionStatus.SUBMITTED));
+      defaultFilter.setStatuses(
+          List.of(
+              ApplicationVersionStatus.IN_PROGRESS,
+              ApplicationVersionStatus.AWAITING_PAYMENT,
+              ApplicationVersionStatus.SUBMITTED
+          )
+      );
     }
 
     defaultFilter.setApplicationTypes(List.of(ApplicationType.PRODUCTION, ApplicationType.FLARE, ApplicationType.VENT));
@@ -145,6 +151,7 @@ public class WorkAreaFilterService {
   private Condition getIndustryApplicationStatusCondition() {
     return APPLICATION_VERSIONS.STATUS.in(
         ApplicationVersionStatus.IN_PROGRESS.name(),
+        ApplicationVersionStatus.AWAITING_PAYMENT.name(),
         ApplicationVersionStatus.SUBMITTED.name()
     );
   }

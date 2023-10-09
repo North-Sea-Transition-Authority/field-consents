@@ -55,7 +55,11 @@ public class IndustryCaseProcessingController {
   }
 
   @GetMapping("industry-case-processing")
-  @HasApplicationStatus(statuses = {ApplicationVersionStatus.IN_PROGRESS, ApplicationVersionStatus.SUBMITTED})
+  @HasApplicationStatus(statuses = {
+      ApplicationVersionStatus.IN_PROGRESS,
+      ApplicationVersionStatus.AWAITING_PAYMENT,
+      ApplicationVersionStatus.SUBMITTED
+  })
   @HasApplicationPermission(permissions = RolePermission.EDIT_FCS_APPLICATIONS)
   public ModelAndView getIndustryCaseProcessing(@PathVariable Integer applicationId,
                                                 ServiceUserDetail user) {

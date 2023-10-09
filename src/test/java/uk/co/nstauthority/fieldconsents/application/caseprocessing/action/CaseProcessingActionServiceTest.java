@@ -12,6 +12,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CHANGE_ACE_STATUS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_MANAGE_RESPONDER;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_REQUEST;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_PAY_FOR_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_UPDATE_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_WITHDRAWAL_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.REGULATOR_ADD_CASE_NOTE;
@@ -76,6 +77,9 @@ class CaseProcessingActionServiceTest {
 
   private static final Set<RolePermission> INDUSTRY_EDITOR_PERMISSIONS =
       IndustryTeamRole.EDITOR.getRolePermissions();
+
+  private static final Set<RolePermission> INDUSTRY_SUBMITTER_PERMISSIONS =
+      IndustryTeamRole.SUBMITTER.getRolePermissions();
 
   @Mock
   private ApplicationAccessService applicationAccessService;
@@ -611,5 +615,28 @@ class CaseProcessingActionServiceTest {
 
     assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
         .isEmpty();
+  }
+
+  @Test
+  void getUserActionItems_whenIndustrySubmitterAndStatusAwaitingPayment_thenCanPayForApplication() {
+    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
+        .thenReturn(INDUSTRY_SUBMITTER_PERMISSIONS);
+
+    applicationVersion.setStatus(ApplicationVersionStatus.AWAITING_PAYMENT);
+
+    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
+        .hasSize(1)
+        .usingRecursiveFieldByFieldElementComparator()
+        .containsExactly(CaseProcessingActionView.from(OPERATOR_PAY_FOR_APPLICATION, applicationVersion));
+  }
+
+  @Test
+  void getUserActionItems_whenIndustrySubmitterAndStatusIsNotAwaitingPayment_thenCannotPayForApplication() {
+    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
+        .thenReturn(INDUSTRY_SUBMITTER_PERMISSIONS);
+
+    applicationVersion.setStatus(ApplicationVersionStatus.IN_PROGRESS);
+
+    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER)).isEmpty();
   }
 }

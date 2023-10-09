@@ -18,12 +18,20 @@ public class TestSecurityRules {
 
           var securityTest = javaClass.getAllMethods()
               .stream()
-              .filter(javaMethodCall -> javaMethodCall.isAnnotatedWith(SecurityTest.class))
+              .filter(javaMethodCall -> javaMethodCall.isAnnotatedWith(SecurityTest.class)
+                  || javaMethodCall.isAnnotatedWith(ParameterizedSecurityTest.class))
               .findAny();
 
           if (securityTest.isEmpty()) {
             conditionEvents.add(
-                SimpleConditionEvent.violated(javaClass, String.format("%s doesn't contain a @SecurityTest", javaClass.getSimpleName())));
+                SimpleConditionEvent.violated(
+                    javaClass,
+                    String.format(
+                        "%s doesn't contain a @SecurityTest or @ParameterizedSecurityTest",
+                        javaClass.getSimpleName()
+                    )
+                )
+            );
           }
         }
       };

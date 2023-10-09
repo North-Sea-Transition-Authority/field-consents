@@ -281,6 +281,29 @@ class ApplicationAssetServiceTest {
   }
 
   @Test
+  void findAssetsByApplicationVersionAndAssetRole() {
+    var applicationVersion = new ApplicationVersion();
+    var assetRole = AssetRole.PRIMARY;
+    var applicationAssets = List.of(new ApplicationAsset(), new ApplicationAsset());
+
+    when(applicationAssetRepository.findAllByApplicationVersionAndAssetRoleOrderByIdAsc(applicationVersion, assetRole))
+        .thenReturn(applicationAssets);
+
+    assertThat(applicationAssetService.findAssetsByApplicationVersionAndAssetRole(applicationVersion, assetRole))
+        .isEqualTo(applicationAssets);
+  }
+
+  @Test
+  void findAssetsByApplicationVersion() {
+    var applicationVersion = new ApplicationVersion();
+    var applicationAssets = List.of(new ApplicationAsset(), new ApplicationAsset());
+
+    when(applicationAssetRepository.findAllByApplicationVersion(applicationVersion)).thenReturn(applicationAssets);
+
+    assertThat(applicationAssetService.findAssetsByApplicationVersion(applicationVersion)).isEqualTo(applicationAssets);
+  }
+
+  @Test
   void getSecondaryAssets_noAssets() {
     when(applicationAssetRepository.findAllByApplicationVersionAndAssetRoleOrderByIdAsc(applicationVersion, AssetRole.SECONDARY))
         .thenReturn(Collections.emptyList());
@@ -622,5 +645,29 @@ class ApplicationAssetServiceTest {
 
     assertThat(applicationAssetService.getPrimaryAndSecondaryFieldJsonsOfShoreType(assetTypesWithShore, requestPurpose))
         .containsExactly(field1Json, field2Json);
+  }
+
+  @Test
+  void getAssetType_assetHasFieldId() {
+    var applicationAsset = new ApplicationAsset();
+    applicationAsset.setFieldId(1);
+
+    assertThat(applicationAssetService.getAssetType(applicationAsset)).isEqualTo(AssetType.FIELD);
+  }
+
+  @Test
+  void getAssetType_assetHasTerminalId() {
+    var applicationAsset = new ApplicationAsset();
+    applicationAsset.setTerminalId(1);
+
+    assertThat(applicationAssetService.getAssetType(applicationAsset)).isEqualTo(AssetType.TERMINAL);
+  }
+
+  @Test
+  void getAssetType_assetDoesNotHaveFieldOrTerminalId() {
+    var applicationAsset = new ApplicationAsset();
+
+    assertThatThrownBy(() -> applicationAssetService.getAssetType(applicationAsset))
+        .isInstanceOf(IllegalStateException.class);
   }
 }
