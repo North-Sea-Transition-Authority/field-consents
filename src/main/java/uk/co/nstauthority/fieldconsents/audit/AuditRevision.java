@@ -21,14 +21,14 @@ public class AuditRevision {
   @RevisionNumber
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "rev")
-  private long id;
+  private Long id;
 
   @RevisionTimestamp
   private Date createdDateTime;
 
-  private long userWuaId;
+  private Long userWuaId;
 
-  public long getId() {
+  public Long getId() {
     return id;
   }
 
@@ -37,7 +37,7 @@ public class AuditRevision {
     this.id = id;
   }
 
-  public long getUserWuaId() {
+  public Long getUserWuaId() {
     return userWuaId;
   }
 
