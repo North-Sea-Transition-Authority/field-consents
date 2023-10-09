@@ -135,7 +135,11 @@ public class ApplicationService {
 
     var application = applicationVersion.getApplication();
 
-    application.setApplicationNo(getApplicationNumber());
+    // If the application has previously been in awaiting payment status it will already have a number assigned, so
+    // don't assign a new one.
+    if (application.getApplicationNo() == null) {
+      application.setApplicationNo(getApplicationNumber());
+    }
 
     applicationVersion.setStatus(ApplicationVersionStatus.AWAITING_PAYMENT);
 

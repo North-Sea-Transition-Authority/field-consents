@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationService.NOT_LATEST_APPLICATION_VERSION_ERROR_MESSAGE;
@@ -240,8 +241,12 @@ class ApplicationServiceTest {
   }
 
   @Test
-  void prepareApplicationForPayment() {
+  void prepareApplicationForPayment_applicationHasNullNumber() {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var application = applicationVersion.getApplication();
+
+    application.setApplicationNo(null);
+
     when(applicationRepository.findLatestApplicationNumber()).thenReturn(Optional.of(1));
 
     applicationService.prepareApplicationForPayment(applicationVersion);
@@ -253,6 +258,26 @@ class ApplicationServiceTest {
     var actualApplication = applicationArgumentCaptor.getValue();
 
     assertThat(actualApplication.getApplicationNo()).isEqualTo(2);
+  }
+
+  @Test
+  void prepareApplicationForPayment_applicationHasNonNullNumber() {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var application = applicationVersion.getApplication();
+
+    application.setApplicationNo(7);
+
+    applicationService.prepareApplicationForPayment(applicationVersion);
+
+    verify(applicationRepository, never()).findLatestApplicationNumber();
+
+    ArgumentCaptor<Application> applicationArgumentCaptor = ArgumentCaptor.forClass(Application.class);
+    verify(applicationRepository).save(applicationArgumentCaptor.capture());
+    verify(applicationVersionRepository).save(applicationVersion);
+
+    var actualApplication = applicationArgumentCaptor.getValue();
+
+    assertThat(actualApplication.getApplicationNo()).isEqualTo(7);
   }
 
   @ParameterizedTest
