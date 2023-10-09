@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.assets.fields;
 
 import jakarta.persistence.EntityNotFoundException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -169,6 +170,10 @@ public class FieldService {
 
   public List<FieldWithOperatorAndLicencesJson> findFieldsWithOperatorAndLicences(List<Integer> fieldIds,
                                                                                   String epaRequestPurpose) {
+    if (fieldIds.isEmpty()) {
+      return Collections.emptyList();
+    }
+
     return fieldApi
         .getFieldsByIds(fieldIds, fieldsWithOperatorsAndLicensesProjectionRoot, new RequestPurpose(epaRequestPurpose))
         .stream()

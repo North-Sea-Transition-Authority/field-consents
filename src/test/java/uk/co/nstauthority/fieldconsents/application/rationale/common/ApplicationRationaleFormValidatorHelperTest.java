@@ -51,7 +51,7 @@ class ApplicationRationaleFormValidatorHelperTest {
   private ApplicationRationaleFormValidatorHelper validatorHelper;
 
   @Test
-  void validateNonHostLocations_noneAdded() {
+  void validateLocationAssets_noneAdded() {
     var form = new Form(Collections.emptyList(), null);
     var bindingResult = getBindingResult(form);
 
@@ -65,7 +65,7 @@ class ApplicationRationaleFormValidatorHelperTest {
   }
 
   @Test
-  void validateNonHostLocations_invalidAssetKeys() {
+  void validateLocationAssets_invalidAssetKeys() {
     var flaringLocations = List.of("1Terminal", "2FIELD", "99???");
     var form = new Form(flaringLocations, null);
     var bindingResult = getBindingResult(form);
@@ -80,7 +80,7 @@ class ApplicationRationaleFormValidatorHelperTest {
   }
 
   @Test
-  void validateNonHostLocations_nonUniqueAssetKeys() {
+  void validateLocationAssets_nonUniqueAssetKeys() {
     var flaringLocations = List.of("1FIELD", "1TERMINAL", "1FIELD");
     var form = new Form(flaringLocations, null);
     var bindingResult = getBindingResult(form);
@@ -95,7 +95,7 @@ class ApplicationRationaleFormValidatorHelperTest {
   }
 
   @Test
-  void validateNonHostLocations_terminalsDontHaveOperator() {
+  void validateLocationAssets_terminalsDontHaveOperator() {
     var form = new Form(NON_HOST_LOCATIONS, null);
     var bindingResult = getBindingResult(form);
 
@@ -115,7 +115,7 @@ class ApplicationRationaleFormValidatorHelperTest {
   }
 
   @Test
-  void validateNonHostLocations_fieldsDontHaveOperatorOrLicenses() {
+  void validateLocationAssets_fieldsDontHaveOperatorOrLicenses() {
     var form = new Form(NON_HOST_LOCATIONS, null);
     var bindingResult = getBindingResult(form);
 
@@ -132,7 +132,7 @@ class ApplicationRationaleFormValidatorHelperTest {
   }
 
   @Test
-  void validateNonHostLocations() {
+  void validateLocationAssets() {
     var form = new Form(NON_HOST_LOCATIONS, null);
     var bindingResult = getBindingResult(form);
 
@@ -150,7 +150,7 @@ class ApplicationRationaleFormValidatorHelperTest {
   @ParameterizedTest
   @ValueSource(strings = {""})
   @NullSource
-  void validateHostLocation_null(String hostLocationAssetKey) {
+  void validateHostLocationAsset_null(String hostLocationAssetKey) {
     var form = new Form(Collections.emptyList(), hostLocationAssetKey);
     var bindingResult = getBindingResult(form);
 
@@ -164,7 +164,7 @@ class ApplicationRationaleFormValidatorHelperTest {
   }
 
   @Test
-  void validateHostLocation_invalidAssetId() {
+  void validateHostLocationAsset_invalidAssetId() {
     var hostLocationAssetKey = "a";
     var form = new Form(Collections.emptyList(), hostLocationAssetKey);
     var bindingResult = getBindingResult(form);
@@ -179,7 +179,7 @@ class ApplicationRationaleFormValidatorHelperTest {
   }
 
   @Test
-  void validateHostLocation_notFlaringLocation() {
+  void validateHostLocationAsset_notFlaringLocation() {
     var hostLocationAssetKey = "99FIELD";
     var form = new Form(NON_HOST_LOCATIONS, hostLocationAssetKey);
     var bindingResult = getBindingResult(form);
@@ -194,7 +194,7 @@ class ApplicationRationaleFormValidatorHelperTest {
   }
 
   @Test
-  void validateHostLocation_doesNotHaveOperator() {
+  void validateHostLocationAsset_doesNotHaveOperator() {
     var hostLocationAssetKey = NON_HOST_LOCATIONS.get(1);
     var form = new Form(NON_HOST_LOCATIONS, hostLocationAssetKey);
     var bindingResult = getBindingResult(form);
