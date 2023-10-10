@@ -40,10 +40,10 @@ docker-compose -f ./devtools/local-dev-compose.yml up -d
 - In your IntelliJ run configuration for the Spring app, include `development` in your active profiles
 - The following environment variables are required when using this profile:
 
-| Environment Variable         | Description            |
-|------------------------------|------------------------|
-| **Digital Payments Library** |                        |
-| `GOV_UK_PAY_API_KEY`         | API Key for GOV.UK Pay |
+| Environment Variable         | Description                                                               |
+|------------------------------|---------------------------------------------------------------------------|
+| **Digital Payments Library** |                                                                           |
+| `GOV_UK_PAY_API_KEY`         | API Key for GOV.UK Pay - https://tpm.fivium.co.uk/index.php/pwd/view/2200 |
 
 #### Production
 - In your IntelliJ run configuration for the Spring app, include `production` in your active profiles
