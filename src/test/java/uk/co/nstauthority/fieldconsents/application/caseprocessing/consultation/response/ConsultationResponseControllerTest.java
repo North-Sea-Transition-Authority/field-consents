@@ -193,6 +193,38 @@ class ConsultationResponseControllerTest extends AbstractApplicationControllerTe
   }
 
   @Test
+  void submitResponseForm_withoutDescriptions() throws Exception {
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(consultationService.getLatestOpenConsultation(application)).thenReturn(consultation);
+    when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(APPLICATION_REFERENCE);
+
+    mockMvc.perform(post(ReverseRouter.route(on(ConsultationResponseController.class)
+            .submitResponseForm(APPLICATION_ID, null, null, null, null)))
+            .param("habitatsRegsResponseType", HabitatsRegsResponseType.AGREE.name())
+            .param("eiaRegsResponseType", EiaRegsResponseType.AGREE.name())
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(notificationBanner(NotificationBanner.builder()
+            .withBannerType(NotificationBannerType.SUCCESS)
+            .withHeadingContent("Consultation response submitted for application %s".formatted(APPLICATION_REFERENCE))
+            .build()))
+        .andExpect(redirectedUrl(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null))));
+
+    verify(validator).validate(any(ConsultationResponseForm.class), any(BindingResult.class), eq(applicationVersion));
+    verify(consultationService).saveConsultationResponse(
+        applicationVersion,
+        consultation,
+        user,
+        HabitatsRegsResponseType.AGREE,
+        null,
+        EiaRegsResponseType.AGREE,
+        null,
+        Collections.emptyList()
+    );
+  }
+
+  @Test
   void submitResponseForm_withValidationErrors() throws Exception {
     mockGetResponseFormInvocations(false);
 

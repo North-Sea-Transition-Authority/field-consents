@@ -1,5 +1,6 @@
 <#include '../../layout/layout.ftl'>
 <#import '../../summary/_applicationSummary.ftl' as applicationSummary>
+<#import '../../functions/_getPageSize.ftl' as getPageSize>
 
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
 
@@ -8,6 +9,7 @@
   pageHeading=pageTitle
   caption=applicationReference
   backLinkUrl=springUrl(backLinkUrl)
+  pageSize=getPageSize.getPageSize(wideSummaryDisplay)
   errorItems=errorList>
   <#if consultationSummaryView?has_content>
     <@fdsSummaryList.summaryListCard summaryListId="consultation-request-summary" headingText="Consultation details">

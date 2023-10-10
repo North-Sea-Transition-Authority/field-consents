@@ -103,9 +103,9 @@ public class ConsultationResponseController {
         consultation,
         user,
         form.habitatsRegsResponseType(),
-        form.getHabitatsRegsDescription().map(StringInput::getInputValue).orElseThrow(),
+        form.getHabitatsRegsDescription().map(StringInput::getInputValue).orElse(null),
         form.eiaRegsResponseType(),
-        form.getEiaRegsDescription().map(StringInput::getInputValue).orElseThrow(),
+        form.getEiaRegsDescription().map(StringInput::getInputValue).orElse(null),
         form.documents()
     );
 
