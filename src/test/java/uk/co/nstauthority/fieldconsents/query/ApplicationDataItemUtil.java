@@ -403,27 +403,27 @@ public class ApplicationDataItemUtil {
   }
 
   public static SearchResultItem getSearchResultItemFromDto(SearchResultItemDto searchResultItemDto, TeamType teamType) {
-    return new SearchResultItem(
-        searchResultItemDto.getApplicationId(),
-        searchResultItemDto.getType().getDisplayName(),
-        getDuration(searchResultItemDto),
-        getCaseReference(searchResultItemDto),
-        getOperator(searchResultItemDto),
-        getAsset(searchResultItemDto),
-        getGeographicArea(searchResultItemDto),
-        searchResultItemDto.getStatus().getDisplayName(),
-        getSubmittedDateTime(searchResultItemDto),
-        getSubmitter(searchResultItemDto),
-        getAceFlag(searchResultItemDto),
-        getCaseOfficer(searchResultItemDto),
-        searchResultItemDto.getWithdrawalOpen(),
-        getTechnicalReviewer(searchResultItemDto, teamType),
-        searchResultItemDto.getApplicationUpdateOpen(),
-        getApplicationUpdateDeadline(searchResultItemDto),
-        searchResultItemDto.getConsultationOpen(),
-        getConsultationDeadline(searchResultItemDto),
-        searchResultItemDto.getLicences()
-    );
+    var applicationDataItem = ApplicationDataItem.newBuilder()
+        .withApplicationId(searchResultItemDto.getApplicationId())
+        .withType(searchResultItemDto.getType().getDisplayName())
+        .withDuration(getDuration(searchResultItemDto))
+        .withReference(getCaseReference(searchResultItemDto))
+        .withOperator(getOperator(searchResultItemDto))
+        .withAsset(getAsset(searchResultItemDto))
+        .withGeographicArea(getGeographicArea(searchResultItemDto))
+        .withStatus(searchResultItemDto.getStatus().getDisplayName())
+        .withSubmittedDateTime(getSubmittedDateTime(searchResultItemDto))
+        .withSubmittedBy(getSubmitter(searchResultItemDto))
+        .withAceFlag(getAceFlag(searchResultItemDto))
+        .withCaseOfficer(getCaseOfficer(searchResultItemDto))
+        .withWithdrawalOpen(searchResultItemDto.getWithdrawalOpen())
+        .withTechnicalReviewer(getTechnicalReviewer(searchResultItemDto, teamType))
+        .withApplicationUpdateOpen(searchResultItemDto.getApplicationUpdateOpen())
+        .withApplicationUpdateDeadline(getApplicationUpdateDeadline(searchResultItemDto))
+        .withConsultationOpen(searchResultItemDto.getConsultationOpen())
+        .withConsultationDeadline(getConsultationDeadline(searchResultItemDto))
+        .build();
+    return new SearchResultItem(applicationDataItem, searchResultItemDto.getLicences());
   }
 
   public static String getAceFlag(ApplicationDataItemDto applicationDataItemDto) {
@@ -565,26 +565,27 @@ public class ApplicationDataItemUtil {
   }
 
   public static SearchResultItem getSearchResultItem() {
-    return new SearchResultItem(
-        APPLICATION_ID,
-        ApplicationType.FLARE.getDisplayName(),
-        ConsentLengthType.ANNUAL.getDisplayName(),
-        APPLICATION_REFERENCE,
-        CACHED_PRIMARY_OPERATOR_NAME_1,
-        FIELD_NAME_1,
-        FIELD_1_GEOGRAPHIC_AREA.getDisplayName(),
-        ApplicationVersionStatus.SUBMITTED.getDisplayName(),
-        SUBMITTED_DATE_TIME,
-        String.valueOf(USER_WUA_ID),
-        "",
-        "",
-        false,
-        "",
-        false,
-        "",
-        false,
-        "",
-        "P1, P2, P3"
-    );
+    var applicationDataItem = ApplicationDataItem.newBuilder()
+        .withApplicationId(APPLICATION_ID)
+        .withType(ApplicationType.FLARE.getDisplayName())
+        .withDuration(ConsentLengthType.ANNUAL.getDisplayName())
+        .withReference(APPLICATION_REFERENCE)
+        .withOperator(CACHED_PRIMARY_OPERATOR_NAME_1)
+        .withAsset(FIELD_NAME_1)
+        .withGeographicArea(FIELD_1_GEOGRAPHIC_AREA.getDisplayName())
+        .withStatus(ApplicationVersionStatus.SUBMITTED.getDisplayName())
+        .withSubmittedDateTime(SUBMITTED_DATE_TIME)
+        .withSubmittedBy(String.valueOf(USER_WUA_ID))
+        .withAceFlag("")
+        .withCaseOfficer("")
+        .withWithdrawalOpen(false)
+        .withTechnicalReviewer("")
+        .withApplicationUpdateOpen(false)
+        .withApplicationUpdateDeadline("")
+        .withConsultationOpen(false)
+        .withConsultationDeadline("")
+        .build();
+    var licenses = "P1, P2, P3";
+    return new SearchResultItem(applicationDataItem, licenses);
   }
 }

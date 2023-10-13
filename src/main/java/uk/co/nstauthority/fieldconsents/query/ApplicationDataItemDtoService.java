@@ -125,35 +125,29 @@ public class ApplicationDataItemDtoService {
   }
 
   public String getDisplayConsentDuration(ApplicationDataItemDto dataItemDto) {
-    String info;
     var consentDuration = dataItemDto.getDuration();
 
-    if (consentDuration == null) {
+    if (Objects.isNull(consentDuration)) {
       return "";
     }
 
-    switch (consentDuration) {
-      case ANNUAL -> info = "%s %d".formatted(consentDuration.getShortDisplayName(), dataItemDto.getConsentYear());
-      case LONG_TERM ->
-          info = "%s %d - %d".formatted(
-              consentDuration.getShortDisplayName(),
-              dataItemDto.getLongTermStartYear(),
-              dataItemDto.getLongTermEndYear()
-          );
-      case SHORT_TERM ->
-          info = "%s %s - %s".formatted(
-              consentDuration.getShortDisplayName(),
-              DateUtils.format(dataItemDto.getShortTermStartDate(), DateUtils.SHORT_DATE),
-              DateUtils.format(dataItemDto.getShortTermEndDate(), DateUtils.SHORT_DATE)
-          );
-      default -> info = "";
-    }
-
-    return info;
+    return switch (consentDuration) {
+      case ANNUAL -> "%s %d".formatted(consentDuration.getShortDisplayName(), dataItemDto.getConsentYear());
+      case LONG_TERM -> "%s %d - %d".formatted(
+          consentDuration.getShortDisplayName(),
+          dataItemDto.getLongTermStartYear(),
+          dataItemDto.getLongTermEndYear()
+      );
+      case SHORT_TERM -> "%s %s - %s".formatted(
+          consentDuration.getShortDisplayName(),
+          DateUtils.format(dataItemDto.getShortTermStartDate(), DateUtils.SHORT_DATE),
+          DateUtils.format(dataItemDto.getShortTermEndDate(), DateUtils.SHORT_DATE)
+      );
+    };
   }
 
   public String getDisplayAssetLocation(ApplicationDataItemDto dataItemDto, Map<Integer, FieldJson> fieldJsonsMap) {
-    if (dataItemDto.getFieldId() == null) {
+    if (Objects.isNull(dataItemDto.getFieldId())) {
       return "";
     }
 
@@ -189,4 +183,57 @@ public class ApplicationDataItemDtoService {
             portalUserDtosMap.get(WebUserAccountId.from(dataItemDto.getTechnicalReviewerWuaId())).displayName())
         : "";
   }
+
+  public ApplicationDataItem getApplicationDataItem(
+      ApplicationDataItemDto dataItemDto,
+      ServiceUserDetail user,
+      TeamType teamType,
+      Map<Integer, String> organisationUnitNameById,
+      Map<Integer, FieldJson> fieldJsonById,
+      Map<WebUserAccountId, EnergyPortalUserDto> portalUserDtoByWuaId
+  ) {
+    var operator = organisationUnitNameById.getOrDefault(dataItemDto.getOperatorId(), "MISSING OPERATOR");
+    var asset = dataItemDto.getFieldId() != null ? dataItemDto.getFieldName() : dataItemDto.getTerminalName();
+
+    var submittedDateTime = ApplicationVersionStatus.SUBMITTED.equals(dataItemDto.getStatus())
+        ? "Submitted: %s".formatted(DateUtils.format(dataItemDto.getSubmittedDateTime(), DateUtils.DATE_TIME))
+        : "";
+
+    var submittedByName = ApplicationVersionStatus.SUBMITTED.equals(dataItemDto.getStatus())
+        ? getDisplaySubmitter(dataItemDto, portalUserDtoByWuaId)
+        : "";
+
+    var consultationDeadline = Boolean.TRUE.equals(dataItemDto.getConsultationOpen())
+        ? DateUtils.format(dataItemDto.getConsultationDeadline(), DateUtils.DATE_TIME)
+        : "";
+
+    var applicationUpdateDeadline = "";
+    if (Boolean.TRUE.equals(dataItemDto.getApplicationUpdateOpen())) {
+      applicationUpdateDeadline = DateUtils.format(dataItemDto.getApplicationUpdateDeadline(), DateUtils.DATE_TIME);
+    }
+
+    var userAction = getApplicationDataItemUserActionFromUser(user);
+
+    return ApplicationDataItem.newBuilder()
+        .withApplicationId(dataItemDto.getApplicationId())
+        .withType(dataItemDto.getType().getDisplayName())
+        .withDuration(getDisplayConsentDuration(dataItemDto))
+        .withReference(getDisplayReference(dataItemDto, userAction))
+        .withOperator(operator)
+        .withAsset(asset)
+        .withGeographicArea(getDisplayAssetLocation(dataItemDto, fieldJsonById))
+        .withStatus(dataItemDto.getStatus().getDisplayName())
+        .withSubmittedDateTime(submittedDateTime)
+        .withSubmittedBy(submittedByName)
+        .withAceFlag(getDisplayAceFlag(dataItemDto))
+        .withCaseOfficer(getDisplayCaseOfficer(dataItemDto, portalUserDtoByWuaId))
+        .withWithdrawalOpen(dataItemDto.getWithdrawalOpen())
+        .withTechnicalReviewer(getDisplayTechnicalReviewer(dataItemDto, portalUserDtoByWuaId, teamType))
+        .withApplicationUpdateOpen(dataItemDto.getApplicationUpdateOpen())
+        .withApplicationUpdateDeadline(applicationUpdateDeadline)
+        .withConsultationOpen(dataItemDto.getConsultationOpen())
+        .withConsultationDeadline(consultationDeadline)
+        .build();
+  }
+
 }

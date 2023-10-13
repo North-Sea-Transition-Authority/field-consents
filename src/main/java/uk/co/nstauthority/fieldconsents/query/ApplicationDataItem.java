@@ -5,122 +5,166 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
-public class ApplicationDataItem {
-  private final Integer applicationId;
-  private final String type;
-  private final String duration;
-  private final String reference;
-  private final String operator;
-  private final String asset;
-  private final String geographicArea;
-  private final String status;
-  private final String submittedDateTime;
-  private final String submittedBy;
-  private final String aceFlag;
-  private final String caseOfficer;
-  private final Boolean withdrawalOpen;
-  private final String technicalReviewer;
-  private final Boolean applicationUpdateOpen;
-  private final String applicationUpdateDeadline;
-  private final Boolean consultationOpen;
-  private final String consultationDeadline;
+public record ApplicationDataItem(
+    Integer applicationId,
+    String type,
+    String duration,
+    String reference,
+    String operator,
+    String asset,
+    String geographicArea,
+    String status,
+    String submittedDateTime,
+    String submittedBy,
+    String aceFlag,
+    String caseOfficer,
+    Boolean withdrawalOpen,
+    String technicalReviewer,
+    Boolean applicationUpdateOpen,
+    String applicationUpdateDeadline,
+    Boolean consultationOpen,
+    String consultationDeadline
+) {
 
-  public ApplicationDataItem(Integer applicationId, String type, String duration, String reference, String operator,
-                             String asset, String geographicArea, String status, String submittedDateTime,
-                             String submittedBy, String aceFlag, String caseOfficer, Boolean withdrawalOpen,
-                             String technicalReviewer, Boolean applicationUpdateOpen, String applicationUpdateDeadline,
-                             Boolean consultationOpen, String consultationDeadline) {
-    this.applicationId = applicationId;
-    this.type = type;
-    this.duration = duration;
-    this.reference = reference;
-    this.operator = operator;
-    this.asset = asset;
-    this.geographicArea = geographicArea;
-    this.status = status;
-    this.submittedDateTime = submittedDateTime;
-    this.submittedBy = submittedBy;
-    this.aceFlag = aceFlag;
-    this.caseOfficer = caseOfficer;
-    this.withdrawalOpen = withdrawalOpen;
-    this.technicalReviewer = technicalReviewer;
-    this.applicationUpdateOpen = applicationUpdateOpen;
-    this.applicationUpdateDeadline = applicationUpdateDeadline;
-    this.consultationOpen = consultationOpen;
-    this.consultationDeadline = consultationDeadline;
+  public static Builder newBuilder() {
+    return new ApplicationDataItem.Builder();
   }
 
-  public Integer getApplicationId() {
-    return applicationId;
+  public static class Builder {
+
+    private Integer applicationId;
+    private String type;
+    private String duration;
+    private String reference;
+    private String operator;
+    private String asset;
+    private String geographicArea;
+    private String status;
+    private String submittedDateTime;
+    private String submittedBy;
+    private String aceFlag;
+    private String caseOfficer;
+    private Boolean withdrawalOpen;
+    private String technicalReviewer;
+    private Boolean applicationUpdateOpen;
+    private String applicationUpdateDeadline;
+    private Boolean consultationOpen;
+    private String consultationDeadline;
+
+    public Builder withApplicationId(Integer applicationId) {
+      this.applicationId = applicationId;
+      return this;
+    }
+
+    public Builder withType(String type) {
+      this.type = type;
+      return this;
+    }
+
+    public Builder withDuration(String duration) {
+      this.duration = duration;
+      return this;
+    }
+
+    public Builder withReference(String reference) {
+      this.reference = reference;
+      return this;
+    }
+
+    public Builder withOperator(String operator) {
+      this.operator = operator;
+      return this;
+    }
+
+    public Builder withAsset(String asset) {
+      this.asset = asset;
+      return this;
+    }
+
+    public Builder withGeographicArea(String geographicArea) {
+      this.geographicArea = geographicArea;
+      return this;
+    }
+
+    public Builder withStatus(String status) {
+      this.status = status;
+      return this;
+    }
+
+    public Builder withSubmittedDateTime(String submittedDateTime) {
+      this.submittedDateTime = submittedDateTime;
+      return this;
+    }
+
+    public Builder withSubmittedBy(String submittedBy) {
+      this.submittedBy = submittedBy;
+      return this;
+    }
+
+    public Builder withAceFlag(String aceFlag) {
+      this.aceFlag = aceFlag;
+      return this;
+    }
+
+    public Builder withCaseOfficer(String caseOfficer) {
+      this.caseOfficer = caseOfficer;
+      return this;
+    }
+
+    public Builder withWithdrawalOpen(Boolean withdrawalOpen) {
+      this.withdrawalOpen = withdrawalOpen;
+      return this;
+    }
+
+    public Builder withTechnicalReviewer(String technicalReviewer) {
+      this.technicalReviewer = technicalReviewer;
+      return this;
+    }
+
+    public Builder withApplicationUpdateOpen(Boolean applicationUpdateOpen) {
+      this.applicationUpdateOpen = applicationUpdateOpen;
+      return this;
+    }
+
+    public Builder withApplicationUpdateDeadline(String applicationUpdateDeadline) {
+      this.applicationUpdateDeadline = applicationUpdateDeadline;
+      return this;
+    }
+
+    public Builder withConsultationOpen(Boolean consultationOpen) {
+      this.consultationOpen = consultationOpen;
+      return this;
+    }
+
+    public Builder withConsultationDeadline(String consultationDeadline) {
+      this.consultationDeadline = consultationDeadline;
+      return this;
+    }
+
+    public ApplicationDataItem build() {
+      return new ApplicationDataItem(
+          applicationId,
+          type,
+          duration,
+          reference,
+          operator,
+          asset,
+          geographicArea,
+          status,
+          submittedDateTime,
+          submittedBy,
+          aceFlag,
+          caseOfficer,
+          withdrawalOpen,
+          technicalReviewer,
+          applicationUpdateOpen,
+          applicationUpdateDeadline,
+          consultationOpen,
+          consultationDeadline
+      );
+    }
   }
 
-  public String getType() {
-    return type;
-  }
-
-  public String getDuration() {
-    return duration;
-  }
-
-  public String getReference() {
-    return reference;
-  }
-
-  public String getOperator() {
-    return operator;
-  }
-
-  public String getAsset() {
-    return asset;
-  }
-
-  public String getGeographicArea() {
-    return geographicArea;
-  }
-
-  public String getStatus() {
-    return status;
-  }
-
-  public String getSubmittedDateTime() {
-    return submittedDateTime;
-  }
-
-  public String getSubmittedBy() {
-    return submittedBy;
-  }
-
-  public String getAceFlag() {
-    return aceFlag;
-  }
-
-  public String getCaseOfficer() {
-    return caseOfficer;
-  }
-
-  public Boolean isWithdrawalOpen() {
-    return withdrawalOpen;
-  }
-
-  public String getTechnicalReviewer() {
-    return technicalReviewer;
-  }
-
-  public Boolean isApplicationUpdateOpen() {
-    return applicationUpdateOpen;
-  }
-
-  public String getApplicationUpdateDeadline() {
-    return applicationUpdateDeadline;
-  }
-
-  public Boolean isConsultationOpen() {
-    return consultationOpen;
-  }
-
-  public String getConsultationDeadline() {
-    return consultationDeadline;
-  }
 
   public String url() {
     return ReverseRouter.route(on(ApplicationSummaryController.class).getApplicationSummary(applicationId, null));

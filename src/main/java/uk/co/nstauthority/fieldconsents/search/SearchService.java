@@ -2,19 +2,15 @@ package uk.co.nstauthority.fieldconsents.search;
 
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_VERSIONS;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
-import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupQueryService;
-import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDto;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDtoService;
 import uk.co.nstauthority.fieldconsents.teams.Team;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
@@ -54,17 +50,15 @@ public class SearchService {
       return Collections.emptyList();
     }
 
-    List<SearchResultItemDto> applicationDataItemDtos = searchResultItemDtoService.runSearchQuery(conditions);
+    var searchResultItemDtos = searchResultItemDtoService.runSearchQuery(conditions);
 
     var organisationUnitJsons = applicationDataItemDtoService
-        .getOrganisationUnitJsonsFromApplicationDataItemDtos(applicationDataItemDtos);
+        .getOrganisationUnitJsonsFromApplicationDataItemDtos(searchResultItemDtos);
 
-    return getItemsFromDtoList(applicationDataItemDtos, organisationUnitJsons, TeamType.REGULATOR, user);
+    return getItemsFromDtoList(searchResultItemDtos, organisationUnitJsons, TeamType.REGULATOR, user);
   }
 
   public List<SearchResultItem> getIndustrySearchResultItems(SearchFilterForm form, ServiceUserDetail user) {
-    var conditions = searchFilterService.getConditions(form, TeamType.INDUSTRY);
-
     var industryTeams = teamService.getTeamsOfTypeThatUserHasPermissionFor(
         user,
         TeamType.INDUSTRY,
@@ -90,10 +84,11 @@ public class SearchService {
         .map(OrganisationUnitJson::organisationUnitId)
         .toList();
 
+    var conditions = new ArrayList<>(searchFilterService.getConditions(form, TeamType.INDUSTRY));
     conditions.add(APPLICATION_VERSIONS.PRIMARY_OPERATOR_OU_ID.in(organisationUnitIds));
-    var applicationDataItemDtos = searchResultItemDtoService.runSearchQuery(conditions);
+    var searchResultItemDtos = searchResultItemDtoService.runSearchQuery(conditions);
 
-    return getItemsFromDtoList(applicationDataItemDtos, organisationUnitJsons, TeamType.INDUSTRY, user);
+    return getItemsFromDtoList(searchResultItemDtos, organisationUnitJsons, TeamType.INDUSTRY, user);
   }
 
   public List<SearchResultItem> getConsulteeSearchResultItems(SearchFilterForm form, ServiceUserDetail user) {
@@ -109,62 +104,48 @@ public class SearchService {
       return Collections.emptyList();
     }
 
-    List<SearchResultItemDto> applicationDataItemDtos = searchResultItemDtoService.runSearchQuery(conditions);
+    var searchResultItemDtos = searchResultItemDtoService.runSearchQuery(conditions);
 
     var organisationUnitJsons = applicationDataItemDtoService
-        .getOrganisationUnitJsonsFromApplicationDataItemDtos(applicationDataItemDtos);
+        .getOrganisationUnitJsonsFromApplicationDataItemDtos(searchResultItemDtos);
 
-    return getItemsFromDtoList(applicationDataItemDtos, organisationUnitJsons, TeamType.OPRED, user);
+    return getItemsFromDtoList(searchResultItemDtos, organisationUnitJsons, TeamType.OPRED, user);
   }
 
-  private List<SearchResultItem> getItemsFromDtoList(List<? extends ApplicationDataItemDto> applicationDataItemDtos,
-                                                     List<OrganisationUnitJson> organisationUnitJsons,
-                                                     TeamType teamType, ServiceUserDetail user) {
-    if (applicationDataItemDtos.isEmpty()) {
+  private List<SearchResultItem> getItemsFromDtoList(
+      List<SearchResultItemDto> searchResultItemDtos,
+      List<OrganisationUnitJson> organisationUnitJsons,
+      TeamType teamType,
+      ServiceUserDetail user
+  ) {
+    if (searchResultItemDtos.isEmpty()) {
       return Collections.emptyList();
     }
 
-    var organisationUnitsMap = organisationUnitJsons.stream()
+    var organisationUnitNamesById = organisationUnitJsons.stream()
         .collect(Collectors.toMap(OrganisationUnitJson::organisationUnitId, OrganisationUnitJson::name));
 
-    Map<Integer, FieldJson> fieldJsonsMap = applicationDataItemDtoService.getFieldJsonMapFromApplicationDataItemDtos(
-        applicationDataItemDtos);
+    var fieldJsonById = applicationDataItemDtoService.getFieldJsonMapFromApplicationDataItemDtos(
+        searchResultItemDtos);
 
-    var portalUserDtosMap = applicationDataItemDtoService
-        .getEnergyPortalUserDtoMapFromApplicationDataItemDtos(applicationDataItemDtos);
+    var portalUserDtoByWuaId = applicationDataItemDtoService
+        .getEnergyPortalUserDtoMapFromApplicationDataItemDtos(searchResultItemDtos);
 
-    var userAction = applicationDataItemDtoService.getApplicationDataItemUserActionFromUser(user);
+    return searchResultItemDtos.stream()
+        .map(dataItemDto -> {
+          var applicationDataItem = applicationDataItemDtoService.getApplicationDataItem(
+              dataItemDto,
+              user,
+              teamType,
+              organisationUnitNamesById,
+              fieldJsonById,
+              portalUserDtoByWuaId
+          );
 
-    return applicationDataItemDtos.stream()
-        .map(dataItemDto -> new SearchResultItem(
-            dataItemDto.getApplicationId(),
-            dataItemDto.getType().getDisplayName(),
-            applicationDataItemDtoService.getDisplayConsentDuration(dataItemDto),
-            applicationDataItemDtoService.getDisplayReference(dataItemDto, userAction),
-            organisationUnitsMap.getOrDefault(dataItemDto.getOperatorId(), "MISSING OPERATOR"),
-            dataItemDto.getFieldId() != null ? dataItemDto.getFieldName() : dataItemDto.getTerminalName(),
-            applicationDataItemDtoService.getDisplayAssetLocation(dataItemDto, fieldJsonsMap),
-            dataItemDto.getStatus().getDisplayName(),
-            ApplicationVersionStatus.SUBMITTED.equals(dataItemDto.getStatus())
-                ? "Submitted: %s".formatted(DateUtils.format(dataItemDto.getSubmittedDateTime(), DateUtils.DATE_TIME))
-                : "",
-            ApplicationVersionStatus.SUBMITTED.equals(dataItemDto.getStatus())
-                ? applicationDataItemDtoService.getDisplaySubmitter(dataItemDto, portalUserDtosMap)
-                : "",
-            applicationDataItemDtoService.getDisplayAceFlag(dataItemDto),
-            applicationDataItemDtoService.getDisplayCaseOfficer(dataItemDto, portalUserDtosMap),
-            dataItemDto.getWithdrawalOpen(),
-            applicationDataItemDtoService.getDisplayTechnicalReviewer(dataItemDto, portalUserDtosMap, teamType),
-            dataItemDto.getApplicationUpdateOpen(),
-            Boolean.TRUE.equals(dataItemDto.getApplicationUpdateOpen())
-                ? DateUtils.format(dataItemDto.getApplicationUpdateDeadline(), DateUtils.DATE_TIME)
-                : "",
-            dataItemDto.getConsultationOpen(),
-            Boolean.TRUE.equals(dataItemDto.getConsultationOpen())
-                ? DateUtils.format(dataItemDto.getConsultationDeadline(), DateUtils.DATE_TIME)
-                : "",
-            ((SearchResultItemDto)dataItemDto).getLicences()
-        ))
+          var licenses = dataItemDto.getLicences();
+          return new SearchResultItem(applicationDataItem, licenses);
+        })
         .toList();
   }
+
 }

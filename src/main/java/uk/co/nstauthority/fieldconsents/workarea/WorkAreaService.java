@@ -10,16 +10,13 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
-import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupQueryService;
-import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItem;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDto;
@@ -59,16 +56,12 @@ public class WorkAreaService {
   }
 
   public List<ApplicationDataItem> getIndustryWorkAreaItems(WorkAreaFilter filter, ServiceUserDetail user) {
-    var conditions = workAreaFilterService.getConditions(filter, user, null);
+    var industryTeams = teamService.getTeamsOfTypeThatUserHasPermissionFor(
+        user, TeamType.INDUSTRY, EnumSet.of(RolePermission.EDIT_FCS_APPLICATIONS)
+    );
 
-    var industryTeams =
-        teamService.getTeamsOfTypeThatUserHasPermissionFor(
-            user, TeamType.INDUSTRY, EnumSet.of(RolePermission.EDIT_FCS_APPLICATIONS)
-        );
-
-    var workAreaItems = new ArrayList<ApplicationDataItem>();
     if (industryTeams.isEmpty()) {
-      return workAreaItems;
+      return Collections.emptyList();
     }
 
     var organisationGroupIds = industryTeams.stream()
@@ -77,24 +70,26 @@ public class WorkAreaService {
         .toList();
 
     if (organisationGroupIds.isEmpty()) {
-      return workAreaItems;
+      return Collections.emptyList();
     }
 
-    var organisationUnitJsons = organisationGroupQueryService.getOrganisationUnitsByOrganisationGroupIds(organisationGroupIds);
-    var organisationUnitIds = organisationUnitJsons
+    var organisationUnitJsonById = organisationGroupQueryService
+        .getOrganisationUnitsByOrganisationGroupIds(organisationGroupIds)
         .stream()
-        .map(OrganisationUnitJson::organisationUnitId)
-        .toList();
+        .collect(Collectors.toMap(
+            OrganisationUnitJson::organisationUnitId,
+            Function.identity()
+        ));
 
-    conditions.add(APPLICATION_VERSIONS.PRIMARY_OPERATOR_OU_ID.in(organisationUnitIds));
+    var conditions = new ArrayList<>(workAreaFilterService.getConditions(filter, user, null));
+    conditions.add(APPLICATION_VERSIONS.PRIMARY_OPERATOR_OU_ID.in(organisationUnitJsonById.keySet()));
     var workAreaItemDtoList = workAreaItemDtoService.runWorkAreaQuery(conditions, INDUSTRY);
 
-    return getItemsFromDtoList(workAreaItemDtoList, organisationUnitJsons, TeamType.INDUSTRY, user);
+    return getItemsFromDtoList(workAreaItemDtoList, organisationUnitJsonById.values().stream().toList(), TeamType.INDUSTRY, user);
   }
 
   public List<ApplicationDataItem> getRegulatorWorkAreaItems(WorkAreaFilter filter, ServiceUserDetail user,
                                                              WorkAreaTab workAreaTab) {
-    var conditions = workAreaFilterService.getConditions(filter, user, workAreaTab);
     var regulatorTeams = teamService.getTeamsOfTypeThatUserHasPermissionFor(
         user,
         TeamType.REGULATOR,
@@ -105,6 +100,7 @@ public class WorkAreaService {
       return Collections.emptyList();
     }
 
+    var conditions = workAreaFilterService.getConditions(filter, user, workAreaTab);
     var applicationDataItemDtos =
         workAreaItemDtoService.runWorkAreaQuery(conditions, workAreaTab.getApplicationWorkAreaPriorityGroup());
 
@@ -116,7 +112,6 @@ public class WorkAreaService {
 
   public List<ApplicationDataItem> getConsulteeWorkAreaItems(WorkAreaFilter filter, ServiceUserDetail user,
                                                              WorkAreaTab workAreaTab) {
-    var conditions = workAreaFilterService.getConditions(filter, user, workAreaTab);
     var consulteeTeams = teamService.getTeamsOfTypeThatUserHasPermissionFor(
         user,
         TeamType.OPRED,
@@ -127,6 +122,7 @@ public class WorkAreaService {
       return Collections.emptyList();
     }
 
+    var conditions = workAreaFilterService.getConditions(filter, user, workAreaTab);
     var applicationDataItemDtos =
         workAreaItemDtoService.runWorkAreaQuery(conditions, workAreaTab.getApplicationWorkAreaPriorityGroup());
 
@@ -136,56 +132,33 @@ public class WorkAreaService {
     return getItemsFromDtoList(applicationDataItemDtos, organisationUnitJsons, TeamType.OPRED, user);
   }
 
-  List<ApplicationDataItem> getItemsFromDtoList(List<ApplicationDataItemDto> applicationDataItemDtos,
-                                                List<OrganisationUnitJson> organisationUnitJsons,
-                                                TeamType teamType, ServiceUserDetail user) {
+  private List<ApplicationDataItem> getItemsFromDtoList(
+      List<ApplicationDataItemDto> applicationDataItemDtos,
+      List<OrganisationUnitJson> organisationUnitJsons,
+      TeamType teamType,
+      ServiceUserDetail user
+  ) {
     if (applicationDataItemDtos.isEmpty()) {
       return Collections.emptyList();
     }
 
-    var organisationUnitsMap = organisationUnitJsons.stream()
+    var organisationUnitNamesById = organisationUnitJsons.stream()
         .collect(Collectors.toMap(OrganisationUnitJson::organisationUnitId, OrganisationUnitJson::name));
 
-    // Early call to API to get all fields from applicationDataItemDtos at once
-    // instead of calling the EPA for each item in loop.
-    Map<Integer, FieldJson> fieldJsonsMap = applicationDataItemDtoService.getFieldJsonMapFromApplicationDataItemDtos(
+    var fieldJsonById = applicationDataItemDtoService.getFieldJsonMapFromApplicationDataItemDtos(
         applicationDataItemDtos);
 
-    // Early call to API to get all energy portal users from applicationDataItemDtos at once
-    // instead of calling the EPA for each item in loop.
-    var portalUserDtosMap = applicationDataItemDtoService
+    var portalUserDtoByWuaId = applicationDataItemDtoService
         .getEnergyPortalUserDtoMapFromApplicationDataItemDtos(applicationDataItemDtos);
 
-    var userAction = applicationDataItemDtoService.getApplicationDataItemUserActionFromUser(user);
-
     return applicationDataItemDtos.stream()
-        .map(dataItemDto -> new ApplicationDataItem(
-            dataItemDto.getApplicationId(),
-            dataItemDto.getType().getDisplayName(),
-            applicationDataItemDtoService.getDisplayConsentDuration(dataItemDto),
-            applicationDataItemDtoService.getDisplayReference(dataItemDto, userAction),
-            organisationUnitsMap.getOrDefault(dataItemDto.getOperatorId(), "MISSING OPERATOR"),
-            dataItemDto.getFieldId() != null ? dataItemDto.getFieldName() : dataItemDto.getTerminalName(),
-            applicationDataItemDtoService.getDisplayAssetLocation(dataItemDto, fieldJsonsMap),
-            dataItemDto.getStatus().getDisplayName(),
-            ApplicationVersionStatus.SUBMITTED.equals(dataItemDto.getStatus())
-                ? "Submitted: %s".formatted(DateUtils.format(dataItemDto.getSubmittedDateTime(), DateUtils.DATE_TIME))
-                : "",
-            ApplicationVersionStatus.SUBMITTED.equals(dataItemDto.getStatus())
-                ? applicationDataItemDtoService.getDisplaySubmitter(dataItemDto, portalUserDtosMap)
-                : "",
-            applicationDataItemDtoService.getDisplayAceFlag(dataItemDto),
-            applicationDataItemDtoService.getDisplayCaseOfficer(dataItemDto, portalUserDtosMap),
-            dataItemDto.getWithdrawalOpen(),
-            applicationDataItemDtoService.getDisplayTechnicalReviewer(dataItemDto, portalUserDtosMap, teamType),
-            dataItemDto.getApplicationUpdateOpen(),
-            Boolean.TRUE.equals(dataItemDto.getApplicationUpdateOpen())
-                ? DateUtils.format(dataItemDto.getApplicationUpdateDeadline(), DateUtils.DATE_TIME)
-                : "",
-            dataItemDto.getConsultationOpen(),
-            Boolean.TRUE.equals(dataItemDto.getConsultationOpen())
-                ? DateUtils.format(dataItemDto.getConsultationDeadline(), DateUtils.DATE_TIME)
-                : ""
+        .map(dataItemDto -> applicationDataItemDtoService.getApplicationDataItem(
+            dataItemDto,
+            user,
+            teamType,
+            organisationUnitNamesById,
+            fieldJsonById,
+            portalUserDtoByWuaId
         ))
         .toList();
   }
@@ -196,4 +169,5 @@ public class WorkAreaService {
         .sorted(Comparator.comparing(WorkAreaTab::getDisplayOrder))
         .toList();
   }
+
 }

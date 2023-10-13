@@ -3,7 +3,8 @@ package uk.co.nstauthority.fieldconsents.datetime;
 import static java.time.format.DateTimeFormatter.ofPattern;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_CLASS;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperatorAndLicences;
@@ -38,8 +39,8 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil
 import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
 import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.integrationtest.AbstractIntegrationTest;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItem;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDtoService;
 import uk.co.nstauthority.fieldconsents.teams.Team;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
@@ -65,7 +66,7 @@ class WorkAreaApplicationUpdateDeadlineTest extends AbstractIntegrationTest {
   private PermissionService permissionService;
 
   @MockBean
-  private ApplicationDataItemDtoService applicationDataItemDtoService;
+  private OrganisationUnitService organisationUnitService;
 
   @Autowired
   private ApplicationUpdateController applicationUpdateController;
@@ -84,7 +85,7 @@ class WorkAreaApplicationUpdateDeadlineTest extends AbstractIntegrationTest {
     when(userDetailService.getUserDetail()).thenReturn(SERVICE_USER_DETAIL);
     when(teamService.isRegulatorUser(SERVICE_USER_DETAIL)).thenReturn(true);
     when(permissionService.hasPermission(SERVICE_USER_DETAIL, Collections.singleton(PROCESS_FCS_APPLICATIONS))).thenReturn(true);
-    when(applicationDataItemDtoService.getOrganisationUnitJsonsFromApplicationDataItemDtos(any())).thenReturn(Collections.singletonList(orgUnit1Json));
+    when(organisationUnitService.getOrganisationUnitsByIds(anyList(), anyString())).thenReturn(Collections.singletonList(orgUnit1Json));
 
     var teams = Collections.singletonList(new Team(1));
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(SERVICE_USER_DETAIL, TeamType.REGULATOR, REGULATOR_PERMISSIONS)).thenReturn(teams);
@@ -105,7 +106,7 @@ class WorkAreaApplicationUpdateDeadlineTest extends AbstractIntegrationTest {
     assertThat(dtos)
         .hasSize(1)
         .first()
-        .extracting(ApplicationDataItem::getApplicationUpdateDeadline)
+        .extracting(ApplicationDataItem::applicationUpdateDeadline)
         .isEqualTo(expectedDeadline);
   }
 

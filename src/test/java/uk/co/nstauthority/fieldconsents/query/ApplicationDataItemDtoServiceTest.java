@@ -2,9 +2,11 @@ package uk.co.nstauthority.fieldconsents.query;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_REFERENCE;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_1;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_ID_1;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_ID_2;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDtoService.ALL_ORG_UNITS_DATA_ITEM_PURPOSE;
@@ -36,10 +38,13 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
+import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
@@ -329,7 +334,72 @@ class ApplicationDataItemDtoServiceTest {
   void getDisplayTechnicalReviewer_withTechnicalReviewer() {
     var applicationDataItemDto = getApplicationDataItemDtoForLongFlareSubmittedForField();
 
-    assertThat(applicationDataItemDtoService.getDisplayTechnicalReviewer(applicationDataItemDto, portalUserDtosMap, TeamType.REGULATOR))
+    assertThat(applicationDataItemDtoService.getDisplayTechnicalReviewer(applicationDataItemDto, portalUserDtosMap,
+        TeamType.REGULATOR))
         .isEqualTo("Technical reviewer: %s".formatted(technicalReviewer.displayName()));
+  }
+
+  @Test
+  void getApplicationDataItem() {
+    var applicationDataItemDto = ApplicationDataItemUtil.getApplicationDataItemDtoForLongFlareSubmittedForTerminal();
+    var serviceUserDetail = ServiceUserDetailTestUtil.Builder()
+        .withWuaId(1L)
+        .withPersonId(1L)
+        .build();
+    var energyPortalUserDto = new EnergyPortalUserDto(
+        serviceUserDetail.wuaId(),
+        serviceUserDetail.personId(),
+        "",
+        serviceUserDetail.forename(),
+        serviceUserDetail.surname(),
+        serviceUserDetail.emailAddress(),
+        "",
+        false,
+        true
+    );
+
+    var organisationUnitNameById = Map.of(1, "org");
+    var fieldJsonById = Map.of(FIELD_ID_1, field1Json);
+    var portalUserDtoByWuaId = Map.of(WebUserAccountId.from(serviceUserDetail), energyPortalUserDto);
+
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(
+        applicationDataItemDto.getType());
+    when(applicationVersionService.getApplicationVersionById(
+        applicationDataItemDto.getApplicationVersionId())).thenReturn(applicationVersion);
+    when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(APPLICATION_REFERENCE);
+
+    var expectedApplicationDataItem = new ApplicationDataItem(
+        applicationDataItemDto.getApplicationId(),
+        applicationDataItemDto.getType().getDisplayName(),
+        "%s %d - %d".formatted(
+            ConsentLengthType.LONG_TERM.getShortDisplayName(),
+            applicationDataItemDto.getLongTermStartYear(),
+            applicationDataItemDto.getLongTermEndYear()
+        ),
+        APPLICATION_REFERENCE,
+        "org",
+        applicationDataItemDto.getTerminalName(),
+        "",
+        applicationDataItemDto.getStatus().getDisplayName(),
+        "Submitted: %s".formatted(DateUtils.format(applicationDataItemDto.getSubmittedDateTime(), DateUtils.DATE_TIME)),
+        "Submitter: %s".formatted(energyPortalUserDto.displayName()),
+        "",
+        "",
+        applicationDataItemDto.getWithdrawalOpen(),
+        "",
+        applicationDataItemDto.getApplicationUpdateOpen(),
+        "",
+        applicationDataItemDto.getConsultationOpen(),
+        ""
+    );
+
+    assertThat(applicationDataItemDtoService.getApplicationDataItem(
+        applicationDataItemDto,
+        serviceUserDetail,
+        TeamType.INDUSTRY,
+        organisationUnitNameById,
+        fieldJsonById,
+        portalUserDtoByWuaId
+    )).isEqualTo(expectedApplicationDataItem);
   }
 }

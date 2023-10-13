@@ -1,6 +1,8 @@
 <#include '../layout/layout.ftl'>
 <#import '../dataitems/_dataItemFilter.ftl' as dataItemFilter>
 
+<#-- @ftlvariable name="applicationDataItem" type="uk.co.nstauthority.fieldconsents.query.ApplicationDataItem" -->
+
 <@defaultPage
   htmlTitle=pageTitle
   pageHeading=pageTitle
@@ -31,7 +33,7 @@
             <@fdsBackendTabs.tabContent tabAnchor=tab.anchor currentTab=selectedTab tabValue=tab.value>
               <@fdsResultList.resultList resultCount=workAreaItems?size>
                 <#list workAreaItems as workAreaItem>
-                  <@fcsApplicationDataItem dataItem=workAreaItem pageTitle=pageTitle/>
+                  <@fcsApplicationDataItem applicationDataItem=workAreaItem pageTitle=pageTitle/>
                 </#list>
               </@fdsResultList.resultList>
             </@fdsBackendTabs.tabContent>
@@ -40,7 +42,7 @@
       <#else>
         <@fdsResultList.resultList resultCount=workAreaItems?size>
           <#list workAreaItems as workAreaItem>
-            <@fcsApplicationDataItem dataItem=workAreaItem pageTitle=pageTitle/>
+            <@fcsApplicationDataItem applicationDataItem=workAreaItem pageTitle=pageTitle/>
           </#list>
         </@fdsResultList.resultList>
       </#if>
@@ -69,36 +71,48 @@
   </@fdsSearch.searchFilterItem>
 </#macro>
 
-<#macro fcsApplicationDataItem dataItem pageTitle>
+<#macro fcsApplicationDataItem applicationDataItem pageTitle>
   <#assign workAreaItemTagContent>
-    <#if dataItem.isWithdrawalOpen()>
+    <#if applicationDataItem.withdrawalOpen()>
       <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Withdrawal requested"/>
     </#if>
-    <#if dataItem.isApplicationUpdateOpen()>
-      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Update due by ${dataItem.getApplicationUpdateDeadline()}"/>
+    <#if applicationDataItem.applicationUpdateOpen()>
+      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Update due by ${applicationDataItem.applicationUpdateDeadline()}"/>
     </#if>
-    <#if dataItem.isConsultationOpen()>
-      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Consultation due by ${dataItem.getConsultationDeadline()}"/>
+    <#if applicationDataItem.consultationOpen()>
+      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Consultation due by ${applicationDataItem.consultationDeadline()}"/>
     </#if>
   </#assign>
   <@fdsResultList.resultListItem
-    linkHeadingText=dataItem.getReference()
-    linkHeadingUrl=springUrl(dataItem.url())
-    captionHeadingText=dataItem.getOperator()
+    linkHeadingText=applicationDataItem.reference()
+    linkHeadingUrl=springUrl(applicationDataItem.url())
+    captionHeadingText=applicationDataItem.operator()
     itemTag=workAreaItemTagContent
   >
     <@fdsResultList.resultListDataItem>
       <#assign consentType>
-        ${dataItem.getType()} <br/> ${dataItem.getDuration()} <br/> ${dataItem.getAceFlag()}
+        ${applicationDataItem.type()}
+        <br/>
+        ${applicationDataItem.duration()}
+        <br/>
+        ${applicationDataItem.aceFlag()}
       </#assign>
       <#assign location>
-        ${dataItem.getAsset()} <br/> ${dataItem.getGeographicArea()}
+        ${applicationDataItem.asset()}
+        <br/>
+        ${applicationDataItem.geographicArea()}
       </#assign>
       <#assign status>
-        ${dataItem.getStatus()} <br/> ${dataItem.getCaseOfficer()} <br/> ${dataItem.getTechnicalReviewer()}
+        ${applicationDataItem.status()}
+        <br/>
+        ${applicationDataItem.caseOfficer()}
+        <br/>
+        ${applicationDataItem.technicalReviewer()}
       </#assign>
       <#assign otherInformation>
-        ${dataItem.getSubmittedDateTime()} <br/> ${dataItem.getSubmittedBy()}
+        ${applicationDataItem.submittedDateTime()}
+        <br/>
+        ${applicationDataItem.submittedBy()}
       </#assign>
       <@fdsResultList.resultListDataValue key="Consent type" value=consentType/>
       <@fdsResultList.resultListDataValue key="Licence info" value=location/>

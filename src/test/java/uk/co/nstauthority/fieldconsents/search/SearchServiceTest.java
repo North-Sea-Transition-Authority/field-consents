@@ -2,12 +2,12 @@ package uk.co.nstauthority.fieldconsents.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.ENERGY_PORTAL_USER_1;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.ORG_GROUP_ID_1;
-import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUserAction.RESUME_APPLICATION;
-import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.portalUserDtosMap;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_PERMISSIONS;
 
 import java.util.ArrayList;
@@ -17,13 +17,17 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupQueryService;
+import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDtoService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil;
 import uk.co.nstauthority.fieldconsents.teams.Team;
@@ -57,11 +61,20 @@ class SearchServiceTest {
 
   private SearchFilterForm form;
 
-  private Map<Integer, FieldJson> fieldJsonMap;
+  private Map<Integer, FieldJson> fieldJsonById;
 
   private Team shell1IndustryTeam;
 
   private Team regulatorTeam;
+
+  @Captor
+  private ArgumentCaptor<Map<Integer, String>> organisationUnitNamesByIdCaptor;
+
+  @Captor
+  private ArgumentCaptor<Map<Integer, FieldJson>> fieldJsonByIdCaptor;
+
+  @Captor
+  private ArgumentCaptor<Map<WebUserAccountId, EnergyPortalUserDto>> portalUserDtoByWuaIdCaptor;
 
   @BeforeEach
   void setUp() {
@@ -75,8 +88,9 @@ class SearchServiceTest {
     regulatorTeam = TeamTestUtil.Builder()
         .withTeamType(TeamType.REGULATOR)
         .build();
+
     form = new SearchFilterForm();
-    fieldJsonMap = Map.of(field1Json.getId(), field1Json);
+    fieldJsonById = Map.of(field1Json.getId(), field1Json);
   }
 
 
@@ -101,96 +115,101 @@ class SearchServiceTest {
 
   @Test
   void getRegulatorSearchResultItems_withFlareSubmitted_forTerminal() {
-    when(searchFilterService.getConditions(form, TeamType.REGULATOR)).thenReturn(new ArrayList<>());
+    when(searchFilterService.getConditions(form, TeamType.REGULATOR)).thenReturn(Collections.emptyList());
+
     var searchResultItemDto = ApplicationDataItemUtil.getSearchResultItemDtoForLongFlareSubmittedForTerminalWithOpenWithdrawalRequest();
-    when(searchResultItemDtoService.runSearchQuery(any())).thenReturn(List.of(searchResultItemDto));
+    when(searchResultItemDtoService.runSearchQuery(any())).thenReturn(Collections.singletonList(searchResultItemDto));
+
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, VIEW_PERMISSIONS))
-        .thenReturn(List.of(regulatorTeam));
-    when(applicationDataItemDtoService.getFieldJsonMapFromApplicationDataItemDtos(
-        List.of(searchResultItemDto))).thenReturn(fieldJsonMap);
-    when(applicationDataItemDtoService
-        .getOrganisationUnitJsonsFromApplicationDataItemDtos(List.of(searchResultItemDto)))
-        .thenReturn(List.of(field1JsonWithOperator.getOperatorJson()));
-    when(applicationDataItemDtoService
-        .getEnergyPortalUserDtoMapFromApplicationDataItemDtos(List.of(searchResultItemDto)))
-        .thenReturn(portalUserDtosMap);
-    when(applicationDataItemDtoService.getApplicationDataItemUserActionFromUser(user)).thenReturn(RESUME_APPLICATION);
-    when(applicationDataItemDtoService.getDisplayReference(searchResultItemDto, RESUME_APPLICATION))
-        .thenReturn(ApplicationDataItemUtil.getCaseReference(searchResultItemDto));
-    when(applicationDataItemDtoService.getDisplayConsentDuration(searchResultItemDto))
-        .thenReturn(ApplicationDataItemUtil.getDuration(searchResultItemDto));
-    when(applicationDataItemDtoService.getDisplayCaseOfficer(searchResultItemDto, portalUserDtosMap))
-        .thenReturn(ApplicationDataItemUtil.getCaseOfficer(searchResultItemDto));
-    when(applicationDataItemDtoService.getDisplayAceFlag(searchResultItemDto))
-        .thenReturn(ApplicationDataItemUtil.getAceFlag(searchResultItemDto));
-    when(applicationDataItemDtoService.getDisplaySubmitter(searchResultItemDto, portalUserDtosMap))
-        .thenReturn(ApplicationDataItemUtil.getSubmitter(searchResultItemDto));
-    when(applicationDataItemDtoService.getDisplayAssetLocation(searchResultItemDto, fieldJsonMap))
-        .thenReturn(ApplicationDataItemUtil.getGeographicArea(searchResultItemDto));
-    when(applicationDataItemDtoService.getDisplayTechnicalReviewer(searchResultItemDto, portalUserDtosMap, TeamType.REGULATOR))
-        .thenReturn(ApplicationDataItemUtil.getTechnicalReviewer(searchResultItemDto, TeamType.REGULATOR));
+        .thenReturn(Collections.singletonList(regulatorTeam));
 
-    var searchResultItems = searchService.getRegulatorSearchResultItems(form, user);
+    when(applicationDataItemDtoService.getOrganisationUnitJsonsFromApplicationDataItemDtos(List.of(searchResultItemDto)))
+        .thenReturn(Collections.singletonList(field1JsonWithOperator.getOperatorJson()));
 
-    assertThat(searchResultItems).hasSize(1);
-    assertThat(searchResultItems.stream().toList().get(0)).usingRecursiveComparison()
-        .isEqualTo(ApplicationDataItemUtil.getSearchResultItemFromDto(searchResultItemDto, TeamType.REGULATOR));
+    when(applicationDataItemDtoService.getFieldJsonMapFromApplicationDataItemDtos(List.of(searchResultItemDto))).thenReturn(fieldJsonById);
+
+    var portalUserDtoByWuaId = Map.of(WebUserAccountId.from(user.wuaId()), ENERGY_PORTAL_USER_1);
+    when(applicationDataItemDtoService.getEnergyPortalUserDtoMapFromApplicationDataItemDtos(List.of(searchResultItemDto))).thenReturn(portalUserDtoByWuaId);
+
+    when(applicationDataItemDtoService.getApplicationDataItem(
+        eq(searchResultItemDto),
+        eq(user),
+        eq(TeamType.REGULATOR),
+        organisationUnitNamesByIdCaptor.capture(),
+        fieldJsonByIdCaptor.capture(),
+        portalUserDtoByWuaIdCaptor.capture()
+    ))
+        .thenReturn(ApplicationDataItemUtil.getApplicationDataItem());
+
+    assertThat(searchService.getRegulatorSearchResultItems(form, user))
+        .containsExactly(ApplicationDataItemUtil.getSearchResultItem());
+
+    assertThat(organisationUnitNamesByIdCaptor.getValue())
+        .hasSize(1)
+        .containsEntry(
+            field1JsonWithOperator.getOperatorJson().organisationUnitId(),
+            field1JsonWithOperator.getOperatorJson().name()
+        );
+
+    assertThat(fieldJsonByIdCaptor.getValue()).containsExactlyEntriesOf(fieldJsonById);
+    assertThat(portalUserDtoByWuaIdCaptor.getValue()).containsExactlyEntriesOf(portalUserDtoByWuaId);
   }
 
   @Test
   void getRegulatorSearchResultItems_withProductionInProgress_forField() {
-    when(searchFilterService.getConditions(form, TeamType.REGULATOR)).thenReturn(new ArrayList<>());
+    when(searchFilterService.getConditions(form, TeamType.REGULATOR)).thenReturn(Collections.emptyList());
+
     var searchResultItemDto = ApplicationDataItemUtil.getSearchResultItemDtoForAnnualProductionInProgressForField();
-    when(searchResultItemDtoService.runSearchQuery(any())).thenReturn(List.of(searchResultItemDto));
+    when(searchResultItemDtoService.runSearchQuery(any())).thenReturn(Collections.singletonList(searchResultItemDto));
+
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, VIEW_PERMISSIONS))
-        .thenReturn(List.of(regulatorTeam));
-    when(applicationDataItemDtoService.getFieldJsonMapFromApplicationDataItemDtos(
-        List.of(searchResultItemDto))).thenReturn(fieldJsonMap);
-    when(applicationDataItemDtoService
-        .getOrganisationUnitJsonsFromApplicationDataItemDtos(List.of(searchResultItemDto)))
-        .thenReturn(List.of(field1JsonWithOperator.getOperatorJson()));
-    when(applicationDataItemDtoService
-        .getEnergyPortalUserDtoMapFromApplicationDataItemDtos(List.of(searchResultItemDto)))
-        .thenReturn(portalUserDtosMap);
-    when(applicationDataItemDtoService.getApplicationDataItemUserActionFromUser(user)).thenReturn(RESUME_APPLICATION);
-    when(applicationDataItemDtoService.getDisplayReference(searchResultItemDto, RESUME_APPLICATION))
-        .thenReturn(ApplicationDataItemUtil.getCaseReference(searchResultItemDto));
-    when(applicationDataItemDtoService.getDisplayConsentDuration(searchResultItemDto))
-        .thenReturn(ApplicationDataItemUtil.getDuration(searchResultItemDto));
-    when(applicationDataItemDtoService.getDisplayCaseOfficer(searchResultItemDto, portalUserDtosMap))
-        .thenReturn(ApplicationDataItemUtil.getCaseOfficer(searchResultItemDto));
-    when(applicationDataItemDtoService.getDisplayAceFlag(searchResultItemDto))
-        .thenReturn(ApplicationDataItemUtil.getAceFlag(searchResultItemDto));
-    when(applicationDataItemDtoService.getDisplayAssetLocation(searchResultItemDto, fieldJsonMap))
-        .thenReturn(ApplicationDataItemUtil.getGeographicArea(searchResultItemDto));
-    when(applicationDataItemDtoService.getDisplayTechnicalReviewer(searchResultItemDto, portalUserDtosMap, TeamType.REGULATOR))
-        .thenReturn(ApplicationDataItemUtil.getTechnicalReviewer(searchResultItemDto, TeamType.REGULATOR));
+        .thenReturn(Collections.singletonList(regulatorTeam));
 
-    var searchResultItems = searchService.getRegulatorSearchResultItems(form, user);
+    when(applicationDataItemDtoService.getOrganisationUnitJsonsFromApplicationDataItemDtos(List.of(searchResultItemDto)))
+        .thenReturn(Collections.singletonList(field1JsonWithOperator.getOperatorJson()));
 
-    assertThat(searchResultItems).hasSize(1);
-    assertThat(searchResultItems.stream().toList().get(0)).usingRecursiveComparison()
-        .isEqualTo(ApplicationDataItemUtil.getSearchResultItemFromDto(searchResultItemDto, TeamType.REGULATOR));
+    when(applicationDataItemDtoService.getFieldJsonMapFromApplicationDataItemDtos(List.of(searchResultItemDto))).thenReturn(fieldJsonById);
+
+    var portalUserDtoByWuaId = Map.of(WebUserAccountId.from(user.wuaId()), ENERGY_PORTAL_USER_1);
+    when(applicationDataItemDtoService.getEnergyPortalUserDtoMapFromApplicationDataItemDtos(List.of(searchResultItemDto))).thenReturn(portalUserDtoByWuaId);
+
+    when(applicationDataItemDtoService.getApplicationDataItem(
+        eq(searchResultItemDto),
+        eq(user),
+        eq(TeamType.REGULATOR),
+        organisationUnitNamesByIdCaptor.capture(),
+        fieldJsonByIdCaptor.capture(),
+        portalUserDtoByWuaIdCaptor.capture()
+    ))
+        .thenReturn(ApplicationDataItemUtil.getApplicationDataItem());
+
+    assertThat(searchService.getRegulatorSearchResultItems(form, user))
+        .containsExactly(ApplicationDataItemUtil.getSearchResultItem());
+
+    assertThat(organisationUnitNamesByIdCaptor.getValue())
+        .hasSize(1)
+        .containsEntry(
+            field1JsonWithOperator.getOperatorJson().organisationUnitId(),
+            field1JsonWithOperator.getOperatorJson().name()
+        );
+
+    assertThat(fieldJsonByIdCaptor.getValue()).containsExactlyEntriesOf(fieldJsonById);
+    assertThat(portalUserDtoByWuaIdCaptor.getValue()).containsExactlyEntriesOf(portalUserDtoByWuaId);
   }
 
   @Test
   void getIndustrySearchResultItems_withNoOrganisationGroup() {
-    when(searchFilterService.getConditions(form, TeamType.INDUSTRY)).thenReturn(new ArrayList<>());
     shell1IndustryTeam.setOrganisationGroupId(null);
-
     assertThat(searchService.getIndustrySearchResultItems(form, user)).isEmpty();
   }
 
   @Test
   void getIndustrySearchResultItems_withEmptyResults() {
-    when(searchFilterService.getConditions(form, TeamType.INDUSTRY)).thenReturn(new ArrayList<>());
-
     assertThat(searchService.getIndustrySearchResultItems(form, user)).isEmpty();
   }
 
   @Test
   void getIndustrySearchResultItems_withNoViewPermission() {
-    when(searchFilterService.getConditions(form, TeamType.INDUSTRY)).thenReturn(new ArrayList<>());
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.INDUSTRY, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(Collections.emptyList());
 
@@ -199,9 +218,9 @@ class SearchServiceTest {
 
   @Test
   void getIndustrySearchResultItems_withEmptySearchResultItemsToDisplay() {
-    when(searchFilterService.getConditions(form, TeamType.INDUSTRY)).thenReturn(new ArrayList<>());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.INDUSTRY, RolePermission.VIEW_PERMISSIONS)).thenReturn(
-        List.of(shell1IndustryTeam));
+    when(searchFilterService.getConditions(form, TeamType.INDUSTRY)).thenReturn(Collections.emptyList());
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.INDUSTRY, RolePermission.VIEW_PERMISSIONS))
+        .thenReturn(Collections.singletonList(shell1IndustryTeam));
     when(searchResultItemDtoService.runSearchQuery(any())).thenReturn(Collections.emptyList());
 
     assertThat(searchService.getIndustrySearchResultItems(form, user)).isEmpty();
@@ -209,40 +228,44 @@ class SearchServiceTest {
 
   @Test
   void getIndustrySearchResultItems_withFlareSubmitted_forTerminal() {
-    when(searchFilterService.getConditions(form, TeamType.INDUSTRY)).thenReturn(new ArrayList<>());
+    when(searchFilterService.getConditions(form, TeamType.INDUSTRY))
+        .thenReturn(Collections.emptyList());
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.INDUSTRY, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(List.of(shell1IndustryTeam));
     when(organisationGroupQueryService.getOrganisationUnitsByOrganisationGroupIds(List.of(ORG_GROUP_ID_1)))
         .thenReturn(List.of(field1JsonWithOperator.getOperatorJson()));
+
     var searchResultItemDto = ApplicationDataItemUtil.getSearchResultItemDtoForLongFlareSubmittedForTerminalWithOpenWithdrawalRequest();
-    when(searchResultItemDtoService.runSearchQuery(any())).thenReturn(List.of(searchResultItemDto));
-    when(applicationDataItemDtoService.getFieldJsonMapFromApplicationDataItemDtos(
-        List.of(searchResultItemDto))).thenReturn(fieldJsonMap);
-    when(applicationDataItemDtoService
-        .getEnergyPortalUserDtoMapFromApplicationDataItemDtos(List.of(searchResultItemDto)))
-        .thenReturn(portalUserDtosMap);
-    when(applicationDataItemDtoService.getApplicationDataItemUserActionFromUser(user)).thenReturn(RESUME_APPLICATION);
-    when(applicationDataItemDtoService.getDisplayReference(searchResultItemDto, RESUME_APPLICATION))
-        .thenReturn(ApplicationDataItemUtil.getCaseReference(searchResultItemDto));
-    when(applicationDataItemDtoService.getDisplayConsentDuration(searchResultItemDto))
-        .thenReturn(ApplicationDataItemUtil.getDuration(searchResultItemDto));
-    when(applicationDataItemDtoService.getDisplayCaseOfficer(searchResultItemDto, portalUserDtosMap))
-        .thenReturn(ApplicationDataItemUtil.getCaseOfficer(searchResultItemDto));
-    when(applicationDataItemDtoService.getDisplayAceFlag(searchResultItemDto))
-        .thenReturn(ApplicationDataItemUtil.getAceFlag(searchResultItemDto));
-    when(applicationDataItemDtoService.getDisplaySubmitter(searchResultItemDto, portalUserDtosMap))
-        .thenReturn(ApplicationDataItemUtil.getSubmitter(searchResultItemDto));
-    when(applicationDataItemDtoService.getDisplayAssetLocation(searchResultItemDto, fieldJsonMap))
-        .thenReturn(ApplicationDataItemUtil.getGeographicArea(searchResultItemDto));
-    when(applicationDataItemDtoService.getDisplayTechnicalReviewer(searchResultItemDto, portalUserDtosMap, TeamType.INDUSTRY))
-        .thenReturn(ApplicationDataItemUtil.getTechnicalReviewer(searchResultItemDto, TeamType.INDUSTRY));
+    when(searchResultItemDtoService.runSearchQuery(any()))
+        .thenReturn(Collections.singletonList(searchResultItemDto));
 
-    var searchResultItems = searchService.getIndustrySearchResultItems(form, user);
+    when(applicationDataItemDtoService.getFieldJsonMapFromApplicationDataItemDtos(List.of(searchResultItemDto))).thenReturn(fieldJsonById);
 
-    assertThat(searchResultItems).hasSize(1);
-    assertThat(searchResultItems.stream().toList().get(0))
-        .usingRecursiveComparison()
-        .isEqualTo(ApplicationDataItemUtil.getSearchResultItemFromDto(searchResultItemDto, TeamType.INDUSTRY));
+    var portalUserDtoByWuaId = Map.of(WebUserAccountId.from(user.wuaId()), ENERGY_PORTAL_USER_1);
+    when(applicationDataItemDtoService.getEnergyPortalUserDtoMapFromApplicationDataItemDtos(List.of(searchResultItemDto))).thenReturn(portalUserDtoByWuaId);
+
+    when(applicationDataItemDtoService.getApplicationDataItem(
+        eq(searchResultItemDto),
+        eq(user),
+        eq(TeamType.INDUSTRY),
+        organisationUnitNamesByIdCaptor.capture(),
+        fieldJsonByIdCaptor.capture(),
+        portalUserDtoByWuaIdCaptor.capture()
+    ))
+        .thenReturn(ApplicationDataItemUtil.getApplicationDataItem());
+
+    assertThat(searchService.getIndustrySearchResultItems(form, user))
+        .containsExactly(ApplicationDataItemUtil.getSearchResultItem());
+
+    assertThat(organisationUnitNamesByIdCaptor.getValue())
+        .hasSize(1)
+        .containsEntry(
+            field1JsonWithOperator.getOperatorJson().organisationUnitId(),
+            field1JsonWithOperator.getOperatorJson().name()
+        );
+
+    assertThat(fieldJsonByIdCaptor.getValue()).containsExactlyEntriesOf(fieldJsonById);
+    assertThat(portalUserDtoByWuaIdCaptor.getValue()).containsExactlyEntriesOf(portalUserDtoByWuaId);
   }
 
   @Test
@@ -254,31 +277,34 @@ class SearchServiceTest {
         .thenReturn(List.of(field1JsonWithOperator.getOperatorJson()));
     var searchResultItemDto = ApplicationDataItemUtil.getSearchResultItemDtoForAnnualProductionInProgressForField();
     when(searchResultItemDtoService.runSearchQuery(any())).thenReturn(List.of(searchResultItemDto));
-    when(applicationDataItemDtoService.getFieldJsonMapFromApplicationDataItemDtos(
-        List.of(searchResultItemDto))).thenReturn(fieldJsonMap);
-    when(applicationDataItemDtoService
-        .getEnergyPortalUserDtoMapFromApplicationDataItemDtos(List.of(searchResultItemDto)))
-        .thenReturn(portalUserDtosMap);
-    when(applicationDataItemDtoService.getApplicationDataItemUserActionFromUser(user)).thenReturn(RESUME_APPLICATION);
-    when(applicationDataItemDtoService.getDisplayReference(searchResultItemDto, RESUME_APPLICATION))
-        .thenReturn(ApplicationDataItemUtil.getCaseReference(searchResultItemDto));
-    when(applicationDataItemDtoService.getDisplayConsentDuration(searchResultItemDto))
-        .thenReturn(ApplicationDataItemUtil.getDuration(searchResultItemDto));
-    when(applicationDataItemDtoService.getDisplayCaseOfficer(searchResultItemDto, portalUserDtosMap))
-        .thenReturn(ApplicationDataItemUtil.getCaseOfficer(searchResultItemDto));
-    when(applicationDataItemDtoService.getDisplayAceFlag(searchResultItemDto))
-        .thenReturn(ApplicationDataItemUtil.getAceFlag(searchResultItemDto));
-    when(applicationDataItemDtoService.getDisplayAssetLocation(searchResultItemDto, fieldJsonMap))
-        .thenReturn(ApplicationDataItemUtil.getGeographicArea(searchResultItemDto));
-    when(applicationDataItemDtoService.getDisplayTechnicalReviewer(searchResultItemDto, portalUserDtosMap, TeamType.INDUSTRY))
-        .thenReturn(ApplicationDataItemUtil.getTechnicalReviewer(searchResultItemDto, TeamType.INDUSTRY));
 
-    var searchResultItems = searchService.getIndustrySearchResultItems(form, user);
+    when(applicationDataItemDtoService.getFieldJsonMapFromApplicationDataItemDtos(List.of(searchResultItemDto))).thenReturn(fieldJsonById);
 
-    assertThat(searchResultItems).hasSize(1);
-    assertThat(searchResultItems.stream().toList().get(0))
-        .usingRecursiveComparison()
-        .isEqualTo(ApplicationDataItemUtil.getSearchResultItemFromDto(searchResultItemDto, TeamType.INDUSTRY));
+    var portalUserDtoByWuaId = Map.of(WebUserAccountId.from(user.wuaId()), ENERGY_PORTAL_USER_1);
+    when(applicationDataItemDtoService.getEnergyPortalUserDtoMapFromApplicationDataItemDtos(List.of(searchResultItemDto))).thenReturn(portalUserDtoByWuaId);
+
+    when(applicationDataItemDtoService.getApplicationDataItem(
+        eq(searchResultItemDto),
+        eq(user),
+        eq(TeamType.INDUSTRY),
+        organisationUnitNamesByIdCaptor.capture(),
+        fieldJsonByIdCaptor.capture(),
+        portalUserDtoByWuaIdCaptor.capture()
+    ))
+        .thenReturn(ApplicationDataItemUtil.getApplicationDataItem());
+
+    assertThat(searchService.getIndustrySearchResultItems(form, user))
+        .containsExactly(ApplicationDataItemUtil.getSearchResultItem());
+
+    assertThat(organisationUnitNamesByIdCaptor.getValue())
+        .hasSize(1)
+        .containsEntry(
+            field1JsonWithOperator.getOperatorJson().organisationUnitId(),
+            field1JsonWithOperator.getOperatorJson().name()
+        );
+
+    assertThat(fieldJsonByIdCaptor.getValue()).containsExactlyEntriesOf(fieldJsonById);
+    assertThat(portalUserDtoByWuaIdCaptor.getValue()).containsExactlyEntriesOf(portalUserDtoByWuaId);
   }
 
   @Test

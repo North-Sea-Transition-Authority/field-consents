@@ -1,6 +1,8 @@
 <#include '../layout/layout.ftl'>
 <#import '../dataitems/_dataItemFilter.ftl' as dataItemFilter>
 
+<#-- @ftlvariable name="searchResultItem" type="uk.co.nstauthority.fieldconsents.search.SearchResultItem" -->
+
 <@defaultPage
   htmlTitle=pageTitle
   pageHeading=pageTitle
@@ -30,7 +32,7 @@
       <#if searchResultItems?has_content>
         <@fdsResultList.resultList resultCount=searchResultItems?size>
           <#list searchResultItems as searchResultItem>
-            <@fcsApplicationDataItem dataItem=searchResultItem pageTitle=pageTitle/>
+            <@fcsApplicationDataItem searchResultItem=searchResultItem pageTitle=pageTitle/>
           </#list>
         </@fdsResultList.resultList>
       <#else>
@@ -47,39 +49,54 @@
 </@fdsSearch.searchPage>
 </@defaultPage>
 
-<#macro fcsApplicationDataItem dataItem pageTitle>
+<#macro fcsApplicationDataItem searchResultItem pageTitle>
+  <#assign dataItem = searchResultItem.applicationDataItem()/>
   <#assign searchItemTagContent>
-    <#if dataItem.isWithdrawalOpen()>
+    <#if dataItem.withdrawalOpen()>
       <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Withdrawal requested"/>
     </#if>
-    <#if dataItem.isApplicationUpdateOpen()>
-      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Update due by ${dataItem.getApplicationUpdateDeadline()}"/>
+    <#if dataItem.applicationUpdateOpen()>
+      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Update due by ${dataItem.applicationUpdateDeadline()}"/>
     </#if>
-    <#if dataItem.isConsultationOpen()>
-      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Consultation due by ${dataItem.getConsultationDeadline()}"/>
+    <#if dataItem.consultationOpen()>
+      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Consultation due by ${dataItem.consultationDeadline()}"/>
     </#if>
   </#assign>
   <@fdsResultList.resultListItem
-    linkHeadingText=dataItem.getReference()
+    linkHeadingText=dataItem.reference()
     linkHeadingUrl=springUrl(dataItem.url())
-    captionHeadingText=dataItem.getOperator()
+    captionHeadingText=dataItem.operator()
     itemTag=searchItemTagContent
   >
   <@fdsResultList.resultListDataItem>
     <#assign consentType>
-      ${dataItem.getType()} <br/> ${dataItem.getDuration()} <br/> ${dataItem.getAceFlag()}
+      ${dataItem.type()}
+      <br/>
+      ${dataItem.duration()}
+      <br/>
+      ${dataItem.aceFlag()}
     </#assign>
     <#assign location>
-      ${dataItem.getAsset()} <br/> ${dataItem.getGeographicArea()}
-      <#if dataItem.getLicences()?has_content>
-        <br/> ${dataItem.getLicences()}
+      ${dataItem.asset()}
+      <br/>
+      ${dataItem.geographicArea()}
+      <#assign licenses = searchResultItem.licenses()!""/>
+      <#if licenses?has_content>
+        <br/>
+        ${licenses}
       </#if>
     </#assign>
     <#assign status>
-      ${dataItem.getStatus()} <br/> ${dataItem.getCaseOfficer()} <br/> ${dataItem.getTechnicalReviewer()}
+      ${dataItem.status()}
+      <br/>
+      ${dataItem.caseOfficer()}
+      <br/>
+      ${dataItem.technicalReviewer()}
     </#assign>
     <#assign otherInformation>
-      ${dataItem.getSubmittedDateTime()} <br/> ${dataItem.getSubmittedBy()}
+      ${dataItem.submittedDateTime()}
+      <br/>
+      ${dataItem.submittedBy()}
     </#assign>
     <@fdsResultList.resultListDataValue key="Consent type" value=consentType/>
     <@fdsResultList.resultListDataValue key="Licence info" value=location/>
