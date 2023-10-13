@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.jooq.impl.DSL.coalesce;
 import static org.jooq.impl.DSL.exists;
 import static org.jooq.impl.DSL.falseCondition;
 import static org.jooq.impl.DSL.year;
@@ -28,6 +29,8 @@ import org.jooq.impl.DefaultDSLContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
@@ -193,6 +196,30 @@ class SearchFilterServiceTest {
 
     assertThat(searchFilterService.getConditions(form, TeamType.INDUSTRY)).containsExactly(
         year(APPLICATION_VERSIONS.SUBMITTED_DATE_TIME).eq(2023)
+    );
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = TeamType.class)
+  void getConditions_withValidConsentStartYear(TeamType teamType) {
+    form.setConsentStartYear("2023");
+
+    assertThat(searchFilterService.getConditions(form, teamType)).contains(
+        coalesce(
+            year(CONSENT_LENGTHS.SHORT_TERM_START_DATE),
+            CONSENT_LENGTHS.LONG_TERM_START_YEAR,
+            CONSENT_LENGTHS.ANNUAL_CONSENT_YEAR
+        ).eq(2023)
+    );
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = TeamType.class)
+  void getConditions_withConsentStartYearNonNumeric(TeamType teamType) {
+    form.setConsentStartYear("abc");
+
+    assertThat(searchFilterService.getConditions(form, teamType)).contains(
+        falseCondition()
     );
   }
 }

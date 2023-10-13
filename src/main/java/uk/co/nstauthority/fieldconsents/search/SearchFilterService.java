@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.search;
 
 import static org.apache.commons.lang3.StringUtils.isNumeric;
+import static org.jooq.impl.DSL.coalesce;
 import static org.jooq.impl.DSL.exists;
 import static org.jooq.impl.DSL.falseCondition;
 import static org.jooq.impl.DSL.year;
@@ -9,6 +10,7 @@ import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.Application
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationFlags.APPLICATION_FLAGS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.Applications.APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ConsentLengths.CONSENT_LENGTHS;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterService.FIELD_LOOKUP_PURPOSE;
 
 import java.util.ArrayList;
@@ -80,6 +82,15 @@ public class SearchFilterService {
       }
     }
 
+    var consentStartYear = form.getConsentStartYear();
+    if (Objects.nonNull(consentStartYear)) {
+      if (isNumeric(consentStartYear)) {
+        searchFilterConditions.add(this.getConsentStartYearQueryCondition(Integer.parseInt(consentStartYear)));
+      } else {
+        searchFilterConditions.add(falseCondition());
+      }
+    }
+
     if (TeamType.OPRED.equals(teamType)) {
       searchFilterConditions.add(getConsultationsCondition());
     }
@@ -126,5 +137,14 @@ public class SearchFilterService {
 
   private Condition getSubmittedYearQueryCondition(Integer submittedYear) {
     return year(APPLICATION_VERSIONS.SUBMITTED_DATE_TIME).eq(submittedYear);
+  }
+
+  private Condition getConsentStartYearQueryCondition(Integer consentStartYear) {
+    return
+        coalesce(
+            year(CONSENT_LENGTHS.SHORT_TERM_START_DATE),
+            CONSENT_LENGTHS.LONG_TERM_START_YEAR,
+            CONSENT_LENGTHS.ANNUAL_CONSENT_YEAR
+        ).eq(consentStartYear);
   }
 }

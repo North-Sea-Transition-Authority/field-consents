@@ -9,6 +9,7 @@ public class SearchFilterForm extends ApplicationDataFilterForm {
   List<AceFlagStatus> aceFlagStatuses;
   String fieldAssetKey;
   String terminalAssetKey;
+  String consentStartYear;
 
   public String getSubmittedYear() {
     return submittedYear;
@@ -40,5 +41,13 @@ public class SearchFilterForm extends ApplicationDataFilterForm {
 
   public void setTerminalAssetKey(String terminalAssetKey) {
     this.terminalAssetKey = terminalAssetKey;
+  }
+
+  public String getConsentStartYear() {
+    return consentStartYear;
+  }
+
+  public void setConsentStartYear(String consentStartYear) {
+    this.consentStartYear = consentStartYear;
   }
 }

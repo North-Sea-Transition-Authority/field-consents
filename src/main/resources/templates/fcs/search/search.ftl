@@ -15,6 +15,7 @@
       <@dataItemFilter.durationFilter form=form durationCheckboxes=durationTypes/>
       <@dataItemFilter.operatorFilter form=form prefilledOperator=prefilledOperator operatorSearchRestUrl=operatorSearchRestUrl/>
       <@submittedYearFilter form=form/>
+      <@consentStartYearFilter form=form/>
       <#if aceStatuses?has_content>
         <@aceFilter form=form aceCheckboxes=aceStatuses/>
       </#if>
@@ -93,6 +94,16 @@
       path="form.submittedYear"
       labelText=""
       suffixScreenReaderPrompt="Application submission year"
+    />
+  </@fdsSearch.searchFilterItem>
+</#macro>
+
+<#macro consentStartYearFilter form>
+  <@fdsSearch.searchFilterItem itemName="Consent start year" expanded=form.consentStartYear?has_content>
+    <@fdsSearch.searchTextInput
+      path="form.consentStartYear"
+      labelText=""
+      suffixScreenReaderPrompt="Consent start year"
     />
   </@fdsSearch.searchFilterItem>
 </#macro>
