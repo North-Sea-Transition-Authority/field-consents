@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.events;
+package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.envers.RevisionType.MOD;
@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import org.hibernate.envers.RevisionType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,9 +40,9 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEvent;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.audit.AuditRevision;
+import uk.co.nstauthority.fieldconsents.audit.FieldConsentsAudit;
+import uk.co.nstauthority.fieldconsents.audit.FieldConsentsAuditService;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -59,7 +60,7 @@ class ConsultationEventServiceTest {
   private ConsultationService consultationService;
 
   @Mock
-  private ConsultationAuditService consultationAuditService;
+  private FieldConsentsAuditService fieldConsentsAuditService;
 
   @Spy
   @InjectMocks
@@ -72,6 +73,9 @@ class ConsultationEventServiceTest {
 
   @Captor
   private ArgumentCaptor<Collection<Consultation>> consultationCollectionCaptor;
+
+  @Captor
+  private ArgumentCaptor<Function<Consultation, Object>> consultationIdFunctionCaptor;
 
   @BeforeEach
   void setUp() {
@@ -100,8 +104,11 @@ class ConsultationEventServiceTest {
     var audit1 = mockConsultationAudit(consultation);
     var audit2 = mockConsultationAudit(consultation);
     var audit3 = mockConsultationAudit(consultation);
-    when(consultationAuditService.getConsultationAudits(consultationCollectionCaptor.capture()))
-        .thenReturn(List.of(audit1, audit2, audit3));
+    when(fieldConsentsAuditService.getAuditsFor(
+        eq(Consultation.class),
+        consultationIdFunctionCaptor.capture(),
+        consultationCollectionCaptor.capture()
+    )).thenReturn(List.of(audit1, audit2, audit3));
 
     var caseEvent = mock(CaseEvent.class);
     doReturn(Collections.singletonList(caseEvent))
@@ -111,6 +118,8 @@ class ConsultationEventServiceTest {
     assertThat(consultationEventService.getCaseEvents(application)).hasSize(3).allMatch(caseEvent::equals);
 
     assertThat(consultationCollectionCaptor.getValue()).extracting(Consultation::getId).containsExactly(CONSULTATION_ID);
+    assertThat(consultationIdFunctionCaptor.getValue().apply(consultation)).isEqualTo(CONSULTATION_ID);
+
     verify(consultationEventService).getConsultationCaseEvents(requestApplicationVersion, responseApplicationVersion, null, audit1);
     verify(consultationEventService).getConsultationCaseEvents(requestApplicationVersion, responseApplicationVersion, audit1, audit2);
     verify(consultationEventService).getConsultationCaseEvents(requestApplicationVersion, responseApplicationVersion, audit2, audit3);
@@ -127,18 +136,22 @@ class ConsultationEventServiceTest {
     when(consultationService.getConsultationsByApplication(application))
         .thenReturn(Collections.singletonList(consultation));
 
-    when(consultationAuditService.getConsultationAudits(consultationCollectionCaptor.capture()))
-        .thenReturn(Collections.emptyList());
+    when(fieldConsentsAuditService.getAuditsFor(
+        eq(Consultation.class),
+        consultationIdFunctionCaptor.capture(),
+        consultationCollectionCaptor.capture()
+    )).thenReturn(Collections.emptyList());
 
     assertThat(consultationEventService.getCaseEvents(application)).isEmpty();
 
     assertThat(consultationCollectionCaptor.getValue()).extracting(Consultation::getId).containsExactly(CONSULTATION_ID);
+    assertThat(consultationIdFunctionCaptor.getValue().apply(consultation)).isEqualTo(CONSULTATION_ID);
   }
 
   @Test
   void getConsultationCaseEvents() {
-    var previous = mock(ConsultationAudit.class);
-    var current = mock(ConsultationAudit.class);
+    FieldConsentsAudit<Consultation> previous = mock(FieldConsentsAudit.class);
+    FieldConsentsAudit<Consultation> current = mock(FieldConsentsAudit.class);
 
     var requestedEvent = mock(CaseEvent.class);
     doReturn(Optional.of(requestedEvent))
@@ -171,8 +184,8 @@ class ConsultationEventServiceTest {
 
   @Test
   void getConsultationCaseEvents_notReassigned() {
-    var previous = mock(ConsultationAudit.class);
-    var current = mock(ConsultationAudit.class);
+    FieldConsentsAudit<Consultation> previous = mock(FieldConsentsAudit.class);
+    FieldConsentsAudit<Consultation> current = mock(FieldConsentsAudit.class);
 
     var requestedEvent = mock(CaseEvent.class);
     doReturn(Optional.of(requestedEvent))
@@ -203,8 +216,8 @@ class ConsultationEventServiceTest {
 
   @Test
   void getConsultationCaseEvents_notResponded() {
-    var previous = mock(ConsultationAudit.class);
-    var current = mock(ConsultationAudit.class);
+    FieldConsentsAudit<Consultation> previous = mock(FieldConsentsAudit.class);
+    FieldConsentsAudit<Consultation> current = mock(FieldConsentsAudit.class);
 
     var requestedEvent = mock(CaseEvent.class);
     doReturn(Optional.of(requestedEvent))
@@ -235,7 +248,7 @@ class ConsultationEventServiceTest {
 
   @Test
   void getConsultationCaseEvents_previousIsNull() {
-    var current = mock(ConsultationAudit.class);
+    FieldConsentsAudit<Consultation> current = mock(FieldConsentsAudit.class);
     var caseEvent = mock(CaseEvent.class);
 
     doReturn(Optional.of(caseEvent)).when(consultationEventService).getRequestedEvent(requestApplicationVersion, current);
@@ -246,7 +259,7 @@ class ConsultationEventServiceTest {
 
   @Test
   void getRequestedEvent() {
-    var current = new ConsultationAudit(createAuditedConsultationForResponder(null), auditRevision, RevisionType.ADD);
+    var current = new FieldConsentsAudit<>(createAuditedConsultationForResponder(null), auditRevision, RevisionType.ADD);
 
     assertThat(consultationEventService.getRequestedEvent(requestApplicationVersion, current))
         .isPresent()
@@ -269,14 +282,14 @@ class ConsultationEventServiceTest {
   @ParameterizedTest
   @EnumSource(value = RevisionType.class, names = "ADD", mode = EXCLUDE)
   void getRequestedEvent_invalidRevisionType(RevisionType revisionType) {
-    var current = new ConsultationAudit(createAuditedConsultationForResponder(null), auditRevision, revisionType);
+    var current = new FieldConsentsAudit<>(createAuditedConsultationForResponder(null), auditRevision, revisionType);
     assertThat(consultationEventService.getRequestedEvent(requestApplicationVersion, current)).isEmpty();
   }
 
   @Test
   void getResponderAssignedEvent() {
-    var previous = new ConsultationAudit(createAuditedConsultationForResponder(null), auditRevision, RevisionType.ADD);
-    var current = new ConsultationAudit(createAuditedConsultationForResponder(1L), auditRevision, MOD);
+    var previous = new FieldConsentsAudit<>(createAuditedConsultationForResponder(null), auditRevision, RevisionType.ADD);
+    var current = new FieldConsentsAudit<>(createAuditedConsultationForResponder(1L), auditRevision, MOD);
 
     assertThat(consultationEventService.getResponderAssignedEvent(requestApplicationVersion, previous, current))
         .isPresent()
@@ -291,31 +304,31 @@ class ConsultationEventServiceTest {
             CONSULTATION_ASSIGNED,
             current.auditRevision().getCreatedDateTime().toInstant(),
             current.auditRevision().getUserWuaId(),
-            current.consultation().getResponderWuaId(),
+            current.entity().getResponderWuaId(),
             null
         );
   }
 
   @Test
   void getResponderAssignedEvent_assignerAlreadyExists() {
-    var previous = new ConsultationAudit(createAuditedConsultationForResponder(1L), auditRevision, RevisionType.ADD);
-    var current = new ConsultationAudit(createAuditedConsultationForResponder(1L), auditRevision, MOD);
+    var previous = new FieldConsentsAudit<>(createAuditedConsultationForResponder(1L), auditRevision, RevisionType.ADD);
+    var current = new FieldConsentsAudit<>(createAuditedConsultationForResponder(1L), auditRevision, MOD);
 
     assertThat(consultationEventService.getResponderAssignedEvent(requestApplicationVersion, previous, current)).isEmpty();
   }
 
   @Test
   void getResponderAssignedEvent_assignerChanged() {
-    var previous = new ConsultationAudit(createAuditedConsultationForResponder(1L), auditRevision, RevisionType.ADD);
-    var current = new ConsultationAudit(createAuditedConsultationForResponder(2L), auditRevision, MOD);
+    var previous = new FieldConsentsAudit<>(createAuditedConsultationForResponder(1L), auditRevision, RevisionType.ADD);
+    var current = new FieldConsentsAudit<>(createAuditedConsultationForResponder(2L), auditRevision, MOD);
 
     assertThat(consultationEventService.getResponderAssignedEvent(requestApplicationVersion, previous, current)).isEmpty();
   }
 
   @Test
   void getResponderReassignedEvent() {
-    var previous = new ConsultationAudit(createAuditedConsultationForResponder(1L), auditRevision, MOD);
-    var current = new ConsultationAudit(createAuditedConsultationForResponder(2L), auditRevision, MOD);
+    var previous = new FieldConsentsAudit<>(createAuditedConsultationForResponder(1L), auditRevision, MOD);
+    var current = new FieldConsentsAudit<>(createAuditedConsultationForResponder(2L), auditRevision, MOD);
 
     assertThat(consultationEventService.getResponderReassignedEvent(requestApplicationVersion, previous, current))
         .isPresent()
@@ -330,40 +343,39 @@ class ConsultationEventServiceTest {
             CONSULTATION_REASSIGNED,
             current.auditRevision().getCreatedDateTime().toInstant(),
             current.auditRevision().getUserWuaId(),
-            current.consultation().getResponderWuaId(),
+            current.entity().getResponderWuaId(),
             null
         );
   }
 
   @Test
   void getResponderReassignedEvent_noPreviousResponder() {
-    var previous = new ConsultationAudit(createAuditedConsultationForResponder(null), auditRevision, MOD);
-    var current = new ConsultationAudit(createAuditedConsultationForResponder(2L), auditRevision, MOD);
+    var previous = new FieldConsentsAudit<>(createAuditedConsultationForResponder(null), auditRevision, MOD);
+    var current = new FieldConsentsAudit<>(createAuditedConsultationForResponder(2L), auditRevision, MOD);
 
     assertThat(consultationEventService.getResponderReassignedEvent(requestApplicationVersion, previous, current)).isEmpty();
   }
 
   @Test
   void getResponderReassignedEvent_wrongEventType() {
-    var previous = new ConsultationAudit(createAuditedConsultationForResponder(1L), auditRevision, MOD);
-    var current = new ConsultationAudit(createAuditedConsultationForResponder(2L), auditRevision, RevisionType.ADD);
+    var previous = new FieldConsentsAudit<>(createAuditedConsultationForResponder(1L), auditRevision, MOD);
+    var current = new FieldConsentsAudit<>(createAuditedConsultationForResponder(2L), auditRevision, RevisionType.ADD);
 
     assertThat(consultationEventService.getResponderReassignedEvent(requestApplicationVersion, previous, current)).isEmpty();
   }
 
   @Test
   void getResponderReassignedEvent_sameResponderWuaId() {
-    var previous = new ConsultationAudit(createAuditedConsultationForResponder(1L), auditRevision, MOD);
-    var current = new ConsultationAudit(createAuditedConsultationForResponder(1L), auditRevision, MOD);
+    var previous = new FieldConsentsAudit<>(createAuditedConsultationForResponder(1L), auditRevision, MOD);
+    var current = new FieldConsentsAudit<>(createAuditedConsultationForResponder(1L), auditRevision, MOD);
 
     assertThat(consultationEventService.getResponderReassignedEvent(requestApplicationVersion, previous, current)).isEmpty();
   }
 
   @Test
   void getResponseSubmittedEvent() {
-    var previous = new ConsultationAudit(createAuditedConsultationForRespondedBy(null), auditRevision,
-        MOD);
-    var current = new ConsultationAudit(createAuditedConsultationForRespondedBy(1L), auditRevision, MOD);
+    var previous = new FieldConsentsAudit<>(createAuditedConsultationForRespondedBy(null), auditRevision, MOD);
+    var current = new FieldConsentsAudit<>(createAuditedConsultationForRespondedBy(1L), auditRevision, MOD);
 
     assertThat(consultationEventService.getResponseSubmittedEvent(requestApplicationVersion, previous, current))
         .isPresent()
@@ -377,7 +389,7 @@ class ConsultationEventServiceTest {
         ).containsExactly(
             CONSULTATION_RESPONDED,
             current.auditRevision().getCreatedDateTime().toInstant(),
-            current.consultation().getRespondedByWuaId(),
+            current.entity().getRespondedByWuaId(),
             null,
             null
         );
@@ -385,8 +397,8 @@ class ConsultationEventServiceTest {
 
   @Test
   void getResponseSubmittedEvent_sameResponderWuaId() {
-    var previous = new ConsultationAudit(createAuditedConsultationForRespondedBy(1L), auditRevision, MOD);
-    var current = new ConsultationAudit(createAuditedConsultationForRespondedBy(1L), auditRevision, MOD);
+    var previous = new FieldConsentsAudit<>(createAuditedConsultationForRespondedBy(1L), auditRevision, MOD);
+    var current = new FieldConsentsAudit<>(createAuditedConsultationForRespondedBy(1L), auditRevision, MOD);
 
     assertThat(consultationEventService.getResponseSubmittedEvent(requestApplicationVersion, previous, current)).isEmpty();
   }
@@ -412,9 +424,9 @@ class ConsultationEventServiceTest {
     return consultation;
   }
 
-  private ConsultationAudit mockConsultationAudit(Consultation consultation) {
-    var audit = mock(ConsultationAudit.class);
-    when(audit.consultation()).thenReturn(consultation);
+  private FieldConsentsAudit<Consultation> mockConsultationAudit(Consultation consultation) {
+    var audit = mock(FieldConsentsAudit.class);
+    when(audit.entity()).thenReturn(consultation);
     return audit;
   }
 

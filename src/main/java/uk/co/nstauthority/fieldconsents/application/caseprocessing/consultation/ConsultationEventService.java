@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.events;
+package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation;
 
 import static org.hibernate.envers.RevisionType.ADD;
 import static org.hibernate.envers.RevisionType.MOD;
@@ -9,6 +9,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.caseev
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -19,19 +20,19 @@ import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEvent;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventService;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
+import uk.co.nstauthority.fieldconsents.audit.FieldConsentsAudit;
+import uk.co.nstauthority.fieldconsents.audit.FieldConsentsAuditService;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 
 @Service
 class ConsultationEventService implements CaseEventService<Application> {
 
   private final ConsultationService consultationService;
-  private final ConsultationAuditService consultationAuditService;
+  private final FieldConsentsAuditService auditService;
 
-  ConsultationEventService(ConsultationService consultationService, ConsultationAuditService consultationAuditService) {
+  ConsultationEventService(ConsultationService consultationService, FieldConsentsAuditService auditService) {
     this.consultationService = consultationService;
-    this.consultationAuditService = consultationAuditService;
+    this.auditService = auditService;
   }
 
   @Override
@@ -40,26 +41,35 @@ class ConsultationEventService implements CaseEventService<Application> {
         .stream()
         .collect(Collectors.toMap(Consultation::getId, Function.identity()));
 
-    var audits = consultationAuditService.getConsultationAudits(consultationsById.values());
+    var auditsByConsultationId = auditService.getAuditsFor(Consultation.class, Consultation::getId, consultationsById.values())
+        .stream()
+        .collect(Collectors.groupingBy(
+            audit -> audit.entity().getId(),
+            LinkedHashMap::new,
+            Collectors.toList()
+        ));
 
-    if (audits.isEmpty()) {
+    if (auditsByConsultationId.isEmpty()) {
       return Collections.emptyList();
     }
 
     var caseEvents = new ArrayList<CaseEvent>();
-    for (var i = 0; i < audits.size(); i++) {
-      var previous = i == 0 ? null : audits.get(i - 1);
-      var current = audits.get(i);
 
-      var consultationId = current.consultation().getId();
-      var requestApplicationVersion = consultationsById.get(consultationId).getRequestApplicationVersion();
-      var responseApplicationVersion = consultationsById.get(consultationId).getResponseApplicationVersion();
-      caseEvents.addAll(getConsultationCaseEvents(
-          requestApplicationVersion,
-          responseApplicationVersion,
-          previous,
-          current
-      ));
+    for (var audits : auditsByConsultationId.values()) {
+      for (var i = 0; i < audits.size(); i++) {
+        var previous = i == 0 ? null : audits.get(i - 1);
+        var current = audits.get(i);
+
+        var consultationId = current.entity().getId();
+        var requestApplicationVersion = consultationsById.get(consultationId).getRequestApplicationVersion();
+        var responseApplicationVersion = consultationsById.get(consultationId).getResponseApplicationVersion();
+        caseEvents.addAll(getConsultationCaseEvents(
+            requestApplicationVersion,
+            responseApplicationVersion,
+            previous,
+            current
+        ));
+      }
     }
 
     return caseEvents;
@@ -68,8 +78,8 @@ class ConsultationEventService implements CaseEventService<Application> {
   List<CaseEvent> getConsultationCaseEvents(
       ApplicationVersion requestApplicationVersion,
       ApplicationVersion responseApplicationVersion,
-      ConsultationAudit previous,
-      ConsultationAudit current
+      FieldConsentsAudit<Consultation> previous,
+      FieldConsentsAudit<Consultation> current
   ) {
     var events = new ArrayList<CaseEvent>();
     getRequestedEvent(requestApplicationVersion, current).ifPresent(events::add);
@@ -85,7 +95,7 @@ class ConsultationEventService implements CaseEventService<Application> {
     return events;
   }
 
-  Optional<CaseEvent> getRequestedEvent(ApplicationVersion applicationVersion, ConsultationAudit current) {
+  Optional<CaseEvent> getRequestedEvent(ApplicationVersion applicationVersion, FieldConsentsAudit<Consultation> current) {
     if (!ADD.equals(current.revisionType())) {
       return Optional.empty();
     }
@@ -93,7 +103,7 @@ class ConsultationEventService implements CaseEventService<Application> {
     var currentAuditRevision = current.auditRevision();
     var caseEvent = CaseEvent.newBuilderForAuditRevision(currentAuditRevision, applicationVersion)
         .withEventType(CONSULTATION_REQUESTED)
-        .withEventText(DateUtils.format(current.consultation().getRequestDeadline(), DateUtils.DATE_TIME))
+        .withEventText(DateUtils.format(current.entity().getRequestDeadline(), DateUtils.DATE_TIME))
         .build();
 
     return Optional.of(caseEvent);
@@ -101,16 +111,16 @@ class ConsultationEventService implements CaseEventService<Application> {
 
   Optional<CaseEvent> getResponderAssignedEvent(
       ApplicationVersion applicationVersion,
-      ConsultationAudit previous,
-      ConsultationAudit current
+      FieldConsentsAudit<Consultation> previous,
+      FieldConsentsAudit<Consultation> current
   ) {
-    if (Objects.nonNull(previous.consultation().getResponderWuaId())) {
+    if (Objects.nonNull(previous.entity().getResponderWuaId())) {
       return Optional.empty();
     }
 
     var caseEvent = CaseEvent.newBuilderForAuditRevision(current.auditRevision(), applicationVersion)
         .withEventType(CONSULTATION_ASSIGNED)
-        .withOtherEventUserWuaId(current.consultation().getResponderWuaId())
+        .withOtherEventUserWuaId(current.entity().getResponderWuaId())
         .build();
 
     return Optional.of(caseEvent);
@@ -118,15 +128,15 @@ class ConsultationEventService implements CaseEventService<Application> {
 
   Optional<CaseEvent> getResponderReassignedEvent(
       ApplicationVersion applicationVersion,
-      ConsultationAudit previous,
-      ConsultationAudit current
+      FieldConsentsAudit<Consultation> previous,
+      FieldConsentsAudit<Consultation> current
   ) {
-    var previousResponder = previous.consultation().getResponderWuaId();
+    var previousResponder = previous.entity().getResponderWuaId();
     if (Objects.isNull(previousResponder)) {
       return Optional.empty();
     }
 
-    var currentResponder = current.consultation().getResponderWuaId();
+    var currentResponder = current.entity().getResponderWuaId();
     if (previousResponder.equals(currentResponder) || !MOD.equals(current.revisionType())) {
       return Optional.empty();
     }
@@ -141,11 +151,15 @@ class ConsultationEventService implements CaseEventService<Application> {
 
   Optional<CaseEvent> getResponseSubmittedEvent(
       ApplicationVersion applicationVersion,
-      ConsultationAudit previous,
-      ConsultationAudit current
+      FieldConsentsAudit<Consultation> previous,
+      FieldConsentsAudit<Consultation> current
   ) {
-    var previousRespondedByWuaId = previous.consultation().getRespondedByWuaId();
-    var currentRespondedByWuaId = current.consultation().getRespondedByWuaId();
+    if (Objects.isNull(applicationVersion)) {
+      return Optional.empty();
+    }
+
+    var previousRespondedByWuaId = previous.entity().getRespondedByWuaId();
+    var currentRespondedByWuaId = current.entity().getRespondedByWuaId();
     if (Objects.equals(previousRespondedByWuaId, currentRespondedByWuaId)) {
       return Optional.empty();
     }
