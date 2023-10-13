@@ -191,16 +191,22 @@ public class ApplicationAssetService {
         .map(AssetTypeWithShore::getShore)
         .toList();
 
-    var primaryAndSecondaryFieldIds = applicationAssetRepository
-        .findAllByFieldIdIsNotNullAndAssetRoleIn(EnumSet.of(AssetRole.PRIMARY, AssetRole.SECONDARY))
+    var primaryAndSecondaryFieldIds = getAllPrimaryAndSecondaryFieldAssets()
         .stream()
         .map(ApplicationAsset::getFieldId)
-        .distinct()
         .toList();
 
     return fieldService.findFieldsByIds(primaryAndSecondaryFieldIds, requestPurpose)
         .stream()
         .filter(fieldJson -> shores.contains(fieldJson.getShore()))
+        .toList();
+  }
+
+  public List<ApplicationAsset> getAllPrimaryAndSecondaryFieldAssets() {
+    return applicationAssetRepository
+        .findAllByFieldIdIsNotNullAndAssetRoleIn(EnumSet.of(AssetRole.PRIMARY, AssetRole.SECONDARY))
+        .stream()
+        .distinct()
         .toList();
   }
 

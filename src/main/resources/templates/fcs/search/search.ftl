@@ -22,6 +22,7 @@
       <@dataItemFilter.assetTypeWithShoreFilter form=form assetTypeWithShoreCheckboxes=assetTypesWithShore/>
       <@fieldAssetFilter form=form prefilledField=prefilledField fieldAssetSearchRestUrl=fieldAssetSearchRestUrl/>
       <@terminalAssetFilter form=form prefilledTerminal=prefilledTerminal terminalAssetSearchRestUrl=terminalAssetSearchRestUrl/>
+      <@licenceReferenceFilter form=form/>
     </@fdsSearch.searchFilterList>
   </@fdsSearch.searchFilter>
   <@fdsSearch.searchPageContent twoThirdsWidth=true>
@@ -137,6 +138,16 @@
       labelText=""
       preselectedItems={prefilledTerminal.id() : prefilledTerminal.text()}
       inputClass="govuk-input--width-10"
+    />
+  </@fdsSearch.searchFilterItem>
+</#macro>
+
+<#macro licenceReferenceFilter form>
+  <@fdsSearch.searchFilterItem itemName="Licence reference" expanded=form.licenceReference?has_content>
+    <@fdsSearch.searchTextInput
+      path="form.licenceReference"
+      labelText=""
+      suffixScreenReaderPrompt="Licence reference"
     />
   </@fdsSearch.searchFilterItem>
 </#macro>

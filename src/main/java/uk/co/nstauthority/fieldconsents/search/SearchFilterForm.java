@@ -10,6 +10,7 @@ public class SearchFilterForm extends ApplicationDataFilterForm {
   String fieldAssetKey;
   String terminalAssetKey;
   String consentStartYear;
+  String licenceReference;
 
   public String getSubmittedYear() {
     return submittedYear;
@@ -49,5 +50,13 @@ public class SearchFilterForm extends ApplicationDataFilterForm {
 
   public void setConsentStartYear(String consentStartYear) {
     this.consentStartYear = consentStartYear;
+  }
+
+  public String getLicenceReference() {
+    return licenceReference;
+  }
+
+  public void setLicenceReference(String licenceReference) {
+    this.licenceReference = licenceReference;
   }
 }
