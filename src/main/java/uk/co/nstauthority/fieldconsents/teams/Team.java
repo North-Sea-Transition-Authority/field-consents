@@ -11,7 +11,6 @@ import jakarta.persistence.Table;
 import org.hibernate.envers.Audited;
 
 @Entity
-@Audited
 @Table(name = "teams")
 public class Team {
 
