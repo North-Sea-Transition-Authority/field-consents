@@ -39,7 +39,7 @@ public enum HabitatsRegsResponseType implements ConsultationResponseType {
            %s is required.
           """,
       "form.habitatsRegsDoesNotApplyDescription.inputValue",
-      true,
+      false,
       false
   );
 

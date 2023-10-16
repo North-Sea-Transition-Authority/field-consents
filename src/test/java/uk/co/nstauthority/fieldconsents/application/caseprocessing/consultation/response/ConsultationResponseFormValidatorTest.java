@@ -110,7 +110,7 @@ class ConsultationResponseFormValidatorTest {
         ),
         arguments(
             formWithValues(HabitatsRegsResponseType.DOES_NOT_APPLY, null, EiaRegsResponseType.AGREE, DESCRIPTION_TEXT, List.of(UPLOADED_FILE_FORM)),
-            errors(tuple("habitatsRegsDoesNotApplyDescription.inputValue", "Enter description"))
+            errors()
         ),
         arguments(
             formWithValues(HabitatsRegsResponseType.DOES_NOT_APPLY, DESCRIPTION_TEXT, EiaRegsResponseType.AGREE, DESCRIPTION_TEXT, List.of(UPLOADED_FILE_FORM)),
@@ -139,7 +139,7 @@ class ConsultationResponseFormValidatorTest {
         ),
         arguments(
             formWithValues(HabitatsRegsResponseType.AGREE, DESCRIPTION_TEXT, EiaRegsResponseType.DOES_NOT_APPLY, null, List.of(UPLOADED_FILE_FORM)),
-            errors(tuple("eiaRegsDoesNotApplyDescription.inputValue", "Enter description"))
+            errors()
         ),
         arguments(
             formWithValues(HabitatsRegsResponseType.AGREE, DESCRIPTION_TEXT, EiaRegsResponseType.DOES_NOT_APPLY, DESCRIPTION_TEXT, List.of(UPLOADED_FILE_FORM)),
@@ -223,7 +223,7 @@ class ConsultationResponseFormValidatorTest {
         ),
         arguments(
             formWithValues(HabitatsRegsResponseType.DOES_NOT_APPLY, null, null, null, List.of(UPLOADED_FILE_FORM)),
-            errors(tuple("habitatsRegsDoesNotApplyDescription.inputValue", "Enter description"))
+            errors()
         ),
         arguments(
             formWithValues(HabitatsRegsResponseType.DOES_NOT_APPLY, DESCRIPTION_TEXT, null, null, List.of(UPLOADED_FILE_FORM)),

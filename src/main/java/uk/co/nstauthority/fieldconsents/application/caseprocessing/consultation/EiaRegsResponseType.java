@@ -41,7 +41,7 @@ public enum EiaRegsResponseType implements ConsultationResponseType {
           the NSTA for the activities described in application reference %s is required
           """,
       "form.eiaRegsDoesNotApplyDescription.inputValue",
-      true,
+      false,
       false
   );
 
