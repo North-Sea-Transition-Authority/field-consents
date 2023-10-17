@@ -4,7 +4,7 @@ public enum EiaRegsResponseType implements ConsultationResponseType {
 
   AGREE(
       "Agree",
-      "Provide consent conditions if they apply (optional)",
+      "Provide consent conditions if they apply",
       """
           Pursuant to the Offshore Oil and Gas Exploration, Production, Unloading and Storage
           (Environmental Impact Assessment) Regulations 2020, the Offshore Petroleum Regulator for

@@ -4,7 +4,7 @@ public enum HabitatsRegsResponseType implements ConsultationResponseType {
 
   AGREE(
       "Agree",
-      "Provide consent conditions if they apply (optional)",
+      "Provide consent conditions if they apply",
       """
           Pursuant to the Offshore Petroleum Activities (Conservation of Habitats) Regulations 2001 (as amended),
           the Offshore Petroleum Regulator for Environment and Decommissioning, acting on behalf of the Secretary

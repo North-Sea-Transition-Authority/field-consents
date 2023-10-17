@@ -34,6 +34,7 @@
         <@fdsRadio.radioItem path="form.habitatsRegsResponseType" itemMap={key: value}>
           <@fdsTextarea.textarea
             path=radioOption.getTextAreaInputName()
+            optionalLabel=!radioOption.isTextAreaInputRequired()
             nestingPath="form.habitatsRegsResponseType"
             labelText=radioOption.getTextAreaDisplayText()
             hintText=radioOption.getTextAreaHintText(applicationReference)/>
@@ -52,6 +53,7 @@
           <@fdsRadio.radioItem path="form.eiaRegsResponseType" itemMap={key: value}>
             <@fdsTextarea.textarea
               path=radioOption.getTextAreaInputName()
+              optionalLabel=!radioOption.isTextAreaInputRequired()
               nestingPath="form.eiaRegsResponseType"
               labelText=radioOption.getTextAreaDisplayText()
               hintText=radioOption.getTextAreaHintText(applicationReference)/>
