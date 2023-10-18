@@ -16,7 +16,7 @@
       <@dataItemFilter.applicationTypeFilter form=form applicationTypeCheckboxes=appTypes/>
       <@dataItemFilter.durationFilter form=form durationCheckboxes=durationTypes/>
       <@dataItemFilter.operatorFilter form=form prefilledOperator=prefilledOperator operatorSearchRestUrl=operatorSearchRestUrl/>
-      <@submittedYearFilter form=form/>
+      <@dataItemFilter.submittedYearFilter form=form/>
       <@consentStartYearFilter form=form/>
       <#if aceStatuses?has_content>
         <@aceFilter form=form aceCheckboxes=aceStatuses/>
@@ -104,16 +104,6 @@
     <@fdsResultList.resultListDataValue key="Other information" value=otherInformation/>
   </@fdsResultList.resultListDataItem>
 </@fdsResultList.resultListItem>
-</#macro>
-
-<#macro submittedYearFilter form>
-  <@fdsSearch.searchFilterItem itemName="Submission year" expanded=form.submittedYear?has_content>
-    <@fdsSearch.searchTextInput
-      path="form.submittedYear"
-      labelText=""
-      suffixScreenReaderPrompt="Application submission year"
-    />
-  </@fdsSearch.searchFilterItem>
 </#macro>
 
 <#macro consentStartYearFilter form>

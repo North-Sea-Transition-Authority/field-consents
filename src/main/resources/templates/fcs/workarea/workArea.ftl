@@ -17,6 +17,7 @@
         <@dataItemFilter.durationFilter form=form durationCheckboxes=durationTypes/>
         <@assetFilter form=form prefilledAsset=prefilledAsset assetSearchRestUrl=assetSearchRestUrl/>
         <@dataItemFilter.operatorFilter form=form prefilledOperator=prefilledOperator operatorSearchRestUrl=operatorSearchRestUrl/>
+        <@dataItemFilter.submittedYearFilter form=form/>
         <@geographicAreaFilter form=form geographicAreaCheckboxes=geographicAreas/>
         <@dataItemFilter.assetTypeWithShoreFilter form=form assetTypeWithShoreCheckboxes=assetTypesWithShore/>
         <#if caseOfficersAssigned?has_content>

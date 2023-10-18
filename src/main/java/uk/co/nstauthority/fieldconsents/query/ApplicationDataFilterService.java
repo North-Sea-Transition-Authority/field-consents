@@ -2,6 +2,8 @@ package uk.co.nstauthority.fieldconsents.query;
 
 import static org.apache.commons.lang3.StringUtils.isNumeric;
 import static org.jooq.impl.DSL.exists;
+import static org.jooq.impl.DSL.falseCondition;
+import static org.jooq.impl.DSL.year;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationAssets.APPLICATION_ASSETS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.Applications.APPLICATIONS;
@@ -99,6 +101,10 @@ public class ApplicationDataFilterService {
     return conditions.get(0).or(conditions.get(1));
   }
 
+  private Condition getSubmittedYearQueryCondition(Integer submittedYear) {
+    return year(APPLICATION_VERSIONS.SUBMITTED_DATE_TIME).eq(submittedYear);
+  }
+
   private static boolean containsFields(List<AssetTypeWithShore> assetTypeWithShores) {
     return assetTypeWithShores
         .stream()
@@ -142,6 +148,15 @@ public class ApplicationDataFilterService {
     Optional.ofNullable(dataFilterForm.getAssetTypesWithShore())
       .map(this::getAssetTypesQueryCondition)
           .ifPresent(conditions::add);
+
+    var submittedYear = dataFilterForm.getSubmittedYear();
+    if (Objects.nonNull(submittedYear)) {
+      if (isNumeric(submittedYear)) {
+        conditions.add(this.getSubmittedYearQueryCondition(Integer.parseInt(submittedYear)));
+      } else {
+        conditions.add(falseCondition());
+      }
+    }
 
     return conditions;
   }

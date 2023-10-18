@@ -194,24 +194,6 @@ class SearchFilterServiceTest {
         );
   }
 
-  @Test
-  void getConditions_withSubmittedYearNonNumeric() {
-    form.setSubmittedYear("abc");
-    when(applicationDataFilterService.getConditions(form)).thenReturn(Collections.emptyList());
-
-    assertThat(searchFilterService.getConditions(form, TeamType.INDUSTRY)).containsExactly(falseCondition());
-  }
-
-  @Test
-  void getConditions_withValidSubmittedYear() {
-    form.setSubmittedYear("2023");
-    when(applicationDataFilterService.getConditions(form)).thenReturn(Collections.emptyList());
-
-    assertThat(searchFilterService.getConditions(form, TeamType.INDUSTRY)).containsExactly(
-        year(APPLICATION_VERSIONS.SUBMITTED_DATE_TIME).eq(2023)
-    );
-  }
-
   @ParameterizedTest
   @EnumSource(value = TeamType.class)
   void getConditions_withValidConsentStartYear(TeamType teamType) {

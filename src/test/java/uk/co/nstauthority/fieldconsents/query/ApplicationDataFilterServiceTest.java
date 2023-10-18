@@ -2,6 +2,8 @@ package uk.co.nstauthority.fieldconsents.query;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.jooq.impl.DSL.exists;
+import static org.jooq.impl.DSL.falseCondition;
+import static org.jooq.impl.DSL.year;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2Json;
@@ -191,5 +193,21 @@ class ApplicationDataFilterServiceTest {
                     )
                 )
         );
+  }
+
+  @Test
+  void getConditions_withSubmittedYearNonNumeric() {
+    dataFilterForm.setSubmittedYear("abc");
+
+    assertThat(applicationDataFilterService.getConditions(dataFilterForm)).containsExactly(falseCondition());
+  }
+
+  @Test
+  void getConditions_withValidSubmittedYear() {
+    dataFilterForm.setSubmittedYear("2023");
+
+    assertThat(applicationDataFilterService.getConditions(dataFilterForm)).containsExactly(
+        year(APPLICATION_VERSIONS.SUBMITTED_DATE_TIME).eq(2023)
+    );
   }
 }

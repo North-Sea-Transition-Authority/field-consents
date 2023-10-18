@@ -16,6 +16,7 @@ public class WorkAreaFilterFormService {
     form.setGeographicAreas(filter.getGeographicAreas());
     form.setAssetTypesWithShore(filter.getAssetTypesWithShore());
     form.setCaseOfficerWuaId(filter.getCaseOfficerWuaId());
+    form.setSubmittedYear(filter.getSubmittedYear());
     return form;
   }
 }

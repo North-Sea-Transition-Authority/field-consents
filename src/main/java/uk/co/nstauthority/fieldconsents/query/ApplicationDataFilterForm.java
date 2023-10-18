@@ -15,6 +15,7 @@ public class ApplicationDataFilterForm {
   Integer operatorId;
   List<GeographicArea> geographicAreas;
   List<AssetTypeWithShore> assetTypesWithShore;
+  String submittedYear;
 
   public String getReferenceNumber() {
     return referenceNumber;
@@ -73,6 +74,14 @@ public class ApplicationDataFilterForm {
     this.assetTypesWithShore = assetTypes;
   }
 
+  public String getSubmittedYear() {
+    return submittedYear;
+  }
+
+  public void setSubmittedYear(String submittedYear) {
+    this.submittedYear = submittedYear;
+  }
+
   public void clearFilter() {
     setReferenceNumber(null);
     setStatuses(null);
@@ -81,6 +90,7 @@ public class ApplicationDataFilterForm {
     setOperatorId(null);
     setGeographicAreas(null);
     setAssetTypesWithShore(null);
+    setSubmittedYear(null);
   }
 
   public void update(ApplicationDataFilterForm form) {
@@ -91,5 +101,6 @@ public class ApplicationDataFilterForm {
     setOperatorId(form.getOperatorId());
     setGeographicAreas(form.getGeographicAreas());
     setAssetTypesWithShore(form.getAssetTypesWithShore());
+    setSubmittedYear(form.getSubmittedYear());
   }
 }

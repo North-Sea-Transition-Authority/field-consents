@@ -79,15 +79,6 @@ public class SearchFilterService {
       searchFilterConditions.add(getTerminalCondition(terminalJson));
     }
 
-    var submittedYear = form.getSubmittedYear();
-    if (Objects.nonNull(submittedYear)) {
-      if (isNumeric(submittedYear)) {
-        searchFilterConditions.add(this.getSubmittedYearQueryCondition(Integer.parseInt(submittedYear)));
-      } else {
-        searchFilterConditions.add(falseCondition());
-      }
-    }
-
     var consentStartYear = form.getConsentStartYear();
     if (Objects.nonNull(consentStartYear)) {
       if (isNumeric(consentStartYear)) {
@@ -150,10 +141,6 @@ public class SearchFilterService {
         .join(APPLICATION_VERSIONS)
           .onKey(APPLICATION_CONSULTATIONS.REQUEST_APPLICATION_VERSION_ID)
         .where(APPLICATION_VERSIONS.APPLICATION_ID.eq(APPLICATIONS.ID)));
-  }
-
-  private Condition getSubmittedYearQueryCondition(Integer submittedYear) {
-    return year(APPLICATION_VERSIONS.SUBMITTED_DATE_TIME).eq(submittedYear);
   }
 
   private Condition getConsentStartYearQueryCondition(Integer consentStartYear) {

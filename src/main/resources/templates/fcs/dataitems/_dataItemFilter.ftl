@@ -57,3 +57,13 @@
     />
   </@fdsSearch.searchFilterItem>
 </#macro>
+
+<#macro submittedYearFilter form>
+  <@fdsSearch.searchFilterItem itemName="Submission year" expanded=form.submittedYear?has_content>
+    <@fdsSearch.searchTextInput
+      path="form.submittedYear"
+      labelText=""
+      suffixScreenReaderPrompt="Application submission year"
+    />
+  </@fdsSearch.searchFilterItem>
+</#macro>
