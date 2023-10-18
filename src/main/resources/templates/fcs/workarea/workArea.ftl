@@ -19,6 +19,9 @@
         <@dataItemFilter.operatorFilter form=form prefilledOperator=prefilledOperator operatorSearchRestUrl=operatorSearchRestUrl/>
         <@geographicAreaFilter form=form geographicAreaCheckboxes=geographicAreas/>
         <@dataItemFilter.assetTypeWithShoreFilter form=form assetTypeWithShoreCheckboxes=assetTypesWithShore/>
+        <#if caseOfficersAssigned?has_content>
+          <@assignedCaseOfficerFilter form=form caseOfficerOptions=caseOfficersAssigned/>
+        </#if>
       </@fdsSearch.searchFilterList>
     </@fdsSearch.searchFilter>
     <@fdsSearch.searchPageContent twoThirdsWidth=true>
@@ -67,6 +70,17 @@
     <@fdsSearch.searchCheckboxes
       path="form.geographicAreas"
       checkboxes=geographicAreaCheckboxes
+    />
+  </@fdsSearch.searchFilterItem>
+</#macro>
+
+<#macro assignedCaseOfficerFilter form caseOfficerOptions>
+  <@fdsSearch.searchFilterItem itemName="Case officer assigned" expanded=form.caseOfficerWuaId?has_content>
+    <@fdsSearchSelector.searchSelectorEnhanced
+      path="form.caseOfficerWuaId"
+      options=caseOfficerOptions
+      labelText=""
+      labelHeadingClass="govuk-input--width-10"
     />
   </@fdsSearch.searchFilterItem>
 </#macro>

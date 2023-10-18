@@ -11,6 +11,8 @@ import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.UNASSIGNED_A
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.UNASSIGNED_CONSULTATIONS;
 
 import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.support.SessionStatus;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.assets.AssetRestController;
 import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
@@ -29,11 +32,13 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.AccessibleByServiceUsers;
 import uk.co.nstauthority.fieldconsents.authorisation.HasPermission;
 import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
+import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormService;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 
 @Controller
 // the ordering of the mappings is important here otherwise the top navigation always highlights the work area
@@ -59,19 +64,22 @@ public class WorkAreaController {
 
   private final ApplicationDataFilterFormService applicationDataFilterFormService;
 
+  private final CaseAssignmentService caseAssignmentService;
 
   public WorkAreaController(WorkAreaService workAreaService,
                             WorkAreaFilterFormService workAreaFormService,
                             WorkAreaFilterService workAreaFilterService,
                             TeamService teamService,
                             PermissionService permissionService,
-                            ApplicationDataFilterFormService applicationDataFilterFormService) {
+                            ApplicationDataFilterFormService applicationDataFilterFormService,
+                            CaseAssignmentService caseAssignmentService) {
     this.workAreaService = workAreaService;
     this.workAreaFormService = workAreaFormService;
     this.workAreaFilterService = workAreaFilterService;
     this.teamService = teamService;
     this.permissionService = permissionService;
     this.applicationDataFilterFormService = applicationDataFilterFormService;
+    this.caseAssignmentService = caseAssignmentService;
   }
 
   @GetMapping
@@ -214,10 +222,12 @@ public class WorkAreaController {
   private ModelAndView renderRegulatorWorkAreaOnTab(WorkAreaFilter filter,
                                                     ServiceUserDetail user,
                                                     WorkAreaTab workAreaTab) {
+    var caseOfficersAssignedMap = convertUsersToMap(caseAssignmentService.getCurrentCaseOfficers());
     return getWorkAreaModelAndView(filter, user)
         .addObject("selectedTab", workAreaTab.getValue())
         .addObject(WORK_AREA_ITEMS, workAreaService.getRegulatorWorkAreaItems(filter, user, workAreaTab))
-        .addObject(IS_WORK_AREA_WITH_TABS, true);
+        .addObject(IS_WORK_AREA_WITH_TABS, true)
+        .addObject("caseOfficersAssigned", caseOfficersAssignedMap);
   }
 
   private ModelAndView renderConsulteeWorkAreaOnTab(WorkAreaFilter filter,
@@ -256,6 +266,13 @@ public class WorkAreaController {
         .addObject("form", form)
         .addObject("pageTitle", WORK_AREA_TITLE)
         .addObject("workAreaTabs", workAreaService.getTabsAvailableToUser(user));
+  }
+
+  private Map<String, String> convertUsersToMap(List<EnergyPortalUserDto> energyPortalUserDtos) {
+    return energyPortalUserDtos.stream()
+        .collect(StreamUtils.toLinkedHashMap(
+            energyPortalUserDto -> energyPortalUserDto.webUserAccountId().toString(),
+            EnergyPortalUserDto::displayName));
   }
 
   @PostMapping

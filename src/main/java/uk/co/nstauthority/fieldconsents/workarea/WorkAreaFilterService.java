@@ -56,6 +56,10 @@ public class WorkAreaFilterService {
     conditions.addAll(applicationDataFilterService.getConditions(filter));
     conditions.addAll(getFieldAssetConditions(filter));
 
+    Optional.ofNullable(filter.getCaseOfficerWuaId())
+        .map(this::getCaseOfficerAssignedCondition)
+        .ifPresent(conditions::add);
+
     if (Objects.isNull(workAreaTab)) {
       return conditions;
     }
@@ -158,5 +162,9 @@ public class WorkAreaFilterService {
 
   private Condition getSubmittedApplicationStatusCondition() {
     return APPLICATION_VERSIONS.STATUS.eq(ApplicationVersionStatus.SUBMITTED.name());
+  }
+
+  private Condition getCaseOfficerAssignedCondition(Long caseOfficerWuaId) {
+    return APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.eq(caseOfficerWuaId.intValue());
   }
 }

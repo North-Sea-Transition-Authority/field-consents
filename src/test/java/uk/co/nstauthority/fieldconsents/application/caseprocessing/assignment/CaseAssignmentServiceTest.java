@@ -5,9 +5,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus.SUBMITTED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.ACCESS_MANGER_TEAM_MEMBER_VIEW;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.CASE_OFFICER_TEAM_MEMBER_VIEW_1;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.CASE_OFFICER_TEAM_MEMBER_VIEW_2;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.ENERGY_PORTAL_USER_1;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.ENERGY_PORTAL_USER_2;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.ENERGY_PORTAL_USER_3;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.TEAM_MEMBER_VIEW_LIST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.VIEWER_TEAM_MEMBER_VIEW;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentService.USER_NOT_IN_CASE_OFFICER_ROLE;
@@ -15,6 +19,7 @@ import static uk.co.nstauthority.fieldconsents.application.workareapriority.Appl
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CASE_OFFICER_ASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CASE_OFFICER_RELEASE_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CASE_OFFICER_TAKE_OWNERSHIP;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CASE_OFFICER;
 
 import java.util.Collections;
 import java.util.List;
@@ -34,9 +39,15 @@ import uk.co.nstauthority.fieldconsents.application.workareapriority.Application
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
+import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.teams.Team;
+import uk.co.nstauthority.fieldconsents.teams.TeamMember;
+import uk.co.nstauthority.fieldconsents.teams.TeamMemberService;
+import uk.co.nstauthority.fieldconsents.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
+import uk.co.nstauthority.fieldconsents.teams.TeamService;
 import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamService;
 
 @ExtendWith(MockitoExtension.class)
@@ -50,6 +61,21 @@ class CaseAssignmentServiceTest {
 
   private static final Team REGULATOR_TEAM = TeamTestUtil.Builder().build();
 
+  private static final TeamMember CASE_OFFICER_1 = TeamMemberTestUtil.Builder()
+      .withWebUserAccountId(1L)
+      .withRole(CASE_OFFICER)
+      .build();
+
+  private static final TeamMember CASE_OFFICER_2 = TeamMemberTestUtil.Builder()
+      .withWebUserAccountId(2L)
+      .withRole(CASE_OFFICER)
+      .build();
+
+  private static final TeamMember CASE_OFFICER_3 = TeamMemberTestUtil.Builder()
+      .withWebUserAccountId(3L)
+      .withRole(CASE_OFFICER)
+      .build();
+
   @Mock
   private ApplicationVersionRepository applicationVersionRepository;
 
@@ -61,6 +87,15 @@ class CaseAssignmentServiceTest {
 
   @Mock
   private ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
+
+  @Mock
+  private TeamMemberService teamMemberService;
+
+  @Mock
+  private EnergyPortalUserService energyPortalUserService;
+  
+  @Mock
+  private TeamService teamService;
 
   @InjectMocks
   private CaseAssignmentService caseAssignmentService;
@@ -191,5 +226,91 @@ class CaseAssignmentServiceTest {
 
     assertThat(caseAssignmentService.getCaseOfficerAssignmentCandidates(applicationVersion, USER))
         .isEmpty();
+  }
+
+  @Test
+  void getCurrentCaseOfficers_whenUserIsNotRegulator() {
+    when(teamService.getTeamsByType(TeamType.REGULATOR)).thenReturn(Collections.emptyList());
+
+    List<Long> currentCaseOfficersWuaIds = List.of(CASE_OFFICER_1.wuaId().id(), CASE_OFFICER_2.wuaId().id());
+    when(applicationVersionRepository
+        .findAllCaseOfficerWuaIdsByApplicationVersionStatus(SUBMITTED)).thenReturn(currentCaseOfficersWuaIds);
+
+    when(energyPortalUserService.findByWuaIds(List.of(CASE_OFFICER_1.wuaId(), CASE_OFFICER_2.wuaId())))
+        .thenReturn(List.of(ENERGY_PORTAL_USER_1, ENERGY_PORTAL_USER_2));
+
+    assertThat(caseAssignmentService.getCurrentCaseOfficers())
+        .containsExactly(
+            ENERGY_PORTAL_USER_1,
+            ENERGY_PORTAL_USER_2
+        );
+  }
+
+  @Test
+  void getCurrentCaseOfficers_withNoCurrentCaseOfficersAvailable() {
+    when(teamService.getTeamsByType(TeamType.REGULATOR)).thenReturn(List.of(REGULATOR_TEAM));
+    when(teamMemberService.getTeamMembers(REGULATOR_TEAM)).thenReturn(Collections.emptyList());
+    List<Long> currentCaseOfficersWuaIds = List.of(CASE_OFFICER_1.wuaId().id(), CASE_OFFICER_2.wuaId().id());
+    when(applicationVersionRepository
+        .findAllCaseOfficerWuaIdsByApplicationVersionStatus(SUBMITTED)).thenReturn(currentCaseOfficersWuaIds);
+
+    when(energyPortalUserService.findByWuaIds(List.of(CASE_OFFICER_1.wuaId(), CASE_OFFICER_2.wuaId())))
+        .thenReturn(List.of(ENERGY_PORTAL_USER_1, ENERGY_PORTAL_USER_2));
+
+    assertThat(caseAssignmentService.getCurrentCaseOfficers())
+        .containsExactly(
+            ENERGY_PORTAL_USER_1,
+            ENERGY_PORTAL_USER_2
+        );
+  }
+
+  @Test
+  void getCurrentCaseOfficers_withNoCurrentNorPreviouslyAssignedCaseOfficersAvailable() {
+    when(teamService.getTeamsByType(TeamType.REGULATOR)).thenReturn(List.of(REGULATOR_TEAM));
+    when(teamMemberService.getTeamMembers(REGULATOR_TEAM)).thenReturn(Collections.emptyList());
+    when(applicationVersionRepository
+        .findAllCaseOfficerWuaIdsByApplicationVersionStatus(SUBMITTED))
+        .thenReturn(Collections.emptyList());
+
+    when(energyPortalUserService.findByWuaIds(Collections.emptyList()))
+        .thenReturn(Collections.emptyList());
+
+    assertThat(caseAssignmentService.getCurrentCaseOfficers()).isEmpty();
+  }
+
+  @Test
+  void getCurrentCaseOfficers_withCurrentCaseOfficersOnly() {
+    when(teamService.getTeamsByType(TeamType.REGULATOR)).thenReturn(List.of(REGULATOR_TEAM));
+    when(teamMemberService.getTeamMembers(REGULATOR_TEAM)).thenReturn(List.of(CASE_OFFICER_1, CASE_OFFICER_2));
+    List<Long> currentCaseOfficersWuaIds = List.of(CASE_OFFICER_1.wuaId().id(), CASE_OFFICER_2.wuaId().id());
+    when(applicationVersionRepository
+        .findAllCaseOfficerWuaIdsByApplicationVersionStatus(SUBMITTED)).thenReturn(currentCaseOfficersWuaIds);
+
+    when(energyPortalUserService.findByWuaIds(List.of(CASE_OFFICER_1.wuaId(), CASE_OFFICER_2.wuaId())))
+        .thenReturn(List.of(ENERGY_PORTAL_USER_1, ENERGY_PORTAL_USER_2));
+
+    assertThat(caseAssignmentService.getCurrentCaseOfficers())
+        .containsExactly(
+            ENERGY_PORTAL_USER_1,
+            ENERGY_PORTAL_USER_2
+        );
+  }
+
+  @Test
+  void getCurrentCaseOfficers_withPreviouslyAssignedCaseOfficers() {
+    when(teamService.getTeamsByType(TeamType.REGULATOR)).thenReturn(List.of(REGULATOR_TEAM));
+    List<Long> previousCaseOfficersWuaIds = List.of(CASE_OFFICER_3.wuaId().id());
+    when(applicationVersionRepository
+        .findAllCaseOfficerWuaIdsByApplicationVersionStatus(SUBMITTED)).thenReturn(previousCaseOfficersWuaIds);
+    when(teamMemberService.getTeamMembers(REGULATOR_TEAM)).thenReturn(List.of(CASE_OFFICER_1, CASE_OFFICER_2));
+    when(energyPortalUserService.findByWuaIds(List.of(CASE_OFFICER_1.wuaId(), CASE_OFFICER_2.wuaId(), CASE_OFFICER_3.wuaId())))
+        .thenReturn(List.of(ENERGY_PORTAL_USER_1, ENERGY_PORTAL_USER_2, ENERGY_PORTAL_USER_3));
+
+    assertThat(caseAssignmentService.getCurrentCaseOfficers())
+        .containsExactly(
+            ENERGY_PORTAL_USER_1,
+            ENERGY_PORTAL_USER_2,
+            ENERGY_PORTAL_USER_3
+        );
   }
 }

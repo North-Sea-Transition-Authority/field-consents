@@ -13,10 +13,12 @@ public class WorkAreaFilter extends WorkAreaFilterForm implements Serializable {
   public void clearSession() {
     super.clearFilter();
     assetKey = null;
+    caseOfficerWuaId = null;
   }
 
   public void update(WorkAreaFilterForm form) {
     super.update(form);
     assetKey = form.getAssetKey();
+    caseOfficerWuaId = form.getCaseOfficerWuaId();
   }
 }

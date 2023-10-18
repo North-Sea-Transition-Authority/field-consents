@@ -27,6 +27,7 @@ import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.assets.AssetRestController;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
@@ -56,6 +57,9 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @MockBean
   private WorkAreaFilterService workAreaFilterService;
+
+  @MockBean
+  protected CaseAssignmentService caseAssignmentService;
 
   private WorkAreaFilter filter;
 

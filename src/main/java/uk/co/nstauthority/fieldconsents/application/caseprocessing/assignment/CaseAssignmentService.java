@@ -1,14 +1,20 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment;
 
+import static uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus.SUBMITTED;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.REGULATOR;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CASE_OFFICER_ASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CASE_OFFICER_RELEASE_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CASE_OFFICER_TAKE_OWNERSHIP;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CASE_OFFICER;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.UnaryOperator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,8 +24,14 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionRepository
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
+import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
+import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
+import uk.co.nstauthority.fieldconsents.teams.TeamMember;
+import uk.co.nstauthority.fieldconsents.teams.TeamMemberService;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberView;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
+import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamService;
 
@@ -30,22 +42,28 @@ public class CaseAssignmentService {
       "Cannot assign case officer as user with wua id %s is not in a regulator case officer role"::formatted;
 
   private final ApplicationVersionRepository applicationVersionRepository;
-
   private final RegulatorTeamService regulatorTeamService;
-
   private final TeamMemberViewService teamMemberViewService;
-
   private final ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
+  private final EnergyPortalUserService energyPortalUserService;
+  private final TeamMemberService teamMemberService;
+  private final TeamService teamService;
 
   @Autowired
   public CaseAssignmentService(ApplicationVersionRepository applicationVersionRepository,
                                RegulatorTeamService regulatorTeamService,
                                TeamMemberViewService teamMemberViewService,
-                               ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService) {
+                               ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService,
+                               EnergyPortalUserService energyPortalUserService,
+                               TeamMemberService teamMemberService,
+                               TeamService teamService) {
     this.applicationVersionRepository = applicationVersionRepository;
     this.regulatorTeamService = regulatorTeamService;
     this.teamMemberViewService = teamMemberViewService;
     this.applicationWorkAreaPriorityService = applicationWorkAreaPriorityService;
+    this.energyPortalUserService = energyPortalUserService;
+    this.teamMemberService = teamMemberService;
+    this.teamService = teamService;
   }
 
   @Transactional
@@ -94,6 +112,37 @@ public class CaseAssignmentService {
         .orElse(Collections.emptyList())
         .stream()
         .sorted(Comparator.comparing(TeamMemberView::getDisplayName))
+        .toList();
+  }
+
+  public List<EnergyPortalUserDto> getCurrentCaseOfficers() {
+    // The list of current case officers is the union of all current case officers in the NSTA team
+    // and the case officers assigned to current applications.
+
+    var teamCaseOfficerWuaIds = getTeamCaseOfficerWuaIds();
+    var caseOfficerAssignedWuaIds = applicationVersionRepository
+        .findAllCaseOfficerWuaIdsByApplicationVersionStatus(SUBMITTED)
+        .stream()
+        .map(WebUserAccountId::from)
+        .toList();
+
+    Set<WebUserAccountId> currentCaseOfficersWuaIds = new HashSet<>();
+    currentCaseOfficersWuaIds.addAll(teamCaseOfficerWuaIds);
+    currentCaseOfficersWuaIds.addAll(caseOfficerAssignedWuaIds);
+
+    return energyPortalUserService.findByWuaIds(new ArrayList<>(currentCaseOfficersWuaIds))
+        .stream()
+        .sorted(Comparator.comparing(EnergyPortalUserDto::displayName))
+        .toList();
+  }
+
+  private List<WebUserAccountId> getTeamCaseOfficerWuaIds() {
+    return teamService.getTeamsByType(TeamType.REGULATOR)
+        .stream()
+        .map(teamMemberService::getTeamMembers)
+        .flatMap(Collection::stream)
+        .filter(teamMember -> teamMember.roles().contains(CASE_OFFICER))
+        .map(TeamMember::wuaId)
         .toList();
   }
 }

@@ -403,6 +403,21 @@ class WorkAreaFilterServiceTest {
     assertNonDefaultFilter(workAreaFilter);
   }
 
+  @Test
+  void getConditions_caseOfficerAssignedCondition() {
+    when(teamService.isRegulatorUser(user)).thenReturn(true);
+
+    form.setCaseOfficerWuaId(123L);
+    filter.update(form);
+
+    var conditions = workAreaFilterService.getConditions(filter, user, null);
+
+    assertThat(conditions).containsExactly(
+        SUBMITTED_APPLICATION_CONDITION,
+        APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.eq(123)
+    );
+  }
+
   private void assertNonDefaultFilter(WorkAreaFilter workAreaFilter) {
     assertThat(workAreaFilter.getReferenceNumber()).isNull();
     assertThat(workAreaFilter.getDurationTypes()).isNull();
