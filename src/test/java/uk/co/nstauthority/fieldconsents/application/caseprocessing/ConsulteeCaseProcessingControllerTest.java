@@ -29,6 +29,9 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CasePr
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationRequestView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest.FurtherInformationRequest;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest.FurtherInformationRequestService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest.FurtherInformationRequestView;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -48,7 +51,12 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
   @MockBean
   private ConsultationService consultationService;
 
+  @MockBean
+  private FurtherInformationRequestService furtherInformationRequestService;
+
   private ApplicationVersion applicationVersion;
+
+  private FurtherInformationRequest furtherInformationRequest;
 
   private ModelAndView emptyModelAndView;
 
@@ -63,6 +71,9 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
         mock(CaseProcessingActionView.class),
         mock(CaseProcessingActionView.class)
     );
+
+    furtherInformationRequest = new FurtherInformationRequest();
+    furtherInformationRequest.setRequestText("request text");
 
     // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
@@ -108,7 +119,8 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
 
     assertThat(model)
         .containsEntry("actionList", caseProcessingActionViews)
-        .containsEntry("consultationRequestView", ConsultationRequestView.from(consultation));
+        .containsEntry("consultationRequestView", ConsultationRequestView.from(consultation))
+        .containsEntry("furtherInformationRequestView", FurtherInformationRequestView.from(furtherInformationRequest));
   }
 
   private void setUpMocksWithConsultation(@Nullable Consultation consultation) {
@@ -116,6 +128,7 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(PAGE_TITLE);
     when(caseProcessingActionService.getUserActionViews(applicationVersion, user)).thenReturn(caseProcessingActionViews);
     when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication())).thenReturn(Optional.ofNullable(consultation));
+    when(furtherInformationRequestService.findLatestOpenFurtherInformationRequest(consultation)).thenReturn(Optional.of(furtherInformationRequest));
     when(applicationSummaryService.getApplicationSummaryModelAndView(
         applicationVersion,
         "fcs/application/consultation/caseProcessing",

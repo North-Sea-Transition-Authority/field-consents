@@ -14,6 +14,8 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationRequestView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest.FurtherInformationRequestService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest.FurtherInformationRequestView;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
@@ -30,19 +32,22 @@ public class ConsulteeCaseProcessingController {
   private final ApplicationSummaryService applicationSummaryService;
   private final CaseProcessingActionService caseProcessingActionService;
   private final ConsultationService consultationService;
+  private final FurtherInformationRequestService furtherInformationRequestService;
 
   ConsulteeCaseProcessingController(
       ApplicationService applicationService,
       ApplicationVersionService applicationVersionService,
       ApplicationSummaryService applicationSummaryService,
       CaseProcessingActionService caseProcessingActionService,
-      ConsultationService consultationService
+      ConsultationService consultationService,
+      FurtherInformationRequestService furtherInformationRequestService
   ) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.applicationSummaryService = applicationSummaryService;
     this.caseProcessingActionService = caseProcessingActionService;
     this.consultationService = consultationService;
+    this.furtherInformationRequestService = furtherInformationRequestService;
   }
 
   @GetMapping
@@ -56,9 +61,16 @@ public class ConsulteeCaseProcessingController {
         pageTitle
     );
 
-    consultationService.findLatestOpenConsultation(applicationVersion.getApplication())
+    var consultationOptional = consultationService.findLatestOpenConsultation(applicationVersion.getApplication());
+
+    consultationOptional
         .map(ConsultationRequestView::from)
         .ifPresent(view -> modelAndView.addObject("consultationRequestView", view));
+
+    consultationOptional
+        .flatMap(furtherInformationRequestService::findLatestOpenFurtherInformationRequest)
+        .map(FurtherInformationRequestView::from)
+        .ifPresent(view -> modelAndView.addObject("furtherInformationRequestView", view));
 
     var actionList = caseProcessingActionService.getUserActionViews(applicationVersion, user);
     modelAndView.addObject("actionList", actionList);

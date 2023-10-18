@@ -1,6 +1,10 @@
 package uk.co.nstauthority.fieldconsents.query;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_REFERENCE;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_1;
@@ -25,19 +29,26 @@ import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.sub
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.technicalReviewer;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.viewer;
 
+import java.time.Instant;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.EnumSource.Mode;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
@@ -51,30 +62,38 @@ import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.util.SelfReturningAnswer;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationDataItemDtoServiceTest {
 
   @Mock
   private FieldService fieldService;
+
   @Mock
   private EnergyPortalUserService energyPortalUserService;
+
   @Mock
   private OrganisationUnitService organisationUnitService;
+
   @Mock
   private ApplicationService applicationService;
+
   @Mock
   private ApplicationVersionService applicationVersionService;
+
   @Mock
   private PermissionService permissionService;
+
+  @Spy
   @InjectMocks
   private ApplicationDataItemDtoService applicationDataItemDtoService;
-
 
   @Test
   void getOrganisationUnitJsonsFromApplicationDataItemDtos_emptyList() {
     var applicationDataItemDtoTerminal = ApplicationDataItemUtil.getApplicationDataItemDtoForShortVentSubmittedForTerminal();
-    when(organisationUnitService.getOrganisationUnitsByIds(List.of(PRIMARY_OPERATOR_OU_ID_1), ALL_ORG_UNITS_DATA_ITEM_PURPOSE))
+    when(organisationUnitService.getOrganisationUnitsByIds(List.of(PRIMARY_OPERATOR_OU_ID_1),
+        ALL_ORG_UNITS_DATA_ITEM_PURPOSE))
         .thenReturn(Collections.emptyList());
 
     assertThat(applicationDataItemDtoService.getOrganisationUnitJsonsFromApplicationDataItemDtos(List.of(
@@ -85,7 +104,8 @@ class ApplicationDataItemDtoServiceTest {
   @Test
   void getOrganisationUnitJsonsFromApplicationDataItemDtos_nonEmptyList() {
     var applicationDataItemDtoTerminal = ApplicationDataItemUtil.getApplicationDataItemDtoForShortVentSubmittedForTerminal();
-    when(organisationUnitService.getOrganisationUnitsByIds(List.of(PRIMARY_OPERATOR_OU_ID_1), ALL_ORG_UNITS_DATA_ITEM_PURPOSE))
+    when(organisationUnitService.getOrganisationUnitsByIds(List.of(PRIMARY_OPERATOR_OU_ID_1),
+        ALL_ORG_UNITS_DATA_ITEM_PURPOSE))
         .thenReturn(List.of(OrganisationUnitTestUtil.orgUnit1Json));
 
     assertThat(applicationDataItemDtoService.getOrganisationUnitJsonsFromApplicationDataItemDtos(List.of(
@@ -98,16 +118,19 @@ class ApplicationDataItemDtoServiceTest {
     var applicationDataItemDtoField = ApplicationDataItemUtil.getApplicationDataItemDtoForAnnualProductionInProgressForField();
     when(fieldService.findFieldsByIds(List.of(FIELD_ID_1), FIELD_LOOKUP_PURPOSE)).thenReturn(Collections.emptyList());
 
-    assertThat(applicationDataItemDtoService.getFieldJsonMapFromApplicationDataItemDtos(List.of(applicationDataItemDtoField)))
+    assertThat(
+        applicationDataItemDtoService.getFieldJsonMapFromApplicationDataItemDtos(List.of(applicationDataItemDtoField)))
         .isEmpty();
   }
 
   @Test
   void getFieldJsonMapFromApplicationDataItemDtos_nonEmptyMap() {
     var applicationDataItemDtoField = ApplicationDataItemUtil.getApplicationDataItemDtoForAnnualProductionInProgressForField();
-    when(fieldService.findFieldsByIds(List.of(FIELD_ID_1), FIELD_LOOKUP_PURPOSE)).thenReturn(List.of(field1JsonWithOperator));
+    when(fieldService.findFieldsByIds(List.of(FIELD_ID_1), FIELD_LOOKUP_PURPOSE)).thenReturn(
+        List.of(field1JsonWithOperator));
 
-    assertThat(applicationDataItemDtoService.getFieldJsonMapFromApplicationDataItemDtos(List.of(applicationDataItemDtoField)))
+    assertThat(
+        applicationDataItemDtoService.getFieldJsonMapFromApplicationDataItemDtos(List.of(applicationDataItemDtoField)))
         .isEqualTo(Map.of(FIELD_ID_1, field1JsonWithOperator));
   }
 
@@ -123,7 +146,8 @@ class ApplicationDataItemDtoServiceTest {
     when(energyPortalUserService.getEnergyPortalUserMap(portalUserWuaIdList))
         .thenReturn(portalUserDtosMap);
 
-    assertThat(applicationDataItemDtoService.getEnergyPortalUserDtoMapFromApplicationDataItemDtos(List.of(applicationDataItemDto)))
+    assertThat(applicationDataItemDtoService.getEnergyPortalUserDtoMapFromApplicationDataItemDtos(
+        List.of(applicationDataItemDto)))
         .isEqualTo(portalUserDtosMap);
   }
 
@@ -137,7 +161,8 @@ class ApplicationDataItemDtoServiceTest {
 
   @Test
   void getDisplayReference_whenApplicationVersion2InProgressAndUserCanResume() {
-    var ventAppVersion = ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.VENT, 1, 2);
+    var ventAppVersion = ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.VENT, 1,
+        2);
     when(applicationService.generateApplicationReference(ventAppVersion)).thenReturn("VCON/500/0 (Version 2)");
     when(applicationVersionService.getApplicationVersionById(ventAppVersion.getId())).thenReturn(ventAppVersion);
 
@@ -169,7 +194,8 @@ class ApplicationDataItemDtoServiceTest {
 
   @Test
   void getDisplayReference_whenApplicationVersion2InProgressAndUserCanView() {
-    var ventAppVersion = ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.VENT, 1, 2);
+    var ventAppVersion = ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.VENT, 1,
+        2);
     when(applicationService.generateApplicationReference(ventAppVersion)).thenReturn("VCON/500/0 (Version 2)");
     when(applicationVersionService.getApplicationVersionById(ventAppVersion.getId())).thenReturn(ventAppVersion);
 
@@ -237,7 +263,8 @@ class ApplicationDataItemDtoServiceTest {
 
     assertThat(applicationDataItemDtoService.getDisplayConsentDuration(applicationDataItemDto))
         .isEqualTo(
-            "%s %d - %d".formatted(consentDurationString, applicationDataItemDto.getLongTermStartYear(), applicationDataItemDto.getLongTermEndYear())
+            "%s %d - %d".formatted(consentDurationString, applicationDataItemDto.getLongTermStartYear(),
+                applicationDataItemDto.getLongTermEndYear())
         );
   }
 
@@ -245,7 +272,8 @@ class ApplicationDataItemDtoServiceTest {
   void getDisplayAssetLocation_Field() {
     var applicationDataItemDto = getApplicationDataItemDtoForAnnualProductionInProgressForField();
 
-    assertThat(applicationDataItemDtoService.getDisplayAssetLocation(applicationDataItemDto, Map.of(FIELD_ID_1, field1JsonWithOperator)))
+    assertThat(applicationDataItemDtoService.getDisplayAssetLocation(applicationDataItemDto,
+        Map.of(FIELD_ID_1, field1JsonWithOperator)))
         .isEqualTo(field1JsonWithOperator.getGeographicArea().getDisplayName());
   }
 
@@ -254,7 +282,8 @@ class ApplicationDataItemDtoServiceTest {
   void getDisplayAssetLocation_Terminal() {
     var applicationDataItemDto = getApplicationDataItemDtoForLongFlareSubmittedForTerminal();
 
-    assertThat(applicationDataItemDtoService.getDisplayAssetLocation(applicationDataItemDto, Map.of(FIELD_ID_1, field1JsonWithOperator)))
+    assertThat(applicationDataItemDtoService.getDisplayAssetLocation(applicationDataItemDto,
+        Map.of(FIELD_ID_1, field1JsonWithOperator)))
         .isEmpty();
   }
 
@@ -262,24 +291,9 @@ class ApplicationDataItemDtoServiceTest {
   void getDisplayAssetLocation_unknownArea() {
     var applicationDataItemDto = getApplicationDataItemDtoForAnnualProductionInProgressForField();
 
-    assertThat(applicationDataItemDtoService.getDisplayAssetLocation(applicationDataItemDto, Map.of(FIELD_ID_2, field2JsonWithOperator)))
+    assertThat(applicationDataItemDtoService.getDisplayAssetLocation(applicationDataItemDto,
+        Map.of(FIELD_ID_2, field2JsonWithOperator)))
         .isEqualTo("Unknown area");
-  }
-
-  @Test
-  void getDisplaySubmitter_Field() {
-    var applicationDataItemDto = getApplicationDataItemDtoForLongFlareSubmittedForField();
-
-    assertThat(applicationDataItemDtoService.getDisplaySubmitter(applicationDataItemDto, portalUserDtosMap))
-        .isEqualTo("Submitter: %s".formatted(submitter.displayName()));
-  }
-
-  @Test
-  void getDisplaySubmitter_Terminal() {
-    var applicationDataItemDto = getApplicationDataItemDtoForLongFlareSubmittedForTerminal();
-
-    assertThat(applicationDataItemDtoService.getDisplaySubmitter(applicationDataItemDto, portalUserDtosMap))
-        .isEqualTo("Submitter: %s".formatted(submitter.displayName()));
   }
 
   @Test
@@ -318,7 +332,8 @@ class ApplicationDataItemDtoServiceTest {
   void getDisplayTechnicalReviewer_withIndustryType() {
     var applicationDataItemDto = getApplicationDataItemDtoForAnnualProductionInProgressForField();
 
-    assertThat(applicationDataItemDtoService.getDisplayTechnicalReviewer(applicationDataItemDto, portalUserDtosMap, TeamType.INDUSTRY))
+    assertThat(applicationDataItemDtoService.getDisplayTechnicalReviewer(applicationDataItemDto, portalUserDtosMap,
+        TeamType.INDUSTRY))
         .isEmpty();
   }
 
@@ -326,7 +341,8 @@ class ApplicationDataItemDtoServiceTest {
   void getDisplayTechnicalReviewer_withNoTechnicalReviewer() {
     var applicationDataItemDto = getApplicationDataItemDtoForAnnualProductionInProgressForField();
 
-    assertThat(applicationDataItemDtoService.getDisplayTechnicalReviewer(applicationDataItemDto, portalUserDtosMap, TeamType.REGULATOR))
+    assertThat(applicationDataItemDtoService.getDisplayTechnicalReviewer(applicationDataItemDto, portalUserDtosMap,
+        TeamType.REGULATOR))
         .isEmpty();
   }
 
@@ -362,10 +378,8 @@ class ApplicationDataItemDtoServiceTest {
     var fieldJsonById = Map.of(FIELD_ID_1, field1Json);
     var portalUserDtoByWuaId = Map.of(WebUserAccountId.from(serviceUserDetail), energyPortalUserDto);
 
-    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(
-        applicationDataItemDto.getType());
-    when(applicationVersionService.getApplicationVersionById(
-        applicationDataItemDto.getApplicationVersionId())).thenReturn(applicationVersion);
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(applicationDataItemDto.getType());
+    when(applicationVersionService.getApplicationVersionById( applicationDataItemDto.getApplicationVersionId())).thenReturn(applicationVersion);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(APPLICATION_REFERENCE);
 
     var expectedApplicationDataItem = new ApplicationDataItem(
@@ -385,12 +399,13 @@ class ApplicationDataItemDtoServiceTest {
         "Submitter: %s".formatted(energyPortalUserDto.displayName()),
         "",
         "",
-        applicationDataItemDto.getWithdrawalOpen(),
+        false,
         "",
-        applicationDataItemDto.getApplicationUpdateOpen(),
+        false,
         "",
-        applicationDataItemDto.getConsultationOpen(),
-        ""
+        null,
+        null,
+        null
     );
 
     assertThat(applicationDataItemDtoService.getApplicationDataItem(
@@ -402,4 +417,238 @@ class ApplicationDataItemDtoServiceTest {
         portalUserDtoByWuaId
     )).isEqualTo(expectedApplicationDataItem);
   }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void getApplicationDataItem_submitted_industry_doesNotSeeConsultationsTag(boolean consultationOpen) {
+    var dto = mock(ApplicationDataItemDto.class);
+    when(dto.getType()).thenReturn(ApplicationType.PRODUCTION);
+    when(dto.getStatus()).thenReturn(ApplicationVersionStatus.SUBMITTED);
+    when(dto.getWithdrawalOpen()).thenReturn(false);
+    when(dto.getApplicationUpdateOpen()).thenReturn(false);
+    when(dto.getConsultationOpen()).thenReturn(consultationOpen);
+
+    var user = mock(ServiceUserDetail.class);
+
+    var teamType = TeamType.INDUSTRY;
+    mockGetDisplayMethodCalls(dto, user, VIEW_APPLICATION, teamType);
+
+    assertThat(applicationDataItemDtoService.getApplicationDataItem(
+        dto,
+        user,
+        teamType,
+        Collections.emptyMap(),
+        Collections.emptyMap(),
+        Collections.emptyMap()
+    ))
+        .extracting(ApplicationDataItem::consultationOpen, ApplicationDataItem::consultationDeadline)
+        .containsOnlyNulls();
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void getApplicationDataItem_submitted_opred_doesNotSeeApplicationUpdateTag(boolean applicationUpdateOpen) {
+    var dto = mock(ApplicationDataItemDto.class);
+    when(dto.getType()).thenReturn(ApplicationType.PRODUCTION);
+    when(dto.getStatus()).thenReturn(ApplicationVersionStatus.SUBMITTED);
+    when(dto.getWithdrawalOpen()).thenReturn(false);
+    when(dto.getApplicationUpdateOpen()).thenReturn(applicationUpdateOpen);
+    when(dto.getConsultationOpen()).thenReturn(false);
+
+    var user = mock(ServiceUserDetail.class);
+
+    var teamType = TeamType.OPRED;
+    mockGetDisplayMethodCalls(dto, user, VIEW_APPLICATION, teamType);
+
+    assertThat(applicationDataItemDtoService.getApplicationDataItem(
+        dto,
+        user,
+        teamType,
+        Collections.emptyMap(),
+        Collections.emptyMap(),
+        Collections.emptyMap()
+    ))
+        .extracting(ApplicationDataItem::applicationUpdateOpen, ApplicationDataItem::applicationUpdateDeadline)
+        .containsOnlyNulls();
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void getApplicationDataItem_submitted_opred_doesNotSeeWithdrawalTag(boolean applicationWithdrawalOpen) {
+    var dto = mock(ApplicationDataItemDto.class);
+    when(dto.getType()).thenReturn(ApplicationType.PRODUCTION);
+    when(dto.getStatus()).thenReturn(ApplicationVersionStatus.SUBMITTED);
+    when(dto.getWithdrawalOpen()).thenReturn(applicationWithdrawalOpen);
+    when(dto.getApplicationUpdateOpen()).thenReturn(false);
+    when(dto.getConsultationOpen()).thenReturn(false);
+
+    var user = mock(ServiceUserDetail.class);
+
+    var teamType = TeamType.OPRED;
+    mockGetDisplayMethodCalls(dto, user, VIEW_APPLICATION, teamType);
+
+    assertThat(applicationDataItemDtoService.getApplicationDataItem(
+        dto,
+        user,
+        teamType,
+        Collections.emptyMap(),
+        Collections.emptyMap(),
+        Collections.emptyMap()
+    ))
+        .extracting(ApplicationDataItem::withdrawalOpen)
+        .isNull();
+  }
+
+
+  private void mockGetDisplayMethodCalls(
+      ApplicationDataItemDto dto,
+      ServiceUserDetail user,
+      ApplicationDataItemUserAction userAction,
+      TeamType teamType
+  ) {
+    doReturn(userAction).when(applicationDataItemDtoService).getApplicationDataItemUserActionFromUser(user);
+
+    doReturn("").when(applicationDataItemDtoService).getDisplayConsentDuration(dto);
+    doReturn("").when(applicationDataItemDtoService).getDisplayReference(dto, userAction);
+    doReturn("").when(applicationDataItemDtoService).getOperator(dto, Collections.emptyMap());
+    doReturn("").when(applicationDataItemDtoService).getAsset(dto);
+    doReturn("").when(applicationDataItemDtoService).getDisplayAssetLocation(dto, Collections.emptyMap());
+    doReturn("").when(applicationDataItemDtoService).getSubmittedDateTime(dto);
+    doReturn("").when(applicationDataItemDtoService).getSubmittedByName(dto, Collections.emptyMap());
+    doReturn("").when(applicationDataItemDtoService).getDisplayAceFlag(dto);
+    doReturn("").when(applicationDataItemDtoService).getDisplayCaseOfficer(dto, Collections.emptyMap());
+    doReturn("").when(applicationDataItemDtoService).getDisplayTechnicalReviewer(dto, Collections.emptyMap(), teamType);
+    doReturn("").when(applicationDataItemDtoService).getApplicationUpdateDeadline(dto);
+    doReturn("").when(applicationDataItemDtoService).getConsultationDeadline(dto);
+  }
+
+  @Test
+  void getSubmittedDateTime_submitted() {
+    var dataItemDto = mock(ApplicationDataItemDto.class);
+    when(dataItemDto.getSubmittedDateTime()).thenReturn(Instant.now());
+    when(dataItemDto.getStatus()).thenReturn(ApplicationVersionStatus.SUBMITTED);
+
+    assertThat(applicationDataItemDtoService.getSubmittedDateTime(dataItemDto))
+        .isEqualTo(
+            "Submitted: %s".formatted(DateUtils.format(dataItemDto.getSubmittedDateTime(), DateUtils.DATE_TIME)));
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = ApplicationVersionStatus.class, names = "SUBMITTED", mode = Mode.EXCLUDE)
+  void getSubmittedDateTime_notSubmitted(ApplicationVersionStatus status) {
+    var dataItemDto = mock(ApplicationDataItemDto.class);
+    when(dataItemDto.getStatus()).thenReturn(status);
+
+    assertThat(applicationDataItemDtoService.getSubmittedDateTime(dataItemDto)).isEmpty();
+  }
+
+  @Test
+  void getSubmittedByName_submitted() {
+    var dataItemDto = mock(ApplicationDataItemDto.class);
+    when(dataItemDto.getStatus()).thenReturn(ApplicationVersionStatus.SUBMITTED);
+    when(dataItemDto.getSubmittedByWuaId()).thenReturn(1L);
+
+    var energyPortalUserDto = mock(EnergyPortalUserDto.class);
+    when(energyPortalUserDto.displayName()).thenReturn("energyPortalUser");
+
+    var portalUserDtoByWuaId = Map.of(new WebUserAccountId(1L), energyPortalUserDto);
+
+    assertThat(applicationDataItemDtoService.getSubmittedByName(dataItemDto, portalUserDtoByWuaId))
+        .isEqualTo("Submitter: energyPortalUser");
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = ApplicationVersionStatus.class, names = "SUBMITTED", mode = Mode.EXCLUDE)
+  void getSubmittedByName_notSubmitted(ApplicationVersionStatus status) {
+    var dataItemDto = mock(ApplicationDataItemDto.class);
+    when(dataItemDto.getStatus()).thenReturn(status);
+
+    assertThat(applicationDataItemDtoService.getSubmittedByName(dataItemDto, Collections.emptyMap())).isEmpty();
+  }
+
+  @Test
+  void getConsultationDeadline_consultationOpen() {
+    var dataItemDto = mock(ApplicationDataItemDto.class);
+    when(dataItemDto.getConsultationOpen()).thenReturn(true);
+    when(dataItemDto.getConsultationDeadline()).thenReturn(Instant.now());
+
+    assertThat(applicationDataItemDtoService.getConsultationDeadline(dataItemDto))
+        .isEqualTo(DateUtils.format(dataItemDto.getConsultationDeadline(), DateUtils.DATE_TIME));
+  }
+
+  @Test
+  void getConsultationDeadline_consultationNotOpen() {
+    var dataItemDto = mock(ApplicationDataItemDto.class);
+    when(dataItemDto.getConsultationOpen()).thenReturn(false);
+
+    assertThat(applicationDataItemDtoService.getConsultationDeadline(dataItemDto)).isEmpty();
+  }
+
+  @Test
+  void getOperator_operatorExists() {
+    var organisationUnitNameById = Map.of(1, "org name");
+
+    var dataItemDto = mock(ApplicationDataItemDto.class);
+    when(dataItemDto.getOperatorId()).thenReturn(1);
+
+    assertThat(applicationDataItemDtoService.getOperator(dataItemDto, organisationUnitNameById)).isEqualTo("org name");
+  }
+
+  @Test
+  void getOperator_operatorDoesNotExist() {
+    var dataItemDto = mock(ApplicationDataItemDto.class);
+    when(dataItemDto.getOperatorId()).thenReturn(1);
+
+    assertThat(applicationDataItemDtoService.getOperator(dataItemDto, Collections.emptyMap())).isEqualTo(
+        "MISSING OPERATOR");
+  }
+
+  @Test
+  void getAsset_field() {
+    var dataItemDto = mock(ApplicationDataItemDto.class);
+    when(dataItemDto.getFieldId()).thenReturn(1);
+    when(dataItemDto.getFieldName()).thenReturn("name");
+
+    assertThat(applicationDataItemDtoService.getAsset(dataItemDto)).isEqualTo("name");
+  }
+
+  @Test
+  void getAsset_terminal() {
+    var dataItemDto = mock(ApplicationDataItemDto.class);
+    when(dataItemDto.getFieldId()).thenReturn(null);
+    when(dataItemDto.getTerminalName()).thenReturn("name");
+
+    assertThat(applicationDataItemDtoService.getAsset(dataItemDto)).isEqualTo("name");
+  }
+
+  @Test
+  void removeTagsForTeamType_industry() {
+    var builder = mock(ApplicationDataItem.Builder.class, new SelfReturningAnswer());
+
+    applicationDataItemDtoService.removeTagsForTeamType(TeamType.INDUSTRY, builder);
+
+    verify(builder).withConsultationOpen(null);
+    verify(builder).withConsultationDeadline(null);
+    verify(builder).withFurtherInformationRequestOpen(null);
+
+    verifyNoMoreInteractions(builder);
+  }
+
+  @Test
+  void removeTagsForTeamType_opred() {
+    var builder = mock(ApplicationDataItem.Builder.class, new SelfReturningAnswer());
+
+    applicationDataItemDtoService.removeTagsForTeamType(TeamType.OPRED, builder);
+
+    verify(builder).withWithdrawalOpen(null);
+    verifyApplicationUpdateTagRemoved(builder);
+
+    verifyNoMoreInteractions(builder);
+  }
+
+  private void verifyApplicationUpdateTagRemoved(ApplicationDataItem.Builder builder) {
+    verify(builder).withApplicationUpdateOpen(null);
+    verify(builder).withApplicationUpdateDeadline(null);
+  }
+
 }

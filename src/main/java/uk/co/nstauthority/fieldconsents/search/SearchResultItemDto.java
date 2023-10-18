@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest.FurtherInformationRequestStatus;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDto;
 
@@ -23,13 +24,14 @@ public class SearchResultItemDto extends ApplicationDataItemDto {
                              Long caseOfficerWuaId, Boolean withdrawalOpen, Long technicalReviewerWuaId,
                              Boolean applicationUpdateOpen, Instant applicationUpdateDeadline,
                              Boolean consultationOpen, Instant consultationDeadline,
+                             FurtherInformationRequestStatus furtherInformationRequestStatus,
                              String licences) {
 
     super(applicationId, applicationVersionId, type, variationNo, applicationNo, versionNo, operatorId, status, fieldId,
         fieldName, terminalId, terminalName, duration, consentYear, shortTermStartDate, shortTermEndDate,
         longTermStartYear, longTermEndYear, submittedDateTime, submittedByWuaId, aceFlag, caseOfficerWuaId,
         withdrawalOpen, technicalReviewerWuaId, applicationUpdateOpen, applicationUpdateDeadline, consultationOpen,
-        consultationDeadline);
+        consultationDeadline, furtherInformationRequestStatus);
 
     this.licences = licences;
   }

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest.FurtherInformationRequestStatus;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
@@ -157,12 +158,6 @@ public class ApplicationDataItemDtoService {
         : "Unknown area";
   }
 
-  public String getDisplaySubmitter(ApplicationDataItemDto dataItemDto,
-                                    Map<WebUserAccountId, EnergyPortalUserDto> portalUserDtosMap) {
-    var matchingPortalUserDto = portalUserDtosMap.get(WebUserAccountId.from(dataItemDto.getSubmittedByWuaId()));
-    return "Submitter: %s".formatted(matchingPortalUserDto.displayName());
-  }
-
   public String getDisplayAceFlag(ApplicationDataItemDto dataItemDto) {
     return Boolean.TRUE.equals(dataItemDto.getAceFlag()) ? "ACE" : "";
   }
@@ -184,6 +179,52 @@ public class ApplicationDataItemDtoService {
         : "";
   }
 
+  public String getSubmittedDateTime(ApplicationDataItemDto dataItemDto) {
+    return ApplicationVersionStatus.SUBMITTED.equals(dataItemDto.getStatus())
+        ? "Submitted: %s".formatted(DateUtils.format(dataItemDto.getSubmittedDateTime(), DateUtils.DATE_TIME))
+        : "";
+  }
+
+  public String getSubmittedByName(
+      ApplicationDataItemDto dataItemDto,
+      Map<WebUserAccountId, EnergyPortalUserDto> portalUserDtoByWuaId
+  ) {
+    if (!ApplicationVersionStatus.SUBMITTED.equals(dataItemDto.getStatus())) {
+      return "";
+    }
+
+    var matchingPortalUserDto = portalUserDtoByWuaId.get(WebUserAccountId.from(dataItemDto.getSubmittedByWuaId()));
+    return "Submitter: %s".formatted(matchingPortalUserDto.displayName());
+  }
+
+  public String getConsultationDeadline(ApplicationDataItemDto dataItemDto) {
+    if (!Boolean.TRUE.equals(dataItemDto.getConsultationOpen())) {
+      return "";
+    }
+
+    return DateUtils.format(dataItemDto.getConsultationDeadline(), DateUtils.DATE_TIME);
+  }
+
+  public String getApplicationUpdateDeadline(ApplicationDataItemDto dataItemDto) {
+    if (!Boolean.TRUE.equals(dataItemDto.getApplicationUpdateOpen())) {
+      return "";
+    }
+
+    return DateUtils.format(dataItemDto.getApplicationUpdateDeadline(), DateUtils.DATE_TIME);
+  }
+
+  public String getOperator(ApplicationDataItemDto dataItemDto, Map<Integer, String> organisationUnitNameById) {
+    return organisationUnitNameById.getOrDefault(dataItemDto.getOperatorId(), "MISSING OPERATOR");
+  }
+
+  public String getAsset(ApplicationDataItemDto dataItemDto) {
+    if (Objects.isNull(dataItemDto.getFieldId())) {
+      return dataItemDto.getTerminalName();
+    }
+
+    return dataItemDto.getFieldName();
+  }
+
   public ApplicationDataItem getApplicationDataItem(
       ApplicationDataItemDto dataItemDto,
       ServiceUserDetail user,
@@ -192,48 +233,66 @@ public class ApplicationDataItemDtoService {
       Map<Integer, FieldJson> fieldJsonById,
       Map<WebUserAccountId, EnergyPortalUserDto> portalUserDtoByWuaId
   ) {
-    var operator = organisationUnitNameById.getOrDefault(dataItemDto.getOperatorId(), "MISSING OPERATOR");
-    var asset = dataItemDto.getFieldId() != null ? dataItemDto.getFieldName() : dataItemDto.getTerminalName();
-
-    var submittedDateTime = ApplicationVersionStatus.SUBMITTED.equals(dataItemDto.getStatus())
-        ? "Submitted: %s".formatted(DateUtils.format(dataItemDto.getSubmittedDateTime(), DateUtils.DATE_TIME))
-        : "";
-
-    var submittedByName = ApplicationVersionStatus.SUBMITTED.equals(dataItemDto.getStatus())
-        ? getDisplaySubmitter(dataItemDto, portalUserDtoByWuaId)
-        : "";
-
-    var consultationDeadline = Boolean.TRUE.equals(dataItemDto.getConsultationOpen())
-        ? DateUtils.format(dataItemDto.getConsultationDeadline(), DateUtils.DATE_TIME)
-        : "";
-
-    var applicationUpdateDeadline = "";
-    if (Boolean.TRUE.equals(dataItemDto.getApplicationUpdateOpen())) {
-      applicationUpdateDeadline = DateUtils.format(dataItemDto.getApplicationUpdateDeadline(), DateUtils.DATE_TIME);
-    }
+    var withdrawalOpen = Boolean.TRUE.equals(dataItemDto.getWithdrawalOpen());
+    var applicationUpdateOpen = Boolean.TRUE.equals(dataItemDto.getApplicationUpdateOpen());
+    var furtherInformationRequestOpen = FurtherInformationRequestStatus.OPEN
+        .equals(dataItemDto.getFurtherInformationRequestStatus());
 
     var userAction = getApplicationDataItemUserActionFromUser(user);
 
-    return ApplicationDataItem.newBuilder()
+    var builder = ApplicationDataItem.newBuilder()
         .withApplicationId(dataItemDto.getApplicationId())
         .withType(dataItemDto.getType().getDisplayName())
         .withDuration(getDisplayConsentDuration(dataItemDto))
         .withReference(getDisplayReference(dataItemDto, userAction))
-        .withOperator(operator)
-        .withAsset(asset)
+        .withOperator(getOperator(dataItemDto, organisationUnitNameById))
+        .withAsset(getAsset(dataItemDto))
         .withGeographicArea(getDisplayAssetLocation(dataItemDto, fieldJsonById))
         .withStatus(dataItemDto.getStatus().getDisplayName())
-        .withSubmittedDateTime(submittedDateTime)
-        .withSubmittedBy(submittedByName)
+        .withSubmittedDateTime(getSubmittedDateTime(dataItemDto))
+        .withSubmittedBy(getSubmittedByName(dataItemDto, portalUserDtoByWuaId))
         .withAceFlag(getDisplayAceFlag(dataItemDto))
         .withCaseOfficer(getDisplayCaseOfficer(dataItemDto, portalUserDtoByWuaId))
-        .withWithdrawalOpen(dataItemDto.getWithdrawalOpen())
+        .withWithdrawalOpen(withdrawalOpen)
         .withTechnicalReviewer(getDisplayTechnicalReviewer(dataItemDto, portalUserDtoByWuaId, teamType))
-        .withApplicationUpdateOpen(dataItemDto.getApplicationUpdateOpen())
-        .withApplicationUpdateDeadline(applicationUpdateDeadline)
+        .withApplicationUpdateOpen(applicationUpdateOpen)
+        .withApplicationUpdateDeadline(getApplicationUpdateDeadline(dataItemDto))
         .withConsultationOpen(dataItemDto.getConsultationOpen())
-        .withConsultationDeadline(consultationDeadline)
-        .build();
+        .withConsultationDeadline(getConsultationDeadline(dataItemDto))
+        .withFurtherInformationRequestOpen(furtherInformationRequestOpen);
+
+    removeTagsForTeamType(teamType, builder);
+
+    return builder.build();
+  }
+
+  void removeTagsForTeamType(TeamType teamType, ApplicationDataItem.Builder builder) {
+    if (TeamType.INDUSTRY.equals(teamType)) {
+      removeConsultationTag(builder);
+      removeFurtherInformationTag(builder);
+      return;
+    }
+
+    if (TeamType.OPRED.equals(teamType)) {
+      removeApplicationUpdateTag(builder);
+      removeWithdrawalTag(builder);
+    }
+  }
+
+  private void removeWithdrawalTag(ApplicationDataItem.Builder builder) {
+    builder.withWithdrawalOpen(null);
+  }
+
+  private void removeApplicationUpdateTag(ApplicationDataItem.Builder builder) {
+    builder.withApplicationUpdateOpen(null).withApplicationUpdateDeadline(null);
+  }
+
+  private void removeFurtherInformationTag(ApplicationDataItem.Builder builder) {
+    builder.withFurtherInformationRequestOpen(null);
+  }
+
+  private void removeConsultationTag(ApplicationDataItem.Builder builder) {
+    builder.withConsultationOpen(null).withConsultationDeadline(null);
   }
 
 }

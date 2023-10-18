@@ -23,7 +23,8 @@ public record ApplicationDataItem(
     Boolean applicationUpdateOpen,
     String applicationUpdateDeadline,
     Boolean consultationOpen,
-    String consultationDeadline
+    String consultationDeadline,
+    Boolean furtherInformationRequestOpen
 ) {
 
   public static Builder newBuilder() {
@@ -50,6 +51,7 @@ public record ApplicationDataItem(
     private String applicationUpdateDeadline;
     private Boolean consultationOpen;
     private String consultationDeadline;
+    private Boolean furtherInformationRequestOpen;
 
     public Builder withApplicationId(Integer applicationId) {
       this.applicationId = applicationId;
@@ -141,6 +143,11 @@ public record ApplicationDataItem(
       return this;
     }
 
+    public Builder withFurtherInformationRequestOpen(Boolean furtherInformationRequestOpen) {
+      this.furtherInformationRequestOpen = furtherInformationRequestOpen;
+      return this;
+    }
+
     public ApplicationDataItem build() {
       return new ApplicationDataItem(
           applicationId,
@@ -160,7 +167,8 @@ public record ApplicationDataItem(
           applicationUpdateOpen,
           applicationUpdateDeadline,
           consultationOpen,
-          consultationDeadline
+          consultationDeadline,
+          furtherInformationRequestOpen
       );
     }
   }

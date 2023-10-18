@@ -85,7 +85,9 @@ public class ApplicationDataItemUtil {
         false,
         null,
         false,
-        null);
+        null,
+        null
+    );
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForProductionInProgressForFieldNoDuration() {
@@ -117,7 +119,9 @@ public class ApplicationDataItemUtil {
         false,
         null,
         false,
-        null);
+        null,
+        null
+    );
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForShortVentSubmittedForTerminal() {
@@ -149,7 +153,9 @@ public class ApplicationDataItemUtil {
         false,
         null,
         false,
-        null);
+        null,
+        null
+    );
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForShortVentVersion2InProgressForTerminal() {
@@ -181,7 +187,9 @@ public class ApplicationDataItemUtil {
         false,
         null,
         false,
-        null);
+        null,
+        null
+    );
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForShortVentAssignedForTerminal() {
@@ -213,7 +221,9 @@ public class ApplicationDataItemUtil {
         false,
         null,
         false,
-        null);
+        null,
+        null
+    );
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForLongFlareSubmittedForTerminal() {
@@ -240,12 +250,14 @@ public class ApplicationDataItemUtil {
         USER_WUA_ID,
         null,
         null,
-        false,
         null,
-        false,
         null,
-        false,
-        null);
+        null,
+        null,
+        null,
+        null,
+        null
+    );
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForLongFlareSubmittedForField() {
@@ -277,7 +289,9 @@ public class ApplicationDataItemUtil {
         false,
         null,
         false,
-        null);
+        null,
+        null
+    );
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForAnnualFlareSubmittedForFieldConsultationOpen() {
@@ -309,7 +323,9 @@ public class ApplicationDataItemUtil {
         false,
         null,
         true,
-        Instant.now().plusSeconds(2*60*60));
+        Instant.now().plusSeconds(2*60*60),
+        null
+    );
   }
 
   public static SearchResultItemDto getSearchResultItemDtoForLongFlareSubmittedForTerminalWithOpenWithdrawalRequest() {
@@ -341,6 +357,7 @@ public class ApplicationDataItemUtil {
         false,
         null,
         false,
+        null,
         null,
         "P1, P2, P3"
     );
@@ -376,6 +393,7 @@ public class ApplicationDataItemUtil {
         null,
         false,
         null,
+        null,
         "P1, P2, P3"
     );
   }
@@ -399,7 +417,9 @@ public class ApplicationDataItemUtil {
         applicationDataItemDto.getApplicationUpdateOpen(),
         getApplicationUpdateDeadline(applicationDataItemDto),
         applicationDataItemDto.getConsultationOpen(),
-        getConsultationDeadline(applicationDataItemDto));
+        getConsultationDeadline(applicationDataItemDto),
+        false
+    );
   }
 
   public static SearchResultItem getSearchResultItemFromDto(SearchResultItemDto searchResultItemDto, TeamType teamType) {
@@ -422,6 +442,7 @@ public class ApplicationDataItemUtil {
         .withApplicationUpdateDeadline(getApplicationUpdateDeadline(searchResultItemDto))
         .withConsultationOpen(searchResultItemDto.getConsultationOpen())
         .withConsultationDeadline(getConsultationDeadline(searchResultItemDto))
+        .withFurtherInformationRequestOpen(false)
         .build();
     return new SearchResultItem(applicationDataItem, searchResultItemDto.getLicences());
   }
@@ -560,7 +581,8 @@ public class ApplicationDataItemUtil {
         false,
         "",
         false,
-        ""
+        "",
+        false
     );
   }
 
@@ -584,6 +606,7 @@ public class ApplicationDataItemUtil {
         .withApplicationUpdateDeadline("")
         .withConsultationOpen(false)
         .withConsultationDeadline("")
+        .withFurtherInformationRequestOpen(false)
         .build();
     var licenses = "P1, P2, P3";
     return new SearchResultItem(applicationDataItem, licenses);

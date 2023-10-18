@@ -7,8 +7,10 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casest
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_UNASSIGNED;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.FURTHER_INFORMATION_REQUEST_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_APPLICATION_UPDATE_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_CONSULTATION_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_FURTHER_INFORMATION_REQUEST_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_TECHNICAL_REVIEW_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_WITHDRAWAL_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.TECHNICAL_REVIEWS_PAGE_ENABLED;
@@ -24,6 +26,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationStatus;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest.FurtherInformationRequestService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalService;
@@ -35,17 +38,20 @@ public class CaseStatusFlagService {
   private final TechnicalReviewService technicalReviewService;
   private final ApplicationUpdateService applicationUpdateService;
   private final ConsultationService consultationService;
+  private final FurtherInformationRequestService furtherInformationRequestService;
 
   CaseStatusFlagService(
       ApplicationWithdrawalService applicationWithdrawalService,
       TechnicalReviewService technicalReviewService,
       ApplicationUpdateService applicationUpdateService,
-      ConsultationService consultationService
+      ConsultationService consultationService,
+      FurtherInformationRequestService furtherInformationRequestService
   ) {
     this.applicationWithdrawalService = applicationWithdrawalService;
     this.technicalReviewService = technicalReviewService;
     this.applicationUpdateService = applicationUpdateService;
     this.consultationService = consultationService;
+    this.furtherInformationRequestService = furtherInformationRequestService;
   }
 
   public Set<CaseStatusFlag> getCaseStatusFlags(ApplicationVersion applicationVersion) {
@@ -55,6 +61,7 @@ public class CaseStatusFlagService {
     caseStatusFlags.addAll(getCaseOfficerAssignmentFlag(applicationVersion));
     caseStatusFlags.addAll(getWithdrawalFlag(applicationVersion));
     caseStatusFlags.addAll(getTechnicalReviewFlag(applicationVersion));
+    caseStatusFlags.addAll(getFurtherInformationRequestFlag(applicationVersion));
     caseStatusFlags.addAll(getUpdateRequestFlag(applicationVersion));
     caseStatusFlags.addAll(getConsultationFlags(applicationVersion));
 
@@ -87,6 +94,13 @@ public class CaseStatusFlagService {
     }
 
     return Collections.singleton(NO_TECHNICAL_REVIEW_OPEN);
+  }
+
+  Set<CaseStatusFlag> getFurtherInformationRequestFlag(ApplicationVersion applicationVersion) {
+    return consultationService.findLatestOpenConsultation(applicationVersion.getApplication())
+        .flatMap(furtherInformationRequestService::findLatestOpenFurtherInformationRequest)
+        .map(fir -> Collections.singleton(FURTHER_INFORMATION_REQUEST_OPEN))
+        .orElse(Collections.singleton(NO_FURTHER_INFORMATION_REQUEST_OPEN));
   }
 
   Set<CaseStatusFlag> getUpdateRequestFlag(ApplicationVersion applicationVersion) {

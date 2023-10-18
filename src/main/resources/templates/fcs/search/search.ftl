@@ -52,14 +52,21 @@
 <#macro fcsApplicationDataItem searchResultItem pageTitle>
   <#assign dataItem = searchResultItem.applicationDataItem()/>
   <#assign searchItemTagContent>
-    <#if dataItem.withdrawalOpen()>
+    <#if dataItem.withdrawalOpen()!false>
       <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Withdrawal requested"/>
+      <br/>
     </#if>
-    <#if dataItem.applicationUpdateOpen()>
+    <#if dataItem.applicationUpdateOpen()!false>
       <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Update due by ${dataItem.applicationUpdateDeadline()}"/>
+      <br/>
     </#if>
-    <#if dataItem.consultationOpen()>
+    <#if dataItem.furtherInformationRequestOpen()!false>
+      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Further information requested"/>
+      <br/>
+    </#if>
+    <#if dataItem.consultationOpen()!false>
       <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Consultation due by ${dataItem.consultationDeadline()}"/>
+      <br/>
     </#if>
   </#assign>
   <@fdsResultList.resultListItem

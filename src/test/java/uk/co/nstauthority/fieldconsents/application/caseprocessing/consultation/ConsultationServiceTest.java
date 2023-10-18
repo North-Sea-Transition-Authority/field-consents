@@ -161,10 +161,26 @@ class ConsultationServiceTest {
         .hasMessage("Consultation [%s] not found for application [%s]".formatted(consultationId, application.getId()));
   }
 
+
   @Test
   void getConsultationsByApplication() {
     when(repository.findAllByRequestApplicationVersion_ApplicationOrderById(application)).thenReturn(Collections.singletonList(consultation));
     assertThat(consultationService.getConsultationsByApplication(application)).containsExactly(consultation);
+  }
+
+  @Test
+  void getOpenConsultationByIdAndApplication() {
+    when(repository.findByIdAndRequestApplicationVersion_ApplicationAndStatus(CONSULTATION_ID, application, OPEN)).thenReturn(Optional.of(consultation));
+    assertThat(consultationService.getOpenConsultationByIdAndApplication(CONSULTATION_ID, application)).isEqualTo(consultation);
+  }
+
+  @Test
+  void getOpenConsultationByIdAndApplication_doesNotExist() {
+    var consultationId = 1;
+    when(repository.findByIdAndRequestApplicationVersion_ApplicationAndStatus(consultationId, application, OPEN)).thenReturn(Optional.empty());
+    assertThatThrownBy(() -> consultationService.getOpenConsultationByIdAndApplication(consultationId, application))
+        .isInstanceOf(EntityNotFoundException.class)
+        .hasMessage("Open consultation [%s] not found for application [%s]".formatted(consultationId, application.getId()));
   }
 
   @Test

@@ -80,6 +80,13 @@ public class ConsultationService {
         )));
   }
 
+  public Consultation getOpenConsultationByIdAndApplication(Integer consultationId, Application application) {
+    return repository.findByIdAndRequestApplicationVersion_ApplicationAndStatus(consultationId, application, OPEN)
+        .orElseThrow(() -> new EntityNotFoundException("Open consultation [%s] not found for application [%s]".formatted(
+            consultationId, application.getId()
+        )));
+  }
+
   public List<Consultation> getConsultationsByApplication(Application application) {
     return repository.findAllByRequestApplicationVersion_ApplicationOrderById(application);
   }

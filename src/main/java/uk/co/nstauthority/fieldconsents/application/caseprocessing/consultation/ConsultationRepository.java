@@ -18,4 +18,10 @@ interface ConsultationRepository extends CrudRepository<Consultation, Integer> {
 
   Optional<Consultation> findByIdAndRequestApplicationVersion_Application(Integer id, Application application);
 
+  Optional<Consultation> findByIdAndRequestApplicationVersion_ApplicationAndStatus(
+      Integer id,
+      Application application,
+      ConsultationStatus consultationStatus
+  );
+
 }

@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest.FurtherInformationRequestStatus;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 
 public class ApplicationDataItemDto {
@@ -35,6 +36,7 @@ public class ApplicationDataItemDto {
   private final Instant applicationUpdateDeadline;
   private final Boolean consultationOpen;
   private final Instant consultationDeadline;
+  private final FurtherInformationRequestStatus furtherInformationRequestStatus;
 
   public ApplicationDataItemDto(Integer applicationId, Integer applicationVersionId, ApplicationType type,
                                 Integer variationNo, Integer applicationNo, Integer versionNo, Integer operatorId,
@@ -45,7 +47,8 @@ public class ApplicationDataItemDto {
                                 Boolean aceFlag, Long caseOfficerWuaId, Boolean withdrawalOpen,
                                 Long technicalReviewerWuaId,
                                 Boolean applicationUpdateOpen, Instant applicationUpdateDeadline,
-                                Boolean consultationOpen, Instant consultationDeadline) {
+                                Boolean consultationOpen, Instant consultationDeadline,
+                                FurtherInformationRequestStatus furtherInformationRequestStatus) {
     this.applicationId = applicationId;
     this.applicationVersionId = applicationVersionId;
     this.type = type;
@@ -74,6 +77,7 @@ public class ApplicationDataItemDto {
     this.applicationUpdateDeadline = applicationUpdateDeadline;
     this.consultationOpen = consultationOpen;
     this.consultationDeadline = consultationDeadline;
+    this.furtherInformationRequestStatus = furtherInformationRequestStatus;
   }
 
   public Integer getApplicationId() {
@@ -186,5 +190,9 @@ public class ApplicationDataItemDto {
 
   public Instant getConsultationDeadline() {
     return consultationDeadline;
+  }
+
+  public FurtherInformationRequestStatus getFurtherInformationRequestStatus() {
+    return furtherInformationRequestStatus;
   }
 }

@@ -88,14 +88,21 @@
 
 <#macro fcsApplicationDataItem applicationDataItem pageTitle>
   <#assign workAreaItemTagContent>
-    <#if applicationDataItem.withdrawalOpen()>
+    <#if applicationDataItem.withdrawalOpen()!false>
       <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Withdrawal requested"/>
+      <br/>
     </#if>
-    <#if applicationDataItem.applicationUpdateOpen()>
+    <#if applicationDataItem.applicationUpdateOpen()!false>
       <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Update due by ${applicationDataItem.applicationUpdateDeadline()}"/>
+      <br/>
     </#if>
-    <#if applicationDataItem.consultationOpen()>
+    <#if applicationDataItem.furtherInformationRequestOpen()!false>
+      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Further information requested"/>
+      <br/>
+    </#if>
+    <#if applicationDataItem.consultationOpen()!false>
       <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Consultation due by ${applicationDataItem.consultationDeadline()}"/>
+      <br/>
     </#if>
   </#assign>
   <@fdsResultList.resultListItem

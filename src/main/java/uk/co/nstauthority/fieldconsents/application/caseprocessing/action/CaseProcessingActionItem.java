@@ -7,6 +7,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.aceflag.AceFl
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casenotes.CaseNotesController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.allocation.ConsultationAllocationController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest.FurtherInformationRequestController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.request.ConsultationRequestController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.response.ConsultationResponseController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewAssignmentController;
@@ -76,11 +77,14 @@ public enum CaseProcessingActionItem implements Displayable {
   // Consultation actions
   CONSULTATION_REQUEST("Request consultation", 99, true, false, null,
       applicationId -> ReverseRouter.route(on(ConsultationRequestController.class).getConsultationRequestForm(applicationId))),
-  CONSULTATION_RESPONSE("Respond to consultation", 99, true, true, null,
+  CONSULTATION_RESPONSE("Respond to consultation", 1, true, true, null,
       applicationId -> ReverseRouter.route(on(ConsultationResponseController.class).getResponseForm(applicationId))),
   CONSULTATION_MANAGE_RESPONDER("Manage consultation responder", 1, false, true, null,
       applicationId -> ReverseRouter.route(on(ConsultationAllocationController.class)
-          .getResponderAllocationForm(applicationId)))
+          .getResponderAllocationForm(applicationId))),
+  CONSULTATION_FURTHER_INFORMATION_REQUEST("Request further information", 2, true, false, null,
+      applicationId -> ReverseRouter.route(on(FurtherInformationRequestController.class)
+          .getFurtherInformationRequestForLatestConsultation(applicationId)))
   ;
 
   private final String displayName;
