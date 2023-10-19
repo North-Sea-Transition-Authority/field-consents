@@ -13,6 +13,8 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseHistoryTabContentService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest.FurtherInformationRequestService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewSummaryView;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
@@ -47,6 +49,10 @@ public class ApplicationCaseProcessingController {
 
   private final RegulatorTeamService regulatorTeamService;
 
+  private final ConsultationService consultationService;
+
+  private final FurtherInformationRequestService furtherInformationRequestService;
+
   ApplicationCaseProcessingController(ApplicationService applicationService,
                                       ApplicationVersionService applicationVersionService,
                                       ApplicationSummaryService applicationSummaryService,
@@ -54,7 +60,9 @@ public class ApplicationCaseProcessingController {
                                       CaseProcessingTabService caseProcessingTabService,
                                       CaseHistoryTabContentService caseHistoryTabContentService,
                                       TechnicalReviewService technicalReviewService,
-                                      RegulatorTeamService regulatorTeamService) {
+                                      RegulatorTeamService regulatorTeamService,
+                                      ConsultationService consultationService,
+                                      FurtherInformationRequestService furtherInformationRequestService) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.applicationSummaryService = applicationSummaryService;
@@ -63,6 +71,8 @@ public class ApplicationCaseProcessingController {
     this.caseHistoryTabContentService = caseHistoryTabContentService;
     this.technicalReviewService = technicalReviewService;
     this.regulatorTeamService = regulatorTeamService;
+    this.consultationService = consultationService;
+    this.furtherInformationRequestService = furtherInformationRequestService;
   }
 
   @GetMapping("case-processing")
@@ -99,9 +109,15 @@ public class ApplicationCaseProcessingController {
 
     if (regulatorTeamService.isTechnicalReviewer(WebUserAccountId.from(user))) {
       technicalReviewService.findOpenTechnicalReview(applicationVersion)
-          .ifPresent(technicalReview ->
-              modelAndView.addObject("technicalReviewSummaryView", TechnicalReviewSummaryView.from(technicalReview))
-          );
+          .map(TechnicalReviewSummaryView::from)
+          .ifPresent(view -> modelAndView.addObject("technicalReviewSummaryView", view));
+    }
+
+    if (regulatorTeamService.isCaseOfficer(WebUserAccountId.from(user))) {
+      consultationService.findLatestOpenConsultation(applicationVersion.getApplication())
+          .flatMap(furtherInformationRequestService::findLatestOpenFurtherInformationRequest)
+          .map(furtherInformationRequestService::getFurtherInformationRequestView)
+          .ifPresent(view -> modelAndView.addObject("furtherInformationRequestView", view));
     }
 
     modelAndView.addObject("actionList", caseProcessingActions)

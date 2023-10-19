@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mock.Strictness.LENIENT;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest.FurtherInformationRequestStatus.OPEN;
@@ -29,6 +30,10 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
+import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
+import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
+import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 
 @ExtendWith(MockitoExtension.class)
 class FurtherInformationRequestServiceTest {
@@ -47,6 +52,9 @@ class FurtherInformationRequestServiceTest {
   @Mock
   private ApplicationWorkAreaPriorityService priorityService;
 
+  @Mock
+  private EnergyPortalUserService energyPortalUserService;
+
   @InjectMocks
   private FurtherInformationRequestService furtherInformationRequestService;
 
@@ -62,6 +70,9 @@ class FurtherInformationRequestServiceTest {
     when(clock.instant()).thenReturn(NOW);
 
     furtherInformationRequest = new FurtherInformationRequest();
+    furtherInformationRequest.setRequestedByWuaId(USER.wuaId());
+    furtherInformationRequest.setRequestedAtDatetime(NOW);
+    furtherInformationRequest.setRequestText(REQUEST_TEXT);
 
     applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.VENT);
     consultation = new Consultation();
@@ -107,6 +118,26 @@ class FurtherInformationRequestServiceTest {
             consultation,
             NOW,
             USER.wuaId(),
+            REQUEST_TEXT
+        );
+  }
+
+  @Test
+  void getFurtherInformationRequestView() {
+    var requestedByUser = "Example user";
+    var energyPortalUser = mock(EnergyPortalUserDto.class);
+    when(energyPortalUser.displayName()).thenReturn(requestedByUser);
+
+    when(energyPortalUserService.getByWuaId(WebUserAccountId.from(USER.wuaId()))).thenReturn(energyPortalUser);
+
+    assertThat(furtherInformationRequestService.getFurtherInformationRequestView(furtherInformationRequest))
+        .extracting(
+            FurtherInformationRequestView::requestedAtTimestamp,
+            FurtherInformationRequestView::requestedByUser,
+            FurtherInformationRequestView::requestText
+        ).containsExactly(
+            DateUtils.format(NOW, DateUtils.DATE_TIME),
+            requestedByUser,
             REQUEST_TEXT
         );
   }

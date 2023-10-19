@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -42,6 +43,11 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest.FurtherInformationRequest;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest.FurtherInformationRequestService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest.FurtherInformationRequestView;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
@@ -68,6 +74,27 @@ class ApplicationUpdateControllerTest extends AbstractApplicationControllerTest 
 
   @MockBean
   private Clock clock;
+
+  @MockBean
+  private ConsultationService consultationService;
+
+  @MockBean
+  private FurtherInformationRequestService furtherInformationRequestService;
+
+  private Consultation consultation;
+
+  private FurtherInformationRequest furtherInformationRequest;
+
+  private FurtherInformationRequestView furtherInformationRequestView;
+
+  @BeforeEach
+  void setUp() {
+    consultation = new Consultation();
+
+    furtherInformationRequest = new FurtherInformationRequest();
+
+    furtherInformationRequestView = new FurtherInformationRequestView("timestamp", "requested by", "request text");
+  }
 
   @SecurityTest
   void getApplicationUpdateRequest_noUser() throws Exception {
@@ -128,6 +155,75 @@ class ApplicationUpdateControllerTest extends AbstractApplicationControllerTest 
     when(applicationService.generateApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
     doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any());
+
+    when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication())).thenReturn(Optional.of(consultation));
+    when(furtherInformationRequestService.findLatestOpenFurtherInformationRequest(consultation)).thenReturn(Optional.of(furtherInformationRequest));
+    when(furtherInformationRequestService.getFurtherInformationRequestView(furtherInformationRequest)).thenReturn(furtherInformationRequestView);
+
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationUpdateController.class)
+            .getApplicationUpdateRequest(APPLICATION_ID)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/update/applicationUpdateRequest"))
+        .andExpect(model().attribute("pageTitle", REQUEST_PAGE_TITLE))
+        .andExpect(model().attributeExists("summarySections"))
+        .andExpect(model().attribute("accordionId", applicationVersion.getId()))
+        .andExpect(model().attribute("wideSummaryDisplay",
+            ApplicationTypeFeature.WIDE_SUMMARY_DISPLAY.allowed(applicationVersion.getApplication().getType())))
+        .andExpect(model().attribute("applicationReference", DUMMY_APP_REF))
+        .andExpect(model().attribute("backLinkUrl",
+            ReverseRouter.route(on(ApplicationCaseProcessingController.class)
+                .getApplicationCaseProcessing(APPLICATION_ID, null))));
+  }
+
+  @ParameterizedTest
+  @MethodSource("getSubmittedApplicationVersions")
+  void getApplicationUpdateRequest_withoutConsultation(ApplicationVersion applicationVersion) throws Exception {
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
+    when(applicationUpdateService.getApplicationUpdateRequestForm(applicationVersion))
+        .thenReturn(new ApplicationUpdateRequestForm());
+    when(applicationService.generateApplicationReference(applicationVersion))
+        .thenReturn(DUMMY_APP_REF);
+    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any());
+
+    when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication())).thenReturn(Optional.empty());
+
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationUpdateController.class)
+            .getApplicationUpdateRequest(APPLICATION_ID)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/update/applicationUpdateRequest"))
+        .andExpect(model().attribute("pageTitle", REQUEST_PAGE_TITLE))
+        .andExpect(model().attributeExists("summarySections"))
+        .andExpect(model().attribute("accordionId", applicationVersion.getId()))
+        .andExpect(model().attribute("wideSummaryDisplay",
+            ApplicationTypeFeature.WIDE_SUMMARY_DISPLAY.allowed(applicationVersion.getApplication().getType())))
+        .andExpect(model().attribute("applicationReference", DUMMY_APP_REF))
+        .andExpect(model().attribute("backLinkUrl",
+            ReverseRouter.route(on(ApplicationCaseProcessingController.class)
+                .getApplicationCaseProcessing(APPLICATION_ID, null))));
+  }
+
+  @ParameterizedTest
+  @MethodSource("getSubmittedApplicationVersions")
+  void getApplicationUpdateRequest_withoutFurtherInformationRequest(ApplicationVersion applicationVersion) throws Exception {
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
+    when(applicationUpdateService.getApplicationUpdateRequestForm(applicationVersion))
+        .thenReturn(new ApplicationUpdateRequestForm());
+    when(applicationService.generateApplicationReference(applicationVersion))
+        .thenReturn(DUMMY_APP_REF);
+    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any());
+
+    when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication())).thenReturn(Optional.of(consultation));
+    when(furtherInformationRequestService.findLatestOpenFurtherInformationRequest(consultation)).thenReturn(Optional.empty());
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationUpdateController.class)
             .getApplicationUpdateRequest(APPLICATION_ID)))
@@ -207,6 +303,10 @@ class ApplicationUpdateControllerTest extends AbstractApplicationControllerTest 
     when(applicationService.generateApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
     doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any());
+
+    when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication())).thenReturn(Optional.of(consultation));
+    when(furtherInformationRequestService.findLatestOpenFurtherInformationRequest(consultation)).thenReturn(Optional.of(furtherInformationRequest));
+    when(furtherInformationRequestService.getFurtherInformationRequestView(furtherInformationRequest)).thenReturn(furtherInformationRequestView);
 
     mockMvc.perform(
             post(ReverseRouter.route(on(ApplicationUpdateController.class)

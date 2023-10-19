@@ -3,16 +3,14 @@
 <#import '../../summary/_applicationSummary.ftl' as applicationSummary>
 <#import '../_caseProcessingActions.ftl' as caseProcessingActions>
 <#import './consultation.ftl' as consulation>
-<#import '../further-information/requestBanner.ftl' as furtherInformationRequestBanner>
+<#import './further-information/furtherInformation.ftl' as furtherInformation>
 
 <@defaultPage
   htmlTitle=pageTitle
   pageHeading=pageTitle
   pageSize=getPageSize.getPageSize(wideSummaryDisplay)>
-    <#if furtherInformationRequestView?has_content>
-      <@furtherInformationRequestBanner.requestBanner furtherInformationRequestView=furtherInformationRequestView/>
-    <#else>
-      <@consulation.consulationInformationBanner consultationRequestView=consultationRequestView />
+    <#if consultationRequestView?has_content>
+      <@consulation.notificationBanner consultationRequestView=consultationRequestView />
     </#if>
     <@caseProcessingActions.caseActions actions=actionList/>
     <@applicationSummary.applicationSummary accordionId=accordionId/>

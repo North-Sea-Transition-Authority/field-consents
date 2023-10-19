@@ -17,6 +17,8 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest.FurtherInformationRequestService;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
@@ -38,6 +40,10 @@ public class ApplicationUpdateController {
 
   private final ApplicationSummaryService applicationSummaryService;
 
+  private final ConsultationService consultationService;
+
+  private final FurtherInformationRequestService furtherInformationRequestService;
+
   private final ApplicationUpdateRequestFormValidator applicationUpdateRequestFormValidator;
 
   @Autowired
@@ -45,11 +51,15 @@ public class ApplicationUpdateController {
                                      ApplicationVersionService applicationVersionService,
                                      ApplicationUpdateService applicationUpdateService,
                                      ApplicationSummaryService applicationSummaryService,
+                                     ConsultationService consultationService,
+                                     FurtherInformationRequestService furtherInformationRequestService,
                                      ApplicationUpdateRequestFormValidator applicationUpdateRequestFormValidator) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.applicationUpdateService = applicationUpdateService;
     this.applicationSummaryService = applicationSummaryService;
+    this.consultationService = consultationService;
+    this.furtherInformationRequestService = furtherInformationRequestService;
     this.applicationUpdateRequestFormValidator = applicationUpdateRequestFormValidator;
   }
 
@@ -58,8 +68,7 @@ public class ApplicationUpdateController {
   public ModelAndView getApplicationUpdateRequest(@PathVariable Integer applicationId) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
 
-    var applicationUpdateRequestForm =
-        applicationUpdateService.getApplicationUpdateRequestForm(applicationVersion);
+    var applicationUpdateRequestForm = applicationUpdateService.getApplicationUpdateRequestForm(applicationVersion);
 
     var modelAndView = getApplicationUpdateRequestModelAndView(applicationVersion);
     modelAndView.addObject("form", applicationUpdateRequestForm);
@@ -76,6 +85,12 @@ public class ApplicationUpdateController {
         "fcs/application/update/applicationUpdateRequest",
         REQUEST_PAGE_TITLE
     );
+
+    consultationService
+        .findLatestOpenConsultation(applicationVersion.getApplication())
+        .flatMap(furtherInformationRequestService::findLatestOpenFurtherInformationRequest)
+        .map(furtherInformationRequestService::getFurtherInformationRequestView)
+        .ifPresent(view -> modelAndView.addObject("furtherInformationRequestView", view));
 
     return modelAndView
         .addObject("applicationReference", applicationReference)

@@ -4,15 +4,21 @@
 <#import '_caseProcessingActions.ftl' as caseProcessingActions>
 <#import './caseprocessingtabs/_caseHistoryTab.ftl' as caseHistoryTab>
 <#import 'review/technicalReviewDetails.ftl' as technicalReviewDetails/>
+<#import '../application/consultation/further-information/furtherInformation.ftl' as furtherInformation/>
+<#import '../application/consultation/consultation.ftl' as consultation/>
 
 <#-- @ftlvariable name="technicalReviewSummaryView" type="uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewSummaryView" -->
 
 <@defaultPage
-htmlTitle=pageTitle
-pageHeading=pageTitle
-pageSize=getPageSize.getPageSize(wideSummaryDisplay)
->
-  <@technicalReviewDetails.notificaitonBanner technicalReviewSummaryView=technicalReviewSummaryView/>
+  htmlTitle=pageTitle
+  pageHeading=pageTitle
+  pageSize=getPageSize.getPageSize(wideSummaryDisplay)>
+  <#if technicalReviewSummaryView?has_content>
+    <@technicalReviewDetails.notificationBanner technicalReviewSummaryView=technicalReviewSummaryView/>
+  </#if>
+  <#if furtherInformationRequestView?has_content>
+    <@furtherInformation.requestNotificationBanner furtherInformationRequestView=furtherInformationRequestView/>
+  </#if>
   <@caseProcessingActions.caseActions actions=actionList/>
   <@fdsBackendTabs.tabs tabsHeading="case processing tabs">
     <@fdsBackendTabs.tabList>

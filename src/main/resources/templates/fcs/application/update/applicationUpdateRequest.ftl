@@ -1,6 +1,8 @@
 <#include '../../layout/layout.ftl'>
 <#import '../../functions/_getPageSize.ftl' as getPageSize>
 <#import '../../summary/_applicationSummary.ftl' as applicationSummary>
+<#import '../../application/consultation/further-information/furtherInformation.ftl' as furtherInformation>
+
 
 <#-- @ftlvariable name="pageTitle" type="java.lang.String" -->
 <#-- @ftlvariable name="applicationReference" type="java.lang.String" -->
@@ -19,6 +21,9 @@
   <@fdsDetails.summaryDetails summaryTitle="View application">
     <@applicationSummary.applicationSummary accordionId=accordionId/>
   </@fdsDetails.summaryDetails>
+  <#if furtherInformationRequestView?has_content>
+    <@furtherInformation.requestDetailsCard furtherInformationRequestView=furtherInformationRequestView/>
+  </#if>
   <@grid.gridRow>
     <@grid.twoThirdsColumn>
       <@fdsForm.htmlForm>

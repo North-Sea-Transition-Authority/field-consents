@@ -19,7 +19,9 @@
   <@fdsDetails.summaryDetails summaryTitle="View application">
       <@applicationSummary.applicationSummary accordionId=accordionId/>
   </@fdsDetails.summaryDetails>
-  <@consultation.requestDetailsCard consultationRequestView=consultationRequestView/>
+  <#if consultationRequestView?has_content>
+    <@consultation.requestDetailsCard consultationRequestView=consultationRequestView/>
+  </#if>
   <@fdsForm.htmlForm>
     <@fdsTextarea.textarea
       path="form.requestText"

@@ -31,7 +31,6 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest.FurtherInformationRequest;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest.FurtherInformationRequestService;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest.FurtherInformationRequestView;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -119,8 +118,7 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
 
     assertThat(model)
         .containsEntry("actionList", caseProcessingActionViews)
-        .containsEntry("consultationRequestView", ConsultationRequestView.from(consultation))
-        .containsEntry("furtherInformationRequestView", FurtherInformationRequestView.from(furtherInformationRequest));
+        .containsEntry("consultationRequestView", ConsultationRequestView.from(consultation));
   }
 
   private void setUpMocksWithConsultation(@Nullable Consultation consultation) {

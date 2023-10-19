@@ -5,7 +5,7 @@
 
 <#macro technicalReviewDetails technicalReviewSummaryView>
   <@fdsSummaryList.summaryListCard headingText="Review details" summaryListId="review-details-summary-card-list">
-    <@fdsSummaryList.summaryListRowNoAction keyText="Review deadline" >
+    <@fdsSummaryList.summaryListRowNoAction keyText="Review deadline">
       ${technicalReviewSummaryView.deadline()!""}
     </@fdsSummaryList.summaryListRowNoAction>
     <@fdsSummaryList.summaryListRowNoAction keyText="Review notes">
@@ -14,23 +14,15 @@
   </@fdsSummaryList.summaryListCard>
 </#macro>
 
-<#macro notificaitonBanner technicalReviewSummaryView={}>
-  <#if technicalReviewSummaryView?has_content>
-    <#assign deadline = technicalReviewSummaryView.deadline()!""/>
-    <#assign note = technicalReviewSummaryView.note()!""/>
+<#macro notificationBanner technicalReviewSummaryView>
+  <#assign deadline = technicalReviewSummaryView.deadline()!""/>
+  <#assign note = technicalReviewSummaryView.note()!""/>
 
-    <@fdsNotificationBanner.notificationBannerInfo bannerTitleText="Technical review required">
-      <#if deadline?has_content>
-        <@fdsNotificationBanner.notificationBannerContent
-          headingText="Technical review due by ${deadline}"
-          moreContent=note
-        />
-      <#else>
-        <@fdsNotificationBanner.notificationBannerContent
-          headingText="Technical review due"
-          moreContent=note
-        />
-      </#if>
-    </@fdsNotificationBanner.notificationBannerInfo>
-  </#if>
+  <@fdsNotificationBanner.notificationBannerInfo bannerTitleText="Technical review required">
+    <#if deadline?has_content>
+      <@fdsNotificationBanner.notificationBannerContent headingText="Technical review due by ${deadline}" moreContent=note/>
+    <#else>
+      <@fdsNotificationBanner.notificationBannerContent headingText="Technical review due" moreContent=note/>
+    </#if>
+  </@fdsNotificationBanner.notificationBannerInfo>
 </#macro>
