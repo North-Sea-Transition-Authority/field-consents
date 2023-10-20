@@ -38,9 +38,9 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.Ca
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseHistoryTabContentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest.FurtherInformationRequest;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest.FurtherInformationRequestService;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest.FurtherInformationRequestView;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformation;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReview;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewSummaryView;
@@ -78,15 +78,15 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   private ConsultationService consultationService;
 
   @MockBean
-  private FurtherInformationRequestService furtherInformationRequestService;
+  private FurtherInformationService furtherInformationService;
 
   private TechnicalReview technicalReview;
 
   private Consultation consultation;
 
-  private FurtherInformationRequest furtherInformationRequest;
+  private FurtherInformation furtherInformation;
 
-  private FurtherInformationRequestView furtherInformationRequestView;
+  private FurtherInformationView furtherInformationView;
 
   @BeforeEach
   void setUp() {
@@ -96,9 +96,9 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
 
     consultation = new Consultation();
 
-    furtherInformationRequest = new FurtherInformationRequest();
+    furtherInformation = new FurtherInformation();
 
-    furtherInformationRequestView = new FurtherInformationRequestView("timestamp", "user", "request text");
+    furtherInformationView = new FurtherInformationView("timestamp", "user", "request text");
   }
 
   @SecurityTest
@@ -280,14 +280,14 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
 
     when(regulatorTeamService.isCaseOfficer(WebUserAccountId.from(user.wuaId()))).thenReturn(true);
     when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication())).thenReturn(Optional.of(consultation));
-    when(furtherInformationRequestService.findLatestOpenFurtherInformationRequest(consultation)).thenReturn(Optional.of(furtherInformationRequest));
-    when(furtherInformationRequestService.getFurtherInformationRequestView(furtherInformationRequest)).thenReturn(furtherInformationRequestView);
+    when(furtherInformationService.findLatestOpenFurtherInformation(consultation)).thenReturn(Optional.of(furtherInformation));
+    when(furtherInformationService.getFurtherInformationView(furtherInformation)).thenReturn(furtherInformationView);
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
             .getApplicationCaseProcessing(APPLICATION_ID, null)))
             .with(user(user)))
         .andExpect(status().isOk())
-        .andExpect(model().attribute("furtherInformationRequestView", furtherInformationRequestView));
+        .andExpect(model().attribute("furtherInformationView", furtherInformationView));
   }
 
   @ParameterizedTest
@@ -305,7 +305,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
         .getModelAndView()
         .getModel();
 
-    assertThat(model).doesNotContainKey("furtherInformationRequestView");
+    assertThat(model).doesNotContainKey("furtherInformationView");
   }
 
   private static void assertModel(ApplicationVersion applicationVersion,

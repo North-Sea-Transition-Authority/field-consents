@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest;
+package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.request;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -39,6 +39,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.ConsulteeCase
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationRequestView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationService;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
@@ -66,7 +67,7 @@ class FurtherInformationRequestControllerTest extends AbstractApplicationControl
   private ConsultationService consultationService;
 
   @MockBean
-  private FurtherInformationRequestService furtherInformationRequestService;
+  private FurtherInformationService furtherInformationService;
 
   private ApplicationVersion applicationVersion;
   private Application application;
@@ -84,28 +85,28 @@ class FurtherInformationRequestControllerTest extends AbstractApplicationControl
   }
 
   @SecurityTest
-  void getFurtherInformationRequestForLatestConsultation_noUser() throws Exception {
+  void getFurtherInformationForLatestConsultation_noUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .getFurtherInformationRequestForLatestConsultation(APPLICATION_ID))))
+            .getFurtherInformationForLatestConsultation(APPLICATION_ID))))
         .andExpect(redirectionToLoginUrl());
   }
 
   @Test
-  void getFurtherInformationRequestForLatestConsultation() throws Exception {
+  void getFurtherInformationForLatestConsultation() throws Exception {
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
     when(consultationService.getLatestOpenConsultation(application)).thenReturn(consultation);
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-        .getFurtherInformationRequestForLatestConsultation(APPLICATION_ID)))
+        .getFurtherInformationForLatestConsultation(APPLICATION_ID)))
         .with(user(user))
     )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .getFurtherInformationRequestFormForConsultation(APPLICATION_ID, CONSULTATION_ID))));
+            .getFurtherInformationForConsultation(APPLICATION_ID, CONSULTATION_ID))));
   }
 
   @Test
-  void getFurtherInformationRequestFormForConsultation() throws Exception {
+  void getFurtherInformationForConsultation() throws Exception {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(consultationService.getOpenConsultationByIdAndApplication(CONSULTATION_ID, application)).thenReturn(consultation);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(APPLICATION_REFERENCE);
@@ -118,7 +119,7 @@ class FurtherInformationRequestControllerTest extends AbstractApplicationControl
         .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class));
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .getFurtherInformationRequestFormForConsultation(APPLICATION_ID, CONSULTATION_ID)))
+            .getFurtherInformationForConsultation(APPLICATION_ID, CONSULTATION_ID)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name(VIEW_NAME))
@@ -131,13 +132,13 @@ class FurtherInformationRequestControllerTest extends AbstractApplicationControl
   }
 
   @Test
-  void submitFurtherInformationRequestToCaseOfficer() throws Exception {
+  void submitFurtherInformationToCaseOfficer() throws Exception {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(consultationService.getOpenConsultationByIdAndApplication(CONSULTATION_ID, application)).thenReturn(consultation);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(APPLICATION_REFERENCE);
 
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .submitFurtherInformationRequestToCaseOfficer(APPLICATION_ID, CONSULTATION_ID, null, null, null, null)))
+            .submitFurtherInformationToCaseOfficer(APPLICATION_ID, CONSULTATION_ID, null, null, null, null)))
             .with(user(user))
             .with(csrf())
             .param("requestText", REQUEST_TEXT))
@@ -148,13 +149,13 @@ class FurtherInformationRequestControllerTest extends AbstractApplicationControl
             .withHeadingContent("Further information requested for application %s".formatted(APPLICATION_REFERENCE))
             .build()));
 
-    verify(furtherInformationRequestService).saveFurtherInformationRequest(consultation, user, REQUEST_TEXT);
+    verify(furtherInformationService).saveFurtherInformationRequest(consultation, user, REQUEST_TEXT);
   }
 
   @ParameterizedTest
   @ValueSource(strings = {" ", ""})
   @NullSource
-  void submitFurtherInformationRequestToCaseOfficer_missingResponseText(String requestText) throws Exception {
+  void submitFurtherInformationToCaseOfficer_missingResponseText(String requestText) throws Exception {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(consultationService.getOpenConsultationByIdAndApplication(CONSULTATION_ID, application)).thenReturn(consultation);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(APPLICATION_REFERENCE);
@@ -167,14 +168,14 @@ class FurtherInformationRequestControllerTest extends AbstractApplicationControl
         .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class));
 
     mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .submitFurtherInformationRequestToCaseOfficer(APPLICATION_ID, CONSULTATION_ID, null, null, null, null)))
+            .submitFurtherInformationToCaseOfficer(APPLICATION_ID, CONSULTATION_ID, null, null, null, null)))
             .with(user(user))
             .with(csrf())
             .param("requestText", requestText))
         .andExpect(status().is2xxSuccessful())
         .andExpect(view().name(VIEW_NAME));
 
-    verify(furtherInformationRequestService, never()).saveFurtherInformationRequest(any(), any(), any());
+    verify(furtherInformationService, never()).saveFurtherInformationRequest(any(), any(), any());
   }
 
   private void addSummarySectionsToModelAndView(ModelAndView modelAndView) {

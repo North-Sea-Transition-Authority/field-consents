@@ -16,8 +16,8 @@
   <#if technicalReviewSummaryView?has_content>
     <@technicalReviewDetails.notificationBanner technicalReviewSummaryView=technicalReviewSummaryView/>
   </#if>
-  <#if furtherInformationRequestView?has_content>
-    <@furtherInformation.requestNotificationBanner furtherInformationRequestView=furtherInformationRequestView/>
+  <#if furtherInformationView?has_content>
+    <@furtherInformation.requestNotificationBanner furtherInformationView=furtherInformationView/>
   </#if>
   <@caseProcessingActions.caseActions actions=actionList/>
   <@fdsBackendTabs.tabs tabsHeading="case processing tabs">

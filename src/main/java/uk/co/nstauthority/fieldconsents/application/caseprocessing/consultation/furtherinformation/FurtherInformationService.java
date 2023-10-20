@@ -1,9 +1,9 @@
-package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest;
+package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation;
 
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest.FurtherInformationRequestStatus.OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationStatus.OPEN;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.CONSULTEE;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.REGULATOR;
-import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.FURTHER_INFORMATION_REQUEST_OPENED;
+import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CONSULTATION_FURTHER_INFORMATION_REQUESTED;
 import static uk.co.nstauthority.fieldconsents.formatting.DateUtils.DATE_TIME;
 
 import jakarta.transaction.Transactional;
@@ -20,16 +20,16 @@ import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserServic
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 
 @Service
-public class FurtherInformationRequestService {
+public class FurtherInformationService {
 
   private final Clock clock;
-  private final FurtherInformationRequestRepository repository;
+  private final FurtherInformationRepository repository;
   private final ApplicationWorkAreaPriorityService priorityService;
   private final EnergyPortalUserService energyPortalUserService;
 
-  FurtherInformationRequestService(
+  FurtherInformationService(
       Clock clock,
-      FurtherInformationRequestRepository repository,
+      FurtherInformationRepository repository,
       ApplicationWorkAreaPriorityService priorityService,
       EnergyPortalUserService energyPortalUserService
   ) {
@@ -39,38 +39,39 @@ public class FurtherInformationRequestService {
     this.energyPortalUserService = energyPortalUserService;
   }
 
-  public Optional<FurtherInformationRequest> findLatestOpenFurtherInformationRequest(Consultation consultation) {
+  public Optional<FurtherInformation> findLatestOpenFurtherInformation(Consultation consultation) {
     return repository.findByConsultationAndStatus(consultation, OPEN);
   }
 
-  public List<FurtherInformationRequest> getAllFurtherInformationRequests(Collection<Consultation> consultations) {
+  public List<FurtherInformation> getAllFurtherInformation(Collection<Consultation> consultations) {
     return repository.findAllByConsultationInOrderById(consultations);
   }
 
   @Transactional
   public void saveFurtherInformationRequest(Consultation consultation, ServiceUserDetail user, String requestText) {
-    var furtherInformationRequest = new FurtherInformationRequest();
-    furtherInformationRequest.setStatus(OPEN);
-    furtherInformationRequest.setConsultation(consultation);
-    furtherInformationRequest.setRequestedAtDatetime(clock.instant());
-    furtherInformationRequest.setRequestedByWuaId(user.wuaId());
-    furtherInformationRequest.setRequestText(requestText);
+    var furtherInformation = new FurtherInformation();
+    furtherInformation.setStatus(OPEN);
+    furtherInformation.setConsultation(consultation);
+    furtherInformation.setRequestedAtDatetime(clock.instant());
+    furtherInformation.setRequestedByWuaId(user.wuaId());
+    furtherInformation.setRequestText(requestText);
 
-    repository.save(furtherInformationRequest);
+    repository.save(furtherInformation);
 
     var applicationVersion = consultation.getRequestApplicationVersion();
-    priorityService.prioritiseApplicationInWorkArea(applicationVersion, user, FURTHER_INFORMATION_REQUEST_OPENED, REGULATOR);
-    priorityService.prioritiseApplicationInWorkArea(applicationVersion, user, FURTHER_INFORMATION_REQUEST_OPENED, CONSULTEE);
+    var reason = CONSULTATION_FURTHER_INFORMATION_REQUESTED;
+    priorityService.prioritiseApplicationInWorkArea(applicationVersion, user, reason, REGULATOR);
+    priorityService.prioritiseApplicationInWorkArea(applicationVersion, user, reason, CONSULTEE);
   }
 
-  public FurtherInformationRequestView getFurtherInformationRequestView(FurtherInformationRequest furtherInformationRequest) {
-    var requestedByWuaId = WebUserAccountId.from(furtherInformationRequest.getRequestedByWuaId());
+  public FurtherInformationView getFurtherInformationView(FurtherInformation furtherInformation) {
+    var requestedByWuaId = WebUserAccountId.from(furtherInformation.getRequestedByWuaId());
     var requestedByEnergyPortalUser = energyPortalUserService.getByWuaId(requestedByWuaId);
 
-    return new FurtherInformationRequestView(
-        DateUtils.format(furtherInformationRequest.getRequestedAtDatetime(), DATE_TIME),
+    return new FurtherInformationView(
+        DateUtils.format(furtherInformation.getRequestedAtDatetime(), DATE_TIME),
         requestedByEnergyPortalUser.displayName(),
-        furtherInformationRequest.getRequestText()
+        furtherInformation.getRequestText()
     );
   }
 

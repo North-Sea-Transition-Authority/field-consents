@@ -28,8 +28,8 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casest
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_APPLICATION_UPDATE_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_CONSULTATION_FURTHER_INFORMATION_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_CONSULTATION_OPEN;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_FURTHER_INFORMATION_REQUEST_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_TECHNICAL_REVIEW_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_WITHDRAWAL_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.TECHNICAL_REVIEWS_PAGE_ENABLED;
@@ -160,7 +160,7 @@ public class CaseProcessingActionService {
           entry(CASE_OFFICER_REASSIGN_OWNERSHIP, EnumSet.of(CASE_OFFICER_ASSIGNED)),
           entry(CONSULTATION_REQUEST,
               EnumSet.of(CASE_OFFICER_ASSIGNED, NO_TECHNICAL_REVIEW_OPEN, NO_CONSULTATION_OPEN)),
-          entry(CONSULTATION_RESPONSE, EnumSet.of(CONSULTATION_OPEN, NO_FURTHER_INFORMATION_REQUEST_OPEN)),
+          entry(CONSULTATION_RESPONSE, EnumSet.of(CONSULTATION_OPEN, NO_CONSULTATION_FURTHER_INFORMATION_OPEN)),
           entry(CONSULTATION_MANAGE_RESPONDER, EnumSet.of(CONSULTATION_OPEN)),
           entry(REGULATOR_ADD_CASE_NOTE, EnumSet.of(CASE_NOTES_ALLOWED)),
           entry(TECHNICAL_REVIEWER_SUBMIT_REVIEW, EnumSet.of(TECHNICAL_REVIEW_OPEN)),
@@ -168,7 +168,7 @@ public class CaseProcessingActionService {
           entry(APPLICATION_UPDATE_REQUEST, EnumSet.of(NO_APPLICATION_UPDATE_OPEN)),
           entry(OPERATOR_WITHDRAWAL_REQUEST, EnumSet.of(NO_WITHDRAWAL_OPEN, NO_APPLICATION_UPDATE_OPEN)),
           entry(OPERATOR_UPDATE_APPLICATION, EnumSet.of(APPLICATION_UPDATE_OPEN)),
-          entry(CONSULTATION_FURTHER_INFORMATION_REQUEST, EnumSet.of(NO_FURTHER_INFORMATION_REQUEST_OPEN))
+          entry(CONSULTATION_FURTHER_INFORMATION_REQUEST, EnumSet.of(NO_CONSULTATION_FURTHER_INFORMATION_OPEN))
       );
 
   private final Map<CaseProcessingActionItem, Set<? extends TeamRole>> actionsToAssigneeOnlyRoles =

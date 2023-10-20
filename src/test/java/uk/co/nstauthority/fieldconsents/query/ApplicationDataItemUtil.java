@@ -442,7 +442,7 @@ public class ApplicationDataItemUtil {
         .withApplicationUpdateDeadline(getApplicationUpdateDeadline(searchResultItemDto))
         .withConsultationOpen(searchResultItemDto.getConsultationOpen())
         .withConsultationDeadline(getConsultationDeadline(searchResultItemDto))
-        .withFurtherInformationRequestOpen(false)
+        .withConsultationFurtherInformationOpen(false)
         .build();
     return new SearchResultItem(applicationDataItem, searchResultItemDto.getLicences());
   }
@@ -606,7 +606,7 @@ public class ApplicationDataItemUtil {
         .withApplicationUpdateDeadline("")
         .withConsultationOpen(false)
         .withConsultationDeadline("")
-        .withFurtherInformationRequestOpen(false)
+        .withConsultationFurtherInformationOpen(false)
         .build();
     var licenses = "P1, P2, P3";
     return new SearchResultItem(applicationDataItem, licenses);

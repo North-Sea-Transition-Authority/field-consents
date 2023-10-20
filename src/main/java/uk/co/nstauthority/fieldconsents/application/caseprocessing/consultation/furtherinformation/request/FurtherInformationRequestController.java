@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest;
+package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.request;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
@@ -20,6 +20,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CasePr
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationRequestView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationService;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
@@ -37,36 +38,36 @@ public class FurtherInformationRequestController {
   private final ApplicationVersionService applicationVersionService;
   private final ApplicationSummaryService applicationSummaryService;
   private final ConsultationService consultationService;
-  private final FurtherInformationRequestService furtherInformationRequestService;
+  private final FurtherInformationService furtherInformationService;
 
   FurtherInformationRequestController(
       ApplicationService applicationService,
       ApplicationVersionService applicationVersionService,
       ApplicationSummaryService applicationSummaryService,
       ConsultationService consultationService,
-      FurtherInformationRequestService furtherInformationRequestService
+      FurtherInformationService furtherInformationService
   ) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.applicationSummaryService = applicationSummaryService;
     this.consultationService = consultationService;
-    this.furtherInformationRequestService = furtherInformationRequestService;
+    this.furtherInformationService = furtherInformationService;
   }
 
   @GetMapping
   @ActionEndPoint(CaseProcessingActionItem.CONSULTATION_FURTHER_INFORMATION_REQUEST)
-  public ModelAndView getFurtherInformationRequestForLatestConsultation(@PathVariable Integer applicationId) {
+  public ModelAndView getFurtherInformationForLatestConsultation(@PathVariable Integer applicationId) {
     var application = applicationService.getApplicationById(applicationId);
     var consultation = consultationService.getLatestOpenConsultation(application);
     var consultationId = consultation.getId();
 
     return ReverseRouter.redirect(on(this.getClass())
-        .getFurtherInformationRequestFormForConsultation(applicationId, consultationId));
+        .getFurtherInformationForConsultation(applicationId, consultationId));
   }
 
-  @GetMapping("{consultationId}/further-information-request")
+  @GetMapping("{consultationId}/further-information/new")
   @ActionEndPoint(CaseProcessingActionItem.CONSULTATION_FURTHER_INFORMATION_REQUEST)
-  public ModelAndView getFurtherInformationRequestFormForConsultation(
+  public ModelAndView getFurtherInformationForConsultation(
       @PathVariable Integer applicationId,
       @PathVariable Integer consultationId
   ) {
@@ -77,9 +78,9 @@ public class FurtherInformationRequestController {
     return getModelAndView(applicationVersion, consultation, FurtherInformationRequestForm.empty());
   }
 
-  @PostMapping("{consultationId}/further-information-request")
+  @PostMapping("{consultationId}/further-information/new")
   @ActionEndPoint(CaseProcessingActionItem.CONSULTATION_FURTHER_INFORMATION_REQUEST)
-  ModelAndView submitFurtherInformationRequestToCaseOfficer(
+  ModelAndView submitFurtherInformationToCaseOfficer(
       @PathVariable Integer applicationId,
       @PathVariable Integer consultationId,
       @Valid @ModelAttribute("form") FurtherInformationRequestForm form,
@@ -95,7 +96,7 @@ public class FurtherInformationRequestController {
       return getModelAndView(applicationVersion, consultation, form);
     }
 
-    furtherInformationRequestService.saveFurtherInformationRequest(consultation, user, form.requestText());
+    furtherInformationService.saveFurtherInformationRequest(consultation, user, form.requestText());
 
     var applicationReference = applicationService.generateApplicationReference(applicationVersion);
     var notificationBannerMessage = "Further information requested for application %s".formatted(applicationReference);

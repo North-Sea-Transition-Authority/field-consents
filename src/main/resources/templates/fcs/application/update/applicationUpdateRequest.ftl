@@ -21,8 +21,8 @@
   <@fdsDetails.summaryDetails summaryTitle="View application">
     <@applicationSummary.applicationSummary accordionId=accordionId/>
   </@fdsDetails.summaryDetails>
-  <#if furtherInformationRequestView?has_content>
-    <@furtherInformation.requestDetailsCard furtherInformationRequestView=furtherInformationRequestView/>
+  <#if furtherInformationView?has_content>
+    <@furtherInformation.requestDetailsCard furtherInformationView=furtherInformationView/>
   </#if>
   <@grid.gridRow>
     <@grid.twoThirdsColumn>

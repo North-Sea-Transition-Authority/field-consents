@@ -18,7 +18,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest.FurtherInformationRequestService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationService;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
@@ -42,7 +42,7 @@ public class ApplicationUpdateController {
 
   private final ConsultationService consultationService;
 
-  private final FurtherInformationRequestService furtherInformationRequestService;
+  private final FurtherInformationService furtherInformationService;
 
   private final ApplicationUpdateRequestFormValidator applicationUpdateRequestFormValidator;
 
@@ -52,14 +52,14 @@ public class ApplicationUpdateController {
                                      ApplicationUpdateService applicationUpdateService,
                                      ApplicationSummaryService applicationSummaryService,
                                      ConsultationService consultationService,
-                                     FurtherInformationRequestService furtherInformationRequestService,
+                                     FurtherInformationService furtherInformationService,
                                      ApplicationUpdateRequestFormValidator applicationUpdateRequestFormValidator) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.applicationUpdateService = applicationUpdateService;
     this.applicationSummaryService = applicationSummaryService;
     this.consultationService = consultationService;
-    this.furtherInformationRequestService = furtherInformationRequestService;
+    this.furtherInformationService = furtherInformationService;
     this.applicationUpdateRequestFormValidator = applicationUpdateRequestFormValidator;
   }
 
@@ -88,9 +88,9 @@ public class ApplicationUpdateController {
 
     consultationService
         .findLatestOpenConsultation(applicationVersion.getApplication())
-        .flatMap(furtherInformationRequestService::findLatestOpenFurtherInformationRequest)
-        .map(furtherInformationRequestService::getFurtherInformationRequestView)
-        .ifPresent(view -> modelAndView.addObject("furtherInformationRequestView", view));
+        .flatMap(furtherInformationService::findLatestOpenFurtherInformation)
+        .map(furtherInformationService::getFurtherInformationView)
+        .ifPresent(view -> modelAndView.addObject("furtherInformationView", view));
 
     return modelAndView
         .addObject("applicationReference", applicationReference)

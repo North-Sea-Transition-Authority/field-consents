@@ -45,9 +45,9 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest.FurtherInformationRequest;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest.FurtherInformationRequestService;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest.FurtherInformationRequestView;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformation;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationView;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
@@ -79,21 +79,21 @@ class ApplicationUpdateControllerTest extends AbstractApplicationControllerTest 
   private ConsultationService consultationService;
 
   @MockBean
-  private FurtherInformationRequestService furtherInformationRequestService;
+  private FurtherInformationService furtherInformationService;
 
   private Consultation consultation;
 
-  private FurtherInformationRequest furtherInformationRequest;
+  private FurtherInformation furtherInformation;
 
-  private FurtherInformationRequestView furtherInformationRequestView;
+  private FurtherInformationView furtherInformationView;
 
   @BeforeEach
   void setUp() {
     consultation = new Consultation();
 
-    furtherInformationRequest = new FurtherInformationRequest();
+    furtherInformation = new FurtherInformation();
 
-    furtherInformationRequestView = new FurtherInformationRequestView("timestamp", "requested by", "request text");
+    furtherInformationView = new FurtherInformationView("timestamp", "requested by", "request text");
   }
 
   @SecurityTest
@@ -157,8 +157,8 @@ class ApplicationUpdateControllerTest extends AbstractApplicationControllerTest 
     doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any());
 
     when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication())).thenReturn(Optional.of(consultation));
-    when(furtherInformationRequestService.findLatestOpenFurtherInformationRequest(consultation)).thenReturn(Optional.of(furtherInformationRequest));
-    when(furtherInformationRequestService.getFurtherInformationRequestView(furtherInformationRequest)).thenReturn(furtherInformationRequestView);
+    when(furtherInformationService.findLatestOpenFurtherInformation(consultation)).thenReturn(Optional.of(furtherInformation));
+    when(furtherInformationService.getFurtherInformationView(furtherInformation)).thenReturn(furtherInformationView);
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationUpdateController.class)
             .getApplicationUpdateRequest(APPLICATION_ID)))
@@ -211,7 +211,7 @@ class ApplicationUpdateControllerTest extends AbstractApplicationControllerTest 
 
   @ParameterizedTest
   @MethodSource("getSubmittedApplicationVersions")
-  void getApplicationUpdateRequest_withoutFurtherInformationRequest(ApplicationVersion applicationVersion) throws Exception {
+  void getApplicationUpdateRequest_withoutFurtherInformation(ApplicationVersion applicationVersion) throws Exception {
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
@@ -223,7 +223,7 @@ class ApplicationUpdateControllerTest extends AbstractApplicationControllerTest 
     doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any());
 
     when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication())).thenReturn(Optional.of(consultation));
-    when(furtherInformationRequestService.findLatestOpenFurtherInformationRequest(consultation)).thenReturn(Optional.empty());
+    when(furtherInformationService.findLatestOpenFurtherInformation(consultation)).thenReturn(Optional.empty());
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationUpdateController.class)
             .getApplicationUpdateRequest(APPLICATION_ID)))
@@ -305,8 +305,8 @@ class ApplicationUpdateControllerTest extends AbstractApplicationControllerTest 
     doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any());
 
     when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication())).thenReturn(Optional.of(consultation));
-    when(furtherInformationRequestService.findLatestOpenFurtherInformationRequest(consultation)).thenReturn(Optional.of(furtherInformationRequest));
-    when(furtherInformationRequestService.getFurtherInformationRequestView(furtherInformationRequest)).thenReturn(furtherInformationRequestView);
+    when(furtherInformationService.findLatestOpenFurtherInformation(consultation)).thenReturn(Optional.of(furtherInformation));
+    when(furtherInformationService.getFurtherInformationView(furtherInformation)).thenReturn(furtherInformationView);
 
     mockMvc.perform(
             post(ReverseRouter.route(on(ApplicationUpdateController.class)

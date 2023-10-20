@@ -629,7 +629,7 @@ class ApplicationDataItemDtoServiceTest {
 
     verify(builder).withConsultationOpen(null);
     verify(builder).withConsultationDeadline(null);
-    verify(builder).withFurtherInformationRequestOpen(null);
+    verify(builder).withConsultationFurtherInformationOpen(null);
 
     verifyNoMoreInteractions(builder);
   }

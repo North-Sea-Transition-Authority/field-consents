@@ -110,7 +110,7 @@
       <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Update due by ${applicationDataItem.applicationUpdateDeadline()}"/>
       <br/>
     </#if>
-    <#if applicationDataItem.furtherInformationRequestOpen()!false>
+    <#if applicationDataItem.consultationFurtherInformationOpen()!false>
       <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Further information requested"/>
       <br/>
     </#if>

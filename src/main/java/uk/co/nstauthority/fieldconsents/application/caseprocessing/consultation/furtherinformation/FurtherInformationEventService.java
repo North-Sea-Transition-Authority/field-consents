@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest;
+package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,49 +12,47 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.Ca
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 
 @Service
-class FurtherInformationRequestEventService implements CaseEventService<Application> {
+class FurtherInformationEventService implements CaseEventService<Application> {
 
   private final ConsultationService consultationService;
-  private final FurtherInformationRequestService furtherInformationRequestService;
+  private final FurtherInformationService furtherInformationService;
 
-  FurtherInformationRequestEventService(
+  FurtherInformationEventService(
       ConsultationService consultationService,
-      FurtherInformationRequestService furtherInformationRequestService
+      FurtherInformationService furtherInformationService
   ) {
     this.consultationService = consultationService;
-    this.furtherInformationRequestService = furtherInformationRequestService;
+    this.furtherInformationService = furtherInformationService;
   }
 
   @Override
   public List<CaseEvent> getCaseEvents(Application application) {
     var consultations = consultationService.getConsultationsByApplication(application);
-    var furtherInformationRequests = furtherInformationRequestService.getAllFurtherInformationRequests(consultations);
-
     var caseEvents = new ArrayList<CaseEvent>();
 
-    for (var furtherInformationRequest : furtherInformationRequests) {
-      getRequestedCaseEvent(furtherInformationRequest).ifPresent(caseEvents::add);
+    for (var furtherInformation : furtherInformationService.getAllFurtherInformation(consultations)) {
+      getRequestedCaseEvent(furtherInformation).ifPresent(caseEvents::add);
       // TODO: FCS-451 - add response event
     }
 
     return caseEvents;
   }
 
-  Optional<CaseEvent> getRequestedCaseEvent(FurtherInformationRequest furtherInformationRequest) {
-    if (Objects.isNull(furtherInformationRequest.getRequestedAtDatetime())) {
+  Optional<CaseEvent> getRequestedCaseEvent(FurtherInformation furtherInformation) {
+    if (Objects.isNull(furtherInformation.getRequestedAtDatetime())) {
       return Optional.empty();
     }
 
-    if (Objects.isNull(furtherInformationRequest.getRequestedByWuaId())) {
+    if (Objects.isNull(furtherInformation.getRequestedByWuaId())) {
       return Optional.empty();
     }
 
-    var applicationVersion = furtherInformationRequest.getConsultation().getRequestApplicationVersion();
+    var applicationVersion = furtherInformation.getConsultation().getRequestApplicationVersion();
     var caseEvent = CaseEvent.builder(applicationVersion)
         .withEventType(CaseEventType.FURTHER_INFORMATION_REQUEST_OPENED)
-        .withMainEventUserWuaId(furtherInformationRequest.getRequestedByWuaId())
-        .withEventDateTime(furtherInformationRequest.getRequestedAtDatetime())
-        .withEventText(furtherInformationRequest.getRequestText())
+        .withMainEventUserWuaId(furtherInformation.getRequestedByWuaId())
+        .withEventDateTime(furtherInformation.getRequestedAtDatetime())
+        .withEventText(furtherInformation.getRequestText())
         .build();
 
     return Optional.of(caseEvent);

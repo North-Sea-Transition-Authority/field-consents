@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest.FurtherInformationRequestStatus;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationStatus;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
@@ -235,8 +235,7 @@ public class ApplicationDataItemDtoService {
   ) {
     var withdrawalOpen = Boolean.TRUE.equals(dataItemDto.getWithdrawalOpen());
     var applicationUpdateOpen = Boolean.TRUE.equals(dataItemDto.getApplicationUpdateOpen());
-    var furtherInformationRequestOpen = FurtherInformationRequestStatus.OPEN
-        .equals(dataItemDto.getFurtherInformationRequestStatus());
+    var furtherInformationOpen = FurtherInformationStatus.OPEN.equals(dataItemDto.getConsultationFurtherInformationStatus());
 
     var userAction = getApplicationDataItemUserActionFromUser(user);
 
@@ -259,7 +258,7 @@ public class ApplicationDataItemDtoService {
         .withApplicationUpdateDeadline(getApplicationUpdateDeadline(dataItemDto))
         .withConsultationOpen(dataItemDto.getConsultationOpen())
         .withConsultationDeadline(getConsultationDeadline(dataItemDto))
-        .withFurtherInformationRequestOpen(furtherInformationRequestOpen);
+        .withConsultationFurtherInformationOpen(furtherInformationOpen);
 
     removeTagsForTeamType(teamType, builder);
 
@@ -288,7 +287,7 @@ public class ApplicationDataItemDtoService {
   }
 
   private void removeFurtherInformationTag(ApplicationDataItem.Builder builder) {
-    builder.withFurtherInformationRequestOpen(null);
+    builder.withConsultationFurtherInformationOpen(null);
   }
 
   private void removeConsultationTag(ApplicationDataItem.Builder builder) {

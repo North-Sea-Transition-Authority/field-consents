@@ -5,7 +5,7 @@ import static uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlag
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_ASSETS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_CONSULTATIONS;
-import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_CONSULTATION_FURTHER_INFORMATION_REQUESTS;
+import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_CONSULTATION_FURTHER_INFORMATION;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_FLAGS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_TECHNICAL_REVIEWS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_UPDATES;
@@ -23,7 +23,7 @@ import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationStatus;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest.FurtherInformationRequestStatus;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.WithdrawalStatus;
@@ -86,7 +86,7 @@ public class ApplicationDataItemQueryService {
             APPLICATION_UPDATES.DEADLINE_DATE_TIME,
             APPLICATION_CONSULTATIONS.CONSULTATION_TEAM_ID.isNotNull(),
             APPLICATION_CONSULTATIONS.REQUEST_DEADLINE,
-            APPLICATION_CONSULTATION_FURTHER_INFORMATION_REQUESTS.STATUS
+            APPLICATION_CONSULTATION_FURTHER_INFORMATION.STATUS
         )
         .from(APPLICATIONS)
         .join(APPLICATION_VERSIONS).onKey(APPLICATION_VERSIONS.APPLICATION_ID)
@@ -108,9 +108,9 @@ public class ApplicationDataItemQueryService {
         .leftJoin(APPLICATION_CONSULTATIONS)
             .on(APPLICATION_CONSULTATIONS.REQUEST_APPLICATION_VERSION_ID.in(allAppVersionsForAppSubQuery))
             .and(APPLICATION_CONSULTATIONS.STATUS.eq(ConsultationStatus.OPEN.name()))
-        .leftJoin(APPLICATION_CONSULTATION_FURTHER_INFORMATION_REQUESTS)
-            .on(APPLICATION_CONSULTATION_FURTHER_INFORMATION_REQUESTS.CONSULTATION_ID.eq(APPLICATION_CONSULTATIONS.ID))
-            .and(APPLICATION_CONSULTATION_FURTHER_INFORMATION_REQUESTS.STATUS.eq(FurtherInformationRequestStatus.OPEN.name()))
+        .leftJoin(APPLICATION_CONSULTATION_FURTHER_INFORMATION)
+            .on(APPLICATION_CONSULTATION_FURTHER_INFORMATION.CONSULTATION_ID.eq(APPLICATION_CONSULTATIONS.ID))
+            .and(APPLICATION_CONSULTATION_FURTHER_INFORMATION.STATUS.eq(FurtherInformationStatus.OPEN.name()))
         .where(APPLICATION_VERSIONS.ID.in(detailsSubQuery));
     return applicationDataItemsSelectStatement.getQuery();
   }

@@ -12,12 +12,12 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casest
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_NOTES_ALLOWED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_FURTHER_INFORMATION_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_UNASSIGNED;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.FURTHER_INFORMATION_REQUEST_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_APPLICATION_UPDATE_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_CONSULTATION_FURTHER_INFORMATION_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_CONSULTATION_OPEN;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_FURTHER_INFORMATION_REQUEST_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_TECHNICAL_REVIEW_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_WITHDRAWAL_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.TECHNICAL_REVIEWS_PAGE_ENABLED;
@@ -40,9 +40,9 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationStatus;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest.FurtherInformationRequest;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest.FurtherInformationRequestService;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest.FurtherInformationRequestStatus;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformation;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalService;
@@ -65,7 +65,7 @@ class CaseStatusFlagServiceTest {
   private ConsultationService consultationService;
 
   @Mock
-  private FurtherInformationRequestService furtherInformationRequestService;
+  private FurtherInformationService furtherInformationService;
 
   @Spy
   @InjectMocks
@@ -93,7 +93,7 @@ class CaseStatusFlagServiceTest {
     doReturn(EMPTY_SET).when(caseStatusFlagService).getCaseOfficerAssignmentFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getWithdrawalFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getTechnicalReviewFlag(applicationVersion);
-    doReturn(EMPTY_SET).when(caseStatusFlagService).getFurtherInformationRequestFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getFurtherInformationFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getUpdateRequestFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getConsultationFlags(applicationVersion);
 
@@ -103,7 +103,7 @@ class CaseStatusFlagServiceTest {
     verify(caseStatusFlagService).getCaseOfficerAssignmentFlag(applicationVersion);
     verify(caseStatusFlagService).getWithdrawalFlag(applicationVersion);
     verify(caseStatusFlagService).getTechnicalReviewFlag(applicationVersion);
-    verify(caseStatusFlagService).getFurtherInformationRequestFlag(applicationVersion);
+    verify(caseStatusFlagService).getFurtherInformationFlag(applicationVersion);
     verify(caseStatusFlagService).getUpdateRequestFlag(applicationVersion);
     verify(caseStatusFlagService).getConsultationFlags(applicationVersion);
   }
@@ -114,7 +114,7 @@ class CaseStatusFlagServiceTest {
     doReturn(EMPTY_SET).when(caseStatusFlagService).getCaseOfficerAssignmentFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getWithdrawalFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getTechnicalReviewFlag(applicationVersion);
-    doReturn(EMPTY_SET).when(caseStatusFlagService).getFurtherInformationRequestFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getFurtherInformationFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getUpdateRequestFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getConsultationFlags(applicationVersion);
 
@@ -127,7 +127,7 @@ class CaseStatusFlagServiceTest {
     doReturn(singleton(DEFAULT_TEST_FLAG)).when(caseStatusFlagService).getCaseOfficerAssignmentFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getWithdrawalFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getTechnicalReviewFlag(applicationVersion);
-    doReturn(EMPTY_SET).when(caseStatusFlagService).getFurtherInformationRequestFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getFurtherInformationFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getUpdateRequestFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getConsultationFlags(applicationVersion);
 
@@ -140,7 +140,7 @@ class CaseStatusFlagServiceTest {
     doReturn(EMPTY_SET).when(caseStatusFlagService).getCaseOfficerAssignmentFlag(applicationVersion);
     doReturn(singleton(DEFAULT_TEST_FLAG)).when(caseStatusFlagService).getWithdrawalFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getTechnicalReviewFlag(applicationVersion);
-    doReturn(EMPTY_SET).when(caseStatusFlagService).getFurtherInformationRequestFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getFurtherInformationFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getUpdateRequestFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getConsultationFlags(applicationVersion);
 
@@ -148,12 +148,12 @@ class CaseStatusFlagServiceTest {
   }
 
   @Test
-  void getCaseStatusFlags_getFurtherInformationRequestFlag() {
+  void getCaseStatusFlags_getFurtherInformationFlag() {
     doReturn(EMPTY_SET).when(caseStatusFlagService).getDefaultFlags();
     doReturn(EMPTY_SET).when(caseStatusFlagService).getCaseOfficerAssignmentFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getWithdrawalFlag(applicationVersion);
     doReturn(singleton(DEFAULT_TEST_FLAG)).when(caseStatusFlagService).getTechnicalReviewFlag(applicationVersion);
-    doReturn(EMPTY_SET).when(caseStatusFlagService).getFurtherInformationRequestFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getFurtherInformationFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getUpdateRequestFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getConsultationFlags(applicationVersion);
 
@@ -166,7 +166,7 @@ class CaseStatusFlagServiceTest {
     doReturn(EMPTY_SET).when(caseStatusFlagService).getCaseOfficerAssignmentFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getWithdrawalFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getTechnicalReviewFlag(applicationVersion);
-    doReturn(singleton(DEFAULT_TEST_FLAG)).when(caseStatusFlagService).getFurtherInformationRequestFlag(applicationVersion);
+    doReturn(singleton(DEFAULT_TEST_FLAG)).when(caseStatusFlagService).getFurtherInformationFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getUpdateRequestFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getConsultationFlags(applicationVersion);
 
@@ -180,7 +180,7 @@ class CaseStatusFlagServiceTest {
     doReturn(EMPTY_SET).when(caseStatusFlagService).getCaseOfficerAssignmentFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getWithdrawalFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getTechnicalReviewFlag(applicationVersion);
-    doReturn(EMPTY_SET).when(caseStatusFlagService).getFurtherInformationRequestFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getFurtherInformationFlag(applicationVersion);
     doReturn(singleton(DEFAULT_TEST_FLAG)).when(caseStatusFlagService).getUpdateRequestFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getConsultationFlags(applicationVersion);
 
@@ -193,7 +193,7 @@ class CaseStatusFlagServiceTest {
     doReturn(EMPTY_SET).when(caseStatusFlagService).getCaseOfficerAssignmentFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getWithdrawalFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getTechnicalReviewFlag(applicationVersion);
-    doReturn(EMPTY_SET).when(caseStatusFlagService).getFurtherInformationRequestFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getFurtherInformationFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getUpdateRequestFlag(applicationVersion);
     doReturn(singleton(DEFAULT_TEST_FLAG)).when(caseStatusFlagService).getConsultationFlags(applicationVersion);
 
@@ -253,21 +253,23 @@ class CaseStatusFlagServiceTest {
   }
 
   @Test
-  void getFurtherInformationRequestFlag_furtherInformationRequestOpen() {
+  void getFurtherInformationFlag_furtherInformationOpen() {
     var consultation = new Consultation();
     when(consultationService.findLatestOpenConsultation(application)).thenReturn(Optional.of(consultation));
 
-    var furtherInformationRequest = new FurtherInformationRequest();
-    furtherInformationRequest.setStatus(FurtherInformationRequestStatus.OPEN);
-    when(furtherInformationRequestService.findLatestOpenFurtherInformationRequest(consultation)).thenReturn(Optional.of(furtherInformationRequest));
+    var furtherInformation = new FurtherInformation();
+    furtherInformation.setStatus(FurtherInformationStatus.OPEN);
+    when(furtherInformationService.findLatestOpenFurtherInformation(consultation)).thenReturn(Optional.of(furtherInformation));
 
-    assertThat(caseStatusFlagService.getFurtherInformationRequestFlag(applicationVersion)).containsExactly(FURTHER_INFORMATION_REQUEST_OPEN);
+    assertThat(caseStatusFlagService.getFurtherInformationFlag(applicationVersion)).containsExactly(
+        CONSULTATION_FURTHER_INFORMATION_OPEN);
   }
 
   @Test
-  void getFurtherInformationRequestFlag_noConsultationsExist() {
+  void getFurtherInformationFlag_noConsultationsExist() {
     when(consultationService.findLatestOpenConsultation(application)).thenReturn(Optional.empty());
-    assertThat(caseStatusFlagService.getFurtherInformationRequestFlag(applicationVersion)).containsExactly(NO_FURTHER_INFORMATION_REQUEST_OPEN);
+    assertThat(caseStatusFlagService.getFurtherInformationFlag(applicationVersion)).containsExactly(
+        NO_CONSULTATION_FURTHER_INFORMATION_OPEN);
   }
 
   @Test

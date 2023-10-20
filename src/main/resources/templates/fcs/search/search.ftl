@@ -60,7 +60,7 @@
       <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Update due by ${dataItem.applicationUpdateDeadline()}"/>
       <br/>
     </#if>
-    <#if dataItem.furtherInformationRequestOpen()!false>
+    <#if dataItem.consultationFurtherInformationOpen()!false>
       <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Further information requested"/>
       <br/>
     </#if>

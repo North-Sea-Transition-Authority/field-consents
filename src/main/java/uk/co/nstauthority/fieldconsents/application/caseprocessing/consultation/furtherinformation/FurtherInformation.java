@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformationrequest;
+package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation;
 
 import com.google.common.annotations.VisibleForTesting;
 import jakarta.persistence.Entity;
@@ -14,8 +14,8 @@ import java.time.Instant;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
 
 @Entity
-@Table(name = "application_consultation_further_information_requests")
-public class FurtherInformationRequest {
+@Table(name = "application_consultation_further_information")
+public class FurtherInformation {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,7 +32,7 @@ public class FurtherInformationRequest {
   private String requestText;
 
   @Enumerated(EnumType.STRING)
-  private FurtherInformationRequestStatus status;
+  private FurtherInformationStatus status;
 
   public Integer getId() {
     return id;
@@ -75,11 +75,11 @@ public class FurtherInformationRequest {
     this.requestText = requestText;
   }
 
-  public FurtherInformationRequestStatus getStatus() {
+  public FurtherInformationStatus getStatus() {
     return status;
   }
 
-  public void setStatus(FurtherInformationRequestStatus status) {
+  public void setStatus(FurtherInformationStatus status) {
     this.status = status;
   }
 }

@@ -1,0 +1,7 @@
+ALTER TABLE application_consultation_further_information_requests RENAME TO application_consultation_further_information;
+
+ALTER INDEX application_consultation_firs_consultation_idx RENAME TO application_consultation_further_information_consultation_idx;
+
+UPDATE application_work_area_priorities
+SET work_area_priority_reason = 'CONSULTATION_FURTHER_INFORMATION_REQUESTED'
+WHERE work_area_priority_reason = 'FURTHER_INFORMATION_REQUEST_OPENED';
