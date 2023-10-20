@@ -418,6 +418,21 @@ class WorkAreaFilterServiceTest {
     );
   }
 
+  @Test
+  void getConditions_technicalReviewerAssignedCondition() {
+    when(teamService.isRegulatorUser(user)).thenReturn(true);
+
+    form.setTechnicalReviewerWuaId(123L);
+    filter.update(form);
+
+    var conditions = workAreaFilterService.getConditions(filter, user, null);
+
+    assertThat(conditions).containsExactly(
+        SUBMITTED_APPLICATION_CONDITION,
+        APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEWER_WUA_ID.eq(123)
+    );
+  }
+
   private void assertNonDefaultFilter(WorkAreaFilter workAreaFilter) {
     assertThat(workAreaFilter.getReferenceNumber()).isNull();
     assertThat(workAreaFilter.getDurationTypes()).isNull();

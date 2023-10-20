@@ -24,6 +24,7 @@ import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewAssignmentService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.assets.AssetRestController;
 import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
@@ -66,13 +67,16 @@ public class WorkAreaController {
 
   private final CaseAssignmentService caseAssignmentService;
 
+  private final TechnicalReviewAssignmentService technicalReviewAssignmentService;
+
   public WorkAreaController(WorkAreaService workAreaService,
                             WorkAreaFilterFormService workAreaFormService,
                             WorkAreaFilterService workAreaFilterService,
                             TeamService teamService,
                             PermissionService permissionService,
                             ApplicationDataFilterFormService applicationDataFilterFormService,
-                            CaseAssignmentService caseAssignmentService) {
+                            CaseAssignmentService caseAssignmentService,
+                            TechnicalReviewAssignmentService technicalReviewAssignmentService) {
     this.workAreaService = workAreaService;
     this.workAreaFormService = workAreaFormService;
     this.workAreaFilterService = workAreaFilterService;
@@ -80,6 +84,7 @@ public class WorkAreaController {
     this.permissionService = permissionService;
     this.applicationDataFilterFormService = applicationDataFilterFormService;
     this.caseAssignmentService = caseAssignmentService;
+    this.technicalReviewAssignmentService = technicalReviewAssignmentService;
   }
 
   @GetMapping
@@ -222,12 +227,14 @@ public class WorkAreaController {
   private ModelAndView renderRegulatorWorkAreaOnTab(WorkAreaFilter filter,
                                                     ServiceUserDetail user,
                                                     WorkAreaTab workAreaTab) {
-    var caseOfficersAssignedMap = convertUsersToMap(caseAssignmentService.getCurrentCaseOfficers());
+    var caseOfficersById = convertUsersToMap(caseAssignmentService.getCurrentCaseOfficers());
+    var technicalReviewersById = convertUsersToMap(technicalReviewAssignmentService.getCurrentTechnicalReviewers());
     return getWorkAreaModelAndView(filter, user)
         .addObject("selectedTab", workAreaTab.getValue())
         .addObject(WORK_AREA_ITEMS, workAreaService.getRegulatorWorkAreaItems(filter, user, workAreaTab))
         .addObject(IS_WORK_AREA_WITH_TABS, true)
-        .addObject("caseOfficersAssigned", caseOfficersAssignedMap);
+        .addObject("caseOfficersAssigned", caseOfficersById)
+        .addObject("technicalReviewersAssigned", technicalReviewersById);
   }
 
   private ModelAndView renderConsulteeWorkAreaOnTab(WorkAreaFilter filter,

@@ -23,6 +23,9 @@
         <#if caseOfficersAssigned?has_content>
           <@assignedCaseOfficerFilter form=form caseOfficerOptions=caseOfficersAssigned/>
         </#if>
+        <#if technicalReviewersAssigned?has_content>
+          <@assignedTechnicalReviewerFilter form=form technicalReviewerOptions=technicalReviewersAssigned/>
+        </#if>
       </@fdsSearch.searchFilterList>
     </@fdsSearch.searchFilter>
     <@fdsSearch.searchPageContent twoThirdsWidth=true>
@@ -71,6 +74,17 @@
     <@fdsSearch.searchCheckboxes
       path="form.geographicAreas"
       checkboxes=geographicAreaCheckboxes
+    />
+  </@fdsSearch.searchFilterItem>
+</#macro>
+
+<#macro assignedTechnicalReviewerFilter form technicalReviewerOptions>
+  <@fdsSearch.searchFilterItem itemName="Technical reviewer assigned" expanded=form.technicalReviewerWuaId?has_content>
+    <@fdsSearchSelector.searchSelectorEnhanced
+      path="form.technicalReviewerWuaId"
+      options=technicalReviewerOptions
+      labelText=""
+      labelHeadingClass="govuk-input--width-10"
     />
   </@fdsSearch.searchFilterItem>
 </#macro>

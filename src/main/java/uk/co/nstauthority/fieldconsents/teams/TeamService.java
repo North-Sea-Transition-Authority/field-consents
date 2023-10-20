@@ -12,6 +12,7 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.TeamRole;
 
 @Service
 public class TeamService {
@@ -120,5 +121,15 @@ public class TeamService {
 
   public Set<RolePermission> getUserPermissionsForTeam(Team team, ServiceUserDetail user) {
     return permissionService.getUserPermissionsForTeam(team, user);
+  }
+
+  public List<WebUserAccountId> getWuaIdsOfTeamMembersWithRoles(TeamType teamType, Set<TeamRole> teamRoles) {
+    return getTeamsByType(teamType)
+        .stream()
+        .map(teamMemberService::getTeamMembers)
+        .flatMap(Collection::stream)
+        .filter(teamMember -> teamMember.roles().containsAll(teamRoles))
+        .map(TeamMember::wuaId)
+        .toList();
   }
 }

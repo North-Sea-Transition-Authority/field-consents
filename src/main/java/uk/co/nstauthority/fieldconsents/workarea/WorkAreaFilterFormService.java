@@ -15,8 +15,9 @@ public class WorkAreaFilterFormService {
     form.setOperatorId(filter.getOperatorId());
     form.setGeographicAreas(filter.getGeographicAreas());
     form.setAssetTypesWithShore(filter.getAssetTypesWithShore());
-    form.setCaseOfficerWuaId(filter.getCaseOfficerWuaId());
     form.setSubmittedYear(filter.getSubmittedYear());
+    form.setCaseOfficerWuaId(filter.getCaseOfficerWuaId());
+    form.setTechnicalReviewerWuaId(filter.getTechnicalReviewerWuaId());
     return form;
   }
 }

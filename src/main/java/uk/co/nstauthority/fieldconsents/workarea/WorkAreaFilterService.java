@@ -55,10 +55,7 @@ public class WorkAreaFilterService {
     conditions.add(getApplicationStatusCondition(user));
     conditions.addAll(applicationDataFilterService.getConditions(filter));
     conditions.addAll(getFieldAssetConditions(filter));
-
-    Optional.ofNullable(filter.getCaseOfficerWuaId())
-        .map(this::getCaseOfficerAssignedCondition)
-        .ifPresent(conditions::add);
+    conditions.addAll(getRegulatorConditions(filter));
 
     if (Objects.isNull(workAreaTab)) {
       return conditions;
@@ -164,7 +161,25 @@ public class WorkAreaFilterService {
     return APPLICATION_VERSIONS.STATUS.eq(ApplicationVersionStatus.SUBMITTED.name());
   }
 
+  private List<Condition> getRegulatorConditions(WorkAreaFilter filter) {
+    var conditions = new ArrayList<Condition>();
+
+    Optional.ofNullable(filter.getCaseOfficerWuaId())
+        .map(this::getCaseOfficerAssignedCondition)
+        .ifPresent(conditions::add);
+
+    Optional.ofNullable(filter.getTechnicalReviewerWuaId())
+        .map(this::getTechnicalReviewerAssignedCondition)
+        .ifPresent(conditions::add);
+
+    return conditions;
+  }
+
   private Condition getCaseOfficerAssignedCondition(Long caseOfficerWuaId) {
     return APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.eq(caseOfficerWuaId.intValue());
+  }
+
+  private Condition getTechnicalReviewerAssignedCondition(Long technicalReviewerWuaId) {
+    return APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEWER_WUA_ID.eq(technicalReviewerWuaId.intValue());
   }
 }

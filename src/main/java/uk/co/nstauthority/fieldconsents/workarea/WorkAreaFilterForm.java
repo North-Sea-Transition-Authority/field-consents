@@ -6,6 +6,7 @@ public class WorkAreaFilterForm extends ApplicationDataFilterForm {
 
   String assetKey;
   Long caseOfficerWuaId;
+  Long technicalReviewerWuaId;
 
   public String getAssetKey() {
     return assetKey;
@@ -21,5 +22,13 @@ public class WorkAreaFilterForm extends ApplicationDataFilterForm {
 
   public void setCaseOfficerWuaId(Long caseOfficerWuaId) {
     this.caseOfficerWuaId = caseOfficerWuaId;
+  }
+
+  public Long getTechnicalReviewerWuaId() {
+    return technicalReviewerWuaId;
+  }
+
+  public void setTechnicalReviewerWuaId(Long technicalReviewerWuaId) {
+    this.technicalReviewerWuaId = technicalReviewerWuaId;
   }
 }

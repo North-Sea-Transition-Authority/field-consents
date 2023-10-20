@@ -28,6 +28,7 @@ import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewAssignmentService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.assets.AssetRestController;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
@@ -60,6 +61,9 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @MockBean
   protected CaseAssignmentService caseAssignmentService;
+
+  @MockBean
+  protected TechnicalReviewAssignmentService technicalReviewAssignmentService;
 
   private WorkAreaFilter filter;
 

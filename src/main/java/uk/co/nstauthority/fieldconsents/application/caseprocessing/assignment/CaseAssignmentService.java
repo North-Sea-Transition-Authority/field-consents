@@ -1,14 +1,8 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment;
 
-import static uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus.SUBMITTED;
-import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.REGULATOR;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CASE_OFFICER_ASSIGN_OWNERSHIP;
-import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CASE_OFFICER_RELEASE_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CASE_OFFICER_TAKE_OWNERSHIP;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CASE_OFFICER;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -21,13 +15,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionRepository;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup;
+import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
-import uk.co.nstauthority.fieldconsents.teams.TeamMember;
-import uk.co.nstauthority.fieldconsents.teams.TeamMemberService;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberView;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
@@ -46,7 +41,6 @@ public class CaseAssignmentService {
   private final TeamMemberViewService teamMemberViewService;
   private final ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
   private final EnergyPortalUserService energyPortalUserService;
-  private final TeamMemberService teamMemberService;
   private final TeamService teamService;
 
   @Autowired
@@ -55,14 +49,12 @@ public class CaseAssignmentService {
                                TeamMemberViewService teamMemberViewService,
                                ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService,
                                EnergyPortalUserService energyPortalUserService,
-                               TeamMemberService teamMemberService,
                                TeamService teamService) {
     this.applicationVersionRepository = applicationVersionRepository;
     this.regulatorTeamService = regulatorTeamService;
     this.teamMemberViewService = teamMemberViewService;
     this.applicationWorkAreaPriorityService = applicationWorkAreaPriorityService;
     this.energyPortalUserService = energyPortalUserService;
-    this.teamMemberService = teamMemberService;
     this.teamService = teamService;
   }
 
@@ -87,7 +79,7 @@ public class CaseAssignmentService {
         applicationVersion,
         actionUser,
         applicationWorkAreaPriorityReason,
-        REGULATOR
+        ApplicationWorkAreaPriorityGroup.REGULATOR
     );
   }
 
@@ -95,8 +87,11 @@ public class CaseAssignmentService {
   public void unassignCaseOfficer(ApplicationVersion applicationVersion, ServiceUserDetail user) {
     applicationVersion.setCaseOfficerWuaId(null);
     applicationVersionRepository.save(applicationVersion);
-    applicationWorkAreaPriorityService
-        .prioritiseApplicationInWorkArea(applicationVersion, user, CASE_OFFICER_RELEASE_OWNERSHIP, REGULATOR);
+    applicationWorkAreaPriorityService.prioritiseApplicationInWorkArea(
+        applicationVersion,
+        user,
+        ApplicationWorkAreaPriorityReason.CASE_OFFICER_RELEASE_OWNERSHIP,
+        ApplicationWorkAreaPriorityGroup.REGULATOR);
   }
 
   public List<TeamMemberView> getCaseOfficerAssignmentCandidates(ApplicationVersion applicationVersion,
@@ -119,9 +114,12 @@ public class CaseAssignmentService {
     // The list of current case officers is the union of all current case officers in the NSTA team
     // and the case officers assigned to current applications.
 
-    var teamCaseOfficerWuaIds = getTeamCaseOfficerWuaIds();
+    var teamCaseOfficerWuaIds = teamService.getWuaIdsOfTeamMembersWithRoles(
+        TeamType.REGULATOR,
+        Set.of(RegulatorTeamRole.CASE_OFFICER)
+    );
     var caseOfficerAssignedWuaIds = applicationVersionRepository
-        .findAllCaseOfficerWuaIdsByApplicationVersionStatus(SUBMITTED)
+        .findAllCaseOfficerWuaIdsByApplicationVersionStatus(ApplicationVersionStatus.SUBMITTED)
         .stream()
         .map(WebUserAccountId::from)
         .toList();
@@ -130,19 +128,9 @@ public class CaseAssignmentService {
     currentCaseOfficersWuaIds.addAll(teamCaseOfficerWuaIds);
     currentCaseOfficersWuaIds.addAll(caseOfficerAssignedWuaIds);
 
-    return energyPortalUserService.findByWuaIds(new ArrayList<>(currentCaseOfficersWuaIds))
+    return energyPortalUserService.findByWuaIds(currentCaseOfficersWuaIds)
         .stream()
         .sorted(Comparator.comparing(EnergyPortalUserDto::displayName))
-        .toList();
-  }
-
-  private List<WebUserAccountId> getTeamCaseOfficerWuaIds() {
-    return teamService.getTeamsByType(TeamType.REGULATOR)
-        .stream()
-        .map(teamMemberService::getTeamMembers)
-        .flatMap(Collection::stream)
-        .filter(teamMember -> teamMember.roles().contains(CASE_OFFICER))
-        .map(TeamMember::wuaId)
         .toList();
   }
 }

@@ -7,6 +7,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.teams.TeamTestUtil.randomInteger;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.ACCESS_MANAGER;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CASE_OFFICER;
 
 import java.util.Collections;
 import java.util.List;
@@ -184,7 +186,7 @@ class TeamServiceTest {
   void getUserAccessibleTeams_whenOnlyHasAccessToViewOwnTeams_thenOnlyPersonalTeams() {
     var industryTeamManager = TeamMemberTestUtil.Builder()
         .withTeamType(TeamType.REGULATOR)
-        .withRole(RegulatorTeamRole.ACCESS_MANAGER)
+        .withRole(ACCESS_MANAGER)
         .build();
 
     var userOwnTeam = TeamTestUtil.Builder().build();
@@ -409,5 +411,34 @@ class TeamServiceTest {
     when(teamRepository.findAllByTeamTypeIn(Collections.singleton(teamType))).thenReturn(List.of(team1, team2));
 
     assertThat(teamService.getTeamsByType(teamType)).containsExactly(team1, team2);
+  }
+
+  @Test
+  void getWuaIdsOfTeamMembersWithRoles() {
+    var teamMember1 = TeamMemberTestUtil.Builder().withRole(CASE_OFFICER).withWebUserAccountId(1L).build();
+    var teamMember2 = TeamMemberTestUtil.Builder().withRole(ACCESS_MANAGER).withWebUserAccountId(2L).build();
+    when(teamRepository.findAllByTeamTypeIn(Collections.singleton(team.getTeamType()))).thenReturn(List.of(team));
+    when(teamMemberService.getTeamMembers(team)).thenReturn(List.of(teamMember1, teamMember2));
+
+    assertThat(teamService.getWuaIdsOfTeamMembersWithRoles(team.getTeamType(), Set.of(CASE_OFFICER)))
+        .containsExactly(WebUserAccountId.from(1L));
+  }
+
+  @Test
+  void getWuaIdsOfTeamMembersWithRoles_whenTeamNotFound() {
+    when(teamRepository.findAllByTeamTypeIn(Collections.singleton(team.getTeamType())))
+        .thenReturn(Collections.emptyList());
+
+    assertThat(teamService.getWuaIdsOfTeamMembersWithRoles(team.getTeamType(), Set.of(CASE_OFFICER)))
+        .isEmpty();
+  }
+
+  @Test
+  void getWuaIdsOfTeamMembersWithRoles_whenTeamMembersNotFound() {
+    when(teamRepository.findAllByTeamTypeIn(Collections.singleton(team.getTeamType()))).thenReturn(List.of(team));
+    when(teamMemberService.getTeamMembers(team)).thenReturn(Collections.emptyList());
+
+    assertThat(teamService.getWuaIdsOfTeamMembersWithRoles(team.getTeamType(), Set.of(CASE_OFFICER)))
+        .isEmpty();
   }
 }

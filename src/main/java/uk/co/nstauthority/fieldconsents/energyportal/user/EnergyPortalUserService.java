@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.energyportal.user;
 
 import jakarta.persistence.EntityNotFoundException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -67,7 +68,7 @@ public class EnergyPortalUserService {
     ));
   }
 
-  public List<EnergyPortalUserDto> findByWuaIds(List<WebUserAccountId> webUserAccountIds) {
+  public List<EnergyPortalUserDto> findByWuaIds(Collection<WebUserAccountId> webUserAccountIds) {
     return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) -> {
 
       List<Integer> webUserAccountIdApiInputs = webUserAccountIds

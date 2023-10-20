@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalrev
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 import uk.co.nstauthority.fieldconsents.application.Application;
@@ -27,4 +28,13 @@ public interface TechnicalReviewRepository extends CrudRepository<TechnicalRevie
       Application application,
       Integer technicalReviewId
   );
+
+  @Query(
+      """
+      SELECT DISTINCT tr.technicalReviewerWuaId
+      FROM TechnicalReview tr
+      WHERE tr.technicalReviewStatus = :status
+      """
+  )
+  List<Long> findAllTechnicalReviewerWuaIdsByTechnicalReviewStatus(TechnicalReviewStatus status);
 }
