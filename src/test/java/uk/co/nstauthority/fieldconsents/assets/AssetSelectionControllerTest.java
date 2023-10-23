@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.assets;
 
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -8,8 +9,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.MANAGE_ASSETS;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.ContextConfiguration;
@@ -47,8 +50,32 @@ class AssetSelectionControllerTest extends AbstractControllerTest {
         .andExpect(redirectionToLoginUrl());
   }
 
+  @SecurityTest
+  void getAssetSelection_whenUserDoesNotHaveManageAssetsPermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(MANAGE_ASSETS)))
+        .thenReturn(false);
+
+    mockMvc.perform(
+        get(ReverseRouter.route(on(AssetSelectionController.class).getAssetSelection()))
+            .with(user(user)))
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void manageAsset_whenUserDoesNotHaveManageAssetsPermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(MANAGE_ASSETS)))
+        .thenReturn(false);
+
+    mockMvc.perform(
+        post(ReverseRouter.route(on(AssetSelectionController.class).manageAsset(form, bindingResult)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().isForbidden());
+  }
+
   @Test
   void getAssetSelection_assertHttpOk() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(MANAGE_ASSETS))).thenReturn(true);
     mockMvc.perform(get(ReverseRouter.route(on(AssetSelectionController.class).getAssetSelection()))
             .with(user(user)))
         .andExpect(status().isOk())
@@ -65,6 +92,7 @@ class AssetSelectionControllerTest extends AbstractControllerTest {
 
   @Test
   void manageAsset_whenValidForm_assertRedirection() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(MANAGE_ASSETS))).thenReturn(true);
     mockMvc
         .perform(post(ReverseRouter.route(on(AssetSelectionController.class).manageAsset(form, bindingResult)))
             .with(user(user))
@@ -76,6 +104,7 @@ class AssetSelectionControllerTest extends AbstractControllerTest {
 
   @Test
   void manageAsset_whenInValidForm_assertStatusOk() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(MANAGE_ASSETS))).thenReturn(true);
     mockMvc
         .perform(post(ReverseRouter.route(on(AssetSelectionController.class).manageAsset(form, bindingResult)))
             .with(user(user))

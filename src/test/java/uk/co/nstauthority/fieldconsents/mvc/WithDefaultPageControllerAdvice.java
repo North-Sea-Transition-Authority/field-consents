@@ -5,11 +5,9 @@ import java.lang.annotation.RetentionPolicy;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
 import uk.co.nstauthority.fieldconsents.branding.EnableAllBrandingConfigurationProperties;
-import uk.co.nstauthority.fieldconsents.topnavigation.TopNavigationService;
 
 @ContextConfiguration(classes = {
     DefaultPageControllerAdvice.class,
-    TopNavigationService.class,
     UserDetailService.class
 })
 @EnableAllBrandingConfigurationProperties

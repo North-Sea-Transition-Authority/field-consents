@@ -18,13 +18,19 @@ public enum IndustryTeamRole implements TeamRole {
       "Viewer",
       "Can view applications and consents for the organisation group",
       20,
-      EnumSet.of(RolePermission.VIEW_FCS_APPLICATIONS, RolePermission.VIEW_FCS_CONSENTS)
+      EnumSet.of(
+          RolePermission.VIEW_FCS_APPLICATIONS,
+          RolePermission.VIEW_FCS_CONSENTS,
+          RolePermission.MANAGE_ASSETS)
   ),
   EDITOR(
       "Editor",
       "Can edit applications for the organisation group",
       30,
-      EnumSet.of(RolePermission.EDIT_FCS_APPLICATIONS, RolePermission.VIEW_FCS_APPLICATIONS)
+      EnumSet.of(
+          RolePermission.EDIT_FCS_APPLICATIONS,
+          RolePermission.VIEW_FCS_APPLICATIONS,
+          RolePermission.MANAGE_ASSETS)
   ),
   SUBMITTER(
       "Submitter",
@@ -33,7 +39,8 @@ public enum IndustryTeamRole implements TeamRole {
       EnumSet.of(
           RolePermission.SUBMIT_FCS_APPLICATIONS,
           RolePermission.EDIT_FCS_APPLICATIONS,
-          RolePermission.VIEW_FCS_APPLICATIONS
+          RolePermission.VIEW_FCS_APPLICATIONS,
+          RolePermission.MANAGE_ASSETS
       )
   ),
   CREATOR(
@@ -43,7 +50,8 @@ public enum IndustryTeamRole implements TeamRole {
       EnumSet.of(
           RolePermission.CREATE_FCS_APPLICATIONS,
           RolePermission.EDIT_FCS_APPLICATIONS,
-          RolePermission.VIEW_FCS_APPLICATIONS
+          RolePermission.VIEW_FCS_APPLICATIONS,
+          RolePermission.MANAGE_ASSETS
       )
   );
 

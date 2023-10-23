@@ -7,11 +7,16 @@ import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaController.WORK_
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.assets.AssetSelectionController;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.fds.navigation.TopNavigationItem;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.search.SearchController;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.TeamListController;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
@@ -20,19 +25,27 @@ public class TopNavigationService {
 
   static final String TEAM_MANAGEMENT_NAVIGATION_ITEM_TITLE = "Teams";
 
+  private final PermissionService permissionService;
 
-  public List<TopNavigationItem> getTopNavigationItems() {
+  @Autowired
+  public TopNavigationService(PermissionService permissionService) {
+    this.permissionService = permissionService;
+  }
+
+  public List<TopNavigationItem> getTopNavigationItems(ServiceUserDetail user) {
     var navigationItems = new ArrayList<TopNavigationItem>();
     navigationItems.add(
         new TopNavigationItem(WORK_AREA_TITLE, ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)))
     );
 
-    navigationItems.add(
-        new TopNavigationItem(
-            ASSET_SELECTION_TITLE,
-            ReverseRouter.route(on(AssetSelectionController.class).getAssetSelection())
-        )
-    );
+    if (permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_ASSETS))) {
+      navigationItems.add(
+          new TopNavigationItem(
+              ASSET_SELECTION_TITLE,
+              ReverseRouter.route(on(AssetSelectionController.class).getAssetSelection())
+          )
+      );
+    }
 
     navigationItems.add(
         new TopNavigationItem(

@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.stereotype.Controller;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
@@ -32,13 +33,15 @@ import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 @ContextConfiguration(classes = {
     DefaultPageControllerAdviceTest.TestController.class,
     DefaultPageControllerAdvice.class,
-    TopNavigationService.class,
     UserDetailService.class
 })
 class DefaultPageControllerAdviceTest {
 
   @Autowired
   private MockMvc mockMvc;
+
+  @MockBean
+  private TopNavigationService topNavigationService;
 
   @Test
   void addDefaultModelAttributes_verifyDefaultAttributes() throws Exception {

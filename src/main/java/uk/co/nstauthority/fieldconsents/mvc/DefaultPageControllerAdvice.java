@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import uk.co.nstauthority.fieldconsents.authentication.InvalidAuthenticationException;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
 import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.branding.ServiceBrandingConfigurationProperties;
@@ -40,10 +41,12 @@ class DefaultPageControllerAdvice {
 
   @ModelAttribute
   void addDefaultModelAttributes(Model model, HttpServletRequest request) {
+    ServiceUserDetail user = userDetailService.getUserDetail();
+
     addBrandingAttributes(model);
     addCommonUrls(model);
-    addTopNavigationItems(model, request);
-    addUser(model);
+    addTopNavigationItems(model, request, user);
+    addUser(model, user);
   }
 
   @InitBinder
@@ -63,8 +66,8 @@ class DefaultPageControllerAdvice {
     );
   }
 
-  private void addTopNavigationItems(Model model, HttpServletRequest request) {
-    model.addAttribute("navigationItems", topNavigationService.getTopNavigationItems());
+  private void addTopNavigationItems(Model model, HttpServletRequest request, ServiceUserDetail user) {
+    model.addAttribute("navigationItems", topNavigationService.getTopNavigationItems(user));
     model.addAttribute("currentEndPoint", request.getRequestURI());
   }
 
@@ -72,9 +75,8 @@ class DefaultPageControllerAdvice {
     model.addAttribute("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)));
   }
 
-  private void addUser(Model model) {
+  private void addUser(Model model, ServiceUserDetail user) {
     try {
-      var user = userDetailService.getUserDetail();
       model.addAttribute("loggedInUser", user);
     } catch (InvalidAuthenticationException exception) {
       // catch exception as unauthenticated endpoints won't have a logged-in user

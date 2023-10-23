@@ -18,6 +18,7 @@ public enum RolePermission {
   EDIT_FCS_CASE_PROCESSING_DOCUMENTS,
   ALLOCATE_CONSULTATION,
   RESPOND_TO_CONSULTATION,
+  MANAGE_ASSETS
   ;
 
   public static final Set<RolePermission> VIEW_PERMISSIONS =

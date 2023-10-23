@@ -46,6 +46,7 @@ import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberService;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.PermissionManagementHandlerInterceptor;
+import uk.co.nstauthority.fieldconsents.topnavigation.TopNavigationService;
 import uk.co.nstauthority.fieldconsents.validation.FormErrorSummaryService;
 import uk.co.nstauthority.fieldconsents.validation.ValidationErrorOrderingService;
 
@@ -77,6 +78,9 @@ public abstract class AbstractControllerTest {
 
   @Autowired
   protected MockMvc mockMvc;
+
+  @MockBean
+  protected TopNavigationService topNavigationService;
 
   @MockBean
   protected PermissionService permissionService;
