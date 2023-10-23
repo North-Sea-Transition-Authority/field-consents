@@ -78,7 +78,8 @@ public abstract class AbstractApplicationControllerTest extends AbstractControll
             CaseProcessingActionItem.APPLICATION_UPDATE_REQUEST,
             CaseProcessingActionItem.CONSULTATION_REQUEST,
             CaseProcessingActionItem.CONSULTATION_RESPONSE,
-            CaseProcessingActionItem.CONSULTATION_FURTHER_INFORMATION_REQUEST
+            CaseProcessingActionItem.CONSULTATION_FURTHER_INFORMATION_REQUEST,
+            CaseProcessingActionItem.CONSULTATION_FURTHER_INFORMATION_RESPOND
         ));
   }
 }

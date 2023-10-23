@@ -8,6 +8,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.Ca
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casenotes.CaseNotesController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.allocation.ConsultationAllocationController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.request.FurtherInformationRequestController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.response.FurtherInformationResponseController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.request.ConsultationRequestController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.response.ConsultationResponseController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewAssignmentController;
@@ -83,8 +84,9 @@ public enum CaseProcessingActionItem implements Displayable {
       applicationId -> ReverseRouter.route(on(ConsultationAllocationController.class)
           .getResponderAllocationForm(applicationId))),
   CONSULTATION_FURTHER_INFORMATION_REQUEST("Request further information", 2, true, false, null,
-      applicationId -> ReverseRouter.route(on(FurtherInformationRequestController.class)
-          .getFurtherInformationForLatestConsultation(applicationId)))
+      applicationId -> ReverseRouter.route(on(FurtherInformationRequestController.class).getRequestForm(applicationId))),
+  CONSULTATION_FURTHER_INFORMATION_RESPOND("Respond to further information request", 3, true, false, null,
+      applicationId -> ReverseRouter.route(on(FurtherInformationResponseController.class).getResponseForm(applicationId)))
   ;
 
   private final String displayName;

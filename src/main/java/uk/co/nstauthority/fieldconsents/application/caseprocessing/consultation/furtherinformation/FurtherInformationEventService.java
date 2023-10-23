@@ -32,7 +32,7 @@ class FurtherInformationEventService implements CaseEventService<Application> {
 
     for (var furtherInformation : furtherInformationService.getAllFurtherInformation(consultations)) {
       getRequestedCaseEvent(furtherInformation).ifPresent(caseEvents::add);
-      // TODO: FCS-451 - add response event
+      getRespondedCaseEvent(furtherInformation).ifPresent(caseEvents::add);
     }
 
     return caseEvents;
@@ -57,4 +57,25 @@ class FurtherInformationEventService implements CaseEventService<Application> {
 
     return Optional.of(caseEvent);
   }
+
+  Optional<CaseEvent> getRespondedCaseEvent(FurtherInformation furtherInformation) {
+    if (Objects.isNull(furtherInformation.getRespondedAtDatetime())) {
+      return Optional.empty();
+    }
+
+    if (Objects.isNull(furtherInformation.getRespondedByWuaId())) {
+      return Optional.empty();
+    }
+
+    var applicationVersion = furtherInformation.getConsultation().getRequestApplicationVersion();
+    var caseEvent = CaseEvent.builder(applicationVersion)
+        .withEventType(CaseEventType.FURTHER_INFORMATION_REQUEST_CLOSED)
+        .withMainEventUserWuaId(furtherInformation.getRespondedByWuaId())
+        .withEventDateTime(furtherInformation.getRespondedAtDatetime())
+        .withEventText(furtherInformation.getResponseText())
+        .build();
+
+    return Optional.of(caseEvent);
+  }
+
 }

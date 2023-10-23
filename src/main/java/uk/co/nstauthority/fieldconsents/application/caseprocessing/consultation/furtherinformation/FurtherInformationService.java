@@ -1,11 +1,14 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation;
 
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationStatus.CLOSED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationStatus.OPEN;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.CONSULTEE;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.REGULATOR;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CONSULTATION_FURTHER_INFORMATION_REQUESTED;
+import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CONSULTATION_FURTHER_INFORMATION_RESPONDED;
 import static uk.co.nstauthority.fieldconsents.formatting.DateUtils.DATE_TIME;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import java.time.Clock;
 import java.util.Collection;
@@ -47,6 +50,12 @@ public class FurtherInformationService {
     return repository.findAllByConsultationInOrderById(consultations);
   }
 
+  public FurtherInformation getLatestOpenFurtherInformation(Consultation consultation) {
+    return findLatestOpenFurtherInformation(consultation)
+        .orElseThrow(() -> new EntityNotFoundException(
+            "Open further information not found for consultation [%s]".formatted(consultation.getId())));
+  }
+
   @Transactional
   public void saveFurtherInformationRequest(Consultation consultation, ServiceUserDetail user, String requestText) {
     var furtherInformation = new FurtherInformation();
@@ -60,6 +69,26 @@ public class FurtherInformationService {
 
     var applicationVersion = consultation.getRequestApplicationVersion();
     var reason = CONSULTATION_FURTHER_INFORMATION_REQUESTED;
+    priorityService.prioritiseApplicationInWorkArea(applicationVersion, user, reason, REGULATOR);
+    priorityService.prioritiseApplicationInWorkArea(applicationVersion, user, reason, CONSULTEE);
+  }
+
+  @Transactional
+  public void saveFurtherInformationResponse(FurtherInformation furtherInformation, ServiceUserDetail user, String responseText) {
+    if (!OPEN.equals(furtherInformation.getStatus())) {
+      throw new IllegalArgumentException("Expected further information [%s] to be OPEN when saving response"
+          .formatted(furtherInformation.getId()));
+    }
+
+    furtherInformation.setStatus(CLOSED);
+    furtherInformation.setRespondedAtDatetime(clock.instant());
+    furtherInformation.setRespondedByWuaId(user.wuaId());
+    furtherInformation.setResponseText(responseText);
+
+    repository.save(furtherInformation);
+
+    var applicationVersion = furtherInformation.getConsultation().getRequestApplicationVersion();
+    var reason = CONSULTATION_FURTHER_INFORMATION_RESPONDED;
     priorityService.prioritiseApplicationInWorkArea(applicationVersion, user, reason, REGULATOR);
     priorityService.prioritiseApplicationInWorkArea(applicationVersion, user, reason, CONSULTEE);
   }

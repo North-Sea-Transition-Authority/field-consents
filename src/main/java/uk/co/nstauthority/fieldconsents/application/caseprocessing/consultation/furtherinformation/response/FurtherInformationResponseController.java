@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.request;
+package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.response;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
@@ -15,11 +15,10 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.ConsulteeCaseProcessingController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationRequestView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformation;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationService;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
@@ -29,11 +28,11 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @Controller
-@RequestMapping("applications/{applicationId}/consultations/further-information/request")
-@ActionEndPoint(CaseProcessingActionItem.CONSULTATION_FURTHER_INFORMATION_REQUEST)
-public class FurtherInformationRequestController {
+@RequestMapping("applications/{applicationId}/consultations/further-information/respond")
+@ActionEndPoint(CaseProcessingActionItem.CONSULTATION_FURTHER_INFORMATION_RESPOND)
+public class FurtherInformationResponseController {
 
-  private static final String PAGE_TITLE = "Request further information";
+  private static final String PAGE_TITLE = "Further information response";
 
   private final ApplicationService applicationService;
   private final ApplicationVersionService applicationVersionService;
@@ -41,7 +40,7 @@ public class FurtherInformationRequestController {
   private final ConsultationService consultationService;
   private final FurtherInformationService furtherInformationService;
 
-  FurtherInformationRequestController(
+  FurtherInformationResponseController(
       ApplicationService applicationService,
       ApplicationVersionService applicationVersionService,
       ApplicationSummaryService applicationSummaryService,
@@ -56,18 +55,19 @@ public class FurtherInformationRequestController {
   }
 
   @GetMapping
-  public ModelAndView getRequestForm(@PathVariable Integer applicationId) {
+  public ModelAndView getResponseForm(@PathVariable Integer applicationId) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var application = applicationVersion.getApplication();
     var consultation = consultationService.getLatestOpenConsultation(application);
+    var furtherInformation = furtherInformationService.getLatestOpenFurtherInformation(consultation);
 
-    return getModelAndView(applicationVersion, consultation, FurtherInformationRequestForm.empty());
+    return getModelAndView(applicationVersion, furtherInformation, FurtherInformationResponseForm.empty());
   }
 
   @PostMapping
-  ModelAndView submitRequestForm(
+  ModelAndView submitResponseForm(
       @PathVariable Integer applicationId,
-      @Valid @ModelAttribute("form") FurtherInformationRequestForm form,
+      @Valid @ModelAttribute("form") FurtherInformationResponseForm form,
       BindingResult bindingResult,
       RedirectAttributes redirectAttributes,
       ServiceUserDetail user
@@ -75,15 +75,16 @@ public class FurtherInformationRequestController {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var application = applicationVersion.getApplication();
     var consultation = consultationService.getLatestOpenConsultation(application);
+    var furtherInformation = furtherInformationService.getLatestOpenFurtherInformation(consultation);
 
     if (bindingResult.hasErrors()) {
-      return getModelAndView(applicationVersion, consultation, form);
+      return getModelAndView(applicationVersion, furtherInformation, form);
     }
 
-    furtherInformationService.saveFurtherInformationRequest(consultation, user, form.requestText());
+    furtherInformationService.saveFurtherInformationResponse(furtherInformation, user, form.responseText());
 
     var applicationReference = applicationService.generateApplicationReference(applicationVersion);
-    var notificationBannerMessage = "Further information requested for application %s".formatted(applicationReference);
+    var notificationBannerMessage = "Further information response submitted for application %s".formatted(applicationReference);
     NotificationBannerUtil.addSuccessNotification(redirectAttributes, notificationBannerMessage);
 
     return ReverseRouter.redirect(on(WorkAreaController.class).getWorkArea(null, null));
@@ -91,19 +92,20 @@ public class FurtherInformationRequestController {
 
   private ModelAndView getModelAndView(
       ApplicationVersion applicationVersion,
-      Consultation consultation,
-      FurtherInformationRequestForm form
+      FurtherInformation furtherInformation,
+      FurtherInformationResponseForm form
   ) {
     var applicationId = applicationVersion.getApplication().getId();
     var applicationReference = applicationService.generateApplicationReference(applicationVersion);
-    var backLinkUrl = ReverseRouter.route(on(ConsulteeCaseProcessingController.class)
+    var backLinkUrl = ReverseRouter.route(on(ApplicationCaseProcessingController.class)
         .getApplicationCaseProcessing(applicationId, null));
 
-    var modelAndView = new ModelAndView("fcs/application/consultation/further-information/requestForm")
+    var modelAndView = new ModelAndView("fcs/application/consultation/further-information/responseForm")
         .addObject("pageTitle", PAGE_TITLE)
         .addObject("backLinkUrl", backLinkUrl)
         .addObject("applicationReference", applicationReference)
-        .addObject("consultationRequestView", ConsultationRequestView.from(consultation))
+        .addObject("furtherInformationView",
+            furtherInformationService.getFurtherInformationView(furtherInformation))
         .addObject("form", form);
 
     applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView);

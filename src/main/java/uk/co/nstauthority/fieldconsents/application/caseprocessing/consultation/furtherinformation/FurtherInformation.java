@@ -31,6 +31,12 @@ public class FurtherInformation {
 
   private String requestText;
 
+  private Instant respondedAtDatetime;
+
+  private Long respondedByWuaId;
+
+  private String responseText;
+
   @Enumerated(EnumType.STRING)
   private FurtherInformationStatus status;
 
@@ -75,6 +81,30 @@ public class FurtherInformation {
     this.requestText = requestText;
   }
 
+  public Instant getRespondedAtDatetime() {
+    return respondedAtDatetime;
+  }
+
+  public void setRespondedAtDatetime(Instant respondedAtDatetime) {
+    this.respondedAtDatetime = respondedAtDatetime;
+  }
+
+  public Long getRespondedByWuaId() {
+    return respondedByWuaId;
+  }
+
+  public void setRespondedByWuaId(Long respondedByWuaId) {
+    this.respondedByWuaId = respondedByWuaId;
+  }
+
+  public String getResponseText() {
+    return responseText;
+  }
+
+  public void setResponseText(String responseText) {
+    this.responseText = responseText;
+  }
+
   public FurtherInformationStatus getStatus() {
     return status;
   }
@@ -82,4 +112,5 @@ public class FurtherInformation {
   public void setStatus(FurtherInformationStatus status) {
     this.status = status;
   }
+
 }
