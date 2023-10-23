@@ -11,3 +11,5 @@ CVE-2022-38752
 CVE-2022-41854
 # com.squareup.okio:okio
 CVE-2023-3635
+# org.apache.santuario:xmlsec
+CVE-2023-44483
