@@ -1,7 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing;
 
-import java.util.Arrays;
-import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
@@ -17,9 +16,9 @@ public class CaseProcessingTabService {
   }
 
   public List<CaseProcessingTab> getTabsAvailableToUser(ServiceUserDetail user) {
-    return Arrays.stream(CaseProcessingTab.values())
+    return EnumSet.allOf(CaseProcessingTab.class)
+        .stream()
         .filter(tab -> permissionService.hasPermission(user, tab.getRolePermissions()))
-        .sorted(Comparator.comparing(CaseProcessingTab::getDisplayOrder))
         .toList();
   }
 }

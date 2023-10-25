@@ -97,7 +97,7 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ConsulteeCaseProcessingController.class)
-            .getApplicationCaseProcessing(APPLICATION_ID, null))));
+            .caseProcessing(APPLICATION_ID, null, null))));
   }
 
   @ParameterizedTest
@@ -230,7 +230,7 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .getApplicationCaseProcessing(APPLICATION_ID, null))));
+            .caseProcessing(APPLICATION_ID, null, null))));
   }
 
   @SecurityTest

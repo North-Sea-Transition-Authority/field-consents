@@ -93,7 +93,15 @@ class ApplicationUpdateControllerTest extends AbstractApplicationControllerTest 
 
     furtherInformation = new FurtherInformation();
 
-    furtherInformationView = new FurtherInformationView("timestamp", "requested by", "request text");
+    furtherInformationView = new FurtherInformationView(
+        "timestamp",
+        "requested by",
+        "request text",
+        false,
+        null,
+        null,
+        null
+    );
   }
 
   @SecurityTest
@@ -174,7 +182,7 @@ class ApplicationUpdateControllerTest extends AbstractApplicationControllerTest 
         .andExpect(model().attribute("applicationReference", DUMMY_APP_REF))
         .andExpect(model().attribute("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-                .getApplicationCaseProcessing(APPLICATION_ID, null))));
+                .caseProcessing(APPLICATION_ID, null, null))));
   }
 
   @ParameterizedTest
@@ -206,7 +214,7 @@ class ApplicationUpdateControllerTest extends AbstractApplicationControllerTest 
         .andExpect(model().attribute("applicationReference", DUMMY_APP_REF))
         .andExpect(model().attribute("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-                .getApplicationCaseProcessing(APPLICATION_ID, null))));
+                .caseProcessing(APPLICATION_ID, null, null))));
   }
 
   @ParameterizedTest
@@ -239,7 +247,7 @@ class ApplicationUpdateControllerTest extends AbstractApplicationControllerTest 
         .andExpect(model().attribute("applicationReference", DUMMY_APP_REF))
         .andExpect(model().attribute("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-                .getApplicationCaseProcessing(APPLICATION_ID, null))));
+                .caseProcessing(APPLICATION_ID, null, null))));
   }
 
   @SecurityTest
@@ -282,7 +290,7 @@ class ApplicationUpdateControllerTest extends AbstractApplicationControllerTest 
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .getApplicationCaseProcessing(APPLICATION_ID, null))))
+            .caseProcessing(APPLICATION_ID, null, null))))
         .andExpect(notificationBanner(expectedNotificationBanner));
 
     verify(applicationUpdateService, times(1))
@@ -324,7 +332,7 @@ class ApplicationUpdateControllerTest extends AbstractApplicationControllerTest 
         .andExpect(model().attribute("applicationReference", DUMMY_APP_REF))
         .andExpect(model().attribute("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-                .getApplicationCaseProcessing(APPLICATION_ID, null))));
+                .caseProcessing(APPLICATION_ID, null, null))));
   }
 
   private static Stream<Arguments> getSubmittedApplicationVersions() {

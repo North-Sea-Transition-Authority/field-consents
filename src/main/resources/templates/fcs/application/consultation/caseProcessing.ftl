@@ -1,4 +1,5 @@
 <#include '../../layout/layout.ftl'>
+<#include '../caseprocessingtabs/caseProccessingTabs.ftl'>
 <#import '../../functions/_getPageSize.ftl' as getPageSize>
 <#import '../../summary/_applicationSummary.ftl' as applicationSummary>
 <#import '../_caseProcessingActions.ftl' as caseProcessingActions>
@@ -9,9 +10,19 @@
   htmlTitle=pageTitle
   pageHeading=pageTitle
   pageSize=getPageSize.getPageSize(wideSummaryDisplay)>
-    <#if consultationRequestView?has_content>
-      <@consulation.notificationBanner consultationRequestView=consultationRequestView />
+  <#if consultationRequestView?has_content>
+    <@consulation.notificationBanner consultationRequestView=consultationRequestView />
+  </#if>
+  <@caseProcessingActions.caseActions actions=actionList/>
+  <@caseProcessingTabsWithContent
+    tabs=caseProcessingTabs
+    selectedTab=selectedTab
+    controllerUrl=controllerUrl>
+    <#if selectedTab == "VIEW_APPLICATION">
+      <@applicationSummary.applicationSummary accordionId=accordionId/>
     </#if>
-    <@caseProcessingActions.caseActions actions=actionList/>
-    <@applicationSummary.applicationSummary accordionId=accordionId/>
+    <#if selectedTab == "FURTHER_INFORMATION">
+      <@furtherInformation.furtherInformationList furtherInformationViews=furtherInformationViews/>
+    </#if>
+  </@caseProcessingTabsWithContent>
 </@defaultPage>

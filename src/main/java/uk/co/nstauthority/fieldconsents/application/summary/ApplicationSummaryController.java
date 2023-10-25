@@ -79,12 +79,12 @@ public class ApplicationSummaryController {
 
     if (isRegulatorCaseProcessingUser(user, applicationVersion)) {
       return ReverseRouter.redirect(on(ApplicationCaseProcessingController.class)
-          .getApplicationCaseProcessing(applicationId, null));
+          .caseProcessing(applicationId, null, null));
     }
 
     if (isConsulteeCaseProcessingUser(user, applicationVersion)) {
       return ReverseRouter.redirect(on(ConsulteeCaseProcessingController.class)
-          .getApplicationCaseProcessing(applicationId, null));
+          .caseProcessing(applicationId, null, null));
     }
 
     if (isIndustryCaseProcessingUser(user, applicationVersion)) {

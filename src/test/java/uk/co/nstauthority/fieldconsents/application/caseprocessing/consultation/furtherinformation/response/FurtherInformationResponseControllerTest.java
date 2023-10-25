@@ -87,7 +87,15 @@ class FurtherInformationResponseControllerTest extends AbstractApplicationContro
     consultation = new Consultation();
     furtherInformation = new FurtherInformation();
 
-    furtherInformationView = new FurtherInformationView("timestamp", "user", "request text");
+    furtherInformationView = new FurtherInformationView(
+        "timestamp",
+        "user",
+        "request text",
+        false,
+        null,
+        null,
+        null
+    );
 
     // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
@@ -118,7 +126,7 @@ class FurtherInformationResponseControllerTest extends AbstractApplicationContro
         .andExpect(view().name(VIEW_NAME))
         .andExpect(model().attribute("pageTitle", PAGE_TITLE))
         .andExpect(model().attribute("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-                .getApplicationCaseProcessing(APPLICATION_ID, null))))
+                .caseProcessing(APPLICATION_ID, null, null))))
         .andExpect(model().attribute("applicationReference", APPLICATION_REFERENCE))
         .andExpect(model().attribute("furtherInformationView", furtherInformationView))
         .andExpect(model().attribute("form", FurtherInformationResponseForm.empty()));

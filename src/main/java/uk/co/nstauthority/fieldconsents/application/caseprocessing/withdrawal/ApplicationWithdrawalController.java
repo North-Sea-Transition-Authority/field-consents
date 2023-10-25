@@ -130,7 +130,7 @@ public class ApplicationWithdrawalController {
         .addObject("submitUrl", ReverseRouter.route(on(ApplicationWithdrawalController.class)
             .submitApplicationWithdrawalResponse(applicationId, null, null, null, null)))
         .addObject("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .getApplicationCaseProcessing(applicationId, null)));
+            .caseProcessing(applicationId, null, null)));
   }
 
   @PostMapping("withdrawal-response")

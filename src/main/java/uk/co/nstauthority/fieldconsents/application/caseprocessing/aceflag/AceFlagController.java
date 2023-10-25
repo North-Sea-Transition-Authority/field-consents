@@ -46,7 +46,7 @@ public class AceFlagController {
     return new ModelAndView("fcs/application/changeAceStatus")
         .addObject("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-                .getApplicationCaseProcessing(applicationId, null)));
+                .caseProcessing(applicationId, null, null)));
   }
 
   @PostMapping
@@ -61,6 +61,6 @@ public class AceFlagController {
     aceFlagService.setAceFlag(applicationVersion, form.getAceFlag());
 
     return ReverseRouter.redirect(on(ApplicationCaseProcessingController.class)
-        .getApplicationCaseProcessing(applicationId, null));
+        .caseProcessing(applicationId, null, null));
   }
 }

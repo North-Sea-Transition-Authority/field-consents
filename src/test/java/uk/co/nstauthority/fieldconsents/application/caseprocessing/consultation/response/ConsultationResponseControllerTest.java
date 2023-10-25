@@ -251,7 +251,7 @@ class ConsultationResponseControllerTest extends AbstractApplicationControllerTe
         "applicationReference", APPLICATION_REFERENCE,
         "consultationSummaryView", ConsultationRequestView.from(consultation),
         "backLinkUrl", ReverseRouter.route(on(ConsulteeCaseProcessingController.class)
-            .getApplicationCaseProcessing(APPLICATION_ID, null))
+            .caseProcessing(APPLICATION_ID, null, null))
     );
   }
   private void mockGetResponseFormInvocations(boolean requiresEiaRegsResponse) {

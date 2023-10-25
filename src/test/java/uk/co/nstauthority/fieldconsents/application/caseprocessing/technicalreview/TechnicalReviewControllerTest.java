@@ -153,7 +153,7 @@ class TechnicalReviewControllerTest extends AbstractApplicationControllerTest {
         .andExpect(model().attribute("technicalReviewSummaryItems", Collections.emptyList()))
         .andExpect(model().attribute("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-                .getApplicationCaseProcessing(APPLICATION_ID, null))));
+                .caseProcessing(APPLICATION_ID, null, null))));
   }
 
   @SecurityTest
@@ -226,7 +226,7 @@ class TechnicalReviewControllerTest extends AbstractApplicationControllerTest {
             TECHNICAL_REVIEWER_ASSIGNMENT_CANDIDATES_MAP))
         .andExpect(model().attribute("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-                .getApplicationCaseProcessing(APPLICATION_ID, null))));
+                .caseProcessing(APPLICATION_ID, null, null))));
   }
 
   @SecurityTest
@@ -273,7 +273,7 @@ class TechnicalReviewControllerTest extends AbstractApplicationControllerTest {
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .getApplicationCaseProcessing(APPLICATION_ID, null))))
+            .caseProcessing(APPLICATION_ID, null, null))))
         .andExpect(notificationBanner(expectedNotificationBanner));
 
     verify(technicalReviewService, times(1))
@@ -311,7 +311,7 @@ class TechnicalReviewControllerTest extends AbstractApplicationControllerTest {
             TECHNICAL_REVIEWER_ASSIGNMENT_CANDIDATES_MAP))
         .andExpect(model().attribute("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-                .getApplicationCaseProcessing(APPLICATION_ID, null))));
+                .caseProcessing(APPLICATION_ID, null, null))));
   }
 
   private static Stream<Arguments> getSubmittedApplicationVersions() {

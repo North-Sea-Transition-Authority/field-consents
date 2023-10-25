@@ -1,8 +1,9 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -11,28 +12,27 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
+import static uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature.WIDE_SUMMARY_DISPLAY;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseProcessingTab.CASE_HISTORY;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseHistoryTabContentService;
@@ -48,13 +48,15 @@ import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummarySe
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.summary.SummarySection;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamService;
 
 @ContextConfiguration(classes = ApplicationCaseProcessingController.class)
 class ApplicationCaseProcessingControllerTest extends AbstractApplicationControllerTest {
 
+  private static final Class<ApplicationCaseProcessingController> CONTROLLER_CLASS = ApplicationCaseProcessingController.class;
+  private static final String APPLICATION_REFERENCE = "application reference";
   private static final String VIEW_NAME = "fcs/application/applicationCaseProcessing";
-  private static final String DUMMY_APP_REF = "DUMMY_APP_REF";
 
   @MockBean
   private ApplicationService applicationService;
@@ -80,6 +82,8 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   @MockBean
   private FurtherInformationService furtherInformationService;
 
+  private ApplicationVersion applicationVersion;
+
   private TechnicalReview technicalReview;
 
   private Consultation consultation;
@@ -88,8 +92,18 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
 
   private FurtherInformationView furtherInformationView;
 
+  private List<CaseProcessingActionView> caseProcessingActionViews;
+
+  private List<SummarySection> summarySections;
+
+  private List<CaseProcessingTab> caseProcessingTabs;
+
+  private List<CaseEventView> caseEventViews;
+
   @BeforeEach
   void setUp() {
+    applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
+
     technicalReview = new TechnicalReview();
     technicalReview.setDeadlineDateTime(Instant.now());
     technicalReview.setRequestText("request text");
@@ -98,239 +112,232 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
 
     furtherInformation = new FurtherInformation();
 
-    furtherInformationView = new FurtherInformationView("timestamp", "user", "request text");
+    furtherInformationView = new FurtherInformationView(
+        "timestamp",
+        "user",
+        "request text",
+        true,
+        "response timestamp",
+        "response user",
+        "response text"
+    );
+
+    caseProcessingActionViews = List.of(
+        mock(CaseProcessingActionView.class),
+        mock(CaseProcessingActionView.class),
+        mock(CaseProcessingActionView.class)
+    );
+
+    summarySections = Collections.emptyList();
+    caseProcessingTabs = EnumSet.allOf(CaseProcessingTab.class).stream().toList();
+
+    caseEventViews = Collections.emptyList();
   }
 
   @SecurityTest
-  void getApplicationCaseProcessing_noUser() throws Exception {
-    mockMvc.perform(get(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .getApplicationCaseProcessing(APPLICATION_ID, null))))
+  void caseProcessing_noUser() throws Exception {
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .caseProcessing(APPLICATION_ID, null, null))))
         .andExpect(redirectionToLoginUrl());
   }
 
-  @SecurityTest
-  void getViewApplicationTab_noUser() throws Exception {
-    mockMvc.perform(get(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .getViewApplicationTab(APPLICATION_ID, null))))
-        .andExpect(redirectionToLoginUrl());
-  }
+  @Test
+  void caseProcessing_viewApplication() throws Exception {
+    stubBaseServiceCalls();
+    stubSummaryServiceCall();
 
-  @SecurityTest
-  void getCaseHistoryTab_noUser() throws Exception {
-    mockMvc.perform(get(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .getCaseHistoryTab(APPLICATION_ID, null))))
-        .andExpect(redirectionToLoginUrl());
-  }
-
-  @ParameterizedTest
-  @MethodSource("getSubmittedApplicationVersions")
-  void getApplicationCaseProcessing(ApplicationVersion applicationVersion) throws Exception {
-    when(caseProcessingTabService.getTabsAvailableToUser(user)).thenReturn(Arrays.asList(CaseProcessingTab.values()));
-    var caseHistoryEvents = CaseHistoryEventTestUtil.getMockCaseEventViews();
-    when(caseHistoryTabContentService.getCaseHistoryTabContent(applicationVersion.getApplication()))
-        .thenReturn(caseHistoryEvents);
-    when(technicalReviewService.findOpenTechnicalReview(applicationVersion))
-        .thenReturn(Optional.of(technicalReview));
-
-    var actionViews =
-        List.of(CaseProcessingActionView.from(CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP, applicationVersion));
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
-        .thenReturn(applicationVersion);
-    when(caseProcessingActionService.getUserActionViews(applicationVersion, user))
-        .thenReturn(actionViews);
-    when(applicationSummaryService.getSummarySections(applicationVersion))
-        .thenReturn(Collections.emptyList());
-    when(applicationService.generateApplicationReference(applicationVersion))
-        .thenReturn(DUMMY_APP_REF);
-
-    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any());
-    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .getApplicationCaseProcessing(APPLICATION_ID, null)))
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .caseProcessing(APPLICATION_ID, null, null)))
             .with(user(user))
             .with(csrf()))
-        .andExpect(status().isOk())
-        .andExpect(view().name("fcs/application/applicationCaseProcessing"))
-        .andReturn().getModelAndView();
-
-    assert modelAndView != null;
-    assertModel(applicationVersion, caseHistoryEvents, actionViews, modelAndView, CaseProcessingTab.VIEW_APPLICATION);
+        .andExpectAll(commonAttributesForTab(CaseProcessingTab.VIEW_APPLICATION, applicationVersion));
   }
 
-  @ParameterizedTest
-  @MethodSource("getSubmittedApplicationVersions")
-  void getViewApplicationTab(ApplicationVersion applicationVersion) throws Exception {
-    when(caseProcessingTabService.getTabsAvailableToUser(user)).thenReturn(Arrays.asList(CaseProcessingTab.values()));
-    var caseHistoryEvents = CaseHistoryEventTestUtil.getMockCaseEventViews();
-    when(caseHistoryTabContentService.getCaseHistoryTabContent(applicationVersion.getApplication()))
-        .thenReturn(caseHistoryEvents);
-
-    var actionViews =
-        List.of(CaseProcessingActionView.from(CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP, applicationVersion));
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
-        .thenReturn(applicationVersion);
-    when(caseProcessingActionService.getUserActionViews(applicationVersion, user))
-        .thenReturn(actionViews);
-    when(applicationSummaryService.getSummarySections(applicationVersion))
-        .thenReturn(Collections.emptyList());
-    when(applicationService.generateApplicationReference(applicationVersion))
-        .thenReturn(DUMMY_APP_REF);
-
-    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any());
-    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .getViewApplicationTab(APPLICATION_ID, null)))
-            .with(user(user))
-            .with(csrf()))
-        .andExpect(status().isOk())
-        .andExpect(view().name("fcs/application/applicationCaseProcessing"))
-        .andReturn().getModelAndView();
-
-    assert modelAndView != null;
-    assertModel(applicationVersion, caseHistoryEvents, actionViews, modelAndView, CaseProcessingTab.VIEW_APPLICATION);
-  }
-
-  @ParameterizedTest
-  @MethodSource("getSubmittedApplicationVersions")
-  void getCaseHistoryTab(ApplicationVersion applicationVersion) throws Exception {
-    when(caseProcessingTabService.getTabsAvailableToUser(user)).thenReturn(Arrays.asList(CaseProcessingTab.values()));
-    var caseHistoryEvents = CaseHistoryEventTestUtil.getMockCaseEventViews();
-    when(caseHistoryTabContentService.getCaseHistoryTabContent(applicationVersion.getApplication()))
-        .thenReturn(caseHistoryEvents);
-
-    var actionViews =
-        List.of(CaseProcessingActionView.from(CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP, applicationVersion));
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
-        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
-        .thenReturn(applicationVersion);
-    when(caseProcessingActionService.getUserActionViews(applicationVersion, user))
-        .thenReturn(actionViews);
-    when(applicationSummaryService.getSummarySections(applicationVersion))
-        .thenReturn(Collections.emptyList());
-    when(applicationService.generateApplicationReference(applicationVersion))
-        .thenReturn(DUMMY_APP_REF);
-
-    doCallRealMethod().when(applicationSummaryService).getApplicationSummaryModelAndView(any(), any(), any());
-    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .getCaseHistoryTab(APPLICATION_ID, null)))
-            .with(user(user))
-            .with(csrf()))
-        .andExpect(status().isOk())
-        .andExpect(view().name("fcs/application/applicationCaseProcessing"))
-        .andReturn().getModelAndView();
-
-    assert modelAndView != null;
-    assertModel(applicationVersion, caseHistoryEvents, actionViews, modelAndView, CaseProcessingTab.CASE_HISTORY);
-  }
-
-  @ParameterizedTest
-  @MethodSource("getSubmittedApplicationVersions")
-  void getApplicationCaseProcessing_isTechnicalReviewer_checkTechnicalReviewBannerExists(ApplicationVersion applicationVersion) throws Exception {
-    stubModelAndViewCalls(applicationVersion);
+  @Test
+  void caseProcessing_viewApplication_isTechnicalReviewer_checkTechnicalReviewBannerExists() throws Exception {
+    stubBaseServiceCalls();
+    stubSummaryServiceCall();
 
     when(regulatorTeamService.isTechnicalReviewer(WebUserAccountId.from(user.wuaId()))).thenReturn(true);
     when(technicalReviewService.findOpenTechnicalReview(applicationVersion)).thenReturn(Optional.of(technicalReview));
 
-    mockMvc.perform(get(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-        .getApplicationCaseProcessing(APPLICATION_ID, null)))
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+        .caseProcessing(APPLICATION_ID, null, null)))
         .with(user(user)))
-        .andExpect(status().isOk())
+        .andExpectAll(commonAttributesForTab(CaseProcessingTab.VIEW_APPLICATION, applicationVersion))
         .andExpect(model().attribute("technicalReviewSummaryView", TechnicalReviewSummaryView.from(technicalReview)));
   }
 
-  private void stubModelAndViewCalls(ApplicationVersion applicationVersion) {
-    when(caseProcessingTabService.getTabsAvailableToUser(user)).thenReturn(Arrays.asList(CaseProcessingTab.values()));
-    var caseHistoryEvents = CaseHistoryEventTestUtil.getMockCaseEventViews();
-    when(caseHistoryTabContentService.getCaseHistoryTabContent(applicationVersion.getApplication())).thenReturn(caseHistoryEvents);
-
-    // this is called in ApplicationHandlerInterceptor
-    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
-    var actionViews = List.of(CaseProcessingActionView.from(CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP, applicationVersion));
-    when(caseProcessingActionService.getUserActionViews(applicationVersion, user)).thenReturn(actionViews);
-    when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(DUMMY_APP_REF);
-    when(applicationSummaryService.getApplicationSummaryModelAndView(applicationVersion, VIEW_NAME, DUMMY_APP_REF)).thenReturn(new ModelAndView());
-  }
-
-  @ParameterizedTest
-  @MethodSource("getSubmittedApplicationVersions")
-  void getApplicationCaseProcessing_isNotTechnicalReviewer_checkTechnicalReviewBannerDoesNotExist(ApplicationVersion applicationVersion) throws Exception {
-    stubModelAndViewCalls(applicationVersion);
+  @Test
+  void caseProcessing_viewApplication_isNotTechnicalReviewer_checkTechnicalReviewBannerDoesNotExist() throws Exception {
+    stubBaseServiceCalls();
+    stubSummaryServiceCall();
 
     when(regulatorTeamService.isTechnicalReviewer(WebUserAccountId.from(user.wuaId()))).thenReturn(false);
 
-    var model = mockMvc.perform(get(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .getApplicationCaseProcessing(APPLICATION_ID, null)))
-            .with(user(user)))
-        .andExpect(status().isOk())
-        .andReturn()
-        .getModelAndView()
-        .getModel();
-
-    assertThat(model).doesNotContainKey("technicalReviewSummaryView");
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+        .caseProcessing(APPLICATION_ID, null, null)))
+        .with(user(user)))
+        .andExpectAll(commonAttributesForTab(CaseProcessingTab.VIEW_APPLICATION, applicationVersion))
+        .andExpect(model().attributeDoesNotExist("technicalReviewSummaryView"));
   }
 
-  @ParameterizedTest
-  @MethodSource("getSubmittedApplicationVersions")
-  void getApplicationCaseProcessing_isCaseOfficer_checkFurtherInformationBannerExists(ApplicationVersion applicationVersion) throws Exception {
-    stubModelAndViewCalls(applicationVersion);
+  @Test
+  void caseProcessing_viewApplication_isCaseOfficer_checkFurtherInformationBannerExists() throws Exception {
+    stubBaseServiceCalls();
+    stubSummaryServiceCall();
 
     when(regulatorTeamService.isCaseOfficer(WebUserAccountId.from(user.wuaId()))).thenReturn(true);
     when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication())).thenReturn(Optional.of(consultation));
     when(furtherInformationService.findLatestOpenFurtherInformation(consultation)).thenReturn(Optional.of(furtherInformation));
     when(furtherInformationService.getFurtherInformationView(furtherInformation)).thenReturn(furtherInformationView);
 
-    mockMvc.perform(get(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .getApplicationCaseProcessing(APPLICATION_ID, null)))
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .caseProcessing(APPLICATION_ID, null, null)))
             .with(user(user)))
-        .andExpect(status().isOk())
+        .andExpectAll(commonAttributesForTab(CaseProcessingTab.VIEW_APPLICATION, applicationVersion))
         .andExpect(model().attribute("furtherInformationView", furtherInformationView));
   }
 
-  @ParameterizedTest
-  @MethodSource("getSubmittedApplicationVersions")
-  void getApplicationCaseProcessing_isNotCaseOfficer_checkFurtherInformationBannerDoesNotExist(ApplicationVersion applicationVersion) throws Exception {
-    stubModelAndViewCalls(applicationVersion);
+  @Test
+  void caseProcessing_viewApplication_isNotCaseOfficer_checkFurtherInformationBannerDoesNotExist() throws Exception {
+    stubBaseServiceCalls();
+    stubSummaryServiceCall();
 
     when(regulatorTeamService.isCaseOfficer(WebUserAccountId.from(user.wuaId()))).thenReturn(false);
 
-    var model = mockMvc.perform(get(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .getApplicationCaseProcessing(APPLICATION_ID, null)))
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .caseProcessing(APPLICATION_ID, null, null)))
             .with(user(user)))
-        .andExpect(status().isOk())
-        .andReturn()
-        .getModelAndView()
-        .getModel();
-
-    assertThat(model).doesNotContainKey("furtherInformationView");
+        .andExpectAll(commonAttributesForTab(CaseProcessingTab.VIEW_APPLICATION, applicationVersion))
+        .andExpect(model().attributeDoesNotExist("furtherInformationView"));
   }
 
-  private static void assertModel(ApplicationVersion applicationVersion,
-                                  List<CaseEventView> caseHistoryEvents,
-                                  List<CaseProcessingActionView> actionViews,
-                                  ModelAndView modelAndView,
-                                  CaseProcessingTab caseHistory) {
-    var model = modelAndView.getModel();
+  @Test
+  void caseProcessing_caseHistory() throws Exception {
+    stubBaseServiceCalls();
+    stubCaseHistoryServiceCall();
 
-    assertThat(model)
-        .containsEntry("pageTitle", DUMMY_APP_REF)
-        .containsKey("summarySections")
-        .containsEntry("accordionId", applicationVersion.getId())
-        .containsKey("wideSummaryDisplay")
-        .containsEntry("actionList", actionViews)
-        .containsEntry("applicationId", applicationVersion.getApplication().getId())
-        .containsEntry("selectedTab", caseHistory.getValue())
-        .containsEntry("caseHistoryEvents", caseHistoryEvents);
+    var tabParam = "?tab=%s".formatted(CASE_HISTORY.getAnchor());
+
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .caseProcessing(APPLICATION_ID, null, null)) + tabParam)
+            .with(user(user)))
+        .andExpectAll(commonAttributesForTab(CASE_HISTORY, applicationVersion))
+        .andExpect(model().attribute("caseHistoryEvents", caseEventViews));
   }
 
-  private static Stream<Arguments> getSubmittedApplicationVersions() {
-    return Stream.of(
-        Arguments.of(ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION)),
-        Arguments.of(ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.FLARE)),
-        Arguments.of(ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.VENT))
-    );
+  @Test
+  void caseProcessing_caseHistory_isTechnicalReviewer_checkTechnicalReviewBannerExists() throws Exception {
+    stubBaseServiceCalls();
+    stubCaseHistoryServiceCall();
+
+    when(regulatorTeamService.isTechnicalReviewer(WebUserAccountId.from(user.wuaId()))).thenReturn(true);
+    when(technicalReviewService.findOpenTechnicalReview(applicationVersion)).thenReturn(Optional.of(technicalReview));
+
+    var tabParam = "?tab=%s".formatted(CASE_HISTORY.getAnchor());
+
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .caseProcessing(APPLICATION_ID, null, null)) + tabParam)
+            .with(user(user)))
+        .andExpectAll(commonAttributesForTab(CASE_HISTORY, applicationVersion))
+        .andExpect(model().attribute("caseHistoryEvents", caseEventViews))
+        .andExpect(model().attribute("technicalReviewSummaryView", TechnicalReviewSummaryView.from(technicalReview)));
+  }
+
+  @Test
+  void caseProcessing_caseHistory_isNotTechnicalReviewer_checkTechnicalReviewBannerDoesNotExist() throws Exception {
+    stubBaseServiceCalls();
+    stubCaseHistoryServiceCall();
+
+    when(regulatorTeamService.isTechnicalReviewer(WebUserAccountId.from(user.wuaId()))).thenReturn(false);
+
+    var tabParam = "?tab=%s".formatted(CASE_HISTORY.getAnchor());
+
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .caseProcessing(APPLICATION_ID, null, null)) + tabParam)
+            .with(user(user)))
+        .andExpectAll(commonAttributesForTab(CASE_HISTORY, applicationVersion))
+        .andExpect(model().attribute("caseHistoryEvents", caseEventViews))
+        .andExpect(model().attributeDoesNotExist("technicalReviewSummaryView"));
+  }
+
+  @Test
+  void caseProcessing_caseHistory_isCaseOfficer_checkFurtherInformationBannerExists() throws Exception {
+    stubBaseServiceCalls();
+    stubCaseHistoryServiceCall();
+
+    when(regulatorTeamService.isCaseOfficer(WebUserAccountId.from(user.wuaId()))).thenReturn(true);
+    when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication())).thenReturn(Optional.of(consultation));
+    when(furtherInformationService.findLatestOpenFurtherInformation(consultation)).thenReturn(Optional.of(furtherInformation));
+    when(furtherInformationService.getFurtherInformationView(furtherInformation)).thenReturn(furtherInformationView);
+
+    var tabParam = "?tab=%s".formatted(CASE_HISTORY.getAnchor());
+
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .caseProcessing(APPLICATION_ID, null, null)) + tabParam)
+            .with(user(user)))
+        .andExpectAll(commonAttributesForTab(CASE_HISTORY, applicationVersion))
+        .andExpect(model().attribute("caseHistoryEvents", caseEventViews))
+        .andExpect(model().attribute("furtherInformationView", furtherInformationView));
+  }
+
+  @Test
+  void caseProcessing_caseHistory_isNotCaseOfficer_checkFurtherInformationBannerDoesNotExist() throws Exception {
+    stubBaseServiceCalls();
+    stubCaseHistoryServiceCall();
+
+    when(regulatorTeamService.isCaseOfficer(WebUserAccountId.from(user.wuaId()))).thenReturn(false);
+
+    var tabParam = "?tab=%s".formatted(CASE_HISTORY.getAnchor());
+
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .caseProcessing(APPLICATION_ID, null, null)) + tabParam)
+            .with(user(user)))
+        .andExpectAll(commonAttributesForTab(CASE_HISTORY, applicationVersion))
+        .andExpect(model().attribute("caseHistoryEvents", caseEventViews))
+        .andExpect(model().attributeDoesNotExist("furtherInformationView"));
+  }
+
+  private void stubBaseServiceCalls() {
+    // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
+
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(caseProcessingTabService.getTabsAvailableToUser(user)).thenReturn(caseProcessingTabs);
+    when(caseProcessingActionService.getUserActionViews(applicationVersion, user)).thenReturn(caseProcessingActionViews);
+    when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(APPLICATION_REFERENCE);
+  }
+
+  private void stubSummaryServiceCall() {
+    var applicationType = applicationVersion.getApplication().getType();
+    doAnswer(invocation -> {
+      invocation.getArgument(1, ModelAndView.class)
+          .addObject("summarySections", summarySections)
+          .addObject("accordionId", applicationVersion.getId())
+          .addObject("wideSummaryDisplay", WIDE_SUMMARY_DISPLAY.allowed(applicationType));
+      return null;
+    })
+        .when(applicationSummaryService)
+        .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class));
+  }
+
+  private void stubCaseHistoryServiceCall() {
+    var application = applicationVersion.getApplication();
+    when(caseHistoryTabContentService.getCaseHistoryTabContent(application)).thenReturn(caseEventViews);
+  }
+
+  private ResultMatcher[] commonAttributesForTab(CaseProcessingTab tab, ApplicationVersion applicationVersion) {
+    var applicationType = applicationVersion.getApplication().getType();
+    return new ResultMatcher[]{
+        status().isOk(),
+        view().name(VIEW_NAME),
+        model().attribute("controllerUrl", ReverseRouter.route(on(CONTROLLER_CLASS).caseProcessing(APPLICATION_ID, null, null))),
+        model().attribute("pageTitle", APPLICATION_REFERENCE),
+        model().attribute("selectedTab", tab),
+        model().attribute("actionList", caseProcessingActionViews),
+        model().attribute("caseProcessingTabs", caseProcessingTabs),
+        model().attribute("wideSummaryDisplay", WIDE_SUMMARY_DISPLAY.allowed(applicationType))
+    };
   }
 }

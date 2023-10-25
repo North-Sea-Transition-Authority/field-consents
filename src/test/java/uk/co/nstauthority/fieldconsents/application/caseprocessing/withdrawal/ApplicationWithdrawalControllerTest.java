@@ -280,7 +280,7 @@ class ApplicationWithdrawalControllerTest extends AbstractApplicationControllerT
                 .submitApplicationWithdrawalResponse(APPLICATION_ID, null, null, null, null))))
         .andExpect(model().attribute("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-                .getApplicationCaseProcessing(APPLICATION_ID, null))));
+                .caseProcessing(APPLICATION_ID, null, null))));
   }
 
   @SecurityTest

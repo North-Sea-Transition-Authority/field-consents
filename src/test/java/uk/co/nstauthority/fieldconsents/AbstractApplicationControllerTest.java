@@ -9,6 +9,7 @@ import org.junit.jupiter.api.TestInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseProcessingTabConverter;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
 import uk.co.nstauthority.fieldconsents.authorisation.ApplicationAccessService;
 import uk.co.nstauthority.fieldconsents.authorisation.ApplicationHandlerInterceptor;
@@ -21,7 +22,8 @@ import uk.co.nstauthority.fieldconsents.authorisation.rules.ApplicationStatusInt
 @Import({
     ApplicationAccessInterceptorRule.class,
     ApplicationStatusInterceptorRule.class,
-    ActionEndPointInterceptorRule.class
+    ActionEndPointInterceptorRule.class,
+    CaseProcessingTabConverter.class
 })
 public abstract class AbstractApplicationControllerTest extends AbstractControllerTest {
 

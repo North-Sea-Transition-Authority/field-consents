@@ -2,13 +2,16 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mock.Strictness.LENIENT;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationStatus.CLOSED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationStatus.OPEN;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.CONSULTEE;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.REGULATOR;
@@ -19,8 +22,12 @@ import jakarta.persistence.EntityNotFoundException;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,6 +38,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
@@ -67,6 +75,7 @@ class FurtherInformationServiceTest {
   @Mock
   private EnergyPortalUserService energyPortalUserService;
 
+  @Spy
   @InjectMocks
   private FurtherInformationService furtherInformationService;
 
@@ -171,7 +180,7 @@ class FurtherInformationServiceTest {
             FurtherInformation::getRespondedByWuaId,
             FurtherInformation::getResponseText
         ).containsExactly(
-            FurtherInformationStatus.CLOSED,
+            CLOSED,
             NOW,
             USER.wuaId(),
             RESPONSE_TEXT
@@ -199,21 +208,127 @@ class FurtherInformationServiceTest {
 
   @Test
   void getFurtherInformationView() {
-    var requestedByUser = "Example user";
+    var view = mock(FurtherInformationView.class);
+    doReturn(Collections.singletonList(view))
+        .when(furtherInformationService)
+        .getFurtherInformationViews(Collections.singleton(furtherInformation));
+
+    assertThat(furtherInformationService.getFurtherInformationView(furtherInformation)).isEqualTo(view);
+  }
+
+  @Test
+  void getFurtherInformationViews() {
+    var furtherInformationList = List.of(
+        createFurtherInformation(
+            1L,
+            NOW,
+            REQUEST_TEXT,
+            OPEN,
+            null,
+            null,
+            null
+        ),
+        createFurtherInformation(
+            1L,
+            NOW,
+            REQUEST_TEXT,
+            CLOSED,
+            2L,
+            NOW,
+            RESPONSE_TEXT
+        ),
+        createFurtherInformation(
+            2L,
+            NOW,
+            REQUEST_TEXT,
+            CLOSED,
+            1L,
+            NOW,
+            RESPONSE_TEXT
+        )
+    );
+
+    var wuaIds = furtherInformationList.stream()
+        .flatMap(fi -> Stream.of(fi.getRequestedByWuaId(), fi.getRespondedByWuaId()))
+        .filter(Objects::nonNull)
+        .distinct()
+        .map(WebUserAccountId::from)
+        .toList();
+
+    var userDisplayName = "Example user";
     var energyPortalUser = mock(EnergyPortalUserDto.class);
-    when(energyPortalUser.displayName()).thenReturn(requestedByUser);
+    when(energyPortalUser.displayName()).thenReturn(userDisplayName);
 
-    when(energyPortalUserService.getByWuaId(WebUserAccountId.from(USER.wuaId()))).thenReturn(energyPortalUser);
+    var user2DisplayName = "Example user 2";
+    var energyPortalUser2 = mock(EnergyPortalUserDto.class);
+    when(energyPortalUser2.displayName()).thenReturn(user2DisplayName);
 
-    assertThat(furtherInformationService.getFurtherInformationView(furtherInformation))
+    when(energyPortalUserService.getEnergyPortalUserMap(wuaIds))
+        .thenReturn(Map.of(
+            WebUserAccountId.from(1L), energyPortalUser,
+            WebUserAccountId.from(2L), energyPortalUser2
+        ));
+
+    assertThat(furtherInformationService.getFurtherInformationViews(furtherInformationList))
         .extracting(
             FurtherInformationView::requestedAtTimestamp,
             FurtherInformationView::requestedByUser,
-            FurtherInformationView::requestText
+            FurtherInformationView::requestText,
+            FurtherInformationView::isClosed,
+            FurtherInformationView::respondedAtTimestamp,
+            FurtherInformationView::respondedByUser,
+            FurtherInformationView::responseText
         ).containsExactly(
-            DateUtils.format(NOW, DateUtils.DATE_TIME),
-            requestedByUser,
-            REQUEST_TEXT
+            tuple(
+                DateUtils.format(NOW, DateUtils.DATE_TIME),
+                userDisplayName,
+                REQUEST_TEXT,
+                false,
+                null,
+                null,
+                null
+            ),
+            tuple(
+                DateUtils.format(NOW, DateUtils.DATE_TIME),
+                userDisplayName,
+                REQUEST_TEXT,
+                true,
+                DateUtils.format(NOW, DateUtils.DATE_TIME),
+                user2DisplayName,
+                RESPONSE_TEXT
+            ),
+            tuple(
+                DateUtils.format(NOW, DateUtils.DATE_TIME),
+                user2DisplayName,
+                REQUEST_TEXT,
+                true,
+                DateUtils.format(NOW, DateUtils.DATE_TIME),
+                userDisplayName,
+                RESPONSE_TEXT
+            )
         );
   }
+
+  private FurtherInformation createFurtherInformation(
+      Long requestedByWuaId,
+      Instant requestedAtTimestamp,
+      String requestText,
+      FurtherInformationStatus status,
+      Long respondedByWuaId,
+      Instant respondedAtTimestamp,
+      String responseText
+  ) {
+    var furtherInforation = new FurtherInformation();
+
+    furtherInforation.setRequestedByWuaId(requestedByWuaId);
+    furtherInforation.setRequestedAtDatetime(requestedAtTimestamp);
+    furtherInforation.setRequestText(requestText);
+    furtherInforation.setStatus(status);
+    furtherInforation.setRespondedByWuaId(respondedByWuaId);
+    furtherInforation.setRespondedAtDatetime(respondedAtTimestamp);
+    furtherInforation.setResponseText(responseText);
+
+    return furtherInforation;
+  }
+
 }

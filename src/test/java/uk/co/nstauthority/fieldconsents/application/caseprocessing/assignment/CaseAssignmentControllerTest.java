@@ -14,11 +14,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_ASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.CASE_OFFICER_ASSIGNMENT_CANDIDATES;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.CASE_OFFICER_ASSIGNMENT_CANDIDATES_MAP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.ENERGY_PORTAL_USER_1;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.SERVICE_USER_DETAIL_USER_1;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_ASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.notificationBanner;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
@@ -137,7 +137,7 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
         .andExpect(model().attribute("caseOfficerAssignmentCandidates", CASE_OFFICER_ASSIGNMENT_CANDIDATES_MAP))
         .andExpect(model().attribute("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-                .getApplicationCaseProcessing(APPLICATION_ID, null))));
+                .caseProcessing(APPLICATION_ID, null, null))));
   }
 
   @SecurityTest
@@ -175,7 +175,7 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .getApplicationCaseProcessing(APPLICATION_ID, null))))
+            .caseProcessing(APPLICATION_ID, null, null))))
         .andExpect(notificationBanner(expectedNotificationBanner));
 
     verify(caseAssignmentService, times(1))
@@ -211,7 +211,7 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
         .andExpect(model().attribute("caseOfficerAssignmentCandidates", CASE_OFFICER_ASSIGNMENT_CANDIDATES_MAP))
         .andExpect(model().attribute("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-                .getApplicationCaseProcessing(APPLICATION_ID, null))));
+                .caseProcessing(APPLICATION_ID, null, null))));
   }
 
   @SecurityTest
@@ -243,7 +243,7 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .getApplicationCaseProcessing(APPLICATION_ID, null))))
+            .caseProcessing(APPLICATION_ID, null, null))))
         .andExpect(notificationBanner(expectedNotificationBanner));
 
     verify(caseAssignmentService, times(1))
@@ -279,7 +279,7 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .getApplicationCaseProcessing(APPLICATION_ID, null))))
+            .caseProcessing(APPLICATION_ID, null, null))))
         .andExpect(notificationBanner(expectedNotificationBanner));
 
     verify(caseAssignmentService, times(1))

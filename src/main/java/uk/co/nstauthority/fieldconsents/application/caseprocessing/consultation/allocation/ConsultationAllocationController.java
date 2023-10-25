@@ -97,7 +97,7 @@ public class ConsultationAllocationController {
     var applicationReference = applicationService.generateApplicationReference(applicationVersion);
     var responders = consultationService.getAllAvailableConsultationRespondersForConsultation(consultation);
     var backLinkUrl = ReverseRouter.route(on(ConsulteeCaseProcessingController.class)
-        .getApplicationCaseProcessing(applicationId, null));
+        .caseProcessing(applicationId, null, null));
 
     return new ModelAndView("fcs/application/consultation/manageConsulteeResponder")
         .addObject("form", form)

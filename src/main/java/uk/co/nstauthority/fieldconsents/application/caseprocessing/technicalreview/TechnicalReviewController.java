@@ -79,7 +79,7 @@ public class TechnicalReviewController {
         .addObject("technicalReviewSummaryItems", technicalReviewSummaryItems)
         .addObject("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-                .getApplicationCaseProcessing(applicationId, null)));
+                .caseProcessing(applicationId, null, null)));
   }
 
   @GetMapping("technical-review-request")
@@ -109,7 +109,7 @@ public class TechnicalReviewController {
         .addObject("technicalReviewerAssignmentCandidates", technicalReviewerAssignmentCandidatesMap)
         .addObject("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-                .getApplicationCaseProcessing(applicationId, null)));
+                .caseProcessing(applicationId, null, null)));
   }
 
   @PostMapping("technical-review-request")
@@ -142,6 +142,6 @@ public class TechnicalReviewController {
     );
 
     return ReverseRouter
-        .redirect(on(ApplicationCaseProcessingController.class).getApplicationCaseProcessing(applicationId, null));
+        .redirect(on(ApplicationCaseProcessingController.class).caseProcessing(applicationId, null, null));
   }
 }

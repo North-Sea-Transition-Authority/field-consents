@@ -95,7 +95,7 @@ public class ApplicationUpdateController {
     return modelAndView
         .addObject("applicationReference", applicationReference)
         .addObject("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .getApplicationCaseProcessing(applicationId, null)));
+            .caseProcessing(applicationId, null, null)));
   }
 
   @PostMapping("application-update-request")
@@ -123,6 +123,6 @@ public class ApplicationUpdateController {
         "Application update request sent to operator");
 
     return ReverseRouter
-        .redirect(on(ApplicationCaseProcessingController.class).getApplicationCaseProcessing(applicationId, null));
+        .redirect(on(ApplicationCaseProcessingController.class).caseProcessing(applicationId, null, null));
   }
 }

@@ -90,7 +90,7 @@ public class ConsultationRequestController {
 
     var applicationId = applicationVersion.getApplication().getId();
     var backLinkUrl = ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-        .getApplicationCaseProcessing(applicationId, null));
+        .caseProcessing(applicationId, null, null));
 
     return new ModelAndView("fcs/application/consultation/requestForm")
         .addObject("backLinkUrl", backLinkUrl)

@@ -6,21 +6,25 @@ import static uk.co.nstauthority.fieldconsents.application.workareapriority.Appl
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.REGULATOR;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CONSULTATION_FURTHER_INFORMATION_REQUESTED;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CONSULTATION_FURTHER_INFORMATION_RESPONDED;
-import static uk.co.nstauthority.fieldconsents.formatting.DateUtils.DATE_TIME;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import java.time.Clock;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
-import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 
 @Service
 public class FurtherInformationService {
@@ -94,14 +98,37 @@ public class FurtherInformationService {
   }
 
   public FurtherInformationView getFurtherInformationView(FurtherInformation furtherInformation) {
-    var requestedByWuaId = WebUserAccountId.from(furtherInformation.getRequestedByWuaId());
-    var requestedByEnergyPortalUser = energyPortalUserService.getByWuaId(requestedByWuaId);
+    return getFurtherInformationViews(Collections.singleton(furtherInformation)).get(0);
+  }
 
-    return new FurtherInformationView(
-        DateUtils.format(furtherInformation.getRequestedAtDatetime(), DATE_TIME),
-        requestedByEnergyPortalUser.displayName(),
-        furtherInformation.getRequestText()
-    );
+  public List<FurtherInformationView> getFurtherInformationViews(Collection<FurtherInformation> furtherInformation) {
+    var wuaIds = furtherInformation.stream()
+        .flatMap(fi -> Stream.of(fi.getRequestedByWuaId(), fi.getRespondedByWuaId()))
+        .filter(Objects::nonNull)
+        .distinct()
+        .map(WebUserAccountId::from)
+        .toList();
+
+    var energyPortalUserByWuaId = energyPortalUserService.getEnergyPortalUserMap(wuaIds)
+        .entrySet()
+        .stream()
+        .collect(Collectors.toMap(
+            entry -> entry.getKey().id(),
+            Map.Entry::getValue
+        ));
+
+    return furtherInformation.stream()
+        .sorted(Comparator.comparing(FurtherInformation::getRequestedAtDatetime).reversed())
+        .map(fi -> FurtherInformationView.newBuilder()
+            .withRequestedByUser(energyPortalUserByWuaId.get(fi.getRequestedByWuaId()))
+            .withRequestedAtTimestamp(fi.getRequestedAtDatetime())
+            .withRequestText(fi.getRequestText())
+            .withStatus(fi.getStatus())
+            .withRespondedByUser(energyPortalUserByWuaId.get(fi.getRespondedByWuaId()))
+            .withRespondedAtTimestamp(fi.getRespondedAtDatetime())
+            .withResponseText(fi.getResponseText())
+            .build())
+        .toList();
   }
 
 }

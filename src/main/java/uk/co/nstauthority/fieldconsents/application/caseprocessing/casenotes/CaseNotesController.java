@@ -65,7 +65,7 @@ public class CaseNotesController {
 
     return new ModelAndView("fcs/application/addCaseNote")
         .addObject("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .getApplicationCaseProcessing(applicationId, null)))
+            .caseProcessing(applicationId, null, null)))
         .addObject("applicationReference", applicationReference)
         .addObject("fileUploadAttributes", fileUploadComponentAttributes(applicationId, form.getCaseNoteDocuments()));
   }
@@ -101,7 +101,7 @@ public class CaseNotesController {
     NotificationBannerUtil.addSuccessNotification(redirectAttributes, "New case note added");
 
     return ReverseRouter
-        .redirect(on(ApplicationCaseProcessingController.class).getApplicationCaseProcessing(applicationId, null));
+        .redirect(on(ApplicationCaseProcessingController.class).caseProcessing(applicationId, null, null));
   }
 
   private FileUploadComponentAttributes fileUploadComponentAttributes(Integer applicationId,

@@ -148,7 +148,7 @@ class TechnicalReviewResponseControllerTest extends AbstractApplicationControlle
     assertThat(model)
         .containsAllEntriesOf(Map.of(
             "applicationReference", APPLICATION_REFERENCE,
-            "backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class).getApplicationCaseProcessing(APPLICATION_ID, null)),
+            "backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class).caseProcessing(APPLICATION_ID, null, null)),
             "approveRadio", TechnicalReviewResponseType.APPROVE,
             "rejectRadio", TechnicalReviewResponseType.REJECT,
             "fileUploadAttributes", fileUploadAttributes,

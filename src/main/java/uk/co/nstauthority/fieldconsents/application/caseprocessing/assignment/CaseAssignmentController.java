@@ -81,7 +81,7 @@ public class CaseAssignmentController {
         .addObject("caseOfficerAssignmentCandidates", caseOfficerAssignmentCandidatesMap)
         .addObject("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-                .getApplicationCaseProcessing(applicationId, null)));
+                .caseProcessing(applicationId, null, null)));
   }
 
   @PostMapping("assign")
@@ -109,7 +109,7 @@ public class CaseAssignmentController {
     );
 
     return ReverseRouter
-        .redirect(on(ApplicationCaseProcessingController.class).getApplicationCaseProcessing(applicationId, null));
+        .redirect(on(ApplicationCaseProcessingController.class).caseProcessing(applicationId, null, null));
   }
 
   @PostMapping("take-ownership-case-officer")
@@ -127,7 +127,7 @@ public class CaseAssignmentController {
     );
 
     return ReverseRouter
-        .redirect(on(ApplicationCaseProcessingController.class).getApplicationCaseProcessing(applicationId, null));
+        .redirect(on(ApplicationCaseProcessingController.class).caseProcessing(applicationId, null, null));
   }
 
   @PostMapping("release-ownership-case-officer")
@@ -145,6 +145,6 @@ public class CaseAssignmentController {
     );
 
     return ReverseRouter
-        .redirect(on(ApplicationCaseProcessingController.class).getApplicationCaseProcessing(applicationId, null));
+        .redirect(on(ApplicationCaseProcessingController.class).caseProcessing(applicationId, null, null));
   }
 }
