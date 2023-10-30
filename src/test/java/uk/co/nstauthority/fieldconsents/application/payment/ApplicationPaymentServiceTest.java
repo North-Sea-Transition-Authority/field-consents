@@ -2,7 +2,6 @@ package uk.co.nstauthority.fieldconsents.application.payment;
 
 import static java.util.Map.entry;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -17,6 +16,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.digitalpaymentslibrary.fee.FeePeriodService;
 import uk.co.fivium.digitalpaymentslibrary.payment.CreateCardPaymentResult;
 import uk.co.fivium.digitalpaymentslibrary.payment.Payment;
 import uk.co.fivium.digitalpaymentslibrary.payment.PaymentService;
@@ -30,12 +30,14 @@ import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
+import uk.co.nstauthority.fieldconsents.application.consentrevision.ConsentRevisionType;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalJson;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.fieldconsents.fee.FeeLineMnemonic;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 
@@ -63,9 +65,42 @@ class ApplicationPaymentServiceTest {
   @Mock
   private PaymentService paymentService;
 
+  @Mock
+  private FeePeriodService feePeriodService;
+
   @InjectMocks
   @Spy
   private ApplicationPaymentService applicationPaymentService;
+
+  @Test
+  void getPaymentAmountPence() {
+    var applicationVersion
+        = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var application = applicationVersion.getApplication();
+
+    var primaryAsset = new ApplicationAsset();
+    var primaryAssetType = AssetType.FIELD;
+
+    var consentLengthDetails = new ConsentLengthDetails();
+    var consentLength = ConsentLengthType.SHORT_TERM;
+    consentLengthDetails.setConsentLength(consentLength);
+
+    var mnemonic = FeeLineMnemonic.from(
+        primaryAssetType,
+        application.getType(),
+        consentLength,
+        ConsentRevisionType.from(application)
+    );
+
+    var currentCostPence = 93000;
+
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryAsset);
+    when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
+    when(applicationAssetService.getAssetType(primaryAsset)).thenReturn(primaryAssetType);
+    when(feePeriodService.getCurrentCost(mnemonic.mnemonic())).thenReturn(currentCostPence);
+
+    assertThat(applicationPaymentService.getPaymentAmountPence(applicationVersion)).isEqualTo(currentCostPence);
+  }
 
   @Test
   void createPayment() {
@@ -73,6 +108,7 @@ class ApplicationPaymentServiceTest {
     var user = ServiceUserDetailTestUtil.Builder().build();
 
     var paymentItemReference = "testPaymentItemReference";
+    var paymentAmountPence = 93000;
     var paymentDescription = "testPaymentDescription";
     Map<String, Object> paymentMetadata = Map.of("testPaymentMetadataKey", "testPaymentMetadataValue");
     Function<UUID, String> returnUrlFunction = paymentId -> "testReturnUrl";
@@ -80,13 +116,14 @@ class ApplicationPaymentServiceTest {
     var createCardPaymentResult = CreateCardPaymentResult.success("testGovUkPayNextUrl");
 
     doReturn(paymentItemReference).when(applicationPaymentService).getPaymentItemReference(applicationVersion);
+    doReturn(paymentAmountPence).when(applicationPaymentService).getPaymentAmountPence(applicationVersion);
     doReturn(paymentDescription).when(applicationPaymentService).getPaymentDescription(applicationVersion);
     doReturn(paymentMetadata).when(applicationPaymentService).getPaymentMetadata(applicationVersion);
 
     when(paymentService.createCardPayment(
         paymentItemReference,
         ApplicationPaymentService.APPLICATION_VERSION_PAYMENT_ITEM_TYPE,
-        100,
+        paymentAmountPence,
         paymentDescription,
         paymentMetadata,
         returnUrlFunction,

@@ -118,6 +118,7 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
     var applicationContextJson =
         new ApplicationContextJson(FieldTestUtil.field1Json, OrganisationUnitTestUtil.orgUnit1Json);
     var paymentDescription = "testPaymentDescription";
+    var paymentAmountPence = 93000;
     var absoluteGetStartPaymentUrl = "testAbsoluteGetStartPaymentUrl";
 
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
@@ -125,6 +126,7 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
     when(applicationContextService.getApplicationContextJson(applicationVersion)).thenReturn(applicationContextJson);
     when(applicationPaymentService.getPaymentDescription(applicationVersion)).thenReturn(paymentDescription);
+    when(applicationPaymentService.getPaymentAmountPence(applicationVersion)).thenReturn(paymentAmountPence);
     when(absoluteUrlService.getAbsoluteUrl(ReverseRouter.route(on(ApplicationPaymentController.class)
         .getStartPayment(APPLICATION_ID)))).thenReturn(absoluteGetStartPaymentUrl);
 
@@ -147,7 +149,8 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
         .andExpect(model().attribute("applicationReference", applicationReference))
         .andExpect(model().attribute("applicationContextJson", applicationContextJson))
         .andExpect(model().attribute("paymentDescription", paymentDescription))
-        .andExpect(model().attribute("formattedPaymentAmount", DecimalFormatUtils.formatMoney(1D)))
+        .andExpect(model().attribute("formattedPaymentAmount",
+            DecimalFormatUtils.formatMoney((double) paymentAmountPence / 100)))
         .andExpect(model().attribute("startPaymentUrl", ReverseRouter.route(on(ApplicationPaymentController.class)
             .startPayment(APPLICATION_ID, null))))
         .andExpect(model().attribute("returnToInProgressUrl", ReverseRouter.route(on(ApplicationPaymentController.class)

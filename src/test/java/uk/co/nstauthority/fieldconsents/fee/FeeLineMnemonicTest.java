@@ -16,7 +16,7 @@ class FeeLineMnemonicTest {
 
   @ParameterizedTest
   @MethodSource("getFromArguments")
-  void from(
+  void from_withString(
       AssetType assetType,
       ApplicationType applicationType,
       ConsentLengthType consentLengthType,
@@ -27,6 +27,27 @@ class FeeLineMnemonicTest {
     assertThat(FeeLineMnemonic.from(mnemonic)).isEqualTo(
         new FeeLineMnemonic(
             mnemonic,
+            assetType,
+            applicationType,
+            consentLengthType,
+            consentRevisionType
+        )
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource("getFromArguments")
+  void from_withAssetTypeAndApplicationTypeAndConsentLengthTypeAndConsentRevisionType(
+      AssetType assetType,
+      ApplicationType applicationType,
+      ConsentLengthType consentLengthType,
+      ConsentRevisionType consentRevisionType
+  ) {
+    var mnemonic = FeeLineMnemonic.from(assetType, applicationType, consentLengthType, consentRevisionType);
+
+    assertThat(mnemonic).isEqualTo(
+        new FeeLineMnemonic(
+            "%s/%s/%s/%s".formatted(assetType, applicationType, consentLengthType, consentRevisionType),
             assetType,
             applicationType,
             consentLengthType,

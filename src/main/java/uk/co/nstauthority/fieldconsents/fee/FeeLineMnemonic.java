@@ -33,6 +33,17 @@ public record FeeLineMnemonic(
     );
   }
 
+  public static FeeLineMnemonic from(
+      AssetType assetType,
+      ApplicationType applicationType,
+      ConsentLengthType consentLengthType,
+      ConsentRevisionType consentRevisionType
+  ) {
+    var mnemonic = "%s/%s/%s/%s".formatted(assetType, applicationType, consentLengthType, consentRevisionType);
+
+    return new FeeLineMnemonic(mnemonic, assetType, applicationType, consentLengthType, consentRevisionType);
+  }
+
   @Override
   public int compareTo(@NotNull FeeLineMnemonic mnemonic) {
     return COMPARATOR.compare(this, mnemonic);

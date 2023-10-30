@@ -9,6 +9,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.digitalpaymentslibrary.fee.FeePeriodService;
 import uk.co.fivium.digitalpaymentslibrary.payment.CreateCardPaymentResult;
 import uk.co.fivium.digitalpaymentslibrary.payment.PaymentService;
 import uk.co.fivium.digitalpaymentslibrary.payment.PaymentStatus;
@@ -18,10 +19,12 @@ import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
+import uk.co.nstauthority.fieldconsents.application.consentrevision.ConsentRevisionType;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.fee.FeeLineMnemonic;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 
 @Service
@@ -36,6 +39,7 @@ public class ApplicationPaymentService {
   private final FieldService fieldService;
   private final TerminalService terminalService;
   private final PaymentService paymentService;
+  private final FeePeriodService feePeriodService;
 
   @Autowired
   ApplicationPaymentService(
@@ -45,7 +49,8 @@ public class ApplicationPaymentService {
       OrganisationUnitService organisationUnitService,
       FieldService fieldService,
       TerminalService terminalService,
-      PaymentService paymentService
+      PaymentService paymentService,
+      FeePeriodService feePeriodService
   ) {
     this.applicationService = applicationService;
     this.applicationAssetService = applicationAssetService;
@@ -54,6 +59,22 @@ public class ApplicationPaymentService {
     this.fieldService = fieldService;
     this.terminalService = terminalService;
     this.paymentService = paymentService;
+    this.feePeriodService = feePeriodService;
+  }
+
+  int getPaymentAmountPence(ApplicationVersion applicationVersion) {
+    var primaryAsset = applicationAssetService.getPrimaryAsset(applicationVersion);
+    var application = applicationVersion.getApplication();
+    var consentLength = consentLengthService.getConsentLengthDetails(applicationVersion).getConsentLength();
+
+    var mnemonic = FeeLineMnemonic.from(
+        applicationAssetService.getAssetType(primaryAsset),
+        application.getType(),
+        consentLength,
+        ConsentRevisionType.from(application)
+    );
+
+    return feePeriodService.getCurrentCost(mnemonic.mnemonic());
   }
 
   CreateCardPaymentResult createPayment(
@@ -64,7 +85,7 @@ public class ApplicationPaymentService {
     return paymentService.createCardPayment(
         getPaymentItemReference(applicationVersion),
         APPLICATION_VERSION_PAYMENT_ITEM_TYPE,
-        100, // TODO FCS-369: Update when hooking in fee bands
+        getPaymentAmountPence(applicationVersion),
         getPaymentDescription(applicationVersion),
         getPaymentMetadata(applicationVersion),
         returnUrlFunction,

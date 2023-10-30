@@ -76,6 +76,7 @@ public class ApplicationPaymentController {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var applicationReference = applicationService.generateApplicationReference(applicationVersion);
     var applicationContextJson = applicationContextService.getApplicationContextJson(applicationVersion);
+    var paymentAmountPence = applicationPaymentService.getPaymentAmountPence(applicationVersion);
     var absoluteGetStartPaymentUrl = absoluteUrlService.getAbsoluteUrl(
         ReverseRouter.route(on(ApplicationPaymentController.class).getStartPayment(applicationId)));
     var sharePaymentMailToLink = ("mailto:?subject=Pay %s for %s application %s&body=Please use this link to pay the" +
@@ -93,7 +94,7 @@ public class ApplicationPaymentController {
         .addObject("applicationReference", applicationReference)
         .addObject("applicationContextJson", applicationContextJson)
         .addObject("paymentDescription", applicationPaymentService.getPaymentDescription(applicationVersion))
-        .addObject("formattedPaymentAmount", DecimalFormatUtils.formatMoney(1D))
+        .addObject("formattedPaymentAmount", DecimalFormatUtils.formatMoney((double) paymentAmountPence / 100))
         .addObject(
             "startPaymentUrl",
             ReverseRouter.route(on(ApplicationPaymentController.class).startPayment(applicationId, null))
