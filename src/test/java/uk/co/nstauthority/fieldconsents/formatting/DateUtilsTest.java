@@ -175,6 +175,14 @@ class DateUtilsTest {
     assertThat(DateUtils.datePickerStringToDate(dateTimeStr)).isEqualTo(LocalDate.of(year, month, day));
   }
 
+  @ParameterizedTest
+  @MethodSource("getValidDatePickerDateElements")
+  void dateToDatePickerString(int day, int month, int year) {
+    var date = LocalDate.of(year, month, day);
+
+    assertThat(DateUtils.dateToDatePickerString(date)).isEqualTo("%02d/%02d/%04d".formatted(day, month, year));
+  }
+
   private static Stream<Arguments> getValidDatePickerDateElements() {
     return Stream.of(
         Arguments.of(1, 2, 2023),
@@ -298,5 +306,19 @@ class DateUtilsTest {
     var expectedInstant = ZonedDateTime.of(year, month, day, hours, minutes, 0, 0, ZoneId.systemDefault()).toInstant();
 
     assertThat(DateUtils.datePickerWithTimeStringToInstant(dateTimeStr)).isEqualTo(expectedInstant);
+  }
+
+  @Test
+  void atEndOfDay() {
+    var date = LocalDate.now();
+
+    assertThat(DateUtils.atEndOfDay(date))
+        .hasYear(date.getYear())
+        .hasMonth(date.getMonth())
+        .hasDayOfMonth(date.getDayOfMonth())
+        .hasHour(23)
+        .hasMinute(59)
+        .hasSecond(59)
+        .hasNano(999_999_999);
   }
 }

@@ -314,7 +314,7 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
     var expectedNotificationBanner = NotificationBanner.builder()
         .withBannerType(NotificationBannerType.INFO)
         .withTitle("Payment not completed")
-        .withHeadingContent("You must pay for your application before it is submitted.")
+        .withHeadingContent("You must pay for your application before it is submitted")
         .build();
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationPaymentController.class)

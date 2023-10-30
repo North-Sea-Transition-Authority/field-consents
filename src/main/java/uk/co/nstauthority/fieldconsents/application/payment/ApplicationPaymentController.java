@@ -38,7 +38,7 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @Controller
-@RequestMapping("applications/{applicationId}/pay")
+@RequestMapping("/applications/{applicationId}/pay")
 public class ApplicationPaymentController {
 
   static final String APPLICATION_SUBMITTED_TITLE = "Application paid and submitted";
@@ -174,7 +174,7 @@ public class ApplicationPaymentController {
         NotificationBanner.builder()
             .withBannerType(NotificationBannerType.INFO)
             .withTitle("Payment not completed")
-            .withHeadingContent("You must pay for your application before it is submitted.")
+            .withHeadingContent("You must pay for your application before it is submitted")
             .build()
     );
 

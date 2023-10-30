@@ -20,6 +20,9 @@ INSERT INTO fcs.team_member_roles (wua_id, team_id, role) VALUES
     (53554, 1, 'CASE_MANAGER'),
     (53555, 1, 'CASE_MANAGER'),
     (53452, 1, 'CASE_MANAGER'),
+    (53696, 1, 'CONSENTS_AND_AUTHORISATIONS_MANAGER'), -- cam1@field-consents.co.uk
+    (53697, 1, 'CONSENTS_AND_AUTHORISATIONS_MANAGER'), -- cam2@field-consents.co.uk
+    (53698, 1, 'CONSENTS_AND_AUTHORISATIONS_MANAGER'), -- cam3@field-consents.co.uk
     (53512, 1, 'TECHNICAL_REVIEWER'),
     (53513, 1, 'TECHNICAL_REVIEWER'),
     (53514, 1, 'TECHNICAL_REVIEWER'),

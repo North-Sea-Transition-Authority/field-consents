@@ -4,6 +4,7 @@ import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePe
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_CASE_PROCESSING_DOCUMENTS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.GRANT_ROLES;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.MANAGE_ASSETS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.MANAGE_FEE_PERIODS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.MANAGE_INDUSTRY_TEAMS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS;
@@ -57,10 +58,23 @@ public enum RegulatorTeamRole implements TeamRole {
           MANAGE_ASSETS
       )
   ),
+  CONSENTS_AND_AUTHORISATIONS_MANAGER(
+      "Consents and authorisations manager",
+      "Can authorise consents and manage fee periods",
+      50,
+      EnumSet.of(
+          MANAGE_FEE_PERIODS,
+          VIEW_FCS_APPLICATIONS,
+          VIEW_FCS_CONSENTS,
+          VIEW_FCS_CASE_PROCESSING_DOCUMENTS,
+          EDIT_FCS_CASE_PROCESSING_DOCUMENTS,
+          MANAGE_ASSETS
+      )
+  ),
   TECHNICAL_REVIEWER(
       "Technical reviewer",
       "Can perform technical reviews and view all applications and consents",
-      50,
+      60,
       EnumSet.of(
           TECHNICAL_REVIEW_FCS_APPLICATIONS,
           VIEW_FCS_APPLICATIONS,
@@ -73,7 +87,7 @@ public enum RegulatorTeamRole implements TeamRole {
   VIEWER(
       "Viewer",
       "Can view all applications and consents",
-      60,
+      70,
       EnumSet.of(
           VIEW_FCS_APPLICATIONS,
           VIEW_FCS_CONSENTS,

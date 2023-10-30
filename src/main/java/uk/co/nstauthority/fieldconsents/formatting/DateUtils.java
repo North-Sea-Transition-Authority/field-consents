@@ -3,6 +3,7 @@ package uk.co.nstauthority.fieldconsents.formatting;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.Month;
 import java.time.Period;
 import java.time.YearMonth;
@@ -101,9 +102,12 @@ public class DateUtils {
     }
   }
 
-
   public static LocalDate datePickerStringToDate(String dateStr) {
     return LocalDate.parse(dateStr, DateTimeFormatter.ofPattern(DATE_PICKER_FORMAT));
+  }
+
+  public static String dateToDatePickerString(LocalDate date) {
+    return DateTimeFormatter.ofPattern(DATE_PICKER_FORMAT).format(date);
   }
 
   public static String constructDatePickerWithTimeString(String dateStr, String hoursStr, String minutesStr) {
@@ -127,5 +131,9 @@ public class DateUtils {
 
   public static Instant datePickerWithTimeStringToInstant(String dateTimeStr) {
     return datePickerWithTimeStringToDateTime(dateTimeStr).toInstant();
+  }
+
+  public static LocalDateTime atEndOfDay(LocalDate date) {
+    return LocalDateTime.of(date, LocalTime.MAX);
   }
 }
