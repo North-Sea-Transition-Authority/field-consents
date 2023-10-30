@@ -9,7 +9,7 @@ public class CaseNoteForm {
 
   private final StringInput caseNoteText;
 
-  private List<UploadedFileForm> caseNoteDocuments = new ArrayList<>();
+  private List<UploadedFileForm> documents = new ArrayList<>();
 
   public CaseNoteForm() {
     this.caseNoteText = new StringInput("caseNoteText", "the case note");
@@ -23,11 +23,11 @@ public class CaseNoteForm {
     this.caseNoteText.setInputValue(caseNoteText);
   }
 
-  public List<UploadedFileForm> getCaseNoteDocuments() {
-    return caseNoteDocuments;
+  public List<UploadedFileForm> getDocuments() {
+    return documents;
   }
 
-  public void setCaseNoteDocuments(List<UploadedFileForm> caseNoteDocuments) {
-    this.caseNoteDocuments = caseNoteDocuments;
+  public void setDocuments(List<UploadedFileForm> documents) {
+    this.documents = documents;
   }
 }

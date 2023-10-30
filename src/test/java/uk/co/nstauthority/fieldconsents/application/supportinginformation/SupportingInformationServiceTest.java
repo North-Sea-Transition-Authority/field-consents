@@ -125,7 +125,7 @@ class SupportingInformationServiceTest {
     supportingInformationService.saveSupportingInformation(applicationVersion, form);
 
     verify(supportingInformationRepository).deleteByApplicationVersion(applicationVersion);
-    verify(fieldConsentsFileService).saveDocuments(fileUsage, form.getSupportingDocuments());
+    verify(fieldConsentsFileService).saveDocuments(fileUsage, form.getDocuments());
     verify(supportingInformationRepository).save(supportingInformationCaptor.capture());
 
     assertThat(supportingInformationCaptor.getValue())
@@ -248,7 +248,7 @@ class SupportingInformationServiceTest {
   private SupportingInformationForm getSupportingInformationProductionForm() {
     SupportingInformationForm supportingInformationForm = new SupportingInformationForm();
     supportingInformationForm.setNotes(APPLICATION_NOTES);
-    supportingInformationForm.setSupportingDocuments(Collections.emptyList());
+    supportingInformationForm.setDocuments(Collections.emptyList());
     return supportingInformationForm;
   }
 

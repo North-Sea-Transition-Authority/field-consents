@@ -12,10 +12,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import uk.co.fivium.fileuploadlibrary.core.FileService;
 import uk.co.fivium.fileuploadlibrary.core.UploadedFile;
 import uk.co.fivium.fileuploadlibrary.fds.FileDeleteResponse;
+import uk.co.fivium.fileuploadlibrary.fds.FileUploadResponse;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.AccessibleByServiceUsers;
 
@@ -32,6 +34,14 @@ public class UnlinkedFileController {
   UnlinkedFileController(FileService fileService, FieldConsentsFileService fieldConsentsFileService) {
     this.fileService = fileService;
     this.fieldConsentsFileService = fieldConsentsFileService;
+  }
+
+  @PostMapping
+  public FileUploadResponse upload(MultipartFile file, ServiceUserDetail userDetail) {
+    return fileService.upload(builder -> builder
+        .withMultipartFile(file)
+        .withUploadedBy(userDetail.wuaId().toString())
+        .build());
   }
 
   @GetMapping("{fileId}")

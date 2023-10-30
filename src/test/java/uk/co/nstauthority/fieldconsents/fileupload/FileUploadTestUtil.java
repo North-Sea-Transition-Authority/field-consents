@@ -1,5 +1,7 @@
 package uk.co.nstauthority.fieldconsents.fileupload;
 
+import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
@@ -8,6 +10,8 @@ import java.util.UUID;
 import org.springframework.util.unit.DataSize;
 import uk.co.fivium.fileuploadlibrary.fds.FileUploadComponentAttributes;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
+import uk.co.nstauthority.fieldconsents.file.UnlinkedFileController;
+import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 public class FileUploadTestUtil {
 
@@ -17,10 +21,17 @@ public class FileUploadTestUtil {
   public static final String FILE_NAME_2 = "file_name_2.doc";
   public static final String FILE_DESCRIPTION_1 = "This is a description of the file_name_1";
   public static final String FILE_DESCRIPTION_2 = "This is a description of the file_name_2";
-  public static final String DOCUMENT_TYPE = "document-type";
   public static final String CONTENT_TYPE = "application/pdf";
-  public static final String APPLICATION_VERSION_USAGE_TYPE = "ApplicationVersion";
-  public static final String CASE_NOTE_USAGE_TYPE = "CaseNote";
+  public static final List<UploadedFileForm> EXISTING_DOCUMENTS = Collections.emptyList();
+  public static final FileUploadComponentAttributes FILE_UPLOAD_COMPONENT_ATTRIBUTES = FileUploadComponentAttributes.newBuilder()
+      .withPath("form.documents")
+      .withMaximumSize(DataSize.ofMegabytes(50))
+      .withAllowedExtensions(Set.of("pdf"))
+      .withUploadUrl(ReverseRouter.route(on(UnlinkedFileController.class).upload(null, null)))
+      .withDownloadUrl(ReverseRouter.route(on(UnlinkedFileController.class).download(null, null)))
+      .withDeleteUrl(ReverseRouter.route(on(UnlinkedFileController.class).delete(null, null)))
+      .withExistingFiles(EXISTING_DOCUMENTS)
+      .build();
 
   public static final List<UploadedFileForm> validDocumentForms =
       List.of(
@@ -51,6 +62,7 @@ public class FileUploadTestUtil {
 
   public static FileUploadComponentAttributes.Builder getFileUploadComponentAttributesBuilder() {
     return FileUploadComponentAttributes.newBuilder()
+        .withPath("form.documents")
         .withMaximumSize(DataSize.ofMegabytes(50))
         .withUploadUrl("/upload")
         .withDownloadUrl("/download")

@@ -1,8 +1,8 @@
 package uk.co.nstauthority.fieldconsents.application.supportinginformation;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature.ERAP_SUPPORTING_INFORMATION;
 
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
@@ -13,11 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.fivium.fileuploadlibrary.FileUploadLibraryUtils;
-import uk.co.fivium.fileuploadlibrary.fds.FileUploadComponentAttributes;
-import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
-import uk.co.nstauthority.fieldconsents.application.ApplicationType;
-import uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
@@ -74,9 +70,9 @@ public class SupportingInformationController {
 
     if (bindingResult.hasErrors()) {
       // TODO: https://jira.fivium.co.uk/browse/FDS-460
-      var descriptionsByFileId = FileUploadLibraryUtils.getFileDescriptionsByFileId(form.getSupportingDocuments());
-      form.setSupportingDocuments(fieldConsentsFileService.getUploadedFileForms(descriptionsByFileId.keySet()));
-      form.getSupportingDocuments().forEach(uploadedFileForm -> uploadedFileForm
+      var descriptionsByFileId = FileUploadLibraryUtils.getFileDescriptionsByFileId(form.getDocuments());
+      form.setDocuments(fieldConsentsFileService.getUploadedFileForms(descriptionsByFileId.keySet()));
+      form.getDocuments().forEach(uploadedFileForm -> uploadedFileForm
           .setFileDescription(descriptionsByFileId.get(uploadedFileForm.getFileId())));
       return getSupportingInformationModelAndView(applicationVersion, form);
     }
@@ -89,35 +85,20 @@ public class SupportingInformationController {
   private ModelAndView getSupportingInformationModelAndView(ApplicationVersion applicationVersion,
                                                             SupportingInformationForm form) {
     var applicationId = applicationVersion.getApplication().getId();
-    var modelAndView = new ModelAndView("fcs/application/supportingInformationForm");
+    var fileUploadAttributes = fieldConsentsFileService.fileUploadComponentAttributes(form.getDocuments());
     var applicationType = applicationService.getApplicationById(applicationId).getType();
+    var applicationTypeString = switch (applicationType) {
+      case VENT -> "venting";
+      case FLARE -> "flaring";
+      case PRODUCTION -> "production";
+    };
 
-    boolean erapInformationAllowed = ApplicationTypeFeature.ERAP_SUPPORTING_INFORMATION.allowed(applicationType);
-    if (erapInformationAllowed) {
-      modelAndView.addObject("applicationType", applicationType.equals(ApplicationType.FLARE) ? "flaring" : "venting");
-    }
-
-    modelAndView
+    return new ModelAndView("fcs/application/supportingInformationForm")
         .addObject("form", form)
-        .addObject("erapInformationAllowed", erapInformationAllowed)
+        .addObject("erapInformationAllowed", ERAP_SUPPORTING_INFORMATION.allowed(applicationType))
         .addObject("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId)))
-        .addObject("fileUploadAttributes", getFileAttributes(applicationVersion, form.getSupportingDocuments()));
-
-    return modelAndView;
-  }
-
-  private FileUploadComponentAttributes getFileAttributes(ApplicationVersion applicationVersion,
-                                                          List<UploadedFileForm> existingFiles) {
-    var controller = SupportingInformationDocumentController.class;
-    var applicationId = applicationVersion.getApplication().getId();
-
-    return fieldConsentsFileService.fileUploadComponentAttributesBuilder()
-        .withPath("form.supportingDocuments")
-        .withUploadUrl(ReverseRouter.route(on(controller).upload(applicationId, null, null)))
-        .withDownloadUrl(ReverseRouter.route(on(controller).download(applicationId, null)))
-        .withDeleteUrl(ReverseRouter.route(on(controller).delete(applicationId, null)))
-        .withExistingFiles(existingFiles)
-        .build();
+        .addObject("fileUploadAttributes", fileUploadAttributes)
+        .addObject("applicationType", applicationTypeString);
   }
 
 }

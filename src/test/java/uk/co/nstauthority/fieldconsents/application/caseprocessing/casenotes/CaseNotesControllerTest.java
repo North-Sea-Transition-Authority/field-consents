@@ -15,8 +15,10 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.REGULATOR_ADD_CASE_NOTE;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.EXISTING_DOCUMENTS;
 import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.FILE_ID;
 import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.FILE_NAME_1;
+import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.FILE_UPLOAD_COMPONENT_ATTRIBUTES;
 import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.getFileUploadComponentAttributesBuilder;
 import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.notificationBanner;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
@@ -65,14 +67,12 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
 
   private ApplicationVersion applicationVersion;
 
-  private FileUploadComponentAttributes.Builder fileUploadComponentAttributesBuilder;
+  private FileUploadComponentAttributes fileUploadComponentAttributes;
 
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
-    fileUploadComponentAttributesBuilder = getFileUploadComponentAttributesBuilder()
-        .withPath("form.caseNoteDocuments");
-
+    fileUploadComponentAttributes = getFileUploadComponentAttributesBuilder().build();
 
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
@@ -105,8 +105,8 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(DUMMY_APP_REF);
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(REGULATOR_ADD_CASE_NOTE));
-    when(fieldConsentsFileService.fileUploadComponentAttributesBuilder())
-        .thenReturn(fileUploadComponentAttributesBuilder);
+    when(fieldConsentsFileService.fileUploadComponentAttributes(EXISTING_DOCUMENTS))
+        .thenReturn(FILE_UPLOAD_COMPONENT_ATTRIBUTES);
 
     mockMvc.perform(get(ReverseRouter.route(on(CaseNotesController.class)
             .getNewCaseNote(APPLICATION_ID)))
@@ -127,8 +127,8 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(DUMMY_APP_REF);
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(REGULATOR_ADD_CASE_NOTE));
-    when(fieldConsentsFileService.fileUploadComponentAttributesBuilder())
-        .thenReturn(fileUploadComponentAttributesBuilder);
+    when(fieldConsentsFileService.fileUploadComponentAttributes(Collections.emptyList()))
+        .thenReturn(fileUploadComponentAttributes);
 
     mockMvc.perform(get(ReverseRouter.route(on(CaseNotesController.class)
             .getNewCaseNote(APPLICATION_ID)))
@@ -137,7 +137,7 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/application/addCaseNote"))
         .andExpect(model().attribute("applicationReference", DUMMY_APP_REF))
-        .andExpect(model().attribute("fileUploadAttributes", fileUploadComponentAttributesBuilder.build()))
+        .andExpect(model().attribute("fileUploadAttributes", fileUploadComponentAttributes))
         .andExpect(model().attribute("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
                 .caseProcessing(APPLICATION_ID, null, null))));
@@ -161,8 +161,8 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(applicationVersion);
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(REGULATOR_ADD_CASE_NOTE));
-    when(fieldConsentsFileService.fileUploadComponentAttributesBuilder())
-        .thenReturn(fileUploadComponentAttributesBuilder);
+    when(fieldConsentsFileService.fileUploadComponentAttributes(Collections.emptyList()))
+        .thenReturn(fileUploadComponentAttributes);
 
     doCallRealMethod().when(caseNoteFormValidator).validate(any(), any());
 
@@ -188,8 +188,8 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(applicationVersion);
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(REGULATOR_ADD_CASE_NOTE));
-    when(fieldConsentsFileService.fileUploadComponentAttributesBuilder())
-        .thenReturn(fileUploadComponentAttributesBuilder);
+    when(fieldConsentsFileService.fileUploadComponentAttributes(Collections.emptyList()))
+        .thenReturn(fileUploadComponentAttributes);
 
     doCallRealMethod().when(caseNoteFormValidator).validate(any(), any());
 
@@ -222,8 +222,8 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(applicationVersion);
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(REGULATOR_ADD_CASE_NOTE));
-    when(fieldConsentsFileService.fileUploadComponentAttributesBuilder())
-        .thenReturn(fileUploadComponentAttributesBuilder);
+    when(fieldConsentsFileService.fileUploadComponentAttributes(Collections.emptyList()))
+        .thenReturn(fileUploadComponentAttributes);
 
     doCallRealMethod().when(caseNoteFormValidator).validate(any(), any());
 

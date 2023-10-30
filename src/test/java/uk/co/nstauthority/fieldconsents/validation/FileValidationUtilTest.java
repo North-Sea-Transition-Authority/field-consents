@@ -15,11 +15,11 @@ class FileValidationUtilTest {
   void validateFilesHaveDescriptions_validForms() {
     var uploadedFileForms = FileUploadTestUtil.validDocumentForms;
     var supportingInformationForm = new SupportingInformationForm();
-    supportingInformationForm.setSupportingDocuments(uploadedFileForms);
+    supportingInformationForm.setDocuments(uploadedFileForms);
 
     var errors = new BeanPropertyBindingResult(supportingInformationForm, "form");
 
-    FileValidationUtil.validateFilesHaveDescriptions(uploadedFileForms, "supportingDocuments", errors);
+    FileValidationUtil.validateFilesHaveDescriptions(uploadedFileForms, "documents", errors);
 
     assertThat(errors.hasErrors()).isFalse();
   }
@@ -28,16 +28,16 @@ class FileValidationUtilTest {
   void validateFilesHaveDescriptions_noDescription() {
     var uploadedFileForms = FileUploadTestUtil.documentFormsWithMissingDescription;
     var supportingInformationForm = new SupportingInformationForm();
-    supportingInformationForm.setSupportingDocuments(uploadedFileForms);
+    supportingInformationForm.setDocuments(uploadedFileForms);
 
     var errors = new BeanPropertyBindingResult(supportingInformationForm, "form");
 
-    FileValidationUtil.validateFilesHaveDescriptions(uploadedFileForms, "supportingDocuments", errors);
+    FileValidationUtil.validateFilesHaveDescriptions(uploadedFileForms, "documents", errors);
 
     assertThat(errors.hasErrors()).isTrue();
     assertThat(ValidatorTestingUtil.getErrorsFieldsAndMessages(errors))
         .containsExactlyEntriesOf(Map.of(
-            "supportingDocuments[1].uploadedFileDescription", Collections.singletonList("Enter a file description")
+            "documents[1].uploadedFileDescription", Collections.singletonList("Enter a file description")
         ));
   }
 }

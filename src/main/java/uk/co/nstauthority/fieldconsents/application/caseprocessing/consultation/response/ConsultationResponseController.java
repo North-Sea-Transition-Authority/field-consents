@@ -3,7 +3,6 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.util.EnumSet;
-import java.util.List;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,10 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.fivium.fileuploadlibrary.FileUploadLibraryUtils;
-import uk.co.fivium.fileuploadlibrary.fds.FileUploadComponentAttributes;
-import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.fivium.formlibrary.input.StringInput;
-import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
@@ -33,7 +29,6 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
-import uk.co.nstauthority.fieldconsents.file.UnlinkedFileController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
@@ -126,11 +121,12 @@ public class ConsultationResponseController {
     var application = applicationVersion.getApplication();
     var applicationId = application.getId();
     var applicationReference = applicationService.generateApplicationReference(applicationVersion);
+    var fileUploadAttributes = fieldConsentsFileService.fileUploadComponentAttributes(form.documents());
 
     var modelAndView = new ModelAndView("fcs/application/consultation/responseForm")
         .addObject("pageTitle", PAGE_TITLE)
         .addObject("form", form)
-        .addObject("fileUploadAttributes", fileUploadComponentAttributes(application, consultation, form.documents()))
+        .addObject("fileUploadAttributes", fileUploadAttributes)
         .addObject("applicationReference", applicationReference)
         .addObject("habitatsRegsRadioOptions", EnumSet.allOf(HabitatsRegsResponseType.class))
         .addObject("consultationSummaryView", ConsultationRequestView.from(consultation))
@@ -144,21 +140,6 @@ public class ConsultationResponseController {
     }
 
     return modelAndView;
-  }
-
-  private FileUploadComponentAttributes fileUploadComponentAttributes(
-      Application application,
-      Consultation consultation,
-      List<UploadedFileForm> uploadedFileForms
-  ) {
-    return fieldConsentsFileService.fileUploadComponentAttributesBuilder()
-        .withPath("form.documents")
-        .withUploadUrl(ReverseRouter.route(on(ConsultationResponseDocumentController.class)
-            .upload(application.getId(), consultation.getId(), null, null)))
-        .withDownloadUrl(ReverseRouter.route(on(UnlinkedFileController.class).download(null, null)))
-        .withDeleteUrl(ReverseRouter.route(on(UnlinkedFileController.class).delete(null, null)))
-        .withExistingFiles(uploadedFileForms)
-        .build();
   }
 
 }

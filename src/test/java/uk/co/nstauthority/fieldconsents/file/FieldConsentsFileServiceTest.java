@@ -9,10 +9,12 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.file.FieldConsentsFileTestUtil.GENERIC_FILE_DESCRIPTION;
 import static uk.co.nstauthority.fieldconsents.file.FieldConsentsFileTestUtil.createUploadedFile;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
@@ -29,6 +31,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import org.springframework.util.unit.DataSize;
 import org.springframework.web.server.ResponseStatusException;
 import uk.co.fivium.fileuploadlibrary.FileUploadLibraryUtils;
 import uk.co.fivium.fileuploadlibrary.core.FileService;
@@ -37,6 +40,7 @@ import uk.co.fivium.fileuploadlibrary.core.UploadedFile;
 import uk.co.fivium.fileuploadlibrary.fds.FileUploadComponentAttributes;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @ExtendWith(MockitoExtension.class)
 class FieldConsentsFileServiceTest {
@@ -200,11 +204,25 @@ class FieldConsentsFileServiceTest {
   }
 
   @Test
-  void fileUploadComponentAttributesBuilder() {
-    var builder = FileUploadComponentAttributes.newBuilder();
-    when(fileService.getFileUploadAttributes()).thenReturn(builder);
+  void fileUploadComponentAttributes() {
+    when(fileService.getFileUploadAttributes()).thenReturn(FileUploadComponentAttributes.newBuilder()
+        .withMaximumSize(DataSize.ofMegabytes(1)));
 
-    assertThat(fieldConsentsFileService.fileUploadComponentAttributesBuilder()).isEqualTo(builder);
+    var uploadedFileForms = Collections.<UploadedFileForm>emptyList();
+    assertThat(fieldConsentsFileService.fileUploadComponentAttributes(uploadedFileForms))
+        .extracting(
+            FileUploadComponentAttributes::path,
+            FileUploadComponentAttributes::uploadUrl,
+            FileUploadComponentAttributes::downloadUrl,
+            FileUploadComponentAttributes::deleteUrl,
+            FileUploadComponentAttributes::existingFiles
+        ).containsExactly(
+            "form.documents",
+            ReverseRouter.route(on(UnlinkedFileController.class).upload(null, null)),
+            ReverseRouter.route(on(UnlinkedFileController.class).download(null, null)),
+            ReverseRouter.route(on(UnlinkedFileController.class).delete(null, null)),
+            uploadedFileForms
+        );
   }
 
   @Test

@@ -47,7 +47,7 @@ public class SupportingInformationService {
   @Transactional
   public void saveSupportingInformation(ApplicationVersion applicationVersion, SupportingInformationForm form) {
     supportingInformationRepository.deleteByApplicationVersion(applicationVersion);
-    fieldConsentsFileService.saveDocuments(getFileUsage(applicationVersion), form.getSupportingDocuments());
+    fieldConsentsFileService.saveDocuments(getFileUsage(applicationVersion), form.getDocuments());
     supportingInformationRepository.save(SupportingInformation.from(applicationVersion, form));
   }
 

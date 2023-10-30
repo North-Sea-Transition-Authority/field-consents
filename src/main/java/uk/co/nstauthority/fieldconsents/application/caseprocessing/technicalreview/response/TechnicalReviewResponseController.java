@@ -3,7 +3,6 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalrev
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWER_SUBMIT_REVIEW;
 
-import java.util.List;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,9 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.fivium.fileuploadlibrary.FileUploadLibraryUtils;
-import uk.co.fivium.fileuploadlibrary.fds.FileUploadComponentAttributes;
-import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
-import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
@@ -25,7 +21,6 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalrevi
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewResponseType;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewSummaryView;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.response.document.TechnicalReviewResponseDocumentController;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
@@ -113,6 +108,7 @@ public class TechnicalReviewResponseController {
                                        TechnicalReviewResponseForm form) {
     var applicationReference = applicationService.generateApplicationReference(applicationVersion);
     var applicationId = applicationVersion.getApplication().getId();
+    var fileUploadAttributes = fieldConsentsFileService.fileUploadComponentAttributes(form.documents());
     var backLinkUrl = ReverseRouter.route(on(ApplicationCaseProcessingController.class)
         .caseProcessing(applicationId, null, null));
 
@@ -125,28 +121,11 @@ public class TechnicalReviewResponseController {
         .addObject("backLinkUrl", backLinkUrl)
         .addObject("approveRadio", TechnicalReviewResponseType.APPROVE)
         .addObject("rejectRadio", TechnicalReviewResponseType.REJECT)
-        .addObject("fileUploadAttributes",
-            getFileAttributes(applicationVersion.getApplication(), technicalReview, form.documents()));
+        .addObject("fileUploadAttributes", fileUploadAttributes);
 
     applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView);
 
     return modelAndView;
-  }
-
-  private FileUploadComponentAttributes getFileAttributes(Application application,
-                                                          TechnicalReview technicalReview,
-                                                          List<UploadedFileForm> existingFiles) {
-    var controller = TechnicalReviewResponseDocumentController.class;
-    var applicationId = application.getId();
-    var technicalReviewId = technicalReview.getId();
-
-    return fieldConsentsFileService.fileUploadComponentAttributesBuilder()
-        .withPath("form.documents")
-        .withUploadUrl(ReverseRouter.route(on(controller).upload(applicationId, null, null)))
-        .withDownloadUrl(ReverseRouter.route(on(controller).download(applicationId, technicalReviewId, null)))
-        .withDeleteUrl(ReverseRouter.route(on(controller).delete(applicationId, technicalReviewId, null)))
-        .withExistingFiles(existingFiles)
-        .build();
   }
 
 }

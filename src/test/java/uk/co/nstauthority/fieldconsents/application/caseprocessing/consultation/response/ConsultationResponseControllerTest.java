@@ -16,6 +16,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.EXISTING_DOCUMENTS;
+import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.FILE_UPLOAD_COMPONENT_ATTRIBUTES;
 import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.notificationBanner;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
@@ -23,19 +25,14 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.util.unit.DataSize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.servlet.ModelAndView;
-import uk.co.fivium.fileuploadlibrary.fds.FileUploadComponentAttributes;
-import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
@@ -53,7 +50,6 @@ import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
-import uk.co.nstauthority.fieldconsents.file.UnlinkedFileController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
@@ -64,17 +60,6 @@ class ConsultationResponseControllerTest extends AbstractApplicationControllerTe
   private static final String APPLICATION_REFERENCE = "APPLICATION_REFERENCE";
   private static final String PAGE_TITLE = "Consultation response";
   private static final String VIEW_NAME = "fcs/application/consultation/responseForm";
-  private static final List<UploadedFileForm> EXISTING_DOCUMENTS = Collections.emptyList();
-  private static final FileUploadComponentAttributes.Builder FILE_UPLOAD_COMPONENT_ATTRIBUTES_BUILDER = FileUploadComponentAttributes.newBuilder()
-      .withMaximumSize(DataSize.ofMegabytes(50))
-      .withAllowedExtensions(Set.of("pdf"));
-  private static final FileUploadComponentAttributes FILE_UPLOAD_COMPONENT_ATTRIBUTES = FILE_UPLOAD_COMPONENT_ATTRIBUTES_BUILDER
-      .withPath("form.documents")
-      .withUploadUrl(ReverseRouter.route(on(ConsultationResponseDocumentController.class).upload(APPLICATION_ID, CONSULTATION_ID, null, null)))
-      .withDownloadUrl(ReverseRouter.route(on(UnlinkedFileController.class).download(null, null)))
-      .withDeleteUrl(ReverseRouter.route(on(UnlinkedFileController.class).delete(null, null)))
-      .withExistingFiles(EXISTING_DOCUMENTS)
-      .build();
 
   @MockBean
   private ApplicationService applicationService;
@@ -259,7 +244,7 @@ class ConsultationResponseControllerTest extends AbstractApplicationControllerTe
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(APPLICATION_REFERENCE);
     when(consultationService.getLatestOpenConsultation(application)).thenReturn(consultation);
     when(consultationService.requiresEiaRegsResponse(applicationVersion)).thenReturn(requiresEiaRegsResponse);
-    when(fieldConsentsFileService.fileUploadComponentAttributesBuilder()).thenReturn(FILE_UPLOAD_COMPONENT_ATTRIBUTES_BUILDER);
+    when(fieldConsentsFileService.fileUploadComponentAttributes(EXISTING_DOCUMENTS)).thenReturn(FILE_UPLOAD_COMPONENT_ATTRIBUTES);
 
     doAnswer(invocation -> {
       addApplicationSummaryAttributes(invocation.getArgument(1, ModelAndView.class));

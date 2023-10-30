@@ -93,13 +93,13 @@ class SupportingInformationFormValidatorTest {
     form.setApplicationVersion(productionApplicationVersion);
     form.setNotes("Test notes");
 
-    form.setSupportingDocuments(FileUploadTestUtil.documentFormsWithMissingDescription);
+    form.setDocuments(FileUploadTestUtil.documentFormsWithMissingDescription);
 
     ValidationUtils.invokeValidator(validator, form, errors);
 
     assertThat(ValidatorTestingUtil.getErrorsFieldsAndMessages(errors))
         .containsExactlyEntriesOf(Map.of(
-            "supportingDocuments[1].uploadedFileDescription", Collections.singletonList("Enter a file description")
+            "documents[1].uploadedFileDescription", Collections.singletonList("Enter a file description")
         ));
   }
 }

@@ -17,6 +17,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWER_SUBMIT_REVIEW;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.FILE_UPLOAD_COMPONENT_ATTRIBUTES;
 import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.notificationBanner;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
@@ -32,10 +33,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.util.unit.DataSize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.servlet.ModelAndView;
-import uk.co.fivium.fileuploadlibrary.fds.FileUploadComponentAttributes;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
@@ -46,7 +45,6 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalrevi
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewResponseType;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewSummaryView;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.response.document.TechnicalReviewResponseDocumentController;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
@@ -59,7 +57,6 @@ import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 class TechnicalReviewResponseControllerTest extends AbstractApplicationControllerTest {
 
   private static final Instant NOW = Instant.now();
-  private static final FileUploadComponentAttributes.Builder DEFAULT_FILE_ATTRIBUTES_BUILDER = FileUploadComponentAttributes.newBuilder().withMaximumSize(DataSize.ofMegabytes(1));
 
   private static final String VIEW_NAME = "fcs/application/review/technicalReviewResponse";
   private static final Class<TechnicalReviewResponseController> CONTROLLER_CLASS = TechnicalReviewResponseController.class;
@@ -126,15 +123,6 @@ class TechnicalReviewResponseControllerTest extends AbstractApplicationControlle
   void getForm() throws Exception {
     mockGetFormInteractions();
 
-    var fileUploadAttributes = DEFAULT_FILE_ATTRIBUTES_BUILDER
-        .withPath("form.documents")
-        .withUploadUrl(ReverseRouter.route(on(TechnicalReviewResponseDocumentController.class).upload(APPLICATION_ID, null, null)))
-        .withDownloadUrl(ReverseRouter.route(on(TechnicalReviewResponseDocumentController.class).download(APPLICATION_ID, TECHNICAL_REVIEW_ID, null)))
-        .withDeleteUrl(ReverseRouter.route(on(TechnicalReviewResponseDocumentController.class).delete(APPLICATION_ID, TECHNICAL_REVIEW_ID, null)))
-        .withMaximumSize(DataSize.ofMegabytes(1))
-        .withExistingFiles(Collections.emptyList())
-        .build();
-
     var model = mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
             .getForm(APPLICATION_ID)))
             .with(user(user))
@@ -151,7 +139,7 @@ class TechnicalReviewResponseControllerTest extends AbstractApplicationControlle
             "backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class).caseProcessing(APPLICATION_ID, null, null)),
             "approveRadio", TechnicalReviewResponseType.APPROVE,
             "rejectRadio", TechnicalReviewResponseType.REJECT,
-            "fileUploadAttributes", fileUploadAttributes,
+            "fileUploadAttributes", FILE_UPLOAD_COMPONENT_ATTRIBUTES,
             "summarySections", Collections.emptyList(),
             "accordionId", applicationVersion.getId(),
             "wideSummaryDisplay", false,
@@ -255,7 +243,7 @@ class TechnicalReviewResponseControllerTest extends AbstractApplicationControlle
   private void mockGetFormInteractions() {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(technicalReviewService.getOpenTechnicalReview(applicationVersion)).thenReturn(technicalReview);
-    when(fieldConsentsFileService.fileUploadComponentAttributesBuilder()).thenReturn(DEFAULT_FILE_ATTRIBUTES_BUILDER);
+    when(fieldConsentsFileService.fileUploadComponentAttributes(Collections.emptyList())).thenReturn(FILE_UPLOAD_COMPONENT_ATTRIBUTES);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(APPLICATION_REFERENCE);
     doAnswer(invocation -> {
       addTechnicalReviewAttributes(invocation.getArgument(1, ModelAndView.class));

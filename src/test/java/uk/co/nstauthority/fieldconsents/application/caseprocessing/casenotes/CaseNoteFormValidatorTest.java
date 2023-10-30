@@ -63,13 +63,13 @@ class CaseNoteFormValidatorTest {
   @Test
   void validate_form_hasFilesWithNoDescriptions() {
     form.setCaseNoteText("Test note");
-    form.setCaseNoteDocuments(FileUploadTestUtil.documentFormsWithMissingDescription);
+    form.setDocuments(FileUploadTestUtil.documentFormsWithMissingDescription);
 
     ValidationUtils.invokeValidator(formValidator, form, errors);
 
     assertThat(ValidatorTestingUtil.getErrorsFieldsAndMessages(errors))
         .containsExactlyEntriesOf(Map.of(
-            "caseNoteDocuments[1].uploadedFileDescription", Collections.singletonList("Enter a file description")
+            "documents[1].uploadedFileDescription", Collections.singletonList("Enter a file description")
         ));
   }
 }

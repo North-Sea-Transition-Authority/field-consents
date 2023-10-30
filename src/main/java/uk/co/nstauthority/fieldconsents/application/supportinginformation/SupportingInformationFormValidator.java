@@ -29,10 +29,6 @@ public class SupportingInformationFormValidator implements Validator {
           .validate(form.getErapNotes(), errors);
     }
 
-    FileValidationUtil.validateFilesHaveDescriptions(
-        form.getSupportingDocuments(),
-        "supportingDocuments",
-        errors
-    );
+    FileValidationUtil.validateFilesHaveDescriptions(form.getDocuments(), "documents", errors);
   }
 }

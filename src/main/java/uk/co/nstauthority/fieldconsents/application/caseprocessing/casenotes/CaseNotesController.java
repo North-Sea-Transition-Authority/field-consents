@@ -3,7 +3,6 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.casenotes;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.REGULATOR_ADD_CASE_NOTE;
 
-import java.util.List;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,8 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.fivium.fileuploadlibrary.FileUploadLibraryUtils;
-import uk.co.fivium.fileuploadlibrary.fds.FileUploadComponentAttributes;
-import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
@@ -24,7 +21,6 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
-import uk.co.nstauthority.fieldconsents.file.UnlinkedFileController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @Controller
@@ -62,12 +58,13 @@ public class CaseNotesController {
   private ModelAndView getNewCaseNoteModelAndView(ApplicationVersion applicationVersion, CaseNoteForm form) {
     var applicationReference = applicationService.generateApplicationReference(applicationVersion);
     var applicationId = applicationVersion.getApplication().getId();
+    var fileUploadAttributes = fieldConsentsFileService.fileUploadComponentAttributes(form.getDocuments());
 
     return new ModelAndView("fcs/application/addCaseNote")
         .addObject("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class)
             .caseProcessing(applicationId, null, null)))
         .addObject("applicationReference", applicationReference)
-        .addObject("fileUploadAttributes", fileUploadComponentAttributes(applicationId, form.getCaseNoteDocuments()));
+        .addObject("fileUploadAttributes", fileUploadAttributes);
   }
 
   @PostMapping
@@ -83,11 +80,11 @@ public class CaseNotesController {
     caseNoteFormValidator.validate(form, bindingResult);
 
     if (bindingResult.hasErrors()) {
-      var descriptionsByFileId = FileUploadLibraryUtils.getFileDescriptionsByFileId(form.getCaseNoteDocuments());
+      var descriptionsByFileId = FileUploadLibraryUtils.getFileDescriptionsByFileId(form.getDocuments());
 
       // TODO: https://jira.fivium.co.uk/browse/FDS-460
-      form.setCaseNoteDocuments(fieldConsentsFileService.getUploadedFileForms(descriptionsByFileId.keySet()));
-      form.getCaseNoteDocuments().forEach(uploadedFileForm -> uploadedFileForm
+      form.setDocuments(fieldConsentsFileService.getUploadedFileForms(descriptionsByFileId.keySet()));
+      form.getDocuments().forEach(uploadedFileForm -> uploadedFileForm
           .setFileDescription(descriptionsByFileId.get(uploadedFileForm.getFileId())));
       return getNewCaseNoteModelAndView(applicationVersion, form);
     }
@@ -95,24 +92,13 @@ public class CaseNotesController {
     caseNotesService.saveCaseNote(
         applicationVersion,
         form.getCaseNoteText().getInputValue(),
-        form.getCaseNoteDocuments(),
+        form.getDocuments(),
         user
     );
     NotificationBannerUtil.addSuccessNotification(redirectAttributes, "New case note added");
 
     return ReverseRouter
         .redirect(on(ApplicationCaseProcessingController.class).caseProcessing(applicationId, null, null));
-  }
-
-  private FileUploadComponentAttributes fileUploadComponentAttributes(Integer applicationId,
-                                                                      List<UploadedFileForm> uploadedFileForms) {
-    return fieldConsentsFileService.fileUploadComponentAttributesBuilder()
-        .withPath("form.caseNoteDocuments")
-        .withUploadUrl(ReverseRouter.route(on(CaseNotesDocumentController.class).upload(applicationId, null, null)))
-        .withDownloadUrl(ReverseRouter.route(on(UnlinkedFileController.class).download(null, null)))
-        .withDeleteUrl(ReverseRouter.route(on(UnlinkedFileController.class).delete(null, null)))
-        .withExistingFiles(uploadedFileForms)
-        .build();
   }
 
 }

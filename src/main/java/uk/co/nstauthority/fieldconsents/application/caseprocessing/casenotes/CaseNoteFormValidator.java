@@ -21,12 +21,8 @@ public class CaseNoteFormValidator implements Validator {
     StringInputValidator.builder()
         .validate(form.getCaseNoteText(), errors);
 
-    if (!form.getCaseNoteDocuments().isEmpty()) {
-      FileValidationUtil.validateFilesHaveDescriptions(
-          form.getCaseNoteDocuments(),
-          "caseNoteDocuments",
-          errors
-      );
+    if (!form.getDocuments().isEmpty()) {
+      FileValidationUtil.validateFilesHaveDescriptions(form.getDocuments(), "documents", errors);
     }
   }
 }

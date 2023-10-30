@@ -16,7 +16,7 @@ public class SupportingInformationForm {
 
   private ApplicationVersion applicationVersion;
 
-  private List<UploadedFileForm> supportingDocuments = new ArrayList<>();
+  private List<UploadedFileForm> documents = new ArrayList<>();
 
   public SupportingInformationForm() {
     this.notes = new StringInput("notes", "notes");
@@ -47,22 +47,22 @@ public class SupportingInformationForm {
     this.applicationVersion = applicationVersion;
   }
 
-  public List<UploadedFileForm> getSupportingDocuments() {
-    return supportingDocuments;
+  public List<UploadedFileForm> getDocuments() {
+    return documents;
   }
 
-  public void setSupportingDocuments(List<UploadedFileForm> supportingDocuments) {
-    this.supportingDocuments = supportingDocuments;
+  public void setDocuments(List<UploadedFileForm> documents) {
+    this.documents = documents;
   }
 
   public static SupportingInformationForm from(SupportingInformation supportingInformation, List<UploadedFile> files) {
-    SupportingInformationForm form = new SupportingInformationForm();
+    var form = new SupportingInformationForm();
 
     form.setNotes(supportingInformation.getNotes());
     form.setErapNotes(supportingInformation.getErapNotes());
 
     var fileForms = files.stream().map(FileUploadLibraryUtils::asForm).toList();
-    form.setSupportingDocuments(fileForms);
+    form.setDocuments(fileForms);
 
     return form;
   }
