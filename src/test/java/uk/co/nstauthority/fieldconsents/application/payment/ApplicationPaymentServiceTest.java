@@ -4,6 +4,7 @@ import static java.util.Map.entry;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -435,5 +436,42 @@ class ApplicationPaymentServiceTest {
     doReturn(paymentItemReference).when(applicationPaymentService).getPaymentItemReference(applicationVersion);
 
     assertThat(applicationPaymentService.isPaymentForApplicationVersion(paymentId, applicationVersion)).isTrue();
+  }
+
+  @Test
+  void getAndRefreshPayments() {
+    var applicationVersion = new ApplicationVersion();
+
+    var paymentItemReference = "testPaymentItemReference";
+
+    var payment1 = mock(Payment.class);
+    var payment2 = mock(Payment.class);
+    var payments = List.of(payment1, payment2);
+
+    doReturn(paymentItemReference).when(applicationPaymentService).getPaymentItemReference(applicationVersion);
+
+    when(paymentService.getPayments(paymentItemReference, ApplicationPaymentService.APPLICATION_VERSION_PAYMENT_ITEM_TYPE))
+        .thenReturn(payments);
+
+    when(payment1.isGovUkPayStateFinished()).thenReturn(true);
+    when(payment2.isGovUkPayStateFinished()).thenReturn(false);
+
+    assertThat(applicationPaymentService.getAndRefreshPayments(applicationVersion)).isEqualTo(payments);
+
+    verify(paymentService).refreshPayment(payment2);
+  }
+
+  @Test
+  void cancelUnfinishedPayments() {
+    var payment1 = mock(Payment.class);
+    var payment2 = mock(Payment.class);
+    var payments = List.of(payment1, payment2);
+
+    when(payment1.isGovUkPayStateFinished()).thenReturn(true);
+    when(payment2.isGovUkPayStateFinished()).thenReturn(false);
+
+    applicationPaymentService.cancelUnfinishedPayments(payments);
+
+    verify(paymentService).cancelPayment(payment2);
   }
 }

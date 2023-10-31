@@ -3,6 +3,7 @@ package uk.co.nstauthority.fieldconsents.application.payment;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -34,6 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.fivium.digitalpaymentslibrary.payment.CreateCardPaymentResult;
+import uk.co.fivium.digitalpaymentslibrary.payment.Payment;
 import uk.co.fivium.digitalpaymentslibrary.payment.PaymentStatus;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationContextJson;
@@ -154,7 +156,7 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
         .andExpect(model().attribute("startPaymentUrl", ReverseRouter.route(on(ApplicationPaymentController.class)
             .startPayment(APPLICATION_ID, null))))
         .andExpect(model().attribute("returnToInProgressUrl", ReverseRouter.route(on(ApplicationPaymentController.class)
-            .returnToInProgress(APPLICATION_ID))))
+            .returnToInProgress(APPLICATION_ID, null))))
         .andExpect(model().attribute("absoluteGetStartPaymentUrl", absoluteGetStartPaymentUrl))
         .andExpect(model().attribute("sharePaymentMailToLink", expectedSharePaymentMailToLink));
   }
@@ -229,7 +231,8 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
 
   @SecurityTest
   void returnToInProgress_noUser() throws Exception {
-    mockMvc.perform(post(ReverseRouter.route(on(ApplicationPaymentController.class).returnToInProgress(APPLICATION_ID)))
+    mockMvc.perform(post(ReverseRouter.route(on(ApplicationPaymentController.class)
+            .returnToInProgress(APPLICATION_ID, null)))
             .with(csrf()))
         .andExpect(redirectionToLoginUrl());
   }
@@ -240,23 +243,64 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of());
 
-    mockMvc.perform(post(ReverseRouter.route(on(ApplicationPaymentController.class).returnToInProgress(APPLICATION_ID)))
+    mockMvc.perform(post(ReverseRouter.route(on(ApplicationPaymentController.class)
+            .returnToInProgress(APPLICATION_ID, null)))
             .with(csrf())
             .with(user(user)))
         .andExpect(status().isForbidden());
   }
 
   @Test
-  void returnToInProgress() throws Exception {
+  void returnToInProgress_paymentExistsThatHasSucceeded() throws Exception {
+    var payment1 = mock(Payment.class);
+    var payment2 = mock(Payment.class);
+    var payments = List.of(payment1, payment2);
+
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT));
+    when(applicationPaymentService.getAndRefreshPayments(applicationVersion)).thenReturn(payments);
+    when(payment1.getGovUkPayStateStatus()).thenReturn("failed");
+    when(payment1.isGovUkPayStateFinished()).thenReturn(false);
+    when(payment2.getGovUkPayStateStatus()).thenReturn("success");
+    when(payment2.isGovUkPayStateFinished()).thenReturn(true);
 
-    mockMvc.perform(post(ReverseRouter.route(on(ApplicationPaymentController.class).returnToInProgress(APPLICATION_ID)))
+    mockMvc.perform(post(ReverseRouter.route(on(ApplicationPaymentController.class)
+            .returnToInProgress(APPLICATION_ID, null)))
             .with(csrf())
             .with(user(user)))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID))));
+        .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationPaymentController.class)
+            .getPaymentCompleted(APPLICATION_ID))));
 
+    verify(applicationService).submitApplication(applicationVersion, user);
+    verify(applicationPaymentService, never()).cancelUnfinishedPayments(any());
+    verify(applicationService, never()).returnApplicationToInProgressFromAwaitingPayment(any());
+  }
+
+  @Test
+  void returnToInProgress_noPaymentExistsThatHasSucceeded() throws Exception {
+    var payment1 = mock(Payment.class);
+    var payment2 = mock(Payment.class);
+    var payments = List.of(payment1, payment2);
+
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT));
+    when(applicationPaymentService.getAndRefreshPayments(applicationVersion)).thenReturn(payments);
+    when(payment1.getGovUkPayStateStatus()).thenReturn("failed");
+    when(payment1.isGovUkPayStateFinished()).thenReturn(false);
+    when(payment2.getGovUkPayStateStatus()).thenReturn("started");
+    when(payment2.isGovUkPayStateFinished()).thenReturn(true);
+
+    mockMvc.perform(post(ReverseRouter.route(on(ApplicationPaymentController.class)
+            .returnToInProgress(APPLICATION_ID, null)))
+            .with(csrf())
+            .with(user(user)))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationTaskListController.class)
+            .getTaskList(APPLICATION_ID))));
+
+    verify(applicationService, never()).submitApplication(any(), any());
+    verify(applicationPaymentService).cancelUnfinishedPayments(payments);
     verify(applicationService).returnApplicationToInProgressFromAwaitingPayment(applicationVersion);
   }
 

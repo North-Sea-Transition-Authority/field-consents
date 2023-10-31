@@ -6,6 +6,8 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 
 import java.util.UUID;
 import java.util.function.Function;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -42,6 +44,8 @@ import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 public class ApplicationPaymentController {
 
   static final String APPLICATION_SUBMITTED_TITLE = "Application paid and submitted";
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationPaymentController.class);
 
   private final ApplicationService applicationService;
   private final ApplicationVersionService applicationVersionService;
@@ -101,7 +105,7 @@ public class ApplicationPaymentController {
         )
         .addObject(
             "returnToInProgressUrl",
-            ReverseRouter.route(on(ApplicationPaymentController.class).returnToInProgress(applicationId))
+            ReverseRouter.route(on(ApplicationPaymentController.class).returnToInProgress(applicationId, null))
         )
         .addObject("absoluteGetStartPaymentUrl", absoluteGetStartPaymentUrl)
         .addObject("sharePaymentMailToLink", sharePaymentMailToLink);
@@ -121,6 +125,11 @@ public class ApplicationPaymentController {
 
     switch (status) {
       case PAYMENT_ALREADY_COMPLETED -> {
+        LOGGER.info(
+            "Received status already completed when creating payment for application {}, submitting application",
+            applicationId
+        );
+
         applicationService.submitApplication(applicationVersion, user);
 
         return ReverseRouter.redirect(on(ApplicationPaymentController.class).getPaymentCompleted(applicationId));
@@ -137,8 +146,23 @@ public class ApplicationPaymentController {
 
   @PostMapping("/return-to-in-progress")
   @ActionEndPoint(OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT)
-  public ModelAndView returnToInProgress(@PathVariable Integer applicationId) {
+  public ModelAndView returnToInProgress(@PathVariable Integer applicationId, ServiceUserDetail user) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
+
+    var payments = applicationPaymentService.getAndRefreshPayments(applicationVersion);
+
+    if (payments.stream().anyMatch(payment -> PaymentStatus.fromPayment(payment) == PaymentStatus.SUCCESS)) {
+      LOGGER.info(
+          "Found completed payment before returning application {} to in progress, submitting application",
+          applicationId
+      );
+
+      applicationService.submitApplication(applicationVersion, user);
+
+      return ReverseRouter.redirect(on(ApplicationPaymentController.class).getPaymentCompleted(applicationId));
+    }
+
+    applicationPaymentService.cancelUnfinishedPayments(payments);
 
     applicationService.returnApplicationToInProgressFromAwaitingPayment(applicationVersion);
 

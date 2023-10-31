@@ -55,7 +55,7 @@ dependencies {
   implementation 'uk.co.fivium.energyportalapi:client:v6.0.1'
   implementation 'uk.co.fivium.digitalformlibrary:digital-form-library:develop-SNAPSHOT'
   implementation "uk.co.fivium:file-upload-spring-boot-starter:v1.1.0"
-  implementation 'uk.co.fivium:digital-payments-library-spring-boot-starter:FCS-97-rename-payment-period-and-payment-line-to-fee-period-and-fee-line-SNAPSHOT' // TODO FCS-464: Update to release version
+  implementation 'uk.co.fivium:digital-payments-library-spring-boot-starter:FCS-498-use-payment-status-enum-for-checking-if-a-payment-has-succeeded-SNAPSHOT' // TODO FCS-464: Update to release version
 
   implementation 'org.springframework.boot:spring-boot-starter-jooq'
   implementation 'org.jooq:jooq-codegen'

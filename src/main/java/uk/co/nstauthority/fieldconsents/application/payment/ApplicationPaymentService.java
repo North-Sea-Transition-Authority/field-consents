@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.application.payment;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -11,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.digitalpaymentslibrary.fee.FeePeriodService;
 import uk.co.fivium.digitalpaymentslibrary.payment.CreateCardPaymentResult;
+import uk.co.fivium.digitalpaymentslibrary.payment.Payment;
 import uk.co.fivium.digitalpaymentslibrary.payment.PaymentService;
 import uk.co.fivium.digitalpaymentslibrary.payment.PaymentStatus;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
@@ -193,5 +195,24 @@ public class ApplicationPaymentService {
 
   PaymentStatus handlePaymentProcessed(UUID paymentId) {
     return paymentService.processPaymentCallback(paymentId);
+  }
+
+  List<Payment> getAndRefreshPayments(ApplicationVersion applicationVersion) {
+    var payments = paymentService.getPayments(
+        getPaymentItemReference(applicationVersion),
+        APPLICATION_VERSION_PAYMENT_ITEM_TYPE
+    );
+
+    payments.stream()
+        .filter(payment -> !payment.isGovUkPayStateFinished())
+        .forEach(paymentService::refreshPayment);
+
+    return payments;
+  }
+
+  void cancelUnfinishedPayments(List<Payment> payments) {
+    payments.stream()
+        .filter(payment -> !payment.isGovUkPayStateFinished())
+        .forEach(paymentService::cancelPayment);
   }
 }

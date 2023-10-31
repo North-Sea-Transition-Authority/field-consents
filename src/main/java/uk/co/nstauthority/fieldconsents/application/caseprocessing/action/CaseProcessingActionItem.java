@@ -68,7 +68,7 @@ public enum CaseProcessingActionItem implements Displayable {
           .getStartPayment(applicationId))),
   OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT("Edit application", 2, false, false,
       applicationId -> ReverseRouter.route(on(ApplicationPaymentController.class)
-          .returnToInProgress(applicationId)), null),
+          .returnToInProgress(applicationId, null)), null),
   OPERATOR_WITHDRAWAL_REQUEST("Request withdrawal", 1, false, true, null,
       applicationId -> ReverseRouter.route(on(ApplicationWithdrawalController.class)
           .getApplicationWithdrawalRequest(applicationId))),
