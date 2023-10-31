@@ -58,13 +58,13 @@ class FeePeriodBootstrapServiceTest {
         new FeeLineDto("FIELD/VENT/ANNUAL/NEW_CONSENT", "Field Vent Annual Consent New Consent", 930 * 100),
         new FeeLineDto("FIELD/VENT/ANNUAL/REVISION", "Field Vent Annual Consent Revision", 930 * 100),
         new FeeLineDto("TERMINAL/FLARE/SHORT_TERM/NEW_CONSENT", "Facility Flare Short Term Consent New Consent", 390 * 100),
-        new FeeLineDto("TERMINAL/FLARE/SHORT_TERM/REVISION", "Facility Flare Short Term Consent Revision", 390 * 100),
+        new FeeLineDto("TERMINAL/FLARE/SHORT_TERM/REVISION", "Facility Flare Short Term Consent Revision", 0),
         new FeeLineDto("TERMINAL/FLARE/ANNUAL/NEW_CONSENT", "Facility Flare Annual Consent New Consent", 390 * 100),
-        new FeeLineDto("TERMINAL/FLARE/ANNUAL/REVISION", "Facility Flare Annual Consent Revision", 390 * 100),
+        new FeeLineDto("TERMINAL/FLARE/ANNUAL/REVISION", "Facility Flare Annual Consent Revision", 0),
         new FeeLineDto("TERMINAL/VENT/SHORT_TERM/NEW_CONSENT", "Facility Vent Short Term Consent New Consent", 390 * 100),
-        new FeeLineDto("TERMINAL/VENT/SHORT_TERM/REVISION", "Facility Vent Short Term Consent Revision", 390 * 100),
+        new FeeLineDto("TERMINAL/VENT/SHORT_TERM/REVISION", "Facility Vent Short Term Consent Revision", 0),
         new FeeLineDto("TERMINAL/VENT/ANNUAL/NEW_CONSENT", "Facility Vent Annual Consent New Consent", 390 * 100),
-        new FeeLineDto("TERMINAL/VENT/ANNUAL/REVISION", "Facility Vent Annual Consent Revision", 390 * 100)
+        new FeeLineDto("TERMINAL/VENT/ANNUAL/REVISION", "Facility Vent Annual Consent Revision", 0)
     );
 
     verify(feePeriodService).createFeePeriod(LocalDate.of(2023, 4, 1), expectedFeeLineDtos, null);
