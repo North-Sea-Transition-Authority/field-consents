@@ -31,9 +31,9 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionRepository;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateController;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateRequestForm;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateRequestFormValidator;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestForm;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestFormValidator;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
@@ -69,7 +69,7 @@ class WorkAreaApplicationUpdateDeadlineTest extends AbstractIntegrationTest {
   private OrganisationUnitService organisationUnitService;
 
   @Autowired
-  private ApplicationUpdateController applicationUpdateController;
+  private ApplicationUpdateRequestController applicationUpdateRequestController;
 
   @Autowired
   private WorkAreaController workAreaController;
@@ -183,7 +183,7 @@ class WorkAreaApplicationUpdateDeadlineTest extends AbstractIntegrationTest {
     form.setDeadlineMinutes(deadline.format(ofPattern("mm")));
     form.getRequestText().setInputValue("comment");
 
-    applicationUpdateController.sendApplicationUpdateRequest(
+    applicationUpdateRequestController.sendApplicationUpdateRequest(
         applicationVersion.getApplication().getId(),
         form,
         new BeanPropertyBindingResult(form, "form"),

@@ -20,7 +20,6 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casest
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_CONSULTATION_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_TECHNICAL_REVIEW_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_WITHDRAWAL_OPEN;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.TECHNICAL_REVIEWS_PAGE_ENABLED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.TECHNICAL_REVIEW_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.WITHDRAWAL_OPEN;
 
@@ -213,7 +212,7 @@ class CaseStatusFlagServiceTest {
 
   @Test
   void getDefaultFlags() {
-    assertThat(caseStatusFlagService.getDefaultFlags()).containsExactlyInAnyOrder(CASE_NOTES_ALLOWED, TECHNICAL_REVIEWS_PAGE_ENABLED);
+    assertThat(caseStatusFlagService.getDefaultFlags()).containsExactlyInAnyOrder(CASE_NOTES_ALLOWED);
   }
 
   @Test

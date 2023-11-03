@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.application.caseprocessing.update;
+package uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request;
 
 public record ApplicationUpdateRequestView(
     String requestedByUser,

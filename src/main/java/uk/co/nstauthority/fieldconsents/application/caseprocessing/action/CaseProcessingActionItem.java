@@ -6,6 +6,7 @@ import java.util.function.Function;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.aceflag.AceFlagController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casenotes.CaseNotesController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.allocation.ConsultationAllocationController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.request.FurtherInformationRequestController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.response.FurtherInformationResponseController;
@@ -16,6 +17,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalrevi
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.response.TechnicalReviewResponseController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationStartUpdateController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalController;
 import uk.co.nstauthority.fieldconsents.application.payment.ApplicationPaymentController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -32,7 +34,7 @@ public enum CaseProcessingActionItem implements Displayable {
   CASE_OFFICER_RELEASE_OWNERSHIP("Release ownership", 2, true, false,
       applicationId -> ReverseRouter.route(on(CaseAssignmentController.class)
           .releaseOwnershipCaseOfficer(applicationId, null, null)), null),
-  CASE_OFFICER_WITHDRAWAL_RESPONSE("Respond to withdrawal", 3, true, false, null,
+  CASE_OFFICER_WITHDRAWAL_RESPONSE("Respond to withdrawal", 1, true, true, null,
       applicationId -> ReverseRouter.route(on(ApplicationWithdrawalController.class)
           .getApplicationWithdrawalResponse(applicationId))),
   TECHNICAL_REVIEW_REQUEST("Request technical review", 5, true, false, null,
@@ -42,13 +44,19 @@ public enum CaseProcessingActionItem implements Displayable {
   CASE_OFFICER_ASSIGN_OWNERSHIP("Assign ownership", 1, false, true, null,
       applicationId -> ReverseRouter.route(on(CaseAssignmentController.class)
           .getCaseAssignment(applicationId, null))),
-  CASE_OFFICER_REASSIGN_OWNERSHIP("Reassign ownership", 1, false, true, null,
+  CASE_OFFICER_REASSIGN_OWNERSHIP("Reassign ownership", 1, false, false, null,
       applicationId -> ReverseRouter.route(on(CaseAssignmentController.class)
           .getCaseAssignment(applicationId, null))),
   // Regulator user actions
   TECHNICAL_REVIEWS("Technical reviews", 4, false, false, null,
       applicationId -> ReverseRouter.route(on(TechnicalReviewController.class)
-          .getTechnicalReviews(applicationId))),
+          .getTechnicalReviews(applicationId, null))),
+  CONSULTATIONS("Consultations", 5, false, false, null,
+      applicationId -> ReverseRouter.route(on(ConsultationController.class)
+          .getConsultations(applicationId, null))),
+  APPLICATION_UPDATES("Application updates", 6, false, false, null,
+      applicationId -> ReverseRouter.route(on(ApplicationUpdateController.class)
+          .getApplicationUpdates(applicationId, null))),
   REGULATOR_ADD_CASE_NOTE("Add case note", 99, false, false, null,
       applicationId -> ReverseRouter.route(on(CaseNotesController.class)
           .getNewCaseNote(applicationId))),
@@ -60,7 +68,7 @@ public enum CaseProcessingActionItem implements Displayable {
           .getTechnicalReviewAssignment(applicationId, null))),
   // Case officer and Technical reviewer actions
   APPLICATION_UPDATE_REQUEST("Request application update", 6, true, false, null,
-      applicationId -> ReverseRouter.route(on(ApplicationUpdateController.class)
+      applicationId -> ReverseRouter.route(on(ApplicationUpdateRequestController.class)
           .getApplicationUpdateRequest(applicationId))),
   // Operator actions
   OPERATOR_PAY_FOR_APPLICATION("Pay for application", 1, false, true, null,

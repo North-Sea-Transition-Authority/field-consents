@@ -8,6 +8,7 @@
 <#import '../application/consultation/further-information/furtherInformation.ftl' as furtherInformation/>
 
 <#-- @ftlvariable name="technicalReviewSummaryView" type="uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewSummaryView" -->
+<#-- @ftlvariable name="taskListSections" type="java.util.List<uk.co.nstauthority.fieldconsents.tasklist.TaskListSection>" -->
 
 <@defaultPage
   htmlTitle=pageTitle
@@ -24,6 +25,9 @@
     tabs=caseProcessingTabs
     selectedTab=selectedTab
     controllerUrl=controllerUrl>
+    <#if selectedTab == "TASKS">
+      <@taskList.standardTaskList taskListSections=taskListSections showSectionNumber=false/>
+    </#if>
     <#if selectedTab == "VIEW_APPLICATION">
       <@applicationSummary.applicationSummary accordionId=accordionId/>
     </#if>

@@ -1,9 +1,10 @@
-package uk.co.nstauthority.fieldconsents.application.caseprocessing.update;
+package uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request;
 
 import static uk.co.nstauthority.fieldconsents.formatting.DateUtils.DATE_TIME;
 
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;

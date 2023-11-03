@@ -1,15 +1,15 @@
-package uk.co.nstauthority.fieldconsents.application.caseprocessing.update;
+package uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.Mockito.when;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateRequestFormValidator.DEADLINE_DATE_FIELD_NAME;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateRequestFormValidator.DEADLINE_HOURS_FIELD_NAME;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateRequestFormValidator.DEADLINE_MINUTES_FIELD_NAME;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateRequestFormValidator.MUST_BE_HOURS_AHEAD;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateTestUtil.APPLICATION_UPDATE_REQUEST_TEXT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateTestUtil.CURRENT_DATE_TIME;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateTestUtil.CURRENT_INSTANT;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestFormValidator.DEADLINE_DATE_FIELD_NAME;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestFormValidator.DEADLINE_HOURS_FIELD_NAME;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestFormValidator.DEADLINE_MINUTES_FIELD_NAME;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestFormValidator.MUST_BE_HOURS_AHEAD;
 import static uk.co.nstauthority.fieldconsents.validation.ValidatorUtils.EMPTY_STRING;
 
 import java.time.Clock;

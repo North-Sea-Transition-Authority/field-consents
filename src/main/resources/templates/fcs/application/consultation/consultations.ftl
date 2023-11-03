@@ -3,9 +3,9 @@
 <#import '../_caseProcessingActions.ftl' as caseProcessingActions>
 
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
-<#-- @ftlvariable name="technicalReviewSummaryItems" type="java.util.List<uk.co.nstauthority.fieldconsents.summary.SummaryItem>" -->
+<#-- @ftlvariable name="consultationSummaryItems" type="java.util.List<uk.co.nstauthority.fieldconsents.summary.SummaryItem>" -->
 
-<#assign pageTitle = "Technical reviews"/>
+<#assign pageTitle = "Consultations"/>
 
 <@defaultPage
   htmlTitle=pageTitle
@@ -14,15 +14,16 @@
   backLinkUrl=springUrl(backLinkUrl)
   pageSize=PageSize.FULL_WIDTH
   errorItems=errorList>
-  <@caseProcessingActions.caseActions actions=technicalReviewActions/>
-  <#if technicalReviewSummaryItems?has_content>
-    <#list technicalReviewSummaryItems as summaryItem>
+  <@caseProcessingActions.caseActions actions=actionList/>
+  <@fdsWarning.warning>Consultation history not implemented yet</@fdsWarning.warning>
+  <#if consultationSummaryItems?has_content>
+    <#list consultationSummaryItems as summaryItem>
       <h2 class="govuk-heading-l">${summaryItem.displayName()}</h2>
       <@summaryDetails.summaryDetails summaryItem=summaryItem/>
     </#list>
   <#else>
     <@fdsInsetText.insetText>
-      No technical reviews have taken place on this case.
+      No consultations have taken place on this case.
     </@fdsInsetText.insetText>
   </#if>
 </@defaultPage>

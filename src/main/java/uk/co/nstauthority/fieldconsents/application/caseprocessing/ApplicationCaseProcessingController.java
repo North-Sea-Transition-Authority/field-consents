@@ -2,7 +2,6 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature.WIDE_SUMMARY_DISPLAY;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseProcessingTab.CASE_HISTORY;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +17,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CasePr
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseHistoryTabContentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.tasklist.CaseProcessingTaskListService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewSummaryView;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
@@ -47,6 +47,8 @@ public class ApplicationCaseProcessingController {
 
   private final CaseProcessingActionService caseProcessingActionService;
 
+  private final CaseProcessingTaskListService caseProcessingTaskListService;
+
   private final CaseProcessingTabService caseProcessingTabService;
 
   private final CaseHistoryTabContentService caseHistoryTabContentService;
@@ -63,6 +65,7 @@ public class ApplicationCaseProcessingController {
                                       ApplicationVersionService applicationVersionService,
                                       ApplicationSummaryService applicationSummaryService,
                                       CaseProcessingActionService caseProcessingActionService,
+                                      CaseProcessingTaskListService caseProcessingTaskListService,
                                       CaseProcessingTabService caseProcessingTabService,
                                       CaseHistoryTabContentService caseHistoryTabContentService,
                                       TechnicalReviewService technicalReviewService,
@@ -73,6 +76,7 @@ public class ApplicationCaseProcessingController {
     this.applicationVersionService = applicationVersionService;
     this.applicationSummaryService = applicationSummaryService;
     this.caseProcessingActionService = caseProcessingActionService;
+    this.caseProcessingTaskListService = caseProcessingTaskListService;
     this.caseProcessingTabService = caseProcessingTabService;
     this.caseHistoryTabContentService = caseHistoryTabContentService;
     this.technicalReviewService = technicalReviewService;
@@ -84,7 +88,7 @@ public class ApplicationCaseProcessingController {
   @GetMapping("case-processing")
   public ModelAndView caseProcessing(
       @PathVariable Integer applicationId,
-      @RequestParam(defaultValue = "view-application") CaseProcessingTab tab,
+      @RequestParam(defaultValue = "tasks") CaseProcessingTab tab,
       ServiceUserDetail user
   ) {
     return renderCaseProcessingOnTab(applicationId, tab, user);
@@ -102,10 +106,10 @@ public class ApplicationCaseProcessingController {
         .addObject("wideSummaryDisplay", WIDE_SUMMARY_DISPLAY.allowed(applicationType))
         .addObject("pageTitle", applicationService.generateApplicationReference(applicationVersion));
 
-    if (CASE_HISTORY.equals(tab)) {
-      addCaseHistoryTab(modelAndView, applicationVersion);
-    } else {
-      applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView);
+    switch (tab) {
+      case CASE_HISTORY -> addCaseHistoryTab(modelAndView, applicationVersion);
+      case TASKS -> addTasksTab(modelAndView, applicationVersion, user);
+      default -> applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView);
     }
 
     if (regulatorTeamService.isTechnicalReviewer(WebUserAccountId.from(user))) {
@@ -127,6 +131,11 @@ public class ApplicationCaseProcessingController {
   private void addCaseHistoryTab(ModelAndView modelAndView, ApplicationVersion applicationVersion) {
     var caseHistoryEvents = caseHistoryTabContentService.getCaseHistoryTabContent(applicationVersion.getApplication());
     modelAndView.addObject("caseHistoryEvents", caseHistoryEvents);
+  }
+
+  private void addTasksTab(ModelAndView modelAndView, ApplicationVersion applicationVersion, ServiceUserDetail user) {
+    var taskListSections = caseProcessingTaskListService.getTaskListSections(applicationVersion, user);
+    modelAndView.addObject("taskListSections", taskListSections);
   }
 
 }

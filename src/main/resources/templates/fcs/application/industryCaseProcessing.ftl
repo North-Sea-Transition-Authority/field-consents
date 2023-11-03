@@ -4,7 +4,7 @@
 <#import '_caseProcessingActions.ftl' as caseProcessingActions>
 <#import 'update/_applicationUpdateRequestBanner.ftl' as applicationUpdateRequestBanner>
 
-<#-- @ftlvariable name="applicationUpdateRequestView" type="uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateRequestView" -->
+<#-- @ftlvariable name="applicationUpdateRequestView" type="uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestView" -->
 
 <@defaultPage
   htmlTitle=pageTitle

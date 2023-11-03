@@ -1,7 +1,7 @@
-package uk.co.nstauthority.fieldconsents.application.caseprocessing.update;
+package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionGroup.APPLICATION_UPDATES;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionGroup.CONSULTATIONS;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,15 +18,15 @@ import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @Controller
-@RequestMapping("applications/{applicationId}/application-updates")
-@ActionEndPoint(CaseProcessingActionItem.APPLICATION_UPDATES)
-public class ApplicationUpdateController {
+@RequestMapping("applications/{applicationId}/consultations")
+@ActionEndPoint(CaseProcessingActionItem.CONSULTATIONS)
+public class ConsultationController {
 
   private final ApplicationService applicationService;
   private final ApplicationVersionService applicationVersionService;
   private final CaseProcessingActionService caseProcessingActionService;
 
-  ApplicationUpdateController(
+  ConsultationController(
       ApplicationService applicationService,
       ApplicationVersionService applicationVersionService,
       CaseProcessingActionService caseProcessingActionService
@@ -37,17 +37,15 @@ public class ApplicationUpdateController {
   }
 
   @GetMapping
-  public ModelAndView getApplicationUpdates(@PathVariable Integer applicationId, ServiceUserDetail user) {
+  public ModelAndView getConsultations(@PathVariable Integer applicationId, ServiceUserDetail user) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
-    var applicationReference = applicationService.generateApplicationReference(applicationVersion);
-    var actionList = caseProcessingActionService.getUserActionViewsForGroup(applicationVersion, user, APPLICATION_UPDATES);
+    var actionList = caseProcessingActionService.getUserActionViewsForGroup(applicationVersion, user, CONSULTATIONS);
 
-    return new ModelAndView("fcs/application/update/applicationUpdates")
-        .addObject("applicationReference", applicationReference)
-        .addObject("applicationUpdateSummaryItems", null) // TODO: FCS-470
+    return new ModelAndView("fcs/application/consultation/consultations")
+        .addObject("applicationReference", applicationService.generateApplicationReference(applicationVersion))
+        .addObject("consultationSummaryItems", null) // TODO: FCS-454
         .addObject("actionList", actionList)
         .addObject("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class)
             .caseProcessing(applicationId, null, null)));
   }
-
 }

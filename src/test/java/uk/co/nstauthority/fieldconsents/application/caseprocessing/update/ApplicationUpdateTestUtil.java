@@ -9,32 +9,32 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.response.ApplicationUpdateResponseType;
 
 public class ApplicationUpdateTestUtil {
 
-  static final Long UPDATE_REQUESTER_USER_WUA_ID = 1L;
+  public static final Long UPDATE_REQUESTER_USER_WUA_ID = 1L;
 
-  static final Long UPDATE_RESPONDER_USER_WUA_ID = 2L;
+  public static final Long UPDATE_RESPONDER_USER_WUA_ID = 2L;
 
-  static final LocalDate CURRENT_DATE = LocalDate.now();
+  public static final LocalDate CURRENT_DATE = LocalDate.now();
 
-  static final LocalDateTime CURRENT_DATE_TIME = LocalDateTime.now();
+  public static final LocalDateTime CURRENT_DATE_TIME = LocalDateTime.now();
 
-  static final Instant CURRENT_INSTANT = Instant.now();
+  public static final Instant CURRENT_INSTANT = Instant.now();
 
-  static final int DEADLINE_AHEAD_HOURS = 2;
+  public static final int DEADLINE_AHEAD_HOURS = 2;
 
-  static final String APPLICATION_UPDATE_REQUEST_TEXT = "Text request text";
+  public static final String APPLICATION_UPDATE_REQUEST_TEXT = "Text request text";
 
-  static final String APPLICATION_UPDATE_RESPONSE_TEXT = "Text response text";
+  public static final String APPLICATION_UPDATE_RESPONSE_TEXT = "Text response text";
 
   public static final ApplicationUpdateRequestView applicationUpdateRequestView = new ApplicationUpdateRequestView(
       "requested by user", "xx/xx/xxxx xx:xx", "request text", "xx/xx/xxxx xx:xx"
   );
 
-  static ApplicationUpdate getOpenApplicationUpdate(ApplicationVersion applicationVersion,
-                                                    Clock clock) {
+  public static ApplicationUpdate getOpenApplicationUpdate(ApplicationVersion applicationVersion, Clock clock) {
     var applicationUpdate = new ApplicationUpdate();
     applicationUpdate.setApplicationVersion(applicationVersion);
     applicationUpdate.setApplicationUpdateStatus(OPEN);

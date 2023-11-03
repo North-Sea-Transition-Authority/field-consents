@@ -89,7 +89,7 @@ class TechnicalReviewControllerTest extends AbstractApplicationControllerTest {
   @SecurityTest
   void getTechnicalReviews_noUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(TechnicalReviewController.class)
-            .getTechnicalReviews(APPLICATION_ID))))
+            .getTechnicalReviews(APPLICATION_ID, null))))
         .andExpect(redirectionToLoginUrl());
   }
 
@@ -103,7 +103,7 @@ class TechnicalReviewControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(Collections.emptyList());
 
     mockMvc.perform(get(ReverseRouter.route(on(TechnicalReviewController.class)
-            .getTechnicalReviews(APPLICATION_ID)))
+            .getTechnicalReviews(APPLICATION_ID, null)))
             .with(user(user)))
         .andExpect(status().isForbidden());
   }
@@ -125,7 +125,7 @@ class TechnicalReviewControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(List.of(TECHNICAL_REVIEWS));
 
     mockMvc.perform(get(ReverseRouter.route(on(TechnicalReviewController.class)
-            .getTechnicalReviews(APPLICATION_ID)))
+            .getTechnicalReviews(APPLICATION_ID, null)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name(TECHNICAL_REVIEWS_VIEW_NAME));
@@ -145,7 +145,7 @@ class TechnicalReviewControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(Collections.emptyList());
 
     mockMvc.perform(get(ReverseRouter.route(on(TechnicalReviewController.class)
-            .getTechnicalReviews(APPLICATION_ID)))
+            .getTechnicalReviews(APPLICATION_ID, null)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name(TECHNICAL_REVIEWS_VIEW_NAME))
@@ -225,8 +225,8 @@ class TechnicalReviewControllerTest extends AbstractApplicationControllerTest {
         .andExpect(model().attribute("technicalReviewerAssignmentCandidates",
             TECHNICAL_REVIEWER_ASSIGNMENT_CANDIDATES_MAP))
         .andExpect(model().attribute("backLinkUrl",
-            ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-                .caseProcessing(APPLICATION_ID, null, null))));
+            ReverseRouter.route(on(TechnicalReviewController.class)
+                .getTechnicalReviews(APPLICATION_ID, null))));
   }
 
   @SecurityTest
@@ -310,8 +310,8 @@ class TechnicalReviewControllerTest extends AbstractApplicationControllerTest {
         .andExpect(model().attribute("technicalReviewerAssignmentCandidates",
             TECHNICAL_REVIEWER_ASSIGNMENT_CANDIDATES_MAP))
         .andExpect(model().attribute("backLinkUrl",
-            ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-                .caseProcessing(APPLICATION_ID, null, null))));
+            ReverseRouter.route(on(TechnicalReviewController.class)
+                .getTechnicalReviews(APPLICATION_ID, null))));
   }
 
   private static Stream<Arguments> getSubmittedApplicationVersions() {

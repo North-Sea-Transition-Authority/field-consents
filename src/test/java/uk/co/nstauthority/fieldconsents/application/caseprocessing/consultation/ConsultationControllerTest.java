@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.application.caseprocessing.update;
+package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -29,11 +29,11 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CasePr
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
-@ContextConfiguration(classes = ApplicationUpdateController.class)
-class ApplicationUpdateControllerTest extends AbstractApplicationControllerTest {
+@ContextConfiguration(classes = ConsultationController.class)
+class ConsultationControllerTest extends AbstractApplicationControllerTest {
 
-  private static final Class<ApplicationUpdateController> CONTROLLER_CLASS = ApplicationUpdateController.class;
-  private static final String VIEW_NAME = "fcs/application/update/applicationUpdates";
+  private static final Class<ConsultationController> CONTROLLER_CLASS = ConsultationController.class;
+  private static final String VIEW_NAME = "fcs/application/consultation/consultations";
 
   @MockBean
   private ApplicationService applicationService;
@@ -52,36 +52,35 @@ class ApplicationUpdateControllerTest extends AbstractApplicationControllerTest 
   }
 
   @SecurityTest
-  void getApplicationUpdates_notSignedIn() throws Exception {
+  void getConsultations_notSignedIn() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .getApplicationUpdates(APPLICATION_ID, null))))
+            .getConsultations(APPLICATION_ID, null))))
         .andExpect(redirectionToLoginUrl());
   }
 
   @SecurityTest
-  void getApplicationUpdates_doesNotHavePermission() throws Exception {
+  void getConsultations_doesNotHavePermission() throws Exception {
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Collections.emptyList());
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .getApplicationUpdates(APPLICATION_ID, null)))
+            .getConsultations(APPLICATION_ID, null)))
             .with(user(user)))
         .andExpect(status().isForbidden());
   }
 
   @Test
-  void getApplicationUpdates() throws Exception {
+  void getConsultations() throws Exception {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
-    when(caseProcessingActionService.getUserActionViewsForGroup(applicationVersion, user, CaseProcessingActionGroup.APPLICATION_UPDATES)).thenReturn(actionList);
+    when(caseProcessingActionService.getUserActionViewsForGroup(applicationVersion, user, CaseProcessingActionGroup.CONSULTATIONS)).thenReturn(actionList);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(APPLICATION_REFERENCE);
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .getApplicationUpdates(APPLICATION_ID, null)))
-            .with(user(user)))
+        .getConsultations(APPLICATION_ID, null)))
+        .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name(VIEW_NAME))
-        .andExpect(model().attribute("applicationUpdateSummaryItems", (Object) null)) // TODO: FCS-470
+        .andExpect(model().attribute("consultationSummaryItems", (Object) null)) // TODO: FCS-454
         .andExpect(model().attribute("applicationReference", APPLICATION_REFERENCE))
         .andExpect(model().attribute("actionList", actionList))
         .andExpect(model().attribute("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class).caseProcessing(APPLICATION_ID, null, null))));
   }
-
 }

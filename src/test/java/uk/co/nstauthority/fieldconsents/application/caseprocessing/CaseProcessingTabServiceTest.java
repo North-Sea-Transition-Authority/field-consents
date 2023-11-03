@@ -1,11 +1,14 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anySet;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-import org.junit.jupiter.api.BeforeEach;
+import java.util.EnumSet;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
@@ -20,29 +23,21 @@ class CaseProcessingTabServiceTest {
   @Mock
   private PermissionService permissionService;
 
+  @InjectMocks
   private CaseProcessingTabService caseProcessingTabService;
-
-  @BeforeEach
-  void setUp() {
-    caseProcessingTabService = new CaseProcessingTabService(permissionService);
-  }
 
   @Test
   void getTabsAvailableToUser_andAllTabsAllowed() {
-    when(permissionService.hasPermission(USER, CaseProcessingTab.VIEW_APPLICATION.getRolePermissions())).thenReturn(true);
-    when(permissionService.hasPermission(USER, CaseProcessingTab.CASE_HISTORY.getRolePermissions())).thenReturn(true);
+    when(permissionService.hasPermission(eq(USER), anySet())).thenReturn(true);
 
-    assertThat(caseProcessingTabService.getTabsAvailableToUser(USER)).containsExactly(
-        CaseProcessingTab.VIEW_APPLICATION,
-        CaseProcessingTab.CASE_HISTORY
-    );
+    var tabs = EnumSet.allOf(CaseProcessingTab.class).stream().toList();
+    assertThat(caseProcessingTabService.getTabsAvailableToUser(USER)).isEqualTo(tabs);
   }
 
   @Test
   void getTabsAvailableToUser_andNoTabsAllowed() {
-    when(permissionService.hasPermission(USER, CaseProcessingTab.VIEW_APPLICATION.getRolePermissions())).thenReturn(false);
-    when(permissionService.hasPermission(USER, CaseProcessingTab.CASE_HISTORY.getRolePermissions())).thenReturn(false);
-
+    when(permissionService.hasPermission(eq(USER), anySet())).thenReturn(false);
     assertThat(caseProcessingTabService.getTabsAvailableToUser(USER)).isEmpty();
   }
+
 }

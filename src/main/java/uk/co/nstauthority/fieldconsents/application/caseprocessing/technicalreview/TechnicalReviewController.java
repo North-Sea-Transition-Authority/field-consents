@@ -18,6 +18,8 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionGroup;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.summary.TechnicalReviewSummaryService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
@@ -47,6 +49,8 @@ public class TechnicalReviewController {
 
   private final TechnicalReviewSummaryService technicalReviewSummaryService;
 
+  private final CaseProcessingActionService caseProcessingActionService;
+
   @Autowired
   public TechnicalReviewController(ApplicationService applicationService,
                                    ApplicationVersionService applicationVersionService,
@@ -55,7 +59,8 @@ public class TechnicalReviewController {
                                    TechnicalReviewRequestFormValidator technicalReviewRequestFormValidator,
                                    TeamMemberViewService teamMemberViewService,
                                    EnergyPortalUserService energyPortalUserService,
-                                   TechnicalReviewSummaryService technicalReviewSummaryService) {
+                                   TechnicalReviewSummaryService technicalReviewSummaryService,
+                                   CaseProcessingActionService caseProcessingActionService) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.technicalReviewService = technicalReviewService;
@@ -64,19 +69,24 @@ public class TechnicalReviewController {
     this.teamMemberViewService = teamMemberViewService;
     this.energyPortalUserService = energyPortalUserService;
     this.technicalReviewSummaryService = technicalReviewSummaryService;
+    this.caseProcessingActionService = caseProcessingActionService;
   }
 
   @GetMapping("technical-reviews")
   @ActionEndPoint(TECHNICAL_REVIEWS)
-  public ModelAndView getTechnicalReviews(@PathVariable Integer applicationId) {
+  public ModelAndView getTechnicalReviews(@PathVariable Integer applicationId,
+                                          ServiceUserDetail user) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var applicationReference = applicationService.generateApplicationReference(applicationVersion);
     var technicalReviewSummaryItems =
         technicalReviewSummaryService.getTechnicalReviewSummaryItems(applicationVersion.getApplication());
+    var caseProcessingActions = caseProcessingActionService.getUserActionViewsForGroup(
+        applicationVersion, user, CaseProcessingActionGroup.TECHNICAL_REVIEWS);
 
     return new ModelAndView("fcs/application/review/technicalReviews")
         .addObject("applicationReference", applicationReference)
         .addObject("technicalReviewSummaryItems", technicalReviewSummaryItems)
+        .addObject("technicalReviewActions", caseProcessingActions)
         .addObject("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)
                 .caseProcessing(applicationId, null, null)));
@@ -108,8 +118,8 @@ public class TechnicalReviewController {
         .addObject("applicationReference", applicationReference)
         .addObject("technicalReviewerAssignmentCandidates", technicalReviewerAssignmentCandidatesMap)
         .addObject("backLinkUrl",
-            ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-                .caseProcessing(applicationId, null, null)));
+            ReverseRouter.route(on(TechnicalReviewController.class)
+                .getTechnicalReviews(applicationId, null)));
   }
 
   @PostMapping("technical-review-request")

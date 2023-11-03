@@ -13,6 +13,12 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
 
 public enum CaseProcessingTab {
 
+  TASKS(
+      "Tasks",
+      "tasks",
+      "tasks",
+      EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS, TECHNICAL_REVIEW_FCS_APPLICATIONS)
+  ),
   VIEW_APPLICATION(
       "View application",
       "viewApplication",

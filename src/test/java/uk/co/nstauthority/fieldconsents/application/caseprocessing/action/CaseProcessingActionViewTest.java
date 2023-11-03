@@ -22,7 +22,7 @@ class CaseProcessingActionViewTest {
     var actionItem = CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP;
     assertThat(CaseProcessingActionView.from(actionItem, applicationVersion))
         .usingRecursiveComparison()
-        .isEqualTo(newFrom(actionItem, applicationVersion));
+        .isEqualTo(CaseProcessingActionView.from(actionItem, applicationVersion));
   }
 
   @Test
@@ -30,17 +30,6 @@ class CaseProcessingActionViewTest {
     var actionItem = CaseProcessingActionItem.CASE_OFFICER_RELEASE_OWNERSHIP;
     assertThat(CaseProcessingActionView.from(actionItem, applicationVersion))
         .usingRecursiveComparison()
-        .isEqualTo(newFrom(actionItem, applicationVersion));
-  }
-
-  public CaseProcessingActionView newFrom(CaseProcessingActionItem actionItem,
-                                          ApplicationVersion applicationVersion) {
-    return new CaseProcessingActionView(
-        actionItem.getDisplayName(),
-        actionItem.getDisplayOrder(),
-        actionItem.isPrimaryAction(),
-        actionItem.getActionPostUrl(applicationVersion.getApplication().getId()),
-        actionItem.getActionRedirectUrl(applicationVersion.getApplication().getId())
-    );
+        .isEqualTo(CaseProcessingActionView.from(actionItem, applicationVersion));
   }
 }

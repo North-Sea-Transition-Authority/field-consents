@@ -1,8 +1,17 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.action;
 
+import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.application.ApplicationType.FLARE;
+import static uk.co.nstauthority.fieldconsents.application.ApplicationType.PRODUCTION;
+import static uk.co.nstauthority.fieldconsents.application.ApplicationType.VENT;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.APPLICATION_UPDATES;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.APPLICATION_UPDATE_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_ASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_REASSIGN_OWNERSHIP;
@@ -10,8 +19,12 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_WITHDRAWAL_RESPONSE;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CHANGE_ACE_STATUS;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATIONS;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_FURTHER_INFORMATION_REQUEST;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_FURTHER_INFORMATION_RESPOND;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_MANAGE_RESPONDER;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_REQUEST;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_RESPONSE;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_PAY_FOR_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_UPDATE_APPLICATION;
@@ -22,65 +35,73 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEW_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.APPLICATION_UPDATE_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_NOTES_ALLOWED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_ASSIGNED;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_FURTHER_INFORMATION_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_APPLICATION_UPDATE_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_CONSULTATION_FURTHER_INFORMATION_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_CONSULTATION_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_TECHNICAL_REVIEW_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_WITHDRAWAL_OPEN;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.TECHNICAL_REVIEW_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.WITHDRAWAL_OPEN;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ALLOCATE_CONSULTATION;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ASSIGN_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_CASE_PROCESSING_DOCUMENTS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.RESPOND_TO_CONSULTATION;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.SUBMIT_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_CASE_PROCESSING_DOCUMENTS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.opred.OpredTeamRole.RESPONDER;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CASE_OFFICER;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.TECHNICAL_REVIEWER;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlagService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.tasklist.CaseProcessingTaskListSection;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.authorisation.ApplicationAccessService;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.opred.OpredTeamRole;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.TeamRole;
 
 @ExtendWith(MockitoExtension.class)
 class CaseProcessingActionServiceTest {
 
   private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
-
   private static final WebUserAccountId USER_WUA_ID = WebUserAccountId.from(USER.wuaId());
-
-  private static final WebUserAccountId OTHER_USER_WUA_ID = WebUserAccountId.from(999L);
-
-  private static final Set<RolePermission> CASE_OFFICER_PERMISSIONS =
-      RegulatorTeamRole.CASE_OFFICER.getRolePermissions();
-
-  private static final Set<RolePermission> CASE_MANAGER_PERMISSIONS =
-      RegulatorTeamRole.CASE_MANAGER.getRolePermissions();
-
-  private static final Set<RolePermission> TECHNICAL_REVIEWER_PERMISSIONS =
-      RegulatorTeamRole.TECHNICAL_REVIEWER.getRolePermissions();
-
-  private static final Set<RolePermission> INDUSTRY_EDITOR_PERMISSIONS =
-      IndustryTeamRole.EDITOR.getRolePermissions();
-
-  private static final Set<RolePermission> INDUSTRY_SUBMITTER_PERMISSIONS =
-      IndustryTeamRole.SUBMITTER.getRolePermissions();
 
   @Mock
   private ApplicationAccessService applicationAccessService;
@@ -97,550 +118,509 @@ class CaseProcessingActionServiceTest {
   @Mock
   private ConsultationService consultationService;
 
+  @Spy
   @InjectMocks
   private CaseProcessingActionService caseProcessingActionService;
 
   private ApplicationVersion applicationVersion;
 
+  private Application application;
+
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.FLARE);
+    application = applicationVersion.getApplication();
+  }
+
+  @ParameterizedTest
+  @MethodSource("getUserActionItems_arguments")
+  void getUserActionItems_inProgress(Set<RolePermission> rolePermissions, Set<CaseStatusFlag> caseStatusFlags, ExpectedActions expectedActions) {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(PRODUCTION);
+    getUserActionItems(applicationVersion, rolePermissions, caseStatusFlags, expectedActions.inProgressActions());
+  }
+
+  @ParameterizedTest
+  @MethodSource("getUserActionItems_arguments")
+  void getUserActionItems_awaitingPayment(Set<RolePermission> rolePermissions, Set<CaseStatusFlag> caseStatusFlags, ExpectedActions expectedActions) {
+    var applicationVersion = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(PRODUCTION);
+    getUserActionItems(applicationVersion, rolePermissions, caseStatusFlags, expectedActions.awaitingPaymentActions());
+  }
+
+  @ParameterizedTest
+  @MethodSource("getUserActionItems_arguments")
+  void getUserActionItems_submitted(Set<RolePermission> rolePermissions, Set<CaseStatusFlag> caseStatusFlags, ExpectedActions expectedActions) {
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(PRODUCTION);
+    getUserActionItems(applicationVersion, rolePermissions, caseStatusFlags, expectedActions.submittedActions());
+  }
+
+  private void getUserActionItems(
+      ApplicationVersion applicationVersion,
+      Set<RolePermission> rolePermissions,
+      Set<CaseStatusFlag> caseStatusFlags,
+      List<CaseProcessingActionItem> expectedActionItems
+  ) {
+    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER)).thenReturn(rolePermissions);
+    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion)).thenReturn(caseStatusFlags);
+
+    var webUserAccountIdByTeamRole = Collections.<TeamRole, WebUserAccountId>emptyMap();
+    doReturn(webUserAccountIdByTeamRole)
+        .when(caseProcessingActionService)
+        .constructAssigneeMap(applicationVersion);
+
+    doReturn(true)
+        .when(caseProcessingActionService)
+        .applicationTypeFeatureFlagAllowed(eq(applicationVersion), any(CaseProcessingActionItem.class));
+
+    lenient().doReturn(true)
+        .when(caseProcessingActionService)
+        .isActionEnabledForUser(any(CaseProcessingActionItem.class), eq(webUserAccountIdByTeamRole), eq(USER));
+
+    assertThat(caseProcessingActionService.getUserActionItems(applicationVersion, USER)).containsExactlyElementsOf(expectedActionItems);
+  }
+
+  private static Stream<Arguments> getUserActionItems_arguments() {
+    return Stream.of(
+        arguments(
+            Set.of(PROCESS_FCS_APPLICATIONS),
+            Set.of(CASE_OFFICER_ASSIGNED),
+            ExpectedActions.newBuilder()
+                .inProgressActions(CHANGE_ACE_STATUS, CASE_OFFICER_RELEASE_OWNERSHIP)
+                .submittedActions(CHANGE_ACE_STATUS, CASE_OFFICER_RELEASE_OWNERSHIP)
+                .build()
+        ),
+        arguments(
+            Set.of(PROCESS_FCS_APPLICATIONS),
+            Set.of(CASE_OFFICER_ASSIGNED, WITHDRAWAL_OPEN),
+            ExpectedActions.newBuilder()
+                .inProgressActions(CHANGE_ACE_STATUS, CASE_OFFICER_RELEASE_OWNERSHIP)
+                .submittedActions(CHANGE_ACE_STATUS, CASE_OFFICER_RELEASE_OWNERSHIP, CASE_OFFICER_WITHDRAWAL_RESPONSE)
+                .build()
+        ),
+        arguments(
+            Set.of(PROCESS_FCS_APPLICATIONS),
+            Set.of(CASE_OFFICER_ASSIGNED, NO_TECHNICAL_REVIEW_OPEN, NO_APPLICATION_UPDATE_OPEN),
+            ExpectedActions.newBuilder()
+                .inProgressActions(CHANGE_ACE_STATUS, CASE_OFFICER_RELEASE_OWNERSHIP)
+                .submittedActions(CHANGE_ACE_STATUS, CASE_OFFICER_RELEASE_OWNERSHIP, TECHNICAL_REVIEW_REQUEST, APPLICATION_UPDATE_REQUEST)
+                .build()
+        ),
+        arguments(
+            Set.of(TECHNICAL_REVIEW_FCS_APPLICATIONS),
+            Set.of(CaseStatusFlag.TECHNICAL_REVIEW_OPEN),
+            ExpectedActions.newBuilder()
+                .inProgressActions(TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP)
+                .submittedActions(TECHNICAL_REVIEWER_SUBMIT_REVIEW, TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP)
+                .build()
+        ),
+        arguments(
+            Set.of(PROCESS_FCS_APPLICATIONS, TECHNICAL_REVIEW_FCS_APPLICATIONS),
+            Set.of(NO_APPLICATION_UPDATE_OPEN),
+            ExpectedActions.newBuilder()
+                .submittedActions(APPLICATION_UPDATE_REQUEST)
+                .build()
+        ),
+        arguments(
+            Set.of(PROCESS_FCS_APPLICATIONS),
+            Set.of(CASE_OFFICER_ASSIGNED, NO_TECHNICAL_REVIEW_OPEN, NO_CONSULTATION_OPEN),
+            ExpectedActions.newBuilder()
+                .inProgressActions(CHANGE_ACE_STATUS, CASE_OFFICER_RELEASE_OWNERSHIP)
+                .submittedActions(CHANGE_ACE_STATUS, CASE_OFFICER_RELEASE_OWNERSHIP, CONSULTATION_REQUEST)
+                .build()
+        ),
+        arguments(
+            Set.of(RESPOND_TO_CONSULTATION),
+            Set.of(CONSULTATION_OPEN, NO_CONSULTATION_FURTHER_INFORMATION_OPEN),
+            ExpectedActions.newBuilder()
+                .submittedActions(CONSULTATION_RESPONSE, CONSULTATION_FURTHER_INFORMATION_REQUEST)
+                .build()
+        ),
+        arguments(
+            Set.of(RESPOND_TO_CONSULTATION),
+            Set.of(NO_CONSULTATION_FURTHER_INFORMATION_OPEN),
+            ExpectedActions.newBuilder()
+                .submittedActions(CONSULTATION_FURTHER_INFORMATION_REQUEST)
+                .build()
+        ),
+        arguments(
+            Set.of(PROCESS_FCS_APPLICATIONS),
+            Set.of(CONSULTATION_FURTHER_INFORMATION_OPEN, NO_APPLICATION_UPDATE_OPEN),
+            ExpectedActions.newBuilder()
+                .submittedActions(APPLICATION_UPDATE_REQUEST, CONSULTATION_FURTHER_INFORMATION_RESPOND)
+                .build()
+        ),
+        arguments(
+            Set.of(PROCESS_FCS_APPLICATIONS),
+            Set.of(CASE_OFFICER_NOT_ASSIGNED),
+            ExpectedActions.newBuilder()
+                .inProgressActions(CASE_OFFICER_TAKE_OWNERSHIP)
+                .submittedActions(CASE_OFFICER_TAKE_OWNERSHIP)
+                .build()
+        ),
+        arguments(
+            Set.of(ASSIGN_FCS_APPLICATIONS),
+            Set.of(CASE_OFFICER_NOT_ASSIGNED),
+            ExpectedActions.newBuilder()
+                .inProgressActions(CASE_OFFICER_ASSIGN_OWNERSHIP)
+                .submittedActions(CASE_OFFICER_ASSIGN_OWNERSHIP)
+                .build()
+        ),
+        arguments(
+            Set.of(ASSIGN_FCS_APPLICATIONS),
+            Set.of(CASE_OFFICER_ASSIGNED),
+            ExpectedActions.newBuilder()
+                .inProgressActions(CASE_OFFICER_REASSIGN_OWNERSHIP)
+                .submittedActions(CASE_OFFICER_REASSIGN_OWNERSHIP)
+                .build()
+        ),
+        arguments(
+            Set.of(VIEW_FCS_CASE_PROCESSING_DOCUMENTS),
+            Set.of(),
+            ExpectedActions.newBuilder()
+                .submittedActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES)
+                .build()
+        ),
+        arguments(
+            Set.of(EDIT_FCS_CASE_PROCESSING_DOCUMENTS),
+            Set.of(CASE_NOTES_ALLOWED),
+            ExpectedActions.newBuilder()
+                .inProgressActions(REGULATOR_ADD_CASE_NOTE)
+                .submittedActions(REGULATOR_ADD_CASE_NOTE)
+                .build()
+        ),
+        arguments(
+            Set.of(TECHNICAL_REVIEW_FCS_APPLICATIONS),
+            Set.of(CaseStatusFlag.TECHNICAL_REVIEW_OPEN),
+            ExpectedActions.newBuilder()
+                .inProgressActions(TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP)
+                .submittedActions(TECHNICAL_REVIEWER_SUBMIT_REVIEW, TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP)
+                .build()
+        ),
+        arguments(
+            Set.of(EDIT_FCS_APPLICATIONS),
+            Set.of(NO_WITHDRAWAL_OPEN, NO_APPLICATION_UPDATE_OPEN),
+            ExpectedActions.newBuilder()
+                .submittedActions(OPERATOR_WITHDRAWAL_REQUEST)
+                .build()
+        ),
+        arguments(
+            Set.of(EDIT_FCS_APPLICATIONS),
+            Set.of(APPLICATION_UPDATE_OPEN),
+            ExpectedActions.newBuilder()
+                .inProgressActions(OPERATOR_UPDATE_APPLICATION)
+                .submittedActions(OPERATOR_UPDATE_APPLICATION)
+                .build()
+        ),
+        arguments(
+            Set.of(ALLOCATE_CONSULTATION),
+            Set.of(CONSULTATION_OPEN),
+            ExpectedActions.newBuilder()
+                .submittedActions(CONSULTATION_MANAGE_RESPONDER)
+                .build()
+        ),
+        arguments(
+            Set.of(SUBMIT_FCS_APPLICATIONS),
+            Set.of(),
+            ExpectedActions.newBuilder()
+                .awaitingPaymentActions(OPERATOR_PAY_FOR_APPLICATION, OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT)
+                .build()
+        )
+    );
   }
 
   @Test
-  void getUserActionItems_whenNoActionsForCaseStatus_thenThrowException() {
-    applicationVersion.setStatus(ApplicationVersionStatus.COMPLETED);
-    assertThatThrownBy(() -> caseProcessingActionService.getUserActionItems(applicationVersion, USER))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("Cannot find any actions for application version id %s with status %s"
-            .formatted(applicationVersion.getId(), applicationVersion.getStatus().name()));
-  }
+  public void getUserActionViews_excludingTaskListItemsAndActions() {
+    var actionItems = EnumSet.allOf(CaseProcessingActionItem.class)
+        .stream()
+        .sorted(Comparator.comparingInt(CaseProcessingActionItem::getDisplayOrder))
+        .toList();
 
-  @Test
-  void getUserActionItems_whenNoActionsForUser_thenEmpty() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(Collections.emptySet());
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Collections.emptySet());
+    var taskListItems = Set.of(
+        CHANGE_ACE_STATUS,
+        TECHNICAL_REVIEW_REQUEST,
+        TECHNICAL_REVIEWS,
+        CONSULTATIONS,
+        APPLICATION_UPDATES,
+        REGULATOR_ADD_CASE_NOTE,
+        APPLICATION_UPDATE_REQUEST,
+        CONSULTATION_REQUEST,
+        CONSULTATION_FURTHER_INFORMATION_RESPOND
+    );
 
-    assertThat(caseProcessingActionService.getUserActionItems(applicationVersion, USER))
-        .isEmpty();
-  }
+    var actionViews = actionItems.stream()
+        .filter(actionItem -> !taskListItems.contains(actionItem)) // exclude these actions
+        .map(actionItem -> CaseProcessingActionView.from(actionItem, applicationVersion)).toList();
 
-  @Test
-  void getUserActionItems_whenNoActionsForUser_permissionsExistButNotFlags_thenEmpty() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(CASE_OFFICER_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Collections.emptySet());
-
-    assertThat(caseProcessingActionService.getUserActionItems(applicationVersion, USER))
-        .isEmpty();
-  }
-
-  @Test
-  void getUserActionItems_whenCaseOfficerUser_thenCanTakeOwnership() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(CASE_OFFICER_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED));
-
-    assertThat(caseProcessingActionService.getUserActionItems(applicationVersion, USER))
-        .containsExactly(CASE_OFFICER_TAKE_OWNERSHIP);
-  }
-
-  @Test
-  void getUserActionItems_whenAssignedCaseOfficerUser_thenCanReleaseOwnershipAndChangeAceStatus() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(CASE_OFFICER_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(CASE_OFFICER_ASSIGNED));
-    when(applicationVersionService.findCaseOfficerWuaId(applicationVersion))
-        .thenReturn(Optional.of(USER_WUA_ID));
-
-    assertThat(caseProcessingActionService.getUserActionItems(applicationVersion, USER))
-        .containsOnly(
-            CHANGE_ACE_STATUS,
-            CASE_OFFICER_RELEASE_OWNERSHIP
-        );
-  }
-
-  @Test
-  void getUserActionItems_whenAssignedCaseOfficerUserNotCurrentUser_thenCannotReleaseOwnershipOrChangeAceStatus() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(CASE_OFFICER_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(CASE_OFFICER_ASSIGNED));
-    when(applicationVersionService.findCaseOfficerWuaId(applicationVersion))
-        .thenReturn(Optional.of(OTHER_USER_WUA_ID));
-
-    assertThat(caseProcessingActionService.getUserActionItems(applicationVersion, USER))
-        .isEmpty();
-  }
-
-  @Test
-  void getUserActionViews_whenCaseOfficerUser_thenCanTakeOwnership() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(CASE_OFFICER_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED));
+    doReturn(actionItems)
+        .when(caseProcessingActionService)
+        .getUserActionItems(applicationVersion, USER);
 
     assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
-        .hasSize(1)
-        .usingRecursiveFieldByFieldElementComparator()
-        .containsExactly(CaseProcessingActionView.from(CASE_OFFICER_TAKE_OWNERSHIP, applicationVersion));
+        .containsExactlyElementsOf(actionViews);
+  }
+
+  @ParameterizedTest
+  @MethodSource("getUserActionViewsForGroup_arguments")
+  void getUserActionViewsForGroup(
+      CaseProcessingActionGroup actionGroup,
+      List<CaseProcessingActionItem> expectedActionItems
+  ) {
+    // get all available actions
+    doReturn(Arrays.asList(CaseProcessingActionItem.values()))
+        .when(caseProcessingActionService)
+        .getUserActionItems(applicationVersion, USER);
+
+    var expectedActionViews = expectedActionItems.stream()
+        .map(actionItem -> CaseProcessingActionView.from(actionItem, applicationVersion))
+        .toList();
+
+    assertThat(caseProcessingActionService.getUserActionViewsForGroup(applicationVersion, USER, actionGroup))
+        .containsExactlyElementsOf(expectedActionViews);
+  }
+
+  private static Stream<Arguments> getUserActionViewsForGroup_arguments() {
+    return Stream.of(
+        arguments(
+            CaseProcessingActionGroup.CONSULTATIONS,
+            List.of(CONSULTATION_FURTHER_INFORMATION_RESPOND, CONSULTATION_REQUEST)
+        ),
+        arguments(
+            CaseProcessingActionGroup.TECHNICAL_REVIEWS,
+            List.of(TECHNICAL_REVIEW_REQUEST)
+        ),
+        arguments(
+            CaseProcessingActionGroup.APPLICATION_UPDATES,
+            List.of(APPLICATION_UPDATE_REQUEST)
+        )
+    );
   }
 
   @Test
-  void getUserActionViews_whenAssignedCaseOfficerUser_thenCanReleaseOwnership() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(CASE_OFFICER_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(CASE_OFFICER_ASSIGNED));
-    when(applicationVersionService.findCaseOfficerWuaId(applicationVersion))
-        .thenReturn(Optional.of(USER_WUA_ID));
-
-    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
-        .hasSize(2)
-        .usingRecursiveFieldByFieldElementComparator()
-        .containsExactly(
-            CaseProcessingActionView.from(CHANGE_ACE_STATUS, applicationVersion),
-            CaseProcessingActionView.from(CASE_OFFICER_RELEASE_OWNERSHIP, applicationVersion)
-        );
+  void groupActionItemsByTaskListSection() {
+    // we don't care about the ordering here because it's not going directly into a view
+    assertThat(caseProcessingActionService.groupActionItemsByTaskListSection(EnumSet.allOf(CaseProcessingActionItem.class)))
+        .containsExactlyInAnyOrderEntriesOf(Map.of(
+            CaseProcessingTaskListSection.CASE_TASKS, List.of(TECHNICAL_REVIEWS, CONSULTATIONS),
+            CaseProcessingTaskListSection.OPTIONAL_CASE_TASKS, List.of(CHANGE_ACE_STATUS, APPLICATION_UPDATES, REGULATOR_ADD_CASE_NOTE)
+        ));
   }
 
-  @Test
-  void getUserActionViews_whenAssignedCaseOfficerUserNotCurrentUser_thenCannotReleaseOwnershipOrChangeAceStatus() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(CASE_OFFICER_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(CASE_OFFICER_ASSIGNED));
-    when(applicationVersionService.findCaseOfficerWuaId(applicationVersion))
-        .thenReturn(Optional.of(OTHER_USER_WUA_ID));
+  @ParameterizedTest
+  @MethodSource("constructAssigneeMap_arguments")
+  void constructAssigneeMap(
+      WebUserAccountId caseOfficerWuaId,
+      WebUserAccountId technicalReviewerWuaId,
+      WebUserAccountId responderWuaId,
+      Map<TeamRole, WebUserAccountId> expectedAssigneeMap
+  ) {
+    when(applicationVersionService.findCaseOfficerWuaId(applicationVersion)).thenReturn(Optional.ofNullable(caseOfficerWuaId));
+    when(technicalReviewService.findTechnicalReviewerWuaId(applicationVersion)).thenReturn(Optional.ofNullable(technicalReviewerWuaId));
 
-    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
-        .isEmpty();
+    var consultation = new Consultation();
+    Optional.ofNullable(responderWuaId).map(WebUserAccountId::id).ifPresent(consultation::setResponderWuaId);
+    when(consultationService.findLatestOpenConsultation(application)).thenReturn(Optional.of(consultation));
+
+    assertThat(caseProcessingActionService.constructAssigneeMap(applicationVersion)).containsExactlyInAnyOrderEntriesOf(expectedAssigneeMap);
   }
 
-  @Test
-  void getUserActionItems_whenCaseManagerUser_thenCanAssignCaseOfficer() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(CASE_MANAGER_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED));
-
-    assertThat(caseProcessingActionService.getUserActionItems(applicationVersion, USER))
-        .containsExactly(CASE_OFFICER_ASSIGN_OWNERSHIP);
+  private static Stream<Arguments> constructAssigneeMap_arguments() {
+    return Stream.of(
+        arguments(
+            null,
+            null,
+            null,
+            emptyMap()
+        ),
+        arguments(
+            USER_WUA_ID,
+            null,
+            null,
+            Map.of(CASE_OFFICER, USER_WUA_ID)
+        ),
+        arguments(
+            null,
+            USER_WUA_ID,
+            null,
+            Map.of(TECHNICAL_REVIEWER, USER_WUA_ID)
+        ),
+        arguments(
+            null,
+            null,
+            USER_WUA_ID,
+            Map.of(RESPONDER, USER_WUA_ID)
+        ),
+        arguments(
+            USER_WUA_ID,
+            USER_WUA_ID,
+            USER_WUA_ID,
+            Map.of(
+                CASE_OFFICER, USER_WUA_ID,
+                TECHNICAL_REVIEWER, USER_WUA_ID,
+                RESPONDER, USER_WUA_ID
+            )
+        )
+    );
   }
 
-  @Test
-  void getUserActionItems_whenCaseManagerUser_thenCanReassignCaseOfficer() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(CASE_MANAGER_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(CASE_OFFICER_ASSIGNED));
-
-    assertThat(caseProcessingActionService.getUserActionItems(applicationVersion, USER))
-        .containsExactly(CASE_OFFICER_REASSIGN_OWNERSHIP);
+  @ParameterizedTest
+  @MethodSource({
+      "isActionEnabledForUser_assigneeOnly_arguments",
+      "isActionEnabledForUser_nonAssignee_arguments"
+  })
+  void isActionEnabledForUser(
+      CaseProcessingActionItem actionItem,
+      Map<TeamRole, WebUserAccountId> assigneeMap,
+      boolean isActionEnabledForUser
+  ) {
+    assertThat(caseProcessingActionService.isActionEnabledForUser(actionItem, assigneeMap, USER)).isEqualTo(isActionEnabledForUser);
   }
 
-  @Test
-  void getUserActionItems_whenTechnicalReviewerAndReviewOpen_thenCanReassignTechnicalReviewer() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(TECHNICAL_REVIEWER_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(TECHNICAL_REVIEW_OPEN));
+  private static Stream<Arguments> isActionEnabledForUser_nonAssignee_arguments() {
+    return Stream.of(
+        arguments(CASE_OFFICER_TAKE_OWNERSHIP, emptyMap(), true),
+        arguments(CASE_OFFICER_ASSIGN_OWNERSHIP, emptyMap(), true),
+        arguments(CASE_OFFICER_REASSIGN_OWNERSHIP, emptyMap(), true),
+        arguments(TECHNICAL_REVIEWS, emptyMap(), true),
+        arguments(REGULATOR_ADD_CASE_NOTE, emptyMap(), true),
+        arguments(TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP, emptyMap(), true),
+        arguments(OPERATOR_PAY_FOR_APPLICATION, emptyMap(), true),
+        arguments(OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT, emptyMap(), true),
+        arguments(OPERATOR_WITHDRAWAL_REQUEST, emptyMap(), true),
+        arguments(OPERATOR_UPDATE_APPLICATION, emptyMap(), true),
+        arguments(CONSULTATION_MANAGE_RESPONDER, emptyMap(), true)
+    );
+  }
 
-    assertThat(caseProcessingActionService.getUserActionItems(applicationVersion, USER))
-        .containsExactly(CaseProcessingActionItem.TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP);
+  private static Stream<Arguments> isActionEnabledForUser_assigneeOnly_arguments() {
+    var caseOfficerAssigneeMap = Map.of(CASE_OFFICER, USER_WUA_ID);
+    var technicalReviewerAssigneeMap = Map.of(TECHNICAL_REVIEWER, USER_WUA_ID);
+    var responderAssigneeMap = Map.of(RESPONDER, USER_WUA_ID);
+
+    return Stream.of(
+        arguments(CHANGE_ACE_STATUS, caseOfficerAssigneeMap, true),
+        arguments(CASE_OFFICER_RELEASE_OWNERSHIP, caseOfficerAssigneeMap, true),
+        arguments(CASE_OFFICER_WITHDRAWAL_RESPONSE, caseOfficerAssigneeMap, true),
+        arguments(TECHNICAL_REVIEW_REQUEST, caseOfficerAssigneeMap, true),
+        arguments(APPLICATION_UPDATE_REQUEST, caseOfficerAssigneeMap, true),
+        arguments(APPLICATION_UPDATE_REQUEST, technicalReviewerAssigneeMap, true),
+        arguments(TECHNICAL_REVIEWER_SUBMIT_REVIEW, technicalReviewerAssigneeMap, true),
+        arguments(CONSULTATION_REQUEST, caseOfficerAssigneeMap, true),
+        arguments(CONSULTATION_RESPONSE, responderAssigneeMap, true),
+        arguments(CONSULTATION_FURTHER_INFORMATION_REQUEST, responderAssigneeMap, true),
+        arguments(CONSULTATION_FURTHER_INFORMATION_RESPOND, caseOfficerAssigneeMap, true),
+
+        // when not assigned
+        arguments(CHANGE_ACE_STATUS, emptyMap(), false),
+        arguments(CASE_OFFICER_RELEASE_OWNERSHIP, emptyMap(), false),
+        arguments(CASE_OFFICER_WITHDRAWAL_RESPONSE, emptyMap(), false),
+        arguments(TECHNICAL_REVIEW_REQUEST, emptyMap(), false),
+        arguments(APPLICATION_UPDATE_REQUEST, emptyMap(), false),
+        arguments(APPLICATION_UPDATE_REQUEST, emptyMap(), false),
+        arguments(TECHNICAL_REVIEWER_SUBMIT_REVIEW, emptyMap(), false),
+        arguments(CONSULTATION_REQUEST, emptyMap(), false),
+        arguments(CONSULTATION_RESPONSE, emptyMap(), false),
+        arguments(CONSULTATION_FURTHER_INFORMATION_REQUEST, emptyMap(), false),
+        arguments(CONSULTATION_FURTHER_INFORMATION_RESPOND, emptyMap(), false)
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource({
+      "applicationTypeFeatureFlagAllowed_production_arguments",
+      "applicationTypeFeatureFlagAllowed_flare_arguments",
+      "applicationTypeFeatureFlagAllowed_vent_arguments",
+  })
+  void applicationTypeFeatureFlagAllowed(
+      ApplicationVersion applicationVersion,
+      CaseProcessingActionItem actionItem,
+      boolean isAllowed
+  ) {
+    assertThat(caseProcessingActionService.applicationTypeFeatureFlagAllowed(applicationVersion, actionItem)).isEqualTo(isAllowed);
+  }
+
+  private static Stream<Arguments> applicationTypeFeatureFlagAllowed_production_arguments() {
+    var productionApplication = ApplicationTestUtil.getNewApplicationVersionWithType(PRODUCTION);
+
+    return EnumSet.allOf(CaseProcessingActionItem.class)
+        .stream()
+        .map(actionItem -> arguments(productionApplication, actionItem, true));
+  }
+
+  private static Stream<Arguments> applicationTypeFeatureFlagAllowed_flare_arguments() {
+    var flareApplication = ApplicationTestUtil.getNewApplicationVersionWithType(FLARE);
+
+    return EnumSet.allOf(CaseProcessingActionItem.class)
+        .stream()
+        .map(actionItem -> arguments(flareApplication, actionItem, true));
+  }
+
+  private static Stream<Arguments> applicationTypeFeatureFlagAllowed_vent_arguments() {
+    var ventApplication = ApplicationTestUtil.getNewApplicationVersionWithType(VENT);
+
+    return Stream.of(
+        arguments(ventApplication, CONSULTATION_REQUEST, false),
+
+        arguments(ventApplication, CASE_OFFICER_TAKE_OWNERSHIP, true),
+        arguments(ventApplication, CHANGE_ACE_STATUS, true),
+        arguments(ventApplication, CASE_OFFICER_RELEASE_OWNERSHIP, true),
+        arguments(ventApplication, CASE_OFFICER_WITHDRAWAL_RESPONSE, true),
+        arguments(ventApplication, TECHNICAL_REVIEW_REQUEST, true),
+        arguments(ventApplication, CASE_OFFICER_ASSIGN_OWNERSHIP, true),
+        arguments(ventApplication, CASE_OFFICER_REASSIGN_OWNERSHIP, true),
+        arguments(ventApplication, TECHNICAL_REVIEWS, true),
+        arguments(ventApplication, REGULATOR_ADD_CASE_NOTE, true),
+        arguments(ventApplication, TECHNICAL_REVIEWER_SUBMIT_REVIEW, true),
+        arguments(ventApplication, TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP, true),
+        arguments(ventApplication, APPLICATION_UPDATE_REQUEST, true),
+        arguments(ventApplication, OPERATOR_PAY_FOR_APPLICATION, true),
+        arguments(ventApplication, OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT, true),
+        arguments(ventApplication, OPERATOR_WITHDRAWAL_REQUEST, true),
+        arguments(ventApplication, OPERATOR_UPDATE_APPLICATION, true),
+        arguments(ventApplication, CONSULTATION_RESPONSE, true),
+        arguments(ventApplication, CONSULTATION_MANAGE_RESPONDER, true),
+        arguments(ventApplication, CONSULTATION_FURTHER_INFORMATION_REQUEST, true),
+        arguments(ventApplication, CONSULTATION_FURTHER_INFORMATION_RESPOND, true)
+    );
+  }
+
+  private record ExpectedActions(
+      List<CaseProcessingActionItem> inProgressActions,
+      List<CaseProcessingActionItem> awaitingPaymentActions,
+      List<CaseProcessingActionItem> submittedActions
+  ) {
+
+    public static Builder newBuilder() {
+      return new Builder();
+    }
+
+    public static class Builder {
+
+      private final List<CaseProcessingActionItem> inProgressActions = new ArrayList<>();
+      private final List<CaseProcessingActionItem> awaitingPaymentActions = new ArrayList<>();
+      private final List<CaseProcessingActionItem> submittedActions = new ArrayList<>();
+
+      public Builder inProgressActions(CaseProcessingActionItem... caseProcessingActionItems) {
+        Collections.addAll(inProgressActions, caseProcessingActionItems);
+        return this;
+      }
+
+      public Builder awaitingPaymentActions(CaseProcessingActionItem... caseProcessingActionItems) {
+        Collections.addAll(awaitingPaymentActions, caseProcessingActionItems);
+        return this;
+      }
+
+      public Builder submittedActions(CaseProcessingActionItem... caseProcessingActionItems) {
+        Collections.addAll(submittedActions, caseProcessingActionItems);
+        return this;
+      }
+
+      public ExpectedActions build() {
+        return new ExpectedActions(inProgressActions, awaitingPaymentActions, submittedActions);
+      }
+
+      private Builder() {
+      }
+    }
 
   }
 
-  @Test
-  void getUserActionItems_whenTechnicalReviewerAndNoReviewOpen_thenCannotReassignTechnicalReviewer() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(TECHNICAL_REVIEWER_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(NO_TECHNICAL_REVIEW_OPEN));
-
-    assertThat(caseProcessingActionService.getUserActionItems(applicationVersion, USER))
-        .isEmpty();
-  }
-
-  @Test
-  void getUserActionItems_whenCaseOfficer_thenCanSeeTechnicalReviewsPage() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(CASE_OFFICER_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(CaseStatusFlag.TECHNICAL_REVIEWS_PAGE_ENABLED));
-
-    assertThat(caseProcessingActionService.getUserActionItems(applicationVersion, USER))
-        .containsExactly(TECHNICAL_REVIEWS);
-  }
-
-  @Test
-  void getUserActionItems_whenCaseManager_thenCanSeeTechnicalReviewsPage() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(CASE_MANAGER_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(CaseStatusFlag.TECHNICAL_REVIEWS_PAGE_ENABLED));
-
-    assertThat(caseProcessingActionService.getUserActionItems(applicationVersion, USER))
-        .containsExactly(TECHNICAL_REVIEWS);
-  }
-
-  @Test
-  void getUserActionItems_whenTechnicalReviewer_thenCanSeeTechnicalReviewsPage() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(TECHNICAL_REVIEWER_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(CaseStatusFlag.TECHNICAL_REVIEWS_PAGE_ENABLED));
-
-    assertThat(caseProcessingActionService.getUserActionItems(applicationVersion, USER))
-        .containsExactly(TECHNICAL_REVIEWS);
-  }
-
-  @Test
-  void getUserActionItems_whenIndustryEditor_thenCannotSeeTechnicalReviewsPage() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(INDUSTRY_EDITOR_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(CaseStatusFlag.TECHNICAL_REVIEWS_PAGE_ENABLED));
-
-    assertThat(caseProcessingActionService.getUserActionItems(applicationVersion, USER))
-        .isEmpty();
-  }
-
-  @Test
-  void getUserActionViews_whenCaseManagerUser_thenCanAssignCaseOfficer() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(CASE_MANAGER_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED));
-
-    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
-        .hasSize(1)
-        .usingRecursiveFieldByFieldElementComparator()
-        .containsExactly(CaseProcessingActionView.from(CASE_OFFICER_ASSIGN_OWNERSHIP, applicationVersion));
-  }
-
-  @Test
-  void getUserActionViews_whenCaseManagerUser_thenCanReassignCaseOfficer() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(CASE_MANAGER_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(CASE_OFFICER_ASSIGNED));
-
-    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
-        .hasSize(1)
-        .usingRecursiveFieldByFieldElementComparator()
-        .containsExactly(CaseProcessingActionView.from(CASE_OFFICER_REASSIGN_OWNERSHIP, applicationVersion));
-  }
-
-  @Test
-  void getUserActionViews_whenIndustryEditorAndNoWithdrawalAndNoAppUpdateOpen_thenCanRequestCaseWithdrawal() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(INDUSTRY_EDITOR_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(NO_WITHDRAWAL_OPEN, NO_APPLICATION_UPDATE_OPEN));
-
-    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
-        .hasSize(1)
-        .usingRecursiveFieldByFieldElementComparator()
-        .containsExactly(CaseProcessingActionView.from(OPERATOR_WITHDRAWAL_REQUEST, applicationVersion));
-  }
-
-  @Test
-  void getUserActionViews_whenIndustryEditor_thenCannotRequestCaseWithdrawal() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(INDUSTRY_EDITOR_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(WITHDRAWAL_OPEN));
-
-    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
-        .isEmpty();
-  }
-
-  @Test
-  void getUserActionViews_whenAssignedCaseOfficerAndWithdrawalOpen_canRespondToCaseWithdrawal() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(CASE_OFFICER_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(CASE_OFFICER_ASSIGNED, WITHDRAWAL_OPEN));
-    when(applicationVersionService.findCaseOfficerWuaId(applicationVersion))
-        .thenReturn(Optional.of(USER_WUA_ID));
-
-    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
-        .hasSize(3)
-        .usingRecursiveFieldByFieldElementComparator()
-        .containsExactly(
-            CaseProcessingActionView.from(CHANGE_ACE_STATUS, applicationVersion),
-            CaseProcessingActionView.from(CASE_OFFICER_RELEASE_OWNERSHIP, applicationVersion),
-            CaseProcessingActionView.from(CASE_OFFICER_WITHDRAWAL_RESPONSE, applicationVersion)
-        );
-  }
-
-  @Test
-  void getUserActionViews_whenAssignedCaseOfficerNotCurrentUserAndWithdrawalOpen_cannotRespondToCaseWithdrawal() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(CASE_OFFICER_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(CASE_OFFICER_ASSIGNED, WITHDRAWAL_OPEN));
-    when(applicationVersionService.findCaseOfficerWuaId(applicationVersion))
-        .thenReturn(Optional.of(OTHER_USER_WUA_ID));
-
-    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
-        .isEmpty();
-  }
-
-  @Test
-  void getUserActionViews_whenAssignedCaseOfficerUserAndNotOpenWithdrawal_thenCannotRespondToCaseWithdrawal() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(CASE_OFFICER_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(CASE_OFFICER_ASSIGNED, NO_WITHDRAWAL_OPEN));
-    when(applicationVersionService.findCaseOfficerWuaId(applicationVersion))
-        .thenReturn(Optional.of(USER_WUA_ID));
-
-    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
-        .hasSize(2)
-        .usingRecursiveFieldByFieldElementComparator()
-        .containsExactly(
-            CaseProcessingActionView.from(CHANGE_ACE_STATUS, applicationVersion),
-            CaseProcessingActionView.from(CASE_OFFICER_RELEASE_OWNERSHIP, applicationVersion)
-        );
-  }
-
-  @Test
-  void getUserActionViews_whenIndustryEditor_thenCannotAddCaseNotes() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(INDUSTRY_EDITOR_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Collections.emptySet());
-
-    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
-        .isEmpty();
-  }
-
-  @Test
-  void getUserActionViews_whenCaseOfficer_thenCanAddCaseNotes() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(CASE_OFFICER_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(CaseStatusFlag.CASE_NOTES_ALLOWED));
-
-    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
-        .hasSize(1)
-        .usingRecursiveFieldByFieldElementComparator()
-        .containsExactly(CaseProcessingActionView.from(REGULATOR_ADD_CASE_NOTE, applicationVersion));
-  }
-
-  @Test
-  void getUserActionViews_whenCaseManager_thenCanAddCaseNotes() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(CASE_MANAGER_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(CaseStatusFlag.CASE_NOTES_ALLOWED));
-
-    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
-        .hasSize(1)
-        .usingRecursiveFieldByFieldElementComparator()
-        .containsExactly(CaseProcessingActionView.from(REGULATOR_ADD_CASE_NOTE, applicationVersion));
-  }
-
-  @Test
-  void getUserActionViews_whenTechnicalReviewer_thenCanAddCaseNotes() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(TECHNICAL_REVIEWER_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(CaseStatusFlag.CASE_NOTES_ALLOWED));
-
-    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
-        .hasSize(1)
-        .usingRecursiveFieldByFieldElementComparator()
-        .containsExactly(CaseProcessingActionView.from(REGULATOR_ADD_CASE_NOTE, applicationVersion));
-  }
-
-  @Test
-  void getUserActionViews_whenAssignedCaseOfficer_thenCanStartTechnicalReviewAndAppUpdate() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(CASE_OFFICER_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(CASE_OFFICER_ASSIGNED, NO_TECHNICAL_REVIEW_OPEN, NO_APPLICATION_UPDATE_OPEN,
-            NO_CONSULTATION_OPEN));
-    when(applicationVersionService.findCaseOfficerWuaId(applicationVersion))
-        .thenReturn(Optional.of(USER_WUA_ID));
-
-    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
-        .usingRecursiveFieldByFieldElementComparator()
-        .containsExactly(
-            CaseProcessingActionView.from(CHANGE_ACE_STATUS, applicationVersion),
-            CaseProcessingActionView.from(CASE_OFFICER_RELEASE_OWNERSHIP, applicationVersion),
-            CaseProcessingActionView.from(TECHNICAL_REVIEW_REQUEST, applicationVersion),
-            CaseProcessingActionView.from(APPLICATION_UPDATE_REQUEST, applicationVersion),
-            CaseProcessingActionView.from(CONSULTATION_REQUEST, applicationVersion)
-        );
-  }
-
-  @Test
-  void getUserActionViews_whenConsultationAllocator_thenCanAssignResponder() {
-    var allocatorRoles = OpredTeamRole.ALLOCATOR.getRolePermissions();
-    var caseFlags = Set.of(CASE_OFFICER_ASSIGNED, NO_TECHNICAL_REVIEW_OPEN, NO_APPLICATION_UPDATE_OPEN, CONSULTATION_OPEN);
-
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER)).thenReturn(allocatorRoles);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion)).thenReturn(caseFlags);
-    when(applicationVersionService.findCaseOfficerWuaId(applicationVersion)).thenReturn(Optional.of(USER_WUA_ID));
-
-    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
-        .usingRecursiveFieldByFieldElementComparator()
-        .containsExactly(CaseProcessingActionView.from(CONSULTATION_MANAGE_RESPONDER, applicationVersion));
-  }
-
-  @Test
-  void getUserActionViews_whenAssignedCaseOfficerNotCurrentUser_thenCannotStartTechnicalReviewOrAppUpdate() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(CASE_OFFICER_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(CASE_OFFICER_ASSIGNED, NO_TECHNICAL_REVIEW_OPEN, NO_APPLICATION_UPDATE_OPEN, NO_CONSULTATION_OPEN));
-    when(applicationVersionService.findCaseOfficerWuaId(applicationVersion))
-        .thenReturn(Optional.of(OTHER_USER_WUA_ID));
-
-    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER)).isEmpty();
-  }
-
-  @Test
-  void getUserActionViews_whenAssignedCaseOfficerAndAppUpdateOpen_thenCannotStartTechnicalReviewOrAppUpdate() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(CASE_OFFICER_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(CASE_OFFICER_ASSIGNED, NO_TECHNICAL_REVIEW_OPEN, APPLICATION_UPDATE_OPEN));
-    when(applicationVersionService.findCaseOfficerWuaId(applicationVersion))
-        .thenReturn(Optional.of(USER_WUA_ID));
-
-    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
-        .hasSize(2)
-        .usingRecursiveFieldByFieldElementComparator()
-        .containsExactly(
-            CaseProcessingActionView.from(CHANGE_ACE_STATUS, applicationVersion),
-            CaseProcessingActionView.from(CASE_OFFICER_RELEASE_OWNERSHIP, applicationVersion)
-        );
-  }
-
-  @Test
-  void getUserActionViews_whenAssignedCaseOfficerAndTechReviewOpenAndAppUpdateOpen_thenCannotStartTechnicalReviewOrAppUpdate() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(CASE_OFFICER_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(CASE_OFFICER_ASSIGNED, TECHNICAL_REVIEW_OPEN, APPLICATION_UPDATE_OPEN));
-    when(applicationVersionService.findCaseOfficerWuaId(applicationVersion))
-        .thenReturn(Optional.of(USER_WUA_ID));
-
-    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
-        .hasSize(2)
-        .usingRecursiveFieldByFieldElementComparator()
-        .containsExactly(
-            CaseProcessingActionView.from(CHANGE_ACE_STATUS, applicationVersion),
-            CaseProcessingActionView.from(CASE_OFFICER_RELEASE_OWNERSHIP, applicationVersion)
-        );
-  }
-
-  @Test
-  void getUserActionViews_whenAssignedTechnicalReviewer_thenCanRequestAppUpdate() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(TECHNICAL_REVIEWER_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(TECHNICAL_REVIEW_OPEN, NO_APPLICATION_UPDATE_OPEN, NO_CONSULTATION_OPEN));
-    when(technicalReviewService.findTechnicalReviewerWuaId(applicationVersion))
-        .thenReturn(Optional.of(USER_WUA_ID));
-
-    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
-        .usingRecursiveFieldByFieldElementComparator()
-        .containsExactly(
-            CaseProcessingActionView.from(TECHNICAL_REVIEWER_SUBMIT_REVIEW, applicationVersion),
-            CaseProcessingActionView.from(TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP, applicationVersion),
-            CaseProcessingActionView.from(APPLICATION_UPDATE_REQUEST, applicationVersion)
-        );
-  }
-
-  @Test
-  void getUserActionViews_whenAssignedTechnicalReviewerNotCurrentUser_thenCannotRequestAppUpdate() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(TECHNICAL_REVIEWER_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(TECHNICAL_REVIEW_OPEN, NO_APPLICATION_UPDATE_OPEN));
-    when(technicalReviewService.findTechnicalReviewerWuaId(applicationVersion))
-        .thenReturn(Optional.of(OTHER_USER_WUA_ID));
-
-    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
-        .hasSize(1)
-        .usingRecursiveFieldByFieldElementComparator()
-        .containsExactly(CaseProcessingActionView.from(TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP, applicationVersion));
-  }
-
-  @Test
-  void getUserActionViews_whenAssignedTechnicalReviewerAndAppUpdateOpen_thenCannotRequestAppUpdate() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(TECHNICAL_REVIEWER_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(TECHNICAL_REVIEW_OPEN, APPLICATION_UPDATE_OPEN));
-    when(technicalReviewService.findTechnicalReviewerWuaId(applicationVersion))
-        .thenReturn(Optional.of(USER_WUA_ID));
-
-    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
-        .usingRecursiveFieldByFieldElementComparator()
-        .containsExactly(
-            CaseProcessingActionView.from(TECHNICAL_REVIEWER_SUBMIT_REVIEW, applicationVersion),
-            CaseProcessingActionView.from(TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP, applicationVersion)
-        );
-  }
-
-  @Test
-  void getUserActionViews_whenIndustryEditorAndAppUpdateOpen_thenCannotUpdateApplication() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(INDUSTRY_EDITOR_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(APPLICATION_UPDATE_OPEN));
-
-    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
-        .hasSize(1)
-        .usingRecursiveFieldByFieldElementComparator()
-        .containsExactly(CaseProcessingActionView.from(OPERATOR_UPDATE_APPLICATION, applicationVersion));
-  }
-
-  @Test
-  void getUserActionViews_whenIndustryEditorAndNoAppUpdateOpen_thenCannotUpdateApplication() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(INDUSTRY_EDITOR_PERMISSIONS);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(NO_APPLICATION_UPDATE_OPEN));
-
-    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
-        .isEmpty();
-  }
-
-  @Test
-  void getUserActionItems_whenIndustrySubmitterAndStatusAwaitingPayment_thenCanPayForApplicationAndReturnApplicationToInProgressFromAwaitingPayment() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(INDUSTRY_SUBMITTER_PERMISSIONS);
-
-    applicationVersion.setStatus(ApplicationVersionStatus.AWAITING_PAYMENT);
-
-    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
-        .hasSize(2)
-        .usingRecursiveFieldByFieldElementComparator()
-        .containsExactly(
-            CaseProcessingActionView.from(OPERATOR_PAY_FOR_APPLICATION, applicationVersion),
-            CaseProcessingActionView.from(OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT, applicationVersion)
-        );
-  }
-
-  @Test
-  void getUserActionItems_whenIndustrySubmitterAndStatusIsNotAwaitingPayment_thenCannotPayForApplicationOrReturnApplicationToInProgressFromAwaitingPayment() {
-    when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
-        .thenReturn(INDUSTRY_SUBMITTER_PERMISSIONS);
-
-    applicationVersion.setStatus(ApplicationVersionStatus.IN_PROGRESS);
-
-    assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER)).isEmpty();
-  }
 }

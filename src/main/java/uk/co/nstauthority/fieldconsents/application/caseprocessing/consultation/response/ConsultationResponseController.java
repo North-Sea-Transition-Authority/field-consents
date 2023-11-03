@@ -33,7 +33,7 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @Controller
-@RequestMapping("applications/{applicationId}/respond-to-consultation")
+@RequestMapping("applications/{applicationId}/consultations/respond")
 @ActionEndPoint(CaseProcessingActionItem.CONSULTATION_RESPONSE)
 public class ConsultationResponseController {
 

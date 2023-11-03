@@ -5,22 +5,22 @@
     <@fdsAction.buttonGroup>
       <#list actions as action>
         <#assign actionClass>
-          <#if action.primaryAction>
+          <#if action.primaryAction()>
             govuk-button
           <#else>
             govuk-button govuk-button--secondary
           </#if>
         </#assign>
-        <#if action.postUrl?has_content>
-          <@fdsForm.htmlForm actionUrl=springUrl(action.postUrl)>
+        <#if action.postUrl()?has_content>
+          <@fdsForm.htmlForm actionUrl=springUrl(action.postUrl())>
             <@fdsAction.button
-              buttonText=action.displayName
+              buttonText=action.displayName()
               buttonClass=actionClass/>
           </@fdsForm.htmlForm>
-        <#elseif action.redirectUrl?has_content>
+        <#elseif action.redirectUrl()?has_content>
           <@fdsAction.link
-            linkUrl=springUrl(action.redirectUrl)
-            linkText=action.displayName
+            linkUrl=springUrl(action.redirectUrl())
+            linkText=action.displayName()
             linkClass=actionClass/>
         </#if>
       </#list>

@@ -1,7 +1,7 @@
 <#include '../../layout/layout.ftl'>
 <#import '_applicationUpdateRequestHiddenSummary.ftl' as applicationUpdateRequestHiddenSummary>
 
-<#-- @ftlvariable name="applicationUpdateRequestView" type="uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateRequestView" -->
+<#-- @ftlvariable name="applicationUpdateRequestView" type="uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestView" -->
 
 <#macro applicationUpdateRequestBanner applicationUpdateRequestView>
   <#if applicationUpdateRequestView?has_content>

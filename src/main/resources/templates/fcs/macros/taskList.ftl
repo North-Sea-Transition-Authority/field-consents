@@ -1,10 +1,15 @@
 <#include '../layout/layout.ftl'>
 
-<#macro standardTaskList taskListSections>
+<#macro standardTaskList taskListSections showSectionNumber=true>
   <#list taskListSections as section>
+    <#if showSectionNumber>
+      <#local currentSectionNumber="${section?index + 1}"/>
+    <#else>
+      <#local currentSectionNumber=""/>
+    </#if>
     <@fdsTaskList.taskList>
       <@fdsTaskList.taskListSection
-        sectionNumber="${section?index + 1}"
+        sectionNumber=currentSectionNumber
         sectionHeadingText=section.displayName()>
         <#list section.items() as item>
           <#if item.label().name() = 'BLOCKED'>

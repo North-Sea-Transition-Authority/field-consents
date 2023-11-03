@@ -16,16 +16,16 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @Controller
-@RequestMapping("applications/{applicationId}/request-consultation")
+@RequestMapping("applications/{applicationId}/consultations/request")
 @ActionEndPoint(CaseProcessingActionItem.CONSULTATION_REQUEST)
 public class ConsultationRequestController {
 
@@ -80,7 +80,7 @@ public class ConsultationRequestController {
     var notificationBannerMessage = "Consultation request has been sent to %s".formatted(consultationTeam.getDisplayName());
     NotificationBannerUtil.addSuccessNotification(redirectAttributes, notificationBannerMessage);
 
-    return ReverseRouter.redirect(on(WorkAreaController.class).getWorkArea(null, null));
+    return ReverseRouter.redirect(on(ConsultationController.class).getConsultations(applicationId, null));
   }
 
   private ModelAndView getModelAndView(ApplicationVersion applicationVersion, ConsultationRequestForm form) {

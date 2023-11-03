@@ -37,6 +37,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
@@ -44,7 +45,6 @@ import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanne
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.Team;
 import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
-import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @ContextConfiguration(classes = ConsultationRequestController.class)
 class ConsultationRequestControllerTest extends AbstractApplicationControllerTest {
@@ -127,7 +127,7 @@ class ConsultationRequestControllerTest extends AbstractApplicationControllerTes
         .getModel();
 
     assertThat(model)
-        .containsEntry("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class).caseProcessing(applicationId, null, null)))
+        .containsEntry("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class).caseProcessing(applicationId, null,null)))
         .containsEntry("pageTitle", "Request consultation from %s".formatted(TEAM.getDisplayName()))
         .containsEntry("applicationReference", APPLICATION_REFERENCE)
         .containsEntry("form", ConsultationRequestForm.empty());
@@ -170,7 +170,7 @@ class ConsultationRequestControllerTest extends AbstractApplicationControllerTes
             .param("deadlineHours", deadlineHours)
             .param("deadlineMinutes", deadlineMinutes))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null))))
+        .andExpect(redirectedUrl(ReverseRouter.route(on(ConsultationController.class).getConsultations(APPLICATION_ID, null))))
         .andExpect(notificationBanner(expectedNotificationBanner));
 
     verify(validator).validate(eq(new ConsultationRequestForm(deadlineDate, deadlineHours, deadlineMinutes)), any(BindingResult.class));

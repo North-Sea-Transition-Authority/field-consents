@@ -1,6 +1,6 @@
 <#include '../../layout/layout.ftl'>
 
-<#-- @ftlvariable name="applicationUpdateRequestView" type="uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateRequestView" -->
+<#-- @ftlvariable name="applicationUpdateRequestView" type="uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestView" -->
 
 <#macro applicationUpdateRequestSummary applicationUpdateRequestView>
   <@fdsSummaryList.summaryListCard
