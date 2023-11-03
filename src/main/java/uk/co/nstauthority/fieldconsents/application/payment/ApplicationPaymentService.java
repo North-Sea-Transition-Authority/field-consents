@@ -8,15 +8,21 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.digitalpaymentslibrary.fee.FeePeriodService;
 import uk.co.fivium.digitalpaymentslibrary.payment.CreateCardPaymentResult;
 import uk.co.fivium.digitalpaymentslibrary.payment.Payment;
+import uk.co.fivium.digitalpaymentslibrary.payment.PaymentReconcileSuccessEvent;
 import uk.co.fivium.digitalpaymentslibrary.payment.PaymentService;
 import uk.co.fivium.digitalpaymentslibrary.payment.PaymentStatus;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
@@ -26,6 +32,8 @@ import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
+import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.fee.FeeLineMnemonic;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 
@@ -34,7 +42,10 @@ public class ApplicationPaymentService {
 
   static final String APPLICATION_VERSION_PAYMENT_ITEM_TYPE = "APPLICATION_VERSION";
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationPaymentService.class);
+
   private final ApplicationService applicationService;
+  private final ApplicationVersionService applicationVersionService;
   private final ApplicationAssetService applicationAssetService;
   private final ConsentLengthService consentLengthService;
   private final OrganisationUnitService organisationUnitService;
@@ -42,19 +53,23 @@ public class ApplicationPaymentService {
   private final TerminalService terminalService;
   private final PaymentService paymentService;
   private final FeePeriodService feePeriodService;
+  private final EnergyPortalUserService energyPortalUserService;
 
   @Autowired
   ApplicationPaymentService(
       ApplicationService applicationService,
+      ApplicationVersionService applicationVersionService,
       ApplicationAssetService applicationAssetService,
       ConsentLengthService consentLengthService,
       OrganisationUnitService organisationUnitService,
       FieldService fieldService,
       TerminalService terminalService,
       PaymentService paymentService,
-      FeePeriodService feePeriodService
+      FeePeriodService feePeriodService,
+      EnergyPortalUserService energyPortalUserService
   ) {
     this.applicationService = applicationService;
+    this.applicationVersionService = applicationVersionService;
     this.applicationAssetService = applicationAssetService;
     this.consentLengthService = consentLengthService;
     this.organisationUnitService = organisationUnitService;
@@ -62,6 +77,7 @@ public class ApplicationPaymentService {
     this.terminalService = terminalService;
     this.paymentService = paymentService;
     this.feePeriodService = feePeriodService;
+    this.energyPortalUserService = energyPortalUserService;
   }
 
   int getPaymentAmountPence(ApplicationVersion applicationVersion) {
@@ -97,6 +113,10 @@ public class ApplicationPaymentService {
 
   String getPaymentItemReference(ApplicationVersion applicationVersion) {
     return applicationVersion.getId().toString();
+  }
+
+  ApplicationVersion getApplicationVersionFromPaymentItemReference(String itemReference) {
+    return applicationVersionService.getApplicationVersionById(Integer.parseInt(itemReference));
   }
 
   String getPaymentDescription(ApplicationVersion applicationVersion) {
@@ -214,5 +234,40 @@ public class ApplicationPaymentService {
     payments.stream()
         .filter(payment -> !payment.isGovUkPayStateFinished())
         .forEach(paymentService::cancelPayment);
+  }
+
+  @EventListener(PaymentReconcileSuccessEvent.class)
+  void onPaymentReconcileSuccessEvent(Payment payment) {
+    var itemType = payment.getItemType();
+    if (!itemType.equals(APPLICATION_VERSION_PAYMENT_ITEM_TYPE)) {
+      throw new IllegalStateException(
+          "Payment %s status changed to success with unknown item type %s"
+              .formatted(payment.getItemReference(), itemType)
+      );
+    }
+
+    var applicationVersion = getApplicationVersionFromPaymentItemReference(payment.getItemReference());
+
+    LOGGER.info(
+        "Payment {} status changed to success, submitting linked application {}",
+        payment.getId(),
+        applicationVersion.getApplication().getId()
+    );
+
+    var applicationVersionStatus = applicationVersion.getStatus();
+    if (!ApplicationVersionStatus.AWAITING_PAYMENT.equals(applicationVersionStatus)) {
+      throw new IllegalStateException(
+          String.format(
+              "Application %d cannot be submitted as application version has status %s",
+              applicationVersion.getApplication().getId(),
+              applicationVersionStatus
+          )
+      );
+    }
+
+    var user = ServiceUserDetail.from(energyPortalUserService.getByWuaId(WebUserAccountId.valueOf(
+        payment.getCreatedByUserId())));
+
+    applicationService.submitApplication(applicationVersion, user);
   }
 }

@@ -2,8 +2,12 @@ package uk.co.nstauthority.fieldconsents.application.payment;
 
 import static java.util.Map.entry;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -13,6 +17,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -25,6 +30,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
@@ -37,7 +43,11 @@ import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalJson;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
+import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
+import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.fee.FeeLineMnemonic;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
@@ -47,6 +57,9 @@ class ApplicationPaymentServiceTest {
 
   @Mock
   private ApplicationService applicationService;
+
+  @Mock
+  private ApplicationVersionService applicationVersionService;
 
   @Mock
   private ApplicationAssetService applicationAssetService;
@@ -68,6 +81,9 @@ class ApplicationPaymentServiceTest {
 
   @Mock
   private FeePeriodService feePeriodService;
+
+  @Mock
+  private EnergyPortalUserService energyPortalUserService;
 
   @InjectMocks
   @Spy
@@ -142,6 +158,19 @@ class ApplicationPaymentServiceTest {
 
     assertThat(applicationPaymentService.getPaymentItemReference(applicationVersion))
         .isEqualTo(applicationVersion.getId().toString());
+  }
+
+  @Test
+  void getApplicationVersionFromPaymentItemReference() {
+    var itemReference = "1";
+
+    var applicationVersion = new ApplicationVersion();
+
+    when(applicationVersionService.getApplicationVersionById(Integer.parseInt(itemReference)))
+        .thenReturn(applicationVersion);
+
+    assertThat(applicationPaymentService.getApplicationVersionFromPaymentItemReference(itemReference))
+        .isEqualTo(applicationVersion);
   }
 
   @Test
@@ -473,5 +502,68 @@ class ApplicationPaymentServiceTest {
     applicationPaymentService.cancelUnfinishedPayments(payments);
 
     verify(paymentService).cancelPayment(payment2);
+  }
+
+  @Test
+  void onPaymentReconcileSuccessEvent_itemTypeNotApplicationVersionPaymentItemType() {
+    var payment = mock(Payment.class);
+
+    when(payment.getItemType()).thenReturn("testItemType");
+
+    assertThatThrownBy(() -> applicationPaymentService.onPaymentReconcileSuccessEvent(payment))
+        .isInstanceOf(IllegalStateException.class);
+
+    verify(applicationService, never()).submitApplication(any(), any());
+  }
+
+  @Test
+  void onPaymentReconcileSuccessEvent_applicationStatusNotAwaitingPayment() {
+    var payment = mock(Payment.class);
+
+    var itemReference = "testItemReference";
+    var applicationVersion =
+        ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+
+    when(payment.getItemType()).thenReturn(ApplicationPaymentService.APPLICATION_VERSION_PAYMENT_ITEM_TYPE);
+    when(payment.getItemReference()).thenReturn(itemReference);
+
+    doReturn(applicationVersion)
+        .when(applicationPaymentService)
+        .getApplicationVersionFromPaymentItemReference(itemReference);
+
+    assertThatThrownBy(() -> applicationPaymentService.onPaymentReconcileSuccessEvent(payment))
+        .isInstanceOf(IllegalStateException.class);
+
+    verify(applicationService, never()).submitApplication(any(), any());
+  }
+
+  @Test
+  void onPaymentReconcileSuccessEvent() {
+    var payment = mock(Payment.class);
+
+    var itemReference = "testItemReference";
+    var createdByUserId = "1";
+    var applicationVersion =
+        ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
+
+    var energyPortalUserDto = mock(EnergyPortalUserDto.class);
+
+    when(payment.getItemType()).thenReturn(ApplicationPaymentService.APPLICATION_VERSION_PAYMENT_ITEM_TYPE);
+    when(payment.getItemReference()).thenReturn(itemReference);
+    when(payment.getCreatedByUserId()).thenReturn(createdByUserId);
+
+    doReturn(applicationVersion)
+        .when(applicationPaymentService)
+        .getApplicationVersionFromPaymentItemReference(itemReference);
+    when(energyPortalUserService.getByWuaId(WebUserAccountId.valueOf(createdByUserId))).thenReturn(energyPortalUserDto);
+    when(energyPortalUserDto.webUserAccountId()).thenReturn(Long.valueOf(createdByUserId));
+
+    applicationPaymentService.onPaymentReconcileSuccessEvent(payment);
+
+    var userCaptor = ArgumentCaptor.forClass(ServiceUserDetail.class);
+
+    verify(applicationService).submitApplication(eq(applicationVersion), userCaptor.capture());
+
+    assertThat(userCaptor.getValue().wuaId()).isEqualTo(Long.valueOf(createdByUserId));
   }
 }
