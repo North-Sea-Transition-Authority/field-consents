@@ -6,6 +6,7 @@
 <#import './caseprocessingtabs/_caseHistoryTab.ftl' as caseHistoryTab>
 <#import 'review/technicalReviewDetails.ftl' as technicalReviewDetails/>
 <#import '../application/consultation/further-information/furtherInformation.ftl' as furtherInformation/>
+<#import './caseprocessingtabs/_paymentsTab.ftl' as paymentsTab>
 
 <#-- @ftlvariable name="technicalReviewSummaryView" type="uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewSummaryView" -->
 <#-- @ftlvariable name="taskListSections" type="java.util.List<uk.co.nstauthority.fieldconsents.tasklist.TaskListSection>" -->
@@ -33,6 +34,9 @@
     </#if>
     <#if selectedTab == "CASE_HISTORY">
       <@caseHistoryTab.tab caseHistoryEvents=caseHistoryEvents/>
+    </#if>
+    <#if selectedTab == "PAYMENTS">
+      <@paymentsTab.tab paymentsTabPaymentSummaryViews=paymentsTabPaymentSummaryViews/>
     </#if>
   </@caseProcessingTabsWithContent>
 </@defaultPage>

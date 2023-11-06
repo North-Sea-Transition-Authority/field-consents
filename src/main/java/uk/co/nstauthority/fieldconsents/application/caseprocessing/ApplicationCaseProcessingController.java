@@ -3,6 +3,7 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature.WIDE_SUMMARY_DISPLAY;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,6 +18,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CasePr
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseHistoryTabContentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.payment.PaymentsTabService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.tasklist.CaseProcessingTaskListService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewSummaryView;
@@ -40,38 +42,33 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.Reg
 public class ApplicationCaseProcessingController {
 
   private final ApplicationService applicationService;
-
   private final ApplicationVersionService applicationVersionService;
-
   private final ApplicationSummaryService applicationSummaryService;
-
   private final CaseProcessingActionService caseProcessingActionService;
-
   private final CaseProcessingTaskListService caseProcessingTaskListService;
-
   private final CaseProcessingTabService caseProcessingTabService;
-
   private final CaseHistoryTabContentService caseHistoryTabContentService;
-
   private final TechnicalReviewService technicalReviewService;
-
   private final RegulatorTeamService regulatorTeamService;
-
   private final ConsultationService consultationService;
-
   private final FurtherInformationService furtherInformationService;
+  private final PaymentsTabService paymentsTabService;
 
-  ApplicationCaseProcessingController(ApplicationService applicationService,
-                                      ApplicationVersionService applicationVersionService,
-                                      ApplicationSummaryService applicationSummaryService,
-                                      CaseProcessingActionService caseProcessingActionService,
-                                      CaseProcessingTaskListService caseProcessingTaskListService,
-                                      CaseProcessingTabService caseProcessingTabService,
-                                      CaseHistoryTabContentService caseHistoryTabContentService,
-                                      TechnicalReviewService technicalReviewService,
-                                      RegulatorTeamService regulatorTeamService,
-                                      ConsultationService consultationService,
-                                      FurtherInformationService furtherInformationService) {
+  @Autowired
+  ApplicationCaseProcessingController(
+      ApplicationService applicationService,
+      ApplicationVersionService applicationVersionService,
+      ApplicationSummaryService applicationSummaryService,
+      CaseProcessingActionService caseProcessingActionService,
+      CaseProcessingTaskListService caseProcessingTaskListService,
+      CaseProcessingTabService caseProcessingTabService,
+      CaseHistoryTabContentService caseHistoryTabContentService,
+      TechnicalReviewService technicalReviewService,
+      RegulatorTeamService regulatorTeamService,
+      ConsultationService consultationService,
+      FurtherInformationService furtherInformationService,
+      PaymentsTabService paymentsTabService
+  ) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.applicationSummaryService = applicationSummaryService;
@@ -83,6 +80,7 @@ public class ApplicationCaseProcessingController {
     this.regulatorTeamService = regulatorTeamService;
     this.consultationService = consultationService;
     this.furtherInformationService = furtherInformationService;
+    this.paymentsTabService = paymentsTabService;
   }
 
   @GetMapping("case-processing")
@@ -107,6 +105,7 @@ public class ApplicationCaseProcessingController {
         .addObject("pageTitle", applicationService.generateApplicationReference(applicationVersion));
 
     switch (tab) {
+      case PAYMENTS -> paymentsTabService.addPaymentsTabContentToModelAndView(applicationVersion, modelAndView);
       case CASE_HISTORY -> addCaseHistoryTab(modelAndView, applicationVersion);
       case TASKS -> addTasksTab(modelAndView, applicationVersion, user);
       default -> applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView);

@@ -35,7 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.fivium.digitalpaymentslibrary.payment.CreateCardPaymentResult;
-import uk.co.fivium.digitalpaymentslibrary.payment.Payment;
+import uk.co.fivium.digitalpaymentslibrary.payment.PaymentDto;
 import uk.co.fivium.digitalpaymentslibrary.payment.PaymentStatus;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationContextJson;
@@ -252,17 +252,15 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
 
   @Test
   void returnToInProgress_paymentExistsThatHasSucceeded() throws Exception {
-    var payment1 = mock(Payment.class);
-    var payment2 = mock(Payment.class);
-    var payments = List.of(payment1, payment2);
+    var paymentDto1 = mock(PaymentDto.class);
+    var paymentDto2 = mock(PaymentDto.class);
+    var paymentDtos = List.of(paymentDto1, paymentDto2);
 
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT));
-    when(applicationPaymentService.getAndRefreshPayments(applicationVersion)).thenReturn(payments);
-    when(payment1.getGovUkPayStateStatus()).thenReturn("failed");
-    when(payment1.isGovUkPayStateFinished()).thenReturn(false);
-    when(payment2.getGovUkPayStateStatus()).thenReturn("success");
-    when(payment2.isGovUkPayStateFinished()).thenReturn(true);
+    when(applicationPaymentService.getAndRefreshPaymentDtos(applicationVersion)).thenReturn(paymentDtos);
+    when(paymentDto1.status()).thenReturn(PaymentStatus.FAILED);
+    when(paymentDto1.status()).thenReturn(PaymentStatus.SUCCESS);
 
     mockMvc.perform(post(ReverseRouter.route(on(ApplicationPaymentController.class)
             .returnToInProgress(APPLICATION_ID, null)))
@@ -273,23 +271,21 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
             .getPaymentCompleted(APPLICATION_ID))));
 
     verify(applicationService).submitApplication(applicationVersion, user);
-    verify(applicationPaymentService, never()).cancelUnfinishedPayments(any());
+    verify(applicationPaymentService, never()).cancelInProgressPayments(any());
     verify(applicationService, never()).returnApplicationToInProgressFromAwaitingPayment(any());
   }
 
   @Test
   void returnToInProgress_noPaymentExistsThatHasSucceeded() throws Exception {
-    var payment1 = mock(Payment.class);
-    var payment2 = mock(Payment.class);
-    var payments = List.of(payment1, payment2);
+    var paymentDto1 = mock(PaymentDto.class);
+    var paymentDto2 = mock(PaymentDto.class);
+    var paymentDtos = List.of(paymentDto1, paymentDto2);
 
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT));
-    when(applicationPaymentService.getAndRefreshPayments(applicationVersion)).thenReturn(payments);
-    when(payment1.getGovUkPayStateStatus()).thenReturn("failed");
-    when(payment1.isGovUkPayStateFinished()).thenReturn(false);
-    when(payment2.getGovUkPayStateStatus()).thenReturn("started");
-    when(payment2.isGovUkPayStateFinished()).thenReturn(true);
+    when(applicationPaymentService.getAndRefreshPaymentDtos(applicationVersion)).thenReturn(paymentDtos);
+    when(paymentDto1.status()).thenReturn(PaymentStatus.FAILED);
+    when(paymentDto1.status()).thenReturn(PaymentStatus.IN_PROGRESS);
 
     mockMvc.perform(post(ReverseRouter.route(on(ApplicationPaymentController.class)
             .returnToInProgress(APPLICATION_ID, null)))
@@ -300,7 +296,7 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
             .getTaskList(APPLICATION_ID))));
 
     verify(applicationService, never()).submitApplication(any(), any());
-    verify(applicationPaymentService).cancelUnfinishedPayments(payments);
+    verify(applicationPaymentService).cancelInProgressPayments(paymentDtos);
     verify(applicationService).returnApplicationToInProgressFromAwaitingPayment(applicationVersion);
   }
 

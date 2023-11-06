@@ -89,7 +89,7 @@ public class ApplicationSummaryController {
 
     if (isIndustryCaseProcessingUser(user, applicationVersion)) {
       return ReverseRouter.redirect(on(IndustryCaseProcessingController.class)
-          .getIndustryCaseProcessing(applicationId, null));
+          .getIndustryCaseProcessing(applicationId, null, null));
     }
 
     return getSummaryModelAndView(applicationVersion);
@@ -102,7 +102,8 @@ public class ApplicationSummaryController {
       return getSummaryModelAndView(applicationVersion);
     }
 
-    return ReverseRouter.redirect(on(IndustryCaseProcessingController.class).getIndustryCaseProcessing(applicationId, null));
+    return ReverseRouter.redirect(on(IndustryCaseProcessingController.class)
+        .getIndustryCaseProcessing(applicationId, null, null));
   }
 
   private ModelAndView getInProgressModelAndView(ApplicationVersion applicationVersion, ServiceUserDetail user) {
@@ -113,7 +114,8 @@ public class ApplicationSummaryController {
     }
 
     if (applicationVersion.isUpdateVersion()) {
-      return ReverseRouter.redirect(on(IndustryCaseProcessingController.class).getIndustryCaseProcessing(applicationId, null));
+      return ReverseRouter.redirect(on(IndustryCaseProcessingController.class)
+          .getIndustryCaseProcessing(applicationId, null, null));
     }
 
     return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));

@@ -3,6 +3,7 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents;
 public enum CaseEventType {
 
   APPLICATION_CREATED("Application created", "Created by", "Created on", null),
+  PAYMENT_COMPLETED("Payment completed", "Paid by", "Paid on", "Payment amount"),
   APPLICATION_SUBMITTED("Application submitted", "Submitted by", "Submitted on", null),
   APPLICATION_DELETED("Application deleted", "Deleted by", "Deleted on", null),
   APPLICATION_UPDATE_REQUESTED("Application update requested", "Requested by", "Requested on", "Update request"),

@@ -88,7 +88,9 @@ public class EnergyPortalUserService {
     }));
   }
 
-  public Map<WebUserAccountId, EnergyPortalUserDto> getEnergyPortalUserMap(List<WebUserAccountId> webUserAccountIds) {
+  public Map<WebUserAccountId, EnergyPortalUserDto> getEnergyPortalUserMap(
+      Collection<WebUserAccountId> webUserAccountIds
+  ) {
     return findByWuaIds(webUserAccountIds)
         .stream()
         .collect(Collectors.toMap(

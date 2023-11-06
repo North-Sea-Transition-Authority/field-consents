@@ -1,8 +1,10 @@
 <#include '../layout/layout.ftl'>
+<#include '../application/caseprocessingtabs/caseProccessingTabs.ftl'>
 <#import '../functions/_getPageSize.ftl' as getPageSize>
 <#import '../summary/_applicationSummary.ftl' as applicationSummary>
 <#import '_caseProcessingActions.ftl' as caseProcessingActions>
 <#import 'update/_applicationUpdateRequestBanner.ftl' as applicationUpdateRequestBanner>
+<#import './caseprocessingtabs/_paymentsTab.ftl' as paymentsTab>
 
 <#-- @ftlvariable name="applicationUpdateRequestView" type="uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestView" -->
 
@@ -12,5 +14,15 @@
   pageSize=getPageSize.getPageSize(wideSummaryDisplay)>
   <@applicationUpdateRequestBanner.applicationUpdateRequestBanner applicationUpdateRequestView=applicationUpdateRequestView!""/>
   <@caseProcessingActions.caseActions actions=actionList/>
-  <@applicationSummary.applicationSummary accordionId=accordionId/>
+  <@caseProcessingTabsWithContent
+    tabs=caseProcessingTabs
+    selectedTab=selectedTab
+    controllerUrl=controllerUrl>
+    <#if selectedTab == "VIEW_APPLICATION">
+      <@applicationSummary.applicationSummary accordionId=accordionId/>
+    </#if>
+    <#if selectedTab == "PAYMENTS">
+      <@paymentsTab.tab paymentsTabPaymentSummaryViews=paymentsTabPaymentSummaryViews/>
+    </#if>
+  </@caseProcessingTabsWithContent>
 </@defaultPage>

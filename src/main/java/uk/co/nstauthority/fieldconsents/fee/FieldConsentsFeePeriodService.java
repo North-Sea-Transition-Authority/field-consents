@@ -12,7 +12,6 @@ import uk.co.fivium.digitalpaymentslibrary.fee.FeeLineDto;
 import uk.co.fivium.digitalpaymentslibrary.fee.FeePeriodDto;
 import uk.co.fivium.digitalpaymentslibrary.fee.FeePeriodService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.formatting.DecimalFormatUtils;
 
 @Service
 public class FieldConsentsFeePeriodService {
@@ -126,7 +125,7 @@ public class FieldConsentsFeePeriodService {
     form.setFeeLineAmountsByMnemonic(feeLineDtos.stream()
         .collect(Collectors.toMap(
             FeeLineDto::mnemonic,
-            feeLineDto -> DecimalFormatUtils.formatMoney((double) feeLineDto.amountPence() / 100)
+            feeLineDto -> String.format("%.2f", (double) feeLineDto.amountPence() / 100)
         )));
 
     return form;

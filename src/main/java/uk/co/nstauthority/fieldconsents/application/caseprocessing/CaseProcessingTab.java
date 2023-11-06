@@ -31,6 +31,12 @@ public enum CaseProcessingTab {
       "case-history",
       EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS, TECHNICAL_REVIEW_FCS_APPLICATIONS)
   ),
+  PAYMENTS(
+      "Payments",
+      "payments",
+      "payments",
+      EnumSet.of(VIEW_FCS_APPLICATIONS)
+  ),
   FURTHER_INFORMATION(
       "Further information requests",
       "furtherInformationRequests",

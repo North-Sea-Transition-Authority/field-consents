@@ -4,8 +4,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -14,6 +14,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature.WIDE_SUMMARY_DISPLAY;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseProcessingTab.CASE_HISTORY;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseProcessingTab.PAYMENTS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseProcessingTab.TASKS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseProcessingTab.VIEW_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
@@ -46,6 +47,8 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformation;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationView;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.payment.PaymentsTabPaymentSummaryView;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.payment.PaymentsTabService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.tasklist.CaseProcessingTaskListService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReview;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
@@ -70,6 +73,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   private static final String TASK_LIST_ATTRIBUTE = "taskListSections";
   private static final String SUMMARY_SECTIONS_ATTRIBUTE = "summarySections";
   private static final String CASE_HISTORY_ATTRIBUTE = "caseHistoryEvents";
+  private static final String PAYMENTS_TAB_PAYMENT_SUMMARY_VIEWS_ATTRIBUTE = "paymentsTabPaymentSummaryViews";
 
   @MockBean
   private ApplicationService applicationService;
@@ -98,6 +102,9 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   @MockBean
   private FurtherInformationService furtherInformationService;
 
+  @MockBean
+  private PaymentsTabService paymentsTabService;
+
   private ApplicationVersion applicationVersion;
 
   private TechnicalReview technicalReview;
@@ -117,6 +124,8 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   private List<CaseEventView> caseEventViews;
 
   private List<TaskListSection> taskListSections;
+
+  private List<PaymentsTabPaymentSummaryView> paymentsTabPaymentSummaryViews;
 
   @BeforeEach
   void setUp() {
@@ -150,6 +159,15 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     caseProcessingTabs = EnumSet.allOf(CaseProcessingTab.class).stream().toList();
     caseEventViews = Collections.emptyList();
     taskListSections = Collections.emptyList();
+
+    paymentsTabPaymentSummaryViews = List.of(new PaymentsTabPaymentSummaryView(
+        "testStatus",
+        "testDescription",
+        "testFormattedPaymentAmount",
+        "testPaidByUser",
+        "testFormattedPaymentDate",
+        "testGovUkPayReference"
+    ));
   }
 
   @ParameterizedSecurityTest
@@ -174,6 +192,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     stubTaskListServiceCall();
     stubSummaryServiceCall();
     stubCaseHistoryServiceCall();
+    stubPaymentsServiceCall();
 
     var tabParam = Optional.ofNullable(caseProcessingTab).map(tab -> "?tab=%s".formatted(tab.getAnchor())).orElse("");
     var expectedTab = Optional.ofNullable(caseProcessingTab).orElse(TASKS);
@@ -191,6 +210,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     stubTaskListServiceCall();
     stubSummaryServiceCall();
     stubCaseHistoryServiceCall();
+    stubPaymentsServiceCall();
 
     when(regulatorTeamService.isTechnicalReviewer(WebUserAccountId.from(user.wuaId()))).thenReturn(true);
     when(technicalReviewService.findOpenTechnicalReview(applicationVersion)).thenReturn(Optional.of(technicalReview));
@@ -210,6 +230,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     stubTaskListServiceCall();
     stubSummaryServiceCall();
     stubCaseHistoryServiceCall();
+    stubPaymentsServiceCall();
 
     when(regulatorTeamService.isTechnicalReviewer(WebUserAccountId.from(user.wuaId()))).thenReturn(false);
 
@@ -228,6 +249,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     stubTaskListServiceCall();
     stubSummaryServiceCall();
     stubCaseHistoryServiceCall();
+    stubPaymentsServiceCall();
 
     when(regulatorTeamService.isCaseOfficer(WebUserAccountId.from(user.wuaId()))).thenReturn(true);
     when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication())).thenReturn(Optional.of(consultation));
@@ -249,6 +271,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     stubTaskListServiceCall();
     stubSummaryServiceCall();
     stubCaseHistoryServiceCall();
+    stubPaymentsServiceCall();
 
     when(regulatorTeamService.isCaseOfficer(WebUserAccountId.from(user.wuaId()))).thenReturn(false);
 
@@ -269,11 +292,11 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
             .caseProcessing(APPLICATION_ID, null, null)) + tabParam)
-            .with(user(user))
-            .with(csrf()))
+            .with(user(user)))
         .andExpectAll(commonAttributesForTab(TASKS, applicationVersion))
         .andExpect(model().attribute(TASK_LIST_ATTRIBUTE, taskListSections))
         .andExpect(model().attributeDoesNotExist(CASE_HISTORY_ATTRIBUTE))
+        .andExpect(model().attributeDoesNotExist(PAYMENTS_TAB_PAYMENT_SUMMARY_VIEWS_ATTRIBUTE))
         .andExpect(model().attributeDoesNotExist(SUMMARY_SECTIONS_ATTRIBUTE));
   }
 
@@ -286,12 +309,14 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
             .caseProcessing(APPLICATION_ID, null, null)) + tabParam)
-            .with(user(user))
-            .with(csrf()))
+            .with(user(user)))
         .andExpectAll(commonAttributesForTab(VIEW_APPLICATION, applicationVersion))
         .andExpect(model().attributeDoesNotExist(TASK_LIST_ATTRIBUTE))
         .andExpect(model().attributeDoesNotExist(CASE_HISTORY_ATTRIBUTE))
+        .andExpect(model().attributeDoesNotExist(PAYMENTS_TAB_PAYMENT_SUMMARY_VIEWS_ATTRIBUTE))
         .andExpect(model().attribute(SUMMARY_SECTIONS_ATTRIBUTE, summarySections));
+
+    verify(applicationSummaryService).addSummarySectionsToModelAndView(eq(applicationVersion), any());
   }
 
   @Test
@@ -307,6 +332,24 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
         .andExpectAll(commonAttributesForTab(CASE_HISTORY, applicationVersion))
         .andExpect(model().attributeDoesNotExist(TASK_LIST_ATTRIBUTE))
         .andExpect(model().attribute(CASE_HISTORY_ATTRIBUTE, caseEventViews))
+        .andExpect(model().attributeDoesNotExist(PAYMENTS_TAB_PAYMENT_SUMMARY_VIEWS_ATTRIBUTE))
+        .andExpect(model().attributeDoesNotExist(SUMMARY_SECTIONS_ATTRIBUTE));
+  }
+
+  @Test
+  void caseProcessing_payments() throws Exception {
+    stubBaseServiceCalls();
+    stubPaymentsServiceCall();
+
+    var tabParam = "?tab=%s".formatted(PAYMENTS.getAnchor());
+
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .caseProcessing(APPLICATION_ID, null, null)) + tabParam)
+            .with(user(user)))
+        .andExpectAll(commonAttributesForTab(PAYMENTS, applicationVersion))
+        .andExpect(model().attributeDoesNotExist(TASK_LIST_ATTRIBUTE))
+        .andExpect(model().attributeDoesNotExist(CASE_HISTORY_ATTRIBUTE))
+        .andExpect(model().attribute(PAYMENTS_TAB_PAYMENT_SUMMARY_VIEWS_ATTRIBUTE, paymentsTabPaymentSummaryViews))
         .andExpect(model().attributeDoesNotExist(SUMMARY_SECTIONS_ATTRIBUTE));
   }
 
@@ -340,6 +383,16 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   private void stubCaseHistoryServiceCall() {
     var application = applicationVersion.getApplication();
     when(caseHistoryTabContentService.getCaseHistoryTabContent(application)).thenReturn(caseEventViews);
+  }
+
+  private void stubPaymentsServiceCall() {
+    doAnswer(invocation -> {
+      invocation.getArgument(1, ModelAndView.class)
+          .addObject("paymentsTabPaymentSummaryViews", paymentsTabPaymentSummaryViews);
+      return null;
+    })
+        .when(paymentsTabService)
+        .addPaymentsTabContentToModelAndView(eq(applicationVersion), any(ModelAndView.class));
   }
 
   private ResultMatcher[] commonAttributesForTab(CaseProcessingTab tab, ApplicationVersion applicationVersion) {

@@ -29,7 +29,7 @@
             <td class="govuk-table__cell">${feeLineView.mnemonic().applicationType().getDisplayName()}</td>
             <td class="govuk-table__cell">${feeLineView.mnemonic().consentLengthType().getShortDisplayName()}</td>
             <td class="govuk-table__cell">${feeLineView.mnemonic().consentRevisionType().getDisplayName()}</td>
-            <td class="govuk-table__cell">£${feeLineView.formattedAmount()}</td>
+            <td class="govuk-table__cell">${feeLineView.formattedAmount()}</td>
           </tr>
         </#list>
       </tbody>

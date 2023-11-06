@@ -2,11 +2,13 @@ package uk.co.nstauthority.fieldconsents.formatting;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.Locale;
 
 public class DecimalFormatUtils {
 
   public static final DecimalFormat DEFAULT_DECIMAL_FORMAT = new DecimalFormat("#.##########");
-  private static final DecimalFormat MONEY_FORMAT = new DecimalFormat("0.00");
+  private static final NumberFormat MONEY_FORMAT = NumberFormat.getCurrencyInstance(Locale.UK);
 
   private DecimalFormatUtils() {
     throw new IllegalStateException("Utility class");

@@ -24,8 +24,9 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.fivium.digitalpaymentslibrary.fee.FeePeriodService;
 import uk.co.fivium.digitalpaymentslibrary.payment.CreateCardPaymentResult;
-import uk.co.fivium.digitalpaymentslibrary.payment.Payment;
+import uk.co.fivium.digitalpaymentslibrary.payment.PaymentDto;
 import uk.co.fivium.digitalpaymentslibrary.payment.PaymentService;
+import uk.co.fivium.digitalpaymentslibrary.payment.PaymentStatus;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
@@ -423,10 +424,10 @@ class ApplicationPaymentServiceTest {
     var paymentId = UUID.randomUUID();
     var applicationVersion = new ApplicationVersion();
 
-    var payment = mock(Payment.class);
+    var paymentDto = mock(PaymentDto.class);
 
-    when(payment.getItemReference()).thenReturn("otherPaymentItemReference");
-    when(paymentService.getPaymentOrThrow(paymentId)).thenReturn(payment);
+    when(paymentDto.itemReference()).thenReturn("otherPaymentItemReference");
+    when(paymentService.getPaymentDtoOrThrow(paymentId)).thenReturn(paymentDto);
 
     doReturn("testPaymentItemReference").when(applicationPaymentService).getPaymentItemReference(applicationVersion);
 
@@ -438,13 +439,13 @@ class ApplicationPaymentServiceTest {
     var paymentId = UUID.randomUUID();
     var applicationVersion = new ApplicationVersion();
 
-    var payment = mock(Payment.class);
+    var paymentDto = mock(PaymentDto.class);
     var paymentItemReference = "testPaymentItemReference";
 
-    when(payment.getItemReference()).thenReturn(paymentItemReference);
-    when(payment.getItemType()).thenReturn("otherPaymentItemType");
+    when(paymentDto.itemReference()).thenReturn(paymentItemReference);
+    when(paymentDto.itemType()).thenReturn("otherPaymentItemType");
 
-    when(paymentService.getPaymentOrThrow(paymentId)).thenReturn(payment);
+    when(paymentService.getPaymentDtoOrThrow(paymentId)).thenReturn(paymentDto);
     doReturn(paymentItemReference).when(applicationPaymentService).getPaymentItemReference(applicationVersion);
 
     assertThat(applicationPaymentService.isPaymentForApplicationVersion(paymentId, applicationVersion)).isFalse();
@@ -455,62 +456,71 @@ class ApplicationPaymentServiceTest {
     var paymentId = UUID.randomUUID();
     var applicationVersion = new ApplicationVersion();
 
-    var payment = mock(Payment.class);
+    var paymentDto = mock(PaymentDto.class);
     var paymentItemReference = "testPaymentItemReference";
 
-    when(payment.getItemReference()).thenReturn(paymentItemReference);
-    when(payment.getItemType()).thenReturn(ApplicationPaymentService.APPLICATION_VERSION_PAYMENT_ITEM_TYPE);
+    when(paymentDto.itemReference()).thenReturn(paymentItemReference);
+    when(paymentDto.itemType()).thenReturn(ApplicationPaymentService.APPLICATION_VERSION_PAYMENT_ITEM_TYPE);
 
-    when(paymentService.getPaymentOrThrow(paymentId)).thenReturn(payment);
+    when(paymentService.getPaymentDtoOrThrow(paymentId)).thenReturn(paymentDto);
     doReturn(paymentItemReference).when(applicationPaymentService).getPaymentItemReference(applicationVersion);
 
     assertThat(applicationPaymentService.isPaymentForApplicationVersion(paymentId, applicationVersion)).isTrue();
   }
 
   @Test
-  void getAndRefreshPayments() {
+  void getPaymentDtos() {
     var applicationVersion = new ApplicationVersion();
 
     var paymentItemReference = "testPaymentItemReference";
 
-    var payment1 = mock(Payment.class);
-    var payment2 = mock(Payment.class);
-    var payments = List.of(payment1, payment2);
+    var paymentDtos = List.of(mock(PaymentDto.class), mock(PaymentDto.class));
 
     doReturn(paymentItemReference).when(applicationPaymentService).getPaymentItemReference(applicationVersion);
 
-    when(paymentService.getPayments(paymentItemReference, ApplicationPaymentService.APPLICATION_VERSION_PAYMENT_ITEM_TYPE))
-        .thenReturn(payments);
+    when(paymentService.getPaymentDtos(paymentItemReference, ApplicationPaymentService.APPLICATION_VERSION_PAYMENT_ITEM_TYPE))
+        .thenReturn(paymentDtos);
 
-    when(payment1.isGovUkPayStateFinished()).thenReturn(true);
-    when(payment2.isGovUkPayStateFinished()).thenReturn(false);
-
-    assertThat(applicationPaymentService.getAndRefreshPayments(applicationVersion)).isEqualTo(payments);
-
-    verify(paymentService).refreshPayment(payment2);
+    assertThat(applicationPaymentService.getPaymentDtos(applicationVersion)).isEqualTo(paymentDtos);
   }
 
   @Test
-  void cancelUnfinishedPayments() {
-    var payment1 = mock(Payment.class);
-    var payment2 = mock(Payment.class);
-    var payments = List.of(payment1, payment2);
+  void getAndRefreshPaymentDtos() {
+    var applicationVersion = new ApplicationVersion();
 
-    when(payment1.isGovUkPayStateFinished()).thenReturn(true);
-    when(payment2.isGovUkPayStateFinished()).thenReturn(false);
+    var paymentItemReference = "testPaymentItemReference";
 
-    applicationPaymentService.cancelUnfinishedPayments(payments);
+    var paymentDtos = List.of(mock(PaymentDto.class), mock(PaymentDto.class));
 
-    verify(paymentService).cancelPayment(payment2);
+    doReturn(paymentItemReference).when(applicationPaymentService).getPaymentItemReference(applicationVersion);
+
+    when(paymentService.getAndRefreshPaymentDtos(paymentItemReference, ApplicationPaymentService.APPLICATION_VERSION_PAYMENT_ITEM_TYPE))
+        .thenReturn(paymentDtos);
+
+    assertThat(applicationPaymentService.getAndRefreshPaymentDtos(applicationVersion)).isEqualTo(paymentDtos);
+  }
+
+  @Test
+  void cancelInProgressPayments() {
+    var paymentDto1 = mock(PaymentDto.class);
+    var paymentDto2 = mock(PaymentDto.class);
+    var paymentDtos = List.of(paymentDto1, paymentDto2);
+
+    when(paymentDto1.status()).thenReturn(PaymentStatus.FAILED);
+    when(paymentDto2.status()).thenReturn(PaymentStatus.IN_PROGRESS);
+
+    applicationPaymentService.cancelInProgressPayments(paymentDtos);
+
+    verify(paymentService).cancelPayment(paymentDto2);
   }
 
   @Test
   void onPaymentReconcileSuccessEvent_itemTypeNotApplicationVersionPaymentItemType() {
-    var payment = mock(Payment.class);
+    var paymentDto = mock(PaymentDto.class);
 
-    when(payment.getItemType()).thenReturn("testItemType");
+    when(paymentDto.itemType()).thenReturn("testItemType");
 
-    assertThatThrownBy(() -> applicationPaymentService.onPaymentReconcileSuccessEvent(payment))
+    assertThatThrownBy(() -> applicationPaymentService.onPaymentReconcileSuccessEvent(paymentDto))
         .isInstanceOf(IllegalStateException.class);
 
     verify(applicationService, never()).submitApplication(any(), any());
@@ -518,20 +528,20 @@ class ApplicationPaymentServiceTest {
 
   @Test
   void onPaymentReconcileSuccessEvent_applicationStatusNotAwaitingPayment() {
-    var payment = mock(Payment.class);
+    var paymentDto = mock(PaymentDto.class);
 
     var itemReference = "testItemReference";
     var applicationVersion =
         ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
 
-    when(payment.getItemType()).thenReturn(ApplicationPaymentService.APPLICATION_VERSION_PAYMENT_ITEM_TYPE);
-    when(payment.getItemReference()).thenReturn(itemReference);
+    when(paymentDto.itemType()).thenReturn(ApplicationPaymentService.APPLICATION_VERSION_PAYMENT_ITEM_TYPE);
+    when(paymentDto.itemReference()).thenReturn(itemReference);
 
     doReturn(applicationVersion)
         .when(applicationPaymentService)
         .getApplicationVersionFromPaymentItemReference(itemReference);
 
-    assertThatThrownBy(() -> applicationPaymentService.onPaymentReconcileSuccessEvent(payment))
+    assertThatThrownBy(() -> applicationPaymentService.onPaymentReconcileSuccessEvent(paymentDto))
         .isInstanceOf(IllegalStateException.class);
 
     verify(applicationService, never()).submitApplication(any(), any());
@@ -539,7 +549,7 @@ class ApplicationPaymentServiceTest {
 
   @Test
   void onPaymentReconcileSuccessEvent() {
-    var payment = mock(Payment.class);
+    var paymentDto = mock(PaymentDto.class);
 
     var itemReference = "testItemReference";
     var createdByUserId = "1";
@@ -548,9 +558,9 @@ class ApplicationPaymentServiceTest {
 
     var energyPortalUserDto = mock(EnergyPortalUserDto.class);
 
-    when(payment.getItemType()).thenReturn(ApplicationPaymentService.APPLICATION_VERSION_PAYMENT_ITEM_TYPE);
-    when(payment.getItemReference()).thenReturn(itemReference);
-    when(payment.getCreatedByUserId()).thenReturn(createdByUserId);
+    when(paymentDto.itemType()).thenReturn(ApplicationPaymentService.APPLICATION_VERSION_PAYMENT_ITEM_TYPE);
+    when(paymentDto.itemReference()).thenReturn(itemReference);
+    when(paymentDto.createdByUserId()).thenReturn(createdByUserId);
 
     doReturn(applicationVersion)
         .when(applicationPaymentService)
@@ -558,7 +568,7 @@ class ApplicationPaymentServiceTest {
     when(energyPortalUserService.getByWuaId(WebUserAccountId.valueOf(createdByUserId))).thenReturn(energyPortalUserDto);
     when(energyPortalUserDto.webUserAccountId()).thenReturn(Long.valueOf(createdByUserId));
 
-    applicationPaymentService.onPaymentReconcileSuccessEvent(payment);
+    applicationPaymentService.onPaymentReconcileSuccessEvent(paymentDto);
 
     var userCaptor = ArgumentCaptor.forClass(ServiceUserDetail.class);
 

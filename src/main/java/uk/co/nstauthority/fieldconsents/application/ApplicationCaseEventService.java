@@ -5,6 +5,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.caseev
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventType.APPLICATION_SUBMITTED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventType.APPLICATION_UPDATE_STARTED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventType.DRAFT_APPLICATION_UPDATE_DELETED;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventType.PAYMENT_COMPLETED;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,22 +13,31 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.digitalpaymentslibrary.payment.PaymentStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEvent;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventService;
+import uk.co.nstauthority.fieldconsents.application.payment.ApplicationPaymentService;
+import uk.co.nstauthority.fieldconsents.formatting.DecimalFormatUtils;
 
 
 @Service
 public class ApplicationCaseEventService implements CaseEventService<Application> {
 
   private final ApplicationVersionService applicationVersionService;
-
   private final ApplicationVersionAuditService applicationVersionAuditService;
+  private final ApplicationPaymentService applicationPaymentService;
 
-  public ApplicationCaseEventService(ApplicationVersionService applicationVersionService,
-                                     ApplicationVersionAuditService applicationVersionAuditService) {
+  @Autowired
+  ApplicationCaseEventService(
+      ApplicationVersionService applicationVersionService,
+      ApplicationVersionAuditService applicationVersionAuditService,
+      ApplicationPaymentService applicationPaymentService
+  ) {
     this.applicationVersionService = applicationVersionService;
     this.applicationVersionAuditService = applicationVersionAuditService;
+    this.applicationPaymentService = applicationPaymentService;
   }
 
   @Override
@@ -55,6 +65,21 @@ public class ApplicationCaseEventService implements CaseEventService<Application
               .withEventDateTime(applicationVersion.getCreatedDateTime())
               .build()
       );
+
+      var paymentDtos = applicationPaymentService.getPaymentDtos(applicationVersion).stream()
+          .filter(paymentDto -> paymentDto.status() == PaymentStatus.SUCCESS)
+          .toList();
+
+      for (var paymentDto : paymentDtos) {
+        caseEvents.add(
+            CaseEvent.builder(applicationVersion)
+                .withEventType(PAYMENT_COMPLETED)
+                .withMainEventUserWuaId(Long.parseLong(paymentDto.createdByUserId()))
+                .withEventDateTime(paymentDto.govUkPayCaptureSubmitInstant())
+                .withEventText(DecimalFormatUtils.formatMoney((double) paymentDto.amountPence() / 100))
+                .build()
+        );
+      }
 
       // this is only for the first version being submitted
       // application updates being submitted is catered for in ApplicationUpdateCaseEventService

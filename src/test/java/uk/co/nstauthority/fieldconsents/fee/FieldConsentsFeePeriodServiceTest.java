@@ -132,28 +132,28 @@ class FieldConsentsFeePeriodServiceTest {
     var feeLineViews = fieldConsentsFeePeriodService.getFeeLineViews(feeLineDtos);
 
     assertThat(feeLineViews).containsExactly(
-        new FeeLineView(FeeLineMnemonic.from("FIELD/PRODUCTION/SHORT_TERM/NEW_CONSENT"), "1180.00"),
-        new FeeLineView(FeeLineMnemonic.from("FIELD/PRODUCTION/SHORT_TERM/REVISION"), "1180.00"),
-        new FeeLineView(FeeLineMnemonic.from("FIELD/PRODUCTION/ANNUAL/NEW_CONSENT"), "1180.00"),
-        new FeeLineView(FeeLineMnemonic.from("FIELD/PRODUCTION/ANNUAL/REVISION"), "1180.00"),
-        new FeeLineView(FeeLineMnemonic.from("FIELD/PRODUCTION/LONG_TERM/NEW_CONSENT"), "1180.00"),
-        new FeeLineView(FeeLineMnemonic.from("FIELD/PRODUCTION/LONG_TERM/REVISION"), "1180.00"),
-        new FeeLineView(FeeLineMnemonic.from("FIELD/FLARE/SHORT_TERM/NEW_CONSENT"), "930.00"),
-        new FeeLineView(FeeLineMnemonic.from("FIELD/FLARE/SHORT_TERM/REVISION"), "930.00"),
-        new FeeLineView(FeeLineMnemonic.from("FIELD/FLARE/ANNUAL/NEW_CONSENT"), "930.00"),
-        new FeeLineView(FeeLineMnemonic.from("FIELD/FLARE/ANNUAL/REVISION"), "930.00"),
-        new FeeLineView(FeeLineMnemonic.from("FIELD/VENT/SHORT_TERM/NEW_CONSENT"), "930.00"),
-        new FeeLineView(FeeLineMnemonic.from("FIELD/VENT/SHORT_TERM/REVISION"), "930.00"),
-        new FeeLineView(FeeLineMnemonic.from("FIELD/VENT/ANNUAL/NEW_CONSENT"), "930.00"),
-        new FeeLineView(FeeLineMnemonic.from("FIELD/VENT/ANNUAL/REVISION"), "930.00"),
-        new FeeLineView(FeeLineMnemonic.from("TERMINAL/FLARE/SHORT_TERM/NEW_CONSENT"), "930.00"),
-        new FeeLineView(FeeLineMnemonic.from("TERMINAL/FLARE/SHORT_TERM/REVISION"), "930.00"),
-        new FeeLineView(FeeLineMnemonic.from("TERMINAL/FLARE/ANNUAL/NEW_CONSENT"), "930.00"),
-        new FeeLineView(FeeLineMnemonic.from("TERMINAL/FLARE/ANNUAL/REVISION"), "930.00"),
-        new FeeLineView(FeeLineMnemonic.from("TERMINAL/VENT/SHORT_TERM/NEW_CONSENT"), "930.00"),
-        new FeeLineView(FeeLineMnemonic.from("TERMINAL/VENT/SHORT_TERM/REVISION"), "930.00"),
-        new FeeLineView(FeeLineMnemonic.from("TERMINAL/VENT/ANNUAL/NEW_CONSENT"), "930.00"),
-        new FeeLineView(FeeLineMnemonic.from("TERMINAL/VENT/ANNUAL/REVISION"), "930.00")
+        new FeeLineView(FeeLineMnemonic.from("FIELD/PRODUCTION/SHORT_TERM/NEW_CONSENT"), "£1,180.00"),
+        new FeeLineView(FeeLineMnemonic.from("FIELD/PRODUCTION/SHORT_TERM/REVISION"), "£1,180.00"),
+        new FeeLineView(FeeLineMnemonic.from("FIELD/PRODUCTION/ANNUAL/NEW_CONSENT"), "£1,180.00"),
+        new FeeLineView(FeeLineMnemonic.from("FIELD/PRODUCTION/ANNUAL/REVISION"), "£1,180.00"),
+        new FeeLineView(FeeLineMnemonic.from("FIELD/PRODUCTION/LONG_TERM/NEW_CONSENT"), "£1,180.00"),
+        new FeeLineView(FeeLineMnemonic.from("FIELD/PRODUCTION/LONG_TERM/REVISION"), "£1,180.00"),
+        new FeeLineView(FeeLineMnemonic.from("FIELD/FLARE/SHORT_TERM/NEW_CONSENT"), "£930.00"),
+        new FeeLineView(FeeLineMnemonic.from("FIELD/FLARE/SHORT_TERM/REVISION"), "£930.00"),
+        new FeeLineView(FeeLineMnemonic.from("FIELD/FLARE/ANNUAL/NEW_CONSENT"), "£930.00"),
+        new FeeLineView(FeeLineMnemonic.from("FIELD/FLARE/ANNUAL/REVISION"), "£930.00"),
+        new FeeLineView(FeeLineMnemonic.from("FIELD/VENT/SHORT_TERM/NEW_CONSENT"), "£930.00"),
+        new FeeLineView(FeeLineMnemonic.from("FIELD/VENT/SHORT_TERM/REVISION"), "£930.00"),
+        new FeeLineView(FeeLineMnemonic.from("FIELD/VENT/ANNUAL/NEW_CONSENT"), "£930.00"),
+        new FeeLineView(FeeLineMnemonic.from("FIELD/VENT/ANNUAL/REVISION"), "£930.00"),
+        new FeeLineView(FeeLineMnemonic.from("TERMINAL/FLARE/SHORT_TERM/NEW_CONSENT"), "£930.00"),
+        new FeeLineView(FeeLineMnemonic.from("TERMINAL/FLARE/SHORT_TERM/REVISION"), "£930.00"),
+        new FeeLineView(FeeLineMnemonic.from("TERMINAL/FLARE/ANNUAL/NEW_CONSENT"), "£930.00"),
+        new FeeLineView(FeeLineMnemonic.from("TERMINAL/FLARE/ANNUAL/REVISION"), "£930.00"),
+        new FeeLineView(FeeLineMnemonic.from("TERMINAL/VENT/SHORT_TERM/NEW_CONSENT"), "£930.00"),
+        new FeeLineView(FeeLineMnemonic.from("TERMINAL/VENT/SHORT_TERM/REVISION"), "£930.00"),
+        new FeeLineView(FeeLineMnemonic.from("TERMINAL/VENT/ANNUAL/NEW_CONSENT"), "£930.00"),
+        new FeeLineView(FeeLineMnemonic.from("TERMINAL/VENT/ANNUAL/REVISION"), "£930.00")
     );
   }
 
@@ -278,8 +278,16 @@ class FieldConsentsFeePeriodServiceTest {
 
     var feePeriodDto = new FeePeriodDto(null, now, null);
     var feeLineDtos = List.of(
-        new FeeLineDto("testFeeLine1Mnemonic", "testFeeLine1Title", 100),
-        new FeeLineDto("testFeeLine2Mnemonic", "testFeeLine2Title", 200)
+        new FeeLineDto("testFeeLine1Mnemonic", "testFeeLine1Title", 0),
+        new FeeLineDto("testFeeLine2Mnemonic", "testFeeLine2Title", 25),
+        new FeeLineDto("testFeeLine3Mnemonic", "testFeeLine3Title", 100),
+        new FeeLineDto("testFeeLine4Mnemonic", "testFeeLine4Title", 150),
+        new FeeLineDto("testFeeLine5Mnemonic", "testFeeLine5Title", 1000),
+        new FeeLineDto("testFeeLine6Mnemonic", "testFeeLine6Title", 1452),
+        new FeeLineDto("testFeeLine7Mnemonic", "testFeeLine7Title", 10000),
+        new FeeLineDto("testFeeLine8Mnemonic", "testFeeLine8Title", 17077),
+        new FeeLineDto("testFeeLine9Mnemonic", "testFeeLine9Title", 100000),
+        new FeeLineDto("testFeeLine10Mnemonic", "testFeeLine10Title", 118000)
     );
 
     var form = fieldConsentsFeePeriodService.getPrefilledFeePeriodForm(feePeriodDto, feeLineDtos);
@@ -289,9 +297,17 @@ class FieldConsentsFeePeriodServiceTest {
         .get()
         .isEqualTo(now);
 
-    assertThat(form.getFeeLineAmountsByMnemonic()).containsExactly(
-        entry("testFeeLine1Mnemonic", "1.00"),
-        entry("testFeeLine2Mnemonic", "2.00")
+    assertThat(form.getFeeLineAmountsByMnemonic()).containsOnly(
+        entry("testFeeLine1Mnemonic", "0.00"),
+        entry("testFeeLine2Mnemonic", "0.25"),
+        entry("testFeeLine3Mnemonic", "1.00"),
+        entry("testFeeLine4Mnemonic", "1.50"),
+        entry("testFeeLine5Mnemonic", "10.00"),
+        entry("testFeeLine6Mnemonic", "14.52"),
+        entry("testFeeLine7Mnemonic", "100.00"),
+        entry("testFeeLine8Mnemonic", "170.77"),
+        entry("testFeeLine9Mnemonic", "1000.00"),
+        entry("testFeeLine10Mnemonic", "1180.00")
     );
   }
 }

@@ -164,7 +164,7 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(IndustryCaseProcessingController.class)
-            .getIndustryCaseProcessing(APPLICATION_ID, null))));
+            .getIndustryCaseProcessing(APPLICATION_ID, null, null))));
   }
 
   @ParameterizedTest
@@ -193,7 +193,7 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(IndustryCaseProcessingController.class)
-            .getIndustryCaseProcessing(APPLICATION_ID, null))));
+            .getIndustryCaseProcessing(APPLICATION_ID, null, null))));
   }
 
   @ParameterizedTest
@@ -212,7 +212,7 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(IndustryCaseProcessingController.class)
-            .getIndustryCaseProcessing(APPLICATION_ID, null))));
+            .getIndustryCaseProcessing(APPLICATION_ID, null, null))));
   }
 
   @ParameterizedTest

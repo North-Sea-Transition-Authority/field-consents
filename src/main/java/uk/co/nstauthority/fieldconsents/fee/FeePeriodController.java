@@ -51,7 +51,7 @@ public class FeePeriodController {
 
   @GetMapping
   public ModelAndView getFeePeriods() {
-    return new ModelAndView("fcs/payment/feePeriods")
+    return new ModelAndView("fcs/fee/feePeriods")
         .addObject("feePeriodSummaryViews", fieldConsentsFeePeriodService.getFeePeriodSummaryViews())
         .addObject(
             "createFeePeriodUrl",
@@ -64,7 +64,7 @@ public class FeePeriodController {
     var feePeriodDto = feePeriodService.getFeePeriodDtoByIdOrThrow(feePeriodId);
     var feeLineDtos = feePeriodService.getFeeLineDtosByFeePeriodId(feePeriodId);
 
-    return new ModelAndView("fcs/payment/viewFeePeriod")
+    return new ModelAndView("fcs/fee/viewFeePeriod")
         .addObject("pageTitle", FeePeriodUtil.getTitle(feePeriodDto))
         .addObject("backLinkUrl", ReverseRouter.route(on(FeePeriodController.class).getFeePeriods()))
         .addObject(
@@ -105,7 +105,7 @@ public class FeePeriodController {
       FeePeriodForm form,
       List<FeeLineDto> latestFeePeriodFeeLineDtos
   ) {
-    return new ModelAndView("fcs/payment/createOrEditFeePeriod")
+    return new ModelAndView("fcs/fee/createOrEditFeePeriod")
         .addObject("form", form)
         .addObject("pageTitle", CREATE_PAGE_TITLE)
         .addObject("submitButtonText", CREATE_SUBMIT_BUTTON_TEXT)
@@ -175,7 +175,7 @@ public class FeePeriodController {
   }
 
   private ModelAndView getEditFeePeriodModelAndView(FeePeriodForm form, List<FeeLineDto> feeLineDtos) {
-    return new ModelAndView("fcs/payment/createOrEditFeePeriod")
+    return new ModelAndView("fcs/fee/createOrEditFeePeriod")
         .addObject("form", form)
         .addObject("pageTitle", EDIT_PAGE_TITLE)
         .addObject("submitButtonText", EDIT_SUBMIT_BUTTON_TEXT)

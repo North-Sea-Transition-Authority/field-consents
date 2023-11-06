@@ -149,9 +149,9 @@ public class ApplicationPaymentController {
   public ModelAndView returnToInProgress(@PathVariable Integer applicationId, ServiceUserDetail user) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
 
-    var payments = applicationPaymentService.getAndRefreshPayments(applicationVersion);
+    var paymentDtos = applicationPaymentService.getAndRefreshPaymentDtos(applicationVersion);
 
-    if (payments.stream().anyMatch(payment -> PaymentStatus.fromPayment(payment) == PaymentStatus.SUCCESS)) {
+    if (paymentDtos.stream().anyMatch(paymentDto -> paymentDto.status() == PaymentStatus.SUCCESS)) {
       LOGGER.info(
           "Found completed payment before returning application {} to in progress, submitting application",
           applicationId
@@ -162,7 +162,7 @@ public class ApplicationPaymentController {
       return ReverseRouter.redirect(on(ApplicationPaymentController.class).getPaymentCompleted(applicationId));
     }
 
-    applicationPaymentService.cancelUnfinishedPayments(payments);
+    applicationPaymentService.cancelInProgressPayments(paymentDtos);
 
     applicationService.returnApplicationToInProgressFromAwaitingPayment(applicationVersion);
 

@@ -7,6 +7,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import uk.co.fivium.digitalpaymentslibrary.payment.PaymentDto;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEvent;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventType;
@@ -21,6 +22,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.Wi
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
+import uk.co.nstauthority.fieldconsents.formatting.DecimalFormatUtils;
 
 public class CaseHistoryEventTestUtil {
 
@@ -66,6 +68,18 @@ public class CaseHistoryEventTestUtil {
         .withEventType(CaseEventType.APPLICATION_CREATED)
         .withMainEventUserWuaId(applicationVersion.getCreatedByWuaId())
         .withEventDateTime(applicationVersion.getCreatedDateTime())
+        .build();
+  }
+
+  public static CaseEvent getCaseEventForPaymentCompleted(
+      ApplicationVersion applicationVersion,
+      PaymentDto paymentDto
+  ) {
+    return CaseEvent.builder(applicationVersion)
+        .withEventType(CaseEventType.PAYMENT_COMPLETED)
+        .withMainEventUserWuaId(Long.parseLong(paymentDto.createdByUserId()))
+        .withEventDateTime(paymentDto.govUkPayCaptureSubmitInstant())
+        .withEventText(DecimalFormatUtils.formatMoney((double) paymentDto.amountPence() / 100))
         .build();
   }
 

@@ -77,7 +77,7 @@ public class ApplicationWithdrawalController {
         .addObject("submitUrl", ReverseRouter.route(on(ApplicationWithdrawalController.class)
             .submitApplicationWithdrawalRequest(applicationId, null, null, null, null)))
         .addObject("backLinkUrl", ReverseRouter.route(on(IndustryCaseProcessingController.class)
-            .getIndustryCaseProcessing(applicationId, null)))
+            .getIndustryCaseProcessing(applicationId, null, null)))
         .addObject("applicationReference", applicationReference);
   }
 
@@ -105,7 +105,7 @@ public class ApplicationWithdrawalController {
     NotificationBannerUtil.addSuccessNotification(redirectAttributes, "Withdrawal request sent");
 
     return ReverseRouter
-        .redirect(on(IndustryCaseProcessingController.class).getIndustryCaseProcessing(applicationId, null));
+        .redirect(on(IndustryCaseProcessingController.class).getIndustryCaseProcessing(applicationId, null, null));
   }
 
   @GetMapping("withdrawal-response")

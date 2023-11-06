@@ -15,7 +15,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.digitalpaymentslibrary.fee.FeePeriodService;
 import uk.co.fivium.digitalpaymentslibrary.payment.CreateCardPaymentResult;
-import uk.co.fivium.digitalpaymentslibrary.payment.Payment;
+import uk.co.fivium.digitalpaymentslibrary.payment.PaymentDto;
 import uk.co.fivium.digitalpaymentslibrary.payment.PaymentReconcileSuccessEvent;
 import uk.co.fivium.digitalpaymentslibrary.payment.PaymentService;
 import uk.co.fivium.digitalpaymentslibrary.payment.PaymentStatus;
@@ -208,49 +208,50 @@ public class ApplicationPaymentService {
   }
 
   boolean isPaymentForApplicationVersion(UUID paymentId, ApplicationVersion applicationVersion) {
-    var payment = paymentService.getPaymentOrThrow(paymentId);
-    return payment.getItemReference().equals(getPaymentItemReference(applicationVersion))
-        && payment.getItemType().equals(APPLICATION_VERSION_PAYMENT_ITEM_TYPE);
+    var paymentDto = paymentService.getPaymentDtoOrThrow(paymentId);
+    return paymentDto.itemReference().equals(getPaymentItemReference(applicationVersion))
+        && paymentDto.itemType().equals(APPLICATION_VERSION_PAYMENT_ITEM_TYPE);
   }
 
   PaymentStatus handlePaymentProcessed(UUID paymentId) {
     return paymentService.processPaymentCallback(paymentId);
   }
 
-  List<Payment> getAndRefreshPayments(ApplicationVersion applicationVersion) {
-    var payments = paymentService.getPayments(
+  public List<PaymentDto> getPaymentDtos(ApplicationVersion applicationVersion) {
+    return paymentService.getPaymentDtos(
         getPaymentItemReference(applicationVersion),
         APPLICATION_VERSION_PAYMENT_ITEM_TYPE
     );
-
-    payments.stream()
-        .filter(payment -> !payment.isGovUkPayStateFinished())
-        .forEach(paymentService::refreshPayment);
-
-    return payments;
   }
 
-  void cancelUnfinishedPayments(List<Payment> payments) {
-    payments.stream()
-        .filter(payment -> !payment.isGovUkPayStateFinished())
+  List<PaymentDto> getAndRefreshPaymentDtos(ApplicationVersion applicationVersion) {
+    return paymentService.getAndRefreshPaymentDtos(
+        getPaymentItemReference(applicationVersion),
+        APPLICATION_VERSION_PAYMENT_ITEM_TYPE
+    );
+  }
+
+  void cancelInProgressPayments(List<PaymentDto> paymentDtos) {
+    paymentDtos.stream()
+        .filter(paymentDto -> paymentDto.status() == PaymentStatus.IN_PROGRESS)
         .forEach(paymentService::cancelPayment);
   }
 
   @EventListener(PaymentReconcileSuccessEvent.class)
-  void onPaymentReconcileSuccessEvent(Payment payment) {
-    var itemType = payment.getItemType();
+  void onPaymentReconcileSuccessEvent(PaymentDto paymentDto) {
+    var itemType = paymentDto.itemType();
     if (!itemType.equals(APPLICATION_VERSION_PAYMENT_ITEM_TYPE)) {
       throw new IllegalStateException(
           "Payment %s status changed to success with unknown item type %s"
-              .formatted(payment.getItemReference(), itemType)
+              .formatted(paymentDto.itemReference(), itemType)
       );
     }
 
-    var applicationVersion = getApplicationVersionFromPaymentItemReference(payment.getItemReference());
+    var applicationVersion = getApplicationVersionFromPaymentItemReference(paymentDto.itemReference());
 
     LOGGER.info(
         "Payment {} status changed to success, submitting linked application {}",
-        payment.getId(),
+        paymentDto.id(),
         applicationVersion.getApplication().getId()
     );
 
@@ -266,7 +267,7 @@ public class ApplicationPaymentService {
     }
 
     var user = ServiceUserDetail.from(energyPortalUserService.getByWuaId(WebUserAccountId.valueOf(
-        payment.getCreatedByUserId())));
+        paymentDto.createdByUserId())));
 
     applicationService.submitApplication(applicationVersion, user);
   }
