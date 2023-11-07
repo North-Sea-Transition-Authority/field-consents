@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
+import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
@@ -26,8 +27,10 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionGroup;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionView;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.summary.ConsultationSummaryService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.summary.SummaryItem;
 
 @ContextConfiguration(classes = ConsultationController.class)
 class ConsultationControllerTest extends AbstractApplicationControllerTest {
@@ -38,14 +41,23 @@ class ConsultationControllerTest extends AbstractApplicationControllerTest {
   @MockBean
   private ApplicationService applicationService;
 
+  @MockBean
+  private ConsultationSummaryService consultationSummaryService;
+
   private ApplicationVersion applicationVersion;
 
+  private Application application;
+
   private List<CaseProcessingActionView> actionList;
+
+  private List<SummaryItem> consultationSummaryItems;
 
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
+    application = applicationVersion.getApplication();
     actionList = Collections.emptyList();
+    consultationSummaryItems = Collections.emptyList();
 
     // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
@@ -72,13 +84,14 @@ class ConsultationControllerTest extends AbstractApplicationControllerTest {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(caseProcessingActionService.getUserActionViewsForGroup(applicationVersion, user, CaseProcessingActionGroup.CONSULTATIONS)).thenReturn(actionList);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(APPLICATION_REFERENCE);
+    when(consultationSummaryService.getConsultationSummaryItems(application)).thenReturn(consultationSummaryItems);
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
         .getConsultations(APPLICATION_ID, null)))
         .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name(VIEW_NAME))
-        .andExpect(model().attribute("consultationSummaryItems", (Object) null)) // TODO: FCS-454
+        .andExpect(model().attribute("consultationSummaryItems", consultationSummaryItems))
         .andExpect(model().attribute("applicationReference", APPLICATION_REFERENCE))
         .andExpect(model().attribute("actionList", actionList))
         .andExpect(model().attribute("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class).caseProcessing(APPLICATION_ID, null, null))));

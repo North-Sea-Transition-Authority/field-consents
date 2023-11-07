@@ -9,6 +9,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationStatus.CLOSED;
@@ -24,10 +25,8 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -218,42 +217,27 @@ class FurtherInformationServiceTest {
 
   @Test
   void getFurtherInformationViews() {
-    var furtherInformationList = List.of(
-        createFurtherInformation(
-            1L,
-            NOW,
-            REQUEST_TEXT,
-            OPEN,
-            null,
-            null,
-            null
-        ),
-        createFurtherInformation(
-            1L,
-            NOW,
-            REQUEST_TEXT,
-            CLOSED,
-            2L,
-            NOW,
-            RESPONSE_TEXT
-        ),
-        createFurtherInformation(
-            2L,
-            NOW,
-            REQUEST_TEXT,
-            CLOSED,
-            1L,
-            NOW,
-            RESPONSE_TEXT
-        )
-    );
+    var energyPortalUser = mock(EnergyPortalUserDto.class);
+    var furtherInformationViews = Collections.<FurtherInformationView>emptyList();
 
-    var wuaIds = furtherInformationList.stream()
-        .flatMap(fi -> Stream.of(fi.getRequestedByWuaId(), fi.getRespondedByWuaId()))
-        .filter(Objects::nonNull)
-        .distinct()
-        .map(WebUserAccountId::from)
-        .toList();
+    doReturn(furtherInformationViews)
+        .when(furtherInformationService)
+        .getFurtherInformationViews(Collections.singleton(furtherInformation), Map.of(USER.wuaId(), energyPortalUser));
+
+    when(energyPortalUserService.getEnergyPortalUserMap(Collections.singleton(WebUserAccountId.from(USER.wuaId()))))
+        .thenReturn(Map.of(WebUserAccountId.from(USER.wuaId()), energyPortalUser));
+
+    assertThat(furtherInformationService.getFurtherInformationViews(Collections.singleton(furtherInformation)))
+        .containsExactlyElementsOf(furtherInformationViews);
+  }
+
+  @Test
+  void getFurtherInformationViews_withProvidedEnergyPortalUsers() {
+    var furtherInformationList = List.of(
+        createFurtherInformation(1L, NOW, REQUEST_TEXT, OPEN, null, null, null),
+        createFurtherInformation(1L, NOW, REQUEST_TEXT, CLOSED, 2L, NOW, RESPONSE_TEXT),
+        createFurtherInformation(2L, NOW, REQUEST_TEXT, CLOSED, 1L, NOW, RESPONSE_TEXT)
+    );
 
     var userDisplayName = "Example user";
     var energyPortalUser = mock(EnergyPortalUserDto.class);
@@ -263,13 +247,9 @@ class FurtherInformationServiceTest {
     var energyPortalUser2 = mock(EnergyPortalUserDto.class);
     when(energyPortalUser2.displayName()).thenReturn(user2DisplayName);
 
-    when(energyPortalUserService.getEnergyPortalUserMap(wuaIds))
-        .thenReturn(Map.of(
-            WebUserAccountId.from(1L), energyPortalUser,
-            WebUserAccountId.from(2L), energyPortalUser2
-        ));
+    var energyPortalUserByWuaId = Map.of(1L, energyPortalUser, 2L, energyPortalUser2);
 
-    assertThat(furtherInformationService.getFurtherInformationViews(furtherInformationList))
+    assertThat(furtherInformationService.getFurtherInformationViews(furtherInformationList, energyPortalUserByWuaId))
         .extracting(
             FurtherInformationView::requestedAtTimestamp,
             FurtherInformationView::requestedByUser,
@@ -307,6 +287,8 @@ class FurtherInformationServiceTest {
                 RESPONSE_TEXT
             )
         );
+
+    verifyNoInteractions(energyPortalUserService);
   }
 
   private FurtherInformation createFurtherInformation(

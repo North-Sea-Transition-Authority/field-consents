@@ -5,6 +5,8 @@ import java.time.Instant;
 import java.util.Objects;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
+import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 
 public record FurtherInformationView(
     String requestedAtTimestamp,
@@ -15,6 +17,22 @@ public record FurtherInformationView(
     String respondedByUser,
     String responseText
 ) {
+
+  public SummaryCard toSummaryCardWithHeading(String heading) {
+    var summaryDataView = SummaryDataView
+        .newWithKeyValue("Requested on", requestedAtTimestamp)
+        .addKeyValue("Requested by", requestedByUser)
+        .addKeyValue("Request text", requestText);
+
+    if (isClosed) {
+      summaryDataView
+          .addKeyValue("Responded on", respondedAtTimestamp)
+          .addKeyValue("Responded by", respondedByUser)
+          .addKeyValue("Response text", responseText);
+    }
+
+    return SummaryCard.simpleSummaryCardWithHeading(heading, summaryDataView);
+  }
 
   public static Builder newBuilder() {
     return new Builder();

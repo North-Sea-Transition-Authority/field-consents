@@ -15,7 +15,6 @@
   pageSize=PageSize.FULL_WIDTH
   errorItems=errorList>
   <@caseProcessingActions.caseActions actions=actionList/>
-  <@fdsWarning.warning>Consultation history not implemented yet</@fdsWarning.warning>
   <#if consultationSummaryItems?has_content>
     <#list consultationSummaryItems as summaryItem>
       <h2 class="govuk-heading-l">${summaryItem.displayName()}</h2>

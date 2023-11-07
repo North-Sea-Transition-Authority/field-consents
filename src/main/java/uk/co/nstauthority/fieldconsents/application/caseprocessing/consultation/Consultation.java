@@ -15,6 +15,7 @@ import java.time.Instant;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.NotAudited;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.teams.Team;
 
 @Entity
@@ -63,6 +64,10 @@ public class Consultation {
   private EiaRegsResponseType eiaRegsResponseType;
 
   private String eiaRegsResponseDescription;
+
+  public static Builder newBuilder() {
+    return new Builder();
+  }
 
   public Integer getId() {
     return id;
@@ -184,4 +189,126 @@ public class Consultation {
   public void setEiaRegsResponseDescription(String responseEiaRegulationsDescription) {
     this.eiaRegsResponseDescription = responseEiaRegulationsDescription;
   }
+
+  public static class Builder {
+
+    private Integer id;
+    private ApplicationVersion requestApplicationVersion;
+    private ApplicationVersion responseApplicationVersion;
+    private Team consultationTeam;
+    private ConsultationStatus status;
+    private Instant requestDeadline;
+    private Instant requestedAtDatetime;
+    private Long requestedByWuaId;
+    private Long responderWuaId;
+    private Instant respondedAtDatetime;
+    private Long respondedByWuaId;
+    private HabitatsRegsResponseType habitatsRegsResponseType;
+    private String habitatsRegsResponseDescription;
+    private EiaRegsResponseType eiaRegsResponseType;
+    private String eiaRegsResponseDescription;
+
+    public Builder withId(int id) {
+      this.id = id;
+      return this;
+    }
+
+    public Builder withRequestApplicationVersion(ApplicationVersion applicationVersion) {
+      this.requestApplicationVersion = applicationVersion;
+      return this;
+    }
+
+    public Builder withResponseApplicationVersion(ApplicationVersion applicationVersion) {
+      this.responseApplicationVersion = applicationVersion;
+      return this;
+    }
+
+    public Builder withConsultationTeam(Team team) {
+      this.consultationTeam = team;
+      return this;
+    }
+
+    public Builder withStatus(ConsultationStatus status) {
+      this.status = status;
+      return this;
+    }
+
+    public Builder withRequestDeadline(Instant deadline) {
+      this.requestDeadline = deadline;
+      return this;
+    }
+
+    public Builder withRequestedAt(Instant requestedAt) {
+      this.requestedAtDatetime = requestedAt;
+      return this;
+    }
+
+    public Builder withRequestedBy(WebUserAccountId wuaId) {
+      this.requestedByWuaId = wuaId.id();
+      return this;
+    }
+
+    public Builder withResponder(WebUserAccountId wuaId) {
+      this.responderWuaId = wuaId.id();
+      return this;
+    }
+
+    public Builder withRespondedAt(Instant respondedAt) {
+      this.respondedAtDatetime = respondedAt;
+      return this;
+    }
+
+    public Builder withRespondedBy(WebUserAccountId wuaId) {
+      this.respondedByWuaId = wuaId.id();
+      return this;
+    }
+
+    public Builder withHabitatsRegsResponseType(HabitatsRegsResponseType responseType) {
+      this.habitatsRegsResponseType = responseType;
+      return this;
+    }
+
+    public Builder withHabitatsRegsResponseDescription(String description) {
+      this.habitatsRegsResponseDescription = description;
+      return this;
+    }
+
+    public Builder withEiaRegsResponseType(EiaRegsResponseType responseType) {
+      this.eiaRegsResponseType = responseType;
+      return this;
+    }
+
+    public Builder withEiaRegsResponseDescription(String description) {
+      this.eiaRegsResponseDescription = description;
+      return this;
+    }
+
+    public Consultation build() {
+      var consultation = new Consultation();
+
+      consultation.setId(id);
+      consultation.setRequestApplicationVersion(requestApplicationVersion);
+      consultation.setResponseApplicationVersion(responseApplicationVersion);
+      consultation.setConsultationTeam(consultationTeam);
+      consultation.setStatus(status);
+      consultation.setRequestDeadline(requestDeadline);
+      consultation.setRequestedAtDatetime(requestedAtDatetime);
+      consultation.setRequestedByWuaId(requestedByWuaId);
+      consultation.setResponderWuaId(responderWuaId);
+      consultation.setRespondedAtDatetime(respondedAtDatetime);
+      consultation.setRespondedByWuaId(respondedByWuaId);
+      consultation.setHabitatsRegsResponseType(habitatsRegsResponseType);
+      consultation.setHabitatsRegsResponseDescription(habitatsRegsResponseDescription);
+      consultation.setEiaRegsResponseType(eiaRegsResponseType);
+      consultation.setEiaRegsResponseDescription(eiaRegsResponseDescription);
+
+      return consultation;
+    }
+
+    private Builder() {
+
+    }
+
+  }
+
 }

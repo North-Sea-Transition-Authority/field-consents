@@ -24,6 +24,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
+import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 
 @Service
@@ -105,9 +106,8 @@ public class FurtherInformationService {
     var wuaIds = furtherInformation.stream()
         .flatMap(fi -> Stream.of(fi.getRequestedByWuaId(), fi.getRespondedByWuaId()))
         .filter(Objects::nonNull)
-        .distinct()
         .map(WebUserAccountId::from)
-        .toList();
+        .collect(Collectors.toSet());
 
     var energyPortalUserByWuaId = energyPortalUserService.getEnergyPortalUserMap(wuaIds)
         .entrySet()
@@ -117,6 +117,13 @@ public class FurtherInformationService {
             Map.Entry::getValue
         ));
 
+    return getFurtherInformationViews(furtherInformation, energyPortalUserByWuaId);
+  }
+
+  public List<FurtherInformationView> getFurtherInformationViews(
+      Collection<FurtherInformation> furtherInformation,
+      Map<Long, EnergyPortalUserDto> energyPortalUserByWuaId
+  ) {
     return furtherInformation.stream()
         .sorted(Comparator.comparing(FurtherInformation::getRequestedAtDatetime).reversed())
         .map(fi -> FurtherInformationView.newBuilder()
@@ -124,7 +131,9 @@ public class FurtherInformationService {
             .withRequestedAtTimestamp(fi.getRequestedAtDatetime())
             .withRequestText(fi.getRequestText())
             .withStatus(fi.getStatus())
-            .withRespondedByUser(energyPortalUserByWuaId.get(fi.getRespondedByWuaId()))
+            .withRespondedByUser(Optional.ofNullable(fi.getRespondedByWuaId())
+                .map(energyPortalUserByWuaId::get)
+                .orElse(null))
             .withRespondedAtTimestamp(fi.getRespondedAtDatetime())
             .withResponseText(fi.getResponseText())
             .build())

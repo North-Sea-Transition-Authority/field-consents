@@ -13,6 +13,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.summary.ConsultationSummaryService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -25,25 +26,29 @@ public class ConsultationController {
   private final ApplicationService applicationService;
   private final ApplicationVersionService applicationVersionService;
   private final CaseProcessingActionService caseProcessingActionService;
+  private final ConsultationSummaryService consultationSummaryService;
 
   ConsultationController(
       ApplicationService applicationService,
       ApplicationVersionService applicationVersionService,
-      CaseProcessingActionService caseProcessingActionService
+      CaseProcessingActionService caseProcessingActionService,
+      ConsultationSummaryService consultationSummaryService
   ) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.caseProcessingActionService = caseProcessingActionService;
+    this.consultationSummaryService = consultationSummaryService;
   }
 
   @GetMapping
   public ModelAndView getConsultations(@PathVariable Integer applicationId, ServiceUserDetail user) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
+    var application = applicationVersion.getApplication();
     var actionList = caseProcessingActionService.getUserActionViewsForGroup(applicationVersion, user, CONSULTATIONS);
 
     return new ModelAndView("fcs/application/consultation/consultations")
         .addObject("applicationReference", applicationService.generateApplicationReference(applicationVersion))
-        .addObject("consultationSummaryItems", null) // TODO: FCS-454
+        .addObject("consultationSummaryItems", consultationSummaryService.getConsultationSummaryItems(application))
         .addObject("actionList", actionList)
         .addObject("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class)
             .caseProcessing(applicationId, null, null)));
