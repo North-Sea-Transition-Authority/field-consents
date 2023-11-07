@@ -25,15 +25,18 @@ public class ApplicationUpdateController {
   private final ApplicationService applicationService;
   private final ApplicationVersionService applicationVersionService;
   private final CaseProcessingActionService caseProcessingActionService;
+  private final ApplicationUpdateSummaryService applicationUpdateSummaryService;
 
   ApplicationUpdateController(
       ApplicationService applicationService,
       ApplicationVersionService applicationVersionService,
-      CaseProcessingActionService caseProcessingActionService
+      CaseProcessingActionService caseProcessingActionService,
+      ApplicationUpdateSummaryService applicationUpdateSummaryService
   ) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.caseProcessingActionService = caseProcessingActionService;
+    this.applicationUpdateSummaryService = applicationUpdateSummaryService;
   }
 
   @GetMapping
@@ -41,10 +44,12 @@ public class ApplicationUpdateController {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var applicationReference = applicationService.generateApplicationReference(applicationVersion);
     var actionList = caseProcessingActionService.getUserActionViewsForGroup(applicationVersion, user, APPLICATION_UPDATES);
+    var application = applicationVersion.getApplication();
+    var applicationUpdateSummaryItems = applicationUpdateSummaryService.getApplicationUpdateSummaryItems(application);
 
     return new ModelAndView("fcs/application/update/applicationUpdates")
         .addObject("applicationReference", applicationReference)
-        .addObject("applicationUpdateSummaryItems", null) // TODO: FCS-470
+        .addObject("applicationUpdateSummaryItems", applicationUpdateSummaryItems)
         .addObject("actionList", actionList)
         .addObject("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class)
             .caseProcessing(applicationId, null, null)));

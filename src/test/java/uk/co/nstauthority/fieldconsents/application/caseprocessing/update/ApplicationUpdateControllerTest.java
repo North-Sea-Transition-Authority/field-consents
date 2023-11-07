@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
+import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
@@ -28,6 +29,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CasePr
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionView;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.summary.SummaryItem;
 
 @ContextConfiguration(classes = ApplicationUpdateController.class)
 class ApplicationUpdateControllerTest extends AbstractApplicationControllerTest {
@@ -38,14 +40,23 @@ class ApplicationUpdateControllerTest extends AbstractApplicationControllerTest 
   @MockBean
   private ApplicationService applicationService;
 
+  @MockBean
+  private ApplicationUpdateSummaryService applicationUpdateSummaryService;
+
+  private Application application;
+
   private ApplicationVersion applicationVersion;
 
   private List<CaseProcessingActionView> actionList;
 
+  private List<SummaryItem> summaryItems;
+
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
+    application = applicationVersion.getApplication();
     actionList = Collections.emptyList();
+    summaryItems = Collections.emptyList();
 
     // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
@@ -72,13 +83,14 @@ class ApplicationUpdateControllerTest extends AbstractApplicationControllerTest 
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(caseProcessingActionService.getUserActionViewsForGroup(applicationVersion, user, CaseProcessingActionGroup.APPLICATION_UPDATES)).thenReturn(actionList);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(APPLICATION_REFERENCE);
+    when(applicationUpdateSummaryService.getApplicationUpdateSummaryItems(application)).thenReturn(summaryItems);
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
             .getApplicationUpdates(APPLICATION_ID, null)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name(VIEW_NAME))
-        .andExpect(model().attribute("applicationUpdateSummaryItems", (Object) null)) // TODO: FCS-470
+        .andExpect(model().attribute("applicationUpdateSummaryItems", summaryItems))
         .andExpect(model().attribute("applicationReference", APPLICATION_REFERENCE))
         .andExpect(model().attribute("actionList", actionList))
         .andExpect(model().attribute("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class).caseProcessing(APPLICATION_ID, null, null))));

@@ -15,7 +15,6 @@
   pageSize=PageSize.FULL_WIDTH
   errorItems=errorList>
   <@caseProcessingActions.caseActions actions=actionList/>
-  <@fdsWarning.warning>Application update history not implemented yet</@fdsWarning.warning>
   <#if applicationUpdateSummaryItems?has_content>
     <#list applicationUpdateSummaryItems as summaryItem>
       <h2 class="govuk-heading-l">${summaryItem.displayName()}</h2>
