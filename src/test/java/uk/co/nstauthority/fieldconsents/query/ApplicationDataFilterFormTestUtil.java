@@ -16,21 +16,31 @@ public class ApplicationDataFilterFormTestUtil {
 
   public static final String ORGANISATION_NAME = "Organisation name";
 
-  public static final String FIELD_ASSET_ID_STRING = "1234";
+  public static final String FIELD1_ASSET_ID_STRING = "1234";
 
-  public static final String FIELD_ASSET_KEY = FIELD_ASSET_ID_STRING + AssetType.FIELD.name();
+  public static final String FIELD1_ASSET_KEY = FIELD1_ASSET_ID_STRING + AssetType.FIELD.name();
+
+  public static final String FIELD2_ASSET_ID_STRING = "4321";
+
+  public static final String FIELD2_ASSET_KEY = FIELD2_ASSET_ID_STRING + AssetType.FIELD.name();
 
   public static final RestSearchItem ORGANISATION_REST_SEARCH_ITEM = new RestSearchItem(String.valueOf(ORGANISATION_UNIT_ID), ORGANISATION_NAME);
 
-  public static final RestSearchItem FIELD_REST_SEARCH_ITEM = new RestSearchItem(FIELD_ASSET_ID_STRING, AssetType.FIELD.name());
+  public static final RestSearchItem FIELD1_REST_SEARCH_ITEM = new RestSearchItem(FIELD1_ASSET_ID_STRING, AssetType.FIELD.name());
 
-  public static final String TERMINAL_ASSET_ID_STRING = "5678";
+  public static final RestSearchItem FIELD2_REST_SEARCH_ITEM = new RestSearchItem(FIELD2_ASSET_ID_STRING, AssetType.FIELD.name());
 
-  public static final Integer TERMINAL_ASSET_ID_INTEGER = 5678;
+  public static final String TERMINAL1_ASSET_ID_STRING = "5678";
 
-  public static final String TERMINAL_ASSET_KEY = TERMINAL_ASSET_ID_STRING + AssetType.TERMINAL.name();
+  public static final String TERMINAL1_ASSET_KEY = TERMINAL1_ASSET_ID_STRING + AssetType.TERMINAL.name();
 
-  public static final RestSearchItem TERMINAL_REST_SEARCH_ITEM = new RestSearchItem(TERMINAL_ASSET_ID_STRING, AssetType.TERMINAL.name());
+  public static final RestSearchItem TERMINAL1_REST_SEARCH_ITEM = new RestSearchItem(TERMINAL1_ASSET_ID_STRING, AssetType.TERMINAL.name());
+
+  public static final String TERMINAL2_ASSET_ID_STRING = "8765";
+
+  public static final String TERMINAL2_ASSET_KEY = TERMINAL2_ASSET_ID_STRING + AssetType.TERMINAL.name();
+
+  public static final RestSearchItem TERMINAL2_REST_SEARCH_ITEM = new RestSearchItem(TERMINAL2_ASSET_ID_STRING, AssetType.TERMINAL.name());
 
   public static final Integer APPLICATION_NO = 10;
 

@@ -174,6 +174,20 @@ public class FieldTestUtil {
   public static FieldWithOperatorAndLicencesJson field2JsonWithOperatorAndLicences =
       FieldWithOperatorAndLicencesJson.from(field2WithOperatorAndLicences);
 
+  public static Field field3WithOperatorAndLicences = Field.newBuilder().fieldId(FIELD_ID_3).fieldName(FIELD_NAME_3)
+      .status(FIELD_3_STATUS.status())
+      .statusDisplayName(FIELD_3_STATUS.statusDisplayName())
+      .geographicArea(FieldGeographicArea.valueOf(FIELD_3_GEOGRAPHIC_AREA.name()))
+      .geographicAreaDisplayName(FIELD_3_GEOGRAPHIC_AREA.getDisplayName())
+      .shore(FieldShore.valueOf(FIELD_3_SHORE.name()))
+      .shoreDisplayName(FIELD_3_SHORE.getDisplayName())
+      .fieldOperator(OrganisationUnitTestUtil.orgUnit3)
+      .licences(LicenceTestUtil.licences3)
+      .build();
+
+  public static FieldWithOperatorAndLicencesJson field3JsonWithOperatorAndLicences =
+      FieldWithOperatorAndLicencesJson.from(field3WithOperatorAndLicences);
+
   public static Field field3 = Field.newBuilder().fieldId(FIELD_ID_3).fieldName(FIELD_NAME_3)
       .status(FIELD_3_STATUS.status())
       .statusDisplayName(FIELD_3_STATUS.statusDisplayName())

@@ -60,6 +60,13 @@ public class ConsentLengthTestUtil {
     return form;
   }
 
+  public static ConsentLengthForm getAnnualConsentLengthFormForYear(int year) {
+    ConsentLengthForm form = new ConsentLengthForm();
+    form.setConsentLengthType(ConsentLengthType.ANNUAL);
+    form.getAnnualConsentYear().setInteger(year);
+    return form;
+  }
+
   public static ConsentLengthForm getLongTermConsentLengthFormForYears(int startYear, int endYear) {
     ConsentLengthForm form = new ConsentLengthForm();
     form.setConsentLengthType(ConsentLengthType.LONG_TERM);

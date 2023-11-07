@@ -10,8 +10,8 @@ import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTes
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit1Json;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormService.ASSETS_LOOKUP_PURPOSE;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormService.ORGANISATION_UNIT_LOOKUP_PURPOSE;
-import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.FIELD_ASSET_KEY;
-import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.TERMINAL_ASSET_KEY;
+import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.FIELD1_ASSET_KEY;
+import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.TERMINAL1_ASSET_KEY;
 
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -94,17 +94,17 @@ class ApplicationDataFilterFormServiceTest {
 
   @Test
   void getPrefilledAsset_withFieldAssetKey() {
-    doReturn(Optional.of(field1AssetJson)).when(assetService).getAsset(AssetKey.from(FIELD_ASSET_KEY), ASSETS_LOOKUP_PURPOSE);
+    doReturn(Optional.of(field1AssetJson)).when(assetService).getAsset(AssetKey.from(FIELD1_ASSET_KEY), ASSETS_LOOKUP_PURPOSE);
 
-    assertThat(applicationDataFilterFormService.getPrefilledAsset(FIELD_ASSET_KEY))
+    assertThat(applicationDataFilterFormService.getPrefilledAsset(FIELD1_ASSET_KEY))
         .isEqualTo(new RestSearchItem(field1AssetJson.getSelectionId(), field1AssetJson.getSelectionText()));
   }
 
   @Test
   void getPrefilledAsset_withTerminalAssetKey() {
-    doReturn(Optional.of(terminal1AssetJson)).when(assetService).getAsset(AssetKey.from(TERMINAL_ASSET_KEY), ASSETS_LOOKUP_PURPOSE);
+    doReturn(Optional.of(terminal1AssetJson)).when(assetService).getAsset(AssetKey.from(TERMINAL1_ASSET_KEY), ASSETS_LOOKUP_PURPOSE);
 
-    assertThat(applicationDataFilterFormService.getPrefilledAsset(TERMINAL_ASSET_KEY))
+    assertThat(applicationDataFilterFormService.getPrefilledAsset(TERMINAL1_ASSET_KEY))
         .isEqualTo(new RestSearchItem(terminal1AssetJson.getSelectionId(), terminal1AssetJson.getSelectionText()));
   }
 }

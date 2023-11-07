@@ -142,7 +142,7 @@ class WorkAreaFilterServiceTest {
   void getConditions_AssetNotFound() {
     when(teamService.isRegulatorUser(user)).thenReturn(true);
 
-    form.setAssetKey(ApplicationDataFilterFormTestUtil.FIELD_ASSET_KEY);
+    form.setAssetKey(ApplicationDataFilterFormTestUtil.FIELD1_ASSET_KEY);
     filter.update(form);
 
     var assetKey = AssetKey.from(form.getAssetKey());
@@ -157,7 +157,7 @@ class WorkAreaFilterServiceTest {
   void getConditions_FieldSelected() {
     when(teamService.isRegulatorUser(user)).thenReturn(true);
 
-    form.setAssetKey(ApplicationDataFilterFormTestUtil.FIELD_ASSET_KEY);
+    form.setAssetKey(ApplicationDataFilterFormTestUtil.FIELD1_ASSET_KEY);
     filter.update(form);
 
     var assetKey = AssetKey.from(form.getAssetKey());
@@ -175,7 +175,7 @@ class WorkAreaFilterServiceTest {
   void getConditions_TerminalSelected() {
     when(teamService.isRegulatorUser(user)).thenReturn(true);
 
-    form.setAssetKey(ApplicationDataFilterFormTestUtil.TERMINAL_ASSET_KEY);
+    form.setAssetKey(ApplicationDataFilterFormTestUtil.TERMINAL1_ASSET_KEY);
     filter.update(form);
 
     var assetKey = AssetKey.from(form.getAssetKey());

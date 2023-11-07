@@ -8,7 +8,7 @@ import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAss
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorAndLicencesJson;
 
 @Service
-class AdditionalAssetsService {
+public class AdditionalAssetsService {
 
   private final ApplicationAssetService applicationAssetService;
 
@@ -22,14 +22,14 @@ class AdditionalAssetsService {
   }
 
   @Transactional
-  void saveAdditionalAsset(ApplicationVersion applicationVersion,
-                           FieldWithOperatorAndLicencesJson field) {
+  public void saveAdditionalAsset(ApplicationVersion applicationVersion,
+                                  FieldWithOperatorAndLicencesJson field) {
     var applicationAsset = applicationAssetService.createSecondaryAsset(applicationVersion, field);
     applicationAssetLicenceService.createAssetLicences(applicationAsset, field);
   }
 
   @Transactional
-  void deleteAdditionalAsset(ApplicationAsset asset) {
+  public void deleteAdditionalAsset(ApplicationAsset asset) {
     applicationAssetLicenceService.deleteAssetLicences(asset);
     applicationAssetService.deleteSecondaryAsset(asset);
   }

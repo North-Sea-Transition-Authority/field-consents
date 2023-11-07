@@ -11,8 +11,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
-import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.FIELD_ASSET_KEY;
-import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.TERMINAL_ASSET_KEY;
+import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.FIELD1_ASSET_KEY;
+import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.TERMINAL1_ASSET_KEY;
 import static uk.co.nstauthority.fieldconsents.search.SearchController.SEARCH_RESULT_ITEMS;
 import static uk.co.nstauthority.fieldconsents.search.SearchController.SEARCH_TITLE;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
@@ -66,16 +66,16 @@ class SearchControllerTest extends AbstractControllerTest {
   @BeforeEach
   void setUp() {
     form = new SearchFilterForm();
-    form.setFieldAssetKey(FIELD_ASSET_KEY);
-    form.setTerminalAssetKey(TERMINAL_ASSET_KEY);
+    form.setFieldAssetKey(FIELD1_ASSET_KEY);
+    form.setTerminalAssetKey(TERMINAL1_ASSET_KEY);
     searchSession = new SearchSession(form);
     searchResultItems = List.of(ApplicationDataItemUtil.getSearchResultItem());
     orgUnitRestSearchItem = ApplicationDataFilterFormTestUtil.ORGANISATION_REST_SEARCH_ITEM;
     when(applicationDataFilterFormService.getPrefilledOrganisation(any())).thenReturn(orgUnitRestSearchItem);
-    assetFieldRestSearchItem = ApplicationDataFilterFormTestUtil.FIELD_REST_SEARCH_ITEM;
-    when(applicationDataFilterFormService.getPrefilledAsset(FIELD_ASSET_KEY)).thenReturn(assetFieldRestSearchItem);
-    assetTerminalRestSearchItem = ApplicationDataFilterFormTestUtil.TERMINAL_REST_SEARCH_ITEM;
-    when(applicationDataFilterFormService.getPrefilledAsset(TERMINAL_ASSET_KEY)).thenReturn(assetTerminalRestSearchItem);
+    assetFieldRestSearchItem = ApplicationDataFilterFormTestUtil.FIELD1_REST_SEARCH_ITEM;
+    when(applicationDataFilterFormService.getPrefilledAsset(FIELD1_ASSET_KEY)).thenReturn(assetFieldRestSearchItem);
+    assetTerminalRestSearchItem = ApplicationDataFilterFormTestUtil.TERMINAL1_REST_SEARCH_ITEM;
+    when(applicationDataFilterFormService.getPrefilledAsset(TERMINAL1_ASSET_KEY)).thenReturn(assetTerminalRestSearchItem);
   }
 
   @SecurityTest

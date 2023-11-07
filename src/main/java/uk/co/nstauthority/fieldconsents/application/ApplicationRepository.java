@@ -8,7 +8,7 @@ import uk.co.nstauthority.fieldconsents.application.duplication.NotDuplicationSo
 
 @Repository
 @NotDuplicationSource
-interface ApplicationRepository extends CrudRepository<Application, Integer> {
+public interface ApplicationRepository extends CrudRepository<Application, Integer> {
 
   @Query(
       """

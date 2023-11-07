@@ -91,7 +91,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
     workAreaItems = List.of(ApplicationDataItemUtil.getApplicationDataItem());
     orgUnitRestSearchItem = ApplicationDataFilterFormTestUtil.ORGANISATION_REST_SEARCH_ITEM;
     when(applicationDataFilterFormService.getPrefilledOrganisation(any())).thenReturn(orgUnitRestSearchItem);
-    assetRestSearchItem = ApplicationDataFilterFormTestUtil.FIELD_REST_SEARCH_ITEM;
+    assetRestSearchItem = ApplicationDataFilterFormTestUtil.FIELD1_REST_SEARCH_ITEM;
     when(applicationDataFilterFormService.getPrefilledAsset(any())).thenReturn(assetRestSearchItem);
   }
 

@@ -32,7 +32,7 @@ public class SearchController {
 
   public static final String SEARCH_TITLE = "Search";
 
-  static final String SEARCH_RESULT_ITEMS = "searchResultItems";
+  public static final String SEARCH_RESULT_ITEMS = "searchResultItems";
 
   private final TeamService teamService;
 

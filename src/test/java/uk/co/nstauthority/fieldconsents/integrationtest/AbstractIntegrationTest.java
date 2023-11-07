@@ -1,7 +1,11 @@
 package uk.co.nstauthority.fieldconsents.integrationtest;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -20,5 +24,10 @@ public abstract class AbstractIntegrationTest {
 
     registry.add("database.url", fcsDb::getJdbcUrl);
     registry.add("schema.password", fcsDb::getPassword);
+  }
+
+  @Bean
+  Clock clock() {
+    return Clock.fixed(Instant.now(), ZoneId.systemDefault());
   }
 }
