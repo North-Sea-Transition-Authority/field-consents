@@ -57,12 +57,18 @@ public class ApplicationDataItemUtil {
     );
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForAnnualProductionInProgressForField() {
+    return getApplicationDataItemDtoForAnnualProductionInProgressForField(APPLICATION_NO);
+  }
+
+  public static ApplicationDataItemDto getApplicationDataItemDtoForAnnualProductionInProgressForField(
+      Integer applicationNo
+  ) {
     return new ApplicationDataItemDto(
         APPLICATION_ID,
         APPLICATION_VERSION_ID,
         ApplicationType.PRODUCTION,
         0,
-        APPLICATION_NO,
+        applicationNo,
         APPLICATION_VERSION_NUMBER,
         PRIMARY_OPERATOR_OU_ID_1,
         ApplicationVersionStatus.IN_PROGRESS,
@@ -530,11 +536,10 @@ public class ApplicationDataItemUtil {
   }
 
   public static String getCaseReference(ApplicationDataItemDto applicationDataItemDto) {
-    if (applicationDataItemDto.getStatus().equals(ApplicationVersionStatus.IN_PROGRESS)
-        && applicationDataItemDto.getVersionNo() == 1) {
-      return "Resume application";
-    } else if (applicationDataItemDto.getStatus().equals(ApplicationVersionStatus.IN_PROGRESS)
-        && applicationDataItemDto.getVersionNo() > 1) {
+    if (applicationDataItemDto.getStatus() == ApplicationVersionStatus.IN_PROGRESS) {
+      if (applicationDataItemDto.getApplicationNo() == null) {
+        return "Resume application";
+      }
       return "Resume %s".formatted(generateApplicationReference(applicationDataItemDto));
     }
 

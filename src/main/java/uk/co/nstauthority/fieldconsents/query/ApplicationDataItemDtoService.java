@@ -104,16 +104,14 @@ public class ApplicationDataItemDtoService {
   public String getDisplayReference(ApplicationDataItemDto dataItemDto, ApplicationDataItemUserAction userAction) {
     var applicationVersion = applicationVersionService.getApplicationVersionById(dataItemDto.getApplicationVersionId());
 
-    if (dataItemDto.getStatus().equals(ApplicationVersionStatus.IN_PROGRESS)
-        && dataItemDto.getVersionNo() == 1) {
-      return "%s application".formatted(userAction.getDisplayName());
-    }
-
-    if (dataItemDto.getStatus().equals(ApplicationVersionStatus.IN_PROGRESS)
-        && dataItemDto.getVersionNo() > 1) {
+    if (dataItemDto.getStatus() == ApplicationVersionStatus.IN_PROGRESS) {
+      if (dataItemDto.getApplicationNo() == null) {
+        return "%s application".formatted(userAction.getDisplayName());
+      }
       return "%s %s".formatted(
           userAction.getDisplayName(),
-          applicationService.generateApplicationReference(applicationVersion));
+          applicationService.generateApplicationReference(applicationVersion)
+      );
     }
 
     return applicationService.generateApplicationReference(applicationVersion);

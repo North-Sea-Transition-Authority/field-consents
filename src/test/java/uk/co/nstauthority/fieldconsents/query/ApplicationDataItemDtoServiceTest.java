@@ -152,11 +152,23 @@ class ApplicationDataItemDtoServiceTest {
   }
 
   @Test
-  void getDisplayReference_whenApplicationInProgressAndUserCanResume() {
-    var applicationDataItemDto = getApplicationDataItemDtoForAnnualProductionInProgressForField();
+  void getDisplayReference_whenApplicationInProgressAndVersionNoNullAndUserCanResume() {
+    var applicationDataItemDto = getApplicationDataItemDtoForAnnualProductionInProgressForField(null);
 
     assertThat(applicationDataItemDtoService.getDisplayReference(applicationDataItemDto, RESUME_APPLICATION))
         .isEqualTo("Resume application");
+  }
+
+  @Test
+  void getDisplayReference_whenApplicationInProgressAndVersionNoNotNullAndUserCanResume() {
+    var ventAppVersion = ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.VENT, 1, 1);
+    when(applicationService.generateApplicationReference(ventAppVersion)).thenReturn("VCON/500/0 (Version 2)");
+    when(applicationVersionService.getApplicationVersionById(ventAppVersion.getId())).thenReturn(ventAppVersion);
+
+    var applicationDataItemDto = getApplicationDataItemDtoForAnnualProductionInProgressForField();
+
+    assertThat(applicationDataItemDtoService.getDisplayReference(applicationDataItemDto, RESUME_APPLICATION))
+        .isEqualTo("Resume VCON/500/0 (Version 2)");
   }
 
   @Test
@@ -185,11 +197,23 @@ class ApplicationDataItemDtoServiceTest {
   }
 
   @Test
-  void getDisplayReference_whenApplicationInProgressAndUserCanView() {
-    var applicationDataItemDto = getApplicationDataItemDtoForAnnualProductionInProgressForField();
+  void getDisplayReference_whenApplicationInProgressAndVersionNoNullAndUserCanView() {
+    var applicationDataItemDto = getApplicationDataItemDtoForAnnualProductionInProgressForField(null);
 
     assertThat(applicationDataItemDtoService.getDisplayReference(applicationDataItemDto, VIEW_APPLICATION))
         .isEqualTo("View application");
+  }
+
+  @Test
+  void getDisplayReference_whenApplicationInProgressAndVersionNoNotNullAndUserCanView() {
+    var ventAppVersion = ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.VENT, 1, 1);
+    when(applicationService.generateApplicationReference(ventAppVersion)).thenReturn("VCON/500/0 (Version 2)");
+    when(applicationVersionService.getApplicationVersionById(ventAppVersion.getId())).thenReturn(ventAppVersion);
+
+    var applicationDataItemDto = getApplicationDataItemDtoForAnnualProductionInProgressForField();
+
+    assertThat(applicationDataItemDtoService.getDisplayReference(applicationDataItemDto, VIEW_APPLICATION))
+        .isEqualTo("View VCON/500/0 (Version 2)");
   }
 
   @Test
