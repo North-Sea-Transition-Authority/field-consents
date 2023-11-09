@@ -178,7 +178,7 @@ class FlareFormValidatorTest {
   @Test
   void validate_validForm1() {
     flareForm = new FlareForm();
-    flareForm.setFlareType(FlareType.LPP_FLARE);
+    flareForm.setFlareType(FlareType.LLP_FLARE);
     flareForm.getDescription().setInputValue(ValidatorTestingUtil.STRING_300_CHARACTERS);
     flareForm.setMeteredFlag(Boolean.FALSE);
     flareForm.getCommentsMeteredNo().setInputValue(ValidatorTestingUtil.STRING_300_CHARACTERS);

@@ -35,10 +35,10 @@ public class TaskListTestUtil {
 
   public static final String GAS_INJECTION = "Gas injection";
 
-  public static final String FLARES_TASK_LIST_ITEM = "Flares";
+  public static final String FLARES_TASK_LIST_ITEM = "Flare system(s)";
 
 
-  public static final String VENTS_TASK_LIST_ITEM = "Vents";
+  public static final String VENTS_TASK_LIST_ITEM = "Vent system(s)";
 
   public static final String FLARE_REPORT_TASK_LIST_ITEM = "Flare report";
 

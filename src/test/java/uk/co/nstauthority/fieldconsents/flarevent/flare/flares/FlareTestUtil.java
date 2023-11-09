@@ -37,7 +37,7 @@ public class FlareTestUtil {
       "MP DESCRIPTION", Boolean.FALSE, "MP COMMENT");
   public static Flare flareLp = new Flare(flareAppVersion, 5, FlareType.LP_FLARE,
       "LP DESCRIPTION", Boolean.TRUE, "LP COMMENT");
-  public static Flare flareLpp = new Flare(flareAppVersion, 7, FlareType.LPP_FLARE,
+  public static Flare flareLpp = new Flare(flareAppVersion, 7, FlareType.LLP_FLARE,
       "LPP DESCRIPTION", Boolean.FALSE, "LPP COMMENT");
   public static List<Flare> flares = List.of(flareHp, flareMp, flareLp, flareLpp);
 
@@ -50,7 +50,7 @@ public class FlareTestUtil {
       Map.of(FlareType.HP_FLARE.getEnumName(), FlareType.HP_FLARE.getDisplayName(),
           FlareType.MP_FLARE.getEnumName(), FlareType.MP_FLARE.getDisplayName(),
           FlareType.LP_FLARE.getEnumName(), FlareType.LP_FLARE.getDisplayName(),
-          FlareType.LPP_FLARE.getEnumName(), FlareType.LPP_FLARE.getDisplayName()
+          FlareType.LLP_FLARE.getEnumName(), FlareType.LLP_FLARE.getDisplayName()
       );
 
   public static StringInput getNewStringInput(String fieldName, String displayName, String inputValue) {

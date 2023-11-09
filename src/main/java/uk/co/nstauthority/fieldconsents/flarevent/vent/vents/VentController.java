@@ -21,15 +21,15 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Controller
-@RequestMapping("applications/{applicationId}")
+@RequestMapping("applications/{applicationId}/vents")
 @HasApplicationStatus(statuses = ApplicationVersionStatus.IN_PROGRESS)
 @HasApplicationPermission(permissions = RolePermission.EDIT_FCS_APPLICATIONS)
 public class VentController {
 
-  public static final String PAGE_NAME_SUMMARY = "Vents";
-  public static final String PAGE_NAME_ADD = "Add vent";
-  public static final String PAGE_NAME_EDIT = "Change vent";
-  public static final String PAGE_NAME_DELETE = "Delete vent";
+  public static final String PAGE_NAME_SUMMARY = "Vent systems(s)";
+  public static final String PAGE_NAME_ADD = "Add vent system";
+  public static final String PAGE_NAME_EDIT = "Change vent system";
+  public static final String PAGE_NAME_DELETE = "Delete vent system";
   static final String PAGE_TITLE_ATTR_NAME = "pageTitle";
 
   private final ApplicationVersionService applicationVersionService;
@@ -51,7 +51,7 @@ public class VentController {
     this.ventSetupFormValidator = ventSetupFormValidator;
   }
 
-  @GetMapping("/vents/new")
+  @GetMapping("new")
   public ModelAndView addVent(@PathVariable Integer applicationId) {
 
     ModelAndView modelAndView = getEditVentModelAndView(applicationId, PAGE_NAME_ADD);
@@ -70,7 +70,7 @@ public class VentController {
     return modelAndView;
   }
 
-  @PostMapping("/vents/new")
+  @PostMapping("new")
   public ModelAndView saveNewVent(@PathVariable Integer applicationId,
                                   @ModelAttribute("form") VentForm form,
                                   BindingResult bindingResult) {
@@ -86,7 +86,7 @@ public class VentController {
     return ReverseRouter.redirect(on(VentController.class).viewVentsSummary(applicationId));
   }
 
-  @GetMapping("/vents")
+  @GetMapping
   public ModelAndView viewVentsSummary(@PathVariable Integer applicationId) {
 
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
@@ -113,7 +113,7 @@ public class VentController {
     return modelAndView;
   }
 
-  @PostMapping("/vents")
+  @PostMapping
   public ModelAndView saveVentsSummary(@PathVariable Integer applicationId,
                                        @ModelAttribute("form") VentSetupForm form,
                                        BindingResult bindingResult) {
@@ -133,7 +133,7 @@ public class VentController {
     return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
   }
 
-  @GetMapping("/vents/{ventNo}")
+  @GetMapping("{ventNo}")
   public ModelAndView editVent(@PathVariable Integer applicationId,
                                @PathVariable Integer ventNo) {
 
@@ -147,7 +147,7 @@ public class VentController {
     return modelAndView;
   }
 
-  @PostMapping("/vents/{ventNo}")
+  @PostMapping("{ventNo}")
   public ModelAndView saveVent(@PathVariable Integer applicationId,
                                @PathVariable Integer ventNo,
                                @ModelAttribute("form") VentForm form,
@@ -166,7 +166,7 @@ public class VentController {
     return ReverseRouter.redirect(on(VentController.class).viewVentsSummary(applicationId));
   }
 
-  @GetMapping("/vents/{ventNo}/delete")
+  @GetMapping("{ventNo}/delete")
   public ModelAndView deleteVentConfirm(@PathVariable Integer applicationId,
                                         @PathVariable Integer ventNo) {
     // Find the vent or error
@@ -184,7 +184,7 @@ public class VentController {
         );
   }
 
-  @PostMapping("/vents/{ventNo}/delete")
+  @PostMapping("{ventNo}/delete")
   public ModelAndView deleteVent(@PathVariable Integer applicationId,
                                  RedirectAttributes redirectAttributes,
                                  @PathVariable Integer ventNo) {
@@ -195,7 +195,7 @@ public class VentController {
     // delete the vent
     ventService.deleteVent(vent);
 
-    redirectAttributes.addFlashAttribute("successfulDeleteBanner", "Vent has been successfully deleted.");
+    redirectAttributes.addFlashAttribute("successfulDeleteBanner", "Vent system has been successfully deleted.");
     if (ventService.ventsExistForApplicationVersion(applicationVersion)) {
       return ReverseRouter.redirect(on(VentController.class).viewVentsSummary(applicationId));
     }

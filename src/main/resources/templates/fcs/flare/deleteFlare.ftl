@@ -4,7 +4,7 @@
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
 <#-- @ftlvariable name="flareView" type="uk.co.nstauthority.fieldconsents.flarevent.flare.flares.FlareView" -->
 
-<#assign pageTitle = "Are you sure you want to delete this flare?"/>
+<#assign pageTitle = "Are you sure you want to delete this flare system?"/>
 
 <@defaultPage htmlTitle=pageTitle pageHeading=pageTitle errorItems=errorList>
 

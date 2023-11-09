@@ -29,7 +29,7 @@
     <#assign hasAddedAllFlaresFormBind = "form.hasOtherFlaresToAdd"/>
     <@fdsRadio.radioGroup
     path=hasAddedAllFlaresFormBind
-    labelText="Do you need to add another flare?">
+    labelText="Do you need to add another flare system?">
       <@fdsRadio.radioYes path=hasAddedAllFlaresFormBind/>
       <@fdsRadio.radioNo path=hasAddedAllFlaresFormBind/>
     </@fdsRadio.radioGroup>

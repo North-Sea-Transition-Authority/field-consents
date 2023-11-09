@@ -101,7 +101,7 @@ class ConsentDetailsTaskListSectionServiceTest {
         .isPresent()
         .get()
         .isEqualTo(new TaskListSection(
-            "Consent details",
+            "Application details",
             10,
             List.of(TASK_LIST_ITEM, TASK_LIST_ITEM, TASK_LIST_ITEM, TASK_LIST_ITEM)
         ));

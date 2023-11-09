@@ -15,14 +15,14 @@ public class AddTeamMemberValidator implements SmartValidator {
   static final String USERNAME_FORM_FIELD_NAME = "username";
 
   static final String NO_USERNAME_ERROR_CODE = "%s.required".formatted(USERNAME_FORM_FIELD_NAME);
-  static final String NO_USERNAME_ERROR_MESSAGE = "Enter an Energy Portal username";
+  static final String NO_USERNAME_ERROR_MESSAGE = "Enter a UK Energy Portal username";
 
   static final String USERNAME_NOT_FOUND_ERROR_CODE = "%s.notFound".formatted(USERNAME_FORM_FIELD_NAME);
-  static final String USERNAME_NOT_FOUND_ERROR_MESSAGE = "No Energy Portal user exists with this username";
+  static final String USERNAME_NOT_FOUND_ERROR_MESSAGE = "No UK Energy Portal user exists with this username";
 
   static final String TOO_MANY_RESULTS_FOUND_ERROR_CODE = "%s.tooManyResults".formatted(USERNAME_FORM_FIELD_NAME);
   static final String TOO_MANY_RESULTS_FOUND_ERROR_MESSAGE =
-      "More than one Energy Portal user exists with this email address. Enter the username of the user instead.";
+      "More than one UK Energy Portal user exists with this email address. Enter the username of the user instead.";
 
   static final String SHARED_ACCOUNT_NOT_ALLOWED_ERROR_CODE = "%s.sharedAccountProhibited"
       .formatted(USERNAME_FORM_FIELD_NAME);

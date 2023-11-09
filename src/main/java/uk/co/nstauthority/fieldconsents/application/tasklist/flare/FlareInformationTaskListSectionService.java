@@ -98,7 +98,7 @@ public class FlareInformationTaskListSectionService implements TaskListSectionSe
         ? ReverseRouter.route(on(FlareController.class).addFlare(applicationId))
         : ReverseRouter.route(on(FlareController.class).viewFlaresSummary(applicationId));
 
-    return new TaskListItem("Flares",
+    return new TaskListItem("Flare system(s)",
         TaskListLabel.readyOrCompleteByCollection(flares),
         flaresUrl);
   }

@@ -9,7 +9,7 @@
         <p class="govuk-body-lead">
           Enter data relating to the flaring that has occurred over the most recent 12-month period.<br/>
           <br/>
-          If the field or hub has started-up during this period, then enter zeros for the prior months with a relevant comment.<br/>
+          If the field, hub or facility has started up in this period, then enter zeros for the prior months with a relevant comment.<br/>
           <br/>
           You can <@fdsAction.link linkText="adjust the reporting period" linkUrl=springUrl(periodUrl)/> if needed.
         </p>

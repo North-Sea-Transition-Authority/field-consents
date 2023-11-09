@@ -5,7 +5,7 @@
 <@defaultPage htmlTitle=pageTitle pageHeading=pageTitle errorItems=errorList>
   <@fdsForm.htmlForm>
     <@fdsRadio.radio
-    labelText="Vent type"
+    labelText="Vent system type"
     path="form.ventType"
     radioItems=ventTypes
     />

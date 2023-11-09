@@ -5,9 +5,9 @@ import uk.co.nstauthority.fieldconsents.util.enumutil.Displayable;
 import uk.co.nstauthority.fieldconsents.util.enumutil.DisplayableEnumOptionUtil;
 
 public enum VentType implements Displayable {
-  HP_VENT("HP Vent", 10),
-  LP_VENT("LP Vent", 20),
-  OTHER_VENT("Other Vent", 30);
+  HP_VENT("HP vent system", 10),
+  LP_VENT("LP vent system", 20),
+  OTHER_VENT("Other vent system", 30);
 
   private final String displayName;
   private final int displayOrder;

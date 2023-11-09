@@ -5,10 +5,10 @@ import uk.co.nstauthority.fieldconsents.util.enumutil.Displayable;
 import uk.co.nstauthority.fieldconsents.util.enumutil.DisplayableEnumOptionUtil;
 
 public enum FlareType implements Displayable {
-  HP_FLARE("HP Flare", 10),
-  MP_FLARE("MP Flare", 20),
-  LP_FLARE("LP Flare", 30),
-  LPP_FLARE("LPP Flare", 40);
+  HP_FLARE("HP flare system", 10),
+  MP_FLARE("MP flare system", 20),
+  LP_FLARE("LP flare system", 30),
+  LLP_FLARE("LLP flare system", 40);
 
   private final String displayName;
   private final int displayOrder;

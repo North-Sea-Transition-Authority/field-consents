@@ -4,7 +4,7 @@
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
 <#-- @ftlvariable name="ventView" type="uk.co.nstauthority.fieldconsents.flarevent.vent.vents.VentView" -->
 
-<#assign pageTitle = "Are you sure you want to delete this vent?"/>
+<#assign pageTitle = "Are you sure you want to delete this vent system?"/>
 
 <@defaultPage htmlTitle=pageTitle pageHeading=pageTitle errorItems=errorList>
 

@@ -29,7 +29,7 @@
     <#assign hasAddedAllVentsFormBind = "form.hasOtherVentsToAdd"/>
     <@fdsRadio.radioGroup
     path=hasAddedAllVentsFormBind
-    labelText="Do you need to add another vent?">
+    labelText="Do you need to add another vent system?">
       <@fdsRadio.radioYes path=hasAddedAllVentsFormBind/>
       <@fdsRadio.radioNo path=hasAddedAllVentsFormBind/>
     </@fdsRadio.radioGroup>

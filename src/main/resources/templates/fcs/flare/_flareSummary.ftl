@@ -10,13 +10,13 @@
   <#assign flareViewsActionsContent>
     <#if showActions>
       <@fdsSummaryList.summaryListCardActionList>
-        <@fdsSummaryList.summaryListCardActionItem itemUrl=springUrl(flare.editUrl) itemText="Change" itemScreenReaderText="flare ${displayOrder}"/>
-        <@fdsSummaryList.summaryListCardActionItem itemUrl=springUrl(flare.deleteUrl) itemText="Delete" itemScreenReaderText="flare ${displayOrder}"/>
+        <@fdsSummaryList.summaryListCardActionItem itemUrl=springUrl(flare.editUrl) itemText="Change" itemScreenReaderText="flare system ${displayOrder}"/>
+        <@fdsSummaryList.summaryListCardActionItem itemUrl=springUrl(flare.deleteUrl) itemText="Delete" itemScreenReaderText="flare system ${displayOrder}"/>
       </@fdsSummaryList.summaryListCardActionList>
     </#if>
   </#assign>
-  <@fdsSummaryList.summaryListCard headingText="Flare ${displayOrder}" cardActionsContent=flareViewsActionsContent summaryListId="flare-view-summary-card-list">
-    <@fdsSummaryList.summaryListRowNoAction keyText="Flare type">
+  <@fdsSummaryList.summaryListCard headingText="Flare system ${displayOrder}" cardActionsContent=flareViewsActionsContent summaryListId="flare-system-view-summary-card-list">
+    <@fdsSummaryList.summaryListRowNoAction keyText="Flare system type">
       ${flare.flareType}
     </@fdsSummaryList.summaryListRowNoAction>
     <@fdsSummaryList.summaryListRowNoAction keyText="Description">

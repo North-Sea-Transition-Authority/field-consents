@@ -70,7 +70,7 @@
 </#macro>
 
 <#macro geographicAreaFilter form geographicAreaCheckboxes>
-  <@fdsSearch.searchFilterItem itemName="Sea location" expanded=form.geographicAreas?has_content>
+  <@fdsSearch.searchFilterItem itemName="Geographic area" expanded=form.geographicAreas?has_content>
     <@fdsSearch.searchCheckboxes
       path="form.geographicAreas"
       checkboxes=geographicAreaCheckboxes

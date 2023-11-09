@@ -21,15 +21,15 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Controller
-@RequestMapping("applications/{applicationId}")
+@RequestMapping("applications/{applicationId}/flares")
 @HasApplicationStatus(statuses = ApplicationVersionStatus.IN_PROGRESS)
 @HasApplicationPermission(permissions = RolePermission.EDIT_FCS_APPLICATIONS)
 public class FlareController {
 
-  public static final String PAGE_NAME_SUMMARY = "Flares";
-  public static final String PAGE_NAME_ADD = "Add flare";
-  public static final String PAGE_NAME_EDIT = "Change flare";
-  public static final String PAGE_NAME_DELETE = "Delete flare";
+  public static final String PAGE_NAME_SUMMARY = "Flare system(s)";
+  public static final String PAGE_NAME_ADD = "Add flare system";
+  public static final String PAGE_NAME_EDIT = "Change flare system";
+  public static final String PAGE_NAME_DELETE = "Delete flare system";
   static final String PAGE_TITLE_ATTR_NAME = "pageTitle";
 
   private final ApplicationVersionService applicationVersionService;
@@ -51,7 +51,7 @@ public class FlareController {
     this.flareSetupFormValidator = flareSetupFormValidator;
   }
 
-  @GetMapping("/flares/new")
+  @GetMapping("new")
   public ModelAndView addFlare(@PathVariable Integer applicationId) {
 
     ModelAndView modelAndView = getEditFlareModelAndView(applicationId, PAGE_NAME_ADD);
@@ -70,7 +70,7 @@ public class FlareController {
     return modelAndView;
   }
 
-  @PostMapping("/flares/new")
+  @PostMapping("new")
   public ModelAndView saveNewFlare(@PathVariable Integer applicationId,
                                    @ModelAttribute("form") FlareForm form,
                                    BindingResult bindingResult) {
@@ -86,7 +86,7 @@ public class FlareController {
     return ReverseRouter.redirect(on(FlareController.class).viewFlaresSummary(applicationId));
   }
 
-  @GetMapping("/flares")
+  @GetMapping
   public ModelAndView viewFlaresSummary(@PathVariable Integer applicationId) {
 
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
@@ -113,7 +113,7 @@ public class FlareController {
     return modelAndView;
   }
 
-  @PostMapping("/flares")
+  @PostMapping
   public ModelAndView saveFlaresSummary(@PathVariable Integer applicationId,
                                         @ModelAttribute("form") FlareSetupForm form,
                                         BindingResult bindingResult) {
@@ -133,7 +133,7 @@ public class FlareController {
     return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
   }
 
-  @GetMapping("/flares/{flareNo}")
+  @GetMapping("{flareNo}")
   public ModelAndView editFlare(@PathVariable Integer applicationId,
                                 @PathVariable Integer flareNo) {
 
@@ -147,7 +147,7 @@ public class FlareController {
     return modelAndView;
   }
 
-  @PostMapping("/flares/{flareNo}")
+  @PostMapping("{flareNo}")
   public ModelAndView saveFlare(@PathVariable Integer applicationId,
                                 @PathVariable Integer flareNo,
                                 @ModelAttribute("form") FlareForm form,
@@ -166,7 +166,7 @@ public class FlareController {
     return ReverseRouter.redirect(on(FlareController.class).viewFlaresSummary(applicationId));
   }
 
-  @GetMapping("/flares/{flareNo}/delete")
+  @GetMapping("{flareNo}/delete")
   public ModelAndView deleteFlareConfirm(@PathVariable Integer applicationId,
                                          @PathVariable Integer flareNo) {
     // Find the flare or error
@@ -184,7 +184,7 @@ public class FlareController {
         );
   }
 
-  @PostMapping("/flares/{flareNo}/delete")
+  @PostMapping("{flareNo}/delete")
   public ModelAndView deleteFlare(@PathVariable Integer applicationId,
                                   RedirectAttributes redirectAttributes,
                                   @PathVariable Integer flareNo) {
@@ -195,7 +195,7 @@ public class FlareController {
     // delete the flare
     flareService.deleteFlare(flare);
 
-    redirectAttributes.addFlashAttribute("successfulDeleteBanner", "Flare has been successfully deleted.");
+    redirectAttributes.addFlashAttribute("successfulDeleteBanner", "Flare system has been successfully deleted.");
     if (flareService.flaresExistForApplicationVersion(applicationVersion)) {
       return ReverseRouter.redirect(on(FlareController.class).viewFlaresSummary(applicationId));
     }

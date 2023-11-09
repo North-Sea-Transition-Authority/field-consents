@@ -63,7 +63,7 @@ public class ConsentDetailsTaskListSectionService implements TaskListSectionServ
       return Optional.empty();
     }
 
-    return Optional.of(new TaskListSection("Consent details", 10, items));
+    return Optional.of(new TaskListSection("Application details", 10, items));
   }
 
   Optional<TaskListItem> getApplicationRationaleTaskListItem(ApplicationVersion applicationVersion) {

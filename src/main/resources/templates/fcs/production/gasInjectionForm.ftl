@@ -9,7 +9,7 @@ pageSize=PageSize.TWO_THIRDS_COLUMN
   <@fdsForm.htmlForm>
     <@fdsRadio.radioGroup
     path="form.willGasBeInjected"
-    labelText="Will gas be injected for the purpose of creating or increasing the pressure support?"
+    labelText="Will gas be injected for the purpose of creating or increasing pressure support?"
     fieldsetHeadingSize="h1"
     fieldsetHeadingClass="govuk-fieldset__legend--l"
     >

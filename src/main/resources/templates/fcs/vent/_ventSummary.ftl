@@ -10,13 +10,13 @@
   <#assign ventViewsActionsContent>
     <#if showActions>
       <@fdsSummaryList.summaryListCardActionList>
-        <@fdsSummaryList.summaryListCardActionItem itemUrl=springUrl(vent.editUrl) itemText="Change" itemScreenReaderText="vent ${displayOrder}"/>
-        <@fdsSummaryList.summaryListCardActionItem itemUrl=springUrl(vent.deleteUrl) itemText="Delete" itemScreenReaderText="vent ${displayOrder}"/>
+        <@fdsSummaryList.summaryListCardActionItem itemUrl=springUrl(vent.editUrl) itemText="Change" itemScreenReaderText="vent system ${displayOrder}"/>
+        <@fdsSummaryList.summaryListCardActionItem itemUrl=springUrl(vent.deleteUrl) itemText="Delete" itemScreenReaderText="vent system ${displayOrder}"/>
       </@fdsSummaryList.summaryListCardActionList>
     </#if>
   </#assign>
-  <@fdsSummaryList.summaryListCard headingText="Vent ${displayOrder}" cardActionsContent=ventViewsActionsContent summaryListId="vent-view-summary-card-list">
-    <@fdsSummaryList.summaryListRowNoAction keyText="Vent type">
+  <@fdsSummaryList.summaryListCard headingText="Vent system ${displayOrder}" cardActionsContent=ventViewsActionsContent summaryListId="vent-system-view-summary-card-list">
+    <@fdsSummaryList.summaryListRowNoAction keyText="Vent system type">
       ${vent.ventType}
     </@fdsSummaryList.summaryListRowNoAction>
     <@fdsSummaryList.summaryListRowNoAction keyText="Description">

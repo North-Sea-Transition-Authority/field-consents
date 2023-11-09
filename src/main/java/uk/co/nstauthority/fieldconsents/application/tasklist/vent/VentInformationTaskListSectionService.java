@@ -96,7 +96,7 @@ public class VentInformationTaskListSectionService implements TaskListSectionSer
         ? ReverseRouter.route(on(VentController.class).addVent(applicationId))
         : ReverseRouter.route(on(VentController.class).viewVentsSummary(applicationId));
 
-    return new TaskListItem("Vents",
+    return new TaskListItem("Vent system(s)",
         TaskListLabel.readyOrCompleteByCollection(vents),
         ventsUrl);
   }
