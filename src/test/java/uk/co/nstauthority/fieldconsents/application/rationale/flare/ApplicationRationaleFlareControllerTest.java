@@ -47,6 +47,7 @@ import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 import uk.co.nstauthority.fieldconsents.assets.AssetRestController;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
+import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -125,7 +126,8 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
     when(applicationRationaleService.getLocations(applicationVersion)).thenReturn(flaringLocations);
     when(applicationRationaleService.getHostLocation(applicationVersion)).thenReturn(Optional.of(hostLocation));
 
-    primaryApplicationAsset.setFieldId(1);
+    primaryApplicationAsset.setAssetId(1);
+    primaryApplicationAsset.setAssetType(AssetType.FIELD);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
 
     var model = mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
@@ -164,7 +166,8 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
     when(applicationRationaleService.getLocations(applicationVersion)).thenReturn(flaringLocations);
     when(applicationRationaleService.getHostLocation(applicationVersion)).thenReturn(Optional.of(hostLocation));
 
-    primaryApplicationAsset.setTerminalId(1);
+    primaryApplicationAsset.setAssetId(1);
+    primaryApplicationAsset.setAssetType(AssetType.TERMINAL);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
 
     var model = mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
@@ -211,7 +214,8 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
     when(applicationRationaleService.getLocations(applicationVersion)).thenReturn(flaringLocations);
     when(applicationRationaleService.getHostLocation(applicationVersion)).thenReturn(Optional.of(hostLocation));
 
-    primaryApplicationAsset.setTerminalId(1);
+    primaryApplicationAsset.setAssetId(1);
+    primaryApplicationAsset.setAssetType(AssetType.TERMINAL);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
 
     var model = mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)

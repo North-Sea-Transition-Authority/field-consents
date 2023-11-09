@@ -6,6 +6,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationStatus;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
+import uk.co.nstauthority.fieldconsents.assets.AssetType;
 
 public class ApplicationDataItemDto {
   private final Integer applicationId;
@@ -16,10 +17,9 @@ public class ApplicationDataItemDto {
   private final Integer versionNo;
   private final Integer operatorId;
   private final ApplicationVersionStatus status;
-  private final Integer fieldId;
-  private final String fieldName;
-  private final Integer terminalId;
-  private final String terminalName;
+  private final AssetType assetType;
+  private final Integer assetId;
+  private final String assetName;
   private final ConsentLengthType duration;
   private final Integer consentYear;
   private final LocalDate shortTermStartDate;
@@ -40,8 +40,8 @@ public class ApplicationDataItemDto {
 
   public ApplicationDataItemDto(Integer applicationId, Integer applicationVersionId, ApplicationType type,
                                 Integer variationNo, Integer applicationNo, Integer versionNo, Integer operatorId,
-                                ApplicationVersionStatus status, Integer fieldId, String fieldName, Integer terminalId,
-                                String terminalName, ConsentLengthType duration, Integer consentYear,
+                                ApplicationVersionStatus status, AssetType assetType, Integer assetId, String assetName,
+                                ConsentLengthType duration, Integer consentYear,
                                 LocalDate shortTermStartDate, LocalDate shortTermEndDate, Integer longTermStartYear,
                                 Integer longTermEndYear, Instant submittedDateTime, Long submittedByWuaId,
                                 Boolean aceFlag, Long caseOfficerWuaId, Boolean withdrawalOpen,
@@ -57,10 +57,9 @@ public class ApplicationDataItemDto {
     this.versionNo = versionNo;
     this.operatorId = operatorId;
     this.status = status;
-    this.fieldId = fieldId;
-    this.fieldName = fieldName;
-    this.terminalId = terminalId;
-    this.terminalName = terminalName;
+    this.assetType = assetType;
+    this.assetId = assetId;
+    this.assetName = assetName;
     this.duration = duration;
     this.consentYear = consentYear;
     this.shortTermStartDate = shortTermStartDate;
@@ -112,20 +111,16 @@ public class ApplicationDataItemDto {
     return status;
   }
 
-  public Integer getFieldId() {
-    return fieldId;
+  public AssetType getAssetType() {
+    return assetType;
   }
 
-  public String getFieldName() {
-    return fieldName;
+  public Integer getAssetId() {
+    return assetId;
   }
 
-  public Integer getTerminalId() {
-    return terminalId;
-  }
-
-  public String getTerminalName() {
-    return terminalName;
+  public String getAssetName() {
+    return assetName;
   }
 
   public ConsentLengthType getDuration() {

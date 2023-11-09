@@ -416,7 +416,7 @@ class ApplicationDataItemDtoServiceTest {
         ),
         APPLICATION_REFERENCE,
         "org",
-        applicationDataItemDto.getTerminalName(),
+        applicationDataItemDto.getAssetName(),
         "",
         applicationDataItemDto.getStatus().getDisplayName(),
         "Submitted: %s".formatted(DateUtils.format(applicationDataItemDto.getSubmittedDateTime(), DateUtils.DATE_TIME)),
@@ -535,7 +535,6 @@ class ApplicationDataItemDtoServiceTest {
     doReturn("").when(applicationDataItemDtoService).getDisplayConsentDuration(dto);
     doReturn("").when(applicationDataItemDtoService).getDisplayReference(dto, userAction);
     doReturn("").when(applicationDataItemDtoService).getOperator(dto, Collections.emptyMap());
-    doReturn("").when(applicationDataItemDtoService).getAsset(dto);
     doReturn("").when(applicationDataItemDtoService).getDisplayAssetLocation(dto, Collections.emptyMap());
     doReturn("").when(applicationDataItemDtoService).getSubmittedDateTime(dto);
     doReturn("").when(applicationDataItemDtoService).getSubmittedByName(dto, Collections.emptyMap());
@@ -625,24 +624,6 @@ class ApplicationDataItemDtoServiceTest {
 
     assertThat(applicationDataItemDtoService.getOperator(dataItemDto, Collections.emptyMap())).isEqualTo(
         "MISSING OPERATOR");
-  }
-
-  @Test
-  void getAsset_field() {
-    var dataItemDto = mock(ApplicationDataItemDto.class);
-    when(dataItemDto.getFieldId()).thenReturn(1);
-    when(dataItemDto.getFieldName()).thenReturn("name");
-
-    assertThat(applicationDataItemDtoService.getAsset(dataItemDto)).isEqualTo("name");
-  }
-
-  @Test
-  void getAsset_terminal() {
-    var dataItemDto = mock(ApplicationDataItemDto.class);
-    when(dataItemDto.getFieldId()).thenReturn(null);
-    when(dataItemDto.getTerminalName()).thenReturn("name");
-
-    assertThat(applicationDataItemDtoService.getAsset(dataItemDto)).isEqualTo("name");
   }
 
   @Test

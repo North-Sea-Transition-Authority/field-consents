@@ -31,6 +31,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
+import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 
@@ -133,11 +134,12 @@ class ApplicationDataFilterServiceTest {
     var conditions = applicationDataFilterService.getConditions(dataFilterForm);
 
     assertThat(conditions).containsExactly(
-        exists(context.select(APPLICATION_ASSETS.FIELD_ID)
+        exists(context.select(APPLICATION_ASSETS.ASSET_ID)
             .from(APPLICATION_ASSETS)
             .where(APPLICATION_ASSETS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID)
                 .and(APPLICATION_ASSETS.ASSET_ROLE.in(AssetRole.PRIMARY.name(), AssetRole.SECONDARY.name()))
-                .and(APPLICATION_ASSETS.FIELD_ID.in(fieldJsonIds)))
+                .and(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name()))
+                .and(APPLICATION_ASSETS.ASSET_ID.in(fieldJsonIds)))
         )
     );
   }
@@ -153,11 +155,12 @@ class ApplicationDataFilterServiceTest {
     var conditions = applicationDataFilterService.getConditions(dataFilterForm);
 
     assertThat(conditions).containsExactly(
-        exists(context.select(APPLICATION_ASSETS.FIELD_ID)
+        exists(context.select(APPLICATION_ASSETS.ASSET_ID)
             .from(APPLICATION_ASSETS)
             .where(APPLICATION_ASSETS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID)
                 .and(APPLICATION_ASSETS.ASSET_ROLE.in(AssetRole.PRIMARY.name(), AssetRole.SECONDARY.name()))
-                .and(APPLICATION_ASSETS.FIELD_ID.in(fieldJsonIds)))
+                .and(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name()))
+                .and(APPLICATION_ASSETS.ASSET_ID.in(fieldJsonIds)))
         )
     );
   }
@@ -168,7 +171,7 @@ class ApplicationDataFilterServiceTest {
 
     var conditions = applicationDataFilterService.getConditions(dataFilterForm);
 
-    assertThat(conditions).containsExactly(APPLICATION_ASSETS.TERMINAL_ID.isNotNull());
+    assertThat(conditions).containsExactly(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.TERMINAL.name()));
   }
 
   @Test
@@ -183,13 +186,14 @@ class ApplicationDataFilterServiceTest {
 
     assertThat(conditions)
         .containsExactly(
-            APPLICATION_ASSETS.TERMINAL_ID.isNotNull()
+            APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.TERMINAL.name())
                 .or(
-                    exists(context.select(APPLICATION_ASSETS.FIELD_ID)
+                    exists(context.select(APPLICATION_ASSETS.ASSET_ID)
                         .from(APPLICATION_ASSETS)
                         .where(APPLICATION_ASSETS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID)
                             .and(APPLICATION_ASSETS.ASSET_ROLE.in(AssetRole.PRIMARY.name(), AssetRole.SECONDARY.name()))
-                            .and(APPLICATION_ASSETS.FIELD_ID.in(fieldJsonIds)))
+                            .and(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name()))
+                            .and(APPLICATION_ASSETS.ASSET_ID.in(fieldJsonIds)))
                     )
                 )
         );

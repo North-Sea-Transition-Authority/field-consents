@@ -54,7 +54,7 @@ public class AdditionalInformationTaskListSectionService implements TaskListSect
     var primaryAsset = applicationAssetService.getPrimaryAsset(applicationVersion);
 
     if (primaryAsset.isField() && ApplicationTypeFeature.EIA_SCREENING_DIRECTION.allowed(applicationType)) {
-      var primaryFieldJson = fieldService.getField(primaryAsset.getFieldId(), FIELD_LOOKUP_PURPOSE);
+      var primaryFieldJson = fieldService.getField(primaryAsset.getAssetId(), FIELD_LOOKUP_PURPOSE);
       if (Shore.OFFSHORE.equals(primaryFieldJson.getShore())) {
         taskListItems.add(getEiaDirectionTaskListItem(applicationVersion));
       }

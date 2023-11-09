@@ -86,7 +86,7 @@ public class ApplicationPaymentService {
     var consentLength = consentLengthService.getConsentLengthDetails(applicationVersion).getConsentLength();
 
     var mnemonic = FeeLineMnemonic.from(
-        applicationAssetService.getAssetType(primaryAsset),
+        primaryAsset.getAssetType(),
         application.getType(),
         consentLength,
         ConsentRevisionType.from(application)
@@ -121,7 +121,7 @@ public class ApplicationPaymentService {
 
   String getPaymentDescription(ApplicationVersion applicationVersion) {
     var primaryAsset = applicationAssetService.getPrimaryAsset(applicationVersion);
-    var primaryAssetType = applicationAssetService.getAssetType(primaryAsset);
+    var primaryAssetType = primaryAsset.getAssetType();
 
     var duration = consentLengthService.getConsentLengthDetails(applicationVersion)
         .getConsentLength()
@@ -152,12 +152,12 @@ public class ApplicationPaymentService {
         .orElseThrow(() -> new IllegalStateException("Unable to find primary asset"));
 
     if (primaryAsset.isField()) {
-      var primaryFieldId = primaryAsset.getFieldId();
+      var primaryFieldId = primaryAsset.getAssetId();
       var secondaryFieldIds = assets
           .stream()
           .filter(applicationAsset -> applicationAsset.getAssetRole() == AssetRole.SECONDARY)
           .filter(ApplicationAsset::isField)
-          .map(ApplicationAsset::getFieldId)
+          .map(ApplicationAsset::getAssetId)
           .toList();
 
       var fieldIds = new ArrayList<Integer>();
@@ -196,8 +196,8 @@ public class ApplicationPaymentService {
     }
 
     if (primaryAsset.isTerminal()) {
-      var primaryTerminalId = primaryAsset.getTerminalId();
-      var terminalJson = terminalService.getTerminal(primaryTerminalId, "Looking up terminal name for payment metadata");
+      var primaryAssetId = primaryAsset.getAssetId();
+      var terminalJson = terminalService.getTerminal(primaryAssetId, "Looking up terminal name for payment metadata");
 
       metadata.put("Facility", terminalJson.getName());
 

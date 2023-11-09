@@ -22,6 +22,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
+import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 
@@ -75,7 +76,7 @@ public class ApplicationDataFilterService {
     var conditions = new ArrayList<Condition>();
 
     if (containsTerminal(assetTypes)) {
-      conditions.add(APPLICATION_ASSETS.TERMINAL_ID.isNotNull());
+      conditions.add(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.TERMINAL.name()));
     }
 
     if (containsFields(assetTypes)) {
@@ -86,11 +87,12 @@ public class ApplicationDataFilterService {
           .toList();
 
       conditions.add(
-          exists(context.select(APPLICATION_ASSETS.FIELD_ID)
+          exists(context.select(APPLICATION_ASSETS.ASSET_ID)
               .from(APPLICATION_ASSETS)
               .where(APPLICATION_ASSETS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID)
                   .and(APPLICATION_ASSETS.ASSET_ROLE.in(AssetRole.PRIMARY.name(), AssetRole.SECONDARY.name()))
-                  .and(APPLICATION_ASSETS.FIELD_ID.in(primaryAndSecondaryFieldIds))))
+                  .and(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name()))
+                  .and(APPLICATION_ASSETS.ASSET_ID.in(primaryAndSecondaryFieldIds))))
       );
     }
 

@@ -7,6 +7,7 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.duplication.NotDuplicationSource;
+import uk.co.nstauthority.fieldconsents.assets.AssetType;
 
 @Repository
 @NotDuplicationSource
@@ -26,15 +27,20 @@ public interface ApplicationAssetRepository extends CrudRepository<ApplicationAs
 
   void deleteAllByApplicationVersionAndAssetRoleIn(ApplicationVersion applicationVersion, Set<AssetRole> assetRoles);
 
-  List<ApplicationAsset> findAllByFieldIdIsNotNullAndAssetRoleIn(Set<AssetRole> assetRoles);
+  List<ApplicationAsset> findAllByAssetIdIsNotNullAndAssetRoleInAndAssetTypeIn(
+      Set<AssetRole> assetRoles,
+      Set<AssetType> assetTypes
+  );
 
-  List<ApplicationAsset> findAllByAssetRoleAndFieldIdIsNotNull(AssetRole assetRole);
-
-  List<ApplicationAsset> findAllByAssetRoleAndTerminalIdIsNotNull(AssetRole assetRole);
+  List<ApplicationAsset> findAllByAssetRoleAndAssetTypeAndAssetIdIsNotNull(AssetRole assetRole, AssetType assetType);
 
   Optional<ApplicationAsset> findByApplicationVersionAndAssetNo(ApplicationVersion applicationVersion, Integer assetNo);
 
-  Optional<ApplicationAsset> findByApplicationVersionAndFieldId(ApplicationVersion applicationVersion, Integer fieldId);
+  Optional<ApplicationAsset> findByApplicationVersionAndAssetTypeAndAssetId(
+      ApplicationVersion applicationVersion,
+      AssetType assetType,
+      Integer assetId
+  );
 
   List<ApplicationAsset> findAllByApplicationVersion(ApplicationVersion applicationVersion);
 }

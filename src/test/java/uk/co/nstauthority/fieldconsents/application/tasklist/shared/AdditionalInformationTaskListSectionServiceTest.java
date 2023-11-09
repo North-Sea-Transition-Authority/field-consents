@@ -79,7 +79,7 @@ class AdditionalInformationTaskListSectionServiceTest {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
 
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(asset);
-    when(fieldService.getField(asset.getFieldId(), FIELD_LOOKUP_PURPOSE)).thenReturn(fieldJson);
+    when(fieldService.getField(asset.getAssetId(), FIELD_LOOKUP_PURPOSE)).thenReturn(fieldJson);
     when(supportingInformationService.findSupportingInformation(applicationVersion)).thenReturn(Optional.empty());
 
     var taskListSection = additionalInformationTaskListSectionService.getSection(applicationVersion).orElseThrow();
@@ -135,7 +135,7 @@ class AdditionalInformationTaskListSectionServiceTest {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
 
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.fieldAsset1);
-    when(fieldService.getField(ApplicationAssetTestUtil.fieldAsset1.getFieldId(), FIELD_LOOKUP_PURPOSE)).thenReturn(FieldTestUtil.field1Json);
+    when(fieldService.getField(ApplicationAssetTestUtil.fieldAsset1.getAssetId(), FIELD_LOOKUP_PURPOSE)).thenReturn(FieldTestUtil.field1Json);
     when(supportingInformationService.findSupportingInformation(applicationVersion)).thenReturn(Optional.empty());
 
     lenient().when(eiaDirectionService.isEiaDirectionStarted(applicationVersion)).thenReturn(isStarted);

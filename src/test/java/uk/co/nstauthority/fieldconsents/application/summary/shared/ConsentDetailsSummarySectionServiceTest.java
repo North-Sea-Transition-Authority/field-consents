@@ -24,6 +24,7 @@ import uk.co.nstauthority.fieldconsents.application.assets.AssetSummaryService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.rationale.flare.ApplicationRationaleFlareService;
 import uk.co.nstauthority.fieldconsents.application.rationale.vent.ApplicationRationaleVentService;
+import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.production.gasinjection.GasInjectionService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryItem;
@@ -159,7 +160,8 @@ class ConsentDetailsSummarySectionServiceTest {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
 
     var applicationAsset = new ApplicationAsset();
-    applicationAsset.setTerminalId(1); // this makes it a 'terminal' application asset
+    applicationAsset.setAssetId(1);
+    applicationAsset.setAssetType(AssetType.TERMINAL);
 
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(applicationAsset);
 
@@ -172,7 +174,8 @@ class ConsentDetailsSummarySectionServiceTest {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
 
     var applicationAsset = new ApplicationAsset();
-    applicationAsset.setFieldId(1); // this makes it a 'field' application asset
+    applicationAsset.setAssetId(1);
+    applicationAsset.setAssetType(AssetType.FIELD);
 
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(applicationAsset);
     when(assetSummaryService.getAdditionalAssetsSummaryCards(applicationVersion)).thenReturn(

@@ -97,14 +97,14 @@ class ApplicationPaymentServiceTest {
     var application = applicationVersion.getApplication();
 
     var primaryAsset = new ApplicationAsset();
-    var primaryAssetType = AssetType.FIELD;
+    primaryAsset.setAssetType(AssetType.FIELD);
 
     var consentLengthDetails = new ConsentLengthDetails();
     var consentLength = ConsentLengthType.SHORT_TERM;
     consentLengthDetails.setConsentLength(consentLength);
 
     var mnemonic = FeeLineMnemonic.from(
-        primaryAssetType,
+        primaryAsset.getAssetType(),
         application.getType(),
         consentLength,
         ConsentRevisionType.from(application)
@@ -114,7 +114,6 @@ class ApplicationPaymentServiceTest {
 
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryAsset);
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
-    when(applicationAssetService.getAssetType(primaryAsset)).thenReturn(primaryAssetType);
     when(feePeriodService.getCurrentCost(mnemonic.mnemonic())).thenReturn(currentCostPence);
 
     assertThat(applicationPaymentService.getPaymentAmountPence(applicationVersion)).isEqualTo(currentCostPence);
@@ -180,7 +179,7 @@ class ApplicationPaymentServiceTest {
         = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
 
     var primaryAsset = new ApplicationAsset();
-    var primaryAssetType = AssetType.FIELD;
+    primaryAsset.setAssetType(AssetType.FIELD);
 
     var consentLengthDetails = new ConsentLengthDetails();
     consentLengthDetails.setConsentLength(ConsentLengthType.SHORT_TERM);
@@ -188,7 +187,6 @@ class ApplicationPaymentServiceTest {
     var applicationReference = "testApplicationReference";
 
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryAsset);
-    when(applicationAssetService.getAssetType(primaryAsset)).thenReturn(primaryAssetType);
 
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
@@ -205,7 +203,7 @@ class ApplicationPaymentServiceTest {
         = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
 
     var primaryAsset = new ApplicationAsset();
-    var primaryAssetType = AssetType.TERMINAL;
+    primaryAsset.setAssetType(AssetType.TERMINAL);
 
     var consentLengthDetails = new ConsentLengthDetails();
     consentLengthDetails.setConsentLength(ConsentLengthType.SHORT_TERM);
@@ -213,7 +211,6 @@ class ApplicationPaymentServiceTest {
     var applicationReference = "testApplicationReference";
 
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryAsset);
-    when(applicationAssetService.getAssetType(primaryAsset)).thenReturn(primaryAssetType);
 
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
@@ -237,7 +234,8 @@ class ApplicationPaymentServiceTest {
     var primaryAssetFieldId = 1;
     var primaryAssetFieldName = "testPrimaryAssetFieldName";
     var primaryAsset = new ApplicationAsset();
-    primaryAsset.setFieldId(primaryAssetFieldId);
+    primaryAsset.setAssetId(primaryAssetFieldId);
+    primaryAsset.setAssetType(AssetType.FIELD);
     primaryAsset.setAssetRole(AssetRole.PRIMARY);
     var primaryAssetFieldJson = new FieldJson(primaryAssetFieldId, primaryAssetFieldName, null, null, null);
 
@@ -271,14 +269,16 @@ class ApplicationPaymentServiceTest {
     var primaryAssetFieldId = 1;
     var primaryAssetFieldName = "testPrimaryAssetFieldName";
     var primaryAsset = new ApplicationAsset();
-    primaryAsset.setFieldId(primaryAssetFieldId);
+    primaryAsset.setAssetId(primaryAssetFieldId);
+    primaryAsset.setAssetType(AssetType.FIELD);
     primaryAsset.setAssetRole(AssetRole.PRIMARY);
     var primaryAssetFieldJson = new FieldJson(primaryAssetFieldId, primaryAssetFieldName, null, null, null);
 
     var secondaryAssetFieldId = 2;
     var secondaryAssetFieldName = "testSecondaryAssetFieldName";
     var secondaryAsset = new ApplicationAsset();
-    secondaryAsset.setFieldId(secondaryAssetFieldId);
+    secondaryAsset.setAssetId(secondaryAssetFieldId);
+    secondaryAsset.setAssetType(AssetType.FIELD);
     secondaryAsset.setAssetRole(AssetRole.SECONDARY);
     var secondaryAssetFieldJson = new FieldJson(secondaryAssetFieldId, secondaryAssetFieldName, null, null, null);
 
@@ -313,21 +313,24 @@ class ApplicationPaymentServiceTest {
     var primaryAssetFieldId = 1;
     var primaryAssetFieldName = "testPrimaryAssetFieldName";
     var primaryAsset = new ApplicationAsset();
-    primaryAsset.setFieldId(primaryAssetFieldId);
+    primaryAsset.setAssetId(primaryAssetFieldId);
+    primaryAsset.setAssetType(AssetType.FIELD);
     primaryAsset.setAssetRole(AssetRole.PRIMARY);
     var primaryAssetFieldJson = new FieldJson(primaryAssetFieldId, primaryAssetFieldName, null, null, null);
 
     var secondaryAsset1FieldId = 2;
     var secondaryAsset1FieldName = "testSecondaryAsset1FieldName";
     var secondaryAsset1 = new ApplicationAsset();
-    secondaryAsset1.setFieldId(secondaryAsset1FieldId);
+    secondaryAsset1.setAssetId(secondaryAsset1FieldId);
+    secondaryAsset1.setAssetType(AssetType.FIELD);
     secondaryAsset1.setAssetRole(AssetRole.SECONDARY);
     var secondaryAsset1FieldJson = new FieldJson(secondaryAsset1FieldId, secondaryAsset1FieldName, null, null, null);
 
     var secondaryAsset2FieldId = 3;
     var secondaryAsset2FieldName = "testSecondaryAsset2FieldName";
     var secondaryAsset2 = new ApplicationAsset();
-    secondaryAsset2.setFieldId(secondaryAsset2FieldId);
+    secondaryAsset2.setAssetId(secondaryAsset2FieldId);
+    secondaryAsset2.setAssetType(AssetType.FIELD);
     secondaryAsset2.setAssetRole(AssetRole.SECONDARY);
     var secondaryAsset2FieldJson = new FieldJson(secondaryAsset2FieldId, secondaryAsset2FieldName, null, null, null);
 
@@ -362,14 +365,16 @@ class ApplicationPaymentServiceTest {
     var primaryAssetFieldId = 1;
     var primaryAssetFieldName = "testPrimaryAssetFieldName";
     var primaryAsset = new ApplicationAsset();
-    primaryAsset.setFieldId(primaryAssetFieldId);
+    primaryAsset.setAssetId(primaryAssetFieldId);
+    primaryAsset.setAssetType(AssetType.FIELD);
     primaryAsset.setAssetRole(AssetRole.PRIMARY);
     var primaryAssetFieldJson = new FieldJson(primaryAssetFieldId, primaryAssetFieldName, null, null, null);
 
     var secondaryAssetTerminalId = 2;
     var secondaryAsset = new ApplicationAsset();
     secondaryAsset.setAssetRole(AssetRole.SECONDARY);
-    secondaryAsset.setTerminalId(secondaryAssetTerminalId);
+    secondaryAsset.setAssetId(secondaryAssetTerminalId);
+    secondaryAsset.setAssetType(AssetType.TERMINAL);
 
     var assets = List.of(primaryAsset, secondaryAsset);
 
@@ -401,7 +406,8 @@ class ApplicationPaymentServiceTest {
     var primaryAssetTerminalId = 1;
     var primaryAssetTerminalName = "testPrimaryAssetTerminalName";
     var primaryAsset = new ApplicationAsset();
-    primaryAsset.setTerminalId(primaryAssetTerminalId);
+    primaryAsset.setAssetId(primaryAssetTerminalId);
+    primaryAsset.setAssetType(AssetType.TERMINAL);
     primaryAsset.setAssetRole(AssetRole.PRIMARY);
     var primaryAssetTerminalJson = new TerminalJson(primaryAssetTerminalId, primaryAssetTerminalName, null);
 

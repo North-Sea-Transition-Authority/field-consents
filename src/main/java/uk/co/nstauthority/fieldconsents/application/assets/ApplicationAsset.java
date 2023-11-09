@@ -12,6 +12,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.util.Objects;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.assets.AssetType;
 
 @Entity
 @Table(name = "application_assets")
@@ -25,13 +26,12 @@ public class ApplicationAsset {
   @JoinColumn(name = "application_version_id")
   private ApplicationVersion applicationVersion;
 
-  private Integer fieldId;
+  @Enumerated(EnumType.STRING)
+  private AssetType assetType;
 
-  private String cachedFieldName;
+  private Integer assetId;
 
-  private Integer terminalId;
-
-  private String cachedTerminalName;
+  private String cachedAssetName;
 
   @Enumerated(EnumType.STRING)
   private AssetRole assetRole;
@@ -47,15 +47,22 @@ public class ApplicationAsset {
   }
 
   @VisibleForTesting
-  public ApplicationAsset(Integer id, ApplicationVersion applicationVersion, Integer fieldId, String cachedFieldName,
-                          Integer terminalId, String cachedTerminalName, AssetRole assetRole, Integer assetNo,
-                          Integer assetOperatorOuId, String cachedAssetOperatorName) {
+  public ApplicationAsset(
+      Integer id,
+      ApplicationVersion applicationVersion,
+      AssetType assetType,
+      Integer assetId,
+      String cachedAssetName,
+      AssetRole assetRole,
+      Integer assetNo,
+      Integer assetOperatorOuId,
+      String cachedAssetOperatorName
+  ) {
     this.id = id;
     this.applicationVersion = applicationVersion;
-    this.fieldId = fieldId;
-    this.cachedFieldName = cachedFieldName;
-    this.terminalId = terminalId;
-    this.cachedTerminalName = cachedTerminalName;
+    this.assetType = assetType;
+    this.assetId = assetId;
+    this.cachedAssetName = cachedAssetName;
     this.assetRole = assetRole;
     this.assetNo = assetNo;
     this.assetOperatorOuId = assetOperatorOuId;
@@ -74,44 +81,28 @@ public class ApplicationAsset {
     this.applicationVersion = applicationVersion;
   }
 
-  public Integer getFieldId() {
-    return fieldId;
+  public AssetType getAssetType() {
+    return assetType;
   }
 
-  public void setFieldId(Integer fieldId) {
-    this.fieldId = fieldId;
+  public void setAssetType(AssetType assetType) {
+    this.assetType = assetType;
   }
 
-  public String getCachedFieldName() {
-    return cachedFieldName;
+  public Integer getAssetId() {
+    return assetId;
   }
 
-  public void setCachedFieldName(String fieldName) {
-    this.cachedFieldName = fieldName;
+  public void setAssetId(Integer assetId) {
+    this.assetId = assetId;
   }
 
-  public boolean isField() {
-    return this.fieldId != null;
+  public String getCachedAssetName() {
+    return cachedAssetName;
   }
 
-  public Integer getTerminalId() {
-    return terminalId;
-  }
-
-  public void setTerminalId(Integer terminalId) {
-    this.terminalId = terminalId;
-  }
-
-  public String getCachedTerminalName() {
-    return cachedTerminalName;
-  }
-
-  public void setCachedTerminalName(String terminalName) {
-    this.cachedTerminalName = terminalName;
-  }
-
-  public boolean isTerminal() {
-    return this.terminalId != null;
+  public void setCachedAssetName(String cachedAssetName) {
+    this.cachedAssetName = cachedAssetName;
   }
 
   public AssetRole getAssetRole() {
@@ -144,6 +135,14 @@ public class ApplicationAsset {
 
   public void setCachedAssetOperatorName(String cachedAssetOperatorName) {
     this.cachedAssetOperatorName = cachedAssetOperatorName;
+  }
+
+  public boolean isTerminal() {
+    return assetType == AssetType.TERMINAL;
+  }
+
+  public boolean isField() {
+    return assetType == AssetType.FIELD;
   }
 
   @Override

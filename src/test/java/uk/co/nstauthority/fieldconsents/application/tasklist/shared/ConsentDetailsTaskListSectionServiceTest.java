@@ -40,6 +40,7 @@ import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationa
 import uk.co.nstauthority.fieldconsents.application.rationale.flare.ApplicationRationaleFlareController;
 import uk.co.nstauthority.fieldconsents.application.rationale.production.ApplicationRationaleProductionController;
 import uk.co.nstauthority.fieldconsents.application.rationale.vent.ApplicationRationaleVentController;
+import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.production.gasinjection.GasInjectionController;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListItem;
@@ -349,7 +350,8 @@ class ConsentDetailsTaskListSectionServiceTest {
   void getAdditionalAssetsTaskListItem_nonProduction_nonField(ApplicationType applicationType) {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
     var applicationAsset = new ApplicationAsset();
-    applicationAsset.setTerminalId(1); // makes this a 'terminal' application asset
+    applicationAsset.setAssetId(1);
+    applicationAsset.setAssetType(AssetType.TERMINAL);
 
     when(applicationAssetService.getPrimaryAsset(applicationVersion))
         .thenReturn(applicationAsset);
@@ -364,7 +366,8 @@ class ConsentDetailsTaskListSectionServiceTest {
     var applicationId = applicationVersion.getApplication().getId();
 
     var primaryAsset = new ApplicationAsset();
-    primaryAsset.setFieldId(1); // makes this a 'field' application asset
+    primaryAsset.setAssetId(1);
+    primaryAsset.setAssetType(AssetType.FIELD);
 
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryAsset);
     when(applicationAssetService.getSecondaryAssets(applicationVersion)).thenReturn(Collections.emptyList());
@@ -387,7 +390,8 @@ class ConsentDetailsTaskListSectionServiceTest {
     var applicationId = applicationVersion.getApplication().getId();
 
     var primaryAsset = new ApplicationAsset();
-    primaryAsset.setFieldId(1); // makes this a 'field' application asset
+    primaryAsset.setAssetId(1);
+    primaryAsset.setAssetType(AssetType.FIELD);
 
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryAsset);
     when(applicationAssetService.getSecondaryAssets(applicationVersion)).thenReturn(Collections.emptyList());
@@ -410,7 +414,8 @@ class ConsentDetailsTaskListSectionServiceTest {
     var applicationId = applicationVersion.getApplication().getId();
 
     var primaryAsset = new ApplicationAsset();
-    primaryAsset.setFieldId(1); // makes this a 'field' application asset
+    primaryAsset.setAssetId(1);
+    primaryAsset.setAssetType(AssetType.FIELD);
 
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryAsset);
     when(applicationAssetService.getSecondaryAssets(applicationVersion)).thenReturn(Collections.emptyList());
@@ -444,10 +449,12 @@ class ConsentDetailsTaskListSectionServiceTest {
 
   private static Stream<Arguments> getAdditionalAssetsTaskListItemParams() {
     var fieldAsset = new ApplicationAsset();
-    fieldAsset.setFieldId(1);
+    fieldAsset.setAssetId(1);
+    fieldAsset.setAssetType(AssetType.FIELD);
 
     var terminalAsset = new ApplicationAsset();
-    terminalAsset.setTerminalId(1);
+    terminalAsset.setAssetId(1);
+    terminalAsset.setAssetType(AssetType.TERMINAL);
 
     return Stream.of(
         Arguments.of(

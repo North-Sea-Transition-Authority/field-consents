@@ -180,7 +180,7 @@ class AdditionalAssetSelectionFormValidatorTest {
   void validate_fieldAssetWithDuplicatedPrimaryAsset() {
     form.setAssetKey(AssetTestUtil.FIELD1_ASSET_KEY);
 
-    when(applicationAssetService.findByApplicationVersionAndFieldId(applicationVersion, fieldAsset1.getFieldId())).thenReturn(
+    when(applicationAssetService.findByApplicationVersionAndFieldId(applicationVersion, fieldAsset1.getAssetId())).thenReturn(
         Optional.of(fieldAsset1));
     when(assetService.getAsset(AssetTestUtil.FIELD1_ASSET_KEY))
         .thenReturn(AssetTestUtil.field1AssetJson);
@@ -200,7 +200,7 @@ class AdditionalAssetSelectionFormValidatorTest {
   void validate_fieldAssetWithDuplicatedSecondaryAsset() {
     form.setAssetKey(AssetTestUtil.FIELD2_ASSET_KEY);
 
-    when(applicationAssetService.findByApplicationVersionAndFieldId(applicationVersion, fieldAsset2.getFieldId())).thenReturn(
+    when(applicationAssetService.findByApplicationVersionAndFieldId(applicationVersion, fieldAsset2.getAssetId())).thenReturn(
         Optional.of(fieldAsset2));
     when(assetService.getAsset(AssetTestUtil.FIELD2_ASSET_KEY))
         .thenReturn(AssetTestUtil.field2AssetJson);

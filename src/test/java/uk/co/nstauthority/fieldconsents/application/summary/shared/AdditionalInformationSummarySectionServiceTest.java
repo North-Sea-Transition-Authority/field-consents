@@ -59,7 +59,7 @@ class AdditionalInformationSummarySectionServiceTest {
     when(supportingInformationService.getSupportingInformationSummaryCard(applicationVersion)).thenReturn(summaryCard);
     when(supportingInformationService.getSupportingDocumentsSummaryCard(applicationVersion)).thenReturn(summaryCard);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.fieldAsset1);
-    when(fieldService.getField(ApplicationAssetTestUtil.fieldAsset1.getFieldId(), FIELD_LOOKUP_PURPOSE))
+    when(fieldService.getField(ApplicationAssetTestUtil.fieldAsset1.getAssetId(), FIELD_LOOKUP_PURPOSE))
         .thenReturn(FieldTestUtil.field1Json);
 
     var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion).orElseThrow();
@@ -86,7 +86,7 @@ class AdditionalInformationSummarySectionServiceTest {
     when(supportingInformationService.getSupportingDocumentsSummaryCard(applicationVersion))
         .thenReturn(simpleSummaryCard);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.fieldAsset2);
-    when(fieldService.getField(ApplicationAssetTestUtil.fieldAsset2.getFieldId(), FIELD_LOOKUP_PURPOSE))
+    when(fieldService.getField(ApplicationAssetTestUtil.fieldAsset2.getAssetId(), FIELD_LOOKUP_PURPOSE))
         .thenReturn(FieldTestUtil.field2Json);
 
     var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion).orElseThrow();

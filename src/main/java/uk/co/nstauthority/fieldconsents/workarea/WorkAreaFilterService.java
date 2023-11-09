@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.workarea;
 
+import static uk.co.nstauthority.fieldconsents.assets.AssetType.FIELD;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_CONSULTATIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationAssets.APPLICATION_ASSETS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationTechnicalReviews.APPLICATION_TECHNICAL_REVIEWS;
@@ -104,14 +105,13 @@ public class WorkAreaFilterService {
         .map(FieldJson::getId)
         .toList();
 
-    return APPLICATION_ASSETS.FIELD_ID.in(primaryFieldIdsInGeographicAreas);
+    return APPLICATION_ASSETS.ASSET_TYPE.eq(FIELD.name())
+        .and(APPLICATION_ASSETS.ASSET_ID.in(primaryFieldIdsInGeographicAreas));
   }
 
   private Condition getAssetCondition(AssetJson assetJson) {
-    return switch (assetJson.getAssetType()) {
-      case FIELD ->  APPLICATION_ASSETS.FIELD_ID.eq(assetJson.getId());
-      case TERMINAL -> APPLICATION_ASSETS.TERMINAL_ID.eq(assetJson.getId());
-    };
+    return APPLICATION_ASSETS.ASSET_TYPE.eq(assetJson.getAssetType().name())
+        .and(APPLICATION_ASSETS.ASSET_ID.eq(assetJson.getId()));
   }
 
   public WorkAreaFilter getDefaultFilter(ServiceUserDetail user) {

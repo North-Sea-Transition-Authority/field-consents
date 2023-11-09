@@ -44,6 +44,7 @@ import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
+import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil;
@@ -155,11 +156,12 @@ class SearchFilterServiceTest {
 
     assertThat(searchFilterService.getConditions(form, TeamType.REGULATOR))
         .containsExactly(
-            exists(context.select(APPLICATION_ASSETS.FIELD_ID)
+            exists(context.select(APPLICATION_ASSETS.ASSET_ID)
                 .from(APPLICATION_ASSETS)
                 .where(APPLICATION_ASSETS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID)
                     .and(APPLICATION_ASSETS.ASSET_ROLE.in(AssetRole.PRIMARY.name(), AssetRole.SECONDARY.name()))
-                    .and(APPLICATION_ASSETS.FIELD_ID.eq(field1Json.getId()))))
+                    .and(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name()))
+                    .and(APPLICATION_ASSETS.ASSET_ID.eq(field1Json.getId()))))
         );
   }
 
@@ -172,11 +174,12 @@ class SearchFilterServiceTest {
 
     assertThat(searchFilterService.getConditions(form, TeamType.REGULATOR))
         .containsExactly(
-            exists(context.select(APPLICATION_ASSETS.TERMINAL_ID)
+            exists(context.select(APPLICATION_ASSETS.ASSET_ID)
                 .from(APPLICATION_ASSETS)
                 .where(APPLICATION_ASSETS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID)
                     .and(APPLICATION_ASSETS.ASSET_ROLE.eq(AssetRole.PRIMARY.name()))
-                    .and(APPLICATION_ASSETS.TERMINAL_ID.eq(terminal1Json.getId()))))
+                    .and(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.TERMINAL.name()))
+                    .and(APPLICATION_ASSETS.ASSET_ID.eq(terminal1Json.getId()))))
         );
   }
 
@@ -239,7 +242,7 @@ class SearchFilterServiceTest {
     when(applicationDataFilterService.getConditions(form)).thenReturn(Collections.emptyList());
     when(applicationAssetService.getAllPrimaryAndSecondaryFieldAssets()).thenReturn(List.of(fieldAsset1, fieldAsset2));
     when(fieldService
-        .findFieldsWithOperatorAndLicences(List.of(fieldAsset1.getFieldId(), fieldAsset2.getFieldId()), FIELD_LOOKUP_PURPOSE)).thenReturn(fieldsWithOperatorAndLicences);
+        .findFieldsWithOperatorAndLicences(List.of(fieldAsset1.getAssetId(), fieldAsset2.getAssetId()), FIELD_LOOKUP_PURPOSE)).thenReturn(fieldsWithOperatorAndLicences);
 
 
     assertThat(searchFilterService.getConditions(form, TeamType.REGULATOR))
@@ -256,16 +259,17 @@ class SearchFilterServiceTest {
     when(applicationDataFilterService.getConditions(form)).thenReturn(Collections.emptyList());
     when(applicationAssetService.getAllPrimaryAndSecondaryFieldAssets()).thenReturn(List.of(fieldAsset1, fieldAsset2));
     when(fieldService
-        .findFieldsWithOperatorAndLicences(List.of(fieldAsset1.getFieldId(), fieldAsset2.getFieldId()), FIELD_LOOKUP_PURPOSE)).thenReturn(fieldsWithOperatorAndLicences);
+        .findFieldsWithOperatorAndLicences(List.of(fieldAsset1.getAssetId(), fieldAsset2.getAssetId()), FIELD_LOOKUP_PURPOSE)).thenReturn(fieldsWithOperatorAndLicences);
 
 
     assertThat(searchFilterService.getConditions(form, TeamType.REGULATOR))
         .containsExactly(
-            exists(context.select(APPLICATION_ASSETS.FIELD_ID)
+            exists(context.select(APPLICATION_ASSETS.ASSET_ID)
                 .from(APPLICATION_ASSETS)
                 .where(APPLICATION_ASSETS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID)
                     .and(APPLICATION_ASSETS.ASSET_ROLE.in(AssetRole.PRIMARY.name(), AssetRole.SECONDARY.name()))
-                    .and(APPLICATION_ASSETS.FIELD_ID.in(List.of(1, 2)))))
+                    .and(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name()))
+                    .and(APPLICATION_ASSETS.ASSET_ID.in(List.of(1, 2)))))
         );
   }
 }

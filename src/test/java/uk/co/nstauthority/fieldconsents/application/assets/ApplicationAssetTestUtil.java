@@ -22,6 +22,7 @@ import java.util.Map;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAssetLicence;
+import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.licences.LicenceTestUtil;
 
 public class ApplicationAssetTestUtil {
@@ -30,10 +31,9 @@ public class ApplicationAssetTestUtil {
   public static final ApplicationAsset fieldAsset1 = new ApplicationAsset(
       1,
       ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT),
+      AssetType.FIELD,
       FIELD_ID_1,
       FIELD_NAME_1,
-      null,
-      null,
       AssetRole.PRIMARY,
       null,
       PRIMARY_OPERATOR_OU_ID_1,
@@ -62,10 +62,9 @@ public class ApplicationAssetTestUtil {
   public static final ApplicationAsset fieldAsset2 = new ApplicationAsset(
       2,
       ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT),
+      AssetType.FIELD,
       FIELD_ID_2,
       FIELD_NAME_2,
-      null,
-      null,
       AssetRole.SECONDARY,
       2,
       PRIMARY_OPERATOR_OU_ID_2,
@@ -94,10 +93,9 @@ public class ApplicationAssetTestUtil {
   public static final ApplicationAsset fieldAsset3 = new ApplicationAsset(
       3,
       ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT),
+      AssetType.FIELD,
       FIELD_ID_3,
       FIELD_NAME_3,
-      null,
-      null,
       AssetRole.SECONDARY,
       3,
       PRIMARY_OPERATOR_OU_ID_3,
@@ -126,8 +124,7 @@ public class ApplicationAssetTestUtil {
   public static final ApplicationAsset terminalAsset1 = new ApplicationAsset(
       1,
       ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT),
-      null,
-      null,
+      AssetType.TERMINAL,
       TERMINAL_ID_1,
       TERMINAL_NAME_1,
       AssetRole.PRIMARY,
@@ -139,8 +136,7 @@ public class ApplicationAssetTestUtil {
   public static final ApplicationAsset terminalAsset2 = new ApplicationAsset(
       2,
       ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE),
-      null,
-      null,
+      AssetType.TERMINAL,
       TERMINAL_ID_2,
       TERMINAL_NAME_2,
       AssetRole.PRIMARY,
@@ -152,7 +148,7 @@ public class ApplicationAssetTestUtil {
   public static AssetView assetView2 = new AssetView(
       1,
       fieldAsset2.getAssetNo(),
-      fieldAsset2.getCachedFieldName(),
+      fieldAsset2.getCachedAssetName(),
       fieldAsset2.getCachedAssetOperatorName(),
       fieldAsset2Licence1.getCachedLicenceRef() + ", " + fieldAsset2Licence2.getCachedLicenceRef(),
       BASE_ASSETS_URL + "/" + fieldAsset2.getAssetNo() + "/delete"
@@ -161,7 +157,7 @@ public class ApplicationAssetTestUtil {
   public static AssetView assetView3 = new AssetView(
       2,
       fieldAsset3.getAssetNo(),
-      fieldAsset3.getCachedFieldName(),
+      fieldAsset3.getCachedAssetName(),
       fieldAsset3.getCachedAssetOperatorName(),
       fieldAsset3Licence1.getCachedLicenceRef() + ", " + fieldAsset3Licence2.getCachedLicenceRef(),
       BASE_ASSETS_URL + "/" + fieldAsset3.getAssetNo() + "/delete"

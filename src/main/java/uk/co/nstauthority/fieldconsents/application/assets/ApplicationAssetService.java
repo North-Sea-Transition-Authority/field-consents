@@ -1,7 +1,11 @@
 package uk.co.nstauthority.fieldconsents.application.assets;
 
+import static uk.co.nstauthority.fieldconsents.assets.AssetType.FIELD;
+import static uk.co.nstauthority.fieldconsents.assets.AssetType.TERMINAL;
+
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
@@ -14,7 +18,6 @@ import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
-import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.assets.AssetWithOperatorJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
@@ -53,13 +56,15 @@ public class ApplicationAssetService {
                                        AssetRole assetRole) {
     ApplicationAsset applicationAsset = new ApplicationAsset();
     applicationAsset.setApplicationVersion(applicationVersion);
-    if (asset instanceof FieldJson fieldJson) {
-      applicationAsset.setFieldId(fieldJson.getId());
-      applicationAsset.setCachedFieldName(fieldJson.getName());
-    } else if (asset instanceof TerminalJson terminalJson) {
-      applicationAsset.setTerminalId(terminalJson.getId());
-      applicationAsset.setCachedTerminalName(terminalJson.getName());
+    applicationAsset.setAssetId(asset.getId());
+    applicationAsset.setCachedAssetName(asset.getName());
+
+    if (asset instanceof FieldJson) {
+      applicationAsset.setAssetType(FIELD);
+    } else if (asset instanceof TerminalJson) {
+      applicationAsset.setAssetType(TERMINAL);
     }
+
     applicationAsset.setAssetRole(assetRole);
 
     // TODO We should cater for this exception earlier on when creating an application - FCS-274
@@ -83,9 +88,10 @@ public class ApplicationAssetService {
 
   public ApplicationAsset createSecondaryAsset(ApplicationVersion applicationVersion,
                                                AssetWithOperatorJson asset) {
-    if (asset.getAssetType().equals(AssetType.TERMINAL)) {
-      throw new RuntimeException("Secondary asset of type terminal not allowed for application version id %s asset id %s"
-          .formatted(applicationVersion.getId(), asset.getId()));
+    if (asset.getAssetType().equals(TERMINAL)) {
+      throw new IllegalArgumentException(
+          "Secondary asset of type terminal not allowed for application version id %s asset id %s"
+              .formatted(applicationVersion.getId(), asset.getId()));
     }
 
     var applicationAsset = createAsset(applicationVersion, asset, AssetRole.SECONDARY);
@@ -146,20 +152,15 @@ public class ApplicationAssetService {
   }
 
   public AssetJson getAssetJsonForApplicationAsset(ApplicationAsset applicationAsset) {
-    if (applicationAsset.getFieldId() != null) {
-      return fieldService.findField(applicationAsset.getFieldId(),
-              "Field lookup for application asset")
-          .orElseGet(() -> FieldJson.fromCachedInformation(applicationAsset.getFieldId(),
-              applicationAsset.getCachedFieldName()));
-    } else if (applicationAsset.getTerminalId() != null) {
-      return terminalService.findTerminal(applicationAsset.getTerminalId(),
-              "Terminal lookup for application asset")
-          .orElseGet(() -> TerminalJson.fromCachedInformation(applicationAsset.getTerminalId(),
-              applicationAsset.getCachedTerminalName()));
-    } else {
-      throw new RuntimeException("Field and terminal ids not found for application asset id %s"
-          .formatted(applicationAsset.getId()));
-    }
+    var assetId = applicationAsset.getAssetId();
+    return switch (applicationAsset.getAssetType()) {
+      case FIELD -> fieldService
+          .findField(assetId, "Field lookup for application asset")
+          .orElseGet(() -> FieldJson.fromCachedInformation(assetId, applicationAsset.getCachedAssetName()));
+      case TERMINAL -> terminalService
+          .findTerminal(assetId, "Terminal lookup for application asset")
+          .orElseGet(() -> TerminalJson.fromCachedInformation(assetId, applicationAsset.getCachedAssetName()));
+    };
   }
 
   public AdditionalAssetsSetupForm getAdditionalAssetsSetupForm(ApplicationVersion applicationVersion) {
@@ -174,15 +175,15 @@ public class ApplicationAssetService {
   }
 
   public Optional<ApplicationAsset> findByApplicationVersionAndFieldId(ApplicationVersion applicationVersion, Integer fieldId) {
-    return applicationAssetRepository.findByApplicationVersionAndFieldId(applicationVersion, fieldId);
+    return applicationAssetRepository.findByApplicationVersionAndAssetTypeAndAssetId(applicationVersion, FIELD, fieldId);
   }
 
   public List<ApplicationAsset> findAllPrimaryFieldAssets() {
-    return applicationAssetRepository.findAllByAssetRoleAndFieldIdIsNotNull(AssetRole.PRIMARY);
+    return applicationAssetRepository.findAllByAssetRoleAndAssetTypeAndAssetIdIsNotNull(AssetRole.PRIMARY, FIELD);
   }
 
   public List<ApplicationAsset> findAllPrimaryTerminalAssets() {
-    return applicationAssetRepository.findAllByAssetRoleAndTerminalIdIsNotNull(AssetRole.PRIMARY);
+    return applicationAssetRepository.findAllByAssetRoleAndAssetTypeAndAssetIdIsNotNull(AssetRole.PRIMARY, TERMINAL);
   }
 
   public List<FieldJson> getPrimaryAndSecondaryFieldJsonsOfShoreType(List<AssetTypeWithShore> assetTypeWithShores,
@@ -193,7 +194,7 @@ public class ApplicationAssetService {
 
     var primaryAndSecondaryFieldIds = getAllPrimaryAndSecondaryFieldAssets()
         .stream()
-        .map(ApplicationAsset::getFieldId)
+        .map(ApplicationAsset::getAssetId)
         .toList();
 
     return fieldService.findFieldsByIds(primaryAndSecondaryFieldIds, requestPurpose)
@@ -204,7 +205,10 @@ public class ApplicationAssetService {
 
   public List<ApplicationAsset> getAllPrimaryAndSecondaryFieldAssets() {
     return applicationAssetRepository
-        .findAllByFieldIdIsNotNullAndAssetRoleIn(EnumSet.of(AssetRole.PRIMARY, AssetRole.SECONDARY))
+        .findAllByAssetIdIsNotNullAndAssetRoleInAndAssetTypeIn(
+            EnumSet.of(AssetRole.PRIMARY, AssetRole.SECONDARY),
+            Collections.singleton(FIELD)
+        )
         .stream()
         .distinct()
         .toList();
@@ -213,36 +217,24 @@ public class ApplicationAssetService {
   public List<AssetJson> getAssetJsonListFor(ApplicationVersion applicationVersion, AssetRole assetRole) {
     return findAssetsByApplicationVersionAndAssetRole(applicationVersion, assetRole)
         .stream()
-        .map(this::getAssetJsonFromApplicationAsset)
+        .map(this::getAssetJsonForApplicationAsset)
         .toList();
   }
 
-  private AssetJson getAssetJsonFromApplicationAsset(ApplicationAsset applicationAsset) {
-    if (applicationAsset.isTerminal()) {
-      return terminalService.getTerminal(applicationAsset.getTerminalId(), "Looking up terminal reference");
-    }
-
-    if (applicationAsset.isField()) {
-      return fieldService.getField(applicationAsset.getFieldId(), "Looking up field reference");
-    }
-
-    throw new UnsupportedOperationException(
-        "ApplicationAsset role [%s] is unsupported".formatted(applicationAsset.getAssetRole()));
-  }
-
   @Transactional
-  public void createAssetForApplicationVersion(ApplicationVersion applicationVersion, String assetKey, AssetRole assetRole) {
+  public void createAssetForApplicationVersion(ApplicationVersion applicationVersion, String assetKey,
+                                               AssetRole assetRole) {
     var purpose = "Adding ApplicationAsset to ApplicationVersion [%s]".formatted(applicationVersion.getId());
     var asset = assetService.getAsset(assetKey);
 
-    if (AssetType.FIELD.equals(asset.getAssetType())) {
+    if (FIELD.equals(asset.getAssetType())) {
       var field = fieldService.getFieldWithOperator(asset.getId(), purpose);
       var applicationAsset = createAsset(applicationVersion, field, assetRole);
       applicationAssetRepository.save(applicationAsset);
       return;
     }
 
-    if (AssetType.TERMINAL.equals(asset.getAssetType())) {
+    if (TERMINAL.equals(asset.getAssetType())) {
       var terminal = terminalService.getTerminalWithOperator(asset.getId(), purpose);
       var applicationAsset = createAsset(applicationVersion, terminal, assetRole);
       applicationAssetRepository.save(applicationAsset);
@@ -255,16 +247,5 @@ public class ApplicationAssetService {
   @Transactional
   public void deleteAssetsByApplicationVersionAndAssetRoles(ApplicationVersion applicationVersion, Set<AssetRole> assetRoles) {
     applicationAssetRepository.deleteAllByApplicationVersionAndAssetRoleIn(applicationVersion, assetRoles);
-  }
-
-  public AssetType getAssetType(ApplicationAsset applicationAsset) {
-    if (applicationAsset.isField()) {
-      return AssetType.FIELD;
-    } else if (applicationAsset.isTerminal()) {
-      return AssetType.TERMINAL;
-    } else {
-      throw new IllegalStateException("Application asset %d is not a field or terminal"
-          .formatted(applicationAsset.getId()));
-    }
   }
 }

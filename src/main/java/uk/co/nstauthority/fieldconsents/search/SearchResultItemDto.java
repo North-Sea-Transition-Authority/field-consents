@@ -6,6 +6,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationStatus;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
+import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDto;
 
 public class SearchResultItemDto extends ApplicationDataItemDto {
@@ -16,7 +17,7 @@ public class SearchResultItemDto extends ApplicationDataItemDto {
                              ApplicationType type, Integer variationNo,
                              Integer applicationNo, Integer versionNo, Integer operatorId,
                              ApplicationVersionStatus status,
-                             Integer fieldId, String fieldName, Integer terminalId, String terminalName,
+                             AssetType assetType, Integer assetId, String assetName,
                              ConsentLengthType duration,
                              Integer consentYear, LocalDate shortTermStartDate,
                              LocalDate shortTermEndDate, Integer longTermStartYear, Integer longTermEndYear,
@@ -27,8 +28,8 @@ public class SearchResultItemDto extends ApplicationDataItemDto {
                              FurtherInformationStatus furtherInformationStatus,
                              String licences) {
 
-    super(applicationId, applicationVersionId, type, variationNo, applicationNo, versionNo, operatorId, status, fieldId,
-        fieldName, terminalId, terminalName, duration, consentYear, shortTermStartDate, shortTermEndDate,
+    super(applicationId, applicationVersionId, type, variationNo, applicationNo, versionNo, operatorId, status, assetType,
+        assetId, assetName, duration, consentYear, shortTermStartDate, shortTermEndDate,
         longTermStartYear, longTermEndYear, submittedDateTime, submittedByWuaId, aceFlag, caseOfficerWuaId,
         withdrawalOpen, technicalReviewerWuaId, applicationUpdateOpen, applicationUpdateDeadline, consultationOpen,
         consultationDeadline, furtherInformationStatus);

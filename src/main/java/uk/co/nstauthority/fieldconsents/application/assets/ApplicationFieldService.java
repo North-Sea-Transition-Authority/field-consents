@@ -15,7 +15,7 @@ public class ApplicationFieldService {
   public List<Integer> findDistinctPrimaryFieldIds() {
     return applicationAssetService.findAllPrimaryFieldAssets()
         .stream()
-        .map(ApplicationAsset::getFieldId)
+        .map(ApplicationAsset::getAssetId)
         .distinct()
         .toList();
   }

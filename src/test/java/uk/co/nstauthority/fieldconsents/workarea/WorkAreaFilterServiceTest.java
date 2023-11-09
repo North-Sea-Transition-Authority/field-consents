@@ -36,6 +36,7 @@ import uk.co.nstauthority.fieldconsents.application.assets.ApplicationFieldServi
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationStatus;
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
+import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.fields.GeographicArea;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
@@ -167,7 +168,8 @@ class WorkAreaFilterServiceTest {
 
     assertThat(conditions).containsExactly(
         SUBMITTED_APPLICATION_CONDITION,
-        APPLICATION_ASSETS.FIELD_ID.eq(FIELD_ID_1)
+        APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name())
+            .and(APPLICATION_ASSETS.ASSET_ID.eq(FIELD_ID_1))
     );
   }
 
@@ -185,7 +187,8 @@ class WorkAreaFilterServiceTest {
 
     assertThat(conditions).containsExactly(
         SUBMITTED_APPLICATION_CONDITION,
-        APPLICATION_ASSETS.TERMINAL_ID.eq(TERMINAL_ID_1)
+        APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.TERMINAL.name())
+            .and(APPLICATION_ASSETS.ASSET_ID.eq(TERMINAL_ID_1))
     );
   }
 
@@ -207,7 +210,8 @@ class WorkAreaFilterServiceTest {
 
     assertThat(conditions).containsExactly(
         SUBMITTED_APPLICATION_CONDITION,
-        APPLICATION_ASSETS.FIELD_ID.in(distinctPrimaryFields)
+        APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name())
+            .and(APPLICATION_ASSETS.ASSET_ID.in(distinctPrimaryFields))
     );
   }
 
@@ -229,7 +233,8 @@ class WorkAreaFilterServiceTest {
 
     assertThat(conditions).containsExactly(
         SUBMITTED_APPLICATION_CONDITION,
-        APPLICATION_ASSETS.FIELD_ID.in(fieldIdsInFilterGeographicAreas)
+        APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name())
+            .and(APPLICATION_ASSETS.ASSET_ID.in(fieldIdsInFilterGeographicAreas))
     );
   }
 

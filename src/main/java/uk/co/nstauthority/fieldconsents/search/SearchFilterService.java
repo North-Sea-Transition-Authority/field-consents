@@ -26,6 +26,7 @@ import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetServi
 import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
+import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalJson;
@@ -107,19 +108,21 @@ public class SearchFilterService {
   }
 
   private Condition getFieldCondition(FieldJson fieldJson) {
-    return exists(context.select(APPLICATION_ASSETS.FIELD_ID)
+    return exists(context.select(APPLICATION_ASSETS.ASSET_ID)
         .from(APPLICATION_ASSETS)
         .where(APPLICATION_ASSETS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID)
             .and(APPLICATION_ASSETS.ASSET_ROLE.in(AssetRole.PRIMARY.name(), AssetRole.SECONDARY.name()))
-            .and(APPLICATION_ASSETS.FIELD_ID.eq(fieldJson.getId()))));
+            .and(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name()))
+            .and(APPLICATION_ASSETS.ASSET_ID.eq(fieldJson.getId()))));
   }
 
   private Condition getTerminalCondition(TerminalJson terminalJson) {
-    return exists(context.select(APPLICATION_ASSETS.TERMINAL_ID)
+    return exists(context.select(APPLICATION_ASSETS.ASSET_ID)
         .from(APPLICATION_ASSETS)
         .where(APPLICATION_ASSETS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID)
             .and(APPLICATION_ASSETS.ASSET_ROLE.eq(AssetRole.PRIMARY.name()))
-            .and(APPLICATION_ASSETS.TERMINAL_ID.eq(terminalJson.getId()))));
+            .and(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.TERMINAL.name()))
+            .and(APPLICATION_ASSETS.ASSET_ID.eq(terminalJson.getId()))));
   }
 
   private Condition getAceStatusCondition(List<AceFlagStatus> aceFlagStatuses) {
@@ -154,17 +157,18 @@ public class SearchFilterService {
 
   private Condition getLicenceReferenceQueryCondition(List<Integer> fieldIdsWithMatchingLicence) {
     return
-        exists(context.select(APPLICATION_ASSETS.FIELD_ID)
+        exists(context.select(APPLICATION_ASSETS.ASSET_ID)
             .from(APPLICATION_ASSETS)
             .where(APPLICATION_ASSETS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID)
                 .and(APPLICATION_ASSETS.ASSET_ROLE.in(AssetRole.PRIMARY.name(), AssetRole.SECONDARY.name()))
-                .and(APPLICATION_ASSETS.FIELD_ID.in(fieldIdsWithMatchingLicence))));
+                .and(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name()))
+                .and(APPLICATION_ASSETS.ASSET_ID.in(fieldIdsWithMatchingLicence))));
   }
 
   private List<Integer> getFieldIdsWithMatchingLicence(String licenceReference) {
     var primaryAndSecondaryFieldIds = applicationAssetService.getAllPrimaryAndSecondaryFieldAssets()
         .stream()
-        .map(ApplicationAsset::getFieldId)
+        .map(ApplicationAsset::getAssetId)
         .toList();
 
     if (primaryAndSecondaryFieldIds.isEmpty()) {

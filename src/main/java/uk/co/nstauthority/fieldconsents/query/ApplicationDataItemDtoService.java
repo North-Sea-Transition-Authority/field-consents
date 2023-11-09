@@ -12,6 +12,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationStatus;
+import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
@@ -71,7 +72,8 @@ public class ApplicationDataItemDtoService {
       List<? extends ApplicationDataItemDto> applicationDataItemDtos) {
     var fieldJsons = fieldService.findFieldsByIds(applicationDataItemDtos
         .stream()
-        .map(ApplicationDataItemDto::getFieldId)
+        .filter(dto -> dto.getAssetType() == AssetType.FIELD)
+        .map(ApplicationDataItemDto::getAssetId)
         .distinct()
         .toList(), FIELD_LOOKUP_PURPOSE);
 
@@ -146,11 +148,11 @@ public class ApplicationDataItemDtoService {
   }
 
   public String getDisplayAssetLocation(ApplicationDataItemDto dataItemDto, Map<Integer, FieldJson> fieldJsonsMap) {
-    if (Objects.isNull(dataItemDto.getFieldId())) {
+    if (dataItemDto.getAssetType() != AssetType.FIELD) {
       return "";
     }
 
-    var matchingFieldJson = fieldJsonsMap.get(dataItemDto.getFieldId());
+    var matchingFieldJson = fieldJsonsMap.get(dataItemDto.getAssetId());
     return matchingFieldJson != null
         ? matchingFieldJson.getGeographicArea().getDisplayName()
         : "Unknown area";
@@ -215,14 +217,6 @@ public class ApplicationDataItemDtoService {
     return organisationUnitNameById.getOrDefault(dataItemDto.getOperatorId(), "MISSING OPERATOR");
   }
 
-  public String getAsset(ApplicationDataItemDto dataItemDto) {
-    if (Objects.isNull(dataItemDto.getFieldId())) {
-      return dataItemDto.getTerminalName();
-    }
-
-    return dataItemDto.getFieldName();
-  }
-
   public ApplicationDataItem getApplicationDataItem(
       ApplicationDataItemDto dataItemDto,
       ServiceUserDetail user,
@@ -243,7 +237,7 @@ public class ApplicationDataItemDtoService {
         .withDuration(getDisplayConsentDuration(dataItemDto))
         .withReference(getDisplayReference(dataItemDto, userAction))
         .withOperator(getOperator(dataItemDto, organisationUnitNameById))
-        .withAsset(getAsset(dataItemDto))
+        .withAsset(dataItemDto.getAssetName())
         .withGeographicArea(getDisplayAssetLocation(dataItemDto, fieldJsonById))
         .withStatus(dataItemDto.getStatus().getDisplayName())
         .withSubmittedDateTime(getSubmittedDateTime(dataItemDto))

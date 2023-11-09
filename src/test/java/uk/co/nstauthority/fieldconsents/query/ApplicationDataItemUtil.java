@@ -27,6 +27,7 @@ import java.util.Map;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
+import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDtoTestUtil;
@@ -72,10 +73,9 @@ public class ApplicationDataItemUtil {
         APPLICATION_VERSION_NUMBER,
         PRIMARY_OPERATOR_OU_ID_1,
         ApplicationVersionStatus.IN_PROGRESS,
+        AssetType.FIELD,
         FIELD_ID_1,
         FIELD_NAME_1,
-        null,
-        null,
         ConsentLengthType.ANNUAL,
         ANNUAL_CONSENT_YEAR,
         null,
@@ -106,10 +106,9 @@ public class ApplicationDataItemUtil {
         APPLICATION_VERSION_NUMBER,
         PRIMARY_OPERATOR_OU_ID_1,
         ApplicationVersionStatus.IN_PROGRESS,
+        AssetType.FIELD,
         FIELD_ID_1,
         FIELD_NAME_1,
-        null,
-        null,
         null,
         ANNUAL_CONSENT_YEAR,
         null,
@@ -140,8 +139,7 @@ public class ApplicationDataItemUtil {
         APPLICATION_VERSION_NUMBER,
         PRIMARY_OPERATOR_OU_ID_1,
         ApplicationVersionStatus.SUBMITTED,
-        null,
-        null,
+        AssetType.TERMINAL,
         TERMINAL_ID_1,
         TERMINAL_NAME_1,
         ConsentLengthType.SHORT_TERM,
@@ -174,8 +172,7 @@ public class ApplicationDataItemUtil {
         2,
         PRIMARY_OPERATOR_OU_ID_1,
         ApplicationVersionStatus.IN_PROGRESS,
-        null,
-        null,
+        AssetType.TERMINAL,
         TERMINAL_ID_1,
         TERMINAL_NAME_1,
         ConsentLengthType.SHORT_TERM,
@@ -208,8 +205,7 @@ public class ApplicationDataItemUtil {
         APPLICATION_VERSION_NUMBER,
         PRIMARY_OPERATOR_OU_ID_1,
         ApplicationVersionStatus.SUBMITTED,
-        null,
-        null,
+        AssetType.TERMINAL,
         TERMINAL_ID_1,
         TERMINAL_NAME_1,
         ConsentLengthType.SHORT_TERM,
@@ -242,8 +238,7 @@ public class ApplicationDataItemUtil {
         APPLICATION_VERSION_NUMBER,
         PRIMARY_OPERATOR_OU_ID_1,
         ApplicationVersionStatus.SUBMITTED,
-        null,
-        null,
+        AssetType.TERMINAL,
         TERMINAL_ID_1,
         TERMINAL_NAME_1,
         ConsentLengthType.LONG_TERM,
@@ -276,8 +271,7 @@ public class ApplicationDataItemUtil {
         APPLICATION_VERSION_NUMBER,
         PRIMARY_OPERATOR_OU_ID_1,
         ApplicationVersionStatus.SUBMITTED,
-        null,
-        null,
+        AssetType.TERMINAL,
         FIELD_ID_1,
         FIELD_NAME_1,
         ConsentLengthType.LONG_TERM,
@@ -310,10 +304,9 @@ public class ApplicationDataItemUtil {
         APPLICATION_VERSION_NUMBER,
         PRIMARY_OPERATOR_OU_ID_1,
         ApplicationVersionStatus.SUBMITTED,
+        AssetType.FIELD,
         FIELD_ID_1,
         FIELD_NAME_1,
-        null,
-        null,
         ConsentLengthType.ANNUAL,
         2024,
         null,
@@ -344,8 +337,7 @@ public class ApplicationDataItemUtil {
         APPLICATION_VERSION_NUMBER,
         PRIMARY_OPERATOR_OU_ID_1,
         ApplicationVersionStatus.SUBMITTED,
-        null,
-        null,
+        AssetType.TERMINAL,
         TERMINAL_ID_1,
         TERMINAL_NAME_1,
         ConsentLengthType.LONG_TERM,
@@ -379,10 +371,9 @@ public class ApplicationDataItemUtil {
         APPLICATION_VERSION_NUMBER,
         PRIMARY_OPERATOR_OU_ID_1,
         ApplicationVersionStatus.IN_PROGRESS,
+        AssetType.FIELD,
         FIELD_ID_1,
         FIELD_NAME_1,
-        null,
-        null,
         ConsentLengthType.ANNUAL,
         ANNUAL_CONSENT_YEAR,
         null,
@@ -411,7 +402,7 @@ public class ApplicationDataItemUtil {
         getDuration(applicationDataItemDto),
         getCaseReference(applicationDataItemDto),
         getOperator(applicationDataItemDto),
-        getAsset(applicationDataItemDto),
+        applicationDataItemDto.getAssetName(),
         getGeographicArea(applicationDataItemDto),
         applicationDataItemDto.getStatus().getDisplayName(),
         getSubmittedDateTime(applicationDataItemDto),
@@ -435,7 +426,7 @@ public class ApplicationDataItemUtil {
         .withDuration(getDuration(searchResultItemDto))
         .withReference(getCaseReference(searchResultItemDto))
         .withOperator(getOperator(searchResultItemDto))
-        .withAsset(getAsset(searchResultItemDto))
+        .withAsset(searchResultItemDto.getAssetName())
         .withGeographicArea(getGeographicArea(searchResultItemDto))
         .withStatus(searchResultItemDto.getStatus().getDisplayName())
         .withSubmittedDateTime(getSubmittedDateTime(searchResultItemDto))
@@ -464,21 +455,17 @@ public class ApplicationDataItemUtil {
   }
 
   public static String getGeographicArea(ApplicationDataItemDto applicationDataItemDto) {
-    return applicationDataItemDto.getFieldId() != null
-        ? field1JsonWithOperator.getGeographicArea().getDisplayName()
-        : "";
-  }
-
-  private static String getAsset(ApplicationDataItemDto applicationDataItemDto) {
-    return applicationDataItemDto.getFieldId() != null
-        ? applicationDataItemDto.getFieldName()
-        : applicationDataItemDto.getTerminalName();
+    return switch (applicationDataItemDto.getAssetType()) {
+      case FIELD -> field1JsonWithOperator.getGeographicArea().getDisplayName();
+      case TERMINAL -> "";
+    };
   }
 
   public static String getOperator(ApplicationDataItemDto applicationDataItemDto) {
-    return applicationDataItemDto.getFieldId() != null
-        ? field1JsonWithOperator.getOperatorName()
-        : terminal1JsonWithOperator.getOperatorName();
+    return switch (applicationDataItemDto.getAssetType()) {
+      case FIELD -> field1JsonWithOperator.getOperatorName();
+      case TERMINAL -> terminal1JsonWithOperator.getOperatorName();
+    };
   }
 
   public static String getDuration(ApplicationDataItemDto applicationDataItemDto) {

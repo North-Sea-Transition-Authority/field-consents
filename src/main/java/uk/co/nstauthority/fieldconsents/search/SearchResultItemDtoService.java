@@ -12,6 +12,7 @@ import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.JoinType;
 import org.springframework.stereotype.Service;
+import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemQueryService;
 
 @Service
@@ -37,7 +38,8 @@ public class SearchResultItemDtoService {
            )
         .from(APPLICATION_ASSETS)
         .join(APPLICATION_ASSET_LICENCES).onKey(APPLICATION_ASSET_LICENCES.APPLICATION_ASSET_ID)
-        .where(APPLICATION_ASSETS.FIELD_ID.isNotNull())
+        .where(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name()))
+        .and(APPLICATION_ASSETS.ASSET_ID.isNotNull())
         .groupBy(APPLICATION_ASSET_LICENCES.APPLICATION_ASSET_ID);
 
     return applicationDataItemQueryService.runQueryWithCustom(conditions, selectQuery -> {
@@ -46,7 +48,8 @@ public class SearchResultItemDtoService {
       selectQuery.addJoin(fieldLicencesQuery, JoinType.LEFT_OUTER_JOIN,
           Objects.requireNonNull(fieldLicencesQuery.field(APPLICATION_ASSET_LICENCES.APPLICATION_ASSET_ID))
               .eq(APPLICATION_ASSETS.ID)
-              .and(APPLICATION_ASSETS.FIELD_ID.isNotNull()));
+              .and(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name()))
+              .and(APPLICATION_ASSETS.ASSET_ID.isNotNull()));
       selectQuery.addOrderBy(greatest(
           APPLICATION_VERSIONS.SUBMITTED_DATE_TIME,
           APPLICATION_VERSIONS.CREATED_DATE_TIME).desc());

@@ -98,22 +98,20 @@ class ApplicationAssetServiceTest {
         .extracting(
             ApplicationAsset::getApplicationVersion,
             ApplicationAsset::getAssetRole,
-            ApplicationAsset::getFieldId,
-            ApplicationAsset::getCachedFieldName,
+            ApplicationAsset::getAssetType,
+            ApplicationAsset::getAssetId,
+            ApplicationAsset::getCachedAssetName,
             ApplicationAsset::getAssetOperatorOuId,
-            ApplicationAsset::getCachedAssetOperatorName,
-            ApplicationAsset::getTerminalId,
-            ApplicationAsset::getCachedTerminalName
+            ApplicationAsset::getCachedAssetOperatorName
         )
         .containsExactly(
             applicationVersion,
             AssetRole.PRIMARY,
+            AssetType.FIELD,
             field1JsonWithOperator.getId(),
             field1JsonWithOperator.getName(),
             field1JsonWithOperator.getOperatorJson().organisationUnitId(),
-            field1JsonWithOperator.getOperatorJson().name(),
-            null,
-            null
+            field1JsonWithOperator.getOperatorJson().name()
         );
   }
 
@@ -137,29 +135,27 @@ class ApplicationAssetServiceTest {
         .extracting(
             ApplicationAsset::getApplicationVersion,
             ApplicationAsset::getAssetRole,
-            ApplicationAsset::getFieldId,
-            ApplicationAsset::getCachedFieldName,
+            ApplicationAsset::getAssetType,
+            ApplicationAsset::getAssetId,
+            ApplicationAsset::getCachedAssetName,
             ApplicationAsset::getAssetOperatorOuId,
-            ApplicationAsset::getCachedAssetOperatorName,
-            ApplicationAsset::getTerminalId,
-            ApplicationAsset::getCachedTerminalName
+            ApplicationAsset::getCachedAssetOperatorName
         )
         .containsExactly(
             applicationVersion,
             AssetRole.PRIMARY,
-            null,
-            null,
-            terminal1JsonWithOperator.getOperatorJson().organisationUnitId(),
-            terminal1JsonWithOperator.getOperatorJson().name(),
+            AssetType.TERMINAL,
             terminal1JsonWithOperator.getId(),
-            terminal1JsonWithOperator.getName()
+            terminal1JsonWithOperator.getName(),
+            terminal1JsonWithOperator.getOperatorJson().organisationUnitId(),
+            terminal1JsonWithOperator.getOperatorJson().name()
         );
   }
 
   @Test
   void createSecondaryAsset_terminal() {
     assertThatThrownBy(() -> applicationAssetService.createSecondaryAsset(applicationVersion, terminal1JsonWithOperator))
-        .isInstanceOf(RuntimeException.class)
+        .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("Secondary asset of type terminal not allowed for application version id %s asset id %s"
             .formatted(applicationVersion.getId(), terminal1JsonWithOperator.getId()));
   }
@@ -179,23 +175,21 @@ class ApplicationAssetServiceTest {
         .extracting(
             ApplicationAsset::getApplicationVersion,
             ApplicationAsset::getAssetRole,
-            ApplicationAsset::getFieldId,
-            ApplicationAsset::getCachedFieldName,
+            ApplicationAsset::getAssetType,
+            ApplicationAsset::getAssetId,
+            ApplicationAsset::getCachedAssetName,
             ApplicationAsset::getAssetOperatorOuId,
             ApplicationAsset::getCachedAssetOperatorName,
-            ApplicationAsset::getTerminalId,
-            ApplicationAsset::getCachedTerminalName,
             ApplicationAsset::getAssetNo
         )
         .containsExactly(
             applicationVersion,
             AssetRole.SECONDARY,
+            AssetType.FIELD,
             field1JsonWithOperator.getId(),
             field1JsonWithOperator.getName(),
             field1JsonWithOperator.getOperatorJson().organisationUnitId(),
             field1JsonWithOperator.getOperatorJson().name(),
-            null,
-            null,
             1
         );
   }
@@ -215,23 +209,21 @@ class ApplicationAssetServiceTest {
         .extracting(
             ApplicationAsset::getApplicationVersion,
             ApplicationAsset::getAssetRole,
-            ApplicationAsset::getFieldId,
-            ApplicationAsset::getCachedFieldName,
+            ApplicationAsset::getAssetType,
+            ApplicationAsset::getAssetId,
+            ApplicationAsset::getCachedAssetName,
             ApplicationAsset::getAssetOperatorOuId,
             ApplicationAsset::getCachedAssetOperatorName,
-            ApplicationAsset::getTerminalId,
-            ApplicationAsset::getCachedTerminalName,
             ApplicationAsset::getAssetNo
         )
         .containsExactly(
             applicationVersion,
             AssetRole.SECONDARY,
+            AssetType.FIELD,
             field1JsonWithOperator.getId(),
             field1JsonWithOperator.getName(),
             field1JsonWithOperator.getOperatorJson().organisationUnitId(),
             field1JsonWithOperator.getOperatorJson().name(),
-            null,
-            null,
             4
         );
   }
@@ -368,18 +360,10 @@ class ApplicationAssetServiceTest {
   }
 
   @Test
-  void getAssetJsonForApplicationAsset_noAssetIdsExists() {
-    ApplicationAsset applicationAsset = getStubPrimaryApplicationAsset(applicationVersion);
-    assertThatThrownBy(() -> applicationAssetService.getAssetJsonForApplicationAsset(applicationAsset))
-        .isInstanceOf(RuntimeException.class)
-        .hasMessage("Field and terminal ids not found for application asset id %s"
-            .formatted(applicationAsset.getId()));
-  }
-
-  @Test
   void getAssetJsonForApplicationAsset_fieldExists() {
     ApplicationAsset applicationAsset = getStubPrimaryApplicationAsset(applicationVersion);
-    applicationAsset.setFieldId(field1.getFieldId());
+    applicationAsset.setAssetId(field1.getFieldId());
+    applicationAsset.setAssetType(AssetType.FIELD);
     when(fieldService.findField(eq(field1.getFieldId()), any())).thenReturn(Optional.of(field1Json));
 
     assertThat(applicationAssetService.getAssetJsonForApplicationAsset(applicationAsset))
@@ -389,8 +373,9 @@ class ApplicationAssetServiceTest {
   @Test
   void getAssetJsonForApplicationAsset_fieldIdExistsButNameLookupFails() {
     ApplicationAsset applicationAsset = getStubPrimaryApplicationAsset(applicationVersion);
-    applicationAsset.setFieldId(field1.getFieldId());
-    applicationAsset.setCachedFieldName(field1.getFieldName());
+    applicationAsset.setAssetId(field1.getFieldId());
+    applicationAsset.setAssetType(AssetType.FIELD);
+    applicationAsset.setCachedAssetName(field1.getFieldName());
 
     when(fieldService.findField(eq(field1.getFieldId()), any())).thenReturn(Optional.empty());
 
@@ -410,7 +395,8 @@ class ApplicationAssetServiceTest {
   @Test
   void getAssetJsonForApplicationAsset_terminalExists() {
     ApplicationAsset applicationAsset = getStubPrimaryApplicationAsset(applicationVersion);
-    applicationAsset.setTerminalId(terminal1.getTerminalId());
+    applicationAsset.setAssetId(terminal1.getTerminalId());
+    applicationAsset.setAssetType(AssetType.TERMINAL);
     when(terminalService.findTerminal(eq(terminal1.getTerminalId()), any()))
         .thenReturn(Optional.of(terminal1Json));
 
@@ -421,21 +407,22 @@ class ApplicationAssetServiceTest {
   @Test
   void getAssetJsonForApplicationAsset_terminalIdExistsButNameLookupFails() {
     ApplicationAsset applicationAsset = getStubPrimaryApplicationAsset(applicationVersion);
-    applicationAsset.setTerminalId(terminal1.getTerminalId());
-    applicationAsset.setCachedTerminalName(terminal1.getTerminalName());
-    when(terminalService.findTerminal(eq(terminal1.getTerminalId()), any()))
+    applicationAsset.setAssetId(terminal1.getTerminalId());
+    applicationAsset.setAssetType(AssetType.TERMINAL);
+    applicationAsset.setCachedAssetName(terminalAsset1.getCachedAssetName());
+    when(terminalService.findTerminal(eq(applicationAsset.getAssetId()), any()))
         .thenReturn(Optional.empty());
 
     assertThat(applicationAssetService.getAssetJsonForApplicationAsset(applicationAsset))
         .extracting(
+            AssetJson::getAssetType,
             AssetJson::getId,
-            AssetJson::getName,
-            AssetJson::getAssetType
+            AssetJson::getName
         )
         .containsExactly(
+            AssetType.TERMINAL,
             terminal1.getTerminalId(),
-            terminal1.getTerminalName(),
-            AssetType.TERMINAL
+            terminal1.getTerminalName()
         );
   }
 
@@ -472,7 +459,7 @@ class ApplicationAssetServiceTest {
 
   @Test
   void findByApplicationVersionAndFieldId_whenExists() {
-    when(applicationAssetRepository.findByApplicationVersionAndFieldId(applicationVersion, FIELD_ID_1))
+    when(applicationAssetRepository.findByApplicationVersionAndAssetTypeAndAssetId(applicationVersion, AssetType.FIELD, FIELD_ID_1))
         .thenReturn(Optional.of(fieldAsset1));
 
     assertThat(applicationAssetService.findByApplicationVersionAndFieldId(applicationVersion, FIELD_ID_1)).get()
@@ -482,7 +469,7 @@ class ApplicationAssetServiceTest {
 
   @Test
   void findByApplicationVersionAndFieldId_whenNotExists() {
-    when(applicationAssetRepository.findByApplicationVersionAndFieldId(applicationVersion, FIELD_ID_1))
+    when(applicationAssetRepository.findByApplicationVersionAndAssetTypeAndAssetId(applicationVersion, AssetType.FIELD, FIELD_ID_1))
         .thenReturn(Optional.empty());
 
     assertThat(applicationAssetService.findByApplicationVersionAndFieldId(applicationVersion, FIELD_ID_1)).isNotPresent();
@@ -490,13 +477,13 @@ class ApplicationAssetServiceTest {
 
   @Test
   void findAllPrimaryFieldAssets_emptyList() {
-    when(applicationAssetRepository.findAllByAssetRoleAndFieldIdIsNotNull(AssetRole.PRIMARY)).thenReturn(Collections.emptyList());
+    when(applicationAssetRepository.findAllByAssetRoleAndAssetTypeAndAssetIdIsNotNull(AssetRole.PRIMARY, AssetType.FIELD)).thenReturn(Collections.emptyList());
     assertThat(applicationAssetService.findAllPrimaryFieldAssets()).isEmpty();
   }
 
   @Test
   void findAllPrimaryFieldAssets_nonEmptyList() {
-    when(applicationAssetRepository.findAllByAssetRoleAndFieldIdIsNotNull(AssetRole.PRIMARY)).thenReturn(List.of(fieldAsset1));
+    when(applicationAssetRepository.findAllByAssetRoleAndAssetTypeAndAssetIdIsNotNull(AssetRole.PRIMARY, AssetType.FIELD)).thenReturn(List.of(fieldAsset1));
     var primaryFieldAssets = applicationAssetService.findAllPrimaryFieldAssets();
 
     assertThat(primaryFieldAssets).hasSize(1);
@@ -505,13 +492,13 @@ class ApplicationAssetServiceTest {
 
   @Test
   void findAllPrimaryTerminalAssets_emptyList() {
-    when(applicationAssetRepository.findAllByAssetRoleAndTerminalIdIsNotNull(AssetRole.PRIMARY)).thenReturn(Collections.emptyList());
+    when(applicationAssetRepository.findAllByAssetRoleAndAssetTypeAndAssetIdIsNotNull(AssetRole.PRIMARY, AssetType.TERMINAL)).thenReturn(Collections.emptyList());
     assertThat(applicationAssetService.findAllPrimaryTerminalAssets()).isEmpty();
   }
 
   @Test
   void findAllPrimaryTerminalAssets_nonEmptyList() {
-    when(applicationAssetRepository.findAllByAssetRoleAndTerminalIdIsNotNull(AssetRole.PRIMARY)).thenReturn(List.of(terminalAsset1));
+    when(applicationAssetRepository.findAllByAssetRoleAndAssetTypeAndAssetIdIsNotNull(AssetRole.PRIMARY, AssetType.TERMINAL)).thenReturn(List.of(terminalAsset1));
     var primaryFieldAssets = applicationAssetService.findAllPrimaryTerminalAssets();
 
     assertThat(primaryFieldAssets).hasSize(1);
@@ -523,8 +510,8 @@ class ApplicationAssetServiceTest {
   void getAssetJsonListFor_field(AssetRole assetRole) {
     when(applicationAssetRepository.findAllByApplicationVersionAndAssetRoleOrderByIdAsc(applicationVersion, assetRole))
         .thenReturn(Collections.singletonList(fieldAsset1));
-    when(fieldService.getField(eq(fieldAsset1.getId()), anyString()))
-        .thenReturn(field1Json);
+    when(fieldService.findField(eq(fieldAsset1.getAssetId()), anyString()))
+        .thenReturn(Optional.of(field1Json));
 
     assertThat(applicationAssetService.getAssetJsonListFor(applicationVersion, assetRole))
         .isEqualTo(Collections.singletonList(field1Json));
@@ -535,8 +522,8 @@ class ApplicationAssetServiceTest {
   void getAssetJsonListFor_terminal(AssetRole assetRole) {
     when(applicationAssetRepository.findAllByApplicationVersionAndAssetRoleOrderByIdAsc(applicationVersion, assetRole))
         .thenReturn(Collections.singletonList(terminalAsset1));
-    when(terminalService.getTerminal(eq(terminalAsset1.getId()), anyString()))
-        .thenReturn(terminal1Json);
+    when(terminalService.findTerminal(eq(terminalAsset1.getId()), anyString()))
+        .thenReturn(Optional.of(terminal1Json));
 
     assertThat(applicationAssetService.getAssetJsonListFor(applicationVersion, assetRole))
         .isEqualTo(Collections.singletonList(terminal1Json));
@@ -558,10 +545,12 @@ class ApplicationAssetServiceTest {
     assertThat(applicationAssetCaptor.getValue())
         .extracting(
             ApplicationAsset::getApplicationVersion,
-            ApplicationAsset::getFieldId,
+            ApplicationAsset::getAssetType,
+            ApplicationAsset::getAssetId,
             ApplicationAsset::getAssetRole
         ).containsExactly(
             applicationVersion,
+            AssetType.FIELD,
             field1.getFieldId(),
             assetRole
         );
@@ -583,10 +572,12 @@ class ApplicationAssetServiceTest {
     assertThat(applicationAssetCaptor.getValue())
         .extracting(
             ApplicationAsset::getApplicationVersion,
-            ApplicationAsset::getTerminalId,
+            ApplicationAsset::getAssetType,
+            ApplicationAsset::getAssetId,
             ApplicationAsset::getAssetRole
         ).containsExactly(
             applicationVersion,
+            AssetType.TERMINAL,
             terminal1.getTerminalId(),
             assetRole
         );
@@ -603,7 +594,10 @@ class ApplicationAssetServiceTest {
   @Test
   void getPrimaryAndSecondaryFieldJsonsOfShoreType_withNoPrimaryOrSecondaryFields() {
     var requestPurpose = "lookup fields";
-    when(applicationAssetRepository.findAllByFieldIdIsNotNullAndAssetRoleIn(EnumSet.of(AssetRole.PRIMARY, AssetRole.SECONDARY)))
+    when(applicationAssetRepository.findAllByAssetIdIsNotNullAndAssetRoleInAndAssetTypeIn(
+        EnumSet.of(AssetRole.PRIMARY, AssetRole.SECONDARY),
+        Set.of(AssetType.FIELD)
+    ))
         .thenReturn(Collections.emptyList());
     var assetTypesWithShore = List.of(AssetTypeWithShore.FIELD_OFFSHORE, AssetTypeWithShore.TERMINAL);
 
@@ -615,10 +609,12 @@ class ApplicationAssetServiceTest {
   void getPrimaryAndSecondaryFieldJsonsOfShoreType_withOnlyOneFieldMatchingAssetTypeWithShore() {
     var requestPurpose = "lookup fields";
     var fieldAssets = List.of(fieldAsset1, fieldAsset2);
-    when(applicationAssetRepository.findAllByFieldIdIsNotNullAndAssetRoleIn(EnumSet.of(AssetRole.PRIMARY, AssetRole.SECONDARY)))
-        .thenReturn(fieldAssets);
+    when(applicationAssetRepository.findAllByAssetIdIsNotNullAndAssetRoleInAndAssetTypeIn(
+        EnumSet.of(AssetRole.PRIMARY, AssetRole.SECONDARY),
+        Set.of(AssetType.FIELD)
+    )).thenReturn(fieldAssets);
 
-    var fieldIds = fieldAssets.stream().map(ApplicationAsset::getFieldId)
+    var fieldIds = fieldAssets.stream().map(ApplicationAsset::getAssetId)
         .distinct()
         .toList();
     var assetTypesWithShore = List.of(AssetTypeWithShore.FIELD_OFFSHORE, AssetTypeWithShore.TERMINAL);
@@ -633,10 +629,12 @@ class ApplicationAssetServiceTest {
   void getPrimaryAndSecondaryFieldJsonsOfShoreType_withAllFieldsMatchingAssetTypeWithShore() {
     var requestPurpose = "lookup fields";
     var fieldAssets = List.of(fieldAsset1, fieldAsset2);
-    when(applicationAssetRepository.findAllByFieldIdIsNotNullAndAssetRoleIn(EnumSet.of(AssetRole.PRIMARY, AssetRole.SECONDARY)))
-        .thenReturn(fieldAssets);
+    when(applicationAssetRepository.findAllByAssetIdIsNotNullAndAssetRoleInAndAssetTypeIn(
+        EnumSet.of(AssetRole.PRIMARY, AssetRole.SECONDARY),
+        Set.of(AssetType.FIELD)
+    )).thenReturn(fieldAssets);
 
-    var fieldIds = fieldAssets.stream().map(ApplicationAsset::getFieldId)
+    var fieldIds = fieldAssets.stream().map(ApplicationAsset::getAssetId)
         .distinct()
         .toList();
     var assetTypesWithShore = List.of(AssetTypeWithShore.FIELD_OFFSHORE, AssetTypeWithShore.FIELD_ONSHORE);
@@ -645,29 +643,5 @@ class ApplicationAssetServiceTest {
 
     assertThat(applicationAssetService.getPrimaryAndSecondaryFieldJsonsOfShoreType(assetTypesWithShore, requestPurpose))
         .containsExactly(field1Json, field2Json);
-  }
-
-  @Test
-  void getAssetType_assetHasFieldId() {
-    var applicationAsset = new ApplicationAsset();
-    applicationAsset.setFieldId(1);
-
-    assertThat(applicationAssetService.getAssetType(applicationAsset)).isEqualTo(AssetType.FIELD);
-  }
-
-  @Test
-  void getAssetType_assetHasTerminalId() {
-    var applicationAsset = new ApplicationAsset();
-    applicationAsset.setTerminalId(1);
-
-    assertThat(applicationAssetService.getAssetType(applicationAsset)).isEqualTo(AssetType.TERMINAL);
-  }
-
-  @Test
-  void getAssetType_assetDoesNotHaveFieldOrTerminalId() {
-    var applicationAsset = new ApplicationAsset();
-
-    assertThatThrownBy(() -> applicationAssetService.getAssetType(applicationAsset))
-        .isInstanceOf(IllegalStateException.class);
   }
 }

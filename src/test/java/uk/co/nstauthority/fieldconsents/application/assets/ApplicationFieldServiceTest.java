@@ -37,7 +37,6 @@ class ApplicationFieldServiceTest {
     when(applicationAssetService.findAllPrimaryFieldAssets()).thenReturn(List.of(fieldAsset1, fieldAsset1));
 
     var primaryFields = applicationFieldService.findDistinctPrimaryFieldIds();
-    assertThat(primaryFields).hasSize(1);
-    assertThat(primaryFields.get(0)).usingRecursiveComparison().isEqualTo(fieldAsset1.getFieldId());
+    assertThat(primaryFields).containsExactly(fieldAsset1.getAssetId());
   }
 }
