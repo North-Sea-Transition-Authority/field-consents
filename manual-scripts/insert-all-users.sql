@@ -14,6 +14,7 @@ INSERT INTO fcs.team_member_roles (wua_id, team_id, role) VALUES
     (38138, (SELECT id FROM fcs.teams WHERE organisation_group_id = 50), 'VIEWER'),
     (38138, (SELECT id FROM fcs.teams WHERE organisation_group_id = 50), 'CREATOR'),
     (38138, (SELECT id FROM fcs.teams WHERE organisation_group_id = 50), 'SUBMITTER'),
+    (53712, (SELECT id FROM fcs.teams WHERE organisation_group_id = 50), 'FINANCE_ADMINISTRATOR'),
     (53453, 1, 'CASE_OFFICER'),
     (53552, 1, 'CASE_OFFICER'),
     (53553, 1, 'CASE_OFFICER'),

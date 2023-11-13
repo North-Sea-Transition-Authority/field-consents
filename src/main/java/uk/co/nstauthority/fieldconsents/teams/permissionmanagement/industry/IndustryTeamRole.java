@@ -34,10 +34,10 @@ public enum IndustryTeamRole implements TeamRole {
   ),
   SUBMITTER(
       "Submitter",
-      "Can submit and edit applications for the organisation group",
+      "Can pay and submit and edit applications for the organisation group",
       40,
       EnumSet.of(
-          RolePermission.SUBMIT_FCS_APPLICATIONS,
+          RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS,
           RolePermission.EDIT_FCS_APPLICATIONS,
           RolePermission.VIEW_FCS_APPLICATIONS,
           RolePermission.MANAGE_ASSETS
@@ -53,6 +53,15 @@ public enum IndustryTeamRole implements TeamRole {
           RolePermission.VIEW_FCS_APPLICATIONS,
           RolePermission.MANAGE_ASSETS
       )
+  ),
+  FINANCE_ADMINISTRATOR(
+      "Finance administrator",
+      "Can pay and submit applications for the organisation group",
+      60,
+      EnumSet.of(
+          RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS,
+          RolePermission.VIEW_FCS_APPLICATIONS
+      )
   );
 
   private final String displayName;
@@ -67,7 +76,7 @@ public enum IndustryTeamRole implements TeamRole {
     this.displayOrder = displayOrder;
     this.rolePermissions = rolePermissions;
   }
-  
+
   @Override
   public String getDescription() {
     return description;

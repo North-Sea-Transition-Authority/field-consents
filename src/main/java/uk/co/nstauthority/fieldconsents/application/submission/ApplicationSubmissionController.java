@@ -78,8 +78,8 @@ public class ApplicationSubmissionController {
                                                       ApplicationUpdateResponseForm form) {
     var applicationId = applicationVersion.getApplication().getId();
 
-    var userHasSubmitPermission = applicationAccessService.hasApplicationPermission(
-        user, applicationVersion, RolePermission.SUBMIT_FCS_APPLICATIONS
+    var userHasPayAndSubmitPermission = applicationAccessService.hasApplicationPermission(
+        user, applicationVersion, RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS
     );
 
     var modelAndView = new ModelAndView("fcs/application/reviewAndSubmit")
@@ -89,7 +89,7 @@ public class ApplicationSubmissionController {
         .addObject("backLinkUrl",
             ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId)))
         .addObject("isSubmittable", applicationSubmissionService.isSubmittable(applicationVersion))
-        .addObject("userHasSubmitPermission", userHasSubmitPermission)
+        .addObject("userHasPayAndSubmitPermission", userHasPayAndSubmitPermission)
         .addObject("applicationReference",
             applicationService.getApplicationReference(applicationVersion));
 
@@ -113,7 +113,7 @@ public class ApplicationSubmissionController {
   }
 
   @PostMapping
-  @HasApplicationPermission(permissions = RolePermission.SUBMIT_FCS_APPLICATIONS)
+  @HasApplicationPermission(permissions = RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS)
   ModelAndView submitApplication(
       @PathVariable Integer applicationId,
       @ModelAttribute("form") ApplicationUpdateResponseForm form,
@@ -150,6 +150,6 @@ public class ApplicationSubmissionController {
 
     applicationService.prepareApplicationForPayment(applicationVersion);
 
-    return ReverseRouter.redirect(on(ApplicationPaymentController.class).getStartPayment(applicationId));
+    return ReverseRouter.redirect(on(ApplicationPaymentController.class).getStartPayment(applicationId, null));
   }
 }

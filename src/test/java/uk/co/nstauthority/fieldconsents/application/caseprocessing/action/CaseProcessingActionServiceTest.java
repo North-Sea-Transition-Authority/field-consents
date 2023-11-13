@@ -25,7 +25,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_MANAGE_RESPONDER;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_RESPONSE;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_PAY_FOR_APPLICATION;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_PAY_AND_SUBMIT_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_UPDATE_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_WITHDRAWAL_REQUEST;
@@ -50,9 +50,9 @@ import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePe
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ASSIGN_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_CASE_PROCESSING_DOCUMENTS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.RESPOND_TO_CONSULTATION;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.SUBMIT_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_CASE_PROCESSING_DOCUMENTS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.opred.OpredTeamRole.RESPONDER;
@@ -299,6 +299,7 @@ class CaseProcessingActionServiceTest {
             Set.of(EDIT_FCS_APPLICATIONS),
             Set.of(NO_WITHDRAWAL_OPEN, NO_APPLICATION_UPDATE_OPEN),
             ExpectedActions.newBuilder()
+                .awaitingPaymentActions(OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT)
                 .submittedActions(OPERATOR_WITHDRAWAL_REQUEST)
                 .build()
         ),
@@ -318,10 +319,10 @@ class CaseProcessingActionServiceTest {
                 .build()
         ),
         arguments(
-            Set.of(SUBMIT_FCS_APPLICATIONS),
-            Set.of(),
+            Set.of(PAY_AND_SUBMIT_FCS_APPLICATIONS),
+            Set.of(NO_APPLICATION_UPDATE_OPEN),
             ExpectedActions.newBuilder()
-                .awaitingPaymentActions(OPERATOR_PAY_FOR_APPLICATION, OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT)
+                .awaitingPaymentActions(OPERATOR_PAY_AND_SUBMIT_APPLICATION)
                 .build()
         )
     );
@@ -482,7 +483,7 @@ class CaseProcessingActionServiceTest {
         arguments(TECHNICAL_REVIEWS, emptyMap(), true),
         arguments(REGULATOR_ADD_CASE_NOTE, emptyMap(), true),
         arguments(TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP, emptyMap(), true),
-        arguments(OPERATOR_PAY_FOR_APPLICATION, emptyMap(), true),
+        arguments(OPERATOR_PAY_AND_SUBMIT_APPLICATION, emptyMap(), true),
         arguments(OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT, emptyMap(), true),
         arguments(OPERATOR_WITHDRAWAL_REQUEST, emptyMap(), true),
         arguments(OPERATOR_UPDATE_APPLICATION, emptyMap(), true),
@@ -571,7 +572,7 @@ class CaseProcessingActionServiceTest {
         arguments(ventApplication, TECHNICAL_REVIEWER_SUBMIT_REVIEW, true),
         arguments(ventApplication, TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP, true),
         arguments(ventApplication, APPLICATION_UPDATE_REQUEST, true),
-        arguments(ventApplication, OPERATOR_PAY_FOR_APPLICATION, true),
+        arguments(ventApplication, OPERATOR_PAY_AND_SUBMIT_APPLICATION, true),
         arguments(ventApplication, OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT, true),
         arguments(ventApplication, OPERATOR_WITHDRAWAL_REQUEST, true),
         arguments(ventApplication, OPERATOR_UPDATE_APPLICATION, true),

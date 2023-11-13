@@ -4,9 +4,9 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ALLOCATE_CONSULTATION;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ASSIGN_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.RESPOND_TO_CONSULTATION;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.SUBMIT_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS;
 
 import org.springframework.stereotype.Controller;
@@ -98,7 +98,7 @@ public class ApplicationSummaryController {
   private ModelAndView getAwaitingPaymentModelAndView(ApplicationVersion applicationVersion, ServiceUserDetail user) {
     var applicationId = applicationVersion.getApplication().getId();
 
-    if (!applicationAccessService.hasApplicationPermission(user, applicationVersion, SUBMIT_FCS_APPLICATIONS)) {
+    if (!applicationAccessService.hasApplicationPermission(user, applicationVersion, PAY_AND_SUBMIT_FCS_APPLICATIONS)) {
       return getSummaryModelAndView(applicationVersion);
     }
 

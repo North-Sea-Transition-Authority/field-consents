@@ -1,7 +1,7 @@
 package uk.co.nstauthority.fieldconsents.application.payment;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_PAY_FOR_APPLICATION;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_PAY_AND_SUBMIT_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT;
 
 import java.util.UUID;
@@ -23,6 +23,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationContextService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionService;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
@@ -52,6 +53,7 @@ public class ApplicationPaymentController {
   private final ApplicationContextService applicationContextService;
   private final ApplicationPaymentService applicationPaymentService;
   private final AbsoluteUrlService absoluteUrlService;
+  private final CaseProcessingActionService caseProcessingActionService;
   private final ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties;
   private final CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties;
 
@@ -62,6 +64,7 @@ public class ApplicationPaymentController {
       ApplicationContextService applicationContextService,
       ApplicationPaymentService applicationPaymentService,
       AbsoluteUrlService absoluteUrlService,
+      CaseProcessingActionService caseProcessingActionService,
       ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties,
       CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties
   ) {
@@ -70,19 +73,20 @@ public class ApplicationPaymentController {
     this.applicationContextService = applicationContextService;
     this.applicationPaymentService = applicationPaymentService;
     this.absoluteUrlService = absoluteUrlService;
+    this.caseProcessingActionService = caseProcessingActionService;
     this.serviceBrandingConfigurationProperties = serviceBrandingConfigurationProperties;
     this.customerBrandingConfigurationProperties = customerBrandingConfigurationProperties;
   }
 
   @GetMapping
-  @ActionEndPoint(OPERATOR_PAY_FOR_APPLICATION)
-  public ModelAndView getStartPayment(@PathVariable Integer applicationId) {
+  @ActionEndPoint(OPERATOR_PAY_AND_SUBMIT_APPLICATION)
+  public ModelAndView getStartPayment(@PathVariable Integer applicationId, ServiceUserDetail user) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var applicationReference = applicationService.generateApplicationReference(applicationVersion);
     var applicationContextJson = applicationContextService.getApplicationContextJson(applicationVersion);
     var paymentAmountPence = applicationPaymentService.getPaymentAmountPence(applicationVersion);
     var absoluteGetStartPaymentUrl = absoluteUrlService.getAbsoluteUrl(
-        ReverseRouter.route(on(ApplicationPaymentController.class).getStartPayment(applicationId)));
+        ReverseRouter.route(on(ApplicationPaymentController.class).getStartPayment(applicationId, null)));
     var sharePaymentMailToLink = ("mailto:?subject=Pay %s for %s application %s&body=Please use this link to pay the" +
         " %s for our %s application: %s")
         .formatted(
@@ -94,6 +98,9 @@ public class ApplicationPaymentController {
             absoluteGetStartPaymentUrl
         );
 
+    var canReturnToInProgress = caseProcessingActionService.getUserActionItems(applicationVersion, user)
+        .contains(OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT);
+
     return new ModelAndView("fcs/application/startPayment")
         .addObject("applicationReference", applicationReference)
         .addObject("applicationContextJson", applicationContextJson)
@@ -103,6 +110,7 @@ public class ApplicationPaymentController {
             "startPaymentUrl",
             ReverseRouter.route(on(ApplicationPaymentController.class).startPayment(applicationId, null))
         )
+        .addObject("canReturnToInProgress", canReturnToInProgress)
         .addObject(
             "returnToInProgressUrl",
             ReverseRouter.route(on(ApplicationPaymentController.class).returnToInProgress(applicationId, null))
@@ -112,7 +120,7 @@ public class ApplicationPaymentController {
   }
 
   @PostMapping
-  @ActionEndPoint(OPERATOR_PAY_FOR_APPLICATION)
+  @ActionEndPoint(OPERATOR_PAY_AND_SUBMIT_APPLICATION)
   public ModelAndView startPayment(@PathVariable Integer applicationId, ServiceUserDetail user) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
 
@@ -170,7 +178,7 @@ public class ApplicationPaymentController {
   }
 
   @GetMapping("/payment-processed/{paymentId}")
-  @ActionEndPoint(OPERATOR_PAY_FOR_APPLICATION)
+  @ActionEndPoint(OPERATOR_PAY_AND_SUBMIT_APPLICATION)
   public ModelAndView getPaymentProcessed(
       @PathVariable Integer applicationId,
       @PathVariable UUID paymentId,
@@ -203,12 +211,12 @@ public class ApplicationPaymentController {
             .build()
     );
 
-    return ReverseRouter.redirect(on(ApplicationPaymentController.class).getStartPayment(applicationId));
+    return ReverseRouter.redirect(on(ApplicationPaymentController.class).getStartPayment(applicationId, null));
   }
 
   @GetMapping("/payment-completed")
   @HasApplicationStatus(statuses = ApplicationVersionStatus.SUBMITTED)
-  @HasApplicationPermission(permissions = RolePermission.SUBMIT_FCS_APPLICATIONS)
+  @HasApplicationPermission(permissions = RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS)
   public ModelAndView getPaymentCompleted(@PathVariable Integer applicationId) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
 

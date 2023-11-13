@@ -152,12 +152,16 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
   }
 
   @SecurityTest
-  void getIndustryCaseProcessing_checkEndPointSecurityOnly_whenMissingEditPermission_thenForbidden() throws Exception {
+  void getIndustryCaseProcessing_checkEndPointSecurityOnly_whenMissingEditPermissionAndPayAndSubmitPermission_thenForbidden() throws Exception {
     var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
-    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, RolePermission.EDIT_FCS_APPLICATIONS))
-        .thenReturn(false);
+    when(applicationAccessService.hasApplicationPermission(
+        user,
+        applicationVersion,
+        RolePermission.EDIT_FCS_APPLICATIONS,
+        RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS
+    )).thenReturn(false);
 
     mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
             .getIndustryCaseProcessing(APPLICATION_ID, null, null)))

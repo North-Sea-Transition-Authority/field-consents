@@ -2,20 +2,20 @@
 <#import './_applicationContext.ftl' as applicationContextInfo>
 
 <@defaultPage
-  htmlTitle="Pay for application ${applicationReference}"
+  htmlTitle="Pay and submit application ${applicationReference}"
   pageHeading="${applicationReference}"
   errorItems=errorList
 >
   <@applicationContextInfo.applicationContextInfo applicationContext=applicationContextJson />
 
-  <h2 class="govuk-heading-l">Pay for application</h2>
+  <h2 class="govuk-heading-l">Pay and submit application</h2>
 
   <@fdsInsetText.insetText>
     Please note that by starting the payment, any other person currently completing a payment for the application will have their attempt cancelled.
   </@fdsInsetText.insetText>
 
   <@fdsDetails.summaryDetails summaryTitle="Share this page for someone else to pay">
-    <p>The person who pays for this application must have permission to submit this application.</p>
+    <p>The person who pays for this application must have permission to pay and submit this application.</p>
     <p>You can <@fdsAction.link linkText="send them an email with a link to pay" linkUrl=sharePaymentMailToLink linkClass=linkclass/> or copy this website address and send it to them: <@fdsAction.link linkText=absoluteGetStartPaymentUrl linkUrl=absoluteGetStartPaymentUrl linkClass=linkclass /></p>
   </@fdsDetails.summaryDetails>
 
@@ -44,9 +44,11 @@
       <@fdsAction.button buttonText="Start payment" buttonClass="govuk-button govuk-!-margin-right-2" />
     </@fdsForm.htmlForm>
 
-    <@fdsForm.htmlForm actionUrl=springUrl(returnToInProgressUrl)>
-      <@fdsAction.button buttonText="Edit application" buttonClass="govuk-button govuk-button--secondary" />
-    </@fdsForm.htmlForm>
+    <#if canReturnToInProgress>
+      <@fdsForm.htmlForm actionUrl=springUrl(returnToInProgressUrl)>
+        <@fdsAction.button buttonText="Edit application" buttonClass="govuk-button govuk-button--secondary" />
+      </@fdsForm.htmlForm>
+    </#if>
   </div>
 
 </@defaultPage>

@@ -57,7 +57,9 @@ public class WorkAreaService {
 
   public List<ApplicationDataItem> getIndustryWorkAreaItems(WorkAreaFilter filter, ServiceUserDetail user) {
     var industryTeams = teamService.getTeamsOfTypeThatUserHasPermissionFor(
-        user, TeamType.INDUSTRY, EnumSet.of(RolePermission.EDIT_FCS_APPLICATIONS)
+        user,
+        TeamType.INDUSTRY,
+        EnumSet.of(RolePermission.EDIT_FCS_APPLICATIONS, RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS)
     );
 
     if (industryTeams.isEmpty()) {

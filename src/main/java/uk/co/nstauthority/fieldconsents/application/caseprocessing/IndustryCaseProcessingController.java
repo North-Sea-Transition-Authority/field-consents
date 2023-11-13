@@ -65,7 +65,10 @@ public class IndustryCaseProcessingController {
       ApplicationVersionStatus.AWAITING_PAYMENT,
       ApplicationVersionStatus.SUBMITTED
   })
-  @HasApplicationPermission(permissions = RolePermission.EDIT_FCS_APPLICATIONS)
+  @HasApplicationPermission(permissions = {
+      RolePermission.EDIT_FCS_APPLICATIONS,
+      RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS
+  })
   public ModelAndView getIndustryCaseProcessing(
       @PathVariable Integer applicationId,
       @RequestParam(defaultValue = "view-application") CaseProcessingTab tab,

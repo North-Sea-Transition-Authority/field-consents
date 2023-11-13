@@ -52,7 +52,7 @@ class OrganisationUnitPermissionServiceTest {
 
     assertThat(
         organisationUnitPermissionService
-            .hasOperatorPermission(USER, PRIMARY_OPERATOR_OU_ID_1, RolePermission.SUBMIT_FCS_APPLICATIONS)
+            .hasOperatorPermission(USER, PRIMARY_OPERATOR_OU_ID_1, RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS)
     ).isFalse();
   }
 
@@ -65,7 +65,7 @@ class OrganisationUnitPermissionServiceTest {
 
     assertThat(
         organisationUnitPermissionService
-            .hasOperatorPermission(USER, PRIMARY_OPERATOR_OU_ID_1, RolePermission.SUBMIT_FCS_APPLICATIONS)
+            .hasOperatorPermission(USER, PRIMARY_OPERATOR_OU_ID_1, RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS)
     ).isFalse();
   }
 
@@ -81,7 +81,7 @@ class OrganisationUnitPermissionServiceTest {
 
     assertThat(
         organisationUnitPermissionService
-            .hasOperatorPermission(USER, PRIMARY_OPERATOR_OU_ID_1, RolePermission.SUBMIT_FCS_APPLICATIONS)
+            .hasOperatorPermission(USER, PRIMARY_OPERATOR_OU_ID_1, RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS)
     ).isFalse();
   }
 
@@ -98,7 +98,7 @@ class OrganisationUnitPermissionServiceTest {
 
     assertThat(
         organisationUnitPermissionService
-            .hasOperatorPermission(USER, PRIMARY_OPERATOR_OU_ID_1, RolePermission.SUBMIT_FCS_APPLICATIONS)
+            .hasOperatorPermission(USER, PRIMARY_OPERATOR_OU_ID_1, RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS)
     ).isTrue();
   }
 
@@ -112,14 +112,14 @@ class OrganisationUnitPermissionServiceTest {
         .thenReturn(Optional.of(team1));
     when(teamService.getTeamByOrganisationGroupId(ORG_GROUP_ID_2))
         .thenReturn(Optional.of(team2));
-    when(permissionService.hasPermissionForTeam(team1, USER, Set.of(RolePermission.SUBMIT_FCS_APPLICATIONS)))
+    when(permissionService.hasPermissionForTeam(team1, USER, Set.of(RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS)))
         .thenReturn(false);
-    when(permissionService.hasPermissionForTeam(team2, USER, Set.of(RolePermission.SUBMIT_FCS_APPLICATIONS)))
+    when(permissionService.hasPermissionForTeam(team2, USER, Set.of(RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS)))
         .thenReturn(true);
 
     assertThat(
         organisationUnitPermissionService
-            .hasOperatorPermission(USER, PRIMARY_OPERATOR_OU_ID_1, RolePermission.SUBMIT_FCS_APPLICATIONS)
+            .hasOperatorPermission(USER, PRIMARY_OPERATOR_OU_ID_1, RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS)
     ).isTrue();
   }
 
@@ -130,12 +130,12 @@ class OrganisationUnitPermissionServiceTest {
     var team1 = TeamTestUtil.Builder().withOrganisationGroupId(ORG_GROUP_ID_1).build();
     when(teamService.getTeamByOrganisationGroupId(ORG_GROUP_ID_1))
         .thenReturn(Optional.of(team1));
-    when(permissionService.hasPermissionForTeam(team1, USER, Set.of(RolePermission.SUBMIT_FCS_APPLICATIONS)))
+    when(permissionService.hasPermissionForTeam(team1, USER, Set.of(RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS)))
         .thenReturn(true);
 
     assertThat(
         organisationUnitPermissionService
-            .hasOperatorPermission(USER, PRIMARY_OPERATOR_OU_ID_1, RolePermission.SUBMIT_FCS_APPLICATIONS)
+            .hasOperatorPermission(USER, PRIMARY_OPERATOR_OU_ID_1, RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS)
     ).isTrue();
   }
 
@@ -149,14 +149,14 @@ class OrganisationUnitPermissionServiceTest {
         .thenReturn(Optional.of(team1));
     when(teamService.getTeamByOrganisationGroupId(ORG_GROUP_ID_2))
         .thenReturn(Optional.of(team2));
-    when(permissionService.hasPermissionForTeam(team1, USER, Set.of(RolePermission.SUBMIT_FCS_APPLICATIONS)))
+    when(permissionService.hasPermissionForTeam(team1, USER, Set.of(RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS)))
         .thenReturn(false);
-    when(permissionService.hasPermissionForTeam(team2, USER, Set.of(RolePermission.SUBMIT_FCS_APPLICATIONS)))
+    when(permissionService.hasPermissionForTeam(team2, USER, Set.of(RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS)))
         .thenReturn(false);
 
     assertThat(
         organisationUnitPermissionService
-            .hasOperatorPermission(USER, PRIMARY_OPERATOR_OU_ID_1, RolePermission.SUBMIT_FCS_APPLICATIONS)
+            .hasOperatorPermission(USER, PRIMARY_OPERATOR_OU_ID_1, RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS)
     ).isFalse();
   }
 

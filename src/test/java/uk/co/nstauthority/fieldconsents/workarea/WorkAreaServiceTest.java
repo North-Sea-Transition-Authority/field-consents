@@ -11,6 +11,7 @@ import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTes
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ALLOCATE_CONSULTATION;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ASSIGN_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.REGULATOR_PERMISSIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.RESPOND_TO_CONSULTATION;
@@ -127,16 +128,23 @@ class WorkAreaServiceTest {
   }
 
   @Test
-  void getIndustryWorkAreaItems_withNoEditPermission() {
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.INDUSTRY, Set.of(RolePermission.EDIT_FCS_APPLICATIONS))).thenReturn(Collections.emptyList());
+  void getIndustryWorkAreaItems_withNoEditPermissionOrPayAndSubmitPermission() {
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(
+        user,
+        TeamType.INDUSTRY,
+        Set.of(EDIT_FCS_APPLICATIONS, PAY_AND_SUBMIT_FCS_APPLICATIONS))
+    ).thenReturn(Collections.emptyList());
     assertThat(workAreaService.getIndustryWorkAreaItems(filter, user)).isEmpty();
   }
 
   @Test
   void getIndustryWorkAreaItems_withWorkAreaItemsToDisplay() {
     when(workAreaFilterService.getConditions(filter, user, null)).thenReturn(new ArrayList<>());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.INDUSTRY, Set.of(EDIT_FCS_APPLICATIONS))).thenReturn(
-        List.of(shell1IndustryTeam));
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(
+        user,
+        TeamType.INDUSTRY,
+        Set.of(EDIT_FCS_APPLICATIONS, PAY_AND_SUBMIT_FCS_APPLICATIONS))
+    ).thenReturn(List.of(shell1IndustryTeam));
     when(workAreaItemDtoService.runWorkAreaQuery(any(), any())).thenReturn(Collections.emptyList());
 
     assertThat(workAreaService.getIndustryWorkAreaItems(filter, user)).isEmpty();
@@ -206,8 +214,11 @@ class WorkAreaServiceTest {
   @Test
   void getIndustryWorkAreaItems_withProductionInProgress_forField() {
     when(workAreaFilterService.getConditions(filter, user, null)).thenReturn(Collections.emptyList());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.INDUSTRY, Set.of(RolePermission.EDIT_FCS_APPLICATIONS)))
-        .thenReturn(List.of(shell1IndustryTeam));
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(
+        user,
+        TeamType.INDUSTRY,
+        Set.of(EDIT_FCS_APPLICATIONS, PAY_AND_SUBMIT_FCS_APPLICATIONS))
+    ).thenReturn(List.of(shell1IndustryTeam));
     when(organisationGroupQueryService.getOrganisationUnitsByOrganisationGroupIds(List.of(ORG_GROUP_ID_1)))
         .thenReturn(List.of(field1JsonWithOperator.getOperatorJson()));
     var workAreaItemDto = ApplicationDataItemUtil.getApplicationDataItemDtoForAnnualProductionInProgressForField();

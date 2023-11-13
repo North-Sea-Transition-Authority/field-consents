@@ -3,8 +3,8 @@ package uk.co.nstauthority.fieldconsents.authorisation;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ALLOCATE_CONSULTATION;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.SUBMIT_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_APPLICATIONS;
 
 import java.util.Collection;
@@ -59,41 +59,44 @@ class ApplicationAccessServiceTest {
   @Test
   void hasApplicationPermission_whenDoesntHasPermission_thenFalse() {
     when(teamService
-        .getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, Set.of(SUBMIT_FCS_APPLICATIONS)))
+        .getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, Set.of(PAY_AND_SUBMIT_FCS_APPLICATIONS)))
         .thenReturn(Collections.emptyList());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, Set.of(SUBMIT_FCS_APPLICATIONS)))
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, Set.of(
+        PAY_AND_SUBMIT_FCS_APPLICATIONS)))
         .thenReturn(Collections.emptyList());
 
     when(organisationUnitPermissionService
         .hasOperatorPermission(
             USER,
             applicationVersion.getPrimaryOperatorOuId(),
-            SUBMIT_FCS_APPLICATIONS))
+            PAY_AND_SUBMIT_FCS_APPLICATIONS))
         .thenReturn(false);
 
     assertThat(
         applicationAccessService
-            .hasApplicationPermission(USER, applicationVersion, SUBMIT_FCS_APPLICATIONS)
+            .hasApplicationPermission(USER, applicationVersion, PAY_AND_SUBMIT_FCS_APPLICATIONS)
     ).isFalse();
   }
 
   @Test
   void hasApplicationPermission_whenPermissionForTeam_thenTrue() {
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, Set.of(SUBMIT_FCS_APPLICATIONS)))
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, Set.of(
+        PAY_AND_SUBMIT_FCS_APPLICATIONS)))
         .thenReturn(Collections.emptyList());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, Set.of(SUBMIT_FCS_APPLICATIONS)))
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, Set.of(
+        PAY_AND_SUBMIT_FCS_APPLICATIONS)))
         .thenReturn(Collections.emptyList());
 
     when(organisationUnitPermissionService
         .hasOperatorPermission(
             USER,
             applicationVersion.getPrimaryOperatorOuId(),
-            SUBMIT_FCS_APPLICATIONS))
+            PAY_AND_SUBMIT_FCS_APPLICATIONS))
         .thenReturn(true);
 
     assertThat(
         applicationAccessService
-            .hasApplicationPermission(USER, applicationVersion, SUBMIT_FCS_APPLICATIONS)
+            .hasApplicationPermission(USER, applicationVersion, PAY_AND_SUBMIT_FCS_APPLICATIONS)
     ).isTrue();
   }
 

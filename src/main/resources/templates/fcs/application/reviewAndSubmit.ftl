@@ -6,20 +6,20 @@
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
 <#-- @ftlvariable name="applicationUpdateRequestView" type="uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestView" -->
 
-<#if !isSubmittable || !userHasSubmitPermission>
+<#if !isSubmittable || !userHasPayAndSubmitPermission>
   <#assign warningBanner>
     <@fdsNotificationBanner.notificationBannerInfo bannerTitleText="Missing information or permissions">
       <@fdsNotificationBanner.notificationBannerContent headingText="Application cannot be submitted">
         <#assign missingInformationExplanation="Not all mandatory sections shown on the task list have been completed"/>
         <#assign missingPermissionsExplanation="Your account does not have permission to submit applications for the primary operator"/>
-        <#if !isSubmittable && !userHasSubmitPermission>
+        <#if !isSubmittable && !userHasPayAndSubmitPermission>
           <ul>
             <li>${missingInformationExplanation}</li>
             <li>${missingPermissionsExplanation}</li>
           </ul>
         <#elseif !isSubmittable>
           ${missingInformationExplanation}
-        <#elseif !userHasSubmitPermission>
+        <#elseif !userHasPayAndSubmitPermission>
           ${missingPermissionsExplanation}
         </#if>
       </@fdsNotificationBanner.notificationBannerContent>
@@ -38,7 +38,7 @@
 >
   <@fdsForm.htmlForm actionUrl=springUrl(submitUrl)>
     <@applicationSummary.applicationSummary accordionId=accordionId/>
-    <#if isSubmittable && userHasSubmitPermission>
+    <#if isSubmittable && userHasPayAndSubmitPermission>
       <#if applicationUpdateRequestView?has_content>
         <@fdsRadio.radioGroup
           path="form.responseType"
