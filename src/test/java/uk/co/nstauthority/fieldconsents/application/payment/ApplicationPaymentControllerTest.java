@@ -28,7 +28,6 @@ import java.util.UUID;
 import java.util.function.Function;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,10 +43,9 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionController;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil;
-import uk.co.nstauthority.fieldconsents.authorisation.ParameterizedSecurityTest;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.branding.ServiceBrandingConfigurationProperties;
@@ -57,8 +55,6 @@ import uk.co.nstauthority.fieldconsents.formatting.DecimalFormatUtils;
 import uk.co.nstauthority.fieldconsents.mvc.AbsoluteUrlService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
-import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @ContextConfiguration(classes = ApplicationPaymentController.class)
 class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest {
@@ -233,6 +229,23 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
   }
 
   @Test
+  void startPayment_paymentAmountPenceZero() throws Exception {
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(OPERATOR_PAY_AND_SUBMIT_APPLICATION));
+    when(applicationPaymentService.getPaymentAmountPence(applicationVersion)).thenReturn(0);
+
+    mockMvc.perform(post(ReverseRouter.route(on(ApplicationPaymentController.class).startPayment(APPLICATION_ID, null)))
+            .with(csrf())
+            .with(user(user)))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationSubmissionController.class)
+            .getApplicationSubmitted(APPLICATION_ID))));
+
+    verify(applicationService).submitApplication(applicationVersion, user);
+    verify(applicationPaymentService, never()).createPayment(any(), any(), any());
+  }
+
+  @Test
   void startPayment_paymentAlreadyCompleted() throws Exception {
     var absoluteGetPaymentProcessedUrl = "testAbsoluteGetPaymentProcessedUrl";
     var paymentId = UUID.randomUUID();
@@ -240,6 +253,7 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
 
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(OPERATOR_PAY_AND_SUBMIT_APPLICATION));
+    when(applicationPaymentService.getPaymentAmountPence(applicationVersion)).thenReturn(100);
     when(absoluteUrlService.getAbsoluteUrl(ReverseRouter.route(on(ApplicationPaymentController.class)
         .getPaymentProcessed(APPLICATION_ID, paymentId, null, null)))).thenReturn(absoluteGetPaymentProcessedUrl);
     when(applicationPaymentService.createPayment(eq(applicationVersion), eq(user), returnUrlArgumentCaptor.capture()))
@@ -249,8 +263,8 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
             .with(csrf())
             .with(user(user)))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationPaymentController.class)
-            .getPaymentCompleted(APPLICATION_ID))));
+        .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationSubmissionController.class)
+            .getApplicationPaidAndSubmitted(APPLICATION_ID))));
 
     assertThat(returnUrlArgumentCaptor.getValue().apply(paymentId)).isEqualTo(absoluteGetPaymentProcessedUrl);
 
@@ -266,6 +280,7 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
 
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(OPERATOR_PAY_AND_SUBMIT_APPLICATION));
+    when(applicationPaymentService.getPaymentAmountPence(applicationVersion)).thenReturn(100);
     when(absoluteUrlService.getAbsoluteUrl(ReverseRouter.route(on(ApplicationPaymentController.class)
         .getPaymentProcessed(APPLICATION_ID, paymentId, null, null)))).thenReturn(absoluteGetPaymentProcessedUrl);
     when(applicationPaymentService.createPayment(eq(applicationVersion), eq(user), returnUrlArgumentCaptor.capture()))
@@ -320,8 +335,8 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
             .with(csrf())
             .with(user(user)))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationPaymentController.class)
-            .getPaymentCompleted(APPLICATION_ID))));
+        .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationSubmissionController.class)
+            .getApplicationPaidAndSubmitted(APPLICATION_ID))));
 
     verify(applicationService).submitApplication(applicationVersion, user);
     verify(applicationPaymentService, never()).cancelInProgressPayments(any());
@@ -395,8 +410,8 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
             .getPaymentProcessed(APPLICATION_ID, PAYMENT_ID, null, null)))
             .with(user(user)))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationPaymentController.class)
-            .getPaymentCompleted(APPLICATION_ID))));
+        .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationSubmissionController.class)
+            .getApplicationPaidAndSubmitted(APPLICATION_ID))));
   }
 
   @Test
@@ -422,60 +437,5 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
             .getStartPayment(APPLICATION_ID, null))));
 
     verify(applicationService, never()).submitApplication(any(), any());
-  }
-
-  @SecurityTest
-  void getPaymentCompleted_noUser() throws Exception {
-    mockMvc.perform(get(ReverseRouter.route(on(ApplicationPaymentController.class)
-            .getPaymentCompleted(APPLICATION_ID))))
-        .andExpect(redirectionToLoginUrl());
-  }
-
-  @ParameterizedSecurityTest
-  @EnumSource(value = ApplicationVersionStatus.class, names = "SUBMITTED", mode = EnumSource.Mode.EXCLUDE)
-  void getPaymentCompleted_statusNotSubmitted(ApplicationVersionStatus applicationVersionStatus) throws Exception {
-    applicationVersion.setStatus(applicationVersionStatus);
-
-    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS))
-        .thenReturn(true);
-
-    mockMvc.perform(get(ReverseRouter.route(on(ApplicationPaymentController.class)
-            .getPaymentCompleted(APPLICATION_ID)))
-            .with(user(user)))
-        .andExpect(status().isForbidden());
-  }
-
-  @SecurityTest
-  void getPaymentCompleted_userDoesNotHavePayAndSubmitPermission() throws Exception {
-    applicationVersion.setStatus(ApplicationVersionStatus.SUBMITTED);
-
-    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS))
-        .thenReturn(false);
-
-    mockMvc.perform(get(ReverseRouter.route(on(ApplicationPaymentController.class)
-            .getPaymentCompleted(APPLICATION_ID)))
-            .with(user(user)))
-        .andExpect(status().isForbidden());
-  }
-
-  @Test
-  void getPaymentCompleted() throws Exception {
-    applicationVersion.setStatus(ApplicationVersionStatus.SUBMITTED);
-
-    var applicationReference = "testApplicationReference";
-
-    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS))
-        .thenReturn(true);
-    when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
-
-    mockMvc.perform(get(ReverseRouter.route(on(ApplicationPaymentController.class)
-            .getPaymentCompleted(APPLICATION_ID)))
-            .with(user(user)))
-        .andExpect(status().isOk())
-        .andExpect(view().name("fcs/application/submissionConfirmation"))
-        .andExpect(model().attribute("pageTitle", ApplicationPaymentController.APPLICATION_SUBMITTED_TITLE))
-        .andExpect(model().attribute("applicationReference", applicationReference))
-        .andExpect(model().attribute("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class)
-            .getWorkArea(null, null))));
   }
 }

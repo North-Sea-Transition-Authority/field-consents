@@ -61,6 +61,12 @@
         </@fdsRadio.radioGroup>
         <@applicationUpdateRequestHiddenSummary.applicationUpdateRequestHiddenSummary applicationUpdateRequestView=applicationUpdateRequestView!""/>
       </#if>
+      <#if paymentRequired>
+        <#assign submitButtonText="Pay and submit"/>
+      <#else>
+        <@fdsInsetText.insetText>No payment is required for this application.</@fdsInsetText.insetText>
+        <#assign submitButtonText="Submit"/>
+      </#if>
       <@fdsAction.submitButtons
         primaryButtonText=submitButtonText
         secondaryLinkText="Back to task list"

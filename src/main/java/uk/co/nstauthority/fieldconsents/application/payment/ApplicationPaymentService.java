@@ -80,7 +80,7 @@ public class ApplicationPaymentService {
     this.energyPortalUserService = energyPortalUserService;
   }
 
-  int getPaymentAmountPence(ApplicationVersion applicationVersion) {
+  public int getPaymentAmountPence(ApplicationVersion applicationVersion) {
     var primaryAsset = applicationAssetService.getPrimaryAsset(applicationVersion);
     var application = applicationVersion.getApplication();
     var consentLength = consentLengthService.getConsentLengthDetails(applicationVersion).getConsentLength();

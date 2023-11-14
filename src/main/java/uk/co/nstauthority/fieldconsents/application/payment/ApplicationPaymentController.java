@@ -22,13 +22,11 @@ import uk.co.fivium.digitalpaymentslibrary.payment.PaymentStatus;
 import uk.co.nstauthority.fieldconsents.application.ApplicationContextService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionService;
+import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionController;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
-import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
-import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
 import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.branding.ServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
@@ -37,14 +35,10 @@ import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanne
 import uk.co.nstauthority.fieldconsents.formatting.DecimalFormatUtils;
 import uk.co.nstauthority.fieldconsents.mvc.AbsoluteUrlService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
-import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @Controller
 @RequestMapping("/applications/{applicationId}/pay")
 public class ApplicationPaymentController {
-
-  static final String APPLICATION_SUBMITTED_TITLE = "Application paid and submitted";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationPaymentController.class);
 
@@ -124,6 +118,20 @@ public class ApplicationPaymentController {
   public ModelAndView startPayment(@PathVariable Integer applicationId, ServiceUserDetail user) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
 
+    // If the payment amount was previously > 0 and the application was set to AWAITING_PAYMENT status, however the fee
+    // line has since changed and the payment amount is now 0, submit the application.
+    if (applicationPaymentService.getPaymentAmountPence(applicationVersion) <= 0) {
+      LOGGER.info(
+          "Found payment amount <= 0 before creating payment for application {}, submitting application",
+          applicationId
+      );
+
+      applicationService.submitApplication(applicationVersion, user);
+
+      return ReverseRouter.redirect(on(ApplicationSubmissionController.class)
+          .getApplicationSubmitted(applicationId));
+    }
+
     Function<UUID, String> returnUrlFunction = paymentId ->
         absoluteUrlService.getAbsoluteUrl(ReverseRouter.route(on(ApplicationPaymentController.class)
             .getPaymentProcessed(applicationId, paymentId, null, null)));
@@ -140,7 +148,8 @@ public class ApplicationPaymentController {
 
         applicationService.submitApplication(applicationVersion, user);
 
-        return ReverseRouter.redirect(on(ApplicationPaymentController.class).getPaymentCompleted(applicationId));
+        return ReverseRouter.redirect(on(ApplicationSubmissionController.class)
+            .getApplicationPaidAndSubmitted(applicationId));
       }
       case SUCCESS -> {
         return new ModelAndView("redirect:%s".formatted(createCardPaymentResult.getGovUkPayNextUrl()));
@@ -167,7 +176,8 @@ public class ApplicationPaymentController {
 
       applicationService.submitApplication(applicationVersion, user);
 
-      return ReverseRouter.redirect(on(ApplicationPaymentController.class).getPaymentCompleted(applicationId));
+      return ReverseRouter.redirect(on(ApplicationSubmissionController.class)
+          .getApplicationPaidAndSubmitted(applicationId));
     }
 
     applicationPaymentService.cancelInProgressPayments(paymentDtos);
@@ -199,7 +209,8 @@ public class ApplicationPaymentController {
     if (paymentStatus == PaymentStatus.SUCCESS) {
       applicationService.submitApplication(applicationVersion, user);
 
-      return ReverseRouter.redirect(on(ApplicationPaymentController.class).getPaymentCompleted(applicationId));
+      return ReverseRouter.redirect(on(ApplicationSubmissionController.class)
+          .getApplicationPaidAndSubmitted(applicationId));
     }
 
     NotificationBannerUtil.applyNotificationBanner(
@@ -212,17 +223,5 @@ public class ApplicationPaymentController {
     );
 
     return ReverseRouter.redirect(on(ApplicationPaymentController.class).getStartPayment(applicationId, null));
-  }
-
-  @GetMapping("/payment-completed")
-  @HasApplicationStatus(statuses = ApplicationVersionStatus.SUBMITTED)
-  @HasApplicationPermission(permissions = RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS)
-  public ModelAndView getPaymentCompleted(@PathVariable Integer applicationId) {
-    var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
-
-    return new ModelAndView("fcs/application/submissionConfirmation")
-        .addObject("pageTitle", APPLICATION_SUBMITTED_TITLE)
-        .addObject("applicationReference", applicationService.generateApplicationReference(applicationVersion))
-        .addObject("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)));
   }
 }

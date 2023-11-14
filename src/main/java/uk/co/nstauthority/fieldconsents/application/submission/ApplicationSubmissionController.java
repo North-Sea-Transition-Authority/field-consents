@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.application.submission;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,6 +21,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.respon
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.response.ApplicationUpdateResponseFormValidator;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.response.ApplicationUpdateResponseType;
 import uk.co.nstauthority.fieldconsents.application.payment.ApplicationPaymentController;
+import uk.co.nstauthority.fieldconsents.application.payment.ApplicationPaymentService;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
@@ -31,11 +33,14 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @Controller
-@RequestMapping("applications/{applicationId}/review-and-submit")
+@RequestMapping("/applications/{applicationId}")
 @HasApplicationStatus(statuses = ApplicationVersionStatus.IN_PROGRESS)
 public class ApplicationSubmissionController {
 
-  static final String UPDATE_SUBMITTED_TITLE = "Updated submitted";
+  static final String SUBMITTED_PAGE_TITLE = "Application submitted";
+  static final String PAID_AND_SUBMITTED_PAGE_TITLE = "Application paid and submitted";
+  static final String UPDATE_SUBMITTED_PAGE_TITLE = "Update submitted";
+
   private final ApplicationService applicationService;
   private final ApplicationVersionService applicationVersionService;
   private final ApplicationSubmissionService applicationSubmissionService;
@@ -43,16 +48,21 @@ public class ApplicationSubmissionController {
   private final ApplicationSummaryService applicationSummaryService;
   private final ApplicationUpdateService applicationUpdateService;
   private final ApplicationUpdateRequestViewService applicationUpdateRequestViewService;
+  private final ApplicationPaymentService applicationPaymentService;
   private final ApplicationUpdateResponseFormValidator applicationUpdateResponseFormValidator;
 
-  ApplicationSubmissionController(ApplicationService applicationService,
-                                         ApplicationVersionService applicationVersionService,
-                                         ApplicationSubmissionService applicationSubmissionService,
-                                         ApplicationAccessService applicationAccessService,
-                                         ApplicationSummaryService applicationSummaryService,
-                                         ApplicationUpdateService applicationUpdateService,
-                                         ApplicationUpdateRequestViewService applicationUpdateRequestViewService,
-                                         ApplicationUpdateResponseFormValidator applicationUpdateResponseFormValidator) {
+  @Autowired
+  ApplicationSubmissionController(
+      ApplicationService applicationService,
+      ApplicationVersionService applicationVersionService,
+      ApplicationSubmissionService applicationSubmissionService,
+      ApplicationAccessService applicationAccessService,
+      ApplicationSummaryService applicationSummaryService,
+      ApplicationUpdateService applicationUpdateService,
+      ApplicationUpdateRequestViewService applicationUpdateRequestViewService,
+      ApplicationPaymentService applicationPaymentService,
+      ApplicationUpdateResponseFormValidator applicationUpdateResponseFormValidator
+  ) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.applicationSubmissionService = applicationSubmissionService;
@@ -60,10 +70,11 @@ public class ApplicationSubmissionController {
     this.applicationSummaryService = applicationSummaryService;
     this.applicationUpdateService = applicationUpdateService;
     this.applicationUpdateRequestViewService = applicationUpdateRequestViewService;
+    this.applicationPaymentService = applicationPaymentService;
     this.applicationUpdateResponseFormValidator = applicationUpdateResponseFormValidator;
   }
 
-  @GetMapping
+  @GetMapping("/review-and-submit")
   @HasApplicationPermission(permissions = RolePermission.EDIT_FCS_APPLICATIONS)
   public ModelAndView getReviewAndSubmit(@PathVariable Integer applicationId,
                                          ServiceUserDetail user) {
@@ -93,8 +104,8 @@ public class ApplicationSubmissionController {
         .addObject("applicationReference",
             applicationService.getApplicationReference(applicationVersion));
 
-
     var applicationUpdateOpen = applicationUpdateService.openApplicationUpdateExists(applicationVersion);
+    var paymentRequired = false;
 
     if (applicationUpdateOpen) {
       modelAndView
@@ -103,16 +114,18 @@ public class ApplicationSubmissionController {
           .addObject("form", form)
           .addObject("requestedChangesOnlyRadio", ApplicationUpdateResponseType.REQUESTED_CHANGES_ONLY)
           .addObject("otherChangesRadio", ApplicationUpdateResponseType.OTHER_CHANGES);
+    } else {
+      paymentRequired = applicationPaymentService.getPaymentAmountPence(applicationVersion) > 0;
     }
 
-    modelAndView.addObject("submitButtonText", !applicationUpdateOpen ? "Pay and submit" : "Submit");
+    modelAndView.addObject("paymentRequired", paymentRequired);
 
     applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView);
 
     return modelAndView;
   }
 
-  @PostMapping
+  @PostMapping("/review-and-submit")
   @HasApplicationPermission(permissions = RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS)
   ModelAndView submitApplication(
       @PathVariable Integer applicationId,
@@ -142,14 +155,49 @@ public class ApplicationSubmissionController {
           user
       );
 
-      return new ModelAndView("fcs/application/submissionConfirmation")
-          .addObject("pageTitle", UPDATE_SUBMITTED_TITLE)
-          .addObject("applicationReference", applicationService.generateApplicationReference(applicationVersion))
-          .addObject("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)));
+      return ReverseRouter.redirect(on(ApplicationSubmissionController.class)
+          .getApplicationUpdateSubmitted(applicationId));
     }
 
-    applicationService.prepareApplicationForPayment(applicationVersion);
+    if (applicationPaymentService.getPaymentAmountPence(applicationVersion) > 0) {
+      applicationService.prepareApplicationForPayment(applicationVersion);
 
-    return ReverseRouter.redirect(on(ApplicationPaymentController.class).getStartPayment(applicationId, null));
+      return ReverseRouter.redirect(on(ApplicationPaymentController.class).getStartPayment(applicationId, null));
+    } else {
+      applicationService.submitApplication(applicationVersion, user);
+
+      return ReverseRouter.redirect(on(ApplicationSubmissionController.class).getApplicationSubmitted(applicationId));
+    }
+  }
+
+
+  @GetMapping("/submitted")
+  @HasApplicationStatus(statuses = ApplicationVersionStatus.SUBMITTED)
+  @HasApplicationPermission(permissions = RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS)
+  public ModelAndView getApplicationSubmitted(@PathVariable Integer applicationId) {
+    return getSubmissionConfirmationModelAndView(applicationId, SUBMITTED_PAGE_TITLE);
+  }
+
+  @GetMapping("/paid-and-submitted")
+  @HasApplicationStatus(statuses = ApplicationVersionStatus.SUBMITTED)
+  @HasApplicationPermission(permissions = RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS)
+  public ModelAndView getApplicationPaidAndSubmitted(@PathVariable Integer applicationId) {
+    return getSubmissionConfirmationModelAndView(applicationId, PAID_AND_SUBMITTED_PAGE_TITLE);
+  }
+
+  @GetMapping("/update-submitted")
+  @HasApplicationStatus(statuses = ApplicationVersionStatus.SUBMITTED)
+  @HasApplicationPermission(permissions = RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS)
+  public ModelAndView getApplicationUpdateSubmitted(@PathVariable Integer applicationId) {
+    return getSubmissionConfirmationModelAndView(applicationId, UPDATE_SUBMITTED_PAGE_TITLE);
+  }
+
+  private ModelAndView getSubmissionConfirmationModelAndView(Integer applicationId, String pageTitle) {
+    var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
+
+    return new ModelAndView("fcs/application/submissionConfirmation")
+        .addObject("pageTitle", pageTitle)
+        .addObject("applicationReference", applicationService.generateApplicationReference(applicationVersion))
+        .addObject("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)));
   }
 }

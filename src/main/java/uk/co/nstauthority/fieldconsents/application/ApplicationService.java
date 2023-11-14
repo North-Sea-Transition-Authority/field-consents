@@ -168,7 +168,8 @@ public class ApplicationService {
   @Transactional
   public void submitApplication(ApplicationVersion applicationVersion, ServiceUserDetail user) {
     var applicationVersionStatus = applicationVersion.getStatus();
-    if (!ApplicationVersionStatus.AWAITING_PAYMENT.equals(applicationVersionStatus)) {
+    if (!ApplicationVersionStatus.IN_PROGRESS.equals(applicationVersionStatus)
+        && !ApplicationVersionStatus.AWAITING_PAYMENT.equals(applicationVersionStatus)) {
       throw new IllegalStateException(
           String.format(
               "Application %d cannot be submitted as application version has status %s",
@@ -179,6 +180,13 @@ public class ApplicationService {
     }
 
     var application = applicationVersion.getApplication();
+
+    // If the application has not been in AWAITING_PAYMENT status if a payment is not required, it won't have a number,
+    // so assign one.
+    if (application.getApplicationNo() == null) {
+      application.setApplicationNo(getApplicationNumber());
+    }
+
     submitApplicationVersion(applicationVersion, user);
     applicationRepository.save(application);
     aceFlagService.autoSetAceFlag(applicationVersion);

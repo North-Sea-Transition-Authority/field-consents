@@ -310,8 +310,12 @@ class ApplicationServiceTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = ApplicationVersionStatus.class, names = "AWAITING_PAYMENT", mode = EnumSource.Mode.EXCLUDE)
-  void submitApplication_statusNotAwaitingPayment(ApplicationVersionStatus applicationVersionStatus) {
+  @EnumSource(
+      value = ApplicationVersionStatus.class,
+      names = { "IN_PROGRESS", "AWAITING_PAYMENT" },
+      mode = EnumSource.Mode.EXCLUDE
+  )
+  void submitApplication_statusNotInProgressOrAwaitingPayment(ApplicationVersionStatus applicationVersionStatus) {
     var applicationVersion
         = ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.PRODUCTION, 1, 1);
     applicationVersion.setStatus(applicationVersionStatus);
@@ -327,9 +331,20 @@ class ApplicationServiceTest {
         );
   }
 
-  @Test
-  void submitApplication() {
-    var applicationVersion = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
+  @ParameterizedTest
+  @EnumSource(value = ApplicationVersionStatus.class, names = { "IN_PROGRESS", "AWAITING_PAYMENT" })
+  void submitApplication_statusInProgressOrAwaitingPaymentAndApplicationHasNullNumber(
+      ApplicationVersionStatus applicationVersionStatus
+  ) {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+
+    applicationVersion.setStatus(applicationVersionStatus);
+
+    var application = applicationVersion.getApplication();
+
+    application.setApplicationNo(null);
+
+    when(applicationRepository.findLatestApplicationNumber()).thenReturn(Optional.of(1));
 
     applicationService.submitApplication(applicationVersion, USER);
 
@@ -339,7 +354,40 @@ class ApplicationServiceTest {
     var actualApplication = applicationArgumentCaptor.getValue();
 
     assertThat(actualApplication.getVariationNo()).isEqualTo(0);
+    assertThat(actualApplication.getApplicationNo()).isEqualTo(2);
 
+    verify(applicationWorkAreaPriorityService)
+        .prioritiseApplicationInWorkArea(applicationVersion, USER, APPLICATION_SUBMITTED, INDUSTRY);
+    verify(applicationWorkAreaPriorityService)
+        .prioritiseApplicationInWorkArea(applicationVersion, USER, APPLICATION_SUBMITTED, REGULATOR);
+    verify(aceFlagService)
+        .autoSetAceFlag(applicationVersion);
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = ApplicationVersionStatus.class, names = { "IN_PROGRESS", "AWAITING_PAYMENT" })
+  void submitApplication_statusInProgressOrAwaitingPaymentAndApplicationHasNonNullNumber(
+      ApplicationVersionStatus applicationVersionStatus
+  ) {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+
+    applicationVersion.setStatus(applicationVersionStatus);
+
+    var application = applicationVersion.getApplication();
+
+    application.setApplicationNo(7);
+
+    applicationService.submitApplication(applicationVersion, USER);
+
+    ArgumentCaptor<Application> applicationArgumentCaptor = ArgumentCaptor.forClass(Application.class);
+    verify(applicationRepository).save(applicationArgumentCaptor.capture());
+
+    var actualApplication = applicationArgumentCaptor.getValue();
+
+    assertThat(actualApplication.getVariationNo()).isEqualTo(0);
+    assertThat(actualApplication.getApplicationNo()).isEqualTo(7);
+
+    verify(applicationRepository, never()).findLatestApplicationNumber();
     verify(applicationWorkAreaPriorityService)
         .prioritiseApplicationInWorkArea(applicationVersion, USER, APPLICATION_SUBMITTED, INDUSTRY);
     verify(applicationWorkAreaPriorityService)
