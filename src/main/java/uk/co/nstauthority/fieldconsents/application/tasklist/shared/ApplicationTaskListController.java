@@ -60,7 +60,7 @@ public class ApplicationTaskListController {
 
     var applicationType = applicationVersion.getApplication().getType().getDisplayName();
 
-    var applicationContext = applicationContextService.getApplicationContextJson(applicationVersion);
+    var applicationContext = applicationContextService.getApplicationContext(applicationVersion);
 
     var modelAndView = new ModelAndView("fcs/application/applicationTaskList")
         .addObject("pageTitle", applicationType + " application")

@@ -5,6 +5,7 @@ import static uk.co.nstauthority.fieldconsents.assets.AssetType.TERMINAL;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -121,9 +122,9 @@ public class ApplicationAssetService {
         );
   }
 
-  public List<ApplicationAsset> findAssetsByApplicationVersionAndAssetRole(ApplicationVersion applicationVersion,
-                                                                           AssetRole assetRole) {
-    return applicationAssetRepository.findAllByApplicationVersionAndAssetRoleOrderByIdAsc(applicationVersion, assetRole);
+  public List<ApplicationAsset> findAssetsByApplicationVersionAndAssetRoles(ApplicationVersion applicationVersion,
+                                                                            Collection<AssetRole> assetRoles) {
+    return applicationAssetRepository.findAllByApplicationVersionAndAssetRoleInOrderByIdAsc(applicationVersion, assetRoles);
   }
 
   public List<ApplicationAsset> findAssetsByApplicationVersion(ApplicationVersion applicationVersion) {
@@ -131,7 +132,7 @@ public class ApplicationAssetService {
   }
 
   public List<ApplicationAsset> getSecondaryAssets(ApplicationVersion applicationVersion) {
-    return findAssetsByApplicationVersionAndAssetRole(applicationVersion, AssetRole.SECONDARY);
+    return findAssetsByApplicationVersionAndAssetRoles(applicationVersion, Collections.singleton(AssetRole.SECONDARY));
   }
 
   public boolean secondaryAssetsExist(ApplicationVersion applicationVersion) {
@@ -215,7 +216,7 @@ public class ApplicationAssetService {
   }
 
   public List<AssetJson> getAssetJsonListFor(ApplicationVersion applicationVersion, AssetRole assetRole) {
-    return findAssetsByApplicationVersionAndAssetRole(applicationVersion, assetRole)
+    return findAssetsByApplicationVersionAndAssetRoles(applicationVersion, Collections.singleton(assetRole))
         .stream()
         .map(this::getAssetJsonForApplicationAsset)
         .toList();

@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application.assets;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -18,9 +19,9 @@ public interface ApplicationAssetRepository extends CrudRepository<ApplicationAs
       AssetRole assetRole
   );
 
-  List<ApplicationAsset> findAllByApplicationVersionAndAssetRoleOrderByIdAsc(
+  List<ApplicationAsset> findAllByApplicationVersionAndAssetRoleInOrderByIdAsc(
       ApplicationVersion applicationVersion,
-      AssetRole assetRole
+      Collection<AssetRole> assetRole
   );
 
   boolean existsByApplicationVersionAndAssetRole(ApplicationVersion applicationVersion, AssetRole assetRole);

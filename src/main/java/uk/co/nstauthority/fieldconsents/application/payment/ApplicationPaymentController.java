@@ -77,7 +77,7 @@ public class ApplicationPaymentController {
   public ModelAndView getStartPayment(@PathVariable Integer applicationId, ServiceUserDetail user) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var applicationReference = applicationService.generateApplicationReference(applicationVersion);
-    var applicationContextJson = applicationContextService.getApplicationContextJson(applicationVersion);
+    var applicationContext = applicationContextService.getApplicationContext(applicationVersion);
     var paymentAmountPence = applicationPaymentService.getPaymentAmountPence(applicationVersion);
     var absoluteGetStartPaymentUrl = absoluteUrlService.getAbsoluteUrl(
         ReverseRouter.route(on(ApplicationPaymentController.class).getStartPayment(applicationId, null)));
@@ -97,7 +97,7 @@ public class ApplicationPaymentController {
 
     return new ModelAndView("fcs/application/startPayment")
         .addObject("applicationReference", applicationReference)
-        .addObject("applicationContextJson", applicationContextJson)
+        .addObject("applicationContext", applicationContext)
         .addObject("paymentDescription", applicationPaymentService.getPaymentDescription(applicationVersion))
         .addObject("formattedPaymentAmount", DecimalFormatUtils.formatMoney((double) paymentAmountPence / 100))
         .addObject(

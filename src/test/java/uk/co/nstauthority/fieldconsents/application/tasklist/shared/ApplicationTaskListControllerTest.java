@@ -20,18 +20,18 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
-import uk.co.nstauthority.fieldconsents.application.ApplicationContextJson;
+import uk.co.nstauthority.fieldconsents.application.ApplicationContext;
 import uk.co.nstauthority.fieldconsents.application.ApplicationContextService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestViewService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListSection;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil;
 
@@ -55,13 +55,16 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
 
   private List<TaskListSection> flareTaskListSections;
 
-  private ApplicationContextJson applicationContext;
+  private ApplicationContext applicationContext;
 
   @BeforeEach
   void setUp() {
     flareTaskListSections = TaskListTestUtil.getFlareTaskListSectionWithItems(APPLICATION_ID);
-    applicationContext = new ApplicationContextJson(FieldTestUtil.field1Json,
-        OrganisationUnitTestUtil.orgUnit1Json);
+    applicationContext = ApplicationContext.newBuilder()
+        .withPrimaryAsset(FieldTestUtil.field1Json)
+        .withPrimaryOperator("Primary operator")
+        .withApplicationVersionStatus(ApplicationVersionStatus.IN_PROGRESS)
+        .build();
   }
 
   @SecurityTest
@@ -77,7 +80,7 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
-    when(applicationContextService.getApplicationContextJson(applicationVersion)).thenReturn(applicationContext);
+    when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(applicationContext);
 
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ApplicationTaskListController.class)
             .getTaskList(APPLICATION_ID)))
@@ -105,7 +108,7 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(applicationTaskListService.getAllSections(applicationVersion)).thenReturn(flareTaskListSections);
-    when(applicationContextService.getApplicationContextJson(applicationVersion)).thenReturn(applicationContext);
+    when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(applicationContext);
 
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ApplicationTaskListController.class)
             .getTaskList(APPLICATION_ID)))
@@ -133,7 +136,7 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(applicationTaskListService.getAllSections(applicationVersion)).thenReturn(flareTaskListSections);
-    when(applicationContextService.getApplicationContextJson(applicationVersion)).thenReturn(applicationContext);
+    when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(applicationContext);
 
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ApplicationTaskListController.class)
             .getTaskList(APPLICATION_ID)))
@@ -161,7 +164,7 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(applicationTaskListService.getAllSections(applicationVersion)).thenReturn(flareTaskListSections);
-    when(applicationContextService.getApplicationContextJson(applicationVersion)).thenReturn(applicationContext);
+    when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(applicationContext);
     when(applicationUpdateService.openApplicationUpdateExists(applicationVersion))
         .thenReturn(true);
     when(applicationUpdateRequestViewService.getOpenApplicationUpdateRequestView(applicationVersion))

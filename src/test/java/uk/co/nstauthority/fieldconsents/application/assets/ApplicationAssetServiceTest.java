@@ -163,7 +163,7 @@ class ApplicationAssetServiceTest {
   @Test
   void createSecondaryAsset_firstOne() {
     when(applicationAssetRepository
-        .findAllByApplicationVersionAndAssetRoleOrderByIdAsc(applicationVersion, AssetRole.SECONDARY))
+        .findAllByApplicationVersionAndAssetRoleInOrderByIdAsc(applicationVersion, Set.of(AssetRole.SECONDARY)))
         .thenReturn(Collections.emptyList());
 
     applicationAssetService.createSecondaryAsset(applicationVersion, field1JsonWithOperator);
@@ -197,7 +197,7 @@ class ApplicationAssetServiceTest {
   @Test
   void createSecondaryAsset_fourthOne() {
     when(applicationAssetRepository
-        .findAllByApplicationVersionAndAssetRoleOrderByIdAsc(applicationVersion, AssetRole.SECONDARY))
+        .findAllByApplicationVersionAndAssetRoleInOrderByIdAsc(applicationVersion, Set.of(AssetRole.SECONDARY)))
         .thenReturn(secondaryAssets);
 
     applicationAssetService.createSecondaryAsset(applicationVersion, field1JsonWithOperator);
@@ -273,15 +273,15 @@ class ApplicationAssetServiceTest {
   }
 
   @Test
-  void findAssetsByApplicationVersionAndAssetRole() {
+  void findAssetsByApplicationVersionAndAssetRoles() {
     var applicationVersion = new ApplicationVersion();
     var assetRole = AssetRole.PRIMARY;
     var applicationAssets = List.of(new ApplicationAsset(), new ApplicationAsset());
 
-    when(applicationAssetRepository.findAllByApplicationVersionAndAssetRoleOrderByIdAsc(applicationVersion, assetRole))
-        .thenReturn(applicationAssets);
+    when(applicationAssetRepository.findAllByApplicationVersionAndAssetRoleInOrderByIdAsc(
+        applicationVersion, Set.of(assetRole))).thenReturn(applicationAssets);
 
-    assertThat(applicationAssetService.findAssetsByApplicationVersionAndAssetRole(applicationVersion, assetRole))
+    assertThat(applicationAssetService.findAssetsByApplicationVersionAndAssetRoles(applicationVersion, Set.of(assetRole)))
         .isEqualTo(applicationAssets);
   }
 
@@ -297,7 +297,7 @@ class ApplicationAssetServiceTest {
 
   @Test
   void getSecondaryAssets_noAssets() {
-    when(applicationAssetRepository.findAllByApplicationVersionAndAssetRoleOrderByIdAsc(applicationVersion, AssetRole.SECONDARY))
+    when(applicationAssetRepository.findAllByApplicationVersionAndAssetRoleInOrderByIdAsc(applicationVersion, Set.of(AssetRole.SECONDARY)))
         .thenReturn(Collections.emptyList());
 
     assertThat(applicationAssetService.getSecondaryAssets(applicationVersion)).isEmpty();
@@ -305,18 +305,15 @@ class ApplicationAssetServiceTest {
 
   @Test
   void getSecondaryAssets_withAssets() {
-    when(applicationAssetRepository.findAllByApplicationVersionAndAssetRoleOrderByIdAsc(applicationVersion, AssetRole.SECONDARY))
+    when(applicationAssetRepository.findAllByApplicationVersionAndAssetRoleInOrderByIdAsc(applicationVersion, Set.of(AssetRole.SECONDARY)))
         .thenReturn(secondaryAssets);
 
-    assertThat(applicationAssetService.getSecondaryAssets(applicationVersion))
-        .containsExactly(
-            fieldAsset2,
-            fieldAsset3);
+    assertThat(applicationAssetService.getSecondaryAssets(applicationVersion)).containsExactly(fieldAsset2, fieldAsset3);
   }
 
   @Test
   void secondaryAssetsExist_doNotExist() {
-    when(applicationAssetRepository.findAllByApplicationVersionAndAssetRoleOrderByIdAsc(applicationVersion, AssetRole.SECONDARY))
+    when(applicationAssetRepository.findAllByApplicationVersionAndAssetRoleInOrderByIdAsc(applicationVersion, Set.of(AssetRole.SECONDARY)))
         .thenReturn(Collections.emptyList());
 
     assertThat(applicationAssetService.secondaryAssetsExist(applicationVersion)).isFalse();
@@ -324,7 +321,7 @@ class ApplicationAssetServiceTest {
 
   @Test
   void secondaryAssetsExist_exist() {
-    when(applicationAssetRepository.findAllByApplicationVersionAndAssetRoleOrderByIdAsc(applicationVersion, AssetRole.SECONDARY))
+    when(applicationAssetRepository.findAllByApplicationVersionAndAssetRoleInOrderByIdAsc(applicationVersion, Set.of(AssetRole.SECONDARY)))
         .thenReturn(secondaryAssets);
 
     assertThat(applicationAssetService.secondaryAssetsExist(applicationVersion)).isTrue();
@@ -508,7 +505,7 @@ class ApplicationAssetServiceTest {
   @ParameterizedTest
   @EnumSource(AssetRole.class)
   void getAssetJsonListFor_field(AssetRole assetRole) {
-    when(applicationAssetRepository.findAllByApplicationVersionAndAssetRoleOrderByIdAsc(applicationVersion, assetRole))
+    when(applicationAssetRepository.findAllByApplicationVersionAndAssetRoleInOrderByIdAsc(applicationVersion, Set.of(assetRole)))
         .thenReturn(Collections.singletonList(fieldAsset1));
     when(fieldService.findField(eq(fieldAsset1.getAssetId()), anyString()))
         .thenReturn(Optional.of(field1Json));
@@ -520,7 +517,7 @@ class ApplicationAssetServiceTest {
   @ParameterizedTest
   @EnumSource(AssetRole.class)
   void getAssetJsonListFor_terminal(AssetRole assetRole) {
-    when(applicationAssetRepository.findAllByApplicationVersionAndAssetRoleOrderByIdAsc(applicationVersion, assetRole))
+    when(applicationAssetRepository.findAllByApplicationVersionAndAssetRoleInOrderByIdAsc(applicationVersion, Set.of(assetRole)))
         .thenReturn(Collections.singletonList(terminalAsset1));
     when(terminalService.findTerminal(eq(terminalAsset1.getId()), anyString()))
         .thenReturn(Optional.of(terminal1Json));

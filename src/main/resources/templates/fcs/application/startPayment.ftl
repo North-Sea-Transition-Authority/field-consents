@@ -6,7 +6,7 @@
   pageHeading="${applicationReference}"
   errorItems=errorList
 >
-  <@applicationContextInfo.applicationContextInfo applicationContext=applicationContextJson />
+  <@applicationContextInfo.applicationContextInfo applicationContext=applicationContext />
 
   <h2 class="govuk-heading-l">Pay and submit application</h2>
 

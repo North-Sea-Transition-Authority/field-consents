@@ -37,7 +37,7 @@ import uk.co.fivium.digitalpaymentslibrary.payment.CreateCardPaymentResult;
 import uk.co.fivium.digitalpaymentslibrary.payment.PaymentDto;
 import uk.co.fivium.digitalpaymentslibrary.payment.PaymentStatus;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
-import uk.co.nstauthority.fieldconsents.application.ApplicationContextJson;
+import uk.co.nstauthority.fieldconsents.application.ApplicationContext;
 import uk.co.nstauthority.fieldconsents.application.ApplicationContextService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
@@ -54,7 +54,6 @@ import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanne
 import uk.co.nstauthority.fieldconsents.formatting.DecimalFormatUtils;
 import uk.co.nstauthority.fieldconsents.mvc.AbsoluteUrlService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil;
 
 @ContextConfiguration(classes = ApplicationPaymentController.class)
 class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest {
@@ -116,8 +115,11 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
   void getStartPayment_userDoesNotHaveOperatorReturnApplicationToInProgressFromAwaitingPaymentCaseProcessingAction()
       throws Exception {
     var applicationReference = "testApplicationReference";
-    var applicationContextJson =
-        new ApplicationContextJson(FieldTestUtil.field1Json, OrganisationUnitTestUtil.orgUnit1Json);
+    var applicationContext = ApplicationContext.newBuilder()
+        .withPrimaryAsset(FieldTestUtil.field1Json)
+        .withPrimaryOperator("Primary operator")
+        .withApplicationVersionStatus(applicationVersion.getStatus())
+        .build();
     var paymentDescription = "testPaymentDescription";
     var paymentAmountPence = 93000;
     var absoluteGetStartPaymentUrl = "testAbsoluteGetStartPaymentUrl";
@@ -125,7 +127,7 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(OPERATOR_PAY_AND_SUBMIT_APPLICATION));
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
-    when(applicationContextService.getApplicationContextJson(applicationVersion)).thenReturn(applicationContextJson);
+    when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(applicationContext);
     when(applicationPaymentService.getPaymentDescription(applicationVersion)).thenReturn(paymentDescription);
     when(applicationPaymentService.getPaymentAmountPence(applicationVersion)).thenReturn(paymentAmountPence);
     when(absoluteUrlService.getAbsoluteUrl(ReverseRouter.route(on(ApplicationPaymentController.class)
@@ -148,7 +150,7 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/application/startPayment"))
         .andExpect(model().attribute("applicationReference", applicationReference))
-        .andExpect(model().attribute("applicationContextJson", applicationContextJson))
+        .andExpect(model().attribute("applicationContext", applicationContext))
         .andExpect(model().attribute("paymentDescription", paymentDescription))
         .andExpect(model().attribute("formattedPaymentAmount",
             DecimalFormatUtils.formatMoney((double) paymentAmountPence / 100)))
@@ -165,8 +167,11 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
   void getStartPayment_userDoesHaveOperatorReturnApplicationToInProgressFromAwaitingPaymentCaseProcessingAction()
       throws Exception {
     var applicationReference = "testApplicationReference";
-    var applicationContextJson =
-        new ApplicationContextJson(FieldTestUtil.field1Json, OrganisationUnitTestUtil.orgUnit1Json);
+    var applicationContext = ApplicationContext.newBuilder()
+        .withPrimaryAsset(FieldTestUtil.field1Json)
+        .withPrimaryOperator("Primary operator")
+        .withApplicationVersionStatus(applicationVersion.getStatus())
+        .build();
     var paymentDescription = "testPaymentDescription";
     var paymentAmountPence = 93000;
     var absoluteGetStartPaymentUrl = "testAbsoluteGetStartPaymentUrl";
@@ -174,7 +179,7 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(
         List.of(OPERATOR_PAY_AND_SUBMIT_APPLICATION, OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT));
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
-    when(applicationContextService.getApplicationContextJson(applicationVersion)).thenReturn(applicationContextJson);
+    when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(applicationContext);
     when(applicationPaymentService.getPaymentDescription(applicationVersion)).thenReturn(paymentDescription);
     when(applicationPaymentService.getPaymentAmountPence(applicationVersion)).thenReturn(paymentAmountPence);
     when(absoluteUrlService.getAbsoluteUrl(ReverseRouter.route(on(ApplicationPaymentController.class)
@@ -197,7 +202,7 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/application/startPayment"))
         .andExpect(model().attribute("applicationReference", applicationReference))
-        .andExpect(model().attribute("applicationContextJson", applicationContextJson))
+        .andExpect(model().attribute("applicationContext", applicationContext))
         .andExpect(model().attribute("paymentDescription", paymentDescription))
         .andExpect(model().attribute("formattedPaymentAmount",
             DecimalFormatUtils.formatMoney((double) paymentAmountPence / 100)))
