@@ -146,6 +146,10 @@ public class FieldService {
   }
 
   public List<FieldJson> findFieldsByIds(List<Integer> fieldIds, String requestPurpose) {
+    if (fieldIds.isEmpty()) {
+      return Collections.emptyList();
+    }
+
     return fieldApi.getFieldsByIds(fieldIds, fieldsProjectionRoot, new RequestPurpose(requestPurpose))
         .stream()
         .map(FieldJson::from)

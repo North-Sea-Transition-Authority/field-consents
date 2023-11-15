@@ -17,6 +17,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CasePr
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseProcessingTab.PAYMENTS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseProcessingTab.TASKS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseProcessingTab.VIEW_APPLICATION;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
@@ -35,6 +36,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
+import uk.co.nstauthority.fieldconsents.application.ApplicationContext;
+import uk.co.nstauthority.fieldconsents.application.ApplicationContextService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
@@ -77,6 +80,9 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
 
   @MockBean
   private ApplicationService applicationService;
+
+  @MockBean
+  private ApplicationContextService applicationContextService;
 
   @MockBean
   private ApplicationSummaryService applicationSummaryService;
@@ -360,6 +366,11 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(caseProcessingTabService.getTabsAvailableToUser(user)).thenReturn(caseProcessingTabs);
     when(caseProcessingActionService.getUserActionViews(applicationVersion, user)).thenReturn(caseProcessingActionViews);
+    when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(ApplicationContext.newBuilder()
+        .withPrimaryAsset(field1Json)
+        .withApplicationVersionStatus(applicationVersion.getStatus())
+        .withPrimaryOperator("Primary operator")
+        .build());
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(APPLICATION_REFERENCE);
   }
 

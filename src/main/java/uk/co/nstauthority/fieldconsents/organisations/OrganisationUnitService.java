@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.organisations;
 
 import jakarta.persistence.EntityNotFoundException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -133,12 +134,13 @@ public class OrganisationUnitService {
     return organisationGroupQueryService.getOrganisationUnitsByOrganisationGroupIds(organisationGroupIds);
   }
 
-  public List<OrganisationUnitJson> getOrganisationUnitsByIds(List<Integer> organisationUnitIds,
-                                                              String purpose) {
-    var requestPurpose = new RequestPurpose(purpose);
-    var organisationUnitsProjectionRoot = new OrganisationUnitsProjectionRoot()
-        .organisationUnitId().name();
+  public List<OrganisationUnitJson> getOrganisationUnitsByIds(List<Integer> organisationUnitIds, String purpose) {
+    if (organisationUnitIds.isEmpty()) {
+      return Collections.emptyList();
+    }
 
+    var requestPurpose = new RequestPurpose(purpose);
+    var organisationUnitsProjectionRoot = new OrganisationUnitsProjectionRoot().organisationUnitId().name();
     return organisationApi.getOrganisationUnitsByIds(organisationUnitIds, organisationUnitsProjectionRoot, requestPurpose)
         .stream()
         .map(OrganisationUnitJson::from)

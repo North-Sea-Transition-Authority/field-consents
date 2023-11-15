@@ -25,47 +25,42 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
 @HasApplicationPermission(permissions = RolePermission.EDIT_FCS_APPLICATIONS)
 public class ApplicationTaskListController {
 
+  private final ApplicationService applicationService;
   private final ApplicationVersionService applicationVersionService;
-
   private final ApplicationTaskListService applicationTaskListService;
-
   private final ApplicationContextService applicationContextService;
-
   private final ApplicationUpdateService applicationUpdateService;
-
   private final ApplicationUpdateRequestViewService applicationUpdateRequestViewService;
 
-  private final ApplicationService applicationService;
-
-  ApplicationTaskListController(ApplicationVersionService applicationVersionService,
-                                ApplicationTaskListService applicationTaskListService,
-                                ApplicationContextService applicationContextService,
-                                ApplicationUpdateService applicationUpdateService,
-                                ApplicationUpdateRequestViewService applicationUpdateRequestViewService,
-                                ApplicationService applicationService) {
+  ApplicationTaskListController(
+      ApplicationService applicationService,
+      ApplicationVersionService applicationVersionService,
+      ApplicationTaskListService applicationTaskListService,
+      ApplicationContextService applicationContextService,
+      ApplicationUpdateService applicationUpdateService,
+      ApplicationUpdateRequestViewService applicationUpdateRequestViewService
+  ) {
+    this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.applicationTaskListService = applicationTaskListService;
     this.applicationContextService = applicationContextService;
     this.applicationUpdateService = applicationUpdateService;
     this.applicationUpdateRequestViewService = applicationUpdateRequestViewService;
-    this.applicationService = applicationService;
   }
 
   @GetMapping
   public ModelAndView getTaskList(@PathVariable Integer applicationId) {
-
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
-
     var sections = applicationTaskListService.getAllSections(applicationVersion);
-
     var applicationType = applicationVersion.getApplication().getType().getDisplayName();
-
     var applicationContext = applicationContextService.getApplicationContext(applicationVersion);
+    var applicationReference = applicationService.getApplicationReference(applicationVersion);
 
     var modelAndView = new ModelAndView("fcs/application/applicationTaskList")
         .addObject("pageTitle", applicationType + " application")
         .addObject("taskListSections", sections)
         .addObject("applicationContext", applicationContext)
+        .addObject("applicationReference", applicationReference)
         .addObject("deleteApplicationUrl", ReverseRouter.route(on(DeleteApplicationController.class)
             .getDeleteApplication(applicationId)));
 
@@ -74,7 +69,6 @@ public class ApplicationTaskListController {
           applicationUpdateRequestViewService.getOpenApplicationUpdateRequestView(applicationVersion));
     }
 
-    return modelAndView
-        .addObject("applicationReference", applicationService.getApplicationReference(applicationVersion));
+    return modelAndView;
   }
 }

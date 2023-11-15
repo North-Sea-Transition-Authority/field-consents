@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.nstauthority.fieldconsents.application.ApplicationContextService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
@@ -30,6 +31,7 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
 public class IndustryCaseProcessingController {
 
   private final ApplicationService applicationService;
+  private final ApplicationContextService applicationContextService;
   private final ApplicationVersionService applicationVersionService;
   private final ApplicationSummaryService applicationSummaryService;
   private final CaseProcessingActionService caseProcessingActionService;
@@ -41,6 +43,7 @@ public class IndustryCaseProcessingController {
   @Autowired
   IndustryCaseProcessingController(
       ApplicationService applicationService,
+      ApplicationContextService applicationContextService,
       ApplicationVersionService applicationVersionService,
       ApplicationSummaryService applicationSummaryService,
       CaseProcessingActionService caseProcessingActionService,
@@ -50,6 +53,7 @@ public class IndustryCaseProcessingController {
       PaymentsTabService paymentsTabService
   ) {
     this.applicationService = applicationService;
+    this.applicationContextService = applicationContextService;
     this.applicationVersionService = applicationVersionService;
     this.applicationSummaryService = applicationSummaryService;
     this.caseProcessingActionService = caseProcessingActionService;
@@ -93,6 +97,7 @@ public class IndustryCaseProcessingController {
                 .getIndustryCaseProcessing(application.getId(), null, null))
         )
         .addObject("actionList", caseProcessingActionService.getUserActionViews(applicationVersion, user))
+        .addObject("applicationContext", applicationContextService.getApplicationContext(applicationVersion))
         .addObject("caseProcessingTabs", caseProcessingTabService.getTabsAvailableToUser(user))
         .addObject("wideSummaryDisplay", WIDE_SUMMARY_DISPLAY.allowed(application.getType()))
         .addObject("pageTitle", applicationService.generateApplicationReference(applicationVersion));

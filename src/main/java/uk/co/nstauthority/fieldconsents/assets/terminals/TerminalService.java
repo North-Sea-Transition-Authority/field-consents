@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.assets.terminals;
 
 import jakarta.persistence.EntityNotFoundException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -130,6 +131,10 @@ public class TerminalService {
 
   // TODO: FCS-427 (remove n+1)
   public List<TerminalWithOperatorJson> findTerminalsWithOperator(List<Integer> terminalIds, String epaRequestPurpose) {
+    if (terminalIds.isEmpty()) {
+      return Collections.emptyList();
+    }
+
     return terminalIds
         .stream()
         .map(id -> terminalApi.findTerminalById(id, terminalWithOperatorProjectionRoot, new RequestPurpose(epaRequestPurpose)))

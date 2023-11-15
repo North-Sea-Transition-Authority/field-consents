@@ -3,6 +3,7 @@
 <#import '../functions/_getPageSize.ftl' as getPageSize>
 <#import '../summary/_applicationSummary.ftl' as applicationSummary>
 <#import '_caseProcessingActions.ftl' as caseProcessingActions>
+<#import './_applicationContext.ftl' as applicationContextInfo>
 <#import './caseprocessingtabs/_caseHistoryTab.ftl' as caseHistoryTab>
 <#import 'review/technicalReviewDetails.ftl' as technicalReviewDetails/>
 <#import '../application/consultation/further-information/furtherInformation.ftl' as furtherInformation/>
@@ -21,6 +22,7 @@
   <#if furtherInformationView?has_content>
     <@furtherInformation.requestNotificationBanner furtherInformationView=furtherInformationView/>
   </#if>
+  <@applicationContextInfo.applicationContextInfo applicationContext=applicationContext/>
   <@caseProcessingActions.caseActions actions=actionList/>
   <@caseProcessingTabsWithContent
     tabs=caseProcessingTabs

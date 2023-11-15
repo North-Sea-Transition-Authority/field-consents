@@ -17,6 +17,7 @@ import static uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeatur
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseProcessingTab.PAYMENTS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseProcessingTab.VIEW_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateTestUtil.applicationUpdateRequestView;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
@@ -34,6 +35,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
+import uk.co.nstauthority.fieldconsents.application.ApplicationContext;
+import uk.co.nstauthority.fieldconsents.application.ApplicationContextService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
@@ -58,6 +61,9 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
 
   @MockBean
   private ApplicationService applicationService;
+
+  @MockBean
+  private ApplicationContextService applicationContextService;
 
   @MockBean
   private ApplicationSummaryService applicationSummaryService;
@@ -118,6 +124,11 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(Collections.emptyList());
+    when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(ApplicationContext.newBuilder()
+        .withPrimaryAsset(field1Json)
+        .withApplicationVersionStatus(applicationVersion.getStatus())
+        .withPrimaryOperator("Primary operator")
+        .build());
 
     mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
             .getIndustryCaseProcessing(APPLICATION_ID, null, null)))
@@ -132,6 +143,12 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
 
+    when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(ApplicationContext.newBuilder()
+        .withPrimaryAsset(field1Json)
+        .withApplicationVersionStatus(applicationVersion.getStatus())
+        .withPrimaryOperator("Primary operator")
+        .build());
+
     mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
             .getIndustryCaseProcessing(APPLICATION_ID, null, null)))
             .with(user(user)))
@@ -144,6 +161,12 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
     applicationVersion.setStatus(ApplicationVersionStatus.WITHDRAWN);
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+
+    when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(ApplicationContext.newBuilder()
+        .withPrimaryAsset(field1Json)
+        .withApplicationVersionStatus(applicationVersion.getStatus())
+        .withPrimaryOperator("Primary operator")
+        .build());
 
     mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
             .getIndustryCaseProcessing(APPLICATION_ID, null, null)))
@@ -162,6 +185,12 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
         RolePermission.EDIT_FCS_APPLICATIONS,
         RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS
     )).thenReturn(false);
+
+    when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(ApplicationContext.newBuilder()
+        .withPrimaryAsset(field1Json)
+        .withApplicationVersionStatus(applicationVersion.getStatus())
+        .withPrimaryOperator("Primary operator")
+        .build());
 
     mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
             .getIndustryCaseProcessing(APPLICATION_ID, null, null)))
@@ -261,6 +290,11 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
     when(caseProcessingTabService.getTabsAvailableToUser(user)).thenReturn(caseProcessingTabs);
     when(caseProcessingActionService.getUserActionViews(applicationVersion, user)).thenReturn(caseProcessingActionViews);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(DUMMY_APP_REF);
+    when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(ApplicationContext.newBuilder()
+        .withPrimaryAsset(field1Json)
+        .withApplicationVersionStatus(applicationVersion.getStatus())
+        .withPrimaryOperator("Primary operator")
+        .build());
   }
 
   private void stubSummaryServiceCall(ApplicationVersion applicationVersion) {

@@ -14,6 +14,7 @@ import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.A
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature.WIDE_SUMMARY_DISPLAY;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseProcessingTab.FURTHER_INFORMATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseProcessingTab.VIEW_APPLICATION;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
@@ -30,6 +31,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
+import uk.co.nstauthority.fieldconsents.application.ApplicationContext;
+import uk.co.nstauthority.fieldconsents.application.ApplicationContextService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
@@ -55,6 +58,9 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
 
   @MockBean
   private ApplicationService applicationService;
+
+  @MockBean
+  private ApplicationContextService applicationContextService;
 
   @MockBean
   private ApplicationSummaryService applicationSummaryService;
@@ -191,6 +197,11 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
   private void setUpMocksWithConsultation(@Nullable Consultation consultation) {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(PAGE_TITLE);
+    when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(ApplicationContext.newBuilder()
+        .withPrimaryAsset(field1Json)
+        .withApplicationVersionStatus(applicationVersion.getStatus())
+        .withPrimaryOperator("Primary operator")
+        .build());
     when(caseProcessingActionService.getUserActionViews(applicationVersion, user)).thenReturn(caseProcessingActionViews);
     when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication())).thenReturn(Optional.ofNullable(consultation));
     when(caseProcessingTabService.getTabsAvailableToUser(user)).thenReturn(caseProcessingTabs);

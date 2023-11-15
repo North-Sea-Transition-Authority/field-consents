@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_1;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_2;
@@ -355,6 +356,12 @@ class OrganisationUnitServiceTest {
         List.of(PRIMARY_OPERATOR_OU_ID_1, PRIMARY_OPERATOR_OU_ID_2),
         ALL_ORG_UNITS_DATA_ITEM_PURPOSE)
     ).isEqualTo(Collections.emptyList());
+  }
+
+  @Test
+  void getOrganisationUnitsByIds_noIds() {
+    assertThat(organisationUnitService.getOrganisationUnitsByIds(Collections.emptyList(), "")).isEmpty();
+    verifyNoInteractions(organisationApi);
   }
 
   @Test

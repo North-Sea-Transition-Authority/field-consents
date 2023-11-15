@@ -5,8 +5,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldService.fieldStatusesAllowed;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldService.fieldsWithOperatorsAndLicensesProjectionRoot;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperator;
@@ -17,7 +19,10 @@ import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2Json;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2JsonWithOperator;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2JsonWithOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2WithOperator;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2WithOperatorAndLicences;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field3;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field3Json;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field3JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.fieldList;
@@ -301,6 +306,24 @@ public class FieldServiceTest {
   }
 
   @Test
+  void findFieldsByIds_noIds() {
+    assertThat(fieldService.findFieldsByIds(Collections.emptyList(), "")).isEmpty();
+    verifyNoInteractions(fieldApi);
+  }
+
+  @Test
+  void findFieldsByIds() {
+    var ids = List.of(1, 2, 3);
+    var requestPurpose = new RequestPurpose("request purpose");
+
+    when(fieldApi.getFieldsByIds(ids, FieldService.fieldsProjectionRoot, requestPurpose)).thenReturn(List.of(field1, field2, field3));
+
+    assertThat(fieldService.findFieldsByIds(ids, requestPurpose.purpose()))
+        .usingRecursiveFieldByFieldElementComparator()
+        .containsExactly(field1Json, field2Json, field3Json);
+  }
+
+  @Test
   void findFieldWithOperatorAndLicences_fieldExists() {
     when(fieldApi.findFieldById(eq(field1WithOperatorAndLicences.getFieldId()), any(FieldProjectionRoot.class), eq(requestPurpose)))
         .thenReturn(Optional.of(field1WithOperatorAndLicences));
@@ -317,6 +340,25 @@ public class FieldServiceTest {
 
     var fieldJsonOptional = fieldService.findFieldWithOperatorAndLicences(0, REQUEST_PURPOSE);
     assertThat(fieldJsonOptional).isNotPresent();
+  }
+
+  @Test
+  void findFieldsWithOperatorAndLicences_noIds() {
+    assertThat(fieldService.findFieldsWithOperatorAndLicences(Collections.emptyList(), "")).isEmpty();
+    verifyNoInteractions(fieldApi);
+  }
+
+  @Test
+  void findFieldsWithOperatorAndLicences() {
+    var ids = List.of(1, 2);
+    var requestPurpose = new RequestPurpose("request purpose");
+
+    when(fieldApi.getFieldsByIds(ids, fieldsWithOperatorsAndLicensesProjectionRoot, requestPurpose))
+        .thenReturn(List.of(field1WithOperatorAndLicences, field2WithOperatorAndLicences));
+
+    assertThat(fieldService.findFieldsWithOperatorAndLicences(ids, requestPurpose.purpose()))
+        .usingRecursiveFieldByFieldElementComparator()
+        .containsExactly(field1JsonWithOperatorAndLicences, field2JsonWithOperatorAndLicences);
   }
 
   @Test

@@ -4,8 +4,12 @@ package uk.co.nstauthority.fieldconsents.assets.terminals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService.terminalWithOperatorProjectionRoot;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1Json;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithOperator;
@@ -320,4 +324,46 @@ public class TerminalServiceTest {
         .isInstanceOf(RuntimeException.class)
         .hasMessageContaining("Terminal not found for terminal id 0");
   }
+
+  @Test
+  void findTerminalsWithOperator_noIdsProvided() {
+    assertThat(terminalService.findTerminalsWithOperator(Collections.emptyList(), "")).isEmpty();
+    verifyNoInteractions(terminalApi);
+  }
+
+  @Test
+  void findTerminalsWithOperator() {
+    var ids = List.of(1, 2, 3, 4);
+    var requestPurpose = new RequestPurpose("request purpose");
+
+    when(terminalApi.findTerminalById(anyInt(), eq(terminalWithOperatorProjectionRoot), eq(requestPurpose))).thenReturn(Optional.of(terminal1WithOperator));
+
+    assertThat(terminalService.findTerminalsWithOperator(ids, requestPurpose.purpose()))
+        .usingRecursiveFieldByFieldElementComparator()
+        .containsExactly(terminal1JsonWithOperator, terminal1JsonWithOperator, terminal1JsonWithOperator, terminal1JsonWithOperator);
+
+    // TODO: FCS-427 (remove n+1)
+    verify(terminalApi).findTerminalById(1, terminalWithOperatorProjectionRoot, requestPurpose);
+    verify(terminalApi).findTerminalById(2, terminalWithOperatorProjectionRoot, requestPurpose);
+    verify(terminalApi).findTerminalById(3, terminalWithOperatorProjectionRoot, requestPurpose);
+    verify(terminalApi).findTerminalById(4, terminalWithOperatorProjectionRoot, requestPurpose);
+  }
+
+  @Test
+  void findTerminalsWithOperator_someIdsNotFound() {
+    var ids = List.of(1, 2);
+    var requestPurpose = new RequestPurpose("request purpose");
+
+    when(terminalApi.findTerminalById(1, terminalWithOperatorProjectionRoot, requestPurpose)).thenReturn(Optional.of(terminal1WithOperator));
+    when(terminalApi.findTerminalById(2, terminalWithOperatorProjectionRoot, requestPurpose)).thenReturn(Optional.empty());
+
+    assertThat(terminalService.findTerminalsWithOperator(ids, requestPurpose.purpose()))
+        .usingRecursiveFieldByFieldElementComparator()
+        .containsExactly(terminal1JsonWithOperator);
+
+    // TODO: FCS-427 (remove n+1)
+    verify(terminalApi).findTerminalById(1, terminalWithOperatorProjectionRoot, requestPurpose);
+    verify(terminalApi).findTerminalById(2, terminalWithOperatorProjectionRoot, requestPurpose);
+  }
+
 }

@@ -3,6 +3,7 @@
 <#import '../../functions/_getPageSize.ftl' as getPageSize>
 <#import '../../summary/_applicationSummary.ftl' as applicationSummary>
 <#import '../_caseProcessingActions.ftl' as caseProcessingActions>
+<#import '../_applicationContext.ftl' as applicationContextInfo>
 <#import './consultation.ftl' as consulation>
 <#import './further-information/furtherInformation.ftl' as furtherInformation>
 
@@ -13,6 +14,7 @@
   <#if consultationRequestView?has_content>
     <@consulation.notificationBanner consultationRequestView=consultationRequestView />
   </#if>
+  <@applicationContextInfo.applicationContextInfo applicationContext=applicationContext/>
   <@caseProcessingActions.caseActions actions=actionList/>
   <@caseProcessingTabsWithContent
     tabs=caseProcessingTabs

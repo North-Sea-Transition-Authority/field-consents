@@ -3,6 +3,7 @@
 <#import '../functions/_getPageSize.ftl' as getPageSize>
 <#import '../summary/_applicationSummary.ftl' as applicationSummary>
 <#import '_caseProcessingActions.ftl' as caseProcessingActions>
+<#import './_applicationContext.ftl' as applicationContextInfo>
 <#import 'update/_applicationUpdateRequestBanner.ftl' as applicationUpdateRequestBanner>
 <#import './caseprocessingtabs/_paymentsTab.ftl' as paymentsTab>
 
@@ -13,6 +14,7 @@
   pageHeading=pageTitle
   pageSize=getPageSize.getPageSize(wideSummaryDisplay)>
   <@applicationUpdateRequestBanner.applicationUpdateRequestBanner applicationUpdateRequestView=applicationUpdateRequestView!""/>
+  <@applicationContextInfo.applicationContextInfo applicationContext=applicationContext/>
   <@caseProcessingActions.caseActions actions=actionList/>
   <@caseProcessingTabsWithContent
     tabs=caseProcessingTabs
