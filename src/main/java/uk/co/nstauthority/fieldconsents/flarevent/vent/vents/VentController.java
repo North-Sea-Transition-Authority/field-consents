@@ -26,7 +26,7 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
 @HasApplicationPermission(permissions = RolePermission.EDIT_FCS_APPLICATIONS)
 public class VentController {
 
-  public static final String PAGE_NAME_SUMMARY = "Vent systems(s)";
+  public static final String PAGE_NAME_SUMMARY = "Vent system(s)";
   public static final String PAGE_NAME_ADD = "Add vent system";
   public static final String PAGE_NAME_EDIT = "Change vent system";
   public static final String PAGE_NAME_DELETE = "Delete vent system";
