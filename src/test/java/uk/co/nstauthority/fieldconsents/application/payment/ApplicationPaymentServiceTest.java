@@ -11,8 +11,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import org.junit.jupiter.api.Test;
@@ -27,6 +29,8 @@ import uk.co.fivium.digitalpaymentslibrary.payment.CreateCardPaymentResult;
 import uk.co.fivium.digitalpaymentslibrary.payment.PaymentDto;
 import uk.co.fivium.digitalpaymentslibrary.payment.PaymentService;
 import uk.co.fivium.digitalpaymentslibrary.payment.PaymentStatus;
+import uk.co.nstauthority.fieldconsents.application.ApplicationContext;
+import uk.co.nstauthority.fieldconsents.application.ApplicationContextService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
@@ -34,30 +38,28 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
-import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.application.consentrevision.ConsentRevisionType;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
-import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalJson;
-import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.fee.FeeLineMnemonic;
-import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
-import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationPaymentServiceTest {
 
   @Mock
   private ApplicationService applicationService;
+
+  @Mock
+  private ApplicationContextService applicationContextService;
 
   @Mock
   private ApplicationVersionService applicationVersionService;
@@ -67,15 +69,6 @@ class ApplicationPaymentServiceTest {
 
   @Mock
   private ConsentLengthService consentLengthService;
-
-  @Mock
-  private OrganisationUnitService organisationUnitService;
-
-  @Mock
-  private FieldService fieldService;
-
-  @Mock
-  private TerminalService terminalService;
 
   @Mock
   private PaymentService paymentService;
@@ -223,32 +216,18 @@ class ApplicationPaymentServiceTest {
 
   @Test
   void getPaymentMetadata_primaryAssetIsField_noSecondaryAssets() {
-    var applicationVersion
-        = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var applicationVersion = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
 
     var primaryOperatorName = "testPrimaryOperatorName";
-    var primaryOperatorOrganisationUnitId = 1;
-    var primaryOperatorOrganisationUnitJson
-        = new OrganisationUnitJson(primaryOperatorOrganisationUnitId, primaryOperatorName);
 
     var primaryAssetFieldId = 1;
     var primaryAssetFieldName = "testPrimaryAssetFieldName";
-    var primaryAsset = new ApplicationAsset();
-    primaryAsset.setAssetId(primaryAssetFieldId);
-    primaryAsset.setAssetType(AssetType.FIELD);
-    primaryAsset.setAssetRole(AssetRole.PRIMARY);
     var primaryAssetFieldJson = new FieldJson(primaryAssetFieldId, primaryAssetFieldName, null, null, null);
 
-    var assets = List.of(primaryAsset);
-
-    var fieldIds = List.of(primaryAssetFieldId);
-    var fieldJsons = List.of(primaryAssetFieldJson);
-
-    when(organisationUnitService.getOrganisationUnitById(primaryOperatorOrganisationUnitId, "Organisation lookup for payment metadata"))
-        .thenReturn(primaryOperatorOrganisationUnitJson);
-    when(applicationAssetService.findAssetsByApplicationVersion(applicationVersion)).thenReturn(assets);
-    when(fieldService.findFieldsByIds(fieldIds, "Looking up field names for payment metadata"))
-        .thenReturn(fieldJsons);
+    when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(ApplicationContext.newBuilder()
+        .withPrimaryAsset(primaryAssetFieldJson)
+        .withPrimaryOperator(primaryOperatorName)
+        .build());
 
     assertThat(applicationPaymentService.getPaymentMetadata(applicationVersion)).containsExactly(
         entry("Primary operator", primaryOperatorName),
@@ -258,40 +237,21 @@ class ApplicationPaymentServiceTest {
 
   @Test
   void getPaymentMetadata_primaryAssetIsField_singleSecondaryFieldAsset() {
-    var applicationVersion
-        = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var applicationVersion  = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
 
     var primaryOperatorName = "testPrimaryOperatorName";
-    var primaryOperatorOrganisationUnitId = 1;
-    var primaryOperatorOrganisationUnitJson
-        = new OrganisationUnitJson(primaryOperatorOrganisationUnitId, primaryOperatorName);
 
     var primaryAssetFieldId = 1;
     var primaryAssetFieldName = "testPrimaryAssetFieldName";
-    var primaryAsset = new ApplicationAsset();
-    primaryAsset.setAssetId(primaryAssetFieldId);
-    primaryAsset.setAssetType(AssetType.FIELD);
-    primaryAsset.setAssetRole(AssetRole.PRIMARY);
     var primaryAssetFieldJson = new FieldJson(primaryAssetFieldId, primaryAssetFieldName, null, null, null);
 
-    var secondaryAssetFieldId = 2;
     var secondaryAssetFieldName = "testSecondaryAssetFieldName";
-    var secondaryAsset = new ApplicationAsset();
-    secondaryAsset.setAssetId(secondaryAssetFieldId);
-    secondaryAsset.setAssetType(AssetType.FIELD);
-    secondaryAsset.setAssetRole(AssetRole.SECONDARY);
-    var secondaryAssetFieldJson = new FieldJson(secondaryAssetFieldId, secondaryAssetFieldName, null, null, null);
 
-    var assets = List.of(primaryAsset, secondaryAsset);
-
-    var fieldIds = List.of(primaryAssetFieldId, secondaryAssetFieldId);
-    var fieldJsons = List.of(primaryAssetFieldJson, secondaryAssetFieldJson);
-
-    when(organisationUnitService.getOrganisationUnitById(primaryOperatorOrganisationUnitId, "Organisation lookup for payment metadata"))
-        .thenReturn(primaryOperatorOrganisationUnitJson);
-    when(applicationAssetService.findAssetsByApplicationVersion(applicationVersion)).thenReturn(assets);
-    when(fieldService.findFieldsByIds(fieldIds, "Looking up field names for payment metadata"))
-        .thenReturn(fieldJsons);
+    when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(ApplicationContext.newBuilder()
+        .withPrimaryAsset(primaryAssetFieldJson)
+        .withPrimaryOperator(primaryOperatorName)
+        .withAdditionalFields(Collections.singleton(secondaryAssetFieldName))
+        .build());
 
     assertThat(applicationPaymentService.getPaymentMetadata(applicationVersion)).containsExactly(
         entry("Primary operator", primaryOperatorName),
@@ -302,48 +262,22 @@ class ApplicationPaymentServiceTest {
 
   @Test
   void getPaymentMetadata_primaryAssetIsField_multipleSecondaryFieldAssets() {
-    var applicationVersion
-        = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var applicationVersion = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
 
     var primaryOperatorName = "testPrimaryOperatorName";
-    var primaryOperatorOrganisationUnitId = 1;
-    var primaryOperatorOrganisationUnitJson
-        = new OrganisationUnitJson(primaryOperatorOrganisationUnitId, primaryOperatorName);
 
     var primaryAssetFieldId = 1;
     var primaryAssetFieldName = "testPrimaryAssetFieldName";
-    var primaryAsset = new ApplicationAsset();
-    primaryAsset.setAssetId(primaryAssetFieldId);
-    primaryAsset.setAssetType(AssetType.FIELD);
-    primaryAsset.setAssetRole(AssetRole.PRIMARY);
     var primaryAssetFieldJson = new FieldJson(primaryAssetFieldId, primaryAssetFieldName, null, null, null);
 
-    var secondaryAsset1FieldId = 2;
     var secondaryAsset1FieldName = "testSecondaryAsset1FieldName";
-    var secondaryAsset1 = new ApplicationAsset();
-    secondaryAsset1.setAssetId(secondaryAsset1FieldId);
-    secondaryAsset1.setAssetType(AssetType.FIELD);
-    secondaryAsset1.setAssetRole(AssetRole.SECONDARY);
-    var secondaryAsset1FieldJson = new FieldJson(secondaryAsset1FieldId, secondaryAsset1FieldName, null, null, null);
-
-    var secondaryAsset2FieldId = 3;
     var secondaryAsset2FieldName = "testSecondaryAsset2FieldName";
-    var secondaryAsset2 = new ApplicationAsset();
-    secondaryAsset2.setAssetId(secondaryAsset2FieldId);
-    secondaryAsset2.setAssetType(AssetType.FIELD);
-    secondaryAsset2.setAssetRole(AssetRole.SECONDARY);
-    var secondaryAsset2FieldJson = new FieldJson(secondaryAsset2FieldId, secondaryAsset2FieldName, null, null, null);
 
-    var assets = List.of(primaryAsset, secondaryAsset1, secondaryAsset2);
-
-    var fieldIds = List.of(primaryAssetFieldId, secondaryAsset1FieldId, secondaryAsset2FieldId);
-    var fieldJsons = List.of(primaryAssetFieldJson, secondaryAsset1FieldJson, secondaryAsset2FieldJson);
-
-    when(organisationUnitService.getOrganisationUnitById(primaryOperatorOrganisationUnitId, "Organisation lookup for payment metadata"))
-        .thenReturn(primaryOperatorOrganisationUnitJson);
-    when(applicationAssetService.findAssetsByApplicationVersion(applicationVersion)).thenReturn(assets);
-    when(fieldService.findFieldsByIds(fieldIds, "Looking up field names for payment metadata"))
-        .thenReturn(fieldJsons);
+    when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(ApplicationContext.newBuilder()
+        .withPrimaryAsset(primaryAssetFieldJson)
+        .withPrimaryOperator(primaryOperatorName)
+        .withAdditionalFields(Set.of(secondaryAsset1FieldName, secondaryAsset2FieldName))
+        .build());
 
     assertThat(applicationPaymentService.getPaymentMetadata(applicationVersion)).containsExactly(
         entry("Primary operator", primaryOperatorName),
@@ -354,38 +288,18 @@ class ApplicationPaymentServiceTest {
 
   @Test
   void getPaymentMetadata_primaryAssetIsField_secondaryTerminalAssetNotIncluded() {
-    var applicationVersion
-        = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var applicationVersion = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
 
     var primaryOperatorName = "testPrimaryOperatorName";
-    var primaryOperatorOrganisationUnitId = 1;
-    var primaryOperatorOrganisationUnitJson
-        = new OrganisationUnitJson(primaryOperatorOrganisationUnitId, primaryOperatorName);
 
     var primaryAssetFieldId = 1;
     var primaryAssetFieldName = "testPrimaryAssetFieldName";
-    var primaryAsset = new ApplicationAsset();
-    primaryAsset.setAssetId(primaryAssetFieldId);
-    primaryAsset.setAssetType(AssetType.FIELD);
-    primaryAsset.setAssetRole(AssetRole.PRIMARY);
     var primaryAssetFieldJson = new FieldJson(primaryAssetFieldId, primaryAssetFieldName, null, null, null);
 
-    var secondaryAssetTerminalId = 2;
-    var secondaryAsset = new ApplicationAsset();
-    secondaryAsset.setAssetRole(AssetRole.SECONDARY);
-    secondaryAsset.setAssetId(secondaryAssetTerminalId);
-    secondaryAsset.setAssetType(AssetType.TERMINAL);
-
-    var assets = List.of(primaryAsset, secondaryAsset);
-
-    var fieldIds = List.of(primaryAssetFieldId);
-    var fieldJsons = List.of(primaryAssetFieldJson);
-
-    when(organisationUnitService.getOrganisationUnitById(primaryOperatorOrganisationUnitId, "Organisation lookup for payment metadata"))
-        .thenReturn(primaryOperatorOrganisationUnitJson);
-    when(applicationAssetService.findAssetsByApplicationVersion(applicationVersion)).thenReturn(assets);
-    when(fieldService.findFieldsByIds(fieldIds, "Looking up field names for payment metadata"))
-        .thenReturn(fieldJsons);
+    when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(ApplicationContext.newBuilder()
+        .withPrimaryAsset(primaryAssetFieldJson)
+        .withPrimaryOperator(primaryOperatorName)
+        .build());
 
     assertThat(applicationPaymentService.getPaymentMetadata(applicationVersion)).containsExactly(
         entry("Primary operator", primaryOperatorName),
@@ -395,29 +309,18 @@ class ApplicationPaymentServiceTest {
 
   @Test
   void getPaymentMetadata_primaryAssetIsTerminal() {
-    var applicationVersion
-        = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var applicationVersion  = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
 
     var primaryOperatorName = "testPrimaryOperatorName";
-    var primaryOperatorOrganisationUnitId = 1;
-    var primaryOperatorOrganisationUnitJson
-        = new OrganisationUnitJson(primaryOperatorOrganisationUnitId, primaryOperatorName);
 
     var primaryAssetTerminalId = 1;
     var primaryAssetTerminalName = "testPrimaryAssetTerminalName";
-    var primaryAsset = new ApplicationAsset();
-    primaryAsset.setAssetId(primaryAssetTerminalId);
-    primaryAsset.setAssetType(AssetType.TERMINAL);
-    primaryAsset.setAssetRole(AssetRole.PRIMARY);
     var primaryAssetTerminalJson = new TerminalJson(primaryAssetTerminalId, primaryAssetTerminalName, null);
 
-    var assets = List.of(primaryAsset);
-
-    when(organisationUnitService.getOrganisationUnitById(primaryOperatorOrganisationUnitId, "Organisation lookup for payment metadata"))
-        .thenReturn(primaryOperatorOrganisationUnitJson);
-    when(applicationAssetService.findAssetsByApplicationVersion(applicationVersion)).thenReturn(assets);
-    when(terminalService.getTerminal(primaryAssetTerminalId, "Looking up terminal name for payment metadata"))
-        .thenReturn(primaryAssetTerminalJson);
+    when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(ApplicationContext.newBuilder()
+        .withPrimaryAsset(primaryAssetTerminalJson)
+        .withPrimaryOperator(primaryOperatorName)
+        .build());
 
     assertThat(applicationPaymentService.getPaymentMetadata(applicationVersion)).containsExactly(
         entry("Primary operator", primaryOperatorName),
