@@ -254,7 +254,7 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
   void startPayment_paymentAlreadyCompleted() throws Exception {
     var absoluteGetPaymentProcessedUrl = "testAbsoluteGetPaymentProcessedUrl";
     var paymentId = UUID.randomUUID();
-    var createCardPaymentResult = CreateCardPaymentResult.alreadyCompleted();
+    var createCardPaymentResult = mock(CreateCardPaymentResult.class);
 
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(OPERATOR_PAY_AND_SUBMIT_APPLICATION));
@@ -263,6 +263,7 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
         .getPaymentProcessed(APPLICATION_ID, paymentId, null, null)))).thenReturn(absoluteGetPaymentProcessedUrl);
     when(applicationPaymentService.createPayment(eq(applicationVersion), eq(user), returnUrlArgumentCaptor.capture()))
         .thenReturn(createCardPaymentResult);
+    when(createCardPaymentResult.getStatus()).thenReturn(CreateCardPaymentResult.Status.PAYMENT_ALREADY_COMPLETED);
 
     mockMvc.perform(post(ReverseRouter.route(on(ApplicationPaymentController.class).startPayment(APPLICATION_ID, null)))
             .with(csrf())
@@ -281,7 +282,7 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
     var absoluteGetPaymentProcessedUrl = "testAbsoluteGetPaymentProcessedUrl";
     var paymentId = UUID.randomUUID();
     var govPayNextUrl = "testGovPayNextUrl";
-    var createCardPaymentResult = CreateCardPaymentResult.success(govPayNextUrl);
+    var createCardPaymentResult = mock(CreateCardPaymentResult.class);
 
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(OPERATOR_PAY_AND_SUBMIT_APPLICATION));
@@ -290,6 +291,8 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
         .getPaymentProcessed(APPLICATION_ID, paymentId, null, null)))).thenReturn(absoluteGetPaymentProcessedUrl);
     when(applicationPaymentService.createPayment(eq(applicationVersion), eq(user), returnUrlArgumentCaptor.capture()))
         .thenReturn(createCardPaymentResult);
+    when(createCardPaymentResult.getStatus()).thenReturn(CreateCardPaymentResult.Status.SUCCESS);
+    when(createCardPaymentResult.getGovUkPayNextUrl()).thenReturn(govPayNextUrl);
 
     mockMvc.perform(post(ReverseRouter.route(on(ApplicationPaymentController.class).startPayment(APPLICATION_ID, null)))
             .with(csrf())

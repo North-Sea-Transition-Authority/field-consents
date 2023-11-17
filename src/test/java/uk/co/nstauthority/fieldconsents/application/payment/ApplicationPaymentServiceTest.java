@@ -123,7 +123,7 @@ class ApplicationPaymentServiceTest {
     Map<String, Object> paymentMetadata = Map.of("testPaymentMetadataKey", "testPaymentMetadataValue");
     Function<UUID, String> returnUrlFunction = paymentId -> "testReturnUrl";
 
-    var createCardPaymentResult = CreateCardPaymentResult.success("testGovUkPayNextUrl");
+    var createCardPaymentResult = mock(CreateCardPaymentResult.class);
 
     doReturn(paymentItemReference).when(applicationPaymentService).getPaymentItemReference(applicationVersion);
     doReturn(paymentAmountPence).when(applicationPaymentService).getPaymentAmountPence(applicationVersion);
