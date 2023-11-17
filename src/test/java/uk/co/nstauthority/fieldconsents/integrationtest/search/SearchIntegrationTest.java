@@ -1,6 +1,8 @@
 package uk.co.nstauthority.fieldconsents.integrationtest.search;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_CLASS;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperatorAndLicences;
@@ -9,7 +11,7 @@ import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal2JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.integrationtest.IntegrationTestUtil.ANNUAL_CONSENT_YEAR;
-import static uk.co.nstauthority.fieldconsents.integrationtest.IntegrationTestUtil.ENERGY_PORTAL_USER_DTO;
+import static uk.co.nstauthority.fieldconsents.integrationtest.IntegrationTestUtil.PORTAL_USERS_DTO_MAP;
 import static uk.co.nstauthority.fieldconsents.integrationtest.IntegrationTestUtil.REGULATOR_TEAM;
 import static uk.co.nstauthority.fieldconsents.integrationtest.IntegrationTestUtil.SHORT_TERM_END_DATE;
 import static uk.co.nstauthority.fieldconsents.integrationtest.IntegrationTestUtil.SHORT_TERM_START_DATE;
@@ -18,6 +20,7 @@ import static uk.co.nstauthority.fieldconsents.integrationtest.IntegrationTestUt
 import static uk.co.nstauthority.fieldconsents.integrationtest.IntegrationTestUtil.getSearchResultItemForTerminalInProgressOfType;
 import static uk.co.nstauthority.fieldconsents.integrationtest.IntegrationTestUtil.getSearchResultItemInProgressOfTypeAndLength;
 import static uk.co.nstauthority.fieldconsents.integrationtest.IntegrationTestUtil.getSearchResultItemProductionSubmittedOfConsentLength;
+import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.FIELD1_ASSET_KEY;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.FIELD2_ASSET_KEY;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.TERMINAL1_ASSET_KEY;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.TERMINAL2_ASSET_KEY;
@@ -29,9 +32,7 @@ import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Stream;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -51,15 +52,17 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.assets.AdditionalAssetsService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalRepository;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.WithdrawalStatus;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthForm;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
+import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
+import uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorAndLicencesJson;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
-import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
-import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
+import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalWithOperatorJson;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
 import uk.co.nstauthority.fieldconsents.integrationtest.AbstractIntegrationTest;
@@ -126,7 +129,6 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
   private RestSearchItem assetFieldRestSearchItem;
   private RestSearchItem assetTerminalRestSearchItem;
   private RestSearchItem orgUnitRestSearchItem;
-  private Map<WebUserAccountId, EnergyPortalUserDto> portalUsersDtoMap;
   private ZonedDateTime zonedDateTime;
 
   @BeforeEach
@@ -148,48 +150,29 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     when(fieldService.findFieldsByIds(ArgumentMatchers.anyList(), ArgumentMatchers.anyString())).thenReturn(List.of(
         field1JsonWithOperatorAndLicences));
 
-    portalUsersDtoMap = Map.of(WebUserAccountId.from(USER_DETAIL), ENERGY_PORTAL_USER_DTO);
-    when(energyPortalUserService.getEnergyPortalUserMap(ArgumentMatchers.anyList())).thenReturn(portalUsersDtoMap);
+    when(energyPortalUserService.getEnergyPortalUserMap(ArgumentMatchers.anyList())).thenReturn(PORTAL_USERS_DTO_MAP);
   }
 
-  // TODO: What do we want to test:
-  //      1.  Test that a blank search returns all applications                                                                                       DONE!
-  //      2.  Test that if I use the REFERENCE NUMBER filter the search only returns the application with the searched case ref number                DONE!
-  //      3.  Test that if I use the STATUS filter the search only returns the application that are in the searched status                            FAIL FOR CERTAIN STATUSES! - FCS-510
-  //      4.  Test that if I use the APPLICATION TYPE filter the search only returns the application with the searched type                           DONE!
-  //      5.  Test that if I use the DURATION filter the search only returns the application with the searched consent duration type                  DONE!
-  //      6.  Test that if I use the PRIMARY OPERATOR filter the search only returns the application with the searched operator                       DONE!
-  //      7.  Test that if I use the SUBMISSION YEAR filter the search only returns the application submitted in the searched year                    DONE!
-  //      8.  Test that if I use the CONSENT START YEAR filter the search only returns the application for consent starting on the searched year      DONE!
-  //      9.  Test that if I use the ACE STATUS filter the search only returns the application with the ACE status specified                          DONE!
-  //     10.  Test that if I use the ASSET TYPE filter the search only returns returns the application with the searched asset type
-  //     11.  Test that if I use the FIELD filter the search only returns the application with the searched field                                     DONE!
-  //     12.  Test that if I use the FACILITY filter the search only returns the application with the searched facility                               DONE!
-  //     13.  Test that if I use the LICENCE REFERENCE filter the search only returns the application with the fields having the searched licence
-  //     14.  Test priority order with multiple applications
-
   /*********************************** EMPTY SEARCH ***********************************/
-// TODO FCS-510: Find out why "matchingPortalUserDto" is null
-  //  @Test
-//  void searchAllApplications_whenFound() {
-//    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
-//    var applicationVersion = createSubmittedApplicationVersion(ApplicationType.PRODUCTION, consentLengthForm);
-//    var applicationId = applicationVersion.getApplication().getId();
-//
-//    var searchResults = getSearchResultItems(searchForm);
-//
-//    Assertions.assertThat(searchResults).containsExactly(
-//        getSearchResultItemProductionSubmittedOfConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
-//    );
-//  }
+  @Test
+  void searchAllApplications_whenFound() {
+    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
+    var applicationVersion = createSubmittedApplicationVersion(ApplicationType.PRODUCTION, consentLengthForm);
+    var applicationId = applicationVersion.getApplication().getId();
 
-  // TODO FCS-510: Find out why "matchingPortalUserDto" is null
-//  @Test
-//  void searchAllApplications_whenNoneFound() {
-//    var searchResults = getSearchResultItems(searchForm);
-//
-//    Assertions.assertThat(searchResults).isEmpty();
-//  }
+    var searchResults = getSearchResultItems(searchForm);
+
+    assertThat(searchResults).containsExactly(
+        getSearchResultItemProductionSubmittedOfConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
+    );
+  }
+
+  @Test
+  void searchAllApplications_whenNoneFound() {
+    var searchResults = getSearchResultItems(searchForm);
+
+    assertThat(searchResults).isEmpty();
+  }
 
   /*********************************** REFERENCE NUMBER ***********************************/
   @Test
@@ -201,7 +184,7 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     var applicationId = applicationVersion.getApplication().getId();
 
     var searchResults = getSearchResultItems(searchForm);
-    Assertions.assertThat(searchResults).containsExactly(
+    assertThat(searchResults).containsExactly(
         getSearchResultItemProductionSubmittedOfConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
     );
   }
@@ -213,7 +196,7 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     createSubmittedApplicationVersion(ApplicationType.FLARE, consentLengthForm);
 
     var searchResults = getSearchResultItems(searchForm);
-    Assertions.assertThat(searchResults).isEmpty();
+    assertThat(searchResults).isEmpty();
   }
 
   /*********************************** APPLICATION STATUS ***********************************/
@@ -225,8 +208,8 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     var applicationId = createNewApplicationVersionForField(ApplicationType.FLARE, consentLengthForm).getApplication().getId();
 
     var searchResults = getSearchResultItems(searchForm);
-    Assertions.assertThat(searchResults)
-        .containsExactly(getSearchResultItemForFieldInProgressOfType(applicationId, ApplicationType.FLARE));
+    assertThat(searchResults)
+        .containsExactly(getSearchResultItemForFieldInProgressOfType(applicationId, ApplicationType.FLARE, field1JsonWithOperatorAndLicences));
   }
 
   @Test
@@ -237,40 +220,38 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     createSubmittedApplicationVersion(ApplicationType.FLARE, consentLengthForm);
 
     var searchResults = getSearchResultItems(searchForm);
-    Assertions.assertThat(searchResults).isEmpty();
+    assertThat(searchResults).isEmpty();
   }
 
-  // TODO FCS-510: Find out why "matchingPortalUserDto" is null
-//  @Test
-//  void searchByStatus_foundWhenSubmitted() {
-//    searchForm.setStatuses(List.of(ApplicationVersionStatus.SUBMITTED));
-//    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
-//
-//    var applicationVersion = createSubmittedApplicationVersion(ApplicationType.PRODUCTION, consentLengthForm);
-//    var applicationId = applicationVersion.getApplication().getId();
-//
-//    var searchResults = getSearchResultItems(searchForm);
-//    Assertions.assertThat(searchResults).containsExactly(
-//        getSearchResultItemProductionSubmittedOfConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
-//    );
-//  }
+  @Test
+  void searchByStatus_foundWhenSubmitted() {
+    searchForm.setStatuses(List.of(ApplicationVersionStatus.SUBMITTED));
+    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
 
-  // TODO FCS-510: the following need further investigation as they are not working yet.
+    var applicationVersion = createSubmittedApplicationVersion(ApplicationType.PRODUCTION, consentLengthForm);
+    var applicationId = applicationVersion.getApplication().getId();
+
+    var searchResults = getSearchResultItems(searchForm);
+    assertThat(searchResults).containsExactly(
+        getSearchResultItemProductionSubmittedOfConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
+    );
+  }
+
 //  @Test
 //  void searchByStatus_foundWhenWithdrawn() {
 //    searchForm.setStatuses(List.of(ApplicationVersionStatus.WITHDRAWN));
 //    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
 //
-//    var applicationVersion = createSubmittedApplicationVersion(ApplicationType.PRODUCTION, consentLengthForm);
+//    var applicationVersion = createWithdrawnApplicationVersion(ApplicationType.PRODUCTION, consentLengthForm);
 //    applicationVersion.setStatus(ApplicationVersionStatus.WITHDRAWN);
 //    var applicationId = applicationVersion.getApplication().getId();
 //
 //    var searchResults = getSearchResultItems(searchForm);
-//    Assertions.assertThat(searchResults).containsExactly(
+//    assertThat(searchResults).containsExactly(
 //        getSearchResultItemProductionSubmittedOfConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
 //    );
 //  }
-
+//
 //  @Test
 //  void searchByStatus_foundWhenAwaitingForPayment() {
 //    searchForm.setStatuses(List.of(ApplicationVersionStatus.AWAITING_PAYMENT));
@@ -280,7 +261,7 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
 //    var applicationId = applicationVersion.getApplication().getId();
 //
 //    var searchResults = getSearchResultItems(searchForm);
-//    Assertions.assertThat(searchResults).containsExactly(
+//    assertThat(searchResults).containsExactly(
 //        getSearchResultItemProductionSubmittedOfConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
 //    );
 //  }
@@ -290,63 +271,63 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
 //    searchForm.setStatuses(List.of(ApplicationVersionStatus.COMPLETED));
 //    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
 //
-//    var applicationVersion = createWithdrawnApplicationVersion(ApplicationType.PRODUCTION, consentLengthForm);
+//    var applicationVersion = createSubmittedApplicationVersion(ApplicationType.PRODUCTION, consentLengthForm);
 //    var applicationId = applicationVersion.getApplication().getId();
 //
 //    var searchResults = getSearchResultItems(searchForm);
-//    Assertions.assertThat(searchResults).containsExactly(
+//    assertThat(searchResults).containsExactly(
 //        getSearchResultItemProductionSubmittedOfConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
 //    );
 //  }
 
   /*********************************** APPLICATION TYPE ***********************************/
-  // TODO FCS-510: Find out why "matchingPortalUserDto" is null
-//  @ParameterizedTest
-//  @EnumSource(ApplicationType.class)
-//  void searchByApplicationType_whenFound(ApplicationType applicationType) {
-//    searchForm.setApplicationTypes(List.of(applicationType));
-//
-//    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
-//
-//    var applicationVersion = createNewApplicationVersionForField(applicationType, consentLengthForm);
-//    var applicationId = applicationVersion.getApplication().getId();
-//
-//    var searchResults = getSearchResultItems(searchForm);
-//    Assertions.assertThat(searchResults).containsExactly(
-//        getSearchResultItemForFieldInProgressOfType(applicationId, applicationType)
-//    );
-//  }
+  @ParameterizedTest
+  @EnumSource(ApplicationType.class)
+  void searchByApplicationType_whenFound(ApplicationType applicationType) {
+    searchForm.setApplicationTypes(List.of(applicationType));
 
-  // TODO FCS-510: Find out why "matchingPortalUserDto" is null
-//  @ParameterizedTest
-//  @EnumSource(ApplicationType.class)
-//  void searchByApplicationType_whenFoundWithMultipleTypes(ApplicationType applicationType) {
-//    searchForm.setApplicationTypes(Arrays.asList(ApplicationType.values()));
-//
-//    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
-//
-//    var applicationVersion = createNewApplicationVersionForField(applicationType, consentLengthForm);
-//    var applicationId = applicationVersion.getApplication().getId();
-//
-//    var searchResults = getSearchResultItems(searchForm);
-//    Assertions.assertThat(searchResults).containsExactly(
-//        getSearchResultItemForFieldInProgressOfType(applicationId, applicationType)
-//    );
-//  }
+    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
 
-  // TODO FCS-510: Find out why "matchingPortalUserDto" is null
-//  @ParameterizedTest
-//  @EnumSource(value = ApplicationType.class, names = "VENT", mode = EnumSource.Mode.EXCLUDE)
-//  void searchByApplicationType_whenNotFound(ApplicationType applicationType) {
-//    searchForm.setApplicationTypes(List.of(applicationType));
-//
-//    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
-//
-//    createNewApplicationVersionForField(ApplicationType.VENT, consentLengthForm);
-//
-//    var searchResults = getSearchResultItems(searchForm);
-//    Assertions.assertThat(searchResults).isEmpty();
-//  }
+    var applicationVersion = createNewApplicationVersionForField(applicationType, consentLengthForm);
+    var applicationId = applicationVersion.getApplication().getId();
+
+    var searchResults = getSearchResultItems(searchForm);
+    assertThat(searchResults).containsExactly(
+        getSearchResultItemForFieldInProgressOfType(applicationId, applicationType, field1JsonWithOperatorAndLicences)
+    );
+    applicationVersionService.deleteApplicationVersion(applicationVersion);
+  }
+
+  @ParameterizedTest
+  @EnumSource(ApplicationType.class)
+  void searchByApplicationType_whenFoundWithMultipleTypes(ApplicationType applicationType) {
+    searchForm.setApplicationTypes(Arrays.asList(ApplicationType.values()));
+
+    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
+
+    var applicationVersion = createNewApplicationVersionForField(applicationType, consentLengthForm);
+    var applicationId = applicationVersion.getApplication().getId();
+
+    var searchResults = getSearchResultItems(searchForm);
+    assertThat(searchResults).containsExactly(
+        getSearchResultItemForFieldInProgressOfType(applicationId, applicationType, field1JsonWithOperatorAndLicences)
+    );
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = ApplicationType.class, names = "VENT", mode = EnumSource.Mode.EXCLUDE)
+  void searchByApplicationType_whenNotFound(ApplicationType applicationType) {
+    searchForm.setApplicationTypes(List.of(applicationType));
+
+    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
+
+    var applicationVersion = createNewApplicationVersionForField(ApplicationType.VENT, consentLengthForm);
+
+    var searchResults = getSearchResultItems(searchForm);
+    assertThat(searchResults).isEmpty();
+
+    applicationVersionService.deleteApplicationVersion(applicationVersion);
+  }
 
   /*********************************** CONSENT LENGTH TYPE ***********************************/
   @Test
@@ -358,7 +339,7 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     var applicationId = applicationVersion.getApplication().getId();
 
     var searchResults = getSearchResultItems(searchForm);
-    Assertions.assertThat(searchResults).containsExactly(
+    assertThat(searchResults).containsExactly(
         getSearchResultItemInProgressOfTypeAndLength(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.ANNUAL)
     );
   }
@@ -372,7 +353,7 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     var applicationId = applicationVersion.getApplication().getId();
 
     var searchResults = getSearchResultItems(searchForm);
-    Assertions.assertThat(searchResults).containsExactly(
+    assertThat(searchResults).containsExactly(
         getSearchResultItemInProgressOfTypeAndLength(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.SHORT_TERM)
     );
   }
@@ -386,7 +367,7 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     var applicationId = applicationVersion.getApplication().getId();
 
     var searchResults = getSearchResultItems(searchForm);
-    Assertions.assertThat(searchResults).containsExactly(
+    assertThat(searchResults).containsExactly(
         getSearchResultItemInProgressOfTypeAndLength(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.LONG_TERM)
     );
   }
@@ -400,7 +381,7 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     var applicationId = applicationVersion.getApplication().getId();
 
     var searchResults = getSearchResultItems(searchForm);
-    Assertions.assertThat(searchResults).containsExactly(
+    assertThat(searchResults).containsExactly(
         getSearchResultItemInProgressOfTypeAndLength(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.ANNUAL)
     );
   }
@@ -414,7 +395,7 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     var applicationId = applicationVersion.getApplication().getId();
 
     var searchResults = getSearchResultItems(searchForm);
-    Assertions.assertThat(searchResults).containsExactly(
+    assertThat(searchResults).containsExactly(
         getSearchResultItemInProgressOfTypeAndLength(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.SHORT_TERM)
     );
   }
@@ -428,7 +409,7 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     var applicationId = applicationVersion.getApplication().getId();
 
     var searchResults = getSearchResultItems(searchForm);
-    Assertions.assertThat(searchResults).containsExactly(
+    assertThat(searchResults).containsExactly(
         getSearchResultItemInProgressOfTypeAndLength(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.LONG_TERM)
     );
   }
@@ -440,7 +421,7 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
     createNewApplicationVersionForField(ApplicationType.PRODUCTION, consentLengthForm);
 
-    Assertions.assertThat(getSearchResultItems(searchForm)).isEmpty();
+    assertThat(getSearchResultItems(searchForm)).isEmpty();
   }
 
   @Test
@@ -450,7 +431,7 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     var consentLengthForm = ConsentLengthTestUtil.getLongTermConsentLengthForm();
     createNewApplicationVersionForField(ApplicationType.PRODUCTION, consentLengthForm);
 
-    Assertions.assertThat(getSearchResultItems(searchForm)).isEmpty();
+    assertThat(getSearchResultItems(searchForm)).isEmpty();
   }
 
   @Test
@@ -460,28 +441,27 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     var consentLengthForm = ConsentLengthTestUtil.getAnnualConsentLengthFormForYear(ANNUAL_CONSENT_YEAR);
     createNewApplicationVersionForField(ApplicationType.PRODUCTION, consentLengthForm);
 
-    Assertions.assertThat(getSearchResultItems(searchForm)).isEmpty();
+    assertThat(getSearchResultItems(searchForm)).isEmpty();
   }
 
   /*********************************** PRIMARY OPERATOR ***********************************/
-  // TODO FCS-510: Find out why "matchingPortalUserDto" is null
-//  @Test
-//  void searchByPrimaryOperator_whenFound() {
-//    orgUnitRestSearchItem = ApplicationDataFilterFormTestUtil.ORGANISATION_REST_SEARCH_ITEM;
-//    when(applicationDataFilterFormService.getPrefilledOrganisation(any())).thenReturn(orgUnitRestSearchItem);
-//
-//    searchForm.setOperatorId(Integer.parseInt(orgUnitRestSearchItem.id()));
-//
-//    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
-//
-//    var applicationVersion = createNewApplicationVersionForField(ApplicationType.PRODUCTION, consentLengthForm);
-//    var applicationId = applicationVersion.getApplication().getId();
-//
-//    var searchResults = getSearchResultItems(searchForm);
-//    Assertions.assertThat(searchResults).containsExactly(
-//        getSearchResultItemForFieldInProgressOfType(applicationId, ApplicationType.PRODUCTION)
-//    );
-//  }
+  @Test
+  void searchByPrimaryOperator_whenFound() {
+    orgUnitRestSearchItem = ApplicationDataFilterFormTestUtil.ORGANISATION_REST_SEARCH_ITEM;
+    when(applicationDataFilterFormService.getPrefilledOrganisation(any())).thenReturn(orgUnitRestSearchItem);
+
+    searchForm.setOperatorId(Integer.parseInt(orgUnitRestSearchItem.id()));
+
+    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
+
+    var applicationVersion = createNewApplicationVersionForField(ApplicationType.PRODUCTION, consentLengthForm);
+    var applicationId = applicationVersion.getApplication().getId();
+
+    var searchResults = getSearchResultItems(searchForm);
+    assertThat(searchResults).containsExactly(
+        getSearchResultItemForFieldInProgressOfType(applicationId, ApplicationType.PRODUCTION, field1JsonWithOperatorAndLicences)
+    );
+  }
 
   @Test
   void searchByPrimaryOperator_whenNotFound() {
@@ -492,7 +472,7 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     createNewApplicationVersionForField(ApplicationType.PRODUCTION, consentLengthForm);
 
     var searchResults = getSearchResultItems(searchForm);
-    Assertions.assertThat(searchResults).isEmpty();
+    assertThat(searchResults).isEmpty();
   }
 
   /*********************************** SUBMISSION YEAR ***********************************/
@@ -506,7 +486,7 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     var applicationId = applicationVersion.getApplication().getId();
 
     var searchResults = getSearchResultItems(searchForm);
-    Assertions.assertThat(searchResults).containsExactly(
+    assertThat(searchResults).containsExactly(
         getSearchResultItemProductionSubmittedOfConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
     );
   }
@@ -520,7 +500,7 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     createNewApplicationVersionForField(ApplicationType.PRODUCTION, consentLengthForm);
 
     var searchResults = getSearchResultItems(searchForm);
-    Assertions.assertThat(searchResults).isEmpty();
+    assertThat(searchResults).isEmpty();
   }
 
   /*********************************** CONSENT START YEAR ***********************************/
@@ -533,7 +513,7 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     var applicationId = applicationVersion.getApplication().getId();
 
     var searchResults = getSearchResultItems(searchForm);
-    Assertions.assertThat(searchResults).containsExactly(
+    assertThat(searchResults).containsExactly(
         getSearchResultItemInProgressOfTypeAndLength(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.ANNUAL)
     );
   }
@@ -547,7 +527,7 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     var applicationId = applicationVersion.getApplication().getId();
 
     var searchResults = getSearchResultItems(searchForm);
-    Assertions.assertThat(searchResults).containsExactly(
+    assertThat(searchResults).containsExactly(
         getSearchResultItemInProgressOfTypeAndLength(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.SHORT_TERM)
     );
   }
@@ -561,7 +541,7 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     var applicationId = applicationVersion.getApplication().getId();
 
     var searchResults = getSearchResultItems(searchForm);
-    Assertions.assertThat(searchResults).containsExactly(
+    assertThat(searchResults).containsExactly(
         getSearchResultItemInProgressOfTypeAndLength(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.LONG_TERM)
     );
   }
@@ -573,7 +553,7 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     var consentLengthForm = ConsentLengthTestUtil.getAnnualConsentLengthFormForYear(ANNUAL_CONSENT_YEAR);
     createNewApplicationVersionForField(ApplicationType.PRODUCTION, consentLengthForm);
 
-    Assertions.assertThat(getSearchResultItems(searchForm)).isEmpty();
+    assertThat(getSearchResultItems(searchForm)).isEmpty();
   }
 
   @Test
@@ -583,7 +563,7 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
     createNewApplicationVersionForField(ApplicationType.PRODUCTION, consentLengthForm);
 
-    Assertions.assertThat(getSearchResultItems(searchForm)).isEmpty();
+    assertThat(getSearchResultItems(searchForm)).isEmpty();
   }
 
   @Test
@@ -593,7 +573,7 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     var consentLengthForm = ConsentLengthTestUtil.getLongTermConsentLengthForm();
     createNewApplicationVersionForField(ApplicationType.PRODUCTION, consentLengthForm);
 
-    Assertions.assertThat(getSearchResultItems(searchForm)).isEmpty();
+    assertThat(getSearchResultItems(searchForm)).isEmpty();
   }
 
   @ParameterizedTest
@@ -611,7 +591,7 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     createNewApplicationVersionForField(ApplicationType.PRODUCTION, consentLengthForm);
 
     var searchResults = getSearchResultItems(searchForm);
-    Assertions.assertThat(searchResults).isEmpty();
+    assertThat(searchResults).isEmpty();
   }
 
   /************************************** ACE STATUS **************************************/
@@ -624,7 +604,7 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     createSubmittedApplicationVersion(ApplicationType.PRODUCTION, consentLengthForm);
 
     var searchResults = getSearchResultItems(searchForm);
-    Assertions.assertThat(searchResults).isNotEmpty();
+    assertThat(searchResults).isNotEmpty();
 
   }
 
@@ -644,7 +624,7 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     createSubmittedApplicationVersion(ApplicationType.PRODUCTION, consentLengthForm);
 
     var searchResults = getSearchResultItems(searchForm);
-    Assertions.assertThat(searchResults).isEmpty();
+    assertThat(searchResults).isEmpty();
 
   }
 
@@ -656,26 +636,26 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
   }
 
   /************************************** ASSET FIELDS **************************************/
-  // TODO FCS-510: Find out why "matchingPortalUserDto" is null
-//  @Test
-//  void searchByField_whenPrimaryAndFound() {
-//    searchForm.setFieldAssetKey(FIELD1_ASSET_KEY);
-//    assetFieldRestSearchItem = ApplicationDataFilterFormTestUtil.FIELD1_REST_SEARCH_ITEM;
-//    when(applicationDataFilterFormService.getPrefilledAsset(FIELD1_ASSET_KEY)).thenReturn(assetFieldRestSearchItem);
-//    when(fieldService.getField(AssetKey.from(FIELD1_ASSET_KEY).assetId(), FIELD_LOOKUP_PURPOSE)).thenReturn(field1JsonWithOperatorAndLicences);
-//
-//    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
-//    var applicationVersion = createNewApplicationVersionForField(ApplicationType.PRODUCTION, consentLengthForm);
-//    var applicationId = applicationVersion.getApplication().getId();
-//
-//    var searchResults = getSearchResultItems(searchForm);
-//    Assertions.assertThat(searchResults).containsExactly(
-//        getSearchResultItemForFieldInProgressOfType(applicationId, ApplicationType.PRODUCTION)
-//    );
-//  }
+  @Test
+  void searchByField_whenFoundWithPrimaryField() {
+    searchForm.setFieldAssetKey(FIELD1_ASSET_KEY);
+    assetFieldRestSearchItem = ApplicationDataFilterFormTestUtil.FIELD1_REST_SEARCH_ITEM;
+    when(applicationDataFilterFormService.getPrefilledAsset(FIELD1_ASSET_KEY)).thenReturn(assetFieldRestSearchItem);
+    when(fieldService.getField(AssetKey.from(FIELD1_ASSET_KEY).assetId(), FIELD_LOOKUP_PURPOSE)).thenReturn(field1JsonWithOperatorAndLicences);
+
+    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
+    var applicationVersion = createNewApplicationVersionForField(ApplicationType.PRODUCTION, consentLengthForm);
+    var applicationId = applicationVersion.getApplication().getId();
+
+    var searchResults = getSearchResultItems(searchForm);
+    assertThat(searchResults).containsExactly(
+        getSearchResultItemForFieldInProgressOfType(applicationId, ApplicationType.PRODUCTION, field1JsonWithOperatorAndLicences)
+    );
+    applicationVersionService.deleteApplicationVersion(applicationVersion);
+  }
 
   @Test
-  void searchByField_whenSecondaryAndFound() {
+  void searchByField_whenFoundWithSecondaryField() {
     searchForm.setFieldAssetKey(FIELD2_ASSET_KEY);
     assetFieldRestSearchItem = ApplicationDataFilterFormTestUtil.FIELD2_REST_SEARCH_ITEM;
     when(applicationDataFilterFormService.getPrefilledAsset(FIELD2_ASSET_KEY)).thenReturn(assetFieldRestSearchItem);
@@ -688,13 +668,13 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     var applicationId = applicationVersion.getApplication().getId();
 
     var searchResults = getSearchResultItems(searchForm);
-    Assertions.assertThat(searchResults).containsExactly(
-        getSearchResultItemForFieldInProgressOfType(applicationId, ApplicationType.PRODUCTION)
+    assertThat(searchResults).containsExactly(
+        getSearchResultItemForFieldInProgressOfType(applicationId, ApplicationType.PRODUCTION, field1JsonWithOperatorAndLicences)
     );
   }
 
   @Test
-  void searchByField_whenPrimaryAndNotFound() {
+  void searchByField_whenNotFoundWithPrimaryField() {
     searchForm.setFieldAssetKey(FIELD2_ASSET_KEY);
     assetFieldRestSearchItem = ApplicationDataFilterFormTestUtil.FIELD2_REST_SEARCH_ITEM;
     when(applicationDataFilterFormService.getPrefilledAsset(FIELD2_ASSET_KEY)).thenReturn(assetFieldRestSearchItem);
@@ -703,11 +683,11 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
     createNewApplicationVersionForField(ApplicationType.PRODUCTION, consentLengthForm);
 
-    Assertions.assertThat(getSearchResultItems(searchForm)).isEmpty();
+    assertThat(getSearchResultItems(searchForm)).isEmpty();
   }
 
   @Test
-  void searchByField_whenSecondaryAndNotFound() {
+  void searchByField_whenNotFoundWithSecondaryField() {
     searchForm.setFieldAssetKey(FIELD2_ASSET_KEY);
     assetFieldRestSearchItem = ApplicationDataFilterFormTestUtil.FIELD2_REST_SEARCH_ITEM;
     when(applicationDataFilterFormService.getPrefilledAsset(FIELD2_ASSET_KEY)).thenReturn(assetFieldRestSearchItem);
@@ -717,7 +697,7 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     var applicationVersion = createNewApplicationVersionForField(ApplicationType.PRODUCTION, consentLengthForm);
     additionalAssetsService.saveAdditionalAsset(applicationVersion, field3JsonWithOperatorAndLicences);
 
-    Assertions.assertThat(getSearchResultItems(searchForm)).isEmpty();
+    assertThat(getSearchResultItems(searchForm)).isEmpty();
   }
 
   /************************************** ASSET FACILITIES **************************************/
@@ -733,8 +713,8 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     var applicationId = applicationVersion.getApplication().getId();
 
     var searchResults = getSearchResultItems(searchForm);
-    Assertions.assertThat(searchResults).containsExactly(
-        getSearchResultItemForTerminalInProgressOfType(applicationId, ApplicationType.PRODUCTION)
+    assertThat(searchResults).containsExactly(
+        getSearchResultItemForTerminalInProgressOfType(applicationId, ApplicationType.PRODUCTION, terminal1JsonWithOperator)
     );
   }
 
@@ -749,10 +729,246 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
 
     createNewApplicationVersionForTerminal(ApplicationType.PRODUCTION, consentLengthForm);
 
-    Assertions.assertThat(getSearchResultItems(searchForm)).isEmpty();
+    assertThat(getSearchResultItems(searchForm)).isEmpty();
   }
 
+  /************************************** ASSET TYPES **************************************/
+  @ParameterizedTest
+  @MethodSource("assetTypesWithShoreToFieldJsonsWhenFound")
+  void searchByAssetType_whenFoundWithPrimaryFieldAssetType(AssetTypeWithShore assetTypeWithShore,
+                                                            FieldWithOperatorAndLicencesJson fieldWithOperatorAndLicencesJson) {
+    searchForm.setAssetTypesWithShore(List.of(assetTypeWithShore));
+    when(fieldService.findFieldsByIds(ArgumentMatchers.anyList(), ArgumentMatchers.anyString())).thenReturn(List.of(
+        fieldWithOperatorAndLicencesJson));
 
+    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
+    var applicationVersion = createNewApplicationVersionForFieldJson(ApplicationType.PRODUCTION, consentLengthForm, fieldWithOperatorAndLicencesJson);
+
+    var applicationId = applicationVersion.getApplication().getId();
+
+    var searchResults = getSearchResultItems(searchForm);
+    assertThat(searchResults).containsExactly(
+        getSearchResultItemForFieldInProgressOfType(applicationId, ApplicationType.PRODUCTION, fieldWithOperatorAndLicencesJson)
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource("assetTypesWithShoreToPrimaryAndSecondaryFieldJsonsWhenFound")
+  void searchByAssetType_whenFoundWithSecondaryFieldAssetType(AssetTypeWithShore assetTypeWithShore,
+                                                              FieldWithOperatorAndLicencesJson primaryFieldWithOperatorAndLicencesJson,
+                                                              FieldWithOperatorAndLicencesJson secondaryFieldWithOperatorAndLicencesJson) {
+    searchForm.setAssetTypesWithShore(List.of(assetTypeWithShore));
+    when(fieldService.findFieldsByIds(ArgumentMatchers.anyList(), ArgumentMatchers.anyString()))
+        .thenReturn(List.of(primaryFieldWithOperatorAndLicencesJson, secondaryFieldWithOperatorAndLicencesJson));
+
+    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
+    var applicationVersion = createNewApplicationVersionForFieldJson(ApplicationType.PRODUCTION, consentLengthForm, primaryFieldWithOperatorAndLicencesJson);
+    additionalAssetsService.saveAdditionalAsset(applicationVersion, secondaryFieldWithOperatorAndLicencesJson);
+
+    var applicationId = applicationVersion.getApplication().getId();
+
+    var searchResults = getSearchResultItems(searchForm);
+    assertThat(searchResults).containsExactly(
+        getSearchResultItemForFieldInProgressOfType(applicationId, ApplicationType.PRODUCTION, primaryFieldWithOperatorAndLicencesJson)
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource("fieldJsonsWithMultipleAssetTypesFound")
+  void searchByAssetType_whenFoundWithFieldAndMultipleAssetTypes(FieldWithOperatorAndLicencesJson fieldWithOperatorAndLicencesJson) {
+    searchForm.setAssetTypesWithShore(Arrays.asList(AssetTypeWithShore.values()));
+    when(fieldService.findFieldsByIds(ArgumentMatchers.anyList(), ArgumentMatchers.anyString())).thenReturn(List.of(
+        fieldWithOperatorAndLicencesJson));
+
+    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
+    var applicationVersion = createNewApplicationVersionForFieldJson(ApplicationType.PRODUCTION, consentLengthForm, fieldWithOperatorAndLicencesJson);
+
+    var applicationId = applicationVersion.getApplication().getId();
+
+    var searchResults = getSearchResultItems(searchForm);
+    assertThat(searchResults).containsExactly(
+        getSearchResultItemForFieldInProgressOfType(applicationId, ApplicationType.PRODUCTION, fieldWithOperatorAndLicencesJson)
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource("assetTypesWithShoreToFieldJsonsWhenNotFound")
+  void searchByAssetType_whenNotFoundWithFieldAssetType(AssetTypeWithShore assetTypeWithShore,
+                                                        FieldWithOperatorAndLicencesJson fieldWithOperatorAndLicencesJson) {
+    searchForm.setAssetTypesWithShore(List.of(assetTypeWithShore));
+    when(fieldService.findFieldsByIds(ArgumentMatchers.anyList(), ArgumentMatchers.anyString())).thenReturn(List.of(
+        fieldWithOperatorAndLicencesJson));
+
+    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
+    createNewApplicationVersionForFieldJson(ApplicationType.PRODUCTION, consentLengthForm, fieldWithOperatorAndLicencesJson);
+
+    assertThat(getSearchResultItems(searchForm)).isEmpty();
+  }
+
+  @Test
+  void searchByAssetType_whenFoundWithFacilityAssetType() {
+    searchForm.setAssetTypesWithShore(List.of(AssetTypeWithShore.TERMINAL));
+
+    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
+    var applicationVersion = createNewApplicationVersionForTerminalJson(ApplicationType.PRODUCTION, consentLengthForm, terminal1JsonWithOperator);
+
+    var applicationId = applicationVersion.getApplication().getId();
+
+    var searchResults = getSearchResultItems(searchForm);
+    assertThat(searchResults).containsExactly(
+        getSearchResultItemForTerminalInProgressOfType(applicationId, ApplicationType.PRODUCTION, terminal1JsonWithOperator)
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource("assetTypesWithShoreToFieldJsonsWhenFound")
+  void searchByAssetType_whenNotFoundWithFacilityAssetType(AssetTypeWithShore assetTypeWithShore,
+                                                           FieldWithOperatorAndLicencesJson fieldWithOperatorAndLicencesJson) {
+    searchForm.setAssetTypesWithShore(List.of(assetTypeWithShore));
+    when(fieldService.findFieldsByIds(ArgumentMatchers.anyList(), ArgumentMatchers.anyString())).thenReturn(List.of(
+        fieldWithOperatorAndLicencesJson));
+
+    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
+    createNewApplicationVersionForTerminalJson(ApplicationType.PRODUCTION, consentLengthForm, terminal1JsonWithOperator);
+
+    assertThat(getSearchResultItems(searchForm)).isEmpty();
+  }
+
+  @Test
+  void searchByAssetType_whenFoundWithFacilityAndMultipleAssetTypes() {
+    searchForm.setAssetTypesWithShore(Arrays.asList(AssetTypeWithShore.values()));
+
+    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
+    var applicationVersion = createNewApplicationVersionForTerminalJson(ApplicationType.PRODUCTION, consentLengthForm, terminal1JsonWithOperator);
+
+    var applicationId = applicationVersion.getApplication().getId();
+
+    var searchResults = getSearchResultItems(searchForm);
+    assertThat(searchResults).containsExactly(
+        getSearchResultItemForTerminalInProgressOfType(applicationId, ApplicationType.PRODUCTION, terminal1JsonWithOperator)
+    );
+  }
+
+  private static Stream<Arguments> assetTypesWithShoreToFieldJsonsWhenFound() {
+    return Stream.of(
+        arguments(AssetTypeWithShore.FIELD_OFFSHORE, field1JsonWithOperatorAndLicences),
+        arguments(AssetTypeWithShore.FIELD_ONSHORE, field2JsonWithOperatorAndLicences),
+        arguments(AssetTypeWithShore.FIELD_UNKNOWN, field3JsonWithOperatorAndLicences)
+    );
+  }
+
+  private static Stream<Arguments> assetTypesWithShoreToPrimaryAndSecondaryFieldJsonsWhenFound() {
+    return Stream.of(
+        arguments(AssetTypeWithShore.FIELD_OFFSHORE, field1JsonWithOperatorAndLicences, field2JsonWithOperatorAndLicences),
+        arguments(AssetTypeWithShore.FIELD_ONSHORE, field2JsonWithOperatorAndLicences, field3JsonWithOperatorAndLicences),
+        arguments(AssetTypeWithShore.FIELD_UNKNOWN, field3JsonWithOperatorAndLicences, field1JsonWithOperatorAndLicences)
+    );
+  }
+
+  private static Stream<Arguments> assetTypesWithShoreToFieldJsonsWhenNotFound() {
+    return Stream.of(
+        arguments(AssetTypeWithShore.FIELD_OFFSHORE, field2JsonWithOperatorAndLicences),
+        arguments(AssetTypeWithShore.FIELD_ONSHORE, field3JsonWithOperatorAndLicences),
+        arguments(AssetTypeWithShore.FIELD_UNKNOWN, field1JsonWithOperatorAndLicences)
+    );
+  }
+
+  private static Stream<Arguments> fieldJsonsWithMultipleAssetTypesFound() {
+    return Stream.of(
+        arguments(field1JsonWithOperatorAndLicences),
+        arguments(field2JsonWithOperatorAndLicences),
+        arguments(field3JsonWithOperatorAndLicences)
+    );
+  }
+
+  /************************************** LICENCES **************************************/
+  @Test
+  void searchByLicenceReference_whenFoundOnPrimaryField() {
+    searchForm.setLicenceReference("P1");
+    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
+
+    var applicationVersion = createNewApplicationVersionForFieldJson(ApplicationType.PRODUCTION, consentLengthForm, field1JsonWithOperatorAndLicences);
+    when(fieldService.findFieldsWithOperatorAndLicences(ArgumentMatchers.anyList(), ArgumentMatchers.anyString())).thenReturn(List.of(
+        field1JsonWithOperatorAndLicences));
+
+    var applicationId = applicationVersion.getApplication().getId();
+
+    var searchResults = getSearchResultItems(searchForm);
+    assertThat(searchResults).containsExactly(
+        getSearchResultItemInProgressOfTypeAndLength(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.SHORT_TERM)
+    );
+  }
+
+  @Test
+  void searchByLicenceReference_whenFoundOnSecondaryField() {
+    searchForm.setLicenceReference("P3");
+    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
+
+    var applicationVersion = createNewApplicationVersionForFieldJson(ApplicationType.PRODUCTION, consentLengthForm, field2JsonWithOperatorAndLicences);
+    additionalAssetsService.saveAdditionalAsset(applicationVersion, field1JsonWithOperatorAndLicences);
+    when(fieldService.findFieldsWithOperatorAndLicences(ArgumentMatchers.anyList(), ArgumentMatchers.anyString()))
+        .thenReturn(List.of(field1JsonWithOperatorAndLicences, field2JsonWithOperatorAndLicences));
+    when(fieldService.findFieldsByIds(ArgumentMatchers.anyList(), ArgumentMatchers.anyString())).thenReturn(List.of(
+        field2JsonWithOperatorAndLicences));
+
+    var applicationId = applicationVersion.getApplication().getId();
+    var searchResults = getSearchResultItems(searchForm);
+    assertThat(searchResults).containsExactly(
+        getSearchResultItemForFieldInProgressOfType(applicationId, ApplicationType.PRODUCTION, field2JsonWithOperatorAndLicences)
+    );
+  }
+
+  @Test
+  void searchByLicenceReference_whenNotFound() {
+    searchForm.setLicenceReference("P3");
+    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
+
+    createNewApplicationVersionForFieldJson(ApplicationType.PRODUCTION, consentLengthForm, field2JsonWithOperatorAndLicences);
+    when(fieldService.findFieldsWithOperatorAndLicences(ArgumentMatchers.anyList(), ArgumentMatchers.anyString()))
+        .thenReturn(List.of(field2JsonWithOperatorAndLicences));
+
+    assertThat(getSearchResultItems(searchForm)).isEmpty();
+  }
+
+  @Test
+  void searchByLicenceReference_whenNotFoundWithInvalidReference() {
+    searchForm.setLicenceReference("abc");
+    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
+    createSubmittedApplicationVersion(ApplicationType.FLARE, consentLengthForm);
+
+    var searchResults = getSearchResultItems(searchForm);
+    assertThat(searchResults).isEmpty();
+  }
+
+  private ApplicationVersion createNewApplicationVersionForFieldJson(ApplicationType applicationType,
+                                                                     ConsentLengthForm consentLengthForm,
+                                                                     FieldWithOperatorAndLicencesJson fieldWithOperatorAndLicencesJson) {
+    var applicationVersion = applicationService.createNewApplicationForField(
+        applicationType,
+        fieldWithOperatorAndLicencesJson,
+        OrganisationUnitTestUtil.orgUnit1Json,
+        USER_DETAIL
+    );
+
+    consentLengthService.saveConsentLengthDetails(applicationVersion, consentLengthForm);
+
+    return applicationVersion;
+  }
+
+  private ApplicationVersion createNewApplicationVersionForTerminalJson(ApplicationType applicationType,
+                                                                        ConsentLengthForm consentLengthForm,
+                                                                        TerminalWithOperatorJson terminalWithOperatorJson) {
+    var applicationVersion = applicationService.createNewApplicationForTerminal(
+        applicationType,
+        terminalWithOperatorJson,
+        OrganisationUnitTestUtil.orgUnit1Json,
+        USER_DETAIL
+    );
+
+    consentLengthService.saveConsentLengthDetails(applicationVersion, consentLengthForm);
+
+    return applicationVersion;
+  }
 
   private ApplicationVersion createNewApplicationVersionForField(ApplicationType applicationType, ConsentLengthForm consentLengthForm) {
     var applicationVersion = applicationService.createNewApplicationForField(
@@ -802,13 +1018,12 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
         "Test request",
         USER_DETAIL
     );
-//    applicationWithdrawalService.saveWithdrawalResponse(
-//        applicationVersion,
-//        WithdrawalStatus.ACCEPTED,
-//        "Test response",
-//        USER_DETAIL
-//    );
-    applicationVersionService.withdrawApplicationVersion(applicationVersion);
+    applicationWithdrawalService.saveWithdrawalResponse(
+        applicationVersion,
+        WithdrawalStatus.ACCEPTED,
+        "Test response",
+        USER_DETAIL
+    );
     return applicationVersion;
   }
 
@@ -817,7 +1032,7 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     var searchSession = new SearchSession(searchForm);
     searchSession.update(searchForm);
     var modelAndView = searchController.getSearch(searchSession, USER_DETAIL);
-    Assertions.assertThat(modelAndView.getModel()).containsKey(SearchController.SEARCH_RESULT_ITEMS);
+    assertThat(modelAndView.getModel()).containsKey(SearchController.SEARCH_RESULT_ITEMS);
 
     return (List<SearchResultItem>) modelAndView.getModel().get(SearchController.SEARCH_RESULT_ITEMS);
   }

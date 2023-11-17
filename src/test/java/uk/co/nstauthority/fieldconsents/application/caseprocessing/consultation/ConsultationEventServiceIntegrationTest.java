@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,8 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionRepository;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAssetLicenceRepository;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetRepository;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEvent;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventType;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
@@ -54,6 +57,15 @@ class ConsultationEventServiceIntegrationTest extends AbstractIntegrationTest {
   @Autowired
   private ConsultationService consultationService;
 
+  @Autowired
+  ConsultationRepository consultationRepository;
+
+  @Autowired
+  ApplicationAssetRepository applicationAssetRepository;
+
+  @Autowired
+  ApplicationAssetLicenceRepository applicationAssetLicenceRepository;
+
   @MockBean
   private OpredTeamService opredTeamService;
 
@@ -65,6 +77,14 @@ class ConsultationEventServiceIntegrationTest extends AbstractIntegrationTest {
   @BeforeEach
   void setUp() {
     beforeTestRun = Instant.now();
+  }
+
+  @AfterEach
+  void tearDown() {
+    applicationAssetLicenceRepository.deleteAll();
+    applicationAssetRepository.deleteAll();
+    consultationRepository.deleteAll();
+    applicationVersionRepository.deleteAll();
   }
 
   @Test

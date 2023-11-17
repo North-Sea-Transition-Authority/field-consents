@@ -26,6 +26,11 @@ public class EnergyPortalUserDtoTestUtil {
 
     private Builder() {}
 
+    public Builder withId(long id) {
+      this.webUserAccountId = id;
+      return this;
+    }
+
     public Builder withWebUserAccountId(Long webUserAccountId) {
       this.webUserAccountId = webUserAccountId;
       return this;

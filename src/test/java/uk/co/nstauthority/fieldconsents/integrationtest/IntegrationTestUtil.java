@@ -2,15 +2,18 @@ package uk.co.nstauthority.fieldconsents.integrationtest;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.Random;
+import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil;
-import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil;
+import uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorAndLicencesJson;
+import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalWithOperatorJson;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
@@ -33,17 +36,20 @@ public class IntegrationTestUtil {
       .build();
 
   public static final ServiceUserDetail USER_DETAIL = ServiceUserDetailTestUtil.Builder()
-      .withWuaId(new Random().nextLong(Integer.MAX_VALUE))
+      .withWuaId(((long) ThreadLocalRandom.current().nextInt()))
       .withForename("Test Forename")
       .withSurname("Test Surname")
       .build();
 
   public static final EnergyPortalUserDto ENERGY_PORTAL_USER_DTO =
       EnergyPortalUserDtoTestUtil.Builder()
+          .withId(USER_DETAIL.wuaId())
           .withWebUserAccountId(USER_DETAIL.wuaId())
           .withForename(USER_DETAIL.forename())
           .withSurname(USER_DETAIL.surname())
           .build();
+
+  public static final Map<WebUserAccountId, EnergyPortalUserDto> PORTAL_USERS_DTO_MAP = Map.of(WebUserAccountId.from(USER_DETAIL), ENERGY_PORTAL_USER_DTO);
 
   public static SearchResultItem getSearchResultItemProductionSubmittedOfConsentLength(int applicationId,
                                                                                        Instant submittedTimestamp,
@@ -77,7 +83,8 @@ public class IntegrationTestUtil {
   }
 
   public static SearchResultItem getSearchResultItemForFieldInProgressOfType(int applicationId,
-                                                                             ApplicationType applicationType) {
+                                                                             ApplicationType applicationType,
+                                                                             FieldWithOperatorAndLicencesJson fieldWithOperatorAndLicencesJson) {
     var applicationDataItem = ApplicationDataItem.newBuilder()
         .withApplicationId(applicationId)
         .withType(applicationType.getDisplayName())
@@ -86,8 +93,8 @@ public class IntegrationTestUtil {
             DateUtils.format(SHORT_TERM_END_DATE, DateUtils.SHORT_DATE)))
         .withReference("View application")
         .withOperator(ApplicationTestUtil.CACHED_PRIMARY_OPERATOR_NAME_1)
-        .withAsset(FieldTestUtil.FIELD_NAME_1)
-        .withGeographicArea(FieldTestUtil.FIELD_1_GEOGRAPHIC_AREA.getDisplayName())
+        .withAsset(fieldWithOperatorAndLicencesJson.getName())
+        .withGeographicArea(fieldWithOperatorAndLicencesJson.getGeographicArea().getDisplayName())
         .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
         .withSubmittedDateTime("")
         .withSubmittedBy("")
@@ -101,12 +108,13 @@ public class IntegrationTestUtil {
         .withConsultationDeadline("")
         .withConsultationFurtherInformationOpen(false)
         .build();
-    var licenses = "P1, P2, P3";
+    var licenses = fieldWithOperatorAndLicencesJson.getLicencesAsString();
     return new SearchResultItem(applicationDataItem, licenses);
   }
 
   public static SearchResultItem getSearchResultItemForTerminalInProgressOfType(int applicationId,
-                                                                                ApplicationType applicationType) {
+                                                                                ApplicationType applicationType,
+                                                                                TerminalWithOperatorJson terminal1JsonWithOperator) {
     var applicationDataItem = ApplicationDataItem.newBuilder()
         .withApplicationId(applicationId)
         .withType(applicationType.getDisplayName())
@@ -115,7 +123,7 @@ public class IntegrationTestUtil {
             DateUtils.format(SHORT_TERM_END_DATE, DateUtils.SHORT_DATE)))
         .withReference("View application")
         .withOperator(ApplicationTestUtil.CACHED_PRIMARY_OPERATOR_NAME_1)
-        .withAsset(TerminalTestUtil.TERMINAL_NAME_1)
+        .withAsset(terminal1JsonWithOperator.getName())
         .withGeographicArea("")
         .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
         .withSubmittedDateTime("")
