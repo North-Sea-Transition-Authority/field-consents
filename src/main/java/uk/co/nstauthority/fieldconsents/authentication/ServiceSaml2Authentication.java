@@ -5,11 +5,11 @@ import java.util.Objects;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 
-class ServiceSaml2Authentication extends AbstractAuthenticationToken {
+public class ServiceSaml2Authentication extends AbstractAuthenticationToken {
 
   private final ServiceUserDetail principal;
 
-  ServiceSaml2Authentication(ServiceUserDetail principal, Collection<? extends GrantedAuthority> authorities) {
+  public ServiceSaml2Authentication(ServiceUserDetail principal, Collection<? extends GrantedAuthority> authorities) {
     super(authorities);
     this.principal = principal;
     setAuthenticated(true);

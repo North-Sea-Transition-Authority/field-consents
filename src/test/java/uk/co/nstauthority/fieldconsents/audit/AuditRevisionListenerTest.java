@@ -1,40 +1,60 @@
 package uk.co.nstauthority.fieldconsents.audit;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
 
-import org.junit.jupiter.api.BeforeEach;
+import java.util.Set;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.context.SecurityContextImpl;
+import uk.co.nstauthority.fieldconsents.authentication.SamlAuthenticationUtil;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceSaml2Authentication;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
-import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
 
-@ExtendWith(MockitoExtension.class)
 class AuditRevisionListenerTest {
 
   private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
 
-  @Mock
-  private UserDetailService userDetailService;
+  private final AuditRevisionListener auditRevisionListener = new AuditRevisionListener();
 
-  @InjectMocks
-  private AuditRevisionListener auditRevisionListener;
-
-  @BeforeEach
-  void setUp() {
-    when(userDetailService.getUserDetail()).thenReturn(USER);
+  @AfterAll
+  static void tearDown() {
+    SecurityContextHolder.setContext(new SecurityContextImpl(null));
   }
 
   @Test
-  void newRevision() {
+  void newRevision_userInContext() {
+    SamlAuthenticationUtil.Builder()
+        .withUser(USER)
+        .setSecurityContext();
+
     var auditRevision = new AuditRevision();
 
     auditRevisionListener.newRevision(auditRevision);
 
     assertThat(auditRevision.getUserWuaId()).isEqualTo(USER.wuaId());
+  }
+
+  @Test
+  void newRevision_noPrincipal() {
+    SecurityContextHolder.setContext(new SecurityContextImpl(new ServiceSaml2Authentication(null, Set.of())));
+
+    var auditRevision = new AuditRevision();
+
+    auditRevisionListener.newRevision(auditRevision);
+
+    assertThat(auditRevision.getUserWuaId()).isNull();
+  }
+
+  @Test
+  void newRevision_noAuthenticationInContext() {
+    SecurityContextHolder.setContext(new SecurityContextImpl(null));
+
+    var auditRevision = new AuditRevision();
+
+    auditRevisionListener.newRevision(auditRevision);
+
+    assertThat(auditRevision.getUserWuaId()).isNull();
   }
 }

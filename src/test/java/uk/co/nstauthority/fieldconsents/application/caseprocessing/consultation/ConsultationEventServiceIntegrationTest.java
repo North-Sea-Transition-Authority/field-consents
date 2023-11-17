@@ -23,9 +23,9 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEvent;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventType;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
+import uk.co.nstauthority.fieldconsents.authentication.SamlAuthenticationUtil;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
-import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.integrationtest.AbstractIntegrationTest;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.opred.OpredTeamService;
@@ -53,9 +53,6 @@ class ConsultationEventServiceIntegrationTest extends AbstractIntegrationTest {
 
   @Autowired
   private ConsultationService consultationService;
-
-  @MockBean
-  private UserDetailService userDetailService;
 
   @MockBean
   private OpredTeamService opredTeamService;
@@ -188,7 +185,9 @@ class ConsultationEventServiceIntegrationTest extends AbstractIntegrationTest {
   }
 
   private ApplicationVersion getSubmittedAndAssignedApplicationVersion() {
-    when(userDetailService.getUserDetail()).thenReturn(INDUSTRY_USER);
+    SamlAuthenticationUtil.Builder()
+        .withUser(INDUSTRY_USER)
+        .setSecurityContext();
 
     var applicationVersion = applicationService.createNewApplicationForField(
         ApplicationType.FLARE,
@@ -205,14 +204,20 @@ class ConsultationEventServiceIntegrationTest extends AbstractIntegrationTest {
   }
 
   private Consultation requestConsultation(ApplicationVersion applicationVersion) {
-    when(userDetailService.getUserDetail()).thenReturn(REGULATOR_USER);
+    SamlAuthenticationUtil.Builder()
+        .withUser(REGULATOR_USER)
+        .setSecurityContext();
+
     consultationService.requestConsultation(applicationVersion, CONSULTATION_DEADLINE, REGULATOR_USER);
 
     return consultationService.getLatestOpenConsultation(applicationVersion.getApplication());
   }
 
   private void assignResponder(Consultation consultation, ServiceUserDetail assigner, ServiceUserDetail responder) {
-    when(userDetailService.getUserDetail()).thenReturn(assigner);
+    SamlAuthenticationUtil.Builder()
+        .withUser(assigner)
+        .setSecurityContext();
+
     when(opredTeamService.isResponder(consultation.getConsultationTeam().toTeamId(), responder)).thenReturn(true);
     consultationService.assignResponderToConsultation(consultation, assigner, responder);
   }
@@ -222,7 +227,10 @@ class ConsultationEventServiceIntegrationTest extends AbstractIntegrationTest {
       Consultation consultation,
       ServiceUserDetail responder
   ) {
-    when(userDetailService.getUserDetail()).thenReturn(responder);
+    SamlAuthenticationUtil.Builder()
+        .withUser(responder)
+        .setSecurityContext();
+
     when(opredTeamService.isResponder(consultation.getConsultationTeam().toTeamId(), responder)).thenReturn(true);
     consultationService.saveConsultationResponse(
         applicationVersion,
