@@ -1,4 +1,12 @@
 
+--DELETE FROM fcs_migration.flare_report_months;
+--DELETE FROM fcs_migration.flare_report_periods;
+--DELETE FROM fcs_migration.flare_report_gas_data;
+--DELETE FROM fcs_migration.flare_short_term_months;
+--DELETE FROM fcs_migration.flare_annual_months;
+--DELETE FROM fcs_migration.short_term_production_months;
+--DELETE FROM fcs_migration.annual_production_months;
+--DELETE FROM fcs_migration.long_term_production_years;
 --DELETE FROM fcs_migration.application_supporting_information;
 --DELETE FROM fcs_migration.application_eia_directions;
 --DELETE FROM fcs_migration.application_flags;
@@ -170,12 +178,13 @@ CROSS JOIN XMLTABLE(
 INSERT INTO fcs_migration.application_assets (
   id
 , application_version_id
-, field_id
-, cached_field_name
 , asset_role
 , asset_no
 , asset_operator_ou_id
 , cached_asset_operator_name
+, asset_type
+, asset_id
+, cached_asset_name
 )
 -- find how many fields are in an application version
 WITH field_counts AS (
@@ -199,20 +208,30 @@ WITH field_counts AS (
 , base AS (
   SELECT
     xfcd.fcd_id application_version_id
-  , xfcf.field_id field_id
-  , f.name cached_field_name
   , CASE
-    WHEN c.field_count = 1 THEN 'PRIMARY' -- if only 1 field it must be the primary 
+    WHEN c.field_count = 1 THEN 'PRIMARY' -- if only 1 field it must be the primary
     WHEN xfcf.field_id = fl.primary_field_id THEN 'PRIMARY'
-    WHEN fl.primary_field_id IS NOT NULL AND xfcf.field_id != fl.primary_field_id THEN 'SECONDARY'
-    ELSE NULL -- TODO will have to solve these later
+    -- where the location field isn't a field in the list just use the first field for the PRIMARY
+    WHEN fl.primary_field_id IS NULL AND xfcf.field_rownum = 1 THEN 'PRIMARY'
+    ELSE 'SECONDARY'
     END asset_role
   , coalesce(xfcf.field_operator_ou_id, xfcd.operator_ou_id) asset_operator_ou_id -- field_operator_ou_id is null for PRODUCTION apps
   , ou.name cached_asset_operator_name
+  , xfcf.field_id asset_id
+  , f.name cached_asset_name
+  , xfcf.field_rownum
   FROM fcs_migration.application_versions av
   JOIN envmgr.xview_field_consent_details xfcd ON xfcd.fcd_id = av.id
   JOIN envmgr.field_consent_details fcd ON fcd.id = xfcd.fcd_id
-  JOIN envmgr.xview_field_consent_fields xfcf ON xfcf.fcd_id = xfcd.fcd_id
+  CROSS JOIN XMLTABLE(
+    '/FIELD_CONSENT/COVER_INFO/FIELD_LIST/FIELD'
+    PASSING
+      fcd.xml_data
+    COLUMNS
+      field_rownum FOR ORDINALITY
+    , field_id INTEGER PATH './FIELD_INFO/FIELD_ID/text()'
+    , field_operator_ou_id INTEGER PATH 'FIELD_OPERATOR_OU_ID/text()' 
+  ) xfcf
   JOIN decmgr.xview_organisation_units ou ON ou.organ_id = coalesce(xfcf.field_operator_ou_id, xfcd.operator_ou_id)
   JOIN devukmgr.fields f ON f.field_identifier = xfcf.field_id
   JOIN field_counts c ON c.fcd_id = xfcd.fcd_id
@@ -222,16 +241,17 @@ WITH field_counts AS (
 SELECT
   fcs_migration.application_asset_id_seq.nextval id
 , b.application_version_id
-, b.field_id
-, b.cached_field_name
 , b.asset_role
 , CASE b.asset_role
   WHEN 'SECONDARY' THEN
-    RANK () OVER (PARTITION BY b.application_version_id, b.asset_role ORDER BY b.cached_field_name)
+    RANK () OVER (PARTITION BY b.application_version_id, b.asset_role ORDER BY b.field_rownum)
   ELSE NULL
   END asset_no
 , b.asset_operator_ou_id
 , b.cached_asset_operator_name
+, 'FIELD' asset_type
+, b.asset_id
+, b.cached_asset_name
 FROM base b;
 /
 
@@ -242,20 +262,22 @@ FROM base b;
 INSERT INTO fcs_migration.application_assets (
   id
 , application_version_id
-, field_id
-, cached_field_name
 , asset_role
 , asset_operator_ou_id
 , cached_asset_operator_name
+, asset_type
+, asset_id
+, cached_asset_name
 )
 SELECT
   fcs_migration.application_asset_id_seq.nextval id
 , fcd.id application_version_id
-, ff.facilities_location_field_id field_id
-, f.name cached_field_name
 , 'LOCATION' asset_role
 , fov.operator_id asset_operator_ou_id
 , fov.operator_name cached_asset_operator_name
+, 'FIELD' asset_type
+, ff.facilities_location_field_id asset_id
+, f.name cached_asset_name
 FROM fcs_migration.application_versions av
 JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
 CROSS JOIN XMLTABLE(
@@ -297,9 +319,10 @@ SELECT
 , li.licence_id
 , li.licence_number cached_licence_ref
 FROM fcs_migration.application_assets aa
-JOIN envmgr.xview_field_consent_licences xfcl ON xfcl.fcd_id = aa.application_version_id AND xfcl.field_id = aa.field_id
+JOIN envmgr.xview_field_consent_licences xfcl ON xfcl.fcd_id = aa.application_version_id AND xfcl.field_id = aa.asset_id
 JOIN licences li ON li.licence_number = xfcl.licence_number
-WHERE (aa.asset_role IS NULL OR aa.asset_role IN ('PRIMARY', 'SECONDARY'));
+WHERE aa.asset_role IN ('PRIMARY', 'SECONDARY')
+AND aa.asset_type = 'FIELD';
 /
 
 --
@@ -434,7 +457,7 @@ SELECT
 FROM hsa;
 /
 
--- IS_ACE_APPLICATION - TODO need confirmation that this is correct from NSTA
+-- IS_ACE_APPLICATION
 INSERT INTO fcs_migration.application_flags (
   id
 , application_version_id
@@ -491,3 +514,440 @@ AND fcd.application_type = 'PCON'; -- TODO - what about the FCON and VCON data?
 --
 -- application_supporting_information
 --
+INSERT INTO fcs_migration.application_supporting_information (
+  id
+, application_version_id
+, notes
+, erap_notes
+)
+SELECT
+  fcs_migration.application_supporting_information_id_seq.nextval id
+, fcd.id
+, hi.note_text
+, hi.imp_note_text
+FROM fcs_migration.application_versions av
+JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+CROSS JOIN XMLTABLE(
+  '/FIELD_CONSENT/ADDITIONAL_INFO/HISTORY_LIST'
+  PASSING
+    fcd.xml_data
+  COLUMNS
+    -- the items with EDITABLE_FLAG true are the latest version of that note TYPE
+    note_text CLOB PATH './HISTORY_ITEM[TYPE/text()="ADDITIONAL_NOTE"][EDITABLE_FLAG/text()="true"]/CONTENT/text()'
+  , imp_note_text CLOB PATH './HISTORY_ITEM[TYPE/text()="IMPROVEMENT_NOTE"][EDITABLE_FLAG/text()="true"]/CONTENT/text()'
+) hi;
+/
+
+--
+-- long_term_production_years
+--
+INSERT INTO fcs_migration.long_term_production_years (
+  id
+, application_version_id
+, year
+, oil_min_value
+, oil_max_value
+, gas_min_value
+, gas_max_value
+)
+SELECT
+  fcs_migration.long_term_production_year_id_seq.nextval id
+, fcd.id application_version_id
+, ltp.year
+, ltp.oil_min_value
+, ltp.oil_max_value
+, ltp.gas_min_value
+, ltp.gas_max_value
+FROM fcs_migration.application_versions av
+JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+JOIN envmgr.xview_field_consent_details xfcd ON xfcd.fcd_id = fcd.id
+CROSS JOIN XMLTABLE(
+  '/FIELD_CONSENT/LONG_TERM_PRODUCTION/PRODUCTION_DATA_LIST/PRODUCTION_DATA'
+  PASSING
+    fcd.xml_data
+  COLUMNS
+    year INTEGER PATH './YEAR/text()'
+  , oil_min_value NUMBER PATH './OIL_MIN/text()'
+  , oil_max_value NUMBER PATH './OIL/text()'
+  , gas_min_value NUMBER PATH './GAS_MIN/text()'
+  , gas_max_value NUMBER PATH './GAS/text()'
+) ltp
+WHERE fcd.application_type = 'PCON'
+AND xfcd.app_length = 'LONG_TERM';
+/
+
+--
+-- annual_production_months
+--
+
+INSERT INTO fcs_migration.annual_production_months (
+  id
+, application_version_id
+, year
+, month
+, oil_min_value
+, oil_max_value
+, gas_min_value
+, gas_max_value
+)
+SELECT
+  fcs_migration.annual_production_month_id_seq.nextval id
+, fcd.id application_version_id
+, xfcd.application_year year
+, upper(trim(ap.description)) month
+, ap.oil_min_value
+, ap.oil_max_value
+, ap.gas_min_value
+, ap.gas_max_value
+FROM fcs_migration.application_versions av
+JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+JOIN envmgr.xview_field_consent_details xfcd ON xfcd.fcd_id = fcd.id
+CROSS JOIN XMLTABLE(
+  '/FIELD_CONSENT/ANNUAL_PRODUCTION/PRODUCTION_DATA_LIST/PRODUCTION_DATA[./TYPE/text()="MONTH"]'
+  PASSING
+    fcd.xml_data
+  COLUMNS
+    description VARCHAR2(4000) PATH './DESCRIPTION/text()'
+  , oil_min_value NUMBER PATH './OIL_MIN/text()'
+  , oil_max_value NUMBER PATH './OIL/text()'
+  , gas_min_value NUMBER PATH './GAS_MIN/text()'
+  , gas_max_value NUMBER PATH './GAS/text()'
+) ap
+WHERE fcd.application_type = 'PCON'
+AND xfcd.app_length = 'ANNUAL'
+AND coalesce(ap.oil_min_value, ap.oil_max_value, ap.gas_max_value, ap.gas_max_value) IS NOT NULL;
+/
+
+--
+-- short_term_production_months
+--
+INSERT INTO fcs_migration.short_term_production_months (
+  id
+, application_version_id
+, year
+, month
+, start_date
+, end_date
+, oil_min_value
+, oil_max_value
+, gas_min_value
+, gas_max_value
+)
+WITH base AS (
+  SELECT
+    fcd.id application_version_id
+  , stp.pd_rownum
+  , stp.data_year
+  , upper(trim(stp.description)) month
+  , stp.oil_min_value
+  , stp.oil_max_value
+  , stp.gas_min_value
+  , stp.gas_max_value
+  , cl.short_term_start_date
+  , cl.short_term_end_date
+  FROM fcs_migration.application_versions av
+  JOIN fcs_migration.consent_lengths cl ON cl.application_version_id = av.id
+  JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+  JOIN envmgr.xview_field_consent_details xfcd ON xfcd.fcd_id = fcd.id
+  CROSS JOIN XMLTABLE(
+    '/FIELD_CONSENT/SHORT_TERM_CONSENT/CONSENT_DATA_LIST/CONSENT_DATA[./TYPE/text()="MONTH"]'
+    PASSING
+      fcd.xml_data
+    COLUMNS
+      pd_rownum FOR ORDINALITY
+    , data_year INTEGER PATH './DATA_YEAR/text()'
+    , description VARCHAR2(4000) PATH './DESCRIPTION/text()'
+    , oil_min_value NUMBER PATH './OIL_MIN/text()'
+    , oil_max_value NUMBER PATH './OIL/text()'
+    , gas_min_value NUMBER PATH './GAS_MIN/text()'
+    , gas_max_value NUMBER PATH './GAS/text()'
+  ) stp
+  WHERE fcd.application_type = 'PCON'
+  AND xfcd.app_length = 'SHORT_TERM'
+  AND coalesce(stp.oil_min_value, stp.oil_max_value, stp.gas_max_value, stp.gas_max_value) IS NOT NULL
+  ORDER BY fcd.id, stp.pd_rownum
+)
+, base2 AS (
+  SELECT
+    b.*
+  , to_date('01'||b.month||b.data_year, 'DDMONTHYYYY') month_start_date
+  , last_day(to_date('01'||b.month||b.data_year, 'DDMONTHYYYY')) month_end_date
+  FROM base b
+)
+SELECT
+  fcs_migration.short_term_production_month_id_seq.nextval id
+, b.application_version_id
+, b.data_year year
+, b.month
+, greatest(b.short_term_start_date, b.month_start_date) start_date
+, least(b.short_term_end_date, b.month_end_date) end_date
+, b.oil_min_value
+, b.oil_max_value
+, b.gas_min_value
+, b.gas_max_value
+FROM base2 b;
+/
+
+--
+-- flare_annual_months
+--
+
+INSERT INTO fcs_migration.flare_annual_months (
+  id
+, application_version_id
+, year
+, month
+, category_a
+, category_b
+, category_c
+, comments
+)
+SELECT
+  fcs_migration.flare_annual_month_id_seq.nextval id
+, fcd.id application_version_id
+, xfcd.application_year year
+, upper(trim(af.description)) month
+, af.category_a
+, af.category_b
+, af.category_c
+, af.comments
+FROM fcs_migration.application_versions av
+JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+JOIN envmgr.xview_field_consent_details xfcd ON xfcd.fcd_id = fcd.id
+CROSS JOIN XMLTABLE(
+  '/FIELD_CONSENT'
+  PASSING
+    fcd.xml_data
+  COLUMNS
+    categories VARCHAR2(4000) PATH './FLAGS/CATEGORIES/text()'
+) cat
+CROSS JOIN XMLTABLE(
+  '/FIELD_CONSENT/CONSENT/CONSENT_DATA_LIST/CONSENT_DATA[./TYPE/text()="MONTH"]'
+  PASSING
+    fcd.xml_data
+  COLUMNS
+    description VARCHAR2(4000) PATH './DESCRIPTION/text()'
+  , category_a NUMBER PATH './CATEGORY_A/text()'
+  , category_b NUMBER PATH './CATEGORY_B/text()'
+  , category_c NUMBER PATH './CATEGORY_C/text()'
+  , comments VARCHAR2(4000) PATH './COMMENTS/text()'
+) af
+WHERE fcd.application_type = 'FCON'
+AND xfcd.app_length = 'ANNUAL'
+AND cat.categories = 'A_B_C';
+/
+
+--
+-- flare_short_term_months
+--
+
+INSERT INTO fcs_migration.flare_short_term_months (
+  id
+, application_version_id
+, year
+, month
+, start_date
+, end_date
+, category_a
+, category_b
+, category_c
+, comments
+)
+WITH base AS (
+  SELECT
+    fcd.id application_version_id
+  , stf.data_year
+  , upper(trim(stf.description)) month
+  , cl.short_term_start_date
+  , cl.short_term_end_date
+  , stf.category_a
+  , stf.category_b
+  , stf.category_c
+  , stf.comments
+  FROM fcs_migration.application_versions av
+  JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+  JOIN envmgr.xview_field_consent_details xfcd ON xfcd.fcd_id = fcd.id
+  CROSS JOIN XMLTABLE(
+    '/FIELD_CONSENT'
+    PASSING
+      fcd.xml_data
+    COLUMNS
+      short_term_start_date DATE PATH 'COVER_INFO/STC_START_DATE/text()'
+    , short_term_end_date DATE PATH 'COVER_INFO/STC_END_DATE/text()'
+    , categories VARCHAR2(4000) PATH './FLAGS/CATEGORIES/text()'
+  ) cl
+  CROSS JOIN XMLTABLE(
+    '/FIELD_CONSENT/SHORT_TERM_CONSENT/CONSENT_DATA_LIST/CONSENT_DATA[./TYPE/text()="MONTH"]'
+    PASSING
+      fcd.xml_data
+    COLUMNS
+      cd_rownum FOR ORDINALITY
+    , data_year INTEGER PATH './DATA_YEAR/text()'
+    , description VARCHAR2(4000) PATH './DESCRIPTION/text()'
+    , category_a NUMBER PATH './CATEGORY_A/text()'
+    , category_b NUMBER PATH './CATEGORY_B/text()'
+    , category_c NUMBER PATH './CATEGORY_C/text()'
+    , comments VARCHAR2(4000) PATH './COMMENTS/text()'
+  ) stf
+  WHERE fcd.application_type = 'FCON'
+  AND xfcd.app_length = 'SHORT_TERM'
+  AND cl.categories = 'A_B_C'
+  ORDER BY fcd.id, stf.cd_rownum
+)
+, base2 AS (
+  SELECT b.*
+  , to_date('01'||b.month||b.data_year, 'DDMONTHYYYY') month_start_date
+  , last_day(to_date('01'||b.month||b.data_year, 'DDMONTHYYYY')) month_end_date
+  FROM base b
+)
+SELECT
+  fcs_migration.flare_short_term_month_id_seq.nextval id
+, b.application_version_id
+, b.data_year year
+, b.month
+, greatest(b.short_term_start_date, b.month_start_date) start_date
+, least(b.short_term_end_date, b.month_end_date) end_date
+, b.category_a
+, b.category_b
+, b.category_c
+, b.comments
+FROM base2 b;
+/
+
+--
+-- flare_report_gas_data
+--
+INSERT INTO fcs_migration.flare_report_gas_data (
+  id
+, application_version_id
+, category_a_density
+, category_a_inert_percentage
+, category_a_hydro_percentage
+, category_b_density
+, category_b_inert_percentage
+, category_b_hydro_percentage
+, category_c_density
+, category_c_inert_percentage
+, category_c_hydro_percentage
+, evaluated_per_category
+, evaluated_per_category_explanation
+)
+WITH base AS (
+  SELECT
+    fcd.id application_version_id
+  , CASE
+    WHEN rd.upper_desc LIKE '%STREAM%' THEN 'DENSITY'
+    WHEN rd.upper_desc LIKE '%INERT%' THEN 'INERT'
+    WHEN rd.upper_desc LIKE '%HYDROCARBON%' THEN 'HYDRO'
+    END data_type
+  , rd.category_a
+  , rd.category_b
+  , rd.category_c
+  FROM fcs_migration.application_versions av
+  JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+  JOIN envmgr.xview_field_consent_details xfcd ON xfcd.fcd_id = fcd.id
+  JOIN fcs_migration.field_consent_report_data rd ON rd.fcd_id = fcd.id
+  WHERE rd.rd_type = 'INFO' 
+  AND fcd.application_type = 'FCON'
+  AND rd.categories = 'A_B_C'
+  AND coalesce(rd.category_a, rd.category_b, rd.category_c) IS NOT NULL
+  ORDER BY rd.fcd_id, rd.rd_rownum
+)
+SELECT
+  fcs_migration.flare_report_gas_data_id_seq.nextval id
+, bd.application_version_id
+, bd.category_a category_a_density
+, bi.category_a category_a_inert_percentage
+, bh.category_a category_a_hydro_percentage
+, bd.category_b category_b_density
+, bi.category_b category_b_inert_percentage
+, bh.category_a category_b_hydro_percentage
+, bd.category_c category_c_density
+, bi.category_c category_c_inert_percentage
+, bh.category_a category_c_hydro_percentage
+, null evaluated_per_category
+, null evaluated_per_category_explanation
+FROM base bd
+JOIN base bi ON bi.application_version_id = bd.application_version_id AND bi.data_type = 'INERT'
+JOIN base bh ON bh.application_version_id = bd.application_version_id AND bh.data_type = 'HYDRO'
+WHERE bd.data_type = 'DENSITY';
+/
+
+--
+-- flare_report_periods
+--
+INSERT INTO fcs_migration.flare_report_periods (
+  id
+, application_version_id
+, report_end_month
+, report_end_year
+)
+WITH base AS (
+  SELECT
+    fcd.id application_version_id
+  , rd.rd_rownum
+  , last_day(to_date('01-'||rd.rd_month, 'DD-MON-YYYY')) report_row_end_date 
+  FROM fcs_migration.application_versions av
+  JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+  JOIN envmgr.xview_field_consent_details xfcd ON xfcd.fcd_id = fcd.id
+  JOIN fcs_migration.field_consent_report_data rd ON rd.fcd_id = fcd.id
+  WHERE rd.rd_type = 'MONTH' 
+  AND fcd.application_type = 'FCON'
+  AND rd.categories = 'A_B_C'
+  AND coalesce(rd.category_a, rd.category_b, rd.category_c, rd.days_total_shutdown) IS NOT NULL
+  ORDER BY fcd.id, rd.rd_rownum
+)
+, report_end AS (
+  SELECT b.application_version_id, max(b.report_row_end_date) report_row_end_date
+  FROM base b
+  GROUP BY b.application_version_id
+)
+SELECT
+  fcs_migration.flare_report_period_id_seq.nextval id
+, re.application_version_id
+, to_char(re.report_row_end_date, 'MONTH') report_end_month
+, to_number(to_char(re.report_row_end_date, 'YYYY')) report_end_year
+FROM report_end re;
+/
+
+--
+-- flare_report_months
+--
+INSERT INTO fcs_migration.flare_report_months (
+  id
+, application_version_id
+, year
+, month
+, category_a
+, category_b
+, category_c
+, shut_down_days
+, comments
+)
+WITH base AS (
+  SELECT
+    fcd.id application_version_id
+  , last_day(to_date('01-'||rd.rd_month, 'DD-MON-YYYY')) report_row_end_date
+  , rd.*
+  FROM fcs_migration.application_versions av
+  JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+  JOIN envmgr.xview_field_consent_details xfcd ON xfcd.fcd_id = fcd.id
+  JOIN fcs_migration.field_consent_report_data rd ON rd.fcd_id = fcd.id
+  WHERE rd.rd_type = 'MONTH' 
+  AND fcd.application_type = 'FCON'
+  AND rd.categories = 'A_B_C'
+  AND coalesce(rd.category_a, rd.category_b, rd.category_c, rd.days_total_shutdown) IS NOT NULL
+  ORDER BY fcd.id, rd.rd_rownum
+)
+SELECT
+  fcs_migration.flare_report_month_id_seq.nextval id
+, b.application_version_id
+, to_number(to_char(b.report_row_end_date, 'YYYY')) year
+, to_char(b.report_row_end_date, 'MONTH') month
+, b.category_a
+, b.category_b
+, b.category_c
+, b.days_total_shutdown
+, b.comments
+FROM base b;
+/

@@ -14,3 +14,5 @@ GRANT SELECT ANY TABLE TO fcs_migration;
 GRANT CREATE TABLE TO fcs_migration;
 
 GRANT CREATE SEQUENCE TO fcs_migration;
+
+GRANT CREATE VIEW TO fcs_migration;

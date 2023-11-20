@@ -1,4 +1,18 @@
 
+--DROP SEQUENCE fcs_migration.flare_report_month_id_seq;
+--DROP TABLE fcs_migration.flare_report_months;
+--DROP SEQUENCE fcs_migration.flare_report_period_id_seq;
+--DROP TABLE fcs_migration.flare_report_periods;
+--DROP SEQUENCE fcs_migration.flare_report_gas_data_id_seq;
+--DROP TABLE fcs_migration.flare_report_gas_data;
+--DROP SEQUENCE fcs_migration.flare_annual_month_id_seq;
+--DROP TABLE fcs_migration.flare_annual_months;
+--DROP SEQUENCE fcs_migration.short_term_production_month_id_seq;
+--DROP TABLE fcs_migration.short_term_production_months;
+--DROP SEQUENCE fcs_migration.annual_production_month_id_seq;
+--DROP TABLE fcs_migration.annual_production_months;
+--DROP SEQUENCE fcs_migration.long_term_production_year_id_seq;
+--DROP TABLE fcs_migration.long_term_production_years;
 --DROP SEQUENCE fcs_migration.application_supporting_information_id_seq;
 --DROP TABLE fcs_migration.application_supporting_information;
 --DROP SEQUENCE fcs_migration.application_eia_direction_id_seq;
@@ -89,14 +103,13 @@ CREATE TABLE fcs_migration.application_assets (
 , application_version_id     INTEGER NOT NULL
                              CONSTRAINT app_assets_fk1_version_id
                              REFERENCES fcs_migration.application_versions
-, field_id                   INTEGER
-, cached_field_name          VARCHAR2(4000)
-, terminal_id                INTEGER
-, cached_terminal_name       VARCHAR2(4000)
-, asset_role                 VARCHAR2(4000) -- allow nulls for now
+, asset_role                 VARCHAR2(4000) NOT NULL
 , asset_no                   INTEGER
 , asset_operator_ou_id       INTEGER NOT NULL
 , cached_asset_operator_name VARCHAR2(4000)
+, asset_type                 VARCHAR2(4000)
+, asset_id                   INTEGER
+, cached_asset_name          VARCHAR2(4000)
 );
 
 
@@ -187,6 +200,162 @@ CREATE TABLE fcs_migration.application_supporting_information (
 , application_version_id INTEGER NOT NULL
                          CONSTRAINT application_supporting_information_fk1_av_id
                          REFERENCES fcs_migration.application_versions
-, notes                  CLOB NOT NULL
+, notes                  CLOB
 , erap_notes             CLOB
+);
+
+--
+-- long_term_production_years
+--
+
+CREATE SEQUENCE fcs_migration.long_term_production_year_id_seq;
+
+CREATE TABLE fcs_migration.long_term_production_years (
+  id                     INTEGER PRIMARY KEY
+, application_version_id INTEGER NOT NULL
+                         CONSTRAINT long_term_prod_fk1_av_id
+                         REFERENCES fcs_migration.application_versions
+, year                   INTEGER NOT NULL
+, oil_min_value          NUMBER
+, oil_max_value          NUMBER
+, gas_min_value          NUMBER
+, gas_max_value          NUMBER
+);
+
+--
+-- annual_production_months
+--
+CREATE SEQUENCE fcs_migration.annual_production_month_id_seq;
+
+CREATE TABLE fcs_migration.annual_production_months (
+  id                     INTEGER PRIMARY KEY
+, application_version_id INTEGER NOT NULL
+                         CONSTRAINT annual_prod_fk1_version_id
+                         REFERENCES fcs_migration.application_versions
+, year                   INTEGER NOT NULL
+, month                  VARCHAR2(4000) NOT NULL
+, oil_min_value          NUMBER
+, oil_max_value          NUMBER NOT NULL
+, gas_min_value          NUMBER
+, gas_max_value          NUMBER NOT NULL
+);
+
+--
+-- short_term_production_months
+--
+
+CREATE SEQUENCE fcs_migration.short_term_production_month_id_seq;
+
+CREATE TABLE fcs_migration.short_term_production_months (
+  id                     INTEGER PRIMARY KEY
+, application_version_id INTEGER NOT NULL
+                         CONSTRAINT short_prod_fk1_version_id
+                         REFERENCES fcs_migration.application_versions
+, year                   INTEGER NOT NULL
+, month                  VARCHAR2(4000) NOT NULL
+, start_date             DATE NOT NULL
+, end_date               DATE NOT NULL
+, oil_min_value          NUMBER NOT NULL
+, oil_max_value          NUMBER NOT NULL
+, gas_min_value          NUMBER NOT NULL
+, gas_max_value          NUMBER NOT NULL
+);
+
+--
+-- flare_annual_months
+--
+
+CREATE SEQUENCE fcs_migration.flare_annual_month_id_seq;
+
+CREATE TABLE fcs_migration.flare_annual_months (
+  id                     INTEGER PRIMARY KEY
+, application_version_id INTEGER NOT NULL
+                         CONSTRAINT flare_annual_months_fk1_av_id
+                         REFERENCES fcs_migration.application_versions
+, year                   INTEGER NOT NULL
+, month                  VARCHAR2(4000) NOT NULL
+, category_a             NUMBER NOT NULL
+, category_b             NUMBER NOT NULL
+, category_c             NUMBER NOT NULL
+, comments               VARCHAR2(4000)
+);
+
+--
+-- flare_short_term_months
+--
+
+CREATE SEQUENCE fcs_migration.flare_short_term_month_id_seq;
+
+CREATE TABLE fcs_migration.flare_short_term_months (
+  id                     INTEGER PRIMARY KEY
+, application_version_id INTEGER NOT NULL
+                         CONSTRAINT flare_short_term_months_fk1_av_id
+                         REFERENCES fcs_migration.application_versions
+, year                   INTEGER NOT NULL
+, month                  VARCHAR2(4000) NOT NULL
+, start_date             DATE
+, end_date               DATE
+, category_a             NUMBER NOT NULL
+, category_b             NUMBER NOT NULL
+, category_c             NUMBER NOT NULL
+, comments               VARCHAR2(4000)
+);
+
+--
+-- flare_report_gas_data
+--
+
+CREATE SEQUENCE fcs_migration.flare_report_gas_data_id_seq;
+
+CREATE TABLE fcs_migration.flare_report_gas_data (
+  id                                 INTEGER PRIMARY KEY
+, application_version_id             INTEGER NOT NULL
+                                     CONSTRAINT flare_report_gas_data_fk1_av_id
+                                     REFERENCES fcs_migration.application_versions
+, category_a_density                 NUMBER NOT NULL
+, category_a_inert_percentage        NUMBER NOT NULL
+, category_a_hydro_percentage        NUMBER NOT NULL
+, category_b_density                 NUMBER NOT NULL
+, category_b_inert_percentage        NUMBER NOT NULL
+, category_b_hydro_percentage        NUMBER NOT NULL
+, category_c_density                 NUMBER NOT NULL
+, category_c_inert_percentage        NUMBER NOT NULL
+, category_c_hydro_percentage        NUMBER NOT NULL
+, evaluated_per_category             VARCHAR2(5)  -- true/false
+, evaluated_per_category_explanation VARCHAR2(4000)
+);
+
+--
+-- flare_report_periods
+--
+
+CREATE SEQUENCE fcs_migration.flare_report_period_id_seq;
+
+CREATE TABLE fcs_migration.flare_report_periods (
+  id                     INTEGER PRIMARY KEY
+, application_version_id INTEGER NOT NULL
+                         CONSTRAINT flare_report_periods_fk1_av_id
+                         REFERENCES fcs_migration.application_versions
+, report_end_month       VARCHAR2(4000) NOT NULL
+, report_end_year        INTEGER NOT NULL
+);
+
+--
+-- flare_report_months
+--
+
+CREATE SEQUENCE fcs_migration.flare_report_month_id_seq;
+
+CREATE TABLE fcs_migration.flare_report_months (
+  id                     INTEGER PRIMARY KEY
+, application_version_id INTEGER NOT NULL
+                         CONSTRAINT flare_report_months_fk1_av_id
+                         REFERENCES fcs_migration.application_versions
+, year                   INTEGER NOT NULL
+, month                  VARCHAR2(4000) NOT NULL
+, category_a             NUMERIC NOT NULL
+, category_b             NUMERIC NOT NULL
+, category_c             NUMERIC NOT NULL
+, shut_down_days         INTEGER NOT NULL
+, comments               VARCHAR2(4000)
 );
