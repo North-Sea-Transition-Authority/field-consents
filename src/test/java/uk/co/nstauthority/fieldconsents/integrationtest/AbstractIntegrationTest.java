@@ -1,14 +1,17 @@
 package uk.co.nstauthority.fieldconsents.integrationtest;
 
+import jakarta.persistence.EntityManager;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 @SuppressWarnings("rawtypes")
@@ -16,6 +19,13 @@ import org.testcontainers.containers.PostgreSQLContainer;
 @ActiveProfiles({"development", "integration-test"})
 @AutoConfigureFileUploadLibrary
 public abstract class AbstractIntegrationTest {
+
+  @Autowired
+  protected TransactionTemplate transactionTemplate;
+
+  @Autowired
+  protected EntityManager entityManager;
+
   protected static PostgreSQLContainer fcsDb;
 
   @DynamicPropertySource
@@ -26,8 +36,16 @@ public abstract class AbstractIntegrationTest {
     registry.add("schema.password", fcsDb::getPassword);
   }
 
+  protected void truncateApplicationsCascade() {
+    transactionTemplate.executeWithoutResult(status -> {
+      entityManager.createNativeQuery("TRUNCATE TABLE fcs.applications CASCADE").executeUpdate();
+      status.flush();
+    });
+  }
+
   @Bean
   Clock clock() {
     return Clock.fixed(Instant.now(), ZoneId.systemDefault());
   }
+
 }

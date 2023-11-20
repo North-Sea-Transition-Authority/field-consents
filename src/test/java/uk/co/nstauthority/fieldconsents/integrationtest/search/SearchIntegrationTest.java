@@ -133,6 +133,8 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
 
   @BeforeEach
   void setUp() {
+    truncateApplicationsCascade();
+
     searchForm = new SearchFilterForm();
     zonedDateTime = ZonedDateTime.now(clock.getZone());
     when(teamService.isRegulatorUser(USER_DETAIL)).thenReturn(true);

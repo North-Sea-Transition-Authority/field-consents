@@ -2,7 +2,6 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit1Json;
 
@@ -10,12 +9,10 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.annotation.DirtiesContext;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
@@ -33,7 +30,6 @@ import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.integrationtest.AbstractIntegrationTest;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.opred.OpredTeamService;
 
-@DirtiesContext(classMode = AFTER_EACH_TEST_METHOD)
 class ConsultationEventServiceIntegrationTest extends AbstractIntegrationTest {
 
   private static final ServiceUserDetail INDUSTRY_USER = ServiceUserDetailTestUtil.Builder().withWuaId(1L).build();
@@ -77,14 +73,6 @@ class ConsultationEventServiceIntegrationTest extends AbstractIntegrationTest {
   @BeforeEach
   void setUp() {
     beforeTestRun = Instant.now();
-  }
-
-  @AfterEach
-  void tearDown() {
-    applicationAssetLicenceRepository.deleteAll();
-    applicationAssetRepository.deleteAll();
-    consultationRepository.deleteAll();
-    applicationVersionRepository.deleteAll();
   }
 
   @Test
