@@ -2,6 +2,8 @@ package uk.co.nstauthority.fieldconsents.application.supportinginformation;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -51,28 +53,31 @@ public class SupportingInformationService {
     supportingInformationRepository.save(SupportingInformation.from(applicationVersion, form));
   }
 
-  public SummaryCard getSupportingInformationSummaryCard(ApplicationVersion applicationVersion) {
+  public List<SummaryCard> getSupportingInformationSummaryCards(ApplicationVersion applicationVersion) {
     var supportingInformationOptional = findSupportingInformation(applicationVersion);
 
     if (supportingInformationOptional.isEmpty()) {
-      return SummaryCard.emptySummaryCard();
+      return SummaryCard.emptySummaryCardList();
     }
 
     var supportingInformation = supportingInformationOptional.get();
 
     var summaryData = SummaryDataView.newWithKeyValue("Notes", supportingInformation.getNotes());
-
     if (ApplicationTypeFeature.ERAP_SUPPORTING_INFORMATION.allowed(applicationVersion.getApplication().getType())) {
       summaryData.addKeyValue("ERAP alignment studies and projects", supportingInformation.getErapNotes());
     }
 
-    return SummaryCard.simpleSummaryCard(summaryData);
+    var summaryCards = new ArrayList<SummaryCard>();
+
+    summaryCards.add(SummaryCard.simpleSummaryCard(summaryData));
+    getSupportingDocumentsSummaryCard(applicationVersion).ifPresent(summaryCards::add);
+
+    return summaryCards;
   }
 
-  public SummaryCard getSupportingDocumentsSummaryCard(ApplicationVersion applicationVersion) {
+  Optional<SummaryCard> getSupportingDocumentsSummaryCard(ApplicationVersion applicationVersion) {
     var applicationId = applicationVersion.getApplication().getId();
-    var fileUsage = ApplicationVersionFileUsage.supportingDocumentFrom(applicationVersion);
-    var filesSummary = fieldConsentsFileService.getUploadedFiles(fileUsage)
+    var filesSummary = fieldConsentsFileService.getUploadedFiles(getFileUsage(applicationVersion))
         .stream()
         .map(uploadedFile -> SummaryFileView.from(
             uploadedFile,
@@ -80,7 +85,11 @@ public class SupportingInformationService {
         )
         .toList();
 
-    return SummaryCard.filesSummaryCardWithHeading("Supporting information documents", filesSummary);
+    if (filesSummary.isEmpty()) {
+      return Optional.empty();
+    }
+
+    return Optional.of(SummaryCard.filesSummaryCardWithHeading("Supporting information documents", filesSummary));
   }
 
   private FieldConsentsFileUsage getFileUsage(ApplicationVersion applicationVersion) {

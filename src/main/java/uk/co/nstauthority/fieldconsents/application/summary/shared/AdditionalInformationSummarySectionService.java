@@ -1,7 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application.summary.shared;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -66,11 +65,7 @@ public class AdditionalInformationSummarySectionService implements SummarySectio
   }
 
   private SummaryItem getSupportingInformationSummaryItem(ApplicationVersion applicationVersion) {
-    return SummaryItem.withCards("Supporting information",
-        List.of(
-            supportingInformationService.getSupportingInformationSummaryCard(applicationVersion),
-            supportingInformationService.getSupportingDocumentsSummaryCard(applicationVersion)
-        )
-    );
+    var summaryCards = supportingInformationService.getSupportingInformationSummaryCards(applicationVersion);
+    return SummaryItem.withCards("Supporting information", summaryCards);
   }
 }

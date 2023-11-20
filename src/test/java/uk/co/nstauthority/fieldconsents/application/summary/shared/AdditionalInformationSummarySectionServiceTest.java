@@ -7,6 +7,7 @@ import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUt
 import static uk.co.nstauthority.fieldconsents.application.summary.SummaryTestUtil.simpleSummaryCard;
 import static uk.co.nstauthority.fieldconsents.application.summary.shared.AdditionalInformationSummarySectionService.FIELD_LOOKUP_PURPOSE;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -56,8 +57,7 @@ class AdditionalInformationSummarySectionServiceTest {
   void getSummarySection_production_offshore(ApplicationType applicationType, SummaryCard summaryCard) {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
     when(eiaDirectionService.getEiaDirectionSummaryCard(applicationVersion)).thenReturn(summaryCard);
-    when(supportingInformationService.getSupportingInformationSummaryCard(applicationVersion)).thenReturn(summaryCard);
-    when(supportingInformationService.getSupportingDocumentsSummaryCard(applicationVersion)).thenReturn(summaryCard);
+    when(supportingInformationService.getSupportingInformationSummaryCards(applicationVersion)).thenReturn(List.of(summaryCard, summaryCard));
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.fieldAsset1);
     when(fieldService.getField(ApplicationAssetTestUtil.fieldAsset1.getAssetId(), FIELD_LOOKUP_PURPOSE))
         .thenReturn(FieldTestUtil.field1Json);
@@ -81,10 +81,8 @@ class AdditionalInformationSummarySectionServiceTest {
   @Test
   void getSummarySection_production_onshore() {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
-    when(supportingInformationService.getSupportingInformationSummaryCard(applicationVersion))
-        .thenReturn(simpleSummaryCard);
-    when(supportingInformationService.getSupportingDocumentsSummaryCard(applicationVersion))
-        .thenReturn(simpleSummaryCard);
+    when(supportingInformationService.getSupportingInformationSummaryCards(applicationVersion))
+        .thenReturn(List.of(simpleSummaryCard, simpleSummaryCard));
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.fieldAsset2);
     when(fieldService.getField(ApplicationAssetTestUtil.fieldAsset2.getAssetId(), FIELD_LOOKUP_PURPOSE))
         .thenReturn(FieldTestUtil.field2Json);
@@ -101,14 +99,13 @@ class AdditionalInformationSummarySectionServiceTest {
   @EnumSource(value = ApplicationType.class, names = "PRODUCTION", mode = EnumSource.Mode.EXCLUDE)
   void getSummarySection_nonProduction_onshore(ApplicationType applicationType) {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
-    when(supportingInformationService.getSupportingInformationSummaryCard(applicationVersion)).thenReturn(simpleSummaryCard);
-    when(supportingInformationService.getSupportingDocumentsSummaryCard(applicationVersion)).thenReturn(simpleSummaryCard);
+    when(supportingInformationService.getSupportingInformationSummaryCards(applicationVersion)).thenReturn(List.of(simpleSummaryCard));
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.fieldAsset2);
 
     var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion).orElseThrow();
     assertThat(summarySection.summaryItems())
         .containsExactly(
-            SummaryItem.withCards(SUPPORTING_INFORMATION_ITEM, List.of(simpleSummaryCard, simpleSummaryCard))
+            SummaryItem.withCards(SUPPORTING_INFORMATION_ITEM, Collections.singletonList(simpleSummaryCard))
         );
   }
 
@@ -116,15 +113,14 @@ class AdditionalInformationSummarySectionServiceTest {
   @EnumSource(value = ApplicationType.class, names = "PRODUCTION", mode = EnumSource.Mode.EXCLUDE)
   void getSummarySection_nonProduction_unknownShore(ApplicationType applicationType) {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
-    when(supportingInformationService.getSupportingInformationSummaryCard(applicationVersion)).thenReturn(simpleSummaryCard);
-    when(supportingInformationService.getSupportingDocumentsSummaryCard(applicationVersion)).thenReturn(simpleSummaryCard);
+    when(supportingInformationService.getSupportingInformationSummaryCards(applicationVersion)).thenReturn(List.of(simpleSummaryCard));
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.fieldAsset3);
 
     var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion).orElseThrow();
     assertSummarySection(summarySection, ADDITIONAL_INFORMATION_DISPLAY_ORDER);
     assertThat(summarySection.summaryItems())
         .containsExactly(
-            SummaryItem.withCards(SUPPORTING_INFORMATION_ITEM, List.of(simpleSummaryCard, simpleSummaryCard))
+            SummaryItem.withCards(SUPPORTING_INFORMATION_ITEM, Collections.singletonList(simpleSummaryCard))
         );
   }
 
@@ -132,15 +128,14 @@ class AdditionalInformationSummarySectionServiceTest {
   @EnumSource(ApplicationType.class)
   void getSummarySection_terminal(ApplicationType applicationType) {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
-    when(supportingInformationService.getSupportingInformationSummaryCard(applicationVersion)).thenReturn(simpleSummaryCard);
-    when(supportingInformationService.getSupportingDocumentsSummaryCard(applicationVersion)).thenReturn(simpleSummaryCard);
+    when(supportingInformationService.getSupportingInformationSummaryCards(applicationVersion)).thenReturn(List.of(simpleSummaryCard));
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.terminalAsset1);
 
     var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion).orElseThrow();
     assertSummarySection(summarySection, ADDITIONAL_INFORMATION_DISPLAY_ORDER);
     assertThat(summarySection.summaryItems())
         .containsExactly(
-            SummaryItem.withCards(SUPPORTING_INFORMATION_ITEM, List.of(simpleSummaryCard, simpleSummaryCard))
+            SummaryItem.withCards(SUPPORTING_INFORMATION_ITEM, Collections.singletonList(simpleSummaryCard))
         );
   }
 }

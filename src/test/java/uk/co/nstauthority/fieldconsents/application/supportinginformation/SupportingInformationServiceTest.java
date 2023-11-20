@@ -38,9 +38,9 @@ class SupportingInformationServiceTest {
 
   private static final String APPLICATION_NOTES_PROMPT = "Notes";
 
-  static final String APPLICATION_NOTES = "application notes";
+  private static final String APPLICATION_NOTES = "application notes";
 
-  static final String ERAP_NOTES = "erap notes";
+  private static final String ERAP_NOTES = "erap notes";
 
   @Mock
   private SupportingInformationRepository supportingInformationRepository;
@@ -163,10 +163,8 @@ class SupportingInformationServiceTest {
     when(supportingInformationRepository.findByApplicationVersion(applicationVersion))
         .thenReturn(Optional.empty());
 
-    var summaryCard = supportingInformationService.getSupportingInformationSummaryCard(applicationVersion);
-
-    assertThat(summaryCard)
-        .isEqualTo(SummaryCard.emptySummaryCard());
+    assertThat(supportingInformationService.getSupportingInformationSummaryCards(applicationVersion))
+        .isEqualTo(SummaryCard.emptySummaryCardList());
   }
 
   @Test
@@ -175,12 +173,10 @@ class SupportingInformationServiceTest {
     when(supportingInformationRepository.findByApplicationVersion(applicationVersion))
         .thenReturn(Optional.of(getSupportingInformationProduction()));
 
-    var summaryCard = supportingInformationService.getSupportingInformationSummaryCard(applicationVersion);
-
-    assertThat(summaryCard)
-        .usingRecursiveComparison()
-        .isEqualTo(SummaryCard.simpleSummaryCard(
-            new SummaryDataView(List.of(new SummaryKeyValue(APPLICATION_NOTES_PROMPT, APPLICATION_NOTES)))
+    assertThat(supportingInformationService.getSupportingInformationSummaryCards(applicationVersion))
+        .containsExactly(
+            SummaryCard.simpleSummaryCard(
+                new SummaryDataView(List.of(new SummaryKeyValue(APPLICATION_NOTES_PROMPT, APPLICATION_NOTES)))
         ));
   }
 
@@ -191,11 +187,8 @@ class SupportingInformationServiceTest {
     when(supportingInformationRepository.findByApplicationVersion(applicationVersion))
         .thenReturn(Optional.of(getSupportingInformation()));
 
-    var summaryCard = supportingInformationService.getSupportingInformationSummaryCard(applicationVersion);
-
-    assertThat(summaryCard)
-        .usingRecursiveComparison()
-        .isEqualTo(SummaryCard.simpleSummaryCard(
+    assertThat(supportingInformationService.getSupportingInformationSummaryCards(applicationVersion))
+        .containsExactly(SummaryCard.simpleSummaryCard(
             new SummaryDataView(List.of(
                 new SummaryKeyValue(APPLICATION_NOTES_PROMPT, APPLICATION_NOTES),
                 new SummaryKeyValue("ERAP alignment studies and projects", ERAP_NOTES)
@@ -207,13 +200,7 @@ class SupportingInformationServiceTest {
   void getSupportingDocumentsSummaryCard_noFiles() {
     var fileUsage = ApplicationVersionFileUsage.supportingDocumentFrom(applicationVersion);
     when(fieldConsentsFileService.getUploadedFiles(fileUsage)).thenReturn(Collections.emptyList());
-
-    assertThat(supportingInformationService.getSupportingDocumentsSummaryCard(applicationVersion))
-        .isEqualTo(new SummaryCard(
-            "Supporting information documents",
-            SummaryCardType.FILES_SUMMARY,
-            Collections.emptyList()
-        ));
+    assertThat(supportingInformationService.getSupportingDocumentsSummaryCard(applicationVersion)).isEmpty();
   }
 
   @Test
@@ -228,7 +215,7 @@ class SupportingInformationServiceTest {
 
     var applicationId = applicationVersion.getApplication().getId();
     assertThat(supportingInformationService.getSupportingDocumentsSummaryCard(applicationVersion))
-        .isEqualTo(new SummaryCard(
+        .contains(new SummaryCard(
             "Supporting information documents",
             SummaryCardType.FILES_SUMMARY,
             Collections.singletonList(new SummaryFileView(
