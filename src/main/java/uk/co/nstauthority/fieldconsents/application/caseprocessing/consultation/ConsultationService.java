@@ -35,7 +35,7 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.opred.OpredTe
 @Service
 public class ConsultationService {
 
-  private static final TeamType CONSULTATION_TEAM_TYPE = TeamType.OPRED;
+  public static final TeamType CONSULTATION_TEAM_TYPE = TeamType.OPRED;
 
   private final TeamService teamService;
   private final ConsultationRepository repository;

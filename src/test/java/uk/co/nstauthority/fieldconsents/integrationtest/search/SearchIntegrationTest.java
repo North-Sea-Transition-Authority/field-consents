@@ -4,22 +4,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_CLASS;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2JsonWithOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field3JsonWithOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal2JsonWithOperator;
-import static uk.co.nstauthority.fieldconsents.integrationtest.IntegrationTestUtil.ANNUAL_CONSENT_YEAR;
-import static uk.co.nstauthority.fieldconsents.integrationtest.IntegrationTestUtil.PORTAL_USERS_DTO_MAP;
-import static uk.co.nstauthority.fieldconsents.integrationtest.IntegrationTestUtil.REGULATOR_TEAM;
-import static uk.co.nstauthority.fieldconsents.integrationtest.IntegrationTestUtil.SHORT_TERM_END_DATE;
-import static uk.co.nstauthority.fieldconsents.integrationtest.IntegrationTestUtil.SHORT_TERM_START_DATE;
-import static uk.co.nstauthority.fieldconsents.integrationtest.IntegrationTestUtil.USER_DETAIL;
-import static uk.co.nstauthority.fieldconsents.integrationtest.IntegrationTestUtil.getSearchResultItemForFieldInProgressOfType;
-import static uk.co.nstauthority.fieldconsents.integrationtest.IntegrationTestUtil.getSearchResultItemForTerminalInProgressOfType;
-import static uk.co.nstauthority.fieldconsents.integrationtest.IntegrationTestUtil.getSearchResultItemInProgressOfTypeAndLength;
-import static uk.co.nstauthority.fieldconsents.integrationtest.IntegrationTestUtil.getSearchResultItemProductionSubmittedOfConsentLength;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.ANNUAL_CONSENT_YEAR;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.PORTAL_USERS_DTO_MAP;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.REGULATOR_TEAM;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.SHORT_TERM_END_DATE;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.SHORT_TERM_START_DATE;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.USER_DETAIL;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.getSearchResultItemForFieldInProgressOfType;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.getSearchResultItemForTerminalInProgressOfType;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.getSearchResultItemInProgressOfTypeAndLength;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.getSearchResultItemProductionSubmittedOfConsentLength;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.FIELD1_ASSET_KEY;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.FIELD2_ASSET_KEY;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.TERMINAL1_ASSET_KEY;
@@ -34,6 +33,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -42,7 +42,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
@@ -50,7 +49,6 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.assets.AdditionalAssetsService;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalRepository;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.WithdrawalStatus;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthForm;
@@ -80,8 +78,7 @@ import uk.co.nstauthority.fieldconsents.teams.TeamType;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Transactional
-@DirtiesContext(classMode = AFTER_CLASS)
-public class SearchIntegrationTest extends AbstractIntegrationTest {
+class SearchIntegrationTest extends AbstractIntegrationTest {
 
   @MockBean
   private TeamService teamService;
@@ -115,9 +112,6 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
 
   @Autowired
   private ApplicationWithdrawalService applicationWithdrawalService;
-
-  @Autowired
-  private ApplicationWithdrawalRepository applicationWithdrawalRepository;
 
   @Autowired
   private AdditionalAssetsService additionalAssetsService;
@@ -197,8 +191,7 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
     createSubmittedApplicationVersion(ApplicationType.FLARE, consentLengthForm);
 
-    var searchResults = getSearchResultItems(searchForm);
-    assertThat(searchResults).isEmpty();
+    assertThat(getSearchResultItems(searchForm)).isEmpty();
   }
 
   /*********************************** APPLICATION STATUS ***********************************/
@@ -221,8 +214,7 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
 
     createSubmittedApplicationVersion(ApplicationType.FLARE, consentLengthForm);
 
-    var searchResults = getSearchResultItems(searchForm);
-    assertThat(searchResults).isEmpty();
+    assertThat(getSearchResultItems(searchForm)).isEmpty();
   }
 
   @Test
@@ -239,48 +231,51 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     );
   }
 
-//  @Test
-//  void searchByStatus_foundWhenWithdrawn() {
-//    searchForm.setStatuses(List.of(ApplicationVersionStatus.WITHDRAWN));
-//    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
-//
-//    var applicationVersion = createWithdrawnApplicationVersion(ApplicationType.PRODUCTION, consentLengthForm);
-//    applicationVersion.setStatus(ApplicationVersionStatus.WITHDRAWN);
-//    var applicationId = applicationVersion.getApplication().getId();
-//
-//    var searchResults = getSearchResultItems(searchForm);
-//    assertThat(searchResults).containsExactly(
-//        getSearchResultItemProductionSubmittedOfConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
-//    );
-//  }
-//
-//  @Test
-//  void searchByStatus_foundWhenAwaitingForPayment() {
-//    searchForm.setStatuses(List.of(ApplicationVersionStatus.AWAITING_PAYMENT));
-//    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
-//
-//    var applicationVersion = createAwaitingForPaymentApplicationVersion(ApplicationType.PRODUCTION, consentLengthForm);
-//    var applicationId = applicationVersion.getApplication().getId();
-//
-//    var searchResults = getSearchResultItems(searchForm);
-//    assertThat(searchResults).containsExactly(
-//        getSearchResultItemProductionSubmittedOfConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
-//    );
-//  }
-//
-//    @Test
-//  void searchByStatus_foundWhenCompleted() {
-//    searchForm.setStatuses(List.of(ApplicationVersionStatus.COMPLETED));
-//    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
-//
-//    var applicationVersion = createSubmittedApplicationVersion(ApplicationType.PRODUCTION, consentLengthForm);
-//    var applicationId = applicationVersion.getApplication().getId();
-//
-//    var searchResults = getSearchResultItems(searchForm);
-//    assertThat(searchResults).containsExactly(
-//        getSearchResultItemProductionSubmittedOfConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
-//    );
-//  }
+  @Test
+  @Disabled(value = "result not found - FCS-520")
+  void searchByStatus_foundWhenWithdrawn() {
+    searchForm.setStatuses(List.of(ApplicationVersionStatus.WITHDRAWN));
+    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
+
+    var applicationVersion = createWithdrawnApplicationVersion(ApplicationType.PRODUCTION, consentLengthForm);
+    applicationVersion.setStatus(ApplicationVersionStatus.WITHDRAWN);
+    var applicationId = applicationVersion.getApplication().getId();
+
+    var searchResults = getSearchResultItems(searchForm);
+    assertThat(searchResults).containsExactly(
+        getSearchResultItemProductionSubmittedOfConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
+    );
+  }
+
+  @Test
+  @Disabled(value = "result not found - FCS-520")
+  void searchByStatus_foundWhenAwaitingForPayment() {
+    searchForm.setStatuses(List.of(ApplicationVersionStatus.AWAITING_PAYMENT));
+    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
+
+    var applicationVersion = createAwaitingForPaymentApplicationVersion(ApplicationType.PRODUCTION, consentLengthForm);
+    var applicationId = applicationVersion.getApplication().getId();
+
+    var searchResults = getSearchResultItems(searchForm);
+    assertThat(searchResults).containsExactly(
+        getSearchResultItemProductionSubmittedOfConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
+    );
+  }
+
+  @Test
+  @Disabled(value = "result not found - FCS-520")
+  void searchByStatus_foundWhenCompleted() {
+    searchForm.setStatuses(List.of(ApplicationVersionStatus.COMPLETED));
+    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
+
+    var applicationVersion = createSubmittedApplicationVersion(ApplicationType.PRODUCTION, consentLengthForm);
+    var applicationId = applicationVersion.getApplication().getId();
+
+    var searchResults = getSearchResultItems(searchForm);
+    assertThat(searchResults).containsExactly(
+        getSearchResultItemProductionSubmittedOfConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
+    );
+  }
 
   /*********************************** APPLICATION TYPE ***********************************/
   @ParameterizedTest
@@ -297,7 +292,6 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     assertThat(searchResults).containsExactly(
         getSearchResultItemForFieldInProgressOfType(applicationId, applicationType, field1JsonWithOperatorAndLicences)
     );
-    applicationVersionService.deleteApplicationVersion(applicationVersion);
   }
 
   @ParameterizedTest
@@ -325,8 +319,7 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
 
     var applicationVersion = createNewApplicationVersionForField(ApplicationType.VENT, consentLengthForm);
 
-    var searchResults = getSearchResultItems(searchForm);
-    assertThat(searchResults).isEmpty();
+    assertThat(getSearchResultItems(searchForm)).isEmpty();
 
     applicationVersionService.deleteApplicationVersion(applicationVersion);
   }
@@ -473,8 +466,7 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
 
     createNewApplicationVersionForField(ApplicationType.PRODUCTION, consentLengthForm);
 
-    var searchResults = getSearchResultItems(searchForm);
-    assertThat(searchResults).isEmpty();
+    assertThat(getSearchResultItems(searchForm)).isEmpty();
   }
 
   /*********************************** SUBMISSION YEAR ***********************************/
@@ -501,8 +493,7 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
 
     createNewApplicationVersionForField(ApplicationType.PRODUCTION, consentLengthForm);
 
-    var searchResults = getSearchResultItems(searchForm);
-    assertThat(searchResults).isEmpty();
+    assertThat(getSearchResultItems(searchForm)).isEmpty();
   }
 
   /*********************************** CONSENT START YEAR ***********************************/
@@ -592,8 +583,7 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
 
     createNewApplicationVersionForField(ApplicationType.PRODUCTION, consentLengthForm);
 
-    var searchResults = getSearchResultItems(searchForm);
-    assertThat(searchResults).isEmpty();
+    assertThat(getSearchResultItems(searchForm)).isEmpty();
   }
 
   /************************************** ACE STATUS **************************************/
@@ -625,9 +615,7 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
 
     createSubmittedApplicationVersion(ApplicationType.PRODUCTION, consentLengthForm);
 
-    var searchResults = getSearchResultItems(searchForm);
-    assertThat(searchResults).isEmpty();
-
+    assertThat(getSearchResultItems(searchForm)).isEmpty();
   }
 
   private static Stream<Arguments> aceStatusFlagsConsentYearsWhenNotFound() {
@@ -653,7 +641,6 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     assertThat(searchResults).containsExactly(
         getSearchResultItemForFieldInProgressOfType(applicationId, ApplicationType.PRODUCTION, field1JsonWithOperatorAndLicences)
     );
-    applicationVersionService.deleteApplicationVersion(applicationVersion);
   }
 
   @Test
@@ -938,8 +925,7 @@ public class SearchIntegrationTest extends AbstractIntegrationTest {
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
     createSubmittedApplicationVersion(ApplicationType.FLARE, consentLengthForm);
 
-    var searchResults = getSearchResultItems(searchForm);
-    assertThat(searchResults).isEmpty();
+    assertThat(getSearchResultItems(searchForm)).isEmpty();
   }
 
   private ApplicationVersion createNewApplicationVersionForFieldJson(ApplicationType applicationType,

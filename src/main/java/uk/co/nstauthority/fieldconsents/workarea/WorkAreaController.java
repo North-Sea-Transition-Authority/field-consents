@@ -51,7 +51,7 @@ public class WorkAreaController {
 
   public static final String WORK_AREA_TITLE = "Work area";
   private static final String IS_WORK_AREA_WITH_TABS = "isWorkAreaWithTabs";
-  private static final String WORK_AREA_ITEMS = "workAreaItems";
+  public static final String WORK_AREA_ITEMS = "workAreaItems";
 
   private final WorkAreaService workAreaService;
 

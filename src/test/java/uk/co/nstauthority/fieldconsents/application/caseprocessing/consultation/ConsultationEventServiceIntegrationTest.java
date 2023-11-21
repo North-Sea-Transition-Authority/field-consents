@@ -22,7 +22,6 @@ import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAss
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetRepository;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEvent;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventType;
-import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.SamlAuthenticationUtil;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
@@ -64,9 +63,6 @@ class ConsultationEventServiceIntegrationTest extends AbstractIntegrationTest {
 
   @MockBean
   private OpredTeamService opredTeamService;
-
-  @MockBean
-  private ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
 
   private Instant beforeTestRun;
 
