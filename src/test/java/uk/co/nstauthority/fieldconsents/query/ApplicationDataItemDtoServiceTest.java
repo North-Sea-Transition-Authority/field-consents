@@ -24,6 +24,7 @@ import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.get
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.getApplicationDataItemDtoForShortVentAssignedForTerminal;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.getApplicationDataItemDtoForShortVentSubmittedForTerminal;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.getApplicationDataItemDtoForShortVentVersion2InProgressForTerminal;
+import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.getSearchResultItemDtoForAnnualProductionInProgressForField;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.portalUserDtosMap;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.submitter;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.technicalReviewer;
@@ -325,11 +326,19 @@ class ApplicationDataItemDtoServiceTest {
     var applicationDataItemDto = getApplicationDataItemDtoForLongFlareSubmittedForField();
 
     assertThat(applicationDataItemDtoService.getDisplayAceFlag(applicationDataItemDto))
-        .isEqualTo("ACE");
+        .isEqualTo("ACE: Yes");
   }
 
   @Test
   void getDisplayAceFlag_whenFalse() {
+    var applicationDataItemDto = getSearchResultItemDtoForAnnualProductionInProgressForField();
+
+    assertThat(applicationDataItemDtoService.getDisplayAceFlag(applicationDataItemDto))
+        .isEqualTo("ACE: No");
+  }
+
+  @Test
+  void getDisplayAceFlag_whenUndefined() {
     var applicationDataItemDto = getApplicationDataItemDtoForLongFlareSubmittedForTerminal();
 
     assertThat(applicationDataItemDtoService.getDisplayAceFlag(applicationDataItemDto))

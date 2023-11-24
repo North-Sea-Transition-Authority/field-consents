@@ -151,7 +151,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withSubmittedBy("Submitter: %s %s".formatted(
             USER_DETAIL.forename(),
             USER_DETAIL.surname()))
-        .withAceFlag("")
+        .withAceFlag("ACE: No")
         .withCaseOfficer("")
         .withWithdrawalOpen(false)
         .withTechnicalReviewer("")
@@ -269,7 +269,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withSubmittedBy("Submitter: %s %s".formatted(
             USER_DETAIL.forename(),
             USER_DETAIL.surname()))
-        .withAceFlag("")
+        .withAceFlag("ACE: No")
         .withCaseOfficer("")
         .withWithdrawalOpen(false)
         .withTechnicalReviewer("")
@@ -298,7 +298,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withSubmittedBy("Submitter: %s %s".formatted(
             USER_DETAIL.forename(),
             USER_DETAIL.surname()))
-        .withAceFlag("")
+        .withAceFlag("ACE: No")
         .withCaseOfficer("Case officer: %s %s".formatted(
             CASE_OFFICER_DETAIL.forename(),
             CASE_OFFICER_DETAIL.surname()))
@@ -329,7 +329,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withSubmittedBy("Submitter: %s %s".formatted(
             USER_DETAIL.forename(),
             USER_DETAIL.surname()))
-        .withAceFlag("")
+        .withAceFlag("ACE: No")
         .withCaseOfficer("Case officer: %s %s".formatted(
             CASE_OFFICER_DETAIL.forename(),
             CASE_OFFICER_DETAIL.surname()))
@@ -363,7 +363,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withSubmittedBy("Submitter: %s %s".formatted(
             USER_DETAIL.forename(),
             USER_DETAIL.surname()))
-        .withAceFlag("")
+        .withAceFlag("ACE: No")
         .withCaseOfficer("Case officer: %s %s".formatted(
             CASE_OFFICER_DETAIL.forename(),
             CASE_OFFICER_DETAIL.surname()))

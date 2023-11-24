@@ -25,6 +25,7 @@ import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.util.BooleanUtil;
 
 /**
  * Implements the common security rules used by both work-area and search screen for user accessibility.
@@ -159,7 +160,10 @@ public class ApplicationDataItemDtoService {
   }
 
   public String getDisplayAceFlag(ApplicationDataItemDto dataItemDto) {
-    return Boolean.TRUE.equals(dataItemDto.getAceFlag()) ? "ACE" : "";
+    if (Objects.isNull(dataItemDto.getAceFlag())) {
+      return "";
+    }
+    return "ACE: %s".formatted(BooleanUtil.yesNoFromBoolean(dataItemDto.getAceFlag()));
   }
 
   public String getDisplayCaseOfficer(ApplicationDataItemDto dataItemDto,
