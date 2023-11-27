@@ -1,4 +1,5 @@
 <#include '../layout/layout.ftl'>
+<#import '../dataitems/applicationDataItem.ftl' as applicationDataItem>
 <#import '../dataitems/_dataItemFilter.ftl' as dataItemFilter>
 
 <#-- @ftlvariable name="applicationDataItem" type="uk.co.nstauthority.fieldconsents.query.ApplicationDataItem" -->
@@ -40,7 +41,7 @@
             <@fdsBackendTabs.tabContent tabAnchor=tab.anchor currentTab=selectedTab tabValue=tab.value>
               <@fdsResultList.resultList resultCount=workAreaItems?size>
                 <#list workAreaItems as workAreaItem>
-                  <@fcsApplicationDataItem applicationDataItem=workAreaItem pageTitle=pageTitle/>
+                  <@applicationDataItem.applicationResultListItem dataItem=workAreaItem />
                 </#list>
               </@fdsResultList.resultList>
             </@fdsBackendTabs.tabContent>
@@ -49,7 +50,7 @@
       <#else>
         <@fdsResultList.resultList resultCount=workAreaItems?size>
           <#list workAreaItems as workAreaItem>
-            <@fcsApplicationDataItem applicationDataItem=workAreaItem pageTitle=pageTitle/>
+            <@applicationDataItem.applicationResultListItem dataItem=workAreaItem />
           </#list>
         </@fdsResultList.resultList>
       </#if>
@@ -98,62 +99,4 @@
       labelHeadingClass="govuk-input--width-10"
     />
   </@fdsSearch.searchFilterItem>
-</#macro>
-
-<#macro fcsApplicationDataItem applicationDataItem pageTitle>
-  <#assign workAreaItemTagContent>
-    <#if applicationDataItem.withdrawalOpen()!false>
-      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Withdrawal requested"/>
-      <br/>
-    </#if>
-    <#if applicationDataItem.applicationUpdateOpen()!false>
-      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Update due by ${applicationDataItem.applicationUpdateDeadline()}"/>
-      <br/>
-    </#if>
-    <#if applicationDataItem.consultationFurtherInformationOpen()!false>
-      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Further information requested"/>
-      <br/>
-    </#if>
-    <#if applicationDataItem.consultationOpen()!false>
-      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Consultation due by ${applicationDataItem.consultationDeadline()}"/>
-      <br/>
-    </#if>
-  </#assign>
-  <@fdsResultList.resultListItem
-    linkHeadingText=applicationDataItem.reference()
-    linkHeadingUrl=springUrl(applicationDataItem.url())
-    captionHeadingText=applicationDataItem.operator()
-    itemTag=workAreaItemTagContent
-  >
-    <@fdsResultList.resultListDataItem>
-      <#assign consentType>
-        ${applicationDataItem.type()}
-        <br/>
-        ${applicationDataItem.duration()}
-        <br/>
-        ${applicationDataItem.aceFlag()}
-      </#assign>
-      <#assign location>
-        ${applicationDataItem.asset()}
-        <br/>
-        ${applicationDataItem.geographicArea()}
-      </#assign>
-      <#assign status>
-        ${applicationDataItem.status()}
-        <br/>
-        ${applicationDataItem.caseOfficer()}
-        <br/>
-        ${applicationDataItem.technicalReviewer()}
-      </#assign>
-      <#assign otherInformation>
-        ${applicationDataItem.submittedDateTime()}
-        <br/>
-        ${applicationDataItem.submittedBy()}
-      </#assign>
-      <@fdsResultList.resultListDataValue key="Consent type" value=consentType/>
-      <@fdsResultList.resultListDataValue key="Licence info" value=location/>
-      <@fdsResultList.resultListDataValue key="Status" value=status/>
-      <@fdsResultList.resultListDataValue key="Other information" value=otherInformation/>
-    </@fdsResultList.resultListDataItem>
-  </@fdsResultList.resultListItem>
 </#macro>

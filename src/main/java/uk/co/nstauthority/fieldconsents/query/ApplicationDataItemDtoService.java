@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.query;
 
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -70,7 +71,8 @@ public class ApplicationDataItemDtoService {
   }
 
   public Map<Integer, FieldJson> getFieldJsonMapFromApplicationDataItemDtos(
-      List<? extends ApplicationDataItemDto> applicationDataItemDtos) {
+      Collection<? extends ApplicationDataItemDto> applicationDataItemDtos
+  ) {
     var fieldJsons = fieldService.findFieldsByIds(applicationDataItemDtos
         .stream()
         .filter(dto -> dto.getAssetType() == AssetType.FIELD)
@@ -87,7 +89,8 @@ public class ApplicationDataItemDtoService {
   }
 
   public Map<WebUserAccountId, EnergyPortalUserDto> getEnergyPortalUserDtoMapFromApplicationDataItemDtos(
-      List<? extends ApplicationDataItemDto> applicationDataItemDtos) {
+      Collection<? extends ApplicationDataItemDto> applicationDataItemDtos
+  ) {
 
     var wuaIds = applicationDataItemDtos
         .stream()
