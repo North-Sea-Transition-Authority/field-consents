@@ -23,6 +23,7 @@ public class SearchResultItemDto extends ApplicationDataItemDto {
                              LocalDate shortTermEndDate, Integer longTermStartYear, Integer longTermEndYear,
                              Instant submittedDateTime, Long submittedByWuaId, Boolean aceFlag,
                              Long caseOfficerWuaId, Boolean withdrawalOpen, Long technicalReviewerWuaId,
+                             Boolean technicalReviewOpen, Instant technicalReviewDeadline,
                              Boolean applicationUpdateOpen, Instant applicationUpdateDeadline,
                              Boolean consultationOpen, Instant consultationDeadline,
                              FurtherInformationStatus furtherInformationStatus,
@@ -31,7 +32,8 @@ public class SearchResultItemDto extends ApplicationDataItemDto {
     super(applicationId, applicationVersionId, type, variationNo, applicationNo, versionNo, operatorId, status, assetType,
         assetId, assetName, duration, consentYear, shortTermStartDate, shortTermEndDate,
         longTermStartYear, longTermEndYear, submittedDateTime, submittedByWuaId, aceFlag, caseOfficerWuaId,
-        withdrawalOpen, technicalReviewerWuaId, applicationUpdateOpen, applicationUpdateDeadline, consultationOpen,
+        withdrawalOpen, technicalReviewerWuaId, technicalReviewOpen, technicalReviewDeadline,
+        applicationUpdateOpen, applicationUpdateDeadline, consultationOpen,
         consultationDeadline, furtherInformationStatus);
 
     this.licences = licences;

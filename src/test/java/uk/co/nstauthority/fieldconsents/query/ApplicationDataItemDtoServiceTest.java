@@ -434,6 +434,8 @@ class ApplicationDataItemDtoServiceTest {
         "",
         false,
         "",
+        null,
+        null,
         false,
         "",
         null,
@@ -599,6 +601,24 @@ class ApplicationDataItemDtoServiceTest {
   }
 
   @Test
+  void getTechnicalReviewDeadline_reviewOpen() {
+    var dataItemDto = mock(ApplicationDataItemDto.class);
+    when(dataItemDto.getTechnicalReviewOpen()).thenReturn(true);
+    when(dataItemDto.getTechnicalReviewDeadline()).thenReturn(Instant.now());
+
+    assertThat(applicationDataItemDtoService.getTechnicalReviewDeadline(dataItemDto))
+        .isEqualTo(DateUtils.format(dataItemDto.getTechnicalReviewDeadline(), DateUtils.DATE_TIME));
+  }
+
+  @Test
+  void getTechnicalReviewDeadline_reviewNotOpen() {
+    var dataItemDto = mock(ApplicationDataItemDto.class);
+    when(dataItemDto.getTechnicalReviewOpen()).thenReturn(false);
+
+    assertThat(applicationDataItemDtoService.getTechnicalReviewDeadline(dataItemDto)).isEmpty();
+  }
+
+  @Test
   void getConsultationDeadline_consultationOpen() {
     var dataItemDto = mock(ApplicationDataItemDto.class);
     when(dataItemDto.getConsultationOpen()).thenReturn(true);
@@ -641,6 +661,7 @@ class ApplicationDataItemDtoServiceTest {
 
     applicationDataItemDtoService.removeTagsForTeamType(TeamType.INDUSTRY, builder);
 
+    verifyTechnicalReviewDeadlineTagRemoved(builder);
     verify(builder).withConsultationOpen(null);
     verify(builder).withConsultationDeadline(null);
     verify(builder).withConsultationFurtherInformationOpen(null);
@@ -655,9 +676,15 @@ class ApplicationDataItemDtoServiceTest {
     applicationDataItemDtoService.removeTagsForTeamType(TeamType.OPRED, builder);
 
     verify(builder).withWithdrawalOpen(null);
+    verifyTechnicalReviewDeadlineTagRemoved(builder);
     verifyApplicationUpdateTagRemoved(builder);
 
     verifyNoMoreInteractions(builder);
+  }
+
+  private void verifyTechnicalReviewDeadlineTagRemoved(ApplicationDataItem.Builder builder) {
+    verify(builder).withTechnicalReviewOpen(null);
+    verify(builder).withTechnicalReviewDeadline(null);
   }
 
   private void verifyApplicationUpdateTagRemoved(ApplicationDataItem.Builder builder) {

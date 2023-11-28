@@ -220,6 +220,14 @@ public class ApplicationDataItemDtoService {
     return DateUtils.format(dataItemDto.getApplicationUpdateDeadline(), DateUtils.DATE_TIME);
   }
 
+  public String getTechnicalReviewDeadline(ApplicationDataItemDto dataItemDto) {
+    if (!Boolean.TRUE.equals(dataItemDto.getTechnicalReviewOpen())) {
+      return "";
+    }
+
+    return DateUtils.format(dataItemDto.getTechnicalReviewDeadline(), DateUtils.DATE_TIME);
+  }
+
   public String getOperator(ApplicationDataItemDto dataItemDto, Map<Integer, String> organisationUnitNameById) {
     return organisationUnitNameById.getOrDefault(dataItemDto.getOperatorId(), "MISSING OPERATOR");
   }
@@ -253,6 +261,8 @@ public class ApplicationDataItemDtoService {
         .withCaseOfficer(getDisplayCaseOfficer(dataItemDto, portalUserDtoByWuaId))
         .withWithdrawalOpen(withdrawalOpen)
         .withTechnicalReviewer(getDisplayTechnicalReviewer(dataItemDto, portalUserDtoByWuaId, teamType))
+        .withTechnicalReviewOpen(dataItemDto.getTechnicalReviewOpen())
+        .withTechnicalReviewDeadline(getTechnicalReviewDeadline(dataItemDto))
         .withApplicationUpdateOpen(applicationUpdateOpen)
         .withApplicationUpdateDeadline(getApplicationUpdateDeadline(dataItemDto))
         .withConsultationOpen(dataItemDto.getConsultationOpen())
@@ -266,12 +276,14 @@ public class ApplicationDataItemDtoService {
 
   void removeTagsForTeamType(TeamType teamType, ApplicationDataItem.Builder builder) {
     if (TeamType.INDUSTRY.equals(teamType)) {
+      removeTechnicalReviewTag(builder);
       removeConsultationTag(builder);
       removeFurtherInformationTag(builder);
       return;
     }
 
     if (TeamType.OPRED.equals(teamType)) {
+      removeTechnicalReviewTag(builder);
       removeApplicationUpdateTag(builder);
       removeWithdrawalTag(builder);
     }
@@ -287,6 +299,10 @@ public class ApplicationDataItemDtoService {
 
   private void removeFurtherInformationTag(ApplicationDataItem.Builder builder) {
     builder.withConsultationFurtherInformationOpen(null);
+  }
+
+  private void removeTechnicalReviewTag(ApplicationDataItem.Builder builder) {
+    builder.withTechnicalReviewOpen(null).withTechnicalReviewDeadline(null);
   }
 
   private void removeConsultationTag(ApplicationDataItem.Builder builder) {

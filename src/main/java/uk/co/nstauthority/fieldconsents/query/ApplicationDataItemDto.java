@@ -32,6 +32,8 @@ public class ApplicationDataItemDto {
   private final Long caseOfficerWuaId;
   private final Boolean withdrawalOpen;
   private final Long technicalReviewerWuaId;
+  private final Boolean technicalReviewOpen;
+  private final Instant technicalReviewDeadline;
   private final Boolean applicationUpdateOpen;
   private final Instant applicationUpdateDeadline;
   private final Boolean consultationOpen;
@@ -45,10 +47,9 @@ public class ApplicationDataItemDto {
                                 LocalDate shortTermStartDate, LocalDate shortTermEndDate, Integer longTermStartYear,
                                 Integer longTermEndYear, Instant submittedDateTime, Long submittedByWuaId,
                                 Boolean aceFlag, Long caseOfficerWuaId, Boolean withdrawalOpen,
-                                Long technicalReviewerWuaId,
-                                Boolean applicationUpdateOpen, Instant applicationUpdateDeadline,
-                                Boolean consultationOpen, Instant consultationDeadline,
-                                FurtherInformationStatus consultationFurtherInformationStatus) {
+                                Long technicalReviewerWuaId, Boolean technicalReviewOpen, Instant technicalReviewDeadline,
+                                Boolean applicationUpdateOpen, Instant applicationUpdateDeadline, Boolean consultationOpen,
+                                Instant consultationDeadline, FurtherInformationStatus consultationFurtherInformationStatus) {
     this.applicationId = applicationId;
     this.applicationVersionId = applicationVersionId;
     this.type = type;
@@ -72,6 +73,8 @@ public class ApplicationDataItemDto {
     this.caseOfficerWuaId = caseOfficerWuaId;
     this.withdrawalOpen = withdrawalOpen;
     this.technicalReviewerWuaId = technicalReviewerWuaId;
+    this.technicalReviewOpen = technicalReviewOpen;
+    this.technicalReviewDeadline = technicalReviewDeadline;
     this.applicationUpdateOpen = applicationUpdateOpen;
     this.applicationUpdateDeadline = applicationUpdateDeadline;
     this.consultationOpen = consultationOpen;
@@ -169,6 +172,14 @@ public class ApplicationDataItemDto {
 
   public Long getTechnicalReviewerWuaId() {
     return technicalReviewerWuaId;
+  }
+
+  public Boolean getTechnicalReviewOpen() {
+    return technicalReviewOpen;
+  }
+
+  public Instant getTechnicalReviewDeadline() {
+    return technicalReviewDeadline;
   }
 
   public Boolean getApplicationUpdateOpen() {

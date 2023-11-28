@@ -92,6 +92,8 @@ public class ApplicationDataItemUtil {
         null,
         false,
         null,
+        false,
+        null,
         null
     );
   }
@@ -125,6 +127,8 @@ public class ApplicationDataItemUtil {
         null,
         false,
         null,
+        false,
+        null,
         null
     );
   }
@@ -151,6 +155,8 @@ public class ApplicationDataItemUtil {
         Instant.now(),
         USER_WUA_ID,
         null,
+        null,
+        false,
         null,
         false,
         null,
@@ -191,6 +197,8 @@ public class ApplicationDataItemUtil {
         null,
         false,
         null,
+        false,
+        null,
         null
     );
   }
@@ -220,6 +228,8 @@ public class ApplicationDataItemUtil {
         CASE_OFFICER_WUA_ID,
         false,
         TECHNICAL_REVIEWER_WUA_ID,
+        false,
+        null,
         false,
         null,
         false,
@@ -254,6 +264,8 @@ public class ApplicationDataItemUtil {
         null,
         null,
         null,
+        null,
+        false,
         null,
         null,
         null,
@@ -290,6 +302,8 @@ public class ApplicationDataItemUtil {
         null,
         false,
         null,
+        false,
+        null,
         null
     );
   }
@@ -316,6 +330,8 @@ public class ApplicationDataItemUtil {
         Instant.now(),
         USER_WUA_ID,
         true,
+        null,
+        false,
         null,
         false,
         null,
@@ -356,6 +372,8 @@ public class ApplicationDataItemUtil {
         null,
         false,
         null,
+        false,
+        null,
         null,
         "P1, P2, P3"
     );
@@ -390,32 +408,10 @@ public class ApplicationDataItemUtil {
         null,
         false,
         null,
+        false,
+        null,
         null,
         "P1, P2, P3"
-    );
-  }
-
-  public static ApplicationDataItem getApplicationDataItemFromDto(ApplicationDataItemDto applicationDataItemDto, TeamType teamType) {
-    return new ApplicationDataItem(
-        applicationDataItemDto.getApplicationId(),
-        applicationDataItemDto.getType().getDisplayName(),
-        getDuration(applicationDataItemDto),
-        getCaseReference(applicationDataItemDto),
-        getOperator(applicationDataItemDto),
-        applicationDataItemDto.getAssetName(),
-        getGeographicArea(applicationDataItemDto),
-        applicationDataItemDto.getStatus().getDisplayName(),
-        getSubmittedDateTime(applicationDataItemDto),
-        getSubmitter(applicationDataItemDto),
-        getAceFlag(applicationDataItemDto),
-        getCaseOfficer(applicationDataItemDto),
-        applicationDataItemDto.getWithdrawalOpen(),
-        getTechnicalReviewer(applicationDataItemDto, teamType),
-        applicationDataItemDto.getApplicationUpdateOpen(),
-        getApplicationUpdateDeadline(applicationDataItemDto),
-        applicationDataItemDto.getConsultationOpen(),
-        getConsultationDeadline(applicationDataItemDto),
-        false
     );
   }
 
@@ -574,6 +570,8 @@ public class ApplicationDataItemUtil {
         "",
         false,
         "",
+        false,
+        "",
         false
     );
   }
@@ -594,6 +592,8 @@ public class ApplicationDataItemUtil {
         .withCaseOfficer("")
         .withWithdrawalOpen(false)
         .withTechnicalReviewer("")
+        .withTechnicalReviewOpen(false)
+        .withTechnicalReviewDeadline("")
         .withApplicationUpdateOpen(false)
         .withApplicationUpdateDeadline("")
         .withConsultationOpen(false)

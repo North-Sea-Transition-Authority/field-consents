@@ -10,6 +10,10 @@
       <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Update due by ${dataItem.applicationUpdateDeadline()}"/>
       <br/>
     </#if>
+    <#if dataItem.technicalReviewOpen()!false>
+      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Technical review due by ${dataItem.technicalReviewDeadline()}"/>
+      <br/>
+    </#if>
     <#if dataItem.consultationFurtherInformationOpen()!false>
       <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Further information requested"/>
       <br/>

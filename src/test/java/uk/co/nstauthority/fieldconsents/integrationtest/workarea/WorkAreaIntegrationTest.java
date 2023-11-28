@@ -826,12 +826,12 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
     workAreaFilterForm.setTechnicalReviewerWuaId(TECHNICAL_REVIEWER_DETAIL.wuaId());
 
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
-    var applicationVersion = createApplicationVersionWithAssignedReviewer(ApplicationType.PRODUCTION, consentLengthForm, CASE_OFFICER_DETAIL, TECHNICAL_REVIEWER_DETAIL, zonedDateTime.plusDays(7).toInstant());
+    var applicationVersion = createApplicationVersionWithAssignedReviewer(ApplicationType.PRODUCTION, consentLengthForm, CASE_OFFICER_DETAIL, TECHNICAL_REVIEWER_DETAIL, zonedDateTime.plusDays(2).toInstant());
     var applicationId = applicationVersion.getApplication().getId();
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, CASE_OFFICER_DETAIL);
     assertThat(workAreaItems).containsExactly(
-        getApplicationDataItemProductionWithReviewOpenOfConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
+        getApplicationDataItemProductionWithReviewOpenOfConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM, zonedDateTime.plusDays(2).toInstant())
     );
   }
 

@@ -20,6 +20,8 @@ public record ApplicationDataItem(
     String caseOfficer,
     Boolean withdrawalOpen,
     String technicalReviewer,
+    Boolean technicalReviewOpen,
+    String technicalReviewDeadline,
     Boolean applicationUpdateOpen,
     String applicationUpdateDeadline,
     Boolean consultationOpen,
@@ -47,6 +49,8 @@ public record ApplicationDataItem(
     private String caseOfficer;
     private Boolean withdrawalOpen;
     private String technicalReviewer;
+    private Boolean technicalReviewOpen;
+    private String technicalReviewDeadline;
     private Boolean applicationUpdateOpen;
     private String applicationUpdateDeadline;
     private Boolean consultationOpen;
@@ -123,6 +127,16 @@ public record ApplicationDataItem(
       return this;
     }
 
+    public Builder withTechnicalReviewOpen(Boolean technicalReviewOpen) {
+      this.technicalReviewOpen = technicalReviewOpen;
+      return this;
+    }
+
+    public Builder withTechnicalReviewDeadline(String technicalReviewDeadline) {
+      this.technicalReviewDeadline = technicalReviewDeadline;
+      return this;
+    }
+
     public Builder withApplicationUpdateOpen(Boolean applicationUpdateOpen) {
       this.applicationUpdateOpen = applicationUpdateOpen;
       return this;
@@ -164,6 +178,8 @@ public record ApplicationDataItem(
           caseOfficer,
           withdrawalOpen,
           technicalReviewer,
+          technicalReviewOpen,
+          technicalReviewDeadline,
           applicationUpdateOpen,
           applicationUpdateDeadline,
           consultationOpen,
