@@ -22,6 +22,7 @@ import uk.co.nstauthority.fieldconsents.authorisation.AccessibleByServiceUsers;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormService;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItem;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 
 @Controller
@@ -53,7 +54,7 @@ public class SearchController {
                                 ServiceUserDetail user) {
     if (searchSession.hasSearchBeenInvoked()) {
       return getSearchModelAndView(searchSession, user)
-          .addObject(SEARCH_RESULT_ITEMS, getSearchResultItems(searchSession, user));
+          .addObject(SEARCH_RESULT_ITEMS, getApplicationDataItems(searchSession, user));
     }
     return getSearchModelAndView(searchSession, user);
   }
@@ -100,17 +101,17 @@ public class SearchController {
     return ReverseRouter.redirect(on(SearchController.class).getSearch(null, null));
   }
 
-  private List<SearchResultItem> getSearchResultItems(SearchSession searchSession, ServiceUserDetail user) {
+  private List<ApplicationDataItem> getApplicationDataItems(SearchSession searchSession, ServiceUserDetail user) {
     if (teamService.isRegulatorUser(user)) {
-      return searchService.getRegulatorSearchResultItems(searchSession.getSearchFilterForm(), user);
+      return searchService.getRegulatorApplicationDataItems(searchSession.getSearchFilterForm(), user);
     }
 
     if (teamService.isIndustryUser(user)) {
-      return searchService.getIndustrySearchResultItems(searchSession.getSearchFilterForm(), user);
+      return searchService.getIndustryApplicationDataItems(searchSession.getSearchFilterForm(), user);
     }
 
     if (teamService.isConsulteeUser(user)) {
-      return searchService.getConsulteeSearchResultItems(searchSession.getSearchFilterForm(), user);
+      return searchService.getConsulteeApplicationDataItems(searchSession.getSearchFilterForm(), user);
     }
 
     return Collections.emptyList();

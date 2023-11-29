@@ -100,7 +100,7 @@ class SearchServiceTest {
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, VIEW_PERMISSIONS))
         .thenReturn(Collections.emptyList());
 
-    assertThat(searchService.getRegulatorSearchResultItems(form, user)).isEmpty();
+    assertThat(searchService.getRegulatorApplicationDataItems(form, user)).isEmpty();
   }
 
   @Test
@@ -110,29 +110,29 @@ class SearchServiceTest {
         .thenReturn(List.of(regulatorTeam));
     when(searchResultItemDtoService.runSearchQuery(any())).thenReturn(Collections.emptyList());
 
-    assertThat(searchService.getRegulatorSearchResultItems(form, user)).isEmpty();
+    assertThat(searchService.getRegulatorApplicationDataItems(form, user)).isEmpty();
   }
 
   @Test
   void getRegulatorSearchResultItems_withFlareSubmitted_forTerminal() {
     when(searchFilterService.getConditions(form, TeamType.REGULATOR)).thenReturn(Collections.emptyList());
 
-    var searchResultItemDto = ApplicationDataItemUtil.getSearchResultItemDtoForLongFlareSubmittedForTerminalWithOpenWithdrawalRequest();
-    when(searchResultItemDtoService.runSearchQuery(any())).thenReturn(Collections.singletonList(searchResultItemDto));
+    var applicationDataItemDto = ApplicationDataItemUtil.getApplicationDataItemDtoForLongFlareSubmittedForTerminalWithOpenWithdrawalRequest();
+    when(searchResultItemDtoService.runSearchQuery(any())).thenReturn(Collections.singletonList(applicationDataItemDto));
 
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, VIEW_PERMISSIONS))
         .thenReturn(Collections.singletonList(regulatorTeam));
 
-    when(applicationDataItemDtoService.getOrganisationUnitJsonsFromApplicationDataItemDtos(List.of(searchResultItemDto)))
+    when(applicationDataItemDtoService.getOrganisationUnitJsonsFromApplicationDataItemDtos(List.of(applicationDataItemDto)))
         .thenReturn(Collections.singletonList(field1JsonWithOperator.getOperatorJson()));
 
-    when(applicationDataItemDtoService.getFieldJsonMapFromApplicationDataItemDtos(List.of(searchResultItemDto))).thenReturn(fieldJsonById);
+    when(applicationDataItemDtoService.getFieldJsonMapFromApplicationDataItemDtos(List.of(applicationDataItemDto))).thenReturn(fieldJsonById);
 
     var portalUserDtoByWuaId = Map.of(WebUserAccountId.from(user.wuaId()), ENERGY_PORTAL_USER_1);
-    when(applicationDataItemDtoService.getEnergyPortalUserDtoMapFromApplicationDataItemDtos(List.of(searchResultItemDto))).thenReturn(portalUserDtoByWuaId);
+    when(applicationDataItemDtoService.getEnergyPortalUserDtoMapFromApplicationDataItemDtos(List.of(applicationDataItemDto))).thenReturn(portalUserDtoByWuaId);
 
     when(applicationDataItemDtoService.getApplicationDataItem(
-        eq(searchResultItemDto),
+        eq(applicationDataItemDto),
         eq(user),
         eq(TeamType.REGULATOR),
         organisationUnitNamesByIdCaptor.capture(),
@@ -141,8 +141,8 @@ class SearchServiceTest {
     ))
         .thenReturn(ApplicationDataItemUtil.getApplicationDataItem());
 
-    assertThat(searchService.getRegulatorSearchResultItems(form, user))
-        .containsExactly(ApplicationDataItemUtil.getSearchResultItem());
+    assertThat(searchService.getRegulatorApplicationDataItems(form, user))
+        .containsExactly(ApplicationDataItemUtil.getApplicationDataItem());
 
     assertThat(organisationUnitNamesByIdCaptor.getValue())
         .hasSize(1)
@@ -159,22 +159,22 @@ class SearchServiceTest {
   void getRegulatorSearchResultItems_withProductionInProgress_forField() {
     when(searchFilterService.getConditions(form, TeamType.REGULATOR)).thenReturn(Collections.emptyList());
 
-    var searchResultItemDto = ApplicationDataItemUtil.getSearchResultItemDtoForAnnualProductionInProgressForField();
-    when(searchResultItemDtoService.runSearchQuery(any())).thenReturn(Collections.singletonList(searchResultItemDto));
+    var applicationDataItemDto = ApplicationDataItemUtil.getApplicationDataItemDtoForAnnualProductionInProgressForField();
+    when(searchResultItemDtoService.runSearchQuery(any())).thenReturn(Collections.singletonList(applicationDataItemDto));
 
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, VIEW_PERMISSIONS))
         .thenReturn(Collections.singletonList(regulatorTeam));
 
-    when(applicationDataItemDtoService.getOrganisationUnitJsonsFromApplicationDataItemDtos(List.of(searchResultItemDto)))
+    when(applicationDataItemDtoService.getOrganisationUnitJsonsFromApplicationDataItemDtos(List.of(applicationDataItemDto)))
         .thenReturn(Collections.singletonList(field1JsonWithOperator.getOperatorJson()));
 
-    when(applicationDataItemDtoService.getFieldJsonMapFromApplicationDataItemDtos(List.of(searchResultItemDto))).thenReturn(fieldJsonById);
+    when(applicationDataItemDtoService.getFieldJsonMapFromApplicationDataItemDtos(List.of(applicationDataItemDto))).thenReturn(fieldJsonById);
 
     var portalUserDtoByWuaId = Map.of(WebUserAccountId.from(user.wuaId()), ENERGY_PORTAL_USER_1);
-    when(applicationDataItemDtoService.getEnergyPortalUserDtoMapFromApplicationDataItemDtos(List.of(searchResultItemDto))).thenReturn(portalUserDtoByWuaId);
+    when(applicationDataItemDtoService.getEnergyPortalUserDtoMapFromApplicationDataItemDtos(List.of(applicationDataItemDto))).thenReturn(portalUserDtoByWuaId);
 
     when(applicationDataItemDtoService.getApplicationDataItem(
-        eq(searchResultItemDto),
+        eq(applicationDataItemDto),
         eq(user),
         eq(TeamType.REGULATOR),
         organisationUnitNamesByIdCaptor.capture(),
@@ -183,8 +183,8 @@ class SearchServiceTest {
     ))
         .thenReturn(ApplicationDataItemUtil.getApplicationDataItem());
 
-    assertThat(searchService.getRegulatorSearchResultItems(form, user))
-        .containsExactly(ApplicationDataItemUtil.getSearchResultItem());
+    assertThat(searchService.getRegulatorApplicationDataItems(form, user))
+        .containsExactly(ApplicationDataItemUtil.getApplicationDataItem());
 
     assertThat(organisationUnitNamesByIdCaptor.getValue())
         .hasSize(1)
@@ -200,12 +200,12 @@ class SearchServiceTest {
   @Test
   void getIndustrySearchResultItems_withNoOrganisationGroup() {
     shell1IndustryTeam.setOrganisationGroupId(null);
-    assertThat(searchService.getIndustrySearchResultItems(form, user)).isEmpty();
+    assertThat(searchService.getIndustryApplicationDataItems(form, user)).isEmpty();
   }
 
   @Test
   void getIndustrySearchResultItems_withEmptyResults() {
-    assertThat(searchService.getIndustrySearchResultItems(form, user)).isEmpty();
+    assertThat(searchService.getIndustryApplicationDataItems(form, user)).isEmpty();
   }
 
   @Test
@@ -213,7 +213,7 @@ class SearchServiceTest {
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.INDUSTRY, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(Collections.emptyList());
 
-    assertThat(searchService.getIndustrySearchResultItems(form, user)).isEmpty();
+    assertThat(searchService.getIndustryApplicationDataItems(form, user)).isEmpty();
   }
 
   @Test
@@ -223,7 +223,7 @@ class SearchServiceTest {
         .thenReturn(Collections.singletonList(shell1IndustryTeam));
     when(searchResultItemDtoService.runSearchQuery(any())).thenReturn(Collections.emptyList());
 
-    assertThat(searchService.getIndustrySearchResultItems(form, user)).isEmpty();
+    assertThat(searchService.getIndustryApplicationDataItems(form, user)).isEmpty();
   }
 
   @Test
@@ -235,17 +235,17 @@ class SearchServiceTest {
     when(organisationGroupQueryService.getOrganisationUnitsByOrganisationGroupIds(List.of(ORG_GROUP_ID_1)))
         .thenReturn(List.of(field1JsonWithOperator.getOperatorJson()));
 
-    var searchResultItemDto = ApplicationDataItemUtil.getSearchResultItemDtoForLongFlareSubmittedForTerminalWithOpenWithdrawalRequest();
+    var applicationDataItemDto = ApplicationDataItemUtil.getApplicationDataItemDtoForLongFlareSubmittedForTerminalWithOpenWithdrawalRequest();
     when(searchResultItemDtoService.runSearchQuery(any()))
-        .thenReturn(Collections.singletonList(searchResultItemDto));
+        .thenReturn(Collections.singletonList(applicationDataItemDto));
 
-    when(applicationDataItemDtoService.getFieldJsonMapFromApplicationDataItemDtos(List.of(searchResultItemDto))).thenReturn(fieldJsonById);
+    when(applicationDataItemDtoService.getFieldJsonMapFromApplicationDataItemDtos(List.of(applicationDataItemDto))).thenReturn(fieldJsonById);
 
     var portalUserDtoByWuaId = Map.of(WebUserAccountId.from(user.wuaId()), ENERGY_PORTAL_USER_1);
-    when(applicationDataItemDtoService.getEnergyPortalUserDtoMapFromApplicationDataItemDtos(List.of(searchResultItemDto))).thenReturn(portalUserDtoByWuaId);
+    when(applicationDataItemDtoService.getEnergyPortalUserDtoMapFromApplicationDataItemDtos(List.of(applicationDataItemDto))).thenReturn(portalUserDtoByWuaId);
 
     when(applicationDataItemDtoService.getApplicationDataItem(
-        eq(searchResultItemDto),
+        eq(applicationDataItemDto),
         eq(user),
         eq(TeamType.INDUSTRY),
         organisationUnitNamesByIdCaptor.capture(),
@@ -254,8 +254,8 @@ class SearchServiceTest {
     ))
         .thenReturn(ApplicationDataItemUtil.getApplicationDataItem());
 
-    assertThat(searchService.getIndustrySearchResultItems(form, user))
-        .containsExactly(ApplicationDataItemUtil.getSearchResultItem());
+    assertThat(searchService.getIndustryApplicationDataItems(form, user))
+        .containsExactly(ApplicationDataItemUtil.getApplicationDataItem());
 
     assertThat(organisationUnitNamesByIdCaptor.getValue())
         .hasSize(1)
@@ -275,16 +275,16 @@ class SearchServiceTest {
         .thenReturn(List.of(shell1IndustryTeam));
     when(organisationGroupQueryService.getOrganisationUnitsByOrganisationGroupIds(List.of(ORG_GROUP_ID_1)))
         .thenReturn(List.of(field1JsonWithOperator.getOperatorJson()));
-    var searchResultItemDto = ApplicationDataItemUtil.getSearchResultItemDtoForAnnualProductionInProgressForField();
-    when(searchResultItemDtoService.runSearchQuery(any())).thenReturn(List.of(searchResultItemDto));
+    var applicationDataItemDto = ApplicationDataItemUtil.getApplicationDataItemDtoForAnnualProductionInProgressForField();
+    when(searchResultItemDtoService.runSearchQuery(any())).thenReturn(List.of(applicationDataItemDto));
 
-    when(applicationDataItemDtoService.getFieldJsonMapFromApplicationDataItemDtos(List.of(searchResultItemDto))).thenReturn(fieldJsonById);
+    when(applicationDataItemDtoService.getFieldJsonMapFromApplicationDataItemDtos(List.of(applicationDataItemDto))).thenReturn(fieldJsonById);
 
     var portalUserDtoByWuaId = Map.of(WebUserAccountId.from(user.wuaId()), ENERGY_PORTAL_USER_1);
-    when(applicationDataItemDtoService.getEnergyPortalUserDtoMapFromApplicationDataItemDtos(List.of(searchResultItemDto))).thenReturn(portalUserDtoByWuaId);
+    when(applicationDataItemDtoService.getEnergyPortalUserDtoMapFromApplicationDataItemDtos(List.of(applicationDataItemDto))).thenReturn(portalUserDtoByWuaId);
 
     when(applicationDataItemDtoService.getApplicationDataItem(
-        eq(searchResultItemDto),
+        eq(applicationDataItemDto),
         eq(user),
         eq(TeamType.INDUSTRY),
         organisationUnitNamesByIdCaptor.capture(),
@@ -293,8 +293,8 @@ class SearchServiceTest {
     ))
         .thenReturn(ApplicationDataItemUtil.getApplicationDataItem());
 
-    assertThat(searchService.getIndustrySearchResultItems(form, user))
-        .containsExactly(ApplicationDataItemUtil.getSearchResultItem());
+    assertThat(searchService.getIndustryApplicationDataItems(form, user))
+        .containsExactly(ApplicationDataItemUtil.getApplicationDataItem());
 
     assertThat(organisationUnitNamesByIdCaptor.getValue())
         .hasSize(1)
@@ -313,7 +313,7 @@ class SearchServiceTest {
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.OPRED, VIEW_PERMISSIONS))
         .thenReturn(Collections.emptyList());
 
-    assertThat(searchService.getConsulteeSearchResultItems(form, user)).isEmpty();
+    assertThat(searchService.getConsulteeApplicationDataItems(form, user)).isEmpty();
   }
 
   @Test
@@ -323,6 +323,6 @@ class SearchServiceTest {
         .thenReturn(List.of(regulatorTeam));
     when(searchResultItemDtoService.runSearchQuery(any())).thenReturn(Collections.emptyList());
 
-    assertThat(searchService.getConsulteeSearchResultItems(form, user)).isEmpty();
+    assertThat(searchService.getConsulteeApplicationDataItems(form, user)).isEmpty();
   }
 }

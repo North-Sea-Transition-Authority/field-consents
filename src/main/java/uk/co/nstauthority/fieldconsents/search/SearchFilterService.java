@@ -14,15 +14,12 @@ import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ConsentLeng
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterService.FIELD_LOOKUP_PURPOSE;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.springframework.stereotype.Service;
-import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
-import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
@@ -43,18 +40,15 @@ public class SearchFilterService {
   private final FieldService fieldService;
   private final TerminalService terminalService;
   private final ApplicationDataFilterService applicationDataFilterService;
-  private final ApplicationAssetService applicationAssetService;
 
   public SearchFilterService(DSLContext context,
                              FieldService fieldService,
                              TerminalService terminalService,
-                             ApplicationDataFilterService applicationDataFilterService,
-                             ApplicationAssetService applicationAssetService) {
+                             ApplicationDataFilterService applicationDataFilterService) {
     this.context = context;
     this.fieldService = fieldService;
     this.terminalService = terminalService;
     this.applicationDataFilterService = applicationDataFilterService;
-    this.applicationAssetService = applicationAssetService;
   }
 
   List<Condition> getConditions(SearchFilterForm form, TeamType teamType) {
@@ -84,17 +78,6 @@ public class SearchFilterService {
     if (Objects.nonNull(consentStartYear)) {
       if (isNumeric(consentStartYear)) {
         searchFilterConditions.add(this.getConsentStartYearQueryCondition(Integer.parseInt(consentStartYear)));
-      } else {
-        searchFilterConditions.add(falseCondition());
-      }
-    }
-
-    var licenceReference = form.getLicenceReference();
-    if (Objects.nonNull(licenceReference)) {
-      List<Integer> fieldIdsWithMatchingLicence = getFieldIdsWithMatchingLicence(licenceReference);
-
-      if (!fieldIdsWithMatchingLicence.isEmpty()) {
-        searchFilterConditions.add(getLicenceReferenceQueryCondition(fieldIdsWithMatchingLicence));
       } else {
         searchFilterConditions.add(falseCondition());
       }
@@ -153,33 +136,5 @@ public class SearchFilterService {
             CONSENT_LENGTHS.LONG_TERM_START_YEAR,
             CONSENT_LENGTHS.ANNUAL_CONSENT_YEAR
         ).eq(consentStartYear);
-  }
-
-  private Condition getLicenceReferenceQueryCondition(List<Integer> fieldIdsWithMatchingLicence) {
-    return
-        exists(context.select(APPLICATION_ASSETS.ASSET_ID)
-            .from(APPLICATION_ASSETS)
-            .where(APPLICATION_ASSETS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID)
-                .and(APPLICATION_ASSETS.ASSET_ROLE.in(AssetRole.PRIMARY.name(), AssetRole.SECONDARY.name()))
-                .and(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name()))
-                .and(APPLICATION_ASSETS.ASSET_ID.in(fieldIdsWithMatchingLicence))));
-  }
-
-  private List<Integer> getFieldIdsWithMatchingLicence(String licenceReference) {
-    var primaryAndSecondaryFieldIds = applicationAssetService.getAllPrimaryAndSecondaryFieldAssets()
-        .stream()
-        .map(ApplicationAsset::getAssetId)
-        .toList();
-
-    if (primaryAndSecondaryFieldIds.isEmpty()) {
-      return Collections.emptyList();
-    }
-
-    return fieldService
-        .findFieldsWithOperatorAndLicences(primaryAndSecondaryFieldIds, FIELD_LOOKUP_PURPOSE)
-        .stream()
-        .filter(fieldJson -> fieldJson.getLicenceReferences().contains(licenceReference))
-        .map(FieldJson::getId)
-        .toList();
   }
 }

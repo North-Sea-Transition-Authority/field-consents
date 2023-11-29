@@ -10,6 +10,7 @@ import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.Application
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ConsentLengths.CONSENT_LENGTHS;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -19,12 +20,14 @@ import org.jooq.impl.DSL;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
+import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 
 @Service
 public class ApplicationDataFilterService {
@@ -33,11 +36,14 @@ public class ApplicationDataFilterService {
 
   private final DSLContext context;
   private final ApplicationAssetService applicationAssetService;
+  private final FieldService fieldService;
 
   public ApplicationDataFilterService(DSLContext context,
-                                      ApplicationAssetService applicationAssetService) {
+                                      ApplicationAssetService applicationAssetService,
+                                      FieldService fieldService) {
     this.context = context;
     this.applicationAssetService = applicationAssetService;
+    this.fieldService = fieldService;
   }
 
   Condition getApplicationNumberQueryCondition(Integer applicationNumber) {
@@ -160,6 +166,45 @@ public class ApplicationDataFilterService {
       }
     }
 
+    var licenceReference = dataFilterForm.getLicenceReference();
+    if (Objects.nonNull(licenceReference)) {
+      List<Integer> fieldIdsWithMatchingLicence = getFieldIdsWithMatchingLicence(licenceReference);
+
+      if (!fieldIdsWithMatchingLicence.isEmpty()) {
+        conditions.add(getLicenceReferenceQueryCondition(fieldIdsWithMatchingLicence));
+      } else {
+        conditions.add(falseCondition());
+      }
+    }
+
     return conditions;
+  }
+
+  private Condition getLicenceReferenceQueryCondition(List<Integer> fieldIdsWithMatchingLicence) {
+    return
+        exists(context.select(APPLICATION_ASSETS.ASSET_ID)
+            .from(APPLICATION_ASSETS)
+            .where(APPLICATION_ASSETS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID)
+                .and(APPLICATION_ASSETS.ASSET_ROLE.in(AssetRole.PRIMARY.name(), AssetRole.SECONDARY.name()))
+                .and(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name()))
+                .and(APPLICATION_ASSETS.ASSET_ID.in(fieldIdsWithMatchingLicence))));
+  }
+
+  private List<Integer> getFieldIdsWithMatchingLicence(String licenceReference) {
+    var primaryAndSecondaryFieldIds = applicationAssetService.getAllPrimaryAndSecondaryFieldAssets()
+        .stream()
+        .map(ApplicationAsset::getAssetId)
+        .toList();
+
+    if (primaryAndSecondaryFieldIds.isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    return fieldService
+        .findFieldsWithOperatorAndLicences(primaryAndSecondaryFieldIds, FIELD_LOOKUP_PURPOSE)
+        .stream()
+        .filter(fieldJson -> fieldJson.getLicenceReferences().contains(licenceReference))
+        .map(FieldJson::getId)
+        .toList();
   }
 }

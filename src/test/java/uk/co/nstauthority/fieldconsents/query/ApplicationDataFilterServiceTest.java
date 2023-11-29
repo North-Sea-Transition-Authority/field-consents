@@ -5,8 +5,12 @@ import static org.jooq.impl.DSL.exists;
 import static org.jooq.impl.DSL.falseCondition;
 import static org.jooq.impl.DSL.year;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil.fieldAsset1;
+import static uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil.fieldAsset2;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2Json;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2JsonWithOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationAssets.APPLICATION_ASSETS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.Applications.APPLICATIONS;
@@ -34,6 +38,7 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthT
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
+import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationDataFilterServiceTest {
@@ -41,6 +46,8 @@ class ApplicationDataFilterServiceTest {
   private DSLContext context;
   @Mock
   private ApplicationAssetService applicationAssetService;
+  @Mock
+  private FieldService fieldService;
   private ApplicationDataFilterService applicationDataFilterService;
   private ApplicationDataFilterForm dataFilterForm;
 
@@ -49,8 +56,8 @@ class ApplicationDataFilterServiceTest {
     context = new DefaultDSLContext(SQLDialect.DEFAULT);
     applicationDataFilterService = new ApplicationDataFilterService(
         context,
-        applicationAssetService
-    );
+        applicationAssetService,
+        fieldService);
     dataFilterForm = new ApplicationDataFilterForm();
   }
 
@@ -213,5 +220,54 @@ class ApplicationDataFilterServiceTest {
     assertThat(applicationDataFilterService.getConditions(dataFilterForm)).containsExactly(
         year(APPLICATION_VERSIONS.SUBMITTED_DATE_TIME).eq(2023)
     );
+  }
+
+  @Test
+  void getConditions_withLicenceReference_whenNoPrimaryOrSecondaryFieldsFound() {
+    dataFilterForm.setLicenceReference("P123");
+
+    when(applicationAssetService.getAllPrimaryAndSecondaryFieldAssets()).thenReturn(Collections.emptyList());
+
+    assertThat(applicationDataFilterService.getConditions(dataFilterForm))
+        .containsExactly(
+            falseCondition()
+        );
+  }
+
+  @Test
+  void getConditions_withLicenceReference_whenNoMatchingFieldsFound() {
+    dataFilterForm.setLicenceReference("P123");
+    var fieldsWithOperatorAndLicences = List.of(field1JsonWithOperatorAndLicences, field2JsonWithOperatorAndLicences);
+
+    when(applicationAssetService.getAllPrimaryAndSecondaryFieldAssets()).thenReturn(List.of(fieldAsset1, fieldAsset2));
+    when(fieldService
+        .findFieldsWithOperatorAndLicences(List.of(fieldAsset1.getAssetId(), fieldAsset2.getAssetId()), FIELD_LOOKUP_PURPOSE)).thenReturn(fieldsWithOperatorAndLicences);
+
+
+    assertThat(applicationDataFilterService.getConditions(dataFilterForm))
+        .containsExactly(
+            falseCondition()
+        );
+  }
+
+  @Test
+  void getConditions_withLicenceReference_whenMatchingFieldsFound() {
+    dataFilterForm.setLicenceReference("P1");
+    var fieldsWithOperatorAndLicences = List.of(field1JsonWithOperatorAndLicences, field2JsonWithOperatorAndLicences);
+
+    when(applicationAssetService.getAllPrimaryAndSecondaryFieldAssets()).thenReturn(List.of(fieldAsset1, fieldAsset2));
+    when(fieldService
+        .findFieldsWithOperatorAndLicences(List.of(fieldAsset1.getAssetId(), fieldAsset2.getAssetId()), FIELD_LOOKUP_PURPOSE)).thenReturn(fieldsWithOperatorAndLicences);
+
+
+    assertThat(applicationDataFilterService.getConditions(dataFilterForm))
+        .containsExactly(
+            exists(context.select(APPLICATION_ASSETS.ASSET_ID)
+                .from(APPLICATION_ASSETS)
+                .where(APPLICATION_ASSETS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID)
+                    .and(APPLICATION_ASSETS.ASSET_ROLE.in(AssetRole.PRIMARY.name(), AssetRole.SECONDARY.name()))
+                    .and(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name()))
+                    .and(APPLICATION_ASSETS.ASSET_ID.in(List.of(1, 2)))))
+        );
   }
 }

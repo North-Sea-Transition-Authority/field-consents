@@ -39,6 +39,7 @@ public class ApplicationDataItemDto {
   private final Boolean consultationOpen;
   private final Instant consultationDeadline;
   private final FurtherInformationStatus consultationFurtherInformationStatus;
+  private final String licences;
 
   public ApplicationDataItemDto(Integer applicationId, Integer applicationVersionId, ApplicationType type,
                                 Integer variationNo, Integer applicationNo, Integer versionNo, Integer operatorId,
@@ -49,7 +50,8 @@ public class ApplicationDataItemDto {
                                 Boolean aceFlag, Long caseOfficerWuaId, Boolean withdrawalOpen,
                                 Long technicalReviewerWuaId, Boolean technicalReviewOpen, Instant technicalReviewDeadline,
                                 Boolean applicationUpdateOpen, Instant applicationUpdateDeadline, Boolean consultationOpen,
-                                Instant consultationDeadline, FurtherInformationStatus consultationFurtherInformationStatus) {
+                                Instant consultationDeadline, FurtherInformationStatus consultationFurtherInformationStatus,
+                                String licences) {
     this.applicationId = applicationId;
     this.applicationVersionId = applicationVersionId;
     this.type = type;
@@ -80,6 +82,7 @@ public class ApplicationDataItemDto {
     this.consultationOpen = consultationOpen;
     this.consultationDeadline = consultationDeadline;
     this.consultationFurtherInformationStatus = consultationFurtherInformationStatus;
+    this.licences = licences;
   }
 
   public Integer getApplicationId() {
@@ -200,5 +203,9 @@ public class ApplicationDataItemDto {
 
   public FurtherInformationStatus getConsultationFurtherInformationStatus() {
     return consultationFurtherInformationStatus;
+  }
+
+  public String getLicences() {
+    return licences;
   }
 }

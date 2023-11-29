@@ -230,6 +230,12 @@ public class ApplicationDataItemDtoService {
     return organisationUnitNameById.getOrDefault(dataItemDto.getOperatorId(), "MISSING OPERATOR");
   }
 
+  public String getLicences(ApplicationDataItemDto dataItemDto) {
+    return AssetType.FIELD.equals(dataItemDto.getAssetType())
+        ? dataItemDto.getLicences()
+        : "";
+  }
+
   public ApplicationDataItem getApplicationDataItem(
       ApplicationDataItemDto dataItemDto,
       ServiceUserDetail user,
@@ -265,7 +271,8 @@ public class ApplicationDataItemDtoService {
         .withApplicationUpdateDeadline(getApplicationUpdateDeadline(dataItemDto))
         .withConsultationOpen(dataItemDto.getConsultationOpen())
         .withConsultationDeadline(getConsultationDeadline(dataItemDto))
-        .withConsultationFurtherInformationOpen(furtherInformationOpen);
+        .withConsultationFurtherInformationOpen(furtherInformationOpen)
+        .withLicences(getLicences(dataItemDto));
 
     removeTagsForTeamType(teamType, builder);
 

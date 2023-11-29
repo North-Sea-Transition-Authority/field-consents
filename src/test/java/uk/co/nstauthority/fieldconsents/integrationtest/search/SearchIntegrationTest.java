@@ -15,10 +15,10 @@ import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataIt
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.SHORT_TERM_END_DATE;
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.SHORT_TERM_START_DATE;
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.USER_DETAIL;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.getSearchResultItemForFieldInProgressOfType;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.getSearchResultItemForTerminalInProgressOfType;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.getSearchResultItemInProgressOfTypeAndLength;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.getSearchResultItemProductionSubmittedOfConsentLength;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.getApplicationDataItemForFieldInProgressOfTypeForRegulator;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.getApplicationDataItemForTerminalInProgressOfTypeForRegulator;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.getApplicationDataItemInProgressOfTypeAndLengthForRegulator;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.getApplicationDataItemProductionSubmittedOfConsentLengthForRegulator;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.FIELD1_ASSET_KEY;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.FIELD2_ASSET_KEY;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.TERMINAL1_ASSET_KEY;
@@ -68,10 +68,10 @@ import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItem;
 import uk.co.nstauthority.fieldconsents.search.AceFlagStatus;
 import uk.co.nstauthority.fieldconsents.search.SearchController;
 import uk.co.nstauthority.fieldconsents.search.SearchFilterForm;
-import uk.co.nstauthority.fieldconsents.search.SearchResultItem;
 import uk.co.nstauthority.fieldconsents.search.SearchSession;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
@@ -159,7 +159,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
     var searchResults = getSearchResultItems(searchForm);
 
     assertThat(searchResults).containsExactly(
-        getSearchResultItemProductionSubmittedOfConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
+        getApplicationDataItemProductionSubmittedOfConsentLengthForRegulator(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
     );
   }
 
@@ -181,7 +181,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
 
     var searchResults = getSearchResultItems(searchForm);
     assertThat(searchResults).containsExactly(
-        getSearchResultItemProductionSubmittedOfConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
+        getApplicationDataItemProductionSubmittedOfConsentLengthForRegulator(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
     );
   }
 
@@ -204,7 +204,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
 
     var searchResults = getSearchResultItems(searchForm);
     assertThat(searchResults)
-        .containsExactly(getSearchResultItemForFieldInProgressOfType(applicationId, ApplicationType.FLARE, field1JsonWithOperatorAndLicences));
+        .containsExactly(getApplicationDataItemForFieldInProgressOfTypeForRegulator(applicationId, ApplicationType.FLARE, field1JsonWithOperatorAndLicences));
   }
 
   @Test
@@ -227,7 +227,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
 
     var searchResults = getSearchResultItems(searchForm);
     assertThat(searchResults).containsExactly(
-        getSearchResultItemProductionSubmittedOfConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
+        getApplicationDataItemProductionSubmittedOfConsentLengthForRegulator(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
     );
   }
 
@@ -243,7 +243,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
 
     var searchResults = getSearchResultItems(searchForm);
     assertThat(searchResults).containsExactly(
-        getSearchResultItemProductionSubmittedOfConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
+        getApplicationDataItemProductionSubmittedOfConsentLengthForRegulator(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
     );
   }
 
@@ -258,7 +258,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
 
     var searchResults = getSearchResultItems(searchForm);
     assertThat(searchResults).containsExactly(
-        getSearchResultItemProductionSubmittedOfConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
+        getApplicationDataItemProductionSubmittedOfConsentLengthForRegulator(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
     );
   }
 
@@ -273,7 +273,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
 
     var searchResults = getSearchResultItems(searchForm);
     assertThat(searchResults).containsExactly(
-        getSearchResultItemProductionSubmittedOfConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
+        getApplicationDataItemProductionSubmittedOfConsentLengthForRegulator(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
     );
   }
 
@@ -290,7 +290,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
 
     var searchResults = getSearchResultItems(searchForm);
     assertThat(searchResults).containsExactly(
-        getSearchResultItemForFieldInProgressOfType(applicationId, applicationType, field1JsonWithOperatorAndLicences)
+        getApplicationDataItemForFieldInProgressOfTypeForRegulator(applicationId, applicationType, field1JsonWithOperatorAndLicences)
     );
   }
 
@@ -306,7 +306,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
 
     var searchResults = getSearchResultItems(searchForm);
     assertThat(searchResults).containsExactly(
-        getSearchResultItemForFieldInProgressOfType(applicationId, applicationType, field1JsonWithOperatorAndLicences)
+        getApplicationDataItemForFieldInProgressOfTypeForRegulator(applicationId, applicationType, field1JsonWithOperatorAndLicences)
     );
   }
 
@@ -335,7 +335,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
 
     var searchResults = getSearchResultItems(searchForm);
     assertThat(searchResults).containsExactly(
-        getSearchResultItemInProgressOfTypeAndLength(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.ANNUAL)
+        getApplicationDataItemInProgressOfTypeAndLengthForRegulator(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.ANNUAL)
     );
   }
 
@@ -349,7 +349,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
 
     var searchResults = getSearchResultItems(searchForm);
     assertThat(searchResults).containsExactly(
-        getSearchResultItemInProgressOfTypeAndLength(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.SHORT_TERM)
+        getApplicationDataItemInProgressOfTypeAndLengthForRegulator(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.SHORT_TERM)
     );
   }
 
@@ -363,7 +363,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
 
     var searchResults = getSearchResultItems(searchForm);
     assertThat(searchResults).containsExactly(
-        getSearchResultItemInProgressOfTypeAndLength(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.LONG_TERM)
+        getApplicationDataItemInProgressOfTypeAndLengthForRegulator(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.LONG_TERM)
     );
   }
 
@@ -377,7 +377,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
 
     var searchResults = getSearchResultItems(searchForm);
     assertThat(searchResults).containsExactly(
-        getSearchResultItemInProgressOfTypeAndLength(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.ANNUAL)
+        getApplicationDataItemInProgressOfTypeAndLengthForRegulator(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.ANNUAL)
     );
   }
 
@@ -391,7 +391,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
 
     var searchResults = getSearchResultItems(searchForm);
     assertThat(searchResults).containsExactly(
-        getSearchResultItemInProgressOfTypeAndLength(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.SHORT_TERM)
+        getApplicationDataItemInProgressOfTypeAndLengthForRegulator(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.SHORT_TERM)
     );
   }
 
@@ -405,7 +405,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
 
     var searchResults = getSearchResultItems(searchForm);
     assertThat(searchResults).containsExactly(
-        getSearchResultItemInProgressOfTypeAndLength(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.LONG_TERM)
+        getApplicationDataItemInProgressOfTypeAndLengthForRegulator(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.LONG_TERM)
     );
   }
 
@@ -454,7 +454,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
 
     var searchResults = getSearchResultItems(searchForm);
     assertThat(searchResults).containsExactly(
-        getSearchResultItemForFieldInProgressOfType(applicationId, ApplicationType.PRODUCTION, field1JsonWithOperatorAndLicences)
+        getApplicationDataItemForFieldInProgressOfTypeForRegulator(applicationId, ApplicationType.PRODUCTION, field1JsonWithOperatorAndLicences)
     );
   }
 
@@ -481,7 +481,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
 
     var searchResults = getSearchResultItems(searchForm);
     assertThat(searchResults).containsExactly(
-        getSearchResultItemProductionSubmittedOfConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
+        getApplicationDataItemProductionSubmittedOfConsentLengthForRegulator(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
     );
   }
 
@@ -507,7 +507,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
 
     var searchResults = getSearchResultItems(searchForm);
     assertThat(searchResults).containsExactly(
-        getSearchResultItemInProgressOfTypeAndLength(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.ANNUAL)
+        getApplicationDataItemInProgressOfTypeAndLengthForRegulator(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.ANNUAL)
     );
   }
 
@@ -521,7 +521,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
 
     var searchResults = getSearchResultItems(searchForm);
     assertThat(searchResults).containsExactly(
-        getSearchResultItemInProgressOfTypeAndLength(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.SHORT_TERM)
+        getApplicationDataItemInProgressOfTypeAndLengthForRegulator(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.SHORT_TERM)
     );
   }
 
@@ -535,7 +535,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
 
     var searchResults = getSearchResultItems(searchForm);
     assertThat(searchResults).containsExactly(
-        getSearchResultItemInProgressOfTypeAndLength(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.LONG_TERM)
+        getApplicationDataItemInProgressOfTypeAndLengthForRegulator(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.LONG_TERM)
     );
   }
 
@@ -639,7 +639,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
 
     var searchResults = getSearchResultItems(searchForm);
     assertThat(searchResults).containsExactly(
-        getSearchResultItemForFieldInProgressOfType(applicationId, ApplicationType.PRODUCTION, field1JsonWithOperatorAndLicences)
+        getApplicationDataItemForFieldInProgressOfTypeForRegulator(applicationId, ApplicationType.PRODUCTION, field1JsonWithOperatorAndLicences)
     );
   }
 
@@ -658,7 +658,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
 
     var searchResults = getSearchResultItems(searchForm);
     assertThat(searchResults).containsExactly(
-        getSearchResultItemForFieldInProgressOfType(applicationId, ApplicationType.PRODUCTION, field1JsonWithOperatorAndLicences)
+        getApplicationDataItemForFieldInProgressOfTypeForRegulator(applicationId, ApplicationType.PRODUCTION, field1JsonWithOperatorAndLicences)
     );
   }
 
@@ -703,7 +703,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
 
     var searchResults = getSearchResultItems(searchForm);
     assertThat(searchResults).containsExactly(
-        getSearchResultItemForTerminalInProgressOfType(applicationId, ApplicationType.PRODUCTION, terminal1JsonWithOperator)
+        getApplicationDataItemForTerminalInProgressOfTypeForRegulator(applicationId, ApplicationType.PRODUCTION, terminal1JsonWithOperator)
     );
   }
 
@@ -737,7 +737,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
 
     var searchResults = getSearchResultItems(searchForm);
     assertThat(searchResults).containsExactly(
-        getSearchResultItemForFieldInProgressOfType(applicationId, ApplicationType.PRODUCTION, fieldWithOperatorAndLicencesJson)
+        getApplicationDataItemForFieldInProgressOfTypeForRegulator(applicationId, ApplicationType.PRODUCTION, fieldWithOperatorAndLicencesJson)
     );
   }
 
@@ -758,7 +758,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
 
     var searchResults = getSearchResultItems(searchForm);
     assertThat(searchResults).containsExactly(
-        getSearchResultItemForFieldInProgressOfType(applicationId, ApplicationType.PRODUCTION, primaryFieldWithOperatorAndLicencesJson)
+        getApplicationDataItemForFieldInProgressOfTypeForRegulator(applicationId, ApplicationType.PRODUCTION, primaryFieldWithOperatorAndLicencesJson)
     );
   }
 
@@ -776,7 +776,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
 
     var searchResults = getSearchResultItems(searchForm);
     assertThat(searchResults).containsExactly(
-        getSearchResultItemForFieldInProgressOfType(applicationId, ApplicationType.PRODUCTION, fieldWithOperatorAndLicencesJson)
+        getApplicationDataItemForFieldInProgressOfTypeForRegulator(applicationId, ApplicationType.PRODUCTION, fieldWithOperatorAndLicencesJson)
     );
   }
 
@@ -805,7 +805,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
 
     var searchResults = getSearchResultItems(searchForm);
     assertThat(searchResults).containsExactly(
-        getSearchResultItemForTerminalInProgressOfType(applicationId, ApplicationType.PRODUCTION, terminal1JsonWithOperator)
+        getApplicationDataItemForTerminalInProgressOfTypeForRegulator(applicationId, ApplicationType.PRODUCTION, terminal1JsonWithOperator)
     );
   }
 
@@ -834,7 +834,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
 
     var searchResults = getSearchResultItems(searchForm);
     assertThat(searchResults).containsExactly(
-        getSearchResultItemForTerminalInProgressOfType(applicationId, ApplicationType.PRODUCTION, terminal1JsonWithOperator)
+        getApplicationDataItemForTerminalInProgressOfTypeForRegulator(applicationId, ApplicationType.PRODUCTION, terminal1JsonWithOperator)
     );
   }
 
@@ -884,7 +884,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
 
     var searchResults = getSearchResultItems(searchForm);
     assertThat(searchResults).containsExactly(
-        getSearchResultItemInProgressOfTypeAndLength(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.SHORT_TERM)
+        getApplicationDataItemInProgressOfTypeAndLengthForRegulator(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.SHORT_TERM)
     );
   }
 
@@ -903,7 +903,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
     var applicationId = applicationVersion.getApplication().getId();
     var searchResults = getSearchResultItems(searchForm);
     assertThat(searchResults).containsExactly(
-        getSearchResultItemForFieldInProgressOfType(applicationId, ApplicationType.PRODUCTION, field2JsonWithOperatorAndLicences)
+        getApplicationDataItemForFieldInProgressOfTypeForRegulator(applicationId, ApplicationType.PRODUCTION, field2JsonWithOperatorAndLicences)
     );
   }
 
@@ -1016,12 +1016,12 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
   }
 
   @SuppressWarnings("unchecked")
-  private List<SearchResultItem> getSearchResultItems(SearchFilterForm searchForm) {
+  private List<ApplicationDataItem> getSearchResultItems(SearchFilterForm searchForm) {
     var searchSession = new SearchSession(searchForm);
     searchSession.update(searchForm);
     var modelAndView = searchController.getSearch(searchSession, USER_DETAIL);
     assertThat(modelAndView.getModel()).containsKey(SearchController.SEARCH_RESULT_ITEMS);
 
-    return (List<SearchResultItem>) modelAndView.getModel().get(SearchController.SEARCH_RESULT_ITEMS);
+    return (List<ApplicationDataItem>) modelAndView.getModel().get(SearchController.SEARCH_RESULT_ITEMS);
   }
 }

@@ -67,3 +67,13 @@
     />
   </@fdsSearch.searchFilterItem>
 </#macro>
+
+<#macro licenceReferenceFilter form>
+  <@fdsSearch.searchFilterItem itemName="Licence reference" expanded=form.licenceReference?has_content>
+    <@fdsSearch.searchTextInput
+      path="form.licenceReference"
+      labelText=""
+      suffixScreenReaderPrompt="Licence reference"
+    />
+  </@fdsSearch.searchFilterItem>
+</#macro>

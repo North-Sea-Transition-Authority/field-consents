@@ -24,7 +24,6 @@ import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.get
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.getApplicationDataItemDtoForShortVentAssignedForTerminal;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.getApplicationDataItemDtoForShortVentSubmittedForTerminal;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.getApplicationDataItemDtoForShortVentVersion2InProgressForTerminal;
-import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.getSearchResultItemDtoForAnnualProductionInProgressForField;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.portalUserDtosMap;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.submitter;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.technicalReviewer;
@@ -331,7 +330,7 @@ class ApplicationDataItemDtoServiceTest {
 
   @Test
   void getDisplayAceFlag_whenFalse() {
-    var applicationDataItemDto = getSearchResultItemDtoForAnnualProductionInProgressForField();
+    var applicationDataItemDto = getApplicationDataItemDtoForAnnualProductionInProgressForField();
 
     assertThat(applicationDataItemDtoService.getDisplayAceFlag(applicationDataItemDto))
         .isEqualTo("ACE: No");
@@ -390,7 +389,7 @@ class ApplicationDataItemDtoServiceTest {
 
   @Test
   void getApplicationDataItem() {
-    var applicationDataItemDto = ApplicationDataItemUtil.getApplicationDataItemDtoForLongFlareSubmittedForTerminal();
+    var applicationDataItemDto = getApplicationDataItemDtoForLongFlareSubmittedForField();
     var serviceUserDetail = ServiceUserDetailTestUtil.Builder()
         .withWuaId(1L)
         .withPersonId(1L)
@@ -412,7 +411,7 @@ class ApplicationDataItemDtoServiceTest {
     var portalUserDtoByWuaId = Map.of(WebUserAccountId.from(serviceUserDetail), energyPortalUserDto);
 
     var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(applicationDataItemDto.getType());
-    when(applicationVersionService.getApplicationVersionById( applicationDataItemDto.getApplicationVersionId())).thenReturn(applicationVersion);
+    when(applicationVersionService.getApplicationVersionById(applicationDataItemDto.getApplicationVersionId())).thenReturn(applicationVersion);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(APPLICATION_REFERENCE);
 
     var expectedApplicationDataItem = new ApplicationDataItem(
@@ -426,11 +425,11 @@ class ApplicationDataItemDtoServiceTest {
         APPLICATION_REFERENCE,
         "org",
         applicationDataItemDto.getAssetName(),
-        "",
+        "Central North Sea",
         applicationDataItemDto.getStatus().getDisplayName(),
         DateUtils.format(applicationDataItemDto.getSubmittedDateTime(), DateUtils.DATE_TIME),
         energyPortalUserDto.displayName(),
-        "",
+        "ACE: Yes",
         "",
         false,
         "",
@@ -440,7 +439,8 @@ class ApplicationDataItemDtoServiceTest {
         "",
         null,
         null,
-        null
+        null,
+        "P1, P2, P3"
     );
 
     assertThat(applicationDataItemDtoService.getApplicationDataItem(

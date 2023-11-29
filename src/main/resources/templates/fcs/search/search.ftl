@@ -2,7 +2,7 @@
 <#import '../dataitems/applicationDataItem.ftl' as applicationDataItem>
 <#import '../dataitems/_dataItemFilter.ftl' as dataItemFilter>
 
-<#-- @ftlvariable name="searchResultItem" type="uk.co.nstauthority.fieldconsents.search.SearchResultItem" -->
+<#-- @ftlvariable name="searchResultItem" type="uk.co.nstauthority.fieldconsents.query.ApplicationDataItem" -->
 
 <@defaultPage
   htmlTitle=pageTitle
@@ -25,7 +25,7 @@
       <@dataItemFilter.assetTypeWithShoreFilter form=form assetTypeWithShoreCheckboxes=assetTypesWithShore/>
       <@fieldAssetFilter form=form prefilledField=prefilledField fieldAssetSearchRestUrl=fieldAssetSearchRestUrl/>
       <@terminalAssetFilter form=form prefilledTerminal=prefilledTerminal terminalAssetSearchRestUrl=terminalAssetSearchRestUrl/>
-      <@licenceReferenceFilter form=form/>
+      <@dataItemFilter.licenceReferenceFilter form=form/>
     </@fdsSearch.searchFilterList>
   </@fdsSearch.searchFilter>
   <@fdsSearch.searchPageContent twoThirdsWidth=true>
@@ -33,9 +33,7 @@
       <#if searchResultItems?has_content>
         <@fdsResultList.resultList resultCount=searchResultItems?size>
           <#list searchResultItems as searchResultItem>
-            <@applicationDataItem.applicationResultListItem
-              dataItem=searchResultItem.applicationDataItem()
-              licenses=searchResultItem.licenses()!""/>
+            <@applicationDataItem.applicationResultListItem dataItem=searchResultItem/>
           </#list>
         </@fdsResultList.resultList>
       <#else>
@@ -91,16 +89,6 @@
       labelText=""
       preselectedItems={prefilledTerminal.id() : prefilledTerminal.text()}
       inputClass="govuk-input--width-10"
-    />
-  </@fdsSearch.searchFilterItem>
-</#macro>
-
-<#macro licenceReferenceFilter form>
-  <@fdsSearch.searchFilterItem itemName="Licence reference" expanded=form.licenceReference?has_content>
-    <@fdsSearch.searchTextInput
-      path="form.licenceReference"
-      labelText=""
-      suffixScreenReaderPrompt="Licence reference"
     />
   </@fdsSearch.searchFilterItem>
 </#macro>

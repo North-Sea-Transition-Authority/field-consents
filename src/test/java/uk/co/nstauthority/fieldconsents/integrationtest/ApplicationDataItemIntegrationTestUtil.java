@@ -18,7 +18,6 @@ import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItem;
-import uk.co.nstauthority.fieldconsents.search.SearchResultItem;
 import uk.co.nstauthority.fieldconsents.teams.Team;
 import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
@@ -134,10 +133,10 @@ public class ApplicationDataItemIntegrationTestUtil {
       WebUserAccountId.from(CASE_OFFICER_DETAIL), CASE_OFFICER_ENERGY_PORTAL_USER_DTO,
       WebUserAccountId.from(TECHNICAL_REVIEWER_DETAIL), TECHNICAL_REVIEWER_ENERGY_PORTAL_USER_DTO);
 
-  public static SearchResultItem getSearchResultItemProductionSubmittedOfConsentLength(int applicationId,
-                                                                                       Instant submittedTimestamp,
-                                                                                       ConsentLengthType consentLengthType) {
-    var applicationDataItem = ApplicationDataItem.newBuilder()
+  public static ApplicationDataItem getApplicationDataItemProductionSubmittedOfConsentLengthForRegulator(int applicationId,
+                                                                                                         Instant submittedTimestamp,
+                                                                                                         ConsentLengthType consentLengthType) {
+    return ApplicationDataItem.newBuilder()
         .withApplicationId(applicationId)
         .withType(ApplicationType.PRODUCTION.getDisplayName())
         .withDuration(getConsentDurationString(consentLengthType))
@@ -159,15 +158,14 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withConsultationOpen(false)
         .withConsultationDeadline("")
         .withConsultationFurtherInformationOpen(false)
+        .withLicences("P1, P2, P3")
         .build();
-    var licenses = "P1, P2, P3";
-    return new SearchResultItem(applicationDataItem, licenses);
   }
 
-  public static SearchResultItem getSearchResultItemForFieldInProgressOfType(int applicationId,
-                                                                             ApplicationType applicationType,
-                                                                             FieldWithOperatorAndLicencesJson fieldWithOperatorAndLicencesJson) {
-    var applicationDataItem = ApplicationDataItem.newBuilder()
+  public static ApplicationDataItem getApplicationDataItemForFieldInProgressOfTypeForRegulator(int applicationId,
+                                                                                               ApplicationType applicationType,
+                                                                                               FieldWithOperatorAndLicencesJson fieldWithOperatorAndLicencesJson) {
+    return ApplicationDataItem.newBuilder()
         .withApplicationId(applicationId)
         .withType(applicationType.getDisplayName())
         .withDuration("Short term %s - %s".formatted(
@@ -191,15 +189,14 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withConsultationOpen(false)
         .withConsultationDeadline("")
         .withConsultationFurtherInformationOpen(false)
+        .withLicences(fieldWithOperatorAndLicencesJson.getLicencesAsString())
         .build();
-    var licenses = fieldWithOperatorAndLicencesJson.getLicencesAsString();
-    return new SearchResultItem(applicationDataItem, licenses);
   }
 
-  public static SearchResultItem getSearchResultItemForTerminalInProgressOfType(int applicationId,
-                                                                                ApplicationType applicationType,
-                                                                                TerminalWithOperatorJson terminal1JsonWithOperator) {
-    var applicationDataItem = ApplicationDataItem.newBuilder()
+  public static ApplicationDataItem getApplicationDataItemForTerminalInProgressOfTypeForRegulator(int applicationId,
+                                                                                                  ApplicationType applicationType,
+                                                                                                  TerminalWithOperatorJson terminal1JsonWithOperator) {
+    return ApplicationDataItem.newBuilder()
         .withApplicationId(applicationId)
         .withType(applicationType.getDisplayName())
         .withDuration("Short term %s - %s".formatted(
@@ -223,14 +220,14 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withConsultationOpen(false)
         .withConsultationDeadline("")
         .withConsultationFurtherInformationOpen(false)
+        .withLicences("")
         .build();
-    return new SearchResultItem(applicationDataItem, null);
   }
 
-  public static SearchResultItem getSearchResultItemInProgressOfTypeAndLength(int applicationId,
-                                                                              ApplicationType applicationType,
-                                                                              ConsentLengthType consentLengthType) {
-    var applicationDataItem = ApplicationDataItem.newBuilder()
+  public static ApplicationDataItem getApplicationDataItemInProgressOfTypeAndLengthForRegulator(int applicationId,
+                                                                                                ApplicationType applicationType,
+                                                                                                ConsentLengthType consentLengthType) {
+    return ApplicationDataItem.newBuilder()
         .withApplicationId(applicationId)
         .withType(applicationType.getDisplayName())
         .withDuration(getConsentDurationString(consentLengthType))
@@ -252,9 +249,8 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withConsultationOpen(false)
         .withConsultationDeadline("")
         .withConsultationFurtherInformationOpen(false)
+        .withLicences("P1, P2, P3")
         .build();
-    var licenses = "P1, P2, P3";
-    return new SearchResultItem(applicationDataItem, licenses);
   }
 
   public static ApplicationDataItem getApplicationDataItemProductionSubmittedOfConsentLength(int applicationId,
@@ -282,6 +278,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withConsultationOpen(null)
         .withConsultationDeadline(null)
         .withConsultationFurtherInformationOpen(null)
+        .withLicences("P1, P2, P3")
         .build();
   }
 
@@ -310,6 +307,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withConsultationOpen(false)
         .withConsultationDeadline("")
         .withConsultationFurtherInformationOpen(false)
+        .withLicences("P1, P2, P3")
         .build();
   }
 
@@ -339,6 +337,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withConsultationOpen(false)
         .withConsultationDeadline("")
         .withConsultationFurtherInformationOpen(false)
+        .withLicences("P1, P2, P3")
         .build();
   }
 
@@ -368,6 +367,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withConsultationOpen(true)
         .withConsultationDeadline(DateUtils.format(consultationDeadline, DateUtils.DATE_TIME))
         .withConsultationFurtherInformationOpen(false)
+        .withLicences("P1, P2, P3")
         .build();
   }
 
@@ -398,6 +398,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withConsultationOpen(null)
         .withConsultationDeadline(null)
         .withConsultationFurtherInformationOpen(null)
+        .withLicences(fieldWithOperatorAndLicencesJson.getLicencesAsString())
         .build();
   }
 
@@ -428,6 +429,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withConsultationOpen(null)
         .withConsultationDeadline(null)
         .withConsultationFurtherInformationOpen(null)
+        .withLicences("")
         .build();
   }
 
@@ -457,6 +459,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withConsultationOpen(null)
         .withConsultationDeadline(null)
         .withConsultationFurtherInformationOpen(null)
+        .withLicences("P1, P2, P3")
         .build();
   }
 

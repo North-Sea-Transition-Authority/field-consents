@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupQueryService;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItem;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDto;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDtoService;
 import uk.co.nstauthority.fieldconsents.teams.Team;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
@@ -38,7 +40,7 @@ public class SearchService {
     this.teamService = teamService;
   }
 
-  public List<SearchResultItem> getRegulatorSearchResultItems(SearchFilterForm form, ServiceUserDetail user) {
+  public List<ApplicationDataItem> getRegulatorApplicationDataItems(SearchFilterForm form, ServiceUserDetail user) {
     var conditions = searchFilterService.getConditions(form, TeamType.REGULATOR);
     var regulatorTeams = teamService.getTeamsOfTypeThatUserHasPermissionFor(
         user,
@@ -50,15 +52,15 @@ public class SearchService {
       return Collections.emptyList();
     }
 
-    var searchResultItemDtos = searchResultItemDtoService.runSearchQuery(conditions);
+    var applicationDataItemDtos = searchResultItemDtoService.runSearchQuery(conditions);
 
     var organisationUnitJsons = applicationDataItemDtoService
-        .getOrganisationUnitJsonsFromApplicationDataItemDtos(searchResultItemDtos);
+        .getOrganisationUnitJsonsFromApplicationDataItemDtos(applicationDataItemDtos);
 
-    return getItemsFromDtoList(searchResultItemDtos, organisationUnitJsons, TeamType.REGULATOR, user);
+    return getItemsFromDtoList(applicationDataItemDtos, organisationUnitJsons, TeamType.REGULATOR, user);
   }
 
-  public List<SearchResultItem> getIndustrySearchResultItems(SearchFilterForm form, ServiceUserDetail user) {
+  public List<ApplicationDataItem> getIndustryApplicationDataItems(SearchFilterForm form, ServiceUserDetail user) {
     var industryTeams = teamService.getTeamsOfTypeThatUserHasPermissionFor(
         user,
         TeamType.INDUSTRY,
@@ -86,12 +88,12 @@ public class SearchService {
 
     var conditions = new ArrayList<>(searchFilterService.getConditions(form, TeamType.INDUSTRY));
     conditions.add(APPLICATION_VERSIONS.PRIMARY_OPERATOR_OU_ID.in(organisationUnitIds));
-    var searchResultItemDtos = searchResultItemDtoService.runSearchQuery(conditions);
+    var applicationDataItemDtos = searchResultItemDtoService.runSearchQuery(conditions);
 
-    return getItemsFromDtoList(searchResultItemDtos, organisationUnitJsons, TeamType.INDUSTRY, user);
+    return getItemsFromDtoList(applicationDataItemDtos, organisationUnitJsons, TeamType.INDUSTRY, user);
   }
 
-  public List<SearchResultItem> getConsulteeSearchResultItems(SearchFilterForm form, ServiceUserDetail user) {
+  public List<ApplicationDataItem> getConsulteeApplicationDataItems(SearchFilterForm form, ServiceUserDetail user) {
     var conditions = searchFilterService.getConditions(form, TeamType.OPRED);
 
     var consulteeTeams = teamService.getTeamsOfTypeThatUserHasPermissionFor(
@@ -104,21 +106,21 @@ public class SearchService {
       return Collections.emptyList();
     }
 
-    var searchResultItemDtos = searchResultItemDtoService.runSearchQuery(conditions);
+    var applicationDataItemDtos = searchResultItemDtoService.runSearchQuery(conditions);
 
     var organisationUnitJsons = applicationDataItemDtoService
-        .getOrganisationUnitJsonsFromApplicationDataItemDtos(searchResultItemDtos);
+        .getOrganisationUnitJsonsFromApplicationDataItemDtos(applicationDataItemDtos);
 
-    return getItemsFromDtoList(searchResultItemDtos, organisationUnitJsons, TeamType.OPRED, user);
+    return getItemsFromDtoList(applicationDataItemDtos, organisationUnitJsons, TeamType.OPRED, user);
   }
 
-  private List<SearchResultItem> getItemsFromDtoList(
-      List<SearchResultItemDto> searchResultItemDtos,
+  private List<ApplicationDataItem> getItemsFromDtoList(
+      List<ApplicationDataItemDto> applicationDataItemDtos,
       List<OrganisationUnitJson> organisationUnitJsons,
       TeamType teamType,
       ServiceUserDetail user
   ) {
-    if (searchResultItemDtos.isEmpty()) {
+    if (applicationDataItemDtos.isEmpty()) {
       return Collections.emptyList();
     }
 
@@ -126,26 +128,20 @@ public class SearchService {
         .collect(Collectors.toMap(OrganisationUnitJson::organisationUnitId, OrganisationUnitJson::name));
 
     var fieldJsonById = applicationDataItemDtoService.getFieldJsonMapFromApplicationDataItemDtos(
-        searchResultItemDtos);
+        applicationDataItemDtos);
 
     var portalUserDtoByWuaId = applicationDataItemDtoService
-        .getEnergyPortalUserDtoMapFromApplicationDataItemDtos(searchResultItemDtos);
+        .getEnergyPortalUserDtoMapFromApplicationDataItemDtos(applicationDataItemDtos);
 
-    return searchResultItemDtos.stream()
-        .map(dataItemDto -> {
-          var applicationDataItem = applicationDataItemDtoService.getApplicationDataItem(
-              dataItemDto,
-              user,
-              teamType,
-              organisationUnitNamesById,
-              fieldJsonById,
-              portalUserDtoByWuaId
-          );
-
-          var licenses = dataItemDto.getLicences();
-          return new SearchResultItem(applicationDataItem, licenses);
-        })
-        .toList();
+    return applicationDataItemDtos.stream()
+        .map(dataItemDto -> applicationDataItemDtoService.getApplicationDataItem(
+            dataItemDto,
+            user,
+            teamType,
+            organisationUnitNamesById,
+            fieldJsonById,
+            portalUserDtoByWuaId
+        )).toList();
   }
 
 }

@@ -18,6 +18,7 @@ public class WorkAreaFilterFormService {
     form.setSubmittedYear(filter.getSubmittedYear());
     form.setCaseOfficerWuaId(filter.getCaseOfficerWuaId());
     form.setTechnicalReviewerWuaId(filter.getTechnicalReviewerWuaId());
+    form.setLicenceReference(filter.getLicenceReference());
     return form;
   }
 }

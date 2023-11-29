@@ -198,7 +198,8 @@ class BulkCaseActionSearchControllerTest extends AbstractControllerTest {
         .withCaseOfficer("")
         .withTechnicalReviewer("")
         .withSubmittedDateTime("")
-        .withSubmittedBy("");
+        .withSubmittedBy("")
+        .withLicences("");
   }
 
 }

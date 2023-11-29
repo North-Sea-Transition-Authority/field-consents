@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.query;
 
+import static org.jooq.impl.DSL.listAggDistinct;
 import static org.jooq.impl.DSL.max;
 import static uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType.IS_ACE_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATIONS;
@@ -12,8 +13,10 @@ import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_VERSIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_WITHDRAWALS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.CONSENT_LENGTHS;
+import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationAssetLicences.APPLICATION_ASSET_LICENCES;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
@@ -27,6 +30,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.WithdrawalStatus;
+import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions;
 
 @Service
@@ -56,6 +60,19 @@ public class ApplicationDataItemQueryService {
         .onKey(APPLICATION_VERSIONS.APPLICATION_ID)
         .and(APPLICATION_VERSIONS.ID.eq(latestAppVersionForAppSubQuery))
         .where(conditions);
+
+    // Get the CSV for the licences associated to the field when this is the primary application asset
+    var fieldLicencesQuery = context.select(
+            APPLICATION_ASSET_LICENCES.APPLICATION_ASSET_ID,
+                listAggDistinct(APPLICATION_ASSET_LICENCES.CACHED_LICENCE_REF, ", ")
+                    .withinGroupOrderBy(APPLICATION_ASSET_LICENCES.CACHED_LICENCE_REF)
+                    .as("fieldLicences")
+            )
+        .from(APPLICATION_ASSETS)
+        .join(APPLICATION_ASSET_LICENCES).onKey(APPLICATION_ASSET_LICENCES.APPLICATION_ASSET_ID)
+        .where(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name()))
+        .and(APPLICATION_ASSETS.ASSET_ID.isNotNull())
+        .groupBy(APPLICATION_ASSET_LICENCES.APPLICATION_ASSET_ID);
 
     var applicationDataItemsSelectStatement = context.select(
             APPLICATIONS.ID,
@@ -87,7 +104,8 @@ public class ApplicationDataItemQueryService {
             APPLICATION_UPDATES.DEADLINE_DATE_TIME,
             APPLICATION_CONSULTATIONS.CONSULTATION_TEAM_ID.isNotNull(),
             APPLICATION_CONSULTATIONS.REQUEST_DEADLINE,
-            APPLICATION_CONSULTATION_FURTHER_INFORMATION.STATUS
+            APPLICATION_CONSULTATION_FURTHER_INFORMATION.STATUS,
+            fieldLicencesQuery.field("fieldLicences", String.class)
         )
         .from(APPLICATIONS)
         .join(APPLICATION_VERSIONS).onKey(APPLICATION_VERSIONS.APPLICATION_ID)
@@ -112,6 +130,11 @@ public class ApplicationDataItemQueryService {
         .leftJoin(APPLICATION_CONSULTATION_FURTHER_INFORMATION)
             .on(APPLICATION_CONSULTATION_FURTHER_INFORMATION.CONSULTATION_ID.eq(APPLICATION_CONSULTATIONS.ID))
             .and(APPLICATION_CONSULTATION_FURTHER_INFORMATION.STATUS.eq(FurtherInformationStatus.OPEN.name()))
+        .leftJoin(fieldLicencesQuery)
+            .on(Objects.requireNonNull(fieldLicencesQuery.field(APPLICATION_ASSET_LICENCES.APPLICATION_ASSET_ID))
+            .eq(APPLICATION_ASSETS.ID)
+            .and(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name()))
+            .and(APPLICATION_ASSETS.ASSET_ID.isNotNull()))
         .where(APPLICATION_VERSIONS.ID.in(detailsSubQuery));
     return applicationDataItemsSelectStatement.getQuery();
   }

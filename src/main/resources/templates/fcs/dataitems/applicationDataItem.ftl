@@ -1,6 +1,6 @@
 <#include '../layout/layout.ftl'/>
 
-<#macro applicationResultListItem dataItem licenses="">
+<#macro applicationResultListItem dataItem>
   <#assign tagContent>
     <#if dataItem.withdrawalOpen()!false>
       <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Withdrawal requested"/>
@@ -40,10 +40,8 @@
         ${dataItem.asset()}
         <br/>
         ${dataItem.geographicArea()}
-        <#if licenses?has_content>
-          <br/>
-          ${licenses}
-        </#if>
+        <br/>
+        ${dataItem.licenses()}
       </#assign>
       <#assign status>
         ${dataItem.status()}

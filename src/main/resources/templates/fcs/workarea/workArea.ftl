@@ -27,6 +27,7 @@
         <#if technicalReviewersAssigned?has_content>
           <@assignedTechnicalReviewerFilter form=form technicalReviewerOptions=technicalReviewersAssigned/>
         </#if>
+        <@dataItemFilter.licenceReferenceFilter form=form/>
       </@fdsSearch.searchFilterList>
     </@fdsSearch.searchFilter>
     <@fdsSearch.searchPageContent twoThirdsWidth=true>
@@ -41,7 +42,7 @@
             <@fdsBackendTabs.tabContent tabAnchor=tab.anchor currentTab=selectedTab tabValue=tab.value>
               <@fdsResultList.resultList resultCount=workAreaItems?size>
                 <#list workAreaItems as workAreaItem>
-                  <@applicationDataItem.applicationResultListItem dataItem=workAreaItem />
+                  <@applicationDataItem.applicationResultListItem dataItem=workAreaItem/>
                 </#list>
               </@fdsResultList.resultList>
             </@fdsBackendTabs.tabContent>
@@ -50,7 +51,7 @@
       <#else>
         <@fdsResultList.resultList resultCount=workAreaItems?size>
           <#list workAreaItems as workAreaItem>
-            <@applicationDataItem.applicationResultListItem dataItem=workAreaItem />
+            <@applicationDataItem.applicationResultListItem dataItem=workAreaItem/>
           </#list>
         </@fdsResultList.resultList>
       </#if>

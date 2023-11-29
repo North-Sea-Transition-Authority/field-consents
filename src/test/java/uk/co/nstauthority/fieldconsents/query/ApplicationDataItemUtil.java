@@ -17,10 +17,8 @@ import static uk.co.nstauthority.fieldconsents.application.consentlength.Consent
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_1_GEOGRAPHIC_AREA;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_ID_1;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_NAME_1;
-import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.TERMINAL_ID_1;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.TERMINAL_NAME_1;
-import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithOperator;
 
 import java.time.Instant;
 import java.util.Map;
@@ -31,10 +29,6 @@ import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDtoTestUtil;
-import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
-import uk.co.nstauthority.fieldconsents.search.SearchResultItem;
-import uk.co.nstauthority.fieldconsents.search.SearchResultItemDto;
-import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 public class ApplicationDataItemUtil {
 
@@ -84,8 +78,6 @@ public class ApplicationDataItemUtil {
         null,
         null,
         null,
-        null,
-        null,
         false,
         null,
         false,
@@ -94,8 +86,10 @@ public class ApplicationDataItemUtil {
         null,
         false,
         null,
-        null
-    );
+        false,
+        null,
+        null,
+        "P1, P2, P3");
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForProductionInProgressForFieldNoDuration() {
@@ -129,8 +123,8 @@ public class ApplicationDataItemUtil {
         null,
         false,
         null,
-        null
-    );
+        null,
+        "P1, P2, P3");
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForShortVentSubmittedForTerminal() {
@@ -164,8 +158,8 @@ public class ApplicationDataItemUtil {
         null,
         false,
         null,
-        null
-    );
+        null,
+        "");
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForShortVentVersion2InProgressForTerminal() {
@@ -199,8 +193,8 @@ public class ApplicationDataItemUtil {
         null,
         false,
         null,
-        null
-    );
+        null,
+        "");
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForShortVentAssignedForTerminal() {
@@ -234,8 +228,8 @@ public class ApplicationDataItemUtil {
         null,
         false,
         null,
-        null
-    );
+        null,
+        "");
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForLongFlareSubmittedForTerminal() {
@@ -269,8 +263,8 @@ public class ApplicationDataItemUtil {
         null,
         null,
         null,
-        null
-    );
+        null,
+        "");
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForLongFlareSubmittedForField() {
@@ -283,7 +277,7 @@ public class ApplicationDataItemUtil {
         APPLICATION_VERSION_NUMBER,
         PRIMARY_OPERATOR_OU_ID_1,
         ApplicationVersionStatus.SUBMITTED,
-        AssetType.TERMINAL,
+        AssetType.FIELD,
         FIELD_ID_1,
         FIELD_NAME_1,
         ConsentLengthType.LONG_TERM,
@@ -304,8 +298,8 @@ public class ApplicationDataItemUtil {
         null,
         false,
         null,
-        null
-    );
+        null,
+        "P1, P2, P3");
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForAnnualFlareSubmittedForFieldConsultationOpen() {
@@ -339,12 +333,12 @@ public class ApplicationDataItemUtil {
         null,
         true,
         Instant.now().plusSeconds(2*60*60),
-        null
-    );
+        null,
+        "P1, P2, P3");
   }
 
-  public static SearchResultItemDto getSearchResultItemDtoForLongFlareSubmittedForTerminalWithOpenWithdrawalRequest() {
-    return new SearchResultItemDto(
+  public static ApplicationDataItemDto getApplicationDataItemDtoForLongFlareSubmittedForTerminalWithOpenWithdrawalRequest() {
+    return new ApplicationDataItemDto(
         APPLICATION_ID,
         APPLICATION_VERSION_ID,
         ApplicationType.FLARE,
@@ -375,179 +369,8 @@ public class ApplicationDataItemUtil {
         false,
         null,
         null,
-        "P1, P2, P3"
+        ""
     );
-  }
-
-  public static SearchResultItemDto getSearchResultItemDtoForAnnualProductionInProgressForField() {
-    return new SearchResultItemDto(
-        APPLICATION_ID,
-        APPLICATION_VERSION_ID,
-        ApplicationType.PRODUCTION,
-        0,
-        APPLICATION_NO,
-        APPLICATION_VERSION_NUMBER,
-        PRIMARY_OPERATOR_OU_ID_1,
-        ApplicationVersionStatus.IN_PROGRESS,
-        AssetType.FIELD,
-        FIELD_ID_1,
-        FIELD_NAME_1,
-        ConsentLengthType.ANNUAL,
-        ANNUAL_CONSENT_YEAR,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        false,
-        null,
-        false,
-        null,
-        false,
-        null,
-        false,
-        null,
-        false,
-        null,
-        null,
-        "P1, P2, P3"
-    );
-  }
-
-  public static SearchResultItem getSearchResultItemFromDto(SearchResultItemDto searchResultItemDto, TeamType teamType) {
-    var applicationDataItem = ApplicationDataItem.newBuilder()
-        .withApplicationId(searchResultItemDto.getApplicationId())
-        .withType(searchResultItemDto.getType().getDisplayName())
-        .withDuration(getDuration(searchResultItemDto))
-        .withReference(getCaseReference(searchResultItemDto))
-        .withOperator(getOperator(searchResultItemDto))
-        .withAsset(searchResultItemDto.getAssetName())
-        .withGeographicArea(getGeographicArea(searchResultItemDto))
-        .withStatus(searchResultItemDto.getStatus().getDisplayName())
-        .withSubmittedDateTime(getSubmittedDateTime(searchResultItemDto))
-        .withSubmittedBy(getSubmitter(searchResultItemDto))
-        .withAceFlag(getAceFlag(searchResultItemDto))
-        .withCaseOfficer(getCaseOfficer(searchResultItemDto))
-        .withWithdrawalOpen(searchResultItemDto.getWithdrawalOpen())
-        .withTechnicalReviewer(getTechnicalReviewer(searchResultItemDto, teamType))
-        .withApplicationUpdateOpen(searchResultItemDto.getApplicationUpdateOpen())
-        .withApplicationUpdateDeadline(getApplicationUpdateDeadline(searchResultItemDto))
-        .withConsultationOpen(searchResultItemDto.getConsultationOpen())
-        .withConsultationDeadline(getConsultationDeadline(searchResultItemDto))
-        .withConsultationFurtherInformationOpen(false)
-        .build();
-    return new SearchResultItem(applicationDataItem, searchResultItemDto.getLicences());
-  }
-
-  public static String getAceFlag(ApplicationDataItemDto applicationDataItemDto) {
-    return Boolean.TRUE.equals(applicationDataItemDto.getAceFlag()) ? "ACE" : "";
-  }
-
-  private static String getSubmittedDateTime(ApplicationDataItemDto applicationDataItemDto) {
-    return applicationDataItemDto.getStatus().equals(ApplicationVersionStatus.SUBMITTED)
-        ? "Submitted: %s".formatted(DateUtils.format(applicationDataItemDto.getSubmittedDateTime(), DateUtils.DATE_TIME))
-        : "";
-  }
-
-  public static String getGeographicArea(ApplicationDataItemDto applicationDataItemDto) {
-    return switch (applicationDataItemDto.getAssetType()) {
-      case FIELD -> field1JsonWithOperator.getGeographicArea().getDisplayName();
-      case TERMINAL -> "";
-    };
-  }
-
-  public static String getOperator(ApplicationDataItemDto applicationDataItemDto) {
-    return switch (applicationDataItemDto.getAssetType()) {
-      case FIELD -> field1JsonWithOperator.getOperatorName();
-      case TERMINAL -> terminal1JsonWithOperator.getOperatorName();
-    };
-  }
-
-  public static String getDuration(ApplicationDataItemDto applicationDataItemDto) {
-    if (applicationDataItemDto.getDuration() != null) {
-      var consentDurationString = applicationDataItemDto.getDuration().getShortDisplayName();
-
-      switch (applicationDataItemDto.getDuration()) {
-        case ANNUAL -> {
-          return "%s %s".formatted(consentDurationString, applicationDataItemDto.getConsentYear());
-        }
-        case LONG_TERM -> {
-          return "%s %d - %d".formatted(consentDurationString, applicationDataItemDto.getLongTermStartYear(), applicationDataItemDto.getLongTermEndYear());
-        }
-
-        case SHORT_TERM -> {
-          return "%s %s - %s".formatted(consentDurationString,
-              DateUtils.format(applicationDataItemDto.getShortTermStartDate(), DateUtils.SHORT_DATE),
-              DateUtils.format(applicationDataItemDto.getShortTermEndDate(), DateUtils.SHORT_DATE)
-          );
-        }
-      }
-    }
-
-    return "";
-  }
-
-  public static String getSubmitter(ApplicationDataItemDto applicationDataItemDto) {
-    if (applicationDataItemDto.getStatus().equals(ApplicationVersionStatus.SUBMITTED)) {
-      var submitter = EnergyPortalUserDtoTestUtil.Builder().build();
-      return "Submitter: %s".formatted(submitter.displayName());
-    }
-
-    return "";
-  }
-
-  public static String getCaseOfficer(ApplicationDataItemDto applicationDataItemDto) {
-    if (applicationDataItemDto.getCaseOfficerWuaId() != null) {
-      var caseOfficer = EnergyPortalUserDtoTestUtil.Builder().build();
-      return "Case officer: %s".formatted(caseOfficer.displayName());
-    }
-
-    return "";
-  }
-
-  public static String getTechnicalReviewer(ApplicationDataItemDto applicationDataItemDto, TeamType teamType) {
-    if (applicationDataItemDto.getTechnicalReviewerWuaId() != null
-        && TeamType.REGULATOR.equals(teamType)) {
-      var technicalReviewer = EnergyPortalUserDtoTestUtil.Builder()
-          .withWebUserAccountId(applicationDataItemDto.getTechnicalReviewerWuaId())
-          .build();
-      return "Technical reviewer: %s".formatted(technicalReviewer.displayName());
-    }
-
-    return "";
-  }
-
-  public static String getCaseReference(ApplicationDataItemDto applicationDataItemDto) {
-    if (applicationDataItemDto.getStatus() == ApplicationVersionStatus.IN_PROGRESS) {
-      if (applicationDataItemDto.getApplicationNo() == null) {
-        return "Resume application";
-      }
-      return "Resume %s".formatted(generateApplicationReference(applicationDataItemDto));
-    }
-
-    return generateApplicationReference(applicationDataItemDto);
-  }
-
-  private static String generateApplicationReference(ApplicationDataItemDto applicationDataItemDto) {
-    return "%s/%d/%d (Version %d)".formatted(
-        applicationDataItemDto.getType().getReferenceMnemonic(),
-        applicationDataItemDto.getApplicationNo(),
-        applicationDataItemDto.getVariationNo(),
-        applicationDataItemDto.getVersionNo()
-    );
-  }
-
-  private static String getApplicationUpdateDeadline(ApplicationDataItemDto applicationDataItemDto) {
-    return applicationDataItemDto.getApplicationUpdateOpen()
-        ? DateUtils.format(applicationDataItemDto.getApplicationUpdateDeadline(), DateUtils.DATE_TIME)
-        : "";
-  }
-
-  private static String getConsultationDeadline(ApplicationDataItemDto applicationDataItemDto) {
-    return applicationDataItemDto.getConsultationOpen()
-        ? DateUtils.format(applicationDataItemDto.getConsultationDeadline(), DateUtils.DATE_TIME)
-        : "";
   }
 
   public static ApplicationDataItem getApplicationDataItem() {
@@ -572,35 +395,8 @@ public class ApplicationDataItemUtil {
         "",
         false,
         "",
-        false
+        false,
+        "P1, P2, P3"
     );
-  }
-
-  public static SearchResultItem getSearchResultItem() {
-    var applicationDataItem = ApplicationDataItem.newBuilder()
-        .withApplicationId(APPLICATION_ID)
-        .withType(ApplicationType.FLARE.getDisplayName())
-        .withDuration(ConsentLengthType.ANNUAL.getDisplayName())
-        .withReference(APPLICATION_REFERENCE)
-        .withOperator(CACHED_PRIMARY_OPERATOR_NAME_1)
-        .withAsset(FIELD_NAME_1)
-        .withGeographicArea(FIELD_1_GEOGRAPHIC_AREA.getDisplayName())
-        .withStatus(ApplicationVersionStatus.SUBMITTED.getDisplayName())
-        .withSubmittedDateTime(SUBMITTED_DATE_TIME)
-        .withSubmittedBy(String.valueOf(USER_WUA_ID))
-        .withAceFlag("")
-        .withCaseOfficer("")
-        .withWithdrawalOpen(false)
-        .withTechnicalReviewer("")
-        .withTechnicalReviewOpen(false)
-        .withTechnicalReviewDeadline("")
-        .withApplicationUpdateOpen(false)
-        .withApplicationUpdateDeadline("")
-        .withConsultationOpen(false)
-        .withConsultationDeadline("")
-        .withConsultationFurtherInformationOpen(false)
-        .build();
-    var licenses = "P1, P2, P3";
-    return new SearchResultItem(applicationDataItem, licenses);
   }
 }
