@@ -79,7 +79,7 @@ public class TopNavigationService {
       navigationItems.add(
           new TopNavigationItem(
               BulkCaseActionSearchController.PAGE_TITLE,
-              ReverseRouter.route(on(BulkCaseActionSearchController.class).getSearchResults(null))
+              ReverseRouter.route(on(BulkCaseActionSearchController.class).getSearchResults(null, null))
           )
       );
     }

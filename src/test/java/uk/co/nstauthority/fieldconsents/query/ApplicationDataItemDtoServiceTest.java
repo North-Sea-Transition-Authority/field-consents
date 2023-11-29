@@ -358,7 +358,7 @@ class ApplicationDataItemDtoServiceTest {
     var applicationDataItemDto = getApplicationDataItemDtoForShortVentAssignedForTerminal();
 
     assertThat(applicationDataItemDtoService.getDisplayCaseOfficer(applicationDataItemDto, portalUserDtosMap))
-        .isEqualTo("Case officer: %s".formatted(caseOfficer.displayName()));
+        .isEqualTo(caseOfficer.displayName());
   }
 
   @Test
@@ -385,7 +385,7 @@ class ApplicationDataItemDtoServiceTest {
 
     assertThat(applicationDataItemDtoService.getDisplayTechnicalReviewer(applicationDataItemDto, portalUserDtosMap,
         TeamType.REGULATOR))
-        .isEqualTo("Technical reviewer: %s".formatted(technicalReviewer.displayName()));
+        .isEqualTo(technicalReviewer.displayName());
   }
 
   @Test
@@ -428,8 +428,8 @@ class ApplicationDataItemDtoServiceTest {
         applicationDataItemDto.getAssetName(),
         "",
         applicationDataItemDto.getStatus().getDisplayName(),
-        "Submitted: %s".formatted(DateUtils.format(applicationDataItemDto.getSubmittedDateTime(), DateUtils.DATE_TIME)),
-        "Submitter: %s".formatted(energyPortalUserDto.displayName()),
+        DateUtils.format(applicationDataItemDto.getSubmittedDateTime(), DateUtils.DATE_TIME),
+        energyPortalUserDto.displayName(),
         "",
         "",
         false,
@@ -563,8 +563,7 @@ class ApplicationDataItemDtoServiceTest {
     when(dataItemDto.getStatus()).thenReturn(ApplicationVersionStatus.SUBMITTED);
 
     assertThat(applicationDataItemDtoService.getSubmittedDateTime(dataItemDto))
-        .isEqualTo(
-            "Submitted: %s".formatted(DateUtils.format(dataItemDto.getSubmittedDateTime(), DateUtils.DATE_TIME)));
+        .isEqualTo(DateUtils.format(dataItemDto.getSubmittedDateTime(), DateUtils.DATE_TIME));
   }
 
   @ParameterizedTest
@@ -588,7 +587,7 @@ class ApplicationDataItemDtoServiceTest {
     var portalUserDtoByWuaId = Map.of(new WebUserAccountId(1L), energyPortalUserDto);
 
     assertThat(applicationDataItemDtoService.getSubmittedByName(dataItemDto, portalUserDtoByWuaId))
-        .isEqualTo("Submitter: energyPortalUser");
+        .isEqualTo("energyPortalUser");
   }
 
   @ParameterizedTest

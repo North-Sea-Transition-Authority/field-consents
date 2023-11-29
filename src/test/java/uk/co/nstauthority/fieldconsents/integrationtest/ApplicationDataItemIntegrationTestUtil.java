@@ -146,11 +146,8 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withAsset(FieldTestUtil.FIELD_NAME_1)
         .withGeographicArea(FieldTestUtil.FIELD_1_GEOGRAPHIC_AREA.getDisplayName())
         .withStatus("Submitted")
-        .withSubmittedDateTime("Submitted: %s".formatted(
-            DateUtils.format(submittedTimestamp, DateUtils.DATE_TIME)))
-        .withSubmittedBy("Submitter: %s %s".formatted(
-            USER_DETAIL.forename(),
-            USER_DETAIL.surname()))
+        .withSubmittedDateTime(DateUtils.format(submittedTimestamp, DateUtils.DATE_TIME))
+        .withSubmittedBy("%s %s".formatted(USER_DETAIL.forename(), USER_DETAIL.surname()))
         .withAceFlag("ACE: No")
         .withCaseOfficer("")
         .withWithdrawalOpen(false)
@@ -272,11 +269,8 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withAsset(FieldTestUtil.FIELD_NAME_1)
         .withGeographicArea(FieldTestUtil.FIELD_1_GEOGRAPHIC_AREA.getDisplayName())
         .withStatus("Submitted")
-        .withSubmittedDateTime("Submitted: %s".formatted(
-            DateUtils.format(submittedTimestamp, DateUtils.DATE_TIME)))
-        .withSubmittedBy("Submitter: %s %s".formatted(
-            USER_DETAIL.forename(),
-            USER_DETAIL.surname()))
+        .withSubmittedDateTime(DateUtils.format(submittedTimestamp, DateUtils.DATE_TIME))
+        .withSubmittedBy("%s %s".formatted(USER_DETAIL.forename(), USER_DETAIL.surname()))
         .withAceFlag("ACE: No")
         .withCaseOfficer("")
         .withWithdrawalOpen(false)
@@ -303,15 +297,10 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withAsset(FieldTestUtil.FIELD_NAME_1)
         .withGeographicArea(FieldTestUtil.FIELD_1_GEOGRAPHIC_AREA.getDisplayName())
         .withStatus("Submitted")
-        .withSubmittedDateTime("Submitted: %s".formatted(
-            DateUtils.format(submittedTimestamp, DateUtils.DATE_TIME)))
-        .withSubmittedBy("Submitter: %s %s".formatted(
-            USER_DETAIL.forename(),
-            USER_DETAIL.surname()))
+        .withSubmittedDateTime(DateUtils.format(submittedTimestamp, DateUtils.DATE_TIME))
+        .withSubmittedBy("%s %s".formatted(USER_DETAIL.forename(), USER_DETAIL.surname()))
         .withAceFlag("ACE: No")
-        .withCaseOfficer("Case officer: %s %s".formatted(
-            CASE_OFFICER_DETAIL.forename(),
-            CASE_OFFICER_DETAIL.surname()))
+        .withCaseOfficer("%s %s".formatted(CASE_OFFICER_DETAIL.forename(), CASE_OFFICER_DETAIL.surname()))
         .withWithdrawalOpen(false)
         .withTechnicalReviewer("")
         .withTechnicalReviewOpen(false)
@@ -337,19 +326,12 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withAsset(FieldTestUtil.FIELD_NAME_1)
         .withGeographicArea(FieldTestUtil.FIELD_1_GEOGRAPHIC_AREA.getDisplayName())
         .withStatus("Submitted")
-        .withSubmittedDateTime("Submitted: %s".formatted(
-            DateUtils.format(submittedTimestamp, DateUtils.DATE_TIME)))
-        .withSubmittedBy("Submitter: %s %s".formatted(
-            USER_DETAIL.forename(),
-            USER_DETAIL.surname()))
+        .withSubmittedDateTime(DateUtils.format(submittedTimestamp, DateUtils.DATE_TIME))
+        .withSubmittedBy("%s %s".formatted(USER_DETAIL.forename(), USER_DETAIL.surname()))
         .withAceFlag("ACE: No")
-        .withCaseOfficer("Case officer: %s %s".formatted(
-            CASE_OFFICER_DETAIL.forename(),
-            CASE_OFFICER_DETAIL.surname()))
+        .withCaseOfficer("%s %s".formatted(CASE_OFFICER_DETAIL.forename(), CASE_OFFICER_DETAIL.surname()))
         .withWithdrawalOpen(false)
-        .withTechnicalReviewer("Technical reviewer: %s %s".formatted(
-            TECHNICAL_REVIEWER_DETAIL.forename(),
-            TECHNICAL_REVIEWER_DETAIL.surname()))
+        .withTechnicalReviewer("%s %s".formatted(TECHNICAL_REVIEWER_DETAIL.forename(), TECHNICAL_REVIEWER_DETAIL.surname()))
         .withTechnicalReviewOpen(true)
         .withTechnicalReviewDeadline(DateUtils.format(technicalReviewDeadline, DateUtils.DATE_TIME))
         .withApplicationUpdateOpen(false)
@@ -373,15 +355,10 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withAsset(FieldTestUtil.FIELD_NAME_1)
         .withGeographicArea(FieldTestUtil.FIELD_1_GEOGRAPHIC_AREA.getDisplayName())
         .withStatus("Submitted")
-        .withSubmittedDateTime("Submitted: %s".formatted(
-            DateUtils.format(submittedTimestamp, DateUtils.DATE_TIME)))
-        .withSubmittedBy("Submitter: %s %s".formatted(
-            USER_DETAIL.forename(),
-            USER_DETAIL.surname()))
+        .withSubmittedDateTime(DateUtils.format(submittedTimestamp, DateUtils.DATE_TIME))
+        .withSubmittedBy("%s %s".formatted(USER_DETAIL.forename(), USER_DETAIL.surname()))
         .withAceFlag("ACE: No")
-        .withCaseOfficer("Case officer: %s %s".formatted(
-            CASE_OFFICER_DETAIL.forename(),
-            CASE_OFFICER_DETAIL.surname()))
+        .withCaseOfficer("%s %s".formatted(CASE_OFFICER_DETAIL.forename(), CASE_OFFICER_DETAIL.surname()))
         .withWithdrawalOpen(null)
         .withTechnicalReviewer("")
         .withTechnicalReviewOpen(null)

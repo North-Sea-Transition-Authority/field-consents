@@ -168,7 +168,7 @@ class TopNavigationServiceTest {
             ),
             tuple(
                 BulkCaseActionSearchController.PAGE_TITLE,
-                ReverseRouter.route(on(BulkCaseActionSearchController.class).getSearchResults(null))
+                ReverseRouter.route(on(BulkCaseActionSearchController.class).getSearchResults(null, null))
             )
         );
   }

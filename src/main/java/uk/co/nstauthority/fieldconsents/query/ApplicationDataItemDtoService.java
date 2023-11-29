@@ -172,8 +172,7 @@ public class ApplicationDataItemDtoService {
   public String getDisplayCaseOfficer(ApplicationDataItemDto dataItemDto,
                                       Map<WebUserAccountId, EnergyPortalUserDto> portalUserDtosMap) {
     return Objects.nonNull(dataItemDto.getCaseOfficerWuaId())
-        ? "Case officer: %s".formatted(
-            portalUserDtosMap.get(WebUserAccountId.from(dataItemDto.getCaseOfficerWuaId())).displayName())
+        ? portalUserDtosMap.get(WebUserAccountId.from(dataItemDto.getCaseOfficerWuaId())).displayName()
         : "";
   }
 
@@ -181,14 +180,13 @@ public class ApplicationDataItemDtoService {
                                             Map<WebUserAccountId, EnergyPortalUserDto> portalUserDtosMap,
                                             TeamType teamType) {
     return TeamType.REGULATOR.equals(teamType) && Objects.nonNull(dataItemDto.getTechnicalReviewerWuaId())
-        ? "Technical reviewer: %s".formatted(
-            portalUserDtosMap.get(WebUserAccountId.from(dataItemDto.getTechnicalReviewerWuaId())).displayName())
+        ? portalUserDtosMap.get(WebUserAccountId.from(dataItemDto.getTechnicalReviewerWuaId())).displayName()
         : "";
   }
 
   public String getSubmittedDateTime(ApplicationDataItemDto dataItemDto) {
     return ApplicationVersionStatus.SUBMITTED.equals(dataItemDto.getStatus())
-        ? "Submitted: %s".formatted(DateUtils.format(dataItemDto.getSubmittedDateTime(), DateUtils.DATE_TIME))
+        ? DateUtils.format(dataItemDto.getSubmittedDateTime(), DateUtils.DATE_TIME)
         : "";
   }
 
@@ -201,7 +199,7 @@ public class ApplicationDataItemDtoService {
     }
 
     var matchingPortalUserDto = portalUserDtoByWuaId.get(WebUserAccountId.from(dataItemDto.getSubmittedByWuaId()));
-    return "Submitter: %s".formatted(matchingPortalUserDto.displayName());
+    return matchingPortalUserDto.displayName();
   }
 
   public String getConsultationDeadline(ApplicationDataItemDto dataItemDto) {

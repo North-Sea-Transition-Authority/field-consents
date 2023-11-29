@@ -48,14 +48,22 @@
       <#assign status>
         ${dataItem.status()}
         <br/>
-        ${dataItem.caseOfficer()}
-        <br/>
-        ${dataItem.technicalReviewer()}
+        <#if dataItem.caseOfficer()?has_content>
+          Case officer: ${dataItem.caseOfficer()}
+          <br/>
+        </#if>
+        <#if dataItem.technicalReviewer()?has_content>
+          Technical reviewer: ${dataItem.technicalReviewer()}
+        </#if>
       </#assign>
       <#assign otherInformation>
-        ${dataItem.submittedDateTime()}
-        <br/>
-        ${dataItem.submittedBy()}
+        <#if dataItem.submittedDateTime()?has_content>
+          Submitted: ${dataItem.submittedDateTime()}
+          <br/>
+        </#if>
+        <#if dataItem.submittedBy()?has_content>
+          Submitter: ${dataItem.submittedBy()}
+        </#if>
       </#assign>
       <@fdsResultList.resultListDataValue key="Consent type" value=consentType/>
       <@fdsResultList.resultListDataValue key="Licence info" value=location/>
