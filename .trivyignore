@@ -14,3 +14,5 @@ CVE-2022-41854
 CVE-2023-3635
 # org.apache.santuario:xmlsec
 CVE-2023-44483
+# ch.qos.logback:logback-classic / ch.qos.logback:logback-core
+CVE-2023-6378
