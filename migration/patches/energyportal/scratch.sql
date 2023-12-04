@@ -44,6 +44,7 @@
 --            on uat and live: ALVHEIM
 --                             STATFJORD(CROSS BORDER)
 --
+-- 
 -- NOTES
 -- a) for a variation the fc_id stays the same (the variation no is on the detail row
 --    and therefore we can have multiple details with the same version_no but different variation_no)
@@ -73,6 +74,39 @@
 --    we will calculate on the fly when showing the applications summary. Note - specifically
 --    highlight that the shutdown days are not now taken off the total days when working out
 --    the daily averages.
+--
+
+-- BPMMGR Intention sets / intention details
+-- 
+-- The following parts of the legacy system use intentions
+--
+-- -- case notes
+--FC_GENERAL_NOTE
+--
+-- -- application update (a case note for the operator)
+--FC_NOTE_FOR_OPERATOR
+--FC_REVIEW_DECISION - severity: APPROVE 
+--
+-- -- technical review response (these are attached to the review intentions set rather than the main app intention set)
+--FC_GENERAL_REVIEW_NOTE - General Review Note
+--FC_UPDATE_REQUIRED - Update Required (Review Advise)
+--FC_ISSUE_CONSENT - Issue Consent (Review Advise)
+--
+-- case decision/approval for issue
+--FC_REVIEW_DECISION - severity: APPROVE 
+--
+-- case submission
+--FC_SUBMISSION
+--FC_SUBMISSION_APPROVAL
+--FC_SUBMISSION_EMAIL
+SELECT DISTINCT xid.class_type--, xid.clause_type, xid.status
+FROM bpmmgr.xview_intention_details xid
+WHERE xid.clause_type = 'FIELD_CONSENTS'
+AND xid.end_datetime IS NULL
+ORDER BY 1 --2, 3
+/
+
+
 
 ------------------------
 -- New FCS system tables
@@ -100,22 +134,22 @@
 --DONE flare_report_gas_data
 --DONE flare_report_periods
 --DONE flare_report_months
---flares
+--DONE flares
 
---vent_annual_months
---vent_short_term_months
---vent_report_gas_data
---vent_report_periods
---vent_report_months
---vents
+--DONE vent_annual_months
+--DONE vent_short_term_months
+--DONE vent_report_gas_data
+--DONE vent_report_periods
+--DONE vent_report_months
+--DONE vents
 
 
 -- CASE_PROCESSING TABLES
---application_case_notes
---application_consultations
---application_technical_reviews
+--DONE!!!!! application_case_notes
+--NA application_consultations (there are no external consultation in the legacy system)
 --application_updates
---application_withdrawals
+--application_technical_reviews
+--NA application_withdrawals (the operator doesn't submit a withdral request, but they can withdraw if they don't want to complete an app update)
 --NA application_work_area_priorities
 
 -- FILE UPLOADS?
@@ -1125,135 +1159,38 @@ FROM base2 b
 --, comments               VARCHAR2(4000)
 
 SELECT
-  fcd.id application_version_id
-, af.cd_rownum
-, xfcd.application_year
-, upper(trim(af.description)) month
---, af.category_1
---, af.category_2
---, af.category_3
-, af.category_a
-, af.category_b
-, af.category_c
---, af.total_flare_gas
-, af.comments
+  ed.*
 , fcd.fc_id
 , fcd.status
 , fcd.version_status
 FROM fcs_migration.application_versions av
 JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
-JOIN envmgr.xview_field_consent_details xfcd ON xfcd.fcd_id = fcd.id
-CROSS JOIN XMLTABLE(
-  '/FIELD_CONSENT'
-  PASSING
-    fcd.xml_data
-  COLUMNS
-    categories VARCHAR2(4000) PATH './FLAGS/CATEGORIES/text()'
-) cat
-CROSS JOIN XMLTABLE(
-  '/FIELD_CONSENT/CONSENT/CONSENT_DATA_LIST/CONSENT_DATA[./TYPE/text()="MONTH"]'
-  PASSING
-    fcd.xml_data
-  COLUMNS
-    type VARCHAR2(4000) PATH 'TYPE/text()' -- MONTH, TOTAL, AVERAGE
-  , cd_rownum FOR ORDINALITY
-  , description VARCHAR2(4000) PATH './DESCRIPTION/text()'
-  , days INTEGER PATH './DAYS/text()'
---  , category_1 NUMBER PATH './CATEGORY_1/text()'
---  , category_2 NUMBER PATH './CATEGORY_2/text()'
---  , category_3 NUMBER PATH './CATEGORY_3/text()'
-  , category_a NUMBER PATH './CATEGORY_A/text()'
-  , category_b NUMBER PATH './CATEGORY_B/text()'
-  , category_c NUMBER PATH './CATEGORY_C/text()'
---  , total_flare_gas NUMBER PATH './TOTAL_FLARE_GAS/text()'
-  , comments VARCHAR2(4000) PATH './COMMENTS/text()'
-) af
+JOIN fcs_migration.field_consent_annual_emission_data ed ON ed.fcd_id = fcd.id
 WHERE fcd.application_type = 'FCON'
-AND xfcd.app_length = 'ANNUAL'
-AND cat.categories = 'A_B_C'
---AND (upper(trim(af.description))) NOT IN (
---  'JANUARY', 'FEBRUARY', 'MARCH'    
---, 'APRIL', 'MAY', 'JUNE'
---, 'JULY', 'AUGUST', 'SEPTEMBER'
---, 'OCTOBER', 'NOVEMBER', 'DECEMBER'
---)
---AND coalesce(af.category_1, 0) + coalesce(af.category_2, 0) + coalesce(af.category_3, 0) + coalesce(af.category_a, 0) + coalesce(af.category_b, 0) + coalesce(af.category_c, 0) = af.total_flare_gas
-ORDER BY fcd.id, af.cd_rownum;
+AND ed.categories = 'A_B_C'
+ORDER BY fcd.id, ed.ed_rownum;
 /
 
 --
 -- flare_short_term_months
 --
 
-WITH base AS (
-  SELECT
-    fcd.id application_version_id
-  , stf.cd_rownum
-  , stf.data_year
-  , upper(trim(stf.description)) month
-  , cl.short_term_start_date
-  , cl.short_term_end_date
---  , stf.category_1
---  , stf.category_2
---  , stf.category_3
-  , stf.category_a
-  , stf.category_b
-  , stf.category_c
---  , stf.total_flare_gas
-  , stf.comments
---  , fcd.fc_id
---  , fcd.status
---  , fcd.version_status
-  FROM fcs_migration.application_versions av
---  JOIN fcs_migration.consent_lengths cl ON cl.application_version_id = av.id
-  JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
-  JOIN envmgr.xview_field_consent_details xfcd ON xfcd.fcd_id = fcd.id
-  CROSS JOIN XMLTABLE(
-    '/FIELD_CONSENT'
-    PASSING
-      fcd.xml_data
-    COLUMNS
-      short_term_start_date DATE PATH 'COVER_INFO/STC_START_DATE/text()'
-    , short_term_end_date DATE PATH 'COVER_INFO/STC_END_DATE/text()'
-    , categories VARCHAR2(4000) PATH './FLAGS/CATEGORIES/text()'
-  ) cl
-  CROSS JOIN XMLTABLE(
-    '/FIELD_CONSENT/SHORT_TERM_CONSENT/CONSENT_DATA_LIST/CONSENT_DATA[./TYPE/text()="MONTH"]'
-    PASSING
-      fcd.xml_data
-    COLUMNS
-      type VARCHAR2(4000) PATH 'TYPE/text()' -- MONTH, TOTAL, AVERAGE
-    , cd_rownum FOR ORDINALITY
-    , data_year INTEGER PATH './DATA_YEAR/text()'
-    , description VARCHAR2(4000) PATH './DESCRIPTION/text()'
-    , days INTEGER PATH './DAYS/text()'
-    , consent_days INTEGER PATH './CONSENT_DAYS/text()'
---    , category_1 NUMBER PATH './CATEGORY_1/text()'
---    , category_2 NUMBER PATH './CATEGORY_2/text()'
---    , category_3 NUMBER PATH './CATEGORY_3/text()'
-    , category_a NUMBER PATH './CATEGORY_A/text()'
-    , category_b NUMBER PATH './CATEGORY_B/text()'
-    , category_c NUMBER PATH './CATEGORY_C/text()'
---    , total_flare_gas NUMBER PATH './TOTAL_FLARE_GAS/text()'
-    , comments VARCHAR2(4000) PATH './COMMENTS/text()'
-  ) stf
-  WHERE fcd.application_type = 'FCON'
-  AND xfcd.app_length = 'SHORT_TERM'
-  AND cl.categories = 'A_B_C'
-  --AND coalesce(stf.category_1, 0) + coalesce(stf.category_2, 0) + coalesce(stf.category_3, 0) + coalesce(stf.category_a, 0) + coalesce(stf.category_b, 0) + coalesce(stf.category_c, 0) = stf.total_flare_gas
-  ORDER BY fcd.id, stf.cd_rownum
-)
-, base2 AS (
-  SELECT b.*
-  , to_date('01'||b.month||b.data_year, 'DDMONTHYYYY') month_start_date
-  , last_day(to_date('01'||b.month||b.data_year, 'DDMONTHYYYY')) month_end_date
-  FROM base b
-)
 SELECT
-  b.*
-, greatest(b.short_term_start_date, b.month_start_date) row_start_date
-, least(b.short_term_end_date, b.month_end_date) row_end_date
-FROM base2 b;
+  ed.fcd_id application_version_id
+, ed.year
+, ed.month
+, ed.start_date
+, ed.end_date
+, ed.category_a
+, ed.category_b
+, ed.category_c
+, ed.comments
+FROM fcs_migration.application_versions av
+JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+JOIN fcs_migration.field_consent_short_term_emission_data ed ON ed.fcd_id = fcd.id
+WHERE fcd.application_type = 'FCON'
+AND ed.categories = 'A_B_C'
+ORDER BY ed.fcd_id, ed.ed_rownum;
 /
 
 --
@@ -1443,3 +1380,428 @@ SELECT
 FROM base b;
 /
 
+--
+-- flares
+--
+
+--  id                     INTEGER PRIMARY KEY
+--, application_version_id INTEGER NOT NULL
+--                         CONSTRAINT flares_fk1_av_id
+--                         REFERENCES fcs_migration.application_versions
+--, flare_no               INTEGER NOT NULL
+--, flare_type             VARCHAR2(4000) NOT NULL
+--, description            VARCHAR2(4000)
+--, metered_flag           VARCHAR2(5) NOT NULL
+--, comments               VARCHAR2(4000)
+
+SELECT
+  fcd.id application_version_id
+, RANK () OVER (PARTITION BY fcd.id ORDER BY es.es_rownum) flare_no
+, es.type flare_type
+, es.description
+, es.metered metered_flag
+, es.comments
+--, fcd.fc_id
+--, fcd.application_type
+--, fcd.status
+--, fcd.version_status
+FROM fcs_migration.application_versions av
+JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+JOIN fcs_migration.field_consent_emission_systems es ON es.fcd_id = fcd.id
+WHERE fcd.application_type = 'FCON'
+ORDER BY av.id ASC;
+/
+
+--
+-- vent_annual_months
+--
+
+--  id                     INTEGER PRIMARY KEY
+--, application_version_id INTEGER NOT NULL
+--                         CONSTRAINT vent_annual_months_fk1_av_id
+--                         REFERENCES fcs_migration.application_versions
+--, year                   INTEGER NOT NULL
+--, month                  VARCHAR2(4000) NOT NULL
+--, category_a             NUMBER NOT NULL
+--, category_b             NUMBER NOT NULL
+--, category_c             NUMBER NOT NULL
+--, comments               VARCHAR2(4000)
+
+SELECT
+  ed.*
+, fcd.fc_id
+, fcd.status
+, fcd.version_status
+FROM fcs_migration.application_versions av
+JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+JOIN fcs_migration.field_consent_annual_emission_data ed ON ed.fcd_id = fcd.id
+WHERE fcd.application_type = 'VCON'
+AND ed.categories = 'A_B_C'
+ORDER BY fcd.id, ed.ed_rownum;
+/
+
+
+--
+-- vent_short_term_months
+--
+
+--  id                     INTEGER PRIMARY KEY
+--, application_version_id INTEGER NOT NULL
+--                         CONSTRAINT vent_short_term_months_fk1_av_id
+--                         REFERENCES fcs_migration.application_versions
+--, year                   INTEGER NOT NULL
+--, month                  VARCHAR2(4000) NOT NULL
+--, start_date             DATE
+--, end_date               DATE
+--, category_a             NUMBER NOT NULL
+--, category_b             NUMBER NOT NULL
+--, category_c             NUMBER NOT NULL
+--, comments               VARCHAR2(4000)
+
+SELECT
+  ed.fcd_id application_version_id
+, ed.year
+, ed.month
+, ed.start_date
+, ed.end_date
+, ed.category_a
+, ed.category_b
+, ed.category_c
+, ed.comments
+FROM fcs_migration.application_versions av
+JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+JOIN fcs_migration.field_consent_short_term_emission_data ed ON ed.fcd_id = fcd.id
+WHERE fcd.application_type = 'VCON'
+AND ed.categories = 'A_B_C'
+ORDER BY fcd.id, ed.ed_rownum;
+/
+
+--
+-- vent_report_gas_data
+--
+WITH base AS (
+  SELECT
+    fcd.id application_version_id
+  , CASE
+    WHEN rd.upper_desc LIKE '%STREAM%' THEN 'DENSITY'
+    WHEN rd.upper_desc LIKE '%INERT%' THEN 'INERT'
+    WHEN rd.upper_desc LIKE '%HYDROCARBON%' THEN 'HYDRO'
+    END data_type
+  , rd.category_a
+  , rd.category_b
+  , rd.category_c
+  FROM fcs_migration.application_versions av
+  JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+  JOIN envmgr.xview_field_consent_details xfcd ON xfcd.fcd_id = fcd.id
+  JOIN fcs_migration.field_consent_report_data rd ON rd.fcd_id = fcd.id
+  WHERE rd.rd_type = 'INFO' 
+  AND fcd.application_type = 'VCON'
+  AND rd.categories = 'A_B_C'
+  AND coalesce(rd.category_a, rd.category_b, rd.category_c) IS NOT NULL
+  ORDER BY rd.fcd_id, rd.rd_rownum
+)
+SELECT
+  bd.application_version_id
+, bd.category_a category_a_density
+, bi.category_a category_a_inert_percentage
+, bh.category_a category_a_hydro_percentage
+, bd.category_b category_b_density
+, bi.category_b category_b_inert_percentage
+, bh.category_a category_b_hydro_percentage
+, bd.category_c category_c_density
+, bi.category_c category_c_inert_percentage
+, bh.category_a category_c_hydro_percentage
+, null evaluated_per_category
+, null evaluated_per_category_explanation
+FROM base bd
+JOIN base bi ON bi.application_version_id = bd.application_version_id AND bi.data_type = 'INERT'
+JOIN base bh ON bh.application_version_id = bd.application_version_id AND bh.data_type = 'HYDRO'
+WHERE bd.data_type = 'DENSITY';
+/
+
+--
+-- vent_report_periods
+--
+
+--  id                     INTEGER PRIMARY KEY
+--, application_version_id INTEGER NOT NULL
+--                         CONSTRAINT vent_report_periods_fk1_av_id
+--                         REFERENCES fcs_migration.application_versions
+--, report_end_month       VARCHAR2(4000) NOT NULL
+--, report_end_year        INTEGER NOT NULL
+
+WITH base AS (
+  SELECT
+    fcd.id application_version_id
+  , rd.rd_rownum
+  , last_day(to_date('01-'||rd.rd_month, 'DD-MON-YYYY')) report_row_end_date
+  FROM fcs_migration.application_versions av
+  JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+  JOIN fcs_migration.field_consent_report_data rd ON rd.fcd_id = fcd.id
+  WHERE rd.rd_type = 'MONTH' 
+  AND fcd.application_type = 'VCON'
+  AND rd.categories = 'A_B_C'
+  AND coalesce(rd.category_a, rd.category_b, rd.category_c, rd.days_total_shutdown) IS NOT NULL
+  ORDER BY fcd.id, rd.rd_rownum
+)
+, report_end AS (
+  SELECT b.application_version_id, max(b.report_row_end_date) report_row_end_date
+  FROM base b
+  GROUP BY b.application_version_id
+)
+SELECT
+  re.application_version_id
+, to_char(re.report_row_end_date, 'MONTH') report_end_month
+, to_number(to_char(re.report_row_end_date, 'YYYY')) report_end_year
+FROM report_end re;
+
+--
+-- vent_report_months
+--
+WITH base AS (
+  SELECT
+    fcd.id application_version_id
+  , last_day(to_date('01-'||rd.rd_month, 'DD-MON-YYYY')) report_row_end_date
+  , rd.*
+  FROM fcs_migration.application_versions av
+  JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+  JOIN envmgr.xview_field_consent_details xfcd ON xfcd.fcd_id = fcd.id
+  JOIN fcs_migration.field_consent_report_data rd ON rd.fcd_id = fcd.id
+  WHERE rd.rd_type = 'MONTH' 
+  AND fcd.application_type = 'VCON'
+  AND rd.categories = 'A_B_C'
+  AND coalesce(rd.category_a, rd.category_b, rd.category_c, rd.days_total_shutdown) IS NOT NULL
+  ORDER BY fcd.id, rd.rd_rownum
+)
+SELECT
+  b.application_version_id
+, to_number(to_char(b.report_row_end_date, 'YYYY')) year
+, to_char(b.report_row_end_date, 'MONTH') month
+, b.category_a
+, b.category_b
+, b.category_c
+, b.days_total_shutdown
+, b.comments
+FROM base b;
+/
+
+--
+-- vents
+--
+SELECT
+  fcd.id application_version_id
+, RANK () OVER (PARTITION BY fcd.id ORDER BY es.es_rownum) vent_no
+, es.type vent_type
+, es.description
+, es.metered metered_flag
+, es.comments
+FROM fcs_migration.application_versions av
+JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+JOIN fcs_migration.field_consent_emission_systems es ON es.fcd_id = fcd.id
+WHERE fcd.application_type = 'VCON';
+/
+
+--
+-- case_notes
+--
+
+--  id                     INTEGER PRIMARY KEY
+--, application_version_id INTEGER NOT NULL
+--                         CONSTRAINT app_case_notes_fk1_version_id
+--                         REFERENCES fcs_migration.application_versions
+--, added_by_wua_id        INTEGER NOT NULL
+--, added_date_time        DATE NOT NULL
+--, case_note_text         CLOB NOT NULL
+
+-- Just convert html to text for now.
+
+-- When a new app version is created all the original intentions are cloned into the
+-- new version (under a new intention set) as you can't see the old version after an
+-- update is submitted. This means that really for a particular version we only
+-- want to migrate the original intentions else we'll have duplicates within
+-- a variation.
+--
+-- For new variations we always start with a blank set of intentions.
+--
+-- NOTE - have spotted that for regulator initiated revisions (i.e. just a clerical
+-- error reissue, after the new intention set is created the system fails to update the
+-- intention_set_id in the case DOM /*/INTENTION_SET_ID. This doesn't appear to be being
+-- used anywhere. So instead of looking at that data we should get the intention_set_id
+-- from via the primary_data_uref (fcd_id||'FC')
+
+-- Good test case on dev FCON/2033/0
+
+SELECT
+  fci.fcd_id application_version_id
+, fci.created_by_wua_id
+, fci.created_datetime
+, fci.intention_text case_note_text
+, fci.*
+FROM fcs_migration.application_versions av
+JOIN fcs_migration.field_consent_intentions fci ON fci.fcd_id = av.id
+WHERE fci.class_type = 'FC_GENERAL_NOTE'
+ORDER BY fci.in_id DESC, fci.id_id DESC
+/
+
+--SELECT xis.*, xfcd.intention_set_id, xfcd.*
+--FROM bpmmgr.xview_intention_sets xis
+--JOIN envmgr.field_consent_details fcd ON fcd.id||'FC' = xis.primary_data_uref
+--JOIN envmgr.xview_field_consent_details xfcd ON xfcd.fcd_id = fcd.id
+----JOIN bpmmgr.xview_intention_sets xis2 ON xis2.primary_data_uref = xis.primary_data_uref AND xis2.is_id != xis.is_id
+--WHERE xis.primary_data_uref LIKE '%FC'
+--AND xis.is_id != xfcd.intention_set_id
+--/
+--
+--SELECT xfcd.*
+--FROM envmgr.xview_field_consent_details xfcd
+--WHERE xfcd.fc_id IN (214, 1024, 1711, 1023, 1879, 1996, 1988, 1857, 1807, 2013)
+--ORDER BY xfcd.fc_id, xfcd.fcd_id
+--/
+
+--SELECT xfcd.*
+--FROM envmgr.field_consent_details fcd
+--JOIN envmgr.xview_field_consent_details xfcd ON xfcd.fcd_id = fcd.id
+--WHERE fcd.fc_id = 6490
+--/
+---- intention_set_id IN (185804, 185657)
+--SELECT TISI.IS_ID, tin.*, xid.*
+--, st.html_to_string(xid.clause_text) case_note_text
+--FROM bpmmgr.xview_intention_details xid
+--JOIN bpmmgr.intentions tin ON tin.id = xid.in_id
+--JOIN bpmmgr.intention_set_intentions tisi ON tisi.in_id = tin.id
+--WHERE xid.clause_type = 'FIELD_CONSENTS'
+----AND xid.class_type = 'FC_GENERAL_NOTE'
+--AND xid.end_datetime IS NULL
+--AND TISI.IS_ID IN (185804, 185657)
+--ORDER BY xid.in_id DESC, xid.id_id DESC
+--/
+--
+--SELECT tisi.*, tin.*, xid.*
+--FROM bpmmgr.intention_set_intentions tisi
+--JOIN bpmmgr.intentions tin ON tin.id = tisi.in_id
+--JOIN bpmmgr.xview_intention_details xid ON xid.in_id = tin.id
+--WHERE xid.clause_type = 'FIELD_CONSENTS'
+----AND tin.original_id_id IS NOT NULL
+--AND xid.end_datetime IS NULL
+----AND XID.STATUS != 'CLOSED'
+--AND (tisi.is_id IN (200726, 200634) OR XID.ID_ID = 465145)
+--ORDER BY XID.IN_ID DESC
+/
+--
+--SELECT
+----  tisi.*
+----, OXID.STATUS
+----, oxid.clause_text, xid.clause_text
+----, XID.STATUS
+----, XMLDIFF(oxid.clause_text, xid.clause_text)
+--1
+--FROM bpmmgr.intention_set_intentions tisi
+--JOIN bpmmgr.intentions tin ON tin.id = tisi.in_id
+--JOIN bpmmgr.xview_intention_details xid ON xid.in_id = tin.id
+--JOIN bpmmgr.xview_intention_details txid ON txid.id_id = tin.original_id_id
+--WHERE xid.clause_type = 'FIELD_CONSENTS'
+--AND xid.end_datetime IS NULL
+--AND tin.original_id_id IS NOT NULL
+--AND dbms_lob.compare(txid.clause_text.getClobVal(), xid.clause_text.getClobVal()) != 0
+--/
+
+--SELECT fci.*
+--FROM fcs_migration.field_consent_intentions fci
+--ORDER BY fci.id_id DESC
+--/
+--SELECT
+----  fcd.id fcd_id
+----, 
+--  xis.*
+--, xid.in_id
+--, xid.id_id
+--, xid.created_by_wua_id
+--, xid.created_datetime
+--, xid.clause_type
+--, xid.class_type
+--, xid.severity
+--, st.html_to_string(xid.clause_text) intention_text
+--FROM bpmmgr.xview_intention_sets xis
+--JOIN bpmmgr.intention_set_intentions isi ON isi.is_id = xis.is_id AND isi.end_datetime IS NULL
+--JOIN bpmmgr.intentions i ON i.id = isi.in_id
+--JOIN bpmmgr.xview_intention_details xid ON xid.in_id = i.id
+--WHERE --xid.clause_type = 'FIELD_CONSENTS'
+----AND 
+--xid.end_datetime IS NULL
+---- remove the duplicates across the sets (for the app versions within a variation)
+--AND i.original_id_id IS NULL
+--ORDER BY xid.id_id DESC
+
+--
+-- application_updates
+--
+
+--  id                              INTEGER PRIMARY KEY
+--, application_version_id          INTEGER NOT NULL
+--                                  CONSTRAINT app_updates_fk1_version_id
+--                                  REFERENCES fcs_migration.application_versions
+--, requested_by_wua_id             INTEGER NOT NULL
+--, requested_date_time             DATE NOT NULL
+--, request_text                    CLOB NOT NULL
+--, deadline_date_time              DATE NOT NULL -- might need to allow NULLs here
+--, responded_by_wua_id             INTEGER
+--, responded_date_time             DATE
+--, response_text                   CLOB
+--, response_type                   VARCHAR2(4000)
+--, application_update_status       VARCHAR2(4000) NOT NULL
+--, response_application_version_id INTEGER
+--                                  CONSTRAINT app_updates_fk2_resp_version_id
+--                                  REFERENCES fcs_migration.application_versions
+
+SELECT
+  av.id application_version_id
+, av.version_no
+, avnext.version_no
+, fci.created_by_wua_id requested_by_wua_id
+, fci.created_datetime requested_date_time
+, fci.intention_text request_text
+, fci.created_datetime deadline_date_time -- TODO set as the request date or leave null?
+, avnext.submitted_by_wua_id responded_by_wua_id
+, avnext.submitted_date_time responded_date_time
+, null response_text
+, null response_type
+, 'CLOSED' application_update_status -- TODO best to mark all closed I think
+, avnext.id response_application_version_id
+--a.*, av.*
+--, avnext.*
+--  count(*)
+FROM fcs_migration.application_versions av
+LEFT JOIN fcs_migration.application_versions avnext ON avnext.id = (
+--avnext.application_id = av.application_id AND avnext.version_no = av.version_no + 1  AND avnext.status != 'DELETED' AND avnext.created_date_time > av.created_date_time
+  SELECT min(av2.id) -- if a variation is subsequently withdraw they could start a variation again (got same number) and therefore have more that one next version within the variations set of versions (see fc_id = 1384 on dev)
+  FROM fcs_migration.application_versions av2
+  WHERE av2.application_id = av.application_id
+  AND av2.version_no = av.version_no + 1
+  AND av2.status != 'DELETED'
+  AND av2.created_date_time > av.created_date_time
+)
+JOIN fcs_migration.field_consent_intentions fci ON fci.fcd_id = av.id
+JOIN applications a ON a.id = av.application_id
+WHERE (fci.class_type, fci.severity) IN (
+  ('FC_NOTE_FOR_OPERATOR', 'NONE')
+, ('FC_REVIEW_DECISION', 'REQUEST_UPDATE')
+)
+
+--WHERE --av.application_id != 4115
+--AND av.status != 'DELETED'
+--AND 
+--avnext.id IS NOT NULL
+ORDER BY av.application_id, av.id
+/
+
+SELECT xfcd.fcd_id, xfcd.status, xfcd.version_status, av.*
+FROM envmgr.xview_field_consent_details xfcd
+LEFT JOIN fcs_migration.application_versions av ON av.id = xfcd.fcd_id
+WHERE xfcd.fc_id = 1384
+ORDER BY xfcd.created_date 
+
+--3850
+--3851
+--3853
+--3855
+--3856
