@@ -1,9 +1,15 @@
 package uk.co.nstauthority.fieldconsents.query;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.jooq.impl.DSL.exists;
 import static org.jooq.impl.DSL.falseCondition;
+import static org.jooq.impl.DSL.or;
 import static org.jooq.impl.DSL.year;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil.fieldAsset1;
 import static uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil.fieldAsset2;
@@ -11,7 +17,9 @@ import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2Json;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2JsonWithOperatorAndLicences;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1Json;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationAssets.APPLICATION_ASSETS;
+import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationFlags.APPLICATION_FLAGS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.Applications.APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ConsentLengths.CONSENT_LENGTHS;
@@ -21,6 +29,9 @@ import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterServic
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
+import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
@@ -28,27 +39,47 @@ import org.jooq.impl.DefaultDSLContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationFieldService;
 import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
+import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
+import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
+import uk.co.nstauthority.fieldconsents.assets.fields.GeographicArea;
+import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
+import uk.co.nstauthority.fieldconsents.search.AceFlagStatus;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationDataFilterServiceTest {
 
   private DSLContext context;
+
   @Mock
   private ApplicationAssetService applicationAssetService;
+
   @Mock
   private FieldService fieldService;
+
+  @Mock
+  private TerminalService terminalService;
+
+  @Mock
+  private ApplicationFieldService applicationFieldService;
+
   private ApplicationDataFilterService applicationDataFilterService;
+
   private ApplicationDataFilterForm dataFilterForm;
 
   @BeforeEach
@@ -57,7 +88,11 @@ class ApplicationDataFilterServiceTest {
     applicationDataFilterService = new ApplicationDataFilterService(
         context,
         applicationAssetService,
-        fieldService);
+        fieldService,
+        terminalService,
+        applicationFieldService
+    );
+
     dataFilterForm = new ApplicationDataFilterForm();
   }
 
@@ -270,4 +305,136 @@ class ApplicationDataFilterServiceTest {
                     .and(APPLICATION_ASSETS.ASSET_ID.in(List.of(1, 2)))))
         );
   }
+
+  @Test
+  void getFieldCondition() {
+    var assetKey = new AssetKey(1, AssetType.FIELD);
+
+    when(fieldService.getField(eq(assetKey.assetId()), anyString())).thenReturn(field1Json);
+
+    assertThat(applicationDataFilterService.getFieldCondition(assetKey)).isEqualTo(
+        exists(context.select(APPLICATION_ASSETS.ASSET_ID)
+            .from(APPLICATION_ASSETS)
+            .where(APPLICATION_ASSETS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID)
+                .and(APPLICATION_ASSETS.ASSET_ROLE.in(AssetRole.PRIMARY.name(), AssetRole.SECONDARY.name()))
+                .and(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name()))
+                .and(APPLICATION_ASSETS.ASSET_ID.eq(field1Json.getId())))));
+  }
+
+  @Test
+  void getFieldCondition_invalidAssetType() {
+    var assetKey = new AssetKey(1, AssetType.TERMINAL);
+    assertThatThrownBy(() -> applicationDataFilterService.getFieldCondition(assetKey))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("Expected AssetKey.assetType to be [FIELD] but was [TERMINAL]");
+  }
+
+  @Test
+  void getTerminalCondition() {
+    var assetKey = new AssetKey(1, AssetType.TERMINAL);
+
+    when(terminalService.getTerminal(eq(assetKey.assetId()), anyString())).thenReturn(terminal1Json);
+
+    assertThat(applicationDataFilterService.getTerminalCondition(assetKey)).isEqualTo(
+        exists(context.select(APPLICATION_ASSETS.ASSET_ID)
+            .from(APPLICATION_ASSETS)
+            .where(APPLICATION_ASSETS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID)
+                .and(APPLICATION_ASSETS.ASSET_ROLE.eq(AssetRole.PRIMARY.name()))
+                .and(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.TERMINAL.name()))
+                .and(APPLICATION_ASSETS.ASSET_ID.eq(terminal1Json.getId())))));
+  }
+
+  @Test
+  void getTerminalCondition_invalidAssetType() {
+    var assetKey = new AssetKey(1, AssetType.FIELD);
+    assertThatThrownBy(() -> applicationDataFilterService.getTerminalCondition(assetKey))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("Expected AssetKey.assetType to be [TERMINAL] but was [FIELD]");
+  }
+
+  @Test
+  void getGeographicAreasQueryCondition() {
+    var distinctPrimaryFieldIds = List.of(1, 2, 3);
+    when(applicationFieldService.findDistinctPrimaryFieldIds()).thenReturn(distinctPrimaryFieldIds);
+
+    var field1 = mock(FieldJson.class);
+    when(field1.getId()).thenReturn(1);
+    when(field1.getGeographicArea()).thenReturn(GeographicArea.CNS);
+
+    var field2 = mock(FieldJson.class);
+    when(field2.getId()).thenReturn(2);
+    when(field2.getGeographicArea()).thenReturn(GeographicArea.IS);
+
+    // this one should be excluded because it wasn't selected
+    var field3 = mock(FieldJson.class);
+    when(field3.getGeographicArea()).thenReturn(GeographicArea.LAND);
+
+    var fieldJsonList = List.of(field1, field2, field3);
+    when(fieldService.findFieldsByIds(eq(distinctPrimaryFieldIds), anyString())).thenReturn(fieldJsonList);
+
+    var geographicAreas = List.of(GeographicArea.CNS, GeographicArea.IS);
+    assertThat(applicationDataFilterService.getGeographicAreasQueryCondition(geographicAreas))
+        .isEqualTo(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name())
+            .and(APPLICATION_ASSETS.ASSET_ID.in(List.of(1, 2))));
+  }
+
+  @ParameterizedTest
+  @EnumSource(AceFlagStatus.class)
+  void getAceStatusCondition(AceFlagStatus aceFlagStatus) {
+    var isAceApplication = aceFlagStatus.isAceApplication();
+    var expectedCondition = exists(context.select(APPLICATION_FLAGS.FLAG_VALUE)
+        .from(APPLICATION_FLAGS)
+        .where(APPLICATION_FLAGS.FLAG_TYPE.eq(ApplicationFlagType.IS_ACE_APPLICATION.name())
+            .and(APPLICATION_FLAGS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID))
+            .and(APPLICATION_FLAGS.FLAG_VALUE.in(Collections.singletonList(isAceApplication)))));
+
+    assertThat(applicationDataFilterService.getAceStatusCondition(List.of(aceFlagStatus))).isEqualTo(expectedCondition);
+  }
+
+  @ParameterizedTest
+  @MethodSource("getCaseOfficerCondition_arguments")
+  void getCaseOfficerCondition_withCaseOfficerId_includeApplicationsWithoutCaseOfficer(
+      Long caseOfficerWuaId,
+      Boolean includeApplicationsWithoutCaseOfficer,
+      Optional<Condition> expectedCondition
+  ) {
+    var actualCondition = applicationDataFilterService.getCaseOfficerCondition(caseOfficerWuaId, includeApplicationsWithoutCaseOfficer);
+    assertThat(actualCondition).isEqualTo(expectedCondition);
+  }
+
+  private static Stream<Arguments> getCaseOfficerCondition_arguments() {
+    var caseOfficerWuaId = 1L;
+    var includeApplicationsWithoutCaseOfficer = true;
+    var dontIncludeApplicationsWithoutCaseOfficer = false;
+
+    return Stream.of(
+        arguments(
+            caseOfficerWuaId,
+            includeApplicationsWithoutCaseOfficer,
+            Optional.of(
+                or(APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.eq((int) caseOfficerWuaId), APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.isNull())
+            )
+        ),
+        arguments(
+            caseOfficerWuaId,
+            dontIncludeApplicationsWithoutCaseOfficer,
+            Optional.of(
+              APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.eq((int) caseOfficerWuaId)
+            )
+        ),
+        arguments(
+            null,
+            dontIncludeApplicationsWithoutCaseOfficer,
+            Optional.of(
+              APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.isNotNull()
+            )
+        ),
+        arguments(
+            null,
+            includeApplicationsWithoutCaseOfficer,
+            Optional.empty() // the same as not adding a condition
+        )
+    );
+  }
+
 }

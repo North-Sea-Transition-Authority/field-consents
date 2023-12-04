@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.energyportal.user;
 
 import jakarta.persistence.EntityNotFoundException;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -84,6 +85,7 @@ public class EnergyPortalUserService {
           )
           .stream()
           .map(EnergyPortalUserDto::from)
+          .sorted(Comparator.comparing(EnergyPortalUserDto::displayName))
           .toList();
     }));
   }

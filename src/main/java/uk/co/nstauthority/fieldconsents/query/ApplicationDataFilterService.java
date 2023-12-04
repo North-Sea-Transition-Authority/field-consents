@@ -3,13 +3,18 @@ package uk.co.nstauthority.fieldconsents.query;
 import static org.apache.commons.lang3.StringUtils.isNumeric;
 import static org.jooq.impl.DSL.exists;
 import static org.jooq.impl.DSL.falseCondition;
+import static org.jooq.impl.DSL.or;
 import static org.jooq.impl.DSL.year;
+import static uk.co.nstauthority.fieldconsents.assets.AssetType.FIELD;
+import static uk.co.nstauthority.fieldconsents.assets.AssetType.TERMINAL;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationAssets.APPLICATION_ASSETS;
+import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationFlags.APPLICATION_FLAGS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.Applications.APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ConsentLengths.CONSENT_LENGTHS;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -22,35 +27,50 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationFieldService;
 import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
+import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
+import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
+import uk.co.nstauthority.fieldconsents.assets.fields.GeographicArea;
+import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
+import uk.co.nstauthority.fieldconsents.search.AceFlagStatus;
 
 @Service
 public class ApplicationDataFilterService {
 
   public static final String FIELD_LOOKUP_PURPOSE = "Lookup field for application data";
+  public static final String TERMINAL_LOOKUP_PURPOSE = "Lookup terminal for application data";
 
   private final DSLContext context;
   private final ApplicationAssetService applicationAssetService;
   private final FieldService fieldService;
+  private final TerminalService terminalService;
+  private final ApplicationFieldService applicationFieldService;
 
-  public ApplicationDataFilterService(DSLContext context,
-                                      ApplicationAssetService applicationAssetService,
-                                      FieldService fieldService) {
+  ApplicationDataFilterService(
+      DSLContext context,
+      ApplicationAssetService applicationAssetService,
+      FieldService fieldService,
+      TerminalService terminalService,
+      ApplicationFieldService applicationFieldService
+  ) {
     this.context = context;
     this.applicationAssetService = applicationAssetService;
     this.fieldService = fieldService;
+    this.terminalService = terminalService;
+    this.applicationFieldService = applicationFieldService;
   }
 
   Condition getApplicationNumberQueryCondition(Integer applicationNumber) {
     return APPLICATIONS.APPLICATION_NO.eq(applicationNumber);
   }
 
-  Condition getStatusQueryCondition(List<ApplicationVersionStatus> statuses) {
+  Condition getStatusQueryCondition(Collection<ApplicationVersionStatus> statuses) {
     var statusStrings = statuses
         .stream()
         .map(ApplicationVersionStatus::getEnumName)
@@ -58,7 +78,7 @@ public class ApplicationDataFilterService {
     return APPLICATION_VERSIONS.STATUS.in(statusStrings);
   }
 
-  Condition getApplicationTypesQueryCondition(List<ApplicationType> applicationTypes) {
+  Condition getApplicationTypesQueryCondition(Collection<ApplicationType> applicationTypes) {
     var applicationTypeStrings = applicationTypes
         .stream()
         .map(ApplicationType::getEnumName)
@@ -66,7 +86,7 @@ public class ApplicationDataFilterService {
     return APPLICATIONS.TYPE.in(applicationTypeStrings);
   }
 
-  Condition getDurationTypesQueryCondition(List<ConsentLengthType> durationTypes) {
+  Condition getDurationTypesQueryCondition(Collection<ConsentLengthType> durationTypes) {
     var consentLengthStrings = durationTypes
         .stream()
         .map(ConsentLengthType::getEnumName)
@@ -74,18 +94,78 @@ public class ApplicationDataFilterService {
     return CONSENT_LENGTHS.CONSENT_LENGTH.in(consentLengthStrings);
   }
 
-  Condition getOperatorCondition(Integer operatorId) {
+  public Condition getOperatorCondition(Integer operatorId) {
     return APPLICATION_VERSIONS.PRIMARY_OPERATOR_OU_ID.eq(operatorId);
   }
 
-  Condition getAssetTypesQueryCondition(List<AssetTypeWithShore> assetTypes) {
-    var conditions = new ArrayList<Condition>();
+  public Condition getGeographicAreasQueryCondition(Collection<GeographicArea> geographicAreas) {
+    var primaryFieldIdsInGeographicAreas = fieldService
+        .findFieldsByIds(applicationFieldService.findDistinctPrimaryFieldIds(), FIELD_LOOKUP_PURPOSE)
+        .stream()
+        .filter(fieldJson -> geographicAreas.contains(fieldJson.getGeographicArea()))
+        .map(FieldJson::getId)
+        .toList();
 
-    if (containsTerminal(assetTypes)) {
-      conditions.add(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.TERMINAL.name()));
+    return APPLICATION_ASSETS.ASSET_TYPE.eq(FIELD.name())
+        .and(APPLICATION_ASSETS.ASSET_ID.in(primaryFieldIdsInGeographicAreas));
+  }
+
+  public Condition getFieldCondition(AssetKey assetKey) {
+    throwIfAssetKeyInvalidType(assetKey, FIELD);
+
+    var fieldJson = fieldService.getField(assetKey.assetId(), FIELD_LOOKUP_PURPOSE);
+
+    return exists(context.select(APPLICATION_ASSETS.ASSET_ID)
+        .from(APPLICATION_ASSETS)
+        .where(APPLICATION_ASSETS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID)
+            .and(APPLICATION_ASSETS.ASSET_ROLE.in(AssetRole.PRIMARY.name(), AssetRole.SECONDARY.name()))
+            .and(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name()))
+            .and(APPLICATION_ASSETS.ASSET_ID.eq(fieldJson.getId()))));
+  }
+
+  public Condition getTerminalCondition(AssetKey assetKey) {
+    throwIfAssetKeyInvalidType(assetKey, TERMINAL);
+
+    var terminalJson = terminalService.getTerminal(assetKey.assetId(), TERMINAL_LOOKUP_PURPOSE);
+
+    return exists(context.select(APPLICATION_ASSETS.ASSET_ID)
+        .from(APPLICATION_ASSETS)
+        .where(APPLICATION_ASSETS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID)
+            .and(APPLICATION_ASSETS.ASSET_ROLE.eq(AssetRole.PRIMARY.name()))
+            .and(APPLICATION_ASSETS.ASSET_TYPE.eq(TERMINAL.name()))
+            .and(APPLICATION_ASSETS.ASSET_ID.eq(terminalJson.getId()))));
+  }
+
+  private void throwIfAssetKeyInvalidType(AssetKey assetKey, AssetType expectedType) {
+    if (assetKey.assetType() == expectedType) {
+      return;
     }
 
-    if (containsFields(assetTypes)) {
+    throw new IllegalArgumentException("Expected AssetKey.assetType to be [%s] but was [%s]".formatted(
+        expectedType,
+        assetKey.assetType()
+    ));
+  }
+
+  public Condition getAceStatusCondition(Collection<AceFlagStatus> aceFlagStatuses) {
+    var aceFlagIsAceApplicationValues = aceFlagStatuses.stream().map(AceFlagStatus::isAceApplication).toList();
+
+    return exists(context.select(APPLICATION_FLAGS.FLAG_VALUE)
+        .from(APPLICATION_FLAGS)
+        .where(APPLICATION_FLAGS.FLAG_TYPE.eq(ApplicationFlagType.IS_ACE_APPLICATION.name())
+            .and(APPLICATION_FLAGS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID))
+            .and(APPLICATION_FLAGS.FLAG_VALUE.in(aceFlagIsAceApplicationValues)))
+    );
+  }
+
+  public Condition getAssetTypesQueryCondition(Collection<AssetTypeWithShore> assetTypes) {
+    var conditions = new ArrayList<Condition>();
+
+    if (containsAssetOfType(assetTypes, TERMINAL)) {
+      conditions.add(APPLICATION_ASSETS.ASSET_TYPE.eq(TERMINAL.name()));
+    }
+
+    if (containsAssetOfType(assetTypes, AssetType.FIELD)) {
       var primaryAndSecondaryFieldIds = applicationAssetService
           .getPrimaryAndSecondaryFieldJsonsOfShoreType(assetTypes, FIELD_LOOKUP_PURPOSE)
           .stream()
@@ -109,20 +189,32 @@ public class ApplicationDataFilterService {
     return conditions.get(0).or(conditions.get(1));
   }
 
+  public Optional<Condition> getCaseOfficerCondition(Long caseOfficerWuaId, boolean includeApplicationsWithoutCaseOfficer) {
+    var hasCaseOfficerWuaId = caseOfficerWuaId != null;
+
+    if (hasCaseOfficerWuaId && includeApplicationsWithoutCaseOfficer) {
+      return Optional.of(or(
+          APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.eq(caseOfficerWuaId.intValue()),
+          APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.isNull()));
+    }
+
+    if (hasCaseOfficerWuaId) {
+      return Optional.of(APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.eq(caseOfficerWuaId.intValue()));
+    }
+
+    if (!includeApplicationsWithoutCaseOfficer) {
+      return Optional.of(APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.isNotNull());
+    }
+
+    return Optional.empty();
+  }
+
   private Condition getSubmittedYearQueryCondition(Integer submittedYear) {
     return year(APPLICATION_VERSIONS.SUBMITTED_DATE_TIME).eq(submittedYear);
   }
 
-  private static boolean containsFields(List<AssetTypeWithShore> assetTypeWithShores) {
-    return assetTypeWithShores
-        .stream()
-        .anyMatch(AssetTypeWithShore::isField);
-  }
-
-  private static boolean containsTerminal(List<AssetTypeWithShore> assetTypeWithShores) {
-    return assetTypeWithShores
-        .stream()
-        .anyMatch(AssetTypeWithShore::isTerminal);
+  private static boolean containsAssetOfType(Collection<AssetTypeWithShore> assetTypeWithShores, AssetType assetType) {
+    return assetTypeWithShores.stream().map(AssetTypeWithShore::getAssetType).anyMatch(assetType::equals);
   }
 
   public List<Condition> getConditions(ApplicationDataFilterForm dataFilterForm) {

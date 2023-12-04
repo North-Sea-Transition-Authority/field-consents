@@ -11,9 +11,9 @@ import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
 
-import jakarta.servlet.http.HttpSession;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import org.jooq.Condition;
 import org.jooq.Record;
@@ -27,7 +27,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.mock.web.MockHttpSession;
+import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.assigncaseofficer.BulkAssignCaseOfficerController;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
@@ -68,47 +68,15 @@ class BulkCaseActionServiceTest {
   }
 
   @Test
-  void getSelectedApplicationIds() {
-    var session = new MockHttpSession();
-    session.setAttribute(BulkCaseActionSearchController.FORM_SESSION_ATTRIBUTE, new BulkCaseActionSearchForm(List.of("1", "2", "3")));
-
-    assertThat(bulkCaseActionService.getSelectedApplicationIds(session)).containsExactly(1, 2, 3);
-  }
-
-  @Test
-  void getSelectedApplicationIds_FormNotInSession() {
-    var session = new MockHttpSession();
-    assertThat(bulkCaseActionService.getSelectedApplicationIds(session)).isEmpty();
-  }
-
-  @Test
-  void getSelectedApplicationIds_AttributeOfWrongTypeInSession() {
-    var session = new MockHttpSession();
-    session.setAttribute(BulkCaseActionSearchController.FORM_SESSION_ATTRIBUTE, "1, 2, 3, I am not a form");
-
-    assertThat(bulkCaseActionService.getSelectedApplicationIds(session)).isEmpty();
-  }
-
-  @Test
-  void getSelectedApplicationIds_DoesNotContainDuplicates() {
-    var session = new MockHttpSession();
-    session.setAttribute(BulkCaseActionSearchController.FORM_SESSION_ATTRIBUTE, new BulkCaseActionSearchForm(List.of("1", "1")));
-
-    assertThat(bulkCaseActionService.getSelectedApplicationIds(session)).containsExactly(1);
-  }
-
-  @Test
   void getSelectedApplicationDataItems() {
-    var selectedIds = List.of(1, 2, 3);
-    doReturn(selectedIds).when(bulkCaseActionService).getSelectedApplicationIds(any(HttpSession.class));
+    var selectedIds = Set.of(1, 2, 3);
+    var form = new BulkCaseActionSelectedApplicationsForm(Set.of("1", "2", "3"));
 
     var applicationDataItems = List.of(ApplicationDataItem.newBuilder().build());
     doReturn(applicationDataItems).when(bulkCaseActionService).getApplicationDataItems(any(ServiceUserDetail.class), anyList());
 
-    var session = new MockHttpSession();
-    assertThat(bulkCaseActionService.getSelectedApplicationDataItems(session, user)).containsExactlyElementsOf(applicationDataItems);
+    assertThat(bulkCaseActionService.getSelectedApplicationDataItems(form, user)).containsExactlyElementsOf(applicationDataItems);
 
-    verify(bulkCaseActionService).getSelectedApplicationIds(session);
     verify(bulkCaseActionService).getApplicationDataItems(user, List.of(APPLICATIONS.ID.in(selectedIds)));
   }
 
@@ -143,5 +111,12 @@ class BulkCaseActionServiceTest {
     verify(selectQuery).addOrderBy(greatest(APPLICATION_VERSIONS.SUBMITTED_DATE_TIME, APPLICATION_VERSIONS.CREATED_DATE_TIME).desc());
 
     assertThat(conditionsCaptor.getValue()).containsExactlyElementsOf(conditions);
+  }
+
+  @Test
+  void getBulkActions() {
+    assertThat(bulkCaseActionService.getBulkActions()).containsExactly(
+        BulkAssignCaseOfficerController.ASSIGN_CASE_OFFICER
+    );
   }
 }

@@ -1,17 +1,14 @@
 package uk.co.nstauthority.fieldconsents.application.bulkcaseactions;
 
 import static org.jooq.impl.DSL.greatest;
-import static uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActionSearchController.FORM_SESSION_ATTRIBUTE;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
 
-import jakarta.servlet.http.HttpSession;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import org.jooq.Condition;
 import org.springframework.stereotype.Service;
+import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.assigncaseofficer.BulkAssignCaseOfficerController;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItem;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDtoService;
@@ -36,20 +33,11 @@ public class BulkCaseActionService {
     this.applicationDataItemQueryService = applicationDataItemQueryService;
   }
 
-  public List<Integer> getSelectedApplicationIds(HttpSession httpSession) {
-    return Optional.ofNullable(httpSession.getAttribute(FORM_SESSION_ATTRIBUTE))
-        .filter(BulkCaseActionSearchForm.class::isInstance)
-        .map(BulkCaseActionSearchForm.class::cast)
-        .map(BulkCaseActionSearchForm::selectedApplicationIds)
-        .stream()
-        .flatMap(Collection::stream)
-        .map(Integer::parseInt)
-        .distinct()
-        .toList();
-  }
-
-  public List<ApplicationDataItem> getSelectedApplicationDataItems(HttpSession httpSession, ServiceUserDetail user) {
-    var selectedApplicationIds = getSelectedApplicationIds(httpSession);
+  public List<ApplicationDataItem> getSelectedApplicationDataItems(
+      BulkCaseActionSelectedApplicationsForm form,
+      ServiceUserDetail user
+  ) {
+    var selectedApplicationIds = form.selectedApplicationIds();
     return getApplicationDataItems(user, List.of(APPLICATIONS.ID.in(selectedApplicationIds)));
   }
 
@@ -67,6 +55,12 @@ public class BulkCaseActionService {
     var organisationUnitJsons = applicationDataItemDtoService.getOrganisationUnitJsonsFromApplicationDataItemDtos(dtos);
 
     return applicationDataItemService.getItemsFromDtos(dtos, organisationUnitJsons, TeamType.REGULATOR, user);
+  }
+
+  List<String> getBulkActions() {
+    return List.of(
+        BulkAssignCaseOfficerController.ASSIGN_CASE_OFFICER
+    );
   }
 
 }

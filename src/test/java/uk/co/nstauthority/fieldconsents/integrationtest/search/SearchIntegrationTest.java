@@ -24,7 +24,7 @@ import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTe
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.TERMINAL1_ASSET_KEY;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.TERMINAL2_ASSET_KEY;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterService.FIELD_LOOKUP_PURPOSE;
-import static uk.co.nstauthority.fieldconsents.search.SearchFilterService.TERMINAL_LOOKUP_PURPOSE;
+import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterService.TERMINAL_LOOKUP_PURPOSE;
 
 import java.time.Clock;
 import java.time.ZonedDateTime;

@@ -19,8 +19,8 @@
         <@assetFilter form=form prefilledAsset=prefilledAsset assetSearchRestUrl=assetSearchRestUrl/>
         <@dataItemFilter.operatorFilter form=form prefilledOperator=prefilledOperator operatorSearchRestUrl=operatorSearchRestUrl/>
         <@dataItemFilter.submittedYearFilter form=form/>
-        <@geographicAreaFilter form=form geographicAreaCheckboxes=geographicAreas/>
-        <@dataItemFilter.assetTypeWithShoreFilter form=form assetTypeWithShoreCheckboxes=assetTypesWithShore/>
+        <@dataItemFilter.geographicAreaFilter form=form geographicAreaCheckboxes=geographicAreas expanded=form.geographicAreas?has_content/>
+        <@dataItemFilter.assetTypeWithShoreFilter form=form assetTypeWithShoreCheckboxes=assetTypesWithShore expanded=form.assetTypesWithShore?has_content/>
         <#if caseOfficersAssigned?has_content>
           <@assignedCaseOfficerFilter form=form caseOfficerOptions=caseOfficersAssigned/>
         </#if>
@@ -67,15 +67,6 @@
       labelText=""
       preselectedItems={prefilledAsset.id() : prefilledAsset.text()}
       inputClass="govuk-input--width-10"
-    />
-  </@fdsSearch.searchFilterItem>
-</#macro>
-
-<#macro geographicAreaFilter form geographicAreaCheckboxes>
-  <@fdsSearch.searchFilterItem itemName="Geographic area" expanded=form.geographicAreas?has_content>
-    <@fdsSearch.searchCheckboxes
-      path="form.geographicAreas"
-      checkboxes=geographicAreaCheckboxes
     />
   </@fdsSearch.searchFilterItem>
 </#macro>

@@ -1,6 +1,7 @@
 <#include '../layout/layout.ftl'>
 <#import '../dataitems/applicationDataItem.ftl' as applicationDataItem>
 <#import '../dataitems/_dataItemFilter.ftl' as dataItemFilter>
+<#import './_noResultsFound.ftl' as noResultsFound>
 
 <#-- @ftlvariable name="searchResultItem" type="uk.co.nstauthority.fieldconsents.query.ApplicationDataItem" -->
 
@@ -20,11 +21,11 @@
       <@dataItemFilter.submittedYearFilter form=form/>
       <@consentStartYearFilter form=form/>
       <#if aceStatuses?has_content>
-        <@aceFilter form=form aceCheckboxes=aceStatuses/>
+        <@dataItemFilter.aceFilter form=form expanded=form.aceFlagStatuses?has_content aceCheckboxes=aceStatuses/>
       </#if>
-      <@dataItemFilter.assetTypeWithShoreFilter form=form assetTypeWithShoreCheckboxes=assetTypesWithShore/>
-      <@fieldAssetFilter form=form prefilledField=prefilledField fieldAssetSearchRestUrl=fieldAssetSearchRestUrl/>
-      <@terminalAssetFilter form=form prefilledTerminal=prefilledTerminal terminalAssetSearchRestUrl=terminalAssetSearchRestUrl/>
+      <@dataItemFilter.assetTypeWithShoreFilter form=form assetTypeWithShoreCheckboxes=assetTypesWithShore expanded=form.assetTypesWithShore?has_content/>
+      <@dataItemFilter.fieldAssetFilter form=form prefilledField=prefilledField fieldAssetSearchRestUrl=fieldAssetSearchRestUrl/>
+      <@dataItemFilter.terminalAssetFilter form=form prefilledTerminal=prefilledTerminal terminalAssetSearchRestUrl=terminalAssetSearchRestUrl/>
       <@dataItemFilter.licenceReferenceFilter form=form/>
     </@fdsSearch.searchFilterList>
   </@fdsSearch.searchFilter>
@@ -37,13 +38,11 @@
           </#list>
         </@fdsResultList.resultList>
       <#else>
-        <h3 class="govuk-heading-s">There are no results matching your search</h3>
-        <p class="govuk-body">Improve your search by:</p>
-        <ul class="govuk-list govuk-list--bullet">
+        <@noResultsFound.noResultsFoundMessageWithHints>
           <li>clearing filters</li>
           <li>double-checking your reference number</li>
           <li>searching for something less specific</li>
-        </ul>
+        </@noResultsFound.noResultsFoundMessageWithHints>
       </#if>
     </#if>
   </@fdsSearch.searchPageContent>
@@ -56,39 +55,6 @@
       path="form.consentStartYear"
       labelText=""
       suffixScreenReaderPrompt="Consent start year"
-    />
-  </@fdsSearch.searchFilterItem>
-</#macro>
-
-<#macro aceFilter form aceCheckboxes>
-  <@fdsSearch.searchFilterItem itemName="ACE status" expanded=form.aceFlagStatuses?has_content>
-    <@fdsSearch.searchCheckboxes
-      path="form.aceFlagStatuses"
-      checkboxes=aceCheckboxes
-    />
-  </@fdsSearch.searchFilterItem>
-</#macro>
-
-<#macro fieldAssetFilter form prefilledField fieldAssetSearchRestUrl>
-  <@fdsSearch.searchFilterItem itemName="Field" expanded=prefilledField.id()?has_content>
-    <@fdsSearchSelector.searchSelectorRest
-      path="form.fieldAssetKey"
-      restUrl=springUrl(fieldAssetSearchRestUrl)
-      labelText=""
-      preselectedItems={prefilledField.id() : prefilledField.text()}
-      inputClass="govuk-input--width-10"
-    />
-  </@fdsSearch.searchFilterItem>
-</#macro>
-
-<#macro terminalAssetFilter form prefilledTerminal terminalAssetSearchRestUrl>
-  <@fdsSearch.searchFilterItem itemName="Facility" expanded=prefilledTerminal.id()?has_content>
-    <@fdsSearchSelector.searchSelectorRest
-      path="form.terminalAssetKey"
-      restUrl=springUrl(terminalAssetSearchRestUrl)
-      labelText=""
-      preselectedItems={prefilledTerminal.id() : prefilledTerminal.text()}
-      inputClass="govuk-input--width-10"
     />
   </@fdsSearch.searchFilterItem>
 </#macro>

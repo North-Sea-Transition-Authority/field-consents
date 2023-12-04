@@ -8,6 +8,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActionControllerHelperService;
 import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActionSearchController;
 import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActionService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
@@ -24,17 +25,24 @@ public class BulkAssignCaseOfficerController {
   public static final String ASSIGN_CASE_OFFICER = "Assign case officer";
 
   private final BulkCaseActionService bulkCaseActionService;
+  private final BulkCaseActionControllerHelperService controllerHelperService;
 
-  BulkAssignCaseOfficerController(BulkCaseActionService bulkCaseActionService) {
+  BulkAssignCaseOfficerController(
+      BulkCaseActionService bulkCaseActionService,
+      BulkCaseActionControllerHelperService controllerHelperService
+  ) {
     this.bulkCaseActionService = bulkCaseActionService;
+    this.controllerHelperService = controllerHelperService;
   }
 
   @GetMapping
   public ModelAndView assignCaseOfficer(HttpSession session, ServiceUserDetail user) {
+    var form = controllerHelperService.getSelectedApplicationsForm(session);
+
     return new ModelAndView("fcs/application/bulk-case-actions/assignCaseOfficer")
         .addObject("pageTitle", ASSIGN_CASE_OFFICER)
         .addObject("backLinkUrl", ReverseRouter.route(on(BulkCaseActionSearchController.class).getSearchResults(null, null)))
-        .addObject("applicationDataItems", bulkCaseActionService.getSelectedApplicationDataItems(session, user))
+        .addObject("applicationDataItems", bulkCaseActionService.getSelectedApplicationDataItems(form, user))
         .addObject("captionHeadingFunction", (Function<ApplicationDataItem, String>) this::captionHeadingFunction);
   }
 

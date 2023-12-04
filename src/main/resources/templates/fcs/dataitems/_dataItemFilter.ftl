@@ -1,46 +1,33 @@
 <#include '../layout/layout.ftl'>
 
-<#macro referenceNumberFilter form>
+<#macro referenceNumberFilter form path="form.referenceNumber">
   <@fdsSearch.searchFilterItem itemName="Reference number" expanded=form.referenceSearchTerm?has_content>
-    <@fdsSearch.searchTextInput
-      path="form.referenceNumber"
-      labelText=""
-      suffixScreenReaderPrompt="Application reference number"
-    />
+    <@fdsSearch.searchTextInput path=path labelText="" suffixScreenReaderPrompt="Application reference number"/>
   </@fdsSearch.searchFilterItem>
 </#macro>
 
-<#macro statusFilter form statusCheckboxes>
+<#macro statusFilter form statusCheckboxes path="form.statuses">
   <@fdsSearch.searchFilterItem itemName="Status" expanded=form.statuses?has_content>
-    <@fdsSearch.searchCheckboxes
-      path="form.statuses"
-      checkboxes=statusCheckboxes
-    />
+    <@fdsSearch.searchCheckboxes path=path checkboxes=statusCheckboxes/>
   </@fdsSearch.searchFilterItem>
 </#macro>
 
-<#macro applicationTypeFilter form applicationTypeCheckboxes>
+<#macro applicationTypeFilter form applicationTypeCheckboxes path="form.applicationTypes">
   <@fdsSearch.searchFilterItem itemName="Application type" expanded=form.applicationTypes?has_content>
-    <@fdsSearch.searchCheckboxes
-      path="form.applicationTypes"
-      checkboxes=applicationTypeCheckboxes
-    />
+    <@fdsSearch.searchCheckboxes path=path checkboxes=applicationTypeCheckboxes/>
   </@fdsSearch.searchFilterItem>
 </#macro>
 
-<#macro durationFilter form durationCheckboxes>
+<#macro durationFilter form durationCheckboxes path="form.durationTypes">
   <@fdsSearch.searchFilterItem itemName="Duration" expanded=form.durationTypes?has_content>
-    <@fdsSearch.searchCheckboxes
-      path="form.durationTypes"
-      checkboxes=durationCheckboxes
-    />
+    <@fdsSearch.searchCheckboxes path=path checkboxes=durationCheckboxes/>
   </@fdsSearch.searchFilterItem>
 </#macro>
 
-<#macro operatorFilter form prefilledOperator operatorSearchRestUrl>
+<#macro operatorFilter form prefilledOperator operatorSearchRestUrl path="form.operatorId">
   <@fdsSearch.searchFilterItem itemName="Primary operator" expanded=prefilledOperator.id()?has_content>
     <@fdsSearchSelector.searchSelectorRest
-      path="form.operatorId"
+      path=path
       restUrl=springUrl(operatorSearchRestUrl)
       labelText=""
       preselectedItems={prefilledOperator.id() : prefilledOperator.text()}
@@ -49,31 +36,78 @@
   </@fdsSearch.searchFilterItem>
 </#macro>
 
-<#macro assetTypeWithShoreFilter form assetTypeWithShoreCheckboxes>
-  <@fdsSearch.searchFilterItem itemName="Asset type" expanded=form.assetTypesWithShore?has_content>
-    <@fdsSearch.searchCheckboxes
-      path="form.assetTypesWithShore"
-      checkboxes=assetTypeWithShoreCheckboxes
-    />
+<#macro assetTypeWithShoreFilter form expanded assetTypeWithShoreCheckboxes path="form.assetTypesWithShore">
+  <@fdsSearch.searchFilterItem itemName="Asset type" expanded=expanded>
+    <@fdsSearch.searchCheckboxes path=path checkboxes=assetTypeWithShoreCheckboxes/>
   </@fdsSearch.searchFilterItem>
 </#macro>
 
-<#macro submittedYearFilter form>
+<#macro submittedYearFilter form path="form.submittedYear">
   <@fdsSearch.searchFilterItem itemName="Submission year" expanded=form.submittedYear?has_content>
-    <@fdsSearch.searchTextInput
-      path="form.submittedYear"
+    <@fdsSearch.searchTextInput path=path labelText="" suffixScreenReaderPrompt="Application submission year"/>
+  </@fdsSearch.searchFilterItem>
+</#macro>
+
+<#macro geographicAreaFilter form expanded geographicAreaCheckboxes path="form.geographicAreas">
+  <@fdsSearch.searchFilterItem itemName="Geographic area" expanded=expanded>
+    <@fdsSearch.searchCheckboxes path=path checkboxes=geographicAreaCheckboxes />
+  </@fdsSearch.searchFilterItem>
+</#macro>
+
+<#macro aceFilter form expanded aceCheckboxes path="form.aceFlagStatuses">
+  <@fdsSearch.searchFilterItem itemName="ACE status" expanded=expanded>
+    <@fdsSearch.searchCheckboxes path=path checkboxes=aceCheckboxes/>
+  </@fdsSearch.searchFilterItem>
+</#macro>
+
+<#macro fieldAssetFilter form prefilledField fieldAssetSearchRestUrl path="form.fieldAssetKey">
+  <@fdsSearch.searchFilterItem itemName="Field" expanded=prefilledField.id()?has_content>
+    <@fdsSearchSelector.searchSelectorRest
+      path=path
+      restUrl=springUrl(fieldAssetSearchRestUrl)
       labelText=""
-      suffixScreenReaderPrompt="Application submission year"
+      preselectedItems={prefilledField.id() : prefilledField.text()}
+      inputClass="govuk-input--width-10"
     />
   </@fdsSearch.searchFilterItem>
 </#macro>
 
-<#macro licenceReferenceFilter form>
+<#macro terminalAssetFilter form prefilledTerminal terminalAssetSearchRestUrl path="form.terminalAssetKey">
+  <@fdsSearch.searchFilterItem itemName="Facility" expanded=prefilledTerminal.id()?has_content>
+    <@fdsSearchSelector.searchSelectorRest
+      path=path
+      restUrl=springUrl(terminalAssetSearchRestUrl)
+      labelText=""
+      preselectedItems={prefilledTerminal.id() : prefilledTerminal.text()}
+      inputClass="govuk-input--width-10"
+    />
+  </@fdsSearch.searchFilterItem>
+</#macro>
+
+<#macro licenceReferenceFilter form path="form.licenceReference">
   <@fdsSearch.searchFilterItem itemName="Licence reference" expanded=form.licenceReference?has_content>
     <@fdsSearch.searchTextInput
-      path="form.licenceReference"
+      path=path
       labelText=""
       suffixScreenReaderPrompt="Licence reference"
     />
+  </@fdsSearch.searchFilterItem>
+</#macro>
+
+<#macro caseOfficerFilter
+  form
+  expanded
+  caseOfficerOptions
+  caseOfficerWuaIdPath="form.caseOfficerWuaId"
+  includeUnassignedCaseOfficerPath="form.includeUnassignedCaseOfficer"
+>
+  <@fdsSearch.searchFilterItem itemName="Case officer" expanded=expanded>
+    <@fdsSearchSelector.searchSelectorEnhanced
+      path=caseOfficerWuaIdPath
+      options=caseOfficerOptions
+      labelText=""
+      labelHeadingClass="govuk-input--width-10"
+    />
+    <@fdsSearch.searchCheckboxes path=includeUnassignedCaseOfficerPath checkboxes={"true": "Show cases without a case officer"}/>
   </@fdsSearch.searchFilterItem>
 </#macro>

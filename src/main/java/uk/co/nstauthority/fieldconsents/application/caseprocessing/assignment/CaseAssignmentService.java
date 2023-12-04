@@ -110,27 +110,27 @@ public class CaseAssignmentService {
         .toList();
   }
 
+  /**
+   * The list of current case officers is the union of all current case officers in the NSTA team
+   * and the case officers assigned to current applications.
+   */
   public List<EnergyPortalUserDto> getCurrentCaseOfficers() {
-    // The list of current case officers is the union of all current case officers in the NSTA team
-    // and the case officers assigned to current applications.
-
-    var teamCaseOfficerWuaIds = teamService.getWuaIdsOfTeamMembersWithRoles(
-        TeamType.REGULATOR,
-        Set.of(RegulatorTeamRole.CASE_OFFICER)
-    );
     var caseOfficerAssignedWuaIds = applicationVersionRepository
         .findAllCaseOfficerWuaIdsByApplicationVersionStatus(ApplicationVersionStatus.SUBMITTED)
         .stream()
         .map(WebUserAccountId::from)
         .toList();
 
-    Set<WebUserAccountId> currentCaseOfficersWuaIds = new HashSet<>();
-    currentCaseOfficersWuaIds.addAll(teamCaseOfficerWuaIds);
+    var currentCaseOfficers = teamService.getWuaIdsOfTeamMembersWithRoles(
+        TeamType.REGULATOR,
+        Set.of(RegulatorTeamRole.CASE_OFFICER)
+    );
+
+    var currentCaseOfficersWuaIds = new HashSet<WebUserAccountId>();
+    currentCaseOfficersWuaIds.addAll(currentCaseOfficers);
     currentCaseOfficersWuaIds.addAll(caseOfficerAssignedWuaIds);
 
-    return energyPortalUserService.findByWuaIds(currentCaseOfficersWuaIds)
-        .stream()
-        .sorted(Comparator.comparing(EnergyPortalUserDto::displayName))
-        .toList();
+    return energyPortalUserService.findByWuaIds(currentCaseOfficersWuaIds);
   }
+
 }

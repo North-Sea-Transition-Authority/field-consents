@@ -13,12 +13,15 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
+import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActionControllerHelperService;
 import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActionSearchController;
+import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActionSelectedApplicationsForm;
 import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActionService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -32,6 +35,16 @@ class BulkAssignCaseOfficerControllerTest extends AbstractControllerTest {
 
   @MockBean
   private BulkCaseActionService bulkCaseActionService;
+
+  @MockBean
+  private BulkCaseActionControllerHelperService controllerHelperService;
+
+  private MockHttpSession session;
+
+  @BeforeEach
+  void setUp() {
+    session = new MockHttpSession();
+  }
 
   @SecurityTest
   void assignCaseOfficer_redirectedToLoginUrlWhenUnauthenticated() throws Exception {
@@ -52,13 +65,14 @@ class BulkAssignCaseOfficerControllerTest extends AbstractControllerTest {
   void assignCaseOfficer() throws Exception {
     when(permissionService.hasPermission(user, Set.of(RolePermission.ASSIGN_FCS_APPLICATIONS))).thenReturn(true);
 
-    var session = new MockHttpSession();
+    var form = BulkCaseActionSelectedApplicationsForm.empty();
+    when(controllerHelperService.getSelectedApplicationsForm(session)).thenReturn(form);
 
     var applicationDataItemWithoutCaseOfficer = applicationDataItemBuilderWithDefaults(1).build();
     var applicationDataItemWithCaseOfficer = applicationDataItemBuilderWithDefaults(2).withCaseOfficer("unit test").build();
 
     var applicationDataItems = List.of(applicationDataItemWithoutCaseOfficer, applicationDataItemWithCaseOfficer);
-    when(bulkCaseActionService.getSelectedApplicationDataItems(session, user)).thenReturn(applicationDataItems);
+    when(bulkCaseActionService.getSelectedApplicationDataItems(form, user)).thenReturn(applicationDataItems);
 
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS).assignCaseOfficer(null, null)))
         .session(session)

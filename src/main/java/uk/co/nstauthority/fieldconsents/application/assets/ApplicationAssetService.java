@@ -187,7 +187,7 @@ public class ApplicationAssetService {
     return applicationAssetRepository.findAllByAssetRoleAndAssetTypeAndAssetIdIsNotNull(AssetRole.PRIMARY, TERMINAL);
   }
 
-  public List<FieldJson> getPrimaryAndSecondaryFieldJsonsOfShoreType(List<AssetTypeWithShore> assetTypeWithShores,
+  public List<FieldJson> getPrimaryAndSecondaryFieldJsonsOfShoreType(Collection<AssetTypeWithShore> assetTypeWithShores,
                                                                      String requestPurpose) {
     var shores = assetTypeWithShores.stream()
         .map(AssetTypeWithShore::getShore)

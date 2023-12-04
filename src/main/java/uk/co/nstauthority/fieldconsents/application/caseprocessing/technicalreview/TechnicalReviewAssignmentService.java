@@ -117,9 +117,6 @@ public class TechnicalReviewAssignmentService {
     currentTechnicalReviewersWuaIds.addAll(teamTechnicalReviewerWuaIds);
     currentTechnicalReviewersWuaIds.addAll(technicalReviewerAssignedWuaIds);
 
-    return energyPortalUserService.findByWuaIds(currentTechnicalReviewersWuaIds)
-        .stream()
-        .sorted(Comparator.comparing(EnergyPortalUserDto::displayName))
-        .toList();
+    return energyPortalUserService.findByWuaIds(currentTechnicalReviewersWuaIds);
   }
 }

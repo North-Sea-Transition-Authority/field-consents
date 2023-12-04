@@ -1,6 +1,5 @@
 package uk.co.nstauthority.fieldconsents.workarea;
 
-import static uk.co.nstauthority.fieldconsents.assets.AssetType.FIELD;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_CONSULTATIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationAssets.APPLICATION_ASSETS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationTechnicalReviews.APPLICATION_TECHNICAL_REVIEWS;
@@ -15,14 +14,10 @@ import org.jooq.impl.DSL;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
-import uk.co.nstauthority.fieldconsents.application.assets.ApplicationFieldService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationStatus;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
-import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
-import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
-import uk.co.nstauthority.fieldconsents.assets.fields.GeographicArea;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterService;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
@@ -33,19 +28,15 @@ public class WorkAreaFilterService {
   public static final String FIELD_LOOKUP_PURPOSE = "Lookup field for the work-area";
 
   private final AssetService assetService;
-  private final FieldService fieldService;
-  private final ApplicationFieldService applicationFieldService;
   private final TeamService teamService;
   private final ApplicationDataFilterService applicationDataFilterService;
 
-  public WorkAreaFilterService(AssetService assetService,
-                               FieldService fieldService,
-                               ApplicationFieldService applicationFieldService,
-                               TeamService teamService,
-                               ApplicationDataFilterService applicationDataFilterService) {
+  WorkAreaFilterService(
+      AssetService assetService,
+      TeamService teamService,
+      ApplicationDataFilterService applicationDataFilterService
+  ) {
     this.assetService = assetService;
-    this.fieldService = fieldService;
-    this.applicationFieldService = applicationFieldService;
     this.teamService = teamService;
     this.applicationDataFilterService = applicationDataFilterService;
   }
@@ -91,22 +82,10 @@ public class WorkAreaFilterService {
         .ifPresent(conditions::add);
 
     Optional.ofNullable(filter.getGeographicAreas())
-        .map(this::getGeographicAreasQueryCondition)
+        .map(applicationDataFilterService::getGeographicAreasQueryCondition)
         .ifPresent(conditions::add);
 
     return conditions;
-  }
-
-  public Condition getGeographicAreasQueryCondition(List<GeographicArea> geographicAreas) {
-    var primaryFieldIdsInGeographicAreas = fieldService
-        .findFieldsByIds(applicationFieldService.findDistinctPrimaryFieldIds(), FIELD_LOOKUP_PURPOSE)
-        .stream()
-        .filter(fieldJson -> geographicAreas.contains(fieldJson.getGeographicArea()))
-        .map(FieldJson::getId)
-        .toList();
-
-    return APPLICATION_ASSETS.ASSET_TYPE.eq(FIELD.name())
-        .and(APPLICATION_ASSETS.ASSET_ID.in(primaryFieldIdsInGeographicAreas));
   }
 
   private Condition getAssetCondition(AssetJson assetJson) {

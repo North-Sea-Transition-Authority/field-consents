@@ -5,24 +5,20 @@ import static org.jooq.impl.DSL.coalesce;
 import static org.jooq.impl.DSL.exists;
 import static org.jooq.impl.DSL.falseCondition;
 import static org.jooq.impl.DSL.year;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.FIELD1_ASSET_KEY;
 import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.TERMINAL1_ASSET_KEY;
-import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
-import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1Json;
-import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationAssets.APPLICATION_ASSETS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationConsultations.APPLICATION_CONSULTATIONS;
-import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationFlags.APPLICATION_FLAGS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.Applications.APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ConsentLengths.CONSENT_LENGTHS;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.APPLICATION_NO;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.ORGANISATION_UNIT_ID;
-import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterService.FIELD_LOOKUP_PURPOSE;
-import static uk.co.nstauthority.fieldconsents.search.SearchFilterService.TERMINAL_LOOKUP_PURPOSE;
 
 import java.util.Collections;
 import java.util.List;
+import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DefaultDSLContext;
@@ -35,13 +31,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
-import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
-import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
-import uk.co.nstauthority.fieldconsents.assets.AssetType;
-import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
-import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
@@ -50,10 +41,7 @@ import uk.co.nstauthority.fieldconsents.teams.TeamType;
 class SearchFilterServiceTest {
 
   private DSLContext context;
-  @Mock
-  private FieldService fieldService;
-  @Mock
-  private TerminalService terminalService;
+
   @Mock
   private ApplicationDataFilterService applicationDataFilterService;
 
@@ -64,12 +52,7 @@ class SearchFilterServiceTest {
   void setUp() {
     form = new SearchFilterForm();
     context = new DefaultDSLContext(SQLDialect.DEFAULT);
-    searchFilterService = new SearchFilterService(
-        context,
-        fieldService,
-        terminalService,
-        applicationDataFilterService
-    );
+    searchFilterService = new SearchFilterService(context, applicationDataFilterService);
   }
 
   @Test
@@ -100,36 +83,17 @@ class SearchFilterServiceTest {
         );
   }
 
-  @Test
-  void getConditions_withAceFlagTrue() {
-    form.setAceFlagStatuses(List.of(AceFlagStatus.ACE));
+  @ParameterizedTest
+  @EnumSource(AceFlagStatus.class)
+  void getConditions_aceFlagStatus(AceFlagStatus aceFlagStatus) {
+    form.setAceFlagStatuses(List.of(aceFlagStatus));
 
     when(applicationDataFilterService.getConditions(form)).thenReturn(Collections.emptyList());
 
-    assertThat(searchFilterService.getConditions(form, TeamType.REGULATOR))
-        .containsExactly(
-            exists(context.select(APPLICATION_FLAGS.FLAG_VALUE)
-                .from(APPLICATION_FLAGS)
-                .where(APPLICATION_FLAGS.FLAG_TYPE.eq(ApplicationFlagType.IS_ACE_APPLICATION.name())
-                    .and(APPLICATION_FLAGS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID))
-                    .and(APPLICATION_FLAGS.FLAG_VALUE.in(true))))
-          );
-  }
+    var aceStatusFlagCondition = mock(Condition.class);
+    when(applicationDataFilterService.getAceStatusCondition(form.getAceFlagStatuses())).thenReturn(aceStatusFlagCondition);
 
-  @Test
-  void getConditions_withAceFlagFalse() {
-    form.setAceFlagStatuses(List.of(AceFlagStatus.NON_ACE));
-
-    when(applicationDataFilterService.getConditions(form)).thenReturn(Collections.emptyList());
-
-    assertThat(searchFilterService.getConditions(form, TeamType.REGULATOR))
-        .containsExactly(
-            exists(context.select(APPLICATION_FLAGS.FLAG_VALUE)
-                .from(APPLICATION_FLAGS)
-                .where(APPLICATION_FLAGS.FLAG_TYPE.eq(ApplicationFlagType.IS_ACE_APPLICATION.name())
-                    .and(APPLICATION_FLAGS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID))
-                    .and(APPLICATION_FLAGS.FLAG_VALUE.in(false))))
-        );
+    assertThat(searchFilterService.getConditions(form, TeamType.REGULATOR)).containsExactly(aceStatusFlagCondition);
   }
 
   @Test
@@ -143,36 +107,20 @@ class SearchFilterServiceTest {
   void getConditions_withFieldAsset() {
     form.setFieldAssetKey(FIELD1_ASSET_KEY);
 
-    when(applicationDataFilterService.getConditions(form)).thenReturn(Collections.emptyList());
-    when(fieldService.getField(AssetKey.from(FIELD1_ASSET_KEY).assetId(), FIELD_LOOKUP_PURPOSE)).thenReturn(field1Json);
+    var jooqCondition = mock(Condition.class);
+    when(applicationDataFilterService.getFieldCondition(AssetKey.from(form.getFieldAssetKey()))).thenReturn(jooqCondition);
 
-    assertThat(searchFilterService.getConditions(form, TeamType.REGULATOR))
-        .containsExactly(
-            exists(context.select(APPLICATION_ASSETS.ASSET_ID)
-                .from(APPLICATION_ASSETS)
-                .where(APPLICATION_ASSETS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID)
-                    .and(APPLICATION_ASSETS.ASSET_ROLE.in(AssetRole.PRIMARY.name(), AssetRole.SECONDARY.name()))
-                    .and(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name()))
-                    .and(APPLICATION_ASSETS.ASSET_ID.eq(field1Json.getId()))))
-        );
+    assertThat(searchFilterService.getConditions(form, TeamType.REGULATOR)).containsExactly(jooqCondition);
   }
 
   @Test
   void getConditions_withTerminalAsset() {
     form.setTerminalAssetKey(TERMINAL1_ASSET_KEY);
 
-    when(applicationDataFilterService.getConditions(form)).thenReturn(Collections.emptyList());
-    when(terminalService.getTerminal(AssetKey.from(TERMINAL1_ASSET_KEY).assetId(), TERMINAL_LOOKUP_PURPOSE)).thenReturn(terminal1Json);
+    var jooqCondition = mock(Condition.class);
+    when(applicationDataFilterService.getTerminalCondition(AssetKey.from(form.getTerminalAssetKey()))).thenReturn(jooqCondition);
 
-    assertThat(searchFilterService.getConditions(form, TeamType.REGULATOR))
-        .containsExactly(
-            exists(context.select(APPLICATION_ASSETS.ASSET_ID)
-                .from(APPLICATION_ASSETS)
-                .where(APPLICATION_ASSETS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID)
-                    .and(APPLICATION_ASSETS.ASSET_ROLE.eq(AssetRole.PRIMARY.name()))
-                    .and(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.TERMINAL.name()))
-                    .and(APPLICATION_ASSETS.ASSET_ID.eq(terminal1Json.getId()))))
-        );
+    assertThat(searchFilterService.getConditions(form, TeamType.REGULATOR)).containsExactly(jooqCondition);
   }
 
   @Test

@@ -9,11 +9,6 @@ import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.U
 import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.field1AssetJson;
 import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.terminal1AssetJson;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_ID_1;
-import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_ID_2;
-import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD_ID_3;
-import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
-import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2Json;
-import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field3Json;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.TERMINAL_ID_1;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_CONSULTATIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationAssets.APPLICATION_ASSETS;
@@ -32,12 +27,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
-import uk.co.nstauthority.fieldconsents.application.assets.ApplicationFieldService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationStatus;
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
-import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.fields.GeographicArea;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
@@ -53,12 +46,6 @@ class WorkAreaFilterServiceTest {
 
   @Mock
   private AssetService assetService;
-
-  @Mock
-  private FieldService fieldService;
-
-  @Mock
-  private ApplicationFieldService applicationFieldService;
 
   @Mock
   private TeamService teamService;
@@ -199,43 +186,13 @@ class WorkAreaFilterServiceTest {
     form.setGeographicAreas(List.of(GeographicArea.CNS, GeographicArea.SNS));
     filter.update(form);
 
-    var distinctPrimaryFields = List.of(FIELD_ID_1, FIELD_ID_2);
-    var primaryFieldJsonsInGeographicAreas = List.of(field1Json, field2Json);
-
-    when(applicationFieldService.findDistinctPrimaryFieldIds()).thenReturn(distinctPrimaryFields);
-    when(fieldService.findFieldsByIds(distinctPrimaryFields, FIELD_LOOKUP_PURPOSE))
-        .thenReturn(primaryFieldJsonsInGeographicAreas);
+    var geographicAreasCondition = mock(Condition.class);
+    when(applicationDataFilterService.getGeographicAreasQueryCondition(form.getGeographicAreas()))
+        .thenReturn(geographicAreasCondition);
 
     var conditions = workAreaFilterService.getConditions(filter, user, null);
 
-    assertThat(conditions).containsExactly(
-        SUBMITTED_APPLICATION_CONDITION,
-        APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name())
-            .and(APPLICATION_ASSETS.ASSET_ID.in(distinctPrimaryFields))
-    );
-  }
-
-  @Test
-  void getConditions_twoGeographicAreas_conditionContainsOnlyThoseFieldsThatMatchTheFilter() {
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
-
-    form.setGeographicAreas(List.of(GeographicArea.CNS, GeographicArea.SNS));
-    filter.update(form);
-
-    var distinctPrimaryFieldIds = List.of(FIELD_ID_1, FIELD_ID_2, FIELD_ID_3);
-    var primaryFieldJsons = List.of(field1Json, field2Json, field3Json);
-    when(applicationFieldService.findDistinctPrimaryFieldIds()).thenReturn(distinctPrimaryFieldIds);
-    when(fieldService.findFieldsByIds(distinctPrimaryFieldIds, FIELD_LOOKUP_PURPOSE))
-        .thenReturn(primaryFieldJsons);
-    var fieldIdsInFilterGeographicAreas = List.of(FIELD_ID_1, FIELD_ID_2);
-
-    var conditions = workAreaFilterService.getConditions(filter, user, null);
-
-    assertThat(conditions).containsExactly(
-        SUBMITTED_APPLICATION_CONDITION,
-        APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name())
-            .and(APPLICATION_ASSETS.ASSET_ID.in(fieldIdsInFilterGeographicAreas))
-    );
+    assertThat(conditions).containsExactly(SUBMITTED_APPLICATION_CONDITION, geographicAreasCondition);
   }
 
   @Test

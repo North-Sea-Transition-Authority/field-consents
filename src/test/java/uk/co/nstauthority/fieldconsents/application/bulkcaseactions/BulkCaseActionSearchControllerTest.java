@@ -2,6 +2,8 @@ package uk.co.nstauthority.fieldconsents.application.bulkcaseactions;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -11,24 +13,33 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
-import static uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActionSearchController.FORM_SESSION_ATTRIBUTE;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
-import jakarta.servlet.http.HttpSession;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import org.jooq.Condition;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.web.servlet.ResultMatcher;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.assigncaseofficer.BulkAssignCaseOfficerController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentService;
+import uk.co.nstauthority.fieldconsents.assets.AssetRestController;
+import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
+import uk.co.nstauthority.fieldconsents.assets.fields.GeographicArea;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
+import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
+import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItem;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil;
+import uk.co.nstauthority.fieldconsents.search.AceFlagStatus;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @ContextConfiguration(classes = BulkCaseActionSearchController.class)
@@ -39,6 +50,60 @@ class BulkCaseActionSearchControllerTest extends AbstractControllerTest {
 
   @MockBean
   private BulkCaseActionService bulkCaseActionService;
+
+  @MockBean
+  private BulkCaseActionControllerHelperService controllerHelperService;
+
+  @MockBean
+  private BulkCaseActionSearchFilterService searchFilterService;
+
+  @MockBean
+  private CaseAssignmentService caseAssignmentService;
+
+  private MockHttpSession session;
+
+  private RestSearchItem prefilledOperator;
+
+  private RestSearchItem prefilledField;
+
+  private RestSearchItem prefilledTerminal;
+
+  private List<EnergyPortalUserDto> caseOfficers;
+
+  private Map<String, String> caseOfficerOptions;
+
+  private List<String> bulkActions;
+
+  @BeforeEach
+  void setUp() {
+    session = new MockHttpSession();
+
+    prefilledOperator = RestSearchItem.EMPTY_REST_SEARCH_ITEM;
+    prefilledField = RestSearchItem.EMPTY_REST_SEARCH_ITEM;
+    prefilledTerminal = RestSearchItem.EMPTY_REST_SEARCH_ITEM;
+
+    var caseOfficer = new EnergyPortalUserDto(
+        1L,
+        1L,
+        "title",
+        "forename",
+        "surname",
+        "emailAddress",
+        "telephoneNumber",
+        false,
+        true
+    );
+    caseOfficers = List.of(caseOfficer);
+
+    caseOfficerOptions = Map.of(
+        caseOfficer.webUserAccountId().toString(),
+        caseOfficer.displayName()
+    );
+
+    bulkActions = List.of(
+        BulkAssignCaseOfficerController.ASSIGN_CASE_OFFICER
+    );
+  }
 
   @Test
   void pageTitle() {
@@ -64,18 +129,31 @@ class BulkCaseActionSearchControllerTest extends AbstractControllerTest {
   void getSearchResults_nothingSelected() throws Exception {
     when(permissionService.hasPermission(user, Set.of(RolePermission.ASSIGN_FCS_APPLICATIONS))).thenReturn(true);
 
+    var filtersForm = BulkCaseActionSearchFiltersForm.empty();
+    when(controllerHelperService.getSearchFiltersForm(session)).thenReturn(filtersForm);
+
+    var jooqConditions = List.<Condition>of();
+    when(searchFilterService.getConditions(filtersForm)).thenReturn(jooqConditions);
+
     var applicationDataItems = List.of(ApplicationDataItemUtil.getApplicationDataItem());
-    when(bulkCaseActionService.getApplicationDataItems(user)).thenReturn(applicationDataItems);
-    when(bulkCaseActionService.getSelectedApplicationIds(any(HttpSession.class))).thenReturn(Collections.emptyList());
+    when(bulkCaseActionService.getApplicationDataItems(user, jooqConditions)).thenReturn(applicationDataItems);
+
+    var searchForm = BulkCaseActionSelectedApplicationsForm.empty();
+    when(controllerHelperService.getSelectedApplicationsForm(session, applicationDataItems)).thenReturn(searchForm);
+
+    when(bulkCaseActionService.getBulkActions()).thenReturn(bulkActions);
+
+    mockServiceCallsForSearchFilters(filtersForm);
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS).getSearchResults(null, null)))
+        .session(session)
         .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/application/bulk-case-actions/search"))
         .andExpect(model().attribute("pageTitle", BulkCaseActionSearchController.PAGE_TITLE))
         .andExpect(model().attribute("actions", List.of(BulkAssignCaseOfficerController.ASSIGN_CASE_OFFICER)))
         .andExpect(model().attribute("applicationDataItems", applicationDataItems))
-        .andExpect(model().attribute("form", BulkCaseActionSearchForm.empty()));
+        .andExpect(model().attribute("form", searchForm));
   }
 
   @Test
@@ -86,48 +164,41 @@ class BulkCaseActionSearchControllerTest extends AbstractControllerTest {
     var applicationDataItem2 = applicationDataItemBuilderWithDefaults(2).build();
     var applicationDataItem3 = applicationDataItemBuilderWithDefaults(3).build();
 
+    var filtersForm = BulkCaseActionSearchFiltersForm.empty();
+    when(controllerHelperService.getSearchFiltersForm(session)).thenReturn(filtersForm);
+
+    var jooqConditions = List.<Condition>of();
+    when(searchFilterService.getConditions(filtersForm)).thenReturn(jooqConditions);
+
     var applicationDataItems = List.of(applicationDataItem1, applicationDataItem2, applicationDataItem3);
-    when(bulkCaseActionService.getApplicationDataItems(user)).thenReturn(applicationDataItems);
-    when(bulkCaseActionService.getSelectedApplicationIds(any(HttpSession.class))).thenReturn(List.of(1, 2, 3));
+    when(bulkCaseActionService.getApplicationDataItems(user, jooqConditions)).thenReturn(applicationDataItems);
+
+    var searchForm = new BulkCaseActionSelectedApplicationsForm(Set.of("1", "2", "3"));
+    when(controllerHelperService.getSelectedApplicationsForm(session, applicationDataItems)).thenReturn(searchForm);
+
+    when(bulkCaseActionService.getBulkActions()).thenReturn(bulkActions);
+
+    mockServiceCallsForSearchFilters(filtersForm);
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS).getSearchResults(null, null)))
+        .session(session)
         .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name(VIEW_NAME))
         .andExpect(model().attribute("pageTitle", BulkCaseActionSearchController.PAGE_TITLE))
         .andExpect(model().attribute("actions", List.of(BulkAssignCaseOfficerController.ASSIGN_CASE_OFFICER)))
         .andExpect(model().attribute("applicationDataItems", applicationDataItems))
-        .andExpect(model().attribute("form", new BulkCaseActionSearchForm(List.of("1", "2", "3"))));
-  }
-
-  @Test
-  void getSearchResults_withPreviouslySelectedApplications_someNoLongerAvailable() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.ASSIGN_FCS_APPLICATIONS))).thenReturn(true);
-
-    var applicationDataItem = applicationDataItemBuilderWithDefaults(1).build();
-    var applicationDataItems = List.of(applicationDataItem);
-    when(bulkCaseActionService.getApplicationDataItems(user)).thenReturn(applicationDataItems);
-    when(bulkCaseActionService.getSelectedApplicationIds(any(HttpSession.class))).thenReturn(List.of(1, 2, 3));
-
-    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS).getSearchResults(null, null)))
-            .with(user(user)))
-        .andExpect(status().isOk())
-        .andExpect(view().name("fcs/application/bulk-case-actions/search"))
-        .andExpect(model().attribute("pageTitle", BulkCaseActionSearchController.PAGE_TITLE))
-        .andExpect(model().attribute("actions", List.of(BulkAssignCaseOfficerController.ASSIGN_CASE_OFFICER)))
-        .andExpect(model().attribute("applicationDataItems", applicationDataItems))
-        // ids 2 and 3 are no longer in the search results, so they can't be selected by default
-        .andExpect(model().attribute("form", new BulkCaseActionSearchForm(List.of("1"))));
+        .andExpect(model().attribute("form", searchForm))
+        .andExpectAll(containsSearchFilterData(filtersForm));
   }
 
   @Test
   void submitAssignCaseOfficerSelection() throws Exception {
     when(permissionService.hasPermission(user, Set.of(RolePermission.ASSIGN_FCS_APPLICATIONS))).thenReturn(true);
 
-    var session = new MockHttpSession();
-    var selectedApplicationIds = List.of("1", "2", "3");
+    var selectedApplicationIds = Set.of("1", "2", "3");
 
-    mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER_CLASS).getSearchResults(null, null)))
+    mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER_CLASS).submitAssignCaseOfficerSelection(null, null, null, null)))
         .session(session)
         .with(user(user))
         .with(csrf())
@@ -136,53 +207,126 @@ class BulkCaseActionSearchControllerTest extends AbstractControllerTest {
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(BulkAssignCaseOfficerController.class).assignCaseOfficer(null, null))));
 
-    assertThat(session.getAttribute(FORM_SESSION_ATTRIBUTE)).isInstanceOf(BulkCaseActionSearchForm.class);
-
-    var sessionAttribute = (BulkCaseActionSearchForm) session.getAttribute(FORM_SESSION_ATTRIBUTE);
-    assertThat(sessionAttribute.selectedApplicationIds()).containsExactlyElementsOf(selectedApplicationIds);
+    verify(controllerHelperService).updateSelectedApplicationsForm(session, new BulkCaseActionSelectedApplicationsForm(selectedApplicationIds));
   }
 
   @Test
-  void submitAssignCaseOfficerSelection_overridesPreviousSelection() throws Exception {
+  void clearSearchFilters() throws Exception {
     when(permissionService.hasPermission(user, Set.of(RolePermission.ASSIGN_FCS_APPLICATIONS))).thenReturn(true);
 
-    var session = new MockHttpSession();
-    session.setAttribute(FORM_SESSION_ATTRIBUTE, new BulkCaseActionSearchForm(List.of("7", "8", "9")));
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS).clearSearchFilters(null)))
+        .session(session)
+        .with(user(user)));
+    verify(controllerHelperService).clearSearchFilters(session);
+  }
 
-    var selectedApplicationIds = List.of("1", "2", "3");
+  @Test
+  void filterSearchResults_emptyForm() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.ASSIGN_FCS_APPLICATIONS))).thenReturn(true);
 
-    mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER_CLASS).getSearchResults(null, null)))
-            .session(session)
-            .with(user(user))
-            .with(csrf())
-            .param(BulkAssignCaseOfficerController.ASSIGN_CASE_OFFICER, BulkAssignCaseOfficerController.ASSIGN_CASE_OFFICER)
-            .param("selectedApplicationIds", String.join(", ", selectedApplicationIds)))
-        .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(BulkAssignCaseOfficerController.class).assignCaseOfficer(null, null))));
+    mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER_CLASS).filterSearchResults(null, null)))
+        .session(session)
+        .with(user(user))
+        .with(csrf())
+        .param("Filter results", "Filter results") // this is the button which submits the filters
+    );
 
-    assertThat(session.getAttribute(FORM_SESSION_ATTRIBUTE)).isInstanceOf(BulkCaseActionSearchForm.class);
+    verify(controllerHelperService).updateSearchFilters(session, new BulkCaseActionSearchFiltersForm(
+        null, null, null, null, null, null, null, null
+    ));
+  }
 
-    var sessionAttribute = (BulkCaseActionSearchForm) session.getAttribute(FORM_SESSION_ATTRIBUTE);
-    assertThat(sessionAttribute.selectedApplicationIds()).containsExactlyElementsOf(selectedApplicationIds);
+  @Test
+  void filterSearchResults() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.ASSIGN_FCS_APPLICATIONS))).thenReturn(true);
+
+    mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER_CLASS).filterSearchResults(null, null)))
+        .session(session)
+        .with(user(user))
+        .with(csrf())
+        .param("Filter results", "Filter results") // this is the button which submits the filters
+        .param("operatorId", "1")
+        .param("fieldAssetKey", "2")
+        .param("terminalAssetKey", "3")
+        .param("caseOfficerWuaId", "4")
+        .param("includeUnassignedCaseOfficer", "true")
+        .param("geographicAreas", "CNS")
+        .param("geographicAreas", "IS")
+        .param("geographicAreas", "LAND")
+        .param("aceFlagStatuses", "ACE")
+        .param("aceFlagStatuses", "NON_ACE")
+        .param("assetTypesWithShore", "TERMINAL")
+        .param("assetTypesWithShore", "FIELD_OFFSHORE")
+    );
+
+    verify(controllerHelperService).updateSearchFilters(session, new BulkCaseActionSearchFiltersForm(
+        1,
+        "2",
+        "3",
+        4L,
+        true,
+        Set.of(GeographicArea.CNS, GeographicArea.IS, GeographicArea.LAND),
+        Set.of(AceFlagStatus.ACE, AceFlagStatus.NON_ACE),
+        Set.of(AssetTypeWithShore.TERMINAL, AssetTypeWithShore.FIELD_OFFSHORE)
+    ));
   }
 
   @Test
   void submitAssignCaseOfficerSelection_nothingSelected() throws Exception {
     when(permissionService.hasPermission(user, Set.of(RolePermission.ASSIGN_FCS_APPLICATIONS))).thenReturn(true);
 
-    var session = new MockHttpSession();
+    var filtersForm = BulkCaseActionSearchFiltersForm.empty();
+    when(controllerHelperService.getSearchFiltersForm(session)).thenReturn(filtersForm);
 
-    mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER_CLASS).getSearchResults(null, null)))
+    var jooqConditions = List.<Condition>of();
+    when(searchFilterService.getConditions(filtersForm)).thenReturn(jooqConditions);
+
+    var applicationDataItems = List.of(ApplicationDataItemUtil.getApplicationDataItem());
+    when(bulkCaseActionService.getApplicationDataItems(user, jooqConditions)).thenReturn(applicationDataItems);
+
+    mockServiceCallsForSearchFilters(filtersForm);
+
+    mockMvc.perform(post(ReverseRouter.route(on(CONTROLLER_CLASS).submitAssignCaseOfficerSelection(null, null, null, null)))
             .session(session)
             .with(user(user))
             .with(csrf())
             .param(BulkAssignCaseOfficerController.ASSIGN_CASE_OFFICER, BulkAssignCaseOfficerController.ASSIGN_CASE_OFFICER))
         .andExpect(status().is2xxSuccessful())
-        .andExpect(view().name(VIEW_NAME));
+        .andExpect(view().name(VIEW_NAME))
+        .andExpectAll(containsSearchFilterData(filtersForm));
 
-    assertThat(session.getAttribute(FORM_SESSION_ATTRIBUTE)).isNull();
+    verify(controllerHelperService, never()).updateSelectedApplicationsForm(any(), any());
   }
 
+  private void mockServiceCallsForSearchFilters(BulkCaseActionSearchFiltersForm filtersForm) {
+    when(searchFilterService.getPrefilledOrganisation(filtersForm.operatorId())).thenReturn(prefilledField);
+    when(searchFilterService.getPrefilledAsset(filtersForm.fieldAssetKey())).thenReturn(prefilledField);
+    when(searchFilterService.getPrefilledAsset(filtersForm.terminalAssetKey())).thenReturn(prefilledTerminal);
+    when(caseAssignmentService.getCurrentCaseOfficers()).thenReturn(caseOfficers);
+  }
+
+  private ResultMatcher[] containsSearchFilterData(BulkCaseActionSearchFiltersForm filtersForm) {
+    var clearFiltersUrl =  ReverseRouter.route(on(CONTROLLER_CLASS).clearSearchFilters(null));
+    var fieldAssetSearchRestUrl = ReverseRouter.route(on(AssetRestController.class).searchFieldAssets(null));
+    var terminalAssetSearchRestUrl = ReverseRouter.route(on(AssetRestController.class).searchTerminalAssets(null));
+    var searchOperatorRestUrl = ReverseRouter.route(on(OrganisationUnitRestController.class).getOrganisationUnitsForViewer(null, null));
+
+    return new ResultMatcher[] {
+        model().attribute("filtersForm", filtersForm),
+        model().attribute("clearFiltersUrl", clearFiltersUrl),
+        model().attribute("prefilledOperator", prefilledOperator),
+        model().attribute("prefilledField", prefilledField),
+        model().attribute("prefilledTerminal", prefilledTerminal),
+        model().attribute("fieldAssetSearchRestUrl", fieldAssetSearchRestUrl),
+        model().attribute("terminalAssetSearchRestUrl", terminalAssetSearchRestUrl),
+        model().attribute("operatorSearchRestUrl", searchOperatorRestUrl),
+        model().attribute("geographicAreaCheckboxes", GeographicArea.getDisplayableOptions()),
+        model().attribute("aceCheckboxes", AceFlagStatus.getDisplayableOptions()),
+        model().attribute("assetTypesWithShoreCheckboxes", AssetTypeWithShore.getDisplayableOptions()),
+        model().attribute("caseOfficerOptions", caseOfficerOptions),
+
+    };
+  }
 
   private ApplicationDataItem.Builder applicationDataItemBuilderWithDefaults(Integer applicationId) {
     return ApplicationDataItem.newBuilder()
