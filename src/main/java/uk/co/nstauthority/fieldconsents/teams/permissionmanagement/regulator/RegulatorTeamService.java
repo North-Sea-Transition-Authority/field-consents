@@ -70,4 +70,13 @@ public class RegulatorTeamService {
 
     teamMemberRoleService.addUserTeamRoles(team, userToAdd, rolesAsStrings);
   }
+
+  public boolean isCamUser(WebUserAccountId wuaId) {
+    return teamService.getTeamsOfTypeThatUserBelongsTo(wuaId, TeamType.REGULATOR)
+        .stream()
+        .anyMatch(regulatorTeam -> teamMemberService
+            .isMemberOfTeamWithAnyRoleOf(regulatorTeam.toTeamId(), wuaId,
+                Set.of(RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER.name()))
+        );
+  }
 }

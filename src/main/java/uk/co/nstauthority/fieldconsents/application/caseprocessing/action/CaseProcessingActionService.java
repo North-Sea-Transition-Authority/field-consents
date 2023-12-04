@@ -4,6 +4,7 @@ import static java.util.Map.entry;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature.CONSULTATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.APPLICATION_UPDATES;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.APPLICATION_UPDATE_REQUEST;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CAM_ASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_ASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_REASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_RELEASE_OWNERSHIP;
@@ -101,7 +102,8 @@ public class CaseProcessingActionService {
               CASE_OFFICER_REASSIGN_OWNERSHIP,
               REGULATOR_ADD_CASE_NOTE,
               TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP,
-              OPERATOR_UPDATE_APPLICATION
+              OPERATOR_UPDATE_APPLICATION,
+              CAM_ASSIGN_OWNERSHIP
           ),
           ApplicationVersionStatus.AWAITING_PAYMENT,
           EnumSet.of(
@@ -130,7 +132,8 @@ public class CaseProcessingActionService {
               APPLICATION_UPDATES,
               APPLICATION_UPDATE_REQUEST,
               OPERATOR_WITHDRAWAL_REQUEST,
-              OPERATOR_UPDATE_APPLICATION
+              OPERATOR_UPDATE_APPLICATION,
+              CAM_ASSIGN_OWNERSHIP
           )
       );
 
@@ -159,7 +162,8 @@ public class CaseProcessingActionService {
           entry(OPERATOR_WITHDRAWAL_REQUEST, EnumSet.of(EDIT_FCS_APPLICATIONS)),
           entry(OPERATOR_UPDATE_APPLICATION, EnumSet.of(EDIT_FCS_APPLICATIONS)),
           entry(CONSULTATION_FURTHER_INFORMATION_REQUEST, EnumSet.of(RESPOND_TO_CONSULTATION)),
-          entry(CONSULTATION_FURTHER_INFORMATION_RESPOND, EnumSet.of(PROCESS_FCS_APPLICATIONS))
+          entry(CONSULTATION_FURTHER_INFORMATION_RESPOND, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
+          entry(CAM_ASSIGN_OWNERSHIP, EnumSet.of(PROCESS_FCS_APPLICATIONS))
       );
 
   private final Map<CaseProcessingActionItem, Set<CaseStatusFlag>> actionsToStatusFlags =
@@ -186,23 +190,30 @@ public class CaseProcessingActionService {
           entry(OPERATOR_UPDATE_APPLICATION, EnumSet.of(APPLICATION_UPDATE_OPEN)),
           entry(CONSULTATION_FURTHER_INFORMATION_REQUEST, EnumSet.of(NO_CONSULTATION_FURTHER_INFORMATION_OPEN)),
           entry(CONSULTATION_FURTHER_INFORMATION_RESPOND,
-              EnumSet.of(CONSULTATION_FURTHER_INFORMATION_OPEN, NO_APPLICATION_UPDATE_OPEN))
+              EnumSet.of(CONSULTATION_FURTHER_INFORMATION_OPEN, NO_APPLICATION_UPDATE_OPEN)),
+          entry(CAM_ASSIGN_OWNERSHIP,
+              EnumSet.of(
+                  CASE_OFFICER_ASSIGNED,
+                  NO_TECHNICAL_REVIEW_OPEN,
+                  NO_APPLICATION_UPDATE_OPEN,
+                  NO_CONSULTATION_OPEN)
+          )
       );
 
   private final Map<CaseProcessingActionItem, Set<? extends TeamRole>> actionsToAssigneeOnlyRoles =
-      Map.of(
-          CHANGE_ACE_STATUS, EnumSet.of(CASE_OFFICER),
-          CASE_OFFICER_RELEASE_OWNERSHIP, EnumSet.of(CASE_OFFICER),
-          CASE_OFFICER_WITHDRAWAL_RESPONSE, EnumSet.of(CASE_OFFICER),
-          TECHNICAL_REVIEW_REQUEST, EnumSet.of(CASE_OFFICER),
-          TECHNICAL_REVIEWER_SUBMIT_REVIEW, EnumSet.of(TECHNICAL_REVIEWER),
-          APPLICATION_UPDATE_REQUEST, EnumSet.of(CASE_OFFICER, TECHNICAL_REVIEWER),
-          CONSULTATION_REQUEST, EnumSet.of(CASE_OFFICER),
-          CONSULTATION_RESPONSE, EnumSet.of(RESPONDER),
-          CONSULTATION_FURTHER_INFORMATION_REQUEST, EnumSet.of(RESPONDER),
-          CONSULTATION_FURTHER_INFORMATION_RESPOND, EnumSet.of(CASE_OFFICER)
+      Map.ofEntries(
+          entry(CHANGE_ACE_STATUS, EnumSet.of(CASE_OFFICER)),
+          entry(CASE_OFFICER_RELEASE_OWNERSHIP, EnumSet.of(CASE_OFFICER)),
+          entry(CASE_OFFICER_WITHDRAWAL_RESPONSE, EnumSet.of(CASE_OFFICER)),
+          entry(TECHNICAL_REVIEW_REQUEST, EnumSet.of(CASE_OFFICER)),
+          entry(TECHNICAL_REVIEWER_SUBMIT_REVIEW, EnumSet.of(TECHNICAL_REVIEWER)),
+          entry(APPLICATION_UPDATE_REQUEST, EnumSet.of(CASE_OFFICER, TECHNICAL_REVIEWER)),
+          entry(CONSULTATION_REQUEST, EnumSet.of(CASE_OFFICER)),
+          entry(CONSULTATION_RESPONSE, EnumSet.of(RESPONDER)),
+          entry(CONSULTATION_FURTHER_INFORMATION_REQUEST, EnumSet.of(RESPONDER)),
+          entry(CONSULTATION_FURTHER_INFORMATION_RESPOND, EnumSet.of(CASE_OFFICER)),
+          entry(CAM_ASSIGN_OWNERSHIP, EnumSet.of(CASE_OFFICER))
       );
-
   /*
    * If an actionItem is not here, it will be allowed by default. If multiple features are present for an action,
    * one of them must match for the action to be allowed.
@@ -304,8 +315,10 @@ public class CaseProcessingActionService {
   Map<TeamRole, WebUserAccountId> constructAssigneeMap(ApplicationVersion applicationVersion) {
     var assigneeMap = new HashMap<TeamRole, WebUserAccountId>();
 
-    applicationVersionService.findCaseOfficerWuaId(applicationVersion)
-        .ifPresent(caseOfficerWuaId -> assigneeMap.put(CASE_OFFICER, caseOfficerWuaId));
+    if (CASE_OFFICER.equals(applicationVersion.getCurrentCaseOwner())) {
+      applicationVersionService.findCaseOfficerWuaId(applicationVersion)
+          .ifPresent(caseOfficerWuaId -> assigneeMap.put(CASE_OFFICER, caseOfficerWuaId));
+    }
 
     technicalReviewService.findTechnicalReviewerWuaId(applicationVersion)
         .ifPresent(technicalReviewerWuaId -> assigneeMap.put(TECHNICAL_REVIEWER, technicalReviewerWuaId));
@@ -323,7 +336,6 @@ public class CaseProcessingActionService {
       Map<TeamRole, WebUserAccountId> assigneeMap,
       ServiceUserDetail user
   ) {
-
     var assigneeRoles = actionsToAssigneeOnlyRoles.get(action);
 
     if (!action.isAssigneeOnly() && Objects.isNull(assigneeRoles)) {

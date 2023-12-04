@@ -45,6 +45,7 @@ import uk.co.nstauthority.fieldconsents.query.ApplicationDataItem;
 import uk.co.nstauthority.fieldconsents.teams.Team;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaFilter;
 
@@ -171,6 +172,7 @@ class WorkAreaApplicationUpdateDeadlineTest extends AbstractIntegrationTest {
     );
 
     applicationVersion.setCaseOfficerWuaId(SERVICE_USER_DETAIL.wuaId());
+    applicationVersion.setCurrentCaseOwner(RegulatorTeamRole.CASE_OFFICER);
     applicationVersion.setSubmittedByWuaId(SERVICE_USER_DETAIL.wuaId());
     applicationVersion.setStatus(ApplicationVersionStatus.SUBMITTED);
 

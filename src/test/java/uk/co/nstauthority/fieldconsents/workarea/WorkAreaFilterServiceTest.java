@@ -37,6 +37,7 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterService;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @ExtendWith(MockitoExtension.class)
 class WorkAreaFilterServiceTest {
@@ -204,6 +205,7 @@ class WorkAreaFilterServiceTest {
     assertThat(conditions).containsExactly(
         SUBMITTED_APPLICATION_CONDITION,
         APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.eq(user.wuaId().intValue())
+            .and(APPLICATION_VERSIONS.CURRENT_CASE_OWNER.eq(RegulatorTeamRole.CASE_OFFICER.name()))
     );
   }
 
@@ -288,18 +290,6 @@ class WorkAreaFilterServiceTest {
     assertThat(conditions).containsExactly(
         SUBMITTED_APPLICATION_CONDITION,
         APPLICATION_CONSULTATIONS.RESPONDER_WUA_ID.isNull().and(APPLICATION_CONSULTATIONS.STATUS.eq(ConsultationStatus.OPEN.name()))
-    );
-  }
-
-  @Test
-  void getConditions_RegulatorApplicationStatusCondition() {
-    when(teamService.isRegulatorUser(user)).thenReturn(true);
-
-    var conditions = workAreaFilterService.getConditions(filter, user, WorkAreaTab.MY_APPLICATIONS);
-
-    assertThat(conditions).containsExactly(
-        SUBMITTED_APPLICATION_CONDITION,
-        APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.eq(user.wuaId().intValue())
     );
   }
 

@@ -184,4 +184,32 @@ class RegulatorTeamServiceTest {
 
     verify(teamMemberRoleService, times(1)).addUserTeamRoles(team, userToAdd, rolesAsStrings);
   }
+
+  @Test
+  void isCamUser_whenCamUser_thenTrue() {
+    when(teamService.getTeamsOfTypeThatUserBelongsTo(WEB_USER_ACCOUNT_ID, TeamType.REGULATOR))
+        .thenReturn(List.of(team));
+    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, WEB_USER_ACCOUNT_ID, Set.of(RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER.name())))
+        .thenReturn(true);
+
+    assertTrue(regulatorTeamService.isCamUser(WEB_USER_ACCOUNT_ID));
+  }
+
+  @Test
+  void isCamUser_whenNotCamUser_thenFalse() {
+    when(teamService.getTeamsOfTypeThatUserBelongsTo(WEB_USER_ACCOUNT_ID, TeamType.REGULATOR))
+        .thenReturn(List.of(team));
+    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, WEB_USER_ACCOUNT_ID, Set.of(RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER.name())))
+        .thenReturn(false);
+
+    assertFalse(regulatorTeamService.isCamUser(WEB_USER_ACCOUNT_ID));
+  }
+
+  @Test
+  void isCamUser_whenNoTeamsOfRegulatorType_thenFalse() {
+    when(teamService.getTeamsOfTypeThatUserBelongsTo(WEB_USER_ACCOUNT_ID, TeamType.REGULATOR))
+        .thenReturn(Collections.emptyList());
+
+    assertFalse(regulatorTeamService.isCaseOfficer(WEB_USER_ACCOUNT_ID));
+  }
 }

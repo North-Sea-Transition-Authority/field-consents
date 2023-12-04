@@ -2,6 +2,8 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusfl
 
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.APPLICATION_UPDATE_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.APPLICATION_UPDATE_STARTED;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CAM_ASSIGNED;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CAM_NOT_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_NOTES_ALLOWED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED;
@@ -63,6 +65,7 @@ public class CaseStatusFlagService {
     caseStatusFlags.addAll(getFurtherInformationFlag(applicationVersion));
     caseStatusFlags.addAll(getUpdateRequestFlag(applicationVersion));
     caseStatusFlags.addAll(getConsultationFlags(applicationVersion));
+    caseStatusFlags.addAll(getCamAssignmentFlag(applicationVersion));
 
     return caseStatusFlags;
   }
@@ -140,4 +143,11 @@ public class CaseStatusFlagService {
     return flags;
   }
 
+  Set<CaseStatusFlag> getCamAssignmentFlag(ApplicationVersion applicationVersion) {
+    if (Objects.nonNull(applicationVersion.getCamWuaId())) {
+      return Collections.singleton(CAM_ASSIGNED);
+    }
+
+    return Collections.singleton(CAM_NOT_ASSIGNED);
+  }
 }

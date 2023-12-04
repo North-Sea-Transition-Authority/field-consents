@@ -16,6 +16,7 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.Objects;
 import org.hibernate.envers.Audited;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @Entity
 @Audited
@@ -49,6 +50,11 @@ public class ApplicationVersion {
   private ApplicationVersionStatus status;
 
   private Long caseOfficerWuaId;
+
+  private Long camWuaId;
+
+  @Enumerated(EnumType.STRING)
+  private RegulatorTeamRole currentCaseOwner;
 
   public ApplicationVersion() {
   }
@@ -166,6 +172,23 @@ public class ApplicationVersion {
 
   public void setCaseOfficerWuaId(Long caseOfficerWuaId) {
     this.caseOfficerWuaId = caseOfficerWuaId;
+  }
+
+  public Long getCamWuaId() {
+    return camWuaId;
+  }
+
+  public void setCamWuaId(Long camWuaId) {
+    this.camWuaId = camWuaId;
+  }
+
+  public RegulatorTeamRole getCurrentCaseOwner() {
+    return currentCaseOwner;
+  }
+
+  public void setCurrentCaseOwner(
+      RegulatorTeamRole currentCaseOwner) {
+    this.currentCaseOwner = currentCaseOwner;
   }
 
   @Override

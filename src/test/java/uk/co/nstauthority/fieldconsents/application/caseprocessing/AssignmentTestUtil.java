@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing;
 
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.ACCESS_MANAGER;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CASE_OFFICER;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.TECHNICAL_REVIEWER;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.VIEWER;
 
@@ -58,6 +59,19 @@ public class AssignmentTestUtil {
           .withSurname("Surname6")
           .build();
 
+  public static final EnergyPortalUserDto ENERGY_PORTAL_USER_7 =
+      EnergyPortalUserDtoTestUtil.Builder()
+          .withWebUserAccountId(7L)
+          .withForename("Forename7")
+          .withSurname("Surname7")
+          .build();
+
+  public static final EnergyPortalUserDto ENERGY_PORTAL_USER_8 =
+      EnergyPortalUserDtoTestUtil.Builder()
+          .withWebUserAccountId(8L)
+          .withForename("Forename8")
+          .withSurname("Surname8")
+          .build();
 
   public static final ServiceUserDetail SERVICE_USER_DETAIL_USER_1 =
       ServiceUserDetail.from(ENERGY_PORTAL_USER_1);
@@ -116,6 +130,22 @@ public class AssignmentTestUtil {
           .withLastName(ENERGY_PORTAL_USER_6.surname())
           .build();
 
+  public static final TeamMemberView CAM_USER_TEAM_MEMBER_VIEW_1 =
+      TeamMemberViewTestUtil.Builder()
+          .withRole(CONSENTS_AND_AUTHORISATIONS_MANAGER)
+          .withWebUserAccountId(new WebUserAccountId(ENERGY_PORTAL_USER_7.webUserAccountId()))
+          .withFirstName(ENERGY_PORTAL_USER_7.forename())
+          .withLastName(ENERGY_PORTAL_USER_7.surname())
+          .build();
+
+  public static final TeamMemberView CAM_USER_TEAM_MEMBER_VIEW_2 =
+      TeamMemberViewTestUtil.Builder()
+          .withRole(CONSENTS_AND_AUTHORISATIONS_MANAGER)
+          .withWebUserAccountId(new WebUserAccountId(ENERGY_PORTAL_USER_8.webUserAccountId()))
+          .withFirstName(ENERGY_PORTAL_USER_8.forename())
+          .withLastName(ENERGY_PORTAL_USER_8.surname())
+          .build();
+
   public static final List<TeamMemberView> TEAM_MEMBER_VIEW_LIST =
       List.of(
           CASE_OFFICER_TEAM_MEMBER_VIEW_1,
@@ -123,7 +153,9 @@ public class AssignmentTestUtil {
           CASE_OFFICER_TEAM_MEMBER_VIEW_2,
           ACCESS_MANGER_TEAM_MEMBER_VIEW,
           TECHNICAL_REVIEWER_TEAM_MEMBER_VIEW_1,
-          TECHNICAL_REVIEWER_TEAM_MEMBER_VIEW_2
+          TECHNICAL_REVIEWER_TEAM_MEMBER_VIEW_2,
+          CAM_USER_TEAM_MEMBER_VIEW_1,
+          CAM_USER_TEAM_MEMBER_VIEW_2
       );
 
   public static final List<TeamMemberView> CASE_OFFICER_ASSIGNMENT_CANDIDATES =
@@ -144,5 +176,14 @@ public class AssignmentTestUtil {
           TECHNICAL_REVIEWER_TEAM_MEMBER_VIEW_1.getDisplayName(),
           TECHNICAL_REVIEWER_TEAM_MEMBER_VIEW_2.wuaId().toString(),
           TECHNICAL_REVIEWER_TEAM_MEMBER_VIEW_2.getDisplayName()
+      );
+
+  public static final List<TeamMemberView> CAM_USER_ASSIGNMENT_CANDIDATES =
+      List.of(CAM_USER_TEAM_MEMBER_VIEW_1, CAM_USER_TEAM_MEMBER_VIEW_2);
+
+  public static final Map<String, String> CAM_USER_ASSIGNMENT_CANDIDATES_MAP =
+      Map.of(
+          CAM_USER_TEAM_MEMBER_VIEW_1.wuaId().toString(), CAM_USER_TEAM_MEMBER_VIEW_1.getDisplayName(),
+          CAM_USER_TEAM_MEMBER_VIEW_2.wuaId().toString(), CAM_USER_TEAM_MEMBER_VIEW_2.getDisplayName()
       );
 }

@@ -21,6 +21,7 @@ import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterService;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @Service
 public class WorkAreaFilterService {
@@ -60,7 +61,8 @@ public class WorkAreaFilterService {
 
   private Condition getWorkAreaTabCondition(WorkAreaTab workAreaTab, ServiceUserDetail user) {
     return switch (workAreaTab) {
-      case MY_APPLICATIONS -> APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.eq(user.wuaId().intValue());
+      case MY_APPLICATIONS -> APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.eq(user.wuaId().intValue())
+          .and(APPLICATION_VERSIONS.CURRENT_CASE_OWNER.eq(RegulatorTeamRole.CASE_OFFICER.name()));
       case MY_TECHNICAL_REVIEWS -> APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEWER_WUA_ID.eq(user.wuaId().intValue());
       case ALL_TECHNICAL_REVIEWS -> APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEWER_WUA_ID.isNotNull();
       case ALL_APPLICATIONS -> DSL.trueCondition();

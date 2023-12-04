@@ -67,6 +67,7 @@ public class CaseAssignmentService {
           USER_NOT_IN_CASE_OFFICER_ROLE.apply(String.valueOf(caseOfficerUser.wuaId())));
     }
     applicationVersion.setCaseOfficerWuaId(caseOfficerUser.wuaId());
+    applicationVersion.setCurrentCaseOwner(RegulatorTeamRole.CASE_OFFICER);
     applicationVersionRepository.save(applicationVersion);
 
     // figure out the work area priority reason, if the person making the assignment is the same as the assignee

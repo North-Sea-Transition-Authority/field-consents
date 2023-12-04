@@ -5,6 +5,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import java.util.function.Function;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.aceflag.AceFlagController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.cam.CamAssignmentController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casenotes.CaseNotesController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.allocation.ConsultationAllocationController;
@@ -40,6 +41,9 @@ public enum CaseProcessingActionItem implements Displayable {
   TECHNICAL_REVIEW_REQUEST("Request technical review", 5, true, false, null,
       applicationId -> ReverseRouter.route(on(TechnicalReviewController.class)
           .getTechnicalReviewRequest(applicationId, null))),
+  CAM_ASSIGN_OWNERSHIP("Assign to CAM", 6, true, false, null,
+      applicationId -> ReverseRouter.route(on(CamAssignmentController.class)
+          .getCamAssignment(applicationId, null))),
   // Case manager actions
   CASE_OFFICER_ASSIGN_OWNERSHIP("Assign ownership", 1, false, true, null,
       applicationId -> ReverseRouter.route(on(CaseAssignmentController.class)

@@ -7,6 +7,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationStatus;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 public class ApplicationDataItemDto {
   private final Integer applicationId;
@@ -30,6 +31,8 @@ public class ApplicationDataItemDto {
   private final Long submittedByWuaId;
   private final Boolean aceFlag;
   private final Long caseOfficerWuaId;
+  private final Long camWuaId;
+  private final RegulatorTeamRole currentCaseOwner;
   private final Boolean withdrawalOpen;
   private final Long technicalReviewerWuaId;
   private final Boolean technicalReviewOpen;
@@ -47,7 +50,8 @@ public class ApplicationDataItemDto {
                                 ConsentLengthType duration, Integer consentYear,
                                 LocalDate shortTermStartDate, LocalDate shortTermEndDate, Integer longTermStartYear,
                                 Integer longTermEndYear, Instant submittedDateTime, Long submittedByWuaId,
-                                Boolean aceFlag, Long caseOfficerWuaId, Boolean withdrawalOpen,
+                                Boolean aceFlag, Long caseOfficerWuaId, Long camWuaId,
+                                RegulatorTeamRole currentCaseOwner, Boolean withdrawalOpen,
                                 Long technicalReviewerWuaId, Boolean technicalReviewOpen, Instant technicalReviewDeadline,
                                 Boolean applicationUpdateOpen, Instant applicationUpdateDeadline, Boolean consultationOpen,
                                 Instant consultationDeadline, FurtherInformationStatus consultationFurtherInformationStatus,
@@ -73,6 +77,8 @@ public class ApplicationDataItemDto {
     this.submittedByWuaId = submittedByWuaId;
     this.aceFlag = aceFlag;
     this.caseOfficerWuaId = caseOfficerWuaId;
+    this.camWuaId = camWuaId;
+    this.currentCaseOwner = currentCaseOwner;
     this.withdrawalOpen = withdrawalOpen;
     this.technicalReviewerWuaId = technicalReviewerWuaId;
     this.technicalReviewOpen = technicalReviewOpen;
@@ -167,6 +173,14 @@ public class ApplicationDataItemDto {
 
   public Long getCaseOfficerWuaId() {
     return caseOfficerWuaId;
+  }
+
+  public Long getCamWuaId() {
+    return camWuaId;
+  }
+
+  public RegulatorTeamRole getCurrentCaseOwner() {
+    return currentCaseOwner;
   }
 
   public Boolean getWithdrawalOpen() {

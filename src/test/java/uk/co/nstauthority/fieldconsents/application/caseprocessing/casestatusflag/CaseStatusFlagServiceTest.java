@@ -9,6 +9,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.APPLICATION_UPDATE_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.APPLICATION_UPDATE_STARTED;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CAM_ASSIGNED;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CAM_NOT_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_NOTES_ALLOWED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED;
@@ -95,6 +97,7 @@ class CaseStatusFlagServiceTest {
     doReturn(EMPTY_SET).when(caseStatusFlagService).getFurtherInformationFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getUpdateRequestFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getConsultationFlags(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getCamAssignmentFlag(applicationVersion);
 
     assertThat(caseStatusFlagService.getCaseStatusFlags(applicationVersion)).isEmpty();
 
@@ -104,6 +107,7 @@ class CaseStatusFlagServiceTest {
     verify(caseStatusFlagService).getTechnicalReviewFlag(applicationVersion);
     verify(caseStatusFlagService).getFurtherInformationFlag(applicationVersion);
     verify(caseStatusFlagService).getUpdateRequestFlag(applicationVersion);
+    verify(caseStatusFlagService).getConsultationFlags(applicationVersion);
     verify(caseStatusFlagService).getConsultationFlags(applicationVersion);
   }
 
@@ -116,6 +120,7 @@ class CaseStatusFlagServiceTest {
     doReturn(EMPTY_SET).when(caseStatusFlagService).getFurtherInformationFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getUpdateRequestFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getConsultationFlags(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getCamAssignmentFlag(applicationVersion);
 
     getCaseStatusFlags_assertFlagAndVerify();
   }
@@ -129,6 +134,7 @@ class CaseStatusFlagServiceTest {
     doReturn(EMPTY_SET).when(caseStatusFlagService).getFurtherInformationFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getUpdateRequestFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getConsultationFlags(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getCamAssignmentFlag(applicationVersion);
 
     getCaseStatusFlags_assertFlagAndVerify();
   }
@@ -142,6 +148,7 @@ class CaseStatusFlagServiceTest {
     doReturn(EMPTY_SET).when(caseStatusFlagService).getFurtherInformationFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getUpdateRequestFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getConsultationFlags(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getCamAssignmentFlag(applicationVersion);
 
     getCaseStatusFlags_assertFlagAndVerify();
   }
@@ -155,6 +162,7 @@ class CaseStatusFlagServiceTest {
     doReturn(EMPTY_SET).when(caseStatusFlagService).getFurtherInformationFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getUpdateRequestFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getConsultationFlags(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getCamAssignmentFlag(applicationVersion);
 
     getCaseStatusFlags_assertFlagAndVerify();
   }
@@ -168,6 +176,7 @@ class CaseStatusFlagServiceTest {
     doReturn(singleton(DEFAULT_TEST_FLAG)).when(caseStatusFlagService).getFurtherInformationFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getUpdateRequestFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getConsultationFlags(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getCamAssignmentFlag(applicationVersion);
 
     getCaseStatusFlags_assertFlagAndVerify();
   }
@@ -182,6 +191,7 @@ class CaseStatusFlagServiceTest {
     doReturn(EMPTY_SET).when(caseStatusFlagService).getFurtherInformationFlag(applicationVersion);
     doReturn(singleton(DEFAULT_TEST_FLAG)).when(caseStatusFlagService).getUpdateRequestFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getConsultationFlags(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getCamAssignmentFlag(applicationVersion);
 
     getCaseStatusFlags_assertFlagAndVerify();
   }
@@ -195,6 +205,7 @@ class CaseStatusFlagServiceTest {
     doReturn(EMPTY_SET).when(caseStatusFlagService).getFurtherInformationFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getUpdateRequestFlag(applicationVersion);
     doReturn(singleton(DEFAULT_TEST_FLAG)).when(caseStatusFlagService).getConsultationFlags(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getCamAssignmentFlag(applicationVersion);
 
     getCaseStatusFlags_assertFlagAndVerify();
   }
@@ -208,6 +219,21 @@ class CaseStatusFlagServiceTest {
     verify(caseStatusFlagService).getTechnicalReviewFlag(applicationVersion);
     verify(caseStatusFlagService).getUpdateRequestFlag(applicationVersion);
     verify(caseStatusFlagService).getConsultationFlags(applicationVersion);
+    verify(caseStatusFlagService).getCamAssignmentFlag(applicationVersion);
+  }
+
+  @Test
+  void getCaseStatusFlags_getCamAssignmentFlag() {
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getDefaultFlags();
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getCaseOfficerAssignmentFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getWithdrawalFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getTechnicalReviewFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getFurtherInformationFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getUpdateRequestFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getConsultationFlags(applicationVersion);
+    doReturn(singleton(DEFAULT_TEST_FLAG)).when(caseStatusFlagService).getCamAssignmentFlag(applicationVersion);
+
+    getCaseStatusFlags_assertFlagAndVerify();
   }
 
   @Test
@@ -316,4 +342,14 @@ class CaseStatusFlagServiceTest {
     assertThat(caseStatusFlagService.getConsultationFlags(applicationVersion)).containsExactly(CONSULTATION_OPEN);
   }
 
+  @Test
+  void getCamAssignmentFlag_assigned() {
+    applicationVersion.setCamWuaId(1L);
+    assertThat(caseStatusFlagService.getCamAssignmentFlag(applicationVersion)).containsExactly(CAM_ASSIGNED);
+  }
+
+  @Test
+  void getCamAssignmentFlag_notAssigned() {
+    assertThat(caseStatusFlagService.getCamAssignmentFlag(applicationVersion)).containsExactly(CAM_NOT_ASSIGNED);
+  }
 }

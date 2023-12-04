@@ -6,6 +6,8 @@ import static org.assertj.core.api.Assertions.entry;
 import static org.assertj.core.api.AssertionsForClassTypes.tuple;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.ACCESS_MANGER_TEAM_MEMBER_VIEW;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.CAM_USER_TEAM_MEMBER_VIEW_1;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.CAM_USER_TEAM_MEMBER_VIEW_2;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.CASE_OFFICER_TEAM_MEMBER_VIEW_1;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.CASE_OFFICER_TEAM_MEMBER_VIEW_2;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.TECHNICAL_REVIEWER_TEAM_MEMBER_VIEW_1;
@@ -237,7 +239,11 @@ class TeamMemberViewServiceTest {
             entry(TECHNICAL_REVIEWER_TEAM_MEMBER_VIEW_1.wuaId().toString(),
                 TECHNICAL_REVIEWER_TEAM_MEMBER_VIEW_1.getDisplayName()),
             entry(TECHNICAL_REVIEWER_TEAM_MEMBER_VIEW_2.wuaId().toString(),
-                TECHNICAL_REVIEWER_TEAM_MEMBER_VIEW_2.getDisplayName())
+                TECHNICAL_REVIEWER_TEAM_MEMBER_VIEW_2.getDisplayName()),
+            entry(CAM_USER_TEAM_MEMBER_VIEW_1.wuaId().toString(),
+                CAM_USER_TEAM_MEMBER_VIEW_1.getDisplayName()),
+            entry(CAM_USER_TEAM_MEMBER_VIEW_2.wuaId().toString(),
+                CAM_USER_TEAM_MEMBER_VIEW_2.getDisplayName())
         );
   }
 

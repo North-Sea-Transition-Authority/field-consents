@@ -129,6 +129,7 @@ class CaseProcessingActionServiceTest {
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.FLARE);
+    applicationVersion.setCurrentCaseOwner(CASE_OFFICER);
     application = applicationVersion.getApplication();
   }
 

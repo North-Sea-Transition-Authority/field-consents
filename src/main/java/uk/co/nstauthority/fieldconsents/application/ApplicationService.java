@@ -248,6 +248,8 @@ public class ApplicationService {
     newApplicationVersion.setPrimaryOperatorOuId(applicationVersion.getPrimaryOperatorOuId());
     newApplicationVersion.setCachedPrimaryOperatorName(applicationVersion.getCachedPrimaryOperatorName());
     newApplicationVersion.setCaseOfficerWuaId(applicationVersion.getCaseOfficerWuaId());
+    newApplicationVersion.setCamWuaId(applicationVersion.getCamWuaId());
+    newApplicationVersion.setCurrentCaseOwner(applicationVersion.getCurrentCaseOwner());
     return applicationVersionRepository.save(newApplicationVersion);
   }
 
