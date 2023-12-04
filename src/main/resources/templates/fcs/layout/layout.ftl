@@ -1,4 +1,5 @@
 <#include '../../fds/layout.ftl'>
+<#include '../../fds/objects/layouts/leftSubNavLayout.ftl'>
 <#import '_pageSizes.ftl' as PageSize>
 <#import '../macros/taskList.ftl' as taskList>
 <#import '_header.ftl' as pageHeader>
@@ -75,32 +76,7 @@
     <#assign notificationBannerContent=notificationBannerContentOverride/>
   <#else>
     <#assign notificationBannerContent>
-      <#if flash?has_content>
-
-        <#local bannerContent>
-          <#if flash.headingContent?has_content>
-            <#if flash.otherContent?has_content>
-              <@fdsNotificationBanner.notificationBannerContent headingText=flash.headingContent moreContent=flash.otherContent/>
-            <#else>
-              <@fdsNotificationBanner.notificationBannerContent>${flash.headingContent}</@fdsNotificationBanner.notificationBannerContent>
-            </#if>
-          <#else>
-            <p class="govuk-body">
-              ${flash.otherContent}
-            </p>
-          </#if>
-        </#local>
-
-        <#if flash.type.name() == "INFO">
-          <@fdsNotificationBanner.notificationBannerInfo bannerTitleText=flash.title>
-            ${bannerContent}
-          </@fdsNotificationBanner.notificationBannerInfo>
-        <#elseif flash.type.name() == "SUCCESS">
-          <@fdsNotificationBanner.notificationBannerSuccess bannerTitleText=flash.title>
-            ${bannerContent}
-          </@fdsNotificationBanner.notificationBannerSuccess>
-        </#if>
-      </#if>
+      <@_flashNotificationBannerContent />
     </#assign>
   </#if>
 
@@ -139,6 +115,55 @@
   </@fdsDefaultPageTemplate>
 </#macro>
 
+<#macro defaultPageWithSubNavigation
+  htmlTitle
+  phaseBanner=true
+  showNavigationItems=true
+>
+  <#local serviceName = serviceBrandingConfigurationProperties.name() />
+  <#local customerMnemonic = customerBrandingConfigurationProperties.mnemonic() />
+  <#local serviceHomeUrl = springUrl(serviceHomeUrl) />
+
+  <#assign serviceHeader>
+    <@_serviceHeader pageSize=PageSize.TWO_THIRDS_COLUMN />
+  </#assign>
+
+  <@fdsLeftSubNavPageTemplate
+    htmlTitle=htmlTitle
+    serviceName=serviceName
+    htmlAppTitle=serviceName
+    headerContent=serviceHeader
+    logoProductText=customerMnemonic
+    phaseBanner=phaseBanner
+    serviceUrl=serviceHomeUrl
+    homePageUrl=serviceHomeUrl
+    topNavigation=showNavigationItems
+  >
+    <#nested />
+  </@fdsLeftSubNavPageTemplate>
+</#macro>
+
+<#macro defaultPageWithSubNavigationSubNav smallSubnav=false>
+  <@fdsLeftSubNavPageTemplateSubNav smallSubnav=smallSubnav>
+    <#nested />
+  </@fdsLeftSubNavPageTemplateSubNav>
+</#macro>
+
+<#macro defaultPageWithSubNavigationContent pageHeading="" notificationBannerContentOverride="">
+  <#-- if the notificationBannerContentOverride has no content then try and set from the flash data -->
+  <#if notificationBannerContentOverride?has_content>
+    <#assign notificationBannerContent=notificationBannerContentOverride/>
+  <#else>
+    <#assign notificationBannerContent>
+      <@_flashNotificationBannerContent />
+    </#assign>
+  </#if>
+
+  <@fdsLeftSubNavPageTemplateContent pageHeading=pageHeading notificationBannerContent=notificationBannerContent>
+    <#nested />
+  </@fdsLeftSubNavPageTemplateContent>
+</#macro>
+
 <#macro _serviceHeader pageSize>
   <@pageHeader.header
     serviceName=SERVICE_NAME
@@ -148,4 +173,32 @@
     signOutUrl=springUrl("/logout")
     pageSize=pageSize
   />
+</#macro>
+
+<#macro _flashNotificationBannerContent>
+  <#if flash?has_content>
+    <#local bannerContent>
+      <#if flash.headingContent?has_content>
+        <#if flash.otherContent?has_content>
+          <@fdsNotificationBanner.notificationBannerContent headingText=flash.headingContent moreContent=flash.otherContent/>
+        <#else>
+          <@fdsNotificationBanner.notificationBannerContent>${flash.headingContent}</@fdsNotificationBanner.notificationBannerContent>
+        </#if>
+      <#else>
+        <p class="govuk-body">
+          ${flash.otherContent}
+        </p>
+      </#if>
+    </#local>
+
+    <#if flash.type.name() == "INFO">
+      <@fdsNotificationBanner.notificationBannerInfo bannerTitleText=flash.title>
+        ${bannerContent}
+      </@fdsNotificationBanner.notificationBannerInfo>
+    <#elseif flash.type.name() == "SUCCESS">
+      <@fdsNotificationBanner.notificationBannerSuccess bannerTitleText=flash.title>
+        ${bannerContent}
+      </@fdsNotificationBanner.notificationBannerSuccess>
+    </#if>
+  </#if>
 </#macro>

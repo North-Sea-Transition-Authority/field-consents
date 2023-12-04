@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ASSIGN_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.MANAGE_ASSETS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.MANAGE_DOCUMENT_TEMPLATES;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.MANAGE_FEE_PERIODS;
 
 import java.util.Set;
@@ -20,6 +21,7 @@ import uk.co.nstauthority.fieldconsents.assets.AssetSelectionController;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
+import uk.co.nstauthority.fieldconsents.document.DocumentTemplateController;
 import uk.co.nstauthority.fieldconsents.fds.navigation.TopNavigationItem;
 import uk.co.nstauthority.fieldconsents.fee.FeePeriodController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -44,9 +46,11 @@ class TopNavigationServiceTest {
   }
 
   @Test
-  void getTopNavigationItems_userCannotManageAssetsOrFeePeriods() {
+  void getTopNavigationItems_userCannotManageAssetsOrFeePeriodsOrDocumentTemplatesOrSeeBulkCaseActions() {
     when(permissionService.hasPermission(user, Set.of(MANAGE_ASSETS))).thenReturn(false);
     when(permissionService.hasPermission(user, Set.of(MANAGE_FEE_PERIODS))).thenReturn(false);
+    when(permissionService.hasPermission(user, Set.of(MANAGE_DOCUMENT_TEMPLATES))).thenReturn(false);
+    when(permissionService.hasPermission(user, Set.of(ASSIGN_FCS_APPLICATIONS))).thenReturn(false);
 
     var topNavigationItems = topNavigationService.getTopNavigationItems(user);
 
@@ -75,6 +79,8 @@ class TopNavigationServiceTest {
   void getTopNavigationItems_userCanManageAssets() {
     when(permissionService.hasPermission(user, Set.of(MANAGE_ASSETS))).thenReturn(true);
     when(permissionService.hasPermission(user, Set.of(MANAGE_FEE_PERIODS))).thenReturn(false);
+    when(permissionService.hasPermission(user, Set.of(MANAGE_DOCUMENT_TEMPLATES))).thenReturn(false);
+    when(permissionService.hasPermission(user, Set.of(ASSIGN_FCS_APPLICATIONS))).thenReturn(false);
 
     var topNavigationItems = topNavigationService.getTopNavigationItems(user);
 
@@ -108,8 +114,9 @@ class TopNavigationServiceTest {
     var user = ServiceUserDetailTestUtil.Builder().build();
 
     when(permissionService.hasPermission(user, Set.of(MANAGE_ASSETS))).thenReturn(false);
-    when(permissionService.hasPermission(user, Set.of(ASSIGN_FCS_APPLICATIONS))).thenReturn(false);
     when(permissionService.hasPermission(user, Set.of(MANAGE_FEE_PERIODS))).thenReturn(true);
+    when(permissionService.hasPermission(user, Set.of(MANAGE_DOCUMENT_TEMPLATES))).thenReturn(false);
+    when(permissionService.hasPermission(user, Set.of(ASSIGN_FCS_APPLICATIONS))).thenReturn(false);
 
     var topNavigationItems = topNavigationService.getTopNavigationItems(user);
 
@@ -139,11 +146,48 @@ class TopNavigationServiceTest {
   }
 
   @Test
+  void getTopNavigationItems_userCanManageDocumentTemplates() {
+    var user = ServiceUserDetailTestUtil.Builder().build();
+
+    when(permissionService.hasPermission(user, Set.of(MANAGE_ASSETS))).thenReturn(false);
+    when(permissionService.hasPermission(user, Set.of(MANAGE_FEE_PERIODS))).thenReturn(false);
+    when(permissionService.hasPermission(user, Set.of(MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
+    when(permissionService.hasPermission(user, Set.of(ASSIGN_FCS_APPLICATIONS))).thenReturn(false);
+
+    var topNavigationItems = topNavigationService.getTopNavigationItems(user);
+
+    assertThat(topNavigationItems)
+        .extracting(
+            TopNavigationItem::getDisplayName,
+            TopNavigationItem::getUrl
+        )
+        .containsExactly(
+            tuple(
+                WorkAreaController.WORK_AREA_TITLE,
+                ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null))
+            ),
+            tuple(
+                SearchController.SEARCH_TITLE,
+                ReverseRouter.route(on(SearchController.class).getSearch(null, null))
+            ),
+            tuple(
+                TopNavigationService.TEAM_MANAGEMENT_NAVIGATION_ITEM_TITLE,
+                ReverseRouter.route(on(TeamListController.class).resolveTeamListEntryRoute())
+            ),
+            tuple(
+                TopNavigationService.DOCUMENT_TEMPLATES_NAVIGATION_ITEM_TITLE,
+                ReverseRouter.route(on(DocumentTemplateController.class).getDocumentTemplates())
+            )
+        );
+  }
+
+  @Test
   void getTopNavigationItems_userCanSeeBulkCaseActions() {
     var user = ServiceUserDetailTestUtil.Builder().build();
 
     when(permissionService.hasPermission(user, Set.of(MANAGE_ASSETS))).thenReturn(false);
     when(permissionService.hasPermission(user, Set.of(MANAGE_FEE_PERIODS))).thenReturn(false);
+    when(permissionService.hasPermission(user, Set.of(MANAGE_DOCUMENT_TEMPLATES))).thenReturn(false);
     when(permissionService.hasPermission(user, Set.of(ASSIGN_FCS_APPLICATIONS))).thenReturn(true);
 
     var topNavigationItems = topNavigationService.getTopNavigationItems(user);

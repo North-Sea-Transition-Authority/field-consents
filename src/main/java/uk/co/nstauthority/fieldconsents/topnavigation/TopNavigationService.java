@@ -4,6 +4,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.fieldconsents.assets.AssetSelectionController.ASSET_SELECTION_TITLE;
 import static uk.co.nstauthority.fieldconsents.search.SearchController.SEARCH_TITLE;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ASSIGN_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.MANAGE_DOCUMENT_TEMPLATES;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.MANAGE_FEE_PERIODS;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaController.WORK_AREA_TITLE;
 
@@ -16,6 +17,7 @@ import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActi
 import uk.co.nstauthority.fieldconsents.assets.AssetSelectionController;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
+import uk.co.nstauthority.fieldconsents.document.DocumentTemplateController;
 import uk.co.nstauthority.fieldconsents.fds.navigation.TopNavigationItem;
 import uk.co.nstauthority.fieldconsents.fee.FeePeriodController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -29,6 +31,7 @@ public class TopNavigationService {
 
   static final String TEAM_MANAGEMENT_NAVIGATION_ITEM_TITLE = "Teams";
   static final String FEE_PERIODS_NAVIGATION_ITEM_TITLE = "Fee periods";
+  static final String DOCUMENT_TEMPLATES_NAVIGATION_ITEM_TITLE = "Document templates";
 
   private final PermissionService permissionService;
 
@@ -71,6 +74,15 @@ public class TopNavigationService {
           new TopNavigationItem(
               FEE_PERIODS_NAVIGATION_ITEM_TITLE,
               ReverseRouter.route(on(FeePeriodController.class).getFeePeriods())
+          )
+      );
+    }
+
+    if (permissionService.hasPermission(user, Set.of(MANAGE_DOCUMENT_TEMPLATES))) {
+      navigationItems.add(
+          new TopNavigationItem(
+              DOCUMENT_TEMPLATES_NAVIGATION_ITEM_TITLE,
+              ReverseRouter.route(on(DocumentTemplateController.class).getDocumentTemplates())
           )
       );
     }

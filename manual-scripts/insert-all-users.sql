@@ -29,4 +29,7 @@ INSERT INTO fcs.team_member_roles (wua_id, team_id, role) VALUES
     (53514, 1, 'TECHNICAL_REVIEWER'),
     (38137, 1, 'ACCESS_MANAGER'),
     (38137, 1, 'INDUSTRY_ACCESS_MANAGER'),
+    (53752, 1, 'DOCUMENT_TEMPLATE_MANAGER'), -- document.template.manager1@field-consents.co.uk
+    (53753, 1, 'DOCUMENT_TEMPLATE_MANAGER'), -- document.template.manager2@field-consents.co.uk
+    (53754, 1, 'DOCUMENT_TEMPLATE_MANAGER'), -- document.template.manager3@field-consents.co.uk
     (38137, 1, 'VIEWER');
