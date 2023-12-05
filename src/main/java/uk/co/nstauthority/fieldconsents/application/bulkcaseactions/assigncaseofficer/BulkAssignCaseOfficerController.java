@@ -4,18 +4,29 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 
 import jakarta.servlet.http.HttpSession;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActionControllerHelperService;
 import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActionSearchController;
 import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActionService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.HasPermission;
+import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
+import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
+import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
+import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItem;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 
 @Controller
 @RequestMapping("bulk-case-actions/assign-case-officer")
@@ -24,26 +35,83 @@ public class BulkAssignCaseOfficerController {
 
   public static final String ASSIGN_CASE_OFFICER = "Assign case officer";
 
-  private final BulkCaseActionService bulkCaseActionService;
+  private final ApplicationVersionService applicationVersionService;
+  private final BulkAssignCaseOfficerFormValidator validator;
+  private final BulkAssignCaseOfficerService bulkAssignCaseOfficerService;
   private final BulkCaseActionControllerHelperService controllerHelperService;
+  private final BulkCaseActionService bulkCaseActionService;
+  private final EnergyPortalUserService energyPortalUserService;
 
   BulkAssignCaseOfficerController(
+      ApplicationVersionService applicationVersionService,
+      BulkAssignCaseOfficerFormValidator validator,
+      BulkAssignCaseOfficerService bulkAssignCaseOfficerService,
+      BulkCaseActionControllerHelperService controllerHelperService,
       BulkCaseActionService bulkCaseActionService,
-      BulkCaseActionControllerHelperService controllerHelperService
+      EnergyPortalUserService energyPortalUserService
   ) {
-    this.bulkCaseActionService = bulkCaseActionService;
+    this.applicationVersionService = applicationVersionService;
+    this.validator = validator;
+    this.bulkAssignCaseOfficerService = bulkAssignCaseOfficerService;
     this.controllerHelperService = controllerHelperService;
+    this.bulkCaseActionService = bulkCaseActionService;
+    this.energyPortalUserService = energyPortalUserService;
   }
 
   @GetMapping
   public ModelAndView assignCaseOfficer(HttpSession session, ServiceUserDetail user) {
-    var form = controllerHelperService.getSelectedApplicationsForm(session);
+    return assignCaseOfficerModelAndView(session, user, BulkAssignCaseOfficerForm.empty());
+  }
+
+  @PostMapping
+  ModelAndView assignCaseOfficer(
+      HttpSession session,
+      RedirectAttributes redirectAttributes,
+      @ModelAttribute("form") BulkAssignCaseOfficerForm form,
+      BindingResult bindingResult,
+      ServiceUserDetail user
+  ) {
+    validator.validate(form, bindingResult);
+
+    if (bindingResult.hasErrors()) {
+      return assignCaseOfficerModelAndView(session, user, form);
+    }
+
+    var caseOfficer = energyPortalUserService.getByWuaId(WebUserAccountId.valueOf(form.caseOfficerWuaId()));
+    var applicationIds = form.selectedApplicationIds().stream().map(Integer::parseInt).collect(Collectors.toSet());
+    var applicationVersions = applicationVersionService.getLatestApplicationVersions(applicationIds);
+
+    bulkAssignCaseOfficerService.assignCaseOfficer(applicationVersions, ServiceUserDetail.from(caseOfficer), user);
+    controllerHelperService.clearSelectedApplicationsForm(session);
+
+    var bannerMessage = bulkAssignCaseOfficerService.getNotificationBannerSuccessMessage(applicationIds.size(), caseOfficer);
+    NotificationBannerUtil.addSuccessNotification(redirectAttributes, bannerMessage);
+
+    return ReverseRouter.redirect(on(BulkCaseActionSearchController.class).getSearchResults(null, null));
+  }
+
+  private ModelAndView assignCaseOfficerModelAndView(
+      HttpSession session,
+      ServiceUserDetail user,
+      BulkAssignCaseOfficerForm form
+  ) {
+    var selectedApplicationsForm = controllerHelperService.getSelectedApplicationsForm(session);
+    var applicationDataItems = bulkCaseActionService.getSelectedApplicationDataItems(selectedApplicationsForm, user);
+
+    var caseOfficerOptions = bulkAssignCaseOfficerService.getAvailableCaseOfficers()
+        .stream()
+        .collect(StreamUtils.toLinkedHashMap(
+            energyPortalUserDto -> energyPortalUserDto.webUserAccountId().toString(),
+            EnergyPortalUserDto::displayName
+        ));
 
     return new ModelAndView("fcs/application/bulk-case-actions/assignCaseOfficer")
+        .addObject("form", form)
         .addObject("pageTitle", ASSIGN_CASE_OFFICER)
         .addObject("backLinkUrl", ReverseRouter.route(on(BulkCaseActionSearchController.class).getSearchResults(null, null)))
-        .addObject("applicationDataItems", bulkCaseActionService.getSelectedApplicationDataItems(form, user))
-        .addObject("captionHeadingFunction", (Function<ApplicationDataItem, String>) this::captionHeadingFunction);
+        .addObject("applicationDataItems", applicationDataItems)
+        .addObject("captionHeadingFunction", (Function<ApplicationDataItem, String>) this::captionHeadingFunction)
+        .addObject("caseOfficerOptions", caseOfficerOptions);
   }
 
   private String captionHeadingFunction(ApplicationDataItem applicationDataItem) {

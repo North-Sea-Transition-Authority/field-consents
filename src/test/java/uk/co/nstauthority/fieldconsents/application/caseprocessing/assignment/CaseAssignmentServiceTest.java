@@ -42,6 +42,7 @@ import uk.co.nstauthority.fieldconsents.application.workareapriority.Application
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
+import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.teams.Team;
 import uk.co.nstauthority.fieldconsents.teams.TeamMember;
@@ -313,5 +314,20 @@ class CaseAssignmentServiceTest {
             ENERGY_PORTAL_USER_2,
             ENERGY_PORTAL_USER_3
         );
+  }
+
+  @Test
+  void getActiveCaseOfficers() {
+    var caseOfficers = List.of(ENERGY_PORTAL_USER_1, ENERGY_PORTAL_USER_2, ENERGY_PORTAL_USER_3);
+    var caseOfficerWebUserAccountIds = caseOfficers
+        .stream()
+        .map(EnergyPortalUserDto::webUserAccountId)
+        .map(WebUserAccountId::new)
+        .toList();
+
+    when(teamService.getWuaIdsOfTeamMembersWithRoles(TeamType.REGULATOR, Set.of(CASE_OFFICER))).thenReturn(caseOfficerWebUserAccountIds);
+    when(energyPortalUserService.findByWuaIds(caseOfficerWebUserAccountIds)).thenReturn(caseOfficers);
+
+    assertThat(caseAssignmentService.getActiveCaseOfficers()).isEqualTo(caseOfficers);
   }
 }

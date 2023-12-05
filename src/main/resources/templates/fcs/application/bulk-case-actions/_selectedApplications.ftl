@@ -7,7 +7,7 @@
     <#list applicationDataItems as applicationDataItem>
       <@fdsResultList.resultListItem
         linkHeadingText=applicationDataItem.reference()
-        linkHeadingUrl=applicationDataItem.url()
+        linkHeadingUrl=springUrl(applicationDataItem.url())
         captionHeadingText=captionHeadingFunction.apply(applicationDataItem)
         />
     </#list>

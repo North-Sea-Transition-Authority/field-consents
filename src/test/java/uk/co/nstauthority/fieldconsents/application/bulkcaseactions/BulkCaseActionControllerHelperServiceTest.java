@@ -119,6 +119,15 @@ class BulkCaseActionControllerHelperServiceTest {
   }
 
   @Test
+  void clearSelectedApplicationsForm() {
+    var form = BulkCaseActionSelectedApplicationsForm.empty();
+    session.setAttribute(BulkCaseActionControllerHelperService.SELECTED_APPLICATIONS_FORM_SESSION_ATTRIBUTE, form);
+
+    controllerHelperService.clearSelectedApplicationsForm(session);
+    assertThat(session.getAttribute(BulkCaseActionControllerHelperService.SELECTED_APPLICATIONS_FORM_SESSION_ATTRIBUTE)).isNull();
+  }
+
+  @Test
   void updateSelectedApplicationsForm() {
     var form = BulkCaseActionSelectedApplicationsForm.empty();
     controllerHelperService.updateSelectedApplicationsForm(session, form);

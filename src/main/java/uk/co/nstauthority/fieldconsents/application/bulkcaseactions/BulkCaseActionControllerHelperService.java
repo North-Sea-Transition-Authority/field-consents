@@ -57,6 +57,10 @@ public class BulkCaseActionControllerHelperService {
     session.removeAttribute(FILTERS_FORM_SESSION_ATTRIBUTE);
   }
 
+  public void clearSelectedApplicationsForm(HttpSession session) {
+    session.removeAttribute(SELECTED_APPLICATIONS_FORM_SESSION_ATTRIBUTE);
+  }
+
   void updateSelectedApplicationsForm(HttpSession session, BulkCaseActionSelectedApplicationsForm form) {
     session.setAttribute(SELECTED_APPLICATIONS_FORM_SESSION_ATTRIBUTE, form);
   }

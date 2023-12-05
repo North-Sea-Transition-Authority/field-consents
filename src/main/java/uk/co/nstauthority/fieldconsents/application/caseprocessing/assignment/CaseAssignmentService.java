@@ -122,16 +122,21 @@ public class CaseAssignmentService {
         .map(WebUserAccountId::from)
         .toList();
 
-    var currentCaseOfficers = teamService.getWuaIdsOfTeamMembersWithRoles(
-        TeamType.REGULATOR,
-        Set.of(RegulatorTeamRole.CASE_OFFICER)
-    );
-
     var currentCaseOfficersWuaIds = new HashSet<WebUserAccountId>();
-    currentCaseOfficersWuaIds.addAll(currentCaseOfficers);
+
+    currentCaseOfficersWuaIds.addAll(getActiveCaseOfficerWebUserAccountIds());
     currentCaseOfficersWuaIds.addAll(caseOfficerAssignedWuaIds);
 
     return energyPortalUserService.findByWuaIds(currentCaseOfficersWuaIds);
+  }
+
+  public List<EnergyPortalUserDto> getActiveCaseOfficers() {
+    var activeCaseOfficers = getActiveCaseOfficerWebUserAccountIds();
+    return energyPortalUserService.findByWuaIds(activeCaseOfficers);
+  }
+
+  private List<WebUserAccountId> getActiveCaseOfficerWebUserAccountIds() {
+    return teamService.getWuaIdsOfTeamMembersWithRoles(TeamType.REGULATOR, Set.of(RegulatorTeamRole.CASE_OFFICER));
   }
 
 }

@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application;
 
+import java.util.Collection;
 import java.util.List;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -14,6 +15,20 @@ public interface ApplicationVersionRepository extends CrudRepository<Application
 
   @Query(
       """
+      FROM ApplicationVersion av
+      WHERE av.application.id IN :applicationIds
+      AND av.version = (
+        SELECT MAX(av2.version)
+        FROM ApplicationVersion av2
+        WHERE av2.application = av.application
+        AND av2.status != 'DELETED')
+      """
+  )
+  List<ApplicationVersion> findLatestByApplicationIds(Collection<Integer> applicationIds);
+
+
+  @Query(
+      """
       SELECT DISTINCT av.caseOfficerWuaId
       FROM ApplicationVersion av
       WHERE av.status = :status
@@ -21,7 +36,7 @@ public interface ApplicationVersionRepository extends CrudRepository<Application
         SELECT MAX (av2.version)
         FROM ApplicationVersion av2
         WHERE av2.application = av.application
-        AND av2.status <> 'DELETED')
+        AND av2.status != 'DELETED')
       AND av.caseOfficerWuaId IS NOT NULL
       """
   )

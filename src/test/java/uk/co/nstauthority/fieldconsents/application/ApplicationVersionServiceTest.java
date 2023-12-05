@@ -3,6 +3,7 @@ package uk.co.nstauthority.fieldconsents.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertThrows;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -108,6 +109,14 @@ class ApplicationVersionServiceTest {
     assertThatThrownBy(() -> applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .isInstanceOf(EntityNotFoundException.class)
         .hasMessage("Application version not found for application with id %s".formatted(APPLICATION_ID));
+  }
+
+  @Test
+  void getLatestApplicationVersions() {
+    var applicationIds = List.of(1, 2, 3);
+    List<ApplicationVersion> applicationVersions = mock(List.class);
+    when(applicationVersionRepository.findLatestByApplicationIds(applicationIds)).thenReturn(applicationVersions);
+    assertThat(applicationVersionService.getLatestApplicationVersions(applicationIds)).isEqualTo(applicationVersions);
   }
 
   @Test
