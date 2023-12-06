@@ -16,7 +16,9 @@ CREATE TABLE document_library_document_template_sections(
 , display_order INTEGER NOT NULL
 , CONSTRAINT document_template_id_fk FOREIGN KEY (document_template_id) REFERENCES document_library_document_templates (id)
 , CONSTRAINT parent_id_id_fk FOREIGN KEY (parent_id) REFERENCES document_library_document_template_sections (id)
-, CONSTRAINT parent_id_display_order_unique UNIQUE (parent_id, display_order)
+-- DEFERRABLE INITIALLY DEFERRED is required for DocumentTemplateSectionService#createDocumentTemplateSection to avoid a
+-- ConstraintViolationException when shifting existing section display orders.
+, CONSTRAINT parent_id_display_order_unique UNIQUE (parent_id, display_order) DEFERRABLE INITIALLY DEFERRED
 );
 
 CREATE INDEX document_library_document_template_sections_doc_template_id_idx ON document_library_document_template_sections (document_template_id);
