@@ -114,11 +114,11 @@ public class WorkAreaFilterService {
 
   private Condition getApplicationStatusCondition(ServiceUserDetail user) {
     if (teamService.isRegulatorUser(user)) {
-      return getSubmittedApplicationStatusCondition();
+      return applicationDataFilterService.getSubmittedApplicationStatusCondition();
     }
 
     if (teamService.isConsulteeUser(user)) {
-      return getSubmittedApplicationStatusCondition();
+      return applicationDataFilterService.getSubmittedApplicationStatusCondition();
     }
 
     if (teamService.isIndustryUser(user)) {
@@ -136,10 +136,6 @@ public class WorkAreaFilterService {
         ApplicationVersionStatus.AWAITING_PAYMENT.name(),
         ApplicationVersionStatus.SUBMITTED.name()
     );
-  }
-
-  private Condition getSubmittedApplicationStatusCondition() {
-    return APPLICATION_VERSIONS.STATUS.eq(ApplicationVersionStatus.SUBMITTED.name());
   }
 
   private List<Condition> getRegulatorConditions(WorkAreaFilter filter) {

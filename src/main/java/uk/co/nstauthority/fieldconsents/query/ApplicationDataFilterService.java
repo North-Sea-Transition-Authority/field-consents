@@ -70,6 +70,10 @@ public class ApplicationDataFilterService {
     return APPLICATIONS.APPLICATION_NO.eq(applicationNumber);
   }
 
+  public Condition getSubmittedApplicationStatusCondition() {
+    return APPLICATION_VERSIONS.STATUS.eq(ApplicationVersionStatus.SUBMITTED.name());
+  }
+
   Condition getStatusQueryCondition(Collection<ApplicationVersionStatus> statuses) {
     var statusStrings = statuses
         .stream()

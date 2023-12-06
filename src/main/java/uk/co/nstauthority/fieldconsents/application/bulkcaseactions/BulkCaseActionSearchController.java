@@ -55,7 +55,7 @@ public class BulkCaseActionSearchController {
   @GetMapping
   public ModelAndView getSearchResults(HttpSession session, ServiceUserDetail user) {
     var filtersForm = controllerHelperService.getSearchFiltersForm(session);
-    var searchConditions = searchFilterService.getConditions(filtersForm);
+    var searchConditions = searchFilterService.getConditions(filtersForm, user);
     var applicationDataItems = bulkCaseActionService.getApplicationDataItems(user, searchConditions);
     var form = controllerHelperService.getSelectedApplicationsForm(session, applicationDataItems);
 
@@ -129,7 +129,7 @@ public class BulkCaseActionSearchController {
   ) {
     if (bindingResult.hasErrors()) {
       var filtersForm = controllerHelperService.getSearchFiltersForm(session);
-      var searchConditions = searchFilterService.getConditions(filtersForm);
+      var searchConditions = searchFilterService.getConditions(filtersForm, user);
       var applicationDataItems = bulkCaseActionService.getApplicationDataItems(user, searchConditions);
 
       var modelAndView = searchResultsModelAndView(applicationDataItems, form);

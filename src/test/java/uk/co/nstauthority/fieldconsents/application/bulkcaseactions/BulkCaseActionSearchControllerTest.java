@@ -133,7 +133,7 @@ class BulkCaseActionSearchControllerTest extends AbstractControllerTest {
     when(controllerHelperService.getSearchFiltersForm(session)).thenReturn(filtersForm);
 
     var jooqConditions = List.<Condition>of();
-    when(searchFilterService.getConditions(filtersForm)).thenReturn(jooqConditions);
+    when(searchFilterService.getConditions(filtersForm, user)).thenReturn(jooqConditions);
 
     var applicationDataItems = List.of(ApplicationDataItemUtil.getApplicationDataItem());
     when(bulkCaseActionService.getApplicationDataItems(user, jooqConditions)).thenReturn(applicationDataItems);
@@ -168,7 +168,7 @@ class BulkCaseActionSearchControllerTest extends AbstractControllerTest {
     when(controllerHelperService.getSearchFiltersForm(session)).thenReturn(filtersForm);
 
     var jooqConditions = List.<Condition>of();
-    when(searchFilterService.getConditions(filtersForm)).thenReturn(jooqConditions);
+    when(searchFilterService.getConditions(filtersForm, user)).thenReturn(jooqConditions);
 
     var applicationDataItems = List.of(applicationDataItem1, applicationDataItem2, applicationDataItem3);
     when(bulkCaseActionService.getApplicationDataItems(user, jooqConditions)).thenReturn(applicationDataItems);
@@ -279,7 +279,7 @@ class BulkCaseActionSearchControllerTest extends AbstractControllerTest {
     when(controllerHelperService.getSearchFiltersForm(session)).thenReturn(filtersForm);
 
     var jooqConditions = List.<Condition>of();
-    when(searchFilterService.getConditions(filtersForm)).thenReturn(jooqConditions);
+    when(searchFilterService.getConditions(filtersForm, user)).thenReturn(jooqConditions);
 
     var applicationDataItems = List.of(ApplicationDataItemUtil.getApplicationDataItem());
     when(bulkCaseActionService.getApplicationDataItems(user, jooqConditions)).thenReturn(applicationDataItems);

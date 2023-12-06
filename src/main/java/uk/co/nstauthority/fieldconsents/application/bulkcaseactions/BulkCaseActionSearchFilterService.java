@@ -6,9 +6,11 @@ import java.util.Optional;
 import org.jooq.Condition;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterService;
+import uk.co.nstauthority.fieldconsents.teams.TeamService;
 
 @Service
 class BulkCaseActionSearchFilterService {
@@ -18,13 +20,16 @@ class BulkCaseActionSearchFilterService {
 
   private final ApplicationDataFilterFormService filterFormService;
   private final ApplicationDataFilterService applicationDataFilterService;
+  private final TeamService teamService;
 
   BulkCaseActionSearchFilterService(
       ApplicationDataFilterFormService filterFormService,
-      ApplicationDataFilterService applicationDataFilterService
+      ApplicationDataFilterService applicationDataFilterService,
+      TeamService teamService
   ) {
     this.filterFormService = filterFormService;
     this.applicationDataFilterService = applicationDataFilterService;
+    this.teamService = teamService;
   }
 
   public RestSearchItem getPrefilledOrganisation(Integer operatorId) {
@@ -35,7 +40,7 @@ class BulkCaseActionSearchFilterService {
     return filterFormService.getPrefilledAsset(assetKey);
   }
 
-  public List<Condition> getConditions(BulkCaseActionSearchFiltersForm filtersForm) {
+  public List<Condition> getConditions(BulkCaseActionSearchFiltersForm filtersForm, ServiceUserDetail user) {
     var conditions = new ArrayList<Condition>();
 
     Optional.ofNullable(filtersForm.operatorId())
@@ -71,7 +76,17 @@ class BulkCaseActionSearchFilterService {
         .getCaseOfficerCondition(filtersForm.caseOfficerWuaId(), Boolean.TRUE.equals(filtersForm.includeUnassignedCaseOfficer()))
         .ifPresent(conditions::add);
 
+    getUserCondition(user).ifPresent(conditions::add);
+
     return conditions;
+  }
+
+  Optional<Condition> getUserCondition(ServiceUserDetail user) {
+    if (!teamService.isRegulatorUser(user)) {
+      return Optional.empty();
+    }
+
+    return Optional.of(applicationDataFilterService.getSubmittedApplicationStatusCondition());
   }
 
 }

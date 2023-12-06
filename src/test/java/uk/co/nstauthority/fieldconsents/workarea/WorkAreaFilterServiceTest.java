@@ -73,6 +73,7 @@ class WorkAreaFilterServiceTest {
   @Test
   void getConditions_CheckApplicationDataFilterConditions() {
     when(teamService.isRegulatorUser(user)).thenReturn(true);
+    when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     var customCondition1 = mock(Condition.class);
     var customCondition2 = mock(Condition.class);
@@ -99,6 +100,7 @@ class WorkAreaFilterServiceTest {
   @Test
   void getConditions_EmptyFilter_Regulator() {
     when(teamService.isRegulatorUser(user)).thenReturn(true);
+    when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     var conditions = workAreaFilterService.getConditions(filter, user, null);
 
@@ -108,6 +110,7 @@ class WorkAreaFilterServiceTest {
   @Test
   void getConditions_EmptyFilter_Consultee() {
     when(teamService.isConsulteeUser(user)).thenReturn(true);
+    when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     var conditions = workAreaFilterService.getConditions(filter, user, null);
 
@@ -130,6 +133,7 @@ class WorkAreaFilterServiceTest {
   @Test
   void getConditions_AssetNotFound() {
     when(teamService.isRegulatorUser(user)).thenReturn(true);
+    when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     form.setAssetKey(ApplicationDataFilterFormTestUtil.FIELD1_ASSET_KEY);
     filter.update(form);
@@ -145,6 +149,7 @@ class WorkAreaFilterServiceTest {
   @Test
   void getConditions_FieldSelected() {
     when(teamService.isRegulatorUser(user)).thenReturn(true);
+    when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     form.setAssetKey(ApplicationDataFilterFormTestUtil.FIELD1_ASSET_KEY);
     filter.update(form);
@@ -164,6 +169,7 @@ class WorkAreaFilterServiceTest {
   @Test
   void getConditions_TerminalSelected() {
     when(teamService.isRegulatorUser(user)).thenReturn(true);
+    when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     form.setAssetKey(ApplicationDataFilterFormTestUtil.TERMINAL1_ASSET_KEY);
     filter.update(form);
@@ -183,6 +189,7 @@ class WorkAreaFilterServiceTest {
   @Test
   void getConditions_SeaLocationsSelected() {
     when(teamService.isRegulatorUser(user)).thenReturn(true);
+    when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     form.setGeographicAreas(List.of(GeographicArea.CNS, GeographicArea.SNS));
     filter.update(form);
@@ -199,6 +206,7 @@ class WorkAreaFilterServiceTest {
   @Test
   void getConditions_MyApplicationsCaseOfficer() {
     when(teamService.isRegulatorUser(user)).thenReturn(true);
+    when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     var conditions = workAreaFilterService.getConditions(filter, user, WorkAreaTab.MY_APPLICATIONS);
 
@@ -212,6 +220,7 @@ class WorkAreaFilterServiceTest {
   @Test
   void getConditions_AllApplications() {
     when(teamService.isRegulatorUser(user)).thenReturn(true);
+    when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     var conditions = workAreaFilterService.getConditions(filter, user, WorkAreaTab.ALL_APPLICATIONS);
 
@@ -224,6 +233,7 @@ class WorkAreaFilterServiceTest {
   @Test
   void getConditions_MyConsultations() {
     when(teamService.isRegulatorUser(user)).thenReturn(true);
+    when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     var conditions = workAreaFilterService.getConditions(filter, user, WorkAreaTab.MY_CONSULTATIONS);
 
@@ -236,6 +246,7 @@ class WorkAreaFilterServiceTest {
   @Test
   void getConditions_MyTechnicalReviews() {
     when(teamService.isRegulatorUser(user)).thenReturn(true);
+    when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     var conditions = workAreaFilterService.getConditions(filter, user, WorkAreaTab.MY_TECHNICAL_REVIEWS);
 
@@ -248,6 +259,7 @@ class WorkAreaFilterServiceTest {
   @Test
   void getConditions_AllTechnicalReviews() {
     when(teamService.isRegulatorUser(user)).thenReturn(true);
+    when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     var conditions = workAreaFilterService.getConditions(filter, user, WorkAreaTab.ALL_TECHNICAL_REVIEWS);
 
@@ -260,6 +272,7 @@ class WorkAreaFilterServiceTest {
   @Test
   void getConditions_UnassignedCaseOfficer() {
     when(teamService.isRegulatorUser(user)).thenReturn(true);
+    when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     var conditions = workAreaFilterService.getConditions(filter, user, WorkAreaTab.UNASSIGNED_APPLICATIONS);
 
@@ -272,6 +285,7 @@ class WorkAreaFilterServiceTest {
   @Test
   void getConditions_AllConsultations() {
     when(teamService.isRegulatorUser(user)).thenReturn(true);
+    when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     var conditions = workAreaFilterService.getConditions(filter, user, WorkAreaTab.ALL_CONSULTATIONS);
 
@@ -284,6 +298,7 @@ class WorkAreaFilterServiceTest {
   @Test
   void getConditions_UnassignedConsultations() {
     when(teamService.isConsulteeUser(user)).thenReturn(true);
+    when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     var conditions = workAreaFilterService.getConditions(filter, user, WorkAreaTab.UNASSIGNED_CONSULTATIONS);
 
@@ -296,6 +311,7 @@ class WorkAreaFilterServiceTest {
   @Test
   void getConditions_ConsulteeApplicationStatusCondition() {
     when(teamService.isConsulteeUser(user)).thenReturn(true);
+    when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     var conditions = workAreaFilterService.getConditions(filter, user, WorkAreaTab.ALL_CONSULTATIONS);
 
@@ -358,6 +374,7 @@ class WorkAreaFilterServiceTest {
   @Test
   void getConditions_caseOfficerAssignedCondition() {
     when(teamService.isRegulatorUser(user)).thenReturn(true);
+    when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     form.setCaseOfficerWuaId(123L);
     filter.update(form);
@@ -373,6 +390,7 @@ class WorkAreaFilterServiceTest {
   @Test
   void getConditions_technicalReviewerAssignedCondition() {
     when(teamService.isRegulatorUser(user)).thenReturn(true);
+    when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
     form.setTechnicalReviewerWuaId(123L);
     filter.update(form);

@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import java.util.Optional;
 import java.util.Set;
 import org.jooq.Condition;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -17,10 +18,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.assets.fields.GeographicArea;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterService;
 import uk.co.nstauthority.fieldconsents.search.AceFlagStatus;
+import uk.co.nstauthority.fieldconsents.teams.TeamService;
 
 @ExtendWith(MockitoExtension.class)
 class BulkCaseActionSearchFilterServiceTest {
@@ -31,8 +35,18 @@ class BulkCaseActionSearchFilterServiceTest {
   @Mock
   private ApplicationDataFilterService applicationDataFilterService;
 
+  @Mock
+  private TeamService teamService;
+
   @InjectMocks
   private BulkCaseActionSearchFilterService bulkCaseActionSearchFilterService;
+
+  private ServiceUserDetail caseManagerUser;
+
+  @BeforeEach
+  void setUp() {
+    caseManagerUser = ServiceUserDetailTestUtil.Builder().build();
+  }
 
   @Test
   void getPrefilledOrganisation() {
@@ -49,9 +63,23 @@ class BulkCaseActionSearchFilterServiceTest {
   }
 
   @Test
-  void getConditions_emptyForm() {
+  void getConditions_emptyForm_isNotRegulator() {
     when(applicationDataFilterService.getCaseOfficerCondition(null, false)).thenReturn(Optional.empty());
-    assertThat(bulkCaseActionSearchFilterService.getConditions(BulkCaseActionSearchFiltersForm.empty())).isEmpty();
+    when(teamService.isRegulatorUser(caseManagerUser)).thenReturn(false);
+
+    assertThat(bulkCaseActionSearchFilterService.getConditions(BulkCaseActionSearchFiltersForm.empty(), caseManagerUser)).isEmpty();
+  }
+
+  @Test
+  void getConditions_emptyForm_isRegulator() {
+    when(applicationDataFilterService.getCaseOfficerCondition(null, false)).thenReturn(Optional.empty());
+
+    var condition = mock(Condition.class);
+    when(teamService.isRegulatorUser(caseManagerUser)).thenReturn(true);
+    when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(condition);
+
+    assertThat(bulkCaseActionSearchFilterService.getConditions(BulkCaseActionSearchFiltersForm.empty(), caseManagerUser))
+        .containsExactly(condition);
   }
 
   @Test
@@ -88,14 +116,19 @@ class BulkCaseActionSearchFilterServiceTest {
     var caseOfficerCondition = mock(Condition.class);
     when(applicationDataFilterService.getCaseOfficerCondition(form.caseOfficerWuaId(), form.includeUnassignedCaseOfficer())).thenReturn(Optional.of(caseOfficerCondition));
 
-    assertThat(bulkCaseActionSearchFilterService.getConditions(form)).containsExactly(
+    var userCondition = mock(Condition.class);
+    when(teamService.isRegulatorUser(caseManagerUser)).thenReturn(true);
+    when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(userCondition);
+
+    assertThat(bulkCaseActionSearchFilterService.getConditions(form, caseManagerUser)).containsExactly(
         operatorCondition,
         geographicAreasCondition,
         aceFlagStatusesCondition,
         assetTypesQueryCondition,
         fieldAssetKeyCondition,
         terminalAssetKeyCondition,
-        caseOfficerCondition
+        caseOfficerCondition,
+        userCondition
     );
   }
 
