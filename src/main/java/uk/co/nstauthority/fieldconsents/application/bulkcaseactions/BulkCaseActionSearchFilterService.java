@@ -1,10 +1,16 @@
 package uk.co.nstauthority.fieldconsents.application.bulkcaseactions;
 
+import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
+import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterService.UNASSIGNED;
+
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.jooq.Condition;
 import org.springframework.stereotype.Service;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentService;
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
@@ -21,15 +27,18 @@ class BulkCaseActionSearchFilterService {
   private final ApplicationDataFilterFormService filterFormService;
   private final ApplicationDataFilterService applicationDataFilterService;
   private final TeamService teamService;
+  private final CaseAssignmentService caseAssignmentService;
 
   BulkCaseActionSearchFilterService(
       ApplicationDataFilterFormService filterFormService,
       ApplicationDataFilterService applicationDataFilterService,
-      TeamService teamService
+      TeamService teamService,
+      CaseAssignmentService caseAssignmentService
   ) {
     this.filterFormService = filterFormService;
     this.applicationDataFilterService = applicationDataFilterService;
     this.teamService = teamService;
+    this.caseAssignmentService = caseAssignmentService;
   }
 
   public RestSearchItem getPrefilledOrganisation(Integer operatorId) {
@@ -38,6 +47,17 @@ class BulkCaseActionSearchFilterService {
 
   public RestSearchItem getPrefilledAsset(String assetKey) {
     return filterFormService.getPrefilledAsset(assetKey);
+  }
+
+  public Map<String, String> getCaseOfficerDisplayOptions() {
+    var caseOfficerDisplayOptions = new LinkedHashMap<String, String>();
+    caseOfficerDisplayOptions.put(UNASSIGNED, "Unassigned");
+
+    for (var energyPortalUser : caseAssignmentService.getCurrentCaseOfficers()) {
+      caseOfficerDisplayOptions.put(energyPortalUser.webUserAccountId().toString(), energyPortalUser.displayName());
+    }
+
+    return caseOfficerDisplayOptions;
   }
 
   public List<Condition> getConditions(BulkCaseActionSearchFiltersForm filtersForm, ServiceUserDetail user) {
@@ -72,8 +92,8 @@ class BulkCaseActionSearchFilterService {
         .map(applicationDataFilterService::getTerminalCondition)
         .ifPresent(conditions::add);
 
-    applicationDataFilterService
-        .getCaseOfficerCondition(filtersForm.caseOfficerWuaId(), Boolean.TRUE.equals(filtersForm.includeUnassignedCaseOfficer()))
+    Optional.ofNullable(filtersForm.caseOfficerWuaId())
+        .flatMap(this::getCaseOfficerCondition)
         .ifPresent(conditions::add);
 
     getUserCondition(user).ifPresent(conditions::add);
@@ -87,6 +107,18 @@ class BulkCaseActionSearchFilterService {
     }
 
     return Optional.of(applicationDataFilterService.getSubmittedApplicationStatusCondition());
+  }
+
+  public Optional<Condition> getCaseOfficerCondition(String caseOfficerWuaId) {
+    if (UNASSIGNED.equals(caseOfficerWuaId)) {
+      return Optional.of(APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.isNull());
+    }
+
+    try {
+      return Optional.of(APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.eq(Integer.parseInt(caseOfficerWuaId)));
+    } catch (NumberFormatException e) {
+      return Optional.empty();
+    }
   }
 
 }

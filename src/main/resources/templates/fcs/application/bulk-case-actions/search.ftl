@@ -53,10 +53,9 @@
             terminalAssetSearchRestUrl=terminalAssetSearchRestUrl
           />
           <@dataItemFilter.caseOfficerFilter
-            caseOfficerWuaIdPath="filtersForm.caseOfficerWuaId"
-            includeUnassignedCaseOfficerPath="filtersForm.includeUnassignedCaseOfficer"
+            path="filtersForm.caseOfficerWuaId"
             form=filtersForm
-            expanded=(filtersForm.caseOfficerWuaId()?has_content || filtersForm.includeUnassignedCaseOfficer()?has_content)
+            expanded=filtersForm.caseOfficerWuaId()?has_content
             caseOfficerOptions=caseOfficerOptions
           />
         </@fdsSearch.searchFilterList>

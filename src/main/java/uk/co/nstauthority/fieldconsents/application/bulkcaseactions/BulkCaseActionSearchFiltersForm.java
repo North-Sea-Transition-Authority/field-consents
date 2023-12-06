@@ -10,8 +10,7 @@ public record BulkCaseActionSearchFiltersForm(
     Integer operatorId,
     String fieldAssetKey,
     String terminalAssetKey,
-    Long caseOfficerWuaId,
-    Boolean includeUnassignedCaseOfficer,
+    String caseOfficerWuaId,
     Set<GeographicArea> geographicAreas,
     Set<AceFlagStatus> aceFlagStatuses,
     Set<AssetTypeWithShore> assetTypesWithShore
@@ -19,7 +18,6 @@ public record BulkCaseActionSearchFiltersForm(
 
   public static BulkCaseActionSearchFiltersForm empty() {
     return new BulkCaseActionSearchFiltersForm(
-        null,
         null,
         null,
         null,

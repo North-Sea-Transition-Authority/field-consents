@@ -3,7 +3,6 @@ package uk.co.nstauthority.fieldconsents.query;
 import static org.apache.commons.lang3.StringUtils.isNumeric;
 import static org.jooq.impl.DSL.exists;
 import static org.jooq.impl.DSL.falseCondition;
-import static org.jooq.impl.DSL.or;
 import static org.jooq.impl.DSL.year;
 import static uk.co.nstauthority.fieldconsents.assets.AssetType.FIELD;
 import static uk.co.nstauthority.fieldconsents.assets.AssetType.TERMINAL;
@@ -43,6 +42,7 @@ import uk.co.nstauthority.fieldconsents.search.AceFlagStatus;
 @Service
 public class ApplicationDataFilterService {
 
+  public static final String UNASSIGNED = "unassigned";
   public static final String FIELD_LOOKUP_PURPOSE = "Lookup field for application data";
   public static final String TERMINAL_LOOKUP_PURPOSE = "Lookup terminal for application data";
 
@@ -191,26 +191,6 @@ public class ApplicationDataFilterService {
     }
 
     return conditions.get(0).or(conditions.get(1));
-  }
-
-  public Optional<Condition> getCaseOfficerCondition(Long caseOfficerWuaId, boolean includeApplicationsWithoutCaseOfficer) {
-    var hasCaseOfficerWuaId = caseOfficerWuaId != null;
-
-    if (hasCaseOfficerWuaId && includeApplicationsWithoutCaseOfficer) {
-      return Optional.of(or(
-          APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.eq(caseOfficerWuaId.intValue()),
-          APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.isNull()));
-    }
-
-    if (hasCaseOfficerWuaId) {
-      return Optional.of(APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.eq(caseOfficerWuaId.intValue()));
-    }
-
-    if (!includeApplicationsWithoutCaseOfficer) {
-      return Optional.of(APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.isNotNull());
-    }
-
-    return Optional.empty();
   }
 
   private Condition getSubmittedYearQueryCondition(Integer submittedYear) {

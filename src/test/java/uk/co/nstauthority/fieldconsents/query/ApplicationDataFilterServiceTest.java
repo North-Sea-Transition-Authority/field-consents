@@ -4,9 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.jooq.impl.DSL.exists;
 import static org.jooq.impl.DSL.falseCondition;
-import static org.jooq.impl.DSL.or;
 import static org.jooq.impl.DSL.year;
-import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -29,9 +27,6 @@ import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterServic
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Stream;
-import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
@@ -40,9 +35,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
@@ -389,52 +382,6 @@ class ApplicationDataFilterServiceTest {
             .and(APPLICATION_FLAGS.FLAG_VALUE.in(Collections.singletonList(isAceApplication)))));
 
     assertThat(applicationDataFilterService.getAceStatusCondition(List.of(aceFlagStatus))).isEqualTo(expectedCondition);
-  }
-
-  @ParameterizedTest
-  @MethodSource("getCaseOfficerCondition_arguments")
-  void getCaseOfficerCondition_withCaseOfficerId_includeApplicationsWithoutCaseOfficer(
-      Long caseOfficerWuaId,
-      Boolean includeApplicationsWithoutCaseOfficer,
-      Optional<Condition> expectedCondition
-  ) {
-    var actualCondition = applicationDataFilterService.getCaseOfficerCondition(caseOfficerWuaId, includeApplicationsWithoutCaseOfficer);
-    assertThat(actualCondition).isEqualTo(expectedCondition);
-  }
-
-  private static Stream<Arguments> getCaseOfficerCondition_arguments() {
-    var caseOfficerWuaId = 1L;
-    var includeApplicationsWithoutCaseOfficer = true;
-    var dontIncludeApplicationsWithoutCaseOfficer = false;
-
-    return Stream.of(
-        arguments(
-            caseOfficerWuaId,
-            includeApplicationsWithoutCaseOfficer,
-            Optional.of(
-                or(APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.eq((int) caseOfficerWuaId), APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.isNull())
-            )
-        ),
-        arguments(
-            caseOfficerWuaId,
-            dontIncludeApplicationsWithoutCaseOfficer,
-            Optional.of(
-              APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.eq((int) caseOfficerWuaId)
-            )
-        ),
-        arguments(
-            null,
-            dontIncludeApplicationsWithoutCaseOfficer,
-            Optional.of(
-              APPLICATION_VERSIONS.CASE_OFFICER_WUA_ID.isNotNull()
-            )
-        ),
-        arguments(
-            null,
-            includeApplicationsWithoutCaseOfficer,
-            Optional.empty() // the same as not adding a condition
-        )
-    );
   }
 
 }

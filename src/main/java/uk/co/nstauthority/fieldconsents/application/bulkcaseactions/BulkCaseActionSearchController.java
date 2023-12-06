@@ -14,19 +14,16 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.assigncaseofficer.BulkAssignCaseOfficerController;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentService;
 import uk.co.nstauthority.fieldconsents.assets.AssetRestController;
 import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.assets.fields.GeographicArea;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.HasPermission;
-import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItem;
 import uk.co.nstauthority.fieldconsents.search.AceFlagStatus;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
-import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 
 @Controller
 @RequestMapping("bulk-case-actions/search")
@@ -38,18 +35,15 @@ public class BulkCaseActionSearchController {
   private final BulkCaseActionService bulkCaseActionService;
   private final BulkCaseActionControllerHelperService controllerHelperService;
   private final BulkCaseActionSearchFilterService searchFilterService;
-  private final CaseAssignmentService caseAssignmentService;
 
   BulkCaseActionSearchController(
       BulkCaseActionService bulkCaseActionService,
       BulkCaseActionControllerHelperService controllerHelperService,
-      BulkCaseActionSearchFilterService searchFilterService,
-      CaseAssignmentService caseAssignmentService
+      BulkCaseActionSearchFilterService searchFilterService
   ) {
     this.bulkCaseActionService = bulkCaseActionService;
     this.controllerHelperService = controllerHelperService;
     this.searchFilterService = searchFilterService;
-    this.caseAssignmentService = caseAssignmentService;
   }
 
   @GetMapping
@@ -80,12 +74,7 @@ public class BulkCaseActionSearchController {
     var prefilledOperator = searchFilterService.getPrefilledOrganisation(filtersForm.operatorId());
     var prefilledField = searchFilterService.getPrefilledAsset(filtersForm.fieldAssetKey());
     var prefilledTerminal = searchFilterService.getPrefilledAsset(filtersForm.terminalAssetKey());
-    var caseOfficerOptions = caseAssignmentService.getCurrentCaseOfficers()
-        .stream()
-        .collect(StreamUtils.toLinkedHashMap(
-            energyPortalUserDto -> energyPortalUserDto.webUserAccountId().toString(),
-            EnergyPortalUserDto::displayName
-        ));
+    var caseOfficerOptions = searchFilterService.getCaseOfficerDisplayOptions();
 
     var clearFiltersUrl = ReverseRouter.route(on(this.getClass()).clearSearchFilters(null));
     var fieldAssetSearchRestUrl = ReverseRouter.route(on(AssetRestController.class).searchFieldAssets(null));

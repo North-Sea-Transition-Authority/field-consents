@@ -28,7 +28,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.ResultMatcher;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.assigncaseofficer.BulkAssignCaseOfficerController;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentService;
 import uk.co.nstauthority.fieldconsents.assets.AssetRestController;
 import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.assets.fields.GeographicArea;
@@ -57,9 +56,6 @@ class BulkCaseActionSearchControllerTest extends AbstractControllerTest {
   @MockBean
   private BulkCaseActionSearchFilterService searchFilterService;
 
-  @MockBean
-  private CaseAssignmentService caseAssignmentService;
-
   private MockHttpSession session;
 
   private RestSearchItem prefilledOperator;
@@ -67,8 +63,6 @@ class BulkCaseActionSearchControllerTest extends AbstractControllerTest {
   private RestSearchItem prefilledField;
 
   private RestSearchItem prefilledTerminal;
-
-  private List<EnergyPortalUserDto> caseOfficers;
 
   private Map<String, String> caseOfficerOptions;
 
@@ -93,7 +87,6 @@ class BulkCaseActionSearchControllerTest extends AbstractControllerTest {
         false,
         true
     );
-    caseOfficers = List.of(caseOfficer);
 
     caseOfficerOptions = Map.of(
         caseOfficer.webUserAccountId().toString(),
@@ -232,7 +225,7 @@ class BulkCaseActionSearchControllerTest extends AbstractControllerTest {
     );
 
     verify(controllerHelperService).updateSearchFilters(session, new BulkCaseActionSearchFiltersForm(
-        null, null, null, null, null, null, null, null
+        null, null, null, null, null, null, null
     ));
   }
 
@@ -263,8 +256,7 @@ class BulkCaseActionSearchControllerTest extends AbstractControllerTest {
         1,
         "2",
         "3",
-        4L,
-        true,
+        "4",
         Set.of(GeographicArea.CNS, GeographicArea.IS, GeographicArea.LAND),
         Set.of(AceFlagStatus.ACE, AceFlagStatus.NON_ACE),
         Set.of(AssetTypeWithShore.TERMINAL, AssetTypeWithShore.FIELD_OFFSHORE)
@@ -302,7 +294,7 @@ class BulkCaseActionSearchControllerTest extends AbstractControllerTest {
     when(searchFilterService.getPrefilledOrganisation(filtersForm.operatorId())).thenReturn(prefilledField);
     when(searchFilterService.getPrefilledAsset(filtersForm.fieldAssetKey())).thenReturn(prefilledField);
     when(searchFilterService.getPrefilledAsset(filtersForm.terminalAssetKey())).thenReturn(prefilledTerminal);
-    when(caseAssignmentService.getCurrentCaseOfficers()).thenReturn(caseOfficers);
+    when(searchFilterService.getCaseOfficerDisplayOptions()).thenReturn(caseOfficerOptions);
   }
 
   private ResultMatcher[] containsSearchFilterData(BulkCaseActionSearchFiltersForm filtersForm) {

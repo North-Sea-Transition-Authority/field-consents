@@ -94,20 +94,13 @@
   </@fdsSearch.searchFilterItem>
 </#macro>
 
-<#macro caseOfficerFilter
-  form
-  expanded
-  caseOfficerOptions
-  caseOfficerWuaIdPath="form.caseOfficerWuaId"
-  includeUnassignedCaseOfficerPath="form.includeUnassignedCaseOfficer"
->
+<#macro caseOfficerFilter form expanded caseOfficerOptions path="form.caseOfficerWuaId">
   <@fdsSearch.searchFilterItem itemName="Case officer" expanded=expanded>
     <@fdsSearchSelector.searchSelectorEnhanced
-      path=caseOfficerWuaIdPath
+      path=path
       options=caseOfficerOptions
       labelText=""
       labelHeadingClass="govuk-input--width-10"
     />
-    <@fdsSearch.searchCheckboxes path=includeUnassignedCaseOfficerPath checkboxes={"true": "Show cases without a case officer"}/>
   </@fdsSearch.searchFilterItem>
 </#macro>
