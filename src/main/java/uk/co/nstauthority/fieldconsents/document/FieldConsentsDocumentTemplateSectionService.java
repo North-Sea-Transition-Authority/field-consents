@@ -3,6 +3,7 @@ package uk.co.nstauthority.fieldconsents.document;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
@@ -61,5 +62,31 @@ public class FieldConsentsDocumentTemplateSectionService {
     }
 
     return sectionSummaryViews;
+  }
+
+  void createDocumentTemplateSection(
+      DocumentTemplateDto documentTemplateDto,
+      @Nullable DocumentTemplateSectionDto parentDto,
+      DocumentTemplateSectionForm form,
+      int displayOrder
+  ) {
+    documentTemplateSectionService.createDocumentTemplateSection(
+        documentTemplateDto,
+        parentDto,
+        form.title(),
+        form.content(),
+        displayOrder
+    );
+  }
+
+  void editDocumentTemplateSection(
+      DocumentTemplateSectionDto documentTemplateSectionDto,
+      DocumentTemplateSectionForm form
+  ) {
+    documentTemplateSectionService.editDocumentTemplateSection(
+        documentTemplateSectionDto,
+        form.title(),
+        form.content()
+    );
   }
 }

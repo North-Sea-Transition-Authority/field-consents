@@ -43,10 +43,18 @@ class DocumentTemplateServiceTest {
 
     var documentTemplate = documentTemplateCaptor.getValue();
 
-    assertThat(documentTemplate.getTitle()).isEqualTo(title);
-    assertThat(documentTemplate.getDescription()).isEqualTo(description);
-    assertThat(documentTemplate.getTemplatePath()).isEqualTo(templatePath);
-    assertThat(documentTemplate.getDisplayOrder()).isEqualTo(displayOrder);
+    assertThat(documentTemplate)
+        .extracting(
+            DocumentTemplate::getTitle,
+            DocumentTemplate::getDescription,
+            DocumentTemplate::getTemplatePath,
+            DocumentTemplate::getDisplayOrder
+        ).containsExactly(
+            title,
+            description,
+            templatePath,
+            displayOrder
+        );
 
     assertThat(documentTemplateDto).isEqualTo(DocumentTemplateDto.from(documentTemplate));
   }

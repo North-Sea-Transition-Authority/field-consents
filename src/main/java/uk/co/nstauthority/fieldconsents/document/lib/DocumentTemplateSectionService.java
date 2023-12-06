@@ -3,9 +3,11 @@ package uk.co.nstauthority.fieldconsents.document.lib;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimaps;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -46,9 +48,79 @@ public class DocumentTemplateSectionService {
     documentTemplateSection.setContent(content);
     documentTemplateSection.setDisplayOrder(displayOrder);
 
-    documentTemplateSectionRepository.save(documentTemplateSection);
+    var documentTemplateSectionsToSave = new ArrayList<DocumentTemplateSection>();
+
+    documentTemplateSectionsToSave.add(documentTemplateSection);
+
+    // If a sibling with the same display order exists, shift its display order up by 1 and any following siblings
+    var siblingsWithEqualOrGreaterDisplayOrder =
+        documentTemplateSectionRepository.findAllByParent_IdAndDisplayOrderGreaterThanEqual(
+            parentDto != null ? parentDto.id() : null,
+            displayOrder
+        )
+            .stream()
+            .collect(Collectors.toMap(DocumentTemplateSection::getDisplayOrder, Function.identity()));
+
+    for (int i = displayOrder; siblingsWithEqualOrGreaterDisplayOrder.containsKey(i); i++) {
+      var siblingToShift = siblingsWithEqualOrGreaterDisplayOrder.get(i);
+
+      siblingToShift.setDisplayOrder(i + 1);
+
+      documentTemplateSectionsToSave.add(siblingToShift);
+    }
+
+    documentTemplateSectionRepository.saveAll(documentTemplateSectionsToSave);
 
     return DocumentTemplateSectionDto.from(documentTemplateSection, List.of());
+  }
+
+  @Transactional
+  public void editDocumentTemplateSection(
+      DocumentTemplateSectionDto documentTemplateSectionDto,
+      String title,
+      String content
+  ) {
+    var documentTemplateSection = getDocumentTemplateSectionOrThrow(documentTemplateSectionDto.id());
+
+    documentTemplateSection.setTitle(title);
+    documentTemplateSection.setContent(content);
+
+    documentTemplateSectionRepository.save(documentTemplateSection);
+  }
+
+  @Transactional
+  public void deleteDocumentTemplateSection(DocumentTemplateSectionDto documentTemplateSectionDto) {
+    var idsToDelete = new ArrayList<UUID>();
+
+    var documentTemplateSectionId = documentTemplateSectionDto.id();
+    idsToDelete.add(documentTemplateSectionId);
+
+    var descendantSectionIds = documentTemplateSectionDto.descendants().stream()
+        .map(DocumentTemplateSectionDto::id)
+        .toList();
+    idsToDelete.addAll(descendantSectionIds);
+
+    documentTemplateSectionRepository.deleteAllById(idsToDelete);
+  }
+
+  public DocumentTemplateSectionDto getDocumentTemplateSectionDtoOrThrow(UUID documentTemplateSectionId) {
+    var documentTemplateSection = getDocumentTemplateSectionOrThrow(documentTemplateSectionId);
+    var documentTemplateSectionsByParentId =
+        getDocumentTemplateSectionsByParentIdMultimap(documentTemplateSection.getDocumentTemplate().getId());
+
+    return getDocumentTemplateSectionDto(documentTemplateSection, documentTemplateSectionsByParentId);
+  }
+
+  DocumentTemplateSectionDto getDocumentTemplateSectionDto(
+      DocumentTemplateSection documentTemplateSection,
+      ListMultimap<UUID, DocumentTemplateSection> documentTemplateSectionsByParentId
+  ) {
+    var children = documentTemplateSectionsByParentId.get(documentTemplateSection.getId());
+    var childrenDtos = children.stream()
+        .map(child -> getDocumentTemplateSectionDto(child, documentTemplateSectionsByParentId))
+        .toList();
+
+    return DocumentTemplateSectionDto.from(documentTemplateSection, childrenDtos);
   }
 
   DocumentTemplateSection getDocumentTemplateSectionOrThrow(UUID documentTemplateSectionId) {
@@ -61,17 +133,7 @@ public class DocumentTemplateSectionService {
   }
 
   public List<DocumentTemplateSectionDto> getDocumentTemplateSectionDtos(DocumentTemplateDto documentTemplateDto) {
-    var documentTemplateSections =
-        documentTemplateSectionRepository.findAllByDocumentTemplateId(documentTemplateDto.id());
-
-    var documentTemplateSectionsByParentId = documentTemplateSections.stream()
-        .collect(
-            Multimaps.toMultimap(
-                section -> section.getParent() == null ? null : section.getParent().getId(),
-                Function.identity(),
-                ArrayListMultimap::create
-            )
-        );
+    var documentTemplateSectionsByParentId = getDocumentTemplateSectionsByParentIdMultimap(documentTemplateDto.id());
 
     var topLevelDocumentTemplateSections = documentTemplateSectionsByParentId.get(null);
 
@@ -85,15 +147,16 @@ public class DocumentTemplateSectionService {
         .toList();
   }
 
-  DocumentTemplateSectionDto getDocumentTemplateSectionDto(
-      DocumentTemplateSection documentTemplateSection,
-      ListMultimap<UUID, DocumentTemplateSection> documentTemplateSectionsByParentId
+  ListMultimap<UUID, DocumentTemplateSection> getDocumentTemplateSectionsByParentIdMultimap(
+      UUID documentTemplateId
   ) {
-    var children = documentTemplateSectionsByParentId.get(documentTemplateSection.getId());
-    var childrenDtos = children.stream()
-        .map(child -> getDocumentTemplateSectionDto(child, documentTemplateSectionsByParentId))
-        .toList();
-
-    return DocumentTemplateSectionDto.from(documentTemplateSection, childrenDtos);
+    return documentTemplateSectionRepository.findAllByDocumentTemplateId(documentTemplateId).stream()
+        .collect(
+            Multimaps.toMultimap(
+                section -> section.getParent() == null ? null : section.getParent().getId(),
+                Function.identity(),
+                ArrayListMultimap::create
+            )
+        );
   }
 }

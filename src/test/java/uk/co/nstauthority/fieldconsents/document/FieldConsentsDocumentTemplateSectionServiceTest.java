@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.document;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -29,7 +30,8 @@ class FieldConsentsDocumentTemplateSectionServiceTest {
 
     var documentTemplateSectionDtos = List.of(DocumentTemplateSectionDtoTestUtil.builder().build());
 
-    var sectionSummaryViewsForSectionSiblings = List.of(new DocumentTemplateSectionSummaryView(null, null));
+    var sectionSummaryViewsForSectionSiblings =
+        List.of(new DocumentTemplateSectionSummaryView(null, null, null, null, null, null, null));
 
     when(documentTemplateSectionService.getDocumentTemplateSectionDtos(documentTemplateDto))
         .thenReturn(documentTemplateSectionDtos);
@@ -102,6 +104,43 @@ class FieldConsentsDocumentTemplateSectionServiceTest {
             "1.2.2",
             siblingDocumentTemplateSectionDto2Child2
         )
+    );
+  }
+
+  @Test
+  void createDocumentTemplateSection() {
+    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
+    var parentDto = DocumentTemplateSectionDtoTestUtil.builder().build();
+    var form = DocumentTemplateSectionFormTestUtil.builder().build();
+    int displayOrder = 1;
+
+    fieldConsentsDocumentTemplateSectionService.createDocumentTemplateSection(
+        documentTemplateDto,
+        parentDto,
+        form,
+        displayOrder
+    );
+
+    verify(documentTemplateSectionService).createDocumentTemplateSection(
+        documentTemplateDto,
+        parentDto,
+        form.title(),
+        form.content(),
+        displayOrder
+    );
+  }
+
+  @Test
+  void editDocumentTemplateSection() {
+    var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
+    var form = DocumentTemplateSectionFormTestUtil.builder().build();
+
+    fieldConsentsDocumentTemplateSectionService.editDocumentTemplateSection(documentTemplateSectionDto, form);
+
+    verify(documentTemplateSectionService).editDocumentTemplateSection(
+        documentTemplateSectionDto,
+        form.title(),
+        form.content()
     );
   }
 }
