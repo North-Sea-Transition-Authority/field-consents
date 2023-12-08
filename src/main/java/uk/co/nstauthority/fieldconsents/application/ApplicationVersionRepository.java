@@ -17,6 +17,7 @@ public interface ApplicationVersionRepository extends CrudRepository<Application
       """
       FROM ApplicationVersion av
       WHERE av.application.id IN :applicationIds
+      AND av.status != 'DELETED'
       AND av.version = (
         SELECT MAX(av2.version)
         FROM ApplicationVersion av2
