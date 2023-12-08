@@ -154,6 +154,8 @@ class CamAssignmentControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
+    when(applicationService.generateApplicationReference(applicationVersion))
+        .thenReturn(DUMMY_APP_REF);
 
     doCallRealMethod().when(camAssignmentFormValidator).validate(any(), any());
 
@@ -162,7 +164,7 @@ class CamAssignmentControllerTest extends AbstractApplicationControllerTest {
 
     var expectedNotificationBanner = NotificationBanner.builder()
         .withBannerType(NotificationBannerType.SUCCESS)
-        .withHeadingContent("You have assigned this case to %s".formatted(ENERGY_PORTAL_USER_1.displayName()))
+        .withHeadingContent("You have assigned %s to %s".formatted(DUMMY_APP_REF, ENERGY_PORTAL_USER_1.displayName()))
         .build();
 
     mockMvc.perform(

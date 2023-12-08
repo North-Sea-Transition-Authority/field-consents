@@ -3,6 +3,7 @@ package uk.co.nstauthority.fieldconsents.workarea;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ALLOCATE_CONSULTATION;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ASSIGN_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.AUTHORISE_FCS_CONSENTS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.RESPOND_TO_CONSULTATION;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS;
@@ -38,20 +39,28 @@ public enum WorkAreaTab {
       30,
       EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS),
       ApplicationWorkAreaPriorityGroup.REGULATOR_TECHNICAL_REVIEWER),
+  MY_CAM_APPLICATIONS(
+      "My applications (CAM)",
+      "camMyApplications",
+      "cam-my-applications",
+      ReverseRouter.route(on(WorkAreaController.class).getWorkAreaCamMyApplications(null, null)),
+      40,
+      EnumSet.of(AUTHORISE_FCS_CONSENTS),
+      ApplicationWorkAreaPriorityGroup.REGULATOR),
   ALL_APPLICATIONS(
       "All applications",
       "allApplications",
       "all-applications",
       ReverseRouter.route(on(WorkAreaController.class).getWorkAreaRegulatorAllApplications(null, null)),
-      40,
-      EnumSet.of(ASSIGN_FCS_APPLICATIONS),
+      50,
+      EnumSet.of(ASSIGN_FCS_APPLICATIONS, AUTHORISE_FCS_CONSENTS),
       ApplicationWorkAreaPriorityGroup.REGULATOR),
   UNASSIGNED_APPLICATIONS(
       "Unassigned",
       "unassigned",
       "unassigned",
       ReverseRouter.route(on(WorkAreaController.class).getWorkAreaCaseOfficerUnassignedApplications(null, null)),
-      50,
+      60,
       EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS),
       ApplicationWorkAreaPriorityGroup.REGULATOR),
   ALL_CONSULTATIONS(
@@ -59,7 +68,7 @@ public enum WorkAreaTab {
       "allConsultations",
       "all-consultations",
       ReverseRouter.route(on(WorkAreaController.class).getWorkAreaAllConsultations(null, null)),
-      60,
+      70,
       EnumSet.of(ALLOCATE_CONSULTATION),
       ApplicationWorkAreaPriorityGroup.CONSULTEE),
   UNASSIGNED_CONSULTATIONS(
@@ -67,7 +76,7 @@ public enum WorkAreaTab {
       "unassignedConsultations",
       "unassigned-consultations",
       ReverseRouter.route(on(WorkAreaController.class).getWorkAreaUnassignedConsultations(null, null)),
-      70,
+      80,
       EnumSet.of(ALLOCATE_CONSULTATION),
       ApplicationWorkAreaPriorityGroup.CONSULTEE),
   MY_CONSULTATIONS(
@@ -75,7 +84,7 @@ public enum WorkAreaTab {
       "myConsultations",
       "my-consultations",
       ReverseRouter.route(on(WorkAreaController.class).getWorkAreaMyConsultations(null, null)),
-      80,
+      90,
       EnumSet.of(RESPOND_TO_CONSULTATION),
       ApplicationWorkAreaPriorityGroup.CONSULTEE)
   ;

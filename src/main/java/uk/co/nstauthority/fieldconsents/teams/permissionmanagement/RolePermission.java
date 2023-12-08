@@ -20,7 +20,8 @@ public enum RolePermission {
   RESPOND_TO_CONSULTATION,
   MANAGE_ASSETS,
   MANAGE_FEE_PERIODS,
-  MANAGE_DOCUMENT_TEMPLATES
+  MANAGE_DOCUMENT_TEMPLATES,
+  AUTHORISE_FCS_CONSENTS
   ;
 
   public static final Set<RolePermission> VIEW_PERMISSIONS =
@@ -30,6 +31,7 @@ public enum RolePermission {
       EnumSet.of(
           RolePermission.PROCESS_FCS_APPLICATIONS,
           RolePermission.ASSIGN_FCS_APPLICATIONS,
-          RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS
+          RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS,
+          RolePermission.AUTHORISE_FCS_CONSENTS
       );
 }

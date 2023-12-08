@@ -97,7 +97,8 @@ public class ApplicationDataItemDtoService {
         .flatMap(dataItem -> Stream.of(
                 dataItem.getSubmittedByWuaId(),
                 dataItem.getCaseOfficerWuaId(),
-                dataItem.getTechnicalReviewerWuaId()
+                dataItem.getTechnicalReviewerWuaId(),
+                dataItem.getCamWuaId()
             ))
         .filter(Objects::nonNull)
         .map(WebUserAccountId::new)
@@ -173,6 +174,14 @@ public class ApplicationDataItemDtoService {
                                       Map<WebUserAccountId, EnergyPortalUserDto> portalUserDtosMap) {
     return Objects.nonNull(dataItemDto.getCaseOfficerWuaId())
         ? portalUserDtosMap.get(WebUserAccountId.from(dataItemDto.getCaseOfficerWuaId())).displayName()
+        : "";
+  }
+
+  public String getDisplayCamUser(ApplicationDataItemDto dataItemDto,
+                                  Map<WebUserAccountId, EnergyPortalUserDto> portalUserDtosMap,
+                                  TeamType teamType) {
+    return TeamType.REGULATOR.equals(teamType) && Objects.nonNull(dataItemDto.getCamWuaId())
+        ? portalUserDtosMap.get(WebUserAccountId.from(dataItemDto.getCamWuaId())).displayName()
         : "";
   }
 
@@ -263,6 +272,7 @@ public class ApplicationDataItemDtoService {
         .withSubmittedBy(getSubmittedByName(dataItemDto, portalUserDtoByWuaId))
         .withAceFlag(getDisplayAceFlag(dataItemDto))
         .withCaseOfficer(getDisplayCaseOfficer(dataItemDto, portalUserDtoByWuaId))
+        .withCamUser(getDisplayCamUser(dataItemDto, portalUserDtoByWuaId, teamType))
         .withWithdrawalOpen(withdrawalOpen)
         .withTechnicalReviewer(getDisplayTechnicalReviewer(dataItemDto, portalUserDtoByWuaId, teamType))
         .withTechnicalReviewOpen(dataItemDto.getTechnicalReviewOpen())

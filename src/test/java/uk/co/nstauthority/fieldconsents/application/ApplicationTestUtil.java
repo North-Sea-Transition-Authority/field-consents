@@ -6,6 +6,7 @@ import java.time.temporal.ChronoUnit;
 public class ApplicationTestUtil {
   public static final long USER_WUA_ID = 1;
   public static final long CASE_OFFICER_WUA_ID = 10;
+  public static final long CASE_USER_WUA_ID = 20;
 
   public static final int APPLICATION_ID = 1;
   public static final int APPLICATION_VERSION_ID = 1;

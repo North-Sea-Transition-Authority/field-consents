@@ -101,7 +101,8 @@ public class CamAssignmentController {
 
     NotificationBannerUtil.addSuccessNotification(
         redirectAttributes,
-        "You have assigned this case to %s".formatted(camUser.displayName())
+        "You have assigned %s to %s".formatted(applicationService.generateApplicationReference(applicationVersion),
+            camUser.displayName())
     );
 
     return ReverseRouter.redirect(on(WorkAreaController.class).getWorkArea(null, null));

@@ -50,6 +50,10 @@
           Case officer: ${dataItem.caseOfficer()}
           <br/>
         </#if>
+        <#if dataItem.camUser()?has_content>
+          CAM: ${dataItem.camUser()}
+          <br/>
+        </#if>
         <#if dataItem.technicalReviewer()?has_content>
           Technical reviewer: ${dataItem.technicalReviewer()}
         </#if>

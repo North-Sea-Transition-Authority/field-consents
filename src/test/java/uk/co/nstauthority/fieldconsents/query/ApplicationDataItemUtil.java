@@ -7,6 +7,7 @@ import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.A
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_VERSION_NUMBER;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.CACHED_PRIMARY_OPERATOR_NAME_1;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.CASE_OFFICER_WUA_ID;
+import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.CASE_USER_WUA_ID;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_1;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.USER_WUA_ID;
 import static uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil.ANNUAL_CONSENT_YEAR;
@@ -44,11 +45,15 @@ public class ApplicationDataItemUtil {
   public static EnergyPortalUserDto technicalReviewer = EnergyPortalUserDtoTestUtil.Builder()
       .withWebUserAccountId(TECHNICAL_REVIEWER_WUA_ID)
       .build();
+  public static EnergyPortalUserDto camUser = EnergyPortalUserDtoTestUtil.Builder()
+      .withWebUserAccountId(CASE_USER_WUA_ID)
+      .build();
 
   public static Map<WebUserAccountId, EnergyPortalUserDto> portalUserDtosMap = Map.of(
       WebUserAccountId.from(submitter.webUserAccountId()), submitter,
       WebUserAccountId.from(caseOfficer.webUserAccountId()), caseOfficer,
-      WebUserAccountId.from(technicalReviewer.webUserAccountId()), technicalReviewer
+      WebUserAccountId.from(technicalReviewer.webUserAccountId()), technicalReviewer,
+      WebUserAccountId.from(camUser.webUserAccountId()), camUser
     );
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForAnnualProductionInProgressForField() {
@@ -205,7 +210,7 @@ public class ApplicationDataItemUtil {
         "");
   }
 
-  public static ApplicationDataItemDto getApplicationDataItemDtoForShortVentAssignedForTerminal() {
+  public static ApplicationDataItemDto getApplicationDataItemDtoForShortVentAssignedToCaseOfficerForTerminal() {
     return new ApplicationDataItemDto(
         APPLICATION_ID,
         APPLICATION_VERSION_ID,
@@ -229,6 +234,43 @@ public class ApplicationDataItemUtil {
         null,
         CASE_OFFICER_WUA_ID,
         null,
+        null,
+        false,
+        TECHNICAL_REVIEWER_WUA_ID,
+        false,
+        null,
+        false,
+        null,
+        false,
+        null,
+        null,
+        "");
+  }
+
+  public static ApplicationDataItemDto getApplicationDataItemDtoForShortVentAssignedToCamForTerminal() {
+    return new ApplicationDataItemDto(
+        APPLICATION_ID,
+        APPLICATION_VERSION_ID,
+        ApplicationType.VENT,
+        0,
+        APPLICATION_NO,
+        APPLICATION_VERSION_NUMBER,
+        PRIMARY_OPERATOR_OU_ID_1,
+        ApplicationVersionStatus.SUBMITTED,
+        AssetType.TERMINAL,
+        TERMINAL_ID_1,
+        TERMINAL_NAME_1,
+        ConsentLengthType.SHORT_TERM,
+        null,
+        SHORT_TERM_START_DATE,
+        SHORT_TERM_END_DATE,
+        null,
+        null,
+        Instant.now(),
+        USER_WUA_ID,
+        null,
+        CASE_OFFICER_WUA_ID,
+        CASE_USER_WUA_ID,
         null,
         false,
         TECHNICAL_REVIEWER_WUA_ID,
@@ -403,6 +445,7 @@ public class ApplicationDataItemUtil {
         ApplicationVersionStatus.SUBMITTED.getDisplayName(),
         SUBMITTED_DATE_TIME,
         String.valueOf(USER_WUA_ID),
+        "",
         "",
         "",
         false,

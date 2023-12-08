@@ -71,6 +71,8 @@ public class WorkAreaFilterService {
       case UNASSIGNED_CONSULTATIONS -> APPLICATION_CONSULTATIONS.RESPONDER_WUA_ID.isNull()
           .and(APPLICATION_CONSULTATIONS.STATUS.eq(ConsultationStatus.OPEN.name()));
       case MY_CONSULTATIONS -> APPLICATION_CONSULTATIONS.RESPONDER_WUA_ID.eq(user.wuaId().intValue());
+      case MY_CAM_APPLICATIONS -> APPLICATION_VERSIONS.CAM_WUA_ID.eq(user.wuaId().intValue())
+          .and(APPLICATION_VERSIONS.CURRENT_CASE_OWNER.eq(RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER.name()));
     };
   }
 

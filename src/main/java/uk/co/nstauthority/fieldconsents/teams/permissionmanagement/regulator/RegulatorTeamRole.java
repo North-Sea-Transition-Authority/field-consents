@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator;
 
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ASSIGN_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.AUTHORISE_FCS_CONSENTS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_CASE_PROCESSING_DOCUMENTS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.GRANT_ROLES;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.MANAGE_ASSETS;
@@ -73,6 +74,7 @@ public enum RegulatorTeamRole implements TeamRole {
       60,
       EnumSet.of(
           MANAGE_FEE_PERIODS,
+          AUTHORISE_FCS_CONSENTS,
           VIEW_FCS_APPLICATIONS,
           VIEW_FCS_CONSENTS,
           VIEW_FCS_CASE_PROCESSING_DOCUMENTS,

@@ -8,6 +8,7 @@ import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.ORG_GROUP_ID_1;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ALLOCATE_CONSULTATION;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ASSIGN_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.AUTHORISE_FCS_CONSENTS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
@@ -282,7 +283,9 @@ class WorkAreaServiceTest {
         .thenReturn(true);
     when(permissionService.hasPermission(user, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)))
         .thenReturn(false);
-    when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS)))
+    when(permissionService.hasPermission(user, EnumSet.of(AUTHORISE_FCS_CONSENTS)))
+        .thenReturn(false);
+    when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS, AUTHORISE_FCS_CONSENTS)))
         .thenReturn(false);
     when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS)))
         .thenReturn(true);
@@ -295,12 +298,14 @@ class WorkAreaServiceTest {
   }
 
   @Test
-  void getTabsAvailableToUser_withAssignFcsApplications() {
+  void getTabsAvailableToUser_withAssignFcsApplicationsAndAuthoriseFcsConsents() {
     when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS)))
         .thenReturn(false);
     when(permissionService.hasPermission(user, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)))
         .thenReturn(false);
-    when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS)))
+    when(permissionService.hasPermission(user, EnumSet.of(AUTHORISE_FCS_CONSENTS)))
+        .thenReturn(false);
+    when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS, AUTHORISE_FCS_CONSENTS)))
         .thenReturn(true);
     when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS)))
         .thenReturn(true);
@@ -320,7 +325,9 @@ class WorkAreaServiceTest {
         .thenReturn(false);
     when(permissionService.hasPermission(user, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)))
         .thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS)))
+    when(permissionService.hasPermission(user, EnumSet.of(AUTHORISE_FCS_CONSENTS)))
+        .thenReturn(false);
+    when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS, AUTHORISE_FCS_CONSENTS)))
         .thenReturn(false);
     when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS)))
         .thenReturn(false);
@@ -335,12 +342,34 @@ class WorkAreaServiceTest {
   }
 
   @Test
+  void getTabsAvailableToUser_withCamUserAuthoriseFcsConsents() {
+    when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS)))
+        .thenReturn(false);
+    when(permissionService.hasPermission(user, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)))
+        .thenReturn(false);
+    when(permissionService.hasPermission(user, EnumSet.of(AUTHORISE_FCS_CONSENTS)))
+        .thenReturn(true);
+    when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS, AUTHORISE_FCS_CONSENTS)))
+        .thenReturn(true);
+    when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS)))
+        .thenReturn(false);
+
+    assertThat(workAreaService.getTabsAvailableToUser(user))
+        .containsExactly(
+            WorkAreaTab.MY_CAM_APPLICATIONS,
+            WorkAreaTab.ALL_APPLICATIONS
+        );
+  }
+
+  @Test
   void getTabsAvailableToUser_withAllocationConsultation() {
     when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS)))
         .thenReturn(false);
     when(permissionService.hasPermission(user, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)))
         .thenReturn(false);
-    when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS)))
+    when(permissionService.hasPermission(user, EnumSet.of(AUTHORISE_FCS_CONSENTS)))
+        .thenReturn(false);
+    when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS, AUTHORISE_FCS_CONSENTS)))
         .thenReturn(false);
     when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS)))
         .thenReturn(false);
@@ -355,12 +384,14 @@ class WorkAreaServiceTest {
   }
 
   @Test
-  void getTabsAvailableToUser_withProcessFcsApplicationsAndAssignFcsApplications() {
+  void getTabsAvailableToUser_withProcessFcsApplicationsAndAssignFcsApplicationsAndAuthoriseFcsConsents() {
     when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS)))
         .thenReturn(true);
     when(permissionService.hasPermission(user, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)))
         .thenReturn(false);
-    when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS)))
+    when(permissionService.hasPermission(user, EnumSet.of(AUTHORISE_FCS_CONSENTS)))
+        .thenReturn(false);
+    when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS, AUTHORISE_FCS_CONSENTS)))
         .thenReturn(true);
     when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS)))
         .thenReturn(true);
@@ -381,7 +412,9 @@ class WorkAreaServiceTest {
         .thenReturn(true);
     when(permissionService.hasPermission(user, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)))
         .thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS)))
+    when(permissionService.hasPermission(user, EnumSet.of(AUTHORISE_FCS_CONSENTS)))
+        .thenReturn(false);
+    when(permissionService.hasPermission(user, EnumSet.of(AUTHORISE_FCS_CONSENTS, ASSIGN_FCS_APPLICATIONS)))
         .thenReturn(false);
     when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS)))
         .thenReturn(true);
@@ -398,12 +431,14 @@ class WorkAreaServiceTest {
   }
 
   @Test
-  void getTabsAvailableToUser_withAssignFcsApplicationsAndTechnicalReviewFcsApplications() {
+  void getTabsAvailableToUser_withAssignFcsApplicationsAndAuthoriseFcsConsentsAndTechnicalReviewFcsApplications() {
     when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS)))
         .thenReturn(false);
     when(permissionService.hasPermission(user, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)))
         .thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS)))
+    when(permissionService.hasPermission(user, EnumSet.of(AUTHORISE_FCS_CONSENTS)))
+        .thenReturn(false);
+    when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS, AUTHORISE_FCS_CONSENTS)))
         .thenReturn(true);
     when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS)))
         .thenReturn(true);
@@ -420,12 +455,14 @@ class WorkAreaServiceTest {
   }
 
   @Test
-  void getTabsAvailableToUser_withProcessFcsApplicationsAndAssignFcsApplicationsAndTechnicalReviewFcsApplications() {
+  void getTabsAvailableToUser_withProcessFcsApplicationsAndAssignFcsApplicationsAndAuthoriseFcsConsentsAndTechnicalReviewFcsApplications() {
     when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS)))
         .thenReturn(true);
     when(permissionService.hasPermission(user, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)))
         .thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS)))
+    when(permissionService.hasPermission(user, EnumSet.of(AUTHORISE_FCS_CONSENTS)))
+        .thenReturn(false);
+    when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS, AUTHORISE_FCS_CONSENTS)))
         .thenReturn(true);
     when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS)))
         .thenReturn(true);
@@ -448,7 +485,9 @@ class WorkAreaServiceTest {
         .thenReturn(true);
     when(permissionService.hasPermission(user, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)))
         .thenReturn(true);
-    when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS)))
+    when(permissionService.hasPermission(user, EnumSet.of(AUTHORISE_FCS_CONSENTS)))
+        .thenReturn(false);
+    when(permissionService.hasPermission(user, EnumSet.of(ASSIGN_FCS_APPLICATIONS, AUTHORISE_FCS_CONSENTS)))
         .thenReturn(true);
     when(permissionService.hasPermission(user, EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS)))
         .thenReturn(true);

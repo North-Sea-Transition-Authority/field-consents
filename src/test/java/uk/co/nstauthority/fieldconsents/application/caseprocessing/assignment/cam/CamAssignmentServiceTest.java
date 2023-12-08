@@ -11,7 +11,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.Assign
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.TEAM_MEMBER_VIEW_LIST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.VIEWER_TEAM_MEMBER_VIEW;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.cam.CamAssignmentService.USER_NOT_IN_CAM_ROLE;
-import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.REGULATOR_CAM;
+import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.REGULATOR;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CAM_ASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CASE_OFFICER;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER;
@@ -128,7 +128,7 @@ class CamAssignmentServiceTest {
     );
 
     verify(applicationWorkAreaPriorityService, times(1))
-        .prioritiseApplicationInWorkArea(applicationVersion, USER, CAM_ASSIGN_OWNERSHIP, REGULATOR_CAM);
+        .prioritiseApplicationInWorkArea(applicationVersion, USER, CAM_ASSIGN_OWNERSHIP, REGULATOR);
   }
   
   @Test

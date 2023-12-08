@@ -18,6 +18,7 @@ public record ApplicationDataItem(
     String submittedBy,
     String aceFlag,
     String caseOfficer,
+    String camUser,
     Boolean withdrawalOpen,
     String technicalReviewer,
     Boolean technicalReviewOpen,
@@ -48,6 +49,7 @@ public record ApplicationDataItem(
     private String submittedBy;
     private String aceFlag;
     private String caseOfficer;
+    private String camUser;
     private Boolean withdrawalOpen;
     private String technicalReviewer;
     private Boolean technicalReviewOpen;
@@ -119,6 +121,11 @@ public record ApplicationDataItem(
       return this;
     }
 
+    public Builder withCamUser(String camUser) {
+      this.camUser = camUser;
+      return this;
+    }
+
     public Builder withWithdrawalOpen(Boolean withdrawalOpen) {
       this.withdrawalOpen = withdrawalOpen;
       return this;
@@ -183,6 +190,7 @@ public record ApplicationDataItem(
           submittedBy,
           aceFlag,
           caseOfficer,
+          camUser,
           withdrawalOpen,
           technicalReviewer,
           technicalReviewOpen,

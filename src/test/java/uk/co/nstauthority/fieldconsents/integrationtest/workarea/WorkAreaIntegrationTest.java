@@ -13,6 +13,7 @@ import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal2JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.ANNUAL_CONSENT_YEAR;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.CAM_USER_DETAIL;
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.CASE_MANAGER_DETAIL;
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.CASE_OFFICER_DETAIL;
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.CASE_OFFICER_ENERGY_PORTAL_USER_DTO;
@@ -32,7 +33,8 @@ import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataIt
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.getApplicationDataItemForFieldInProgressOfType;
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.getApplicationDataItemForTerminalInProgressOfType;
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.getApplicationDataItemInProgressOfTypeAndLength;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.getApplicationDataItemProductionAssignedOfConsentLength;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.getApplicationDataItemProductionAssignedToCamUserOfConsentLength;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.getApplicationDataItemProductionAssignedToCaseOfficerOfConsentLength;
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.getApplicationDataItemProductionSubmittedOfConsentLength;
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.getApplicationDataItemProductionWithConsultationConsentLength;
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.getApplicationDataItemProductionWithReviewOpenOfConsentLength;
@@ -70,6 +72,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.assets.AdditionalAssetsService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.cam.CamAssignmentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
@@ -165,6 +168,9 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
   private ApplicationUpdateService applicationUpdateService;
 
   @Autowired
+  private CamAssignmentService camAssignmentService;
+
+  @Autowired
   private Clock clock;
 
   private WorkAreaFilterForm workAreaFilterForm;
@@ -227,6 +233,11 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
     when(permissionService.hasPermission(CONSULTEE_RESPONDER_DETAIL, EnumSet.of(RolePermission.RESPOND_TO_CONSULTATION))).thenReturn(true);
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(CONSULTEE_RESPONDER_DETAIL, TeamType.OPRED, EnumSet.of(RolePermission.ALLOCATE_CONSULTATION, RolePermission.RESPOND_TO_CONSULTATION)))
         .thenReturn(Collections.singletonList(CONSULTATION_TEAM));
+
+    when(teamService.isRegulatorUser(CAM_USER_DETAIL)).thenReturn(true);
+    when(permissionService.hasPermission(CAM_USER_DETAIL, EnumSet.of(RolePermission.AUTHORISE_FCS_CONSENTS))).thenReturn(true);
+    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(CAM_USER_DETAIL, TeamType.REGULATOR, REGULATOR_PERMISSIONS))
+        .thenReturn(Collections.singletonList(REGULATOR_TEAM));
 
     when(teamService.getWuaIdsOfTeamMembersWithRoles(
         TeamType.OPRED,
@@ -792,12 +803,12 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
     workAreaFilterForm.setCaseOfficerWuaId(CASE_OFFICER_DETAIL.wuaId());
 
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
-    var applicationVersion = createAssignedApplicationVersion(ApplicationType.PRODUCTION, consentLengthForm, CASE_OFFICER_DETAIL);
+    var applicationVersion = createApplicationVersionAssignedToCaseOfficer(ApplicationType.PRODUCTION, consentLengthForm, CASE_OFFICER_DETAIL);
     var applicationId = applicationVersion.getApplication().getId();
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, CASE_MANAGER_DETAIL);
     assertThat(workAreaItems).containsExactly(
-        getApplicationDataItemProductionAssignedOfConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
+        getApplicationDataItemProductionAssignedToCaseOfficerOfConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
     );
   }
 
@@ -813,7 +824,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
     workAreaFilterForm.setCaseOfficerWuaId(CASE_OFFICER_DETAIL.wuaId());
 
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
-    createAssignedApplicationVersion(ApplicationType.PRODUCTION, consentLengthForm, USER_DETAIL);
+    createApplicationVersionAssignedToCaseOfficer(ApplicationType.PRODUCTION, consentLengthForm, USER_DETAIL);
 
     assertThat(getWorkAreaItems(workAreaFilterForm, CASE_MANAGER_DETAIL)).isEmpty();
   }
@@ -863,7 +874,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
   @Test
   void getWorkAreaItemsForConsulteeAllocator_whenNoConsultationOpen() {
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
-    createAssignedApplicationVersion(ApplicationType.PRODUCTION, consentLengthForm, CASE_OFFICER_DETAIL);
+    createApplicationVersionAssignedToCaseOfficer(ApplicationType.PRODUCTION, consentLengthForm, CASE_OFFICER_DETAIL);
 
     assertThat(getWorkAreaItems(workAreaFilterForm, CONSULTEE_ALLOCATOR_DETAIL)).isEmpty();
   }
@@ -900,7 +911,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
     when(opredTeamService.isResponder(CONSULTATION_TEAM.toTeamId(), CONSULTEE_RESPONDER_DETAIL)).thenReturn(true);
 
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
-    createAssignedApplicationVersion(ApplicationType.PRODUCTION, consentLengthForm, CASE_OFFICER_DETAIL);
+    createApplicationVersionAssignedToCaseOfficer(ApplicationType.PRODUCTION, consentLengthForm, CASE_OFFICER_DETAIL);
 
     assertThat(getWorkAreaItems(workAreaFilterForm, CONSULTEE_RESPONDER_DETAIL)).isEmpty();
   }
@@ -961,8 +972,8 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
   void getWorkAreaItemsForRegulatorCaseOfficer_sortDescending() {
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
 
-    var productionAppVersion = createAssignedApplicationVersion(ApplicationType.PRODUCTION, consentLengthForm, CASE_OFFICER_DETAIL);
-    var flareAppVersion = createAssignedApplicationVersion(ApplicationType.FLARE, consentLengthForm, CASE_OFFICER_DETAIL);
+    var productionAppVersion = createApplicationVersionAssignedToCaseOfficer(ApplicationType.PRODUCTION, consentLengthForm, CASE_OFFICER_DETAIL);
+    var flareAppVersion = createApplicationVersionAssignedToCaseOfficer(ApplicationType.FLARE, consentLengthForm, CASE_OFFICER_DETAIL);
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, CASE_OFFICER_DETAIL);
     var applicationVersionIds = workAreaItems.stream().map(ApplicationDataItem::applicationId).toList();
@@ -977,7 +988,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
   void getWorkAreaItemsForRegulatorCaseManager_sortDescending() {
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
 
-    var productionAppVersion = createAssignedApplicationVersion(ApplicationType.PRODUCTION, consentLengthForm, CASE_OFFICER_DETAIL);
+    var productionAppVersion = createApplicationVersionAssignedToCaseOfficer(ApplicationType.PRODUCTION, consentLengthForm, CASE_OFFICER_DETAIL);
     var flareAppVersion = createSubmittedApplicationVersion(ApplicationType.FLARE, consentLengthForm);
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, CASE_MANAGER_DETAIL);
@@ -1021,6 +1032,36 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
         productionAppVersion.getId()
     );
   }
+
+  /*********************************** CAM ASSIGNED ***********************************/
+  @Test
+  void getWorkAreaItemsForRegulatorCamUser_whenCamAssigned() {
+    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
+    var applicationVersion = createApplicationVersionAssignedToCam(ApplicationType.PRODUCTION, consentLengthForm, CASE_OFFICER_DETAIL, CAM_USER_DETAIL);
+    var applicationId = applicationVersion.getApplication().getId();
+
+    var workAreaItems = getWorkAreaItems(workAreaFilterForm, CAM_USER_DETAIL);
+    assertThat(workAreaItems).containsExactly(
+        getApplicationDataItemProductionAssignedToCamUserOfConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
+    );
+  }
+
+  @Test
+  void getWorkAreaItemsForRegulatorCamUser_whenCaseOfficer() {
+    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
+    createApplicationVersionAssignedToCaseOfficer(ApplicationType.PRODUCTION, consentLengthForm, CASE_OFFICER_DETAIL);
+
+    assertThat(getWorkAreaItems(workAreaFilterForm, CAM_USER_DETAIL)).isEmpty();
+  }
+
+  @Test
+  void getWorkAreaItemsForRegulatorCaseOfficer_whenCamAssigned() {
+    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
+    createApplicationVersionAssignedToCam(ApplicationType.PRODUCTION, consentLengthForm, CASE_OFFICER_DETAIL, CAM_USER_DETAIL);
+
+    assertThat(getWorkAreaItems(workAreaFilterForm, CASE_OFFICER_DETAIL)).isEmpty();
+  }
+
   /*****************************************************************************************/
 
   private ApplicationVersion createNewApplicationVersionForField(ApplicationType applicationType, ConsentLengthForm consentLengthForm) {
@@ -1056,13 +1097,27 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
     return applicationVersion;
   }
 
-  private ApplicationVersion createAssignedApplicationVersion(ApplicationType applicationType, ConsentLengthForm consentLengthForm, ServiceUserDetail caseOfficer) {
+  private ApplicationVersion createApplicationVersionAssignedToCaseOfficer(ApplicationType applicationType,
+                                                                           ConsentLengthForm consentLengthForm,
+                                                                           ServiceUserDetail caseOfficer) {
     var applicationVersion = createSubmittedApplicationVersion(applicationType, consentLengthForm);
 
     when(regulatorTeamService.isCaseOfficer(WebUserAccountId.from(caseOfficer.wuaId()))).thenReturn(true);
 
     caseAssignmentService.assignCaseOfficer(applicationVersion, caseOfficer, CASE_MANAGER_DETAIL);
-    applicationVersion.setCaseOfficerWuaId(caseOfficer.wuaId());
+
+    return applicationVersion;
+  }
+
+  private ApplicationVersion createApplicationVersionAssignedToCam(ApplicationType applicationType,
+                                                                   ConsentLengthForm consentLengthForm,
+                                                                   ServiceUserDetail caseOfficer,
+                                                                   ServiceUserDetail camUser) {
+    var applicationVersion = createApplicationVersionAssignedToCaseOfficer(applicationType, consentLengthForm, caseOfficer);
+
+    when(regulatorTeamService.isCamUser(WebUserAccountId.from(camUser.wuaId()))).thenReturn(true);
+
+    camAssignmentService.assignCamUser(applicationVersion, camUser, CASE_OFFICER_DETAIL);
 
     return applicationVersion;
   }
@@ -1072,7 +1127,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
                                                                           ServiceUserDetail caseOfficer,
                                                                           ServiceUserDetail technicalReviewer,
                                                                           Instant deadlineInstant) {
-    var applicationVersion = createAssignedApplicationVersion(applicationType, consentLengthForm, caseOfficer);
+    var applicationVersion = createApplicationVersionAssignedToCaseOfficer(applicationType, consentLengthForm, caseOfficer);
     applicationVersion.setCaseOfficerWuaId(caseOfficer.wuaId());
 
     when(regulatorTeamService.isTechnicalReviewer(WebUserAccountId.from(technicalReviewer.wuaId()))).thenReturn(true);
@@ -1087,7 +1142,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
                                                                           ConsentLengthForm consentLengthForm,
                                                                           ServiceUserDetail caseOfficer,
                                                                           Instant deadlineInstant) {
-    var applicationVersion = createAssignedApplicationVersion(applicationType, consentLengthForm, caseOfficer);
+    var applicationVersion = createApplicationVersionAssignedToCaseOfficer(applicationType, consentLengthForm, caseOfficer);
     applicationVersion.setCaseOfficerWuaId(caseOfficer.wuaId());
 
     when(teamService.getTeamsByType(CONSULTATION_TEAM_TYPE)).thenReturn(Collections.singletonList(CONSULTATION_TEAM));
@@ -1100,7 +1155,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
   private ApplicationVersion createApplicationVersionWithConsultationResponder(ApplicationType applicationType,
                                                                                ConsentLengthForm consentLengthForm,
                                                                                ServiceUserDetail caseOfficer) {
-    var applicationVersion = createAssignedApplicationVersion(applicationType, consentLengthForm, caseOfficer);
+    var applicationVersion = createApplicationVersionAssignedToCaseOfficer(applicationType, consentLengthForm, caseOfficer);
     applicationVersion.setCaseOfficerWuaId(caseOfficer.wuaId());
 
     when(teamService.getTeamsByType(CONSULTATION_TEAM_TYPE)).thenReturn(Collections.singletonList(CONSULTATION_TEAM));

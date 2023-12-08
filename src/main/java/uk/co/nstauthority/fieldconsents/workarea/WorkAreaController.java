@@ -5,6 +5,7 @@ import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.ALL_APPLICAT
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.ALL_CONSULTATIONS;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.ALL_TECHNICAL_REVIEWS;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.MY_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.MY_CAM_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.MY_CONSULTATIONS;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.MY_TECHNICAL_REVIEWS;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.UNASSIGNED_APPLICATIONS;
@@ -96,6 +97,8 @@ public class WorkAreaController {
         return renderRegulatorWorkAreaOnTab(filter, user, ALL_APPLICATIONS);
       } else if (permissionService.hasPermission(user, EnumSet.of(RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS))) {
         return renderRegulatorWorkAreaOnTab(filter, user, MY_TECHNICAL_REVIEWS);
+      } else if (permissionService.hasPermission(user, EnumSet.of(RolePermission.AUTHORISE_FCS_CONSENTS))) {
+        return renderRegulatorWorkAreaOnTab(filter, user, MY_CAM_APPLICATIONS);
       }
     }
 
@@ -170,7 +173,7 @@ public class WorkAreaController {
   }
 
   @GetMapping("regulator-all-applications")
-  @HasPermission(permissions = RolePermission.ASSIGN_FCS_APPLICATIONS)
+  @HasPermission(permissions = {RolePermission.ASSIGN_FCS_APPLICATIONS, RolePermission.AUTHORISE_FCS_CONSENTS})
   public ModelAndView getWorkAreaRegulatorAllApplications(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
                                                           ServiceUserDetail user) {
     return renderRegulatorWorkAreaOnTab(filter, user, ALL_APPLICATIONS);
@@ -222,6 +225,20 @@ public class WorkAreaController {
   @HasPermission(permissions = RolePermission.RESPOND_TO_CONSULTATION)
   public ModelAndView postWorkAreaMyConsultations(@ModelAttribute("workAreaFilter") WorkAreaFilter filter) {
     return ReverseRouter.redirect(on(WorkAreaController.class).getWorkAreaMyConsultations(null, null));
+  }
+
+  @GetMapping("cam-my-applications")
+  @HasPermission(permissions = RolePermission.AUTHORISE_FCS_CONSENTS)
+  public ModelAndView getWorkAreaCamMyApplications(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
+                                                   ServiceUserDetail user) {
+    return renderRegulatorWorkAreaOnTab(filter, user, MY_CAM_APPLICATIONS);
+  }
+
+  @PostMapping("cam-my-applications")
+  @HasPermission(permissions = RolePermission.AUTHORISE_FCS_CONSENTS)
+  public ModelAndView postWorkAreaCamMyApplications(@ModelAttribute("workAreaFilter") WorkAreaFilter filter,
+                                                    ServiceUserDetail user) {
+    return ReverseRouter.redirect(on(WorkAreaController.class).getWorkAreaCamMyApplications(filter, user));
   }
 
   private ModelAndView renderRegulatorWorkAreaOnTab(WorkAreaFilter filter,

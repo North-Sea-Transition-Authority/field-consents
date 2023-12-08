@@ -99,7 +99,8 @@ class WorkAreaControllerTest extends AbstractControllerTest {
   void getWorkArea_IndustryUser() throws Exception {
     filter.setStatuses(List.of(ApplicationVersionStatus.IN_PROGRESS, ApplicationVersionStatus.SUBMITTED));
     when(workAreaService.getIndustryWorkAreaItems(any(WorkAreaFilter.class), any(ServiceUserDetail.class))).thenReturn(workAreaItems);
-    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)))
+    var modelAndView = mockMvc.perform(
+        get(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name(WORK_AREA_VIEW_NAME))
@@ -123,9 +124,9 @@ class WorkAreaControllerTest extends AbstractControllerTest {
         .thenReturn(false);
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(WorkAreaController.class)
-                .getWorkAreaCaseOfficerMyApplications(filter, user)))
-                .with(user(user))
+        get(ReverseRouter.route(on(WorkAreaController.class)
+            .getWorkAreaCaseOfficerMyApplications(filter, user)))
+            .with(user(user))
         )
         .andExpect(status().isForbidden());
   }
@@ -136,9 +137,9 @@ class WorkAreaControllerTest extends AbstractControllerTest {
         .thenReturn(true);
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(WorkAreaController.class)
-                .getWorkAreaCaseOfficerMyApplications(filter, user)))
-                .with(user(user))
+        get(ReverseRouter.route(on(WorkAreaController.class)
+            .getWorkAreaCaseOfficerMyApplications(filter, user)))
+            .with(user(user))
         )
         .andExpect(status().isOk());
   }
@@ -149,10 +150,10 @@ class WorkAreaControllerTest extends AbstractControllerTest {
         .thenReturn(false);
 
     mockMvc.perform(
-            post(ReverseRouter.route(on(WorkAreaController.class)
-                .postWorkAreaCaseOfficerMyApplications(filter, user)))
-                .with(user(user))
-                .with(csrf())
+        post(ReverseRouter.route(on(WorkAreaController.class)
+            .postWorkAreaCaseOfficerMyApplications(filter, user)))
+            .with(user(user))
+            .with(csrf())
         )
         .andExpect(status().isForbidden());
   }
@@ -163,10 +164,10 @@ class WorkAreaControllerTest extends AbstractControllerTest {
         .thenReturn(true);
 
     mockMvc.perform(
-            post(ReverseRouter.route(on(WorkAreaController.class)
-                .postWorkAreaCaseOfficerMyApplications(filter, user)))
-                .with(user(user))
-                .with(csrf())
+        post(ReverseRouter.route(on(WorkAreaController.class)
+            .postWorkAreaCaseOfficerMyApplications(filter, user)))
+            .with(user(user))
+            .with(csrf())
         )
         .andExpect(status().is3xxRedirection());
   }
@@ -177,9 +178,9 @@ class WorkAreaControllerTest extends AbstractControllerTest {
         .thenReturn(false);
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(WorkAreaController.class)
-                .getWorkAreaMyTechnicalReviews(filter, user)))
-                .with(user(user))
+        get(ReverseRouter.route(on(WorkAreaController.class)
+            .getWorkAreaMyTechnicalReviews(filter, user)))
+            .with(user(user))
         )
         .andExpect(status().isForbidden());
   }
@@ -190,9 +191,9 @@ class WorkAreaControllerTest extends AbstractControllerTest {
         .thenReturn(true);
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(WorkAreaController.class)
-                .getWorkAreaMyTechnicalReviews(filter, user)))
-                .with(user(user))
+        get(ReverseRouter.route(on(WorkAreaController.class)
+            .getWorkAreaMyTechnicalReviews(filter, user)))
+            .with(user(user))
         )
         .andExpect(status().isOk());
   }
@@ -203,10 +204,10 @@ class WorkAreaControllerTest extends AbstractControllerTest {
         .thenReturn(false);
 
     mockMvc.perform(
-            post(ReverseRouter.route(on(WorkAreaController.class)
-                .postWorkAreaMyTechnicalReviews(filter, user)))
-                .with(user(user))
-                .with(csrf())
+        post(ReverseRouter.route(on(WorkAreaController.class)
+            .postWorkAreaMyTechnicalReviews(filter, user)))
+            .with(user(user))
+            .with(csrf())
         )
         .andExpect(status().isForbidden());
   }
@@ -217,10 +218,10 @@ class WorkAreaControllerTest extends AbstractControllerTest {
         .thenReturn(true);
 
     mockMvc.perform(
-            post(ReverseRouter.route(on(WorkAreaController.class)
-                .postWorkAreaMyTechnicalReviews(filter, user)))
-                .with(user(user))
-                .with(csrf())
+        post(ReverseRouter.route(on(WorkAreaController.class)
+            .postWorkAreaMyTechnicalReviews(filter, user)))
+            .with(user(user))
+            .with(csrf())
         )
         .andExpect(status().is3xxRedirection());
   }
@@ -231,9 +232,9 @@ class WorkAreaControllerTest extends AbstractControllerTest {
         .thenReturn(false);
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(WorkAreaController.class)
-                .getWorkAreaCaseOfficerUnassignedApplications(filter, user)))
-                .with(user(user))
+        get(ReverseRouter.route(on(WorkAreaController.class)
+            .getWorkAreaCaseOfficerUnassignedApplications(filter, user)))
+            .with(user(user))
         )
         .andExpect(status().isForbidden());
   }
@@ -244,9 +245,9 @@ class WorkAreaControllerTest extends AbstractControllerTest {
         .thenReturn(true);
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(WorkAreaController.class)
-                .getWorkAreaCaseOfficerUnassignedApplications(filter, user)))
-                .with(user(user))
+        get(ReverseRouter.route(on(WorkAreaController.class)
+            .getWorkAreaCaseOfficerUnassignedApplications(filter, user)))
+            .with(user(user))
         )
         .andExpect(status().isOk());
   }
@@ -257,10 +258,10 @@ class WorkAreaControllerTest extends AbstractControllerTest {
         .thenReturn(false);
 
     mockMvc.perform(
-            post(ReverseRouter.route(on(WorkAreaController.class)
-                .postWorkAreaCaseOfficerUnassignedApplications(filter, user)))
-                .with(user(user))
-                .with(csrf())
+        post(ReverseRouter.route(on(WorkAreaController.class)
+            .postWorkAreaCaseOfficerUnassignedApplications(filter, user)))
+            .with(user(user))
+            .with(csrf())
         )
         .andExpect(status().isForbidden());
   }
@@ -271,10 +272,10 @@ class WorkAreaControllerTest extends AbstractControllerTest {
         .thenReturn(true);
 
     mockMvc.perform(
-            post(ReverseRouter.route(on(WorkAreaController.class)
-                .postWorkAreaCaseOfficerUnassignedApplications(filter, user)))
-                .with(user(user))
-                .with(csrf())
+        post(ReverseRouter.route(on(WorkAreaController.class)
+            .postWorkAreaCaseOfficerUnassignedApplications(filter, user)))
+            .with(user(user))
+            .with(csrf())
         )
         .andExpect(status().is3xxRedirection());
   }
@@ -285,9 +286,9 @@ class WorkAreaControllerTest extends AbstractControllerTest {
         .thenReturn(false);
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(WorkAreaController.class)
-                .getWorkAreaAllTechnicalReviews(filter, user)))
-                .with(user(user))
+        get(ReverseRouter.route(on(WorkAreaController.class)
+            .getWorkAreaAllTechnicalReviews(filter, user)))
+            .with(user(user))
         )
         .andExpect(status().isForbidden());
   }
@@ -298,9 +299,9 @@ class WorkAreaControllerTest extends AbstractControllerTest {
         .thenReturn(true);
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(WorkAreaController.class)
-                .getWorkAreaAllTechnicalReviews(filter, user)))
-                .with(user(user))
+        get(ReverseRouter.route(on(WorkAreaController.class)
+            .getWorkAreaAllTechnicalReviews(filter, user)))
+            .with(user(user))
         )
         .andExpect(status().isOk());
   }
@@ -311,10 +312,10 @@ class WorkAreaControllerTest extends AbstractControllerTest {
         .thenReturn(false);
 
     mockMvc.perform(
-            post(ReverseRouter.route(on(WorkAreaController.class)
-                .postWorkAreaAllTechnicalReviews(filter, user)))
-                .with(user(user))
-                .with(csrf())
+        post(ReverseRouter.route(on(WorkAreaController.class)
+            .postWorkAreaAllTechnicalReviews(filter, user)))
+            .with(user(user))
+            .with(csrf())
         )
         .andExpect(status().isForbidden());
   }
@@ -325,10 +326,10 @@ class WorkAreaControllerTest extends AbstractControllerTest {
         .thenReturn(true);
 
     mockMvc.perform(
-            post(ReverseRouter.route(on(WorkAreaController.class)
-                .postWorkAreaAllTechnicalReviews(filter, user)))
-                .with(user(user))
-                .with(csrf())
+        post(ReverseRouter.route(on(WorkAreaController.class)
+            .postWorkAreaAllTechnicalReviews(filter, user)))
+            .with(user(user))
+            .with(csrf())
         )
         .andExpect(status().is3xxRedirection());
   }
@@ -339,22 +340,22 @@ class WorkAreaControllerTest extends AbstractControllerTest {
         .thenReturn(false);
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(WorkAreaController.class)
-                .getWorkAreaRegulatorAllApplications(filter, user)))
-                .with(user(user))
+        get(ReverseRouter.route(on(WorkAreaController.class)
+            .getWorkAreaRegulatorAllApplications(filter, user)))
+            .with(user(user))
         )
         .andExpect(status().isForbidden());
   }
 
   @SecurityTest
   void getWorkAreaRegulatorAllApplications_whenUserDoesHaveAssignFcsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.ASSIGN_FCS_APPLICATIONS)))
+    when(permissionService.hasPermission(user, Set.of(RolePermission.ASSIGN_FCS_APPLICATIONS, RolePermission.AUTHORISE_FCS_CONSENTS)))
         .thenReturn(true);
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(WorkAreaController.class)
-                .getWorkAreaRegulatorAllApplications(filter, user)))
-                .with(user(user))
+        get(ReverseRouter.route(on(WorkAreaController.class)
+            .getWorkAreaRegulatorAllApplications(filter, user)))
+            .with(user(user))
         )
         .andExpect(status().isOk());
   }
@@ -365,10 +366,10 @@ class WorkAreaControllerTest extends AbstractControllerTest {
         .thenReturn(false);
 
     mockMvc.perform(
-            post(ReverseRouter.route(on(WorkAreaController.class)
-                .postWorkAreaRegulatorAllApplications(filter, user)))
-                .with(user(user))
-                .with(csrf())
+        post(ReverseRouter.route(on(WorkAreaController.class)
+            .postWorkAreaRegulatorAllApplications(filter, user)))
+            .with(user(user))
+            .with(csrf())
         )
         .andExpect(status().isForbidden());
   }
@@ -379,10 +380,10 @@ class WorkAreaControllerTest extends AbstractControllerTest {
         .thenReturn(true);
 
     mockMvc.perform(
-            post(ReverseRouter.route(on(WorkAreaController.class)
-                .postWorkAreaRegulatorAllApplications(filter, user)))
-                .with(user(user))
-                .with(csrf())
+        post(ReverseRouter.route(on(WorkAreaController.class)
+            .postWorkAreaRegulatorAllApplications(filter, user)))
+            .with(user(user))
+            .with(csrf())
         )
         .andExpect(status().is3xxRedirection());
   }
@@ -447,9 +448,9 @@ class WorkAreaControllerTest extends AbstractControllerTest {
         .thenReturn(false);
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(WorkAreaController.class)
-                .getWorkAreaUnassignedConsultations(filter, user)))
-                .with(user(user))
+        get(ReverseRouter.route(on(WorkAreaController.class)
+            .getWorkAreaUnassignedConsultations(filter, user)))
+            .with(user(user))
         )
         .andExpect(status().isForbidden());
   }
@@ -501,9 +502,9 @@ class WorkAreaControllerTest extends AbstractControllerTest {
         .thenReturn(false);
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(WorkAreaController.class)
-                .getWorkAreaMyConsultations(filter, user)))
-                .with(user(user))
+        get(ReverseRouter.route(on(WorkAreaController.class)
+            .getWorkAreaMyConsultations(filter, user)))
+            .with(user(user))
         )
         .andExpect(status().isForbidden());
   }
@@ -514,9 +515,9 @@ class WorkAreaControllerTest extends AbstractControllerTest {
         .thenReturn(true);
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(WorkAreaController.class)
-                .getWorkAreaMyConsultations(filter, user)))
-                .with(user(user))
+        get(ReverseRouter.route(on(WorkAreaController.class)
+            .getWorkAreaMyConsultations(filter, user)))
+            .with(user(user))
         )
         .andExpect(status().isOk());
   }
@@ -527,10 +528,10 @@ class WorkAreaControllerTest extends AbstractControllerTest {
         .thenReturn(false);
 
     mockMvc.perform(
-            post(ReverseRouter.route(on(WorkAreaController.class)
-                .postWorkAreaMyConsultations(filter)))
-                .with(user(user))
-                .with(csrf())
+        post(ReverseRouter.route(on(WorkAreaController.class)
+            .postWorkAreaMyConsultations(filter)))
+            .with(user(user))
+            .with(csrf())
         )
         .andExpect(status().isForbidden());
   }
@@ -541,10 +542,64 @@ class WorkAreaControllerTest extends AbstractControllerTest {
         .thenReturn(true);
 
     mockMvc.perform(
-            post(ReverseRouter.route(on(WorkAreaController.class)
-                .postWorkAreaMyConsultations(filter)))
-                .with(user(user))
-                .with(csrf())
+        post(ReverseRouter.route(on(WorkAreaController.class)
+            .postWorkAreaMyConsultations(filter)))
+            .with(user(user))
+            .with(csrf())
+        )
+        .andExpect(status().is3xxRedirection());
+  }
+
+  @SecurityTest
+  void getWorkAreaCamUserApplications_whenUserDoesNotHaveManageFeePeriodsPermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.AUTHORISE_FCS_CONSENTS)))
+        .thenReturn(false);
+
+    mockMvc.perform(
+        get(ReverseRouter.route(on(WorkAreaController.class)
+            .getWorkAreaCamMyApplications(filter, user)))
+            .with(user(user))
+        )
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void getWorkAreaCamUserApplications_whenUserDoesHaveManageFeePeriodsPermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.AUTHORISE_FCS_CONSENTS)))
+        .thenReturn(true);
+
+    mockMvc.perform(
+        get(ReverseRouter.route(on(WorkAreaController.class)
+            .getWorkAreaCamMyApplications(filter, user)))
+            .with(user(user))
+        )
+        .andExpect(status().isOk());
+  }
+
+  @SecurityTest
+  void postWorkAreaCamUserApplications_whenUserDoesNotHaveManageFeePeriodsPermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.AUTHORISE_FCS_CONSENTS)))
+        .thenReturn(false);
+
+    mockMvc.perform(
+        post(ReverseRouter.route(on(WorkAreaController.class)
+            .postWorkAreaCamMyApplications(filter, user)))
+            .with(user(user))
+            .with(csrf())
+        )
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void postWorkAreaCamUserApplications_whenUserDoesHaveManageFeePeriodsPermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.AUTHORISE_FCS_CONSENTS)))
+        .thenReturn(true);
+
+    mockMvc.perform(
+        post(ReverseRouter.route(on(WorkAreaController.class)
+            .postWorkAreaCamMyApplications(filter, user)))
+            .with(user(user))
+            .with(csrf())
         )
         .andExpect(status().is3xxRedirection());
   }
@@ -557,7 +612,8 @@ class WorkAreaControllerTest extends AbstractControllerTest {
     var caseOfficerTabs = List.of(WorkAreaTab.MY_APPLICATIONS, WorkAreaTab.UNASSIGNED_APPLICATIONS);
     when(workAreaService.getTabsAvailableToUser(user)).thenReturn(caseOfficerTabs);
 
-    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)))
+    var modelAndView = mockMvc.perform(
+        get(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name(WORK_AREA_VIEW_NAME))
@@ -584,7 +640,8 @@ class WorkAreaControllerTest extends AbstractControllerTest {
     var caseManagerTabs = List.of(WorkAreaTab.ALL_APPLICATIONS, WorkAreaTab.UNASSIGNED_APPLICATIONS);
     when(workAreaService.getTabsAvailableToUser(user)).thenReturn(caseManagerTabs);
 
-    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)))
+    var modelAndView = mockMvc.perform(
+        get(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name(WORK_AREA_VIEW_NAME))
@@ -613,7 +670,8 @@ class WorkAreaControllerTest extends AbstractControllerTest {
     var technicalReviewerTabs = List.of(WorkAreaTab.MY_TECHNICAL_REVIEWS, WorkAreaTab.ALL_TECHNICAL_REVIEWS);
     when(workAreaService.getTabsAvailableToUser(user)).thenReturn(technicalReviewerTabs);
 
-    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)))
+    var modelAndView = mockMvc.perform(
+        get(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name(WORK_AREA_VIEW_NAME))
@@ -640,7 +698,8 @@ class WorkAreaControllerTest extends AbstractControllerTest {
     var consulteeAllocatorTabs = List.of(WorkAreaTab.ALL_CONSULTATIONS, WorkAreaTab.UNASSIGNED_CONSULTATIONS);
     when(workAreaService.getTabsAvailableToUser(user)).thenReturn(consulteeAllocatorTabs);
 
-    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)))
+    var modelAndView = mockMvc.perform(
+        get(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name(WORK_AREA_VIEW_NAME))
@@ -673,7 +732,8 @@ class WorkAreaControllerTest extends AbstractControllerTest {
     when(workAreaService.getIndustryWorkAreaItems(any(WorkAreaFilter.class), any(ServiceUserDetail.class)))
         .thenReturn(workAreaItems);
 
-    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)))
+    var modelAndView = mockMvc.perform(
+        get(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name(WORK_AREA_VIEW_NAME))
@@ -686,6 +746,34 @@ class WorkAreaControllerTest extends AbstractControllerTest {
     var model = modelAndView.getModel();
 
     assertWorkAreaModel(model);
+  }
+
+  @Test
+  void getWorkArea_RegulatorUser_CamUser() throws Exception {
+    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    when(permissionService.hasPermission(user, EnumSet.of(RolePermission.AUTHORISE_FCS_CONSENTS))).thenReturn(true);
+    when(workAreaService.getRegulatorWorkAreaItems(any(WorkAreaFilter.class), any(ServiceUserDetail.class), any(WorkAreaTab.class))).thenReturn(workAreaItems);
+    var camTabs = List.of(WorkAreaTab.MY_CAM_APPLICATIONS, WorkAreaTab.ALL_APPLICATIONS);
+    when(workAreaService.getTabsAvailableToUser(user)).thenReturn(camTabs);
+
+    var modelAndView = mockMvc.perform(
+        get(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)))
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(view().name(WORK_AREA_VIEW_NAME))
+        .andReturn().getModelAndView();
+
+    assert modelAndView != null;
+    var model = modelAndView.getModel();
+
+    assertWorkAreaModel(model);
+    assertThat(model)
+        .containsEntry("isWorkAreaWithTabs", true)
+        .containsEntry("selectedTab", WorkAreaTab.MY_CAM_APPLICATIONS.getValue())
+        .containsEntry("workAreaTabs", camTabs);
+
+    var actualForm = (WorkAreaFilterForm) model.get("form");
+    assertThat(actualForm).usingRecursiveComparison().isEqualTo(form);
   }
 
   private void assertWorkAreaModel(Map<String, Object> model) {

@@ -218,7 +218,7 @@ class WorkAreaFilterServiceTest {
   }
 
   @Test
-  void getConditions_AllApplications() {
+  void getConditions_AllApplications_whenCaseManager() {
     when(teamService.isRegulatorUser(user)).thenReturn(true);
     when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
 
@@ -227,6 +227,37 @@ class WorkAreaFilterServiceTest {
     assertThat(conditions).containsExactly(
         SUBMITTED_APPLICATION_CONDITION,
         DSL.trueCondition()
+    );
+  }
+
+  @Test
+  void getConditions_AllApplications_whenCamUser() {
+    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(
+        APPLICATION_VERSIONS.STATUS.eq(ApplicationVersionStatus.SUBMITTED.name())
+    );
+
+    var conditions = workAreaFilterService.getConditions(filter, user, WorkAreaTab.ALL_APPLICATIONS);
+
+    assertThat(conditions).containsExactly(
+        SUBMITTED_APPLICATION_CONDITION,
+        DSL.trueCondition()
+    );
+  }
+
+  @Test
+  void getConditions_MyApplications_whenCamUser() {
+    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(
+        APPLICATION_VERSIONS.STATUS.eq(ApplicationVersionStatus.SUBMITTED.name())
+    );
+
+    var conditions = workAreaFilterService.getConditions(filter, user, WorkAreaTab.MY_CAM_APPLICATIONS);
+
+    assertThat(conditions).containsExactly(
+        SUBMITTED_APPLICATION_CONDITION,
+        APPLICATION_VERSIONS.CAM_WUA_ID.eq(user.wuaId().intValue())
+            .and(APPLICATION_VERSIONS.CURRENT_CASE_OWNER.eq(RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER.name()))
     );
   }
 

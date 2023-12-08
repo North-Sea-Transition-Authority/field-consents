@@ -17,11 +17,13 @@ import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDtoServi
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDtoService.FIELD_LOOKUP_PURPOSE;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUserAction.RESUME_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUserAction.VIEW_APPLICATION;
+import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.camUser;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.caseOfficer;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.getApplicationDataItemDtoForAnnualProductionInProgressForField;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.getApplicationDataItemDtoForLongFlareSubmittedForField;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.getApplicationDataItemDtoForLongFlareSubmittedForTerminal;
-import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.getApplicationDataItemDtoForShortVentAssignedForTerminal;
+import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.getApplicationDataItemDtoForShortVentAssignedToCamForTerminal;
+import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.getApplicationDataItemDtoForShortVentAssignedToCaseOfficerForTerminal;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.getApplicationDataItemDtoForShortVentSubmittedForTerminal;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.getApplicationDataItemDtoForShortVentVersion2InProgressForTerminal;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.portalUserDtosMap;
@@ -136,7 +138,7 @@ class ApplicationDataItemDtoServiceTest {
 
   @Test
   void getEnergyPortalUserDtoMapFromApplicationDataItemDtos() {
-    var applicationDataItemDto = getApplicationDataItemDtoForShortVentAssignedForTerminal();
+    var applicationDataItemDto = getApplicationDataItemDtoForShortVentAssignedToCaseOfficerForTerminal();
     var portalUserWuaIdList = List.of(
         WebUserAccountId.from(applicationDataItemDto.getSubmittedByWuaId()),
         WebUserAccountId.from(applicationDataItemDto.getCaseOfficerWuaId()),
@@ -259,7 +261,7 @@ class ApplicationDataItemDtoServiceTest {
 
   @Test
   void getDisplayConsentDuration_shortTerm() {
-    var applicationDataItemDto = getApplicationDataItemDtoForShortVentAssignedForTerminal();
+    var applicationDataItemDto = getApplicationDataItemDtoForShortVentAssignedToCaseOfficerForTerminal();
     var consentDurationString = applicationDataItemDto.getDuration().getShortDisplayName();
 
     assertThat(applicationDataItemDtoService.getDisplayConsentDuration(applicationDataItemDto))
@@ -354,10 +356,37 @@ class ApplicationDataItemDtoServiceTest {
 
   @Test
   void getDisplayCaseOfficer_withCaseOfficer() {
-    var applicationDataItemDto = getApplicationDataItemDtoForShortVentAssignedForTerminal();
+    var applicationDataItemDto = getApplicationDataItemDtoForShortVentAssignedToCaseOfficerForTerminal();
 
     assertThat(applicationDataItemDtoService.getDisplayCaseOfficer(applicationDataItemDto, portalUserDtosMap))
         .isEqualTo(caseOfficer.displayName());
+  }
+
+  @Test
+  void getDisplayCamUser_withIndustryType() {
+    var applicationDataItemDto = getApplicationDataItemDtoForAnnualProductionInProgressForField();
+
+    assertThat(applicationDataItemDtoService.getDisplayCamUser(applicationDataItemDto, portalUserDtosMap,
+        TeamType.INDUSTRY))
+        .isEmpty();
+  }
+
+  @Test
+  void getDisplayCamUser_withNoCamUserAssigned() {
+    var applicationDataItemDto = getApplicationDataItemDtoForAnnualProductionInProgressForField();
+
+    assertThat(applicationDataItemDtoService.getDisplayCamUser(applicationDataItemDto, portalUserDtosMap,
+        TeamType.REGULATOR))
+        .isEmpty();
+  }
+
+  @Test
+  void getDisplayCamUser_withCamUserAssigned() {
+    var applicationDataItemDto = getApplicationDataItemDtoForShortVentAssignedToCamForTerminal();
+
+    assertThat(applicationDataItemDtoService.getDisplayCamUser(applicationDataItemDto, portalUserDtosMap,
+        TeamType.REGULATOR))
+        .isEqualTo(camUser.displayName());
   }
 
   @Test
@@ -430,6 +459,7 @@ class ApplicationDataItemDtoServiceTest {
         DateUtils.format(applicationDataItemDto.getSubmittedDateTime(), DateUtils.DATE_TIME),
         energyPortalUserDto.displayName(),
         "ACE: Yes",
+        "",
         "",
         false,
         "",
@@ -551,6 +581,7 @@ class ApplicationDataItemDtoServiceTest {
     doReturn("").when(applicationDataItemDtoService).getSubmittedByName(dto, Collections.emptyMap());
     doReturn("").when(applicationDataItemDtoService).getDisplayAceFlag(dto);
     doReturn("").when(applicationDataItemDtoService).getDisplayCaseOfficer(dto, Collections.emptyMap());
+    doReturn("").when(applicationDataItemDtoService).getDisplayCamUser(dto, Collections.emptyMap(), teamType);
     doReturn("").when(applicationDataItemDtoService).getDisplayTechnicalReviewer(dto, Collections.emptyMap(), teamType);
     doReturn("").when(applicationDataItemDtoService).getApplicationUpdateDeadline(dto);
     doReturn("").when(applicationDataItemDtoService).getConsultationDeadline(dto);

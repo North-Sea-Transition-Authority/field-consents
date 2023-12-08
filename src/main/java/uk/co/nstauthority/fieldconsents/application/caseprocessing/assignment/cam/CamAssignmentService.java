@@ -56,7 +56,7 @@ public class CamAssignmentService {
         applicationVersion,
         actionUser,
         CAM_ASSIGN_OWNERSHIP,
-        ApplicationWorkAreaPriorityGroup.REGULATOR_CAM
+        ApplicationWorkAreaPriorityGroup.REGULATOR
     );
   }
 

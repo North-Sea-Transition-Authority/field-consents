@@ -79,6 +79,12 @@ public class ApplicationDataItemIntegrationTestUtil {
       .withSurname("Consultee Responder Surname")
       .build();
 
+  public static final ServiceUserDetail CAM_USER_DETAIL = ServiceUserDetailTestUtil.Builder()
+      .withWuaId(((long) ThreadLocalRandom.current().nextInt()))
+      .withForename("Cam User Forename")
+      .withSurname("Cam User Surname")
+      .build();
+
   public static final EnergyPortalUserDto ENERGY_PORTAL_USER_DTO =
       EnergyPortalUserDtoTestUtil.Builder()
           .withId(USER_DETAIL.wuaId())
@@ -127,11 +133,20 @@ public class ApplicationDataItemIntegrationTestUtil {
           .withSurname(CONSULTEE_RESPONDER_DETAIL.surname())
           .build();
 
+  public static final EnergyPortalUserDto CAM_USER_ENERGY_PORTAL_USER_DTO =
+      EnergyPortalUserDtoTestUtil.Builder()
+          .withId(CAM_USER_DETAIL.wuaId())
+          .withWebUserAccountId(CAM_USER_DETAIL.wuaId())
+          .withForename(CAM_USER_DETAIL.forename())
+          .withSurname(CAM_USER_DETAIL.surname())
+          .build();
+
   public static final Map<WebUserAccountId, EnergyPortalUserDto> PORTAL_USERS_DTO_MAP = Map.of(
       WebUserAccountId.from(USER_DETAIL), ENERGY_PORTAL_USER_DTO,
       WebUserAccountId.from(CASE_MANAGER_DETAIL), CASE_MANAGER_ENERGY_PORTAL_USER_DTO,
       WebUserAccountId.from(CASE_OFFICER_DETAIL), CASE_OFFICER_ENERGY_PORTAL_USER_DTO,
-      WebUserAccountId.from(TECHNICAL_REVIEWER_DETAIL), TECHNICAL_REVIEWER_ENERGY_PORTAL_USER_DTO);
+      WebUserAccountId.from(TECHNICAL_REVIEWER_DETAIL), TECHNICAL_REVIEWER_ENERGY_PORTAL_USER_DTO,
+      WebUserAccountId.from(CAM_USER_DETAIL), CAM_USER_ENERGY_PORTAL_USER_DTO);
 
   public static ApplicationDataItem getApplicationDataItemProductionSubmittedOfConsentLengthForRegulator(int applicationId,
                                                                                                          Instant submittedTimestamp,
@@ -149,6 +164,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withSubmittedBy("%s %s".formatted(USER_DETAIL.forename(), USER_DETAIL.surname()))
         .withAceFlag("ACE: No")
         .withCaseOfficer("")
+        .withCamUser("")
         .withWithdrawalOpen(false)
         .withTechnicalReviewer("")
         .withTechnicalReviewOpen(false)
@@ -180,6 +196,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withSubmittedBy("")
         .withAceFlag("")
         .withCaseOfficer("")
+        .withCamUser("")
         .withWithdrawalOpen(false)
         .withTechnicalReviewer("")
         .withTechnicalReviewOpen(false)
@@ -211,6 +228,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withSubmittedBy("")
         .withAceFlag("")
         .withCaseOfficer("")
+        .withCamUser("")
         .withWithdrawalOpen(false)
         .withTechnicalReviewer("")
         .withTechnicalReviewOpen(false)
@@ -240,6 +258,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withSubmittedBy("")
         .withAceFlag("")
         .withCaseOfficer("")
+        .withCamUser("")
         .withWithdrawalOpen(false)
         .withTechnicalReviewer("")
         .withTechnicalReviewOpen(false)
@@ -269,6 +288,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withSubmittedBy("%s %s".formatted(USER_DETAIL.forename(), USER_DETAIL.surname()))
         .withAceFlag("ACE: No")
         .withCaseOfficer("")
+        .withCamUser("")
         .withWithdrawalOpen(false)
         .withTechnicalReviewer("")
         .withTechnicalReviewOpen(null)
@@ -282,9 +302,9 @@ public class ApplicationDataItemIntegrationTestUtil {
         .build();
   }
 
-  public static ApplicationDataItem getApplicationDataItemProductionAssignedOfConsentLength(int applicationId,
-                                                                                            Instant submittedTimestamp,
-                                                                                            ConsentLengthType consentLengthType) {
+  public static ApplicationDataItem getApplicationDataItemProductionAssignedToCaseOfficerOfConsentLength(int applicationId,
+                                                                                                         Instant submittedTimestamp,
+                                                                                                         ConsentLengthType consentLengthType) {
     return ApplicationDataItem.newBuilder()
         .withApplicationId(applicationId)
         .withType(ApplicationType.PRODUCTION.getDisplayName())
@@ -298,6 +318,37 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withSubmittedBy("%s %s".formatted(USER_DETAIL.forename(), USER_DETAIL.surname()))
         .withAceFlag("ACE: No")
         .withCaseOfficer("%s %s".formatted(CASE_OFFICER_DETAIL.forename(), CASE_OFFICER_DETAIL.surname()))
+        .withCamUser("")
+        .withWithdrawalOpen(false)
+        .withTechnicalReviewer("")
+        .withTechnicalReviewOpen(false)
+        .withTechnicalReviewDeadline("")
+        .withApplicationUpdateOpen(false)
+        .withApplicationUpdateDeadline("")
+        .withConsultationOpen(false)
+        .withConsultationDeadline("")
+        .withConsultationFurtherInformationOpen(false)
+        .withLicences("P1, P2, P3")
+        .build();
+  }
+
+  public static ApplicationDataItem getApplicationDataItemProductionAssignedToCamUserOfConsentLength(int applicationId,
+                                                                                                     Instant submittedTimestamp,
+                                                                                                     ConsentLengthType consentLengthType) {
+    return ApplicationDataItem.newBuilder()
+        .withApplicationId(applicationId)
+        .withType(ApplicationType.PRODUCTION.getDisplayName())
+        .withDuration(getConsentDurationString(consentLengthType))
+        .withReference("PCON/10/0 (Version 1)")
+        .withOperator(ApplicationTestUtil.CACHED_PRIMARY_OPERATOR_NAME_1)
+        .withAsset(FieldTestUtil.FIELD_NAME_1)
+        .withGeographicArea(FieldTestUtil.FIELD_1_GEOGRAPHIC_AREA.getDisplayName())
+        .withStatus("Submitted")
+        .withSubmittedDateTime(DateUtils.format(submittedTimestamp, DateUtils.DATE_TIME))
+        .withSubmittedBy("%s %s".formatted(USER_DETAIL.forename(), USER_DETAIL.surname()))
+        .withAceFlag("ACE: No")
+        .withCaseOfficer("%s %s".formatted(CASE_OFFICER_DETAIL.forename(), CASE_OFFICER_DETAIL.surname()))
+        .withCamUser("%s %s".formatted(CAM_USER_DETAIL.forename(), CAM_USER_DETAIL.surname()))
         .withWithdrawalOpen(false)
         .withTechnicalReviewer("")
         .withTechnicalReviewOpen(false)
@@ -328,6 +379,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withSubmittedBy("%s %s".formatted(USER_DETAIL.forename(), USER_DETAIL.surname()))
         .withAceFlag("ACE: No")
         .withCaseOfficer("%s %s".formatted(CASE_OFFICER_DETAIL.forename(), CASE_OFFICER_DETAIL.surname()))
+        .withCamUser("")
         .withWithdrawalOpen(false)
         .withTechnicalReviewer("%s %s".formatted(TECHNICAL_REVIEWER_DETAIL.forename(), TECHNICAL_REVIEWER_DETAIL.surname()))
         .withTechnicalReviewOpen(true)
@@ -358,6 +410,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withSubmittedBy("%s %s".formatted(USER_DETAIL.forename(), USER_DETAIL.surname()))
         .withAceFlag("ACE: No")
         .withCaseOfficer("%s %s".formatted(CASE_OFFICER_DETAIL.forename(), CASE_OFFICER_DETAIL.surname()))
+        .withCamUser("")
         .withWithdrawalOpen(null)
         .withTechnicalReviewer("")
         .withTechnicalReviewOpen(null)
@@ -389,6 +442,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withSubmittedBy("")
         .withAceFlag("")
         .withCaseOfficer("")
+        .withCamUser("")
         .withWithdrawalOpen(false)
         .withTechnicalReviewer("")
         .withTechnicalReviewOpen(null)
@@ -420,6 +474,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withSubmittedBy("")
         .withAceFlag("")
         .withCaseOfficer("")
+        .withCamUser("")
         .withWithdrawalOpen(false)
         .withTechnicalReviewer("")
         .withTechnicalReviewOpen(null)
@@ -450,6 +505,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withSubmittedBy("")
         .withAceFlag("")
         .withCaseOfficer("")
+        .withCamUser("")
         .withWithdrawalOpen(false)
         .withTechnicalReviewer("")
         .withTechnicalReviewOpen(null)
