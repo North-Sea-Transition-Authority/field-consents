@@ -1,7 +1,12 @@
 {
   "name": "field-consents",
   "devDependencies": {
+    "@babel/plugin-transform-class-properties": "^7.23.3",
     "@babel/preset-env": "^7.18.2",
+    "@rollup/plugin-babel": "^6.0.4",
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
     "autoprefixer": "^10.4.7",
     "gulp": "^4.0.2",
     "gulp-babel": "^8.0.0",
@@ -10,7 +15,7 @@
     "gulp-sass": "^5.1.0",
     "gulp-sourcemaps": "^3.0.0",
     "postcss": "^8.4.14",
+    "rollup": "^4.6.1",
     "sass": "^1.63.6"
-  },
-  "dependencies": {}
+  }
 }

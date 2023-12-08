@@ -10,71 +10,78 @@
   pageSize=PageSize.FULL_PAGE_WIDTH
   errorItems=errorList>
   <@fdsForm.htmlForm>
-    <#list actions as action>
-      <@fdsAction.button buttonText=action />
-    </#list>
-    <@fdsSearch.searchPage>
-      <@fdsSearch.searchFilter oneThirdWidth=true>
-        <@fdsSearch.searchFilterList clearFilterUrl=springUrl(clearFiltersUrl) filterButtonClass="govuk-button govuk-button--secondary">
-          <@dataItemFilter.operatorFilter
-            path="filtersForm.operatorId"
-            form=filtersForm
-            prefilledOperator=prefilledOperator
-            operatorSearchRestUrl=operatorSearchRestUrl
-          />
-          <@dataItemFilter.geographicAreaFilter
-            path="filtersForm.geographicAreas"
-            form=filtersForm
-            geographicAreaCheckboxes=geographicAreaCheckboxes
-            expanded=filtersForm.geographicAreas()?has_content
-          />
-          <@dataItemFilter.aceFilter
-            path="filtersForm.aceFlagStatuses"
-            form=filtersForm
-            expanded=filtersForm.aceFlagStatuses()?has_content
-            aceCheckboxes=aceCheckboxes
-          />
-          <@dataItemFilter.assetTypeWithShoreFilter
-            path="filtersForm.assetTypesWithShore"
-            form=filtersForm
-            expanded=filtersForm.assetTypesWithShore()?has_content
-            assetTypeWithShoreCheckboxes=assetTypesWithShoreCheckboxes
-          />
-          <@dataItemFilter.fieldAssetFilter
-            path="filtersForm.fieldAssetKey"
-            form=filtersForm
-            prefilledField=prefilledField
-            fieldAssetSearchRestUrl=fieldAssetSearchRestUrl
-          />
-          <@dataItemFilter.terminalAssetFilter
-            path="filtersForm.terminalAssetKey"
-            form=filtersForm
-            prefilledTerminal=prefilledTerminal
-            terminalAssetSearchRestUrl=terminalAssetSearchRestUrl
-          />
-          <@dataItemFilter.caseOfficerFilter
-            path="filtersForm.caseOfficerWuaId"
-            form=filtersForm
-            expanded=filtersForm.caseOfficerWuaId()?has_content
-            caseOfficerOptions=caseOfficerOptions
-          />
-        </@fdsSearch.searchFilterList>
-      </@fdsSearch.searchFilter>
-      <@fdsSearch.searchPageContent twoThirdsWidth=true>
-        <#if applicationDataItems?has_content>
-          <@fdsResultList.resultList resultCount=applicationDataItems?size>
-            <#list applicationDataItems as dataItem>
-              <@_selectableApplicationDataItem dataItem=dataItem path="form.selectedApplicationIds"/>
-            </#list>
-          </@fdsResultList.resultList>
-        <#else>
-          <@noResultsFound.noResultsFoundMessageWithHints>
-            <li>clearing filters</li>
-            <li>searching for something less specific</li>
-          </@noResultsFound.noResultsFoundMessageWithHints>
-        </#if>
-      </@fdsSearch.searchPageContent>
-    </@fdsSearch.searchPage>
+    <div data-module="fcs-selectable-results-and-actions-container">
+      <#list actions as action>
+        <@fdsAction.button buttonText=action />
+      </#list>
+
+      <@fdsSearch.searchPage>
+        <@fdsSearch.searchFilter oneThirdWidth=true>
+          <@fdsSearch.searchFilterList clearFilterUrl=springUrl(clearFiltersUrl) filterButtonClass="govuk-button govuk-button--secondary">
+            <@dataItemFilter.operatorFilter
+              path="filtersForm.operatorId"
+              form=filtersForm
+              prefilledOperator=prefilledOperator
+              operatorSearchRestUrl=operatorSearchRestUrl
+            />
+            <@dataItemFilter.geographicAreaFilter
+              path="filtersForm.geographicAreas"
+              form=filtersForm
+              geographicAreaCheckboxes=geographicAreaCheckboxes
+              expanded=filtersForm.geographicAreas()?has_content
+            />
+            <@dataItemFilter.aceFilter
+              path="filtersForm.aceFlagStatuses"
+              form=filtersForm
+              expanded=filtersForm.aceFlagStatuses()?has_content
+              aceCheckboxes=aceCheckboxes
+            />
+            <@dataItemFilter.assetTypeWithShoreFilter
+              path="filtersForm.assetTypesWithShore"
+              form=filtersForm
+              expanded=filtersForm.assetTypesWithShore()?has_content
+              assetTypeWithShoreCheckboxes=assetTypesWithShoreCheckboxes
+            />
+            <@dataItemFilter.fieldAssetFilter
+              path="filtersForm.fieldAssetKey"
+              form=filtersForm
+              prefilledField=prefilledField
+              fieldAssetSearchRestUrl=fieldAssetSearchRestUrl
+            />
+            <@dataItemFilter.terminalAssetFilter
+              path="filtersForm.terminalAssetKey"
+              form=filtersForm
+              prefilledTerminal=prefilledTerminal
+              terminalAssetSearchRestUrl=terminalAssetSearchRestUrl
+            />
+            <@dataItemFilter.caseOfficerFilter
+              path="filtersForm.caseOfficerWuaId"
+              form=filtersForm
+              expanded=filtersForm.caseOfficerWuaId()?has_content
+              caseOfficerOptions=caseOfficerOptions
+            />
+          </@fdsSearch.searchFilterList>
+        </@fdsSearch.searchFilter>
+        <@fdsSearch.searchPageContent twoThirdsWidth=true>
+          <div style="display: flex; padding-top: 0.25rem">
+            <a href="#" class="govuk-body govuk-link govuk-link--no-visited-state selectAllResults">Select all</a>
+            <a href="#" class="govuk-body govuk-link govuk-!-margin-left-2 govuk-link--no-visited-state deSelectAllResults">Select none</a>
+          </div>
+          <#if applicationDataItems?has_content>
+            <@fdsResultList.resultList resultCount=applicationDataItems?size>
+              <#list applicationDataItems as dataItem>
+                <@_selectableApplicationDataItem dataItem=dataItem path="form.selectedApplicationIds"/>
+              </#list>
+            </@fdsResultList.resultList>
+          <#else>
+            <@noResultsFound.noResultsFoundMessageWithHints>
+              <li>clearing filters</li>
+              <li>searching for something less specific</li>
+            </@noResultsFound.noResultsFoundMessageWithHints>
+          </#if>
+        </@fdsSearch.searchPageContent>
+      </@fdsSearch.searchPage>
+    </div>
   </@fdsForm.htmlForm>
 </@defaultPage>
 

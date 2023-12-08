@@ -33,6 +33,10 @@
   <#local customerMnemonic = customerBrandingConfigurationProperties.mnemonic() />
   <#local serviceHomeUrl = springUrl(serviceHomeUrl) />
 
+  <#assign customScriptContent>
+    <script src="<@spring.url'/assets/static/js/fcs-bundle.js'/>"></script>
+  </#assign>
+
   <#assign fullPageWidth=false />
   <#assign fullWidthColumn=false />
   <#assign oneHalfColumn=false />
@@ -107,6 +111,7 @@
     backLinkUrl=backLinkUrl
     breadcrumbs=useBreadCrumbs
     breadcrumbsList=breadcrumbsMap
+    customScriptContent=customScriptContent
     singleErrorMessage=singleErrorMessage
     errorItems=errorItems
     notificationBannerContent=notificationBannerContent
