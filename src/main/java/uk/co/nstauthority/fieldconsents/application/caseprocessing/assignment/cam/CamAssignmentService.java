@@ -6,6 +6,7 @@ import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regula
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.UnaryOperator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -71,5 +72,10 @@ public class CamAssignmentService {
         .stream()
         .sorted(Comparator.comparing(TeamMemberView::getDisplayName))
         .toList();
+  }
+
+  public Optional<WebUserAccountId> findCamWuaId(ApplicationVersion applicationVersion) {
+    return Optional.ofNullable(applicationVersion.getCamWuaId())
+        .map(WebUserAccountId::from);
   }
 }

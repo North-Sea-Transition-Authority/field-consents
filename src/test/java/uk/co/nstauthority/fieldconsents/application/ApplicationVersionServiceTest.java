@@ -9,7 +9,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_VERSION_ID;
-import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.USER_WUA_ID;
 
 import jakarta.persistence.EntityNotFoundException;
 import java.util.Collections;
@@ -23,7 +22,6 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationVersionServiceTest {
@@ -149,19 +147,6 @@ class ApplicationVersionServiceTest {
 
     assertThat(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .isNotPresent();
-  }
-
-  @Test
-  void findCaseOfficerWuaId_whenNotAssigned() {
-    assertThat(applicationVersionService.findCaseOfficerWuaId(applicationVersion))
-        .isEmpty();
-  }
-
-  @Test
-  void findCaseOfficerWuaId_whenAssigned() {
-    applicationVersion.setCaseOfficerWuaId(USER_WUA_ID);
-    assertThat(applicationVersionService.findCaseOfficerWuaId(applicationVersion))
-        .contains(WebUserAccountId.from(USER_WUA_ID));
   }
 
   @Test

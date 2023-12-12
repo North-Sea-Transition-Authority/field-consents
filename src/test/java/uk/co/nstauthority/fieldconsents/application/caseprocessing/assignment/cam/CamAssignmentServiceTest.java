@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.USER_WUA_ID;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.ACCESS_MANGER_TEAM_MEMBER_VIEW;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.CAM_USER_TEAM_MEMBER_VIEW_1;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.CAM_USER_TEAM_MEMBER_VIEW_2;
@@ -171,5 +172,18 @@ class CamAssignmentServiceTest {
 
     assertThat(camAssignmentService.getCamUserAssignmentCandidates(USER))
         .isEmpty();
+  }
+
+  @Test
+  void findCamWuaId_whenNotAssigned() {
+    assertThat(camAssignmentService.findCamWuaId(applicationVersion))
+        .isEmpty();
+  }
+
+  @Test
+  void findCamWuaId_whenAssigned() {
+    applicationVersion.setCamWuaId(USER_WUA_ID);
+    assertThat(camAssignmentService.findCamWuaId(applicationVersion))
+        .contains(WebUserAccountId.from(USER_WUA_ID));
   }
 }

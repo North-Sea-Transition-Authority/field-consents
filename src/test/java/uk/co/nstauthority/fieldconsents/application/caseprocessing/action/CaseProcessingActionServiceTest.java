@@ -57,6 +57,7 @@ import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePe
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_CASE_PROCESSING_DOCUMENTS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.opred.OpredTeamRole.RESPONDER;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CASE_OFFICER;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.TECHNICAL_REVIEWER;
 
 import java.util.ArrayList;
@@ -83,7 +84,8 @@ import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.cam.CamAssignmentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlagService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
@@ -110,13 +112,16 @@ class CaseProcessingActionServiceTest {
   private CaseStatusFlagService caseStatusFlagService;
 
   @Mock
-  private ApplicationVersionService applicationVersionService;
-
-  @Mock
   private TechnicalReviewService technicalReviewService;
 
   @Mock
   private ConsultationService consultationService;
+
+  @Mock
+  private CaseAssignmentService caseAssignmentService;
+
+  @Mock
+  private CamAssignmentService camAssignmentService;
 
   @Spy
   @InjectMocks
@@ -414,7 +419,7 @@ class CaseProcessingActionServiceTest {
       WebUserAccountId responderWuaId,
       Map<TeamRole, WebUserAccountId> expectedAssigneeMap
   ) {
-    when(applicationVersionService.findCaseOfficerWuaId(applicationVersion)).thenReturn(Optional.ofNullable(caseOfficerWuaId));
+    when(caseAssignmentService.findCaseOfficerWuaId(applicationVersion)).thenReturn(Optional.ofNullable(caseOfficerWuaId));
     when(technicalReviewService.findTechnicalReviewerWuaId(applicationVersion)).thenReturn(Optional.ofNullable(technicalReviewerWuaId));
 
     var consultation = new Consultation();
@@ -422,6 +427,20 @@ class CaseProcessingActionServiceTest {
     when(consultationService.findLatestOpenConsultation(application)).thenReturn(Optional.of(consultation));
 
     assertThat(caseProcessingActionService.constructAssigneeMap(applicationVersion)).containsExactlyInAnyOrderEntriesOf(expectedAssigneeMap);
+  }
+
+  @Test
+  void constructAssigneeMap_whenAssignedToCam() {
+    applicationVersion.setCamWuaId(USER_WUA_ID.id());
+    applicationVersion.setCurrentCaseOwner(CONSENTS_AND_AUTHORISATIONS_MANAGER);
+
+    when(camAssignmentService.findCamWuaId(applicationVersion)).thenReturn(Optional.of(USER_WUA_ID));
+    when(technicalReviewService.findTechnicalReviewerWuaId(applicationVersion)).thenReturn(Optional.empty());
+    when(consultationService.findLatestOpenConsultation(application)).thenReturn(Optional.empty());
+
+    assertThat(caseProcessingActionService.constructAssigneeMap(applicationVersion)).containsExactlyInAnyOrderEntriesOf(Map.of(
+        CONSENTS_AND_AUTHORISATIONS_MANAGER, USER_WUA_ID
+    ));
   }
 
   private static Stream<Arguments> constructAssigneeMap_arguments() {

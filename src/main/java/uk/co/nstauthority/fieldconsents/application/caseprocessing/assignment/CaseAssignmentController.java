@@ -5,6 +5,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_REASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_RELEASE_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.RETURN_TO_CASE_OFFICER;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -22,10 +23,12 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
+import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
+import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @Controller
 @RequestMapping("applications/{applicationId}")
@@ -146,5 +149,26 @@ public class CaseAssignmentController {
 
     return ReverseRouter
         .redirect(on(ApplicationCaseProcessingController.class).caseProcessing(applicationId, null, null));
+  }
+
+  @PostMapping("return-to-case-officer")
+  @ActionEndPoint(RETURN_TO_CASE_OFFICER)
+  public ModelAndView returnToCaseOfficer(@PathVariable Integer applicationId,
+                                          ServiceUserDetail user,
+                                          RedirectAttributes redirectAttributes) {
+    var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
+
+    var caseOfficer = ServiceUserDetail.from(
+        energyPortalUserService.getByWuaId(WebUserAccountId.from(applicationVersion.getCaseOfficerWuaId())));
+
+    caseAssignmentService.returnToCaseOfficer(applicationVersion, user);
+
+    NotificationBannerUtil.addSuccessNotification(
+        redirectAttributes,
+        "You have reassigned %s to %s".formatted(applicationService.generateApplicationReference(applicationVersion),
+            caseOfficer.displayName())
+    );
+
+    return ReverseRouter.redirect(on(WorkAreaController.class).getWorkArea(null, null));
   }
 }

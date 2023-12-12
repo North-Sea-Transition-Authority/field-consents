@@ -63,6 +63,8 @@ public abstract class AbstractApplicationControllerTest extends AbstractControll
         .thenReturn(true);
     when(applicationAccessService.hasApplicationPermission(any(), any(), any(), any(), any()))
         .thenReturn(true);
+    when(applicationAccessService.hasApplicationPermission(any(), any(), any(), any(), any(), any()))
+        .thenReturn(true);
   }
 
   void setupWhenUserCanCallAllActionEndPoints() {
@@ -84,7 +86,8 @@ public abstract class AbstractApplicationControllerTest extends AbstractControll
             CaseProcessingActionItem.CONSULTATION_RESPONSE,
             CaseProcessingActionItem.CONSULTATION_FURTHER_INFORMATION_REQUEST,
             CaseProcessingActionItem.CONSULTATION_FURTHER_INFORMATION_RESPOND,
-            CaseProcessingActionItem.CAM_ASSIGN_OWNERSHIP
+            CaseProcessingActionItem.CAM_ASSIGN_OWNERSHIP,
+            CaseProcessingActionItem.RETURN_TO_CASE_OFFICER
         ));
   }
 }

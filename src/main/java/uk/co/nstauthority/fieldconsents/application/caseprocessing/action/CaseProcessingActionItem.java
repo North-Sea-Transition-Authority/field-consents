@@ -98,7 +98,11 @@ public enum CaseProcessingActionItem implements Displayable {
   CONSULTATION_FURTHER_INFORMATION_REQUEST("Request further information", 2, true, false, null,
       applicationId -> ReverseRouter.route(on(FurtherInformationRequestController.class).getRequestForm(applicationId))),
   CONSULTATION_FURTHER_INFORMATION_RESPOND("Respond to further information request", 3, true, false, null,
-      applicationId -> ReverseRouter.route(on(FurtherInformationResponseController.class).getResponseForm(applicationId)))
+      applicationId -> ReverseRouter.route(on(FurtherInformationResponseController.class).getResponseForm(applicationId))),
+  // CAM actions
+  RETURN_TO_CASE_OFFICER("Return to case officer", 1, true, false,
+      applicationId -> ReverseRouter.route(on(CaseAssignmentController.class)
+          .returnToCaseOfficer(applicationId, null, null)), null)
   ;
 
   private final String displayName;

@@ -8,6 +8,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,6 +88,7 @@ public class CaseAssignmentService {
   @Transactional
   public void unassignCaseOfficer(ApplicationVersion applicationVersion, ServiceUserDetail user) {
     applicationVersion.setCaseOfficerWuaId(null);
+    applicationVersion.setCurrentCaseOwner(null);
     applicationVersionRepository.save(applicationVersion);
     applicationWorkAreaPriorityService.prioritiseApplicationInWorkArea(
         applicationVersion,
@@ -139,4 +141,23 @@ public class CaseAssignmentService {
     return teamService.getWuaIdsOfTeamMembersWithRoles(TeamType.REGULATOR, Set.of(RegulatorTeamRole.CASE_OFFICER));
   }
 
+  @Transactional
+  public void returnToCaseOfficer(ApplicationVersion applicationVersion,
+                                  ServiceUserDetail actionUser) {
+    applicationVersion.setCamWuaId(null);
+    applicationVersion.setCurrentCaseOwner(RegulatorTeamRole.CASE_OFFICER);
+    applicationVersionRepository.save(applicationVersion);
+
+    applicationWorkAreaPriorityService.prioritiseApplicationInWorkArea(
+        applicationVersion,
+        actionUser,
+        CASE_OFFICER_ASSIGN_OWNERSHIP,
+        ApplicationWorkAreaPriorityGroup.REGULATOR
+    );
+  }
+
+  public Optional<WebUserAccountId> findCaseOfficerWuaId(ApplicationVersion applicationVersion) {
+    return Optional.ofNullable(applicationVersion.getCaseOfficerWuaId())
+        .map(WebUserAccountId::from);
+  }
 }

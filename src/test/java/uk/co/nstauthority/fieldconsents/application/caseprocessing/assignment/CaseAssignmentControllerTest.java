@@ -45,6 +45,7 @@ import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanne
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
+import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @ContextConfiguration(classes = CaseAssignmentController.class)
 class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
@@ -66,13 +67,13 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
   @MockBean
   private TeamMemberViewService teamMemberViewService;
 
+
   @SecurityTest
   void getCaseAssignment_noUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(CaseAssignmentController.class)
             .getCaseAssignment(APPLICATION_ID, null))))
         .andExpect(redirectionToLoginUrl());
   }
-
 
   @SecurityTest
   void getCaseAssignment_checkEndPointSecurityOnly_forbidden() throws Exception {
@@ -284,6 +285,46 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
 
     verify(caseAssignmentService, times(1))
         .unassignCaseOfficer(applicationVersion, user);
+  }
+
+  @SecurityTest
+  void returnToCaseOfficer_noUser() throws Exception {
+    mockMvc.perform(post(ReverseRouter.route(on(CaseAssignmentController.class)
+            .returnToCaseOfficer(APPLICATION_ID, null, null)))
+            .with(csrf()))
+        .andExpect(redirectionToLoginUrl());
+  }
+
+  @ParameterizedTest
+  @MethodSource("getSubmittedApplicationVersions")
+  void returnToCaseOfficer(ApplicationVersion applicationVersion) throws Exception {
+    applicationVersion.setCaseOfficerWuaId(ENERGY_PORTAL_USER_1.webUserAccountId());
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+    when(applicationService.generateApplicationReference(applicationVersion))
+        .thenReturn(DUMMY_APP_REF);
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
+    when(energyPortalUserService.getByWuaId(new WebUserAccountId(ENERGY_PORTAL_USER_1.webUserAccountId())))
+        .thenReturn(ENERGY_PORTAL_USER_1);
+    var expectedNotificationBanner = NotificationBanner.builder()
+        .withBannerType(NotificationBannerType.SUCCESS)
+        .withHeadingContent("You have reassigned %s to %s".formatted(DUMMY_APP_REF, ENERGY_PORTAL_USER_1.displayName()))
+        .build();
+
+    mockMvc.perform(
+            post(ReverseRouter.route(on(CaseAssignmentController.class)
+                .returnToCaseOfficer(APPLICATION_ID, null, null)))
+                .with(csrf())
+                .with(user(user))
+        )
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(ReverseRouter.route(on(WorkAreaController.class)
+            .getWorkArea(null, null))))
+        .andExpect(notificationBanner(expectedNotificationBanner));
+
+    verify(caseAssignmentService, times(1))
+        .returnToCaseOfficer(applicationVersion, user);
   }
 
   private static Stream<Arguments> getSubmittedApplicationVersions() {

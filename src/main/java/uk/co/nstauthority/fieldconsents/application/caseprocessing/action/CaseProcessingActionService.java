@@ -22,11 +22,13 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_UPDATE_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_WITHDRAWAL_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.REGULATOR_ADD_CASE_NOTE;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.RETURN_TO_CASE_OFFICER;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWER_SUBMIT_REVIEW;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEW_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.APPLICATION_UPDATE_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CAM_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_NOTES_ALLOWED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED;
@@ -43,6 +45,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.taskli
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.tasklist.CaseProcessingTaskListSection.OPTIONAL_CASE_TASKS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ALLOCATE_CONSULTATION;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ASSIGN_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.AUTHORISE_FCS_CONSENTS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_CASE_PROCESSING_DOCUMENTS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS;
@@ -52,6 +55,7 @@ import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePe
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_CASE_PROCESSING_DOCUMENTS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.opred.OpredTeamRole.RESPONDER;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CASE_OFFICER;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.TECHNICAL_REVIEWER;
 
 import java.util.Collection;
@@ -68,8 +72,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.cam.CamAssignmentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlagService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
@@ -87,9 +92,10 @@ public class CaseProcessingActionService {
 
   private final ApplicationAccessService applicationAccessService;
   private final CaseStatusFlagService caseStatusFlagService;
-  private final ApplicationVersionService applicationVersionService;
   private final TechnicalReviewService technicalReviewService;
   private final ConsultationService consultationService;
+  private final CaseAssignmentService caseAssignmentService;
+  private final CamAssignmentService camAssignmentService;
 
   private final Map<ApplicationVersionStatus, Set<CaseProcessingActionItem>> caseStatusToActions =
       Map.of(
@@ -102,8 +108,7 @@ public class CaseProcessingActionService {
               CASE_OFFICER_REASSIGN_OWNERSHIP,
               REGULATOR_ADD_CASE_NOTE,
               TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP,
-              OPERATOR_UPDATE_APPLICATION,
-              CAM_ASSIGN_OWNERSHIP
+              OPERATOR_UPDATE_APPLICATION
           ),
           ApplicationVersionStatus.AWAITING_PAYMENT,
           EnumSet.of(
@@ -133,7 +138,8 @@ public class CaseProcessingActionService {
               APPLICATION_UPDATE_REQUEST,
               OPERATOR_WITHDRAWAL_REQUEST,
               OPERATOR_UPDATE_APPLICATION,
-              CAM_ASSIGN_OWNERSHIP
+              CAM_ASSIGN_OWNERSHIP,
+              RETURN_TO_CASE_OFFICER
           )
       );
 
@@ -163,7 +169,8 @@ public class CaseProcessingActionService {
           entry(OPERATOR_UPDATE_APPLICATION, EnumSet.of(EDIT_FCS_APPLICATIONS)),
           entry(CONSULTATION_FURTHER_INFORMATION_REQUEST, EnumSet.of(RESPOND_TO_CONSULTATION)),
           entry(CONSULTATION_FURTHER_INFORMATION_RESPOND, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
-          entry(CAM_ASSIGN_OWNERSHIP, EnumSet.of(PROCESS_FCS_APPLICATIONS))
+          entry(CAM_ASSIGN_OWNERSHIP, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
+          entry(RETURN_TO_CASE_OFFICER, EnumSet.of(AUTHORISE_FCS_CONSENTS))
       );
 
   private final Map<CaseProcessingActionItem, Set<CaseStatusFlag>> actionsToStatusFlags =
@@ -197,7 +204,8 @@ public class CaseProcessingActionService {
                   NO_TECHNICAL_REVIEW_OPEN,
                   NO_APPLICATION_UPDATE_OPEN,
                   NO_CONSULTATION_OPEN)
-          )
+          ),
+          entry(RETURN_TO_CASE_OFFICER, EnumSet.of(CAM_ASSIGNED))
       );
 
   private final Map<CaseProcessingActionItem, Set<? extends TeamRole>> actionsToAssigneeOnlyRoles =
@@ -212,7 +220,8 @@ public class CaseProcessingActionService {
           entry(CONSULTATION_RESPONSE, EnumSet.of(RESPONDER)),
           entry(CONSULTATION_FURTHER_INFORMATION_REQUEST, EnumSet.of(RESPONDER)),
           entry(CONSULTATION_FURTHER_INFORMATION_RESPOND, EnumSet.of(CASE_OFFICER)),
-          entry(CAM_ASSIGN_OWNERSHIP, EnumSet.of(CASE_OFFICER))
+          entry(CAM_ASSIGN_OWNERSHIP, EnumSet.of(CASE_OFFICER)),
+          entry(RETURN_TO_CASE_OFFICER, EnumSet.of(CONSENTS_AND_AUTHORISATIONS_MANAGER))
       );
   /*
    * If an actionItem is not here, it will be allowed by default. If multiple features are present for an action,
@@ -245,14 +254,16 @@ public class CaseProcessingActionService {
   @Autowired
   public CaseProcessingActionService(ApplicationAccessService applicationAccessService,
                                      CaseStatusFlagService caseStatusFlagService,
-                                     ApplicationVersionService applicationVersionService,
                                      TechnicalReviewService technicalReviewService,
-                                     ConsultationService consultationService) {
+                                     ConsultationService consultationService,
+                                     CaseAssignmentService caseAssignmentService,
+                                     CamAssignmentService camAssignmentService) {
     this.applicationAccessService = applicationAccessService;
     this.caseStatusFlagService = caseStatusFlagService;
-    this.applicationVersionService = applicationVersionService;
     this.technicalReviewService = technicalReviewService;
     this.consultationService = consultationService;
+    this.caseAssignmentService = caseAssignmentService;
+    this.camAssignmentService = camAssignmentService;
   }
 
   public List<CaseProcessingActionItem> getUserActionItems(ApplicationVersion applicationVersion,
@@ -316,8 +327,13 @@ public class CaseProcessingActionService {
     var assigneeMap = new HashMap<TeamRole, WebUserAccountId>();
 
     if (CASE_OFFICER.equals(applicationVersion.getCurrentCaseOwner())) {
-      applicationVersionService.findCaseOfficerWuaId(applicationVersion)
+      caseAssignmentService.findCaseOfficerWuaId(applicationVersion)
           .ifPresent(caseOfficerWuaId -> assigneeMap.put(CASE_OFFICER, caseOfficerWuaId));
+    }
+
+    if (CONSENTS_AND_AUTHORISATIONS_MANAGER.equals(applicationVersion.getCurrentCaseOwner())) {
+      camAssignmentService.findCamWuaId(applicationVersion)
+          .ifPresent(camUserWuaId -> assigneeMap.put(CONSENTS_AND_AUTHORISATIONS_MANAGER, camUserWuaId));
     }
 
     technicalReviewService.findTechnicalReviewerWuaId(applicationVersion)

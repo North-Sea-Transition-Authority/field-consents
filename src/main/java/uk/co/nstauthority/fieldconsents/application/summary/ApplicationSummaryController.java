@@ -3,6 +3,7 @@ package uk.co.nstauthority.fieldconsents.application.summary;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ALLOCATE_CONSULTATION;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ASSIGN_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.AUTHORISE_FCS_CONSENTS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
@@ -127,7 +128,8 @@ public class ApplicationSummaryController {
         applicationVersion,
         PROCESS_FCS_APPLICATIONS,
         ASSIGN_FCS_APPLICATIONS,
-        TECHNICAL_REVIEW_FCS_APPLICATIONS
+        TECHNICAL_REVIEW_FCS_APPLICATIONS,
+        AUTHORISE_FCS_CONSENTS
     );
   }
 

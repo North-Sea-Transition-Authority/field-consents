@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 
 @Service
 public class ApplicationVersionService {
@@ -46,11 +45,6 @@ public class ApplicationVersionService {
 
   public List<ApplicationVersion> getAllApplicationVersionsByApplicationId(Integer applicationId) {
     return applicationVersionRepository.findAllByApplicationIdOrderByVersion(applicationId);
-  }
-
-  public Optional<WebUserAccountId> findCaseOfficerWuaId(ApplicationVersion applicationVersion) {
-    return Optional.ofNullable(applicationVersion.getCaseOfficerWuaId())
-        .map(WebUserAccountId::from);
   }
 
   public void deleteApplicationVersion(ApplicationVersion applicationVersion) {

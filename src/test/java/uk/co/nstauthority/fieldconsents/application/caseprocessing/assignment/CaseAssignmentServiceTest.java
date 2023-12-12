@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.USER_WUA_ID;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus.SUBMITTED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.ACCESS_MANGER_TEAM_MEMBER_VIEW;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.CASE_OFFICER_TEAM_MEMBER_VIEW_1;
@@ -159,8 +160,10 @@ class CaseAssignmentServiceTest {
     verify(applicationVersionRepository, times(1))
         .save(applicationVersionArgumentCaptor.capture());
 
-    assertThat(applicationVersionArgumentCaptor.getValue().getCaseOfficerWuaId())
-        .isEqualTo(WEB_USER_ACCOUNT_ID.id());
+    var actualApplicationVersion = applicationVersionArgumentCaptor.getValue();
+
+    assertThat(actualApplicationVersion.getCaseOfficerWuaId()).isEqualTo(WEB_USER_ACCOUNT_ID.id());
+    assertThat(actualApplicationVersion.getCurrentCaseOwner()).isEqualTo(CASE_OFFICER);
 
     verify(applicationWorkAreaPriorityService, times(1))
         .prioritiseApplicationInWorkArea(applicationVersion, USER2, CASE_OFFICER_ASSIGN_OWNERSHIP, REGULATOR);
@@ -176,8 +179,10 @@ class CaseAssignmentServiceTest {
     verify(applicationVersionRepository, times(1))
         .save(applicationVersionArgumentCaptor.capture());
 
-    assertThat(applicationVersionArgumentCaptor.getValue().getCaseOfficerWuaId())
-        .isNull();
+    var actualApplicationVersion = applicationVersionArgumentCaptor.getValue();
+
+    assertThat(actualApplicationVersion.getCaseOfficerWuaId()).isNull();
+    assertThat(actualApplicationVersion.getCurrentCaseOwner()).isNull();
 
     verify(applicationWorkAreaPriorityService, times(1))
         .prioritiseApplicationInWorkArea(applicationVersion, USER, CASE_OFFICER_RELEASE_OWNERSHIP, REGULATOR);
@@ -329,5 +334,38 @@ class CaseAssignmentServiceTest {
     when(energyPortalUserService.findByWuaIds(caseOfficerWebUserAccountIds)).thenReturn(caseOfficers);
 
     assertThat(caseAssignmentService.getActiveCaseOfficers()).isEqualTo(caseOfficers);
+  }
+
+  @Test
+  void returnToCaseOfficer_thenApplicationVersionCamWuaIdNulled() {
+    applicationVersion.setCaseOfficerWuaId(WEB_USER_ACCOUNT_ID.id());
+
+    caseAssignmentService.returnToCaseOfficer(applicationVersion, USER2);
+
+    var applicationVersionArgumentCaptor = ArgumentCaptor.forClass(ApplicationVersion.class);
+
+    verify(applicationVersionRepository, times(1))
+        .save(applicationVersionArgumentCaptor.capture());
+
+    var actualApplicationVersion = applicationVersionArgumentCaptor.getValue();
+
+    assertThat(actualApplicationVersion.getCamWuaId()).isNull();
+    assertThat(actualApplicationVersion.getCurrentCaseOwner()).isEqualTo(CASE_OFFICER);
+
+    verify(applicationWorkAreaPriorityService, times(1))
+        .prioritiseApplicationInWorkArea(applicationVersion, USER2, CASE_OFFICER_ASSIGN_OWNERSHIP, REGULATOR);
+  }
+
+  @Test
+  void findCaseOfficerWuaId_whenNotAssigned() {
+    assertThat(caseAssignmentService.findCaseOfficerWuaId(applicationVersion))
+        .isEmpty();
+  }
+
+  @Test
+  void findCaseOfficerWuaId_whenAssigned() {
+    applicationVersion.setCaseOfficerWuaId(USER_WUA_ID);
+    assertThat(caseAssignmentService.findCaseOfficerWuaId(applicationVersion))
+        .contains(WebUserAccountId.from(USER_WUA_ID));
   }
 }

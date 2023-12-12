@@ -38,7 +38,8 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.Reg
 @HasApplicationPermission(permissions = {
     RolePermission.PROCESS_FCS_APPLICATIONS,
     RolePermission.ASSIGN_FCS_APPLICATIONS,
-    RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS
+    RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS,
+    RolePermission.AUTHORISE_FCS_CONSENTS
 })
 public class ApplicationCaseProcessingController {
 
