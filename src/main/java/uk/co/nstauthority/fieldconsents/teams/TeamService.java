@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
@@ -131,5 +132,12 @@ public class TeamService {
         .filter(teamMember -> teamMember.roles().containsAll(teamRoles))
         .map(TeamMember::wuaId)
         .toList();
+  }
+
+  public boolean hasAnyTeamRoleOf(ServiceUserDetail user, TeamType teamType, Set<TeamRole> roles) {
+    var teamRoleNames = roles.stream().map(TeamRole::name).collect(Collectors.toSet());
+    return getTeamsOfTypeThatUserBelongsTo(user, teamType)
+        .stream()
+        .anyMatch(team -> teamMemberService.isMemberOfTeamWithAnyRoleOf(team.toTeamId(), user, teamRoleNames));
   }
 }

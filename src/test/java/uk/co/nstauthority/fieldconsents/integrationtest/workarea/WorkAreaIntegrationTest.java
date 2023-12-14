@@ -3,6 +3,7 @@ package uk.co.nstauthority.fieldconsents.integrationtest.workarea;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
@@ -799,7 +800,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
     )).thenReturn(List.of(WebUserAccountId.from(CASE_OFFICER_DETAIL)));
     when(energyPortalUserService.findByWuaIds(List.of(WebUserAccountId.from(CASE_OFFICER_DETAIL))))
         .thenReturn(List.of(CASE_OFFICER_ENERGY_PORTAL_USER_DTO));
-
+    when(teamService.hasAnyTeamRoleOf(any(), any(), anySet())).thenReturn(true);
     workAreaFilterForm.setCaseOfficerWuaId(CASE_OFFICER_DETAIL.wuaId());
 
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
@@ -971,7 +972,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
   @Test
   void getWorkAreaItemsForRegulatorCaseOfficer_sortDescending() {
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
-
+    when(teamService.hasAnyTeamRoleOf(any(), any(), anySet())).thenReturn(true);
     var productionAppVersion = createApplicationVersionAssignedToCaseOfficer(ApplicationType.PRODUCTION, consentLengthForm, CASE_OFFICER_DETAIL);
     var flareAppVersion = createApplicationVersionAssignedToCaseOfficer(ApplicationType.FLARE, consentLengthForm, CASE_OFFICER_DETAIL);
 

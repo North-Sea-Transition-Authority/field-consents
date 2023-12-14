@@ -1,24 +1,39 @@
 package uk.co.nstauthority.fieldconsents.teams;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.teams.TeamTestUtil.randomInteger;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.CREATOR;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.EDITOR;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.FINANCE_ADMINISTRATOR;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole.SUBMITTER;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.opred.OpredTeamRole.ALLOCATOR;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.opred.OpredTeamRole.RESPONDER;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.ACCESS_MANAGER;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CASE_MANAGER;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CASE_OFFICER;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.DOCUMENT_TEMPLATE_MANAGER;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.TECHNICAL_REVIEWER;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -27,6 +42,7 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil
 import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.TeamRole;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
@@ -440,5 +456,51 @@ class TeamServiceTest {
 
     assertThat(teamService.getWuaIdsOfTeamMembersWithRoles(team.getTeamType(), Set.of(CASE_OFFICER)))
         .isEmpty();
+  }
+
+  @ParameterizedTest
+  @MethodSource("teamToTeamRoles")
+  void hasAnyTeamRoleOf_whenUserIsMemberOfNoTeam(TeamType teamType, Team team, Set<TeamRole> teamRoles) {
+    when(teamRepository.findAllTeamsOfTypeThatUserIsMemberOf(user.wuaId(), teamType)).thenReturn(List.of());
+
+    assertThat(teamService.hasAnyTeamRoleOf(user, teamType, teamRoles)).isFalse();
+  }
+
+  @ParameterizedTest
+  @MethodSource("teamToTeamRoles")
+  void hasAnyTeamRoleOf_whenTeamMemberIsNotInAnyRoles(TeamType teamType, Team team, Set<TeamRole> teamRoles) {
+    when(teamRepository.findAllTeamsOfTypeThatUserIsMemberOf(user.wuaId(), teamType)).thenReturn(List.of(team));
+
+    var teamRoleNames = teamRoles.stream().map(TeamRole::name).collect(Collectors.toSet());
+    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(team.toTeamId(), user, teamRoleNames)).thenReturn(false);
+
+    assertThat(teamService.hasAnyTeamRoleOf(user, teamType, teamRoles)).isFalse();
+  }
+
+  @ParameterizedTest
+  @MethodSource("teamToTeamRoles")
+  void hasAnyTeamRoleOf_whenTeamMemberIsInRoles(TeamType teamType, Team team, Set<TeamRole> teamRoles) {
+    when(teamRepository.findAllTeamsOfTypeThatUserIsMemberOf(user.wuaId(), teamType)).thenReturn(List.of(team));
+
+    var teamRoleNames = teamRoles.stream().map(TeamRole::name).collect(Collectors.toSet());
+    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(team.toTeamId(), user, teamRoleNames)).thenReturn(true);
+
+    assertThat(teamService.hasAnyTeamRoleOf(user, teamType, teamRoles)).isTrue();
+  }
+
+  private static Stream<Arguments> teamToTeamRoles() {
+    return Stream.of(
+        arguments(TeamType.REGULATOR, TeamTestUtil.Builder().build(),
+            Set.of(
+              CASE_OFFICER,
+              CASE_MANAGER,
+              TECHNICAL_REVIEWER,
+              CONSENTS_AND_AUTHORISATIONS_MANAGER,
+              DOCUMENT_TEMPLATE_MANAGER)),
+        arguments(TeamType.OPRED, TeamTestUtil.Builder().withTeamType(TeamType.OPRED).build(),
+            Set.of(ALLOCATOR, RESPONDER)),
+        arguments(TeamType.INDUSTRY, TeamTestUtil.Builder().withTeamType(TeamType.INDUSTRY).build(),
+            Set.of(CREATOR, SUBMITTER, EDITOR, FINANCE_ADMINISTRATOR))
+    );
   }
 }

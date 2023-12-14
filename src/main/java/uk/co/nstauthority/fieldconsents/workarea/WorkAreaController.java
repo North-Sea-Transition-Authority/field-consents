@@ -14,6 +14,7 @@ import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.UNASSIGNED_C
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -39,7 +40,9 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormService;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
 import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 
 @Controller
@@ -244,7 +247,11 @@ public class WorkAreaController {
   private ModelAndView renderRegulatorWorkAreaOnTab(WorkAreaFilter filter,
                                                     ServiceUserDetail user,
                                                     WorkAreaTab workAreaTab) {
-    var caseOfficersById = convertUsersToMap(caseAssignmentService.getCurrentCaseOfficers());
+    var caseOfficerFilterEnabled = teamService.hasAnyTeamRoleOf(user, TeamType.REGULATOR,
+        Set.of(RegulatorTeamRole.CASE_MANAGER,
+            RegulatorTeamRole.TECHNICAL_REVIEWER,
+            RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER));
+    var caseOfficersById = caseOfficerFilterEnabled ? convertUsersToMap(caseAssignmentService.getCurrentCaseOfficers()) : null;
     var technicalReviewersById = convertUsersToMap(technicalReviewAssignmentService.getCurrentTechnicalReviewers());
     return getWorkAreaModelAndView(filter, user)
         .addObject("selectedTab", workAreaTab.getValue())
