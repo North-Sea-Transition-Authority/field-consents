@@ -1,9 +1,9 @@
 package uk.co.nstauthority.fieldconsents.document.lib;
 
+import jakarta.annotation.Nullable;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
-import org.jetbrains.annotations.Nullable;
 
 public record DocumentTemplateSectionDto(
     UUID id,
@@ -13,7 +13,7 @@ public record DocumentTemplateSectionDto(
     String content,
     int displayOrder,
     List<DocumentTemplateSectionDto> children
-) {
+) implements DocumentSectionDto<DocumentTemplateSectionDto> {
 
   public List<DocumentTemplateSectionDto> descendants() {
     return children.stream()

@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.document.lib;
 
+import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,5 +45,16 @@ public class DocumentInstanceService {
     );
 
     return DocumentInstanceDto.from(documentInstance);
+  }
+
+  public DocumentInstanceDto getDocumentInstanceDtoOrThrow(UUID documentInstanceId) {
+    return DocumentInstanceDto.from(getDocumentInstanceOrThrow(documentInstanceId));
+  }
+
+  DocumentInstance getDocumentInstanceOrThrow(UUID documentInstanceId) {
+    return documentInstanceRepository.findById(documentInstanceId)
+        .orElseThrow(() ->
+            new DocumentInstanceNotFoundException("Unable to find document instance %s".formatted(documentInstanceId))
+        );
   }
 }

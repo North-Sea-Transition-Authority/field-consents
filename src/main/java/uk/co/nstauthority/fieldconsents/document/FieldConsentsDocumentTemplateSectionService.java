@@ -1,67 +1,38 @@
 package uk.co.nstauthority.fieldconsents.document;
 
-import java.util.ArrayList;
-import java.util.Comparator;
+import jakarta.annotation.Nullable;
 import java.util.List;
-import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateSectionDto;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateSectionNumberingUtil;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateSectionService;
 
 @Service
 public class FieldConsentsDocumentTemplateSectionService {
 
   private final DocumentTemplateSectionService documentTemplateSectionService;
+  private final DocumentSectionService documentSectionService;
 
   @Autowired
-  FieldConsentsDocumentTemplateSectionService(DocumentTemplateSectionService documentTemplateSectionService) {
+  FieldConsentsDocumentTemplateSectionService(
+      DocumentTemplateSectionService documentTemplateSectionService,
+      DocumentSectionService documentSectionService
+  ) {
     this.documentTemplateSectionService = documentTemplateSectionService;
+    this.documentSectionService = documentSectionService;
   }
 
-  List<DocumentTemplateSectionSummaryView> getDocumentTemplateSectionSummaryViews(
+  List<DocumentSectionSummaryView> getDocumentSectionSummaryViews(
       DocumentTemplateDto documentTemplateDto
   ) {
     var topLevelDocumentTemplateSectionDtos =
-        documentTemplateSectionService.getDocumentTemplateSectionDtos(documentTemplateDto);
+        documentTemplateSectionService.getTopLevelDocumentTemplateSectionDtos(documentTemplateDto);
 
-    return getSectionSummaryViewsForSectionSiblings(null, topLevelDocumentTemplateSectionDtos);
-  }
-
-  List<DocumentTemplateSectionSummaryView> getSectionSummaryViewsForSectionSiblings(
-      String parentSectionNumberString,
-      List<DocumentTemplateSectionDto> siblingDocumentTemplateSectionDtos
-  ) {
-    var sectionSummaryViews = new ArrayList<DocumentTemplateSectionSummaryView>();
-
-    var sortedSiblingDocumentTemplateSectionDtos = siblingDocumentTemplateSectionDtos.stream()
-        .sorted(Comparator.comparingInt(DocumentTemplateSectionDto::displayOrder))
-        .toList();
-
-    for (var i = 0; i < sortedSiblingDocumentTemplateSectionDtos.size(); i++) {
-      var documentTemplateSectionDto = sortedSiblingDocumentTemplateSectionDtos.get(i);
-
-      var sectionNumberString = DocumentTemplateSectionNumberingUtil.getFullNumberSectionNumberString(
-          parentSectionNumberString,
-          i + 1
-      );
-
-      var documentTemplateSectionSummaryView = DocumentTemplateSectionSummaryView.from(
-          sectionNumberString,
-          documentTemplateSectionDto
-      );
-      sectionSummaryViews.add(documentTemplateSectionSummaryView);
-
-      var childrenSectionSummaryViews = getSectionSummaryViewsForSectionSiblings(
-          sectionNumberString,
-          documentTemplateSectionDto.children()
-      );
-      sectionSummaryViews.addAll(childrenSectionSummaryViews);
-    }
-
-    return sectionSummaryViews;
+    return documentSectionService.getSectionSummaryViewsForSectionSiblings(
+        null,
+        topLevelDocumentTemplateSectionDtos
+    );
   }
 
   void createDocumentTemplateSection(

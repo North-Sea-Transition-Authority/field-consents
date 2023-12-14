@@ -6,8 +6,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -228,20 +226,19 @@ class DocumentTemplateSectionServiceTest {
 
     var documentTemplateSection = DocumentTemplateSectionTestUtil.builder().build();
 
-    ListMultimap<UUID, DocumentTemplateSection> documentTemplateSectionsByParentId = ArrayListMultimap.create();
-    documentTemplateSectionsByParentId.put(null, documentTemplateSection);
+    var allDocumentTemplateSections = List.of(documentTemplateSection);
 
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
 
     doReturn(documentTemplateSection)
         .when(documentTemplateSectionService)
         .getDocumentTemplateSectionOrThrow(documentTemplateSectionId);
-    doReturn(documentTemplateSectionsByParentId)
-        .when(documentTemplateSectionService)
-        .getDocumentTemplateSectionsByParentIdMultimap(documentTemplateSection.getDocumentTemplate().getId());
+    when(documentTemplateSectionRepository.findAllByDocumentTemplateId(
+        documentTemplateSection.getDocumentTemplate().getId())
+    ).thenReturn(allDocumentTemplateSections);
     doReturn(documentTemplateSectionDto)
         .when(documentTemplateSectionService)
-        .getDocumentTemplateSectionDto(documentTemplateSection, documentTemplateSectionsByParentId);
+        .getDocumentTemplateSectionDto(documentTemplateSection, allDocumentTemplateSections);
 
     assertThat(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(documentTemplateSectionId))
         .isEqualTo(documentTemplateSectionDto);
@@ -261,16 +258,17 @@ class DocumentTemplateSectionServiceTest {
         .withParent(documentTemplateSection)
         .build();
 
-    ListMultimap<UUID, DocumentTemplateSection> documentTemplateSectionsByParentId = ArrayListMultimap.create();
-    documentTemplateSectionsByParentId.put(null, documentTemplateSection);
-    documentTemplateSectionsByParentId.put(documentTemplateSection.getId(), documentTemplateSectionChild1);
-    documentTemplateSectionsByParentId.put(documentTemplateSectionChild1.getId(), documentTemplateSectionChild1Child1);
-    documentTemplateSectionsByParentId.put(documentTemplateSection.getId(), documentTemplateSectionChild2);
+    var allDocumentTemplateSections = List.of(
+        documentTemplateSection,
+        documentTemplateSectionChild1,
+        documentTemplateSectionChild1Child1,
+        documentTemplateSectionChild2
+    );
 
     assertThat(
         documentTemplateSectionService.getDocumentTemplateSectionDto(
             documentTemplateSection,
-            documentTemplateSectionsByParentId
+            allDocumentTemplateSections
         )
     ).isEqualTo(
         DocumentTemplateSectionDto.from(
@@ -294,7 +292,7 @@ class DocumentTemplateSectionServiceTest {
 
     assertThatThrownBy(
         () -> documentTemplateSectionService.getDocumentTemplateSectionOrThrow(documentTemplateSectionId)
-    ).isInstanceOf(DocumentTemplateNotFoundException.class);
+    ).isInstanceOf(DocumentTemplateSectionNotFoundException.class);
   }
 
   @Test
@@ -311,7 +309,7 @@ class DocumentTemplateSectionServiceTest {
   }
 
   @Test
-  void getDocumentTemplateSectionDtos() {
+  void getTopLevelDocumentTemplateSectionDtos() {
     var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
 
     var documentTemplateSection1 = DocumentTemplateSectionTestUtil.builder().build();
@@ -326,68 +324,31 @@ class DocumentTemplateSectionServiceTest {
         .withParent(documentTemplateSection2)
         .build();
 
-    ListMultimap<UUID, DocumentTemplateSection> documentTemplateSectionsByParentId = ArrayListMultimap.create();
-    documentTemplateSectionsByParentId.put(null, documentTemplateSection1);
-    documentTemplateSectionsByParentId.put(null, documentTemplateSection2);
-    documentTemplateSectionsByParentId.put(documentTemplateSection2.getId(), documentTemplateSection3);
-    documentTemplateSectionsByParentId.put(documentTemplateSection3.getId(), documentTemplateSection4);
-    documentTemplateSectionsByParentId.put(documentTemplateSection2.getId(), documentTemplateSection5);
+    var allDocumentTemplateSections = List.of(
+        documentTemplateSection1,
+        documentTemplateSection2,
+        documentTemplateSection3,
+        documentTemplateSection4,
+        documentTemplateSection5
+    );
 
     var documentTemplateSectionDto1 = DocumentTemplateSectionDtoTestUtil.builder().build();
     var documentTemplateSectionDto2 = DocumentTemplateSectionDtoTestUtil.builder().build();
 
-    doReturn(documentTemplateSectionsByParentId)
-        .when(documentTemplateSectionService)
-        .getDocumentTemplateSectionsByParentIdMultimap(documentTemplateDto.id());
+    when(documentTemplateSectionRepository.findAllByDocumentTemplateId(documentTemplateDto.id()))
+        .thenReturn(allDocumentTemplateSections);
     doReturn(documentTemplateSectionDto1)
         .when(documentTemplateSectionService)
-        .getDocumentTemplateSectionDto(documentTemplateSection1, documentTemplateSectionsByParentId);
+        .getDocumentTemplateSectionDto(documentTemplateSection1, allDocumentTemplateSections);
     doReturn(documentTemplateSectionDto2)
         .when(documentTemplateSectionService)
-        .getDocumentTemplateSectionDto(documentTemplateSection2, documentTemplateSectionsByParentId);
+        .getDocumentTemplateSectionDto(documentTemplateSection2, allDocumentTemplateSections);
 
-    assertThat(documentTemplateSectionService.getDocumentTemplateSectionDtos(documentTemplateDto))
+    assertThat(documentTemplateSectionService.getTopLevelDocumentTemplateSectionDtos(documentTemplateDto))
         .containsExactly(
             documentTemplateSectionDto1,
             documentTemplateSectionDto2
         );
-  }
-
-  @Test
-  void getDocumentTemplateSectionsByParentIdMultimap() {
-    var documentTemplateId = UUID.randomUUID();
-
-    var documentTemplateSection1 = DocumentTemplateSectionTestUtil.builder().build();
-    var documentTemplateSection2 = DocumentTemplateSectionTestUtil.builder().build();
-    var documentTemplateSection3 = DocumentTemplateSectionTestUtil.builder()
-        .withParent(documentTemplateSection2)
-        .build();
-    var documentTemplateSection4 = DocumentTemplateSectionTestUtil.builder()
-        .withParent(documentTemplateSection3)
-        .build();
-    var documentTemplateSection5 = DocumentTemplateSectionTestUtil.builder()
-        .withParent(documentTemplateSection2)
-        .build();
-
-    when(documentTemplateSectionRepository.findAllByDocumentTemplateId(documentTemplateId)).thenReturn(
-        List.of(
-            documentTemplateSection1,
-            documentTemplateSection2,
-            documentTemplateSection3,
-            documentTemplateSection4,
-            documentTemplateSection5
-        )
-    );
-
-    ListMultimap<UUID, DocumentTemplateSection> expectedDocumentTemplateSectionsByParentId = ArrayListMultimap.create();
-    expectedDocumentTemplateSectionsByParentId.put(null, documentTemplateSection1);
-    expectedDocumentTemplateSectionsByParentId.put(null, documentTemplateSection2);
-    expectedDocumentTemplateSectionsByParentId.put(documentTemplateSection2.getId(), documentTemplateSection3);
-    expectedDocumentTemplateSectionsByParentId.put(documentTemplateSection3.getId(), documentTemplateSection4);
-    expectedDocumentTemplateSectionsByParentId.put(documentTemplateSection2.getId(), documentTemplateSection5);
-
-    assertThat(documentTemplateSectionService.getDocumentTemplateSectionsByParentIdMultimap(documentTemplateId))
-        .isEqualTo(expectedDocumentTemplateSectionsByParentId);
   }
 
   @Test

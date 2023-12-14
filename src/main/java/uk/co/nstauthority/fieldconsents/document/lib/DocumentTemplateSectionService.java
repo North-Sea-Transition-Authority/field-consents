@@ -1,14 +1,11 @@
 package uk.co.nstauthority.fieldconsents.document.lib;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Multimaps;
+import jakarta.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -105,19 +102,21 @@ public class DocumentTemplateSectionService {
 
   public DocumentTemplateSectionDto getDocumentTemplateSectionDtoOrThrow(UUID documentTemplateSectionId) {
     var documentTemplateSection = getDocumentTemplateSectionOrThrow(documentTemplateSectionId);
-    var documentTemplateSectionsByParentId =
-        getDocumentTemplateSectionsByParentIdMultimap(documentTemplateSection.getDocumentTemplate().getId());
+    var allDocumentTemplateSections = documentTemplateSectionRepository.findAllByDocumentTemplateId(
+        documentTemplateSection.getDocumentTemplate().getId()
+    );
 
-    return getDocumentTemplateSectionDto(documentTemplateSection, documentTemplateSectionsByParentId);
+    return getDocumentTemplateSectionDto(documentTemplateSection, allDocumentTemplateSections);
   }
 
   DocumentTemplateSectionDto getDocumentTemplateSectionDto(
       DocumentTemplateSection documentTemplateSection,
-      ListMultimap<UUID, DocumentTemplateSection> documentTemplateSectionsByParentId
+      List<DocumentTemplateSection> allDocumentTemplateSections
   ) {
-    var children = documentTemplateSectionsByParentId.get(documentTemplateSection.getId());
-    var childrenDtos = children.stream()
-        .map(child -> getDocumentTemplateSectionDto(child, documentTemplateSectionsByParentId))
+    var childrenDtos = allDocumentTemplateSections.stream()
+        .filter(section -> section.getParent() != null
+            && section.getParent().getId().equals(documentTemplateSection.getId()))
+        .map(child -> getDocumentTemplateSectionDto(child, allDocumentTemplateSections))
         .toList();
 
     return DocumentTemplateSectionDto.from(documentTemplateSection, childrenDtos);
@@ -126,38 +125,27 @@ public class DocumentTemplateSectionService {
   DocumentTemplateSection getDocumentTemplateSectionOrThrow(UUID documentTemplateSectionId) {
     return documentTemplateSectionRepository.findById(documentTemplateSectionId)
         .orElseThrow(() ->
-            new DocumentTemplateNotFoundException(
+            new DocumentTemplateSectionNotFoundException(
                 "Unable to find document template section %s".formatted(documentTemplateSectionId)
             )
         );
   }
 
-  public List<DocumentTemplateSectionDto> getDocumentTemplateSectionDtos(DocumentTemplateDto documentTemplateDto) {
-    var documentTemplateSectionsByParentId = getDocumentTemplateSectionsByParentIdMultimap(documentTemplateDto.id());
+  public List<DocumentTemplateSectionDto> getTopLevelDocumentTemplateSectionDtos(
+      DocumentTemplateDto documentTemplateDto
+  ) {
+    var allDocumentTemplateSections =
+        documentTemplateSectionRepository.findAllByDocumentTemplateId(documentTemplateDto.id());
 
-    var topLevelDocumentTemplateSections = documentTemplateSectionsByParentId.get(null);
-
-    return topLevelDocumentTemplateSections.stream()
+    return allDocumentTemplateSections.stream()
+        .filter(documentTemplateSection -> documentTemplateSection.getParent() == null)
         .map(documentTemplateSection ->
             getDocumentTemplateSectionDto(
                 documentTemplateSection,
-                documentTemplateSectionsByParentId
+                allDocumentTemplateSections
             )
         )
         .toList();
-  }
-
-  ListMultimap<UUID, DocumentTemplateSection> getDocumentTemplateSectionsByParentIdMultimap(
-      UUID documentTemplateId
-  ) {
-    return documentTemplateSectionRepository.findAllByDocumentTemplateId(documentTemplateId).stream()
-        .collect(
-            Multimaps.toMultimap(
-                section -> section.getParent() == null ? null : section.getParent().getId(),
-                Function.identity(),
-                ArrayListMultimap::create
-            )
-        );
   }
 
   List<DocumentTemplateSection> getDocumentTemplateSections(DocumentTemplate documentTemplate) {

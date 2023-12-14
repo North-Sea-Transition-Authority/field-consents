@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateSectionService;
 
@@ -20,91 +19,30 @@ class FieldConsentsDocumentTemplateSectionServiceTest {
   @Mock
   private DocumentTemplateSectionService documentTemplateSectionService;
 
+  @Mock
+  private DocumentSectionService documentSectionService;
+
   @InjectMocks
-  @Spy
   private FieldConsentsDocumentTemplateSectionService fieldConsentsDocumentTemplateSectionService;
 
   @Test
   void getDocumentTemplateSectionSummaryViews() {
     var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
 
-    var documentTemplateSectionDtos = List.of(DocumentTemplateSectionDtoTestUtil.builder().build());
+    var topLevelDocumentTemplateSectionDtos = List.of(DocumentTemplateSectionDtoTestUtil.builder().build());
 
     var sectionSummaryViewsForSectionSiblings =
-        List.of(new DocumentTemplateSectionSummaryView(null, null, null, null, null, null, null));
+        List.of(new DocumentSectionSummaryView(null, null, null, null, null, null, null));
 
-    when(documentTemplateSectionService.getDocumentTemplateSectionDtos(documentTemplateDto))
-        .thenReturn(documentTemplateSectionDtos);
+    when(documentTemplateSectionService.getTopLevelDocumentTemplateSectionDtos(documentTemplateDto))
+        .thenReturn(topLevelDocumentTemplateSectionDtos);
 
     doReturn(sectionSummaryViewsForSectionSiblings)
-        .when(fieldConsentsDocumentTemplateSectionService)
-        .getSectionSummaryViewsForSectionSiblings(null, documentTemplateSectionDtos);
+        .when(documentSectionService)
+        .getSectionSummaryViewsForSectionSiblings(null, topLevelDocumentTemplateSectionDtos);
 
-    assertThat(fieldConsentsDocumentTemplateSectionService.getDocumentTemplateSectionSummaryViews(documentTemplateDto))
+    assertThat(fieldConsentsDocumentTemplateSectionService.getDocumentSectionSummaryViews(documentTemplateDto))
         .isEqualTo(sectionSummaryViewsForSectionSiblings);
-  }
-
-  @Test
-  void getSectionSummaryViewsForSectionSiblings() {
-    var parentSectionNumberString = "1";
-
-    var siblingDocumentTemplateSectionDto1 =
-        DocumentTemplateSectionDtoTestUtil.builder()
-            .withDisplayOrder(1)
-            .build();
-
-    var siblingDocumentTemplateSectionDto2Child1Child1 =
-        DocumentTemplateSectionDtoTestUtil.builder().build();
-    var siblingDocumentTemplateSectionDto2Child1 =
-        DocumentTemplateSectionDtoTestUtil.builder()
-            .withChildren(List.of(siblingDocumentTemplateSectionDto2Child1Child1))
-            .withDisplayOrder(1)
-            .build();
-    var siblingDocumentTemplateSectionDto2Child2 =
-        DocumentTemplateSectionDtoTestUtil.builder()
-            .withDisplayOrder(2)
-            .build();
-    var siblingDocumentTemplateSectionDto2 =
-        DocumentTemplateSectionDtoTestUtil.builder()
-            .withChildren(
-                List.of(
-                    siblingDocumentTemplateSectionDto2Child2,
-                    siblingDocumentTemplateSectionDto2Child1
-                )
-            )
-            .withDisplayOrder(2)
-            .build();
-
-    var siblingDocumentTemplateSectionDtos =
-        List.of(siblingDocumentTemplateSectionDto1, siblingDocumentTemplateSectionDto2);
-
-    assertThat(
-        fieldConsentsDocumentTemplateSectionService.getSectionSummaryViewsForSectionSiblings(
-            parentSectionNumberString,
-            siblingDocumentTemplateSectionDtos
-        )
-    ).containsExactly(
-        DocumentTemplateSectionSummaryView.from(
-            "1.1",
-            siblingDocumentTemplateSectionDto1
-        ),
-        DocumentTemplateSectionSummaryView.from(
-            "1.2",
-            siblingDocumentTemplateSectionDto2
-        ),
-        DocumentTemplateSectionSummaryView.from(
-            "1.2.1",
-            siblingDocumentTemplateSectionDto2Child1
-        ),
-        DocumentTemplateSectionSummaryView.from(
-            "1.2.1.1",
-            siblingDocumentTemplateSectionDto2Child1Child1
-        ),
-        DocumentTemplateSectionSummaryView.from(
-            "1.2.2",
-            siblingDocumentTemplateSectionDto2Child2
-        )
-    );
   }
 
   @Test

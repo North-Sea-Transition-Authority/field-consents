@@ -1,14 +1,19 @@
 package uk.co.nstauthority.fieldconsents.document.lib;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -24,6 +29,7 @@ class DocumentInstanceServiceTest {
   private DocumentTemplateService documentTemplateService;
 
   @InjectMocks
+  @Spy
   private DocumentInstanceService documentInstanceService;
 
   @Test
@@ -62,5 +68,38 @@ class DocumentInstanceServiceTest {
     );
 
     assertThat(documentInstanceDto).isEqualTo(DocumentInstanceDto.from(documentInstance));
+  }
+
+  @Test
+  void getDocumentInstanceDtoOrThrow() {
+    var documentInstanceId = UUID.randomUUID();
+
+    var documentInstance = DocumentInstanceTestUtil.builder().build();
+
+    doReturn(documentInstance).when(documentInstanceService).getDocumentInstanceOrThrow(documentInstanceId);
+
+    assertThat(documentInstanceService.getDocumentInstanceDtoOrThrow(documentInstanceId))
+        .isEqualTo(DocumentInstanceDto.from(documentInstance));
+  }
+
+  @Test
+  void getDocumentInstanceOrThrow_documentInstanceDoesNotExist() {
+    var documentInstanceId = UUID.randomUUID();
+
+    when(documentInstanceRepository.findById(documentInstanceId)).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> documentInstanceService.getDocumentInstanceOrThrow(documentInstanceId))
+        .isInstanceOf(DocumentInstanceNotFoundException.class);
+  }
+
+  @Test
+  void getDocumentInstanceOrThrow_documentInstanceExists() {
+    var documentInstanceId = UUID.randomUUID();
+
+    var documentInstance = DocumentInstanceTestUtil.builder().build();
+
+    when(documentInstanceRepository.findById(documentInstanceId)).thenReturn(Optional.of(documentInstance));
+
+    assertThat(documentInstanceService.getDocumentInstanceOrThrow(documentInstanceId)).isEqualTo(documentInstance);
   }
 }

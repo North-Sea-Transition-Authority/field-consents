@@ -2,10 +2,10 @@ package uk.co.nstauthority.fieldconsents.document;
 
 import java.util.List;
 import java.util.UUID;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateSectionDto;
+import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceDto;
+import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceSectionDto;
 
-class DocumentTemplateSectionDtoTestUtil {
+class DocumentInstanceSectionDtoTestUtil {
 
   static Builder builder() {
     return new Builder();
@@ -14,12 +14,13 @@ class DocumentTemplateSectionDtoTestUtil {
   static class Builder {
 
     private UUID id = UUID.randomUUID();
-    private DocumentTemplateDto documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
+    private DocumentInstanceDto documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
+    private UUID createdFromDocumentTemplateSectionId = UUID.randomUUID();
     private UUID parentId;
     private String title = "Test title";
     private String content = "Test content";
     private int displayOrder = 1;
-    private List<DocumentTemplateSectionDto> children = List.of();
+    private List<DocumentInstanceSectionDto> children = List.of();
 
     private Builder() {
     }
@@ -29,8 +30,13 @@ class DocumentTemplateSectionDtoTestUtil {
       return this;
     }
 
-    Builder withDocumentTemplateDto(DocumentTemplateDto documentTemplateDto) {
-      this.documentTemplateDto = documentTemplateDto;
+    Builder withDocumentInstanceDto(DocumentInstanceDto documentInstanceDto) {
+      this.documentInstanceDto = documentInstanceDto;
+      return this;
+    }
+
+    Builder withCreatedFromDocumentTemplateSectionId(UUID createdFromDocumentTemplateSectionId) {
+      this.createdFromDocumentTemplateSectionId = createdFromDocumentTemplateSectionId;
       return this;
     }
 
@@ -54,15 +60,16 @@ class DocumentTemplateSectionDtoTestUtil {
       return this;
     }
 
-    Builder withChildren(List<DocumentTemplateSectionDto> children) {
+    Builder withChildren(List<DocumentInstanceSectionDto> children) {
       this.children = children;
       return this;
     }
 
-    DocumentTemplateSectionDto build() {
-      return new DocumentTemplateSectionDto(
+    DocumentInstanceSectionDto build() {
+      return new DocumentInstanceSectionDto(
           id,
-          documentTemplateDto,
+          documentInstanceDto,
+          createdFromDocumentTemplateSectionId,
           parentId,
           title,
           content,

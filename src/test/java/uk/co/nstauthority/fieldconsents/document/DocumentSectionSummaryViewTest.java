@@ -6,18 +6,18 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import org.junit.jupiter.api.Test;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
-class DocumentTemplateSectionSummaryViewTest {
+class DocumentSectionSummaryViewTest {
 
   @Test
-  void from() {
+  void from_withDocumentTemplateSectionDto() {
     var sectionNumberString = "1.2.3";
 
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
 
     var documentTemplateSectionId = documentTemplateSectionDto.id();
 
-    assertThat(DocumentTemplateSectionSummaryView.from(sectionNumberString, documentTemplateSectionDto)).isEqualTo(
-        new DocumentTemplateSectionSummaryView(
+    assertThat(DocumentSectionSummaryView.from(sectionNumberString, documentTemplateSectionDto)).isEqualTo(
+        new DocumentSectionSummaryView(
             "1.2.3 Test title",
             documentTemplateSectionDto.content(),
             ReverseRouter.route(on(DocumentTemplateSectionController.class)
@@ -30,6 +30,25 @@ class DocumentTemplateSectionSummaryViewTest {
                 .getEditDocumentTemplateSection(documentTemplateSectionId)),
             ReverseRouter.route(on(DocumentTemplateSectionController.class)
                 .getRemoveDocumentTemplateSection(documentTemplateSectionId))
+        )
+    );
+  }
+
+  @Test
+  void from_withDocumentInstanceSectionDto() {
+    var sectionNumberString = "1.2.3";
+
+    var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
+
+    assertThat(DocumentSectionSummaryView.from(sectionNumberString, documentInstanceSectionDto)).isEqualTo(
+        new DocumentSectionSummaryView(
+            "1.2.3 Test title",
+            documentInstanceSectionDto.content(),
+            null,
+            null,
+            null,
+            null,
+            null
         )
     );
   }
