@@ -40,15 +40,22 @@ class DocumentSectionSummaryViewTest {
 
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
 
+    var documentInstanceSectionId = documentInstanceSectionDto.id();
+
     assertThat(DocumentSectionSummaryView.from(sectionNumberString, documentInstanceSectionDto)).isEqualTo(
         new DocumentSectionSummaryView(
             "1.2.3 Test title",
             documentInstanceSectionDto.content(),
-            null,
-            null,
-            null,
-            null,
-            null
+            ReverseRouter.route(on(DocumentInstanceSectionController.class)
+                .getAddDocumentInstanceSectionBefore(documentInstanceSectionId)),
+            ReverseRouter.route(on(DocumentInstanceSectionController.class)
+                .getAddDocumentInstanceSectionAfter(documentInstanceSectionId)),
+            ReverseRouter.route(on(DocumentInstanceSectionController.class)
+                .getAddDocumentInstanceSubsection(documentInstanceSectionId)),
+            ReverseRouter.route(on(DocumentInstanceSectionController.class)
+                .getEditDocumentInstanceSection(documentInstanceSectionId)),
+            ReverseRouter.route(on(DocumentInstanceSectionController.class)
+                .getRemoveDocumentInstanceSection(documentInstanceSectionId))
         )
     );
   }

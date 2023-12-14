@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.document;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -42,5 +43,42 @@ class FieldConsentsDocumentInstanceSectionServiceTest {
 
     assertThat(fieldConsentsDocumentInstanceSectionService.getDocumentSectionSummaryViews(documentInstanceDto))
         .isEqualTo(sectionSummaryViewsForSectionSiblings);
+  }
+
+  @Test
+  void createDocumentInstanceSection() {
+    var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
+    var parentDto = DocumentInstanceSectionDtoTestUtil.builder().build();
+    var form = DocumentSectionFormTestUtil.builder().build();
+    int displayOrder = 1;
+
+    fieldConsentsDocumentInstanceSectionService.createDocumentInstanceSection(
+        documentInstanceDto,
+        parentDto,
+        form,
+        displayOrder
+    );
+
+    verify(documentInstanceSectionService).createDocumentInstanceSection(
+        documentInstanceDto,
+        parentDto,
+        form.title(),
+        form.content(),
+        displayOrder
+    );
+  }
+
+  @Test
+  void editDocumentInstanceSection() {
+    var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
+    var form = DocumentSectionFormTestUtil.builder().build();
+
+    fieldConsentsDocumentInstanceSectionService.editDocumentInstanceSection(documentInstanceSectionDto, form);
+
+    verify(documentInstanceSectionService).editDocumentInstanceSection(
+        documentInstanceSectionDto,
+        form.title(),
+        form.content()
+    );
   }
 }

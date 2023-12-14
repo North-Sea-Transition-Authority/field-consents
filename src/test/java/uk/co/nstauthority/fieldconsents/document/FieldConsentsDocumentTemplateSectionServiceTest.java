@@ -49,7 +49,7 @@ class FieldConsentsDocumentTemplateSectionServiceTest {
   void createDocumentTemplateSection() {
     var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
     var parentDto = DocumentTemplateSectionDtoTestUtil.builder().build();
-    var form = DocumentTemplateSectionFormTestUtil.builder().build();
+    var form = DocumentSectionFormTestUtil.builder().build();
     int displayOrder = 1;
 
     fieldConsentsDocumentTemplateSectionService.createDocumentTemplateSection(
@@ -71,7 +71,7 @@ class FieldConsentsDocumentTemplateSectionServiceTest {
   @Test
   void editDocumentTemplateSection() {
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
-    var form = DocumentTemplateSectionFormTestUtil.builder().build();
+    var form = DocumentSectionFormTestUtil.builder().build();
 
     fieldConsentsDocumentTemplateSectionService.editDocumentTemplateSection(documentTemplateSectionDto, form);
 

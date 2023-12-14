@@ -49,13 +49,13 @@ public class DocumentTemplateSectionController {
     var documentTemplateSectionDto =
         documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(documentTemplateSectionId);
 
-    return getAddDocumentTemplateSectionModelAndView(documentTemplateSectionDto, DocumentTemplateSectionForm.empty());
+    return getAddDocumentTemplateSectionModelAndView(documentTemplateSectionDto, DocumentSectionForm.empty());
   }
 
   @PostMapping("/add-before")
   public ModelAndView addDocumentTemplateSectionBefore(
       @PathVariable UUID documentTemplateSectionId,
-      @Valid @ModelAttribute("form") DocumentTemplateSectionForm form,
+      @Valid @ModelAttribute("form") DocumentSectionForm form,
       BindingResult bindingResult,
       RedirectAttributes redirectAttributes
   ) {
@@ -82,13 +82,13 @@ public class DocumentTemplateSectionController {
     var documentTemplateSectionDto =
         documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(documentTemplateSectionId);
 
-    return getAddDocumentTemplateSectionModelAndView(documentTemplateSectionDto, DocumentTemplateSectionForm.empty());
+    return getAddDocumentTemplateSectionModelAndView(documentTemplateSectionDto, DocumentSectionForm.empty());
   }
 
   @PostMapping("/add-after")
   public ModelAndView addDocumentTemplateSectionAfter(
       @PathVariable UUID documentTemplateSectionId,
-      @Valid @ModelAttribute("form") DocumentTemplateSectionForm form,
+      @Valid @ModelAttribute("form") DocumentSectionForm form,
       BindingResult bindingResult,
       RedirectAttributes redirectAttributes
   ) {
@@ -115,13 +115,13 @@ public class DocumentTemplateSectionController {
     var documentTemplateSectionDto =
         documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(documentTemplateSectionId);
 
-    return getAddDocumentTemplateSectionModelAndView(documentTemplateSectionDto, DocumentTemplateSectionForm.empty());
+    return getAddDocumentTemplateSectionModelAndView(documentTemplateSectionDto, DocumentSectionForm.empty());
   }
 
   @PostMapping("/add-subsection")
   public ModelAndView addDocumentTemplateSubsection(
       @PathVariable UUID documentTemplateSectionId,
-      @Valid @ModelAttribute("form") DocumentTemplateSectionForm form,
+      @Valid @ModelAttribute("form") DocumentSectionForm form,
       BindingResult bindingResult,
       RedirectAttributes redirectAttributes
   ) {
@@ -140,9 +140,9 @@ public class DocumentTemplateSectionController {
 
   private ModelAndView getAddDocumentTemplateSectionModelAndView(
       DocumentTemplateSectionDto documentTemplateSectionDto,
-      DocumentTemplateSectionForm form
+      DocumentSectionForm form
   ) {
-    return new ModelAndView("fcs/document/addOrEditDocumentTemplateSection")
+    return new ModelAndView("fcs/document/addOrEditDocumentSection")
         .addObject("form", form)
         .addObject("pageTitle", ADD_PAGE_TITLE)
         .addObject("submitButtonText", ADD_SUBMIT_BUTTON_TEXT)
@@ -155,7 +155,7 @@ public class DocumentTemplateSectionController {
 
   private ModelAndView addDocumentSection(
       DocumentTemplateSectionDto documentTemplateSectionDto,
-      DocumentTemplateSectionForm form,
+      DocumentSectionForm form,
       BindingResult bindingResult,
       RedirectAttributes redirectAttributes,
       @Nullable DocumentTemplateSectionDto parentDto,
@@ -182,7 +182,7 @@ public class DocumentTemplateSectionController {
   public ModelAndView getEditDocumentTemplateSection(@PathVariable UUID documentTemplateSectionId) {
     var documentTemplateSectionDto =
         documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(documentTemplateSectionId);
-    var form = DocumentTemplateSectionForm.from(documentTemplateSectionDto);
+    var form = DocumentSectionForm.from(documentTemplateSectionDto);
 
     return getEditDocumentTemplateSectionModelAndView(documentTemplateSectionDto, form);
   }
@@ -190,7 +190,7 @@ public class DocumentTemplateSectionController {
   @PostMapping("/edit")
   public ModelAndView editDocumentTemplateSection(
       @PathVariable UUID documentTemplateSectionId,
-      @Valid @ModelAttribute("form") DocumentTemplateSectionForm form,
+      @Valid @ModelAttribute("form") DocumentSectionForm form,
       BindingResult bindingResult,
       RedirectAttributes redirectAttributes
   ) {
@@ -211,9 +211,9 @@ public class DocumentTemplateSectionController {
 
   private ModelAndView getEditDocumentTemplateSectionModelAndView(
       DocumentTemplateSectionDto documentTemplateSectionDto,
-      DocumentTemplateSectionForm form
+      DocumentSectionForm form
   ) {
-    return new ModelAndView("fcs/document/addOrEditDocumentTemplateSection")
+    return new ModelAndView("fcs/document/addOrEditDocumentSection")
         .addObject("form", form)
         .addObject("pageTitle", EDIT_PAGE_TITLE)
         .addObject("submitButtonText", EDIT_SUBMIT_BUTTON_TEXT)
@@ -229,8 +229,9 @@ public class DocumentTemplateSectionController {
     var documentTemplateSectionDto =
         documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(documentTemplateSectionId);
 
-    return new ModelAndView("fcs/document/removeDocumentTemplateSection")
-        .addObject("documentTemplateSectionDto", documentTemplateSectionDto)
+    return new ModelAndView("fcs/document/removeDocumentSection")
+        .addObject("documentSectionDto", documentTemplateSectionDto)
+        .addObject("documentSectionDtoDescendants", documentTemplateSectionDto.descendants())
         .addObject(
             "cancelUrl",
             ReverseRouter.route(on(DocumentTemplateController.class)

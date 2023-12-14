@@ -6,15 +6,15 @@
   <@fdsForm.htmlForm>
     <@fdsSummaryList.summaryListCard headingText="Section details" summaryListId="section-details-summary-card-list">
       <@fdsSummaryList.summaryListRowNoAction keyText="Title">
-        ${documentTemplateSectionDto.title()}
+        ${documentSectionDto.title()}
       </@fdsSummaryList.summaryListRowNoAction>
 
       <@fdsSummaryList.summaryListRowNoAction keyText="Text">
-        <p class="govuk-body govuk-body__preserve-whitespace">${documentTemplateSectionDto.content()!}</p>
+        <p class="govuk-body govuk-body__preserve-whitespace">${documentSectionDto.content()!}</p>
       </@fdsSummaryList.summaryListRowNoAction>
     </@fdsSummaryList.summaryListCard>
 
-    <#if documentTemplateSectionDto.descendants()?has_content>
+    <#if documentSectionDtoDescendants?has_content>
       <@fdsWarning.warning>
         Removing this section will also remove all the section's subsections.
       </@fdsWarning.warning>

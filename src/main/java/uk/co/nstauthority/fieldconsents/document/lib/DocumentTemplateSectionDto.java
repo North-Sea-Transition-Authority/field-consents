@@ -3,7 +3,6 @@ package uk.co.nstauthority.fieldconsents.document.lib;
 import jakarta.annotation.Nullable;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Stream;
 
 public record DocumentTemplateSectionDto(
     UUID id,
@@ -14,12 +13,6 @@ public record DocumentTemplateSectionDto(
     int displayOrder,
     List<DocumentTemplateSectionDto> children
 ) implements DocumentSectionDto<DocumentTemplateSectionDto> {
-
-  public List<DocumentTemplateSectionDto> descendants() {
-    return children.stream()
-        .flatMap(child -> Stream.concat(Stream.of(child), child.descendants().stream()))
-        .toList();
-  }
 
   static DocumentTemplateSectionDto from(
       DocumentTemplateSection documentTemplateSection,

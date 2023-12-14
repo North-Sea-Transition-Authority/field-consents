@@ -88,4 +88,22 @@ class DocumentInstanceSectionDtoTest {
         )
     );
   }
+
+  @Test
+  void descendants() {
+    var documentInstanceSectionDtoChild1Child1 = DocumentInstanceSectionDtoTestUtil.builder().build();
+    var documentInstanceSectionDtoChild1 = DocumentInstanceSectionDtoTestUtil.builder()
+        .withChildren(List.of(documentInstanceSectionDtoChild1Child1))
+        .build();
+    var documentInstanceSectionDtoChild2 = DocumentInstanceSectionDtoTestUtil.builder().build();
+    var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder()
+        .withChildren(List.of(documentInstanceSectionDtoChild1, documentInstanceSectionDtoChild2))
+        .build();
+
+    assertThat(documentInstanceSectionDto.descendants()).containsExactly(
+        documentInstanceSectionDtoChild1,
+        documentInstanceSectionDtoChild1Child1,
+        documentInstanceSectionDtoChild2
+    );
+  }
 }

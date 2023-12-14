@@ -9,4 +9,6 @@ import uk.co.nstauthority.fieldconsents.application.duplication.NotDuplicationSo
 interface DocumentInstanceSectionRepository extends ListCrudRepository<DocumentInstanceSection, UUID> {
 
   List<DocumentInstanceSection> findAllByDocumentInstanceId(UUID documentInstanceId);
+
+  List<DocumentInstanceSection> findAllByParent_IdAndDisplayOrderGreaterThanEqual(UUID parentId, int displayOrder);
 }

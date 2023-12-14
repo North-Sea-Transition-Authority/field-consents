@@ -38,7 +38,7 @@ public class FieldConsentsDocumentTemplateSectionService {
   void createDocumentTemplateSection(
       DocumentTemplateDto documentTemplateDto,
       @Nullable DocumentTemplateSectionDto parentDto,
-      DocumentTemplateSectionForm form,
+      DocumentSectionForm form,
       int displayOrder
   ) {
     documentTemplateSectionService.createDocumentTemplateSection(
@@ -52,7 +52,7 @@ public class FieldConsentsDocumentTemplateSectionService {
 
   void editDocumentTemplateSection(
       DocumentTemplateSectionDto documentTemplateSectionDto,
-      DocumentTemplateSectionForm form
+      DocumentSectionForm form
   ) {
     documentTemplateSectionService.editDocumentTemplateSection(
         documentTemplateSectionDto,

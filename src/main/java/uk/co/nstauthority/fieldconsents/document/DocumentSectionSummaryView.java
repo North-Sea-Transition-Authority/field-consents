@@ -23,6 +23,8 @@ public record DocumentSectionSummaryView(
   ) {
     var title = "%s %s".formatted(sectionNumberString, documentSectionDto.title());
 
+    var documentSectionId = documentSectionDto.id();
+
     String addSectionBeforeUrl;
     String addSectionAfterUrl;
     String addSubsectionUrl;
@@ -30,8 +32,6 @@ public record DocumentSectionSummaryView(
     String removeUrl;
 
     if (documentSectionDto instanceof DocumentTemplateSectionDto) {
-      var documentSectionId = documentSectionDto.id();
-
       addSectionBeforeUrl = ReverseRouter.route(on(DocumentTemplateSectionController.class)
           .getAddDocumentTemplateSectionBefore(documentSectionId));
       addSectionAfterUrl =  ReverseRouter.route(on(DocumentTemplateSectionController.class)
@@ -43,11 +43,16 @@ public record DocumentSectionSummaryView(
       removeUrl = ReverseRouter.route(on(DocumentTemplateSectionController.class)
           .getRemoveDocumentTemplateSection(documentSectionId));
     } else if (documentSectionDto instanceof DocumentInstanceSectionDto) {
-      addSectionBeforeUrl = null; // TODO FCS-537
-      addSectionAfterUrl = null; // TODO FCS-537
-      addSubsectionUrl = null; // TODO FCS-537
-      editUrl = null; // TODO FCS-537
-      removeUrl = null; // TODO FCS-537
+      addSectionBeforeUrl = ReverseRouter.route(on(DocumentInstanceSectionController.class)
+          .getAddDocumentInstanceSectionBefore(documentSectionId));
+      addSectionAfterUrl =  ReverseRouter.route(on(DocumentInstanceSectionController.class)
+          .getAddDocumentInstanceSectionAfter(documentSectionId));
+      addSubsectionUrl = ReverseRouter.route(on(DocumentInstanceSectionController.class)
+          .getAddDocumentInstanceSubsection(documentSectionId));
+      editUrl = ReverseRouter.route(on(DocumentInstanceSectionController.class)
+          .getEditDocumentInstanceSection(documentSectionId));
+      removeUrl = ReverseRouter.route(on(DocumentInstanceSectionController.class)
+          .getRemoveDocumentInstanceSection(documentSectionId));
     } else {
       throw new IllegalStateException("Unknown DocumentSectionDto class %s".formatted(documentSectionDto.getClass()));
     }

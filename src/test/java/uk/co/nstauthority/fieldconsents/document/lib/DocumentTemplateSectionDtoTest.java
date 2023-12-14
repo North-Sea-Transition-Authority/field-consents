@@ -8,24 +8,6 @@ import org.junit.jupiter.api.Test;
 class DocumentTemplateSectionDtoTest {
 
   @Test
-  void descendants() {
-    var documentTemplateSectionDtoChild1Child1 = DocumentTemplateSectionDtoTestUtil.builder().build();
-    var documentTemplateSectionDtoChild1 = DocumentTemplateSectionDtoTestUtil.builder()
-        .withChildren(List.of(documentTemplateSectionDtoChild1Child1))
-        .build();
-    var documentTemplateSectionDtoChild2 = DocumentTemplateSectionDtoTestUtil.builder().build();
-    var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder()
-        .withChildren(List.of(documentTemplateSectionDtoChild1, documentTemplateSectionDtoChild2))
-        .build();
-
-    assertThat(documentTemplateSectionDto.descendants()).containsExactly(
-        documentTemplateSectionDtoChild1,
-        documentTemplateSectionDtoChild1Child1,
-        documentTemplateSectionDtoChild2
-    );
-  }
-
-  @Test
   void from_sectionDoesNotHaveParent() {
     var documentTemplateSection = DocumentTemplateSectionTestUtil.builder().build();
 
@@ -72,6 +54,24 @@ class DocumentTemplateSectionDtoTest {
             documentTemplateSection.getDisplayOrder(),
             children
         )
+    );
+  }
+
+  @Test
+  void descendants() {
+    var documentTemplateSectionDtoChild1Child1 = DocumentTemplateSectionDtoTestUtil.builder().build();
+    var documentTemplateSectionDtoChild1 = DocumentTemplateSectionDtoTestUtil.builder()
+        .withChildren(List.of(documentTemplateSectionDtoChild1Child1))
+        .build();
+    var documentTemplateSectionDtoChild2 = DocumentTemplateSectionDtoTestUtil.builder().build();
+    var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder()
+        .withChildren(List.of(documentTemplateSectionDtoChild1, documentTemplateSectionDtoChild2))
+        .build();
+
+    assertThat(documentTemplateSectionDto.descendants()).containsExactly(
+        documentTemplateSectionDtoChild1,
+        documentTemplateSectionDtoChild1Child1,
+        documentTemplateSectionDtoChild2
     );
   }
 }
