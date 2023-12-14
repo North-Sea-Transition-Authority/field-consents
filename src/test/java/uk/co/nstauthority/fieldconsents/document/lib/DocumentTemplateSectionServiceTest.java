@@ -34,7 +34,7 @@ class DocumentTemplateSectionServiceTest {
   private DocumentTemplateSectionService documentTemplateSectionService;
 
   @Captor
-  private ArgumentCaptor<List<DocumentTemplateSection>> documentTemplateSectionListArgumentCaptor;
+  private ArgumentCaptor<List<DocumentTemplateSection>> documentTemplateSectionListCaptor;
 
   @Test
   void createDocumentTemplateSection_nullParent() {
@@ -70,9 +70,9 @@ class DocumentTemplateSectionServiceTest {
     assertThat(existingSibling1.getDisplayOrder()).isEqualTo(displayOrder + 1);
     assertThat(existingSibling2.getDisplayOrder()).isEqualTo(displayOrder + 2);
 
-    verify(documentTemplateSectionRepository).saveAll(documentTemplateSectionListArgumentCaptor.capture());
+    verify(documentTemplateSectionRepository).saveAll(documentTemplateSectionListCaptor.capture());
 
-    var savedDocumentTemplateSections = documentTemplateSectionListArgumentCaptor.getValue();
+    var savedDocumentTemplateSections = documentTemplateSectionListCaptor.getValue();
 
     assertThat(savedDocumentTemplateSections).hasSize(3);
 
@@ -141,9 +141,9 @@ class DocumentTemplateSectionServiceTest {
     assertThat(existingSibling1.getDisplayOrder()).isEqualTo(displayOrder + 1);
     assertThat(existingSibling2.getDisplayOrder()).isEqualTo(displayOrder + 2);
 
-    verify(documentTemplateSectionRepository).saveAll(documentTemplateSectionListArgumentCaptor.capture());
+    verify(documentTemplateSectionRepository).saveAll(documentTemplateSectionListCaptor.capture());
 
-    var savedDocumentTemplateSections = documentTemplateSectionListArgumentCaptor.getValue();
+    var savedDocumentTemplateSections = documentTemplateSectionListCaptor.getValue();
 
     assertThat(savedDocumentTemplateSections).hasSize(3);
 
@@ -388,5 +388,20 @@ class DocumentTemplateSectionServiceTest {
 
     assertThat(documentTemplateSectionService.getDocumentTemplateSectionsByParentIdMultimap(documentTemplateId))
         .isEqualTo(expectedDocumentTemplateSectionsByParentId);
+  }
+
+  @Test
+  void getDocumentTemplateSections() {
+    var documentTemplate = DocumentTemplateTestUtil.builder().build();
+    var documentTemplateSections = List.of(
+        DocumentTemplateSectionTestUtil.builder().build(),
+        DocumentTemplateSectionTestUtil.builder().build()
+    );
+
+    when(documentTemplateSectionRepository.findAllByDocumentTemplateId(documentTemplate.getId()))
+        .thenReturn(documentTemplateSections);
+
+    assertThat(documentTemplateSectionService.getDocumentTemplateSections(documentTemplate))
+        .isEqualTo(documentTemplateSections);
   }
 }

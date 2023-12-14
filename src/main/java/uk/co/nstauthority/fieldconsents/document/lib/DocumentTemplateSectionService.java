@@ -159,4 +159,8 @@ public class DocumentTemplateSectionService {
             )
         );
   }
+
+  List<DocumentTemplateSection> getDocumentTemplateSections(DocumentTemplate documentTemplate) {
+    return documentTemplateSectionRepository.findAllByDocumentTemplateId(documentTemplate.getId());
+  }
 }
