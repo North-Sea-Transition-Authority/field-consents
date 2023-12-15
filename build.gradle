@@ -96,6 +96,10 @@ flyway {
   user = 'fcs_app'
   password = 'dev1'
   schemas = ['fcs']
+  placeholders = [
+      'datawarehouse-user-password' : 'dev1',
+      'application-schema' : 'fcs'
+  ]
 }
 
 //Set the url before the build to dynamically set the port
