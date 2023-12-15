@@ -1,5 +1,5 @@
 INSERT INTO fcs.teams (type, display_name, organisation_group_id)
-VALUES ('INDUSTRY', 'BP EXPLORATION', 50);
+VALUES ('INDUSTRY', 'BP EXPLORATION OIL & GAS COMPANY', 50);
 
 INSERT INTO fcs.team_member_roles (wua_id, team_id, role) VALUES
     (53644, (SELECT id FROM fcs.teams WHERE type = 'OPRED'), 'ACCESS_MANAGER'), -- opred-access-manager@field-consents.co.uk
