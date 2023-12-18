@@ -7,12 +7,15 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionAudit;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEvent;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventType;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 public class ApplicationVersionAuditTestUtil {
 
   static final Long CASE_OFFICER_WUA_ID_1 = 1L;
 
   static final Long CASE_OFFICER_WUA_ID_2 = 2L;
+
+  static final Long CAM_USER_WUA_ID_1 = 100L;
 
   static final Long AUDIT_USER_WUA_ID = 1000L;
 
@@ -26,7 +29,9 @@ public class ApplicationVersionAuditTestUtil {
         CASE_OFFICER_WUA_ID_1,
         DUMMY_INSTANT,
         CASE_OFFICER_WUA_ID_1,
-        ApplicationVersionStatus.SUBMITTED
+        ApplicationVersionStatus.SUBMITTED,
+        null,
+        RegulatorTeamRole.CASE_OFFICER
     );
   }
 
@@ -44,7 +49,9 @@ public class ApplicationVersionAuditTestUtil {
         null,
         DUMMY_INSTANT,
         CASE_OFFICER_WUA_ID_1,
-        ApplicationVersionStatus.SUBMITTED
+        ApplicationVersionStatus.SUBMITTED,
+        null,
+        null
     );
   }
 
@@ -62,8 +69,52 @@ public class ApplicationVersionAuditTestUtil {
         caseOfficerWuaId,
         DUMMY_INSTANT,
         AUDIT_USER_WUA_ID,
-        ApplicationVersionStatus.SUBMITTED
+        ApplicationVersionStatus.SUBMITTED,
+        null,
+        RegulatorTeamRole.CASE_OFFICER
     );
+  }
+
+  static ApplicationVersionAudit getApplicationVersionAuditCamAssigned(ApplicationVersion applicationVersion, Long caseOfficerWuaId, Long camUserWuaId) {
+    return new ApplicationVersionAudit(
+        applicationVersion.getId(),
+        caseOfficerWuaId,
+        DUMMY_INSTANT,
+        caseOfficerWuaId,
+        ApplicationVersionStatus.SUBMITTED,
+        camUserWuaId,
+        RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER
+    );
+  }
+
+  static CaseEvent getCaseEventCamAssigned(ApplicationVersion applicationVersion, Long caseOfficerWuaId, Long camUserWuaId) {
+    return CaseEvent.builder(applicationVersion)
+        .withEventType(CaseEventType.CAM_ASSIGNED)
+        .withMainEventUserWuaId(caseOfficerWuaId)
+        .withEventDateTime(DUMMY_INSTANT)
+        .withOtherEventUserWuaId(camUserWuaId)
+        .build();
+  }
+
+  static ApplicationVersionAudit getApplicationVersionAuditCaseOfficerReassigned(ApplicationVersion applicationVersion, Long camUserWuaId) {
+    return new ApplicationVersionAudit(
+        applicationVersion.getId(),
+        CASE_OFFICER_WUA_ID_1,
+        DUMMY_INSTANT,
+        camUserWuaId,
+        ApplicationVersionStatus.SUBMITTED,
+        null,
+        RegulatorTeamRole.CASE_OFFICER
+    );
+  }
+
+  static CaseEvent getCaseEventOfficerReassigned(ApplicationVersion applicationVersion, Long camUserWuaId) {
+    return CaseEvent.builder(applicationVersion)
+        .withEventType(CaseEventType.CASE_OFFICER_REASSIGNED)
+        .withMainEventUserWuaId(camUserWuaId)
+        .withEventDateTime(DUMMY_INSTANT)
+        .withOtherEventUserWuaId(CASE_OFFICER_WUA_ID_1)
+        .build();
   }
 
   static CaseEvent getCaseEventOfficerAssigned(ApplicationVersion applicationVersion, Long caseOfficerWuaId) {
@@ -82,7 +133,9 @@ public class ApplicationVersionAuditTestUtil {
         OPERATOR_WUA_ID,
         DUMMY_INSTANT,
         OPERATOR_WUA_ID,
-        ApplicationVersionStatus.DELETED
+        ApplicationVersionStatus.DELETED,
+        null,
+        RegulatorTeamRole.CASE_OFFICER
     );
   }
 }

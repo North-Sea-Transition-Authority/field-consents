@@ -8,6 +8,7 @@ import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.query.AuditQuery;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @Service
 public class ApplicationVersionAuditService {
@@ -40,6 +41,8 @@ public class ApplicationVersionAuditService {
           .addProjection(AuditEntity.revisionProperty("createdDateTime"))
           .addProjection(AuditEntity.revisionProperty("userWuaId"))
           .addProjection(AuditEntity.property("status"))
+          .addProjection(AuditEntity.property("camWuaId"))
+          .addProjection(AuditEntity.property("currentCaseOwner"))
           .addOrder(AuditEntity.revisionProperty("createdDateTime").asc());
 
       List<Object[]> resultList = updatedQuery.getResultList();
@@ -49,7 +52,9 @@ public class ApplicationVersionAuditService {
               (Long) objects[1],
               ((Timestamp) objects[2]).toInstant(),
               (Long) objects[3],
-              (ApplicationVersionStatus) objects[4]
+              (ApplicationVersionStatus) objects[4],
+              (Long) objects[5],
+              (RegulatorTeamRole) objects[6]
           )).toList();
     });
   }

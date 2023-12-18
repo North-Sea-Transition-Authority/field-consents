@@ -2,12 +2,17 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.CAM_USER_WUA_ID_1;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.CASE_OFFICER_WUA_ID_1;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.CASE_OFFICER_WUA_ID_2;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.getApplicationVersionAuditCamAssigned;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.getApplicationVersionAuditCaseOfficerAssigned;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.getApplicationVersionAuditCaseOfficerNotAssigned;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.getApplicationVersionAuditCaseOfficerReassigned;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.getApplicationVersionAuditCaseOwnershipTaken;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.getCaseEventCamAssigned;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.getCaseEventOfficerAssigned;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.getCaseEventOfficerReassigned;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.getCaseEventOwnershipReleased;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.getCaseEventOwnershipTaken;
 
@@ -151,6 +156,42 @@ class CaseAssignmentEventServiceTest {
         .containsExactly(
             getCaseEventOwnershipTaken(applicationVersion),
             getCaseEventOfficerAssigned(applicationVersion, CASE_OFFICER_WUA_ID_2)
+        );
+  }
+
+  @Test
+  void getCaseEvents_camUserAssigned_withPreviousCaseOfficerAssigned() {
+    var applicationVersionAudits = List.of(
+        getApplicationVersionAuditCaseOwnershipTaken(applicationVersion),
+        getApplicationVersionAuditCamAssigned(applicationVersion, CASE_OFFICER_WUA_ID_1, CAM_USER_WUA_ID_1)
+    );
+    when(applicationVersionAuditService.getApplicationVersionAudits(applicationVersions)).thenReturn(applicationVersionAudits);
+
+    var caseEvents = caseAssignmentEventService.getCaseEvents(application);
+
+    assertThat(caseEvents)
+        .containsExactly(
+            getCaseEventOwnershipTaken(applicationVersion),
+            getCaseEventCamAssigned(applicationVersion, CASE_OFFICER_WUA_ID_1, CAM_USER_WUA_ID_1)
+        );
+  }
+
+  @Test
+  void getCaseEvents_caseOfficerReassigned_withPreviousCamUserAssigned() {
+    var applicationVersionAudits = List.of(
+        getApplicationVersionAuditCaseOwnershipTaken(applicationVersion),
+        getApplicationVersionAuditCamAssigned(applicationVersion, CASE_OFFICER_WUA_ID_1, CAM_USER_WUA_ID_1),
+        getApplicationVersionAuditCaseOfficerReassigned(applicationVersion, CAM_USER_WUA_ID_1)
+    );
+    when(applicationVersionAuditService.getApplicationVersionAudits(applicationVersions)).thenReturn(applicationVersionAudits);
+
+    var caseEvents = caseAssignmentEventService.getCaseEvents(application);
+
+    assertThat(caseEvents)
+        .containsExactly(
+            getCaseEventOwnershipTaken(applicationVersion),
+            getCaseEventCamAssigned(applicationVersion, CASE_OFFICER_WUA_ID_1, CAM_USER_WUA_ID_1),
+            getCaseEventOfficerReassigned(applicationVersion, CAM_USER_WUA_ID_1)
         );
   }
 

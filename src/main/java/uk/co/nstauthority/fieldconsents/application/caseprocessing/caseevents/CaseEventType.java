@@ -24,7 +24,9 @@ public enum CaseEventType {
   CONSULTATION_REASSIGNED("Consultation re-assigned", "Re-assigned by", "Assigned on", "Deadline", "Responder"),
   CONSULTATION_RESPONDED("Consultation responded", "Responded by", "Responded at", "Responded"),
   FURTHER_INFORMATION_REQUEST_OPENED("Further information requested", "Requested by", "Requested at", "Request text"),
-  FURTHER_INFORMATION_REQUEST_CLOSED("Further information responded", "Responded by", "Responded at", "Response text")
+  FURTHER_INFORMATION_REQUEST_CLOSED("Further information responded", "Responded by", "Responded at", "Response text"),
+  CAM_ASSIGNED("CAM assigned", "Assigned by", "Assigned on", null, "CAM"),
+  CASE_OFFICER_REASSIGNED("Case officer reassigned", "Assigned by", "Assigned on", null, "Case officer")
   ;
 
   private final String caseEventHeader;
