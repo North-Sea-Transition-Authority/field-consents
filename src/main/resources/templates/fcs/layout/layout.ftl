@@ -88,6 +88,10 @@
     <@_serviceHeader pageSize=pageSize />
   </#assign>
 
+  <#assign footerContent>
+    <@fdsNstaFooter.nstaFooter wrapperWidth=fullPageWidth />
+  </#assign>
+
   <@fdsDefaultPageTemplate
     htmlTitle=htmlTitle
     serviceName=serviceName
@@ -115,6 +119,7 @@
     singleErrorMessage=singleErrorMessage
     errorItems=errorItems
     notificationBannerContent=notificationBannerContent
+    footerContent=footerContent
   >
     <#nested />
   </@fdsDefaultPageTemplate>

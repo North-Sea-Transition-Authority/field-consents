@@ -75,6 +75,12 @@ gulp.task("rollup-babel", () => rollup.rollup({
   })
 );
 
+// copy FDS images into public/assets
+gulp.task('copyFdsImages', () => {
+  return gulp.src(['fivium-design-system-core/fds/static/images/**/*'])
+    .pipe(gulp.dest('src/main/resources/public/assets/static/fds/images'));
+});
+
 // copy FDS into public/assets
 gulp.task("copyFdsResources", () => {
   return gulp.src(["fivium-design-system-core/fds/**/*"])
@@ -105,8 +111,8 @@ gulp.task("copyHtml5Shiv", () => {
     .pipe(gulp.dest("src/main/resources/public/assets/html5shiv"))
 });
 
-// Init all appropriate resources into project"s public/assets
-gulp.task("initFds", gulp.series(["copyFdsResources", "copyGovukResources", "copyHtml5Shiv", "copyJs", "copyVendorJs"]))
+// Init all appropriate resources into projects public/assets
+gulp.task("initFds", gulp.series(["copyFdsResources", "copyFdsImages", "copyGovukResources", "copyHtml5Shiv", "copyJs", "copyVendorJs"]))
 
 gulp.task("sassCi", gulp.series(["initFds"], () => {
   return compileSass(true);
