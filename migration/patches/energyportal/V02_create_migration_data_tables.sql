@@ -1,4 +1,7 @@
 
+--DROP TABLE fcs_migration.file_upload_library_uploaded_files;
+--DROP SEQUENCE fcs_migration.application_technical_review_id_seq;
+--DROP TABLE fcs_migration.application_technical_reviews;
 --DROP SEQUENCE fcs_migration.application_update_id_seq;
 --DROP TABLE fcs_migration.application_updates;
 --DROP SEQUENCE fcs_migration.application_case_note_id_seq;
@@ -90,8 +93,11 @@ CREATE TABLE fcs_migration.application_versions (
 , created_by_wua_id            INTEGER NOT NULL
 , submitted_date_time          DATE
 , submitted_by_wua_id          INTEGER
-, case_officer_wua_id          INTEGER
+, case_officer_wua_id          INTEGER -- Range 6/Administrator/Revision Admin
+, cam_wua_id                   INTEGER -- Range 10
+, current_case_owner           VARCHAR2(4000)
 );
+
 
 --
 -- consent_lengths
@@ -555,4 +561,48 @@ CREATE TABLE fcs_migration.application_updates (
 , response_application_version_id INTEGER
                                   CONSTRAINT app_updates_fk2_resp_version_id
                                   REFERENCES fcs_migration.application_versions
+);
+
+--
+-- application_technical_reviews
+--
+
+CREATE SEQUENCE fcs_migration.application_technical_review_id_seq;
+
+CREATE TABLE fcs_migration.application_technical_reviews (
+  id                              INTEGER PRIMARY KEY
+, request_application_version_id  INTEGER NOT NULL
+                                  CONSTRAINT app_technical_reviews_fk1_version_id
+                                  REFERENCES fcs_migration.application_versions
+, requested_by_wua_id             INTEGER NOT NULL
+, requested_date_time             DATE NOT NULL
+, request_text                    VARCHAR2(4000)
+, deadline_date_time              DATE
+, technical_reviewer_wua_id       INTEGER
+, responded_by_wua_id             INTEGER
+, responded_date_time             DATE
+, response_text                   CLOB
+, response_type                   VARCHAR2(4000)
+, technical_review_status         VARCHAR2(4000) NOT NULL
+, response_application_version_id INTEGER
+                                  CONSTRAINT application_technical_reviews_response_application_version_fkey
+                                  REFERENCES fcs_migration.application_versions
+);
+
+--
+-- file_upload_library_uploaded_files
+--
+CREATE TABLE fcs_migration.file_upload_library_uploaded_files (
+  id             VARCHAR2(4000) PRIMARY KEY -- this is a UUID (might not need here)
+, bucket         VARCHAR2(4000) NOT NULL -- field-consents
+, key            VARCHAR2(4000) NOT NULL -- an AWS S3 UUID ?
+, name           VARCHAR2(4000) NOT NULL -- file name e.g. test1.txt
+, content_type   VARCHAR2(4000) NOT NULL -- file type e.g. text/plain application/vnd.ms-excel application/pdf image/jpeg
+, content_length INTEGER NOT NULL -- file size
+, uploaded_at    DATE NOT NULL
+, usage_id       VARCHAR2(4000) -- the application version id
+, usage_type     VARCHAR2(4000) -- will be ApplicationVersion for supporting docs
+, document_type  VARCHAR2(4000) -- e.g. supporting-document
+, description    VARCHAR2(4000) -- file description 
+, uploaded_by    VARCHAR2(4000) -- wua id
 );

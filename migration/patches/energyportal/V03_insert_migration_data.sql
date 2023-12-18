@@ -1,4 +1,7 @@
 
+--DELETE FROM fcs_migration.file_upload_library_uploaded_files;
+--DELETE FROM fcs_migration.application_technical_review_id_seq;
+--DELETE FROM fcs_migration.application_technical_reviews;
 --DELETE FROM fcs_migration.application_updates;
 --DELETE FROM fcs_migration.application_case_notes;
 --DELETE FROM fcs_migration.vents;
@@ -87,6 +90,42 @@ INSERT INTO fcs_migration.application_versions (
 , submitted_date_time
 , submitted_by_wua_id
 , case_officer_wua_id
+, cam_wua_id
+)
+WITH stage_assignments AS (
+  SELECT /*+ materialize */
+    xbc.primary_data_uref fcd_uref
+  , wua.id wua_id
+  , bs.end_datetime bs_end_datetime
+  , CASE c.assignment
+    WHEN 'FC_R10_DTI_ADMIN' THEN 'CONSENTS_AND_AUTHORISATIONS_MANAGER'
+    ELSE 'CASE_OFFICER'
+    END assignment_role
+  FROM bpmmgr.xview_business_contexts xbc
+  JOIN bpmmgr.business_routine_contexts brc ON xbc.bc_id = brc.bc_id
+  JOIN bpmmgr.business_stages bs ON brc.id = bs.brc_id
+  JOIN bpmmgr.xview_bpd_stages xbpds ON xbpds.stage_label = bs.stage_label AND xbpds.bp_id = bs.bp_id AND xbpds.stage_classification = 'TOP-LEVEL'
+  JOIN bpmmgr.business_processes bp ON bp.id = bs.bp_id
+  JOIN bpmmgr.xview_bpd_stage_clocks c ON bs.stage_label = c.stage_label -- if a stage has multiple CLOCK assignments defined then this adds cardinality
+  JOIN bpmmgr.business_routine_assignments bra ON bra.brc_id = bs.brc_id AND bra.assignment = c.assignment
+  JOIN bpmmgr.xview_assignees xa ON xa.bas_id  = bra.bas_id AND xa.status_control = 'C' -- any additional cardinality from the clock join is removed here
+  JOIN securemgr.web_user_accounts wua ON wua.id||'WUA' = xa.assignee_uref
+  WHERE xbc.context_name IN ('FC_ROOT', 'OUTCOME_ACTIVITY', 'UPDATE')
+  AND xbc.primary_data_uref LIKE '%FC'
+  AND bp.short_name = 'FC_ADMIN'
+  AND c.assignment IN ('FC_R6_DTI_ADMIN', 'FC_ADMINISTRATOR', 'FC_REVISION_ADMIN', 'FC_R10_DTI_ADMIN')
+)
+, ranked_stage_assignments AS (
+  SELECT
+    sa.*
+  , RANK () OVER (PARTITION BY sa.fcd_uref, sa.assignment_role ORDER BY sa.bs_end_datetime DESC NULLS FIRST) rank_rownum -- unended stages are at the top
+  FROM stage_assignments sa
+)
+, tip_assignments AS (
+  SELECT
+    rsa.*
+  FROM ranked_stage_assignments rsa
+  WHERE rsa.rank_rownum = 1
 )
 SELECT
   fcd.id -- this is using the fcd_id as the app version id
@@ -111,7 +150,18 @@ SELECT
 , fcd.created_by created_by_wua_id
 , fcd.submitted_date submitted_date_time
 , fcd.submitted_by submitted_by_wua_id
-, NULL case_officer_wua_id -- TODO?
+, (
+    SELECT ta.wua_id
+    FROM tip_assignments ta
+    WHERE ta.fcd_uref = fcd.id||'FC'
+    AND ta.assignment_role = 'CASE_OFFICER'
+  ) case_officer_wua_id
+, (
+    SELECT ta.wua_id
+    FROM tip_assignments ta
+    WHERE ta.fcd_uref = fcd.id||'FC'
+    AND ta.assignment_role = 'CONSENTS_AND_AUTHORISATIONS_MANAGER'
+  ) cam_wua_id
 FROM envmgr.field_consent_details fcd
 JOIN fcs_migration.applications ap ON ap.fc_id = fcd.fc_id AND ap.variation_no = fcd.variation_no  
 JOIN envmgr.xview_field_consent_details xfcd ON xfcd.fcd_id = fcd.id
@@ -122,6 +172,15 @@ WHERE (fcd.status, fcd.version_status) NOT IN (
 )
 AND fcd.fc_id IS NOT NULL; -- implies never submitted (don't migrate)
 /
+
+UPDATE fcs_migration.application_versions
+SET current_case_owner =
+  CASE
+  WHEN cam_wua_id IS NOT NULL THEN 'CONSENTS_AND_AUTHORISATIONS_MANAGER' -- assigned after the case officer
+  WHEN case_officer_wua_id IS NOT NULL THEN 'CASE_OFFICER'
+  END;
+/
+
 
 --
 -- consent_lengths
@@ -1167,7 +1226,7 @@ SELECT
 , fci.fcd_id application_version_id
 , fci.created_by_wua_id added_by_wua_id
 , fci.created_datetime added_date_time
-, fci.intention_text case_note_text
+, fci.intention_html case_note_text
 FROM fcs_migration.application_versions av
 JOIN fcs_migration.field_consent_intentions fci ON fci.fcd_id = av.id
 WHERE fci.class_type = 'FC_GENERAL_NOTE';
@@ -1211,7 +1270,7 @@ WITH resp AS (
     av.id application_version_id
   , fci.created_by_wua_id requested_by_wua_id
   , fci.created_datetime requested_date_time
-  , fci.intention_text request_text
+  , fci.intention_html request_text
   -- you have to do the subqueries here as you can't LEFT OUTER JOIN on and INSERT INTO
   , (SELECT r.responded_by_wua_id FROM resp r WHERE r.application_version_id = av.id) responded_by_wua_id
   , (SELECT r.responded_date_time FROM resp r WHERE r.application_version_id = av.id) responded_date_time
@@ -1239,3 +1298,123 @@ SELECT
 , b.response_application_version_id
 FROM base b;
 /
+
+--
+-- application_technical_reviews
+--
+INSERT INTO fcs_migration.application_technical_reviews (
+  id
+, request_application_version_id
+, requested_by_wua_id
+, requested_date_time
+, request_text
+, deadline_date_time
+, technical_reviewer_wua_id
+, responded_by_wua_id
+, responded_date_time
+, response_text
+, response_type
+, technical_review_status
+, response_application_version_id
+)
+WITH isetins AS (
+  SELECT isi.is_id
+  , '<p>'||xtcd.title||':</p>'||XMLQUERY('/CLAUSE_TEXT/node()' PASSING xid.clause_text RETURNING CONTENT).getClobVal() response_text
+  FROM bpmmgr.review_advisor_slot_details rasd
+  JOIN bpmmgr.xview_intention_sets xis ON xis.is_id = rasd.intention_set_id
+  JOIN bpmmgr.intention_set_intentions isi ON isi.is_id = xis.is_id AND isi.end_datetime IS NULL
+  JOIN bpmmgr.intentions i ON i.id = isi.in_id
+  JOIN bpmmgr.xview_intention_details xid ON xid.in_id = i.id AND xid.end_datetime IS NULL
+  JOIN bpmmgr.xview_template_clause_details xtcd ON xtcd.clause_type_id = xid.clause_type AND xtcd.class = xid.class_type
+  WHERE upper(rasd.name) LIKE '%FIELD CONSENT REVIEW%'
+  AND xis.domain = 'RESPONSE'
+  AND xis.primary_data_uref = 'PSUEDO_SLOT_MSD'
+  ORDER BY isi.is_id, xid.created_datetime
+)
+, isets AS (
+  SELECT i.is_id
+  , st.joinclob(staggclob(i.response_text), '<br/><br/>') response_text
+  FROM isetins i
+  GROUP BY i.is_id
+)
+, aac_mems AS (
+  SELECT
+    aac.id aac_id
+  , rmc.resource_person_id
+  , RANK () OVER (PARTITION BY aac.id ORDER BY rmc.start_date DESC) aac_mem_rank
+  FROM bpmmgr.advice_advisory_communities aac
+  JOIN decmgr.resource_usages_current ru ON ru.uref = aac.id||'AAC' 
+  JOIN decmgr.xview_resource_members_history rmc ON rmc.res_id = ru.res_id AND rmc.role_name = 'ELECTRONIC_ADVISOR_AUTO'
+  WHERE aac.advice_type = 'FIELD_CONSENTS'
+)
+, aac_wuas AS (
+  SELECT
+    m.aac_id
+  , m.resource_person_id
+  , (
+    SELECT max(wua.wua_id) -- this is a bit wierd but will return us the latest created wua for the person
+    FROM securemgr.web_user_account_current wua
+    WHERE wua.person_id = m.resource_person_id
+    ) wua_id
+  FROM aac_mems m
+  WHERE m.aac_mem_rank = 1 -- we grab the last member added to the aac team ELECTRONIC_ADVISOR_AUTO role (only 1 member of this role type exists for each aac in legacy field consents)
+)
+SELECT
+  fcs_migration.application_technical_review_id_seq.nextval id
+, (
+  SELECT av2.id -- the latest app version at the time of the review
+  FROM fcs_migration.application_versions av2
+  WHERE av2.application_id = av.application_id
+  AND xrad.review_delivered_date > av2.created_date_time
+  AND av2.status != 'DELETED'
+  ORDER BY av2.created_date_time DESC
+  FETCH FIRST 1 ROWS ONLY
+  ) request_application_version_id
+, rreqd.created_by_wua_id requested_by_wua_id
+, xrad.review_delivered_date requested_date_time
+, NULL request_text
+, xrad.review_deadline_date deadline_date_time
+, coalesce(aac_wuas.wua_id, rasd.status_by_wua_id) technical_reviewer_wua_id
+, rasd.status_by_wua_id response_wua_id
+, coalesce(xrad.review_completed_date, xrad.review_closed_date) responded_date_time
+, isets.response_text
+, CASE rasd.response_decision
+  WHEN 'ISSUE_CONSENT' THEN 'APPROVE'
+  WHEN 'UPDATE_REQUIRED' THEN 'REJECT'
+  ELSE NULL
+  END response_type
+, CASE
+  WHEN xrad.status IN ('COMPLETED', 'CLOSED')  THEN 'CLOSED'
+  ELSE 'OPEN'
+  END technical_review_status
+, (
+  SELECT av2.id -- the latest app version at the time of the response
+  FROM fcs_migration.application_versions av2
+  WHERE av2.application_id = av.application_id
+  AND coalesce(xrad.review_completed_date, xrad.review_closed_date) IS NOT NULL
+  AND coalesce(xrad.review_completed_date, xrad.review_closed_date) > av2.created_date_time
+  AND av2.status != 'DELETED'
+  ORDER BY av2.created_date_time DESC
+  FETCH FIRST 1 ROWS ONLY
+  ) response_application_version_id
+FROM fcs_migration.application_versions av
+JOIN bpmmgr.xview_review_inv_details rid ON rid.primary_data_uref = av.id||'FC'
+JOIN bpmmgr.review_runs rr ON rr.ri_id = rid.ri_id
+JOIN bpmmgr.review_requests rreq ON rreq.rrun_id = rr.id
+JOIN bpmmgr.review_request_details rreqd ON rreqd.rreq_id = rreq.id AND rreqd.status_control = 'C'
+JOIN bpmmgr.review_advisors ra ON ra.rreq_id = rreq.id
+JOIN bpmmgr.review_advisor_details rad ON ra.id = rad.ra_id AND rad.status_control = 'C'
+JOIN bpmmgr.xview_review_advisor_details xrad ON xrad.ra_id = rad.ra_id AND xrad.status_control = 'C'
+JOIN bpmmgr.review_advisor_slots ras ON ras.ra_id = ra.id
+JOIN bpmmgr.review_advisor_slot_details rasd ON ras.id = rasd.ras_id AND rasd.status_control = 'C'
+LEFT JOIN isets ON isets.is_id = rasd.intention_set_id
+LEFT JOIN aac_wuas ON aac_wuas.aac_id = rreq.aac_id
+WHERE rid.status_control = 'C';
+/
+
+--
+-- file_upload_library_uploaded_files
+--
+-- supporting info docs
+--
+

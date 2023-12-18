@@ -44,7 +44,17 @@
 --            on uat and live: ALVHEIM
 --                             STATFJORD(CROSS BORDER)
 --
+-- 7) Do we need to migrate legacy payments?
+--    CT thinks no - they can access via the portal payments screens.
+--                   Also the legacy system doesn't let then see the payments from within Field Consent cases.
 -- 
+-- 8) Still need to consider the consent processing data. i.e. the consented figures and also the field equity partners and the
+--    items that drive the Consent docs and Cover letter. I don't have anywhere for this data to go yet.
+--    Plus the actual consent output documents.
+--
+-- 9) Need to migrate the supporting docs file uploads.
+--
+--
 -- NOTES
 -- a) for a variation the fc_id stays the same (the variation no is on the detail row
 --    and therefore we can have multiple details with the same version_no but different variation_no)
@@ -62,7 +72,6 @@
 --    Good example: BIRCH 
 --
 -- d) The assigned Case officer should come from the Range 6 or Administrator for legacy apps.
---    TODO - fix queries for this
 --    We need to ensure that the regulator teams are setup with appropriate case officers. Specifically
 --    the currently assigned case officers for "Submitted" legacy cases must be setup so the app processing
 --    can continue in the new system.
@@ -145,18 +154,18 @@ ORDER BY 1 --2, 3
 
 
 -- CASE_PROCESSING TABLES
---DONE!!!!! application_case_notes
+--DONE application_case_notes
 --NA application_consultations (there are no external consultation in the legacy system)
---application_updates
---application_technical_reviews
+--DONE application_updates
+--DONE application_technical_reviews
 --NA application_withdrawals (the operator doesn't submit a withdral request, but they can withdraw if they don't want to complete an app update)
 --NA application_work_area_priorities
 
 -- FILE UPLOADS?
---file_upload_library_flyway
---file_upload_library_shedlock
---file_upload_library_uploaded_files
---file_upload_library_uploaded_files_aud
+--NA file_upload_library_flyway
+--NA file_upload_library_shedlock
+--IN PROGRESS file_upload_library_uploaded_files
+
 
 -- TEAMS?
 --team_member_roles
@@ -169,6 +178,7 @@ ORDER BY 1 --2, 3
 --NA application_updates_aud
 --NA application_versions_aud
 --NA audit_revisions
+--NA file_upload_library_uploaded_files_aud
 
 -- OTHER
 --NA flyway_schema_history
@@ -326,7 +336,51 @@ ORDER BY a.id ASC
 --
 -- application_versions
 --
-WITH t AS (
+
+--SELECT wua.wua_id, xrph.full_name
+--FROM securemgr.web_user_account_current wua
+--JOIN decmgr.xview_resource_people_history xrph ON xrph.rp_id = wua.person_id AND xrph.status_control = 'C'
+/
+
+WITH stage_assignments AS (
+  SELECT /*+ materialize */
+    xbc.primary_data_uref fcd_uref
+  , xa.assignee_uref
+  , wua.id wua_id
+  , wua.login_id
+  , bs.stage_label
+  , bs.end_datetime bs_end_datetime
+  , CASE c.assignment
+    WHEN 'FC_R10_DTI_ADMIN' THEN 'CAM'
+    ELSE 'CASE_OFFICER'
+    END assignment_role
+  FROM bpmmgr.xview_business_contexts xbc
+  JOIN bpmmgr.business_routine_contexts brc ON xbc.bc_id = brc.bc_id
+  JOIN bpmmgr.business_stages bs ON brc.id = bs.brc_id --AND bs.end_datetime IS NULL
+  JOIN bpmmgr.xview_bpd_stages xbpds ON xbpds.stage_label = bs.stage_label AND xbpds.bp_id = bs.bp_id AND xbpds.stage_classification = 'TOP-LEVEL'
+  JOIN bpmmgr.business_processes bp ON bp.id = bs.bp_id
+  JOIN bpmmgr.xview_bpd_stage_clocks c ON bs.stage_label = c.stage_label -- if a stage has multiple CLOCK assignments defined then this adds cardinality
+  JOIN bpmmgr.business_routine_assignments bra ON bra.brc_id = bs.brc_id AND bra.assignment = c.assignment
+  JOIN bpmmgr.xview_assignees xa ON xa.bas_id  = bra.bas_id AND xa.status_control = 'C' -- any additional cardinality from the clock join is removed here
+  JOIN securemgr.web_user_accounts wua ON wua.id||'WUA' = xa.assignee_uref
+  WHERE xbc.context_name IN ('FC_ROOT', 'OUTCOME_ACTIVITY', 'UPDATE')
+  AND xbc.primary_data_uref LIKE '%FC'
+  AND bp.short_name = 'FC_ADMIN'
+  AND c.assignment IN ('FC_R6_DTI_ADMIN', 'FC_ADMINISTRATOR', 'FC_REVISION_ADMIN', 'FC_R10_DTI_ADMIN')
+)
+, ranked_stage_assignments AS (
+  SELECT
+    sa.*
+  , RANK () OVER (PARTITION BY sa.fcd_uref, sa.assignment_role ORDER BY sa.bs_end_datetime DESC NULLS FIRST) rank_rownum
+  FROM stage_assignments sa
+)
+, tip_assignments AS (
+  SELECT
+    rsa.*
+  FROM ranked_stage_assignments rsa
+  WHERE rsa.rank_rownum = 1
+)
+, t AS (
 SELECT
   fcd.id
 , fcd.fc_id
@@ -351,7 +405,18 @@ SELECT
 , fcd.created_by created_by_wua_id
 , fcd.submitted_date submitted_date_time
 , fcd.submitted_by submitted_by_wua_id
-, NULL case_officer_wua_id -- TODO
+, (
+    SELECT ta.wua_id
+    FROM tip_assignments ta
+    WHERE ta.fcd_uref = fcd.id||'FC'
+    AND ta.assignment_role = 'CASE_OFFICER'
+  ) case_officer_wua_id
+, (
+    SELECT ta.wua_id
+    FROM tip_assignments ta
+    WHERE ta.fcd_uref = fcd.id||'FC'
+    AND ta.assignment_role = 'CAM'
+  ) cam_wua_id
 , fcd.status
 , fcd.version_status
 , fcd.variation_no
@@ -1799,9 +1864,364 @@ FROM envmgr.xview_field_consent_details xfcd
 LEFT JOIN fcs_migration.application_versions av ON av.id = xfcd.fcd_id
 WHERE xfcd.fc_id = 1384
 ORDER BY xfcd.created_date 
-
+/
 --3850
 --3851
 --3853
 --3855
 --3856
+
+--
+-- application_technical_reviews
+--
+
+SELECT
+  rid.xml_data rid_xml_data
+, at.xml_data at_xml_data
+, rid.id review_invitation_detail_id
+FROM appenv.review_invitations ri
+JOIN appenv.review_invitation_details rid ON ri.id = rid.ri_id AND rid.status_control = 'C'
+JOIN appenv.advice_types at ON ri.advice_type = at.advice_type
+WHERE ri.id = 26537
+
+/
+
+
+
+
+WITH ri AS (
+  SELECT d.*
+  FROM bpmmgr.xview_review_inv_details d
+  
+  WHERE d.status_control = 'C'
+  AND d.primary_data_uref = '4326FC'
+)
+SELECT
+  ri.advice_type
+, rt.review_type
+, rt.review_title
+, rt.method_type
+, rt.method_title
+, rt.batch_availability
+, rt.individual_allow_late_reviews
+, rt.slot_configuration
+, rt.review_messaging
+, rt.review_deadline
+--, CASE
+--    WHEN rt.review_deadline = 'true' AND rt.review_run_default_days IS NOT NULL
+--      THEN TO_CHAR(bpmmgr.clock.compute_timing(SYSDATE, rt.review_run_default_days + 1), 'YYYY-MM-DD')
+--    ELSE NULL
+--  END review_deadline_date
+, rt.aac_pickable_flag
+, rt.aac_pick_default_recommended
+FROM appenv.review_invitations ri
+JOIN appenv.xview_review_types rt ON ri.advice_type = rt.advice_type
+WHERE ri.id = (SELECT ri.ri_id FROM ri)
+--AND rt.review_type = 'FULL'
+/
+
+WITH isetins AS (
+  SELECT isi.is_id
+--  , xtcd.title||': '||st.html_to_string(xid.clause_text) response_text
+  , '<p>'||xtcd.title||'</p>'||XMLQUERY('/CLAUSE_TEXT/node()' PASSING xid.clause_text RETURNING CONTENT).getClobVal() response_text
+  FROM bpmmgr.review_advisor_slot_details rasd
+  JOIN bpmmgr.xview_intention_sets xis ON xis.is_id = rasd.intention_set_id
+  JOIN bpmmgr.intention_set_intentions isi ON isi.is_id = xis.is_id AND isi.end_datetime IS NULL
+  JOIN bpmmgr.intentions i ON i.id = isi.in_id
+  JOIN bpmmgr.xview_intention_details xid ON xid.in_id = i.id AND xid.end_datetime IS NULL
+  JOIN bpmmgr.xview_template_clause_details xtcd ON xtcd.clause_type_id = xid.clause_type AND xtcd.class = xid.class_type
+  WHERE upper(rasd.name) LIKE '%FIELD CONSENT REVIEW%'
+  AND xis.domain = 'RESPONSE'
+  AND xis.primary_data_uref = 'PSUEDO_SLOT_MSD'
+  --AND xp.get_root_name(xid.clause_text) != 'CLAUSE_TEXT'
+  ORDER BY isi.is_id, xid.created_datetime
+)
+, isets AS (
+  SELECT i.is_id
+  , st.joinclob(staggclob(i.response_text), '<br/><br/>') response_text
+  FROM isetins i
+  GROUP BY i.is_id
+)
+, aac_mems AS (
+  SELECT
+    aac.id aac_id
+  , rmc.resource_person_id
+  , RANK () OVER (PARTITION BY aac.id ORDER BY rmc.start_date DESC) aac_mem_rank
+  FROM bpmmgr.advice_advisory_communities aac
+  JOIN decmgr.resource_usages_current ru ON ru.uref = aac.id||'AAC' 
+  JOIN decmgr.xview_resource_members_history rmc ON rmc.res_id = ru.res_id AND rmc.role_name = 'ELECTRONIC_ADVISOR_AUTO'
+  WHERE aac.advice_type = 'FIELD_CONSENTS'
+)
+, aac_wuas AS (
+  SELECT
+    m.aac_id
+  , m.resource_person_id
+  , (
+    SELECT max(wua.wua_id) -- this is a bit wierd but will return us the latest created wua for the person
+    FROM securemgr.web_user_account_current wua
+    WHERE wua.person_id = m.resource_person_id
+    ) wua_id
+  FROM aac_mems m
+  WHERE m.aac_mem_rank = 1 -- we grab the last member added to the aac team ELECTRONIC_ADVISOR_AUTO role (only 1 member of this role for legacy field consents)
+)
+SELECT
+--  rid.primary_data_uref
+--, rid.ri_id
+--, rr.id rr_id
+--, xrad.ra_id
+--, aac.id aac_id
+----, ri.*
+----, rt.*
+----, at.*
+----, rr.*
+----, rrd.*
+----, xrrd.*
+--, rreq.*
+----, rreqd.*
+--, xrreqd.review_dispatched_date
+--, aac.*
+--, ac.*
+--, ab.*
+--, ra.*
+--, xrad.*
+  (
+  SELECT av2.id -- the latest app version at the time of the review
+  FROM fcs_migration.application_versions av2
+  WHERE av2.application_id = av.application_id
+  AND xrad.review_delivered_date > av2.created_date_time
+  AND av2.status != 'DELETED'
+  ORDER BY av2.created_date_time DESC
+  FETCH FIRST 1 ROWS ONLY
+  ) request_application_version_id
+, rreqd.created_by_wua_id requested_by_wua_id
+, (SELECT w.login_id FROM securemgr.web_user_accounts w WHERE w.id = rreqd.created_by_wua_id) req_user
+, xrad.review_delivered_date requested_date_time
+, NULL request_text
+, xrad.review_deadline_date deadline_date_time
+, ac.name
+
+, aac_wuas.*
+
+, coalesce(aac_wuas.wua_id, rasd.status_by_wua_id) technical_reviewer_wua_id
+, (SELECT w.login_id FROM securemgr.web_user_accounts w WHERE w.id = coalesce(aac_wuas.wua_id, rasd.status_by_wua_id)) tech_user
+, rasd.status_by_wua_id response_wua_id
+, coalesce(xrad.review_completed_date, xrad.review_closed_date) responded_date_time
+, isets.response_text
+, CASE rasd.response_decision
+  WHEN 'ISSUE_CONSENT' THEN 'APPROVE'
+  WHEN 'UPDATE_REQUIRED' THEN 'REJECT'
+  ELSE NULL
+  END response_type
+, CASE
+  WHEN xrad.status IN ('COMPLETED', 'CLOSED')  THEN 'CLOSED'
+  ELSE 'OPEN'
+  END technical_review_status
+, (
+  SELECT av2.id -- the latest app version at the time of the response
+  FROM fcs_migration.application_versions av2
+  WHERE av2.application_id = av.application_id
+  AND coalesce(xrad.review_completed_date, xrad.review_closed_date) IS NOT NULL
+  AND coalesce(xrad.review_completed_date, xrad.review_closed_date) > av2.created_date_time
+  AND av2.status != 'DELETED'
+  ORDER BY av2.created_date_time DESC
+  FETCH FIRST 1 ROWS ONLY
+  ) response_application_version_id
+  
+--, xrad.status rad_status
+--, xrad.review_closed_date
+--, xrad.review_completed_date
+--, rasd.status slot_status
+--, rasd.response_decision
+--, wua.full_name||' ('||to_char(rasd.status_date, 'DD-MON-YYYY HH24:Mi:SS')||')' response_info
+--, isets.*
+--, ru.*
+--, rmc.*
+FROM fcs_migration.application_versions av
+--JOIN envmgr.xview_field_consent_details fcd ON fcd.fcd_id = av.id
+JOIN bpmmgr.xview_review_inv_details rid ON rid.primary_data_uref = av.id||'FC'
+--JOIN bpmmgr.review_invitations ri ON ri.id = rid.ri_id
+--JOIN bpmmgr.xview_review_types rt ON ri.advice_type = rt.advice_type
+--JOIN bpmmgr.advice_types at ON ri.advice_type = at.advice_type
+JOIN bpmmgr.review_runs rr ON rr.ri_id = rid.ri_id
+--JOIN bpmmgr.review_run_details rrd ON rrd.rrun_id = rr.id AND rrd.status_control = 'C'
+JOIN bpmmgr.xview_review_run_details xrrd ON xrrd.rrun_id = rr.id AND xrrd.status_control = 'C'
+JOIN bpmmgr.review_requests rreq ON rreq.rrun_id = rr.id
+JOIN bpmmgr.review_request_details rreqd ON rreqd.rreq_id = rreq.id AND rreqd.status_control = 'C'
+JOIN bpmmgr.xview_review_request_details xrreqd ON xrreqd.rreq_id = rreq.id AND xrreqd.status_control = 'C'
+JOIN bpmmgr.advice_advisory_communities aac ON rreq.aac_id = aac.id
+JOIN bpmmgr.advisory_communities ac ON aac.ac_id = ac.id AND aac.ab_id = ac.ab_id
+JOIN bpmmgr.advisory_bodies ab ON aac.ab_id = ab.id
+JOIN bpmmgr.review_advisors ra ON ra.rreq_id = rreq.id
+JOIN bpmmgr.review_advisor_details rad ON ra.id = rad.ra_id AND rad.status_control = 'C'
+JOIN bpmmgr.xview_review_advisor_details xrad ON xrad.ra_id = rad.ra_id AND xrad.status_control = 'C'
+JOIN bpmmgr.review_advisor_slots ras ON ras.ra_id = ra.id
+JOIN bpmmgr.review_advisor_slot_details rasd ON ras.id = rasd.ras_id AND rasd.status_control = 'C'
+LEFT JOIN isets ON isets.is_id = rasd.intention_set_id
+LEFT JOIN aac_wuas ON aac_wuas.aac_id = aac.id
+--JOIN decmgr.resource_usages_current ru ON ru.uref = aac.id||'AAC' -- AND (xrad.review_delivered_date BETWEEN ru.start_datetime AND coalesce(ru.end_datetime, sysdate))
+--JOIN decmgr.resource_member_current_simple rmc ON rmc.res_id = ru.res_id AND rmc.role_name = 'ELECTRONIC_ADVISOR_AUTO' -- TODO this could add cardinality - check that all the field consents aac team have just one ELECTRONIC_ADVISOR_AUTO on live / dev
+WHERE rid.status_control = 'C'
+-- this is version 4 what happens when we do an update and get version 5? do the reviews get copied forward / repointed to the new FC uref (this is the detail id!) ?
+-- ah, the uref for the rid gets repointed at the new uref! so we loose the context of which app version the review was requested on ummmmm TODO need to think about this 
+--AND rid.primary_data_uref = '4326FC'
+ORDER BY av.id DESC, xrad.review_delivered_date DESC
+/
+SELECT DISTINCT xrad.status
+FROM bpmmgr.xview_review_advisor_details xrad
+/
+
+-- ra_id 20053 20054
+WITH ints AS (
+  SELECT isi.is_id
+  , st.joinclob(stagg(xtcd.title||': '||st.html_to_string(xid.clause_text)), CHR(10), NULL, NULL, NULL, 'false', 'ORDER BY 1 ASC') response_text
+  FROM bpmmgr.xview_intention_sets xis
+  JOIN bpmmgr.intention_set_intentions isi ON isi.is_id = xis.is_id AND isi.end_datetime IS NULL
+  JOIN bpmmgr.intentions i ON i.id = isi.in_id
+  JOIN bpmmgr.xview_intention_details xid ON xid.in_id = i.id AND xid.end_datetime IS NULL
+  JOIN bpmmgr.xview_template_clause_details xtcd ON xtcd.clause_type_id = xid.clause_type AND xtcd.class = xid.class_type
+  WHERE xis.is_id = 22995
+  GROUP BY isi.is_id
+)
+SELECT
+  rasd.status slot_status
+, rasd.response_decision
+, wua.response_wua_id
+, wua.full_name||' ('||to_char(rasd.status_date, 'DD-MON-YYYY HH24:Mi:SS')||')' response_info
+, rasd.uref slot_uref
+, rasd.id slot_detail_id
+--, (SELECT NVL2(psd.response_decision, NVL(xrtr.response_long_key, psd.response_decision) || DECODE(psd.status, 'COMPLETED', ' (Submitted)', ' (Not submitted)'), 'None' )
+--   FROM previous_slot_decisions psd
+--   LEFT JOIN bpmmgr.xview_review_type_responses xrtr ON psd.response_decision = xrtr.response_data AND xrtr.review_type = :review_type AND xrtr.advice_type = :advice_type
+--   WHERE psd.ras_rank = 1
+--   AND psd.ras_id = ras.id) prev_decision_in_current_rrun
+, rasd.ff_id
+, 'false' ff_active
+, rasd.*
+, ras.*
+--, i.*
+, xid.*
+FROM bpmmgr.review_advisor_slots ras
+JOIN bpmmgr.review_advisor_slot_details rasd ON ras.id = rasd.ras_id AND rasd.status_control = 'C'
+LEFT JOIN securemgr.web_user_accounts wua ON rasd.status_by_wua_id = wua.id
+LEFT JOIN bpmmgr.xview_intention_sets xis ON xis.is_id = rasd.intention_set_id
+LEFT JOIN bpmmgr.intention_set_intentions isi ON isi.is_id = xis.is_id AND isi.end_datetime IS NULL
+LEFT JOIN bpmmgr.intentions i ON i.id = isi.in_id
+LEFT JOIN bpmmgr.xview_intention_details xid ON xid.in_id = i.id AND xid.end_datetime IS NULL
+WHERE ras.ra_id IN (20053, 20054)
+
+--WHERE xid.clause_type = 'FIELD_CONSENTS'
+-- remove the duplicates across the sets (for the app versions within a variation)
+--AND i.original_id_id IS NULL;
+
+
+ORDER BY lower(rasd.name)
+/
+
+
+SELECT ac.id ac_id, ac.name, ac.status, aac.id aac_id
+, mh.*
+--, rmc.*
+FROM bpmmgr.advisory_bodies ab
+JOIN bpmmgr.advisory_communities ac ON ac.ab_id = ab.id
+JOIN bpmmgr.advice_advisory_communities aac ON aac.ac_id = ac.id
+JOIN decmgr.resource_usages_current ru ON ru.uref = aac.id||'AAC' -- AND (xrad.review_delivered_date BETWEEN ru.start_datetime AND coalesce(ru.end_datetime, sysdate))
+LEFT JOIN decmgr.xview_resource_members_history mh ON mh.res_id = ru.res_id AND mh.role_name = 'ELECTRONIC_ADVISOR_AUTO' AND mh.status_control = 'C'
+--LEFT JOIN decmgr.resource_member_current_simple rmc ON rmc.res_id = ru.res_id AND rmc.role_name = 'ELECTRONIC_ADVISOR_AUTO' -- TODO this could add cardinality - check that all the field consents aac team have just one ELECTRONIC_ADVISOR_AUTO on live / dev
+WHERE aac.advice_type = 'FIELD_CONSENTS'
+--GROUP BY aac.id
+ORDER BY aac.id
+
+/
+
+
+SELECT wuah.*
+FROM securemgr.web_user_account_histories wuah
+WHERE wuah.resource_person_id IN (51747, 53827)
+/
+
+SELECT rp.*, wuah.*
+FROM decmgr.xview_resource_people_history rp
+LEFT JOIN securemgr.web_user_account_histories wuah ON wuah.resource_person_id = rp.rp_id
+WHERE rp.rp_id IN (51747, 53827)
+--WHERE upper(rp.forename) = 'ALISON'
+--AND upper(rp.surname) like '%ARCY%'
+--AND rp.status_control = 'C'
+/
+-- AAC/AC to wua check
+-- This looks good all environments
+-- dev
+-- st
+-- uat (had to fix up the "RE - Mike Hannan" ACC team)
+-- live (had to fix up the "RE - Mike Hannan" ACC team)
+WITH aac_mems AS (
+  SELECT
+    aac.id aac_id
+  , ac.name ac_name
+  , rmc.resource_person_id
+  , RANK () OVER (PARTITION BY aac.id ORDER BY rmc.start_date DESC) aac_mem_rank
+  FROM bpmmgr.advice_advisory_communities aac
+  JOIN bpmmgr.advisory_communities ac ON ac.id = aac.ac_id
+  JOIN decmgr.resource_usages_current ru ON ru.uref = aac.id||'AAC' 
+  JOIN decmgr.xview_resource_members_history rmc ON rmc.res_id = ru.res_id AND rmc.role_name = 'ELECTRONIC_ADVISOR_AUTO'
+  WHERE aac.advice_type = 'FIELD_CONSENTS'
+)
+, aac_wuas AS (
+  SELECT
+    m.aac_id
+  , m.ac_name
+  , m.resource_person_id
+  , (
+    SELECT max(wua.wua_id) -- this is a bit wierd but will return us the latest created wua for the person
+    FROM securemgr.web_user_account_current wua
+    WHERE wua.person_id = m.resource_person_id
+    ) wua_id
+  FROM aac_mems m
+  WHERE m.aac_mem_rank = 1 -- we grab the last member added to the aac team ELECTRONIC_ADVISOR_AUTO role (only 1 member of this role for legacy field consents)
+)
+SELECT
+  aw.*
+, wua.full_name
+, wua.primary_email_address
+FROM aac_wuas aw
+JOIN securemgr.web_user_accounts wua ON wua.id = aw.wua_id
+/
+SELECT *
+FROM fcs_migration.application_technical_reviews
+ORDER BY requested_date_time DESC
+/
+SELECT *
+FROM fcs_migration.application_case_notes
+ORDER BY added_date_time DESC
+/
+SELECT *
+FROM fcs_migration.application_updates
+ORDER BY requested_date_time DESC
+/
+
+--
+-- file_upload_library_uploaded_files
+--
+-- supporting info docs
+--
+
+-- note - as per the new system the files are cloned to a new file folder for
+-- an application update, i.e. new application version
+
+SELECT count(*)
+, sum(CASE WHEN ff.id IS NULL THEN 1 ELSE 0 END) missing_folder_count
+, sum(CASE WHEN ffu.ff_id IS NULL THEN 1 ELSE 0 END) missing_folder_usage_count
+FROM envmgr.xview_field_consent_details fcd
+LEFT JOIN decmgr.file_folders ff ON ff.id = fcd.folder_id
+LEFT JOIN decmgr.file_folder_usages ffu ON ffu.uref = fcd.uref;
+
+/
+
+--
+-- File migration proposed method
+--
+-- 1) insert data we have into fcs_migration.file_upload_library_uploaded_files (will be missing the id and key)
+-- 2) insert data required (blobs etc) into promotemgr.s3_file_migration
+-- 3) run the Java file migration tool (from the bastion for uat and prod)
+--    -- generate the uuid key (stored at text in FUSS) here? or at step (2)?
+-- 4) get the key from promotemgr.s3_file_migration and update fcs_migration.file_upload_library_uploaded_files
+-- 5) push the data from Oracle to Postgress
