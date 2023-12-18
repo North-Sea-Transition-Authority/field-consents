@@ -51,7 +51,7 @@ class DocumentTemplateBootstrapServiceTest {
         documentTemplateService.createDocumentTemplate(
             "Production Consent",
             "Document template used for creating Production Consents",
-            "document/template/productionConsent.ftl",
+            "fcs/document/template/productionConsent.ftl",
             1
         )
     ).thenReturn(productionDocumentTemplateDto);
@@ -64,7 +64,7 @@ class DocumentTemplateBootstrapServiceTest {
     verify(documentTemplateService).createDocumentTemplate(
         "Production Consent",
         "Document template used for creating Production Consents",
-        "document/template/productionConsent.ftl",
+        "fcs/document/template/productionConsent.ftl",
         1
     );
 
@@ -113,13 +113,13 @@ class DocumentTemplateBootstrapServiceTest {
     verify(documentTemplateService).createDocumentTemplate(
         "Flare Consent",
         "Document template used for creating Flare Consents",
-        "document/template/flareConsent.ftl",
+        "fcs/document/template/flareConsent.ftl",
         2
     );
     verify(documentTemplateService).createDocumentTemplate(
         "Vent Consent",
         "Document template used for creating Vent Consents",
-        "document/template/ventConsent.ftl",
+        "fcs/document/template/ventConsent.ftl",
         3
     );
   }

@@ -2,10 +2,21 @@ package uk.co.nstauthority.fieldconsents.document.lib;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -15,6 +26,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.ByteArrayResource;
 
 @ExtendWith(MockitoExtension.class)
 class DocumentInstanceServiceTest {
@@ -27,6 +39,9 @@ class DocumentInstanceServiceTest {
 
   @Mock
   private DocumentTemplateService documentTemplateService;
+
+  @Mock
+  private Configuration freemarkerConfiguration;
 
   @InjectMocks
   @Spy
@@ -101,5 +116,40 @@ class DocumentInstanceServiceTest {
     when(documentInstanceRepository.findById(documentInstanceId)).thenReturn(Optional.of(documentInstance));
 
     assertThat(documentInstanceService.getDocumentInstanceOrThrow(documentInstanceId)).isEqualTo(documentInstance);
+  }
+
+  @Test
+  void renderPdf() throws Exception {
+    var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
+    Map<String, Object> templateModel = Map.of("test-model-key", "test-model-value");
+
+    var freemarkerTemplate = mock(Template.class);
+
+    var expectedModel = new HashMap<>(templateModel);
+    expectedModel.put("documentInstanceDto", documentInstanceDto);
+
+    var html = "<html></html>";
+
+    var byteArrayResource = new ByteArrayResource(new byte[] {1, 2, 3});
+
+    when(freemarkerConfiguration.getTemplate(documentInstanceDto.documentTemplateDto().templatePath()))
+        .thenReturn(freemarkerTemplate);
+
+    doAnswer(invocation -> {
+      var writer = invocation.getArgument(1, Writer.class);
+      writer.write(html);
+      return null;
+    })
+        .when(freemarkerTemplate)
+        .process(eq(expectedModel), any(StringWriter.class));
+
+    doReturn(byteArrayResource).when(documentInstanceService).renderPdfFromHtml(html);
+
+    assertThat(documentInstanceService.renderPdf(documentInstanceDto, templateModel)).isEqualTo(byteArrayResource);
+  }
+
+  @Test
+  void renderPdfFromHtml() throws IOException {
+    assertThat(documentInstanceService.renderPdfFromHtml("<html></html>").getByteArray()).isNotEmpty();
   }
 }

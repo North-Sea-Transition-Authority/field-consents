@@ -15,6 +15,13 @@
   </@defaultPageWithSubNavigationSubNav>
 
   <@defaultPageWithSubNavigationContent pageHeading=pageTitle>
+    <@fdsAction.link
+      linkText="Preview document"
+      linkUrl=springUrl(previewUrl)
+      linkClass="govuk-button govuk-button--blue"
+      role=true
+    />
+
     <#list documentSectionSummaryViews as documentSectionSummaryView>
       <h2 id="${documentSectionSummaryView.title()}" class="govuk-heading-l govuk-!-margin-bottom-2">
         ${documentSectionSummaryView.title()}

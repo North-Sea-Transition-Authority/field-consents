@@ -2,6 +2,8 @@ package uk.co.nstauthority.fieldconsents.document;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
@@ -14,6 +16,9 @@ import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
@@ -25,6 +30,9 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
 class DocumentInstanceControllerTest extends AbstractControllerTest {
 
   private static final UUID DOCUMENT_INSTANCE_ID = UUID.randomUUID();
+
+  @MockBean
+  private FieldConsentsDocumentInstanceService fieldConsentsDocumentInstanceService;
 
   @MockBean
   private FieldConsentsDocumentInstanceSectionService fieldConsentsDocumentInstanceSectionService;
@@ -70,6 +78,44 @@ class DocumentInstanceControllerTest extends AbstractControllerTest {
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/document/viewDocumentInstance"))
         .andExpect(model().attribute("pageTitle", documentInstanceDto.documentTemplateDto().title()))
-        .andExpect(model().attribute("documentSectionSummaryViews", documentSectionSummaryViews));
+        .andExpect(model().attribute("documentSectionSummaryViews", documentSectionSummaryViews))
+        .andExpect(model().attribute("previewUrl", ReverseRouter.route(on(DocumentInstanceController.class)
+            .getPreviewDocumentInstance(DOCUMENT_INSTANCE_ID))));
+  }
+
+  @SecurityTest
+  void getPreviewDocumentInstance_noUser() throws Exception {
+    mockMvc.perform(get(ReverseRouter.route(on(DocumentInstanceController.class)
+            .getPreviewDocumentInstance(DOCUMENT_INSTANCE_ID))))
+        .andExpect(redirectionToLoginUrl());
+  }
+
+  @SecurityTest
+  void getPreviewDocumentInstance_userDoesNotHaveProcessFcsApplicationsPermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(false);
+
+    mockMvc.perform(get(ReverseRouter.route(on(DocumentInstanceController.class)
+            .getPreviewDocumentInstance(DOCUMENT_INSTANCE_ID)))
+            .with(user(user)))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void getPreviewDocumentInstance() throws Exception {
+    var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
+    var byteArrayResource = new ByteArrayResource(new byte[] {1, 2, 3});
+
+    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
+    when(documentInstanceService.getDocumentInstanceDtoOrThrow(DOCUMENT_INSTANCE_ID))
+        .thenReturn(documentInstanceDto);
+    when(fieldConsentsDocumentInstanceService.renderPdf(documentInstanceDto)).thenReturn(byteArrayResource);
+
+    mockMvc.perform(get(ReverseRouter.route(on(DocumentInstanceController.class)
+            .getPreviewDocumentInstance(DOCUMENT_INSTANCE_ID)))
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_OCTET_STREAM))
+        .andExpect(content().bytes(byteArrayResource.getByteArray()))
+        .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"Document Preview.pdf\""));
   }
 }

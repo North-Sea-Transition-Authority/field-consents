@@ -38,7 +38,7 @@ class DocumentTemplateBootstrapService {
     var productionDocumentTemplateDto = documentTemplateService.createDocumentTemplate(
         "Production Consent",
         "Document template used for creating Production Consents",
-        "document/template/productionConsent.ftl",
+        "fcs/document/template/productionConsent.ftl",
         1
     );
 
@@ -87,13 +87,13 @@ class DocumentTemplateBootstrapService {
     documentTemplateService.createDocumentTemplate(
         "Flare Consent",
         "Document template used for creating Flare Consents",
-        "document/template/flareConsent.ftl",
+        "fcs/document/template/flareConsent.ftl",
         2
     );
     documentTemplateService.createDocumentTemplate(
         "Vent Consent",
         "Document template used for creating Vent Consents",
-        "document/template/ventConsent.ftl",
+        "fcs/document/template/ventConsent.ftl",
         3
     );
   }
