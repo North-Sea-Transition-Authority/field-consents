@@ -1,4 +1,5 @@
 <#include '../layout/layout.ftl'>
+<#import '../hints/copyPasteTableHint.ftl' as copyPasteTableHint>
 
 <#-- @ftlvariable name="startYear" type="String" -->
 <#-- @ftlvariable name="endYear" type="String" -->
@@ -9,8 +10,9 @@
 <#assign pageTitle = "Long Term Oil and Gas Production Request"/>
 
 <@defaultPage htmlTitle=pageTitle pageHeading=pageTitle errorItems=errorList>
+  <@copyPasteTableHint.hint/>
   <@fdsForm.htmlForm actionUrl=springUrl(submitUrl)>
-    <table class="govuk-table">
+    <table class="govuk-table" data-module="fcs-table-with-pastable-content">
       <caption class="govuk-table__caption govuk-table__caption--m">${startYear} to ${endYear}</caption>
       <tbody class="govuk-table__body">
       <tr class="govuk-table__row">

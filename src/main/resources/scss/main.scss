@@ -13,3 +13,5 @@ $govuk-assets-path: "../../govuk-frontend/govuk/assets/";
 @import "button-group"; // TODO remove when FDS-457 is fixed
 @import "spacing";
 @import "table";
+
+@import "patterns/all";

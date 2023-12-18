@@ -1,5 +1,6 @@
 <#include '../layout/layout.ftl'>
 <#import './_flareCategoryInfo.ftl' as flareCategoryInfo>
+<#import '../hints/copyPasteTableHint.ftl' as copyPasteTableHint>
 
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
 
@@ -7,10 +8,11 @@
     <@grid.gridRow>
       <@grid.twoThirdsColumn>
         <@flareCategoryInfo.flareCategoryInfo/>
+        <@copyPasteTableHint.hint/>
       </@grid.twoThirdsColumn>
     </@grid.gridRow>
     <@fdsForm.htmlForm actionUrl=springUrl(submitUrl)>
-      <table class="govuk-table">
+      <table class="govuk-table" data-module="fcs-table-with-pastable-content">
         <tbody class="govuk-table__body">
         <tr class="govuk-table__row">
           <th class="govuk-table__header">Month</th>

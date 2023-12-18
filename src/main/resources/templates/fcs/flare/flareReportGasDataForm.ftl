@@ -1,15 +1,17 @@
 <#include '../layout/layout.ftl'>
 <#import './_flareCategoryInfo.ftl' as flareCategoryInfo>
 <#import '../flarevent/_reportGasDataRow.ftl' as reportGasDataRow>
+<#import '../hints/copyPasteTableHint.ftl' as copyPasteTableHint>
 
 <#assign pageTitle = "Flare report gas properties"/>
 
 <@defaultPage htmlTitle=pageTitle pageHeading=pageTitle errorItems=errorList pageSize=PageSize.TWO_THIRDS_COLUMN>
 
     <@flareCategoryInfo.flareCategoryInfo/>
+    <@copyPasteTableHint.hint/>
 
     <@fdsForm.htmlForm actionUrl=springUrl(submitUrl)>
-    <table class="govuk-table">
+    <table class="govuk-table" data-module="fcs-table-with-pastable-content">
       <caption class="govuk-table__caption govuk-table__caption--m">${reportPeriodStart} to ${reportPeriodEnd}</caption>
       <tbody class="govuk-table__body">
       <tr class="govuk-table__row">

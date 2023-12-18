@@ -1,13 +1,15 @@
 <#include '../layout/layout.ftl'>
+<#import '../hints/copyPasteTableHint.ftl' as copyPasteTableHint>
 
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
 
 <#assign pageTitle = "Annual Oil and Gas Production Request ${requestYear}"/>
 
 <@defaultPage htmlTitle=pageTitle pageHeading=pageTitle errorItems=errorList>
+    <@copyPasteTableHint.hint/>
     <@fdsForm.htmlForm actionUrl=springUrl(submitUrl)>
       <input type="hidden" name="year" value="${requestYear}"/>
-      <table class="govuk-table">
+      <table class="govuk-table" data-module="fcs-table-with-pastable-content">
         <tbody class="govuk-table__body">
         <tr class="govuk-table__row">
           <th class="govuk-table__header govuk-!-width-one-third">Month</th>

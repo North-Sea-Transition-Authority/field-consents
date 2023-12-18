@@ -1,0 +1,21 @@
+@keyframes fadeInAndOut {
+  0% {
+    background-color: inherit;
+  }
+  25% {
+    background-color: rgba(govuk-colour("blue"), 0.30);
+  }
+  100% {
+    background-color: inherit;
+  }
+}
+
+.pasted {
+  animation: fadeInAndOut 0.5s ease-in-out;
+}
+
+@media (prefers-reduced-motion) {
+  .pasted {
+    animation: none;
+  }
+}
