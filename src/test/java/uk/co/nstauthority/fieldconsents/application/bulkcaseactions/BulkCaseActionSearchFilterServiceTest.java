@@ -12,6 +12,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.Assign
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.ENERGY_PORTAL_USER_2;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.ENERGY_PORTAL_USER_3;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CASE_OFFICER;
 
 import java.util.List;
 import java.util.Optional;
@@ -42,6 +43,10 @@ import uk.co.nstauthority.fieldconsents.teams.TeamService;
 
 @ExtendWith(MockitoExtension.class)
 class BulkCaseActionSearchFilterServiceTest {
+
+  private static final Condition CURRENT_CASE_OWNER_IS_EMPTY_OR_IS_CASE_OFFICER_CONDITION =
+      APPLICATION_VERSIONS.CURRENT_CASE_OWNER.isNull()
+          .or(APPLICATION_VERSIONS.CURRENT_CASE_OWNER.eq(CASE_OFFICER.name()));
 
   @Mock
   private ApplicationDataFilterFormService filterFormService;
@@ -96,7 +101,8 @@ class BulkCaseActionSearchFilterServiceTest {
   void getConditions_emptyForm_isNotRegulator() {
     when(teamService.isRegulatorUser(caseManagerUser)).thenReturn(false);
 
-    assertThat(bulkCaseActionSearchFilterService.getConditions(BulkCaseActionSearchFiltersForm.empty(), caseManagerUser)).isEmpty();
+    assertThat(bulkCaseActionSearchFilterService.getConditions(BulkCaseActionSearchFiltersForm.empty(), caseManagerUser))
+        .containsExactly(CURRENT_CASE_OWNER_IS_EMPTY_OR_IS_CASE_OFFICER_CONDITION);
   }
 
   @Test
@@ -106,7 +112,7 @@ class BulkCaseActionSearchFilterServiceTest {
     when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(condition);
 
     assertThat(bulkCaseActionSearchFilterService.getConditions(BulkCaseActionSearchFiltersForm.empty(), caseManagerUser))
-        .containsExactly(condition);
+        .containsExactly(condition, CURRENT_CASE_OWNER_IS_EMPTY_OR_IS_CASE_OFFICER_CONDITION);
   }
 
   @Test
@@ -154,7 +160,8 @@ class BulkCaseActionSearchFilterServiceTest {
         fieldAssetKeyCondition,
         terminalAssetKeyCondition,
         caseOfficerCondition,
-        userCondition
+        userCondition,
+        CURRENT_CASE_OWNER_IS_EMPTY_OR_IS_CASE_OFFICER_CONDITION
     );
   }
 

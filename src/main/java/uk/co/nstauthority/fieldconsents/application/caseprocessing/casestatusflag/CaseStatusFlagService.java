@@ -17,6 +17,8 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casest
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_WITHDRAWAL_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.TECHNICAL_REVIEW_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.WITHDRAWAL_OPEN;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CASE_OFFICER;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -75,7 +77,8 @@ public class CaseStatusFlagService {
   }
 
   Set<CaseStatusFlag> getCaseOfficerAssignmentFlag(ApplicationVersion applicationVersion) {
-    if (Objects.nonNull(applicationVersion.getCaseOfficerWuaId())) {
+    if (Objects.nonNull(applicationVersion.getCaseOfficerWuaId())
+        && CASE_OFFICER.equals(applicationVersion.getCurrentCaseOwner())) {
       return Collections.singleton(CASE_OFFICER_ASSIGNED);
     }
 
@@ -144,7 +147,8 @@ public class CaseStatusFlagService {
   }
 
   Set<CaseStatusFlag> getCamAssignmentFlag(ApplicationVersion applicationVersion) {
-    if (Objects.nonNull(applicationVersion.getCamWuaId())) {
+    if (Objects.nonNull(applicationVersion.getCamWuaId())
+        && CONSENTS_AND_AUTHORISATIONS_MANAGER.equals(applicationVersion.getCurrentCaseOwner())) {
       return Collections.singleton(CAM_ASSIGNED);
     }
 

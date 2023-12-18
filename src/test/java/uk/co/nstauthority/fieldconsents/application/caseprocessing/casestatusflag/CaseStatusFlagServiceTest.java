@@ -24,6 +24,8 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casest
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_WITHDRAWAL_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.TECHNICAL_REVIEW_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.WITHDRAWAL_OPEN;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CASE_OFFICER;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER;
 
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -242,9 +244,16 @@ class CaseStatusFlagServiceTest {
   }
 
   @Test
-  void getCaseOfficerAssignmentFlag_assigned() {
+  void getCaseOfficerAssignmentFlag_whenCaseOfficerAssigned() {
     applicationVersion.setCaseOfficerWuaId(1L);
+    applicationVersion.setCurrentCaseOwner(CASE_OFFICER);
     assertThat(caseStatusFlagService.getCaseOfficerAssignmentFlag(applicationVersion)).containsExactly(CASE_OFFICER_ASSIGNED);
+  }
+
+  @Test
+  void getCaseOfficerAssignmentFlag_whenCaseOfficerNotAssigned() {
+    applicationVersion.setCaseOfficerWuaId(1L);
+    assertThat(caseStatusFlagService.getCaseOfficerAssignmentFlag(applicationVersion)).containsExactly(CASE_OFFICER_NOT_ASSIGNED);
   }
 
   @Test
@@ -343,9 +352,16 @@ class CaseStatusFlagServiceTest {
   }
 
   @Test
-  void getCamAssignmentFlag_assigned() {
+  void getCamAssignmentFlag_whenCamUserAssigned() {
     applicationVersion.setCamWuaId(1L);
+    applicationVersion.setCurrentCaseOwner(CONSENTS_AND_AUTHORISATIONS_MANAGER);
     assertThat(caseStatusFlagService.getCamAssignmentFlag(applicationVersion)).containsExactly(CAM_ASSIGNED);
+  }
+
+  @Test
+  void getCamAssignmentFlag_whenCamUserNotAssigned() {
+    applicationVersion.setCamWuaId(1L);
+    assertThat(caseStatusFlagService.getCamAssignmentFlag(applicationVersion)).containsExactly(CAM_NOT_ASSIGNED);
   }
 
   @Test

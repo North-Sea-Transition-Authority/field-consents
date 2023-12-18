@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.application.bulkcaseactions;
 
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterService.UNASSIGNED;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CASE_OFFICER;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -98,7 +99,14 @@ class BulkCaseActionSearchFilterService {
 
     getUserCondition(user).ifPresent(conditions::add);
 
+    conditions.add(getCurrentCaseOwnerIsEmptyOrIsCaseOfficerCondition());
+
     return conditions;
+  }
+
+  private Condition getCurrentCaseOwnerIsEmptyOrIsCaseOfficerCondition() {
+    return APPLICATION_VERSIONS.CURRENT_CASE_OWNER.isNull()
+        .or(APPLICATION_VERSIONS.CURRENT_CASE_OWNER.eq(CASE_OFFICER.name()));
   }
 
   Optional<Condition> getUserCondition(ServiceUserDetail user) {
