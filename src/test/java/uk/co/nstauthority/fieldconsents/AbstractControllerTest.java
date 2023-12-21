@@ -30,7 +30,9 @@ import uk.co.nstauthority.fieldconsents.authorisation.HasAssetPermissionIntercep
 import uk.co.nstauthority.fieldconsents.authorisation.HasPermissionInterceptor;
 import uk.co.nstauthority.fieldconsents.authorisation.HasTeamPermissionInterceptor;
 import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
+import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.branding.EnableAllBrandingConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.branding.ServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.configuration.SamlProperties;
 import uk.co.nstauthority.fieldconsents.configuration.ServiceConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.configuration.WebSecurityConfiguration;
@@ -38,6 +40,7 @@ import uk.co.nstauthority.fieldconsents.controllerhelper.ControllerHelperService
 import uk.co.nstauthority.fieldconsents.energyportal.IncludeEnergyPortalConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupQueryService;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.SearchSelectorService;
+import uk.co.nstauthority.fieldconsents.mvc.ControllerAdviceService;
 import uk.co.nstauthority.fieldconsents.mvc.ErrorListHandlerInterceptor;
 import uk.co.nstauthority.fieldconsents.mvc.ResponseBufferSizeHandlerInterceptor;
 import uk.co.nstauthority.fieldconsents.mvc.WebMvcConfiguration;
@@ -145,13 +148,30 @@ public abstract class AbstractControllerTest {
     }
 
     @Bean
-    public ControllerHelperService controllerHelperService() {
-      return new ControllerHelperService(validationErrorOrderingService());
+    public ControllerHelperService controllerHelperService(ValidationErrorOrderingService validationErrorOrderingService) {
+      return new ControllerHelperService(validationErrorOrderingService);
     }
 
     @Bean
-    public ValidationErrorOrderingService validationErrorOrderingService() {
-      return new ValidationErrorOrderingService(messageSource());
+    public ControllerAdviceService controllerAdviceService(
+        UserDetailService userDetailService,
+        ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties,
+        ServiceConfigurationProperties serviceConfigurationProperties,
+        CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties,
+        TopNavigationService topNavigationService
+    ) {
+      return new ControllerAdviceService(
+          userDetailService,
+          serviceBrandingConfigurationProperties,
+          serviceConfigurationProperties,
+          customerBrandingConfigurationProperties,
+          topNavigationService
+      );
+    }
+
+    @Bean
+    public ValidationErrorOrderingService validationErrorOrderingService(MessageSource messageSource) {
+      return new ValidationErrorOrderingService(messageSource);
     }
 
     @Bean("messageSource")

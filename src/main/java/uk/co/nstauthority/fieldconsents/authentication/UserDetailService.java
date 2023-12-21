@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.authentication;
 
+import java.util.Optional;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +16,14 @@ public class UserDetailService {
       }
     } else {
       throw new InvalidAuthenticationException("ServiceSaml2Authentication not found in authentication context");
+    }
+  }
+
+  public Optional<ServiceUserDetail> findUserDetail() {
+    try {
+      return Optional.of(getUserDetail());
+    } catch (InvalidAuthenticationException e) {
+      return Optional.empty();
     }
   }
 

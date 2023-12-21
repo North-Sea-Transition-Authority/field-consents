@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.HandlerMapping;
+import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
 import uk.co.nstauthority.fieldconsents.authorisation.rules.ApplicationInterceptorSecurityRule;
@@ -36,10 +37,14 @@ public class ApplicationHandlerInterceptor extends AbstractHandlerInterceptor {
   @Override
   @SuppressWarnings("unchecked")
   public boolean preHandle(
-      HttpServletRequest request,
+      @NonNull HttpServletRequest request,
       @NonNull HttpServletResponse response,
       @NonNull Object handler
   ) throws IOException {
+    if (handler instanceof ResourceHttpRequestHandler) {
+      return true;
+    }
+
     var handlerMethod = (HandlerMethod) handler;
     var pathVariables = (Map<String, String>) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
 

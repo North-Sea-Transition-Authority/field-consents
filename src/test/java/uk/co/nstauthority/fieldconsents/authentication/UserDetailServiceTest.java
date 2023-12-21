@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 
 import java.util.Set;
-import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,8 +19,8 @@ class UserDetailServiceTest {
     userDetailService = new UserDetailService();
   }
 
-  @AfterAll
-  static void tearDown() {
+  @AfterEach
+  void tearDown() {
     SecurityContextHolder.setContext(new SecurityContextImpl(null));
   }
 
@@ -53,5 +53,18 @@ class UserDetailServiceTest {
 
     assertThrowsExactly(InvalidAuthenticationException.class, () -> userDetailService.getUserDetail(),
         "ServiceSaml2Authentication not found in authentication context");
+  }
+
+  @Test
+  void findUserDetail_withoutUser() {
+    assertThat(userDetailService.findUserDetail()).isEmpty();
+  }
+
+  @Test
+  void findUserDetail_withUser() {
+    var user = ServiceUserDetailTestUtil.Builder().build();
+    SamlAuthenticationUtil.Builder().withUser(user).setSecurityContext();
+
+    assertThat(userDetailService.findUserDetail()).contains(user);
   }
 }

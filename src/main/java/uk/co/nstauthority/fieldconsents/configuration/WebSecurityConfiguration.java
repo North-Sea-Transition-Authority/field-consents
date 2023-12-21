@@ -46,7 +46,7 @@ public class WebSecurityConfiguration {
 
     return httpSecurity
         .authorizeHttpRequests(http -> http
-            .requestMatchers("/assets/**").permitAll()
+            .requestMatchers("/error", "/assets/**").permitAll()
             // TODO - add in when we add FOX change to access new system via workbasket
             //.requestMatchers("/*").hasAuthority(IDP_ACCESS_GRANTED_AUTHORITY_NAME)
             .anyRequest().authenticated())
