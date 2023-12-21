@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateSectionService;
 
@@ -19,10 +20,8 @@ class FieldConsentsDocumentTemplateSectionServiceTest {
   @Mock
   private DocumentTemplateSectionService documentTemplateSectionService;
 
-  @Mock
-  private DocumentSectionService documentSectionService;
-
   @InjectMocks
+  @Spy
   private FieldConsentsDocumentTemplateSectionService fieldConsentsDocumentTemplateSectionService;
 
   @Test
@@ -31,25 +30,88 @@ class FieldConsentsDocumentTemplateSectionServiceTest {
 
     var topLevelDocumentTemplateSectionDtos = List.of(DocumentTemplateSectionDtoTestUtil.builder().build());
 
-    var sectionSummaryViewsForSectionSiblings =
-        List.of(new DocumentSectionSummaryView(null, null, null, null, null, null, null));
+    var documentTemplateSectionSummaryViewsForSectionSiblings =
+        List.of(new DocumentTemplateSectionSummaryView(null, null, null, null, null, null, null));
 
     when(documentTemplateSectionService.getTopLevelDocumentTemplateSectionDtos(documentTemplateDto))
         .thenReturn(topLevelDocumentTemplateSectionDtos);
 
-    doReturn(sectionSummaryViewsForSectionSiblings)
-        .when(documentSectionService)
-        .getSectionSummaryViewsForSectionSiblings(null, topLevelDocumentTemplateSectionDtos);
+    doReturn(documentTemplateSectionSummaryViewsForSectionSiblings)
+        .when(fieldConsentsDocumentTemplateSectionService)
+        .getDocumentTemplateSectionSummaryViewsForSectionSiblings(null, topLevelDocumentTemplateSectionDtos);
 
-    assertThat(fieldConsentsDocumentTemplateSectionService.getDocumentSectionSummaryViews(documentTemplateDto))
-        .isEqualTo(sectionSummaryViewsForSectionSiblings);
+    assertThat(fieldConsentsDocumentTemplateSectionService.getDocumentTemplateSectionSummaryViews(documentTemplateDto))
+        .isEqualTo(documentTemplateSectionSummaryViewsForSectionSiblings);
+  }
+
+  @Test
+  void getDocumentTemplateSectionSummaryViewsForSectionSiblings() {
+    var parentSectionNumberString = "1";
+
+    var siblingDocumentTemplateSectionDto1 =
+        DocumentTemplateSectionDtoTestUtil.builder()
+            .withDisplayOrder(1)
+            .build();
+
+    var siblingDocumentTemplateSectionDto2Child1Child1 =
+        DocumentTemplateSectionDtoTestUtil.builder().build();
+    var siblingDocumentTemplateSectionDto2Child1 =
+        DocumentTemplateSectionDtoTestUtil.builder()
+            .withDisplayOrder(1)
+            .withChildren(List.of(siblingDocumentTemplateSectionDto2Child1Child1))
+            .build();
+    var siblingDocumentTemplateSectionDto2Child2 =
+        DocumentTemplateSectionDtoTestUtil.builder()
+            .withDisplayOrder(2)
+            .build();
+    var siblingDocumentTemplateSectionDto2 =
+        DocumentTemplateSectionDtoTestUtil.builder()
+            .withDisplayOrder(2)
+            .withChildren(
+                List.of(
+                    siblingDocumentTemplateSectionDto2Child2,
+                    siblingDocumentTemplateSectionDto2Child1
+                )
+            )
+            .build();
+
+    var siblingDocumentTemplateSectionDtos =
+        List.of(siblingDocumentTemplateSectionDto1, siblingDocumentTemplateSectionDto2);
+
+    assertThat(
+        fieldConsentsDocumentTemplateSectionService.getDocumentTemplateSectionSummaryViewsForSectionSiblings(
+            parentSectionNumberString,
+            siblingDocumentTemplateSectionDtos
+        )
+    ).containsExactly(
+        DocumentTemplateSectionSummaryView.from(
+            "1.1",
+            siblingDocumentTemplateSectionDto1
+        ),
+        DocumentTemplateSectionSummaryView.from(
+            "1.2",
+            siblingDocumentTemplateSectionDto2
+        ),
+        DocumentTemplateSectionSummaryView.from(
+            "1.2.1",
+            siblingDocumentTemplateSectionDto2Child1
+        ),
+        DocumentTemplateSectionSummaryView.from(
+            "1.2.1.1",
+            siblingDocumentTemplateSectionDto2Child1Child1
+        ),
+        DocumentTemplateSectionSummaryView.from(
+            "1.2.2",
+            siblingDocumentTemplateSectionDto2Child2
+        )
+    );
   }
 
   @Test
   void createDocumentTemplateSection() {
     var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
     var parentDto = DocumentTemplateSectionDtoTestUtil.builder().build();
-    var form = DocumentSectionFormTestUtil.builder().build();
+    var form = DocumentTemplateSectionFormTestUtil.builder().build();
     int displayOrder = 1;
 
     fieldConsentsDocumentTemplateSectionService.createDocumentTemplateSection(
@@ -71,7 +133,7 @@ class FieldConsentsDocumentTemplateSectionServiceTest {
   @Test
   void editDocumentTemplateSection() {
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
-    var form = DocumentSectionFormTestUtil.builder().build();
+    var form = DocumentTemplateSectionFormTestUtil.builder().build();
 
     fieldConsentsDocumentTemplateSectionService.editDocumentTemplateSection(documentTemplateSectionDto, form);
 

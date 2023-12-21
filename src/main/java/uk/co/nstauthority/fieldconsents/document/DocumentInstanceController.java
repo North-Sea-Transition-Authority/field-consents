@@ -44,8 +44,8 @@ public class DocumentInstanceController {
     return new ModelAndView("fcs/document/viewDocumentInstance")
         .addObject("pageTitle", documentInstanceDto.documentTemplateDto().title())
         .addObject(
-            "documentSectionSummaryViews",
-            fieldConsentsDocumentInstanceSectionService.getDocumentSectionSummaryViews(documentInstanceDto)
+            "documentInstanceSectionSummaryViews",
+            fieldConsentsDocumentInstanceSectionService.getDocumentInstanceSectionSummaryViews(documentInstanceDto)
         )
         .addObject(
             "previewUrl",

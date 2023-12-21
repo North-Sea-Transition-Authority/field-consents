@@ -1,10 +1,10 @@
 package uk.co.nstauthority.fieldconsents.document.lib;
 
-public class DocumentTemplateSectionNumberingUtil {
+public class DocumentSectionNumberingUtil {
 
-  private DocumentTemplateSectionNumberingUtil() {
+  private DocumentSectionNumberingUtil() {
     throw new IllegalStateException(
-        "DocumentTemplateSectionNumberingUtil is a utility class and cannot be instantiated"
+        "DocumentSectionNumberingUtil is a utility class and cannot be instantiated"
     );
   }
 

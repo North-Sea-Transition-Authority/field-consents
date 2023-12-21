@@ -2,12 +2,12 @@
   <body>
     <h1>Production Consent</h1>
 
-    <#list documentSectionSummaryViews as documentSectionSummaryView>
-      <h2 id="${documentSectionSummaryView.title()}">
-        ${documentSectionSummaryView.title()}
+    <#list documentInstanceSectionSummaryViews as documentInstanceSectionSummaryView>
+      <h2 id="${documentInstanceSectionSummaryView.title()}">
+        ${documentInstanceSectionSummaryView.title()}
       </h2>
 
-      <p>${documentSectionSummaryView.content()!}</p>
+      <p>${documentInstanceSectionSummaryView.content()!}</p>
     </#list>
   </body>
 </html>

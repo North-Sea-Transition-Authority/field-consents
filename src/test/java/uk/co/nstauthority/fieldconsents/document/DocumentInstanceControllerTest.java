@@ -61,16 +61,16 @@ class DocumentInstanceControllerTest extends AbstractControllerTest {
   void getViewDocumentInstance() throws Exception {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
 
-    var documentSectionSummaryViews = List.of(
-        DocumentSectionSummaryView.from("1", DocumentInstanceSectionDtoTestUtil.builder().build()),
-        DocumentSectionSummaryView.from("2", DocumentInstanceSectionDtoTestUtil.builder().build())
+    var documentInstanceSectionSummaryViews = List.of(
+        DocumentInstanceSectionSummaryView.from("1", DocumentInstanceSectionDtoTestUtil.builder().build()),
+        DocumentInstanceSectionSummaryView.from("2", DocumentInstanceSectionDtoTestUtil.builder().build())
     );
 
     when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
     when(documentInstanceService.getDocumentInstanceDtoOrThrow(DOCUMENT_INSTANCE_ID))
         .thenReturn(documentInstanceDto);
-    when(fieldConsentsDocumentInstanceSectionService.getDocumentSectionSummaryViews(documentInstanceDto))
-        .thenReturn(documentSectionSummaryViews);
+    when(fieldConsentsDocumentInstanceSectionService.getDocumentInstanceSectionSummaryViews(documentInstanceDto))
+        .thenReturn(documentInstanceSectionSummaryViews);
 
     mockMvc.perform(get(ReverseRouter.route(on(DocumentInstanceController.class)
             .getViewDocumentInstance(DOCUMENT_INSTANCE_ID)))
@@ -78,7 +78,7 @@ class DocumentInstanceControllerTest extends AbstractControllerTest {
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/document/viewDocumentInstance"))
         .andExpect(model().attribute("pageTitle", documentInstanceDto.documentTemplateDto().title()))
-        .andExpect(model().attribute("documentSectionSummaryViews", documentSectionSummaryViews))
+        .andExpect(model().attribute("documentInstanceSectionSummaryViews", documentInstanceSectionSummaryViews))
         .andExpect(model().attribute("previewUrl", ReverseRouter.route(on(DocumentInstanceController.class)
             .getPreviewDocumentInstance(DOCUMENT_INSTANCE_ID))));
   }

@@ -7,13 +7,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-class DocumentTemplateSectionNumberingUtilTest {
+class DocumentSectionNumberingUtilTest {
 
   @ParameterizedTest
   @MethodSource("getFullNumberSectionNumberStringArguments")
   void getFullNumberSectionNumberString(String parentSectionNumberString, int sectionNumber, String expectedResult) {
     assertThat(
-        DocumentTemplateSectionNumberingUtil.getFullNumberSectionNumberString(
+        DocumentSectionNumberingUtil.getFullNumberSectionNumberString(
             parentSectionNumberString,
             sectionNumber
         )

@@ -1,6 +1,6 @@
 package uk.co.nstauthority.fieldconsents.document;
 
-class DocumentSectionFormTestUtil {
+class DocumentInstanceSectionFormTestUtil {
 
   static Builder builder() {
     return new Builder();
@@ -24,8 +24,8 @@ class DocumentSectionFormTestUtil {
       return this;
     }
 
-    DocumentSectionForm build() {
-      return new DocumentSectionForm(title, content);
+    DocumentInstanceSectionForm build() {
+      return new DocumentInstanceSectionForm(title, content);
     }
   }
 }

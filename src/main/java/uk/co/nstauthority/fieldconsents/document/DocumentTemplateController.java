@@ -47,8 +47,8 @@ public class DocumentTemplateController {
     return new ModelAndView("fcs/document/viewDocumentTemplate")
         .addObject("pageTitle", documentTemplateDto.title())
         .addObject(
-            "documentSectionSummaryViews",
-            fieldConsentsDocumentTemplateSectionService.getDocumentSectionSummaryViews(documentTemplateDto)
+            "documentTemplateSectionSummaryViews",
+            fieldConsentsDocumentTemplateSectionService.getDocumentTemplateSectionSummaryViews(documentTemplateDto)
         );
   }
 }

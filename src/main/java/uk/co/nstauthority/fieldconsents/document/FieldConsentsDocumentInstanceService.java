@@ -24,8 +24,8 @@ public class FieldConsentsDocumentInstanceService {
 
   public ByteArrayResource renderPdf(DocumentInstanceDto documentInstanceDto) {
     Map<String, Object> templateModel = Map.of(
-        "documentSectionSummaryViews",
-        fieldConsentsDocumentInstanceSectionService.getDocumentSectionSummaryViews(documentInstanceDto)
+        "documentInstanceSectionSummaryViews",
+        fieldConsentsDocumentInstanceSectionService.getDocumentInstanceSectionSummaryViews(documentInstanceDto)
     );
 
     return documentInstanceService.renderPdf(documentInstanceDto, templateModel);

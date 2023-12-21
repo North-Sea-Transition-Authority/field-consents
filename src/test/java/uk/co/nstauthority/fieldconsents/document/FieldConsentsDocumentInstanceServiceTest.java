@@ -31,8 +31,8 @@ class FieldConsentsDocumentInstanceServiceTest {
     var byteArrayResource = new ByteArrayResource(new byte[] {1, 2, 3});
 
     Map<String, Object> expectedTemplateModel = Map.of(
-        "documentSectionSummaryViews",
-        fieldConsentsDocumentInstanceSectionService.getDocumentSectionSummaryViews(documentInstanceDto)
+        "documentInstanceSectionSummaryViews",
+        fieldConsentsDocumentInstanceSectionService.getDocumentInstanceSectionSummaryViews(documentInstanceDto)
     );
 
     when(documentInstanceService.renderPdf(documentInstanceDto, expectedTemplateModel))
