@@ -36,6 +36,7 @@ class DocumentTemplateBootstrapService {
     LOGGER.info("Creating initial document templates");
 
     var productionDocumentTemplateDto = documentTemplateService.createDocumentTemplate(
+        DocumentType.PRODUCTION_CONSENT.name(),
         "Production Consent",
         "Document template used for creating Production Consents",
         "fcs/document/template/productionConsent.ftl",
@@ -85,12 +86,14 @@ class DocumentTemplateBootstrapService {
     );
 
     documentTemplateService.createDocumentTemplate(
+        DocumentType.FLARE_CONSENT.name(),
         "Flare Consent",
         "Document template used for creating Flare Consents",
         "fcs/document/template/flareConsent.ftl",
         2
     );
     documentTemplateService.createDocumentTemplate(
+        DocumentType.VENT_CONSENT.name(),
         "Vent Consent",
         "Document template used for creating Vent Consents",
         "fcs/document/template/ventConsent.ftl",

@@ -18,6 +18,7 @@ public class DocumentTemplateService {
 
   @Transactional
   public DocumentTemplateDto createDocumentTemplate(
+      String mnemonic,
       String title,
       String description,
       String templatePath,
@@ -25,6 +26,7 @@ public class DocumentTemplateService {
   ) {
     var documentTemplate = new DocumentTemplate();
 
+    documentTemplate.setMnemonic(mnemonic);
     documentTemplate.setTitle(title);
     documentTemplate.setDescription(description);
     documentTemplate.setTemplatePath(templatePath);

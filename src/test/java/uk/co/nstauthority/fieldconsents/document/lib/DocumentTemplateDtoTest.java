@@ -13,6 +13,7 @@ class DocumentTemplateDtoTest {
     assertThat(DocumentTemplateDto.from(documentTemplate)).isEqualTo(
         new DocumentTemplateDto(
             documentTemplate.getId(),
+            documentTemplate.getMnemonic(),
             documentTemplate.getTitle(),
             documentTemplate.getDescription(),
             documentTemplate.getTemplatePath(),

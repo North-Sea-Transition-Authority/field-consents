@@ -34,7 +34,7 @@ class DocumentTemplateBootstrapServiceTest {
 
     documentTemplateBootstrapService.onApplicationReadyEvent();
 
-    verify(documentTemplateService, never()).createDocumentTemplate(any(), any(), any(), anyInt());
+    verify(documentTemplateService, never()).createDocumentTemplate(any(), any(), any(), any(), anyInt());
     verify(documentTemplateSectionService, never()).createDocumentTemplateSection(any(), any(), any(), any(), anyInt());
   }
 
@@ -49,6 +49,7 @@ class DocumentTemplateBootstrapServiceTest {
 
     when(
         documentTemplateService.createDocumentTemplate(
+            DocumentType.PRODUCTION_CONSENT.name(),
             "Production Consent",
             "Document template used for creating Production Consents",
             "fcs/document/template/productionConsent.ftl",
@@ -62,6 +63,7 @@ class DocumentTemplateBootstrapServiceTest {
     documentTemplateBootstrapService.onApplicationReadyEvent();
 
     verify(documentTemplateService).createDocumentTemplate(
+        DocumentType.PRODUCTION_CONSENT.name(),
         "Production Consent",
         "Document template used for creating Production Consents",
         "fcs/document/template/productionConsent.ftl",
@@ -111,12 +113,14 @@ class DocumentTemplateBootstrapServiceTest {
     );
 
     verify(documentTemplateService).createDocumentTemplate(
+        DocumentType.FLARE_CONSENT.name(),
         "Flare Consent",
         "Document template used for creating Flare Consents",
         "fcs/document/template/flareConsent.ftl",
         2
     );
     verify(documentTemplateService).createDocumentTemplate(
+        DocumentType.VENT_CONSENT.name(),
         "Vent Consent",
         "Document template used for creating Vent Consents",
         "fcs/document/template/ventConsent.ftl",

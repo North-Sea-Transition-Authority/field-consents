@@ -11,6 +11,7 @@ class DocumentTemplateTestUtil {
   static class Builder {
 
     private UUID id = UUID.randomUUID();
+    private String mnemonic = "TEST_MNEMONIC";
     private String title = "Test title";
     private String description = "Test description";
     private String templatePath = "test/template/path";
@@ -21,6 +22,11 @@ class DocumentTemplateTestUtil {
 
     Builder withId(UUID id) {
       this.id = id;
+      return this;
+    }
+
+    Builder withMnemonic(String mnemonic) {
+      this.mnemonic = mnemonic;
       return this;
     }
 
@@ -47,6 +53,7 @@ class DocumentTemplateTestUtil {
     DocumentTemplate build() {
       var documentTemplate = new DocumentTemplate(id);
 
+      documentTemplate.setMnemonic(mnemonic);
       documentTemplate.setTitle(title);
       documentTemplate.setDescription(description);
       documentTemplate.setTemplatePath(templatePath);

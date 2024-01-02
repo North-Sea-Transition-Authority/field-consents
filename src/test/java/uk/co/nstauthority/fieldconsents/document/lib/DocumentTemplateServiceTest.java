@@ -29,13 +29,14 @@ class DocumentTemplateServiceTest {
 
   @Test
   void createDocumentTemplate() {
+    var mnemonic = "TEST_MNEMONIC";
     var title = "Test title";
     var description = "Test description";
     var templatePath = "test/template/path";
     var displayOrder = 1;
 
     var documentTemplateDto =
-        documentTemplateService.createDocumentTemplate(title, description, templatePath, displayOrder);
+        documentTemplateService.createDocumentTemplate(mnemonic, title, description, templatePath, displayOrder);
 
     var documentTemplateCaptor = ArgumentCaptor.forClass(DocumentTemplate.class);
 
@@ -45,11 +46,13 @@ class DocumentTemplateServiceTest {
 
     assertThat(documentTemplate)
         .extracting(
+            DocumentTemplate::getMnemonic,
             DocumentTemplate::getTitle,
             DocumentTemplate::getDescription,
             DocumentTemplate::getTemplatePath,
             DocumentTemplate::getDisplayOrder
         ).containsExactly(
+            mnemonic,
             title,
             description,
             templatePath,

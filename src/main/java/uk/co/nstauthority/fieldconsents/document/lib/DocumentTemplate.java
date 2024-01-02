@@ -15,6 +15,8 @@ class DocumentTemplate {
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
+  private String mnemonic;
+
   private String title;
 
   private String description;
@@ -32,6 +34,14 @@ class DocumentTemplate {
 
   UUID getId() {
     return id;
+  }
+
+  String getMnemonic() {
+    return mnemonic;
+  }
+
+  void setMnemonic(String mnemonic) {
+    this.mnemonic = mnemonic;
   }
 
   String getTitle() {
