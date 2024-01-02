@@ -40,46 +40,50 @@ docker-compose -f ./devtools/local-dev-compose.yml up -d
 - In your IntelliJ run configuration for the Spring app, include `development` in your active profiles
 - The following environment variables are required when using this profile:
 
-| Environment Variable         | Description                                                               |
-|------------------------------|---------------------------------------------------------------------------|
-| **Digital Payments Library** |                                                                           |
-| `GOV_UK_PAY_API_KEY`         | API Key for GOV.UK Pay - https://tpm.fivium.co.uk/index.php/pwd/view/2200 |
+| Environment Variable         | Description                                                                |
+|------------------------------|----------------------------------------------------------------------------|
+| **Digital Payments Library** |                                                                            |
+| `GOV_UK_PAY_API_KEY`         | API Key for GOV.UK Pay - https://tpm.fivium.co.uk/index.php/pwd/view/2200  |
 
 #### Production
 - In your IntelliJ run configuration for the Spring app, include `production` in your active profiles
 - The following environment variables are required when using this profile:
 
-| Environment Variable              | Description                                                                                        |
-|-----------------------------------|----------------------------------------------------------------------------------------------------|
-| **Service**                       |                                                                                                    |
-| `FCS_SERVICE_BASE_URL`            | The service base URL excluding the context path (e.g. https://itportal.dev.fivium.local)           |
-| `FCS_CONTEXT_PATH`                | The service URL context path (e.g. /fcs)                                                           |
-|                                   |                                                                                                    |
-| **Database**                      |                                                                                                    |
-| `FCS_DATABASE_URL`                | The URL to the database the service connect to                                                     |
-| `FCS_DATABASE_PASSWORD`           | Database schema password for the `fcs` user                                                        |
-| `FCS_DATAWAREHOUSE_USER_PASSWORD` | The database password for the `datawarehouseuser` database user                                    |
-| `FCS_ENABLE_FLYWAY_OUT_OF_ORDER`  | Set to `true` to allow flyway to run out of order, defaults to `false`                             |
-|                                   |                                                                                                    |
-| **SAML**                          |                                                                                                    |
-| `FCS_SAML_ENTITY_ID`              | Fox instance URL (dev: https://itportal.dev.fivium.local/engedudev1/fox)                           |
-| `FCS_SAML_CERTIFICATE`            | The x509 certificate string                                                                        |
-| `FCS_SAML_LOGIN_URL`              | The URL to hit the `login` entry theme of the SAML login module                                    |
-| `FCS_SAML_BASE_URL`               | The url prior to the `/${serverContext}` part of the url  (E.G: https://itportal.dev.fivium.local) |
-|                                   |                                                                                                    |
-| **File upload library**           |                                                                                                    |
-| `S3_ACCESS_TOKEN`                 | Access token to access for Amazon S3                                                               |
-| `S3_SECRET_TOKEN`                 | The accompanying secret token                                                                      |
-| `S3_DEFAULT_BUCKET`               | The bucket where files will be uploaded to by default                                              |
-| `S3_ENDPOINT`                     | The Amazon S3 endpoint. Defaults to `s3.eu-west-2.amazonaws.com`                                   |
-| `S3_SIGNING_REGION`               | The signing region. Defaults to `eu-west-2`                                                        |
-| `S3_PROXY_HOST`                   | Proxy host for Amazon S3                                                                           |
-| `S3_PROXY_PORT`                   | Proxy port for Amazon S3                                                                           |
-| `CLAMAV_HOST`                     | Host for ClamAv virus scanner                                                                      |
-| `CLAMAV_PORT`                     | Port for ClamAv virus scanner                                                                      |
-|                                   |                                                                                                    |
-| **Digital Payments Library**      |                                                                                                    |
-| `GOV_UK_PAY_API_KEY`              | API Key for GOV.UK Pay                                                                             |
+| Environment Variable                         | Description                                                                                                                               |
+|----------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------|
+| **Service**                                  |                                                                                                                                           |
+| `FCS_SERVICE_BASE_URL`                       | The service base URL excluding the context path (e.g. https://itportal.dev.fivium.local)                                                  |
+| `FCS_CONTEXT_PATH`                           | The service URL context path (e.g. /fcs)                                                                                                  |
+|                                              |                                                                                                                                           |
+| **Database**                                 |                                                                                                                                           |
+| `FCS_DATABASE_URL`                           | The URL to the database the service connect to                                                                                            |
+| `FCS_DATABASE_PASSWORD`                      | Database schema password for the `fcs` user                                                                                               |
+| `FCS_DATAWAREHOUSE_USER_PASSWORD`            | The database password for the `datawarehouseuser` database user                                                                           |
+| `FCS_ENABLE_FLYWAY_OUT_OF_ORDER`             | Set to `true` to allow flyway to run out of order, defaults to `false`                                                                    |
+|                                              |                                                                                                                                           |
+| **SAML**                                     |                                                                                                                                           |
+| `FCS_SAML_ENTITY_ID`                         | Fox instance URL (dev: https://itportal.dev.fivium.local/engedudev1/fox)                                                                  |
+| `FCS_SAML_CERTIFICATE`                       | The x509 certificate string                                                                                                               |
+| `FCS_SAML_LOGIN_URL`                         | The URL to hit the `login` entry theme of the SAML login module                                                                           |
+| `FCS_SAML_BASE_URL`                          | The url prior to the `/${serverContext}` part of the url  (E.G: https://itportal.dev.fivium.local)                                        |
+|                                              |                                                                                                                                           |
+| **File upload library**                      |                                                                                                                                           |
+| `S3_ACCESS_TOKEN`                            | Access token to access for Amazon S3                                                                                                      |
+| `S3_SECRET_TOKEN`                            | The accompanying secret token                                                                                                             |
+| `S3_DEFAULT_BUCKET`                          | The bucket where files will be uploaded to by default                                                                                     |
+| `S3_ENDPOINT`                                | The Amazon S3 endpoint. Defaults to `s3.eu-west-2.amazonaws.com`                                                                          |
+| `S3_SIGNING_REGION`                          | The signing region. Defaults to `eu-west-2`                                                                                               |
+| `S3_PROXY_HOST`                              | Proxy host for Amazon S3                                                                                                                  |
+| `S3_PROXY_PORT`                              | Proxy port for Amazon S3                                                                                                                  |
+| `CLAMAV_HOST`                                | Host for ClamAv virus scanner                                                                                                             |
+| `CLAMAV_PORT`                                | Port for ClamAv virus scanner                                                                                                             |
+|                                              |                                                                                                                                           |
+| **Digital Payments Library**                 |                                                                                                                                           |
+| `GOV_UK_PAY_API_KEY`                         | API Key for GOV.UK Pay                                                                                                                    |
+|                                              |                                                                                                                                           |
+| **Energy Portal Team Access Library**        |                                                                                                                                           |
+| `FCS_ENERGY_PORTAL_TEAM_ACCESS_API_BASE_URL` | The Energy Portal team access API base url. (ending in the fox 5 context for the environment)                                             |
+| `FCS_ENERGY_PORTAL_TEAM_ACCESS_API_TOKEN`    | The Energy Portal team access API token. [See API readme](https://github.com/Fivium/energy-portal-team-access-library?tab=readme-ov-file) |
 
 ### 4. Initialise the Fivium Design System
 ```bash

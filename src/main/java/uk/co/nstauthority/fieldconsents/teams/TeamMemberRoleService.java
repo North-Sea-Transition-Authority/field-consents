@@ -5,44 +5,47 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uk.co.fivium.digital.energyportalteamaccesslibrary.team.EnergyPortalAccessService;
+import uk.co.fivium.digital.energyportalteamaccesslibrary.team.InstigatingWebUserAccountId;
+import uk.co.fivium.digital.energyportalteamaccesslibrary.team.ResourceType;
+import uk.co.fivium.digital.energyportalteamaccesslibrary.team.TargetWebUserAccountId;
 import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.AddedToTeamEventPublisher;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.TeamMemberRemovedEventPublisher;
 
 @Service
 public class TeamMemberRoleService {
 
-  private final TeamMemberRoleRepository teamMemberRoleRepository;
+  static final String RESOURCE_TYPE_NAME = "FCS_ACCESS_TEAM";
 
-  private final AddedToTeamEventPublisher addedToTeamEventPublisher;
+  private final TeamMemberRoleRepository teamMemberRoleRepository;
 
   private final UserDetailService userDetailService;
 
-  private final TeamMemberRemovedEventPublisher teamMemberRemovedEventPublisher;
+  private final EnergyPortalAccessService energyPortalAccessService;
 
   @Autowired
   public TeamMemberRoleService(TeamMemberRoleRepository teamMemberRoleRepository,
-                               AddedToTeamEventPublisher addedToTeamEventPublisher,
                                UserDetailService userDetailService,
-                               TeamMemberRemovedEventPublisher teamMemberRemovedEventPublisher) {
+                               EnergyPortalAccessService energyPortalAccessService) {
     this.teamMemberRoleRepository = teamMemberRoleRepository;
-    this.addedToTeamEventPublisher = addedToTeamEventPublisher;
     this.userDetailService = userDetailService;
-    this.teamMemberRemovedEventPublisher = teamMemberRemovedEventPublisher;
+    this.energyPortalAccessService = energyPortalAccessService;
   }
 
   @Transactional
   public void addUserTeamRoles(Team team, EnergyPortalUserDto userToAdd, Set<String> roles) {
+    var isNewUser = teamMemberRoleRepository.findAllByWuaId(userToAdd.webUserAccountId()).isEmpty();
+
     updateUserTeamRoles(team, new WebUserAccountId(userToAdd.webUserAccountId()), roles);
 
-    addedToTeamEventPublisher.publish(
-        new TeamId(team.getId()),
-        new WebUserAccountId(userToAdd.webUserAccountId()),
-        roles,
-        userDetailService.getUserDetail()
-    );
+    if (isNewUser) {
+      energyPortalAccessService.addUserToAccessTeam(
+          new ResourceType(RESOURCE_TYPE_NAME),
+          new TargetWebUserAccountId(new WebUserAccountId(userToAdd.webUserAccountId()).id()),
+          new InstigatingWebUserAccountId(userDetailService.getUserDetail().wuaId())
+      );
+    }
   }
 
   @Transactional
@@ -67,7 +70,16 @@ public class TeamMemberRoleService {
   @Transactional
   public void removeMemberFromTeam(Team team, TeamMember teamMember) {
     teamMemberRoleRepository.deleteAllByTeamAndWuaId(team, teamMember.wuaId().id());
-    teamMemberRemovedEventPublisher.publish(teamMember, userDetailService.getUserDetail());
+
+    var isUserRemovedFromAllTeams = teamMemberRoleRepository.findAllByWuaId(teamMember.wuaId().id()).isEmpty();
+
+    if (isUserRemovedFromAllTeams) {
+      energyPortalAccessService.removeUserFromAccessTeam(
+          new ResourceType(RESOURCE_TYPE_NAME),
+          new TargetWebUserAccountId(teamMember.wuaId().id()),
+          new InstigatingWebUserAccountId(userDetailService.getUserDetail().wuaId())
+      );
+    }
   }
 
 }

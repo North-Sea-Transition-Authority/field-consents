@@ -47,9 +47,7 @@ public class WebSecurityConfiguration {
     return httpSecurity
         .authorizeHttpRequests(http -> http
             .requestMatchers("/error", "/assets/**").permitAll()
-            // TODO - add in when we add FOX change to access new system via workbasket
-            //.requestMatchers("/*").hasAuthority(IDP_ACCESS_GRANTED_AUTHORITY_NAME)
-            .anyRequest().authenticated())
+            .anyRequest().hasAuthority(IDP_ACCESS_GRANTED_AUTHORITY_NAME))
         .saml2Login(saml2 -> saml2.authenticationManager(new ProviderManager(authenticationProvider)))
         .logout(logout -> logout.logoutSuccessHandler(serviceLogoutSuccessHandler))
         .build();
