@@ -40,8 +40,13 @@ import uk.co.nstauthority.fieldconsents.controllerhelper.ControllerHelperService
 import uk.co.nstauthority.fieldconsents.energyportal.IncludeEnergyPortalConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupQueryService;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.SearchSelectorService;
+import uk.co.nstauthority.fieldconsents.hibernate.HibernateQueryCounter;
+import uk.co.nstauthority.fieldconsents.jooq.JooqStatisticsListener;
+import uk.co.nstauthority.fieldconsents.metrics.QueryCounter;
 import uk.co.nstauthority.fieldconsents.mvc.ControllerAdviceService;
 import uk.co.nstauthority.fieldconsents.mvc.ErrorListHandlerInterceptor;
+import uk.co.nstauthority.fieldconsents.mvc.PostAuthenticationRequestMdcFilter;
+import uk.co.nstauthority.fieldconsents.mvc.RequestLogFilter;
 import uk.co.nstauthority.fieldconsents.mvc.ResponseBufferSizeHandlerInterceptor;
 import uk.co.nstauthority.fieldconsents.mvc.WebMvcConfiguration;
 import uk.co.nstauthority.fieldconsents.mvc.WithDefaultPageControllerAdvice;
@@ -71,7 +76,9 @@ import uk.co.nstauthority.fieldconsents.validation.ValidationErrorOrderingServic
     ApplicationHandlerInterceptor.class,
     PermissionService.class,
     WebSecurityConfiguration.class,
-    ServiceUserDetailArgumentResolver.class
+    ServiceUserDetailArgumentResolver.class,
+    RequestLogFilter.class,
+    PostAuthenticationRequestMdcFilter.class
 })
 @EnableConfigurationProperties({
     SamlProperties.class,
@@ -130,6 +137,8 @@ public abstract class AbstractControllerTest {
   @MockBean
   protected AssetAccessService assetAccessService;
 
+  @MockBean
+  protected JooqStatisticsListener jooqStatisticsListener;
 
   protected ServiceUserDetail user;
 
@@ -180,6 +189,16 @@ public abstract class AbstractControllerTest {
       messageSource.setBasename("messages");
       messageSource.setDefaultEncoding("UTF-8");
       return messageSource;
+    }
+
+    @Bean
+    public QueryCounter queryCounter() {
+      return new QueryCounter();
+    }
+
+    @Bean
+    public HibernateQueryCounter hibernateQueryInterceptor(QueryCounter queryCounter) {
+      return new HibernateQueryCounter(queryCounter);
     }
   }
 }

@@ -7,16 +7,17 @@ import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import jakarta.persistence.EntityNotFoundException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.fivium.energyportalapi.client.LogCorrelationId;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
@@ -24,12 +25,18 @@ import uk.co.fivium.energyportalapi.client.user.UserApi;
 import uk.co.nstauthority.fieldconsents.branding.ServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.api.EnergyPortalApiWrapper;
+import uk.co.nstauthority.fieldconsents.metrics.QueryCounter;
 
 @ExtendWith(MockitoExtension.class)
 class EnergyPortalUserServiceTest {
 
+  @Mock
   private static UserApi userApi;
 
+  @Mock
+  private QueryCounter queryCounter;
+
+  @InjectMocks
   private static EnergyPortalUserService energyPortalUserService;
 
   private static final ServiceBrandingConfigurationProperties SERVICE_BRANDING_CONFIGURATION_PROPERTIES = new ServiceBrandingConfigurationProperties(
@@ -37,12 +44,11 @@ class EnergyPortalUserServiceTest {
       "mnemonic"
   );
 
-  @BeforeAll
-  static void setup() {
-    userApi = mock(UserApi.class);
+  @BeforeEach
+  void setUp() {
     energyPortalUserService = new EnergyPortalUserService(
         userApi,
-        new EnergyPortalApiWrapper(SERVICE_BRANDING_CONFIGURATION_PROPERTIES)
+        new EnergyPortalApiWrapper(SERVICE_BRANDING_CONFIGURATION_PROPERTIES, queryCounter)
     );
   }
 

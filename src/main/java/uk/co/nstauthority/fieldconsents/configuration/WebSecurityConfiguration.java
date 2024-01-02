@@ -6,7 +6,6 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Objects;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.ProviderManager;
@@ -18,8 +17,11 @@ import org.springframework.security.saml2.provider.service.registration.RelyingP
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
 import org.springframework.security.saml2.provider.service.registration.Saml2MessageBinding;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
 import uk.co.nstauthority.fieldconsents.authentication.SamlResponseParser;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceLogoutSuccessHandler;
+import uk.co.nstauthority.fieldconsents.mvc.PostAuthenticationRequestMdcFilter;
+import uk.co.nstauthority.fieldconsents.mvc.RequestLogFilter;
 
 @Configuration
 public class WebSecurityConfiguration {
@@ -29,20 +31,27 @@ public class WebSecurityConfiguration {
   private final SamlProperties samlProperties;
   private final SamlResponseParser samlResponseParser;
   private final ServiceLogoutSuccessHandler serviceLogoutSuccessHandler;
+  private final RequestLogFilter requestLogFilter;
+  private final PostAuthenticationRequestMdcFilter postAuthenticationRequestMdcFilter;
 
-  @Autowired
-  public WebSecurityConfiguration(SamlProperties samlProperties, SamlResponseParser samlResponseParser,
-                                  ServiceLogoutSuccessHandler serviceLogoutSuccessHandler) {
+  WebSecurityConfiguration(
+      SamlProperties samlProperties,
+      SamlResponseParser samlResponseParser,
+      ServiceLogoutSuccessHandler serviceLogoutSuccessHandler,
+      RequestLogFilter requestLogFilter,
+      PostAuthenticationRequestMdcFilter postAuthenticationRequestMdcFilter
+  ) {
     this.samlProperties = samlProperties;
     this.samlResponseParser = samlResponseParser;
     this.serviceLogoutSuccessHandler = serviceLogoutSuccessHandler;
+    this.requestLogFilter = requestLogFilter;
+    this.postAuthenticationRequestMdcFilter = postAuthenticationRequestMdcFilter;
   }
 
   @Bean
   protected SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
     var authenticationProvider = new OpenSaml4AuthenticationProvider();
-    authenticationProvider.setResponseAuthenticationConverter(r ->
-        samlResponseParser.parseSamlResponse(r.getResponse()));
+    authenticationProvider.setResponseAuthenticationConverter(r -> samlResponseParser.parseSamlResponse(r.getResponse()));
 
     return httpSecurity
         .authorizeHttpRequests(http -> http
@@ -50,6 +59,8 @@ public class WebSecurityConfiguration {
             .anyRequest().hasAuthority(IDP_ACCESS_GRANTED_AUTHORITY_NAME))
         .saml2Login(saml2 -> saml2.authenticationManager(new ProviderManager(authenticationProvider)))
         .logout(logout -> logout.logoutSuccessHandler(serviceLogoutSuccessHandler))
+        .addFilterBefore(requestLogFilter, SecurityContextHolderFilter.class)
+        .addFilterAfter(postAuthenticationRequestMdcFilter, SecurityContextHolderFilter.class)
         .build();
   }
 

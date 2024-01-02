@@ -1,34 +1,43 @@
 package uk.co.nstauthority.fieldconsents.energyportal.api;
 
-import java.util.UUID;
 import java.util.function.BiFunction;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import uk.co.fivium.energyportalapi.client.LogCorrelationId;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.fieldconsents.branding.ServiceBrandingConfigurationProperties;
-import uk.co.nstauthority.fieldconsents.logging.LoggerUtil;
+import uk.co.nstauthority.fieldconsents.correlationid.CorrelationIdUtil;
+import uk.co.nstauthority.fieldconsents.metrics.QueryCounter;
 
 @Component
 public class EnergyPortalApiWrapper {
-  static final String API_REQUEST_PREFIX = "EPA-request";
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(EnergyPortalApiWrapper.class);
 
   private final ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties;
+  private final QueryCounter queryCounter;
 
-  @Autowired
-  public EnergyPortalApiWrapper(ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties) {
+  public EnergyPortalApiWrapper(
+      ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties,
+      QueryCounter queryCounter
+  ) {
     this.serviceBrandingConfigurationProperties = serviceBrandingConfigurationProperties;
+    this.queryCounter = queryCounter;
   }
 
   public <T> T makeRequest(BiFunction<LogCorrelationId, RequestPurpose, T> request) {
-    var logCorrelationId = getDefaultLogCorrelationId();
+    queryCounter.incrementEpa();
+
+    var logCorrelationId = getLogCorrelationId();
     var requestPurpose = getRequestPurpose();
-    logEpaRequest(logCorrelationId, requestPurpose);
+
+    LOGGER.debug("{} ({})", logCorrelationId, requestPurpose);
+
     return request.apply(logCorrelationId, requestPurpose);
   }
 
   private RequestPurpose getRequestPurpose() {
-
     var callingMethod = StackWalker.getInstance()
         .walk(frames -> frames
             .skip(2) // the first frame is this method, second is the BiFunction request so skip to get the real caller
@@ -40,16 +49,8 @@ public class EnergyPortalApiWrapper {
     return new RequestPurpose("%s: %s".formatted(getServiceIdentifier(), callingMethod));
   }
 
-  private LogCorrelationId getLogCorrelationId(String logCorrelationId) {
-    return new LogCorrelationId("%s %s: %s".formatted(getServiceIdentifier(), API_REQUEST_PREFIX, logCorrelationId));
-  }
-
-  private LogCorrelationId getDefaultLogCorrelationId() {
-    return getLogCorrelationId(String.valueOf(UUID.randomUUID()));
-  }
-
-  private void logEpaRequest(LogCorrelationId logCorrelationId, RequestPurpose requestPurpose) {
-    LoggerUtil.info("%s (%s)".formatted(logCorrelationId.id(), requestPurpose.purpose()));
+  private LogCorrelationId getLogCorrelationId() {
+    return new LogCorrelationId(CorrelationIdUtil.getCorrelationIdFromMdc());
   }
 
   private String getServiceIdentifier() {
