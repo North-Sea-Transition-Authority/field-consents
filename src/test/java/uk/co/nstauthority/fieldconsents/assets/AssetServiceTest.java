@@ -99,6 +99,56 @@ public class AssetServiceTest {
   }
 
   @Test
+  void searchFieldsForUser_whenNotFound() {
+    when(fieldService
+        .searchFieldsWithOperatorForUser("F", SEARCH_FIELDS_PURPOSE, user))
+        .thenReturn(List.of());
+
+    var searchAssetsResults = assetService.searchFieldsForUser("F", user);
+
+    assertThat(searchAssetsResults).isEmpty();
+  }
+
+  @Test
+  void searchFieldsForUser_whenFound() {
+    when(fieldService
+        .searchFieldsWithOperatorForUser("F", SEARCH_FIELDS_PURPOSE, user))
+        .thenReturn(List.of(field1JsonWithOperator, field2JsonWithOperator, field3JsonWithOperator));
+
+    var searchAssetsResults = assetService.searchFieldsForUser("F", user);
+
+    assertThat(searchAssetsResults).containsExactly(
+        field1JsonWithOperator,
+        field2JsonWithOperator,
+        field3JsonWithOperator);
+  }
+
+  @Test
+  void searchTerminalsForUser_whenNotFound() {
+    when(terminalService
+        .searchTerminalsWithOperatorForUser("T", SEARCH_TERMINALS_PURPOSE, user))
+        .thenReturn(List.of());
+
+    var searchAssetsResults = assetService.searchTerminalsForUser("T", user);
+
+    assertThat(searchAssetsResults).isEmpty();
+  }
+
+  @Test
+  void searchTerminalsForUser_whenFound() {
+    when(terminalService
+        .searchTerminalsWithOperatorForUser("T", SEARCH_TERMINALS_PURPOSE, user))
+        .thenReturn(List.of(terminal1JsonWithOperator, terminal2JsonWithOperator, terminal3JsonWithOperator));
+
+    var searchAssetsResults = assetService.searchTerminalsForUser("T", user);
+
+    assertThat(searchAssetsResults).containsExactly(
+        terminal1JsonWithOperator,
+        terminal2JsonWithOperator,
+        terminal3JsonWithOperator);
+  }
+
+  @Test
   void searchAssets_verifyListAndOrder() {
     when(fieldService.searchFields("1", SEARCH_FIELDS_PURPOSE)).thenReturn(List.of(field1Json));
     when(terminalService.searchTerminals("1", SEARCH_TERMINALS_PURPOSE)).thenReturn(List.of(terminal1Json));

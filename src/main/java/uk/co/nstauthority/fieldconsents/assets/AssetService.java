@@ -10,8 +10,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
+import uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorJson;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalJson;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
+import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalWithOperatorJson;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 
 @Service
@@ -34,6 +36,14 @@ public class AssetService {
         fieldService.searchFieldsWithOperatorForUser(assetName, SEARCH_FIELDS_PURPOSE, user),
         terminalService.searchTerminalsWithOperatorForUser(assetName, SEARCH_TERMINALS_PURPOSE, user)
     );
+  }
+
+  public List<TerminalWithOperatorJson> searchTerminalsForUser(String terminalName, ServiceUserDetail user) {
+    return terminalService.searchTerminalsWithOperatorForUser(terminalName, SEARCH_TERMINALS_PURPOSE, user);
+  }
+
+  public List<FieldWithOperatorJson> searchFieldsForUser(String fieldName, ServiceUserDetail user) {
+    return fieldService.searchFieldsWithOperatorForUser(fieldName, SEARCH_FIELDS_PURPOSE, user);
   }
 
   public List<AssetJson> searchAssets(String assetName) {

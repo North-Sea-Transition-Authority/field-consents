@@ -240,10 +240,10 @@ class SearchControllerTest extends AbstractControllerTest {
             ReverseRouter.route(on(OrganisationUnitRestController.class).getOrganisationUnitsForViewer(null, null)))
         .containsEntry("prefilledField", assetFieldRestSearchItem)
         .containsEntry("fieldAssetSearchRestUrl",
-            ReverseRouter.route(on(AssetRestController.class).searchFieldAssets(null)))
+            ReverseRouter.route(on(AssetRestController.class).searchFieldAssetsForUser(null, null)))
         .containsEntry("prefilledTerminal", assetTerminalRestSearchItem)
         .containsEntry("terminalAssetSearchRestUrl",
-            ReverseRouter.route(on(AssetRestController.class).searchTerminalAssets(null)))
+            ReverseRouter.route(on(AssetRestController.class).searchTerminalAssetsForUser(null, null)))
         .containsEntry("assetTypesWithShore", AssetTypeWithShore.getDisplayableOptions())
         .containsEntry("pageTitle", SEARCH_TITLE);
   }

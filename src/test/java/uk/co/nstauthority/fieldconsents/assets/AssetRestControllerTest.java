@@ -31,6 +31,13 @@ public class AssetRestControllerTest extends AbstractControllerTest {
   AssetWithOperatorJson braeAssetJson = new TerminalWithOperatorJson(1, "BRAE",
       TerminalStatus.ACTIVE, OrganisationUnitTestUtil.orgUnit2Json);
 
+  TerminalWithOperatorJson bactonAssetJson = new TerminalWithOperatorJson(1, "Bacton",
+      TerminalStatus.ACTIVE, OrganisationUnitTestUtil.orgUnit2Json);
+
+  FieldWithOperatorJson albaAssetJson = new FieldWithOperatorJson(1, "ALBA",
+      FieldTestUtil.FIELD_1_STATUS, FieldTestUtil.FIELD_1_GEOGRAPHIC_AREA, FieldTestUtil.FIELD_1_SHORE,
+      OrganisationUnitTestUtil.orgUnit1Json);
+
   @MockBean
   AssetService assetService;
 
@@ -125,6 +132,44 @@ public class AssetRestControllerTest extends AbstractControllerTest {
         .andExpect(status().isOk())
         .andExpect(content().json("""
            {"results":[{"id":"1FIELD","text":"BRENT"}]}
+         """));
+  }
+
+  @SecurityTest
+  void searchTerminalAssetsForUser_whenNotAuthenticated_thenRedirectedToLogin() throws Exception {
+    mockMvc.perform(get(ReverseRouter.route(on(AssetRestController.class)
+            .searchTerminalAssetsForUser("test", null))))
+        .andExpect(redirectionToLoginUrl());
+  }
+
+  @Test
+  void searchTerminalAssetsForUser_assertHttpOk() throws Exception {
+    when(assetService.searchTerminalsForUser("bacton", user)).thenReturn(List.of(bactonAssetJson));
+
+    mockMvc.perform(get(ReverseRouter.route(on(AssetRestController.class).searchTerminalAssetsForUser("bacton", user)))
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(content().json("""
+           {"results":[{"id":"1TERMINAL","text":"Bacton"}]}
+         """));
+  }
+
+  @SecurityTest
+  void searchFieldAssetsForUser_whenNotAuthenticated_thenRedirectedToLogin() throws Exception {
+    mockMvc.perform(get(ReverseRouter.route(on(AssetRestController.class)
+            .searchFieldAssetsForUser("test", null))))
+        .andExpect(redirectionToLoginUrl());
+  }
+
+  @Test
+  void searchFieldAssetsForUser_assertHttpOk() throws Exception {
+    when(assetService.searchFieldsForUser("alba", user)).thenReturn(List.of(albaAssetJson));
+
+    mockMvc.perform(get(ReverseRouter.route(on(AssetRestController.class).searchFieldAssetsForUser("alba", user)))
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(content().json("""
+           {"results":[{"id":"1FIELD","text":"ALBA"}]}
          """));
   }
 }

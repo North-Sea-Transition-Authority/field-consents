@@ -79,9 +79,11 @@ public class SearchController {
         .addObject("operatorSearchRestUrl",
             ReverseRouter.route(on(OrganisationUnitRestController.class).getOrganisationUnitsForViewer(null, null)))
         .addObject("prefilledField", prefilledField)
-        .addObject("fieldAssetSearchRestUrl", ReverseRouter.route(on(AssetRestController.class).searchFieldAssets(null)))
+        .addObject("fieldAssetSearchRestUrl",
+            ReverseRouter.route(on(AssetRestController.class).searchFieldAssetsForUser(null, null)))
         .addObject("prefilledTerminal", prefilledTerminal)
-        .addObject("terminalAssetSearchRestUrl", ReverseRouter.route(on(AssetRestController.class).searchTerminalAssets(null)))
+        .addObject("terminalAssetSearchRestUrl",
+            ReverseRouter.route(on(AssetRestController.class).searchTerminalAssetsForUser(null, null)))
         .addObject("assetTypesWithShore", assetTypesWithShore)
         .addObject("form", searchFilterForm)
         .addObject("pageTitle", SEARCH_TITLE)

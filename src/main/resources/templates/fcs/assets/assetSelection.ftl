@@ -4,7 +4,7 @@
   <@fdsForm.htmlForm actionUrl=springUrl("/manage-asset")>
     <@fdsSearchSelector.searchSelectorRest
       path="form.assetKey"
-      restUrl=springUrl("/data-sources/assets")
+      restUrl=springUrl("/data-sources/user-assets")
       labelText="Select field/facility"
       pageHeading=true
       labelHeadingClass="govuk-label--xl"

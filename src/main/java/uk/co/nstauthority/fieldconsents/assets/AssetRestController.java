@@ -24,7 +24,7 @@ public class AssetRestController {
     this.searchSelectorService = searchSelectorService;
   }
 
-  @GetMapping("/data-sources/assets")
+  @GetMapping("/data-sources/user-assets")
   public RestSearchResult searchAssetsForUser(@RequestParam(value = "term", required = false) String assetName,
                                               ServiceUserDetail user) {
     return searchSelectorService.search(
@@ -39,12 +39,30 @@ public class AssetRestController {
   }
 
   @GetMapping("/data-sources/terminal-assets")
-  public RestSearchResult searchTerminalAssets(@RequestParam(value = "term", required = false) String assetName) {
-    return searchSelectorService.search(assetName, assetService::searchTerminals);
+  public RestSearchResult searchTerminalAssets(@RequestParam(value = "term", required = false) String terminalName) {
+    return searchSelectorService.search(terminalName, assetService::searchTerminals);
   }
 
   @GetMapping("/data-sources/field-assets")
   public RestSearchResult searchFieldAssets(@RequestParam(value = "term", required = false) String fieldName) {
     return searchSelectorService.search(fieldName, assetService::searchFields);
+  }
+
+  @GetMapping("/data-sources/user-terminal-assets")
+  public RestSearchResult searchTerminalAssetsForUser(@RequestParam(value = "term", required = false) String terminalName,
+                                                      ServiceUserDetail user) {
+    return searchSelectorService.search(
+        terminalName,
+        searchTerminalName ->
+            assetService.searchTerminalsForUser(searchTerminalName, user));
+  }
+
+  @GetMapping("/data-sources/user-field-assets")
+  public RestSearchResult searchFieldAssetsForUser(@RequestParam(value = "term", required = false) String fieldName,
+                                                   ServiceUserDetail user) {
+    return searchSelectorService.search(
+        fieldName,
+        searchFieldName ->
+            assetService.searchFieldsForUser(searchFieldName, user));
   }
 }
