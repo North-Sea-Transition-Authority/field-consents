@@ -13,6 +13,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.response.FurtherInformationResponseController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.request.ConsultationRequestController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.response.ConsultationResponseController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.DocumentPreparationController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewAssignmentController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.response.TechnicalReviewResponseController;
@@ -61,6 +62,9 @@ public enum CaseProcessingActionItem implements Displayable {
   APPLICATION_UPDATES("Application updates", 6, false, false, null,
       applicationId -> ReverseRouter.route(on(ApplicationUpdateController.class)
           .getApplicationUpdates(applicationId, null))),
+  DOCUMENT_PREPARATION("Document preparation", 7, false, false, null,
+      applicationId -> ReverseRouter.route(on(DocumentPreparationController.class)
+          .viewDocumentInstances(applicationId))),
   REGULATOR_ADD_CASE_NOTE("Add case note", 99, false, false, null,
       applicationId -> ReverseRouter.route(on(CaseNotesController.class)
           .getNewCaseNote(applicationId))),

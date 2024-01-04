@@ -17,6 +17,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_MANAGE_RESPONDER;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_RESPONSE;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.DOCUMENT_PREPARATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_PAY_AND_SUBMIT_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_UPDATE_APPLICATION;
@@ -140,7 +141,8 @@ public class CaseProcessingActionService {
               OPERATOR_WITHDRAWAL_REQUEST,
               OPERATOR_UPDATE_APPLICATION,
               CAM_ASSIGN_OWNERSHIP,
-              RETURN_TO_CASE_OFFICER
+              RETURN_TO_CASE_OFFICER,
+              DOCUMENT_PREPARATION
           )
       );
 
@@ -163,6 +165,7 @@ public class CaseProcessingActionService {
           entry(TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)),
           entry(APPLICATION_UPDATES, EnumSet.of(VIEW_FCS_CASE_PROCESSING_DOCUMENTS)),
           entry(APPLICATION_UPDATE_REQUEST, EnumSet.of(PROCESS_FCS_APPLICATIONS, TECHNICAL_REVIEW_FCS_APPLICATIONS)),
+          entry(DOCUMENT_PREPARATION, EnumSet.of(VIEW_FCS_CASE_PROCESSING_DOCUMENTS)),
           entry(OPERATOR_PAY_AND_SUBMIT_APPLICATION, EnumSet.of(PAY_AND_SUBMIT_FCS_APPLICATIONS)),
           entry(OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT, EnumSet.of(
               EDIT_FCS_APPLICATIONS)),
@@ -238,6 +241,7 @@ public class CaseProcessingActionService {
       Map.of(
           TECHNICAL_REVIEWS, CASE_TASKS,
           CONSULTATIONS, CASE_TASKS,
+          DOCUMENT_PREPARATION, CASE_TASKS,
           CHANGE_ACE_STATUS, OPTIONAL_CASE_TASKS,
           APPLICATION_UPDATES, OPTIONAL_CASE_TASKS,
           REGULATOR_ADD_CASE_NOTE, OPTIONAL_CASE_TASKS
