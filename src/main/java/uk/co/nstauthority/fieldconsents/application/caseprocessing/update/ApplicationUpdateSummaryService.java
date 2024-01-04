@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
@@ -107,7 +108,12 @@ public class ApplicationUpdateSummaryService {
         .addKeyValue("Response application version", applicationUpdate.getResponseApplicationVersion().getVersion())
         .addKeyValue("Responded by", energyPortalUserByWuaId.get(applicationUpdate.getRespondedByWuaId()).displayName())
         .addKeyValue("Responded on", DateUtils.format(applicationUpdate.getRespondedDateTime(), DateUtils.DATE_TIME))
-        .addKeyValue("Update type", responseType.getDisplayName());
+        // null check to cope with migrated data
+        .addKeyValue("Update type",
+            Optional.ofNullable(responseType)
+                .map(ApplicationUpdateResponseType::getDisplayName)
+                .orElse(null)
+        );
 
     if (ApplicationUpdateResponseType.OTHER_CHANGES.equals(responseType)) {
       summaryDataView.addKeyValue("Other changes description", applicationUpdate.getResponseText());

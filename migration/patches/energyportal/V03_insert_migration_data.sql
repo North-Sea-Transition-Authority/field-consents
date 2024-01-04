@@ -1,6 +1,5 @@
 
 --DELETE FROM fcs_migration.file_upload_library_uploaded_files;
---DELETE FROM fcs_migration.application_technical_review_id_seq;
 --DELETE FROM fcs_migration.application_technical_reviews;
 --DELETE FROM fcs_migration.application_updates;
 --DELETE FROM fcs_migration.application_case_notes;

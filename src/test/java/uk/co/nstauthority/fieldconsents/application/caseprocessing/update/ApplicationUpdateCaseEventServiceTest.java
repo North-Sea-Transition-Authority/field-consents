@@ -49,7 +49,6 @@ class ApplicationUpdateCaseEventServiceTest {
     );
     when(clock.instant()).thenReturn(CURRENT_INSTANT);
     openApplicationUpdate = ApplicationUpdateTestUtil.getOpenApplicationUpdate(applicationVersion, clock);
-
   }
 
   @Test
@@ -118,6 +117,23 @@ class ApplicationUpdateCaseEventServiceTest {
         APPLICATION_UPDATE_RESPONSE_TEXT,
         clock
     );
+
+    assertUpdateCaseEvents(completedApplicationUpdate);
+  }
+
+  @Test
+  void getCaseEvents_withApplicationUpdateSubmitted_withMissingRequestAndResponseData() {
+    openApplicationUpdate.setRequestText(null);
+    openApplicationUpdate.setDeadlineDateTime(null);
+    var completedApplicationUpdate = ApplicationUpdateTestUtil.getClosedApplicationUpdate(
+        applicationVersion,
+        applicationVersionUpdate,
+        null,
+        null,
+        clock
+    );
+    completedApplicationUpdate.setRequestText(null);
+    completedApplicationUpdate.setDeadlineDateTime(null);
 
     assertUpdateCaseEvents(completedApplicationUpdate);
   }

@@ -6,7 +6,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Optional;
 import uk.co.fivium.digitalpaymentslibrary.payment.PaymentDto;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEvent;
@@ -102,30 +102,40 @@ public class CaseHistoryEventTestUtil {
   }
 
   public static CaseEvent getApplicationUpdateRequestedEvent(ApplicationUpdate applicationUpdate) {
-    var requestText = String.format("Deadline: %s. Update request details: %s",
-        DateUtils.format(applicationUpdate.getDeadlineDateTime(), DateUtils.DATE_TIME),
-        applicationUpdate.getRequestText());
+    // null check to cope with migrated data
+    var deadlineText = Optional.ofNullable(applicationUpdate.getDeadlineDateTime())
+        .map(deadlineDateTime -> DateUtils.format(deadlineDateTime, DateUtils.DATE_TIME))
+        .map("Deadline: %s."::formatted)
+        .orElse("");
+
+    // null check to cope with migrated data
+    var requestText = Optional.ofNullable(applicationUpdate.getRequestText())
+        .map("Update request details: %s"::formatted)
+        .orElse("");
 
     return CaseEvent.builder(applicationUpdate.getApplicationVersion())
         .withEventType(CaseEventType.APPLICATION_UPDATE_REQUESTED)
         .withMainEventUserWuaId(applicationUpdate.getRequestedByWuaId())
         .withEventDateTime(applicationUpdate.getRequestedDateTime())
-        .withEventText(requestText)
+        .withEventText("%s %s".formatted(deadlineText, requestText).strip())
         .build();
   }
 
   public static CaseEvent getApplicationUpdateSubmittedEvent(ApplicationUpdate applicationUpdate) {
-    var responseTypeText = "Update type: " + applicationUpdate.getResponseType().getDisplayName();
+    // null check to cope with migrated data
+    var responseTypeText = Optional.ofNullable(applicationUpdate.getResponseType())
+        .map(responseType -> "Update type: %s.".formatted(responseType.getDisplayName()))
+        .orElse("");
 
-    var responseText = Objects.nonNull(applicationUpdate.getResponseText())
-        ? ". Update description: %s".formatted(applicationUpdate.getResponseText())
-        : "";
+    var responseText = Optional.ofNullable(applicationUpdate.getResponseText())
+        .map("Update description: %s"::formatted)
+        .orElse("");
 
     return CaseEvent.builder(applicationUpdate.getResponseApplicationVersion())
         .withEventType(CaseEventType.APPLICATION_UPDATE_SUBMITTED)
         .withMainEventUserWuaId(applicationUpdate.getRespondedByWuaId())
         .withEventDateTime(applicationUpdate.getRespondedDateTime())
-        .withEventText(responseTypeText + responseText)
+        .withEventText("%s %s".formatted(responseTypeText, responseText).strip())
         .build();
   }
 
@@ -186,34 +196,46 @@ public class CaseHistoryEventTestUtil {
   }
 
   public static CaseEvent getCaseEventForTechnicalReviewRequested(TechnicalReview technicalReview) {
+    // null check to cope with migrated data
+    var deadlineText = Optional.ofNullable(technicalReview.getDeadlineDateTime())
+        .map(deadlineDateTime -> DateUtils.format(deadlineDateTime, DateUtils.DATE_TIME))
+        .map("Deadline: %s."::formatted)
+        .orElse("");
+
+    var requestText = Optional.ofNullable(technicalReview.getRequestText())
+        .map("Notes for the reviewer: %s"::formatted)
+        .orElse("");
+
     return CaseEvent
         .builder(technicalReview.getRequestApplicationVersion())
         .withEventType(CaseEventType.TECHNICAL_REVIEW_REQUESTED)
         .withMainEventUserWuaId(technicalReview.getRequestedByWuaId())
         .withOtherEventUserWuaId(technicalReview.getTechnicalReviewerWuaId())
-        .withEventText(String.format(
-            "Deadline date time %s. Notes for the reviewer: %s",
-            DateUtils.format(technicalReview.getDeadlineDateTime(), DateUtils.DATE_TIME),
-            technicalReview.getRequestText())
-        )
+        .withEventText("%s %s".formatted(deadlineText, requestText).strip())
         .withEventDateTime(technicalReview.getRequestedDateTime())
         .build();
   }
 
   public static CaseEvent getCaseEventForTechnicalReviewResponded(TechnicalReview technicalReview) {
-    var technicalReviewResponseText =
-        Objects.nonNull(technicalReview.getResponseText())
-            ? "%s: %s".formatted(technicalReview.getResponseType().getResponseTextLabel(), technicalReview.getResponseText())
-            : "";
+    // null check to cope with migrated data
+    var responseTypeText = Optional.ofNullable(technicalReview.getResponseType())
+        .map(responseType -> "Decision: %s.".formatted(responseType.getDisplayName()))
+        .orElse("");
+
+    // null check to cope with migrated data
+    var responseTextPrompt = Optional.ofNullable(technicalReview.getResponseType())
+        .map(TechnicalReviewResponseType::getResponseTextLabel)
+        .orElse("Response notes");
+
+    var responseText = Optional.ofNullable(technicalReview.getResponseText())
+        .map(text -> "%s: %s".formatted(responseTextPrompt, text))
+        .orElse("");
 
     return CaseEvent
         .builder(technicalReview.getResponseApplicationVersion())
         .withEventType(CaseEventType.TECHNICAL_REVIEW_COMPLETED)
         .withMainEventUserWuaId(technicalReview.getRespondedByWuaId())
-        .withEventText(String.format("Decision: %s. %s",
-            technicalReview.getResponseType().getDisplayName(),
-            technicalReviewResponseText
-        ))
+        .withEventText("%s %s".formatted(responseTypeText, responseText).strip())
         .withEventDateTime(technicalReview.getRespondedDateTime())
         .build();
   }

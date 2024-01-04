@@ -4,18 +4,60 @@ This guide details the steps to migrate the legacy portal Field consents system 
 
 This migration guide will make use of both the Energy Portal Oracle database and the FCS Postgres database.
 
-The plan is to flatten the data required for migration and insert into tables in a new fcs_migration schema in the Oracle portal database ready for migration to the new FCS Postgres database.
-
-It is still undecided how we will get the data from one DB into the other:
-1. Using a database link
-2. Extracting the data (using Toad) and manually importing (using PGAdmin) 
+The plan is to flatten the data required for migration and insert into tables in a new `fcs_migration` schema in the Oracle portal database ready for migration to the new FCS Postgres database.
 
 ## 1. Create the migration schema on the Energy Portal database
 
-Run the following patches to construct the required tables for the migration. Note, this will need to be in a schema such as `XVIEWMGR` which has permission to make tables in other schemas.
-
+Run the following patch create the migration schema `fcs_migration`. Note, this will need to be run in a schema such as `XVIEWMGR` which has permission to create users and grant roles.
 - `/energyportal/V01_create_migration_schema.sql`
+
+## 2. Create the tables required for the migration 
+
+On schema `fcs_migration` run the following patch:
 - `/energyportal/V02_create_mirgation_data_tables.sql`
+
+## 3. Stage/flatten the legacy field consents data ready for migration
+
+On schema `fcs_migration` run the following patch:
+- `/energyportal/V03_insert_mirgation_data.sql`
+
+## 4. Setup a DB link from Oracle to Postgres
+
+Run through the following guide per environment (sys admin/DBA job):
+- https://medium.com/analytics-vidhya/oracle-database-link-to-postgresql-database-b5ac1006f47a
+
+Example final DB link creation from the Oracle side:
+```
+CREATE PUBLIC DATABASE LINK FCS_POSTGRES_DB
+CONNECT TO "fcs_app"
+IDENTIFIED BY <password>
+USING 'fcs_postgres';
+```
+
+Environments - `local`, `dev`, `st`, `preprod`, `prod`
+
+## 5a. Push the data over the DB link to the new field consents Postgres database
+
+On schema `fcs_migration` run the following patch:
+- `/energyportal/V04_push_mirgation_data.sql`
+
+Note - you will need to have a clean DB to migrate to otherwise the ids will likely clash.
+
+## 5b. Manual extract/import
+
+CLOBs are not supported over the DB link so the following tables have been migrated manually via extract/import (for now):
+- application_supporting_information
+- application_case_notes
+- application_updates
+- application_technical_reviews
+
+### Methdod
+- Query the data in Toad
+- Ctrl-A (select all the data) -> Right click "Export dataset..."
+- Export as pipe separated txt file
+- In IntelliJ connect to the appropriate Postgres DB and navigate to the appropriate table
+- Right click -> Import/Export -> Import Data From File(s) -> select the appropriate file and choose the correct import setting for pipe separated data
+- Run the Import
 
 # Scratch notes
 

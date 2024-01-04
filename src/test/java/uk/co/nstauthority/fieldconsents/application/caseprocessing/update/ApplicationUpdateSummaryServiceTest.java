@@ -246,6 +246,38 @@ class ApplicationUpdateSummaryServiceTest {
   }
 
   @Test
+  void getSummaryCard_closed_nullResponseType() {
+    applicationUpdate.setApplicationUpdateStatus(ApplicationUpdateStatus.CLOSED);
+    applicationUpdate.setApplicationVersion(applicationVersion);
+    applicationUpdate.setRequestedByWuaId(REQUESTER_WUA_ID.id());
+    applicationUpdate.setRequestedDateTime(REQUESTED_AT);
+    applicationUpdate.setRequestText(REQUEST_TEXT);
+
+    applicationUpdate.setResponseApplicationVersion(responseApplicationVersion);
+    applicationUpdate.setRespondedByWuaId(RESPONDER_WUA_ID.id());
+    applicationUpdate.setRespondedDateTime(RESPONDED_AT);
+    applicationUpdate.setResponseType(null);
+
+    assertThat(applicationUpdateSummaryService.getSummaryCard(applicationUpdate, energyPortalUserDtoByWuaId))
+        .extracting(SummaryCard::displayName, SummaryCard::summaryCardType, SummaryCard::summaryData)
+        .containsExactly(
+            null,
+            SummaryCardType.SIMPLE_SUMMARY,
+            SummaryDataView
+                .newWithKeyValue("Update status", applicationUpdate.getApplicationUpdateStatus().getDisplayName())
+                .addKeyValue("Request application version", applicationUpdate.getApplicationVersion().getVersion())
+                .addKeyValue("Requested by", requesterUser.displayName())
+                .addKeyValue("Requested on", DateUtils.format(applicationUpdate.getRequestedDateTime(), DateUtils.DATE_TIME))
+                .addKeyValue("Request details", applicationUpdate.getRequestText())
+                .addKeyValue("Deadline", DateUtils.format(applicationUpdate.getDeadlineDateTime(), DateUtils.DATE_TIME))
+                .addKeyValue("Response application version", applicationUpdate.getResponseApplicationVersion().getVersion())
+                .addKeyValue("Responded by", responderUser.displayName())
+                .addKeyValue("Responded on", DateUtils.format(applicationUpdate.getRespondedDateTime(), DateUtils.DATE_TIME))
+                .addKeyValue("Update type", null)
+        );
+  }
+
+  @Test
   void getSummaryCard_closed_otherChanges() {
     applicationUpdate.setApplicationUpdateStatus(ApplicationUpdateStatus.CLOSED);
     applicationUpdate.setApplicationVersion(applicationVersion);

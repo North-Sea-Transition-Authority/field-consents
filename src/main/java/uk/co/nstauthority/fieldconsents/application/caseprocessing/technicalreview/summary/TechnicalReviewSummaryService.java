@@ -9,12 +9,14 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.fileuploadlibrary.core.UploadedFile;
 import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReview;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewResponseType;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.response.document.TechnicalReviewFileUsage;
@@ -103,8 +105,19 @@ public class TechnicalReviewSummaryService {
           .addKeyValue("Responded by",
               energyPortalUserMap.get(WebUserAccountId.from(technicalReview.getRespondedByWuaId())).displayName())
           .addKeyValue("Responded on", DateUtils.format(technicalReview.getRespondedDateTime(), DATE_TIME))
-          .addKeyValue("Decision", technicalReview.getResponseType().getDisplayName())
-          .addKeyValue(technicalReview.getResponseType().getResponseTextLabel(), technicalReview.getResponseText());
+          // null check to cope with migrated data
+          .addKeyValue("Decision",
+              Optional.ofNullable(technicalReview.getResponseType())
+                  .map(TechnicalReviewResponseType::getDisplayName)
+                  .orElse(null)
+          )
+          // null check to cope with migrated data
+          .addKeyValue(
+              Optional.ofNullable(technicalReview.getResponseType())
+                  .map(TechnicalReviewResponseType::getResponseTextLabel)
+                  .orElse("Response notes"),
+              technicalReview.getResponseText()
+          );
     }
 
     return SummaryCard.simpleSummaryCard(summaryData);

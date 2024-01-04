@@ -2,7 +2,7 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.update;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEvent;
@@ -49,10 +49,18 @@ public class ApplicationUpdateCaseEventService implements CaseEventService<Appli
   }
 
   private String getApplicationUpdateRequestText(ApplicationUpdate applicationUpdate) {
-    return String.format("Deadline: %s. Update request details: %s",
-        DateUtils.format(applicationUpdate.getDeadlineDateTime(), DateUtils.DATE_TIME),
-        applicationUpdate.getRequestText()
-    );
+    // null check to cope with migrated data
+    var deadlineText = Optional.ofNullable(applicationUpdate.getDeadlineDateTime())
+        .map(deadlineDateTime -> DateUtils.format(deadlineDateTime, DateUtils.DATE_TIME))
+        .map("Deadline: %s."::formatted)
+        .orElse("");
+
+    // null check to cope with migrated data
+    var requestText = Optional.ofNullable(applicationUpdate.getRequestText())
+        .map("Update request details: %s"::formatted)
+        .orElse("");
+
+    return "%s %s".formatted(deadlineText, requestText).strip();
   }
 
   private CaseEvent getApplicationUpdateCompletedEvent(ApplicationUpdate applicationUpdate) {
@@ -65,12 +73,15 @@ public class ApplicationUpdateCaseEventService implements CaseEventService<Appli
   }
 
   private String getApplicationUpdateResponseText(ApplicationUpdate applicationUpdate) {
-    var responseTypeText = "Update type: " + applicationUpdate.getResponseType().getDisplayName();
+    // null check to cope with migrated data
+    var responseTypeText = Optional.ofNullable(applicationUpdate.getResponseType())
+        .map(responseType -> "Update type: %s.".formatted(responseType.getDisplayName()))
+        .orElse("");
 
-    var responseText = Objects.nonNull(applicationUpdate.getResponseText())
-        ? ". Update description: %s".formatted(applicationUpdate.getResponseText())
-        : "";
+    var responseText = Optional.ofNullable(applicationUpdate.getResponseText())
+        .map("Update description: %s"::formatted)
+        .orElse("");
 
-    return responseTypeText + responseText;
+    return "%s %s".formatted(responseTypeText, responseText).strip();
   }
 }

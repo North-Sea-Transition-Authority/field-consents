@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -64,7 +65,9 @@ class TechnicalReviewSummaryServiceTest {
   private static final int TECHNICAL_REVIEW2_ID = 2;
   private TechnicalReview technicalReview2;
   private static final int TECHNICAL_REVIEW3_ID = 3;
-  private TechnicalReview technicalReview3Open;
+  private TechnicalReview technicalReview3;
+  private static final int TECHNICAL_REVIEW4_ID = 4;
+  private TechnicalReview technicalReview4Open;
   private List<TechnicalReview> technicalReviews;
   private FieldConsentsFileUsage technicalReview1FileUsage;
   private List<UploadedFile> technicalReview1UploadedFiles;
@@ -79,9 +82,12 @@ class TechnicalReviewSummaryServiceTest {
     technicalReview2 = TechnicalReviewTestUtil.getClosedTechnicalReviewWithResponseType(
         applicationVersion, TechnicalReviewResponseType.REJECT);
     technicalReview2.setId(TECHNICAL_REVIEW2_ID);
-    technicalReview3Open = TechnicalReviewTestUtil.getOpenTechnicalReview(applicationVersion);
-    technicalReview3Open.setId(TECHNICAL_REVIEW3_ID);
-    technicalReviews = List.of(technicalReview3Open, technicalReview2, technicalReview1);
+    technicalReview3 = TechnicalReviewTestUtil.getClosedTechnicalReviewWithResponseType(
+        applicationVersion, null);
+    technicalReview3.setId(TECHNICAL_REVIEW3_ID);
+    technicalReview4Open = TechnicalReviewTestUtil.getOpenTechnicalReview(applicationVersion);
+    technicalReview4Open.setId(TECHNICAL_REVIEW4_ID);
+    technicalReviews = List.of(technicalReview4Open, technicalReview3, technicalReview2, technicalReview1);
 
     technicalReview1FileUsage = TechnicalReviewFileUsage.responseFrom(technicalReview1);
     technicalReview1UploadedFiles = new ArrayList<>();
@@ -110,7 +116,9 @@ class TechnicalReviewSummaryServiceTest {
     when(energyPortalUserService.getEnergyPortalUserMap(webUserAccountIds))
         .thenReturn(energyPortalUserMap);
 
-    when(fieldConsentsFileService.getUploadedFiles(TechnicalReviewFileUsage.responseFrom(technicalReview3Open)))
+    when(fieldConsentsFileService.getUploadedFiles(TechnicalReviewFileUsage.responseFrom(technicalReview4Open)))
+        .thenReturn(Collections.emptyList());
+    when(fieldConsentsFileService.getUploadedFiles(TechnicalReviewFileUsage.responseFrom(technicalReview3)))
         .thenReturn(Collections.emptyList());
     when(fieldConsentsFileService.getUploadedFiles(TechnicalReviewFileUsage.responseFrom(technicalReview2)))
         .thenReturn(Collections.emptyList());
@@ -125,16 +133,21 @@ class TechnicalReviewSummaryServiceTest {
     );
 
     var technicalReviewSummaryItem1 =
-        SummaryItem.withCard("Technical review 3",
-            getTechnicalReviewDetailsSummaryCard(technicalReview3Open)
+        SummaryItem.withCard("Technical review 4",
+            getTechnicalReviewDetailsSummaryCard(technicalReview4Open)
         );
 
     var technicalReviewSummaryItem2 =
+        SummaryItem.withCard("Technical review 3",
+            getTechnicalReviewDetailsSummaryCard(technicalReview3)
+        );
+
+    var technicalReviewSummaryItem3 =
         SummaryItem.withCard("Technical review 2",
             getTechnicalReviewDetailsSummaryCard(technicalReview2)
         );
 
-    var technicalReviewSummaryItem3 =
+    var technicalReviewSummaryItem4 =
         SummaryItem.withCards("Technical review 1",
             List.of(
                 getTechnicalReviewDetailsSummaryCard(technicalReview1),
@@ -143,7 +156,8 @@ class TechnicalReviewSummaryServiceTest {
         );
 
     assertThat(technicalReviewSummaryService.getTechnicalReviewSummaryItems(application))
-        .containsExactly(technicalReviewSummaryItem1, technicalReviewSummaryItem2, technicalReviewSummaryItem3);
+        .containsExactly(technicalReviewSummaryItem1, technicalReviewSummaryItem2, technicalReviewSummaryItem3,
+            technicalReviewSummaryItem4);
   }
 
   private SummaryCard getTechnicalReviewDetailsSummaryCard(TechnicalReview technicalReview) {
@@ -162,8 +176,12 @@ class TechnicalReviewSummaryServiceTest {
           .addKeyValue("Response application version", technicalReview.getResponseApplicationVersion().getVersion().toString())
           .addKeyValue("Responded by", TECHNICAL_REVIEWER_EPU.displayName())
           .addKeyValue("Responded on", DateUtils.format(technicalReview.getRespondedDateTime(), DATE_TIME))
-          .addKeyValue("Decision", technicalReview.getResponseType().getDisplayName())
-          .addKeyValue(technicalReview.getResponseType().getResponseTextLabel(), technicalReview.getResponseText());
+          .addKeyValue("Decision", Objects.nonNull(technicalReview.getResponseType()) // null check to cope with migrated data
+              ? technicalReview.getResponseType().getDisplayName() : null)
+          .addKeyValue(Objects.nonNull(technicalReview.getResponseType()) // null check to cope with migrated data
+                  ? technicalReview.getResponseType().getResponseTextLabel()
+                  : "Response notes",
+              technicalReview.getResponseText());
     }
 
     return SummaryCard.simpleSummaryCard(summaryData);

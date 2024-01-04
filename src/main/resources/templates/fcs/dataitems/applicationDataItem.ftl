@@ -41,7 +41,7 @@
         <br/>
         ${dataItem.geographicArea()}
         <br/>
-        ${dataItem.licenses()}
+        ${dataItem.licenses()!""} <!-- cope with migrated data -->
       </#assign>
       <#assign status>
         ${dataItem.status()}

@@ -28,6 +28,8 @@ class TechnicalReviewCaseEventServiceTest {
 
   private ApplicationVersion applicationVersion;
 
+  private ApplicationVersion newerApplicationVersion;
+
   private TechnicalReview technicalReviewRejected;
 
   private TechnicalReview technicalReviewApproved;
@@ -36,14 +38,14 @@ class TechnicalReviewCaseEventServiceTest {
 
   private CaseEvent secondTechnicalReviewRequestedEvent;
 
-  private CaseEvent firstTechnicalReviewRejectedEvent;
+  private CaseEvent firstTechnicalReviewResponseEvent;
 
-  private CaseEvent secondTechnicalReviewApprovedEvent;
+  private CaseEvent secondTechnicalReviewResponseEvent;
 
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.VENT);
-    var newerApplicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.VENT);
+    newerApplicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.VENT);
     newerApplicationVersion.setId(applicationVersion.getId() + 1);
 
     technicalReviewRejected = TechnicalReviewTestUtil.getClosedTechnicalReviewWithResponseType(
@@ -61,13 +63,13 @@ class TechnicalReviewCaseEventServiceTest {
     firstTechnicalReviewRequestedEvent = CaseHistoryEventTestUtil
         .getCaseEventForTechnicalReviewRequested(technicalReviewRejected);
 
-    firstTechnicalReviewRejectedEvent = CaseHistoryEventTestUtil
+    firstTechnicalReviewResponseEvent = CaseHistoryEventTestUtil
         .getCaseEventForTechnicalReviewResponded(technicalReviewRejected);
 
     secondTechnicalReviewRequestedEvent = CaseHistoryEventTestUtil
         .getCaseEventForTechnicalReviewRequested(technicalReviewApproved);
 
-    secondTechnicalReviewApprovedEvent = CaseHistoryEventTestUtil
+    secondTechnicalReviewResponseEvent = CaseHistoryEventTestUtil
         .getCaseEventForTechnicalReviewResponded(technicalReviewApproved);
   }
 
@@ -121,9 +123,60 @@ class TechnicalReviewCaseEventServiceTest {
     assertThat(caseEvents)
         .containsExactly(
             firstTechnicalReviewRequestedEvent,
-            firstTechnicalReviewRejectedEvent,
+            firstTechnicalReviewResponseEvent,
             secondTechnicalReviewRequestedEvent,
-            secondTechnicalReviewApprovedEvent
+            secondTechnicalReviewResponseEvent
+        );
+  }
+
+  @Test
+  void getCaseEvents_withMissingRequestAndResponseData() {
+    var technicalReview1 = TechnicalReviewTestUtil.getClosedTechnicalReviewWithResponseType(
+        applicationVersion,
+        null
+    );
+    technicalReview1.setDeadlineDateTime(null);
+    technicalReview1.setRequestText(null);
+    technicalReview1.setResponseApplicationVersion(applicationVersion);
+    technicalReview1.setResponseText(null);
+
+    var technicalReview2 = TechnicalReviewTestUtil.getClosedTechnicalReviewWithResponseType(
+        applicationVersion,
+        null
+    );
+    technicalReview2.setDeadlineDateTime(null);
+    technicalReview2.setRequestText(null);
+    technicalReview2.setResponseApplicationVersion(newerApplicationVersion);
+    technicalReview2.setResponseText(null);
+
+    firstTechnicalReviewRequestedEvent = CaseHistoryEventTestUtil
+        .getCaseEventForTechnicalReviewRequested(technicalReview1);
+
+    firstTechnicalReviewResponseEvent = CaseHistoryEventTestUtil
+        .getCaseEventForTechnicalReviewResponded(technicalReview1);
+
+    secondTechnicalReviewRequestedEvent = CaseHistoryEventTestUtil
+        .getCaseEventForTechnicalReviewRequested(technicalReview2);
+
+    secondTechnicalReviewResponseEvent = CaseHistoryEventTestUtil
+        .getCaseEventForTechnicalReviewResponded(technicalReview2);
+
+    when(technicalReviewService.getTechnicalReviewsByApplication(applicationVersion.getApplication()))
+        .thenReturn(
+            List.of(
+                technicalReview1,
+                technicalReview2
+            )
+        );
+
+    var caseEvents = technicalReviewCaseEventService.getCaseEvents(applicationVersion.getApplication());
+
+    assertThat(caseEvents)
+        .containsExactly(
+            firstTechnicalReviewRequestedEvent,
+            firstTechnicalReviewResponseEvent,
+            secondTechnicalReviewRequestedEvent,
+            secondTechnicalReviewResponseEvent
         );
   }
 }

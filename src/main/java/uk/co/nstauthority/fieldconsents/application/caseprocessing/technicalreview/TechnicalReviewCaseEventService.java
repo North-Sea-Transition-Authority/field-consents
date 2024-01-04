@@ -2,7 +2,7 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalrev
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEvent;
@@ -50,17 +50,17 @@ public class TechnicalReviewCaseEventService implements CaseEventService<Applica
   }
 
   private String getTechnicalReviewRequestText(TechnicalReview technicalReview) {
-    var technicalReviewDeadlineText = String.format("Deadline date time %s.",
-        DateUtils.format(technicalReview.getDeadlineDateTime(), DateUtils.DATE_TIME)
-    );
+    // null check to cope with migrated data
+    var deadlineText = Optional.ofNullable(technicalReview.getDeadlineDateTime())
+        .map(deadlineDateTime -> DateUtils.format(deadlineDateTime, DateUtils.DATE_TIME))
+        .map("Deadline: %s."::formatted)
+        .orElse("");
 
-    if (Objects.nonNull(technicalReview.getRequestText())) {
-      var technicalReviewRequestText = String.format(" Notes for the reviewer: %s",
-          technicalReview.getRequestText()
-      );
-      return technicalReviewDeadlineText.concat(technicalReviewRequestText);
-    }
-    return technicalReviewDeadlineText;
+    var requestText = Optional.ofNullable(technicalReview.getRequestText())
+        .map("Notes for the reviewer: %s"::formatted)
+        .orElse("");
+
+    return "%s %s".formatted(deadlineText, requestText).strip();
   }
 
   private CaseEvent getTechnicalReviewCompletedEvent(TechnicalReview technicalReview) {
@@ -73,13 +73,20 @@ public class TechnicalReviewCaseEventService implements CaseEventService<Applica
   }
 
   private String getTechnicalReviewResponseText(TechnicalReview technicalReview) {
-    var technicalReviewDecisionText = "Decision: " + technicalReview.getResponseType().getDisplayName();
+    // null check to cope with migrated data
+    var responseTypeText = Optional.ofNullable(technicalReview.getResponseType())
+        .map(responseType -> "Decision: %s.".formatted(responseType.getDisplayName()))
+        .orElse("");
 
-    var technicalReviewResponseText =
-        Objects.nonNull(technicalReview.getResponseText())
-            ? ". %s: %s".formatted(technicalReview.getResponseType().getResponseTextLabel(), technicalReview.getResponseText())
-            : "";
+    // null check to cope with migrated data
+    var responseTextPrompt = Optional.ofNullable(technicalReview.getResponseType())
+        .map(TechnicalReviewResponseType::getResponseTextLabel)
+        .orElse("Response notes");
 
-    return technicalReviewDecisionText + technicalReviewResponseText;
+    var responseText = Optional.ofNullable(technicalReview.getResponseText())
+        .map(text -> "%s: %s".formatted(responseTextPrompt, text))
+        .orElse("");
+
+    return "%s %s".formatted(responseTypeText, responseText).strip();
   }
 }
