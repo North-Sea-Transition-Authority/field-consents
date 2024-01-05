@@ -621,9 +621,9 @@ SELECT
   fcs_migration.long_term_production_year_id_seq.nextval id
 , fcd.id application_version_id
 , ltp.year
-, ltp.oil_min_value
+, coalesce(ltp.oil_min_value, 0) oil_min_value
 , ltp.oil_max_value
-, ltp.gas_min_value
+, coalesce(ltp.gas_min_value, 0) gas_min_value
 , ltp.gas_max_value
 FROM fcs_migration.application_versions av
 JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
@@ -662,9 +662,9 @@ SELECT
 , fcd.id application_version_id
 , xfcd.application_year year
 , upper(trim(ap.description)) month
-, ap.oil_min_value
+, coalesce(ap.oil_min_value, 0) oil_min_value
 , ap.oil_max_value
-, ap.gas_min_value
+, coalesce(ap.gas_min_value, 0) gas_min_value
 , ap.gas_max_value
 FROM fcs_migration.application_versions av
 JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
@@ -706,9 +706,9 @@ WITH base AS (
   , stp.pd_rownum
   , stp.data_year
   , upper(trim(stp.description)) month
-  , stp.oil_min_value
+  , coalesce(stp.oil_min_value, 0) oil_min_value
   , stp.oil_max_value
-  , stp.gas_min_value
+  , coalesce(stp.gas_min_value, 0) gas_min_value
   , stp.gas_max_value
   , cl.short_term_start_date
   , cl.short_term_end_date

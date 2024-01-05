@@ -1039,9 +1039,9 @@ ORDER BY 2 DESC, 1 DESC;
 SELECT
   fcd.id application_version_id
 , ltp.year
-, ltp.oil_min_value
+, coalesce(ltp.oil_min_value, 0) oil_min_value
 , ltp.oil_max_value
-, ltp.gas_min_value
+, coalesce(ltp.gas_min_value, 0) gas_min_value
 , ltp.gas_max_value
 , fcd.fc_id
 FROM fcs_migration.application_versions av
@@ -1100,9 +1100,9 @@ SELECT
   fcd.id application_version_id
 , xfcd.application_year
 , upper(trim(ap.description)) month
-, ap.oil_min_value
+, coalesce(ap.oil_min_value, 0) oil_min_value
 , ap.oil_max_value
-, ap.gas_min_value
+, coalesce(ap.gas_min_value, 0) gas_min_value
 , ap.gas_max_value
 , fcd.fc_id
 , fcd.status
@@ -1155,9 +1155,9 @@ WITH base AS (
   , upper(trim(stp.description)) month
   , cl.short_term_start_date
   , cl.short_term_end_date
-  , stp.oil_min_value
+  , coalesce(stp.oil_min_value, 0) oil_min_value
   , stp.oil_max_value
-  , stp.gas_min_value
+  , coalesce(stp.gas_min_value, 0) gas_min_value
   , stp.gas_max_value
 --  , fcd.fc_id
 --  , fcd.status
