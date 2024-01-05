@@ -8,6 +8,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.production.ProductionRow;
+import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 import uk.co.nstauthority.fieldconsents.production.annual.AnnualProductionService;
 import uk.co.nstauthority.fieldconsents.production.longterm.LongTermProductionService;
 import uk.co.nstauthority.fieldconsents.production.shortterm.ShortTermProductionService;
@@ -58,6 +59,7 @@ public class ProductionSummaryService {
     var oilUnit = applicationUnitService.getProductionOilUnit(applicationVersion);
     var gasUnit = applicationUnitService.getProductionGasUnit(applicationVersion);
     var averageUnit = applicationUnitService.getProductionAverageUnit(applicationVersion);
+    var oilAverageConversionFactor = getProductionAverageConversionFactor(oilUnit, averageUnit);
 
     var summaryTable = SummaryTableView.newWithHeading(
         MONTH_HEADING,
@@ -99,8 +101,8 @@ public class ProductionSummaryService {
         .addRow(
             AVERAGE_PROMPT.apply(averageUnit.getDisplayName()),
             null,
-            BigDecimalUtil.divideRound(oilMinTotal, totalDays),
-            BigDecimalUtil.divideRound(oilMaxTotal, totalDays),
+            BigDecimalUtil.divideRound(oilMinTotal, totalDays * oilAverageConversionFactor),
+            BigDecimalUtil.divideRound(oilMaxTotal, totalDays * oilAverageConversionFactor),
             BigDecimalUtil.divideRound(gasMinTotal, totalDays),
             BigDecimalUtil.divideRound(gasMaxTotal, totalDays)
         );
@@ -119,6 +121,7 @@ public class ProductionSummaryService {
     var oilUnit = applicationUnitService.getProductionOilUnit(applicationVersion);
     var gasUnit = applicationUnitService.getProductionGasUnit(applicationVersion);
     var averageUnit = applicationUnitService.getProductionAverageUnit(applicationVersion);
+    var oilAverageConversionFactor = getProductionAverageConversionFactor(oilUnit, averageUnit);
 
     var summaryTable = SummaryTableView.newWithHeading(
         MONTH_HEADING,
@@ -155,8 +158,8 @@ public class ProductionSummaryService {
         )
         .addRow(
             AVERAGE_PROMPT.apply(averageUnit.getDisplayName()),
-            BigDecimalUtil.divideRound(oilMinTotal, totalDays),
-            BigDecimalUtil.divideRound(oilMaxTotal, totalDays),
+            BigDecimalUtil.divideRound(oilMinTotal, totalDays * oilAverageConversionFactor),
+            BigDecimalUtil.divideRound(oilMaxTotal, totalDays * oilAverageConversionFactor),
             BigDecimalUtil.divideRound(gasMinTotal, totalDays),
             BigDecimalUtil.divideRound(gasMaxTotal, totalDays)
         );
@@ -194,5 +197,26 @@ public class ProductionSummaryService {
     }
 
     return SummaryCard.tableSummaryCard(summaryTable);
+  }
+
+  /**
+   * This function will only return anything other than 1 for migrated case units as these are the only cases where
+   * the entered production data mismatches how we want to show the daily averages.
+   *
+   * @param productionUnit        The production unit in use (on the form data).
+   * @param averageProductionUnit The unit in use for the averages.
+   * @return The factor used to convert the production data into the unit in use for the averages.
+   */
+  private int getProductionAverageConversionFactor(ProductionUnit productionUnit, ProductionUnit averageProductionUnit) {
+    if (ProductionUnit.KSCM_PER_MONTH.equals(productionUnit) && ProductionUnit.KSCM_PER_DAY.equals(averageProductionUnit)) {
+      return 1;
+    } else if (ProductionUnit.SCM_PER_MONTH.equals(productionUnit) && ProductionUnit.SCM_PER_DAY.equals(averageProductionUnit)) {
+      return 1;
+    } else if (ProductionUnit.SCM_PER_MONTH.equals(productionUnit) && ProductionUnit.KSCM_PER_DAY.equals(averageProductionUnit)) {
+      return 1000;
+    } else {
+      throw new RuntimeException(
+          "Unhandled production units found. Cannot work out the production average conversion factor.");
+    }
   }
 }

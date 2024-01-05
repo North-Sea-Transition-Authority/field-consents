@@ -437,6 +437,19 @@ class ApplicationUnitServiceTest {
         .isEqualTo(ProductionUnit.SCM_PER_DAY);
   }
 
+  @Test
+  void getProductionAverageUnit_manualMigrationCaseScmOilKscmGasPerMonth() {
+    ApplicationUnit applicationUnit = new ApplicationUnit();
+    applicationUnit.setApplicationVersion(productionAppVersion);
+    applicationUnit.setProductionOilUnit(ProductionUnit.SCM_PER_MONTH);
+    applicationUnit.setProductionGasUnit(ProductionUnit.KSCM_PER_MONTH);
+    when(applicationUnitRepository.findByApplicationVersion(productionAppVersion))
+        .thenReturn(Optional.of(applicationUnit));
+
+    assertThat(applicationUnitService.getProductionAverageUnit(productionAppVersion))
+        .isEqualTo(ProductionUnit.KSCM_PER_DAY);
+  }
+
   @ParameterizedTest
   @MethodSource("getMismatchProductionUnits")
   void getProductionAverageUnit_manualMismatchUnits(ProductionUnit oilUnit, ProductionUnit gasUnit) {
@@ -456,7 +469,6 @@ class ApplicationUnitServiceTest {
     return Stream.of(
         Arguments.of(ProductionUnit.SCM_PER_MONTH, ProductionUnit.SCM_PER_DAY),
         Arguments.of(ProductionUnit.SCM_PER_MONTH, ProductionUnit.KSCM_PER_DAY),
-        Arguments.of(ProductionUnit.SCM_PER_MONTH, ProductionUnit.KSCM_PER_MONTH),
         Arguments.of(ProductionUnit.KSCM_PER_MONTH, ProductionUnit.SCM_PER_DAY),
         Arguments.of(ProductionUnit.KSCM_PER_MONTH, ProductionUnit.KSCM_PER_DAY),
         Arguments.of(ProductionUnit.KSCM_PER_MONTH, ProductionUnit.SCM_PER_MONTH),
