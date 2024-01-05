@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application.assetlicences;
 
+import java.util.Collection;
 import java.util.List;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
@@ -11,7 +12,9 @@ import uk.co.nstauthority.fieldconsents.application.duplication.NotDuplicationSo
 @NotDuplicationSource
 public interface ApplicationAssetLicenceRepository extends CrudRepository<ApplicationAssetLicence, Integer> {
 
-  List<ApplicationAssetLicence> findAllByApplicationAssetOrderByCachedLicenceRefAsc(ApplicationAsset applicationAsset);
+  List<ApplicationAssetLicence> findAllByApplicationAssetInOrderByCachedLicenceRefAsc(
+      Collection<ApplicationAsset> applicationAssets
+  );
 
   List<ApplicationAssetLicence> findAllByApplicationVersion(ApplicationVersion applicationVersion);
 

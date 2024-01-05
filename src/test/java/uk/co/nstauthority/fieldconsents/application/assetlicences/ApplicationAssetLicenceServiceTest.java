@@ -25,6 +25,7 @@ import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field
 import static uk.co.nstauthority.fieldconsents.licences.LicenceTestUtil.LICENCE_ID_3;
 import static uk.co.nstauthority.fieldconsents.licences.LicenceTestUtil.LICENCE_REF_3;
 
+import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -117,7 +118,7 @@ class ApplicationAssetLicenceServiceTest {
     fieldAsset1Licence3.setApplicationAsset(applicationAsset);
     fieldAsset1Licence3.setLicenceId(LICENCE_ID_3);
     fieldAsset1Licence3.setCachedLicenceRef(LICENCE_REF_3);
-    when(applicationAssetLicenceRepository.findAllByApplicationAssetOrderByCachedLicenceRefAsc(applicationAsset))
+    when(applicationAssetLicenceRepository.findAllByApplicationAssetInOrderByCachedLicenceRefAsc(Collections.singleton(applicationAsset)))
         .thenReturn(List.of(fieldAsset1Licence1, fieldAsset1Licence2, fieldAsset1Licence3));
 
     assertThat(applicationAssetLicenceService.getAssetLicences(applicationAsset))

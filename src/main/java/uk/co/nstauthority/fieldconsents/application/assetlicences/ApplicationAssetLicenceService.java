@@ -4,6 +4,8 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
 
 import jakarta.transaction.Transactional;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -43,7 +45,11 @@ public class ApplicationAssetLicenceService {
   }
 
   public List<ApplicationAssetLicence> getAssetLicences(ApplicationAsset applicationAsset) {
-    return applicationAssetLicenceRepository.findAllByApplicationAssetOrderByCachedLicenceRefAsc(applicationAsset);
+    return getAssetLicences(Collections.singleton(applicationAsset));
+  }
+
+  public List<ApplicationAssetLicence> getAssetLicences(Collection<ApplicationAsset> applicationAssets) {
+    return applicationAssetLicenceRepository.findAllByApplicationAssetInOrderByCachedLicenceRefAsc(applicationAssets);
   }
 
   public Map<ApplicationAsset, List<ApplicationAssetLicence>> getAssetLicencesMap(ApplicationVersion applicationVersion) {

@@ -3,18 +3,21 @@ package uk.co.nstauthority.fieldconsents.assets.terminals;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.groups.Tuple.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService.terminalProjectionRoot;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService.terminalWithOperatorProjectionRoot;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1Json;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1WithNoOperator;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1WithOperator;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal2;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal2Json;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal2JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal3;
@@ -366,4 +369,27 @@ public class TerminalServiceTest {
     verify(terminalApi).findTerminalById(2, terminalWithOperatorProjectionRoot, requestPurpose);
   }
 
+  @Test
+  void getTerminals() {
+    var terminalIds = List.of(1, 2, 3);
+
+    when(terminalApi.findTerminalById(1, terminalProjectionRoot, requestPurpose)).thenReturn(Optional.of(terminal1));
+    when(terminalApi.findTerminalById(2, terminalProjectionRoot, requestPurpose)).thenReturn(Optional.of(terminal2));
+    when(terminalApi.findTerminalById(3, terminalProjectionRoot, requestPurpose)).thenReturn(Optional.empty());
+
+    assertThat(terminalService.getTerminals(terminalIds, requestPurpose.purpose()))
+        .extracting(
+            TerminalJson::getId,
+            TerminalJson::getName
+        )
+        .containsExactly(
+            tuple(terminal1.getTerminalId(), terminal1.getTerminalName()),
+            tuple(terminal2.getTerminalId(), terminal2.getTerminalName())
+        );
+  }
+
+  @Test
+  void getTerminals_noIdsProvided() {
+    assertThat(terminalService.getTerminals(Collections.emptyList(), requestPurpose.purpose())).isEmpty();
+  }
 }

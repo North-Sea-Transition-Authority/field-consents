@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application;
 
+
 import jakarta.annotation.Nullable;
 import java.util.Collection;
 import java.util.Optional;
@@ -8,19 +9,18 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
+import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAssetLicence;
+import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAssetLicenceService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
-import uk.co.nstauthority.fieldconsents.assets.AssetWithLicencesJson;
-import uk.co.nstauthority.fieldconsents.assets.AssetWithOperatorJson;
+import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
-import uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorAndLicencesJson;
+import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalJson;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
-import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalWithOperatorJson;
-import uk.co.nstauthority.fieldconsents.licences.LicenceJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
@@ -29,8 +29,12 @@ import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 @Service
 public class ApplicationContextService {
 
+  private static final String ORGANISATION_UNIT_NAME_LOOKUP_PURPOSE =
+      "Looking up organisation unit names for application context";
+
   private final ConsentLengthService consentLengthService;
   private final ApplicationAssetService applicationAssetService;
+  private final ApplicationAssetLicenceService applicationAssetLicenceService;
   private final OrganisationUnitService organisationUnitService;
   private final FieldService fieldService;
   private final TerminalService terminalService;
@@ -38,12 +42,14 @@ public class ApplicationContextService {
   ApplicationContextService(
       ConsentLengthService consentLengthService,
       ApplicationAssetService applicationAssetService,
+      ApplicationAssetLicenceService applicationAssetLicenceService,
       OrganisationUnitService organisationUnitService,
       FieldService fieldService,
       TerminalService terminalService
   ) {
     this.consentLengthService = consentLengthService;
     this.applicationAssetService = applicationAssetService;
+    this.applicationAssetLicenceService = applicationAssetLicenceService;
     this.organisationUnitService = organisationUnitService;
     this.fieldService = fieldService;
     this.terminalService = terminalService;
@@ -119,9 +125,9 @@ public class ApplicationContextService {
         .toList();
 
     var fieldsById = fieldService
-        .findFieldsWithOperatorAndLicences(fieldIds, requestPurpose)
+        .findFieldsByIds(fieldIds, requestPurpose)
         .stream()
-        .collect(Collectors.toMap(FieldWithOperatorAndLicencesJson::getId, Function.identity()));
+        .collect(Collectors.toMap(FieldJson::getId, Function.identity()));
 
     var terminalIds = applicationAssets.stream()
         .filter(ApplicationAsset::isTerminal)
@@ -129,9 +135,9 @@ public class ApplicationContextService {
         .distinct()
         .toList();
 
-    var terminalsById = terminalService.findTerminalsWithOperator(terminalIds, requestPurpose)
+    var terminalsById = terminalService.getTerminals(terminalIds, requestPurpose)
         .stream()
-        .collect(Collectors.toMap(TerminalWithOperatorJson::getId, Function.identity()));
+        .collect(Collectors.toMap(TerminalJson::getId, Function.identity()));
 
     var secondaryFields = applicationAssets
         .stream()
@@ -143,15 +149,15 @@ public class ApplicationContextService {
 
     var allAssets = Stream.concat(fieldsById.values().stream(), terminalsById.values().stream()).toList();
     addPrimaryAsset(applicationAssets, allAssets, builder);
-    addAssetOperators(allAssets, builder);
 
+    addAssetOperators(applicationAssets, builder);
     addAdditionalFields(secondaryFields, builder);
-    addLicences(fieldsById.values(), builder);
+    addLicences(applicationAssets, builder);
   }
 
   void addPrimaryAsset(
       Collection<ApplicationAsset> applicationAssets,
-      Collection<? extends AssetJson> assetJsons,
+      Collection<AssetJson> assetJsons,
       ApplicationContext.Builder builder
   ) {
     var primaryApplicationAsset = applicationAssets.stream()
@@ -168,14 +174,20 @@ public class ApplicationContextService {
     builder.withPrimaryAsset(primaryAsset);
   }
 
-  void addAssetOperators(Collection<AssetWithOperatorJson> assetWithOperatorJsons, ApplicationContext.Builder builder) {
-    var operators = assetWithOperatorJsons
+  void addAssetOperators(Collection<ApplicationAsset> applicationAssets, ApplicationContext.Builder builder) {
+    var assetOperatorOuIds = applicationAssets
         .stream()
-        .map(AssetWithOperatorJson::getOperatorJson)
+        .map(ApplicationAsset::getAssetOperatorOuId)
+        .distinct()
+        .toList();
+
+    var assetOperators = organisationUnitService
+        .getOrganisationUnitsByIds(assetOperatorOuIds, ORGANISATION_UNIT_NAME_LOOKUP_PURPOSE)
+        .stream()
         .map(OrganisationUnitJson::name)
         .collect(Collectors.toSet());
 
-    builder.withAssetOperators(operators);
+    builder.withAssetOperators(assetOperators);
   }
 
   void addAdditionalFields(Collection<? extends AssetJson> assetJsons, ApplicationContext.Builder builder) {
@@ -183,12 +195,10 @@ public class ApplicationContextService {
     builder.withAdditionalFields(additionalAssets);
   }
 
-  void addLicences(Collection<? extends AssetWithLicencesJson> assetWithLicencesJsons, ApplicationContext.Builder builder) {
-    var licences = assetWithLicencesJsons
+  void addLicences(Collection<ApplicationAsset> applicationAssets, ApplicationContext.Builder builder) {
+    var licences = applicationAssetLicenceService.getAssetLicences(applicationAssets)
         .stream()
-        .map(AssetWithLicencesJson::getLicences)
-        .flatMap(Collection::stream)
-        .map(LicenceJson::licenceRef)
+        .map(ApplicationAssetLicence::getCachedLicenceRef)
         .collect(Collectors.toSet());
 
     builder.withLicences(licences);

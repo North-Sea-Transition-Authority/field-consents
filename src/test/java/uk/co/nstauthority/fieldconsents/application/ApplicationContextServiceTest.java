@@ -10,20 +10,22 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperatorAndLicences;
+import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2Json;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2JsonWithOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1Json;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithOperator;
+import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal2Json;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal2JsonWithOperator;
+import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit1Json;
+import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit2Json;
 
 import java.time.LocalDate;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,8 +36,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAssetLicence;
+import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAssetLicenceService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil;
 import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
@@ -43,9 +48,7 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthT
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
-import uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorAndLicencesJson;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
-import uk.co.nstauthority.fieldconsents.licences.LicenceJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
@@ -60,6 +63,9 @@ class ApplicationContextServiceTest {
 
   @Mock
   private ApplicationAssetService applicationAssetService;
+
+  @Mock
+  private ApplicationAssetLicenceService applicationAssetLicenceService;
 
   @Mock
   private OrganisationUnitService organisationUnitService;
@@ -233,52 +239,48 @@ class ApplicationContextServiceTest {
 
   @Test
   void addAssetDetailsToContext() {
-    var fields = List.of(field1JsonWithOperatorAndLicences, field2JsonWithOperatorAndLicences);
+    var fields = List.of(field1Json, field2Json);
     var fieldIds = fields.stream().map(AssetJson::getId).toList();
-    var terminals = List.of(terminal1JsonWithOperator, terminal2JsonWithOperator);
+    var terminals = List.of(terminal1Json, terminal2Json);
     var terminalIds = terminals.stream().map(AssetJson::getId).toList();
 
-    var field1ApplicationAsset = new ApplicationAsset();
-    field1ApplicationAsset.setAssetRole(AssetRole.PRIMARY);
-    field1ApplicationAsset.setAssetType(AssetType.FIELD);
-    field1ApplicationAsset.setAssetId(fields.get(0).getId());
+    var field1ApplicationAsset = ApplicationAssetTestUtil.newBuilder()
+        .withAssetRole(AssetRole.PRIMARY)
+        .withAssetJson(fields.get(0))
+        .build();
 
-    var field2ApplicationAsset = new ApplicationAsset();
-    field2ApplicationAsset.setAssetRole(AssetRole.SECONDARY);
-    field2ApplicationAsset.setAssetType(AssetType.FIELD);
-    field2ApplicationAsset.setAssetId(fields.get(1).getId());
+    var field2ApplicationAsset = ApplicationAssetTestUtil.newBuilder()
+        .withAssetRole(AssetRole.SECONDARY)
+        .withAssetJson(fields.get(1))
+        .build();
 
-    var terminal1ApplicationAsset = new ApplicationAsset();
-    terminal1ApplicationAsset.setAssetRole(AssetRole.SECONDARY);
-    terminal1ApplicationAsset.setAssetType(AssetType.TERMINAL);
-    terminal1ApplicationAsset.setAssetId(terminals.get(0).getId());
+    var terminal1ApplicationAsset = ApplicationAssetTestUtil.newBuilder()
+        .withAssetRole(AssetRole.SECONDARY)
+        .withAssetJson(terminals.get(0))
+        .build();
 
-    var terminal2ApplicationAsset = new ApplicationAsset();
-    terminal2ApplicationAsset.setAssetRole(AssetRole.SECONDARY);
-    terminal2ApplicationAsset.setAssetType(AssetType.TERMINAL);
-    terminal2ApplicationAsset.setAssetId(terminals.get(1).getId());
+    var terminal2ApplicationAsset = ApplicationAssetTestUtil.newBuilder()
+        .withAssetRole(AssetRole.SECONDARY)
+        .withAssetJson(terminals.get(1))
+        .build();
 
     var applicationAssets = List.of(field1ApplicationAsset, field2ApplicationAsset, terminal1ApplicationAsset, terminal2ApplicationAsset);
 
+    var cachedLicenceRefs = List.of("1", "2", "3");
+    var applicationAssetLicenses = List.of(
+        new ApplicationAssetLicence(null, null, null, cachedLicenceRefs.get(0)),
+        new ApplicationAssetLicence(null, null, null, cachedLicenceRefs.get(1)),
+        new ApplicationAssetLicence(null, null, null, cachedLicenceRefs.get(2))
+    );
+
     when(applicationAssetService.findAssetsByApplicationVersionAndAssetRoles(applicationVersion, Set.of(AssetRole.PRIMARY, AssetRole.SECONDARY))).thenReturn(applicationAssets);
-    when(fieldService.findFieldsWithOperatorAndLicences(eq(fieldIds), anyString())).thenReturn(fields);
-    when(terminalService.findTerminalsWithOperator(eq(terminalIds), anyString())).thenReturn(terminals);
+    when(applicationAssetLicenceService.getAssetLicences(applicationAssets)).thenReturn(applicationAssetLicenses);
+    when(fieldService.findFieldsByIds(eq(fieldIds), anyString())).thenReturn(fields);
+    when(terminalService.getTerminals(eq(terminalIds), anyString())).thenReturn(terminals);
+    when(organisationUnitService.getOrganisationUnitsByIds(eq(List.of(field1ApplicationAsset.getAssetOperatorOuId())), anyString())).thenReturn(List.of(orgUnit1Json, orgUnit2Json));
 
     var builder = ApplicationContext.newBuilder();
-
     applicationContextService.addAssetDetailsToContext(applicationVersion, builder);
-
-    var assetOperators = new HashSet<String>();
-    assetOperators.add(field1JsonWithOperatorAndLicences.getOperatorJson().name());
-    assetOperators.add(field2JsonWithOperatorAndLicences.getOperatorJson().name());
-    assetOperators.add(terminal1JsonWithOperator.getOperatorJson().name());
-    assetOperators.add(terminal2JsonWithOperator.getOperatorJson().name());
-
-    var licenses = fields.stream()
-        .map(FieldWithOperatorAndLicencesJson::getLicences)
-        .flatMap(Collection::stream)
-        .map(LicenceJson::licenceRef)
-        .collect(Collectors.toSet());
 
     assertThat(builder.build())
         .extracting(
@@ -287,10 +289,10 @@ class ApplicationContextServiceTest {
             ApplicationContext::additionalFields,
             ApplicationContext::licences
         ).containsExactly(
-            field1JsonWithOperatorAndLicences,
-            assetOperators,
-            Collections.singleton(field2JsonWithOperatorAndLicences.getName()),
-            licenses
+            field1Json,
+            Set.of(orgUnit1Json.name(), orgUnit2Json.name()),
+            Collections.singleton(field2Json.getName()),
+            new HashSet<>(cachedLicenceRefs)
         );
   }
 
@@ -341,17 +343,18 @@ class ApplicationContextServiceTest {
   @Test
   void addAssetOperators() {
     var builder = ApplicationContext.newBuilder();
-    applicationContextService.addAssetOperators(
-        List.of(field1JsonWithOperatorAndLicences, field2JsonWithOperatorAndLicences),
-        builder
-    );
+
+    var applicationAsset = new ApplicationAsset();
+    applicationAsset.setAssetOperatorOuId(1);
+
+    when(organisationUnitService.getOrganisationUnitsByIds(eq(List.of(1)), anyString())).thenReturn(List.of(orgUnit1Json, orgUnit2Json));
+
+    var applicationAssets = List.of(applicationAsset);
+    applicationContextService.addAssetOperators(applicationAssets, builder);
 
     var applicationContext = builder.build();
     var operators = applicationContext.assetOperators();
-    assertThat(operators).containsExactly(
-        field1JsonWithOperatorAndLicences.getOperatorJson().name(),
-        field2JsonWithOperatorAndLicences.getOperatorJson().name()
-    );
+    assertThat(operators).containsExactly(orgUnit1Json.name(), orgUnit2Json.name());
   }
 
   @Test
@@ -372,18 +375,21 @@ class ApplicationContextServiceTest {
 
   @Test
   void addLicences() {
-    var builder = ApplicationContext.newBuilder();
-    applicationContextService.addLicences(
-        List.of(field1JsonWithOperatorAndLicences, field2JsonWithOperatorAndLicences),
-        builder
+    var cachedLicenceRefs = List.of("1", "2", "3");
+    var applicationAssetLicenses = List.of(
+        new ApplicationAssetLicence(null, null, null, cachedLicenceRefs.get(0)),
+        new ApplicationAssetLicence(null, null, null, cachedLicenceRefs.get(1)),
+        new ApplicationAssetLicence(null, null, null, cachedLicenceRefs.get(2))
     );
 
-    var expectedLicenses = new HashSet<String>();
-    field1JsonWithOperatorAndLicences.getLicences().stream().map(LicenceJson::licenceRef).forEach(expectedLicenses::add);
-    field2JsonWithOperatorAndLicences.getLicences().stream().map(LicenceJson::licenceRef).forEach(expectedLicenses::add);
+    var applicationAssets = List.of(new ApplicationAsset());
+    when(applicationAssetLicenceService.getAssetLicences(applicationAssets)).thenReturn(applicationAssetLicenses);
+
+    var builder = ApplicationContext.newBuilder();
+    applicationContextService.addLicences(applicationAssets, builder);
 
     var applicationContext = builder.build();
     var licences = applicationContext.licences();
-    assertThat(licences).containsExactlyElementsOf(expectedLicenses);
+    assertThat(licences).containsExactlyElementsOf(cachedLicenceRefs);
   }
 }

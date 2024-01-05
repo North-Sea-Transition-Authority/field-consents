@@ -42,35 +42,13 @@ public class ApplicationAsset {
 
   private String cachedAssetOperatorName;
 
-  public ApplicationAsset() {
-
+  public Integer getId() {
+    return id;
   }
 
   @VisibleForTesting
-  public ApplicationAsset(
-      Integer id,
-      ApplicationVersion applicationVersion,
-      AssetType assetType,
-      Integer assetId,
-      String cachedAssetName,
-      AssetRole assetRole,
-      Integer assetNo,
-      Integer assetOperatorOuId,
-      String cachedAssetOperatorName
-  ) {
+  public void setId(Integer id) {
     this.id = id;
-    this.applicationVersion = applicationVersion;
-    this.assetType = assetType;
-    this.assetId = assetId;
-    this.cachedAssetName = cachedAssetName;
-    this.assetRole = assetRole;
-    this.assetNo = assetNo;
-    this.assetOperatorOuId = assetOperatorOuId;
-    this.cachedAssetOperatorName = cachedAssetOperatorName;
-  }
-
-  public Integer getId() {
-    return id;
   }
 
   public ApplicationVersion getApplicationVersion() {
