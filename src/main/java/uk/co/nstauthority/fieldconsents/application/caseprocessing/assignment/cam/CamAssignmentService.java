@@ -6,6 +6,7 @@ import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regula
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 import org.springframework.stereotype.Service;
@@ -61,11 +62,13 @@ public class CamAssignmentService {
     );
   }
 
-  public List<TeamMemberView> getCamUserAssignmentCandidates(ServiceUserDetail user) {
+  public List<TeamMemberView> getCamUserAssignmentCandidates(ApplicationVersion applicationVersion, ServiceUserDetail user) {
     return regulatorTeamService.getRegulatorTeamForUser(user)
         .map(team -> teamMemberViewService.getTeamMemberViewsForTeam(team)
             .stream()
             .filter(teamMemberView -> teamMemberView.teamRoles().contains(CONSENTS_AND_AUTHORISATIONS_MANAGER))
+            .filter(teamMemberView -> Objects.isNull(applicationVersion.getCamWuaId())
+                || !applicationVersion.getCamWuaId().equals(teamMemberView.wuaId().id()))
             .toList()
         )
         .orElse(Collections.emptyList())

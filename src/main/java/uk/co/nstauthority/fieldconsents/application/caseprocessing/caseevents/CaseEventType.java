@@ -26,7 +26,8 @@ public enum CaseEventType {
   FURTHER_INFORMATION_REQUEST_OPENED("Further information requested", "Requested by", "Requested at", "Request text"),
   FURTHER_INFORMATION_REQUEST_CLOSED("Further information responded", "Responded by", "Responded at", "Response text"),
   CAM_ASSIGNED("CAM assigned", "Assigned by", "Assigned on", null, "CAM"),
-  CASE_OFFICER_REASSIGNED("Case officer reassigned", "Assigned by", "Assigned on", null, "Case officer")
+  CASE_OFFICER_REASSIGNED("Case officer reassigned", "Assigned by", "Assigned on", null, "Case officer"),
+  CAM_REASSIGNED("CAM reassigned", "Assigned by", "Assigned on", null, "CAM")
   ;
 
   private final String caseEventHeader;

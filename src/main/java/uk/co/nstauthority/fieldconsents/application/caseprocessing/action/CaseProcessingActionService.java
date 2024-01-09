@@ -5,6 +5,7 @@ import static uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeatur
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.APPLICATION_UPDATES;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.APPLICATION_UPDATE_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CAM_ASSIGN_OWNERSHIP;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CAM_REASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_ASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_REASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_RELEASE_OWNERSHIP;
@@ -142,6 +143,7 @@ public class CaseProcessingActionService {
               OPERATOR_UPDATE_APPLICATION,
               CAM_ASSIGN_OWNERSHIP,
               RETURN_TO_CASE_OFFICER,
+              CAM_REASSIGN_OWNERSHIP,
               DOCUMENT_PREPARATION
           )
       );
@@ -174,12 +176,13 @@ public class CaseProcessingActionService {
           entry(CONSULTATION_FURTHER_INFORMATION_REQUEST, EnumSet.of(RESPOND_TO_CONSULTATION)),
           entry(CONSULTATION_FURTHER_INFORMATION_RESPOND, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
           entry(CAM_ASSIGN_OWNERSHIP, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
-          entry(RETURN_TO_CASE_OFFICER, EnumSet.of(AUTHORISE_FCS_CONSENTS))
+          entry(RETURN_TO_CASE_OFFICER, EnumSet.of(AUTHORISE_FCS_CONSENTS)),
+          entry(CAM_REASSIGN_OWNERSHIP, EnumSet.of(AUTHORISE_FCS_CONSENTS, ASSIGN_FCS_APPLICATIONS))
       );
 
   private final Map<CaseProcessingActionItem, Set<CaseStatusFlag>> actionsToStatusFlags =
       Map.ofEntries(
-          entry(CASE_OFFICER_TAKE_OWNERSHIP, EnumSet.of(CASE_OFFICER_NOT_ASSIGNED)),
+          entry(CASE_OFFICER_TAKE_OWNERSHIP, EnumSet.of(CASE_OFFICER_NOT_ASSIGNED, CAM_NOT_ASSIGNED)),
           entry(CHANGE_ACE_STATUS, EnumSet.of(CASE_OFFICER_ASSIGNED)),
           entry(CASE_OFFICER_RELEASE_OWNERSHIP, EnumSet.of(CASE_OFFICER_ASSIGNED)),
           entry(CASE_OFFICER_WITHDRAWAL_RESPONSE, EnumSet.of(CASE_OFFICER_ASSIGNED, WITHDRAWAL_OPEN)),
@@ -209,7 +212,8 @@ public class CaseProcessingActionService {
                   NO_APPLICATION_UPDATE_OPEN,
                   NO_CONSULTATION_OPEN)
           ),
-          entry(RETURN_TO_CASE_OFFICER, EnumSet.of(CAM_ASSIGNED))
+          entry(RETURN_TO_CASE_OFFICER, EnumSet.of(CAM_ASSIGNED, CASE_OFFICER_NOT_ASSIGNED)),
+          entry(CAM_REASSIGN_OWNERSHIP, EnumSet.of(CAM_ASSIGNED, CASE_OFFICER_NOT_ASSIGNED))
       );
 
   private final Map<CaseProcessingActionItem, Set<? extends TeamRole>> actionsToAssigneeOnlyRoles =

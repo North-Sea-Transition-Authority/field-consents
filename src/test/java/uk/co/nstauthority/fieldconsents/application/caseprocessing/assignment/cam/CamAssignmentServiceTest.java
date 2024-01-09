@@ -137,7 +137,7 @@ class CamAssignmentServiceTest {
     when(regulatorTeamService.getRegulatorTeamForUser(USER))
         .thenReturn(Optional.empty());
 
-    assertThat(camAssignmentService.getCamUserAssignmentCandidates(USER))
+    assertThat(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion, USER))
         .isEmpty();
   }
 
@@ -148,8 +148,21 @@ class CamAssignmentServiceTest {
     when(teamMemberViewService.getTeamMemberViewsForTeam(REGULATOR_TEAM))
         .thenReturn(TEAM_MEMBER_VIEW_LIST);
 
-    assertThat(camAssignmentService.getCamUserAssignmentCandidates(USER))
+    assertThat(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion, USER))
         .containsExactly(CAM_USER_TEAM_MEMBER_VIEW_1, CAM_USER_TEAM_MEMBER_VIEW_2);
+  }
+
+  @Test
+  void getCamUserAssignmentCandidates_whenRegulatorUserAndCurrentlyAssignedCamUserIsExcluded() {
+    applicationVersion.setCamWuaId(CAM_USER_TEAM_MEMBER_VIEW_1.wuaId().id());
+
+    when(regulatorTeamService.getRegulatorTeamForUser(USER))
+        .thenReturn(Optional.of(REGULATOR_TEAM));
+    when(teamMemberViewService.getTeamMemberViewsForTeam(REGULATOR_TEAM))
+        .thenReturn(TEAM_MEMBER_VIEW_LIST);
+
+    assertThat(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion, USER))
+        .containsExactly(CAM_USER_TEAM_MEMBER_VIEW_2);
   }
 
   @Test
@@ -159,7 +172,7 @@ class CamAssignmentServiceTest {
     when(teamMemberViewService.getTeamMemberViewsForTeam(REGULATOR_TEAM))
         .thenReturn(Collections.emptyList());
 
-    assertThat(camAssignmentService.getCamUserAssignmentCandidates(USER))
+    assertThat(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion, USER))
         .isEmpty();
   }
 
@@ -170,7 +183,7 @@ class CamAssignmentServiceTest {
     when(teamMemberViewService.getTeamMemberViewsForTeam(REGULATOR_TEAM))
         .thenReturn(List.of(VIEWER_TEAM_MEMBER_VIEW, ACCESS_MANGER_TEAM_MEMBER_VIEW));
 
-    assertThat(camAssignmentService.getCamUserAssignmentCandidates(USER))
+    assertThat(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion, USER))
         .isEmpty();
   }
 

@@ -2,15 +2,19 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.AUDIT_USER_WUA_ID;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.CAM_USER_WUA_ID_1;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.CAM_USER_WUA_ID_2;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.CASE_OFFICER_WUA_ID_1;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.CASE_OFFICER_WUA_ID_2;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.getApplicationVersionAuditCamAssigned;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.getApplicationVersionAuditCamReassigned;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.getApplicationVersionAuditCaseOfficerAssigned;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.getApplicationVersionAuditCaseOfficerNotAssigned;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.getApplicationVersionAuditCaseOfficerReassigned;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.getApplicationVersionAuditCaseOwnershipTaken;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.getCaseEventCamAssigned;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.getCaseEventCamReassigned;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.getCaseEventOfficerAssigned;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.getCaseEventOfficerReassigned;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil.getCaseEventOwnershipReleased;
@@ -173,6 +177,123 @@ class CaseAssignmentEventServiceTest {
         .containsExactly(
             getCaseEventOwnershipTaken(applicationVersion),
             getCaseEventCamAssigned(applicationVersion, CASE_OFFICER_WUA_ID_1, CAM_USER_WUA_ID_1)
+        );
+  }
+
+  @Test
+  void getCaseEvents_camUserReassignedAfterAnotherCamUserReassignsOwnership() {
+    var applicationVersionAudits = List.of(
+        getApplicationVersionAuditCaseOwnershipTaken(applicationVersion),
+        getApplicationVersionAuditCamAssigned(applicationVersion, CASE_OFFICER_WUA_ID_1, CAM_USER_WUA_ID_1),
+        getApplicationVersionAuditCamReassigned(applicationVersion, CASE_OFFICER_WUA_ID_1, CAM_USER_WUA_ID_2, CAM_USER_WUA_ID_2)
+    );
+    when(applicationVersionAuditService.getApplicationVersionAudits(applicationVersions)).thenReturn(applicationVersionAudits);
+
+    var caseEvents = caseAssignmentEventService.getCaseEvents(application);
+
+    assertThat(caseEvents)
+        .containsExactly(
+            getCaseEventOwnershipTaken(applicationVersion),
+            getCaseEventCamAssigned(applicationVersion, CASE_OFFICER_WUA_ID_1, CAM_USER_WUA_ID_1),
+            getCaseEventCamReassigned(applicationVersion, CAM_USER_WUA_ID_2, CAM_USER_WUA_ID_2)
+        );
+  }
+
+  @Test
+  void getCaseEvents_camUserReassignedAfterAnotherCamUserReassignsOwnership_duplicatedCamReassignmentEventIsIgnored() {
+    var applicationVersionAudits = List.of(
+        getApplicationVersionAuditCaseOwnershipTaken(applicationVersion),
+        getApplicationVersionAuditCamAssigned(applicationVersion, CASE_OFFICER_WUA_ID_1, CAM_USER_WUA_ID_1),
+        getApplicationVersionAuditCamReassigned(applicationVersion, CASE_OFFICER_WUA_ID_1, CAM_USER_WUA_ID_2, CAM_USER_WUA_ID_2),
+        getApplicationVersionAuditCamReassigned(applicationVersion, CASE_OFFICER_WUA_ID_1, CAM_USER_WUA_ID_2, CAM_USER_WUA_ID_2)
+    );
+    when(applicationVersionAuditService.getApplicationVersionAudits(applicationVersions)).thenReturn(applicationVersionAudits);
+
+    var caseEvents = caseAssignmentEventService.getCaseEvents(application);
+
+    assertThat(caseEvents)
+        .containsExactly(
+            getCaseEventOwnershipTaken(applicationVersion),
+            getCaseEventCamAssigned(applicationVersion, CASE_OFFICER_WUA_ID_1, CAM_USER_WUA_ID_1),
+            getCaseEventCamReassigned(applicationVersion, CAM_USER_WUA_ID_2, CAM_USER_WUA_ID_2)
+        );
+  }
+
+  @Test
+  void getCaseEvents_camUserReassignedByCurrentlyAssignedCamUser() {
+    var applicationVersionAudits = List.of(
+        getApplicationVersionAuditCaseOwnershipTaken(applicationVersion),
+        getApplicationVersionAuditCamAssigned(applicationVersion, CASE_OFFICER_WUA_ID_1, CAM_USER_WUA_ID_1),
+        getApplicationVersionAuditCamReassigned(applicationVersion, CASE_OFFICER_WUA_ID_1, CAM_USER_WUA_ID_1, CAM_USER_WUA_ID_2)
+    );
+    when(applicationVersionAuditService.getApplicationVersionAudits(applicationVersions)).thenReturn(applicationVersionAudits);
+
+    var caseEvents = caseAssignmentEventService.getCaseEvents(application);
+
+    assertThat(caseEvents)
+        .containsExactly(
+            getCaseEventOwnershipTaken(applicationVersion),
+            getCaseEventCamAssigned(applicationVersion, CASE_OFFICER_WUA_ID_1, CAM_USER_WUA_ID_1),
+            getCaseEventCamReassigned(applicationVersion, CAM_USER_WUA_ID_1, CAM_USER_WUA_ID_2)
+        );
+  }
+
+  @Test
+  void getCaseEvents_camUserReassignedByCurrentlyAssignedCamUser_duplicatedCamReassignmentEventIsIgnored() {
+    var applicationVersionAudits = List.of(
+        getApplicationVersionAuditCaseOwnershipTaken(applicationVersion),
+        getApplicationVersionAuditCamAssigned(applicationVersion, CASE_OFFICER_WUA_ID_1, CAM_USER_WUA_ID_1),
+        getApplicationVersionAuditCamReassigned(applicationVersion, CASE_OFFICER_WUA_ID_1, CAM_USER_WUA_ID_1, CAM_USER_WUA_ID_2),
+        getApplicationVersionAuditCamReassigned(applicationVersion, CASE_OFFICER_WUA_ID_1, CAM_USER_WUA_ID_1, CAM_USER_WUA_ID_2)
+    );
+    when(applicationVersionAuditService.getApplicationVersionAudits(applicationVersions)).thenReturn(applicationVersionAudits);
+
+    var caseEvents = caseAssignmentEventService.getCaseEvents(application);
+
+    assertThat(caseEvents)
+        .containsExactly(
+            getCaseEventOwnershipTaken(applicationVersion),
+            getCaseEventCamAssigned(applicationVersion, CASE_OFFICER_WUA_ID_1, CAM_USER_WUA_ID_1),
+            getCaseEventCamReassigned(applicationVersion, CAM_USER_WUA_ID_1, CAM_USER_WUA_ID_2)
+        );
+  }
+
+  @Test
+  void getCaseEvents_camUserReassignedByCaseManager() {
+    var applicationVersionAudits = List.of(
+        getApplicationVersionAuditCaseOwnershipTaken(applicationVersion),
+        getApplicationVersionAuditCamAssigned(applicationVersion, CASE_OFFICER_WUA_ID_1, CAM_USER_WUA_ID_1),
+        getApplicationVersionAuditCamReassigned(applicationVersion, CASE_OFFICER_WUA_ID_1, AUDIT_USER_WUA_ID, CAM_USER_WUA_ID_2)
+    );
+    when(applicationVersionAuditService.getApplicationVersionAudits(applicationVersions)).thenReturn(applicationVersionAudits);
+
+    var caseEvents = caseAssignmentEventService.getCaseEvents(application);
+
+    assertThat(caseEvents)
+        .containsExactly(
+            getCaseEventOwnershipTaken(applicationVersion),
+            getCaseEventCamAssigned(applicationVersion, CASE_OFFICER_WUA_ID_1, CAM_USER_WUA_ID_1),
+            getCaseEventCamReassigned(applicationVersion, AUDIT_USER_WUA_ID, CAM_USER_WUA_ID_2)
+        );
+  }
+
+  @Test
+  void getCaseEvents_camUserReassignedByCaseManager_duplicatedCamReassignmentEventIsIgnored() {
+    var applicationVersionAudits = List.of(
+        getApplicationVersionAuditCaseOwnershipTaken(applicationVersion),
+        getApplicationVersionAuditCamAssigned(applicationVersion, CASE_OFFICER_WUA_ID_1, CAM_USER_WUA_ID_1),
+        getApplicationVersionAuditCamReassigned(applicationVersion, CASE_OFFICER_WUA_ID_1, AUDIT_USER_WUA_ID, CAM_USER_WUA_ID_2),
+        getApplicationVersionAuditCamReassigned(applicationVersion, CASE_OFFICER_WUA_ID_1, AUDIT_USER_WUA_ID, CAM_USER_WUA_ID_2)
+    );
+    when(applicationVersionAuditService.getApplicationVersionAudits(applicationVersions)).thenReturn(applicationVersionAudits);
+
+    var caseEvents = caseAssignmentEventService.getCaseEvents(application);
+
+    assertThat(caseEvents)
+        .containsExactly(
+            getCaseEventOwnershipTaken(applicationVersion),
+            getCaseEventCamAssigned(applicationVersion, CASE_OFFICER_WUA_ID_1, CAM_USER_WUA_ID_1),
+            getCaseEventCamReassigned(applicationVersion, AUDIT_USER_WUA_ID, CAM_USER_WUA_ID_2)
         );
   }
 

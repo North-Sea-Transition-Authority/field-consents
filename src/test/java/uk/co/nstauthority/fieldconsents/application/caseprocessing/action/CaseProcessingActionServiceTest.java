@@ -13,6 +13,7 @@ import static uk.co.nstauthority.fieldconsents.application.ApplicationType.PRODU
 import static uk.co.nstauthority.fieldconsents.application.ApplicationType.VENT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.APPLICATION_UPDATES;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.APPLICATION_UPDATE_REQUEST;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CAM_REASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_ASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_REASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_RELEASE_OWNERSHIP;
@@ -31,11 +32,13 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_UPDATE_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_WITHDRAWAL_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.REGULATOR_ADD_CASE_NOTE;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.RETURN_TO_CASE_OFFICER;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWER_SUBMIT_REVIEW;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEW_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.APPLICATION_UPDATE_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CAM_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CAM_NOT_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_NOTES_ALLOWED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_ASSIGNED;
@@ -50,6 +53,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casest
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.WITHDRAWAL_OPEN;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ALLOCATE_CONSULTATION;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ASSIGN_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.AUTHORISE_FCS_CONSENTS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_CASE_PROCESSING_DOCUMENTS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS;
@@ -258,7 +262,7 @@ class CaseProcessingActionServiceTest {
         ),
         arguments(
             Set.of(PROCESS_FCS_APPLICATIONS),
-            Set.of(CASE_OFFICER_NOT_ASSIGNED),
+            Set.of(CASE_OFFICER_NOT_ASSIGNED, CAM_NOT_ASSIGNED),
             ExpectedActions.newBuilder()
                 .inProgressActions(CASE_OFFICER_TAKE_OWNERSHIP)
                 .submittedActions(CASE_OFFICER_TAKE_OWNERSHIP)
@@ -278,6 +282,20 @@ class CaseProcessingActionServiceTest {
             ExpectedActions.newBuilder()
                 .inProgressActions(CASE_OFFICER_REASSIGN_OWNERSHIP)
                 .submittedActions(CASE_OFFICER_REASSIGN_OWNERSHIP)
+                .build()
+        ),
+        arguments(
+            Set.of(AUTHORISE_FCS_CONSENTS),
+            Set.of(CASE_OFFICER_NOT_ASSIGNED, CAM_ASSIGNED),
+            ExpectedActions.newBuilder()
+                .submittedActions(CAM_REASSIGN_OWNERSHIP, RETURN_TO_CASE_OFFICER)
+                .build()
+        ),
+        arguments(
+            Set.of(ASSIGN_FCS_APPLICATIONS),
+            Set.of(CASE_OFFICER_NOT_ASSIGNED, CAM_ASSIGNED),
+            ExpectedActions.newBuilder()
+                .submittedActions(CAM_REASSIGN_OWNERSHIP)
                 .build()
         ),
         arguments(
@@ -331,6 +349,13 @@ class CaseProcessingActionServiceTest {
             Set.of(NO_APPLICATION_UPDATE_OPEN),
             ExpectedActions.newBuilder()
                 .awaitingPaymentActions(OPERATOR_PAY_AND_SUBMIT_APPLICATION)
+                .build()
+        ),
+        arguments(
+            Set.of(AUTHORISE_FCS_CONSENTS),
+            Set.of(CASE_OFFICER_NOT_ASSIGNED, CAM_ASSIGNED),
+            ExpectedActions.newBuilder()
+                .submittedActions(CAM_REASSIGN_OWNERSHIP, RETURN_TO_CASE_OFFICER)
                 .build()
         )
     );

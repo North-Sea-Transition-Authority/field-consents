@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.c
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CAM_ASSIGN_OWNERSHIP;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CAM_REASSIGN_OWNERSHIP;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
@@ -55,7 +56,7 @@ public class CamAssignmentController {
   }
 
   @GetMapping("assign-to-cam")
-  @ActionEndPoint(CAM_ASSIGN_OWNERSHIP)
+  @ActionEndPoint({CAM_ASSIGN_OWNERSHIP, CAM_REASSIGN_OWNERSHIP})
   public ModelAndView getCamAssignment(@PathVariable Integer applicationId,
                                        ServiceUserDetail user) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
@@ -70,7 +71,7 @@ public class CamAssignmentController {
     var applicationId = applicationVersion.getApplication().getId();
 
     var camUserAssignmentCandidatesMap = teamMemberViewService
-        .getUsersMap(camAssignmentService.getCamUserAssignmentCandidates(user));
+        .getUsersMap(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion, user));
 
     return new ModelAndView("fcs/application/camAssignment")
         .addObject("applicationReference", applicationReference)
@@ -81,7 +82,7 @@ public class CamAssignmentController {
   }
 
   @PostMapping("assign-to-cam")
-  @ActionEndPoint(CAM_ASSIGN_OWNERSHIP)
+  @ActionEndPoint({CAM_ASSIGN_OWNERSHIP, CAM_REASSIGN_OWNERSHIP})
   public ModelAndView assignCamUser(@PathVariable Integer applicationId,
                                     @ModelAttribute("form") CamAssignmentForm form,
                                     ServiceUserDetail user,

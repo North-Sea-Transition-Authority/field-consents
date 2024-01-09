@@ -99,7 +99,7 @@ class CamAssignmentControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(applicationVersion);
     when(applicationService.generateApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
-    when(camAssignmentService.getCamUserAssignmentCandidates(user))
+    when(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion, user))
         .thenReturn(CAM_USER_ASSIGNMENT_CANDIDATES);
 
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
@@ -122,7 +122,7 @@ class CamAssignmentControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(applicationVersion);
     when(applicationService.generateApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
-    when(camAssignmentService.getCamUserAssignmentCandidates(user))
+    when(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion, user))
         .thenReturn(CAM_USER_ASSIGNMENT_CANDIDATES);
     when(teamMemberViewService.getUsersMap(CAM_USER_ASSIGNMENT_CANDIDATES))
         .thenReturn(CAM_USER_ASSIGNMENT_CANDIDATES_MAP);
@@ -195,7 +195,7 @@ class CamAssignmentControllerTest extends AbstractApplicationControllerTest {
 
     when(applicationService.generateApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
-    when(camAssignmentService.getCamUserAssignmentCandidates(user))
+    when(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion, user))
         .thenReturn(CAM_USER_ASSIGNMENT_CANDIDATES);
     when(teamMemberViewService.getUsersMap(CAM_USER_ASSIGNMENT_CANDIDATES))
         .thenReturn(CAM_USER_ASSIGNMENT_CANDIDATES_MAP);
