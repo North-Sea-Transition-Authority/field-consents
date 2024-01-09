@@ -8,7 +8,7 @@ class DocumentTemplateSectionFormTest {
 
   @Test
   void empty() {
-    assertThat(DocumentTemplateSectionForm.empty()).isEqualTo(new DocumentTemplateSectionForm(null, null));
+    assertThat(DocumentTemplateSectionForm.empty()).isEqualTo(new DocumentTemplateSectionForm(null, null, null));
   }
 
   @Test
@@ -16,7 +16,11 @@ class DocumentTemplateSectionFormTest {
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
 
     assertThat(DocumentTemplateSectionForm.from(documentTemplateSectionDto)).isEqualTo(
-        new DocumentTemplateSectionForm(documentTemplateSectionDto.title(), documentTemplateSectionDto.content())
+        new DocumentTemplateSectionForm(
+            documentTemplateSectionDto.title(),
+            documentTemplateSectionDto.content(),
+            documentTemplateSectionDto.conditionMnemonic()
+        )
     );
   }
 }

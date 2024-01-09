@@ -20,6 +20,10 @@
         ${documentTemplateSectionSummaryView.title()}
       </h2>
 
+      <#if documentTemplateSectionSummaryView.conditionTitle()?has_content>
+        <div class="govuk-hint">Condition: ${documentTemplateSectionSummaryView.conditionTitle()}</div>
+      </#if>
+
      <@fdsActionDropdown.actionDropdown dropdownButtonText="Section actions">
        <@fdsActionDropdown.actionDropdownItem
          actionText="Add section before"

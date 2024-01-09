@@ -90,8 +90,16 @@ class DocumentTemplateControllerTest extends AbstractControllerTest {
     var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
 
     var documentTemplateSectionSummaryViews = List.of(
-        DocumentTemplateSectionSummaryView.from("1", DocumentTemplateSectionDtoTestUtil.builder().build()),
-        DocumentTemplateSectionSummaryView.from("2", DocumentTemplateSectionDtoTestUtil.builder().build())
+        DocumentTemplateSectionSummaryView.from(
+            "1",
+            "TEST_CONDITION_TITLE_1",
+            DocumentTemplateSectionDtoTestUtil.builder().build()
+        ),
+        DocumentTemplateSectionSummaryView.from(
+            "2",
+            "TEST_CONDITION_TITLE_2",
+            DocumentTemplateSectionDtoTestUtil.builder().build()
+        )
     );
 
     when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);

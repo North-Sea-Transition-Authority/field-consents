@@ -1,20 +1,17 @@
 package uk.co.nstauthority.fieldconsents.document.lib;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -26,117 +23,318 @@ class DocumentInstanceSectionTemplateCopyingServiceTest {
   @Mock
   private DocumentTemplateSectionService documentTemplateSectionService;
 
-  @InjectMocks
-  private DocumentInstanceSectionTemplateCopyingService documentInstanceSectionTemplateCopyingService;
+  @Mock
+  private DocumentTemplateSectionConditionService documentTemplateSectionConditionService;
 
-  @Captor
-  private ArgumentCaptor<Collection<DocumentInstanceSection>> documentInstanceSectionCollectionCaptor;
+  @InjectMocks
+  @Spy
+  private DocumentInstanceSectionTemplateCopyingService documentInstanceSectionTemplateCopyingService;
 
   @Test
   void copyDocumentTemplateSectionsToDocumentInstance() {
     var documentTemplate = DocumentTemplateTestUtil.builder().build();
     var documentInstance = DocumentInstanceTestUtil.builder().build();
 
-    var documentTemplateSection1 = DocumentTemplateSectionTestUtil.builder()
-        .withTitle("Test title 1")
-        .withContent("Test content 1")
-        .withDisplayOrder(1)
-        .build();
-    var documentTemplateSection2 = DocumentTemplateSectionTestUtil.builder()
-        .withTitle("Test title 2")
-        .withContent("Test content 2")
-        .withDisplayOrder(2)
-        .build();
-    var documentTemplateSection3 = DocumentTemplateSectionTestUtil.builder()
+    var documentTemplateSection1 = DocumentTemplateSectionTestUtil.builder().build();
+    var documentTemplateSection2 = DocumentTemplateSectionTestUtil.builder().build();
+    var documentTemplateSection2Child1 = DocumentTemplateSectionTestUtil.builder()
         .withParent(documentTemplateSection2)
-        .withTitle("Test title 3")
-        .withContent("Test content 3")
-        .withDisplayOrder(3)
-        .build();
-    var documentTemplateSection4 = DocumentTemplateSectionTestUtil.builder()
-        .withParent(documentTemplateSection3)
-        .withTitle("Test title 4")
-        .withContent("Test content 4")
-        .withDisplayOrder(4)
-        .build();
-    var documentTemplateSection5 = DocumentTemplateSectionTestUtil.builder()
-        .withParent(documentTemplateSection2)
-        .withTitle("Test title 5")
-        .withContent("Test content 5")
-        .withDisplayOrder(5)
         .build();
 
     var documentTemplateSections = List.of(
         documentTemplateSection1,
         documentTemplateSection2,
-        documentTemplateSection3,
-        documentTemplateSection4,
-        documentTemplateSection5
+        documentTemplateSection2Child1
     );
+
+    var documentInstanceSection1 = DocumentInstanceSectionTestUtil.builder().build();
+    var documentInstanceSection2 = DocumentInstanceSectionTestUtil.builder().build();
 
     when(documentTemplateSectionService.getDocumentTemplateSections(documentTemplate))
         .thenReturn(documentTemplateSections);
 
-    documentInstanceSectionTemplateCopyingService
-        .copyDocumentTemplateSectionsToDocumentInstance(documentTemplate, documentInstance);
-
-    verify(documentInstanceSectionRepository).saveAll(documentInstanceSectionCollectionCaptor.capture());
-
-    var documentInstanceSections = documentInstanceSectionCollectionCaptor.getValue();
-
-    var documentInstanceSectionsByTemplateSection = documentInstanceSections.stream()
-        .collect(Collectors.toMap(DocumentInstanceSection::getCreatedFromDocumentTemplateSection, Function.identity()));
-
-    assertThat(documentInstanceSections)
-        .extracting(
-            DocumentInstanceSection::getDocumentInstance,
-            DocumentInstanceSection::getCreatedFromDocumentTemplateSection,
-            DocumentInstanceSection::getParent,
-            DocumentInstanceSection::getTitle,
-            DocumentInstanceSection::getContent,
-            DocumentInstanceSection::getDisplayOrder
-        )
-        .containsExactlyInAnyOrder(
-            tuple(
-                documentInstance,
-                documentTemplateSection1,
-                null,
-                documentTemplateSection1.getTitle(),
-                documentTemplateSection1.getContent(),
-                documentTemplateSection1.getDisplayOrder()
-            ),
-            tuple(
-                documentInstance,
-                documentTemplateSection2,
-                null,
-                documentTemplateSection2.getTitle(),
-                documentTemplateSection2.getContent(),
-                documentTemplateSection2.getDisplayOrder()
-            ),
-            tuple(
-                documentInstance,
-                documentTemplateSection3,
-                documentInstanceSectionsByTemplateSection.get(documentTemplateSection3.getParent()),
-                documentTemplateSection3.getTitle(),
-                documentTemplateSection3.getContent(),
-                documentTemplateSection3.getDisplayOrder()
-            ),
-            tuple(
-                documentInstance,
-                documentTemplateSection4,
-                documentInstanceSectionsByTemplateSection.get(documentTemplateSection4.getParent()),
-                documentTemplateSection4.getTitle(),
-                documentTemplateSection4.getContent(),
-                documentTemplateSection4.getDisplayOrder()
-            ),
-            tuple(
-                documentInstance,
-                documentTemplateSection5,
-                documentInstanceSectionsByTemplateSection.get(documentTemplateSection5.getParent()),
-                documentTemplateSection5.getTitle(),
-                documentTemplateSection5.getContent(),
-                documentTemplateSection5.getDisplayOrder()
-            )
+    doReturn(List.of(documentInstanceSection1))
+        .when(documentInstanceSectionTemplateCopyingService)
+        .tryCopyDocumentTemplateSectionAndChildren(
+            documentTemplateSection1,
+            documentInstance,
+            null,
+            documentTemplateSections
         );
+    doReturn(List.of(documentInstanceSection2))
+        .when(documentInstanceSectionTemplateCopyingService)
+        .tryCopyDocumentTemplateSectionAndChildren(
+            documentTemplateSection2,
+            documentInstance,
+            null,
+            documentTemplateSections
+        );
+
+    documentInstanceSectionTemplateCopyingService.copyDocumentTemplateSectionsToDocumentInstance(
+        documentTemplate,
+        documentInstance
+    );
+
+    verify(documentInstanceSectionRepository).saveAll(List.of(documentInstanceSection1, documentInstanceSection2));
+  }
+
+  @Test
+  void tryCopyDocumentTemplateSectionAndChildren_conditionMnemonicNotNullAndConditionEvaluatesToFalse() {
+    var conditionMnemonic = "TEST_CONDITION_MNEMONIC";
+
+    var documentTemplateSection = DocumentTemplateSectionTestUtil.builder()
+        .withConditionMnemonic(conditionMnemonic)
+        .build();
+    var documentInstance = DocumentInstanceTestUtil.builder().build();
+    var parent = DocumentInstanceSectionTestUtil.builder().build();
+
+    var documentTemplateSectionChild1 = DocumentTemplateSectionTestUtil.builder()
+        .withParent(documentTemplateSection)
+        .build();
+    var documentTemplateSectionChild1Child1 = DocumentTemplateSectionTestUtil.builder()
+        .withParent(documentTemplateSectionChild1)
+        .build();
+    var documentTemplateSectionChild2 = DocumentTemplateSectionTestUtil.builder()
+        .withParent(documentTemplateSection)
+        .build();
+
+    var allDocumentTemplateSections = List.of(
+        documentTemplateSection,
+        documentTemplateSectionChild1,
+        documentTemplateSectionChild1Child1,
+        documentTemplateSectionChild2
+    );
+
+    var condition = mock(DocumentTemplateSectionCondition.class);
+
+    when(documentTemplateSectionConditionService.getDocumentTemplateSectionConditionOrThrow(conditionMnemonic))
+        .thenReturn(condition);
+    when(condition.evaluate(DocumentInstanceDto.from(documentInstance))).thenReturn(false);
+
+    assertThat(documentInstanceSectionTemplateCopyingService.tryCopyDocumentTemplateSectionAndChildren(
+        documentTemplateSection,
+        documentInstance,
+        parent,
+        allDocumentTemplateSections
+    )).isEmpty();
+  }
+
+  @Test
+  void tryCopyDocumentTemplateSectionAndChildren_conditionMnemonicNotNullAndConditionEvaluatesToTrue() {
+    var conditionMnemonic = "TEST_CONDITION_MNEMONIC";
+
+    var documentTemplateSection = DocumentTemplateSectionTestUtil.builder()
+        .withConditionMnemonic(conditionMnemonic)
+        .build();
+    var documentInstance = DocumentInstanceTestUtil.builder().build();
+    var parent = DocumentInstanceSectionTestUtil.builder().build();
+
+    var documentTemplateSectionChild1 = DocumentTemplateSectionTestUtil.builder()
+        .withParent(documentTemplateSection)
+        .build();
+    var documentTemplateSectionChild1Child1 = DocumentTemplateSectionTestUtil.builder()
+        .withParent(documentTemplateSectionChild1)
+        .build();
+    var documentTemplateSectionChild2 = DocumentTemplateSectionTestUtil.builder()
+        .withParent(documentTemplateSection)
+        .build();
+
+    var allDocumentTemplateSections = List.of(
+        documentTemplateSection,
+        documentTemplateSectionChild1,
+        documentTemplateSectionChild1Child1,
+        documentTemplateSectionChild2
+    );
+
+    var condition = mock(DocumentTemplateSectionCondition.class);
+
+    when(documentTemplateSectionConditionService.getDocumentTemplateSectionConditionOrThrow(conditionMnemonic))
+        .thenReturn(condition);
+    when(condition.evaluate(DocumentInstanceDto.from(documentInstance))).thenReturn(true);
+
+    var documentInstanceSection = DocumentInstanceSectionTestUtil.builder().build();
+    var documentInstanceSectionChild1 = DocumentInstanceSectionTestUtil.builder().build();
+    var documentInstanceSectionChild1Child1 = DocumentInstanceSectionTestUtil.builder().build();
+    var documentInstanceSectionChild2 = DocumentInstanceSectionTestUtil.builder().build();
+
+    doReturn(documentInstanceSection)
+        .when(documentInstanceSectionTemplateCopyingService)
+        .newDocumentInstanceSection(documentTemplateSection, documentInstance, parent);
+    doReturn(documentInstanceSectionChild1)
+        .when(documentInstanceSectionTemplateCopyingService)
+        .newDocumentInstanceSection(documentTemplateSectionChild1, documentInstance, documentInstanceSection);
+    doReturn(documentInstanceSectionChild1Child1)
+        .when(documentInstanceSectionTemplateCopyingService)
+        .newDocumentInstanceSection(documentTemplateSectionChild1Child1, documentInstance, documentInstanceSectionChild1);
+    doReturn(documentInstanceSectionChild2)
+        .when(documentInstanceSectionTemplateCopyingService)
+        .newDocumentInstanceSection(documentTemplateSectionChild2, documentInstance, documentInstanceSection);
+
+    assertThat(documentInstanceSectionTemplateCopyingService.tryCopyDocumentTemplateSectionAndChildren(
+        documentTemplateSection,
+        documentInstance,
+        parent,
+        allDocumentTemplateSections
+    )).containsExactly(
+        documentInstanceSection,
+        documentInstanceSectionChild1,
+        documentInstanceSectionChild1Child1,
+        documentInstanceSectionChild2
+    );
+  }
+
+  @Test
+  void tryCopyDocumentTemplateSectionAndChildren_conditionMnemonicNull() {
+    var documentTemplateSection = DocumentTemplateSectionTestUtil.builder()
+        .withConditionMnemonic(null)
+        .build();
+    var documentInstance = DocumentInstanceTestUtil.builder().build();
+    var parent = DocumentInstanceSectionTestUtil.builder().build();
+
+    var documentTemplateSectionChild1 = DocumentTemplateSectionTestUtil.builder()
+        .withParent(documentTemplateSection)
+        .build();
+    var documentTemplateSectionChild1Child1 = DocumentTemplateSectionTestUtil.builder()
+        .withParent(documentTemplateSectionChild1)
+        .build();
+    var documentTemplateSectionChild2 = DocumentTemplateSectionTestUtil.builder()
+        .withParent(documentTemplateSection)
+        .build();
+
+    var allDocumentTemplateSections = List.of(
+        documentTemplateSection,
+        documentTemplateSectionChild1,
+        documentTemplateSectionChild1Child1,
+        documentTemplateSectionChild2
+    );
+
+    var documentInstanceSection = DocumentInstanceSectionTestUtil.builder().build();
+    var documentInstanceSectionChild1 = DocumentInstanceSectionTestUtil.builder().build();
+    var documentInstanceSectionChild1Child1 = DocumentInstanceSectionTestUtil.builder().build();
+    var documentInstanceSectionChild2 = DocumentInstanceSectionTestUtil.builder().build();
+
+    doReturn(documentInstanceSection)
+        .when(documentInstanceSectionTemplateCopyingService)
+        .newDocumentInstanceSection(documentTemplateSection, documentInstance, parent);
+    doReturn(documentInstanceSectionChild1)
+        .when(documentInstanceSectionTemplateCopyingService)
+        .newDocumentInstanceSection(documentTemplateSectionChild1, documentInstance, documentInstanceSection);
+    doReturn(documentInstanceSectionChild1Child1)
+        .when(documentInstanceSectionTemplateCopyingService)
+        .newDocumentInstanceSection(documentTemplateSectionChild1Child1, documentInstance, documentInstanceSectionChild1);
+    doReturn(documentInstanceSectionChild2)
+        .when(documentInstanceSectionTemplateCopyingService)
+        .newDocumentInstanceSection(documentTemplateSectionChild2, documentInstance, documentInstanceSection);
+
+    assertThat(documentInstanceSectionTemplateCopyingService.tryCopyDocumentTemplateSectionAndChildren(
+        documentTemplateSection,
+        documentInstance,
+        parent,
+        allDocumentTemplateSections
+    )).containsExactly(
+        documentInstanceSection,
+        documentInstanceSectionChild1,
+        documentInstanceSectionChild1Child1,
+        documentInstanceSectionChild2
+    );
+  }
+
+  @Test
+  void tryCopyDocumentTemplateSectionAndChildren_childSectionsHaveConditions() {
+    var trueConditionMnemonic = "TRUE_CONDITION_MNEMONIC";
+    var falseConditionMnemonic = "FALSE_CONDITION_MNEMONIC";
+
+    var documentTemplateSection = DocumentTemplateSectionTestUtil.builder()
+        .withConditionMnemonic(null)
+        .build();
+    var documentInstance = DocumentInstanceTestUtil.builder().build();
+    var parent = DocumentInstanceSectionTestUtil.builder().build();
+
+    var documentTemplateSectionChild1 = DocumentTemplateSectionTestUtil.builder()
+        .withParent(documentTemplateSection)
+        .withConditionMnemonic(null)
+        .build();
+    var documentTemplateSectionChild1Child1 = DocumentTemplateSectionTestUtil.builder()
+        .withParent(documentTemplateSectionChild1)
+        .withConditionMnemonic(falseConditionMnemonic)
+        .build();
+    var documentTemplateSectionChild1Child1Child1 = DocumentTemplateSectionTestUtil.builder()
+        .withParent(documentTemplateSectionChild1Child1)
+        .withConditionMnemonic(null)
+        .build();
+    var documentTemplateSectionChild2 = DocumentTemplateSectionTestUtil.builder()
+        .withParent(documentTemplateSection)
+        .withConditionMnemonic(trueConditionMnemonic)
+        .build();
+
+    var allDocumentTemplateSections = List.of(
+        documentTemplateSection,
+        documentTemplateSectionChild1,
+        documentTemplateSectionChild1Child1,
+        documentTemplateSectionChild1Child1Child1,
+        documentTemplateSectionChild2
+    );
+
+    var trueCondition = mock(DocumentTemplateSectionCondition.class);
+    var falseCondition = mock(DocumentTemplateSectionCondition.class);
+
+    when(documentTemplateSectionConditionService.getDocumentTemplateSectionConditionOrThrow(trueConditionMnemonic))
+        .thenReturn(trueCondition);
+    when(documentTemplateSectionConditionService.getDocumentTemplateSectionConditionOrThrow(falseConditionMnemonic))
+        .thenReturn(falseCondition);
+    when(trueCondition.evaluate(DocumentInstanceDto.from(documentInstance))).thenReturn(true);
+    when(falseCondition.evaluate(DocumentInstanceDto.from(documentInstance))).thenReturn(false);
+
+    var documentInstanceSection = DocumentInstanceSectionTestUtil.builder().build();
+    var documentInstanceSectionChild1 = DocumentInstanceSectionTestUtil.builder().build();
+    var documentInstanceSectionChild2 = DocumentInstanceSectionTestUtil.builder().build();
+
+    doReturn(documentInstanceSection)
+        .when(documentInstanceSectionTemplateCopyingService)
+        .newDocumentInstanceSection(documentTemplateSection, documentInstance, parent);
+    doReturn(documentInstanceSectionChild1)
+        .when(documentInstanceSectionTemplateCopyingService)
+        .newDocumentInstanceSection(documentTemplateSectionChild1, documentInstance, documentInstanceSection);
+    doReturn(documentInstanceSectionChild2)
+        .when(documentInstanceSectionTemplateCopyingService)
+        .newDocumentInstanceSection(documentTemplateSectionChild2, documentInstance, documentInstanceSection);
+
+    assertThat(documentInstanceSectionTemplateCopyingService.tryCopyDocumentTemplateSectionAndChildren(
+        documentTemplateSection,
+        documentInstance,
+        parent,
+        allDocumentTemplateSections
+    )).containsExactly(
+        documentInstanceSection,
+        documentInstanceSectionChild1,
+        documentInstanceSectionChild2
+    );
+  }
+
+  @Test
+  void newDocumentInstanceSection() {
+    var documentTemplateSection = DocumentTemplateSectionTestUtil.builder().build();
+    var documentInstance = DocumentInstanceTestUtil.builder().build();
+    var parent = DocumentInstanceSectionTestUtil.builder().build();
+
+    assertThat(documentInstanceSectionTemplateCopyingService.newDocumentInstanceSection(
+        documentTemplateSection,
+        documentInstance,
+        parent
+    )).extracting(
+        DocumentInstanceSection::getDocumentInstance,
+        DocumentInstanceSection::getCreatedFromDocumentTemplateSection,
+        DocumentInstanceSection::getParent,
+        DocumentInstanceSection::getTitle,
+        DocumentInstanceSection::getContent,
+        DocumentInstanceSection::getDisplayOrder
+    ).containsExactly(
+        documentInstance,
+        documentTemplateSection,
+        parent,
+        documentTemplateSection.getTitle(),
+        documentTemplateSection.getContent(),
+        documentTemplateSection.getDisplayOrder()
+    );
   }
 }

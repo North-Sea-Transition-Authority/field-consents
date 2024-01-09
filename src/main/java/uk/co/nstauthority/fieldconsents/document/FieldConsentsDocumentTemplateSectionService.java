@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentSectionNumberingUtil;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
+import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateSectionConditionService;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateSectionDto;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateSectionService;
 
@@ -15,10 +16,15 @@ import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateSectionServ
 public class FieldConsentsDocumentTemplateSectionService {
 
   private final DocumentTemplateSectionService documentTemplateSectionService;
+  private final DocumentTemplateSectionConditionService documentTemplateSectionConditionService;
 
   @Autowired
-  FieldConsentsDocumentTemplateSectionService(DocumentTemplateSectionService documentTemplateSectionService) {
+  FieldConsentsDocumentTemplateSectionService(
+      DocumentTemplateSectionService documentTemplateSectionService,
+      DocumentTemplateSectionConditionService documentTemplateSectionConditionService
+  ) {
     this.documentTemplateSectionService = documentTemplateSectionService;
+    this.documentTemplateSectionConditionService = documentTemplateSectionConditionService;
   }
 
   List<DocumentTemplateSectionSummaryView> getDocumentTemplateSectionSummaryViews(
@@ -51,8 +57,14 @@ public class FieldConsentsDocumentTemplateSectionService {
           i + 1
       );
 
+      var conditionMnemonic = documentTemplateSectionDto.conditionMnemonic();
+      var conditionTitle = conditionMnemonic != null
+          ? documentTemplateSectionConditionService.getDocumentTemplateSectionConditionOrThrow(conditionMnemonic)
+              .getTitle()
+          : null;
+
       var documentTemplateSectionSummaryView =
-          DocumentTemplateSectionSummaryView.from(sectionNumberString, documentTemplateSectionDto);
+          DocumentTemplateSectionSummaryView.from(sectionNumberString, conditionTitle, documentTemplateSectionDto);
       documentTemplateSectionSummaryViews.add(documentTemplateSectionSummaryView);
 
       var childrenDocumentTemplateSectionSummaryViews = getDocumentTemplateSectionSummaryViewsForSectionSiblings(
@@ -76,6 +88,7 @@ public class FieldConsentsDocumentTemplateSectionService {
         parentDto,
         form.title(),
         form.content(),
+        form.conditionMnemonic(),
         displayOrder
     );
   }
@@ -87,7 +100,8 @@ public class FieldConsentsDocumentTemplateSectionService {
     documentTemplateSectionService.editDocumentTemplateSection(
         documentTemplateSectionDto,
         form.title(),
-        form.content()
+        form.content(),
+        form.conditionMnemonic()
     );
   }
 }

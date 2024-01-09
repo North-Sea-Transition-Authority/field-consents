@@ -52,12 +52,16 @@ class DocumentInstanceServiceTest {
     var itemReference = "TEST_ITEM_REFERENCE";
     var itemType = "TEST_ITEM_TYPE";
     var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
+
     var documentTemplate = DocumentTemplateTestUtil.builder().build();
 
     when(documentTemplateService.getDocumentTemplateOrThrow(documentTemplateDto.id())).thenReturn(documentTemplate);
 
-    var documentInstanceDto =
-        documentInstanceService.createDocumentInstance(itemReference, itemType, documentTemplateDto);
+    var documentInstanceDto = documentInstanceService.createDocumentInstance(
+        itemReference,
+        itemType,
+        documentTemplateDto
+    );
 
     var documentInstanceCaptor = ArgumentCaptor.forClass(DocumentInstance.class);
 

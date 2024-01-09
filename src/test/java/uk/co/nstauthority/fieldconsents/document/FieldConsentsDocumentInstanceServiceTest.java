@@ -10,6 +10,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ByteArrayResource;
+import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
+import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceService;
 
 @ExtendWith(MockitoExtension.class)
@@ -23,6 +25,23 @@ class FieldConsentsDocumentInstanceServiceTest {
 
   @InjectMocks
   private FieldConsentsDocumentInstanceService fieldConsentsDocumentInstanceService;
+
+  @Test
+  void createDocumentInstance() {
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
+
+    var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
+
+    when(documentInstanceService.createDocumentInstance(
+        applicationVersion.getId().toString(),
+        documentTemplateDto.mnemonic(),
+        documentTemplateDto
+    )).thenReturn(documentInstanceDto);
+
+    assertThat(fieldConsentsDocumentInstanceService.createDocumentInstance(applicationVersion, documentTemplateDto))
+        .isEqualTo(documentInstanceDto);
+  }
 
   @Test
   void renderPdf() {

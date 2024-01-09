@@ -11,26 +11,29 @@ class DocumentTemplateSectionSummaryViewTest {
   @Test
   void from() {
     var sectionNumberString = "1.2.3";
+    var conditionTitle = "Test condition title";
 
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
 
     var documentTemplateSectionId = documentTemplateSectionDto.id();
 
-    assertThat(DocumentTemplateSectionSummaryView.from(sectionNumberString, documentTemplateSectionDto)).isEqualTo(
-        new DocumentTemplateSectionSummaryView(
-            "1.2.3 Test title",
-            documentTemplateSectionDto.content(),
-            ReverseRouter.route(on(DocumentTemplateSectionController.class)
-                .getAddDocumentTemplateSectionBefore(documentTemplateSectionId)),
-            ReverseRouter.route(on(DocumentTemplateSectionController.class)
-                .getAddDocumentTemplateSectionAfter(documentTemplateSectionId)),
-            ReverseRouter.route(on(DocumentTemplateSectionController.class)
-                .getAddDocumentTemplateSubsection(documentTemplateSectionId)),
-            ReverseRouter.route(on(DocumentTemplateSectionController.class)
-                .getEditDocumentTemplateSection(documentTemplateSectionId)),
-            ReverseRouter.route(on(DocumentTemplateSectionController.class)
-                .getRemoveDocumentTemplateSection(documentTemplateSectionId))
-        )
+    assertThat(DocumentTemplateSectionSummaryView.from(sectionNumberString, conditionTitle, documentTemplateSectionDto))
+        .isEqualTo(
+            new DocumentTemplateSectionSummaryView(
+                "1.2.3 Test title",
+                documentTemplateSectionDto.content(),
+                conditionTitle,
+                ReverseRouter.route(on(DocumentTemplateSectionController.class)
+                    .getAddDocumentTemplateSectionBefore(documentTemplateSectionId)),
+                ReverseRouter.route(on(DocumentTemplateSectionController.class)
+                    .getAddDocumentTemplateSectionAfter(documentTemplateSectionId)),
+                ReverseRouter.route(on(DocumentTemplateSectionController.class)
+                    .getAddDocumentTemplateSubsection(documentTemplateSectionId)),
+                ReverseRouter.route(on(DocumentTemplateSectionController.class)
+                    .getEditDocumentTemplateSection(documentTemplateSectionId)),
+                ReverseRouter.route(on(DocumentTemplateSectionController.class)
+                    .getRemoveDocumentTemplateSection(documentTemplateSectionId))
+            )
     );
   }
 }

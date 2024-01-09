@@ -3,7 +3,6 @@ package uk.co.nstauthority.fieldconsents.document;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import jakarta.annotation.Nullable;
-import jakarta.validation.Valid;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -33,15 +32,21 @@ public class DocumentTemplateSectionController {
   static final String EDIT_SUBMIT_BUTTON_TEXT = "Save";
 
   private final FieldConsentsDocumentTemplateSectionService fieldConsentsDocumentTemplateSectionService;
+  private final FieldConsentsDocumentTemplateSectionConditionService fieldConsentsDocumentTemplateSectionConditionService;
   private final DocumentTemplateSectionService documentTemplateSectionService;
+  private final DocumentTemplateSectionFormValidator documentTemplateSectionFormValidator;
 
   @Autowired
   DocumentTemplateSectionController(
       FieldConsentsDocumentTemplateSectionService fieldConsentsDocumentTemplateSectionService,
-      DocumentTemplateSectionService documentTemplateSectionService
+      FieldConsentsDocumentTemplateSectionConditionService fieldConsentsDocumentTemplateSectionConditionService,
+      DocumentTemplateSectionService documentTemplateSectionService,
+      DocumentTemplateSectionFormValidator documentTemplateSectionFormValidator
   ) {
     this.fieldConsentsDocumentTemplateSectionService = fieldConsentsDocumentTemplateSectionService;
+    this.fieldConsentsDocumentTemplateSectionConditionService = fieldConsentsDocumentTemplateSectionConditionService;
     this.documentTemplateSectionService = documentTemplateSectionService;
+    this.documentTemplateSectionFormValidator = documentTemplateSectionFormValidator;
   }
 
   @GetMapping("/add-before")
@@ -55,7 +60,7 @@ public class DocumentTemplateSectionController {
   @PostMapping("/add-before")
   public ModelAndView addDocumentTemplateSectionBefore(
       @PathVariable UUID documentTemplateSectionId,
-      @Valid @ModelAttribute("form") DocumentTemplateSectionForm form,
+      @ModelAttribute("form") DocumentTemplateSectionForm form,
       BindingResult bindingResult,
       RedirectAttributes redirectAttributes
   ) {
@@ -88,7 +93,7 @@ public class DocumentTemplateSectionController {
   @PostMapping("/add-after")
   public ModelAndView addDocumentTemplateSectionAfter(
       @PathVariable UUID documentTemplateSectionId,
-      @Valid @ModelAttribute("form") DocumentTemplateSectionForm form,
+      @ModelAttribute("form") DocumentTemplateSectionForm form,
       BindingResult bindingResult,
       RedirectAttributes redirectAttributes
   ) {
@@ -121,7 +126,7 @@ public class DocumentTemplateSectionController {
   @PostMapping("/add-subsection")
   public ModelAndView addDocumentTemplateSubsection(
       @PathVariable UUID documentTemplateSectionId,
-      @Valid @ModelAttribute("form") DocumentTemplateSectionForm form,
+      @ModelAttribute("form") DocumentTemplateSectionForm form,
       BindingResult bindingResult,
       RedirectAttributes redirectAttributes
   ) {
@@ -145,6 +150,10 @@ public class DocumentTemplateSectionController {
     return new ModelAndView("fcs/document/addOrEditDocumentTemplateSection")
         .addObject("form", form)
         .addObject("pageTitle", ADD_PAGE_TITLE)
+        .addObject(
+            "conditionsFdsSelectMap",
+            fieldConsentsDocumentTemplateSectionConditionService.getConditionsFdsSelectMap()
+        )
         .addObject("submitButtonText", ADD_SUBMIT_BUTTON_TEXT)
         .addObject(
             "cancelUrl",
@@ -161,6 +170,8 @@ public class DocumentTemplateSectionController {
       @Nullable DocumentTemplateSectionDto parentDto,
       int displayOrder
   ) {
+    documentTemplateSectionFormValidator.validate(form, bindingResult);
+
     if (bindingResult.hasErrors()) {
       return getAddDocumentTemplateSectionModelAndView(documentTemplateSectionDto, form);
     }
@@ -190,12 +201,14 @@ public class DocumentTemplateSectionController {
   @PostMapping("/edit")
   public ModelAndView editDocumentTemplateSection(
       @PathVariable UUID documentTemplateSectionId,
-      @Valid @ModelAttribute("form") DocumentTemplateSectionForm form,
+      @ModelAttribute("form") DocumentTemplateSectionForm form,
       BindingResult bindingResult,
       RedirectAttributes redirectAttributes
   ) {
     var documentTemplateSectionDto =
         documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(documentTemplateSectionId);
+
+    documentTemplateSectionFormValidator.validate(form, bindingResult);
 
     if (bindingResult.hasErrors()) {
       return getEditDocumentTemplateSectionModelAndView(documentTemplateSectionDto, form);
@@ -216,6 +229,10 @@ public class DocumentTemplateSectionController {
     return new ModelAndView("fcs/document/addOrEditDocumentTemplateSection")
         .addObject("form", form)
         .addObject("pageTitle", EDIT_PAGE_TITLE)
+        .addObject(
+            "conditionsFdsSelectMap",
+            fieldConsentsDocumentTemplateSectionConditionService.getConditionsFdsSelectMap()
+        )
         .addObject("submitButtonText", EDIT_SUBMIT_BUTTON_TEXT)
         .addObject(
             "cancelUrl",

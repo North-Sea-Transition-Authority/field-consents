@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.document.lib;
 
-import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -9,53 +10,84 @@ class DocumentInstanceSectionTemplateCopyingService {
 
   private final DocumentInstanceSectionRepository documentInstanceSectionRepository;
   private final DocumentTemplateSectionService documentTemplateSectionService;
+  private final DocumentTemplateSectionConditionService documentTemplateSectionConditionService;
 
   @Autowired
   DocumentInstanceSectionTemplateCopyingService(
       DocumentInstanceSectionRepository documentInstanceSectionRepository,
-      DocumentTemplateSectionService documentTemplateSectionService
+      DocumentTemplateSectionService documentTemplateSectionService,
+      DocumentTemplateSectionConditionService documentTemplateSectionConditionService
   ) {
     this.documentInstanceSectionRepository = documentInstanceSectionRepository;
     this.documentTemplateSectionService = documentTemplateSectionService;
+    this.documentTemplateSectionConditionService = documentTemplateSectionConditionService;
   }
 
   void copyDocumentTemplateSectionsToDocumentInstance(
       DocumentTemplate documentTemplate,
       DocumentInstance documentInstance
   ) {
-    var documentTemplateSections = documentTemplateSectionService.getDocumentTemplateSections(documentTemplate);
+    var allDocumentTemplateSections = documentTemplateSectionService.getDocumentTemplateSections(documentTemplate);
+    var copiedDocumentInstanceSections = allDocumentTemplateSections.stream()
+        .filter(section -> section.getParent() == null)
+        .flatMap(child ->
+            tryCopyDocumentTemplateSectionAndChildren(
+                child,
+                documentInstance,
+                null,
+                allDocumentTemplateSections
+            ).stream()
+        )
+        .toList();
 
-    var documentInstanceSectionsByTemplateSection = new HashMap<DocumentTemplateSection, DocumentInstanceSection>();
+    documentInstanceSectionRepository.saveAll(copiedDocumentInstanceSections);
+  }
 
-    documentTemplateSections.forEach(documentTemplateSection -> {
-      var documentInstanceSection = new DocumentInstanceSection();
-
-      documentInstanceSection.setDocumentInstance(documentInstance);
-      documentInstanceSection.setCreatedFromDocumentTemplateSection(documentTemplateSection);
-      documentInstanceSection.setTitle(documentTemplateSection.getTitle());
-      documentInstanceSection.setContent(documentTemplateSection.getContent());
-      documentInstanceSection.setDisplayOrder(documentTemplateSection.getDisplayOrder());
-
-      documentInstanceSectionsByTemplateSection.put(documentTemplateSection, documentInstanceSection);
-    });
-
-    documentInstanceSectionsByTemplateSection.forEach((documentTemplateSection, documentInstanceSection) -> {
-      var documentTemplateSectionParent = documentTemplateSection.getParent();
-      if (documentTemplateSectionParent == null) {
-        return;
+  List<DocumentInstanceSection> tryCopyDocumentTemplateSectionAndChildren(
+      DocumentTemplateSection documentTemplateSection,
+      DocumentInstance documentInstance,
+      DocumentInstanceSection parent,
+      List<DocumentTemplateSection> allDocumentTemplateSections
+  ) {
+    var conditionMnemonic = documentTemplateSection.getConditionMnemonic();
+    if (conditionMnemonic != null) {
+      var condition = documentTemplateSectionConditionService.getDocumentTemplateSectionConditionOrThrow(conditionMnemonic);
+      if (!condition.evaluate(DocumentInstanceDto.from(documentInstance))) {
+        return List.of();
       }
+    }
 
-      var documentInstanceSectionParent = documentInstanceSectionsByTemplateSection.get(documentTemplateSectionParent);
-      if (documentInstanceSectionParent == null) {
-        throw new IllegalStateException(
-            "Unable to find document instance section for document template section %s"
-                .formatted(documentTemplateSectionParent.getId())
+    var documentInstanceSection = newDocumentInstanceSection(documentTemplateSection, documentInstance, parent);
+
+    var copiedChildren = allDocumentTemplateSections.stream()
+        .filter(section -> section.getParent() != null
+            && section.getParent().getId().equals(documentTemplateSection.getId()))
+        .flatMap(child ->
+            tryCopyDocumentTemplateSectionAndChildren(
+                child,
+                documentInstance,
+                documentInstanceSection,
+                allDocumentTemplateSections
+            ).stream()
         );
-      }
 
-      documentInstanceSection.setParent(documentInstanceSectionParent);
-    });
+    return Stream.concat(Stream.of(documentInstanceSection), copiedChildren).toList();
+  }
 
-    documentInstanceSectionRepository.saveAll(documentInstanceSectionsByTemplateSection.values());
+  DocumentInstanceSection newDocumentInstanceSection(
+      DocumentTemplateSection documentTemplateSection,
+      DocumentInstance documentInstance,
+      DocumentInstanceSection parent
+  ) {
+    var documentInstanceSection = new DocumentInstanceSection();
+
+    documentInstanceSection.setDocumentInstance(documentInstance);
+    documentInstanceSection.setCreatedFromDocumentTemplateSection(documentTemplateSection);
+    documentInstanceSection.setParent(parent);
+    documentInstanceSection.setTitle(documentTemplateSection.getTitle());
+    documentInstanceSection.setContent(documentTemplateSection.getContent());
+    documentInstanceSection.setDisplayOrder(documentTemplateSection.getDisplayOrder());
+
+    return documentInstanceSection;
   }
 }

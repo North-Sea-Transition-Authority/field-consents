@@ -11,6 +11,7 @@ public record DocumentTemplateSectionDto(
     @Nullable UUID parentId,
     String title,
     String content,
+    String conditionMnemonic,
     int displayOrder,
     List<DocumentTemplateSectionDto> children
 ) {
@@ -33,6 +34,7 @@ public record DocumentTemplateSectionDto(
         parent != null ? parent.getId() : null,
         documentTemplateSection.getTitle(),
         documentTemplateSection.getContent(),
+        documentTemplateSection.getConditionMnemonic(),
         documentTemplateSection.getDisplayOrder(),
         children
     );

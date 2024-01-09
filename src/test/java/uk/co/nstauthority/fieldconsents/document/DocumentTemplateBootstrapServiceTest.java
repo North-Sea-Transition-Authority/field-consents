@@ -35,7 +35,8 @@ class DocumentTemplateBootstrapServiceTest {
     documentTemplateBootstrapService.onApplicationReadyEvent();
 
     verify(documentTemplateService, never()).createDocumentTemplate(any(), any(), any(), any(), anyInt());
-    verify(documentTemplateSectionService, never()).createDocumentTemplateSection(any(), any(), any(), any(), anyInt());
+    verify(documentTemplateSectionService, never())
+        .createDocumentTemplateSection(any(), any(), any(), any(), any(), anyInt());
   }
 
   @Test
@@ -57,7 +58,7 @@ class DocumentTemplateBootstrapServiceTest {
         )
     ).thenReturn(productionDocumentTemplateDto);
 
-    when(documentTemplateSectionService.createDocumentTemplateSection(any(), any(), any(), any(), anyInt()))
+    when(documentTemplateSectionService.createDocumentTemplateSection(any(), any(), any(), any(), any(), anyInt()))
         .thenReturn(null, secondSection, secondSectionFirstSubsection);
 
     documentTemplateBootstrapService.onApplicationReadyEvent();
@@ -77,6 +78,7 @@ class DocumentTemplateBootstrapServiceTest {
         null,
         "First section",
         exampleContent,
+        null,
         1
     );
 
@@ -85,6 +87,7 @@ class DocumentTemplateBootstrapServiceTest {
         null,
         "Second section",
         exampleContent,
+        null,
         2
     );
 
@@ -93,6 +96,7 @@ class DocumentTemplateBootstrapServiceTest {
         secondSection,
         "Second section first subsection",
         exampleContent,
+        null,
         1
     );
 
@@ -101,6 +105,7 @@ class DocumentTemplateBootstrapServiceTest {
         secondSectionFirstSubsection,
         "Second section first subsection first subsection",
         exampleContent,
+        null,
         1
     );
 
@@ -109,6 +114,7 @@ class DocumentTemplateBootstrapServiceTest {
         secondSection,
         "Second section second subsection",
         exampleContent,
+        null,
         2
     );
 

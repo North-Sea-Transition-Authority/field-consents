@@ -15,6 +15,7 @@ class DocumentTemplateSectionTestUtil {
     private DocumentTemplateSection parent;
     private String title = "Test title";
     private String content = "Test content";
+    private String conditionMnemonic;
     private int displayOrder = 1;
 
     private Builder() {
@@ -45,6 +46,11 @@ class DocumentTemplateSectionTestUtil {
       return this;
     }
 
+    Builder withConditionMnemonic(String conditionMnemonic) {
+      this.conditionMnemonic = conditionMnemonic;
+      return this;
+    }
+
     Builder withDisplayOrder(int displayOrder) {
       this.displayOrder = displayOrder;
       return this;
@@ -57,6 +63,7 @@ class DocumentTemplateSectionTestUtil {
       documentTemplateSection.setParent(parent);
       documentTemplateSection.setTitle(title);
       documentTemplateSection.setContent(content);
+      documentTemplateSection.setConditionMnemonic(conditionMnemonic);
       documentTemplateSection.setDisplayOrder(displayOrder);
 
       return documentTemplateSection;

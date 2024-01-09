@@ -1,0 +1,1 @@
+ALTER TABLE document_library_document_template_sections ADD COLUMN condition_mnemonic TEXT;

@@ -50,6 +50,7 @@ class DocumentTemplateBootstrapService {
         null,
         "First section",
         exampleContent,
+        null,
         1
     );
 
@@ -58,6 +59,7 @@ class DocumentTemplateBootstrapService {
         null,
         "Second section",
         exampleContent,
+        null,
         2
     );
 
@@ -66,6 +68,7 @@ class DocumentTemplateBootstrapService {
         secondSection,
         "Second section first subsection",
         exampleContent,
+        null,
         1
     );
 
@@ -74,6 +77,7 @@ class DocumentTemplateBootstrapService {
         secondSectionFirstSubsection,
         "Second section first subsection first subsection",
         exampleContent,
+        null,
         1
     );
 
@@ -82,6 +86,7 @@ class DocumentTemplateBootstrapService {
         secondSection,
         "Second section second subsection",
         exampleContent,
+        null,
         2
     );
 

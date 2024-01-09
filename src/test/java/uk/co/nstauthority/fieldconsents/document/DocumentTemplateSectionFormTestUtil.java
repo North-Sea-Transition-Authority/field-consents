@@ -10,6 +10,7 @@ class DocumentTemplateSectionFormTestUtil {
 
     private String title = "Test form title";
     private String content = "Test form content";
+    private String conditionMnemonic;
 
     private Builder() {
     }
@@ -24,8 +25,13 @@ class DocumentTemplateSectionFormTestUtil {
       return this;
     }
 
+    Builder withConditionMnemonic(String conditionMnemonic) {
+      this.conditionMnemonic = conditionMnemonic;
+      return this;
+    }
+
     DocumentTemplateSectionForm build() {
-      return new DocumentTemplateSectionForm(title, content);
+      return new DocumentTemplateSectionForm(title, content, conditionMnemonic);
     }
   }
 }

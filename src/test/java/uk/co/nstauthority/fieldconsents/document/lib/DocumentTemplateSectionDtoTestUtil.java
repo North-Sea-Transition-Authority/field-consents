@@ -16,6 +16,7 @@ class DocumentTemplateSectionDtoTestUtil {
     private UUID parentId;
     private String title = "Test title";
     private String content = "Test content";
+    private String conditionMnemonic;
     private int displayOrder = 1;
     private List<DocumentTemplateSectionDto> children = List.of();
 
@@ -47,6 +48,11 @@ class DocumentTemplateSectionDtoTestUtil {
       return this;
     }
 
+    Builder withConditionMnemonic(String conditionMnemonic) {
+      this.conditionMnemonic = conditionMnemonic;
+      return this;
+    }
+
     Builder withDisplayOrder(int displayOrder) {
       this.displayOrder = displayOrder;
       return this;
@@ -64,6 +70,7 @@ class DocumentTemplateSectionDtoTestUtil {
           parentId,
           title,
           content,
+          conditionMnemonic,
           displayOrder,
           children
       );

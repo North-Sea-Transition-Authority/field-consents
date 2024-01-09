@@ -29,6 +29,8 @@ class DocumentTemplateSection {
 
   private String content;
 
+  private String conditionMnemonic;
+
   private int displayOrder;
 
   protected DocumentTemplateSection() {
@@ -72,6 +74,14 @@ class DocumentTemplateSection {
 
   void setContent(String content) {
     this.content = content;
+  }
+
+  String getConditionMnemonic() {
+    return conditionMnemonic;
+  }
+
+  void setConditionMnemonic(String conditionMnemonic) {
+    this.conditionMnemonic = conditionMnemonic;
   }
 
   int getDisplayOrder() {

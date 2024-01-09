@@ -12,6 +12,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateSectionConditionService;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateSectionService;
 
 @ExtendWith(MockitoExtension.class)
@@ -19,6 +20,9 @@ class FieldConsentsDocumentTemplateSectionServiceTest {
 
   @Mock
   private DocumentTemplateSectionService documentTemplateSectionService;
+
+  @Mock
+  private DocumentTemplateSectionConditionService documentTemplateSectionConditionService;
 
   @InjectMocks
   @Spy
@@ -31,7 +35,7 @@ class FieldConsentsDocumentTemplateSectionServiceTest {
     var topLevelDocumentTemplateSectionDtos = List.of(DocumentTemplateSectionDtoTestUtil.builder().build());
 
     var documentTemplateSectionSummaryViewsForSectionSiblings =
-        List.of(new DocumentTemplateSectionSummaryView(null, null, null, null, null, null, null));
+        List.of(new DocumentTemplateSectionSummaryView(null, null, null, null, null, null, null, null));
 
     when(documentTemplateSectionService.getTopLevelDocumentTemplateSectionDtos(documentTemplateDto))
         .thenReturn(topLevelDocumentTemplateSectionDtos);
@@ -48,6 +52,12 @@ class FieldConsentsDocumentTemplateSectionServiceTest {
   void getDocumentTemplateSectionSummaryViewsForSectionSiblings() {
     var parentSectionNumberString = "1";
 
+    var conditionMnemonic1 = "TEST_CONDITION_MNEMONIC_1";
+    var conditionMnemonic2 = "TEST_CONDITION_MNEMONIC_2";
+
+    var condition1 = DocumentTemplateSectionConditionTestUtil.builder().withTitle("Test title 1").build();
+    var condition2 = DocumentTemplateSectionConditionTestUtil.builder().withTitle("Test title 2").build();
+
     var siblingDocumentTemplateSectionDto1 =
         DocumentTemplateSectionDtoTestUtil.builder()
             .withDisplayOrder(1)
@@ -57,6 +67,7 @@ class FieldConsentsDocumentTemplateSectionServiceTest {
         DocumentTemplateSectionDtoTestUtil.builder().build();
     var siblingDocumentTemplateSectionDto2Child1 =
         DocumentTemplateSectionDtoTestUtil.builder()
+            .withConditionMnemonic(conditionMnemonic2)
             .withDisplayOrder(1)
             .withChildren(List.of(siblingDocumentTemplateSectionDto2Child1Child1))
             .build();
@@ -66,6 +77,7 @@ class FieldConsentsDocumentTemplateSectionServiceTest {
             .build();
     var siblingDocumentTemplateSectionDto2 =
         DocumentTemplateSectionDtoTestUtil.builder()
+            .withConditionMnemonic(conditionMnemonic1)
             .withDisplayOrder(2)
             .withChildren(
                 List.of(
@@ -78,6 +90,11 @@ class FieldConsentsDocumentTemplateSectionServiceTest {
     var siblingDocumentTemplateSectionDtos =
         List.of(siblingDocumentTemplateSectionDto1, siblingDocumentTemplateSectionDto2);
 
+    when(documentTemplateSectionConditionService.getDocumentTemplateSectionConditionOrThrow(conditionMnemonic1))
+        .thenReturn(condition1);
+    when(documentTemplateSectionConditionService.getDocumentTemplateSectionConditionOrThrow(conditionMnemonic2))
+        .thenReturn(condition2);
+
     assertThat(
         fieldConsentsDocumentTemplateSectionService.getDocumentTemplateSectionSummaryViewsForSectionSiblings(
             parentSectionNumberString,
@@ -86,22 +103,27 @@ class FieldConsentsDocumentTemplateSectionServiceTest {
     ).containsExactly(
         DocumentTemplateSectionSummaryView.from(
             "1.1",
+            null,
             siblingDocumentTemplateSectionDto1
         ),
         DocumentTemplateSectionSummaryView.from(
             "1.2",
+            condition1.getTitle(),
             siblingDocumentTemplateSectionDto2
         ),
         DocumentTemplateSectionSummaryView.from(
             "1.2.1",
+            condition2.getTitle(),
             siblingDocumentTemplateSectionDto2Child1
         ),
         DocumentTemplateSectionSummaryView.from(
             "1.2.1.1",
+            null,
             siblingDocumentTemplateSectionDto2Child1Child1
         ),
         DocumentTemplateSectionSummaryView.from(
             "1.2.2",
+            null,
             siblingDocumentTemplateSectionDto2Child2
         )
     );
@@ -126,6 +148,7 @@ class FieldConsentsDocumentTemplateSectionServiceTest {
         parentDto,
         form.title(),
         form.content(),
+        form.conditionMnemonic(),
         displayOrder
     );
   }
@@ -140,7 +163,8 @@ class FieldConsentsDocumentTemplateSectionServiceTest {
     verify(documentTemplateSectionService).editDocumentTemplateSection(
         documentTemplateSectionDto,
         form.title(),
-        form.content()
+        form.content(),
+        form.conditionMnemonic()
     );
   }
 }
