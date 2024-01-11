@@ -23,11 +23,9 @@ class DocumentInstanceSectionTemplateCopyingService {
     this.documentTemplateSectionConditionService = documentTemplateSectionConditionService;
   }
 
-  void copyDocumentTemplateSectionsToDocumentInstance(
-      DocumentTemplate documentTemplate,
-      DocumentInstance documentInstance
-  ) {
-    var allDocumentTemplateSections = documentTemplateSectionService.getDocumentTemplateSections(documentTemplate);
+  void copyDocumentTemplateSectionsToDocumentInstance(DocumentInstance documentInstance) {
+    var allDocumentTemplateSections =
+        documentTemplateSectionService.getDocumentTemplateSections(documentInstance.getDocumentTemplate());
     var copiedDocumentInstanceSections = allDocumentTemplateSections.stream()
         .filter(section -> section.getParent() == null)
         .flatMap(child ->
@@ -89,5 +87,11 @@ class DocumentInstanceSectionTemplateCopyingService {
     documentInstanceSection.setDisplayOrder(documentTemplateSection.getDisplayOrder());
 
     return documentInstanceSection;
+  }
+
+  void reloadDocumentInstanceSectionsFromDocumentTemplate(DocumentInstance documentInstance) {
+    documentInstanceSectionRepository.deleteAllByDocumentInstanceId(documentInstance.getId());
+
+    copyDocumentTemplateSectionsToDocumentInstance(documentInstance);
   }
 }

@@ -81,10 +81,8 @@ class DocumentInstanceServiceTest {
             documentTemplate
         );
 
-    verify(documentInstanceSectionTemplateCopyingService).copyDocumentTemplateSectionsToDocumentInstance(
-        documentTemplate,
-        documentInstance
-    );
+    verify(documentInstanceSectionTemplateCopyingService)
+        .copyDocumentTemplateSectionsToDocumentInstance(documentInstance);
 
     assertThat(documentInstanceDto).isEqualTo(DocumentInstanceDto.from(documentInstance));
   }
@@ -155,5 +153,19 @@ class DocumentInstanceServiceTest {
   @Test
   void renderPdfFromHtml() throws IOException {
     assertThat(documentInstanceService.renderPdfFromHtml("<html></html>").getByteArray()).isNotEmpty();
+  }
+
+  @Test
+  void reloadDocumentInstance() {
+    var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
+
+    var documentInstance = DocumentInstanceTestUtil.builder().build();
+
+    doReturn(documentInstance).when(documentInstanceService).getDocumentInstanceOrThrow(documentInstanceDto.id());
+
+    documentInstanceService.reloadDocumentInstance(documentInstanceDto);
+
+    verify(documentInstanceSectionTemplateCopyingService)
+        .reloadDocumentInstanceSectionsFromDocumentTemplate(documentInstance);
   }
 }

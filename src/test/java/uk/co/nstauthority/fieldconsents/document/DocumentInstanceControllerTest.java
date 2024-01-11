@@ -1,14 +1,19 @@
 package uk.co.nstauthority.fieldconsents.document;
 
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.notificationBanner;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.List;
@@ -21,8 +26,13 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
+import uk.co.nstauthority.fieldconsents.application.ApplicationService;
+import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
+import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceService;
+import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
+import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
@@ -39,6 +49,12 @@ class DocumentInstanceControllerTest extends AbstractControllerTest {
 
   @MockBean
   private DocumentInstanceService documentInstanceService;
+
+  @MockBean
+  private DocumentInstanceLinkingService documentInstanceLinkingService;
+
+  @MockBean
+  private ApplicationService applicationService;
 
   @SecurityTest
   void getViewDocumentInstance_noUser() throws Exception {
@@ -88,7 +104,9 @@ class DocumentInstanceControllerTest extends AbstractControllerTest {
         .andExpect(model().attribute("pageTitle", documentInstanceDto.documentTemplateDto().title()))
         .andExpect(model().attribute("documentInstanceSectionSummaryViews", documentInstanceSectionSummaryViews))
         .andExpect(model().attribute("previewUrl", ReverseRouter.route(on(DocumentInstanceController.class)
-            .getPreviewDocumentInstance(DOCUMENT_INSTANCE_ID))));
+            .getPreviewDocumentInstance(DOCUMENT_INSTANCE_ID))))
+        .andExpect(model().attribute("reloadUrl", ReverseRouter.route(on(DocumentInstanceController.class)
+            .getReloadDocumentInstance(DOCUMENT_INSTANCE_ID))));
   }
 
   @SecurityTest
@@ -125,5 +143,91 @@ class DocumentInstanceControllerTest extends AbstractControllerTest {
         .andExpect(content().contentType(MediaType.APPLICATION_OCTET_STREAM))
         .andExpect(content().bytes(byteArrayResource.getByteArray()))
         .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"Document Preview.pdf\""));
+  }
+
+  @SecurityTest
+  void getReloadDocumentInstance_noUser() throws Exception {
+    mockMvc.perform(get(ReverseRouter.route(on(DocumentInstanceController.class)
+            .getReloadDocumentInstance(DOCUMENT_INSTANCE_ID))))
+        .andExpect(redirectionToLoginUrl());
+  }
+
+  @SecurityTest
+  void getReloadDocumentInstance_userDoesNotHaveProcessFcsApplicationsPermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(false);
+
+    mockMvc.perform(get(ReverseRouter.route(on(DocumentInstanceController.class)
+            .getReloadDocumentInstance(DOCUMENT_INSTANCE_ID)))
+            .with(user(user)))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void getReloadDocumentInstance() throws Exception {
+    var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
+    var applicationVersion =
+        ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var applicationReference = "Test/application/reference";
+
+    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
+    when(documentInstanceService.getDocumentInstanceDtoOrThrow(DOCUMENT_INSTANCE_ID))
+        .thenReturn(documentInstanceDto);
+    when(documentInstanceLinkingService.getApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
+        .thenReturn(applicationVersion);
+    when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
+
+    mockMvc.perform(get(ReverseRouter.route(on(DocumentInstanceController.class)
+            .getReloadDocumentInstance(DOCUMENT_INSTANCE_ID)))
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/document/reloadDocumentInstance"))
+        .andExpect(model().attribute("documentTitle", documentInstanceDto.documentTemplateDto().title()))
+        .andExpect(model().attribute("applicationReference", applicationReference))
+        .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(DocumentInstanceController.class)
+            .getViewDocumentInstance(DOCUMENT_INSTANCE_ID))));
+  }
+
+  @SecurityTest
+  void reloadDocumentInstance_noUser() throws Exception {
+    mockMvc.perform(post(ReverseRouter.route(on(DocumentInstanceController.class)
+            .reloadDocumentInstance(DOCUMENT_INSTANCE_ID, null)))
+            .with(csrf()))
+        .andExpect(redirectionToLoginUrl());
+  }
+
+  @SecurityTest
+  void reloadDocumentInstance_userDoesNotHaveProcessFcsApplicationsPermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(false);
+
+    mockMvc.perform(post(ReverseRouter.route(on(DocumentInstanceController.class)
+            .reloadDocumentInstance(DOCUMENT_INSTANCE_ID, null)))
+            .with(csrf())
+            .with(user(user)))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void reloadDocumentInstance() throws Exception {
+    var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
+
+    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
+    when(documentInstanceService.getDocumentInstanceDtoOrThrow(DOCUMENT_INSTANCE_ID))
+        .thenReturn(documentInstanceDto);
+
+    var expectedNotificationBanner = NotificationBanner.builder()
+        .withBannerType(NotificationBannerType.SUCCESS)
+        .withHeadingContent("Document reloaded")
+        .build();
+
+    mockMvc.perform(post(ReverseRouter.route(on(DocumentInstanceController.class)
+            .reloadDocumentInstance(DOCUMENT_INSTANCE_ID, null)))
+            .with(csrf())
+            .with(user(user)))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(notificationBanner(expectedNotificationBanner))
+        .andExpect(redirectedUrl(ReverseRouter.route(on(DocumentInstanceController.class)
+            .getViewDocumentInstance(DOCUMENT_INSTANCE_ID))));
+
+    verify(documentInstanceService).reloadDocumentInstance(documentInstanceDto);
   }
 }

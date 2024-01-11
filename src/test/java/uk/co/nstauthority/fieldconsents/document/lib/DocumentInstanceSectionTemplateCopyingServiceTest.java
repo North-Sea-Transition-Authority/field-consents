@@ -1,6 +1,8 @@
 package uk.co.nstauthority.fieldconsents.document.lib;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -32,7 +34,6 @@ class DocumentInstanceSectionTemplateCopyingServiceTest {
 
   @Test
   void copyDocumentTemplateSectionsToDocumentInstance() {
-    var documentTemplate = DocumentTemplateTestUtil.builder().build();
     var documentInstance = DocumentInstanceTestUtil.builder().build();
 
     var documentTemplateSection1 = DocumentTemplateSectionTestUtil.builder().build();
@@ -50,7 +51,7 @@ class DocumentInstanceSectionTemplateCopyingServiceTest {
     var documentInstanceSection1 = DocumentInstanceSectionTestUtil.builder().build();
     var documentInstanceSection2 = DocumentInstanceSectionTestUtil.builder().build();
 
-    when(documentTemplateSectionService.getDocumentTemplateSections(documentTemplate))
+    when(documentTemplateSectionService.getDocumentTemplateSections(documentInstance.getDocumentTemplate()))
         .thenReturn(documentTemplateSections);
 
     doReturn(List.of(documentInstanceSection1))
@@ -70,10 +71,7 @@ class DocumentInstanceSectionTemplateCopyingServiceTest {
             documentTemplateSections
         );
 
-    documentInstanceSectionTemplateCopyingService.copyDocumentTemplateSectionsToDocumentInstance(
-        documentTemplate,
-        documentInstance
-    );
+    documentInstanceSectionTemplateCopyingService.copyDocumentTemplateSectionsToDocumentInstance(documentInstance);
 
     verify(documentInstanceSectionRepository).saveAll(List.of(documentInstanceSection1, documentInstanceSection2));
   }
@@ -336,5 +334,21 @@ class DocumentInstanceSectionTemplateCopyingServiceTest {
         documentTemplateSection.getContent(),
         documentTemplateSection.getDisplayOrder()
     );
+  }
+
+  @Test
+  void reloadDocumentInstanceSectionsFromDocumentTemplate() {
+    var documentInstance = DocumentInstanceTestUtil.builder().build();
+
+    doNothing()
+        .when(documentInstanceSectionTemplateCopyingService)
+        .copyDocumentTemplateSectionsToDocumentInstance(any());
+
+    documentInstanceSectionTemplateCopyingService.reloadDocumentInstanceSectionsFromDocumentTemplate(documentInstance);
+
+    verify(documentInstanceSectionRepository).deleteAllByDocumentInstanceId(documentInstance.getId());
+
+    verify(documentInstanceSectionTemplateCopyingService)
+        .copyDocumentTemplateSectionsToDocumentInstance(documentInstance);
   }
 }

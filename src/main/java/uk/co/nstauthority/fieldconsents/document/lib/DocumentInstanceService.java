@@ -50,10 +50,7 @@ public class DocumentInstanceService {
 
     documentInstanceRepository.save(documentInstance);
 
-    documentInstanceSectionTemplateCopyingService.copyDocumentTemplateSectionsToDocumentInstance(
-        documentTemplate,
-        documentInstance
-    );
+    documentInstanceSectionTemplateCopyingService.copyDocumentTemplateSectionsToDocumentInstance(documentInstance);
 
     return DocumentInstanceDto.from(documentInstance);
   }
@@ -99,5 +96,12 @@ public class DocumentInstanceService {
 
       return new ByteArrayResource(outputStream.toByteArray());
     }
+  }
+
+  @Transactional
+  public void reloadDocumentInstance(DocumentInstanceDto documentInstanceDto) {
+    var documentInstance = getDocumentInstanceOrThrow(documentInstanceDto.id());
+
+    documentInstanceSectionTemplateCopyingService.reloadDocumentInstanceSectionsFromDocumentTemplate(documentInstance);
   }
 }

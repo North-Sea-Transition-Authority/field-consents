@@ -22,6 +22,13 @@
       role=true
     />
 
+    <@fdsAction.link
+      linkText="Reload document"
+      linkUrl=springUrl(reloadUrl)
+      linkClass="govuk-button govuk-button--secondary"
+      role=true
+    />
+
     <#list documentInstanceSectionSummaryViews as documentInstanceSectionSummaryView>
       <h2 id="${documentInstanceSectionSummaryView.title()}" class="govuk-heading-l govuk-!-margin-bottom-2">
         ${documentInstanceSectionSummaryView.title()}
