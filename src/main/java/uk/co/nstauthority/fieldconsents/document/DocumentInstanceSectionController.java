@@ -3,7 +3,6 @@ package uk.co.nstauthority.fieldconsents.document;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import jakarta.annotation.Nullable;
-import jakarta.validation.Valid;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -33,15 +32,21 @@ public class DocumentInstanceSectionController {
   static final String EDIT_SUBMIT_BUTTON_TEXT = "Save";
 
   private final FieldConsentsDocumentInstanceSectionService fieldConsentsDocumentInstanceSectionService;
+  private final FieldConsentsDocumentMailMergeFieldService fieldConsentsDocumentMailMergeFieldService;
   private final DocumentInstanceSectionService documentInstanceSectionService;
+  private final DocumentInstanceSectionFormValidator documentInstanceSectionFormValidator;
 
   @Autowired
   DocumentInstanceSectionController(
       FieldConsentsDocumentInstanceSectionService fieldConsentsDocumentInstanceSectionService,
-      DocumentInstanceSectionService documentInstanceSectionService
+      FieldConsentsDocumentMailMergeFieldService fieldConsentsDocumentMailMergeFieldService,
+      DocumentInstanceSectionService documentInstanceSectionService,
+      DocumentInstanceSectionFormValidator documentInstanceSectionFormValidator
   ) {
     this.fieldConsentsDocumentInstanceSectionService = fieldConsentsDocumentInstanceSectionService;
+    this.fieldConsentsDocumentMailMergeFieldService = fieldConsentsDocumentMailMergeFieldService;
     this.documentInstanceSectionService = documentInstanceSectionService;
+    this.documentInstanceSectionFormValidator = documentInstanceSectionFormValidator;
   }
 
   @GetMapping("/add-before")
@@ -55,7 +60,7 @@ public class DocumentInstanceSectionController {
   @PostMapping("/add-before")
   public ModelAndView addDocumentInstanceSectionBefore(
       @PathVariable UUID documentInstanceSectionId,
-      @Valid @ModelAttribute("form") DocumentInstanceSectionForm form,
+      @ModelAttribute("form") DocumentInstanceSectionForm form,
       BindingResult bindingResult,
       RedirectAttributes redirectAttributes
   ) {
@@ -88,7 +93,7 @@ public class DocumentInstanceSectionController {
   @PostMapping("/add-after")
   public ModelAndView addDocumentInstanceSectionAfter(
       @PathVariable UUID documentInstanceSectionId,
-      @Valid @ModelAttribute("form") DocumentInstanceSectionForm form,
+      @ModelAttribute("form") DocumentInstanceSectionForm form,
       BindingResult bindingResult,
       RedirectAttributes redirectAttributes
   ) {
@@ -121,7 +126,7 @@ public class DocumentInstanceSectionController {
   @PostMapping("/add-subsection")
   public ModelAndView addDocumentInstanceSubsection(
       @PathVariable UUID documentInstanceSectionId,
-      @Valid @ModelAttribute("form") DocumentInstanceSectionForm form,
+      @ModelAttribute("form") DocumentInstanceSectionForm form,
       BindingResult bindingResult,
       RedirectAttributes redirectAttributes
   ) {
@@ -142,14 +147,20 @@ public class DocumentInstanceSectionController {
       DocumentInstanceSectionDto documentInstanceSectionDto,
       DocumentInstanceSectionForm form
   ) {
+    var documentInstanceDto = documentInstanceSectionDto.documentInstanceDto();
+    var documentTemplateDto = documentInstanceDto.documentTemplateDto();
+
     return new ModelAndView("fcs/document/addOrEditDocumentInstanceSection")
         .addObject("form", form)
         .addObject("pageTitle", ADD_PAGE_TITLE)
+        .addObject(
+            "mailMergeFieldViews",
+            fieldConsentsDocumentMailMergeFieldService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto)
+        )
         .addObject("submitButtonText", ADD_SUBMIT_BUTTON_TEXT)
         .addObject(
             "cancelUrl",
-            ReverseRouter.route(on(DocumentInstanceController.class)
-                .getViewDocumentInstance(documentInstanceSectionDto.documentInstanceDto().id()))
+            ReverseRouter.route(on(DocumentInstanceController.class).getViewDocumentInstance(documentInstanceDto.id()))
         );
   }
 
@@ -161,12 +172,16 @@ public class DocumentInstanceSectionController {
       @Nullable DocumentInstanceSectionDto parentDto,
       int displayOrder
   ) {
+    var documentInstanceDto = documentInstanceSectionDto.documentInstanceDto();
+
+    documentInstanceSectionFormValidator.validate(form, documentInstanceDto, bindingResult);
+
     if (bindingResult.hasErrors()) {
       return getAddDocumentInstanceSectionModelAndView(documentInstanceSectionDto, form);
     }
 
     fieldConsentsDocumentInstanceSectionService.createDocumentInstanceSection(
-        documentInstanceSectionDto.documentInstanceDto(),
+        documentInstanceDto,
         parentDto,
         form,
         displayOrder
@@ -175,7 +190,7 @@ public class DocumentInstanceSectionController {
     NotificationBannerUtil.addSuccessNotification(redirectAttributes, "Section added");
 
     return ReverseRouter.redirect(on(DocumentInstanceController.class)
-        .getViewDocumentInstance(documentInstanceSectionDto.documentInstanceDto().id()));
+        .getViewDocumentInstance(documentInstanceDto.id()));
   }
 
   @GetMapping("/edit")
@@ -190,12 +205,15 @@ public class DocumentInstanceSectionController {
   @PostMapping("/edit")
   public ModelAndView editDocumentInstanceSection(
       @PathVariable UUID documentInstanceSectionId,
-      @Valid @ModelAttribute("form") DocumentInstanceSectionForm form,
+      @ModelAttribute("form") DocumentInstanceSectionForm form,
       BindingResult bindingResult,
       RedirectAttributes redirectAttributes
   ) {
     var documentInstanceSectionDto =
         documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(documentInstanceSectionId);
+    var documentInstanceDto = documentInstanceSectionDto.documentInstanceDto();
+
+    documentInstanceSectionFormValidator.validate(form, documentInstanceDto, bindingResult);
 
     if (bindingResult.hasErrors()) {
       return getEditDocumentInstanceSectionModelAndView(documentInstanceSectionDto, form);
@@ -206,21 +224,27 @@ public class DocumentInstanceSectionController {
     NotificationBannerUtil.addSuccessNotification(redirectAttributes, "Section saved");
 
     return ReverseRouter.redirect(on(DocumentInstanceController.class)
-        .getViewDocumentInstance(documentInstanceSectionDto.documentInstanceDto().id()));
+        .getViewDocumentInstance(documentInstanceDto.id()));
   }
 
   private ModelAndView getEditDocumentInstanceSectionModelAndView(
       DocumentInstanceSectionDto documentInstanceSectionDto,
       DocumentInstanceSectionForm form
   ) {
+    var documentInstanceDto = documentInstanceSectionDto.documentInstanceDto();
+    var documentTemplateDto = documentInstanceDto.documentTemplateDto();
+
     return new ModelAndView("fcs/document/addOrEditDocumentInstanceSection")
         .addObject("form", form)
         .addObject("pageTitle", EDIT_PAGE_TITLE)
         .addObject("submitButtonText", EDIT_SUBMIT_BUTTON_TEXT)
         .addObject(
+            "mailMergeFieldViews",
+            fieldConsentsDocumentMailMergeFieldService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto)
+        )
+        .addObject(
             "cancelUrl",
-            ReverseRouter.route(on(DocumentInstanceController.class)
-                .getViewDocumentInstance(documentInstanceSectionDto.documentInstanceDto().id()))
+            ReverseRouter.route(on(DocumentInstanceController.class).getViewDocumentInstance(documentInstanceDto.id()))
         );
   }
 

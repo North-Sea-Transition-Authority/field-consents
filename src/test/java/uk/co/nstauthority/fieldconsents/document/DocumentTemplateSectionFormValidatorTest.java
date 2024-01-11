@@ -14,6 +14,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
+import uk.co.nstauthority.fieldconsents.document.lib.DocumentMailMergeFieldService;
+import uk.co.nstauthority.fieldconsents.document.lib.DocumentMailMergeValidationResult;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateSectionConditionService;
 
 @ExtendWith(MockitoExtension.class)
@@ -21,6 +23,9 @@ class DocumentTemplateSectionFormValidatorTest {
 
   @Mock
   private DocumentTemplateSectionConditionService documentTemplateSectionConditionService;
+
+  @Mock
+  private DocumentMailMergeFieldService documentMailMergeFieldService;
 
   @InjectMocks
   private DocumentTemplateSectionFormValidator documentTemplateSectionFormValidator;
@@ -31,9 +36,13 @@ class DocumentTemplateSectionFormValidatorTest {
     var form = DocumentTemplateSectionFormTestUtil.builder()
         .withTitle(title)
         .build();
+    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
     var errors = new BeanPropertyBindingResult(form, "form");
 
-    documentTemplateSectionFormValidator.validate(form, errors);
+    when(documentMailMergeFieldService.validateMailMergeFields(documentTemplateDto, form.content()))
+        .thenReturn(DocumentMailMergeValidationResult.valid());
+
+    documentTemplateSectionFormValidator.validate(form, documentTemplateDto, errors);
 
     assertThat(errors.getFieldErrors())
         .extracting(
@@ -51,9 +60,13 @@ class DocumentTemplateSectionFormValidatorTest {
     var form = DocumentTemplateSectionFormTestUtil.builder()
         .withConditionMnemonic(null)
         .build();
+    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
     var errors = new BeanPropertyBindingResult(form, "form");
 
-    documentTemplateSectionFormValidator.validate(form, errors);
+    when(documentMailMergeFieldService.validateMailMergeFields(documentTemplateDto, form.content()))
+        .thenReturn(DocumentMailMergeValidationResult.valid());
+
+    documentTemplateSectionFormValidator.validate(form, documentTemplateDto, errors);
 
     assertThat(errors.getFieldErrors()).isEmpty();
   }
@@ -65,12 +78,15 @@ class DocumentTemplateSectionFormValidatorTest {
     var form = DocumentTemplateSectionFormTestUtil.builder()
         .withConditionMnemonic(conditionMnemonic)
         .build();
+    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
     var errors = new BeanPropertyBindingResult(form, "form");
 
     when(documentTemplateSectionConditionService.getDocumentTemplateSectionCondition(conditionMnemonic))
         .thenReturn(Optional.empty());
+    when(documentMailMergeFieldService.validateMailMergeFields(documentTemplateDto, form.content()))
+        .thenReturn(DocumentMailMergeValidationResult.valid());
 
-    documentTemplateSectionFormValidator.validate(form, errors);
+    documentTemplateSectionFormValidator.validate(form, documentTemplateDto, errors);
 
     assertThat(errors.getFieldErrors())
         .extracting(
@@ -90,15 +106,42 @@ class DocumentTemplateSectionFormValidatorTest {
     var form = DocumentTemplateSectionFormTestUtil.builder()
         .withConditionMnemonic(conditionMnemonic)
         .build();
+    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
     var errors = new BeanPropertyBindingResult(form, "form");
 
     var documentTemplateSectionCondition = DocumentTemplateSectionConditionTestUtil.builder().build();
 
     when(documentTemplateSectionConditionService.getDocumentTemplateSectionCondition(conditionMnemonic))
         .thenReturn(Optional.of(documentTemplateSectionCondition));
+    when(documentMailMergeFieldService.validateMailMergeFields(documentTemplateDto, form.content()))
+        .thenReturn(DocumentMailMergeValidationResult.valid());
 
-    documentTemplateSectionFormValidator.validate(form, errors);
+    documentTemplateSectionFormValidator.validate(form, documentTemplateDto, errors);
 
     assertThat(errors.getFieldErrors()).isEmpty();
+  }
+
+  @Test
+  void validate_contentHasMailMergeValidationErrors() {
+    var form = DocumentTemplateSectionFormTestUtil.builder().build();
+    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
+    var errors = new BeanPropertyBindingResult(form, "form");
+
+    var mailMergeErrorMessage = "Test error message";
+
+    when(documentMailMergeFieldService.validateMailMergeFields(documentTemplateDto, form.content()))
+        .thenReturn(DocumentMailMergeValidationResult.invalid(mailMergeErrorMessage));
+
+    documentTemplateSectionFormValidator.validate(form, documentTemplateDto, errors);
+
+    assertThat(errors.getFieldErrors())
+        .extracting(
+            FieldError::getField,
+            FieldError::getCode,
+            FieldError::getDefaultMessage
+        )
+        .containsExactly(
+            tuple("content", "content.invalid", mailMergeErrorMessage)
+        );
   }
 }

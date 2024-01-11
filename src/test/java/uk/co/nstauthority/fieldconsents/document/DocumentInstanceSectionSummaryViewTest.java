@@ -14,23 +14,26 @@ class DocumentInstanceSectionSummaryViewTest {
 
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
 
+    var content = "Test content";
+
     var documentInstanceSectionId = documentInstanceSectionDto.id();
 
-    assertThat(DocumentInstanceSectionSummaryView.from(sectionNumberString, documentInstanceSectionDto)).isEqualTo(
-        new DocumentInstanceSectionSummaryView(
-            "1.2.3 Test title",
-            documentInstanceSectionDto.content(),
-            ReverseRouter.route(on(DocumentInstanceSectionController.class)
-                .getAddDocumentInstanceSectionBefore(documentInstanceSectionId)),
-            ReverseRouter.route(on(DocumentInstanceSectionController.class)
-                .getAddDocumentInstanceSectionAfter(documentInstanceSectionId)),
-            ReverseRouter.route(on(DocumentInstanceSectionController.class)
-                .getAddDocumentInstanceSubsection(documentInstanceSectionId)),
-            ReverseRouter.route(on(DocumentInstanceSectionController.class)
-                .getEditDocumentInstanceSection(documentInstanceSectionId)),
-            ReverseRouter.route(on(DocumentInstanceSectionController.class)
-                .getRemoveDocumentInstanceSection(documentInstanceSectionId))
-        )
+    assertThat(DocumentInstanceSectionSummaryView.from(sectionNumberString, documentInstanceSectionDto, content))
+        .isEqualTo(
+            new DocumentInstanceSectionSummaryView(
+                "1.2.3 Test title",
+                content,
+                ReverseRouter.route(on(DocumentInstanceSectionController.class)
+                    .getAddDocumentInstanceSectionBefore(documentInstanceSectionId)),
+                ReverseRouter.route(on(DocumentInstanceSectionController.class)
+                    .getAddDocumentInstanceSectionAfter(documentInstanceSectionId)),
+                ReverseRouter.route(on(DocumentInstanceSectionController.class)
+                    .getAddDocumentInstanceSubsection(documentInstanceSectionId)),
+                ReverseRouter.route(on(DocumentInstanceSectionController.class)
+                    .getEditDocumentInstanceSection(documentInstanceSectionId)),
+                ReverseRouter.route(on(DocumentInstanceSectionController.class)
+                    .getRemoveDocumentInstanceSection(documentInstanceSectionId))
+            )
     );
   }
 }

@@ -13,12 +13,16 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceSectionService;
+import uk.co.nstauthority.fieldconsents.document.lib.DocumentMailMergeFieldService;
 
 @ExtendWith(MockitoExtension.class)
 class FieldConsentsDocumentInstanceSectionServiceTest {
 
   @Mock
   private DocumentInstanceSectionService documentInstanceSectionService;
+
+  @Mock
+  private DocumentMailMergeFieldService documentMailMergeFieldService;
 
   @InjectMocks
   @Spy
@@ -78,6 +82,23 @@ class FieldConsentsDocumentInstanceSectionServiceTest {
     var siblingDocumentInstanceSectionDtos =
         List.of(siblingDocumentInstanceSectionDto1, siblingDocumentInstanceSectionDto2);
 
+    var siblingDocumentInstanceSectionDto1ResolvedContent = "Test content 1";
+    var siblingDocumentInstanceSectionDto2ResolvedContent = "Test content 2";
+    var siblingDocumentInstanceSectionDto2Child1ResolvedContent = "Test content 3";
+    var siblingDocumentInstanceSectionDto2Child1Child1ResolvedContent = "Test content 4";
+    var siblingDocumentInstanceSectionDto2Child2ResolvedContent = "Test content 5";
+
+    when(documentMailMergeFieldService.resolveMailMergeFields(siblingDocumentInstanceSectionDto1))
+        .thenReturn(siblingDocumentInstanceSectionDto1ResolvedContent);
+    when(documentMailMergeFieldService.resolveMailMergeFields(siblingDocumentInstanceSectionDto2))
+        .thenReturn(siblingDocumentInstanceSectionDto2ResolvedContent);
+    when(documentMailMergeFieldService.resolveMailMergeFields(siblingDocumentInstanceSectionDto2Child1))
+        .thenReturn(siblingDocumentInstanceSectionDto2Child1ResolvedContent);
+    when(documentMailMergeFieldService.resolveMailMergeFields(siblingDocumentInstanceSectionDto2Child1Child1))
+        .thenReturn(siblingDocumentInstanceSectionDto2Child1Child1ResolvedContent);
+    when(documentMailMergeFieldService.resolveMailMergeFields(siblingDocumentInstanceSectionDto2Child2))
+        .thenReturn(siblingDocumentInstanceSectionDto2Child2ResolvedContent);
+
     assertThat(
         fieldConsentsDocumentInstanceSectionService.getDocumentInstanceSectionSummaryViewsForSectionSiblings(
             parentSectionNumberString,
@@ -86,23 +107,28 @@ class FieldConsentsDocumentInstanceSectionServiceTest {
     ).containsExactly(
         DocumentInstanceSectionSummaryView.from(
             "1.1",
-            siblingDocumentInstanceSectionDto1
+            siblingDocumentInstanceSectionDto1,
+            siblingDocumentInstanceSectionDto1ResolvedContent
         ),
         DocumentInstanceSectionSummaryView.from(
             "1.2",
-            siblingDocumentInstanceSectionDto2
+            siblingDocumentInstanceSectionDto2,
+            siblingDocumentInstanceSectionDto2ResolvedContent
         ),
         DocumentInstanceSectionSummaryView.from(
             "1.2.1",
-            siblingDocumentInstanceSectionDto2Child1
+            siblingDocumentInstanceSectionDto2Child1,
+            siblingDocumentInstanceSectionDto2Child1ResolvedContent
         ),
         DocumentInstanceSectionSummaryView.from(
             "1.2.1.1",
-            siblingDocumentInstanceSectionDto2Child1Child1
+            siblingDocumentInstanceSectionDto2Child1Child1,
+            siblingDocumentInstanceSectionDto2Child1Child1ResolvedContent
         ),
         DocumentInstanceSectionSummaryView.from(
             "1.2.2",
-            siblingDocumentInstanceSectionDto2Child2
+            siblingDocumentInstanceSectionDto2Child2,
+            siblingDocumentInstanceSectionDto2Child2ResolvedContent
         )
     );
   }

@@ -20,6 +20,7 @@ import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.u
 import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.notificationBanner;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -47,6 +48,9 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
   private FieldConsentsDocumentTemplateSectionConditionService fieldConsentsDocumentTemplateSectionConditionService;
 
   @MockBean
+  private FieldConsentsDocumentMailMergeFieldService fieldConsentsDocumentMailMergeFieldService;
+
+  @MockBean
   private DocumentTemplateSectionService documentTemplateSectionService;
 
   @MockBean
@@ -72,13 +76,21 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
   @Test
   void getAddDocumentTemplateSectionBefore() throws Exception {
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
+    var documentTemplateDto = documentTemplateSectionDto.documentTemplateDto();
+
     var conditionsFdsSelectMap = Map.of("TEST_MNEMONIC", "Test title");
+    var applicableDocumentMailMergeFieldViews = List.of(
+        new DocumentMailMergeFieldView("TEST_MNEMONIC_1", "Test description 1"),
+        new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
+    );
 
     when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
     when(fieldConsentsDocumentTemplateSectionConditionService.getConditionsFdsSelectMap())
         .thenReturn(conditionsFdsSelectMap);
+    when(fieldConsentsDocumentMailMergeFieldService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
+        .thenReturn(applicableDocumentMailMergeFieldViews);
 
     mockMvc.perform(get(ReverseRouter.route(on(DocumentTemplateSectionController.class)
             .getAddDocumentTemplateSectionBefore(DOCUMENT_TEMPLATE_SECTION_ID)))
@@ -88,9 +100,10 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
         .andExpect(model().attribute("form", DocumentTemplateSectionForm.empty()))
         .andExpect(model().attribute("pageTitle", DocumentTemplateSectionController.ADD_PAGE_TITLE))
         .andExpect(model().attribute("conditionsFdsSelectMap", conditionsFdsSelectMap))
+        .andExpect(model().attribute("mailMergeFieldViews", applicableDocumentMailMergeFieldViews))
         .andExpect(model().attribute("submitButtonText", DocumentTemplateSectionController.ADD_SUBMIT_BUTTON_TEXT))
         .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(DocumentTemplateController.class)
-            .getViewDocumentTemplate(documentTemplateSectionDto.documentTemplateDto().id()))));
+            .getViewDocumentTemplate(documentTemplateDto.id()))));
   }
 
   @SecurityTest
@@ -115,22 +128,30 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
   @Test
   void addDocumentTemplateSectionBefore_invalidForm() throws Exception {
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
+    var documentTemplateDto = documentTemplateSectionDto.documentTemplateDto();
+
     var conditionsFdsSelectMap = Map.of("TEST_MNEMONIC", "Test title");
+    var applicableDocumentMailMergeFieldViews = List.of(
+        new DocumentMailMergeFieldView("TEST_MNEMONIC_1", "Test description 1"),
+        new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
+    );
 
     when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
 
     doAnswer(invocation -> {
-      var bindingResult = (BindingResult) invocation.getArgument(1);
+      var bindingResult = (BindingResult) invocation.getArgument(2);
       bindingResult.rejectValue("title", "code", "message");
       return bindingResult;
     })
         .when(documentTemplateSectionFormValidator)
-        .validate(any(), any());
+        .validate(any(), any(), any());
 
     when(fieldConsentsDocumentTemplateSectionConditionService.getConditionsFdsSelectMap())
         .thenReturn(conditionsFdsSelectMap);
+    when(fieldConsentsDocumentMailMergeFieldService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
+        .thenReturn(applicableDocumentMailMergeFieldViews);
 
     mockMvc.perform(post(ReverseRouter.route(on(DocumentTemplateSectionController.class)
             .addDocumentTemplateSectionBefore(DOCUMENT_TEMPLATE_SECTION_ID, null, null, null)))
@@ -141,11 +162,12 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
         .andExpect(model().attributeExists("form"))
         .andExpect(model().attribute("pageTitle", DocumentTemplateSectionController.ADD_PAGE_TITLE))
         .andExpect(model().attribute("conditionsFdsSelectMap", conditionsFdsSelectMap))
+        .andExpect(model().attribute("mailMergeFieldViews", applicableDocumentMailMergeFieldViews))
         .andExpect(model().attribute("submitButtonText", DocumentTemplateSectionController.ADD_SUBMIT_BUTTON_TEXT))
         .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(DocumentTemplateController.class)
-            .getViewDocumentTemplate(documentTemplateSectionDto.documentTemplateDto().id()))));
+            .getViewDocumentTemplate(documentTemplateDto.id()))));
 
-    verify(documentTemplateSectionFormValidator).validate(any(), any());
+    verify(documentTemplateSectionFormValidator).validate(any(), any(), any());
 
     verify(fieldConsentsDocumentTemplateSectionService, never())
         .createDocumentTemplateSection(any(), any(), any(), anyInt());
@@ -173,7 +195,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
         .andExpect(redirectedUrl(ReverseRouter.route(on(DocumentTemplateController.class)
             .getViewDocumentTemplate(documentTemplateSectionDto.documentTemplateDto().id()))));
 
-    verify(documentTemplateSectionFormValidator).validate(any(), any());
+    verify(documentTemplateSectionFormValidator).validate(any(), any(), any());
 
     verify(fieldConsentsDocumentTemplateSectionService).createDocumentTemplateSection(
         eq(documentTemplateSectionDto.documentTemplateDto()),
@@ -193,7 +215,6 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
         .build();
 
     when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
-
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(parentId))
@@ -213,7 +234,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
         .andExpect(redirectedUrl(ReverseRouter.route(on(DocumentTemplateController.class)
             .getViewDocumentTemplate(documentTemplateSectionDto.documentTemplateDto().id()))));
 
-    verify(documentTemplateSectionFormValidator).validate(any(), any());
+    verify(documentTemplateSectionFormValidator).validate(any(), any(), any());
 
     verify(fieldConsentsDocumentTemplateSectionService).createDocumentTemplateSection(
         eq(documentTemplateSectionDto.documentTemplateDto()),
@@ -243,13 +264,21 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
   @Test
   void getAddDocumentTemplateSectionAfter() throws Exception {
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
+    var documentTemplateDto = documentTemplateSectionDto.documentTemplateDto();
+
     var conditionsFdsSelectMap = Map.of("TEST_MNEMONIC", "Test title");
+    var applicableDocumentMailMergeFieldViews = List.of(
+        new DocumentMailMergeFieldView("TEST_MNEMONIC_1", "Test description 1"),
+        new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
+    );
 
     when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
     when(fieldConsentsDocumentTemplateSectionConditionService.getConditionsFdsSelectMap())
         .thenReturn(conditionsFdsSelectMap);
+    when(fieldConsentsDocumentMailMergeFieldService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
+        .thenReturn(applicableDocumentMailMergeFieldViews);
 
     mockMvc.perform(get(ReverseRouter.route(on(DocumentTemplateSectionController.class)
             .getAddDocumentTemplateSectionAfter(DOCUMENT_TEMPLATE_SECTION_ID)))
@@ -259,9 +288,10 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
         .andExpect(model().attribute("form", DocumentTemplateSectionForm.empty()))
         .andExpect(model().attribute("pageTitle", DocumentTemplateSectionController.ADD_PAGE_TITLE))
         .andExpect(model().attribute("conditionsFdsSelectMap", conditionsFdsSelectMap))
+        .andExpect(model().attribute("mailMergeFieldViews", applicableDocumentMailMergeFieldViews))
         .andExpect(model().attribute("submitButtonText", DocumentTemplateSectionController.ADD_SUBMIT_BUTTON_TEXT))
         .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(DocumentTemplateController.class)
-            .getViewDocumentTemplate(documentTemplateSectionDto.documentTemplateDto().id()))));
+            .getViewDocumentTemplate(documentTemplateDto.id()))));
   }
 
   @SecurityTest
@@ -286,22 +316,30 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
   @Test
   void addDocumentTemplateSectionAfter_invalidForm() throws Exception {
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
+    var documentTemplateDto = documentTemplateSectionDto.documentTemplateDto();
+
     var conditionsFdsSelectMap = Map.of("TEST_MNEMONIC", "Test title");
+    var applicableDocumentMailMergeFieldViews = List.of(
+        new DocumentMailMergeFieldView("TEST_MNEMONIC_1", "Test description 1"),
+        new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
+    );
 
     when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
 
     doAnswer(invocation -> {
-      var bindingResult = (BindingResult) invocation.getArgument(1);
+      var bindingResult = (BindingResult) invocation.getArgument(2);
       bindingResult.rejectValue("title", "code", "message");
       return bindingResult;
     })
         .when(documentTemplateSectionFormValidator)
-        .validate(any(), any());
+        .validate(any(), any(), any());
 
     when(fieldConsentsDocumentTemplateSectionConditionService.getConditionsFdsSelectMap())
         .thenReturn(conditionsFdsSelectMap);
+    when(fieldConsentsDocumentMailMergeFieldService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
+        .thenReturn(applicableDocumentMailMergeFieldViews);
 
     mockMvc.perform(post(ReverseRouter.route(on(DocumentTemplateSectionController.class)
             .addDocumentTemplateSectionAfter(DOCUMENT_TEMPLATE_SECTION_ID, null, null, null)))
@@ -312,11 +350,12 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
         .andExpect(model().attributeExists("form"))
         .andExpect(model().attribute("pageTitle", DocumentTemplateSectionController.ADD_PAGE_TITLE))
         .andExpect(model().attribute("conditionsFdsSelectMap", conditionsFdsSelectMap))
+        .andExpect(model().attribute("mailMergeFieldViews", applicableDocumentMailMergeFieldViews))
         .andExpect(model().attribute("submitButtonText", DocumentTemplateSectionController.ADD_SUBMIT_BUTTON_TEXT))
         .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(DocumentTemplateController.class)
-            .getViewDocumentTemplate(documentTemplateSectionDto.documentTemplateDto().id()))));
+            .getViewDocumentTemplate(documentTemplateDto.id()))));
 
-    verify(documentTemplateSectionFormValidator).validate(any(), any());
+    verify(documentTemplateSectionFormValidator).validate(any(), any(), any());
 
     verify(fieldConsentsDocumentTemplateSectionService, never())
         .createDocumentTemplateSection(any(), any(), any(), anyInt());
@@ -344,7 +383,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
         .andExpect(redirectedUrl(ReverseRouter.route(on(DocumentTemplateController.class)
             .getViewDocumentTemplate(documentTemplateSectionDto.documentTemplateDto().id()))));
 
-    verify(documentTemplateSectionFormValidator).validate(any(), any());
+    verify(documentTemplateSectionFormValidator).validate(any(), any(), any());
 
     verify(fieldConsentsDocumentTemplateSectionService).createDocumentTemplateSection(
         eq(documentTemplateSectionDto.documentTemplateDto()),
@@ -364,7 +403,6 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
         .build();
 
     when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
-
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(parentId))
@@ -384,7 +422,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
         .andExpect(redirectedUrl(ReverseRouter.route(on(DocumentTemplateController.class)
             .getViewDocumentTemplate(documentTemplateSectionDto.documentTemplateDto().id()))));
 
-    verify(documentTemplateSectionFormValidator).validate(any(), any());
+    verify(documentTemplateSectionFormValidator).validate(any(), any(), any());
 
     verify(fieldConsentsDocumentTemplateSectionService).createDocumentTemplateSection(
         eq(documentTemplateSectionDto.documentTemplateDto()),
@@ -414,13 +452,21 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
   @Test
   void getAddDocumentTemplateSubsection() throws Exception {
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
+    var documentTemplateDto = documentTemplateSectionDto.documentTemplateDto();
+
     var conditionsFdsSelectMap = Map.of("TEST_MNEMONIC", "Test title");
+    var applicableDocumentMailMergeFieldViews = List.of(
+        new DocumentMailMergeFieldView("TEST_MNEMONIC_1", "Test description 1"),
+        new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
+    );
 
     when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
     when(fieldConsentsDocumentTemplateSectionConditionService.getConditionsFdsSelectMap())
         .thenReturn(conditionsFdsSelectMap);
+    when(fieldConsentsDocumentMailMergeFieldService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
+        .thenReturn(applicableDocumentMailMergeFieldViews);
 
     mockMvc.perform(get(ReverseRouter.route(on(DocumentTemplateSectionController.class)
             .getAddDocumentTemplateSubsection(DOCUMENT_TEMPLATE_SECTION_ID)))
@@ -430,9 +476,10 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
         .andExpect(model().attribute("form", DocumentTemplateSectionForm.empty()))
         .andExpect(model().attribute("pageTitle", DocumentTemplateSectionController.ADD_PAGE_TITLE))
         .andExpect(model().attribute("conditionsFdsSelectMap", conditionsFdsSelectMap))
+        .andExpect(model().attribute("mailMergeFieldViews", applicableDocumentMailMergeFieldViews))
         .andExpect(model().attribute("submitButtonText", DocumentTemplateSectionController.ADD_SUBMIT_BUTTON_TEXT))
         .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(DocumentTemplateController.class)
-            .getViewDocumentTemplate(documentTemplateSectionDto.documentTemplateDto().id()))));
+            .getViewDocumentTemplate(documentTemplateDto.id()))));
   }
 
   @SecurityTest
@@ -457,19 +504,27 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
   @Test
   void addDocumentTemplateSubsection_invalidForm() throws Exception {
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
+    var documentTemplateDto = documentTemplateSectionDto.documentTemplateDto();
+
     var conditionsFdsSelectMap = Map.of("TEST_MNEMONIC", "Test title");
+    var applicableDocumentMailMergeFieldViews = List.of(
+        new DocumentMailMergeFieldView("TEST_MNEMONIC_1", "Test description 1"),
+        new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
+    );
 
     when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
+    when(fieldConsentsDocumentMailMergeFieldService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
+        .thenReturn(applicableDocumentMailMergeFieldViews);
 
     doAnswer(invocation -> {
-      var bindingResult = (BindingResult) invocation.getArgument(1);
+      var bindingResult = (BindingResult) invocation.getArgument(2);
       bindingResult.rejectValue("title", "code", "message");
       return bindingResult;
     })
         .when(documentTemplateSectionFormValidator)
-        .validate(any(), any());
+        .validate(any(), any(), any());
 
     when(fieldConsentsDocumentTemplateSectionConditionService.getConditionsFdsSelectMap())
         .thenReturn(conditionsFdsSelectMap);
@@ -483,11 +538,12 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
         .andExpect(model().attributeExists("form"))
         .andExpect(model().attribute("pageTitle", DocumentTemplateSectionController.ADD_PAGE_TITLE))
         .andExpect(model().attribute("conditionsFdsSelectMap", conditionsFdsSelectMap))
+        .andExpect(model().attribute("mailMergeFieldViews", applicableDocumentMailMergeFieldViews))
         .andExpect(model().attribute("submitButtonText", DocumentTemplateSectionController.ADD_SUBMIT_BUTTON_TEXT))
         .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(DocumentTemplateController.class)
-            .getViewDocumentTemplate(documentTemplateSectionDto.documentTemplateDto().id()))));
+            .getViewDocumentTemplate(documentTemplateDto.id()))));
 
-    verify(documentTemplateSectionFormValidator).validate(any(), any());
+    verify(documentTemplateSectionFormValidator).validate(any(), any(), any());
 
     verify(fieldConsentsDocumentTemplateSectionService, never())
         .createDocumentTemplateSection(any(), any(), any(), anyInt());
@@ -515,7 +571,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
         .andExpect(redirectedUrl(ReverseRouter.route(on(DocumentTemplateController.class)
             .getViewDocumentTemplate(documentTemplateSectionDto.documentTemplateDto().id()))));
 
-    verify(documentTemplateSectionFormValidator).validate(any(), any());
+    verify(documentTemplateSectionFormValidator).validate(any(), any(), any());
 
     verify(fieldConsentsDocumentTemplateSectionService).createDocumentTemplateSection(
         eq(documentTemplateSectionDto.documentTemplateDto()),
@@ -545,13 +601,21 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
   @Test
   void getEditDocumentTemplateSection() throws Exception {
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
+    var documentTemplateDto = documentTemplateSectionDto.documentTemplateDto();
+
     var conditionsFdsSelectMap = Map.of("TEST_MNEMONIC", "Test title");
+    var applicableDocumentMailMergeFieldViews = List.of(
+        new DocumentMailMergeFieldView("TEST_MNEMONIC_1", "Test description 1"),
+        new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
+    );
 
     when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
     when(fieldConsentsDocumentTemplateSectionConditionService.getConditionsFdsSelectMap())
         .thenReturn(conditionsFdsSelectMap);
+    when(fieldConsentsDocumentMailMergeFieldService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
+        .thenReturn(applicableDocumentMailMergeFieldViews);
 
     mockMvc.perform(get(ReverseRouter.route(on(DocumentTemplateSectionController.class)
             .getEditDocumentTemplateSection(DOCUMENT_TEMPLATE_SECTION_ID)))
@@ -561,9 +625,10 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
         .andExpect(model().attribute("form", DocumentTemplateSectionForm.from(documentTemplateSectionDto)))
         .andExpect(model().attribute("pageTitle", DocumentTemplateSectionController.EDIT_PAGE_TITLE))
         .andExpect(model().attribute("conditionsFdsSelectMap", conditionsFdsSelectMap))
+        .andExpect(model().attribute("mailMergeFieldViews", applicableDocumentMailMergeFieldViews))
         .andExpect(model().attribute("submitButtonText", DocumentTemplateSectionController.EDIT_SUBMIT_BUTTON_TEXT))
         .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(DocumentTemplateController.class)
-            .getViewDocumentTemplate(documentTemplateSectionDto.documentTemplateDto().id()))));
+            .getViewDocumentTemplate(documentTemplateDto.id()))));
   }
 
   @SecurityTest
@@ -588,22 +653,30 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
   @Test
   void editDocumentTemplateSection_invalidForm() throws Exception {
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
+    var documentTemplateDto = documentTemplateSectionDto.documentTemplateDto();
+
     var conditionsFdsSelectMap = Map.of("TEST_MNEMONIC", "Test title");
+    var applicableDocumentMailMergeFieldViews = List.of(
+        new DocumentMailMergeFieldView("TEST_MNEMONIC_1", "Test description 1"),
+        new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
+    );
 
     when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
 
     doAnswer(invocation -> {
-      var bindingResult = (BindingResult) invocation.getArgument(1);
+      var bindingResult = (BindingResult) invocation.getArgument(2);
       bindingResult.rejectValue("title", "code", "message");
       return bindingResult;
     })
         .when(documentTemplateSectionFormValidator)
-        .validate(any(), any());
+        .validate(any(), any(), any());
 
     when(fieldConsentsDocumentTemplateSectionConditionService.getConditionsFdsSelectMap())
         .thenReturn(conditionsFdsSelectMap);
+    when(fieldConsentsDocumentMailMergeFieldService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
+        .thenReturn(applicableDocumentMailMergeFieldViews);
 
     mockMvc.perform(post(ReverseRouter.route(on(DocumentTemplateSectionController.class)
             .editDocumentTemplateSection(DOCUMENT_TEMPLATE_SECTION_ID, null, null, null)))
@@ -614,11 +687,12 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
         .andExpect(model().attributeExists("form"))
         .andExpect(model().attribute("pageTitle", DocumentTemplateSectionController.EDIT_PAGE_TITLE))
         .andExpect(model().attribute("conditionsFdsSelectMap", conditionsFdsSelectMap))
+        .andExpect(model().attribute("mailMergeFieldViews", applicableDocumentMailMergeFieldViews))
         .andExpect(model().attribute("submitButtonText", DocumentTemplateSectionController.EDIT_SUBMIT_BUTTON_TEXT))
         .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(DocumentTemplateController.class)
-            .getViewDocumentTemplate(documentTemplateSectionDto.documentTemplateDto().id()))));
+            .getViewDocumentTemplate(documentTemplateDto.id()))));
 
-    verify(documentTemplateSectionFormValidator).validate(any(), any());
+    verify(documentTemplateSectionFormValidator).validate(any(), any(), any());
 
     verify(fieldConsentsDocumentTemplateSectionService, never())
         .editDocumentTemplateSection(any(), any());
@@ -646,7 +720,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
         .andExpect(redirectedUrl(ReverseRouter.route(on(DocumentTemplateController.class)
             .getViewDocumentTemplate(documentTemplateSectionDto.documentTemplateDto().id()))));
 
-    verify(documentTemplateSectionFormValidator).validate(any(), any());
+    verify(documentTemplateSectionFormValidator).validate(any(), any(), any());
 
     verify(fieldConsentsDocumentTemplateSectionService)
         .editDocumentTemplateSection(eq(documentTemplateSectionDto), any());

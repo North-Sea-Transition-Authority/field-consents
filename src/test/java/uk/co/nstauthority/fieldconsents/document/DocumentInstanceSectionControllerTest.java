@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -19,14 +20,17 @@ import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.u
 import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.notificationBanner;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.validation.BindingResult;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceSectionService;
+import uk.co.nstauthority.fieldconsents.document.lib.DocumentMailMergeFieldService;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -42,6 +46,15 @@ class DocumentInstanceSectionControllerTest extends AbstractControllerTest {
 
   @MockBean
   private DocumentInstanceSectionService documentInstanceSectionService;
+
+  @MockBean
+  private FieldConsentsDocumentMailMergeFieldService fieldConsentsDocumentMailMergeFieldService;
+
+  @MockBean
+  private DocumentInstanceSectionFormValidator documentInstanceSectionFormValidator;
+
+  @MockBean
+  private DocumentMailMergeFieldService documentMailMergeFieldService;
 
   @SecurityTest
   void getAddDocumentInstanceSectionBefore_noUser() throws Exception {
@@ -63,10 +76,21 @@ class DocumentInstanceSectionControllerTest extends AbstractControllerTest {
   @Test
   void getAddDocumentInstanceSectionBefore() throws Exception {
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
+    var documentInstanceDto = documentInstanceSectionDto.documentInstanceDto();
+
+    var applicableDocumentMailMergeFieldViews = List.of(
+        new DocumentMailMergeFieldView("TEST_MNEMONIC_1", "Test description 1"),
+        new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
+    );
 
     when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
     when(documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
+    when(
+        fieldConsentsDocumentMailMergeFieldService.getApplicableDocumentMailMergeFieldViews(
+            documentInstanceDto.documentTemplateDto()
+        )
+    ).thenReturn(applicableDocumentMailMergeFieldViews);
 
     mockMvc.perform(get(ReverseRouter.route(on(DocumentInstanceSectionController.class)
             .getAddDocumentInstanceSectionBefore(DOCUMENT_INSTANCE_SECTION_ID)))
@@ -75,9 +99,10 @@ class DocumentInstanceSectionControllerTest extends AbstractControllerTest {
         .andExpect(view().name("fcs/document/addOrEditDocumentInstanceSection"))
         .andExpect(model().attribute("form", DocumentInstanceSectionForm.empty()))
         .andExpect(model().attribute("pageTitle", DocumentInstanceSectionController.ADD_PAGE_TITLE))
+        .andExpect(model().attribute("mailMergeFieldViews", applicableDocumentMailMergeFieldViews))
         .andExpect(model().attribute("submitButtonText", DocumentInstanceSectionController.ADD_SUBMIT_BUTTON_TEXT))
         .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(DocumentInstanceController.class)
-            .getViewDocumentInstance(documentInstanceSectionDto.documentInstanceDto().id()))));
+            .getViewDocumentInstance(documentInstanceDto.id()))));
   }
 
   @SecurityTest
@@ -102,24 +127,45 @@ class DocumentInstanceSectionControllerTest extends AbstractControllerTest {
   @Test
   void addDocumentInstanceSectionBefore_invalidForm() throws Exception {
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
+    var documentInstanceDto = documentInstanceSectionDto.documentInstanceDto();
+
+    var applicableDocumentMailMergeFieldViews = List.of(
+        new DocumentMailMergeFieldView("TEST_MNEMONIC_1", "Test description 1"),
+        new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
+    );
 
     when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
     when(documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
 
+    doAnswer(invocation -> {
+      var bindingResult = (BindingResult) invocation.getArgument(2);
+      bindingResult.rejectValue("title", "code", "message");
+      return bindingResult;
+    })
+        .when(documentInstanceSectionFormValidator)
+        .validate(any(), any(), any());
+
+    when(
+        fieldConsentsDocumentMailMergeFieldService.getApplicableDocumentMailMergeFieldViews(
+            documentInstanceDto.documentTemplateDto()
+        )
+    ).thenReturn(applicableDocumentMailMergeFieldViews);
+
     mockMvc.perform(post(ReverseRouter.route(on(DocumentInstanceSectionController.class)
             .addDocumentInstanceSectionBefore(DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
             .with(csrf())
-            .with(user(user))
-            .param("title", "")
-            .param("content", "Test content"))
+            .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/document/addOrEditDocumentInstanceSection"))
         .andExpect(model().attributeExists("form"))
         .andExpect(model().attribute("pageTitle", DocumentInstanceSectionController.ADD_PAGE_TITLE))
+        .andExpect(model().attribute("mailMergeFieldViews", applicableDocumentMailMergeFieldViews))
         .andExpect(model().attribute("submitButtonText", DocumentInstanceSectionController.ADD_SUBMIT_BUTTON_TEXT))
         .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(DocumentInstanceController.class)
-            .getViewDocumentInstance(documentInstanceSectionDto.documentInstanceDto().id()))));
+            .getViewDocumentInstance(documentInstanceDto.id()))));
+
+    verify(documentInstanceSectionFormValidator).validate(any(), any(), any());
 
     verify(fieldConsentsDocumentInstanceSectionService, never())
         .createDocumentInstanceSection(any(), any(), any(), anyInt());
@@ -141,13 +187,13 @@ class DocumentInstanceSectionControllerTest extends AbstractControllerTest {
     mockMvc.perform(post(ReverseRouter.route(on(DocumentInstanceSectionController.class)
             .addDocumentInstanceSectionBefore(DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
             .with(csrf())
-            .with(user(user))
-            .param("title", "Test title")
-            .param("content", "Test content"))
+            .with(user(user)))
         .andExpect(status().is3xxRedirection())
         .andExpect(notificationBanner(expectedNotificationBanner))
         .andExpect(redirectedUrl(ReverseRouter.route(on(DocumentInstanceController.class)
             .getViewDocumentInstance(documentInstanceSectionDto.documentInstanceDto().id()))));
+
+    verify(documentInstanceSectionFormValidator).validate(any(), any(), any());
 
     verify(fieldConsentsDocumentInstanceSectionService).createDocumentInstanceSection(
         eq(documentInstanceSectionDto.documentInstanceDto()),
@@ -167,7 +213,6 @@ class DocumentInstanceSectionControllerTest extends AbstractControllerTest {
         .build();
 
     when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
-
     when(documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
     when(documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(parentId))
@@ -181,13 +226,13 @@ class DocumentInstanceSectionControllerTest extends AbstractControllerTest {
     mockMvc.perform(post(ReverseRouter.route(on(DocumentInstanceSectionController.class)
             .addDocumentInstanceSectionBefore(DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
             .with(csrf())
-            .with(user(user))
-            .param("title", "Test title")
-            .param("content", "Test content"))
+            .with(user(user)))
         .andExpect(status().is3xxRedirection())
         .andExpect(notificationBanner(expectedNotificationBanner))
         .andExpect(redirectedUrl(ReverseRouter.route(on(DocumentInstanceController.class)
             .getViewDocumentInstance(documentInstanceSectionDto.documentInstanceDto().id()))));
+
+    verify(documentInstanceSectionFormValidator).validate(any(), any(), any());
 
     verify(fieldConsentsDocumentInstanceSectionService).createDocumentInstanceSection(
         eq(documentInstanceSectionDto.documentInstanceDto()),
@@ -217,10 +262,21 @@ class DocumentInstanceSectionControllerTest extends AbstractControllerTest {
   @Test
   void getAddDocumentInstanceSectionAfter() throws Exception {
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
+    var documentInstanceDto = documentInstanceSectionDto.documentInstanceDto();
+
+    var applicableDocumentMailMergeFieldViews = List.of(
+        new DocumentMailMergeFieldView("TEST_MNEMONIC_1", "Test description 1"),
+        new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
+    );
 
     when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
     when(documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
+    when(
+        fieldConsentsDocumentMailMergeFieldService.getApplicableDocumentMailMergeFieldViews(
+            documentInstanceDto.documentTemplateDto()
+        )
+    ).thenReturn(applicableDocumentMailMergeFieldViews);
 
     mockMvc.perform(get(ReverseRouter.route(on(DocumentInstanceSectionController.class)
             .getAddDocumentInstanceSectionAfter(DOCUMENT_INSTANCE_SECTION_ID)))
@@ -229,9 +285,10 @@ class DocumentInstanceSectionControllerTest extends AbstractControllerTest {
         .andExpect(view().name("fcs/document/addOrEditDocumentInstanceSection"))
         .andExpect(model().attribute("form", DocumentInstanceSectionForm.empty()))
         .andExpect(model().attribute("pageTitle", DocumentInstanceSectionController.ADD_PAGE_TITLE))
+        .andExpect(model().attribute("mailMergeFieldViews", applicableDocumentMailMergeFieldViews))
         .andExpect(model().attribute("submitButtonText", DocumentInstanceSectionController.ADD_SUBMIT_BUTTON_TEXT))
         .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(DocumentInstanceController.class)
-            .getViewDocumentInstance(documentInstanceSectionDto.documentInstanceDto().id()))));
+            .getViewDocumentInstance(documentInstanceDto.id()))));
   }
 
   @SecurityTest
@@ -256,24 +313,45 @@ class DocumentInstanceSectionControllerTest extends AbstractControllerTest {
   @Test
   void addDocumentInstanceSectionAfter_invalidForm() throws Exception {
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
+    var documentInstanceDto = documentInstanceSectionDto.documentInstanceDto();
+
+    var applicableDocumentMailMergeFieldViews = List.of(
+        new DocumentMailMergeFieldView("TEST_MNEMONIC_1", "Test description 1"),
+        new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
+    );
 
     when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
     when(documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
 
+    doAnswer(invocation -> {
+      var bindingResult = (BindingResult) invocation.getArgument(2);
+      bindingResult.rejectValue("title", "code", "message");
+      return bindingResult;
+    })
+        .when(documentInstanceSectionFormValidator)
+        .validate(any(), any(), any());
+
+    when(
+        fieldConsentsDocumentMailMergeFieldService.getApplicableDocumentMailMergeFieldViews(
+            documentInstanceDto.documentTemplateDto()
+        )
+    ).thenReturn(applicableDocumentMailMergeFieldViews);
+
     mockMvc.perform(post(ReverseRouter.route(on(DocumentInstanceSectionController.class)
             .addDocumentInstanceSectionAfter(DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
             .with(csrf())
-            .with(user(user))
-            .param("title", "")
-            .param("content", "Test content"))
+            .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/document/addOrEditDocumentInstanceSection"))
         .andExpect(model().attributeExists("form"))
         .andExpect(model().attribute("pageTitle", DocumentInstanceSectionController.ADD_PAGE_TITLE))
+        .andExpect(model().attribute("mailMergeFieldViews", applicableDocumentMailMergeFieldViews))
         .andExpect(model().attribute("submitButtonText", DocumentInstanceSectionController.ADD_SUBMIT_BUTTON_TEXT))
         .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(DocumentInstanceController.class)
-            .getViewDocumentInstance(documentInstanceSectionDto.documentInstanceDto().id()))));
+            .getViewDocumentInstance(documentInstanceDto.id()))));
+
+    verify(documentInstanceSectionFormValidator).validate(any(), any(), any());
 
     verify(fieldConsentsDocumentInstanceSectionService, never())
         .createDocumentInstanceSection(any(), any(), any(), anyInt());
@@ -295,13 +373,13 @@ class DocumentInstanceSectionControllerTest extends AbstractControllerTest {
     mockMvc.perform(post(ReverseRouter.route(on(DocumentInstanceSectionController.class)
             .addDocumentInstanceSectionAfter(DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
             .with(csrf())
-            .with(user(user))
-            .param("title", "Test title")
-            .param("content", "Test content"))
+            .with(user(user)))
         .andExpect(status().is3xxRedirection())
         .andExpect(notificationBanner(expectedNotificationBanner))
         .andExpect(redirectedUrl(ReverseRouter.route(on(DocumentInstanceController.class)
             .getViewDocumentInstance(documentInstanceSectionDto.documentInstanceDto().id()))));
+
+    verify(documentInstanceSectionFormValidator).validate(any(), any(), any());
 
     verify(fieldConsentsDocumentInstanceSectionService).createDocumentInstanceSection(
         eq(documentInstanceSectionDto.documentInstanceDto()),
@@ -321,7 +399,6 @@ class DocumentInstanceSectionControllerTest extends AbstractControllerTest {
         .build();
 
     when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
-
     when(documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
     when(documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(parentId))
@@ -335,13 +412,13 @@ class DocumentInstanceSectionControllerTest extends AbstractControllerTest {
     mockMvc.perform(post(ReverseRouter.route(on(DocumentInstanceSectionController.class)
             .addDocumentInstanceSectionAfter(DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
             .with(csrf())
-            .with(user(user))
-            .param("title", "Test title")
-            .param("content", "Test content"))
+            .with(user(user)))
         .andExpect(status().is3xxRedirection())
         .andExpect(notificationBanner(expectedNotificationBanner))
         .andExpect(redirectedUrl(ReverseRouter.route(on(DocumentInstanceController.class)
             .getViewDocumentInstance(documentInstanceSectionDto.documentInstanceDto().id()))));
+
+    verify(documentInstanceSectionFormValidator).validate(any(), any(), any());
 
     verify(fieldConsentsDocumentInstanceSectionService).createDocumentInstanceSection(
         eq(documentInstanceSectionDto.documentInstanceDto()),
@@ -371,10 +448,21 @@ class DocumentInstanceSectionControllerTest extends AbstractControllerTest {
   @Test
   void getAddDocumentInstanceSubsection() throws Exception {
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
+    var documentInstanceDto = documentInstanceSectionDto.documentInstanceDto();
+
+    var applicableDocumentMailMergeFieldViews = List.of(
+        new DocumentMailMergeFieldView("TEST_MNEMONIC_1", "Test description 1"),
+        new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
+    );
 
     when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
     when(documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
+    when(
+        fieldConsentsDocumentMailMergeFieldService.getApplicableDocumentMailMergeFieldViews(
+            documentInstanceDto.documentTemplateDto()
+        )
+    ).thenReturn(applicableDocumentMailMergeFieldViews);
 
     mockMvc.perform(get(ReverseRouter.route(on(DocumentInstanceSectionController.class)
             .getAddDocumentInstanceSubsection(DOCUMENT_INSTANCE_SECTION_ID)))
@@ -383,9 +471,10 @@ class DocumentInstanceSectionControllerTest extends AbstractControllerTest {
         .andExpect(view().name("fcs/document/addOrEditDocumentInstanceSection"))
         .andExpect(model().attribute("form", DocumentInstanceSectionForm.empty()))
         .andExpect(model().attribute("pageTitle", DocumentInstanceSectionController.ADD_PAGE_TITLE))
+        .andExpect(model().attribute("mailMergeFieldViews", applicableDocumentMailMergeFieldViews))
         .andExpect(model().attribute("submitButtonText", DocumentInstanceSectionController.ADD_SUBMIT_BUTTON_TEXT))
         .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(DocumentInstanceController.class)
-            .getViewDocumentInstance(documentInstanceSectionDto.documentInstanceDto().id()))));
+            .getViewDocumentInstance(documentInstanceDto.id()))));
   }
 
   @SecurityTest
@@ -410,24 +499,44 @@ class DocumentInstanceSectionControllerTest extends AbstractControllerTest {
   @Test
   void addDocumentInstanceSubsection_invalidForm() throws Exception {
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
+    var documentInstanceDto = documentInstanceSectionDto.documentInstanceDto();
+
+    var applicableDocumentMailMergeFieldViews = List.of(
+        new DocumentMailMergeFieldView("TEST_MNEMONIC_1", "Test description 1"),
+        new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
+    );
 
     when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
     when(documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
+    when(
+        fieldConsentsDocumentMailMergeFieldService.getApplicableDocumentMailMergeFieldViews(
+            documentInstanceDto.documentTemplateDto()
+        )
+    ).thenReturn(applicableDocumentMailMergeFieldViews);
+
+    doAnswer(invocation -> {
+      var bindingResult = (BindingResult) invocation.getArgument(2);
+      bindingResult.rejectValue("title", "code", "message");
+      return bindingResult;
+    })
+        .when(documentInstanceSectionFormValidator)
+        .validate(any(), any(), any());
 
     mockMvc.perform(post(ReverseRouter.route(on(DocumentInstanceSectionController.class)
             .addDocumentInstanceSubsection(DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
             .with(csrf())
-            .with(user(user))
-            .param("title", "")
-            .param("content", "Test content"))
+            .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/document/addOrEditDocumentInstanceSection"))
         .andExpect(model().attributeExists("form"))
         .andExpect(model().attribute("pageTitle", DocumentInstanceSectionController.ADD_PAGE_TITLE))
+        .andExpect(model().attribute("mailMergeFieldViews", applicableDocumentMailMergeFieldViews))
         .andExpect(model().attribute("submitButtonText", DocumentInstanceSectionController.ADD_SUBMIT_BUTTON_TEXT))
         .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(DocumentInstanceController.class)
-            .getViewDocumentInstance(documentInstanceSectionDto.documentInstanceDto().id()))));
+            .getViewDocumentInstance(documentInstanceDto.id()))));
+
+    verify(documentInstanceSectionFormValidator).validate(any(), any(), any());
 
     verify(fieldConsentsDocumentInstanceSectionService, never())
         .createDocumentInstanceSection(any(), any(), any(), anyInt());
@@ -449,13 +558,13 @@ class DocumentInstanceSectionControllerTest extends AbstractControllerTest {
     mockMvc.perform(post(ReverseRouter.route(on(DocumentInstanceSectionController.class)
             .addDocumentInstanceSubsection(DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
             .with(csrf())
-            .with(user(user))
-            .param("title", "Test title")
-            .param("content", "Test content"))
+            .with(user(user)))
         .andExpect(status().is3xxRedirection())
         .andExpect(notificationBanner(expectedNotificationBanner))
         .andExpect(redirectedUrl(ReverseRouter.route(on(DocumentInstanceController.class)
             .getViewDocumentInstance(documentInstanceSectionDto.documentInstanceDto().id()))));
+
+    verify(documentInstanceSectionFormValidator).validate(any(), any(), any());
 
     verify(fieldConsentsDocumentInstanceSectionService).createDocumentInstanceSection(
         eq(documentInstanceSectionDto.documentInstanceDto()),
@@ -485,10 +594,21 @@ class DocumentInstanceSectionControllerTest extends AbstractControllerTest {
   @Test
   void getEditDocumentInstanceSection() throws Exception {
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
+    var documentInstanceDto = documentInstanceSectionDto.documentInstanceDto();
+
+    var applicableDocumentMailMergeFieldViews = List.of(
+        new DocumentMailMergeFieldView("TEST_MNEMONIC_1", "Test description 1"),
+        new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
+    );
 
     when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
     when(documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
+    when(
+        fieldConsentsDocumentMailMergeFieldService.getApplicableDocumentMailMergeFieldViews(
+            documentInstanceDto.documentTemplateDto()
+        )
+    ).thenReturn(applicableDocumentMailMergeFieldViews);
 
     mockMvc.perform(get(ReverseRouter.route(on(DocumentInstanceSectionController.class)
             .getEditDocumentInstanceSection(DOCUMENT_INSTANCE_SECTION_ID)))
@@ -497,9 +617,10 @@ class DocumentInstanceSectionControllerTest extends AbstractControllerTest {
         .andExpect(view().name("fcs/document/addOrEditDocumentInstanceSection"))
         .andExpect(model().attribute("form", DocumentInstanceSectionForm.from(documentInstanceSectionDto)))
         .andExpect(model().attribute("pageTitle", DocumentInstanceSectionController.EDIT_PAGE_TITLE))
+        .andExpect(model().attribute("mailMergeFieldViews", applicableDocumentMailMergeFieldViews))
         .andExpect(model().attribute("submitButtonText", DocumentInstanceSectionController.EDIT_SUBMIT_BUTTON_TEXT))
         .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(DocumentInstanceController.class)
-            .getViewDocumentInstance(documentInstanceSectionDto.documentInstanceDto().id()))));
+            .getViewDocumentInstance(documentInstanceDto.id()))));
   }
 
   @SecurityTest
@@ -524,24 +645,45 @@ class DocumentInstanceSectionControllerTest extends AbstractControllerTest {
   @Test
   void editDocumentInstanceSection_invalidForm() throws Exception {
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
+    var documentInstanceDto = documentInstanceSectionDto.documentInstanceDto();
+
+    var applicableDocumentMailMergeFieldViews = List.of(
+        new DocumentMailMergeFieldView("TEST_MNEMONIC_1", "Test description 1"),
+        new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
+    );
 
     when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
     when(documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
 
+    doAnswer(invocation -> {
+      var bindingResult = (BindingResult) invocation.getArgument(2);
+      bindingResult.rejectValue("title", "code", "message");
+      return bindingResult;
+    })
+        .when(documentInstanceSectionFormValidator)
+        .validate(any(), any(), any());
+
+    when(
+        fieldConsentsDocumentMailMergeFieldService.getApplicableDocumentMailMergeFieldViews(
+            documentInstanceDto.documentTemplateDto()
+        )
+    ).thenReturn(applicableDocumentMailMergeFieldViews);
+
     mockMvc.perform(post(ReverseRouter.route(on(DocumentInstanceSectionController.class)
             .editDocumentInstanceSection(DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
             .with(csrf())
-            .with(user(user))
-            .param("title", "")
-            .param("content", "Test content"))
+            .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/document/addOrEditDocumentInstanceSection"))
         .andExpect(model().attributeExists("form"))
         .andExpect(model().attribute("pageTitle", DocumentInstanceSectionController.EDIT_PAGE_TITLE))
+        .andExpect(model().attribute("mailMergeFieldViews", applicableDocumentMailMergeFieldViews))
         .andExpect(model().attribute("submitButtonText", DocumentInstanceSectionController.EDIT_SUBMIT_BUTTON_TEXT))
         .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(DocumentInstanceController.class)
-            .getViewDocumentInstance(documentInstanceSectionDto.documentInstanceDto().id()))));
+            .getViewDocumentInstance(documentInstanceDto.id()))));
+
+    verify(documentInstanceSectionFormValidator).validate(any(), any(), any());
 
     verify(fieldConsentsDocumentInstanceSectionService, never())
         .editDocumentInstanceSection(any(), any());
@@ -563,13 +705,13 @@ class DocumentInstanceSectionControllerTest extends AbstractControllerTest {
     mockMvc.perform(post(ReverseRouter.route(on(DocumentInstanceSectionController.class)
             .editDocumentInstanceSection(DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
             .with(csrf())
-            .with(user(user))
-            .param("title", "Test title")
-            .param("content", "Test content"))
+            .with(user(user)))
         .andExpect(status().is3xxRedirection())
         .andExpect(notificationBanner(expectedNotificationBanner))
         .andExpect(redirectedUrl(ReverseRouter.route(on(DocumentInstanceController.class)
             .getViewDocumentInstance(documentInstanceSectionDto.documentInstanceDto().id()))));
+
+    verify(documentInstanceSectionFormValidator).validate(any(), any(), any());
 
     verify(fieldConsentsDocumentInstanceSectionService)
         .editDocumentInstanceSection(eq(documentInstanceSectionDto), any());

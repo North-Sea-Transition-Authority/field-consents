@@ -33,6 +33,7 @@ public class DocumentTemplateSectionController {
 
   private final FieldConsentsDocumentTemplateSectionService fieldConsentsDocumentTemplateSectionService;
   private final FieldConsentsDocumentTemplateSectionConditionService fieldConsentsDocumentTemplateSectionConditionService;
+  private final FieldConsentsDocumentMailMergeFieldService fieldConsentsDocumentMailMergeFieldService;
   private final DocumentTemplateSectionService documentTemplateSectionService;
   private final DocumentTemplateSectionFormValidator documentTemplateSectionFormValidator;
 
@@ -40,11 +41,13 @@ public class DocumentTemplateSectionController {
   DocumentTemplateSectionController(
       FieldConsentsDocumentTemplateSectionService fieldConsentsDocumentTemplateSectionService,
       FieldConsentsDocumentTemplateSectionConditionService fieldConsentsDocumentTemplateSectionConditionService,
+      FieldConsentsDocumentMailMergeFieldService fieldConsentsDocumentMailMergeFieldService,
       DocumentTemplateSectionService documentTemplateSectionService,
       DocumentTemplateSectionFormValidator documentTemplateSectionFormValidator
   ) {
     this.fieldConsentsDocumentTemplateSectionService = fieldConsentsDocumentTemplateSectionService;
     this.fieldConsentsDocumentTemplateSectionConditionService = fieldConsentsDocumentTemplateSectionConditionService;
+    this.fieldConsentsDocumentMailMergeFieldService = fieldConsentsDocumentMailMergeFieldService;
     this.documentTemplateSectionService = documentTemplateSectionService;
     this.documentTemplateSectionFormValidator = documentTemplateSectionFormValidator;
   }
@@ -147,6 +150,8 @@ public class DocumentTemplateSectionController {
       DocumentTemplateSectionDto documentTemplateSectionDto,
       DocumentTemplateSectionForm form
   ) {
+    var documentTemplateDto = documentTemplateSectionDto.documentTemplateDto();
+
     return new ModelAndView("fcs/document/addOrEditDocumentTemplateSection")
         .addObject("form", form)
         .addObject("pageTitle", ADD_PAGE_TITLE)
@@ -154,11 +159,14 @@ public class DocumentTemplateSectionController {
             "conditionsFdsSelectMap",
             fieldConsentsDocumentTemplateSectionConditionService.getConditionsFdsSelectMap()
         )
+        .addObject(
+            "mailMergeFieldViews",
+            fieldConsentsDocumentMailMergeFieldService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto)
+        )
         .addObject("submitButtonText", ADD_SUBMIT_BUTTON_TEXT)
         .addObject(
             "cancelUrl",
-            ReverseRouter.route(on(DocumentTemplateController.class)
-                .getViewDocumentTemplate(documentTemplateSectionDto.documentTemplateDto().id()))
+            ReverseRouter.route(on(DocumentTemplateController.class).getViewDocumentTemplate(documentTemplateDto.id()))
         );
   }
 
@@ -170,14 +178,16 @@ public class DocumentTemplateSectionController {
       @Nullable DocumentTemplateSectionDto parentDto,
       int displayOrder
   ) {
-    documentTemplateSectionFormValidator.validate(form, bindingResult);
+    var documentTemplateDto = documentTemplateSectionDto.documentTemplateDto();
+
+    documentTemplateSectionFormValidator.validate(form, documentTemplateDto, bindingResult);
 
     if (bindingResult.hasErrors()) {
       return getAddDocumentTemplateSectionModelAndView(documentTemplateSectionDto, form);
     }
 
     fieldConsentsDocumentTemplateSectionService.createDocumentTemplateSection(
-        documentTemplateSectionDto.documentTemplateDto(),
+        documentTemplateDto,
         parentDto,
         form,
         displayOrder
@@ -186,7 +196,7 @@ public class DocumentTemplateSectionController {
     NotificationBannerUtil.addSuccessNotification(redirectAttributes, "Section added");
 
     return ReverseRouter.redirect(on(DocumentTemplateController.class)
-        .getViewDocumentTemplate(documentTemplateSectionDto.documentTemplateDto().id()));
+        .getViewDocumentTemplate(documentTemplateDto.id()));
   }
 
   @GetMapping("/edit")
@@ -207,8 +217,9 @@ public class DocumentTemplateSectionController {
   ) {
     var documentTemplateSectionDto =
         documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(documentTemplateSectionId);
+    var documentTemplateDto = documentTemplateSectionDto.documentTemplateDto();
 
-    documentTemplateSectionFormValidator.validate(form, bindingResult);
+    documentTemplateSectionFormValidator.validate(form, documentTemplateDto, bindingResult);
 
     if (bindingResult.hasErrors()) {
       return getEditDocumentTemplateSectionModelAndView(documentTemplateSectionDto, form);
@@ -219,13 +230,15 @@ public class DocumentTemplateSectionController {
     NotificationBannerUtil.addSuccessNotification(redirectAttributes, "Section saved");
 
     return ReverseRouter.redirect(on(DocumentTemplateController.class)
-        .getViewDocumentTemplate(documentTemplateSectionDto.documentTemplateDto().id()));
+        .getViewDocumentTemplate(documentTemplateDto.id()));
   }
 
   private ModelAndView getEditDocumentTemplateSectionModelAndView(
       DocumentTemplateSectionDto documentTemplateSectionDto,
       DocumentTemplateSectionForm form
   ) {
+    var documentTemplateDto = documentTemplateSectionDto.documentTemplateDto();
+
     return new ModelAndView("fcs/document/addOrEditDocumentTemplateSection")
         .addObject("form", form)
         .addObject("pageTitle", EDIT_PAGE_TITLE)
@@ -233,11 +246,14 @@ public class DocumentTemplateSectionController {
             "conditionsFdsSelectMap",
             fieldConsentsDocumentTemplateSectionConditionService.getConditionsFdsSelectMap()
         )
+        .addObject(
+            "mailMergeFieldViews",
+            fieldConsentsDocumentMailMergeFieldService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto)
+        )
         .addObject("submitButtonText", EDIT_SUBMIT_BUTTON_TEXT)
         .addObject(
             "cancelUrl",
-            ReverseRouter.route(on(DocumentTemplateController.class)
-                .getViewDocumentTemplate(documentTemplateSectionDto.documentTemplateDto().id()))
+            ReverseRouter.route(on(DocumentTemplateController.class).getViewDocumentTemplate(documentTemplateDto.id()))
         );
   }
 

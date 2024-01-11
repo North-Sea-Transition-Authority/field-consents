@@ -62,8 +62,16 @@ class DocumentInstanceControllerTest extends AbstractControllerTest {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
 
     var documentInstanceSectionSummaryViews = List.of(
-        DocumentInstanceSectionSummaryView.from("1", DocumentInstanceSectionDtoTestUtil.builder().build()),
-        DocumentInstanceSectionSummaryView.from("2", DocumentInstanceSectionDtoTestUtil.builder().build())
+        DocumentInstanceSectionSummaryView.from(
+            "1",
+            DocumentInstanceSectionDtoTestUtil.builder().build(),
+            "Test content 1"
+        ),
+        DocumentInstanceSectionSummaryView.from(
+            "2",
+            DocumentInstanceSectionDtoTestUtil.builder().build(),
+            "Test content 2"
+        )
     );
 
     when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);

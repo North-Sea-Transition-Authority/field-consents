@@ -9,16 +9,22 @@ import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceDto;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceSectionDto;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceSectionService;
+import uk.co.nstauthority.fieldconsents.document.lib.DocumentMailMergeFieldService;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentSectionNumberingUtil;
 
 @Service
 public class FieldConsentsDocumentInstanceSectionService {
 
   private final DocumentInstanceSectionService documentInstanceSectionService;
+  private final DocumentMailMergeFieldService documentMailMergeFieldService;
 
   @Autowired
-  FieldConsentsDocumentInstanceSectionService(DocumentInstanceSectionService documentInstanceSectionService) {
+  FieldConsentsDocumentInstanceSectionService(
+      DocumentInstanceSectionService documentInstanceSectionService,
+      DocumentMailMergeFieldService documentMailMergeFieldService
+  ) {
     this.documentInstanceSectionService = documentInstanceSectionService;
+    this.documentMailMergeFieldService = documentMailMergeFieldService;
   }
 
   List<DocumentInstanceSectionSummaryView> getDocumentInstanceSectionSummaryViews(
@@ -51,8 +57,10 @@ public class FieldConsentsDocumentInstanceSectionService {
           i + 1
       );
 
+      var content = documentMailMergeFieldService.resolveMailMergeFields(documentInstanceSectionDto);
+
       var documentInstanceSectionSummaryView =
-          DocumentInstanceSectionSummaryView.from(sectionNumberString, documentInstanceSectionDto);
+          DocumentInstanceSectionSummaryView.from(sectionNumberString, documentInstanceSectionDto, content);
       documentInstanceSectionSummaryViews.add(documentInstanceSectionSummaryView);
 
       var childrenDocumentInstanceSectionSummaryViews = getDocumentInstanceSectionSummaryViewsForSectionSiblings(

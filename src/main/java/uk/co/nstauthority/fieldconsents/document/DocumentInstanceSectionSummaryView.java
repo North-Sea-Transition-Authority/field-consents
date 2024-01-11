@@ -17,13 +17,14 @@ public record DocumentInstanceSectionSummaryView(
 
   static DocumentInstanceSectionSummaryView from(
       String sectionNumberString,
-      DocumentInstanceSectionDto documentInstanceSectionDto
+      DocumentInstanceSectionDto documentInstanceSectionDto,
+      String content
   ) {
     var documentInstanceSectionId = documentInstanceSectionDto.id();
 
     return new DocumentInstanceSectionSummaryView(
         "%s %s".formatted(sectionNumberString, documentInstanceSectionDto.title()),
-        documentInstanceSectionDto.content(),
+        content,
         ReverseRouter.route(on(DocumentInstanceSectionController.class)
             .getAddDocumentInstanceSectionBefore(documentInstanceSectionId)),
         ReverseRouter.route(on(DocumentInstanceSectionController.class)
