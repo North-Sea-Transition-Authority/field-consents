@@ -56,6 +56,8 @@ public class ApplicationVersion {
   @Enumerated(EnumType.STRING)
   private RegulatorTeamRole currentCaseOwner;
 
+  private Boolean migrated;
+
   public ApplicationVersion() {
   }
 
@@ -63,7 +65,7 @@ public class ApplicationVersion {
   public ApplicationVersion(Integer id, Application application, Integer version, Integer primaryOperatorOuId,
                             String cachedPrimaryOperatorName, Instant createdDateTime, Long createdByWuaId,
                             Instant submittedDateTime, Long submittedByWuaId, ApplicationVersionStatus status,
-                            Long caseOfficerWuaId) {
+                            Long caseOfficerWuaId, Boolean migrated) {
     this.id = id;
     this.application = application;
     this.version = version;
@@ -75,6 +77,7 @@ public class ApplicationVersion {
     this.submittedByWuaId = submittedByWuaId;
     this.status = status;
     this.caseOfficerWuaId = caseOfficerWuaId;
+    this.migrated = migrated;
   }
 
   public Integer getId() {
@@ -189,6 +192,14 @@ public class ApplicationVersion {
   public void setCurrentCaseOwner(
       RegulatorTeamRole currentCaseOwner) {
     this.currentCaseOwner = currentCaseOwner;
+  }
+
+  public Boolean getMigrated() {
+    return migrated;
+  }
+
+  public void setMigrated(Boolean migrated) {
+    this.migrated = migrated;
   }
 
   @Override

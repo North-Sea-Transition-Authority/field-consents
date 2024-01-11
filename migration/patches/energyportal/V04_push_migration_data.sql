@@ -1,6 +1,7 @@
 
 -- Full execution time
--- dev to local: 32mins 39secs
+-- dev to local: 32mins 39secs - run 1
+-- dev to local: 12mins 01secs - run 2
 
 --SELECT *
 --FROM "fcs"."applications"@fcs_postgres_db;
@@ -74,7 +75,6 @@ BEGIN
     , "created_by_wua_id"
     , "variation_no"
     , "application_no"
-    --, "fc_id"
     ) VALUES (
       rec.id
     , rec.type
@@ -82,7 +82,6 @@ BEGIN
     , rec.created_by_wua_id
     , rec.variation_no
     , rec.application_no
-    --, rec.fc_id -- TODO add flag?
     );
   
   END LOOP;
@@ -113,6 +112,8 @@ BEGIN
     , "submitted_by_wua_id"
     , "case_officer_wua_id"
     , "cam_wua_id"
+    , "current_case_owner"
+    , "migrated"
     ) VALUES (
       rec.id
     , rec.application_id
@@ -126,6 +127,8 @@ BEGIN
     , rec.submitted_by_wua_id
     , rec.case_officer_wua_id
     , rec.cam_wua_id
+    , rec.current_case_owner
+    , rec.migrated
     );
   
   END LOOP;

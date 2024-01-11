@@ -90,6 +90,7 @@ INSERT INTO fcs_migration.application_versions (
 , submitted_by_wua_id
 , case_officer_wua_id
 , cam_wua_id
+, migrated
 )
 WITH stage_assignments AS (
   SELECT /*+ materialize */
@@ -161,6 +162,7 @@ SELECT
     WHERE ta.fcd_uref = fcd.id||'FC'
     AND ta.assignment_role = 'CONSENTS_AND_AUTHORISATIONS_MANAGER'
   ) cam_wua_id
+, 'true' migrated
 FROM envmgr.field_consent_details fcd
 JOIN fcs_migration.applications ap ON ap.fc_id = fcd.fc_id AND ap.variation_no = fcd.variation_no  
 JOIN envmgr.xview_field_consent_details xfcd ON xfcd.fcd_id = fcd.id

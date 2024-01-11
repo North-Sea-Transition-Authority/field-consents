@@ -49,7 +49,8 @@ public class ApplicationTestUtil {
         null,
         null,
         ApplicationVersionStatus.IN_PROGRESS,
-        null);
+        null,
+        false);
   }
 
   private static Application getAwaitingPaymentApplicationWithType(ApplicationType applicationType) {
@@ -81,8 +82,8 @@ public class ApplicationTestUtil {
         null,
         null,
         ApplicationVersionStatus.AWAITING_PAYMENT,
-        null
-    );
+        null,
+        false);
   }
 
   private static Application getSubmittedApplicationWithType(ApplicationType applicationType) {
@@ -108,7 +109,8 @@ public class ApplicationTestUtil {
         Instant.now(),
         USER_WUA_ID,
         ApplicationVersionStatus.SUBMITTED,
-        null);
+        null,
+        false);
 
     submittedApplicationVersion.setSubmittedDateTime(Instant.now().plus(3, ChronoUnit.DAYS));
     submittedApplicationVersion.setSubmittedByWuaId(USER_WUA_ID);

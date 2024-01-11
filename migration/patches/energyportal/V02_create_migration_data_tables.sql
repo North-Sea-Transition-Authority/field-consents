@@ -96,6 +96,7 @@ CREATE TABLE fcs_migration.application_versions (
 , case_officer_wua_id          INTEGER -- Range 6/Administrator/Revision Admin
 , cam_wua_id                   INTEGER -- Range 10
 , current_case_owner           VARCHAR2(4000)
+, migrated                     VARCHAR2(5) NOT NULL -- always true
 );
 
 

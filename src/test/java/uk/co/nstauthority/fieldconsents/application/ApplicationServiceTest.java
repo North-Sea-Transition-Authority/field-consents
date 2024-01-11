@@ -112,7 +112,8 @@ class ApplicationServiceTest {
     when(applicationRepository.save(any(Application.class))).thenReturn(newApplication);
 
     ApplicationVersion newApplicationVersion = new ApplicationVersion(1, newApplication, 1, organisationUnitJson.organisationUnitId(),
-        organisationUnitJson.name(), Instant.now(), USER_WUA_ID, null, null, ApplicationVersionStatus.IN_PROGRESS, null);
+        organisationUnitJson.name(), Instant.now(), USER_WUA_ID, null, null, ApplicationVersionStatus.IN_PROGRESS, null,
+        false);
     when(applicationVersionRepository.save(any(ApplicationVersion.class))).thenReturn(newApplicationVersion);
 
     ApplicationAsset applicationAsset = ApplicationAssetTestUtil.fieldAsset1;
@@ -146,7 +147,8 @@ class ApplicationServiceTest {
     when(applicationRepository.save(any(Application.class))).thenReturn(newApplication);
 
     ApplicationVersion newApplicationVersion = new ApplicationVersion(1, newApplication, 1, organisationUnitJson.organisationUnitId(),
-        organisationUnitJson.name(), Instant.now(), USER_WUA_ID, null, null, ApplicationVersionStatus.IN_PROGRESS, null);
+        organisationUnitJson.name(), Instant.now(), USER_WUA_ID, null, null, ApplicationVersionStatus.IN_PROGRESS, null,
+        false);
     when(applicationVersionRepository.save(any(ApplicationVersion.class))).thenReturn(newApplicationVersion);
 
     ApplicationVersion expectedApplicationVersion = applicationService.createNewApplicationForTerminal(

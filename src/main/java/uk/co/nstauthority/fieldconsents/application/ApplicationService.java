@@ -117,6 +117,7 @@ public class ApplicationService {
     applicationVersion.setStatus(ApplicationVersionStatus.IN_PROGRESS);
     applicationVersion.setPrimaryOperatorOuId(operatorOuJson.organisationUnitId());
     applicationVersion.setCachedPrimaryOperatorName(operatorOuJson.name());
+    applicationVersion.setMigrated(false);
     return applicationVersionRepository.save(applicationVersion);
   }
 
@@ -250,6 +251,7 @@ public class ApplicationService {
     newApplicationVersion.setCaseOfficerWuaId(applicationVersion.getCaseOfficerWuaId());
     newApplicationVersion.setCamWuaId(applicationVersion.getCamWuaId());
     newApplicationVersion.setCurrentCaseOwner(applicationVersion.getCurrentCaseOwner());
+    newApplicationVersion.setMigrated(false);
     return applicationVersionRepository.save(newApplicationVersion);
   }
 
