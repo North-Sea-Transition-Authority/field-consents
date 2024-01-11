@@ -12,6 +12,7 @@ public record DocumentTemplateSectionDto(
     String title,
     String content,
     String conditionMnemonic,
+    boolean numbered,
     int displayOrder,
     List<DocumentTemplateSectionDto> children
 ) {
@@ -35,6 +36,7 @@ public record DocumentTemplateSectionDto(
         documentTemplateSection.getTitle(),
         documentTemplateSection.getContent(),
         documentTemplateSection.getConditionMnemonic(),
+        documentTemplateSection.isNumbered(),
         documentTemplateSection.getDisplayOrder(),
         children
     );

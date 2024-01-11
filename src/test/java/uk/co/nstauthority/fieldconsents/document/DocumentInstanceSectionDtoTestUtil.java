@@ -19,6 +19,7 @@ class DocumentInstanceSectionDtoTestUtil {
     private UUID parentId;
     private String title = "Test title";
     private String content = "Test content";
+    private boolean numbered = true;
     private int displayOrder = 1;
     private List<DocumentInstanceSectionDto> children = List.of();
 
@@ -55,6 +56,11 @@ class DocumentInstanceSectionDtoTestUtil {
       return this;
     }
 
+    Builder withNumbered(boolean numbered) {
+      this.numbered = numbered;
+      return this;
+    }
+
     Builder withDisplayOrder(int displayOrder) {
       this.displayOrder = displayOrder;
       return this;
@@ -73,6 +79,7 @@ class DocumentInstanceSectionDtoTestUtil {
           parentId,
           title,
           content,
+          numbered,
           displayOrder,
           children
       );

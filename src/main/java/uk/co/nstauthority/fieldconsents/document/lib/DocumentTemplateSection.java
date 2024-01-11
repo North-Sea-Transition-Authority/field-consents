@@ -31,6 +31,8 @@ class DocumentTemplateSection {
 
   private String conditionMnemonic;
 
+  private boolean numbered;
+
   private int displayOrder;
 
   protected DocumentTemplateSection() {
@@ -82,6 +84,14 @@ class DocumentTemplateSection {
 
   void setConditionMnemonic(String conditionMnemonic) {
     this.conditionMnemonic = conditionMnemonic;
+  }
+
+  boolean isNumbered() {
+    return numbered;
+  }
+
+  void setNumbered(boolean numbered) {
+    this.numbered = numbered;
   }
 
   int getDisplayOrder() {

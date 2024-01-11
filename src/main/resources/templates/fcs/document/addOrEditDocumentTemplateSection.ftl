@@ -21,6 +21,11 @@
 
     <@fdsTextarea.textarea path="form.content" labelText="Text" rows = "12" />
 
+    <@fdsRadio.radioGroup path="form.numbered" labelText="Should this section be numbered?">
+      <@fdsRadio.radioYes path="form.numbered" />
+      <@fdsRadio.radioNo path="form.numbered" />
+    </@fdsRadio.radioGroup>
+
     <#if mailMergeFieldViews?has_content>
       <@_mailMergeFieldSummaryDetails.mailMergeFieldSummaryDetails mailMergeFieldViews />
     </#if>

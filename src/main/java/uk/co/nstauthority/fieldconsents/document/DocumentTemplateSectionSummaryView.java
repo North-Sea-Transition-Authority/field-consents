@@ -24,8 +24,15 @@ public record DocumentTemplateSectionSummaryView(
   ) {
     var documentTemplateSectionId = documentTemplateSectionDto.id();
 
+    String title;
+    if (documentTemplateSectionDto.numbered()) {
+      title = "%s %s".formatted(sectionNumberString, documentTemplateSectionDto.title());
+    } else {
+      title = documentTemplateSectionDto.title();
+    }
+
     return new DocumentTemplateSectionSummaryView(
-        "%s %s".formatted(sectionNumberString, documentTemplateSectionDto.title()),
+        title,
         documentTemplateSectionDto.content(),
         conditionTitle,
         ReverseRouter.route(on(DocumentTemplateSectionController.class)

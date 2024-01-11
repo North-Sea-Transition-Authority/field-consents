@@ -11,6 +11,7 @@ class DocumentTemplateSectionFormTestUtil {
     private String title = "Test form title";
     private String content = "Test form content";
     private String conditionMnemonic;
+    private Boolean numbered = true;
 
     private Builder() {
     }
@@ -30,8 +31,13 @@ class DocumentTemplateSectionFormTestUtil {
       return this;
     }
 
+    Builder withNumbered(Boolean numbered) {
+      this.numbered = numbered;
+      return this;
+    }
+
     DocumentTemplateSectionForm build() {
-      return new DocumentTemplateSectionForm(title, content, conditionMnemonic);
+      return new DocumentTemplateSectionForm(title, content, conditionMnemonic, numbered);
     }
   }
 }

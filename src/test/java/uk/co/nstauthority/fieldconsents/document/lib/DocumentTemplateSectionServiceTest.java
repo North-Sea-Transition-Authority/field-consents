@@ -40,6 +40,7 @@ class DocumentTemplateSectionServiceTest {
     var title = "Test title";
     var content = "Test content";
     var conditionMnemonic = "Test condition mnemonic";
+    var numbered = true;
     var displayOrder = 1;
 
     var documentTemplate = DocumentTemplateTestUtil.builder().build();
@@ -64,6 +65,7 @@ class DocumentTemplateSectionServiceTest {
         title,
         content,
         conditionMnemonic,
+        numbered,
         displayOrder
     );
 
@@ -85,6 +87,7 @@ class DocumentTemplateSectionServiceTest {
             DocumentTemplateSection::getTitle,
             DocumentTemplateSection::getContent,
             DocumentTemplateSection::getConditionMnemonic,
+            DocumentTemplateSection::isNumbered,
             DocumentTemplateSection::getDisplayOrder
         )
         .containsExactly(
@@ -93,6 +96,7 @@ class DocumentTemplateSectionServiceTest {
             title,
             content,
             conditionMnemonic,
+            numbered,
             displayOrder
         );
 
@@ -113,6 +117,7 @@ class DocumentTemplateSectionServiceTest {
     var title = "Test title";
     var content = "Test content";
     var conditionMnemonic = "TEST_CONDITION_MNEMONIC";
+    var numbered = true;
     var displayOrder = 1;
 
     var documentTemplate = DocumentTemplateTestUtil.builder().build();
@@ -139,6 +144,7 @@ class DocumentTemplateSectionServiceTest {
         title,
         content,
         conditionMnemonic,
+        numbered,
         displayOrder
     );
 
@@ -160,6 +166,7 @@ class DocumentTemplateSectionServiceTest {
             DocumentTemplateSection::getTitle,
             DocumentTemplateSection::getContent,
             DocumentTemplateSection::getConditionMnemonic,
+            DocumentTemplateSection::isNumbered,
             DocumentTemplateSection::getDisplayOrder
         )
         .containsExactly(
@@ -168,6 +175,7 @@ class DocumentTemplateSectionServiceTest {
             title,
             content,
             conditionMnemonic,
+            numbered,
             displayOrder
         );
 
@@ -184,6 +192,7 @@ class DocumentTemplateSectionServiceTest {
     var title = "Tedt edited title";
     var content = "Test edited content";
     var conditionMnemonic = "TEST_CONDITION_MNEMONIC";
+    var numbered = true;
 
     var documentTemplateSection = DocumentTemplateSectionTestUtil.builder().build();
 
@@ -195,19 +204,22 @@ class DocumentTemplateSectionServiceTest {
         documentTemplateSectionDto,
         title,
         content,
-        conditionMnemonic
+        conditionMnemonic,
+        numbered
     );
 
     assertThat(documentTemplateSection)
         .extracting(
             DocumentTemplateSection::getTitle,
             DocumentTemplateSection::getContent,
-            DocumentTemplateSection::getConditionMnemonic
+            DocumentTemplateSection::getConditionMnemonic,
+            DocumentTemplateSection::isNumbered
         )
         .containsExactly(
             title,
             content,
-            conditionMnemonic
+            conditionMnemonic,
+            numbered
         );
 
     verify(documentTemplateSectionRepository).save(documentTemplateSection);

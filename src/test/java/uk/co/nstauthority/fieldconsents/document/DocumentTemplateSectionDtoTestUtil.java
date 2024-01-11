@@ -19,6 +19,7 @@ class DocumentTemplateSectionDtoTestUtil {
     private String title = "Test title";
     private String content = "Test content";
     private String conditionMnemonic;
+    private boolean numbered = true;
     private int displayOrder = 1;
     private List<DocumentTemplateSectionDto> children = List.of();
 
@@ -55,6 +56,11 @@ class DocumentTemplateSectionDtoTestUtil {
       return this;
     }
 
+    Builder withNumbered(boolean numbered) {
+      this.numbered = numbered;
+      return this;
+    }
+
     Builder withDisplayOrder(int displayOrder) {
       this.displayOrder = displayOrder;
       return this;
@@ -73,6 +79,7 @@ class DocumentTemplateSectionDtoTestUtil {
           title,
           content,
           conditionMnemonic,
+          numbered,
           displayOrder,
           children
       );

@@ -27,6 +27,7 @@ class DocumentInstanceSectionDtoTest {
             null,
             documentInstanceSection.getTitle(),
             documentInstanceSection.getContent(),
+            documentInstanceSection.isNumbered(),
             documentInstanceSection.getDisplayOrder(),
             children
         )
@@ -55,6 +56,7 @@ class DocumentInstanceSectionDtoTest {
             null,
             documentInstanceSection.getTitle(),
             documentInstanceSection.getContent(),
+            documentInstanceSection.isNumbered(),
             documentInstanceSection.getDisplayOrder(),
             children
         )
@@ -83,6 +85,7 @@ class DocumentInstanceSectionDtoTest {
             parent.getId(),
             documentInstanceSection.getTitle(),
             documentInstanceSection.getContent(),
+            documentInstanceSection.isNumbered(),
             documentInstanceSection.getDisplayOrder(),
             children
         )

@@ -12,6 +12,7 @@ public record DocumentInstanceSectionDto(
     @Nullable UUID parentId,
     String title,
     String content,
+    boolean numbered,
     int displayOrder,
     List<DocumentInstanceSectionDto> children
 ) {
@@ -36,6 +37,7 @@ public record DocumentInstanceSectionDto(
         parent != null ? parent.getId() : null,
         documentInstanceSection.getTitle(),
         documentInstanceSection.getContent(),
+        documentInstanceSection.isNumbered(),
         documentInstanceSection.getDisplayOrder(),
         children
     );

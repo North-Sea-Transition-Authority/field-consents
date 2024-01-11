@@ -33,6 +33,8 @@ class DocumentInstanceSection {
 
   private String content;
 
+  private boolean numbered;
+
   private int displayOrder;
 
   protected DocumentInstanceSection() {
@@ -84,6 +86,14 @@ class DocumentInstanceSection {
 
   void setContent(String content) {
     this.content = content;
+  }
+
+  boolean isNumbered() {
+    return numbered;
+  }
+
+  void setNumbered(boolean numbered) {
+    this.numbered = numbered;
   }
 
   int getDisplayOrder() {

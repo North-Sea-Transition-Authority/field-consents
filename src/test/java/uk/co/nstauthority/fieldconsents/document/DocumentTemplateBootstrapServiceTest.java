@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.document;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -36,7 +37,7 @@ class DocumentTemplateBootstrapServiceTest {
 
     verify(documentTemplateService, never()).createDocumentTemplate(any(), any(), any(), any(), anyInt());
     verify(documentTemplateSectionService, never())
-        .createDocumentTemplateSection(any(), any(), any(), any(), any(), anyInt());
+        .createDocumentTemplateSection(any(), any(), any(), any(), any(), anyBoolean(), anyInt());
   }
 
   @Test
@@ -58,8 +59,17 @@ class DocumentTemplateBootstrapServiceTest {
         )
     ).thenReturn(productionDocumentTemplateDto);
 
-    when(documentTemplateSectionService.createDocumentTemplateSection(any(), any(), any(), any(), any(), anyInt()))
-        .thenReturn(null, secondSection, secondSectionFirstSubsection);
+    when(
+        documentTemplateSectionService.createDocumentTemplateSection(
+            any(),
+            any(),
+            any(),
+            any(),
+            any(),
+            anyBoolean(),
+            anyInt()
+        )
+    ).thenReturn(null, secondSection, secondSectionFirstSubsection);
 
     documentTemplateBootstrapService.onApplicationReadyEvent();
 
@@ -79,6 +89,7 @@ class DocumentTemplateBootstrapServiceTest {
         "First section",
         exampleContent,
         null,
+        true,
         1
     );
 
@@ -88,6 +99,7 @@ class DocumentTemplateBootstrapServiceTest {
         "Second section",
         exampleContent,
         null,
+        true,
         2
     );
 
@@ -97,6 +109,7 @@ class DocumentTemplateBootstrapServiceTest {
         "Second section first subsection",
         exampleContent,
         null,
+        true,
         1
     );
 
@@ -106,6 +119,7 @@ class DocumentTemplateBootstrapServiceTest {
         "Second section first subsection first subsection",
         exampleContent,
         null,
+        true,
         1
     );
 
@@ -115,6 +129,7 @@ class DocumentTemplateBootstrapServiceTest {
         "Second section second subsection",
         exampleContent,
         null,
+        true,
         2
     );
 

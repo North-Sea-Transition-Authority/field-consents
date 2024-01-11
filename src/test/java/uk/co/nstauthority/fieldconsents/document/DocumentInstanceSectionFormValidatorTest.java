@@ -64,9 +64,9 @@ class DocumentInstanceSectionFormValidatorTest {
 
     when(
         documentMailMergeFieldService.validateMailMergeFields(
-                documentInstanceDto.documentTemplateDto(),
-                form.content()
-            )
+            documentInstanceDto.documentTemplateDto(),
+            form.content()
+        )
     ).thenReturn(DocumentMailMergeValidationResult.invalid(mailMergeErrorMessage));
 
     documentInstanceSectionFormValidator.validate(form, documentInstanceDto, errors);
@@ -79,6 +79,34 @@ class DocumentInstanceSectionFormValidatorTest {
         )
         .containsExactly(
             tuple("content", "content.invalid", mailMergeErrorMessage)
+        );
+  }
+
+  @Test
+  void validate_numberedNull() {
+    var form = DocumentInstanceSectionFormTestUtil.builder()
+        .withNumbered(null)
+        .build();
+    var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
+    var errors = new BeanPropertyBindingResult(form, "form");
+
+    when(
+        documentMailMergeFieldService.validateMailMergeFields(
+            documentInstanceDto.documentTemplateDto(),
+            form.content()
+        )
+    ).thenReturn(DocumentMailMergeValidationResult.valid());
+
+    documentInstanceSectionFormValidator.validate(form, documentInstanceDto, errors);
+
+    assertThat(errors.getFieldErrors())
+        .extracting(
+            FieldError::getField,
+            FieldError::getCode,
+            FieldError::getDefaultMessage
+        )
+        .containsExactly(
+            tuple("numbered", "numbered.required", "Select if this section should be numbered")
         );
   }
 }

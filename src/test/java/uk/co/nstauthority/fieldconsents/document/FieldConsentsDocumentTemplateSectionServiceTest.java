@@ -60,11 +60,12 @@ class FieldConsentsDocumentTemplateSectionServiceTest {
 
     var siblingDocumentTemplateSectionDto1 =
         DocumentTemplateSectionDtoTestUtil.builder()
+            .withNumbered(false)
             .withDisplayOrder(1)
             .build();
 
-    var siblingDocumentTemplateSectionDto2Child1Child1 =
-        DocumentTemplateSectionDtoTestUtil.builder().build();
+    var siblingDocumentTemplateSectionDto2Child1Child1 = DocumentTemplateSectionDtoTestUtil.builder().build();
+
     var siblingDocumentTemplateSectionDto2Child1 =
         DocumentTemplateSectionDtoTestUtil.builder()
             .withConditionMnemonic(conditionMnemonic2)
@@ -73,8 +74,14 @@ class FieldConsentsDocumentTemplateSectionServiceTest {
             .build();
     var siblingDocumentTemplateSectionDto2Child2 =
         DocumentTemplateSectionDtoTestUtil.builder()
+            .withNumbered(false)
             .withDisplayOrder(2)
             .build();
+    var siblingDocumentTemplateSectionDto2Child3 =
+        DocumentTemplateSectionDtoTestUtil.builder()
+            .withDisplayOrder(3)
+            .build();
+
     var siblingDocumentTemplateSectionDto2 =
         DocumentTemplateSectionDtoTestUtil.builder()
             .withConditionMnemonic(conditionMnemonic1)
@@ -82,6 +89,7 @@ class FieldConsentsDocumentTemplateSectionServiceTest {
             .withChildren(
                 List.of(
                     siblingDocumentTemplateSectionDto2Child2,
+                    siblingDocumentTemplateSectionDto2Child3,
                     siblingDocumentTemplateSectionDto2Child1
                 )
             )
@@ -102,29 +110,34 @@ class FieldConsentsDocumentTemplateSectionServiceTest {
         )
     ).containsExactly(
         DocumentTemplateSectionSummaryView.from(
-            "1.1",
+            "",
             null,
             siblingDocumentTemplateSectionDto1
         ),
         DocumentTemplateSectionSummaryView.from(
-            "1.2",
+            "1.1",
             condition1.getTitle(),
             siblingDocumentTemplateSectionDto2
         ),
         DocumentTemplateSectionSummaryView.from(
-            "1.2.1",
+            "1.1.1",
             condition2.getTitle(),
             siblingDocumentTemplateSectionDto2Child1
         ),
         DocumentTemplateSectionSummaryView.from(
-            "1.2.1.1",
+            "1.1.1.1",
             null,
             siblingDocumentTemplateSectionDto2Child1Child1
         ),
         DocumentTemplateSectionSummaryView.from(
-            "1.2.2",
+            "",
             null,
             siblingDocumentTemplateSectionDto2Child2
+        ),
+        DocumentTemplateSectionSummaryView.from(
+            "1.1.2",
+            null,
+            siblingDocumentTemplateSectionDto2Child3
         )
     );
   }
@@ -149,6 +162,7 @@ class FieldConsentsDocumentTemplateSectionServiceTest {
         form.title(),
         form.content(),
         form.conditionMnemonic(),
+        form.numbered(),
         displayOrder
     );
   }
@@ -164,7 +178,8 @@ class FieldConsentsDocumentTemplateSectionServiceTest {
         documentTemplateSectionDto,
         form.title(),
         form.content(),
-        form.conditionMnemonic()
+        form.conditionMnemonic(),
+        form.numbered()
     );
   }
 }

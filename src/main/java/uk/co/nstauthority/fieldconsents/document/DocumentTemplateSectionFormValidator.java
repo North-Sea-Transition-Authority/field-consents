@@ -43,5 +43,9 @@ class DocumentTemplateSectionFormValidator {
         errors.rejectValue("content", "content.invalid", documentMailMergeValidationResult.errorMessage());
       }
     }
+
+    if (form.numbered() == null) {
+      errors.rejectValue("numbered", "numbered.required", "Select if this section should be numbered");
+    }
   }
 }

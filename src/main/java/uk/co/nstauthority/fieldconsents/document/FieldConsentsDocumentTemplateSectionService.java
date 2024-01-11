@@ -49,13 +49,21 @@ public class FieldConsentsDocumentTemplateSectionService {
         .sorted(Comparator.comparingInt(DocumentTemplateSectionDto::displayOrder))
         .toList();
 
-    for (var i = 0; i < sortedSiblingDocumentTemplateSectionDtos.size(); i++) {
-      var documentTemplateSectionDto = sortedSiblingDocumentTemplateSectionDtos.get(i);
+    var currentSectionNumber = 0;
 
-      var sectionNumberString = DocumentSectionNumberingUtil.getFullNumberSectionNumberString(
-          parentSectionNumberString,
-          i + 1
-      );
+    for (var documentTemplateSectionDto : sortedSiblingDocumentTemplateSectionDtos) {
+      String sectionNumberString;
+
+      if (documentTemplateSectionDto.numbered()) {
+        currentSectionNumber++;
+
+        sectionNumberString = DocumentSectionNumberingUtil.getFullNumberSectionNumberString(
+            parentSectionNumberString,
+            currentSectionNumber
+        );
+      } else {
+        sectionNumberString = null;
+      }
 
       var conditionMnemonic = documentTemplateSectionDto.conditionMnemonic();
       var conditionTitle = conditionMnemonic != null
@@ -89,6 +97,7 @@ public class FieldConsentsDocumentTemplateSectionService {
         form.title(),
         form.content(),
         form.conditionMnemonic(),
+        form.numbered(),
         displayOrder
     );
   }
@@ -101,7 +110,8 @@ public class FieldConsentsDocumentTemplateSectionService {
         documentTemplateSectionDto,
         form.title(),
         form.content(),
-        form.conditionMnemonic()
+        form.conditionMnemonic(),
+        form.numbered()
     );
   }
 }

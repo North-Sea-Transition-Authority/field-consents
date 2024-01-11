@@ -325,6 +325,7 @@ class DocumentInstanceSectionTemplateCopyingServiceTest {
         DocumentInstanceSection::getParent,
         DocumentInstanceSection::getTitle,
         DocumentInstanceSection::getContent,
+        DocumentInstanceSection::isNumbered,
         DocumentInstanceSection::getDisplayOrder
     ).containsExactly(
         documentInstance,
@@ -332,6 +333,7 @@ class DocumentInstanceSectionTemplateCopyingServiceTest {
         parent,
         documentTemplateSection.getTitle(),
         documentTemplateSection.getContent(),
+        documentTemplateSection.isNumbered(),
         documentTemplateSection.getDisplayOrder()
     );
   }

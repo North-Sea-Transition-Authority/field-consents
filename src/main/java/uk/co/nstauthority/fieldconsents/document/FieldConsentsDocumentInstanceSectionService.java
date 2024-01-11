@@ -49,13 +49,21 @@ public class FieldConsentsDocumentInstanceSectionService {
         .sorted(Comparator.comparingInt(DocumentInstanceSectionDto::displayOrder))
         .toList();
 
-    for (var i = 0; i < sortedSiblingDocumentInstanceSectionDtos.size(); i++) {
-      var documentInstanceSectionDto = sortedSiblingDocumentInstanceSectionDtos.get(i);
+    var currentSectionNumber = 0;
 
-      var sectionNumberString = DocumentSectionNumberingUtil.getFullNumberSectionNumberString(
-          parentSectionNumberString,
-          i + 1
-      );
+    for (var documentInstanceSectionDto : sortedSiblingDocumentInstanceSectionDtos) {
+      String sectionNumberString;
+
+      if (documentInstanceSectionDto.numbered()) {
+        currentSectionNumber++;
+
+        sectionNumberString = DocumentSectionNumberingUtil.getFullNumberSectionNumberString(
+            parentSectionNumberString,
+            currentSectionNumber
+        );
+      } else {
+        sectionNumberString = null;
+      }
 
       var content = documentMailMergeFieldService.resolveMailMergeFields(documentInstanceSectionDto);
 
@@ -84,6 +92,7 @@ public class FieldConsentsDocumentInstanceSectionService {
         parentDto,
         form.title(),
         form.content(),
+        form.numbered(),
         displayOrder
     );
   }
@@ -95,7 +104,8 @@ public class FieldConsentsDocumentInstanceSectionService {
     documentInstanceSectionService.editDocumentInstanceSection(
         documentInstanceSectionDto,
         form.title(),
-        form.content()
+        form.content(),
+        form.numbered()
     );
   }
 }

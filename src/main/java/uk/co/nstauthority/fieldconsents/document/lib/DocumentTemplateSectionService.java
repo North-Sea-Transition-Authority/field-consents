@@ -32,6 +32,7 @@ public class DocumentTemplateSectionService {
       String title,
       String content,
       String conditionMnemonic,
+      boolean numbered,
       int displayOrder
   ) {
     var documentTemplate = documentTemplateService.getDocumentTemplateOrThrow(documentTemplateDto.id());
@@ -45,6 +46,7 @@ public class DocumentTemplateSectionService {
     documentTemplateSection.setTitle(title);
     documentTemplateSection.setContent(content);
     documentTemplateSection.setConditionMnemonic(conditionMnemonic);
+    documentTemplateSection.setNumbered(numbered);
     documentTemplateSection.setDisplayOrder(displayOrder);
 
     var documentTemplateSectionsToSave = new ArrayList<DocumentTemplateSection>();
@@ -78,13 +80,15 @@ public class DocumentTemplateSectionService {
       DocumentTemplateSectionDto documentTemplateSectionDto,
       String title,
       String content,
-      String conditionMnemonic
+      String conditionMnemonic,
+      boolean numbered
   ) {
     var documentTemplateSection = getDocumentTemplateSectionOrThrow(documentTemplateSectionDto.id());
 
     documentTemplateSection.setTitle(title);
     documentTemplateSection.setContent(content);
     documentTemplateSection.setConditionMnemonic(conditionMnemonic);
+    documentTemplateSection.setNumbered(numbered);
 
     documentTemplateSectionRepository.save(documentTemplateSection);
   }

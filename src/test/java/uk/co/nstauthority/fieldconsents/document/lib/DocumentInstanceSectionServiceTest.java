@@ -39,6 +39,7 @@ class DocumentInstanceSectionServiceTest {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
     var title = "Test title";
     var content = "Test content";
+    var numbered = true;
     var displayOrder = 1;
 
     var documentInstance = DocumentInstanceTestUtil.builder().build();
@@ -62,6 +63,7 @@ class DocumentInstanceSectionServiceTest {
         null,
         title,
         content,
+        numbered,
         displayOrder
     );
 
@@ -82,6 +84,7 @@ class DocumentInstanceSectionServiceTest {
             DocumentInstanceSection::getParent,
             DocumentInstanceSection::getTitle,
             DocumentInstanceSection::getContent,
+            DocumentInstanceSection::isNumbered,
             DocumentInstanceSection::getDisplayOrder
         )
         .containsExactly(
@@ -89,6 +92,7 @@ class DocumentInstanceSectionServiceTest {
             null,
             title,
             content,
+            numbered,
             displayOrder
         );
 
@@ -108,6 +112,7 @@ class DocumentInstanceSectionServiceTest {
 
     var title = "Test title";
     var content = "Test content";
+    var numbered = true;
     var displayOrder = 1;
 
     var documentInstance = DocumentInstanceTestUtil.builder().build();
@@ -133,6 +138,7 @@ class DocumentInstanceSectionServiceTest {
         parentDto,
         title,
         content,
+        numbered,
         displayOrder
     );
 
@@ -153,6 +159,7 @@ class DocumentInstanceSectionServiceTest {
             DocumentInstanceSection::getParent,
             DocumentInstanceSection::getTitle,
             DocumentInstanceSection::getContent,
+            DocumentInstanceSection::isNumbered,
             DocumentInstanceSection::getDisplayOrder
         )
         .containsExactly(
@@ -160,6 +167,7 @@ class DocumentInstanceSectionServiceTest {
             parent,
             title,
             content,
+            numbered,
             displayOrder
         );
 
@@ -173,8 +181,9 @@ class DocumentInstanceSectionServiceTest {
   @Test
   void editDocumentInstanceSection() {
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
-    var title = "Tedt edited title";
+    var title = "Test edited title";
     var content = "Test edited content";
+    var numbered = true;
 
     var documentInstanceSection = DocumentInstanceSectionTestUtil.builder().build();
 
@@ -182,16 +191,18 @@ class DocumentInstanceSectionServiceTest {
         .when(documentInstanceSectionService)
         .getDocumentInstanceSectionOrThrow(documentInstanceSectionDto.id());
 
-    documentInstanceSectionService.editDocumentInstanceSection(documentInstanceSectionDto, title, content);
+    documentInstanceSectionService.editDocumentInstanceSection(documentInstanceSectionDto, title, content, numbered);
 
     assertThat(documentInstanceSection)
         .extracting(
             DocumentInstanceSection::getTitle,
-            DocumentInstanceSection::getContent
+            DocumentInstanceSection::getContent,
+            DocumentInstanceSection::isNumbered
         )
         .containsExactly(
             title,
-            content
+            content,
+            numbered
         );
 
     verify(documentInstanceSectionRepository).save(documentInstanceSection);

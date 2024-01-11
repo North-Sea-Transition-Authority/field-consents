@@ -22,8 +22,15 @@ public record DocumentInstanceSectionSummaryView(
   ) {
     var documentInstanceSectionId = documentInstanceSectionDto.id();
 
+    String title;
+    if (documentInstanceSectionDto.numbered()) {
+      title = "%s %s".formatted(sectionNumberString, documentInstanceSectionDto.title());
+    } else {
+      title = documentInstanceSectionDto.title();
+    }
+
     return new DocumentInstanceSectionSummaryView(
-        "%s %s".formatted(sectionNumberString, documentInstanceSectionDto.title()),
+        title,
         content,
         ReverseRouter.route(on(DocumentInstanceSectionController.class)
             .getAddDocumentInstanceSectionBefore(documentInstanceSectionId)),

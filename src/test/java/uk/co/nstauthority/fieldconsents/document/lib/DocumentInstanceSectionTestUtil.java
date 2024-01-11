@@ -17,6 +17,7 @@ class DocumentInstanceSectionTestUtil {
     private DocumentInstanceSection parent;
     private String title = "Test title";
     private String content = "Test content";
+    private boolean numbered = true;
     private int displayOrder = 1;
 
     private Builder() {
@@ -52,6 +53,11 @@ class DocumentInstanceSectionTestUtil {
       return this;
     }
 
+    Builder withNumbered(boolean numbered) {
+      this.numbered = numbered;
+      return this;
+    }
+
     Builder withDisplayOrder(int displayOrder) {
       this.displayOrder = displayOrder;
       return this;
@@ -65,6 +71,7 @@ class DocumentInstanceSectionTestUtil {
       documentInstanceSection.setParent(parent);
       documentInstanceSection.setTitle(title);
       documentInstanceSection.setContent(content);
+      documentInstanceSection.setNumbered(numbered);
       documentInstanceSection.setDisplayOrder(displayOrder);
 
       return documentInstanceSection;

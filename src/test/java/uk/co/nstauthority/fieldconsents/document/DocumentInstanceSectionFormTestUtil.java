@@ -10,6 +10,7 @@ class DocumentInstanceSectionFormTestUtil {
 
     private String title = "Test form title";
     private String content = "Test form content";
+    private Boolean numbered = true;
 
     private Builder() {
     }
@@ -24,8 +25,13 @@ class DocumentInstanceSectionFormTestUtil {
       return this;
     }
 
+    Builder withNumbered(Boolean numbered) {
+      this.numbered = numbered;
+      return this;
+    }
+
     DocumentInstanceSectionForm build() {
-      return new DocumentInstanceSectionForm(title, content);
+      return new DocumentInstanceSectionForm(title, content, numbered);
     }
   }
 }

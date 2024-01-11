@@ -144,4 +144,28 @@ class DocumentTemplateSectionFormValidatorTest {
             tuple("content", "content.invalid", mailMergeErrorMessage)
         );
   }
+
+  @Test
+  void validate_numberedNull() {
+    var form = DocumentTemplateSectionFormTestUtil.builder()
+        .withNumbered(null)
+        .build();
+    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
+    var errors = new BeanPropertyBindingResult(form, "form");
+
+    when(documentMailMergeFieldService.validateMailMergeFields(documentTemplateDto, form.content()))
+        .thenReturn(DocumentMailMergeValidationResult.valid());
+
+    documentTemplateSectionFormValidator.validate(form, documentTemplateDto, errors);
+
+    assertThat(errors.getFieldErrors())
+        .extracting(
+            FieldError::getField,
+            FieldError::getCode,
+            FieldError::getDefaultMessage
+        )
+        .containsExactly(
+            tuple("numbered", "numbered.required", "Select if this section should be numbered")
+        );
+  }
 }

@@ -8,7 +8,7 @@ class DocumentInstanceSectionFormTest {
 
   @Test
   void empty() {
-    assertThat(DocumentInstanceSectionForm.empty()).isEqualTo(new DocumentInstanceSectionForm(null, null));
+    assertThat(DocumentInstanceSectionForm.empty()).isEqualTo(new DocumentInstanceSectionForm(null, null, null));
   }
 
   @Test
@@ -16,7 +16,11 @@ class DocumentInstanceSectionFormTest {
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
 
     assertThat(DocumentInstanceSectionForm.from(documentInstanceSectionDto)).isEqualTo(
-        new DocumentInstanceSectionForm(documentInstanceSectionDto.title(), documentInstanceSectionDto.content())
+        new DocumentInstanceSectionForm(
+            documentInstanceSectionDto.title(),
+            documentInstanceSectionDto.content(),
+            documentInstanceSectionDto.numbered()
+        )
     );
   }
 }

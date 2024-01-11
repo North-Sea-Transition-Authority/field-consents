@@ -84,6 +84,7 @@ class DocumentInstanceSectionTemplateCopyingService {
     documentInstanceSection.setParent(parent);
     documentInstanceSection.setTitle(documentTemplateSection.getTitle());
     documentInstanceSection.setContent(documentTemplateSection.getContent());
+    documentInstanceSection.setNumbered(documentTemplateSection.isNumbered());
     documentInstanceSection.setDisplayOrder(documentTemplateSection.getDisplayOrder());
 
     return documentInstanceSection;

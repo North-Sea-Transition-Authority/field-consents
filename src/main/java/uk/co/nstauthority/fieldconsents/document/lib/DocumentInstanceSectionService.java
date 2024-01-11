@@ -31,6 +31,7 @@ public class DocumentInstanceSectionService {
       @Nullable DocumentInstanceSectionDto parentDto,
       String title,
       String content,
+      boolean numbered,
       int displayOrder
   ) {
     var documentInstance = documentInstanceService.getDocumentInstanceOrThrow(documentInstanceDto.id());
@@ -43,6 +44,7 @@ public class DocumentInstanceSectionService {
     }
     documentInstanceSection.setTitle(title);
     documentInstanceSection.setContent(content);
+    documentInstanceSection.setNumbered(numbered);
     documentInstanceSection.setDisplayOrder(displayOrder);
 
     var documentInstanceSectionsToSave = new ArrayList<DocumentInstanceSection>();
@@ -75,12 +77,14 @@ public class DocumentInstanceSectionService {
   public void editDocumentInstanceSection(
       DocumentInstanceSectionDto documentInstanceSectionDto,
       String title,
-      String content
+      String content,
+      boolean numbered
   ) {
     var documentInstanceSection = getDocumentInstanceSectionOrThrow(documentInstanceSectionDto.id());
 
     documentInstanceSection.setTitle(title);
     documentInstanceSection.setContent(content);
+    documentInstanceSection.setNumbered(numbered);
 
     documentInstanceSectionRepository.save(documentInstanceSection);
   }

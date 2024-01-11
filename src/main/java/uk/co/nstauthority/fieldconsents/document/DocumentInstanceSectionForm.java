@@ -4,14 +4,19 @@ import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceSectionDto;
 
 public record DocumentInstanceSectionForm(
     String title,
-    String content
+    String content,
+    Boolean numbered
 ) {
 
   static DocumentInstanceSectionForm empty() {
-    return new DocumentInstanceSectionForm(null, null);
+    return new DocumentInstanceSectionForm(null, null, null);
   }
 
   static DocumentInstanceSectionForm from(DocumentInstanceSectionDto documentInstanceSectionDto) {
-    return new DocumentInstanceSectionForm(documentInstanceSectionDto.title(), documentInstanceSectionDto.content());
+    return new DocumentInstanceSectionForm(
+        documentInstanceSectionDto.title(),
+        documentInstanceSectionDto.content(),
+        documentInstanceSectionDto.numbered()
+    );
   }
 }
