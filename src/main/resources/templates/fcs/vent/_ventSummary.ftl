@@ -20,13 +20,13 @@
       ${vent.ventType}
     </@fdsSummaryList.summaryListRowNoAction>
     <@fdsSummaryList.summaryListRowNoAction keyText="Description">
-      ${vent.description}
+      <@multiLineText.multiLineText contentText=vent.description/>
     </@fdsSummaryList.summaryListRowNoAction>
     <@fdsSummaryList.summaryListRowNoAction keyText="Metered">
       ${vent.meteredFlag}
     </@fdsSummaryList.summaryListRowNoAction>
     <@fdsSummaryList.summaryListRowNoAction keyText="Comments">
-      ${vent.comments}
+      <@multiLineText.multiLineText contentText=vent.comments/>
     </@fdsSummaryList.summaryListRowNoAction>
   </@fdsSummaryList.summaryListCard>
 </#macro>

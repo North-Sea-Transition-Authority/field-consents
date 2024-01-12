@@ -9,7 +9,7 @@
     summaryListId="summary-data-card-list">
     <#list summaryDataView.keyValues() as keyValue>
       <@fdsSummaryList.summaryListRowNoAction keyText=keyValue.key()>
-        ${(keyValue.value())!""}
+        <@multiLineText.multiLineText contentText=keyValue.value()!""/>
       </@fdsSummaryList.summaryListRowNoAction>
     </#list>
   </@fdsSummaryList.summaryListCard>

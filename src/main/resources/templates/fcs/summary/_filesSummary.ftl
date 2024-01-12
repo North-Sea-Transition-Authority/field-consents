@@ -13,7 +13,9 @@
         actionText="Download"
         actionUrl=springUrl(fileView.downloadUrl())
         screenReaderActionText="Download ${fileView.filename()}">
-        <p class="govuk-body">${fileView.description()}</p>
+        <p class="govuk-body">
+          <@multiLineText.multiLineText contentText=fileView.description()/>
+        </p>
       </@fdsSummaryList.summaryListRow>
     </#list>
   </@fdsSummaryList.summaryListCard>

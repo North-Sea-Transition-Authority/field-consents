@@ -29,9 +29,12 @@
 
 <#macro requestNotificationBanner furtherInformationView>
   <@fdsNotificationBanner.notificationBannerInfo bannerTitleText="Further information requested">
+  <#local bannerText>
+    <@multiLineText.multiLineText contentText=furtherInformationView.requestText()/>
+  </#local>
     <@fdsNotificationBanner.notificationBannerContent
       headingText="Further information requested"
-      moreContent=furtherInformationView.requestText()/>
+      moreContent=bannerText/>
   </@fdsNotificationBanner.notificationBannerInfo>
 </#macro>
 
@@ -56,7 +59,7 @@
     ${furtherInformationView.requestedAtTimestamp()!""}
   </@fdsSummaryList.summaryListRowNoAction>
   <@fdsSummaryList.summaryListRowNoAction keyText="Request text">
-    ${furtherInformationView.requestText()!""}
+    <@multiLineText.multiLineText contentText=furtherInformationView.requestText()!""/>
   </@fdsSummaryList.summaryListRowNoAction>
 </#macro>
 
@@ -68,6 +71,6 @@
     ${furtherInformationView.respondedAtTimestamp()!""}
   </@fdsSummaryList.summaryListRowNoAction>
   <@fdsSummaryList.summaryListRowNoAction keyText="Response text">
-    ${furtherInformationView.responseText()!""}
+    <@multiLineText.multiLineText contentText=furtherInformationView.responseText()!""/>
   </@fdsSummaryList.summaryListRowNoAction>
 </#macro>

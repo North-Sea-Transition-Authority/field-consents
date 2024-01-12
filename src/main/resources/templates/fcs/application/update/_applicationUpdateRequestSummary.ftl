@@ -13,7 +13,7 @@
       ${applicationUpdateRequestView.requestedByDateTime()!""}
     </@fdsSummaryList.summaryListRowNoAction>
     <@fdsSummaryList.summaryListRowNoAction keyText="Request details">
-      ${applicationUpdateRequestView.requestText()!""}
+      <@multiLineText.multiLineText contentText=applicationUpdateRequestView.requestText()!""/>
     </@fdsSummaryList.summaryListRowNoAction>
     <@fdsSummaryList.summaryListRowNoAction keyText="Deadline">
       ${applicationUpdateRequestView.deadlineDate()!""}

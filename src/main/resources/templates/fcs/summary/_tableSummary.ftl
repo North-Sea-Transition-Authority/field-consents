@@ -23,9 +23,13 @@
             <tr class="govuk-table__row">
               <#list tableRow.rowValues() as rowValue>
                   <#if rowValue?index == 0>
-                    <th scope="row" class="govuk-table__header">${rowValue!""}</th>
+                    <th scope="row" class="govuk-table__header">
+                      <@multiLineText.multiLineText contentText=rowValue!""/>
+                    </th>
                   <#else>
-                    <td class="govuk-table__cell">${rowValue!""}</td>
+                    <td class="govuk-table__cell">
+                      <@multiLineText.multiLineText contentText=rowValue!""/>
+                    </td>
                   </#if>
               </#list>
             </tr>

@@ -3,6 +3,7 @@
 <#import '_pageSizes.ftl' as PageSize>
 <#import '../macros/taskList.ftl' as taskList>
 <#import '_header.ftl' as pageHeader>
+<#import '../macros/_multiLineText.ftl' as multiLineText>
 
 <#-- @ftlvariable name="serviceBrandingConfigurationProperties" type="uk.co.nstauthority.fieldconsents.branding.ServiceBrandingConfigurationProperties" -->
 <#-- @ftlvariable name="customerBrandingConfigurationProperties" type="uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties" -->

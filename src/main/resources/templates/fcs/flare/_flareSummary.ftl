@@ -20,13 +20,13 @@
       ${flare.flareType}
     </@fdsSummaryList.summaryListRowNoAction>
     <@fdsSummaryList.summaryListRowNoAction keyText="Description">
-      ${flare.description}
+      <@multiLineText.multiLineText contentText=flare.description/>
     </@fdsSummaryList.summaryListRowNoAction>
     <@fdsSummaryList.summaryListRowNoAction keyText="Metered">
       ${flare.meteredFlag}
     </@fdsSummaryList.summaryListRowNoAction>
     <@fdsSummaryList.summaryListRowNoAction keyText="Comments">
-      ${flare.comments}
+      <@multiLineText.multiLineText contentText=flare.comments/>
     </@fdsSummaryList.summaryListRowNoAction>
   </@fdsSummaryList.summaryListCard>
 </#macro>

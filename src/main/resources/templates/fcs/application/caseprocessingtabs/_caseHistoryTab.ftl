@@ -39,7 +39,7 @@
 
               <#if item.eventText?has_content>
                 <@fdsSummaryList.summaryListRowNoAction keyText=item.eventTextLabel>
-                  ${item.eventText}
+                  <@multiLineText.multiLineText contentText=item.eventText/>
                 </@fdsSummaryList.summaryListRowNoAction>
               </#if>
 
@@ -52,7 +52,9 @@
                           linkUrl=springUrl(summaryFileView.downloadUrl())
                           linkText=summaryFileView.filename()/>
                           <#if summaryFileView.description()?has_content>
-                            <div>${summaryFileView.description()}</div>
+                            <div>
+                              <@multiLineText.multiLineText contentText=summaryFileView.description()/>
+                            </div>
                           </#if>
                       </li>
                     </#list>
