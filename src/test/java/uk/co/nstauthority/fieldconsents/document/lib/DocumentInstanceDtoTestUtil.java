@@ -13,6 +13,8 @@ class DocumentInstanceDtoTestUtil {
     private UUID id = UUID.randomUUID();
     private String itemReference = "TEST_ITEM_REFERENCE";
     private String itemType = "TEST_ITEM_TYPE";
+    private String title = "Test title";
+    private String description = "Test description";
     private DocumentTemplateDto documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
 
     private Builder() {
@@ -33,13 +35,23 @@ class DocumentInstanceDtoTestUtil {
       return this;
     }
 
+    Builder withTitle(String title) {
+      this.title = title;
+      return this;
+    }
+
+    Builder withDescription(String description) {
+      this.description = description;
+      return this;
+    }
+
     Builder withDocumentTemplate(DocumentTemplateDto documentTemplateDto) {
       this.documentTemplateDto = documentTemplateDto;
       return this;
     }
 
     DocumentInstanceDto build() {
-      return new DocumentInstanceDto(id, itemReference, itemType, documentTemplateDto);
+      return new DocumentInstanceDto(id, itemReference, itemType, title, description, documentTemplateDto);
     }
   }
 }

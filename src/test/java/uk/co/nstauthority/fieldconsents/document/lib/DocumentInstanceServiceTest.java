@@ -15,7 +15,9 @@ import freemarker.template.Template;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -51,6 +53,8 @@ class DocumentInstanceServiceTest {
   void createDocumentInstance() {
     var itemReference = "TEST_ITEM_REFERENCE";
     var itemType = "TEST_ITEM_TYPE";
+    var title = "Test title";
+    var description = "Test description";
     var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
 
     var documentTemplate = DocumentTemplateTestUtil.builder().build();
@@ -60,6 +64,8 @@ class DocumentInstanceServiceTest {
     var documentInstanceDto = documentInstanceService.createDocumentInstance(
         itemReference,
         itemType,
+        title,
+        description,
         documentTemplateDto
     );
 
@@ -73,11 +79,15 @@ class DocumentInstanceServiceTest {
         .extracting(
             DocumentInstance::getItemReference,
             DocumentInstance::getItemType,
+            DocumentInstance::getTitle,
+            DocumentInstance::getDescription,
             DocumentInstance::getDocumentTemplate
         )
         .containsExactly(
             itemReference,
             itemType,
+            title,
+            description,
             documentTemplate
         );
 
@@ -85,6 +95,52 @@ class DocumentInstanceServiceTest {
         .copyDocumentTemplateSectionsToDocumentInstance(documentInstance);
 
     assertThat(documentInstanceDto).isEqualTo(DocumentInstanceDto.from(documentInstance));
+  }
+
+  @Test
+  void getDocumentInstanceDtosByItemReference() {
+    var itemReference = "itemReference";
+    var documentInstance = DocumentInstanceTestUtil.builder().build();
+    var documentInstanceDto = DocumentInstanceDto.from(documentInstance);
+
+    when(documentInstanceRepository.findAllByItemReference(itemReference)).thenReturn(List.of(documentInstance));
+
+    assertThat(documentInstanceService.getDocumentInstanceDtosByItemReference(itemReference))
+        .containsExactly(documentInstanceDto);
+  }
+
+  @Test
+  void getDocumentInstanceDtosByItemReference_doesNotExist() {
+    var itemReference = "itemReference";
+    when(documentInstanceRepository.findAllByItemReference(itemReference)).thenReturn(Collections.emptyList());
+
+    assertThat(documentInstanceService.getDocumentInstanceDtosByItemReference(itemReference)).isEmpty();
+  }
+
+  @Test
+  void getDocumentInstanceDtoByItemReferenceAndItemTypeAndDocumentTemplateDto() {
+    var itemReference = "itemReference";
+    var itemType = "itemType";
+    var documentInstance = DocumentInstanceTestUtil.builder().build();
+    var documentInstanceDto = DocumentInstanceDto.from(documentInstance);
+    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
+
+    when(documentInstanceRepository.findByItemReferenceAndItemTypeAndDocumentTemplate_Id(itemReference, itemType, documentTemplateDto.id()))
+        .thenReturn(Optional.of(documentInstance));
+
+    assertThat(documentInstanceService.getDocumentInstanceDtoByItemReferenceAndItemTypeAndDocumentTemplateDto(itemReference, itemType, documentTemplateDto))
+        .contains(documentInstanceDto);
+  }
+
+  @Test
+  void getDocumentInstanceDtoByItemReferenceAndItemTypeAndDocumentTemplateDto_doesNotExist() {
+    var itemReference = "itemReference";
+    var itemType = "itemType";
+    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
+
+    when(documentInstanceRepository.findByItemReferenceAndItemTypeAndDocumentTemplate_Id(itemReference, itemType, documentTemplateDto.id())).thenReturn(Optional.empty());
+
+    assertThat(documentInstanceService.getDocumentInstanceDtoByItemReferenceAndItemTypeAndDocumentTemplateDto(itemReference, itemType, documentTemplateDto)).isEmpty();
   }
 
   @Test

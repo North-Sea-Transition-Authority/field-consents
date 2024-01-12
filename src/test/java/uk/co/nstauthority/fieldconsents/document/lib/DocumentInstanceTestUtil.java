@@ -13,6 +13,8 @@ class DocumentInstanceTestUtil {
     private UUID id = UUID.randomUUID();
     private String itemReference = "TEST_ITEM_REFERENCE";
     private String itemType = "TEST_ITEM_TYPE";
+    private String title = "Test title";
+    private String description = "Test description";
     private DocumentTemplate documentTemplate = DocumentTemplateTestUtil.builder().build();
 
     private Builder() {
@@ -33,6 +35,16 @@ class DocumentInstanceTestUtil {
       return this;
     }
 
+    Builder withTitle(String title) {
+      this.title = title;
+      return this;
+    }
+
+    Builder withDescription(String description) {
+      this.description = description;
+      return this;
+    }
+
     Builder withDocumentTemplate(DocumentTemplate documentTemplate) {
       this.documentTemplate = documentTemplate;
       return this;
@@ -43,6 +55,8 @@ class DocumentInstanceTestUtil {
 
       documentInstance.setItemReference(itemReference);
       documentInstance.setItemType(itemType);
+      documentInstance.setTitle(title);
+      documentInstance.setDescription(description);
       documentInstance.setDocumentTemplate(documentTemplate);
 
       return documentInstance;

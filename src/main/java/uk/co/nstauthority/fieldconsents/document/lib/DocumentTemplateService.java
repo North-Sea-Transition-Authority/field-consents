@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.document.lib;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -53,4 +54,16 @@ public class DocumentTemplateService {
         .map(DocumentTemplateDto::from)
         .toList();
   }
+
+  public Optional<DocumentTemplateDto> getDocumentTemplateDtoByMnemonic(String mnemonic) {
+    return documentTemplateRepository.findByMnemonic(mnemonic).map(DocumentTemplateDto::from);
+  }
+
+  public DocumentTemplateDto getDocumentTemplateDtoByMnemonicOrThrow(String mnemonic) {
+    return getDocumentTemplateDtoByMnemonic(mnemonic)
+        .orElseThrow(() ->
+            new DocumentTemplateNotFoundException("Unable to find document template with mnemonic [%s]".formatted(mnemonic))
+        );
+  }
+
 }

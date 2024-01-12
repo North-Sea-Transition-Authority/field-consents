@@ -11,12 +11,14 @@ import jakarta.persistence.EntityNotFoundException;
 import java.time.Clock;
 import java.util.Objects;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAssetLicenceService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.aceflag.AceFlagService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
+import uk.co.nstauthority.fieldconsents.application.events.ApplicationSubmittedEvent;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorAndLicencesJson;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalWithOperatorJson;
@@ -52,6 +54,8 @@ public class ApplicationService {
 
   private final TechnicalReviewService technicalReviewService;
 
+  private final ApplicationEventPublisher applicationEventPublisher;
+
   public ApplicationService(ApplicationRepository applicationRepository,
                             ApplicationVersionRepository applicationVersionRepository,
                             ApplicationAssetService applicationAssetService,
@@ -61,7 +65,8 @@ public class ApplicationService {
                             ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService,
                             Clock clock,
                             ApplicationVersionService applicationVersionService,
-                            TechnicalReviewService technicalReviewService) {
+                            TechnicalReviewService technicalReviewService,
+                            ApplicationEventPublisher applicationEventPublisher) {
     this.applicationRepository = applicationRepository;
     this.applicationVersionRepository = applicationVersionRepository;
     this.applicationAssetService = applicationAssetService;
@@ -72,6 +77,7 @@ public class ApplicationService {
     this.clock = clock;
     this.applicationVersionService = applicationVersionService;
     this.technicalReviewService = technicalReviewService;
+    this.applicationEventPublisher = applicationEventPublisher;
   }
 
   private ApplicationVersion createNewApplication(ApplicationType applicationType,
@@ -195,6 +201,8 @@ public class ApplicationService {
         .prioritiseApplicationInWorkArea(applicationVersion, user, APPLICATION_SUBMITTED, INDUSTRY);
     applicationWorkAreaPriorityService
         .prioritiseApplicationInWorkArea(applicationVersion, user, APPLICATION_SUBMITTED, REGULATOR);
+
+    applicationEventPublisher.publishEvent(new ApplicationSubmittedEvent(application.getId()));
   }
 
   @Transactional

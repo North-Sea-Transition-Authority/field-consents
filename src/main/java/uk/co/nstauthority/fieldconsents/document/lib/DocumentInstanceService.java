@@ -5,7 +5,9 @@ import freemarker.template.Configuration;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
@@ -38,6 +40,8 @@ public class DocumentInstanceService {
   public DocumentInstanceDto createDocumentInstance(
       String itemReference,
       String itemType,
+      String title,
+      String description,
       DocumentTemplateDto documentTemplateDto
   ) {
     var documentTemplate = documentTemplateService.getDocumentTemplateOrThrow(documentTemplateDto.id());
@@ -46,6 +50,8 @@ public class DocumentInstanceService {
 
     documentInstance.setItemReference(itemReference);
     documentInstance.setItemType(itemType);
+    documentInstance.setTitle(title);
+    documentInstance.setDescription(description);
     documentInstance.setDocumentTemplate(documentTemplate);
 
     documentInstanceRepository.save(documentInstance);
@@ -53,6 +59,20 @@ public class DocumentInstanceService {
     documentInstanceSectionTemplateCopyingService.copyDocumentTemplateSectionsToDocumentInstance(documentInstance);
 
     return DocumentInstanceDto.from(documentInstance);
+  }
+
+  public List<DocumentInstanceDto> getDocumentInstanceDtosByItemReference(String itemReference) {
+    return documentInstanceRepository.findAllByItemReference(itemReference).stream().map(DocumentInstanceDto::from).toList();
+  }
+
+  public Optional<DocumentInstanceDto> getDocumentInstanceDtoByItemReferenceAndItemTypeAndDocumentTemplateDto(
+      String itemReference,
+      String itemType,
+      DocumentTemplateDto documentTemplateDto
+  ) {
+    return documentInstanceRepository
+        .findByItemReferenceAndItemTypeAndDocumentTemplate_Id(itemReference, itemType, documentTemplateDto.id())
+        .map(DocumentInstanceDto::from);
   }
 
   public DocumentInstanceDto getDocumentInstanceDtoOrThrow(UUID documentInstanceId) {

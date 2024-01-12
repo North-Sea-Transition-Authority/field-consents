@@ -33,12 +33,14 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAssetLicenceService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.aceflag.AceFlagService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
+import uk.co.nstauthority.fieldconsents.application.events.ApplicationSubmittedEvent;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
@@ -83,6 +85,9 @@ class ApplicationServiceTest {
   @Mock
   private TechnicalReviewService technicalReviewService;
 
+  @Mock
+  private ApplicationEventPublisher applicationEventPublisher;
+
   private ApplicationService applicationService;
 
   @BeforeEach
@@ -100,7 +105,8 @@ class ApplicationServiceTest {
         applicationWorkAreaPriorityService,
         clock,
         applicationVersionService,
-        technicalReviewService
+        technicalReviewService,
+        applicationEventPublisher
     );
 
     newApplication = new Application(1, ApplicationType.PRODUCTION, Instant.now(), USER_WUA_ID, 0, null);
@@ -396,6 +402,8 @@ class ApplicationServiceTest {
         .prioritiseApplicationInWorkArea(applicationVersion, USER, APPLICATION_SUBMITTED, REGULATOR);
     verify(aceFlagService)
         .autoSetAceFlag(applicationVersion);
+    verify(applicationEventPublisher)
+        .publishEvent(new ApplicationSubmittedEvent(application.getId()));
   }
 
   @ParameterizedTest

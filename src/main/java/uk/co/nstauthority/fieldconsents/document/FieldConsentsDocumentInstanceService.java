@@ -1,37 +1,92 @@
 package uk.co.nstauthority.fieldconsents.document;
 
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.Application;
+import uk.co.nstauthority.fieldconsents.application.ApplicationService;
+import uk.co.nstauthority.fieldconsents.application.events.ApplicationSubmittedEvent;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceDto;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceService;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
+import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateService;
 
 @Service
 public class FieldConsentsDocumentInstanceService {
 
+  private static final String APPLICATION_INSTANCE_ITEM_TYPE = "APPLICATION";
+  private static final Logger LOGGER = LoggerFactory.getLogger(FieldConsentsDocumentInstanceService.class);
+
+  private final ApplicationService applicationService;
   private final DocumentInstanceService documentInstanceService;
+  private final DocumentTemplateService documentTemplateService;
   private final FieldConsentsDocumentInstanceSectionService fieldConsentsDocumentInstanceSectionService;
 
   @Autowired
   FieldConsentsDocumentInstanceService(
+      ApplicationService applicationService,
       DocumentInstanceService documentInstanceService,
+      DocumentTemplateService documentTemplateService,
       FieldConsentsDocumentInstanceSectionService fieldConsentsDocumentInstanceSectionService
   ) {
+    this.applicationService = applicationService;
     this.documentInstanceService = documentInstanceService;
+    this.documentTemplateService = documentTemplateService;
     this.fieldConsentsDocumentInstanceSectionService = fieldConsentsDocumentInstanceSectionService;
   }
 
-  public DocumentInstanceDto createDocumentInstance(
-      ApplicationVersion applicationVersion,
-      DocumentTemplateDto documentTemplateDto
-  ) {
-    var itemReference = applicationVersion.getId().toString();
-    var itemType = documentTemplateDto.mnemonic();
+  @EventListener
+  void onApplicationSubmittedEvent(ApplicationSubmittedEvent event) {
+    var application = applicationService.getApplicationById(event.applicationId());
+    var consentDocumentType = getConsentDocumentType(application);
+    var itemReference = getItemReference(application);
 
-    return documentInstanceService.createDocumentInstance(itemReference, itemType, documentTemplateDto);
+    var documentTemplateDto = documentTemplateService.getDocumentTemplateDtoByMnemonicOrThrow(consentDocumentType.getMnemonic());
+    var documentInstanceDtoOptional = documentInstanceService
+        .getDocumentInstanceDtoByItemReferenceAndItemTypeAndDocumentTemplateDto(
+            itemReference,
+            APPLICATION_INSTANCE_ITEM_TYPE,
+            documentTemplateDto
+        );
+
+    if (documentInstanceDtoOptional.isPresent()) {
+      LOGGER.debug(
+          "Not creating consent document instance for application [{}], since one or more already exist",
+          event.applicationId()
+      );
+      return;
+    }
+
+    createDocumentInstance(application, documentTemplateDto, consentDocumentType);
+    LOGGER.debug("Created consent document instance for application [{}]", event.applicationId());
+  }
+
+  public DocumentInstanceDto createDocumentInstance(
+      Application application,
+      DocumentTemplateDto documentTemplateDto,
+      DocumentTemplateType documentTemplateType
+  ) {
+    return documentInstanceService.createDocumentInstance(
+        getItemReference(application),
+        APPLICATION_INSTANCE_ITEM_TYPE,
+        documentTemplateDto.title(),
+        documentTemplateType.getDocumentInstanceDescription(),
+        documentTemplateDto
+    );
+  }
+
+  public List<DocumentInstanceSummaryView> getDocumentInstanceSummaryViews(Application application) {
+    return documentInstanceService.getDocumentInstanceDtosByItemReference(getItemReference(application))
+        .stream()
+        .sorted(Comparator.comparingInt(documentInstance -> documentInstance.documentTemplateDto().displayOrder()))
+        .map(DocumentInstanceSummaryView::from)
+        .toList();
   }
 
   public ByteArrayResource renderPdf(DocumentInstanceDto documentInstanceDto) {
@@ -42,4 +97,17 @@ public class FieldConsentsDocumentInstanceService {
 
     return documentInstanceService.renderPdf(documentInstanceDto, templateModel);
   }
+
+  private DocumentTemplateType getConsentDocumentType(Application application) {
+    return switch (application.getType()) {
+      case PRODUCTION -> DocumentTemplateType.PRODUCTION_CONSENT;
+      case FLARE -> DocumentTemplateType.FLARE_CONSENT;
+      case VENT -> DocumentTemplateType.VENT_CONSENT;
+    };
+  }
+
+  private String getItemReference(Application application) {
+    return application.getId().toString();
+  }
+
 }

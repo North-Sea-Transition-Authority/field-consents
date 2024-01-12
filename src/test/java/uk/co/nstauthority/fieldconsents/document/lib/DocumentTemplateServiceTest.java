@@ -107,4 +107,26 @@ class DocumentTemplateServiceTest {
         DocumentTemplateDto.from(documentTemplate2)
     );
   }
+
+  @Test
+  void getDocumentTemplateDtoByMnemonicOrThrow() {
+    var mnemonic = "mnemonic";
+    var documentTemplate = DocumentTemplateTestUtil.builder().build();
+
+    when(documentTemplateRepository.findByMnemonic(mnemonic)).thenReturn(Optional.of(documentTemplate));
+
+    assertThat(documentTemplateService.getDocumentTemplateDtoByMnemonicOrThrow(mnemonic))
+        .isEqualTo(DocumentTemplateDto.from(documentTemplate));
+  }
+
+  @Test
+  void getDocumentTemplateDtoByMnemonicOrThrow_whenNotFound() {
+    var mnemonic = "mnemonic";
+
+    when(documentTemplateRepository.findByMnemonic(mnemonic)).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> documentTemplateService.getDocumentTemplateDtoByMnemonicOrThrow(mnemonic))
+        .isInstanceOf(DocumentTemplateNotFoundException.class)
+        .hasMessage("Unable to find document template with mnemonic [mnemonic]");
+  }
 }

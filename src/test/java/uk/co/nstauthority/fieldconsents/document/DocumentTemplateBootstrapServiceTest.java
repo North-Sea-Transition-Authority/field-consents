@@ -51,7 +51,7 @@ class DocumentTemplateBootstrapServiceTest {
 
     when(
         documentTemplateService.createDocumentTemplate(
-            DocumentType.PRODUCTION_CONSENT.name(),
+            DocumentTemplateType.PRODUCTION_CONSENT.getMnemonic(),
             "Production Consent",
             "Document template used for creating Production Consents",
             "fcs/document/template/productionConsent.ftl",
@@ -74,7 +74,7 @@ class DocumentTemplateBootstrapServiceTest {
     documentTemplateBootstrapService.onApplicationReadyEvent();
 
     verify(documentTemplateService).createDocumentTemplate(
-        DocumentType.PRODUCTION_CONSENT.name(),
+        DocumentTemplateType.PRODUCTION_CONSENT.getMnemonic(),
         "Production Consent",
         "Document template used for creating Production Consents",
         "fcs/document/template/productionConsent.ftl",
@@ -134,14 +134,14 @@ class DocumentTemplateBootstrapServiceTest {
     );
 
     verify(documentTemplateService).createDocumentTemplate(
-        DocumentType.FLARE_CONSENT.name(),
+        DocumentTemplateType.FLARE_CONSENT.getMnemonic(),
         "Flare Consent",
         "Document template used for creating Flare Consents",
         "fcs/document/template/flareConsent.ftl",
         2
     );
     verify(documentTemplateService).createDocumentTemplate(
-        DocumentType.VENT_CONSENT.name(),
+        DocumentTemplateType.VENT_CONSENT.getMnemonic(),
         "Vent Consent",
         "Document template used for creating Vent Consents",
         "fcs/document/template/ventConsent.ftl",

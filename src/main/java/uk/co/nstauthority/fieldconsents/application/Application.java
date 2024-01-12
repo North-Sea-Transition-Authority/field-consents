@@ -42,6 +42,11 @@ public class Application {
     this.applicationNo = applicationNo;
   }
 
+  @VisibleForTesting
+  public Application(Integer id) {
+    this.id = id;
+  }
+
   public Application() {
   }
 

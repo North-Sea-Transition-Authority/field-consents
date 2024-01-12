@@ -21,6 +21,10 @@ class DocumentInstance {
 
   private String itemType;
 
+  private String title;
+
+  private String description;
+
   @ManyToOne
   @JoinColumn(name = "document_template_id")
   private DocumentTemplate documentTemplate;
@@ -50,6 +54,22 @@ class DocumentInstance {
 
   void setItemType(String itemType) {
     this.itemType = itemType;
+  }
+
+  String getTitle() {
+    return title;
+  }
+
+  void setTitle(String title) {
+    this.title = title;
+  }
+
+  String getDescription() {
+    return description;
+  }
+
+  void setDescription(String description) {
+    this.description = description;
   }
 
   DocumentTemplate getDocumentTemplate() {

@@ -6,6 +6,8 @@ public record DocumentInstanceDto(
     UUID id,
     String itemReference,
     String itemType,
+    String title,
+    String description,
     DocumentTemplateDto documentTemplateDto
 ) {
 
@@ -14,6 +16,8 @@ public record DocumentInstanceDto(
         documentInstance.getId(),
         documentInstance.getItemReference(),
         documentInstance.getItemType(),
+        documentInstance.getTitle(),
+        documentInstance.getDescription(),
         DocumentTemplateDto.from(documentInstance.getDocumentTemplate())
     );
   }

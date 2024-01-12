@@ -1,12 +1,12 @@
 <#include '../../layout/layout.ftl'>
 
 <@defaultPage htmlTitle=pageTitle pageHeading=pageTitle>
-  <@fdsResultList.resultList resultCount=documentInstanceViews?size resultCountSuffix="document">
-    <#list documentInstanceViews as documentInstanceView>
+  <@fdsResultList.resultList resultCount=documentInstanceSummaryViews?size resultCountSuffix="document">
+    <#list documentInstanceSummaryViews as documentInstanceSummaryView>
       <@fdsResultList.resultListItem
-        linkHeadingUrl="#"
-        linkHeadingText="Heading TODO"
-        captionHeadingText="Description TODO"/>
+        linkHeadingUrl=springUrl(documentInstanceSummaryView.viewUrl())
+        linkHeadingText=documentInstanceSummaryView.title()
+        captionHeadingText=documentInstanceSummaryView.description()/>
     </#list>
   </@fdsResultList.resultList>
 </@defaultPage>

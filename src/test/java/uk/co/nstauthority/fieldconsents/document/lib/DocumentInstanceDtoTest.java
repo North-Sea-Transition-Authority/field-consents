@@ -15,6 +15,8 @@ class DocumentInstanceDtoTest {
             documentInstance.getId(),
             documentInstance.getItemReference(),
             documentInstance.getItemType(),
+            documentInstance.getTitle(),
+            documentInstance.getDescription(),
             DocumentTemplateDto.from(documentInstance.getDocumentTemplate())
         )
     );
