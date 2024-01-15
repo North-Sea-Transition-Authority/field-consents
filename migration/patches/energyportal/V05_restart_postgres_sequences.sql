@@ -1,0 +1,68 @@
+CREATE OR REPLACE PROCEDURE fcs.post_migration_sync_table_sequence(p_table_name TEXT)
+    LANGUAGE 'plpgsql'
+AS $$
+DECLARE
+    l_seq_start_value INTEGER;
+BEGIN
+    EXECUTE 'SELECT max(id) + 1 FROM fcs.'||p_table_name INTO l_seq_start_value;
+    EXECUTE 'ALTER SEQUENCE fcs.'||p_table_name||'_id_seq RESTART WITH '||l_seq_start_value;
+END;
+$$;
+
+CALL fcs.post_migration_sync_table_sequence('applications');
+CALL fcs.post_migration_sync_table_sequence('application_versions');
+CALL fcs.post_migration_sync_table_sequence('consent_lengths');
+CALL fcs.post_migration_sync_table_sequence('application_assets');
+CALL fcs.post_migration_sync_table_sequence('application_asset_licences');
+CALL fcs.post_migration_sync_table_sequence('application_units');
+CALL fcs.post_migration_sync_table_sequence('application_flags');
+CALL fcs.post_migration_sync_table_sequence('application_eia_directions');
+CALL fcs.post_migration_sync_table_sequence('application_supporting_information');
+CALL fcs.post_migration_sync_table_sequence('long_term_production_years');
+CALL fcs.post_migration_sync_table_sequence('annual_production_months');
+CALL fcs.post_migration_sync_table_sequence('short_term_production_months');
+CALL fcs.post_migration_sync_table_sequence('flare_annual_months');
+CALL fcs.post_migration_sync_table_sequence('flare_short_term_months');
+CALL fcs.post_migration_sync_table_sequence('flare_report_gas_data');
+CALL fcs.post_migration_sync_table_sequence('flare_report_periods');
+CALL fcs.post_migration_sync_table_sequence('flare_report_months');
+CALL fcs.post_migration_sync_table_sequence('flares');
+CALL fcs.post_migration_sync_table_sequence('vent_annual_months');
+CALL fcs.post_migration_sync_table_sequence('vent_short_term_months');
+CALL fcs.post_migration_sync_table_sequence('vent_report_gas_data');
+CALL fcs.post_migration_sync_table_sequence('vent_report_periods');
+CALL fcs.post_migration_sync_table_sequence('vent_report_months');
+CALL fcs.post_migration_sync_table_sequence('vents');
+CALL fcs.post_migration_sync_table_sequence('application_case_notes');
+CALL fcs.post_migration_sync_table_sequence('application_updates');
+CALL fcs.post_migration_sync_table_sequence('application_technical_reviews');
+
+DROP PROCEDURE fcs.post_migration_sync_table_sequence(TEXT);
+
+SELECT * FROM fcs.applications_id_seq;
+SELECT * FROM fcs.application_versions_id_seq;
+SELECT * FROM fcs.consent_lengths_id_seq;
+SELECT * FROM fcs.application_assets_id_seq;
+SELECT * FROM fcs.application_asset_licences_id_seq;
+SELECT * FROM fcs.application_units_id_seq;
+SELECT * FROM fcs.application_flags_id_seq;
+SELECT * FROM fcs.application_eia_directions_id_seq;
+SELECT * FROM fcs.application_supporting_information_id_seq;
+SELECT * FROM fcs.long_term_production_years_id_seq;
+SELECT * FROM fcs.annual_production_months_id_seq;
+SELECT * FROM fcs.short_term_production_months_id_seq;
+SELECT * FROM fcs.flare_annual_months_id_seq;
+SELECT * FROM fcs.flare_short_term_months_id_seq;
+SELECT * FROM fcs.flare_report_gas_data_id_seq;
+SELECT * FROM fcs.flare_report_periods_id_seq;
+SELECT * FROM fcs.flare_report_months_id_seq;
+SELECT * FROM fcs.flares_id_seq;
+SELECT * FROM fcs.vent_annual_months_id_seq;
+SELECT * FROM fcs.vent_short_term_months_id_seq;
+SELECT * FROM fcs.vent_report_gas_data_id_seq;
+SELECT * FROM fcs.vent_report_periods_id_seq;
+SELECT * FROM fcs.vent_report_months_id_seq;
+SELECT * FROM fcs.vents_id_seq;
+SELECT * FROM fcs.application_case_notes_id_seq;
+SELECT * FROM fcs.application_updates_id_seq;
+SELECT * FROM fcs.application_technical_reviews_id_seq;

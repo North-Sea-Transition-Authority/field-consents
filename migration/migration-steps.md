@@ -59,6 +59,13 @@ CLOBs are not supported over the DB link so the following tables have been migra
 - Right click -> Import/Export -> Import Data From File(s) -> select the appropriate file and choose the correct import setting for pipe separated data
 - Run the Import
 
+## 6. Post migration sync Postgres sequences
+
+On the FCS Postgres database (`fcs` schema) run the following patch:
+- `/energyportal/V05_restart_postgres_sequences.sql`
+
+This will look at all the migrated ids and ensure the sequence next values are in sync.
+
 # Scratch notes
 
 FLARE ANNUAL MIGRATION (Legacy test case FCON/2041/0 (Version 1), local test case FCON/28/0 (Version 1))
