@@ -287,7 +287,7 @@ public class ApplicationService {
   }
 
   protected int getApplicationNumber() {
-    return applicationRepository.findLatestApplicationNumber()
+    return applicationRepository.findLatestNonMigratedApplicationNumber()
         .map(latestApplicationNumber -> latestApplicationNumber + 1)
         .orElse(Integer.valueOf(applicationConfigurationProperties.applicationNoStartValue()));
   }

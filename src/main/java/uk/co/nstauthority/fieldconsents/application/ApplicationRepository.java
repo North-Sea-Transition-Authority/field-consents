@@ -14,7 +14,13 @@ public interface ApplicationRepository extends CrudRepository<Application, Integ
       """
       SELECT max(app.applicationNo)
       FROM Application app
+      WHERE NOT EXISTS (
+          SELECT 1
+          FROM ApplicationVersion av
+          WHERE av.application.id = app.id
+          AND av.migrated = true
+      )
       """
   )
-  Optional<Integer> findLatestApplicationNumber();
+  Optional<Integer> findLatestNonMigratedApplicationNumber();
 }

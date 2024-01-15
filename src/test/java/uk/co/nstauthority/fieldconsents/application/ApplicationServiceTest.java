@@ -255,7 +255,7 @@ class ApplicationServiceTest {
 
     application.setApplicationNo(null);
 
-    when(applicationRepository.findLatestApplicationNumber()).thenReturn(Optional.of(1));
+    when(applicationRepository.findLatestNonMigratedApplicationNumber()).thenReturn(Optional.of(1));
 
     applicationService.prepareApplicationForPayment(applicationVersion);
 
@@ -277,7 +277,7 @@ class ApplicationServiceTest {
 
     applicationService.prepareApplicationForPayment(applicationVersion);
 
-    verify(applicationRepository, never()).findLatestApplicationNumber();
+    verify(applicationRepository, never()).findLatestNonMigratedApplicationNumber();
 
     ArgumentCaptor<Application> applicationArgumentCaptor = ArgumentCaptor.forClass(Application.class);
     verify(applicationRepository).save(applicationArgumentCaptor.capture());
@@ -352,7 +352,7 @@ class ApplicationServiceTest {
 
     application.setApplicationNo(null);
 
-    when(applicationRepository.findLatestApplicationNumber()).thenReturn(Optional.of(1));
+    when(applicationRepository.findLatestNonMigratedApplicationNumber()).thenReturn(Optional.of(1));
 
     applicationService.submitApplication(applicationVersion, USER);
 
@@ -395,7 +395,7 @@ class ApplicationServiceTest {
     assertThat(actualApplication.getVariationNo()).isEqualTo(0);
     assertThat(actualApplication.getApplicationNo()).isEqualTo(7);
 
-    verify(applicationRepository, never()).findLatestApplicationNumber();
+    verify(applicationRepository, never()).findLatestNonMigratedApplicationNumber();
     verify(applicationWorkAreaPriorityService)
         .prioritiseApplicationInWorkArea(applicationVersion, USER, APPLICATION_SUBMITTED, INDUSTRY);
     verify(applicationWorkAreaPriorityService)
@@ -567,14 +567,14 @@ class ApplicationServiceTest {
 
   @Test
   void getApplicationNumber_whenOneApplicationExists() {
-    when(applicationRepository.findLatestApplicationNumber()).thenReturn(Optional.of(1));
+    when(applicationRepository.findLatestNonMigratedApplicationNumber()).thenReturn(Optional.of(1));
 
     assertThat(applicationService.getApplicationNumber()).isEqualTo(2);
   }
 
   @Test
   void getApplicationNumber_whenNoApplicationExists() {
-    when(applicationRepository.findLatestApplicationNumber()).thenReturn(Optional.empty());
+    when(applicationRepository.findLatestNonMigratedApplicationNumber()).thenReturn(Optional.empty());
 
     assertThat(applicationService.getApplicationNumber()).isEqualTo(Integer.parseInt(APPLICATION_NUMBER_START_VALUE));
   }
