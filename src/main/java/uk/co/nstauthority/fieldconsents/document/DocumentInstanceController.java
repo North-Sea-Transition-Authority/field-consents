@@ -84,7 +84,7 @@ public class DocumentInstanceController {
   public ModelAndView getReloadDocumentInstance(@PathVariable UUID documentInstanceId) {
     var documentInstanceDto = documentInstanceService.getDocumentInstanceDtoOrThrow(documentInstanceId);
     var applicationVersion =
-        documentInstanceLinkingService.getApplicationVersionFromDocumentInstanceDto(documentInstanceDto);
+        documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto);
     var applicationReference = applicationService.generateApplicationReference(applicationVersion);
 
     return new ModelAndView("fcs/document/reloadDocumentInstance")

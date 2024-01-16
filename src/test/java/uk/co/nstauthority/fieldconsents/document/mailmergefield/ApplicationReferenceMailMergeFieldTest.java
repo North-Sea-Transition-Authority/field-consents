@@ -52,7 +52,7 @@ class ApplicationReferenceMailMergeFieldTest {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
     var applicationReference = "Test/application/reference";
 
-    when(documentInstanceLinkingService.getApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
+    when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
         .thenReturn(applicationVersion);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
 

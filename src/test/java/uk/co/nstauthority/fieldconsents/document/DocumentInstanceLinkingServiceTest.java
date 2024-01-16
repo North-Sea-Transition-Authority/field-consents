@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.document;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,8 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 @ExtendWith(MockitoExtension.class)
 class DocumentInstanceLinkingServiceTest {
 
+  private static final String APPLICATION_DOCUMENT_INSTANCE_ITEM_TYPE = "APPLICATION";
+
   @Mock
   private ApplicationVersionService applicationVersionService;
 
@@ -23,15 +26,31 @@ class DocumentInstanceLinkingServiceTest {
   @Test
   void getApplicationVersionFromDocumentInstanceDto() {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder()
+        .withItemType(APPLICATION_DOCUMENT_INSTANCE_ITEM_TYPE)
         .withItemReference("1")
         .build();
 
     var applicationVersion = new ApplicationVersion();
 
-    when(applicationVersionService.getApplicationVersionById(Integer.parseInt(documentInstanceDto.itemReference())))
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(Integer.parseInt(documentInstanceDto.itemReference())))
         .thenReturn(applicationVersion);
 
-    assertThat(documentInstanceLinkingService.getApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
+    assertThat(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
         .isEqualTo(applicationVersion);
+  }
+
+  @Test
+  void getApplicationVersionFromDocumentInstanceDto_wrongItemType() {
+    var wrongItemType = "wrong item type";
+    var documentInstanceDto = DocumentInstanceDtoTestUtil.builder()
+        .withItemReference("1")
+        .withItemType(wrongItemType)
+        .build();
+
+    assertThatThrownBy(() -> documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Expected itemType %s but found %s".formatted(
+            APPLICATION_DOCUMENT_INSTANCE_ITEM_TYPE, wrongItemType
+        ));
   }
 }

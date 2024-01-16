@@ -46,7 +46,7 @@ class ApplicationIsLongTermConditionTest {
     var consentLengthDetails = new ConsentLengthDetails();
     consentLengthDetails.setConsentLength(ConsentLengthType.SHORT_TERM);
 
-    when(documentInstanceLinkingService.getApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
+    when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
         .thenReturn(applicationVersion);
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
 
@@ -61,7 +61,7 @@ class ApplicationIsLongTermConditionTest {
     var consentLengthDetails = new ConsentLengthDetails();
     consentLengthDetails.setConsentLength(ConsentLengthType.LONG_TERM);
 
-    when(documentInstanceLinkingService.getApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
+    when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
         .thenReturn(applicationVersion);
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
 

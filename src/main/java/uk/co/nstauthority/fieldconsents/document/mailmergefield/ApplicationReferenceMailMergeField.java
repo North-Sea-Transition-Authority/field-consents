@@ -41,7 +41,7 @@ class ApplicationReferenceMailMergeField implements DocumentMailMergeField {
   @Override
   public String resolve(DocumentInstanceDto documentInstanceDto) {
     var applicationVersion =
-        documentInstanceLinkingService.getApplicationVersionFromDocumentInstanceDto(documentInstanceDto);
+        documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto);
 
     return applicationService.generateApplicationReference(applicationVersion);
   }

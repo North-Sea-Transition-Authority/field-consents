@@ -36,7 +36,7 @@ class ApplicationIsLongTermCondition implements DocumentTemplateSectionCondition
   @Override
   public boolean evaluate(DocumentInstanceDto documentInstanceDto) {
     var applicationVersion =
-        documentInstanceLinkingService.getApplicationVersionFromDocumentInstanceDto(documentInstanceDto);
+        documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto);
     var consentLength = consentLengthService.getConsentLengthDetails(applicationVersion);
 
     return consentLength.getConsentLength().equals(ConsentLengthType.LONG_TERM);

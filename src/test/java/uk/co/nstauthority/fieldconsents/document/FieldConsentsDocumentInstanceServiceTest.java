@@ -31,7 +31,7 @@ import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateService;
 @ExtendWith(MockitoExtension.class)
 class FieldConsentsDocumentInstanceServiceTest {
 
-  private static final String APPLICATION_ITEM_TYPE = "APPLICATION";
+  private static final String APPLICATION_DOCUMENT_INSTANCE_ITEM_TYPE = "APPLICATION";
 
   @Mock
   private ApplicationService applicationService;
@@ -59,13 +59,14 @@ class FieldConsentsDocumentInstanceServiceTest {
 
     when(applicationService.getApplicationById(application.getId())).thenReturn(application);
     when(documentTemplateService.getDocumentTemplateDtoByMnemonicOrThrow(documentTemplateType.name())).thenReturn(documentTemplateDto);
-    when(documentInstanceService.getDocumentInstanceDtoByItemReferenceAndItemTypeAndDocumentTemplateDto(itemReference, APPLICATION_ITEM_TYPE, documentTemplateDto)).thenReturn(Optional.empty());
+    when(documentInstanceService.getDocumentInstanceDtoByItemReferenceAndItemTypeAndDocumentTemplateDto(itemReference,
+        APPLICATION_DOCUMENT_INSTANCE_ITEM_TYPE, documentTemplateDto)).thenReturn(Optional.empty());
 
     fieldConsentsDocumentInstanceService.onApplicationSubmittedEvent(new ApplicationSubmittedEvent(application.getId()));
 
     verify(documentInstanceService).createDocumentInstance(
         itemReference,
-        APPLICATION_ITEM_TYPE,
+        APPLICATION_DOCUMENT_INSTANCE_ITEM_TYPE,
         documentTemplateDto.title(),
         documentTemplateType.getDocumentInstanceDescription(),
         documentTemplateDto
@@ -84,7 +85,8 @@ class FieldConsentsDocumentInstanceServiceTest {
 
     when(documentTemplateService.getDocumentTemplateDtoByMnemonicOrThrow(documentTemplateType.getMnemonic())).thenReturn(documentTemplateDto);
     when(applicationService.getApplicationById(application.getId())).thenReturn(application);
-    when(documentInstanceService.getDocumentInstanceDtoByItemReferenceAndItemTypeAndDocumentTemplateDto(itemReference, APPLICATION_ITEM_TYPE, documentTemplateDto)).thenReturn(Optional.of(existingDocumentInstance));
+    when(documentInstanceService.getDocumentInstanceDtoByItemReferenceAndItemTypeAndDocumentTemplateDto(itemReference,
+        APPLICATION_DOCUMENT_INSTANCE_ITEM_TYPE, documentTemplateDto)).thenReturn(Optional.of(existingDocumentInstance));
 
     fieldConsentsDocumentInstanceService.onApplicationSubmittedEvent(new ApplicationSubmittedEvent(application.getId()));
 
@@ -110,7 +112,7 @@ class FieldConsentsDocumentInstanceServiceTest {
 
     when(documentInstanceService.createDocumentInstance(
         itemReference,
-        APPLICATION_ITEM_TYPE,
+        APPLICATION_DOCUMENT_INSTANCE_ITEM_TYPE,
         documentTemplateDto.title(),
         documentTemplateType.getDocumentInstanceDescription(),
         documentTemplateDto

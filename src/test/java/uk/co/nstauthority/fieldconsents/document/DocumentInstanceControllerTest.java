@@ -172,7 +172,7 @@ class DocumentInstanceControllerTest extends AbstractControllerTest {
     when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
     when(documentInstanceService.getDocumentInstanceDtoOrThrow(DOCUMENT_INSTANCE_ID))
         .thenReturn(documentInstanceDto);
-    when(documentInstanceLinkingService.getApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
+    when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
         .thenReturn(applicationVersion);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
 

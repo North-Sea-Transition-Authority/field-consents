@@ -20,7 +20,7 @@ import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateService;
 @Service
 public class FieldConsentsDocumentInstanceService {
 
-  private static final String APPLICATION_INSTANCE_ITEM_TYPE = "APPLICATION";
+  private static final String APPLICATION_DOCUMENT_INSTANCE_ITEM_TYPE = "APPLICATION";
   private static final Logger LOGGER = LoggerFactory.getLogger(FieldConsentsDocumentInstanceService.class);
 
   private final ApplicationService applicationService;
@@ -51,7 +51,7 @@ public class FieldConsentsDocumentInstanceService {
     var documentInstanceDtoOptional = documentInstanceService
         .getDocumentInstanceDtoByItemReferenceAndItemTypeAndDocumentTemplateDto(
             itemReference,
-            APPLICATION_INSTANCE_ITEM_TYPE,
+            APPLICATION_DOCUMENT_INSTANCE_ITEM_TYPE,
             documentTemplateDto
         );
 
@@ -74,7 +74,7 @@ public class FieldConsentsDocumentInstanceService {
   ) {
     return documentInstanceService.createDocumentInstance(
         getItemReference(application),
-        APPLICATION_INSTANCE_ITEM_TYPE,
+        APPLICATION_DOCUMENT_INSTANCE_ITEM_TYPE,
         documentTemplateDto.title(),
         documentTemplateType.getDocumentInstanceDescription(),
         documentTemplateDto
