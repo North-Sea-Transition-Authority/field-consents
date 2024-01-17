@@ -1,6 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application.assets;
 
-import java.util.Optional;
+import java.util.Set;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -104,10 +104,15 @@ class AdditionalAssetSelectionFormValidator implements Validator {
   }
 
   private void rejectIfDuplicatedField(@NotNull Errors errors, ApplicationVersion applicationVersion, FieldJson fieldJson) {
-    Optional<ApplicationAsset> optionalApplicationAsset =
-        applicationAssetService.findByApplicationVersionAndFieldId(applicationVersion, fieldJson.getId());
-    if (optionalApplicationAsset.isPresent()) {
-      ApplicationAsset applicationAsset = optionalApplicationAsset.get();
+    var duplicatedApplicationAsset = applicationAssetService
+        .findAssetsByApplicationVersionAndAssetRoles(applicationVersion, Set.of(AssetRole.PRIMARY, AssetRole.SECONDARY))
+        .stream()
+        .filter(applicationAsset -> AssetType.FIELD.equals(applicationAsset.getAssetType()))
+        .filter(applicationAsset -> applicationAsset.getAssetId().equals(fieldJson.getId()))
+        .findFirst();
+
+    if (duplicatedApplicationAsset.isPresent()) {
+      var applicationAsset = duplicatedApplicationAsset.get();
       if (applicationAsset.getAssetRole().equals(AssetRole.PRIMARY)) {
         errors.rejectValue(ASSET_KEY_FIELD_NAME, ASSET_KEY_FIELD_NAME + ".duplicated",
             DUPLICATED_PRIMARY_FIELD.formatted(fieldJson.getName()));

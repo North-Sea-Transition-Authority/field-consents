@@ -12,7 +12,7 @@ import static uk.co.nstauthority.fieldconsents.application.assets.ApplicationAss
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -180,8 +180,8 @@ class AdditionalAssetSelectionFormValidatorTest {
   void validate_fieldAssetWithDuplicatedPrimaryAsset() {
     form.setAssetKey(AssetTestUtil.FIELD1_ASSET_KEY);
 
-    when(applicationAssetService.findByApplicationVersionAndFieldId(applicationVersion, fieldAsset1.getAssetId())).thenReturn(
-        Optional.of(fieldAsset1));
+    when(applicationAssetService.findAssetsByApplicationVersionAndAssetRoles(applicationVersion, Set.of(AssetRole.PRIMARY, AssetRole.SECONDARY)))
+        .thenReturn(List.of(fieldAsset1));
     when(assetService.getAsset(AssetTestUtil.FIELD1_ASSET_KEY))
         .thenReturn(AssetTestUtil.field1AssetJson);
     when(fieldService.getFieldWithOperatorAndLicences(eq(AssetTestUtil.field1AssetJson.getId()), any()))
@@ -200,8 +200,8 @@ class AdditionalAssetSelectionFormValidatorTest {
   void validate_fieldAssetWithDuplicatedSecondaryAsset() {
     form.setAssetKey(AssetTestUtil.FIELD2_ASSET_KEY);
 
-    when(applicationAssetService.findByApplicationVersionAndFieldId(applicationVersion, fieldAsset2.getAssetId())).thenReturn(
-        Optional.of(fieldAsset2));
+    when(applicationAssetService.findAssetsByApplicationVersionAndAssetRoles(applicationVersion, Set.of(AssetRole.PRIMARY, AssetRole.SECONDARY)))
+        .thenReturn(List.of(fieldAsset2));
     when(assetService.getAsset(AssetTestUtil.FIELD2_ASSET_KEY))
         .thenReturn(AssetTestUtil.field2AssetJson);
     when(fieldService.getFieldWithOperatorAndLicences(eq(AssetTestUtil.field2AssetJson.getId()), any()))
