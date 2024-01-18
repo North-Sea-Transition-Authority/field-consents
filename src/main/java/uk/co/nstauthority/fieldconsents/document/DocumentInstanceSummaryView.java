@@ -7,7 +7,7 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 public record DocumentInstanceSummaryView(String title, String description, String viewUrl) {
 
-  static DocumentInstanceSummaryView from(DocumentInstanceDto documentInstanceDto) {
+  public static DocumentInstanceSummaryView from(DocumentInstanceDto documentInstanceDto) {
     return new DocumentInstanceSummaryView(
         documentInstanceDto.title(),
         documentInstanceDto.description(),

@@ -20,13 +20,13 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_WITHDRAWAL_RESPONSE;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CHANGE_ACE_STATUS;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSENT_PREPARATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATIONS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_FURTHER_INFORMATION_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_FURTHER_INFORMATION_RESPOND;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_MANAGE_RESPONDER;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_RESPONSE;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.DOCUMENT_PREPARATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_PAY_AND_SUBMIT_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_UPDATE_APPLICATION;
@@ -302,7 +302,7 @@ class CaseProcessingActionServiceTest {
             Set.of(VIEW_FCS_CASE_PROCESSING_DOCUMENTS),
             Set.of(),
             ExpectedActions.newBuilder()
-                .submittedActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES, DOCUMENT_PREPARATION)
+                .submittedActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES, CONSENT_PREPARATION)
                 .build()
         ),
         arguments(
@@ -378,7 +378,7 @@ class CaseProcessingActionServiceTest {
         APPLICATION_UPDATE_REQUEST,
         CONSULTATION_REQUEST,
         CONSULTATION_FURTHER_INFORMATION_RESPOND,
-        DOCUMENT_PREPARATION
+        CONSENT_PREPARATION
     );
 
     var actionViews = actionItems.stream()
@@ -434,7 +434,7 @@ class CaseProcessingActionServiceTest {
     // we don't care about the ordering here because it's not going directly into a view
     assertThat(caseProcessingActionService.groupActionItemsByTaskListSection(EnumSet.allOf(CaseProcessingActionItem.class)))
         .containsExactlyInAnyOrderEntriesOf(Map.of(
-            CaseProcessingTaskListSection.CASE_TASKS, List.of(TECHNICAL_REVIEWS, CONSULTATIONS, DOCUMENT_PREPARATION),
+            CaseProcessingTaskListSection.CASE_TASKS, List.of(TECHNICAL_REVIEWS, CONSULTATIONS, CONSENT_PREPARATION),
             CaseProcessingTaskListSection.OPTIONAL_CASE_TASKS, List.of(CHANGE_ACE_STATUS, APPLICATION_UPDATES, REGULATOR_ADD_CASE_NOTE)
         ));
   }

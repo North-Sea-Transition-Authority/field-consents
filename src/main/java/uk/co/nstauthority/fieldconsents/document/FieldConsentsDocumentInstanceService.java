@@ -6,12 +6,9 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.event.EventListener;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.Application;
-import uk.co.nstauthority.fieldconsents.application.ApplicationService;
-import uk.co.nstauthority.fieldconsents.application.events.ApplicationSubmittedEvent;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceDto;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceService;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
@@ -23,27 +20,23 @@ public class FieldConsentsDocumentInstanceService {
   private static final String APPLICATION_DOCUMENT_INSTANCE_ITEM_TYPE = "APPLICATION";
   private static final Logger LOGGER = LoggerFactory.getLogger(FieldConsentsDocumentInstanceService.class);
 
-  private final ApplicationService applicationService;
   private final DocumentInstanceService documentInstanceService;
   private final DocumentTemplateService documentTemplateService;
   private final FieldConsentsDocumentInstanceSectionService fieldConsentsDocumentInstanceSectionService;
 
   @Autowired
   FieldConsentsDocumentInstanceService(
-      ApplicationService applicationService,
       DocumentInstanceService documentInstanceService,
       DocumentTemplateService documentTemplateService,
       FieldConsentsDocumentInstanceSectionService fieldConsentsDocumentInstanceSectionService
   ) {
-    this.applicationService = applicationService;
     this.documentInstanceService = documentInstanceService;
     this.documentTemplateService = documentTemplateService;
     this.fieldConsentsDocumentInstanceSectionService = fieldConsentsDocumentInstanceSectionService;
   }
 
-  @EventListener
-  void onApplicationSubmittedEvent(ApplicationSubmittedEvent event) {
-    var application = applicationService.getApplicationById(event.applicationId());
+  public void createDocumentInstancesForApplication(Application application) {
+    var applicationId = application.getId();
     var consentDocumentType = getConsentDocumentType(application);
     var itemReference = getItemReference(application);
 
@@ -58,13 +51,13 @@ public class FieldConsentsDocumentInstanceService {
     if (documentInstanceDtoOptional.isPresent()) {
       LOGGER.debug(
           "Not creating consent document instance for application [{}], since one or more already exist",
-          event.applicationId()
+          applicationId
       );
       return;
     }
 
     createDocumentInstance(application, documentTemplateDto, consentDocumentType);
-    LOGGER.debug("Created consent document instance for application [{}]", event.applicationId());
+    LOGGER.debug("Created consent document instance for application [{}]", applicationId);
   }
 
   public DocumentInstanceDto createDocumentInstance(
@@ -109,5 +102,4 @@ public class FieldConsentsDocumentInstanceService {
   private String getItemReference(Application application) {
     return application.getId().toString();
   }
-
 }

@@ -21,10 +21,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ByteArrayResource;
 import uk.co.nstauthority.fieldconsents.application.Application;
-import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
-import uk.co.nstauthority.fieldconsents.application.events.ApplicationSubmittedEvent;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceService;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateService;
 
@@ -32,9 +30,6 @@ import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateService;
 class FieldConsentsDocumentInstanceServiceTest {
 
   private static final String APPLICATION_DOCUMENT_INSTANCE_ITEM_TYPE = "APPLICATION";
-
-  @Mock
-  private ApplicationService applicationService;
 
   @Mock
   private DocumentInstanceService documentInstanceService;
@@ -49,23 +44,20 @@ class FieldConsentsDocumentInstanceServiceTest {
   private FieldConsentsDocumentInstanceService fieldConsentsDocumentInstanceService;
 
   @ParameterizedTest
-  @MethodSource("onApplicationSubmittedEvent_arguments")
-  void onApplicationSubmittedEvent(ApplicationType applicationType, DocumentTemplateType documentTemplateType) {
+  @MethodSource("createDocumentInstancesForApplication_arguments")
+  void createDocumentInstancesForApplication(ApplicationType applicationType, DocumentTemplateType documentTemplateType) {
     var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
     var application = new Application(1);
     application.setType(applicationType);
 
-    var itemReference = application.getId().toString();
-
-    when(applicationService.getApplicationById(application.getId())).thenReturn(application);
     when(documentTemplateService.getDocumentTemplateDtoByMnemonicOrThrow(documentTemplateType.name())).thenReturn(documentTemplateDto);
-    when(documentInstanceService.getDocumentInstanceDtoByItemReferenceAndItemTypeAndDocumentTemplateDto(itemReference,
-        APPLICATION_DOCUMENT_INSTANCE_ITEM_TYPE, documentTemplateDto)).thenReturn(Optional.empty());
+    when(documentInstanceService.getDocumentInstanceDtoByItemReferenceAndItemTypeAndDocumentTemplateDto(application.getId().toString(), APPLICATION_DOCUMENT_INSTANCE_ITEM_TYPE, documentTemplateDto))
+        .thenReturn(Optional.empty());
 
-    fieldConsentsDocumentInstanceService.onApplicationSubmittedEvent(new ApplicationSubmittedEvent(application.getId()));
+    fieldConsentsDocumentInstanceService.createDocumentInstancesForApplication(application);
 
     verify(documentInstanceService).createDocumentInstance(
-        itemReference,
+        application.getId().toString(),
         APPLICATION_DOCUMENT_INSTANCE_ITEM_TYPE,
         documentTemplateDto.title(),
         documentTemplateType.getDocumentInstanceDescription(),
@@ -74,26 +66,23 @@ class FieldConsentsDocumentInstanceServiceTest {
   }
 
   @ParameterizedTest
-  @MethodSource("onApplicationSubmittedEvent_arguments")
-  void onApplicationSubmittedEvent_documentInstancesAlreadyExist(ApplicationType applicationType, DocumentTemplateType documentTemplateType) {
+  @MethodSource("createDocumentInstancesForApplication_arguments")
+  void createDocumentInstancesForApplication_documentInstancesAlreadyExist(ApplicationType applicationType, DocumentTemplateType documentTemplateType) {
     var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
     var existingDocumentInstance = DocumentInstanceDtoTestUtil.builder().build();
     var application = new Application(1);
     application.setType(applicationType);
 
-    var itemReference = application.getId().toString();
+    when(documentTemplateService.getDocumentTemplateDtoByMnemonicOrThrow(documentTemplateType.name())).thenReturn(documentTemplateDto);
+    when(documentInstanceService.getDocumentInstanceDtoByItemReferenceAndItemTypeAndDocumentTemplateDto(application.getId().toString(), APPLICATION_DOCUMENT_INSTANCE_ITEM_TYPE, documentTemplateDto))
+        .thenReturn(Optional.of(existingDocumentInstance));
 
-    when(documentTemplateService.getDocumentTemplateDtoByMnemonicOrThrow(documentTemplateType.getMnemonic())).thenReturn(documentTemplateDto);
-    when(applicationService.getApplicationById(application.getId())).thenReturn(application);
-    when(documentInstanceService.getDocumentInstanceDtoByItemReferenceAndItemTypeAndDocumentTemplateDto(itemReference,
-        APPLICATION_DOCUMENT_INSTANCE_ITEM_TYPE, documentTemplateDto)).thenReturn(Optional.of(existingDocumentInstance));
-
-    fieldConsentsDocumentInstanceService.onApplicationSubmittedEvent(new ApplicationSubmittedEvent(application.getId()));
+    fieldConsentsDocumentInstanceService.createDocumentInstancesForApplication(application);
 
     verify(documentInstanceService, never()).createDocumentInstance(any(), any(), any(), any(), any());
   }
 
-  private static Stream<Arguments> onApplicationSubmittedEvent_arguments() {
+  private static Stream<Arguments> createDocumentInstancesForApplication_arguments() {
     return Stream.of(
         arguments(ApplicationType.FLARE, DocumentTemplateType.FLARE_CONSENT),
         arguments(ApplicationType.PRODUCTION, DocumentTemplateType.PRODUCTION_CONSENT),
