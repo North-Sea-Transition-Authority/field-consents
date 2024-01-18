@@ -24,6 +24,7 @@ import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 public class ApplicationDataItemIntegrationTestUtil {
 
+  public static final String APPLICATION_REFERENCE = "PCON/8000/0 (Version 1)";
   public static final int ANNUAL_CONSENT_YEAR = LocalDate.now().getYear();
   public static final int LONG_TERM_START_YEAR = LocalDate.now().getYear();
   public static final int LONG_TERM_END_YEAR = LONG_TERM_START_YEAR + 4;
@@ -155,7 +156,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withApplicationId(applicationId)
         .withType(ApplicationType.PRODUCTION.getDisplayName())
         .withDuration(getConsentDurationString(consentLengthType))
-        .withReference("PCON/10/0 (Version 1)")
+        .withReference(APPLICATION_REFERENCE)
         .withOperator(ApplicationTestUtil.CACHED_PRIMARY_OPERATOR_NAME_1)
         .withAsset(FieldTestUtil.FIELD_NAME_1)
         .withGeographicArea(FieldTestUtil.FIELD_1_GEOGRAPHIC_AREA.getDisplayName())
@@ -279,7 +280,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withApplicationId(applicationId)
         .withType(ApplicationType.PRODUCTION.getDisplayName())
         .withDuration(getConsentDurationString(consentLengthType))
-        .withReference("PCON/10/0 (Version 1)")
+        .withReference(APPLICATION_REFERENCE)
         .withOperator(ApplicationTestUtil.CACHED_PRIMARY_OPERATOR_NAME_1)
         .withAsset(FieldTestUtil.FIELD_NAME_1)
         .withGeographicArea(FieldTestUtil.FIELD_1_GEOGRAPHIC_AREA.getDisplayName())
@@ -309,7 +310,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withApplicationId(applicationId)
         .withType(ApplicationType.PRODUCTION.getDisplayName())
         .withDuration(getConsentDurationString(consentLengthType))
-        .withReference("PCON/10/0 (Version 1)")
+        .withReference(APPLICATION_REFERENCE)
         .withOperator(ApplicationTestUtil.CACHED_PRIMARY_OPERATOR_NAME_1)
         .withAsset(FieldTestUtil.FIELD_NAME_1)
         .withGeographicArea(FieldTestUtil.FIELD_1_GEOGRAPHIC_AREA.getDisplayName())
@@ -339,7 +340,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withApplicationId(applicationId)
         .withType(ApplicationType.PRODUCTION.getDisplayName())
         .withDuration(getConsentDurationString(consentLengthType))
-        .withReference("PCON/10/0 (Version 1)")
+        .withReference(APPLICATION_REFERENCE)
         .withOperator(ApplicationTestUtil.CACHED_PRIMARY_OPERATOR_NAME_1)
         .withAsset(FieldTestUtil.FIELD_NAME_1)
         .withGeographicArea(FieldTestUtil.FIELD_1_GEOGRAPHIC_AREA.getDisplayName())
@@ -370,7 +371,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withApplicationId(applicationId)
         .withType(ApplicationType.PRODUCTION.getDisplayName())
         .withDuration(getConsentDurationString(consentLengthType))
-        .withReference("PCON/10/0 (Version 1)")
+        .withReference(APPLICATION_REFERENCE)
         .withOperator(ApplicationTestUtil.CACHED_PRIMARY_OPERATOR_NAME_1)
         .withAsset(FieldTestUtil.FIELD_NAME_1)
         .withGeographicArea(FieldTestUtil.FIELD_1_GEOGRAPHIC_AREA.getDisplayName())
@@ -401,7 +402,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withApplicationId(applicationId)
         .withType(ApplicationType.PRODUCTION.getDisplayName())
         .withDuration(getConsentDurationString(consentLengthType))
-        .withReference("PCON/10/0 (Version 1)")
+        .withReference(APPLICATION_REFERENCE)
         .withOperator(ApplicationTestUtil.CACHED_PRIMARY_OPERATOR_NAME_1)
         .withAsset(FieldTestUtil.FIELD_NAME_1)
         .withGeographicArea(FieldTestUtil.FIELD_1_GEOGRAPHIC_AREA.getDisplayName())

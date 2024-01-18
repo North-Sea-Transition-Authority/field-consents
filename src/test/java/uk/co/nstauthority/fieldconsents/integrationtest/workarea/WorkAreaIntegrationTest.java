@@ -252,7 +252,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
   /*********************************** REFERENCE NUMBER ***********************************/
   @Test
   void getWorkAreaItemsForIndustryByReferenceNumber_foundWhenValidApplicationNumber() {
-    workAreaFilterForm.setReferenceNumber("10");
+    workAreaFilterForm.setReferenceNumber("8000");
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
 
     var applicationVersion = createSubmittedApplicationVersion(ApplicationType.PRODUCTION, consentLengthForm);

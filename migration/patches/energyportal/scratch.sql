@@ -312,6 +312,10 @@ WHERE fcd.id = (
   FROM envmgr.field_consent_details ifcd
   WHERE ifcd.fc_id = fcd.fc_id
   AND ifcd.variation_no = fcd.variation_no
+  AND (ifcd.status, ifcd.version_status) NOT IN (
+    ('INPROGRESS', 'PENDING') -- an unsubmitted application update (for any version/variation) (don't migrate)
+  , ('INPROGRESS', 'CURRENT') -- an unsubmitted application (version 1 variation 0) (don't migrate)
+  )
 ) -- only pick the first detail per variation
 ORDER BY fc.id ASC, fcd.id ASC
 /

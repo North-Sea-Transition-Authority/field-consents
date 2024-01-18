@@ -173,7 +173,7 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
   /*********************************** REFERENCE NUMBER ***********************************/
   @Test
   void searchByReferenceNumber_foundWhenValidApplicationNumber() {
-    searchForm.setReferenceNumber("10");
+    searchForm.setReferenceNumber("8000");
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
 
     var applicationVersion = createSubmittedApplicationVersion(ApplicationType.PRODUCTION, consentLengthForm);
