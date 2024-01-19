@@ -35,7 +35,7 @@ class FieldConsentsDocumentInstanceSectionServiceTest {
     var topLevelDocumentInstanceSectionDtos = List.of(DocumentInstanceSectionDtoTestUtil.builder().build());
 
     var documentInstanceSectionSummaryViewsForSectionSiblings =
-        List.of(new DocumentInstanceSectionSummaryView(null, null, null, null, null, null, null));
+        List.of(new DocumentInstanceSectionSummaryView(0, null, null, null, null, null, null, null, null));
 
     when(documentInstanceSectionService.getTopLevelDocumentInstanceSectionDtos(documentInstanceDto))
         .thenReturn(topLevelDocumentInstanceSectionDtos);
@@ -117,7 +117,7 @@ class FieldConsentsDocumentInstanceSectionServiceTest {
         )
     ).containsExactly(
         DocumentInstanceSectionSummaryView.from(
-            "",
+            null,
             siblingDocumentInstanceSectionDto1,
             siblingDocumentInstanceSectionDto1ResolvedContent
         ),
@@ -137,7 +137,7 @@ class FieldConsentsDocumentInstanceSectionServiceTest {
             siblingDocumentInstanceSectionDto2Child1Child1ResolvedContent
         ),
         DocumentInstanceSectionSummaryView.from(
-            "",
+            null,
             siblingDocumentInstanceSectionDto2Child2,
             siblingDocumentInstanceSectionDto2Child2ResolvedContent
         ),

@@ -142,7 +142,7 @@ class DocumentInstanceControllerTest extends AbstractControllerTest {
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_OCTET_STREAM))
         .andExpect(content().bytes(byteArrayResource.getByteArray()))
-        .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"Document Preview.pdf\""));
+        .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"Document Preview.pdf\""));
   }
 
   @SecurityTest

@@ -9,20 +9,40 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 class DocumentTemplateSectionSummaryViewTest {
 
   @Test
-  void from_sectionNumbered() {
+  void titleWithSectionNumber_nullSectionNumber() {
+    var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder()
+        .withTitle("title")
+        .build();
+
+    assertThat(DocumentTemplateSectionSummaryView.from(null, "condition title", documentTemplateSectionDto))
+        .extracting(DocumentTemplateSectionSummaryView::titleWithSectionNumber)
+        .isEqualTo(documentTemplateSectionDto.title());
+  }
+
+  @Test
+  void titleWithSectionNumber_withSectionNumber() {
+    var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder()
+        .withTitle("title")
+        .build();
+
+    assertThat(DocumentTemplateSectionSummaryView.from("1.2.3", "condition title", documentTemplateSectionDto))
+        .extracting(DocumentTemplateSectionSummaryView::titleWithSectionNumber)
+        .isEqualTo("1.2.3 title");
+  }
+
+  @Test
+  void from() {
     var sectionNumberString = "1.2.3";
     var conditionTitle = "Test condition title";
 
-    var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder()
-        .withNumbered(true)
-        .build();
-
+    var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
     var documentTemplateSectionId = documentTemplateSectionDto.id();
 
     assertThat(DocumentTemplateSectionSummaryView.from(sectionNumberString, conditionTitle, documentTemplateSectionDto))
         .isEqualTo(
             new DocumentTemplateSectionSummaryView(
-                "1.2.3 Test title",
+                sectionNumberString,
+                documentTemplateSectionDto.title(),
                 documentTemplateSectionDto.content(),
                 conditionTitle,
                 ReverseRouter.route(on(DocumentTemplateSectionController.class)
@@ -37,36 +57,5 @@ class DocumentTemplateSectionSummaryViewTest {
                     .getRemoveDocumentTemplateSection(documentTemplateSectionId))
             )
     );
-  }
-
-  @Test
-  void from_sectionNotNumbered() {
-    var sectionNumberString = "";
-    var conditionTitle = "Test condition title";
-
-    var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder()
-        .withNumbered(false)
-        .build();
-
-    var documentTemplateSectionId = documentTemplateSectionDto.id();
-
-    assertThat(DocumentTemplateSectionSummaryView.from(sectionNumberString, conditionTitle, documentTemplateSectionDto))
-        .isEqualTo(
-            new DocumentTemplateSectionSummaryView(
-                "Test title",
-                documentTemplateSectionDto.content(),
-                conditionTitle,
-                ReverseRouter.route(on(DocumentTemplateSectionController.class)
-                    .getAddDocumentTemplateSectionBefore(documentTemplateSectionId)),
-                ReverseRouter.route(on(DocumentTemplateSectionController.class)
-                    .getAddDocumentTemplateSectionAfter(documentTemplateSectionId)),
-                ReverseRouter.route(on(DocumentTemplateSectionController.class)
-                    .getAddDocumentTemplateSubsection(documentTemplateSectionId)),
-                ReverseRouter.route(on(DocumentTemplateSectionController.class)
-                    .getEditDocumentTemplateSection(documentTemplateSectionId)),
-                ReverseRouter.route(on(DocumentTemplateSectionController.class)
-                    .getRemoveDocumentTemplateSection(documentTemplateSectionId))
-            )
-        );
   }
 }

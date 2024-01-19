@@ -76,7 +76,7 @@ public class DocumentInstanceController {
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_OCTET_STREAM)
         .contentLength(byteArrayResource.contentLength())
-        .header(HttpHeaders.CONTENT_DISPOSITION, String.format("attachment; filename=\"%s\"", fileName))
+        .header(HttpHeaders.CONTENT_DISPOSITION, String.format("inline; filename=\"%s\"", fileName))
         .body(byteArrayResource);
   }
 

@@ -70,7 +70,7 @@ public class DocumentInstanceSectionService {
 
     documentInstanceSectionRepository.saveAll(documentInstanceSectionsToSave);
 
-    return DocumentInstanceSectionDto.from(documentInstanceSection, List.of());
+    return DocumentInstanceSectionDto.from(0, documentInstanceSection, List.of());
   }
 
   @Transactional
@@ -110,20 +110,21 @@ public class DocumentInstanceSectionService {
         documentInstanceSection.getDocumentInstance().getId()
     );
 
-    return getDocumentInstanceSectionDto(documentInstanceSection, allDocumentInstanceSections);
+    return getDocumentInstanceSectionDto(0, documentInstanceSection, allDocumentInstanceSections);
   }
 
   DocumentInstanceSectionDto getDocumentInstanceSectionDto(
+      int nestingLevel,
       DocumentInstanceSection documentInstanceSection,
       List<DocumentInstanceSection> allDocumentInstanceSections
   ) {
     var childrenDtos = allDocumentInstanceSections.stream()
         .filter(section -> section.getParent() != null
             && section.getParent().getId().equals(documentInstanceSection.getId()))
-        .map(child -> getDocumentInstanceSectionDto(child, allDocumentInstanceSections))
+        .map(child -> getDocumentInstanceSectionDto(nestingLevel + 1, child, allDocumentInstanceSections))
         .toList();
 
-    return DocumentInstanceSectionDto.from(documentInstanceSection, childrenDtos);
+    return DocumentInstanceSectionDto.from(nestingLevel, documentInstanceSection, childrenDtos);
   }
 
   DocumentInstanceSection getDocumentInstanceSectionOrThrow(UUID documentInstanceSectionId) {
@@ -145,6 +146,7 @@ public class DocumentInstanceSectionService {
         .filter(documentInstanceSection -> documentInstanceSection.getParent() == null)
         .map(documentInstanceSection ->
             getDocumentInstanceSectionDto(
+                0,
                 documentInstanceSection,
                 allDocumentInstanceSections
             )

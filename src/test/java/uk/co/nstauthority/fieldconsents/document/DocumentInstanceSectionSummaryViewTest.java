@@ -9,21 +9,40 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 class DocumentInstanceSectionSummaryViewTest {
 
   @Test
-  void from_sectionNumbered() {
-    var sectionNumberString = "1.2.3";
-
+  void titleWithSectionNumber_nullSectionNumber() {
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder()
-        .withNumbered(true)
+        .withTitle("title")
         .build();
 
-    var content = "Test content";
+    assertThat(DocumentInstanceSectionSummaryView.from(null, documentInstanceSectionDto, "content"))
+        .extracting(DocumentInstanceSectionSummaryView::titleWithSectionNumber)
+        .isEqualTo(documentInstanceSectionDto.title());
+  }
 
+  @Test
+  void titleWithSectionNumber_withSectionNumber() {
+    var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder()
+        .withTitle("title")
+        .build();
+
+    assertThat(DocumentInstanceSectionSummaryView.from("1.2.3", documentInstanceSectionDto, "content"))
+        .extracting(DocumentInstanceSectionSummaryView::titleWithSectionNumber)
+        .isEqualTo("1.2.3 title");
+  }
+
+  @Test
+  void from_sectionNumbered() {
+    var sectionNumberString = "1.2.3";
+    var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
+    var content = "Test content";
     var documentInstanceSectionId = documentInstanceSectionDto.id();
 
     assertThat(DocumentInstanceSectionSummaryView.from(sectionNumberString, documentInstanceSectionDto, content))
         .isEqualTo(
             new DocumentInstanceSectionSummaryView(
-                "1.2.3 Test title",
+                documentInstanceSectionDto.nestingLevel(),
+                sectionNumberString,
+                documentInstanceSectionDto.title(),
                 content,
                 ReverseRouter.route(on(DocumentInstanceSectionController.class)
                     .getAddDocumentInstanceSectionBefore(documentInstanceSectionId)),
@@ -37,36 +56,5 @@ class DocumentInstanceSectionSummaryViewTest {
                     .getRemoveDocumentInstanceSection(documentInstanceSectionId))
             )
     );
-  }
-
-  @Test
-  void from_sectionNotNumbered() {
-    var sectionNumberString = "";
-
-    var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder()
-        .withNumbered(false)
-        .build();
-
-    var content = "Test content";
-
-    var documentInstanceSectionId = documentInstanceSectionDto.id();
-
-    assertThat(DocumentInstanceSectionSummaryView.from(sectionNumberString, documentInstanceSectionDto, content))
-        .isEqualTo(
-            new DocumentInstanceSectionSummaryView(
-                "Test title",
-                content,
-                ReverseRouter.route(on(DocumentInstanceSectionController.class)
-                    .getAddDocumentInstanceSectionBefore(documentInstanceSectionId)),
-                ReverseRouter.route(on(DocumentInstanceSectionController.class)
-                    .getAddDocumentInstanceSectionAfter(documentInstanceSectionId)),
-                ReverseRouter.route(on(DocumentInstanceSectionController.class)
-                    .getAddDocumentInstanceSubsection(documentInstanceSectionId)),
-                ReverseRouter.route(on(DocumentInstanceSectionController.class)
-                    .getEditDocumentInstanceSection(documentInstanceSectionId)),
-                ReverseRouter.route(on(DocumentInstanceSectionController.class)
-                    .getRemoveDocumentInstanceSection(documentInstanceSectionId))
-            )
-        );
   }
 }

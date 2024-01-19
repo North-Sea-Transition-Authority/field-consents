@@ -1,13 +1,5 @@
-<html>
-  <body>
-    <h1>Production Consent</h1>
+<#import '_consent.ftl' as fcsConsent/>
 
-    <#list documentInstanceSectionSummaryViews as documentInstanceSectionSummaryView>
-      <h2 id="${documentInstanceSectionSummaryView.title()}">
-        ${documentInstanceSectionSummaryView.title()}
-      </h2>
-
-      <p>${documentInstanceSectionSummaryView.content()!}</p>
-    </#list>
-  </body>
-</html>
+<@fcsConsent.defaultDocument>
+  <@fcsConsent.sections documentInstanceSectionSummaryViews/>
+</@fcsConsent.defaultDocument>

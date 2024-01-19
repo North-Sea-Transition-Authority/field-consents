@@ -14,6 +14,7 @@ public record DocumentInstanceSectionDto(
     String content,
     boolean numbered,
     int displayOrder,
+    int nestingLevel,
     List<DocumentInstanceSectionDto> children
 ) {
 
@@ -24,6 +25,7 @@ public record DocumentInstanceSectionDto(
   }
 
   static DocumentInstanceSectionDto from(
+      int nestingLevel,
       DocumentInstanceSection documentInstanceSection,
       List<DocumentInstanceSectionDto> children
   ) {
@@ -39,6 +41,7 @@ public record DocumentInstanceSectionDto(
         documentInstanceSection.getContent(),
         documentInstanceSection.isNumbered(),
         documentInstanceSection.getDisplayOrder(),
+        nestingLevel,
         children
     );
   }

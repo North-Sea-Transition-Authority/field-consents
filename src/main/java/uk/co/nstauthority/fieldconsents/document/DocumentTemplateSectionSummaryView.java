@@ -7,6 +7,7 @@ import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateSectionDto;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 public record DocumentTemplateSectionSummaryView(
+    @Nullable String sectionNumber,
     String title,
     String content,
     @Nullable String conditionTitle,
@@ -17,6 +18,14 @@ public record DocumentTemplateSectionSummaryView(
     String removeUrl
 ) {
 
+  public String titleWithSectionNumber() {
+    if (sectionNumber == null) {
+      return title;
+    }
+
+    return "%s %s".formatted(sectionNumber, title);
+  }
+
   static DocumentTemplateSectionSummaryView from(
       String sectionNumberString,
       String conditionTitle,
@@ -24,15 +33,9 @@ public record DocumentTemplateSectionSummaryView(
   ) {
     var documentTemplateSectionId = documentTemplateSectionDto.id();
 
-    String title;
-    if (documentTemplateSectionDto.numbered()) {
-      title = "%s %s".formatted(sectionNumberString, documentTemplateSectionDto.title());
-    } else {
-      title = documentTemplateSectionDto.title();
-    }
-
     return new DocumentTemplateSectionSummaryView(
-        title,
+        sectionNumberString,
+        documentTemplateSectionDto.title(),
         documentTemplateSectionDto.content(),
         conditionTitle,
         ReverseRouter.route(on(DocumentTemplateSectionController.class)

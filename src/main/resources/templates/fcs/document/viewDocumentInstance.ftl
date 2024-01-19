@@ -6,8 +6,8 @@
       <@fdsSubNavigation.subNavigationSection>
         <#list documentInstanceSectionSummaryViews as documentInstanceSectionSummaryView>
           <@fdsSubNavigation.subNavigationNestedLink
-            linkText=documentInstanceSectionSummaryView.title()
-            linkUrl="#${documentInstanceSectionSummaryView.title()}"
+            linkText=documentInstanceSectionSummaryView.titleWithSectionNumber()
+            linkUrl="#${documentInstanceSectionSummaryView.titleWithSectionNumber()}"
           />
         </#list>
       </@fdsSubNavigation.subNavigationSection>
@@ -20,6 +20,7 @@
       linkUrl=springUrl(previewUrl)
       linkClass="govuk-button govuk-button--blue"
       role=true
+      openInNewTab=true
     />
 
     <@fdsAction.link
@@ -30,8 +31,8 @@
     />
 
     <#list documentInstanceSectionSummaryViews as documentInstanceSectionSummaryView>
-      <h2 id="${documentInstanceSectionSummaryView.title()}" class="govuk-heading-l govuk-!-margin-bottom-2">
-        ${documentInstanceSectionSummaryView.title()}
+      <h2 id="${documentInstanceSectionSummaryView.titleWithSectionNumber()}" class="govuk-heading-l govuk-!-margin-bottom-2">
+        ${documentInstanceSectionSummaryView.titleWithSectionNumber()}
       </h2>
 
      <@fdsActionDropdown.actionDropdown dropdownButtonText="Section actions">
@@ -39,35 +40,35 @@
          actionText="Add section before"
          linkAction=true
          linkActionUrl=springUrl(documentInstanceSectionSummaryView.addSectionBeforeUrl())
-         linkActionScreenReaderText=documentInstanceSectionSummaryView.title()
+         linkActionScreenReaderText=documentInstanceSectionSummaryView.titleWithSectionNumber()
        />
 
        <@fdsActionDropdown.actionDropdownItem
          actionText="Add section after"
          linkAction=true
          linkActionUrl=springUrl(documentInstanceSectionSummaryView.addSectionAfterUrl())
-         linkActionScreenReaderText=documentInstanceSectionSummaryView.title()
+         linkActionScreenReaderText=documentInstanceSectionSummaryView.titleWithSectionNumber()
        />
 
        <@fdsActionDropdown.actionDropdownItem
          actionText="Add subsection"
          linkAction=true
          linkActionUrl=springUrl(documentInstanceSectionSummaryView.addSubsectionUrl())
-         linkActionScreenReaderText=documentInstanceSectionSummaryView.title()
+         linkActionScreenReaderText=documentInstanceSectionSummaryView.titleWithSectionNumber()
        />
 
        <@fdsActionDropdown.actionDropdownItem
          actionText="Edit"
          linkAction=true
          linkActionUrl=springUrl(documentInstanceSectionSummaryView.editUrl())
-         linkActionScreenReaderText=documentInstanceSectionSummaryView.title()
+         linkActionScreenReaderText=documentInstanceSectionSummaryView.titleWithSectionNumber()
        />
 
        <@fdsActionDropdown.actionDropdownItem
          actionText="Remove"
          linkAction=true
          linkActionUrl=springUrl(documentInstanceSectionSummaryView.removeUrl())
-         linkActionScreenReaderText=documentInstanceSectionSummaryView.title()
+         linkActionScreenReaderText=documentInstanceSectionSummaryView.titleWithSectionNumber()
        />
      </@fdsActionDropdown.actionDropdown>
 

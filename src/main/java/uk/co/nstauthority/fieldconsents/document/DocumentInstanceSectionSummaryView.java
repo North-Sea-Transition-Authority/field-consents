@@ -2,10 +2,13 @@ package uk.co.nstauthority.fieldconsents.document;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import javax.annotation.Nullable;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceSectionDto;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 public record DocumentInstanceSectionSummaryView(
+    int nestingLevel,
+    @Nullable String sectionNumber,
     String title,
     String content,
     String addSectionBeforeUrl,
@@ -15,6 +18,14 @@ public record DocumentInstanceSectionSummaryView(
     String removeUrl
 ) {
 
+  public String titleWithSectionNumber() {
+    if (sectionNumber == null) {
+      return title;
+    }
+
+    return "%s %s".formatted(sectionNumber, title);
+  }
+
   static DocumentInstanceSectionSummaryView from(
       String sectionNumberString,
       DocumentInstanceSectionDto documentInstanceSectionDto,
@@ -22,15 +33,10 @@ public record DocumentInstanceSectionSummaryView(
   ) {
     var documentInstanceSectionId = documentInstanceSectionDto.id();
 
-    String title;
-    if (documentInstanceSectionDto.numbered()) {
-      title = "%s %s".formatted(sectionNumberString, documentInstanceSectionDto.title());
-    } else {
-      title = documentInstanceSectionDto.title();
-    }
-
     return new DocumentInstanceSectionSummaryView(
-        title,
+        documentInstanceSectionDto.nestingLevel(),
+        sectionNumberString,
+        documentInstanceSectionDto.title(),
         content,
         ReverseRouter.route(on(DocumentInstanceSectionController.class)
             .getAddDocumentInstanceSectionBefore(documentInstanceSectionId)),
@@ -44,4 +50,5 @@ public record DocumentInstanceSectionSummaryView(
             .getRemoveDocumentInstanceSection(documentInstanceSectionId))
     );
   }
+
 }
