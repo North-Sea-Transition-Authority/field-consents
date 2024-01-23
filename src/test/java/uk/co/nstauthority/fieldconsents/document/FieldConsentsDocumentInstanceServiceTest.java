@@ -84,9 +84,9 @@ class FieldConsentsDocumentInstanceServiceTest {
 
   private static Stream<Arguments> createDocumentInstancesForApplication_arguments() {
     return Stream.of(
-        arguments(ApplicationType.FLARE, DocumentTemplateType.FLARE_CONSENT),
-        arguments(ApplicationType.PRODUCTION, DocumentTemplateType.PRODUCTION_CONSENT),
-        arguments(ApplicationType.VENT, DocumentTemplateType.VENT_CONSENT)
+        arguments(ApplicationType.FLARE, DocumentTemplateType.FIELD_FLARE_CONSENT),
+        arguments(ApplicationType.PRODUCTION, DocumentTemplateType.FIELD_PRODUCTION_CONSENT),
+        arguments(ApplicationType.VENT, DocumentTemplateType.FIELD_VENT_CONSENT)
     );
   }
 
@@ -96,7 +96,7 @@ class FieldConsentsDocumentInstanceServiceTest {
     var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
 
-    var documentTemplateType = DocumentTemplateType.PRODUCTION_CONSENT;
+    var documentTemplateType = DocumentTemplateType.FIELD_PRODUCTION_CONSENT;
     var itemReference = application.getId().toString();
 
     when(documentInstanceService.createDocumentInstance(

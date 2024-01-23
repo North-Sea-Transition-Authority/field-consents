@@ -93,9 +93,9 @@ public class FieldConsentsDocumentInstanceService {
 
   private DocumentTemplateType getConsentDocumentType(Application application) {
     return switch (application.getType()) {
-      case PRODUCTION -> DocumentTemplateType.PRODUCTION_CONSENT;
-      case FLARE -> DocumentTemplateType.FLARE_CONSENT;
-      case VENT -> DocumentTemplateType.VENT_CONSENT;
+      case PRODUCTION -> DocumentTemplateType.FIELD_PRODUCTION_CONSENT;
+      case FLARE -> DocumentTemplateType.FIELD_FLARE_CONSENT;
+      case VENT -> DocumentTemplateType.FIELD_VENT_CONSENT;
     };
   }
 

@@ -2,13 +2,14 @@ package uk.co.nstauthority.fieldconsents.document.mailmergefield;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -20,6 +21,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.
 import uk.co.nstauthority.fieldconsents.document.DocumentInstanceDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.document.DocumentInstanceLinkingService;
 import uk.co.nstauthority.fieldconsents.document.DocumentTemplateDtoTestUtil;
+import uk.co.nstauthority.fieldconsents.document.DocumentTemplateType;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -53,10 +55,14 @@ class ConsentEndDateMailMergeFieldTest {
     assertThat(consentEndDateMailMergeField.getDescription()).isEqualTo("The Consent end date for this application");
   }
 
-  @Test
-  void isApplicable() {
-    var template = DocumentTemplateDtoTestUtil.builder().build();
-    assertTrue(consentEndDateMailMergeField.isApplicable(template));
+  @ParameterizedTest
+  @EnumSource(DocumentTemplateType.class)
+  void isApplicable(DocumentTemplateType documentTemplateType) {
+    var template = DocumentTemplateDtoTestUtil.builder()
+        .withMnemonic(documentTemplateType.getMnemonic())
+        .build();
+
+    assertThat(consentEndDateMailMergeField.isApplicable(template)).isTrue();
   }
 
   @Test

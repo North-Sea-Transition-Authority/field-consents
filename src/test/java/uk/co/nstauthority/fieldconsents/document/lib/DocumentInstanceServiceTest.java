@@ -2,19 +2,11 @@ package uk.co.nstauthority.fieldconsents.document.lib;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import freemarker.template.Configuration;
-import freemarker.template.Template;
 import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -43,7 +35,7 @@ class DocumentInstanceServiceTest {
   private DocumentTemplateService documentTemplateService;
 
   @Mock
-  private Configuration freemarkerConfiguration;
+  private FreeMarkerTemplateRenderingService freeMarkerTemplateRenderingService;
 
   @InjectMocks
   @Spy
@@ -181,8 +173,6 @@ class DocumentInstanceServiceTest {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
     Map<String, Object> templateModel = Map.of("test-model-key", "test-model-value");
 
-    var freemarkerTemplate = mock(Template.class);
-
     var expectedModel = new HashMap<>(templateModel);
     expectedModel.put("documentInstanceDto", documentInstanceDto);
 
@@ -190,16 +180,12 @@ class DocumentInstanceServiceTest {
 
     var byteArrayResource = new ByteArrayResource(new byte[] {1, 2, 3});
 
-    when(freemarkerConfiguration.getTemplate(documentInstanceDto.documentTemplateDto().templatePath()))
-        .thenReturn(freemarkerTemplate);
-
-    doAnswer(invocation -> {
-      var writer = invocation.getArgument(1, Writer.class);
-      writer.write(html);
-      return null;
-    })
-        .when(freemarkerTemplate)
-        .process(eq(expectedModel), any(StringWriter.class));
+    when(
+        freeMarkerTemplateRenderingService.renderTemplate(
+            documentInstanceDto.documentTemplateDto().templatePath(),
+            expectedModel
+        )
+    ).thenReturn(html);
 
     doReturn(byteArrayResource).when(documentInstanceService).renderPdfFromHtml(html);
 

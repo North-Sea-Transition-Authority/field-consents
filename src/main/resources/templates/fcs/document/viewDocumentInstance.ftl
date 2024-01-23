@@ -72,7 +72,7 @@
        />
      </@fdsActionDropdown.actionDropdown>
 
-      <p class="govuk-body govuk-body__preserve-whitespace govuk-!-margin-top-4">${documentInstanceSectionSummaryView.content()!}</p>
+      <p class="govuk-body govuk-body__preserve-whitespace govuk-!-margin-top-4">${documentInstanceSectionSummaryView.content()!?no_esc}</p>
     </#list>
   </@defaultPageWithSubNavigationContent>
 </@defaultPageWithSubNavigation>

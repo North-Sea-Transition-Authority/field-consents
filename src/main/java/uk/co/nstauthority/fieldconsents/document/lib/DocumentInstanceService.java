@@ -1,7 +1,6 @@
 package uk.co.nstauthority.fieldconsents.document.lib;
 
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
-import freemarker.template.Configuration;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
@@ -13,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 
 @Service
 public class DocumentInstanceService {
@@ -21,19 +19,19 @@ public class DocumentInstanceService {
   private final DocumentInstanceRepository documentInstanceRepository;
   private final DocumentInstanceSectionTemplateCopyingService documentInstanceSectionTemplateCopyingService;
   private final DocumentTemplateService documentTemplateService;
-  private final Configuration freemarkerConfiguration;
+  private final FreeMarkerTemplateRenderingService freeMarkerTemplateRenderingService;
 
   @Autowired
   DocumentInstanceService(
       DocumentInstanceRepository documentInstanceRepository,
       DocumentInstanceSectionTemplateCopyingService documentInstanceSectionTemplateCopyingService,
       DocumentTemplateService documentTemplateService,
-      Configuration freemarkerConfiguration
+      FreeMarkerTemplateRenderingService freeMarkerTemplateRenderingService
   ) {
     this.documentInstanceRepository = documentInstanceRepository;
     this.documentInstanceSectionTemplateCopyingService = documentInstanceSectionTemplateCopyingService;
     this.documentTemplateService = documentTemplateService;
-    this.freemarkerConfiguration = freemarkerConfiguration;
+    this.freeMarkerTemplateRenderingService = freeMarkerTemplateRenderingService;
   }
 
   @Transactional
@@ -93,9 +91,10 @@ public class DocumentInstanceService {
     model.put("documentInstanceDto", documentInstanceDto);
 
     try {
-      var freemarkerTemplate =
-          freemarkerConfiguration.getTemplate(documentInstanceDto.documentTemplateDto().templatePath());
-      var documentHtml = FreeMarkerTemplateUtils.processTemplateIntoString(freemarkerTemplate, model);
+      var documentHtml = freeMarkerTemplateRenderingService.renderTemplate(
+          documentInstanceDto.documentTemplateDto().templatePath(),
+          model
+      );
 
       return renderPdfFromHtml(documentHtml);
     } catch (Exception exception) {

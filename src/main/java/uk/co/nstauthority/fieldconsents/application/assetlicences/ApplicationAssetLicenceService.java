@@ -52,6 +52,10 @@ public class ApplicationAssetLicenceService {
     return applicationAssetLicenceRepository.findAllByApplicationAssetInOrderByCachedLicenceRefAsc(applicationAssets);
   }
 
+  public List<ApplicationAssetLicence> getAssetLicences(ApplicationVersion applicationVersion) {
+    return applicationAssetLicenceRepository.findAllByApplicationVersion(applicationVersion);
+  }
+
   public Map<ApplicationAsset, List<ApplicationAssetLicence>> getAssetLicencesMap(ApplicationVersion applicationVersion) {
     return applicationAssetLicenceRepository.findAllByApplicationVersion(applicationVersion)
         .stream()

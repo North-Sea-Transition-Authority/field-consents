@@ -16,4 +16,8 @@ public class MailMergeFieldFailedToResolveException extends IllegalStateExceptio
   public MailMergeFieldFailedToResolveException(String s) {
     super(s);
   }
+
+  public MailMergeFieldFailedToResolveException(String s, Throwable cause) {
+    super(s, cause);
+  }
 }

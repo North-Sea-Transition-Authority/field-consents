@@ -1,4 +1,4 @@
-<#import '_consent.ftl' as fcsConsent/>
+<#import '../_consent.ftl' as fcsConsent/>
 
 <@fcsConsent.defaultDocument>
   <@fcsConsent.sections documentInstanceSectionSummaryViews/>

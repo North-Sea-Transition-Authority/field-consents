@@ -15,7 +15,7 @@
       <tbody>
       <tr>
         <td style="padding-left: ${nestingLevel+1}rem; padding-right: 1rem; vertical-align: top;">${sectionNumber!}</td>
-        <td style="vertical-align: top; white-space: pre-line;">${content!}</td>
+        <td style="vertical-align: top; white-space: pre-line;">${content!?no_esc}</td>
       </tr>
       </tbody>
     </table>

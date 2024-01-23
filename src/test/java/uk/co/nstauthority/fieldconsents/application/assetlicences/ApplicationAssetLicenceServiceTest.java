@@ -3,6 +3,7 @@ package uk.co.nstauthority.fieldconsents.application.assetlicences;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.entry;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -32,7 +33,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
@@ -48,6 +51,8 @@ class ApplicationAssetLicenceServiceTest {
   @Captor
   private ArgumentCaptor<ApplicationAssetLicence> applicationAssetLicenceArgumentCaptor;
 
+  @InjectMocks
+  @Spy
   private ApplicationAssetLicenceService applicationAssetLicenceService;
 
   private ApplicationAsset applicationAsset;
@@ -56,7 +61,6 @@ class ApplicationAssetLicenceServiceTest {
 
   @BeforeEach
   void setUp() {
-    applicationAssetLicenceService = new ApplicationAssetLicenceService(applicationAssetLicenceRepository);
     applicationAsset = fieldAsset1;
     applicationVersion = applicationAsset.getApplicationVersion();
   }
@@ -112,16 +116,50 @@ class ApplicationAssetLicenceServiceTest {
   }
 
   @Test
-  void getAssetLicences() {
-    ApplicationAssetLicence fieldAsset1Licence3 = new ApplicationAssetLicence();
+  void getAssetLicences_withApplicationAsset() {
+    var fieldAsset1Licence3 = new ApplicationAssetLicence();
     fieldAsset1Licence3.setApplicationVersion(applicationAsset.getApplicationVersion());
     fieldAsset1Licence3.setApplicationAsset(applicationAsset);
     fieldAsset1Licence3.setLicenceId(LICENCE_ID_3);
     fieldAsset1Licence3.setCachedLicenceRef(LICENCE_REF_3);
-    when(applicationAssetLicenceRepository.findAllByApplicationAssetInOrderByCachedLicenceRefAsc(Collections.singleton(applicationAsset)))
-        .thenReturn(List.of(fieldAsset1Licence1, fieldAsset1Licence2, fieldAsset1Licence3));
+
+    doReturn(List.of(fieldAsset1Licence1, fieldAsset1Licence2, fieldAsset1Licence3))
+        .when(applicationAssetLicenceService)
+        .getAssetLicences(Collections.singleton(applicationAsset));
 
     assertThat(applicationAssetLicenceService.getAssetLicences(applicationAsset))
+        .containsExactly(fieldAsset1Licence1, fieldAsset1Licence2, fieldAsset1Licence3);
+  }
+
+  @Test
+  void getAssetLicences_withApplicationAssets() {
+    var fieldAsset1Licence3 = new ApplicationAssetLicence();
+    fieldAsset1Licence3.setApplicationVersion(applicationAsset.getApplicationVersion());
+    fieldAsset1Licence3.setApplicationAsset(applicationAsset);
+    fieldAsset1Licence3.setLicenceId(LICENCE_ID_3);
+    fieldAsset1Licence3.setCachedLicenceRef(LICENCE_REF_3);
+
+    var applicationAssets = List.of(applicationAsset);
+
+    when(applicationAssetLicenceRepository.findAllByApplicationAssetInOrderByCachedLicenceRefAsc(applicationAssets))
+        .thenReturn(List.of(fieldAsset1Licence1, fieldAsset1Licence2, fieldAsset1Licence3));
+
+    assertThat(applicationAssetLicenceService.getAssetLicences(applicationAssets))
+        .containsExactly(fieldAsset1Licence1, fieldAsset1Licence2, fieldAsset1Licence3);
+  }
+
+  @Test
+  void getAssetLicences_withApplicationVersion() {
+    var fieldAsset1Licence3 = new ApplicationAssetLicence();
+    fieldAsset1Licence3.setApplicationVersion(applicationAsset.getApplicationVersion());
+    fieldAsset1Licence3.setApplicationAsset(applicationAsset);
+    fieldAsset1Licence3.setLicenceId(LICENCE_ID_3);
+    fieldAsset1Licence3.setCachedLicenceRef(LICENCE_REF_3);
+
+    when(applicationAssetLicenceRepository.findAllByApplicationVersion(applicationVersion))
+        .thenReturn(List.of(fieldAsset1Licence1, fieldAsset1Licence2, fieldAsset1Licence3));
+
+    assertThat(applicationAssetLicenceService.getAssetLicences(applicationVersion))
         .containsExactly(fieldAsset1Licence1, fieldAsset1Licence2, fieldAsset1Licence3);
   }
 

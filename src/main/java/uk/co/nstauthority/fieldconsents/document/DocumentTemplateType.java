@@ -1,9 +1,10 @@
 package uk.co.nstauthority.fieldconsents.document;
 
 public enum DocumentTemplateType {
-  PRODUCTION_CONSENT("Production Consent document for this application"),
-  FLARE_CONSENT("Vent Consent document for this application"),
-  VENT_CONSENT("Flare Consent document for this application"),
+
+  FIELD_PRODUCTION_CONSENT("Production Consent document for this application"),
+  FIELD_FLARE_CONSENT("Vent Consent document for this application"),
+  FIELD_VENT_CONSENT("Flare Consent document for this application"),
   ;
 
   private final String documentInstanceDescription;
@@ -20,4 +21,19 @@ public enum DocumentTemplateType {
     return documentInstanceDescription;
   }
 
+  public static DocumentTemplateType getByMnemonic(String mnemonic) {
+    return valueOf(mnemonic);
+  }
+
+  public static boolean isField(DocumentTemplateType documentTemplateType) {
+    return documentTemplateType == FIELD_PRODUCTION_CONSENT
+        || documentTemplateType == FIELD_FLARE_CONSENT
+        || documentTemplateType == FIELD_VENT_CONSENT;
+  }
+
+  public static boolean isConsent(DocumentTemplateType documentTemplateType) {
+    return documentTemplateType == FIELD_PRODUCTION_CONSENT
+        || documentTemplateType == FIELD_FLARE_CONSENT
+        || documentTemplateType == FIELD_VENT_CONSENT;
+  }
 }
