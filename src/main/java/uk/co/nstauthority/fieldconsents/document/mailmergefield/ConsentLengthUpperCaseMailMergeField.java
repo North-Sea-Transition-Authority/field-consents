@@ -3,58 +3,50 @@ package uk.co.nstauthority.fieldconsents.document.mailmergefield;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
-import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAssetLicence;
-import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAssetLicenceService;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.document.DocumentInstanceLinkingService;
 import uk.co.nstauthority.fieldconsents.document.DocumentTemplateType;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceDto;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentMailMergeField;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
-import uk.co.nstauthority.fieldconsents.util.StringUtil;
 
-@Order(5)
+@Order(4)
 @Component
-class LicenceReferenceListMailMergeField implements DocumentMailMergeField {
+class ConsentLengthUpperCaseMailMergeField implements DocumentMailMergeField {
 
   private final DocumentInstanceLinkingService documentInstanceLinkingService;
-  private final ApplicationAssetLicenceService applicationAssetLicenceService;
+  private final ConsentLengthService consentLengthService;
 
   @Autowired
-  LicenceReferenceListMailMergeField(
+  ConsentLengthUpperCaseMailMergeField(
       DocumentInstanceLinkingService documentInstanceLinkingService,
-      ApplicationAssetLicenceService applicationAssetLicenceService
+      ConsentLengthService consentLengthService
   ) {
     this.documentInstanceLinkingService = documentInstanceLinkingService;
-    this.applicationAssetLicenceService = applicationAssetLicenceService;
+    this.consentLengthService = consentLengthService;
   }
 
   @Override
   public String getMnemonic() {
-    return "LICENCE_REFERENCE_LIST";
+    return "CONSENT_LENGTH_UPPER_CASE";
   }
 
   @Override
   public String getDescription() {
-    return "A list of the licence references associated with the application";
+    return "The length of the consent in upper case";
   }
 
   @Override
   public boolean isApplicable(DocumentTemplateDto documentTemplateDto) {
-    var documentTemplateType = DocumentTemplateType.getByMnemonic(documentTemplateDto.mnemonic());
-
-    return DocumentTemplateType.isField(documentTemplateType) && DocumentTemplateType.isConsent(documentTemplateType);
+    return DocumentTemplateType.isConsent(DocumentTemplateType.getByMnemonic(documentTemplateDto.mnemonic()));
   }
 
   @Override
   public String resolve(DocumentInstanceDto documentInstanceDto) {
     var applicationVersion =
         documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto);
+    var consentLengthDetails = consentLengthService.getConsentLengthDetails(applicationVersion);
 
-    var licenceReferences = applicationAssetLicenceService.getAssetLicences(applicationVersion).stream()
-        .map(ApplicationAssetLicence::getCachedLicenceRef)
-        .distinct()
-        .toList();
-
-    return StringUtil.formatStringList(licenceReferences);
+    return consentLengthDetails.getConsentLength().getShortDisplayName().toUpperCase();
   }
 }

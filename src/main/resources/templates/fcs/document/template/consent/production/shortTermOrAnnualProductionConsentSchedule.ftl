@@ -1,6 +1,6 @@
 <div class="govuk-body govuk-!-font-weight-bold govuk-!-text-align-centre">
   <p>SCHEDULE</p>
-  <p>${primaryFieldName} – Short Term Development and Production Consent</p>
+  <p>${primaryFieldName} – ${capitalizedConsentLengthType} Development and Production Consent</p>
   <p>Thousand Cubic Meters Per Day</p>
 </div>
 

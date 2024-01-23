@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.document.mailmergefield;
 
 import java.util.Map;
+import org.apache.commons.text.WordUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -13,7 +14,7 @@ import uk.co.nstauthority.fieldconsents.document.lib.DocumentMailMergeField;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
 import uk.co.nstauthority.fieldconsents.document.lib.FreeMarkerTemplateRenderingService;
 
-@Order(5)
+@Order(6)
 @Component
 class ScheduleMailMergeField implements DocumentMailMergeField {
 
@@ -69,13 +70,14 @@ class ScheduleMailMergeField implements DocumentMailMergeField {
         documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto);
 
     var consentLengthType = consentLengthService.getConsentLengthDetails(applicationVersion).getConsentLength();
-    if (consentLengthType != ConsentLengthType.SHORT_TERM) {
+    if (consentLengthType != ConsentLengthType.SHORT_TERM && consentLengthType != ConsentLengthType.ANNUAL) {
       throw new MailMergeFieldFailedToResolveException(
           "Unsupported ConsentLengthType: %s".formatted(consentLengthType)
       );
     }
 
     var model = Map.of(
+        "capitalizedConsentLengthType", WordUtils.capitalizeFully(consentLengthType.getShortDisplayName()),
         "primaryFieldName", primaryFieldNameMailMergeField.resolve(documentInstanceDto),
         "consentStartDate", consentStartDateMailMergeField.resolve(documentInstanceDto),
         "consentEndDate", consentEndDateMailMergeField.resolve(documentInstanceDto)
@@ -83,7 +85,7 @@ class ScheduleMailMergeField implements DocumentMailMergeField {
 
     try {
       return freeMarkerTemplateRenderingService.renderTemplate(
-          "fcs/document/template/consent/production/shortTermProductionConsentSchedule.ftl",
+          "fcs/document/template/consent/production/shortTermOrAnnualProductionConsentSchedule.ftl",
           model
       );
     } catch (Exception exception) {

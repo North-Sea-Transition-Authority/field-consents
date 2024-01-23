@@ -90,7 +90,7 @@ class DocumentTemplateBootstrapServiceTest {
         "Header",
         """
         PETROLEUM PRODUCTION LICENCE No(s). ((LICENCE_REFERENCE_LIST)) (“Licence(s)”)
-        SHORT TERM DEVELOPMENT AND PRODUCTION CONSENT
+        ((CONSENT_LENGTH_UPPER_CASE)) DEVELOPMENT AND PRODUCTION CONSENT
         """,
         null,
         false,

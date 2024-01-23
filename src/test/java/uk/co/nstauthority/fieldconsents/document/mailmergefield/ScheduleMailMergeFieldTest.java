@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 import java.util.Map;
+import org.apache.commons.text.WordUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -83,8 +84,8 @@ class ScheduleMailMergeFieldTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = ConsentLengthType.class, names = { "SHORT_TERM" }, mode = EnumSource.Mode.EXCLUDE)
-  void resolve_consentLengthTypeIsNotShortTerm(ConsentLengthType consentLengthType) {
+  @EnumSource(value = ConsentLengthType.class, names = { "SHORT_TERM", "ANNUAL" }, mode = EnumSource.Mode.EXCLUDE)
+  void resolve_consentLengthTypeIsNotShortTermOrAnnual(ConsentLengthType consentLengthType) {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder()
         .withDocumentTemplate(
             DocumentTemplateDtoTestUtil.builder()
@@ -106,8 +107,9 @@ class ScheduleMailMergeFieldTest {
         .isInstanceOf(MailMergeFieldFailedToResolveException.class);
   }
 
-  @Test
-  void resolve() throws Exception {
+  @ParameterizedTest
+  @EnumSource(value = ConsentLengthType.class, names = { "SHORT_TERM", "ANNUAL" }, mode = EnumSource.Mode.INCLUDE)
+  void resolve(ConsentLengthType consentLengthType) throws Exception {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder()
         .withDocumentTemplate(
             DocumentTemplateDtoTestUtil.builder()
@@ -119,7 +121,7 @@ class ScheduleMailMergeFieldTest {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
 
     var consentLengthDetails = new ConsentLengthDetails();
-    consentLengthDetails.setConsentLength(ConsentLengthType.SHORT_TERM);
+    consentLengthDetails.setConsentLength(consentLengthType);
 
     var primaryFieldName = "Test primary field name";
     var consentStartDate = "17/01/2024";
@@ -138,8 +140,9 @@ class ScheduleMailMergeFieldTest {
 
     when(
         freeMarkerTemplateRenderingService.renderTemplate(
-            "fcs/document/template/consent/production/shortTermProductionConsentSchedule.ftl",
+            "fcs/document/template/consent/production/shortTermOrAnnualProductionConsentSchedule.ftl",
             Map.of(
+                "capitalizedConsentLengthType", WordUtils.capitalizeFully(consentLengthType.getShortDisplayName()),
                 "primaryFieldName", primaryFieldName,
                 "consentStartDate", consentStartDate,
                 "consentEndDate", consentEndDate
