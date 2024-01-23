@@ -84,32 +84,8 @@ class ScheduleMailMergeFieldTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = ConsentLengthType.class, names = { "SHORT_TERM", "ANNUAL" }, mode = EnumSource.Mode.EXCLUDE)
-  void resolve_consentLengthTypeIsNotShortTermOrAnnual(ConsentLengthType consentLengthType) {
-    var documentInstanceDto = DocumentInstanceDtoTestUtil.builder()
-        .withDocumentTemplate(
-            DocumentTemplateDtoTestUtil.builder()
-                .withMnemonic(DocumentTemplateType.FIELD_PRODUCTION_CONSENT.getMnemonic())
-                .build()
-        )
-        .build();
-
-    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
-
-    var consentLengthDetails = new ConsentLengthDetails();
-    consentLengthDetails.setConsentLength(consentLengthType);
-
-    when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
-        .thenReturn(applicationVersion);
-    when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
-
-    assertThatThrownBy(() -> scheduleMailMergeField.resolve(documentInstanceDto))
-        .isInstanceOf(MailMergeFieldFailedToResolveException.class);
-  }
-
-  @ParameterizedTest
   @EnumSource(value = ConsentLengthType.class, names = { "SHORT_TERM", "ANNUAL" }, mode = EnumSource.Mode.INCLUDE)
-  void resolve(ConsentLengthType consentLengthType) throws Exception {
+  void resolve_consentLengthTypeIsShortTermOrAnnual(ConsentLengthType consentLengthType) throws Exception {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder()
         .withDocumentTemplate(
             DocumentTemplateDtoTestUtil.builder()
@@ -143,6 +119,51 @@ class ScheduleMailMergeFieldTest {
             "fcs/document/template/consent/production/shortTermOrAnnualProductionConsentSchedule.ftl",
             Map.of(
                 "capitalizedConsentLengthType", WordUtils.capitalizeFully(consentLengthType.getShortDisplayName()),
+                "primaryFieldName", primaryFieldName,
+                "consentStartDate", consentStartDate,
+                "consentEndDate", consentEndDate
+            )
+        )
+    ).thenReturn(html);
+
+    assertThat(scheduleMailMergeField.resolve(documentInstanceDto)).isEqualTo(html);
+  }
+
+  @Test
+  void resolve_consentLengthTypeIsLongTerm() throws Exception {
+    var documentInstanceDto = DocumentInstanceDtoTestUtil.builder()
+        .withDocumentTemplate(
+            DocumentTemplateDtoTestUtil.builder()
+                .withMnemonic(DocumentTemplateType.FIELD_PRODUCTION_CONSENT.getMnemonic())
+                .build()
+        )
+        .build();
+
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+
+    var consentLengthDetails = new ConsentLengthDetails();
+    consentLengthDetails.setConsentLength(ConsentLengthType.LONG_TERM);
+
+    var primaryFieldName = "Test primary field name";
+    var consentStartDate = "17/01/2024";
+    var consentEndDate = "17/01/2024";
+
+    var html = "<html></html>";
+
+    when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
+        .thenReturn(applicationVersion);
+
+    when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
+
+    when(primaryFieldNameMailMergeField.resolve(documentInstanceDto)).thenReturn(primaryFieldName);
+    when(consentStartDateMailMergeField.resolve(documentInstanceDto)).thenReturn(consentStartDate);
+    when(consentEndDateMailMergeField.resolve(documentInstanceDto)).thenReturn(consentEndDate);
+
+    when(
+        freeMarkerTemplateRenderingService.renderTemplate(
+            "fcs/document/template/consent/production/longTermProductionConsentSchedule.ftl",
+            Map.of(
+                "capitalizedConsentLengthType", WordUtils.capitalizeFully(ConsentLengthType.LONG_TERM.getShortDisplayName()),
                 "primaryFieldName", primaryFieldName,
                 "consentStartDate", consentStartDate,
                 "consentEndDate", consentEndDate

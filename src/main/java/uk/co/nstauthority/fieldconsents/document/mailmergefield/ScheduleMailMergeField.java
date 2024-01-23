@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
-import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.document.DocumentInstanceLinkingService;
 import uk.co.nstauthority.fieldconsents.document.DocumentTemplateType;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceDto;
@@ -70,11 +69,12 @@ class ScheduleMailMergeField implements DocumentMailMergeField {
         documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto);
 
     var consentLengthType = consentLengthService.getConsentLengthDetails(applicationVersion).getConsentLength();
-    if (consentLengthType != ConsentLengthType.SHORT_TERM && consentLengthType != ConsentLengthType.ANNUAL) {
-      throw new MailMergeFieldFailedToResolveException(
-          "Unsupported ConsentLengthType: %s".formatted(consentLengthType)
-      );
-    }
+
+    var templateName = switch (consentLengthType) {
+      case SHORT_TERM, ANNUAL ->
+          "fcs/document/template/consent/production/shortTermOrAnnualProductionConsentSchedule.ftl";
+      case LONG_TERM -> "fcs/document/template/consent/production/longTermProductionConsentSchedule.ftl";
+    };
 
     var model = Map.of(
         "capitalizedConsentLengthType", WordUtils.capitalizeFully(consentLengthType.getShortDisplayName()),
@@ -84,10 +84,7 @@ class ScheduleMailMergeField implements DocumentMailMergeField {
     );
 
     try {
-      return freeMarkerTemplateRenderingService.renderTemplate(
-          "fcs/document/template/consent/production/shortTermOrAnnualProductionConsentSchedule.ftl",
-          model
-      );
+      return freeMarkerTemplateRenderingService.renderTemplate(templateName, model);
     } catch (Exception exception) {
       throw new MailMergeFieldFailedToResolveException(
           "Exception rendering schedule for document instance: %s".formatted(documentInstanceDto.id()),
