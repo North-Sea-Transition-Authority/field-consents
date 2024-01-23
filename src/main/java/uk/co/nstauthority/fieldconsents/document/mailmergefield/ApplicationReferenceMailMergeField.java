@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.document.mailmergefield;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.document.DocumentInstanceLinkingService;
@@ -8,6 +9,7 @@ import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceDto;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentMailMergeField;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
 
+@Order(0)
 @Component
 class ApplicationReferenceMailMergeField implements DocumentMailMergeField {
 

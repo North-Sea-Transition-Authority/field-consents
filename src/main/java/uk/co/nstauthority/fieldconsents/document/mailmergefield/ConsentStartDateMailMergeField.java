@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.document.mailmergefield;
 
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentData;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataRepository;
@@ -9,6 +10,7 @@ import uk.co.nstauthority.fieldconsents.document.lib.DocumentMailMergeField;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 
+@Order(10)
 @Component
 public class ConsentStartDateMailMergeField implements DocumentMailMergeField {
 

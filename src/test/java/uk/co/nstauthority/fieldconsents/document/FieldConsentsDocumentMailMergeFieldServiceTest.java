@@ -24,28 +24,17 @@ class FieldConsentsDocumentMailMergeFieldServiceTest {
   void getApplicableDocumentMailMergeFieldMnemonics() {
     var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
 
-    var applicableMailMergeField1 = DocumentMailMergeFieldTestUtil.builder()
+    var applicableMailMergeField = DocumentMailMergeFieldTestUtil.builder()
         .withMnemonic("TEST_MNEMONIC_1")
         .build();
-    var applicableMailMergeField2 = DocumentMailMergeFieldTestUtil.builder()
-        .withMnemonic("TEST_MNEMONIC_2")
-        .build();
-    var applicableMailMergeField3 = DocumentMailMergeFieldTestUtil.builder()
-        .withMnemonic("TEST_MNEMONIC_3")
-        .build();
-
-    var applicableMailMergeFields =
-        List.of(applicableMailMergeField3, applicableMailMergeField1, applicableMailMergeField2);
 
     when(documentMailMergeFieldService.getApplicableDocumentMailMergeFields(documentTemplateDto))
-        .thenReturn(applicableMailMergeFields);
+        .thenReturn(List.of(applicableMailMergeField));
 
     assertThat(
         fieldConsentsDocumentMailMergeFieldService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto)
     ).containsExactly(
-        DocumentMailMergeFieldView.from(applicableMailMergeField1),
-        DocumentMailMergeFieldView.from(applicableMailMergeField2),
-        DocumentMailMergeFieldView.from(applicableMailMergeField3)
+        DocumentMailMergeFieldView.from(applicableMailMergeField)
     );
   }
 }
