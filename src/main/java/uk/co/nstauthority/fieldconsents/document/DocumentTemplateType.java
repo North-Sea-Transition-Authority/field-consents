@@ -3,8 +3,8 @@ package uk.co.nstauthority.fieldconsents.document;
 public enum DocumentTemplateType {
 
   FIELD_PRODUCTION_CONSENT("Production Consent document for this application"),
-  FIELD_FLARE_CONSENT("Vent Consent document for this application"),
-  FIELD_VENT_CONSENT("Flare Consent document for this application"),
+  FIELD_FLARE_CONSENT("Flare Consent document for this application"),
+  FIELD_VENT_CONSENT("Vent Consent document for this application"),
   ;
 
   private final String documentInstanceDescription;

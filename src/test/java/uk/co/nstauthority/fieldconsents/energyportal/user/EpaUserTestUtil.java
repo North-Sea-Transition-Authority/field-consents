@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.energyportal.user;
 
+import java.util.UUID;
 import uk.co.fivium.energyportalapi.generated.types.User;
 import uk.co.nstauthority.fieldconsents.exception.IllegalUtilClassInstantiationException;
 
@@ -17,6 +18,7 @@ class EpaUserTestUtil {
 
     private int webUserAccountId = 1;
     private int personId = 2;
+    private String loginId = UUID.randomUUID().toString();
     private String title = "title";
     private String forename = "forename";
     private String surname = "surname";
@@ -34,6 +36,11 @@ class EpaUserTestUtil {
 
     Builder withPersonId(int personId) {
       this.personId = personId;
+      return this;
+    }
+
+    Builder withLoginId(String loginId) {
+      this.loginId = loginId;
       return this;
     }
 
@@ -81,6 +88,7 @@ class EpaUserTestUtil {
       return new User(
           webUserAccountId,
           personId,
+          loginId,
           title,
           forename,
           surname,

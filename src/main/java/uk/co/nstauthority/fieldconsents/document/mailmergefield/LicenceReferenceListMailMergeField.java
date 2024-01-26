@@ -12,7 +12,7 @@ import uk.co.nstauthority.fieldconsents.document.lib.DocumentMailMergeField;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
 import uk.co.nstauthority.fieldconsents.util.StringUtil;
 
-@Order(5)
+@Order(7)
 @Component
 class LicenceReferenceListMailMergeField implements DocumentMailMergeField {
 

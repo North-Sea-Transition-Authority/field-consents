@@ -13,7 +13,7 @@ import uk.co.nstauthority.fieldconsents.document.lib.DocumentMailMergeField;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
 import uk.co.nstauthority.fieldconsents.document.lib.FreeMarkerTemplateRenderingService;
 
-@Order(6)
+@Order(8)
 @Component
 class ScheduleMailMergeField implements DocumentMailMergeField {
 
@@ -48,7 +48,7 @@ class ScheduleMailMergeField implements DocumentMailMergeField {
 
   @Override
   public String getDescription() {
-    return "The schedule for the consent";
+    return "The schedule for the Consent";
   }
 
   @Override

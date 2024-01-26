@@ -116,10 +116,10 @@ class DocumentTemplateBootstrapServiceTest {
         "The erection or carrying out of the relevant works",
         """
         the erection or carrying out of the relevant works, as defined in the Licence(s) and described in the document \
-        entitled [TODO FCS-624] dated [TODO FCS-624] (the “Development Plan”), during the Period (as defined in \
-        paragraph 2 below) for the purpose of getting petroleum from those parts of the licensed area known as the \
-        ((PRIMARY_FIELD_NAME)) field, as defined in the Development Plan (the “Field"), or for the purpose of \
-        conveying, to a place on land petroleum got from the Field; and
+        entitled ((FIELD_DEVELOPMENT_PLAN_TITLE)) dated ((FIELD_DEVELOPMENT_PLAN_DATE)) (the “Development Plan”), \
+        during the Period (as defined in paragraph 2 below) for the purpose of getting petroleum from those parts \
+        of the licensed area known as the ((PRIMARY_FIELD_NAME)) field, as defined in the Development Plan \
+        (the “Field"), or for the purpose of conveying, to a place on land petroleum got from the Field; and
         """,
         null,
         true,
