@@ -1241,6 +1241,23 @@ ORDER BY fcd.id, ed.ed_rownum;
 /
 
 --
+-- flare_annual_123_months
+--
+SELECT
+  ed.*
+, fcd.fc_id
+, fcd.status
+, fcd.version_status
+FROM fcs_migration.application_versions av
+JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+JOIN fcs_migration.field_consent_annual_emission_data ed ON ed.fcd_id = fcd.id
+WHERE fcd.application_type = 'FCON'
+AND ed.categories = '1_2_3'
+ORDER BY fcd.id, ed.ed_rownum;
+/
+
+
+--
 -- flare_short_term_months
 --
 
@@ -1259,6 +1276,28 @@ JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
 JOIN fcs_migration.field_consent_short_term_emission_data ed ON ed.fcd_id = fcd.id
 WHERE fcd.application_type = 'FCON'
 AND ed.categories = 'A_B_C'
+ORDER BY ed.fcd_id, ed.ed_rownum;
+/
+
+--
+-- flare_short_term_123_months
+--
+
+SELECT
+  ed.fcd_id application_version_id
+, ed.year
+, ed.month
+, ed.start_date
+, ed.end_date
+, ed.category_1
+, ed.category_2
+, ed.category_3
+, ed.comments
+FROM fcs_migration.application_versions av
+JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+JOIN fcs_migration.field_consent_short_term_emission_data ed ON ed.fcd_id = fcd.id
+WHERE fcd.application_type = 'FCON'
+AND ed.categories = '1_2_3'
 ORDER BY ed.fcd_id, ed.ed_rownum;
 /
 
@@ -1304,6 +1343,7 @@ WITH base AS (
   WHERE rd.rd_type = 'INFO' 
   AND fcd.application_type = 'FCON'
   AND rd.categories = 'A_B_C'
+  AND xfcd.app_length IN ('ANNUAL', 'SHORT_TERM')
   AND coalesce(rd.category_a, rd.category_b, rd.category_c) IS NOT NULL
   ORDER BY rd.fcd_id, rd.rd_rownum
 )
@@ -1335,8 +1375,13 @@ WITH base AS (
 --  , 'HYDRO_A' AS category_a_hydro_percentage, 'HYDRO_B' AS category_b_hydro_percentage, 'HYDRO_C' AS category_c_hydro_percentage
 --  )
 --)
+, base_av AS (
+  SELECT b.application_version_id
+  FROM base b
+  GROUP BY b.application_version_id
+)
 SELECT
-  bd.application_version_id
+  b.application_version_id
 
 , bd.category_a category_a_density
 , bi.category_a category_a_inert_percentage
@@ -1344,16 +1389,89 @@ SELECT
 
 , bd.category_b category_b_density
 , bi.category_b category_b_inert_percentage
-, bh.category_a category_b_hydro_percentage
+, bh.category_b category_b_hydro_percentage
 
 , bd.category_c category_c_density
 , bi.category_c category_c_inert_percentage
-, bh.category_a category_c_hydro_percentage
-FROM base bd
-JOIN base bi ON bi.application_version_id = bd.application_version_id AND bi.data_type = 'INERT'
-JOIN base bh ON bh.application_version_id = bd.application_version_id AND bh.data_type = 'HYDRO'
-WHERE bd.data_type = 'DENSITY'
+, bh.category_c category_c_hydro_percentage
+FROM base_av b
+LEFT JOIN base bd ON bd.application_version_id = b.application_version_id AND bd.data_type = 'DENSITY'
+LEFT JOIN base bi ON bi.application_version_id = b.application_version_id AND bi.data_type = 'INERT'
+LEFT JOIN base bh ON bh.application_version_id = b.application_version_id AND bh.data_type = 'HYDRO'
 /
+
+--
+-- flare_report_123_gas_data
+--
+WITH base AS (
+  SELECT
+    fcd.id application_version_id
+  --, xfcd.application_year
+  , CASE
+    WHEN rd.upper_desc LIKE '%STREAM%' THEN 'DENSITY'
+    WHEN rd.upper_desc LIKE '%INERT%' THEN 'INERT'
+    WHEN rd.upper_desc LIKE '%HYDROCARBON%' THEN 'HYDRO'
+    END data_type
+  , rd.category_1
+  , rd.category_2
+  , rd.category_3
+  FROM fcs_migration.application_versions av
+  JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+  JOIN envmgr.xview_field_consent_details xfcd ON xfcd.fcd_id = fcd.id
+  JOIN fcs_migration.field_consent_report_data rd ON rd.fcd_id = fcd.id
+  WHERE rd.rd_type = 'INFO' 
+  AND fcd.application_type = 'FCON'
+  AND rd.categories = '1_2_3'
+  AND xfcd.app_length = 'ANNUAL'
+  AND coalesce(rd.category_1, rd.category_2, rd.category_3) IS NOT NULL
+  ORDER BY rd.fcd_id, rd.rd_rownum
+)
+-- below required as we may be missing a row for any of the 3 data_types
+-- so use this as the starting point for the pivot query below then use
+-- LEFT joins for all there data_type sets
+, base_av AS (
+  SELECT b.application_version_id
+  FROM base b
+  GROUP BY b.application_version_id
+)
+SELECT
+  b.application_version_id
+
+, bd.category_1 category_1_density
+, bi.category_1 category_1_inert_percentage
+, bh.category_1 category_1_hydro_percentage
+
+, bd.category_2 category_2_density
+, bi.category_2 category_2_inert_percentage
+, bh.category_2 category_2_hydro_percentage
+
+, bd.category_3 category_3_density
+, bi.category_3 category_3_inert_percentage
+, bh.category_3 category_3_hydro_percentage
+FROM base_av b
+LEFT JOIN base bd ON bd.application_version_id = b.application_version_id AND bd.data_type = 'DENSITY'
+LEFT JOIN base bi ON bi.application_version_id = b.application_version_id AND bi.data_type = 'INERT'
+LEFT JOIN base bh ON bh.application_version_id = b.application_version_id AND bh.data_type = 'HYDRO'
+--SELECT b.application_version_id, st.join(stagg(b.data_type))
+--FROM base b
+--GROUP BY b.application_version_id
+----HAVING st.join(stagg(b.data_type)) NOT LIKE '%DENSITY%'
+----HAVING st.join(stagg(b.data_type)) NOT LIKE '%INERT%'
+----HAVING st.join(stagg(b.data_type)) NOT LIKE '%HYDRO%'
+/
+
+SELECT ap.*
+FROM fcs_migration.application_versions av
+JOIN fcs_migration.applications ap ON ap.id = av.application_id
+--WHERE av.id IN (1799, 1802, 2280, 3283, 3284, 3520, 3522, 3523) -- missing DENSITY row
+WHERE av.id IN (3265, 3311, 3316, 3393, 3401, 3465, 808, 908) -- missing INERT row
+--WHERE av.id IN (2695, 2696, 3012, 3013, 3014) -- missing HYDRO row
+ORDER BY ap.fc_id
+/
+--These app numbers are good examples with missing data for all three categories for a data type
+-- DENSITY (Stream Mol Wt) 913, 1298, 1658, 1727
+-- INERT (Inert Gas Content) 417, 1173, 1520, 1527, 1531
+-- HYDRO (Hydrocarbon content) 1204, 1205, 1477, 1478
 
 --
 -- flare_report_periods
@@ -1384,6 +1502,7 @@ WITH base AS (
   WHERE rd.rd_type = 'MONTH' 
   AND fcd.application_type = 'FCON'
   AND rd.categories = 'A_B_C'
+  AND xfcd.app_length IN ('ANNUAL', 'SHORT_TERM')
   AND coalesce(rd.category_a, rd.category_b, rd.category_c, rd.days_total_shutdown) IS NOT NULL
   ORDER BY fcd.fc_id, rd.fcd_id, rd.rd_rownum
 )
@@ -1399,6 +1518,44 @@ SELECT
 FROM report_end re
 ORDER BY re.fc_id, re.application_version_id;
 /
+
+--
+-- 1_2_3 report periods go into the same table as A_B_C
+--
+WITH base AS (
+  SELECT
+    fcd.id application_version_id
+  , rd.rd_rownum
+  , CASE
+    WHEN rd.rd_month IS NULL THEN
+      last_day(to_date('01-'||rd.upper_desc||'-'||to_char(xfcd.application_year - 1), 'DD-MONTH-YYYY'))
+    ELSE
+      last_day(to_date('01-'||rd.rd_month, 'DD-MON-YYYY'))
+    END report_row_end_date
+  , xfcd.application_year
+  FROM fcs_migration.application_versions av
+  JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+  JOIN envmgr.xview_field_consent_details xfcd ON xfcd.fcd_id = fcd.id
+  JOIN fcs_migration.field_consent_report_data rd ON rd.fcd_id = fcd.id
+  WHERE rd.rd_type = 'MONTH' 
+  AND fcd.application_type = 'FCON'
+  AND rd.categories = '1_2_3'
+  AND xfcd.app_length = 'ANNUAL'
+  AND coalesce(rd.category_1, rd.category_2, rd.category_3, rd.days_total_shutdown) IS NOT NULL
+  ORDER BY fcd.id, rd.rd_rownum
+)
+, report_end AS (
+  SELECT b.application_version_id, max(b.report_row_end_date) report_row_end_date
+  FROM base b
+  GROUP BY b.application_version_id
+)
+SELECT
+  re.application_version_id
+, to_char(re.report_row_end_date, 'MONTH') report_end_month
+, to_number(to_char(re.report_row_end_date, 'YYYY')) report_end_year
+FROM report_end re;
+/
+
 
 --
 -- flare_report_months
@@ -1434,6 +1591,7 @@ WITH base AS (
   WHERE rd.rd_type = 'MONTH' 
   AND fcd.application_type = 'FCON'
   AND rd.categories = 'A_B_C'
+  AND xfcd.app_length IN ('ANNUAL', 'SHORT_TERM')
   AND coalesce(rd.category_a, rd.category_b, rd.category_c, rd.days_total_shutdown) IS NOT NULL
   ORDER BY fcd.id, rd.rd_rownum
 )
@@ -1444,6 +1602,49 @@ SELECT
 , b.category_a
 , b.category_b
 , b.category_c
+, b.days_total_shutdown
+, b.comments
+FROM base b;
+/
+
+--
+-- flare_report_123_months
+--
+WITH base AS (
+  SELECT
+    fcd.id application_version_id
+  , xfcd.application_year
+  , xfcd.app_length
+  , rd.rd_month
+  , CASE
+    WHEN rd.rd_month IS NULL THEN
+      last_day(to_date('01-'||rd.upper_desc||'-'||to_char(xfcd.application_year - 1), 'DD-MONTH-YYYY'))
+    ELSE
+      last_day(to_date('01-'||rd.rd_month, 'DD-MON-YYYY'))
+    END report_row_end_date
+  , rd.*
+  , fcd.fc_id
+  , fcd.application_type
+  , fcd.status
+  , fcd.version_status
+  FROM fcs_migration.application_versions av
+  JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+  JOIN envmgr.xview_field_consent_details xfcd ON xfcd.fcd_id = fcd.id
+  JOIN fcs_migration.field_consent_report_data rd ON rd.fcd_id = fcd.id
+  WHERE rd.rd_type = 'MONTH' 
+  AND fcd.application_type = 'FCON'
+  AND rd.categories = '1_2_3'
+  AND xfcd.app_length = 'ANNUAL'
+  AND coalesce(rd.category_1, rd.category_2, rd.category_3, rd.days_total_shutdown) IS NOT NULL
+  ORDER BY fcd.id, rd.rd_rownum
+)
+SELECT
+  b.application_version_id
+, to_number(to_char(b.report_row_end_date, 'YYYY')) year
+, to_char(b.report_row_end_date, 'MONTH') month
+, b.category_1
+, b.category_2
+, b.category_3
 , b.days_total_shutdown
 , b.comments
 FROM base b;
@@ -1508,6 +1709,23 @@ WHERE fcd.application_type = 'VCON'
 AND ed.categories = 'A_B_C'
 ORDER BY fcd.id, ed.ed_rownum;
 /
+--
+-- vent_annual_123_months
+--
+SELECT
+  ed.*
+, fcd.fc_id
+, fcd.status
+, fcd.version_status
+FROM fcs_migration.application_versions av
+JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+JOIN fcs_migration.field_consent_annual_emission_data ed ON ed.fcd_id = fcd.id
+WHERE fcd.application_type = 'VCON'
+AND ed.categories = '1_2_3'
+-- category_1 data is null for the legacy terminal apps (i.e. there no consent months data so don't migrate)
+AND ed.category_1 IS NOT NULL
+ORDER BY fcd.id, ed.ed_rownum;
+/
 
 
 --
@@ -1546,6 +1764,30 @@ ORDER BY fcd.id, ed.ed_rownum;
 /
 
 --
+-- vent_short_term_123_months
+--
+
+SELECT
+  ed.fcd_id application_version_id
+, ed.year
+, ed.month
+, ed.start_date
+, ed.end_date
+, ed.category_1
+, ed.category_a
+, ed.comments
+FROM fcs_migration.application_versions av
+JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+JOIN fcs_migration.field_consent_short_term_emission_data ed ON ed.fcd_id = fcd.id
+WHERE fcd.application_type = 'VCON'
+AND ed.categories = '1_2_3'
+-- category_1 data is null for the legacy terminal apps (i.e. there no consent months data so don't migrate)
+AND ed.category_1 IS NOT NULL
+ORDER BY fcd.id, ed.ed_rownum;
+/ 
+
+
+--
 -- vent_report_gas_data
 --
 WITH base AS (
@@ -1566,26 +1808,79 @@ WITH base AS (
   WHERE rd.rd_type = 'INFO' 
   AND fcd.application_type = 'VCON'
   AND rd.categories = 'A_B_C'
+  AND xfcd.app_length IN ('ANNUAL', 'SHORT_TERM')
   AND coalesce(rd.category_a, rd.category_b, rd.category_c) IS NOT NULL
   ORDER BY rd.fcd_id, rd.rd_rownum
 )
+-- below required as we may be missing a row for any of the 3 data_types
+-- so use this as the starting point for the pivot query below then use
+-- LEFT joins for all there data_type sets
+, base_av AS (
+  SELECT b.application_version_id
+  FROM base b
+  GROUP BY b.application_version_id
+)
 SELECT
-  bd.application_version_id
+  b.application_version_id
 , bd.category_a category_a_density
 , bi.category_a category_a_inert_percentage
 , bh.category_a category_a_hydro_percentage
 , bd.category_b category_b_density
 , bi.category_b category_b_inert_percentage
-, bh.category_a category_b_hydro_percentage
+, bh.category_b category_b_hydro_percentage
 , bd.category_c category_c_density
 , bi.category_c category_c_inert_percentage
-, bh.category_a category_c_hydro_percentage
+, bh.category_c category_c_hydro_percentage
 , null evaluated_per_category
 , null evaluated_per_category_explanation
-FROM base bd
-JOIN base bi ON bi.application_version_id = bd.application_version_id AND bi.data_type = 'INERT'
-JOIN base bh ON bh.application_version_id = bd.application_version_id AND bh.data_type = 'HYDRO'
-WHERE bd.data_type = 'DENSITY';
+FROM base_av b
+LEFT JOIN base bd ON bd.application_version_id = b.application_version_id AND bd.data_type = 'DENSITY'
+LEFT JOIN base bi ON bi.application_version_id = b.application_version_id AND bi.data_type = 'INERT'
+LEFT JOIN base bh ON bh.application_version_id = b.application_version_id AND bh.data_type = 'HYDRO'
+/
+
+--
+-- vent_report_123_gas_data
+--
+WITH base AS (
+  SELECT
+    fcd.id application_version_id
+  --, xfcd.application_year
+  , CASE
+    WHEN rd.upper_desc LIKE '%STREAM%' THEN 'DENSITY'
+    WHEN rd.upper_desc LIKE '%INERT%' THEN 'INERT'
+    WHEN rd.upper_desc LIKE '%HYDROCARBON%' THEN 'HYDRO'
+    END data_type
+  , rd.category_1
+  FROM fcs_migration.application_versions av
+  JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+  JOIN envmgr.xview_field_consent_details xfcd ON xfcd.fcd_id = fcd.id
+  JOIN fcs_migration.field_consent_report_data rd ON rd.fcd_id = fcd.id
+  WHERE rd.rd_type = 'INFO' 
+  AND fcd.application_type = 'VCON'
+  AND rd.categories = '1_2_3'
+  AND xfcd.app_length = 'ANNUAL'
+  AND rd.category_1 IS NOT NULL
+  ORDER BY rd.fcd_id, rd.rd_rownum
+)
+-- below required as we may be missing a row for any of the 3 data_types
+-- so use this as the starting point for the pivot query below then use
+-- LEFT joins for all there data_type sets
+, base_av AS (
+  SELECT b.application_version_id
+  FROM base b
+  GROUP BY b.application_version_id
+)
+SELECT
+  b.application_version_id
+
+, bd.category_1 category_1_density
+, bi.category_1 category_1_inert_percentage
+, bh.category_1 category_1_hydro_percentage
+FROM base_av b
+LEFT JOIN base bd ON bd.application_version_id = b.application_version_id AND bd.data_type = 'DENSITY'
+LEFT JOIN base bi ON bi.application_version_id = b.application_version_id AND bi.data_type = 'INERT'
+LEFT JOIN base bh ON bh.application_version_id = b.application_version_id AND bh.data_type = 'HYDRO'
 /
 
 --
@@ -1606,10 +1901,12 @@ WITH base AS (
   , last_day(to_date('01-'||rd.rd_month, 'DD-MON-YYYY')) report_row_end_date
   FROM fcs_migration.application_versions av
   JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+  JOIN envmgr.xview_field_consent_details xfcd ON xfcd.fcd_id = fcd.id
   JOIN fcs_migration.field_consent_report_data rd ON rd.fcd_id = fcd.id
   WHERE rd.rd_type = 'MONTH' 
   AND fcd.application_type = 'VCON'
   AND rd.categories = 'A_B_C'
+  AND xfcd.app_length IN ('ANNUAL', 'SHORT_TERM')
   AND coalesce(rd.category_a, rd.category_b, rd.category_c, rd.days_total_shutdown) IS NOT NULL
   ORDER BY fcd.id, rd.rd_rownum
 )
@@ -1623,6 +1920,44 @@ SELECT
 , to_char(re.report_row_end_date, 'MONTH') report_end_month
 , to_number(to_char(re.report_row_end_date, 'YYYY')) report_end_year
 FROM report_end re;
+
+--
+-- 1_2_3 report periods go into the same table as A_B_C
+--
+WITH base AS (
+  SELECT
+    fcd.id application_version_id
+  , rd.rd_rownum
+  , CASE
+    WHEN rd.rd_month IS NULL THEN
+      last_day(to_date('01-'||rd.upper_desc||'-'||to_char(xfcd.application_year - 1), 'DD-MONTH-YYYY'))
+    ELSE
+      last_day(to_date('01-'||rd.rd_month, 'DD-MON-YYYY'))
+    END report_row_end_date
+  , xfcd.application_year
+  , rd.rd_month
+  FROM fcs_migration.application_versions av
+  JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+  JOIN envmgr.xview_field_consent_details xfcd ON xfcd.fcd_id = fcd.id
+  JOIN fcs_migration.field_consent_report_data rd ON rd.fcd_id = fcd.id
+  WHERE rd.rd_type = 'MONTH' 
+  AND fcd.application_type = 'VCON'
+  AND rd.categories = '1_2_3'
+  AND xfcd.app_length = 'ANNUAL'
+  AND coalesce(rd.category_1, rd.days_total_shutdown) IS NOT NULL
+  ORDER BY fcd.id, rd.rd_rownum
+)
+, report_end AS (
+  SELECT b.application_version_id, max(b.report_row_end_date) report_row_end_date
+  FROM base b
+  GROUP BY b.application_version_id
+)
+SELECT
+  re.application_version_id
+, to_char(re.report_row_end_date, 'MONTH') report_end_month
+, to_number(to_char(re.report_row_end_date, 'YYYY')) report_end_year
+FROM report_end re;
+/
 
 --
 -- vent_report_months
@@ -1639,6 +1974,7 @@ WITH base AS (
   WHERE rd.rd_type = 'MONTH' 
   AND fcd.application_type = 'VCON'
   AND rd.categories = 'A_B_C'
+  AND xfcd.app_length IN ('ANNUAL', 'SHORT_TERM')
   AND coalesce(rd.category_a, rd.category_b, rd.category_c, rd.days_total_shutdown) IS NOT NULL
   ORDER BY fcd.id, rd.rd_rownum
 )
@@ -1653,6 +1989,52 @@ SELECT
 , b.comments
 FROM base b;
 /
+
+--
+-- vent_report_123_months
+--
+WITH base AS (
+  SELECT
+    fcd.id application_version_id
+  , CASE
+    WHEN rd.rd_month IS NULL THEN
+      last_day(to_date('01-'||rd.upper_desc||'-'||to_char(xfcd.application_year - 1), 'DD-MONTH-YYYY'))
+    ELSE
+      last_day(to_date('01-'||rd.rd_month, 'DD-MON-YYYY'))
+    END report_row_end_date
+  , rd.*
+  FROM fcs_migration.application_versions av
+  JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+  JOIN envmgr.xview_field_consent_details xfcd ON xfcd.fcd_id = fcd.id
+  JOIN fcs_migration.field_consent_report_data rd ON rd.fcd_id = fcd.id
+  WHERE rd.rd_type = 'MONTH' 
+  AND fcd.application_type = 'VCON'
+  AND rd.categories = '1_2_3'
+  AND xfcd.app_length = 'ANNUAL'
+  AND coalesce(rd.category_1, rd.days_total_shutdown) IS NOT NULL
+  ORDER BY fcd.id, rd.rd_rownum
+)
+SELECT
+  null-- fcs_migration.vent_report_123_month_id_seq.nextval id
+, b.application_version_id
+, to_number(to_char(b.report_row_end_date, 'YYYY')) year
+, to_char(b.report_row_end_date, 'MONTH') month
+, coalesce(b.category_1, 0) category_1
+, b.days_total_shutdown
+, b.comments
+FROM base b;
+/
+
+SELECT ap.*, av.id, av.version_no
+FROM fcs_migration.application_versions av
+JOIN fcs_migration.applications ap ON ap.id = av.application_id
+--WHERE av.id IN (358, 4224, 3947, 3956, 3970, 4019)
+--WHERE av.id IN (3787, 3788, 1319, 4256, 4181, 3944, 4253, 4260, 3934, 3948)
+WHERE av.id IN (59, 4254, 4256)
+ORDER BY ap.fc_id
+/
+
+
 
 --
 -- vents

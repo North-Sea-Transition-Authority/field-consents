@@ -33,12 +33,20 @@
 --DELETE FROM "fcs"."application_technical_reviews"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_updates"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_case_notes"@fcs_postgres_db;
+--DELETE FROM "fcs"."vent_report_123_months"@fcs_postgres_db;
+--DELETE FROM "fcs"."vent_report_123_gas_data"@fcs_postgres_db;
+--DELETE FROM "fcs"."vent_short_term_123_months"@fcs_postgres_db;
+--DELETE FROM "fcs"."vent_annual_123_months"@fcs_postgres_db;
 --DELETE FROM "fcs"."vents"@fcs_postgres_db;
 --DELETE FROM "fcs"."vent_report_months"@fcs_postgres_db;
 --DELETE FROM "fcs"."vent_report_periods"@fcs_postgres_db;
 --DELETE FROM "fcs"."vent_report_gas_data"@fcs_postgres_db;
 --DELETE FROM "fcs"."vent_short_term_months"@fcs_postgres_db;
 --DELETE FROM "fcs"."vent_annual_months"@fcs_postgres_db;
+--DELETE FROM "fcs"."flare_report_123_months"@fcs_postgres_db;
+--DELETE FROM "fcs"."flare_report_123_gas_data"@fcs_postgres_db;
+--DELETE FROM "fcs"."flare_short_term_123_months"@fcs_postgres_db;
+--DELETE FROM "fcs"."flare_annual_123_months"@fcs_postgres_db;
 --DELETE FROM "fcs"."flares"@fcs_postgres_db;
 --DELETE FROM "fcs"."flare_report_months"@fcs_postgres_db;
 --DELETE FROM "fcs"."flare_report_periods"@fcs_postgres_db;
@@ -516,7 +524,7 @@ END;
 -- dev to local: 1s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.flare_annual_months) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.flare_annual_months ORDER BY id) LOOP
   
     INSERT INTO "fcs"."flare_annual_months"@fcs_postgres_db (
       "id"
@@ -544,6 +552,65 @@ END;
 /
 
 --
+-- flare_annual_123_months
+--
+
+-- Execution time
+-- dev to local: 3 mins
+BEGIN
+
+  FOR rec IN (SELECT * FROM fcs_migration.flare_annual_123_months ORDER BY id) LOOP
+  
+    --dbms_output.put_line('inserting id: '||rec.id);
+  
+    INSERT INTO "fcs"."flare_annual_123_months"@fcs_postgres_db (
+      "id"
+    , "application_version_id"
+    , "year"
+    , "month"
+    , "category_1"
+    , "category_2"
+    , "category_3"
+    , "comments"
+    ) VALUES (
+      rec.id
+    , rec.application_version_id
+    , rec.year
+    , rec.month
+    , rec.category_1
+    , rec.category_2
+    , rec.category_3
+    , rec.comments
+    );
+  
+  END LOOP;
+
+END;
+/
+
+-- bad rows on dev for ids: 9078 and 10466
+-- the comments data had a strange bullet character which caused the following
+-- error in the above script
+--ORA-02055: distributed update operation failed; rollback required
+--ORA-28500: connection from ORACLE to a non-Oracle system returned this message:
+--ERROR: invalid byte sequence for encoding "UTF8": 0xb7;
+--Error while executing the query {22021,NativeErr = 7}
+--ORA-02063: preceding 3 lines from FCS_POSTGRES_DB
+--ORA-06512: at line 5
+--ORA-06512: at line 5
+--
+-- to fix I added a replace in the view fcs_migration.field_consent_annual_emission_data
+-- i.e. replace(ed.comments, '�', '-')
+--SELECT f.*--, replace(f.comments, '�', '-'), av.* 
+--FROM fcs_migration.flare_annual_123_months f
+--join fcs_migration.application_versions av ON av.id = f.application_version_id 
+--where comments is not null
+--AND f.id IN (9078, 10466)
+--ORDER by f.id
+--/
+
+
+--
 -- flare_short_term_months
 --
 
@@ -551,7 +618,7 @@ END;
 -- dev to local: 1s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.flare_short_term_months) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.flare_short_term_months ORDER BY id) LOOP
   
     INSERT INTO "fcs"."flare_short_term_months"@fcs_postgres_db (
       "id"
@@ -583,6 +650,46 @@ END;
 /
 
 --
+-- flare_short_term_123_months
+--
+
+-- Execution time
+-- dev to local: 1s
+BEGIN
+
+  FOR rec IN (SELECT * FROM fcs_migration.flare_short_term_123_months ORDER BY id) LOOP
+  
+    INSERT INTO "fcs"."flare_short_term_123_months"@fcs_postgres_db (
+      "id"
+    , "application_version_id"
+    , "year"
+    , "month"
+    , "start_date"
+    , "end_date"
+    , "category_1"
+    , "category_2"
+    , "category_3"
+    , "comments"
+    ) VALUES (
+      rec.id
+    , rec.application_version_id
+    , rec.year
+    , rec.month
+    , rec.start_date
+    , rec.end_date
+    , rec.category_1
+    , rec.category_2
+    , rec.category_3
+    , rec.comments
+    );
+  
+  END LOOP;
+
+END;
+/
+
+
+--
 -- flare_report_gas_data
 --
 
@@ -590,7 +697,7 @@ END;
 -- dev to local: 1s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.flare_report_gas_data) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.flare_report_gas_data ORDER BY id) LOOP
   
     INSERT INTO "fcs"."flare_report_gas_data"@fcs_postgres_db (
       "id"
@@ -628,14 +735,56 @@ END;
 /
 
 --
+-- flare_report_123_gas_data
+--
+
+-- Execution time
+-- dev to local: 10s
+BEGIN
+
+  FOR rec IN (SELECT * FROM fcs_migration.flare_report_123_gas_data ORDER BY id) LOOP
+  
+    INSERT INTO "fcs"."flare_report_123_gas_data"@fcs_postgres_db (
+      "id"
+    , "application_version_id"
+    , "category_1_density"
+    , "category_1_inert_percentage"
+    , "category_1_hydro_percentage"
+    , "category_2_density"
+    , "category_2_inert_percentage"
+    , "category_2_hydro_percentage"
+    , "category_3_density"
+    , "category_3_inert_percentage"
+    , "category_3_hydro_percentage"
+    ) VALUES (
+      rec.id
+    , rec.application_version_id
+    , rec.category_1_density
+    , rec.category_1_inert_percentage
+    , rec.category_1_hydro_percentage
+    , rec.category_2_density
+    , rec.category_2_inert_percentage
+    , rec.category_2_hydro_percentage
+    , rec.category_3_density
+    , rec.category_3_inert_percentage
+    , rec.category_3_hydro_percentage
+    );
+  
+  END LOOP;
+
+END;
+/
+
+
+--
 -- flare_report_periods
 --
 
 -- Execution time
--- dev to local: 1s
+-- dev to local: 13s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.flare_report_periods) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.flare_report_periods ORDER BY id) LOOP
   
     INSERT INTO "fcs"."flare_report_periods"@fcs_postgres_db (
       "id"
@@ -662,7 +811,7 @@ END;
 -- dev to local: 2s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.flare_report_months) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.flare_report_months ORDER BY id) LOOP
   
     INSERT INTO "fcs"."flare_report_months"@fcs_postgres_db (
       "id"
@@ -692,14 +841,69 @@ END;
 /
 
 --
+-- flare_report_123_months
+--
+
+-- Execution time
+-- dev to local: 2 mins
+BEGIN
+
+  FOR rec IN (SELECT * FROM fcs_migration.flare_report_123_months ORDER BY id) LOOP
+  
+    INSERT INTO "fcs"."flare_report_123_months"@fcs_postgres_db (
+      "id"
+    , "application_version_id"
+    , "year"
+    , "month"
+    , "category_1"
+    , "category_2"
+    , "category_3"
+    , "shut_down_days"
+    , "comments"
+    ) VALUES (
+      rec.id
+    , rec.application_version_id
+    , rec.year
+    , rec.month
+    , rec.category_1
+    , rec.category_2
+    , rec.category_3
+    , rec.shut_down_days
+    , rec.comments
+    );
+  
+  END LOOP;
+
+END;
+/
+--ORA-02055: distributed update operation failed; rollback required
+--ORA-28500: connection from ORACLE to a non-Oracle system returned this message:
+--ERROR: invalid byte sequence for encoding "UTF8": 0xbf;
+--Error while executing the query {22021,NativeErr = 7}
+--ORA-02063: preceding 3 lines from FCS_POSTGRES_DB
+--ORA-06512: at line 5
+--ORA-06512: at line 5
+--
+--SELECT f.*, replace(f.comments, CHR(191), NULL)--, av.* 
+--FROM fcs_migration.flare_report_123_months f
+--join fcs_migration.application_versions av ON av.id = f.application_version_id 
+--where f.comments is not null
+--AND f.id IN (7041)
+--ORDER by f.id
+--/
+--SELECT ASCII('�'), ASCII('�')
+--from dual;
+--/
+
+--
 -- flares
 --
 
 -- Execution time
--- dev to local: 45s
+-- dev to local: 54s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.flares) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.flares ORDER BY id) LOOP
   
     INSERT INTO "fcs"."flares"@fcs_postgres_db (
       "id"
@@ -732,7 +936,7 @@ END;
 -- dev to local: 1s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.vent_annual_months) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.vent_annual_months ORDER BY id) LOOP
   
     INSERT INTO "fcs"."vent_annual_months"@fcs_postgres_db (
       "id"
@@ -760,6 +964,38 @@ END;
 /
 
 --
+-- vent_annual_123_months
+--
+
+-- Execution time
+-- dev to local: 80s
+BEGIN
+
+  FOR rec IN (SELECT * FROM fcs_migration.vent_annual_123_months ORDER BY id) LOOP
+  
+    INSERT INTO "fcs"."vent_annual_123_months"@fcs_postgres_db (
+      "id"
+    , "application_version_id"
+    , "year"
+    , "month"
+    , "category_1"
+    , "comments"
+    ) VALUES (
+      rec.id
+    , rec.application_version_id
+    , rec.year
+    , rec.month
+    , rec.category_1
+    , rec.comments
+    );
+  
+  END LOOP;
+
+END;
+/
+
+
+--
 -- vent_short_term_months
 --
 
@@ -767,7 +1003,7 @@ END;
 -- dev to local: 1s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.vent_short_term_months) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.vent_short_term_months ORDER BY id) LOOP
   
     INSERT INTO "fcs"."vent_short_term_months"@fcs_postgres_db (
       "id"
@@ -799,6 +1035,41 @@ END;
 /
 
 --
+-- vent_short_term_123_months
+--
+
+-- Execution time
+-- dev to local: 1s
+BEGIN
+
+  FOR rec IN (SELECT * FROM fcs_migration.vent_short_term_123_months ORDER BY id) LOOP
+  
+    INSERT INTO "fcs"."vent_short_term_123_months"@fcs_postgres_db (
+      "id"
+    , "application_version_id"
+    , "year"
+    , "month"
+    , "start_date"
+    , "end_date"
+    , "category_1"
+    , "comments"
+    ) VALUES (
+      rec.id
+    , rec.application_version_id
+    , rec.year
+    , rec.month
+    , rec.start_date
+    , rec.end_date
+    , rec.category_1
+    , rec.comments
+    );
+  
+  END LOOP;
+
+END;
+/
+
+--
 -- vent_report_gas_data
 --
 
@@ -806,7 +1077,7 @@ END;
 -- dev to local: 1s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.vent_report_gas_data) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.vent_report_gas_data ORDER BY id) LOOP
   
     INSERT INTO "fcs"."vent_report_gas_data"@fcs_postgres_db (
       "id"
@@ -844,14 +1115,43 @@ END;
 /
 
 --
+-- vent_report_123_gas_data
+--
+
+-- Execution time
+-- dev to local: 3s
+BEGIN
+
+  FOR rec IN (SELECT * FROM fcs_migration.vent_report_123_gas_data ORDER BY id) LOOP
+  
+    INSERT INTO "fcs"."vent_report_123_gas_data"@fcs_postgres_db (
+      "id"
+    , "application_version_id"
+    , "category_1_density"
+    , "category_1_inert_percentage"
+    , "category_1_hydro_percentage"
+    ) VALUES (
+      rec.id
+    , rec.application_version_id
+    , rec.category_1_density
+    , rec.category_1_inert_percentage
+    , rec.category_1_hydro_percentage
+    );
+  
+  END LOOP;
+
+END;
+/
+
+--
 -- vent_report_periods
 --
 
 -- Execution time
--- dev to local: 1s
+-- dev to local: 10s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.vent_report_periods) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.vent_report_periods ORDER BY id) LOOP
   
     INSERT INTO "fcs"."vent_report_periods"@fcs_postgres_db (
       "id"
@@ -878,7 +1178,7 @@ END;
 -- dev to local: 1s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.vent_report_months) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.vent_report_months ORDER BY id) LOOP
   
     INSERT INTO "fcs"."vent_report_months"@fcs_postgres_db (
       "id"
@@ -908,6 +1208,39 @@ END;
 /
 
 --
+-- vent_report_123_months
+--
+
+-- Execution time
+-- dev to local: 60s
+BEGIN
+
+  FOR rec IN (SELECT * FROM fcs_migration.vent_report_123_months ORDER BY id) LOOP
+  
+    INSERT INTO "fcs"."vent_report_123_months"@fcs_postgres_db (
+      "id"
+    , "application_version_id"
+    , "year"
+    , "month"
+    , "category_1"
+    , "shut_down_days"
+    , "comments"
+    ) VALUES (
+      rec.id
+    , rec.application_version_id
+    , rec.year
+    , rec.month
+    , rec.category_1
+    , rec.shut_down_days
+    , rec.comments
+    );
+  
+  END LOOP;
+
+END;
+/
+
+--
 -- vents
 --
 
@@ -915,7 +1248,7 @@ END;
 -- dev to local: 13s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.vents) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.vents ORDER BY id) LOOP
   
     INSERT INTO "fcs"."vents"@fcs_postgres_db (
       "id"
