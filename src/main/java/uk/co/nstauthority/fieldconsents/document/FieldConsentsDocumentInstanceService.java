@@ -82,10 +82,15 @@ public class FieldConsentsDocumentInstanceService {
         .toList();
   }
 
-  public ByteArrayResource renderPdf(DocumentInstanceDto documentInstanceDto) {
+  public ByteArrayResource renderPdf(
+      DocumentInstanceDto documentInstanceDto,
+      PdfRenderingOptions pdfRenderingOptions
+  ) {
     Map<String, Object> templateModel = Map.of(
         "documentInstanceSectionSummaryViews",
-        fieldConsentsDocumentInstanceSectionService.getDocumentInstanceSectionSummaryViews(documentInstanceDto)
+        fieldConsentsDocumentInstanceSectionService.getDocumentInstanceSectionSummaryViews(documentInstanceDto),
+        "previewWatermark",
+        pdfRenderingOptions.previewWatermark()
     );
 
     return documentInstanceService.renderPdf(documentInstanceDto, templateModel);

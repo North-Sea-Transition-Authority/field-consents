@@ -1,12 +1,37 @@
 <#macro defaultDocument>
   <html>
+  <head>
+    <style>
+      @page {
+        size: a4;
+
+        @top-center {
+          content: element(watermark-ref);
+        }
+      }
+
+      watermark {
+        position: running(watermark-ref);
+        z-index: -999;
+        color: #b3b3ff;
+        font-size: 100px;
+        padding-top: 115mm;
+        text-align: center;
+        font-weight: bold;
+        line-height: 90px;
+      }
+    </style>
+  </head>
   <body>
   <#nested/>
   </body>
   </html>
 </#macro>
 
-<#macro sections documentInstanceSectionSummaryViews>
+<#macro sections documentInstanceSectionSummaryViews previewWatermark>
+  <#if previewWatermark?has_content>
+    <watermark>PREVIEW DOCUMENT</watermark>
+  </#if>
   <#list documentInstanceSectionSummaryViews as documentInstanceSectionSummaryView>
     <#assign nestingLevel = documentInstanceSectionSummaryView.nestingLevel()>
     <#assign sectionNumber = documentInstanceSectionSummaryView.sectionNumber()!>

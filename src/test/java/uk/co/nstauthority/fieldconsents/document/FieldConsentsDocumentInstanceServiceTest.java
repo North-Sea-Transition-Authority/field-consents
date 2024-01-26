@@ -140,17 +140,20 @@ class FieldConsentsDocumentInstanceServiceTest {
   @Test
   void renderPdf() {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
+    var pdfRenderingOptions = PdfRenderingOptions.newBuilder().build();
 
     var byteArrayResource = new ByteArrayResource(new byte[] {1, 2, 3});
 
     Map<String, Object> expectedTemplateModel = Map.of(
         "documentInstanceSectionSummaryViews",
-        fieldConsentsDocumentInstanceSectionService.getDocumentInstanceSectionSummaryViews(documentInstanceDto)
+        fieldConsentsDocumentInstanceSectionService.getDocumentInstanceSectionSummaryViews(documentInstanceDto),
+        "previewWatermark",
+        pdfRenderingOptions.previewWatermark()
     );
 
     when(documentInstanceService.renderPdf(documentInstanceDto, expectedTemplateModel))
         .thenReturn(byteArrayResource);
 
-    assertThat(fieldConsentsDocumentInstanceService.renderPdf(documentInstanceDto)).isEqualTo(byteArrayResource);
+    assertThat(fieldConsentsDocumentInstanceService.renderPdf(documentInstanceDto, pdfRenderingOptions)).isEqualTo(byteArrayResource);
   }
 }

@@ -70,13 +70,16 @@ public class DocumentInstanceController {
   @GetMapping("/{documentInstanceId}/preview")
   public ResponseEntity<?> getPreviewDocumentInstance(@PathVariable UUID documentInstanceId) {
     var documentInstanceDto = documentInstanceService.getDocumentInstanceDtoOrThrow(documentInstanceId);
-    var byteArrayResource = fieldConsentsDocumentInstanceService.renderPdf(documentInstanceDto);
+    var byteArrayResource = fieldConsentsDocumentInstanceService.renderPdf(
+        documentInstanceDto,
+        PdfRenderingOptions.newBuilder().withPreviewWatermark(true).build()
+    );
     var fileName = "Document Preview.pdf";
 
     return ResponseEntity.ok()
-        .contentType(MediaType.APPLICATION_OCTET_STREAM)
+        .contentType(MediaType.APPLICATION_PDF)
         .contentLength(byteArrayResource.contentLength())
-        .header(HttpHeaders.CONTENT_DISPOSITION, String.format("inline; filename=\"%s\"", fileName))
+        .header(HttpHeaders.CONTENT_DISPOSITION, String.format("filename=\"%s\"", fileName))
         .body(byteArrayResource);
   }
 

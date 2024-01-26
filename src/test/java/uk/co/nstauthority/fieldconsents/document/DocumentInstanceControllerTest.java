@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
@@ -55,6 +57,9 @@ class DocumentInstanceControllerTest extends AbstractControllerTest {
 
   @MockBean
   private ApplicationService applicationService;
+
+  @Captor
+  private ArgumentCaptor<PdfRenderingOptions> pdfRenderingOptionsCaptor;
 
   @SecurityTest
   void getViewDocumentInstance_noUser() throws Exception {
@@ -134,15 +139,18 @@ class DocumentInstanceControllerTest extends AbstractControllerTest {
     when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
     when(documentInstanceService.getDocumentInstanceDtoOrThrow(DOCUMENT_INSTANCE_ID))
         .thenReturn(documentInstanceDto);
-    when(fieldConsentsDocumentInstanceService.renderPdf(documentInstanceDto)).thenReturn(byteArrayResource);
+    when(fieldConsentsDocumentInstanceService.renderPdf(
+        documentInstanceDto,
+        PdfRenderingOptions.newBuilder().withPreviewWatermark(true).build())
+    ).thenReturn(byteArrayResource);
 
     mockMvc.perform(get(ReverseRouter.route(on(DocumentInstanceController.class)
             .getPreviewDocumentInstance(DOCUMENT_INSTANCE_ID)))
             .with(user(user)))
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_OCTET_STREAM))
+        .andExpect(content().contentType(MediaType.APPLICATION_PDF))
         .andExpect(content().bytes(byteArrayResource.getByteArray()))
-        .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"Document Preview.pdf\""));
+        .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, "filename=\"Document Preview.pdf\""));
   }
 
   @SecurityTest
