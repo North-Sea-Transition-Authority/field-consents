@@ -35,22 +35,22 @@ class DocumentTemplateBootstrapService {
 
     LOGGER.info("Creating initial document templates");
 
-    createProductionConsentTemplate();
-    createFlareConsentTemplate();
-    createVentConsentTemplate();
+    createFieldProductionConsentDocumentTemplate();
+    createFieldFlareConsentDocumentTemplate();
+    createFieldVentConsentDocumentTemplate();
   }
 
-  void createProductionConsentTemplate() {
-    var productionDocumentTemplateDto = documentTemplateService.createDocumentTemplate(
+  void createFieldProductionConsentDocumentTemplate() {
+    var fieldProductionConsentDocumentTemplateDto = documentTemplateService.createDocumentTemplate(
         DocumentTemplateType.FIELD_PRODUCTION_CONSENT.getMnemonic(),
         "Production Consent",
         "Document template used for creating Production Consents",
-        "fcs/document/template/consent/production/productionConsent.ftl",
+        "fcs/document/template/consent/production/fieldProductionConsent.ftl",
         1
     );
 
     documentTemplateSectionService.createDocumentTemplateSection(
-        productionDocumentTemplateDto,
+        fieldProductionConsentDocumentTemplateDto,
         null,
         "Header",
         """
@@ -63,7 +63,7 @@ class DocumentTemplateBootstrapService {
     );
 
     var consentsToSection = documentTemplateSectionService.createDocumentTemplateSection(
-        productionDocumentTemplateDto,
+        fieldProductionConsentDocumentTemplateDto,
         null,
         "Consents to",
         """
@@ -76,7 +76,7 @@ class DocumentTemplateBootstrapService {
     );
 
     documentTemplateSectionService.createDocumentTemplateSection(
-        productionDocumentTemplateDto,
+        fieldProductionConsentDocumentTemplateDto,
         consentsToSection,
         "The erection or carrying out of the relevant works",
         """
@@ -92,7 +92,7 @@ class DocumentTemplateBootstrapService {
     );
 
     documentTemplateSectionService.createDocumentTemplateSection(
-        productionDocumentTemplateDto,
+        fieldProductionConsentDocumentTemplateDto,
         consentsToSection,
         "The getting of petroleum",
         "the getting of petroleum from the Field during the Period as by means of such relevant works.",
@@ -102,7 +102,7 @@ class DocumentTemplateBootstrapService {
     );
 
     documentTemplateSectionService.createDocumentTemplateSection(
-        productionDocumentTemplateDto,
+        fieldProductionConsentDocumentTemplateDto,
         null,
         "This consent shall commence on",
         """
@@ -115,7 +115,7 @@ class DocumentTemplateBootstrapService {
     );
 
     var thisConsentIsGivenSection = documentTemplateSectionService.createDocumentTemplateSection(
-        productionDocumentTemplateDto,
+        fieldProductionConsentDocumentTemplateDto,
         null,
         "This consent is given",
         "This consent is given subject always to the following conditions:",
@@ -125,7 +125,7 @@ class DocumentTemplateBootstrapService {
     );
 
     documentTemplateSectionService.createDocumentTemplateSection(
-        productionDocumentTemplateDto,
+        fieldProductionConsentDocumentTemplateDto,
         thisConsentIsGivenSection,
         "Any activities carried out pursuant",
         """
@@ -138,7 +138,7 @@ class DocumentTemplateBootstrapService {
     );
 
     documentTemplateSectionService.createDocumentTemplateSection(
-        productionDocumentTemplateDto,
+        fieldProductionConsentDocumentTemplateDto,
         thisConsentIsGivenSection,
         "During the Period, the quantity of petroleum",
         """
@@ -151,7 +151,7 @@ class DocumentTemplateBootstrapService {
     );
 
     documentTemplateSectionService.createDocumentTemplateSection(
-        productionDocumentTemplateDto,
+        fieldProductionConsentDocumentTemplateDto,
         null,
         "This consent is given for the purposes",
         """
@@ -164,7 +164,7 @@ class DocumentTemplateBootstrapService {
     );
 
     documentTemplateSectionService.createDocumentTemplateSection(
-        productionDocumentTemplateDto,
+        fieldProductionConsentDocumentTemplateDto,
         null,
         "TODO FCS-610: This consent supersedes",
         "[This consent supersedes the consent [CONSENT REFERENCE] granted by the Oil and Gas Authority dated [DATE].]",
@@ -174,7 +174,7 @@ class DocumentTemplateBootstrapService {
     );
 
     documentTemplateSectionService.createDocumentTemplateSection(
-        productionDocumentTemplateDto,
+        fieldProductionConsentDocumentTemplateDto,
         null,
         "Consents to the use of gas",
         """
@@ -189,7 +189,7 @@ class DocumentTemplateBootstrapService {
     );
 
     documentTemplateSectionService.createDocumentTemplateSection(
-        productionDocumentTemplateDto,
+        fieldProductionConsentDocumentTemplateDto,
         null,
         "Schedule",
         "((SCHEDULE))",
@@ -199,7 +199,7 @@ class DocumentTemplateBootstrapService {
     );
 
     documentTemplateSectionService.createDocumentTemplateSection(
-        productionDocumentTemplateDto,
+        fieldProductionConsentDocumentTemplateDto,
         null,
         "Backplate",
         """
@@ -213,22 +213,123 @@ class DocumentTemplateBootstrapService {
     );
   }
 
-  void createFlareConsentTemplate() {
-    documentTemplateService.createDocumentTemplate(
+  void createFieldFlareConsentDocumentTemplate() {
+    var fieldFlareConsentDocumentTemplateDto = documentTemplateService.createDocumentTemplate(
         DocumentTemplateType.FIELD_FLARE_CONSENT.getMnemonic(),
         "Flare Consent",
         "Document template used for creating Flare Consents",
-        "fcs/document/template/consent/flare/flareConsent.ftl",
+        "fcs/document/template/consent/flare/fieldFlareConsent.ftl",
         2
+    );
+
+    documentTemplateSectionService.createDocumentTemplateSection(
+        fieldFlareConsentDocumentTemplateDto,
+        null,
+        "Header",
+        """
+        ((CONSENT_LENGTH_UPPER_CASE)) FLARE CONSENT
+        PETROLEUM PRODUCTION LICENCE No(s). ((LICENCE_REFERENCE_LIST)) (“Licence(s)”)
+        """,
+        null,
+        false,
+        1
+    );
+
+    documentTemplateSectionService.createDocumentTemplateSection(
+        fieldFlareConsentDocumentTemplateDto,
+        null,
+        "Consents to",
+        """
+        In accordance with paragraph (3)(a) of the clause titled “Avoidance of harmful methods of working” set out in \
+        or otherwise incorporated into the Licence(s), the Oil and Gas Authority hereby consents to the flaring, of \
+        natural gas obtained from those parts of the licensed area known as the ((PRIMARY_AND_ADDITIONAL_FIELD_NAMES)) \
+        field(s) during the Period.
+        """,
+        null,
+        true,
+        2
+    );
+
+    documentTemplateSectionService.createDocumentTemplateSection(
+        fieldFlareConsentDocumentTemplateDto,
+        null,
+        "This consent is given",
+        """
+        This consent is given subject always to the condition that natural gas shall not be flared at an average daily \
+        rate greater than the maximum specified in the schedule hereto.
+        """,
+        null,
+        true,
+        3
+    );
+
+    documentTemplateSectionService.createDocumentTemplateSection(
+        fieldFlareConsentDocumentTemplateDto,
+        null,
+        "This consent shall commence on",
+        """
+        This consent shall commence on ((CONSENT_START_DATE)) and expire on the earlier of ((CONSENT_END_DATE)) or the \
+        date of expiry or determination of any Licence (the “Period").
+        """,
+        null,
+        true,
+        4
+    );
+
+    documentTemplateSectionService.createDocumentTemplateSection(
+        fieldFlareConsentDocumentTemplateDto,
+        null,
+        "This consent is given for the purposes",
+        """
+        This consent is given for the purposes of the said paragraph (3)(a) of the clause titled “Avoidance of harmful \
+        methods of working” and without prejudice to the operation of any other provision of the Licence(s) or otherwise.
+        """,
+        null,
+        true,
+        5
+    );
+
+    documentTemplateSectionService.createDocumentTemplateSection(
+        fieldFlareConsentDocumentTemplateDto,
+        null,
+        "TODO FCS-610: This consent supersedes",
+        "[This consent supersedes the consent [CONSENT REFERENCE] granted by the Oil and Gas Authority dated [DATE].]",
+        null,
+        true,
+        6
+    );
+
+    documentTemplateSectionService.createDocumentTemplateSection(
+        fieldFlareConsentDocumentTemplateDto,
+        null,
+        "Schedule",
+        "((SCHEDULE))",
+        null,
+        false,
+        7
+    );
+
+    documentTemplateSectionService.createDocumentTemplateSection(
+        fieldFlareConsentDocumentTemplateDto,
+        null,
+        "Backplate",
+        """
+        ((PRIMARY_AND_ADDITIONAL_FIELD_NAMES))
+        LICENCE(S) ((LICENCE_REFERENCE_LIST))
+        [TODO FCS-611: All Licensees]
+        """,
+        null,
+        false,
+        8
     );
   }
 
-  void createVentConsentTemplate() {
+  void createFieldVentConsentDocumentTemplate() {
     documentTemplateService.createDocumentTemplate(
         DocumentTemplateType.FIELD_VENT_CONSENT.getMnemonic(),
         "Vent Consent",
         "Document template used for creating Vent Consents",
-        "fcs/document/template/consent/vent/ventConsent.ftl",
+        "fcs/document/template/consent/vent/fieldVentConsent.ftl",
         3
     );
   }

@@ -19,6 +19,7 @@ import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
+import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.assets.AssetWithOperatorJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
@@ -122,9 +123,26 @@ public class ApplicationAssetService {
         );
   }
 
-  public List<ApplicationAsset> findAssetsByApplicationVersionAndAssetRoles(ApplicationVersion applicationVersion,
-                                                                            Collection<AssetRole> assetRoles) {
-    return applicationAssetRepository.findAllByApplicationVersionAndAssetRoleInOrderByIdAsc(applicationVersion, assetRoles);
+  public List<ApplicationAsset> findAssetsByApplicationVersionAndAssetRoles(
+      ApplicationVersion applicationVersion,
+      Collection<AssetRole> assetRoles
+  ) {
+    return applicationAssetRepository.findAllByApplicationVersionAndAssetRoleInOrderByIdAsc(
+        applicationVersion,
+        assetRoles
+    );
+  }
+
+  public List<ApplicationAsset> findAssetsByApplicationVersionAndAssetTypeAndAssetRoles(
+      ApplicationVersion applicationVersion,
+      AssetType assetType,
+      Collection<AssetRole> assetRoles
+  ) {
+    return applicationAssetRepository.findAllByApplicationVersionAndAssetTypeAndAssetRoleInOrderByIdAsc(
+        applicationVersion,
+        assetType,
+        assetRoles
+    );
   }
 
   public List<ApplicationAsset> findAssetsByApplicationVersion(ApplicationVersion applicationVersion) {

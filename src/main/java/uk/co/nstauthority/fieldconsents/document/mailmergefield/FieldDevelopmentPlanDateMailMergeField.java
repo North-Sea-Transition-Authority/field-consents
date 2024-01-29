@@ -14,7 +14,7 @@ import uk.co.nstauthority.fieldconsents.document.lib.DocumentMailMergeField;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 
-@Order(5)
+@Order(7)
 @Component
 public class FieldDevelopmentPlanDateMailMergeField implements DocumentMailMergeField {
 

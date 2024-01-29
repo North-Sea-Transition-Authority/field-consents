@@ -10,7 +10,7 @@ import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceDto;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentMailMergeField;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
 
-@Order(4)
+@Order(5)
 @Component
 class ConsentLengthUpperCaseMailMergeField implements DocumentMailMergeField {
 

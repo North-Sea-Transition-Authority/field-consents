@@ -13,10 +13,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
-import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
+import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.document.DocumentInstanceDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.document.DocumentInstanceLinkingService;
 import uk.co.nstauthority.fieldconsents.document.DocumentTemplateDtoTestUtil;
@@ -30,6 +31,9 @@ class PrimaryFieldNameMailMergeFieldTest {
 
   @Mock
   private ApplicationAssetService applicationAssetService;
+
+  @Mock
+  private FieldService fieldService;
 
   @InjectMocks
   private PrimaryFieldNameMailMergeField primaryFieldNameMailMergeField;
@@ -45,25 +49,35 @@ class PrimaryFieldNameMailMergeFieldTest {
         .isEqualTo("The name of the primary field on the application");
   }
 
-  @ParameterizedTest
-  @EnumSource(DocumentTemplateType.class)
-  void isApplicable(DocumentTemplateType documentTemplateType) {
+  @Test
+  void isApplicable_documentTemplateTypeIsFieldProductionConsent() {
     var template = DocumentTemplateDtoTestUtil.builder()
-        .withMnemonic(documentTemplateType.getMnemonic())
+        .withMnemonic(DocumentTemplateType.FIELD_PRODUCTION_CONSENT.getMnemonic())
         .build();
 
     assertThat(primaryFieldNameMailMergeField.isApplicable(template)).isTrue();
   }
 
   @ParameterizedTest
-  @EnumSource(value = AssetType.class, names = { "FIELD" }, mode = EnumSource.Mode.EXCLUDE)
+  @EnumSource(value = DocumentTemplateType.class, names = "FIELD_PRODUCTION_CONSENT", mode = EnumSource.Mode.EXCLUDE)
+  void isApplicable_documentTemplateTypeIsNotFieldProductionConsent(DocumentTemplateType documentTemplateType) {
+    var template = DocumentTemplateDtoTestUtil.builder()
+        .withMnemonic(documentTemplateType.getMnemonic())
+        .build();
+
+    assertThat(primaryFieldNameMailMergeField.isApplicable(template)).isFalse();
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = AssetType.class, names = "FIELD", mode = EnumSource.Mode.EXCLUDE)
   void resolve_primaryAssetTypeIsNotField(AssetType assetType) {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
 
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
 
-    var applicationAsset = new ApplicationAsset();
-    applicationAsset.setAssetType(assetType);
+    var applicationAsset = ApplicationAssetTestUtil.newBuilder()
+        .withAssetType(assetType)
+        .build();
 
     when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
         .thenReturn(applicationVersion);
@@ -79,16 +93,18 @@ class PrimaryFieldNameMailMergeFieldTest {
 
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
 
-    var applicationAsset = new ApplicationAsset();
-    applicationAsset.setAssetType(AssetType.FIELD);
+    var applicationAsset = ApplicationAssetTestUtil.newBuilder()
+        .withAssetType(AssetType.FIELD)
+        .build();
 
     var fieldName = "CLAIR";
-    var assetJson = new FieldJson(null, fieldName, null, null, null);
+    var fieldJson = new FieldJson(null, fieldName, null, null, null);
 
     when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
         .thenReturn(applicationVersion);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(applicationAsset);
-    when(applicationAssetService.getAssetJsonForApplicationAsset(applicationAsset)).thenReturn(assetJson);
+    when(fieldService.getField(applicationAsset.getAssetId(), "Field lookup for application asset"))
+        .thenReturn(fieldJson);
 
     assertThat(primaryFieldNameMailMergeField.resolve(documentInstanceDto)).isEqualTo(fieldName);
   }

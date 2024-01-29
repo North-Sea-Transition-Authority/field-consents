@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
+import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.document.DocumentInstanceLinkingService;
 import uk.co.nstauthority.fieldconsents.document.DocumentTemplateType;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceDto;
@@ -16,14 +17,17 @@ class PrimaryFieldNameMailMergeField implements DocumentMailMergeField {
 
   private final DocumentInstanceLinkingService documentInstanceLinkingService;
   private final ApplicationAssetService applicationAssetService;
+  private final FieldService fieldService;
 
   @Autowired
   PrimaryFieldNameMailMergeField(
       DocumentInstanceLinkingService documentInstanceLinkingService,
-      ApplicationAssetService applicationAssetService
+      ApplicationAssetService applicationAssetService,
+      FieldService fieldService
   ) {
     this.documentInstanceLinkingService = documentInstanceLinkingService;
     this.applicationAssetService = applicationAssetService;
+    this.fieldService = fieldService;
   }
 
   @Override
@@ -40,7 +44,7 @@ class PrimaryFieldNameMailMergeField implements DocumentMailMergeField {
   public boolean isApplicable(DocumentTemplateDto documentTemplateDto) {
     var documentTemplateType = DocumentTemplateType.getByMnemonic(documentTemplateDto.mnemonic());
 
-    return DocumentTemplateType.isField(documentTemplateType) && DocumentTemplateType.isConsent(documentTemplateType);
+    return documentTemplateType == DocumentTemplateType.FIELD_PRODUCTION_CONSENT;
   }
 
   @Override
@@ -55,6 +59,6 @@ class PrimaryFieldNameMailMergeField implements DocumentMailMergeField {
       );
     }
 
-    return applicationAssetService.getAssetJsonForApplicationAsset(primaryAsset).getName();
+    return fieldService.getField(primaryAsset.getAssetId(), "Field lookup for application asset").getName();
   }
 }

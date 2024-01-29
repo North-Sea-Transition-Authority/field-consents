@@ -277,11 +277,43 @@ class ApplicationAssetServiceTest {
     var assetRole = AssetRole.PRIMARY;
     var applicationAssets = List.of(new ApplicationAsset(), new ApplicationAsset());
 
-    when(applicationAssetRepository.findAllByApplicationVersionAndAssetRoleInOrderByIdAsc(
-        applicationVersion, Set.of(assetRole))).thenReturn(applicationAssets);
+    when(
+        applicationAssetRepository.findAllByApplicationVersionAndAssetRoleInOrderByIdAsc(
+            applicationVersion,
+            Set.of(assetRole)
+        )
+    ).thenReturn(applicationAssets);
 
-    assertThat(applicationAssetService.findAssetsByApplicationVersionAndAssetRoles(applicationVersion, Set.of(assetRole)))
-        .isEqualTo(applicationAssets);
+    assertThat(
+        applicationAssetService.findAssetsByApplicationVersionAndAssetRoles(
+            applicationVersion,
+            Set.of(assetRole)
+        )
+    ).isEqualTo(applicationAssets);
+  }
+
+  @Test
+  void findAssetsByApplicationVersionAndAssetTypeAndAssetRoles() {
+    var applicationVersion = new ApplicationVersion();
+    var assetType = AssetType.FIELD;
+    var assetRole = AssetRole.PRIMARY;
+    var applicationAssets = List.of(new ApplicationAsset(), new ApplicationAsset());
+
+    when(
+        applicationAssetRepository.findAllByApplicationVersionAndAssetTypeAndAssetRoleInOrderByIdAsc(
+            applicationVersion,
+            assetType,
+            Set.of(assetRole)
+        )
+    ).thenReturn(applicationAssets);
+
+    assertThat(
+        applicationAssetService.findAssetsByApplicationVersionAndAssetTypeAndAssetRoles(
+            applicationVersion,
+            assetType,
+            Set.of(assetRole)
+        )
+    ).isEqualTo(applicationAssets);
   }
 
   @Test

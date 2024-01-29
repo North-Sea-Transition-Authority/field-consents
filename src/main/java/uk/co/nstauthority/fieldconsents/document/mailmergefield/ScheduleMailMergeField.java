@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.document.mailmergefield;
 
+import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.text.WordUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +14,7 @@ import uk.co.nstauthority.fieldconsents.document.lib.DocumentMailMergeField;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
 import uk.co.nstauthority.fieldconsents.document.lib.FreeMarkerTemplateRenderingService;
 
-@Order(8)
+@Order(9)
 @Component
 class ScheduleMailMergeField implements DocumentMailMergeField {
 
@@ -58,30 +59,38 @@ class ScheduleMailMergeField implements DocumentMailMergeField {
 
   @Override
   public String resolve(DocumentInstanceDto documentInstanceDto) {
-    var documentTemplateType = DocumentTemplateType.getByMnemonic(documentInstanceDto.documentTemplateDto().mnemonic());
-    if (documentTemplateType != DocumentTemplateType.FIELD_PRODUCTION_CONSENT) {
-      throw new MailMergeFieldFailedToResolveException(
-          "Unsupported DocumentTemplateType: %s".formatted(documentTemplateType)
-      );
-    }
-
     var applicationVersion =
         documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto);
 
-    var consentLengthType = consentLengthService.getConsentLengthDetails(applicationVersion).getConsentLength();
+    String templateName;
 
-    var templateName = switch (consentLengthType) {
-      case SHORT_TERM, ANNUAL ->
-          "fcs/document/template/consent/production/shortTermOrAnnualProductionConsentSchedule.ftl";
-      case LONG_TERM -> "fcs/document/template/consent/production/longTermProductionConsentSchedule.ftl";
-    };
+    Map<String, String> model = new HashMap<>();
+    model.put("consentStartDate", consentStartDateMailMergeField.resolve(documentInstanceDto));
+    model.put("consentEndDate", consentEndDateMailMergeField.resolve(documentInstanceDto));
 
-    var model = Map.of(
-        "capitalizedConsentLengthType", WordUtils.capitalizeFully(consentLengthType.getShortDisplayName()),
-        "primaryFieldName", primaryFieldNameMailMergeField.resolve(documentInstanceDto),
-        "consentStartDate", consentStartDateMailMergeField.resolve(documentInstanceDto),
-        "consentEndDate", consentEndDateMailMergeField.resolve(documentInstanceDto)
-    );
+    var documentTemplateType = DocumentTemplateType.getByMnemonic(documentInstanceDto.documentTemplateDto().mnemonic());
+
+    switch (documentTemplateType) {
+      case FIELD_PRODUCTION_CONSENT:
+        var consentLengthType = consentLengthService.getConsentLengthDetails(applicationVersion).getConsentLength();
+
+        templateName = switch (consentLengthType) {
+          case SHORT_TERM, ANNUAL ->
+              "fcs/document/template/consent/production/shortTermOrAnnualFieldProductionConsentSchedule.ftl";
+          case LONG_TERM -> "fcs/document/template/consent/production/longTermFieldProductionConsentSchedule.ftl";
+        };
+
+        model.put("capitalizedConsentLengthType", WordUtils.capitalizeFully(consentLengthType.getShortDisplayName()));
+        model.put("primaryFieldName", primaryFieldNameMailMergeField.resolve(documentInstanceDto));
+        break;
+      case FIELD_FLARE_CONSENT:
+        templateName = "fcs/document/template/consent/flare/fieldFlareConsentSchedule.ftl";
+        break;
+      default:
+        throw new MailMergeFieldFailedToResolveException(
+            "Unsupported DocumentTemplateType: %s".formatted(documentTemplateType)
+        );
+    }
 
     try {
       return freeMarkerTemplateRenderingService.renderTemplate(templateName, model);

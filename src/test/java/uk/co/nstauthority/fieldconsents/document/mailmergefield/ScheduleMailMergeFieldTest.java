@@ -69,8 +69,12 @@ class ScheduleMailMergeFieldTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = DocumentTemplateType.class, names = {"FIELD_PRODUCTION_CONSENT"}, mode = EnumSource.Mode.EXCLUDE)
-  void resolve_documentTemplateTypeIsNotConsent(DocumentTemplateType documentTemplateType) {
+  @EnumSource(
+      value = DocumentTemplateType.class,
+      names = { "FIELD_PRODUCTION_CONSENT", "FIELD_FLARE_CONSENT" },
+      mode = EnumSource.Mode.EXCLUDE
+  )
+  void resolve_documentTemplateTypeIsNotFieldProductionConsentOrFieldFlareConsent(DocumentTemplateType documentTemplateType) {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder()
         .withDocumentTemplate(
             DocumentTemplateDtoTestUtil.builder()
@@ -85,7 +89,9 @@ class ScheduleMailMergeFieldTest {
 
   @ParameterizedTest
   @EnumSource(value = ConsentLengthType.class, names = { "SHORT_TERM", "ANNUAL" }, mode = EnumSource.Mode.INCLUDE)
-  void resolve_consentLengthTypeIsShortTermOrAnnual(ConsentLengthType consentLengthType) throws Exception {
+  void resolve_documentTemplateTypeIsFieldProductionConsentAndConsentLengthTypeIsShortTermOrAnnual(
+      ConsentLengthType consentLengthType
+  ) throws Exception {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder()
         .withDocumentTemplate(
             DocumentTemplateDtoTestUtil.builder()
@@ -116,12 +122,12 @@ class ScheduleMailMergeFieldTest {
 
     when(
         freeMarkerTemplateRenderingService.renderTemplate(
-            "fcs/document/template/consent/production/shortTermOrAnnualProductionConsentSchedule.ftl",
+            "fcs/document/template/consent/production/shortTermOrAnnualFieldProductionConsentSchedule.ftl",
             Map.of(
-                "capitalizedConsentLengthType", WordUtils.capitalizeFully(consentLengthType.getShortDisplayName()),
-                "primaryFieldName", primaryFieldName,
                 "consentStartDate", consentStartDate,
-                "consentEndDate", consentEndDate
+                "consentEndDate", consentEndDate,
+                "capitalizedConsentLengthType", WordUtils.capitalizeFully(consentLengthType.getShortDisplayName()),
+                "primaryFieldName", primaryFieldName
             )
         )
     ).thenReturn(html);
@@ -130,7 +136,7 @@ class ScheduleMailMergeFieldTest {
   }
 
   @Test
-  void resolve_consentLengthTypeIsLongTerm() throws Exception {
+  void resolve_documentTemplateTypeIsFieldProductionConsentAndConsentLengthTypeIsLongTerm() throws Exception {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder()
         .withDocumentTemplate(
             DocumentTemplateDtoTestUtil.builder()
@@ -161,10 +167,46 @@ class ScheduleMailMergeFieldTest {
 
     when(
         freeMarkerTemplateRenderingService.renderTemplate(
-            "fcs/document/template/consent/production/longTermProductionConsentSchedule.ftl",
+            "fcs/document/template/consent/production/longTermFieldProductionConsentSchedule.ftl",
             Map.of(
+                "consentStartDate", consentStartDate,
+                "consentEndDate", consentEndDate,
                 "capitalizedConsentLengthType", WordUtils.capitalizeFully(ConsentLengthType.LONG_TERM.getShortDisplayName()),
-                "primaryFieldName", primaryFieldName,
+                "primaryFieldName", primaryFieldName
+            )
+        )
+    ).thenReturn(html);
+
+    assertThat(scheduleMailMergeField.resolve(documentInstanceDto)).isEqualTo(html);
+  }
+
+  @Test
+  void resolve_documentTemplateTypeIsFieldFlareConsent() throws Exception {
+    var documentInstanceDto = DocumentInstanceDtoTestUtil.builder()
+        .withDocumentTemplate(
+            DocumentTemplateDtoTestUtil.builder()
+                .withMnemonic(DocumentTemplateType.FIELD_FLARE_CONSENT.getMnemonic())
+                .build()
+        )
+        .build();
+
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+
+    var consentStartDate = "17/01/2024";
+    var consentEndDate = "17/01/2024";
+
+    var html = "<html></html>";
+
+    when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
+        .thenReturn(applicationVersion);
+
+    when(consentStartDateMailMergeField.resolve(documentInstanceDto)).thenReturn(consentStartDate);
+    when(consentEndDateMailMergeField.resolve(documentInstanceDto)).thenReturn(consentEndDate);
+
+    when(
+        freeMarkerTemplateRenderingService.renderTemplate(
+            "fcs/document/template/consent/flare/fieldFlareConsentSchedule.ftl",
+            Map.of(
                 "consentStartDate", consentStartDate,
                 "consentEndDate", consentEndDate
             )
