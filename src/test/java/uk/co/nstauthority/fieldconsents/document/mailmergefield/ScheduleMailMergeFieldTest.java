@@ -1,7 +1,6 @@
 package uk.co.nstauthority.fieldconsents.document.mailmergefield;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 import java.util.Map;
@@ -66,25 +65,6 @@ class ScheduleMailMergeFieldTest {
         .build();
 
     assertThat(scheduleMailMergeField.isApplicable(template)).isTrue();
-  }
-
-  @ParameterizedTest
-  @EnumSource(
-      value = DocumentTemplateType.class,
-      names = { "FIELD_PRODUCTION_CONSENT", "FIELD_FLARE_CONSENT" },
-      mode = EnumSource.Mode.EXCLUDE
-  )
-  void resolve_documentTemplateTypeIsNotFieldProductionConsentOrFieldFlareConsent(DocumentTemplateType documentTemplateType) {
-    var documentInstanceDto = DocumentInstanceDtoTestUtil.builder()
-        .withDocumentTemplate(
-            DocumentTemplateDtoTestUtil.builder()
-                .withMnemonic(documentTemplateType.getMnemonic())
-                .build()
-        )
-        .build();
-
-    assertThatThrownBy(() -> scheduleMailMergeField.resolve(documentInstanceDto))
-        .isInstanceOf(MailMergeFieldFailedToResolveException.class);
   }
 
   @ParameterizedTest
@@ -206,6 +186,42 @@ class ScheduleMailMergeFieldTest {
     when(
         freeMarkerTemplateRenderingService.renderTemplate(
             "fcs/document/template/consent/flare/fieldFlareConsentSchedule.ftl",
+            Map.of(
+                "consentStartDate", consentStartDate,
+                "consentEndDate", consentEndDate
+            )
+        )
+    ).thenReturn(html);
+
+    assertThat(scheduleMailMergeField.resolve(documentInstanceDto)).isEqualTo(html);
+  }
+
+  @Test
+  void resolve_documentTemplateTypeIsFieldVentConsent() throws Exception {
+    var documentInstanceDto = DocumentInstanceDtoTestUtil.builder()
+        .withDocumentTemplate(
+            DocumentTemplateDtoTestUtil.builder()
+                .withMnemonic(DocumentTemplateType.FIELD_VENT_CONSENT.getMnemonic())
+                .build()
+        )
+        .build();
+
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+
+    var consentStartDate = "17/01/2024";
+    var consentEndDate = "17/01/2024";
+
+    var html = "<html></html>";
+
+    when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
+        .thenReturn(applicationVersion);
+
+    when(consentStartDateMailMergeField.resolve(documentInstanceDto)).thenReturn(consentStartDate);
+    when(consentEndDateMailMergeField.resolve(documentInstanceDto)).thenReturn(consentEndDate);
+
+    when(
+        freeMarkerTemplateRenderingService.renderTemplate(
+            "fcs/document/template/consent/vent/fieldVentConsentSchedule.ftl",
             Map.of(
                 "consentStartDate", consentStartDate,
                 "consentEndDate", consentEndDate

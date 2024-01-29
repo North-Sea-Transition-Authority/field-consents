@@ -86,6 +86,9 @@ class ScheduleMailMergeField implements DocumentMailMergeField {
       case FIELD_FLARE_CONSENT:
         templateName = "fcs/document/template/consent/flare/fieldFlareConsentSchedule.ftl";
         break;
+      case FIELD_VENT_CONSENT:
+        templateName = "fcs/document/template/consent/vent/fieldVentConsentSchedule.ftl";
+        break;
       default:
         throw new MailMergeFieldFailedToResolveException(
             "Unsupported DocumentTemplateType: %s".formatted(documentTemplateType)

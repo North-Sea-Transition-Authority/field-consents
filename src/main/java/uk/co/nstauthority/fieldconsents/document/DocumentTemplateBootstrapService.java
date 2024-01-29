@@ -325,12 +325,90 @@ class DocumentTemplateBootstrapService {
   }
 
   void createFieldVentConsentDocumentTemplate() {
-    documentTemplateService.createDocumentTemplate(
+    var fieldVentConsentDocumentTemplateDto = documentTemplateService.createDocumentTemplate(
         DocumentTemplateType.FIELD_VENT_CONSENT.getMnemonic(),
         "Vent Consent",
         "Document template used for creating Vent Consents",
         "fcs/document/template/consent/vent/fieldVentConsent.ftl",
         3
+    );
+
+    documentTemplateSectionService.createDocumentTemplateSection(
+        fieldVentConsentDocumentTemplateDto,
+        null,
+        "Header",
+        """
+        ENERGY ACT 1976
+        PETROLEUM PRODUCTION LICENCE No(s). ((LICENCE_REFERENCE_LIST)) (“Licence(s)”)
+        ((CONSENT_LENGTH_UPPER_CASE)) VENT CONSENT
+        """,
+        null,
+        false,
+        1
+    );
+
+    documentTemplateSectionService.createDocumentTemplateSection(
+        fieldVentConsentDocumentTemplateDto,
+        null,
+        "Consents to",
+        """
+        Pursuant to section 12A(1)(b) of the Energy Act 1976, the Oil and Gas Authority hereby consents to the \
+        releasing unignited into the atmosphere of natural gas obtained from those parts of the licensed area of the \
+        Licence(s) known as the ((PRIMARY_AND_ADDITIONAL_FIELD_NAMES)) field(s) during the Period.
+        """,
+        null,
+        true,
+        2
+    );
+
+    documentTemplateSectionService.createDocumentTemplateSection(
+        fieldVentConsentDocumentTemplateDto,
+        null,
+        "This consent shall commence on",
+        """
+        This consent shall commence on ((CONSENT_START_DATE)) and expire on the earlier of ((CONSENT_END_DATE)) or the \
+        date of expiry or determination of any Licence (the “Period").
+        """,
+        null,
+        true,
+        3
+    );
+
+    documentTemplateSectionService.createDocumentTemplateSection(
+        fieldVentConsentDocumentTemplateDto,
+        null,
+        "This consent is given",
+        """
+        This consent is given subject always to the condition that natural gas shall not be disposed of at an average \
+        daily rate greater than the maximum specified in the schedule hereto.
+        """,
+        null,
+        true,
+        4
+    );
+
+    documentTemplateSectionService.createDocumentTemplateSection(
+        fieldVentConsentDocumentTemplateDto,
+        null,
+        "Schedule",
+        "((SCHEDULE))",
+        null,
+        false,
+        5
+    );
+
+    documentTemplateSectionService.createDocumentTemplateSection(
+        fieldVentConsentDocumentTemplateDto,
+        null,
+        "Backplate",
+        """
+        ((PRIMARY_AND_ADDITIONAL_FIELD_NAMES))
+        LICENCE(S) ((LICENCE_REFERENCE_LIST))
+        [TODO FCS-611: All Licensees]
+        """,
+        null,
+        false,
+        6
     );
   }
 }
