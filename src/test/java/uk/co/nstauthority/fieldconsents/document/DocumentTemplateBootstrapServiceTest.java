@@ -41,6 +41,7 @@ class DocumentTemplateBootstrapServiceTest {
     verify(documentTemplateBootstrapService, never()).createFieldFlareConsentDocumentTemplate();
     verify(documentTemplateBootstrapService, never()).createTerminalFlareConsentDocumentTemplate();
     verify(documentTemplateBootstrapService, never()).createFieldVentConsentDocumentTemplate();
+    verify(documentTemplateBootstrapService, never()).createTerminalVentConsentDocumentTemplate();
   }
 
   @Test
@@ -53,6 +54,7 @@ class DocumentTemplateBootstrapServiceTest {
     verify(documentTemplateBootstrapService).createFieldFlareConsentDocumentTemplate();
     verify(documentTemplateBootstrapService).createTerminalFlareConsentDocumentTemplate();
     verify(documentTemplateBootstrapService).createFieldVentConsentDocumentTemplate();
+    verify(documentTemplateBootstrapService).createTerminalVentConsentDocumentTemplate();
   }
 
   @Test
@@ -545,6 +547,94 @@ class DocumentTemplateBootstrapServiceTest {
         LICENCE(S) ((LICENCE_REFERENCE_LIST))
         [TODO FCS-611: All Licensees]
         """,
+        null,
+        false,
+        6
+    );
+  }
+
+  @Test
+  void createTerminalVentConsentDocumentTemplate() {
+    var terminalVentConsentDocumentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
+
+    when(
+        documentTemplateService.createDocumentTemplate(
+            DocumentTemplateType.TERMINAL_VENT_CONSENT.getMnemonic(),
+            "Facility Vent Consent",
+            "Document template used for creating Facility Vent Consent documents",
+            "fcs/document/template/consent/vent/ventConsent.ftl",
+            5
+        )
+    ).thenReturn(terminalVentConsentDocumentTemplateDto);
+
+    documentTemplateBootstrapService.createTerminalVentConsentDocumentTemplate();
+
+    verify(documentTemplateSectionService).createDocumentTemplateSection(
+        terminalVentConsentDocumentTemplateDto,
+        null,
+        "Header",
+        """
+        ENERGY ACT 1976
+        CONSENT TO DISPOSE OF NATURAL GAS AT ((FACILITY_NAME))
+        """,
+        null,
+        false,
+        1
+    );
+
+    verify(documentTemplateSectionService).createDocumentTemplateSection(
+        terminalVentConsentDocumentTemplateDto,
+        null,
+        "Consents to",
+        """
+        Pursuant to section 12A(1)(a) of the Energy Act 1976, the Oil and Gas Authority hereby consents to the \
+        releasing unignited into the atmosphere from the relevant oil processing facility or relevant gas processing \
+        facility, being the ((FACILITY_NAME)) (the “Facility”), of natural gas originally won from the fields with a \
+        right to have the natural gas processed by the Facility.
+        """,
+        null,
+        true,
+        2
+    );
+
+    verify(documentTemplateSectionService).createDocumentTemplateSection(
+        terminalVentConsentDocumentTemplateDto,
+        null,
+        "This consent shall commence on",
+        "This consent shall commence on ((CONSENT_START_DATE)) and expire on ((CONSENT_END_DATE)) (the “Period”).",
+        null,
+        true,
+        3
+    );
+
+    verify(documentTemplateSectionService).createDocumentTemplateSection(
+        terminalVentConsentDocumentTemplateDto,
+        null,
+        "This consent is given",
+        """
+        This consent is given subject always to the condition that, during the Period, natural gas shall not be \
+        disposed of at an average daily rate greater than the maximum specified in the schedule hereto.
+        """,
+        null,
+        true,
+        4
+    );
+
+    verify(documentTemplateSectionService).createDocumentTemplateSection(
+        terminalVentConsentDocumentTemplateDto,
+        null,
+        "TODO FCS-610: This consent supersedes",
+        "[This consent supersedes the consent [CONSENT REFERENCE] granted by the Oil and Gas Authority dated [DATE].]",
+        null,
+        true,
+        5
+    );
+
+    verify(documentTemplateSectionService).createDocumentTemplateSection(
+        terminalVentConsentDocumentTemplateDto,
+        null,
+        "Schedule",
+        "((SCHEDULE))",
         null,
         false,
         6

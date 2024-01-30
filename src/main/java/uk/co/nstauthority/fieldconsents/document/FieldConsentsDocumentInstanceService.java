@@ -110,7 +110,9 @@ public class FieldConsentsDocumentInstanceService {
       case FLARE -> isPrimaryAssetField(application)
           ? DocumentTemplateType.FIELD_FLARE_CONSENT
           : DocumentTemplateType.TERMINAL_FLARE_CONSENT;
-      case VENT -> DocumentTemplateType.FIELD_VENT_CONSENT;
+      case VENT -> isPrimaryAssetField(application)
+          ? DocumentTemplateType.FIELD_VENT_CONSENT
+          : DocumentTemplateType.TERMINAL_VENT_CONSENT;
     };
   }
 

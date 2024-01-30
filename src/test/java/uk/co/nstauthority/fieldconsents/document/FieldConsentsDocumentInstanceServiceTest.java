@@ -217,12 +217,25 @@ class FieldConsentsDocumentInstanceServiceTest {
   }
 
   @Test
-  void getConsentDocumentType_applicationTypeIsVent() {
+  void getConsentDocumentType_applicationTypeIsVentAndPrimaryAssetIsField() {
     var application = new Application();
     application.setType(ApplicationType.VENT);
 
+    doReturn(true).when(fieldConsentsDocumentInstanceService).isPrimaryAssetField(application);
+
     assertThat(fieldConsentsDocumentInstanceService.getConsentDocumentType(application))
         .isEqualTo(DocumentTemplateType.FIELD_VENT_CONSENT);
+  }
+
+  @Test
+  void getConsentDocumentType_applicationTypeIsVentAndPrimaryAssetIsNotField() {
+    var application = new Application();
+    application.setType(ApplicationType.VENT);
+
+    doReturn(false).when(fieldConsentsDocumentInstanceService).isPrimaryAssetField(application);
+
+    assertThat(fieldConsentsDocumentInstanceService.getConsentDocumentType(application))
+        .isEqualTo(DocumentTemplateType.TERMINAL_VENT_CONSENT);
   }
 
   @Test

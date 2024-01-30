@@ -88,7 +88,7 @@ class ScheduleMailMergeField implements DocumentMailMergeField {
       case FIELD_FLARE_CONSENT, TERMINAL_FLARE_CONSENT:
         templateName = "fcs/document/template/consent/flare/flareConsentSchedule.ftl";
         break;
-      case FIELD_VENT_CONSENT:
+      case FIELD_VENT_CONSENT, TERMINAL_VENT_CONSENT:
         templateName = "fcs/document/template/consent/vent/ventConsentSchedule.ftl";
         break;
       default:

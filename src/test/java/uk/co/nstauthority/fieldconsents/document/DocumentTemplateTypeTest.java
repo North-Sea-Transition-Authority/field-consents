@@ -42,13 +42,21 @@ class DocumentTemplateTypeTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = DocumentTemplateType.class, names = "TERMINAL_FLARE_CONSENT", mode = EnumSource.Mode.INCLUDE)
+  @EnumSource(
+      value = DocumentTemplateType.class,
+      names = { "TERMINAL_FLARE_CONSENT", "TERMINAL_VENT_CONSENT" },
+      mode = EnumSource.Mode.INCLUDE
+  )
   void isTerminal_documentTemplateTypeIsTerminal(DocumentTemplateType documentTemplateType) {
     assertThat(DocumentTemplateType.isTerminal(documentTemplateType)).isTrue();
   }
 
   @ParameterizedTest
-  @EnumSource(value = DocumentTemplateType.class, names = "TERMINAL_FLARE_CONSENT", mode = EnumSource.Mode.EXCLUDE)
+  @EnumSource(
+      value = DocumentTemplateType.class,
+      names = { "TERMINAL_FLARE_CONSENT", "TERMINAL_VENT_CONSENT" },
+      mode = EnumSource.Mode.EXCLUDE
+  )
   void isTerminal_documentTemplateTypeIsNotTerminal(DocumentTemplateType documentTemplateType) {
     assertThat(DocumentTemplateType.isTerminal(documentTemplateType)).isFalse();
   }

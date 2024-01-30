@@ -202,12 +202,17 @@ class ScheduleMailMergeFieldTest {
     assertThat(scheduleMailMergeField.resolve(documentInstanceDto)).isEqualTo(html);
   }
 
-  @Test
-  void resolve_documentTemplateTypeIsFieldVentConsent() throws Exception {
+  @ParameterizedTest
+  @EnumSource(
+      value = DocumentTemplateType.class,
+      names = { "FIELD_VENT_CONSENT", "TERMINAL_VENT_CONSENT" },
+      mode = EnumSource.Mode.INCLUDE
+  )
+  void resolve_documentTemplateTypeIsFieldVentConsentOrTerminalVentConsent(DocumentTemplateType documentTemplateType) throws Exception {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder()
         .withDocumentTemplate(
             DocumentTemplateDtoTestUtil.builder()
-                .withMnemonic(DocumentTemplateType.FIELD_VENT_CONSENT.getMnemonic())
+                .withMnemonic(documentTemplateType.getMnemonic())
                 .build()
         )
         .build();
