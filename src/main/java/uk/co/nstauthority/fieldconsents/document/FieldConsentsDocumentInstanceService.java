@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.Application;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceDto;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceService;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
@@ -23,16 +25,22 @@ public class FieldConsentsDocumentInstanceService {
   private final DocumentInstanceService documentInstanceService;
   private final DocumentTemplateService documentTemplateService;
   private final FieldConsentsDocumentInstanceSectionService fieldConsentsDocumentInstanceSectionService;
+  private final ApplicationVersionService applicationVersionService;
+  private final ApplicationAssetService applicationAssetService;
 
   @Autowired
   FieldConsentsDocumentInstanceService(
       DocumentInstanceService documentInstanceService,
       DocumentTemplateService documentTemplateService,
-      FieldConsentsDocumentInstanceSectionService fieldConsentsDocumentInstanceSectionService
+      FieldConsentsDocumentInstanceSectionService fieldConsentsDocumentInstanceSectionService,
+      ApplicationVersionService applicationVersionService,
+      ApplicationAssetService applicationAssetService
   ) {
     this.documentInstanceService = documentInstanceService;
     this.documentTemplateService = documentTemplateService;
     this.fieldConsentsDocumentInstanceSectionService = fieldConsentsDocumentInstanceSectionService;
+    this.applicationVersionService = applicationVersionService;
+    this.applicationAssetService = applicationAssetService;
   }
 
   public void createDocumentInstancesForApplication(Application application) {
@@ -60,7 +68,7 @@ public class FieldConsentsDocumentInstanceService {
     LOGGER.debug("Created consent document instance for application [{}]", applicationId);
   }
 
-  public DocumentInstanceDto createDocumentInstance(
+  DocumentInstanceDto createDocumentInstance(
       Application application,
       DocumentTemplateDto documentTemplateDto,
       DocumentTemplateType documentTemplateType
@@ -96,15 +104,25 @@ public class FieldConsentsDocumentInstanceService {
     return documentInstanceService.renderPdf(documentInstanceDto, templateModel);
   }
 
-  private DocumentTemplateType getConsentDocumentType(Application application) {
+  DocumentTemplateType getConsentDocumentType(Application application) {
     return switch (application.getType()) {
       case PRODUCTION -> DocumentTemplateType.FIELD_PRODUCTION_CONSENT;
-      case FLARE -> DocumentTemplateType.FIELD_FLARE_CONSENT;
+      case FLARE -> isPrimaryAssetField(application)
+          ? DocumentTemplateType.FIELD_FLARE_CONSENT
+          : DocumentTemplateType.TERMINAL_FLARE_CONSENT;
       case VENT -> DocumentTemplateType.FIELD_VENT_CONSENT;
     };
   }
 
-  private String getItemReference(Application application) {
+  boolean isPrimaryAssetField(Application application) {
+    var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(application.getId());
+
+    var primaryAsset = applicationAssetService.getPrimaryAsset(applicationVersion);
+
+    return primaryAsset.isField();
+  }
+
+  String getItemReference(Application application) {
     return application.getId().toString();
   }
 }

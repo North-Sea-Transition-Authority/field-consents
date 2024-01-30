@@ -1,8 +1,8 @@
 package uk.co.nstauthority.fieldconsents.document;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -10,19 +10,23 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ByteArrayResource;
 import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
+import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceService;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateService;
 
@@ -40,53 +44,70 @@ class FieldConsentsDocumentInstanceServiceTest {
   @Mock
   private FieldConsentsDocumentInstanceSectionService fieldConsentsDocumentInstanceSectionService;
 
+  @Mock
+  private ApplicationVersionService applicationVersionService;
+
+  @Mock
+  private ApplicationAssetService applicationAssetService;
+
   @InjectMocks
+  @Spy
   private FieldConsentsDocumentInstanceService fieldConsentsDocumentInstanceService;
 
-  @ParameterizedTest
-  @MethodSource("createDocumentInstancesForApplication_arguments")
-  void createDocumentInstancesForApplication(ApplicationType applicationType, DocumentTemplateType documentTemplateType) {
-    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
-    var application = new Application(1);
-    application.setType(applicationType);
+  @Test
+  void createDocumentInstancesForApplication_documentInstancesAlreadyExist() {
+    var application = new Application();
 
-    when(documentTemplateService.getDocumentTemplateDtoByMnemonicOrThrow(documentTemplateType.name())).thenReturn(documentTemplateDto);
-    when(documentInstanceService.getDocumentInstanceDtoByItemReferenceAndItemTypeAndDocumentTemplateDto(application.getId().toString(), APPLICATION_DOCUMENT_INSTANCE_ITEM_TYPE, documentTemplateDto))
-        .thenReturn(Optional.empty());
+    var consentDocumentType = DocumentTemplateType.FIELD_PRODUCTION_CONSENT;
+    var itemReference = "Test/item/reference";
 
-    fieldConsentsDocumentInstanceService.createDocumentInstancesForApplication(application);
-
-    verify(documentInstanceService).createDocumentInstance(
-        application.getId().toString(),
-        APPLICATION_DOCUMENT_INSTANCE_ITEM_TYPE,
-        documentTemplateDto.title(),
-        documentTemplateType.getDocumentInstanceDescription(),
-        documentTemplateDto
-    );
-  }
-
-  @ParameterizedTest
-  @MethodSource("createDocumentInstancesForApplication_arguments")
-  void createDocumentInstancesForApplication_documentInstancesAlreadyExist(ApplicationType applicationType, DocumentTemplateType documentTemplateType) {
     var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
     var existingDocumentInstance = DocumentInstanceDtoTestUtil.builder().build();
-    var application = new Application(1);
-    application.setType(applicationType);
 
-    when(documentTemplateService.getDocumentTemplateDtoByMnemonicOrThrow(documentTemplateType.name())).thenReturn(documentTemplateDto);
-    when(documentInstanceService.getDocumentInstanceDtoByItemReferenceAndItemTypeAndDocumentTemplateDto(application.getId().toString(), APPLICATION_DOCUMENT_INSTANCE_ITEM_TYPE, documentTemplateDto))
-        .thenReturn(Optional.of(existingDocumentInstance));
+    doReturn(consentDocumentType).when(fieldConsentsDocumentInstanceService).getConsentDocumentType(application);
+    doReturn(itemReference).when(fieldConsentsDocumentInstanceService).getItemReference(application);
+    when(documentTemplateService.getDocumentTemplateDtoByMnemonicOrThrow(consentDocumentType.getMnemonic()))
+        .thenReturn(documentTemplateDto);
+    when(
+        documentInstanceService.getDocumentInstanceDtoByItemReferenceAndItemTypeAndDocumentTemplateDto(
+            itemReference,
+            APPLICATION_DOCUMENT_INSTANCE_ITEM_TYPE,
+            documentTemplateDto
+        )
+    ).thenReturn(Optional.of(existingDocumentInstance));
 
     fieldConsentsDocumentInstanceService.createDocumentInstancesForApplication(application);
 
-    verify(documentInstanceService, never()).createDocumentInstance(any(), any(), any(), any(), any());
+    verify(fieldConsentsDocumentInstanceService, never()).createDocumentInstance(any(), any(), any());
   }
 
-  private static Stream<Arguments> createDocumentInstancesForApplication_arguments() {
-    return Stream.of(
-        arguments(ApplicationType.FLARE, DocumentTemplateType.FIELD_FLARE_CONSENT),
-        arguments(ApplicationType.PRODUCTION, DocumentTemplateType.FIELD_PRODUCTION_CONSENT),
-        arguments(ApplicationType.VENT, DocumentTemplateType.FIELD_VENT_CONSENT)
+  @Test
+  void createDocumentInstancesForApplication() {
+    var application = new Application();
+
+    var consentDocumentType = DocumentTemplateType.FIELD_PRODUCTION_CONSENT;
+    var itemReference = "Test/item/reference";
+
+    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
+
+    doReturn(consentDocumentType).when(fieldConsentsDocumentInstanceService).getConsentDocumentType(application);
+    doReturn(itemReference).when(fieldConsentsDocumentInstanceService).getItemReference(application);
+    when(documentTemplateService.getDocumentTemplateDtoByMnemonicOrThrow(consentDocumentType.getMnemonic()))
+        .thenReturn(documentTemplateDto);
+    when(
+        documentInstanceService.getDocumentInstanceDtoByItemReferenceAndItemTypeAndDocumentTemplateDto(
+            itemReference,
+            APPLICATION_DOCUMENT_INSTANCE_ITEM_TYPE,
+            documentTemplateDto
+        )
+    ).thenReturn(Optional.empty());
+
+    fieldConsentsDocumentInstanceService.createDocumentInstancesForApplication(application);
+
+    verify(fieldConsentsDocumentInstanceService).createDocumentInstance(
+        application,
+        documentTemplateDto,
+        consentDocumentType
     );
   }
 
@@ -99,16 +120,23 @@ class FieldConsentsDocumentInstanceServiceTest {
     var documentTemplateType = DocumentTemplateType.FIELD_PRODUCTION_CONSENT;
     var itemReference = application.getId().toString();
 
-    when(documentInstanceService.createDocumentInstance(
-        itemReference,
-        APPLICATION_DOCUMENT_INSTANCE_ITEM_TYPE,
-        documentTemplateDto.title(),
-        documentTemplateType.getDocumentInstanceDescription(),
-        documentTemplateDto
-    )).thenReturn(documentInstanceDto);
+    when(
+        documentInstanceService.createDocumentInstance(
+            itemReference,
+            APPLICATION_DOCUMENT_INSTANCE_ITEM_TYPE,
+            documentTemplateDto.title(),
+            documentTemplateType.getDocumentInstanceDescription(),
+            documentTemplateDto
+        )
+    ).thenReturn(documentInstanceDto);
 
-    assertThat(fieldConsentsDocumentInstanceService.createDocumentInstance(application, documentTemplateDto, documentTemplateType))
-        .isEqualTo(documentInstanceDto);
+    assertThat(
+        fieldConsentsDocumentInstanceService.createDocumentInstance(
+            application,
+            documentTemplateDto,
+            documentTemplateType
+        )
+    ).isEqualTo(documentInstanceDto);
   }
 
   @Test
@@ -155,5 +183,84 @@ class FieldConsentsDocumentInstanceServiceTest {
         .thenReturn(byteArrayResource);
 
     assertThat(fieldConsentsDocumentInstanceService.renderPdf(documentInstanceDto, pdfRenderingOptions)).isEqualTo(byteArrayResource);
+  }
+
+  @Test
+  void getConsentDocumentType_applicationTypeIsProduction() {
+    var application = new Application();
+    application.setType(ApplicationType.PRODUCTION);
+
+    assertThat(fieldConsentsDocumentInstanceService.getConsentDocumentType(application))
+        .isEqualTo(DocumentTemplateType.FIELD_PRODUCTION_CONSENT);
+  }
+
+  @Test
+  void getConsentDocumentType_applicationTypeIsFlareAndPrimaryAssetIsField() {
+    var application = new Application();
+    application.setType(ApplicationType.FLARE);
+
+    doReturn(true).when(fieldConsentsDocumentInstanceService).isPrimaryAssetField(application);
+
+    assertThat(fieldConsentsDocumentInstanceService.getConsentDocumentType(application))
+        .isEqualTo(DocumentTemplateType.FIELD_FLARE_CONSENT);
+  }
+
+  @Test
+  void getConsentDocumentType_applicationTypeIsFlareAndPrimaryAssetIsNotField() {
+    var application = new Application();
+    application.setType(ApplicationType.FLARE);
+
+    doReturn(false).when(fieldConsentsDocumentInstanceService).isPrimaryAssetField(application);
+
+    assertThat(fieldConsentsDocumentInstanceService.getConsentDocumentType(application))
+        .isEqualTo(DocumentTemplateType.TERMINAL_FLARE_CONSENT);
+  }
+
+  @Test
+  void getConsentDocumentType_applicationTypeIsVent() {
+    var application = new Application();
+    application.setType(ApplicationType.VENT);
+
+    assertThat(fieldConsentsDocumentInstanceService.getConsentDocumentType(application))
+        .isEqualTo(DocumentTemplateType.FIELD_VENT_CONSENT);
+  }
+
+  @Test
+  void isPrimaryAssetField_assetTypeIsField() {
+    var application = new Application(1);
+    var applicationVersion = new ApplicationVersion();
+
+    var primaryAsset = new ApplicationAsset();
+    primaryAsset.setAssetType(AssetType.FIELD);
+
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(application.getId()))
+        .thenReturn(applicationVersion);
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryAsset);
+
+    assertThat(fieldConsentsDocumentInstanceService.isPrimaryAssetField(application)).isEqualTo(true);
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = AssetType.class, names = "FIELD", mode = EnumSource.Mode.EXCLUDE)
+  void isPrimaryAssetField_assetTypeIsNotField(AssetType assetType) {
+    var application = new Application(1);
+    var applicationVersion = new ApplicationVersion();
+
+    var primaryAsset = new ApplicationAsset();
+    primaryAsset.setAssetType(assetType);
+
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(application.getId()))
+        .thenReturn(applicationVersion);
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryAsset);
+
+    assertThat(fieldConsentsDocumentInstanceService.isPrimaryAssetField(application)).isEqualTo(false);
+  }
+
+  @Test
+  void getItemReference() {
+    var application = new Application(1);
+
+    assertThat(fieldConsentsDocumentInstanceService.getItemReference(application))
+        .isEqualTo(application.getId().toString());
   }
 }

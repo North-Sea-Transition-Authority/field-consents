@@ -39,6 +39,7 @@ class DocumentTemplateBootstrapServiceTest {
 
     verify(documentTemplateBootstrapService, never()).createFieldProductionConsentDocumentTemplate();
     verify(documentTemplateBootstrapService, never()).createFieldFlareConsentDocumentTemplate();
+    verify(documentTemplateBootstrapService, never()).createTerminalFlareConsentDocumentTemplate();
     verify(documentTemplateBootstrapService, never()).createFieldVentConsentDocumentTemplate();
   }
 
@@ -50,6 +51,7 @@ class DocumentTemplateBootstrapServiceTest {
 
     verify(documentTemplateBootstrapService).createFieldProductionConsentDocumentTemplate();
     verify(documentTemplateBootstrapService).createFieldFlareConsentDocumentTemplate();
+    verify(documentTemplateBootstrapService).createTerminalFlareConsentDocumentTemplate();
     verify(documentTemplateBootstrapService).createFieldVentConsentDocumentTemplate();
   }
 
@@ -63,9 +65,9 @@ class DocumentTemplateBootstrapServiceTest {
     when(
         documentTemplateService.createDocumentTemplate(
             DocumentTemplateType.FIELD_PRODUCTION_CONSENT.getMnemonic(),
-            "Production Consent",
-            "Document template used for creating Production Consents",
-            "fcs/document/template/consent/production/fieldProductionConsent.ftl",
+            "Field Production Consent",
+            "Document template used for creating Field Production Consent documents",
+            "fcs/document/template/consent/production/productionConsent.ftl",
             1
         )
     ).thenReturn(fieldProductionConsentDocumentTemplateDto);
@@ -255,9 +257,9 @@ class DocumentTemplateBootstrapServiceTest {
     when(
         documentTemplateService.createDocumentTemplate(
             DocumentTemplateType.FIELD_FLARE_CONSENT.getMnemonic(),
-            "Flare Consent",
-            "Document template used for creating Flare Consents",
-            "fcs/document/template/consent/flare/fieldFlareConsent.ftl",
+            "Field Flare Consent",
+            "Document template used for creating Field Flare Consent documents",
+            "fcs/document/template/consent/flare/flareConsent.ftl",
             2
         )
     ).thenReturn(fieldFlareConsentDocumentTemplateDto);
@@ -367,16 +369,104 @@ class DocumentTemplateBootstrapServiceTest {
   }
 
   @Test
+  void createTerminalFlareConsentDocumentTemplate() {
+    var terminalFlareConsentDocumentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
+
+    when(
+        documentTemplateService.createDocumentTemplate(
+            DocumentTemplateType.TERMINAL_FLARE_CONSENT.getMnemonic(),
+            "Facility Flare Consent",
+            "Document template used for creating Facility Flare Consent documents",
+            "fcs/document/template/consent/flare/flareConsent.ftl",
+            3
+        )
+    ).thenReturn(terminalFlareConsentDocumentTemplateDto);
+
+    documentTemplateBootstrapService.createTerminalFlareConsentDocumentTemplate();
+
+    verify(documentTemplateSectionService).createDocumentTemplateSection(
+        terminalFlareConsentDocumentTemplateDto,
+        null,
+        "Header",
+        """
+        ENERGY ACT 1976
+        CONSENT TO DISPOSE OF NATURAL GAS AT ((FACILITY_NAME))
+        """,
+        null,
+        false,
+        1
+    );
+
+    verify(documentTemplateSectionService).createDocumentTemplateSection(
+        terminalFlareConsentDocumentTemplateDto,
+        null,
+        "Consents to",
+        """
+        Pursuant to section 12A(1)(a) of the Energy Act 1976, the Oil and Gas Authority hereby consents to the flaring \
+        from the relevant oil processing facility or relevant gas processing facility, being the ((FACILITY_NAME)) \
+        (the “Facility”), of natural gas originally won from the fields with a right to have the natural gas processed \
+        by the Facility.
+        """,
+        null,
+        true,
+        2
+    );
+
+    verify(documentTemplateSectionService).createDocumentTemplateSection(
+        terminalFlareConsentDocumentTemplateDto,
+        null,
+        "This consent shall commence on",
+        "This consent shall commence on ((CONSENT_START_DATE)) and expire on ((CONSENT_END_DATE)) (the “Period”).",
+        null,
+        true,
+        3
+    );
+
+    verify(documentTemplateSectionService).createDocumentTemplateSection(
+        terminalFlareConsentDocumentTemplateDto,
+        null,
+        "This consent is given",
+        """
+        This consent is given subject always to the condition that, during the Period, natural gas shall not be flared \
+        at an average daily rate greater than the maximum specified in the schedule hereto.
+        """,
+        null,
+        true,
+        4
+    );
+
+    verify(documentTemplateSectionService).createDocumentTemplateSection(
+        terminalFlareConsentDocumentTemplateDto,
+        null,
+        "TODO FCS-610: This consent supersedes",
+        "[This consent supersedes the consent [CONSENT REFERENCE] granted by the Oil and Gas Authority dated [DATE].]",
+        null,
+        true,
+        5
+    );
+
+    verify(documentTemplateSectionService).createDocumentTemplateSection(
+        terminalFlareConsentDocumentTemplateDto,
+        null,
+        "Schedule",
+        "((SCHEDULE))",
+        null,
+        false,
+        6
+    );
+  }
+
+  @Test
   void createFieldVentConsentDocumentTemplate() {
     var fieldVentConsentDocumentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
 
     when(
         documentTemplateService.createDocumentTemplate(
             DocumentTemplateType.FIELD_VENT_CONSENT.getMnemonic(),
-            "Vent Consent",
-            "Document template used for creating Vent Consents",
-            "fcs/document/template/consent/vent/fieldVentConsent.ftl",
-            3
+            "Field Vent Consent",
+            "Document template used for creating Field Vent Consent documents",
+            "fcs/document/template/consent/vent/ventConsent.ftl",
+            4
         )
     ).thenReturn(fieldVentConsentDocumentTemplateDto);
 

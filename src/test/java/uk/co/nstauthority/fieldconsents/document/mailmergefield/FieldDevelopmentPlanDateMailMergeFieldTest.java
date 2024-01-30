@@ -46,7 +46,7 @@ class FieldDevelopmentPlanDateMailMergeFieldTest {
   private FieldApi fieldApi;
 
   @InjectMocks
-  private FieldDevelopmentPlanDateMailMergeField mailMergeField;
+  private FieldDevelopmentPlanDateMailMergeField fieldDevelopmentPlanDateMailMergeField;
 
   private ApplicationVersion applicationVersion;
 
@@ -57,31 +57,23 @@ class FieldDevelopmentPlanDateMailMergeFieldTest {
 
   @Test
   void getMnemonic() {
-    assertThat(mailMergeField.getMnemonic()).isEqualTo(MNEMONIC);
+    assertThat(fieldDevelopmentPlanDateMailMergeField.getMnemonic()).isEqualTo(MNEMONIC);
   }
 
   @Test
   void getDescription() {
-    assertThat(mailMergeField.getDescription()).isEqualTo(DESCRIPTION);
-  }
-
-  @Test
-  void isApplicable() {
-    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder()
-        .withMnemonic(DocumentTemplateType.FIELD_PRODUCTION_CONSENT.getMnemonic())
-        .build();
-
-    assertThat(mailMergeField.isApplicable(documentTemplateDto)).isTrue();
+    assertThat(fieldDevelopmentPlanDateMailMergeField.getDescription()).isEqualTo(DESCRIPTION);
   }
 
   @ParameterizedTest
-  @EnumSource(value = DocumentTemplateType.class, mode = EnumSource.Mode.EXCLUDE, names = "FIELD_PRODUCTION_CONSENT")
-  void isApplicable_whenNotFieldConsent(DocumentTemplateType documentTemplateType) {
-    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder()
+  @EnumSource(DocumentTemplateType.class)
+  void isApplicable(DocumentTemplateType documentTemplateType) {
+    var template = DocumentTemplateDtoTestUtil.builder()
         .withMnemonic(documentTemplateType.getMnemonic())
         .build();
 
-    assertThat(mailMergeField.isApplicable(documentTemplateDto)).isFalse();
+    assertThat(fieldDevelopmentPlanDateMailMergeField.isApplicable(template))
+        .isEqualTo(DocumentTemplateType.isField(documentTemplateType));
   }
 
   @Test
@@ -96,11 +88,14 @@ class FieldDevelopmentPlanDateMailMergeFieldTest {
             .build())
         .build();
 
-    when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto)).thenReturn(applicationVersion);
+    when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
+        .thenReturn(applicationVersion);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
-    when(fieldApi.findFieldById(primaryApplicationAsset.getAssetId(), QUERY, REQUEST_PURPOSE)).thenReturn(Optional.of(field));
+    when(fieldApi.findFieldById(primaryApplicationAsset.getAssetId(), QUERY, REQUEST_PURPOSE))
+        .thenReturn(Optional.of(field));
 
-    assertThat(mailMergeField.resolve(documentInstanceDto)).isEqualTo(DateUtils.format(fieldDevelopmentPlanDate, DateUtils.LONG_DATE));
+    assertThat(fieldDevelopmentPlanDateMailMergeField.resolve(documentInstanceDto))
+        .isEqualTo(DateUtils.format(fieldDevelopmentPlanDate, DateUtils.LONG_DATE));
   }
 
   @ParameterizedTest
@@ -109,10 +104,11 @@ class FieldDevelopmentPlanDateMailMergeFieldTest {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
     var primaryApplicationAsset = ApplicationAssetTestUtil.newBuilder().withAssetType(assetType).build();
 
-    when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto)).thenReturn(applicationVersion);
+    when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
+        .thenReturn(applicationVersion);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
 
-    assertThatThrownBy(() -> mailMergeField.resolve(documentInstanceDto))
+    assertThatThrownBy(() -> fieldDevelopmentPlanDateMailMergeField.resolve(documentInstanceDto))
         .isInstanceOf(MailMergeFieldFailedToResolveException.class);
   }
 
@@ -121,11 +117,13 @@ class FieldDevelopmentPlanDateMailMergeFieldTest {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
     var primaryApplicationAsset = ApplicationAssetTestUtil.newBuilder().withAssetType(AssetType.FIELD).build();
 
-    when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto)).thenReturn(applicationVersion);
+    when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
+        .thenReturn(applicationVersion);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
-    when(fieldApi.findFieldById(primaryApplicationAsset.getAssetId(), QUERY, REQUEST_PURPOSE)).thenReturn(Optional.empty());
+    when(fieldApi.findFieldById(primaryApplicationAsset.getAssetId(), QUERY, REQUEST_PURPOSE))
+        .thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> mailMergeField.resolve(documentInstanceDto))
+    assertThatThrownBy(() -> fieldDevelopmentPlanDateMailMergeField.resolve(documentInstanceDto))
         .isInstanceOf(MailMergeFieldFailedToResolveException.class);
   }
 

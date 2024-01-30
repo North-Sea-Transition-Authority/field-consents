@@ -62,7 +62,8 @@ class ConsentStartDateMailMergeFieldTest {
         .withMnemonic(documentTemplateType.getMnemonic())
         .build();
 
-    assertThat(consentStartDateMailMergeField.isApplicable(template)).isTrue();
+    assertThat(consentStartDateMailMergeField.isApplicable(template))
+        .isEqualTo(DocumentTemplateType.isConsent(documentTemplateType));
   }
 
   @Test

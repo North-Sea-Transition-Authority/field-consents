@@ -22,9 +22,35 @@ class DocumentTemplateTypeTest {
   }
 
   @ParameterizedTest
-  @EnumSource(DocumentTemplateType.class)
-  void isField(DocumentTemplateType documentTemplateType) {
+  @EnumSource(
+      value = DocumentTemplateType.class,
+      names = { "FIELD_PRODUCTION_CONSENT", "FIELD_FLARE_CONSENT", "FIELD_VENT_CONSENT" },
+      mode = EnumSource.Mode.INCLUDE
+  )
+  void isField_documentTemplateTypeIsField(DocumentTemplateType documentTemplateType) {
     assertThat(DocumentTemplateType.isField(documentTemplateType)).isTrue();
+  }
+
+  @ParameterizedTest
+  @EnumSource(
+      value = DocumentTemplateType.class,
+      names = { "FIELD_PRODUCTION_CONSENT", "FIELD_FLARE_CONSENT", "FIELD_VENT_CONSENT" },
+      mode = EnumSource.Mode.EXCLUDE
+  )
+  void isField_documentTemplateTypeIsNotField(DocumentTemplateType documentTemplateType) {
+    assertThat(DocumentTemplateType.isField(documentTemplateType)).isFalse();
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = DocumentTemplateType.class, names = "TERMINAL_FLARE_CONSENT", mode = EnumSource.Mode.INCLUDE)
+  void isTerminal_documentTemplateTypeIsTerminal(DocumentTemplateType documentTemplateType) {
+    assertThat(DocumentTemplateType.isTerminal(documentTemplateType)).isTrue();
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = DocumentTemplateType.class, names = "TERMINAL_FLARE_CONSENT", mode = EnumSource.Mode.EXCLUDE)
+  void isTerminal_documentTemplateTypeIsNotTerminal(DocumentTemplateType documentTemplateType) {
+    assertThat(DocumentTemplateType.isTerminal(documentTemplateType)).isFalse();
   }
 
   @ParameterizedTest

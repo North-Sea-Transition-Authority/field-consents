@@ -50,7 +50,8 @@ class ConsentLengthUpperCaseMailMergeFieldTest {
         .withMnemonic(documentTemplateType.getMnemonic())
         .build();
 
-    assertThat(consentLengthUpperCaseMailMergeField.isApplicable(template)).isTrue();
+    assertThat(consentLengthUpperCaseMailMergeField.isApplicable(template))
+        .isEqualTo(DocumentTemplateType.isConsent(documentTemplateType));
   }
 
   @ParameterizedTest

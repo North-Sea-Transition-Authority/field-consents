@@ -58,35 +58,15 @@ class PrimaryAndAdditionalFieldNamesMailMergeFieldTest {
   }
 
   @ParameterizedTest
-  @EnumSource(
-      value = DocumentTemplateType.class,
-      names = { "FIELD_FLARE_CONSENT", "FIELD_VENT_CONSENT" },
-      mode = EnumSource.Mode.INCLUDE
-  )
-  void isApplicable_documentTemplateTypeIsFieldFlareConsentOrFieldVentConsent(
-      DocumentTemplateType documentTemplateType
-  ) {
+  @EnumSource(DocumentTemplateType.class)
+  void isApplicable(DocumentTemplateType documentTemplateType) {
     var template = DocumentTemplateDtoTestUtil.builder()
         .withMnemonic(documentTemplateType.getMnemonic())
         .build();
 
-    assertThat(primaryAndAdditionalFieldNamesMailMergeField.isApplicable(template)).isTrue();
-  }
-
-  @ParameterizedTest
-  @EnumSource(
-      value = DocumentTemplateType.class,
-      names = { "FIELD_FLARE_CONSENT", "FIELD_VENT_CONSENT" },
-      mode = EnumSource.Mode.EXCLUDE
-  )
-  void isApplicable_documentTemplateTypeIsNotFieldFlareConsentOrFieldVentConsent(
-      DocumentTemplateType documentTemplateType
-  ) {
-    var template = DocumentTemplateDtoTestUtil.builder()
-        .withMnemonic(documentTemplateType.getMnemonic())
-        .build();
-
-    assertThat(primaryAndAdditionalFieldNamesMailMergeField.isApplicable(template)).isFalse();
+    assertThat(primaryAndAdditionalFieldNamesMailMergeField.isApplicable(template))
+        .isEqualTo(documentTemplateType == DocumentTemplateType.FIELD_FLARE_CONSENT
+            || documentTemplateType == DocumentTemplateType.FIELD_VENT_CONSENT);
   }
 
   @Test

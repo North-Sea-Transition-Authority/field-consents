@@ -10,7 +10,7 @@ import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceDto;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentMailMergeField;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
 
-@Order(5)
+@Order(6)
 @Component
 class ConsentLengthUpperCaseMailMergeField implements DocumentMailMergeField {
 
@@ -38,7 +38,9 @@ class ConsentLengthUpperCaseMailMergeField implements DocumentMailMergeField {
 
   @Override
   public boolean isApplicable(DocumentTemplateDto documentTemplateDto) {
-    return DocumentTemplateType.isConsent(DocumentTemplateType.getByMnemonic(documentTemplateDto.mnemonic()));
+    var documentTemplateType = DocumentTemplateType.getByMnemonic(documentTemplateDto.mnemonic());
+
+    return DocumentTemplateType.isConsent(documentTemplateType);
   }
 
   @Override

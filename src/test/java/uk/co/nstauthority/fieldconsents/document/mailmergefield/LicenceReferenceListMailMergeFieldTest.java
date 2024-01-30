@@ -50,7 +50,9 @@ class LicenceReferenceListMailMergeFieldTest {
         .withMnemonic(documentTemplateType.getMnemonic())
         .build();
 
-    assertThat(licenceReferenceListMailMergeField.isApplicable(template)).isTrue();
+    assertThat(licenceReferenceListMailMergeField.isApplicable(template))
+        .isEqualTo(DocumentTemplateType.isField(documentTemplateType)
+            && DocumentTemplateType.isConsent(documentTemplateType));
   }
 
   @Test

@@ -64,7 +64,8 @@ class ScheduleMailMergeFieldTest {
         .withMnemonic(documentTemplateType.getMnemonic())
         .build();
 
-    assertThat(scheduleMailMergeField.isApplicable(template)).isTrue();
+    assertThat(scheduleMailMergeField.isApplicable(template))
+        .isEqualTo(DocumentTemplateType.isConsent(documentTemplateType));
   }
 
   @ParameterizedTest
@@ -102,7 +103,7 @@ class ScheduleMailMergeFieldTest {
 
     when(
         freeMarkerTemplateRenderingService.renderTemplate(
-            "fcs/document/template/consent/production/shortTermOrAnnualFieldProductionConsentSchedule.ftl",
+            "fcs/document/template/consent/production/shortTermOrAnnualProductionConsentSchedule.ftl",
             Map.of(
                 "consentStartDate", consentStartDate,
                 "consentEndDate", consentEndDate,
@@ -147,7 +148,7 @@ class ScheduleMailMergeFieldTest {
 
     when(
         freeMarkerTemplateRenderingService.renderTemplate(
-            "fcs/document/template/consent/production/longTermFieldProductionConsentSchedule.ftl",
+            "fcs/document/template/consent/production/longTermProductionConsentSchedule.ftl",
             Map.of(
                 "consentStartDate", consentStartDate,
                 "consentEndDate", consentEndDate,
@@ -160,12 +161,17 @@ class ScheduleMailMergeFieldTest {
     assertThat(scheduleMailMergeField.resolve(documentInstanceDto)).isEqualTo(html);
   }
 
-  @Test
-  void resolve_documentTemplateTypeIsFieldFlareConsent() throws Exception {
+  @ParameterizedTest
+  @EnumSource(
+      value = DocumentTemplateType.class,
+      names = { "FIELD_FLARE_CONSENT", "TERMINAL_FLARE_CONSENT" },
+      mode = EnumSource.Mode.INCLUDE
+  )
+  void resolve_documentTemplateTypeIsFieldFlareConsentOrTerminalFlareConsent(DocumentTemplateType documentTemplateType) throws Exception {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder()
         .withDocumentTemplate(
             DocumentTemplateDtoTestUtil.builder()
-                .withMnemonic(DocumentTemplateType.FIELD_FLARE_CONSENT.getMnemonic())
+                .withMnemonic(documentTemplateType.getMnemonic())
                 .build()
         )
         .build();
@@ -185,7 +191,7 @@ class ScheduleMailMergeFieldTest {
 
     when(
         freeMarkerTemplateRenderingService.renderTemplate(
-            "fcs/document/template/consent/flare/fieldFlareConsentSchedule.ftl",
+            "fcs/document/template/consent/flare/flareConsentSchedule.ftl",
             Map.of(
                 "consentStartDate", consentStartDate,
                 "consentEndDate", consentEndDate
@@ -221,7 +227,7 @@ class ScheduleMailMergeFieldTest {
 
     when(
         freeMarkerTemplateRenderingService.renderTemplate(
-            "fcs/document/template/consent/vent/fieldVentConsentSchedule.ftl",
+            "fcs/document/template/consent/vent/ventConsentSchedule.ftl",
             Map.of(
                 "consentStartDate", consentStartDate,
                 "consentEndDate", consentEndDate

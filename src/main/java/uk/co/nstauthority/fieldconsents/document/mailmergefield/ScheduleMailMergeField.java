@@ -14,7 +14,7 @@ import uk.co.nstauthority.fieldconsents.document.lib.DocumentMailMergeField;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
 import uk.co.nstauthority.fieldconsents.document.lib.FreeMarkerTemplateRenderingService;
 
-@Order(9)
+@Order(10)
 @Component
 class ScheduleMailMergeField implements DocumentMailMergeField {
 
@@ -54,7 +54,9 @@ class ScheduleMailMergeField implements DocumentMailMergeField {
 
   @Override
   public boolean isApplicable(DocumentTemplateDto documentTemplateDto) {
-    return DocumentTemplateType.isConsent(DocumentTemplateType.getByMnemonic(documentTemplateDto.mnemonic()));
+    var documentTemplateType = DocumentTemplateType.getByMnemonic(documentTemplateDto.mnemonic());
+
+    return DocumentTemplateType.isConsent(documentTemplateType);
   }
 
   @Override
@@ -76,18 +78,18 @@ class ScheduleMailMergeField implements DocumentMailMergeField {
 
         templateName = switch (consentLengthType) {
           case SHORT_TERM, ANNUAL ->
-              "fcs/document/template/consent/production/shortTermOrAnnualFieldProductionConsentSchedule.ftl";
-          case LONG_TERM -> "fcs/document/template/consent/production/longTermFieldProductionConsentSchedule.ftl";
+              "fcs/document/template/consent/production/shortTermOrAnnualProductionConsentSchedule.ftl";
+          case LONG_TERM -> "fcs/document/template/consent/production/longTermProductionConsentSchedule.ftl";
         };
 
         model.put("capitalizedConsentLengthType", WordUtils.capitalizeFully(consentLengthType.getShortDisplayName()));
         model.put("primaryFieldName", primaryFieldNameMailMergeField.resolve(documentInstanceDto));
         break;
-      case FIELD_FLARE_CONSENT:
-        templateName = "fcs/document/template/consent/flare/fieldFlareConsentSchedule.ftl";
+      case FIELD_FLARE_CONSENT, TERMINAL_FLARE_CONSENT:
+        templateName = "fcs/document/template/consent/flare/flareConsentSchedule.ftl";
         break;
       case FIELD_VENT_CONSENT:
-        templateName = "fcs/document/template/consent/vent/fieldVentConsentSchedule.ftl";
+        templateName = "fcs/document/template/consent/vent/ventConsentSchedule.ftl";
         break;
       default:
         throw new MailMergeFieldFailedToResolveException(

@@ -11,7 +11,7 @@ import uk.co.nstauthority.fieldconsents.document.lib.DocumentMailMergeField;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 
-@Order(4)
+@Order(5)
 @Component
 public class ConsentEndDateMailMergeField implements DocumentMailMergeField {
 
@@ -41,7 +41,9 @@ public class ConsentEndDateMailMergeField implements DocumentMailMergeField {
 
   @Override
   public boolean isApplicable(DocumentTemplateDto documentTemplateDto) {
-    return DocumentTemplateType.isConsent(DocumentTemplateType.getByMnemonic(documentTemplateDto.mnemonic()));
+    var documentTemplateType = DocumentTemplateType.getByMnemonic(documentTemplateDto.mnemonic());
+
+    return DocumentTemplateType.isConsent(documentTemplateType);
   }
 
   @Override

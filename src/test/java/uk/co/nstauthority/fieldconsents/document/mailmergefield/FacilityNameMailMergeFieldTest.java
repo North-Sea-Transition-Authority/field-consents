@@ -16,15 +16,15 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
-import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
-import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
+import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalJson;
+import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
 import uk.co.nstauthority.fieldconsents.document.DocumentInstanceDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.document.DocumentInstanceLinkingService;
 import uk.co.nstauthority.fieldconsents.document.DocumentTemplateDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.document.DocumentTemplateType;
 
 @ExtendWith(MockitoExtension.class)
-class PrimaryFieldNameMailMergeFieldTest {
+class FacilityNameMailMergeFieldTest {
 
   @Mock
   private DocumentInstanceLinkingService documentInstanceLinkingService;
@@ -33,20 +33,14 @@ class PrimaryFieldNameMailMergeFieldTest {
   private ApplicationAssetService applicationAssetService;
 
   @Mock
-  private FieldService fieldService;
+  private TerminalService terminalService;
 
   @InjectMocks
-  private PrimaryFieldNameMailMergeField primaryFieldNameMailMergeField;
+  private FacilityNameMailMergeField facilityNameMailMergeField;
 
   @Test
   void getMnemonic() {
-    assertThat(primaryFieldNameMailMergeField.getMnemonic()).isEqualTo("PRIMARY_FIELD_NAME");
-  }
-
-  @Test
-  void getDescription() {
-    assertThat(primaryFieldNameMailMergeField.getDescription())
-        .isEqualTo("The name of the primary field on the application");
+    assertThat(facilityNameMailMergeField.getMnemonic()).isEqualTo("FACILITY_NAME");
   }
 
   @ParameterizedTest
@@ -56,16 +50,16 @@ class PrimaryFieldNameMailMergeFieldTest {
         .withMnemonic(documentTemplateType.getMnemonic())
         .build();
 
-    assertThat(primaryFieldNameMailMergeField.isApplicable(template))
-        .isEqualTo(documentTemplateType == DocumentTemplateType.FIELD_PRODUCTION_CONSENT);
+    assertThat(facilityNameMailMergeField.isApplicable(template))
+        .isEqualTo(DocumentTemplateType.isTerminal(documentTemplateType));
   }
 
   @ParameterizedTest
-  @EnumSource(value = AssetType.class, names = "FIELD", mode = EnumSource.Mode.EXCLUDE)
-  void resolve_primaryAssetTypeIsNotField(AssetType assetType) {
+  @EnumSource(value = AssetType.class, names = "TERMINAL", mode = EnumSource.Mode.EXCLUDE)
+  void resolve_primaryAssetTypeIsNotTerminal(AssetType assetType) {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
 
-    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
 
     var applicationAsset = ApplicationAssetTestUtil.newBuilder()
         .withAssetType(assetType)
@@ -75,29 +69,29 @@ class PrimaryFieldNameMailMergeFieldTest {
         .thenReturn(applicationVersion);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(applicationAsset);
 
-    assertThatThrownBy(() -> primaryFieldNameMailMergeField.resolve(documentInstanceDto))
+    assertThatThrownBy(() -> facilityNameMailMergeField.resolve(documentInstanceDto))
         .isInstanceOf(MailMergeFieldFailedToResolveException.class);
   }
 
   @Test
-  void primaryAssetTypeIsField() {
+  void primaryAssetTypeIsTerminal() {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
 
-    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
 
     var applicationAsset = ApplicationAssetTestUtil.newBuilder()
-        .withAssetType(AssetType.FIELD)
+        .withAssetType(AssetType.TERMINAL)
         .build();
 
-    var fieldName = "CLAIR";
-    var fieldJson = new FieldJson(null, fieldName, null, null, null);
+    var terminalName = "Sullom Voe";
+    var terminalJson = new TerminalJson(null, terminalName, null);
 
     when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
         .thenReturn(applicationVersion);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(applicationAsset);
-    when(fieldService.getField(applicationAsset.getAssetId(), "Field lookup for application asset"))
-        .thenReturn(fieldJson);
+    when(terminalService.getTerminal(applicationAsset.getAssetId(), "Terminal lookup for application asset"))
+        .thenReturn(terminalJson);
 
-    assertThat(primaryFieldNameMailMergeField.resolve(documentInstanceDto)).isEqualTo(fieldName);
+    assertThat(facilityNameMailMergeField.resolve(documentInstanceDto)).isEqualTo(terminalName);
   }
 }
