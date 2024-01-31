@@ -25,7 +25,7 @@ class ConsentDataFormValidatorTest {
 
   @BeforeEach
   void setUp() {
-    form = ConsentDataForm.empty();
+    form = new ConsentDataForm(null, null);
     bindingResult = new BeanPropertyBindingResult(form, "form");
   }
 

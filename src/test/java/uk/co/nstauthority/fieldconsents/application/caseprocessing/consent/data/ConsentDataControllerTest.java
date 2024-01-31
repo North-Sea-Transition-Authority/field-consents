@@ -149,10 +149,10 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
 
   @Test
   void editConsentData() throws Exception {
-    var consentData = ConsentDataTestUtil.newBuilder().build();
+    var form = ConsentDataForm.from(LocalDate.parse("2024-01-01"), LocalDate.parse("2025-01-01"));
 
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
-    when(consentDataService.findConsentData(application)).thenReturn(Optional.of(consentData));
+    when(consentDataService.getPrefilledConsentDataForm(application)).thenReturn(form);
 
     var model = mockMvc.perform(get(ReverseRouter.route(on(ConsentDataController.class).editConsentData(APPLICATION_ID)))
         .with(user(user)))
@@ -164,40 +164,7 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
         .getModelAndView()
         .getModel();
 
-    assertThat(model.get("form"))
-        .asInstanceOf(type(ConsentDataForm.class))
-        .extracting(
-            form -> form.consentStartDate().getAsLocalDate(),
-            form -> form.consentEndDate().getAsLocalDate()
-        ).containsExactly(
-            Optional.of(consentData.getConsentStartDate()),
-            Optional.of(consentData.getConsentEndDate())
-        );
-  }
-
-  @Test
-  void editConsentData_consentDataNotFound() throws Exception {
-    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
-    when(consentDataService.findConsentData(application)).thenReturn(Optional.empty());
-
-    var model = mockMvc.perform(get(ReverseRouter.route(on(ConsentDataController.class).editConsentData(APPLICATION_ID)))
-            .with(user(user)))
-        .andExpect(status().isOk())
-        .andExpect(view().name(VIEW_NAME))
-        .andExpect(model().attribute("pageTitle", "Edit consent data"))
-        .andExpect(model().attributeExists("form"))
-        .andReturn()
-        .getModelAndView()
-        .getModel();
-
-    assertThat(model.get("form"))
-        .asInstanceOf(type(ConsentDataForm.class))
-        .extracting(
-            form -> form.consentStartDate().getAsLocalDate(),
-            form -> form.consentEndDate().getAsLocalDate()
-        )
-        .isNotEmpty()
-        .allMatch(Optional.empty()::equals);
+    assertThat(model.get("form")).isEqualTo(form);
   }
 
   @Test
@@ -225,20 +192,19 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
     var expectedConsentEndDate = LocalDate.parse("2025-01-01");
 
     verify(validator).validate(consentDataFormCaptor.capture(), any(BindingResult.class));
-    assertThat(consentDataFormCaptor.getValue())
+
+    var form = consentDataFormCaptor.getValue();
+
+    assertThat(form)
         .extracting(
-            form -> form.consentStartDate().getAsLocalDate().orElseThrow(),
-            form -> form.consentEndDate().getAsLocalDate().orElseThrow()
+            consentDataForm -> consentDataForm.consentStartDate().getAsLocalDate().orElseThrow(),
+            consentDataForm -> consentDataForm.consentEndDate().getAsLocalDate().orElseThrow()
         ).containsExactly(
             expectedConsentStartDate,
             expectedConsentEndDate
         );
 
-    verify(consentDataService).saveConsentData(
-        application,
-        expectedConsentStartDate,
-        expectedConsentEndDate
-    );
+    verify(consentDataService).saveConsentData(application, form);
   }
 
   @Test
@@ -278,6 +244,6 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
             LocalDate.parse("2025-01-01")
         );
 
-    verify(consentDataService, never()).saveConsentData(any(), any(), any());
+    verify(consentDataService, never()).saveConsentData(any(), any());
   }
 }

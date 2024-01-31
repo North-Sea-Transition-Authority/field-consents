@@ -52,10 +52,7 @@ public class ConsentDataController {
   @GetMapping("/edit")
   public ModelAndView editConsentData(@PathVariable Integer applicationId) {
     var application = applicationService.getApplicationById(applicationId);
-    var form = consentDataService.findConsentData(application)
-        .map(ConsentDataForm::from)
-        .orElseGet(ConsentDataForm::empty);
-
+    var form = consentDataService.getPrefilledConsentDataForm(application);
     return modelAndView(form);
   }
 
@@ -74,11 +71,7 @@ public class ConsentDataController {
 
     var application = applicationService.getApplicationById(applicationId);
 
-    consentDataService.saveConsentData(
-        application,
-        form.consentStartDate().getAsLocalDate().orElseThrow(),
-        form.consentEndDate().getAsLocalDate().orElseThrow()
-    );
+    consentDataService.saveConsentData(application, form);
 
     NotificationBannerUtil.addSuccessNotification(redirectAttributes, "Consent data saved");
 

@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data;
 
+import java.time.LocalDate;
 import uk.co.fivium.formlibrary.input.ThreeFieldDateInput;
 
 public record ConsentDataForm(
@@ -12,16 +13,12 @@ public record ConsentDataForm(
     consentEndDate = new ThreeFieldDateInput("consentEndDate", "consent end date");
   }
 
-  public static ConsentDataForm empty() {
-    return new ConsentDataForm(null, null);
-  }
+  public static ConsentDataForm from(LocalDate startDate, LocalDate endDate) {
+    var form = new ConsentDataForm(null, null);
 
-  public static ConsentDataForm from(ConsentData consentData) {
-    var form = ConsentDataForm.empty();
-    form.consentStartDate().setDate(consentData.getConsentStartDate());
-    form.consentEndDate().setDate(consentData.getConsentEndDate());
+    form.consentStartDate().setDate(startDate);
+    form.consentEndDate().setDate(endDate);
 
     return form;
   }
-
 }

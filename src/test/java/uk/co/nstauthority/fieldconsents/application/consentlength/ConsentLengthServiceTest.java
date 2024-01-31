@@ -12,6 +12,7 @@ import static uk.co.nstauthority.fieldconsents.production.ProductionTestUtils.EN
 import static uk.co.nstauthority.fieldconsents.production.ProductionTestUtils.START_DATE;
 
 import jakarta.persistence.EntityNotFoundException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
@@ -304,5 +305,75 @@ class ConsentLengthServiceTest {
                 new SummaryKeyValue("Start year", String.valueOf(LONG_TERM_START_YEAR)),
                 new SummaryKeyValue("End year", String.valueOf(LONG_TERM_END_YEAR))
             ))));
+  }
+
+  @Test
+  void getProposedConsentStartDate_consentLengthIsShortTerm() {
+    var consentLengthDetails = new ConsentLengthDetails();
+    consentLengthDetails.setConsentLength(ConsentLengthType.SHORT_TERM);
+
+    var shortTermStartDate = LocalDate.parse("2024-01-01");
+    consentLengthDetails.setShortTermStartDate(shortTermStartDate);
+
+    assertThat(consentLengthService.getProposedConsentStartDate(consentLengthDetails)).isEqualTo(shortTermStartDate);
+  }
+
+  @Test
+  void getProposedConsentStartDate_consentLengthIsAnnual() {
+    var consentLengthDetails = new ConsentLengthDetails();
+    consentLengthDetails.setConsentLength(ConsentLengthType.ANNUAL);
+
+    var annualConsentYear = 2024;
+    consentLengthDetails.setAnnualConsentYear(annualConsentYear);
+
+    assertThat(consentLengthService.getProposedConsentStartDate(consentLengthDetails))
+        .isEqualTo(LocalDate.of(annualConsentYear, 1, 1));
+  }
+
+  @Test
+  void getProposedConsentStartDate_consentLengthIsLongTerm() {
+    var consentLengthDetails = new ConsentLengthDetails();
+    consentLengthDetails.setConsentLength(ConsentLengthType.LONG_TERM);
+
+    var longTermStartYear = 2024;
+    consentLengthDetails.setLongTermStartYear(longTermStartYear);
+
+    assertThat(consentLengthService.getProposedConsentStartDate(consentLengthDetails))
+        .isEqualTo(LocalDate.of(longTermStartYear, 1, 1));
+  }
+
+  @Test
+  void getProposedConsentEndDate_consentLengthIsShortTerm() {
+    var consentLengthDetails = new ConsentLengthDetails();
+    consentLengthDetails.setConsentLength(ConsentLengthType.SHORT_TERM);
+
+    var shortTermEndDate = LocalDate.parse("2025-01-01");
+    consentLengthDetails.setShortTermEndDate(shortTermEndDate);
+
+    assertThat(consentLengthService.getProposedConsentEndDate(consentLengthDetails)).isEqualTo(shortTermEndDate);
+  }
+
+  @Test
+  void getProposedConsentEndDate_consentLengthIsAnnual() {
+    var consentLengthDetails = new ConsentLengthDetails();
+    consentLengthDetails.setConsentLength(ConsentLengthType.ANNUAL);
+
+    var annualConsentYear = 2025;
+    consentLengthDetails.setAnnualConsentYear(annualConsentYear);
+
+    assertThat(consentLengthService.getProposedConsentEndDate(consentLengthDetails))
+        .isEqualTo(LocalDate.of(annualConsentYear, 12, 31));
+  }
+
+  @Test
+  void getProposedConsentEndDate_consentLengthIsLongTerm() {
+    var consentLengthDetails = new ConsentLengthDetails();
+    consentLengthDetails.setConsentLength(ConsentLengthType.LONG_TERM);
+
+    var longTermEndYear = 2025;
+    consentLengthDetails.setLongTermEndYear(longTermEndYear);
+
+    assertThat(consentLengthService.getProposedConsentEndDate(consentLengthDetails))
+        .isEqualTo(LocalDate.of(longTermEndYear, 12, 31));
   }
 }

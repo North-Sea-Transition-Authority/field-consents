@@ -146,4 +146,20 @@ public class ConsentLengthService {
 
     return SummaryCard.simpleSummaryCard(summaryData);
   }
+
+  public LocalDate getProposedConsentStartDate(ConsentLengthDetails consentLengthDetails) {
+    return switch (consentLengthDetails.getConsentLength()) {
+      case SHORT_TERM -> consentLengthDetails.getShortTermStartDate();
+      case ANNUAL -> LocalDate.of(consentLengthDetails.getAnnualConsentYear(), 1, 1);
+      case LONG_TERM -> LocalDate.of(consentLengthDetails.getLongTermStartYear(), 1, 1);
+    };
+  }
+
+  public LocalDate getProposedConsentEndDate(ConsentLengthDetails consentLengthDetails) {
+    return switch (consentLengthDetails.getConsentLength()) {
+      case SHORT_TERM -> consentLengthDetails.getShortTermEndDate();
+      case ANNUAL -> LocalDate.of(consentLengthDetails.getAnnualConsentYear(), 12, 31);
+      case LONG_TERM -> LocalDate.of(consentLengthDetails.getLongTermEndYear(), 12, 31);
+    };
+  }
 }
