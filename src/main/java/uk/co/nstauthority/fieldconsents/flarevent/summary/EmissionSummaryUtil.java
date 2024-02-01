@@ -11,7 +11,7 @@ public class EmissionSummaryUtil {
   // report and consent table headings and row prompts
   public static final String MONTH_HEADING = "Month";
   public static final String CONSENT_DAYS_HEADING = "Consent days";
-  private static final String CATEGORY_HEADING = "Category";
+  public static final String CATEGORY_HEADING = "Category";
   public static final String CATEGORY_A_HEADING = CATEGORY_HEADING + " A";
   public static final String CATEGORY_B_HEADING = CATEGORY_HEADING + " B";
   public static final String CATEGORY_C_HEADING = CATEGORY_HEADING + " C";

@@ -10,6 +10,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.flarevent.EmissionCategoryType;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentUnit;
 import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 
@@ -49,6 +50,9 @@ public class ApplicationUnit {
   @Enumerated(EnumType.STRING)
   private FlareVentUnit ventGasContentUnit;
 
+  @Enumerated(EnumType.STRING)
+  private EmissionCategoryType emissionCategoryType;
+
   public ApplicationUnit() {
   }
 
@@ -56,7 +60,7 @@ public class ApplicationUnit {
                          FlareVentUnit ventCategoryUnit, ProductionUnit productionOilUnit,
                          ProductionUnit productionGasUnit, FlareVentUnit flareGasDensityUnit,
                          FlareVentUnit flareGasContentUnit, FlareVentUnit ventGasDensityUnit,
-                         FlareVentUnit ventGasContentUnit) {
+                         FlareVentUnit ventGasContentUnit, EmissionCategoryType emissionCategoryType) {
     this.applicationVersion = applicationVersion;
     this.flareCategoryUnit = flareCategoryUnit;
     this.ventCategoryUnit = ventCategoryUnit;
@@ -66,6 +70,7 @@ public class ApplicationUnit {
     this.flareGasContentUnit = flareGasContentUnit;
     this.ventGasDensityUnit = ventGasDensityUnit;
     this.ventGasContentUnit = ventGasContentUnit;
+    this.emissionCategoryType = emissionCategoryType;
   }
 
   public ApplicationVersion getApplicationVersion() {
@@ -138,5 +143,13 @@ public class ApplicationUnit {
 
   public void setFlareGasContentUnit(FlareVentUnit gasDataMass) {
     this.flareGasContentUnit = gasDataMass;
+  }
+
+  public EmissionCategoryType getEmissionCategoryType() {
+    return emissionCategoryType;
+  }
+
+  public void setEmissionCategoryType(EmissionCategoryType emissionCategoryType) {
+    this.emissionCategoryType = emissionCategoryType;
   }
 }

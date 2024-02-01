@@ -28,6 +28,7 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthC
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil;
+import uk.co.nstauthority.fieldconsents.flarevent.EmissionCategoryType;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentUnit;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flares.FlareTestUtil;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.vents.VentTestUtil;
@@ -86,7 +87,10 @@ class ApplicationUnitServiceTest {
         null,
         null,
         FlareVentUnit.KG_PER_CUBIC_METER,
-        FlareVentUnit.MASS_PERCENTAGE);
+        FlareVentUnit.MASS_PERCENTAGE,
+        null,
+        null,
+        EmissionCategoryType.CATEGORY_ABC);
   }
 
   @Test
@@ -94,7 +98,8 @@ class ApplicationUnitServiceTest {
     when(applicationUnitRepository.findByApplicationVersion(flareAppVersion))
         .thenReturn(Optional.of(new ApplicationUnit(flareAppVersion, FlareVentUnit.TONNES_PER_MONTH,
             null, null, null, FlareVentUnit.KG_PER_CUBIC_METER,
-            FlareVentUnit.MASS_PERCENTAGE, FlareVentUnit.KG_PER_CUBIC_METER, FlareVentUnit.MASS_PERCENTAGE)));
+            FlareVentUnit.MASS_PERCENTAGE, null, null,
+            EmissionCategoryType.CATEGORY_123)));
 
     ApplicationUnit returnedApplicationUnit = applicationUnitService.getOrCreateApplicationUnit(flareAppVersion);
 
@@ -105,7 +110,10 @@ class ApplicationUnitServiceTest {
         null,
         null,
         FlareVentUnit.KG_PER_CUBIC_METER,
-        FlareVentUnit.MASS_PERCENTAGE);
+        FlareVentUnit.MASS_PERCENTAGE,
+        null,
+        null,
+        EmissionCategoryType.CATEGORY_123);
   }
 
   @Test
@@ -350,6 +358,44 @@ class ApplicationUnitServiceTest {
         .hasMessage(MISMATCHED_UNITS_EXCEPTION_MESSAGE.formatted("vent", ventUnit.name()));
   }
 
+  @Test
+  void getEmissionCategoryType_productionAppVersion_unitsNotExists() {
+    when(applicationUnitRepository.findByApplicationVersion(productionAppVersion)).thenReturn(Optional.empty());
+    when(consentLengthService.getConsentLengthDetails(productionAppVersion))
+        .thenReturn(ConsentLengthTestUtil.getConsentLengthDetailsForAnnual(productionAppVersion));
+    assertThat(applicationUnitService.getEmissionCategoryType(productionAppVersion))
+        .isNull();
+  }
+
+  @Test
+  void getEmissionCategoryType_flareAppVersion_unitsNotExists() {
+    when(applicationUnitRepository.findByApplicationVersion(flareAppVersion)).thenReturn(Optional.empty());
+    when(consentLengthService.getConsentLengthDetails(flareAppVersion))
+        .thenReturn(ConsentLengthTestUtil.getConsentLengthDetailsForAnnual(flareAppVersion));
+    assertThat(applicationUnitService.getEmissionCategoryType(flareAppVersion))
+        .isEqualTo(EmissionCategoryType.CATEGORY_ABC);
+  }
+
+  @Test
+  void getEmissionCategoryType_ventAppVersion_unitsNotExists() {
+    when(applicationUnitRepository.findByApplicationVersion(ventAppVersion)).thenReturn(Optional.empty());
+    when(consentLengthService.getConsentLengthDetails(ventAppVersion))
+        .thenReturn(ConsentLengthTestUtil.getConsentLengthDetailsForAnnual(ventAppVersion));
+    assertThat(applicationUnitService.getEmissionCategoryType(ventAppVersion))
+        .isEqualTo(EmissionCategoryType.CATEGORY_ABC);
+  }
+
+  @Test
+  void getEmissionCategoryType_unitsExist() {
+    ApplicationUnit applicationUnit = new ApplicationUnit();
+    applicationUnit.setApplicationVersion(ventAppVersion);
+    applicationUnit.setEmissionCategoryType(EmissionCategoryType.CATEGORY_123);
+    when(applicationUnitRepository.findByApplicationVersion(ventAppVersion))
+        .thenReturn(Optional.of(applicationUnit));
+
+    assertThat(applicationUnitService.getEmissionCategoryType(ventAppVersion))
+        .isEqualTo(EmissionCategoryType.CATEGORY_123);
+  }
 
   @Test
   void getProductionOilUnit_notExists() {
@@ -497,7 +543,10 @@ class ApplicationUnitServiceTest {
         null,
         null,
         FlareVentUnit.KG_PER_CUBIC_METER,
-        FlareVentUnit.MASS_PERCENTAGE);
+        FlareVentUnit.MASS_PERCENTAGE,
+        null,
+        null,
+        EmissionCategoryType.CATEGORY_ABC);
   }
 
   @Test
@@ -516,7 +565,10 @@ class ApplicationUnitServiceTest {
         null,
         null,
         FlareVentUnit.KG_PER_CUBIC_METER,
-        FlareVentUnit.MASS_PERCENTAGE);
+        FlareVentUnit.MASS_PERCENTAGE,
+        null,
+        null,
+        EmissionCategoryType.CATEGORY_ABC);
   }
 
   @Test
@@ -534,8 +586,11 @@ class ApplicationUnitServiceTest {
         FlareVentUnit.TONNES_PER_MONTH,
         null,
         null,
+        null,
+        null,
         FlareVentUnit.KG_PER_CUBIC_METER,
-        FlareVentUnit.MASS_PERCENTAGE);
+        FlareVentUnit.MASS_PERCENTAGE,
+        EmissionCategoryType.CATEGORY_ABC);
   }
 
   @Test
@@ -553,8 +608,11 @@ class ApplicationUnitServiceTest {
         FlareVentUnit.TONNES_PER_MONTH,
         null,
         null,
+        null,
+        null,
         FlareVentUnit.KG_PER_CUBIC_METER,
-        FlareVentUnit.MASS_PERCENTAGE);
+        FlareVentUnit.MASS_PERCENTAGE,
+        EmissionCategoryType.CATEGORY_ABC);
   }
 
   @Test
@@ -572,6 +630,9 @@ class ApplicationUnitServiceTest {
         null,
         ProductionUnit.KSCM_PER_DAY,
         ProductionUnit.KSCM_PER_DAY,
+        null,
+        null,
+        null,
         null,
         null);
   }
@@ -592,6 +653,9 @@ class ApplicationUnitServiceTest {
         ProductionUnit.KSCM_PER_MONTH,
         ProductionUnit.KSCM_PER_MONTH,
         null,
+        null,
+        null,
+        null,
         null);
   }
 
@@ -611,6 +675,9 @@ class ApplicationUnitServiceTest {
         ProductionUnit.KSCM_PER_MONTH,
         ProductionUnit.KSCM_PER_MONTH,
         null,
+        null,
+        null,
+        null,
         null);
   }
 
@@ -620,8 +687,11 @@ class ApplicationUnitServiceTest {
                                      FlareVentUnit ventCategoryUnit,
                                      ProductionUnit productionOilUnit,
                                      ProductionUnit productionGasUnit,
-                                     FlareVentUnit gasDensity,
-                                     FlareVentUnit gasMass) {
+                                     FlareVentUnit flareGasDensity,
+                                     FlareVentUnit flareGasContent,
+                                     FlareVentUnit ventGasDensity,
+                                     FlareVentUnit ventGasContent,
+                                     EmissionCategoryType emissionCategoryType) {
 
     assertThat(applicationUnit)
         .extracting(ApplicationUnit::getApplicationVersion,
@@ -630,7 +700,10 @@ class ApplicationUnitServiceTest {
             ApplicationUnit::getProductionOilUnit,
             ApplicationUnit::getProductionGasUnit,
             ApplicationUnit::getFlareGasDensityUnit,
-            ApplicationUnit::getFlareGasContentUnit
+            ApplicationUnit::getFlareGasContentUnit,
+            ApplicationUnit::getVentGasDensityUnit,
+            ApplicationUnit::getVentGasContentUnit,
+            ApplicationUnit::getEmissionCategoryType
         )
         .containsExactly(
             applicationVersion,
@@ -638,8 +711,11 @@ class ApplicationUnitServiceTest {
             ventCategoryUnit,
             productionOilUnit,
             productionGasUnit,
-            gasDensity,
-            gasMass
+            flareGasDensity,
+            flareGasContent,
+            ventGasDensity,
+            ventGasContent,
+            emissionCategoryType
         );
 
   }

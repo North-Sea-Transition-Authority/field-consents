@@ -794,6 +794,7 @@ WHERE av.id IN (2590, 3469, 3470, 3550);
 --, flare_gas_content_unit VARCHAR2(4000)
 --, vent_gas_density_unit  VARCHAR2(4000)
 --, vent_gas_content_unit  VARCHAR2(4000)
+--, emission_category_type VARCHAR2(4000)
 --);
 
 -- Unit rules
@@ -849,10 +850,23 @@ SELECT
   END flare_category_unit
 , 'G_PER_MOL' flare_gas_density_unit
 , 'MOL_PERCENTAGE' flare_gas_content_unit
+, CASE cat.categories
+  WHEN '1_2_3' THEN 'CATEGORY_123'
+  WHEN 'A_B_C' THEN 'CATEGORY_ABC'
+  END emission_category_type
 FROM fcs_migration.applications a
 JOIN fcs_migration.application_versions av ON av.application_id = a.id
 JOIN fcs_migration.consent_lengths cl ON cl.application_version_id = av.id
+JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+CROSS JOIN XMLTABLE(
+  '/FIELD_CONSENT'
+  PASSING
+    fcd.xml_data
+  COLUMNS
+    categories VARCHAR2(4000) PATH './FLAGS/CATEGORIES/text()'
+) cat
 WHERE a.type = 'FLARE'
+--AND (cat.categories IS NULL OR cat.categories NOT IN ('1_2_3', 'A_B_C'))
 /
 SELECT
   null id
@@ -864,10 +878,23 @@ SELECT
   END vent_category_unit
 , 'G_PER_MOL' vent_gas_density_unit
 , 'MOL_PERCENTAGE' vent_gas_content_unit
+, CASE cat.categories
+  WHEN '1_2_3' THEN 'CATEGORY_123'
+  WHEN 'A_B_C' THEN 'CATEGORY_ABC'
+  END emission_category_type
 FROM fcs_migration.applications a
 JOIN fcs_migration.application_versions av ON av.application_id = a.id
 JOIN fcs_migration.consent_lengths cl ON cl.application_version_id = av.id
-WHERE a.type = 'VENT';
+JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+CROSS JOIN XMLTABLE(
+  '/FIELD_CONSENT'
+  PASSING
+    fcd.xml_data
+  COLUMNS
+    categories VARCHAR2(4000) PATH './FLAGS/CATEGORIES/text()'
+) cat
+WHERE a.type = 'VENT'
+--AND (cat.categories IS NULL OR cat.categories NOT IN ('1_2_3', 'A_B_C'))
 /
 
 --

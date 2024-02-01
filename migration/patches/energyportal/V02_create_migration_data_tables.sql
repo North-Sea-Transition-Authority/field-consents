@@ -194,12 +194,9 @@ CREATE TABLE fcs_migration.application_units (
 , flare_gas_content_unit VARCHAR2(4000)
 , vent_gas_density_unit  VARCHAR2(4000)
 , vent_gas_content_unit  VARCHAR2(4000)
--- TODO FCS-545 add these?
---EmissionCategoryType emission_category_type (CATEGORY_123 or CATEGORY_ABC)
---or 
---EmissionCategoryType flare_category_type
---EmissionCategoryType vent_category_type
+, emission_category_type VARCHAR2(4000)
 );
+
 
 --
 -- application_flags

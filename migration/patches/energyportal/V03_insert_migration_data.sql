@@ -442,6 +442,7 @@ INSERT INTO fcs_migration.application_units (
 , flare_category_unit
 , flare_gas_density_unit
 , flare_gas_content_unit
+, emission_category_type
 )
 SELECT
   fcs_migration.application_unit_id_seq.nextval id
@@ -453,9 +454,21 @@ SELECT
   END flare_category_unit
 , 'G_PER_MOL' flare_gas_density_unit
 , 'MOL_PERCENTAGE' flare_gas_content_unit
+, CASE cat.categories
+  WHEN '1_2_3' THEN 'CATEGORY_123'
+  WHEN 'A_B_C' THEN 'CATEGORY_ABC'
+  END emission_category_type
 FROM fcs_migration.applications a
 JOIN fcs_migration.application_versions av ON av.application_id = a.id
 JOIN fcs_migration.consent_lengths cl ON cl.application_version_id = av.id
+JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+CROSS JOIN XMLTABLE(
+  '/FIELD_CONSENT'
+  PASSING
+    fcd.xml_data
+  COLUMNS
+    categories VARCHAR2(4000) PATH './FLAGS/CATEGORIES/text()'
+) cat
 WHERE a.type = 'FLARE';
 /
 INSERT INTO fcs_migration.application_units (
@@ -464,6 +477,7 @@ INSERT INTO fcs_migration.application_units (
 , vent_category_unit
 , vent_gas_density_unit
 , vent_gas_content_unit
+, emission_category_type
 )
 SELECT
   fcs_migration.application_unit_id_seq.nextval id
@@ -475,9 +489,21 @@ SELECT
   END vent_category_unit
 , 'G_PER_MOL' vent_gas_density_unit
 , 'MOL_PERCENTAGE' vent_gas_content_unit
+, CASE cat.categories
+  WHEN '1_2_3' THEN 'CATEGORY_123'
+  WHEN 'A_B_C' THEN 'CATEGORY_ABC'
+  END emission_category_type
 FROM fcs_migration.applications a
 JOIN fcs_migration.application_versions av ON av.application_id = a.id
 JOIN fcs_migration.consent_lengths cl ON cl.application_version_id = av.id
+JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+CROSS JOIN XMLTABLE(
+  '/FIELD_CONSENT'
+  PASSING
+    fcd.xml_data
+  COLUMNS
+    categories VARCHAR2(4000) PATH './FLAGS/CATEGORIES/text()'
+) cat
 WHERE a.type = 'VENT';
 /
 

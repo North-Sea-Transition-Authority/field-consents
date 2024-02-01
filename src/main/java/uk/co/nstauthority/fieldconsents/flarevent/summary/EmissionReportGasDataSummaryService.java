@@ -19,8 +19,8 @@ import uk.co.nstauthority.fieldconsents.summary.SummaryTableView;
 public class EmissionReportGasDataSummaryService {
 
   private static final UnaryOperator<String> DENSITY_PROMPT_WITH_UNIT = "Standard density (%s)"::formatted;
-  private static final UnaryOperator<String> INERT_GAS_CONTENT_PROMPT_WITH_UNIT = "Inert gas content (%s)"::formatted;
-  private static final UnaryOperator<String> HYDROCARBON_CONTENT_PROMPT_WITH_UNIT = "Hydrocarbon content (%s)"::formatted;
+  public static final UnaryOperator<String> INERT_GAS_CONTENT_PROMPT_WITH_UNIT = "Inert gas content (%s)"::formatted;
+  public static final UnaryOperator<String> HYDROCARBON_CONTENT_PROMPT_WITH_UNIT = "Hydrocarbon content (%s)"::formatted;
 
   public SummaryCard getReportGasDataTableSummaryCard(FlareVentReportGasData reportGasData,
                                                       FlareVentReportPeriod reportPeriod,

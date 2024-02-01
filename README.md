@@ -62,10 +62,10 @@ docker-compose -f ./devtools/local-dev-compose.yml up -d
 | `FCS_ENABLE_FLYWAY_OUT_OF_ORDER`             | Set to `true` to allow flyway to run out of order, defaults to `false`                                                                    |
 |                                              |                                                                                                                                           |
 | **SAML**                                     |                                                                                                                                           |
-| `FCS_SAML_ENTITY_ID`                         | Fox instance URL (dev: https://itportal.dev.fivium.local/engedudev1/fox)                                                                  |
+| `FCS_SAML_ENTITY_ID`                         | Fox instance URL (dev: https://itportal.dev.fivium.co.uk/engedudev1/fox)                                                                  |
 | `FCS_SAML_CERTIFICATE`                       | The x509 certificate string                                                                                                               |
 | `FCS_SAML_LOGIN_URL`                         | The URL to hit the `login` entry theme of the SAML login module                                                                           |
-| `FCS_SAML_BASE_URL`                          | The url prior to the `/${serverContext}` part of the url  (E.G: https://itportal.dev.fivium.local)                                        |
+| `FCS_SAML_BASE_URL`                          | The url prior to the `/${serverContext}` part of the url  (E.G: https://itportal.dev.fivium.co.uk)                                        |
 |                                              |                                                                                                                                           |
 | **File upload library**                      |                                                                                                                                           |
 | `S3_ACCESS_TOKEN`                            | Access token to access for Amazon S3                                                                                                      |

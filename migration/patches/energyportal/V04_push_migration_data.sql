@@ -252,7 +252,7 @@ END;
 --
 
 -- Run time
--- dev to local: 113s
+-- dev to local: 45s
 BEGIN
 
   FOR rec IN (SELECT * FROM fcs_migration.application_units) LOOP
@@ -268,6 +268,7 @@ BEGIN
     , "flare_gas_content_unit"
     , "vent_gas_density_unit"
     , "vent_gas_content_unit"
+    , "emission_category_type"
     ) VALUES (
       rec.id
     , rec.application_version_id
@@ -279,6 +280,7 @@ BEGIN
     , rec.flare_gas_content_unit
     , rec.vent_gas_density_unit
     , rec.vent_gas_content_unit
+    , rec.emission_category_type
     );
   
   END LOOP;
