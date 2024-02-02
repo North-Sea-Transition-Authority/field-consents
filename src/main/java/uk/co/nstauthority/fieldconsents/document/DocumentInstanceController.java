@@ -74,7 +74,7 @@ public class DocumentInstanceController {
         documentInstanceDto,
         PdfRenderingOptions.newBuilder().withPreviewWatermark(true).build()
     );
-    var fileName = "Document Preview.pdf";
+    var fileName = "PREVIEW %s.pdf".formatted(documentInstanceDto.title());
 
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_PDF)

@@ -144,13 +144,15 @@ class DocumentInstanceControllerTest extends AbstractControllerTest {
         PdfRenderingOptions.newBuilder().withPreviewWatermark(true).build())
     ).thenReturn(byteArrayResource);
 
+    var fileName = "PREVIEW %s.pdf".formatted(documentInstanceDto.title());
+
     mockMvc.perform(get(ReverseRouter.route(on(DocumentInstanceController.class)
             .getPreviewDocumentInstance(DOCUMENT_INSTANCE_ID)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_PDF))
         .andExpect(content().bytes(byteArrayResource.getByteArray()))
-        .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, "filename=\"Document Preview.pdf\""));
+        .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, "filename=\"%s\"".formatted(fileName)));
   }
 
   @SecurityTest
