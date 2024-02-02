@@ -14,6 +14,7 @@ class DocumentInstanceSummaryViewTest {
 
     assertThat(DocumentInstanceSummaryView.from(documentInstanceDto)).isEqualTo(
         new DocumentInstanceSummaryView(
+            documentInstanceDto.id(),
             documentInstanceDto.title(),
             documentInstanceDto.description(),
             ReverseRouter.route(on(DocumentInstanceController.class).getViewDocumentInstance(documentInstanceDto.id()))

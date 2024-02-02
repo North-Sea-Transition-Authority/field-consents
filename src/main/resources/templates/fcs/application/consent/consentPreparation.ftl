@@ -1,5 +1,6 @@
 <#include '../../layout/layout.ftl'>
 <#import 'data/_consentDataSummary.ftl' as consentDataSummary>
+<#import 'documents/_consentFilesSummary.ftl' as consentFilesSummary>
 
 <@defaultPage
   htmlTitle=pageTitle
@@ -8,12 +9,12 @@
   <@consentDataSummary.summaryCard
     consentDataView=consentDataView
     editUrl=consentDataEditUrl/>
-  <@fdsResultList.resultList resultCount=documentInstanceSummaryViews?size resultCountSuffix="document">
-    <#list documentInstanceSummaryViews as documentInstanceSummaryView>
-      <@fdsResultList.resultListItem
-        linkHeadingUrl=springUrl(documentInstanceSummaryView.viewUrl())
-        linkHeadingText=documentInstanceSummaryView.title()
-        captionHeadingText=documentInstanceSummaryView.description()/>
-    </#list>
-  </@fdsResultList.resultList>
+  <@consentFilesSummary.summary
+    heading=consentDocumentsSummaryCard.displayName()
+    fileViews=consentDocumentsSummaryCard.summaryData()
+    editUrl=consentDocumentsEditUrl/>
+  <@fdsAction.link
+    linkText="Save and continue"
+    linkClass="govuk-button"
+    linkUrl=springUrl(backLinkUrl)/>
 </@defaultPage>

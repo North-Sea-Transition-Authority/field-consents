@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.application.caseprocessing.consent;
+package uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -29,10 +29,13 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataTestUtil;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataView;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.documents.ConsentPreparationDocumentService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.documents.ConsentPreparationDocumentsController;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
-import uk.co.nstauthority.fieldconsents.document.DocumentInstanceSummaryView;
-import uk.co.nstauthority.fieldconsents.document.FieldConsentsDocumentInstanceService;
+import uk.co.nstauthority.fieldconsents.document.DocumentInstanceSummaryViewTestUtil;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
+import uk.co.nstauthority.fieldconsents.summary.SummaryFileView;
 
 @ContextConfiguration(classes = ConsentPreparationController.class)
 class ConsentPreparationControllerTest extends AbstractApplicationControllerTest {
@@ -41,10 +44,10 @@ class ConsentPreparationControllerTest extends AbstractApplicationControllerTest
   private ApplicationService applicationService;
 
   @MockBean
-  private FieldConsentsDocumentInstanceService fieldConsentsDocumentInstanceService;
+  private ConsentDataService consentDataService;
 
   @MockBean
-  private ConsentDataService consentDataService;
+  private ConsentPreparationDocumentService consentDocumentService;
 
   private Application application;
   private ApplicationVersion applicationVersion;
@@ -59,51 +62,56 @@ class ConsentPreparationControllerTest extends AbstractApplicationControllerTest
   }
 
   @SecurityTest
-  void viewDocumentInstances_notSignedIn() throws Exception {
+  void viewConsentPreparationPage_notSignedIn() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(ConsentPreparationController.class)
-        .viewDocumentInstances(APPLICATION_ID))))
+        .viewConsentPreparationPage(APPLICATION_ID))))
         .andExpect(redirectionToLoginUrl());
   }
 
   @SecurityTest
-  void viewDocumentInstances_doesNotHavePermission() throws Exception {
+  void viewConsentPreparationPage_doesNotHavePermission() throws Exception {
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Collections.emptyList());
     mockMvc.perform(get(ReverseRouter.route(on(ConsentPreparationController.class)
-            .viewDocumentInstances(APPLICATION_ID)))
+            .viewConsentPreparationPage(APPLICATION_ID)))
             .with(user(user)))
         .andExpect(status().isForbidden());
   }
 
   @Test
-  void viewDocumentInstances() throws Exception {
-    var documentInstanceSummaryView = new DocumentInstanceSummaryView("title", "description", "/");
-    var documentInstanceSummarySummaryViews = List.of(documentInstanceSummaryView);
+  void viewConsentPreparationPage() throws Exception {
     var consentData = ConsentDataTestUtil.newBuilder().build();
     var consentDataView = ConsentDataView.from(consentData);
+    var documentsInstanceSummaryView = DocumentInstanceSummaryViewTestUtil.newBuilder().build();
+    var consentDocumentsSummaryCard = SummaryCard.filesSummaryCardWithHeading(
+        "Consent documents",
+        List.of(SummaryFileView.previewSummaryFrom(documentsInstanceSummaryView))
+    );
 
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
-    when(fieldConsentsDocumentInstanceService.getDocumentInstanceSummaryViews(application)).thenReturn(documentInstanceSummarySummaryViews);
     when(consentDataService.findConsentData(application)).thenReturn(Optional.of(consentData));
+    when(consentDocumentService.getConsentDocumentsSummaryCard(application)).thenReturn(consentDocumentsSummaryCard);
 
-    mockMvc.perform(get(ReverseRouter.route(on(ConsentPreparationController.class).viewDocumentInstances(APPLICATION_ID)))
+    mockMvc.perform(get(ReverseRouter.route(on(ConsentPreparationController.class).viewConsentPreparationPage(APPLICATION_ID)))
         .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/application/consent/consentPreparation"))
         .andExpect(model().attribute("pageTitle", "Consent preparation"))
-        .andExpect(model().attribute("documentInstanceSummaryViews", documentInstanceSummarySummaryViews))
+        .andExpect(model().attribute("consentDocumentsSummaryCard", consentDocumentsSummaryCard))
         .andExpect(model().attribute("consentDataView", consentDataView))
-        .andExpect(model().attribute("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .caseProcessing(APPLICATION_ID, null, null))))
-        .andExpect(model().attribute("consentDataEditUrl", ReverseRouter.route(on(ConsentDataController.class)
-            .editConsentData(APPLICATION_ID))));
+        .andExpect(model().attribute("consentDataEditUrl",
+            ReverseRouter.route(on(ConsentDataController.class).editConsentData(APPLICATION_ID))))
+        .andExpect(model().attribute("consentDocumentsEditUrl",
+            ReverseRouter.route(on(ConsentPreparationDocumentsController.class).editDocuments(APPLICATION_ID))))
+        .andExpect(model().attribute("backLinkUrl",
+            ReverseRouter.route(on(ApplicationCaseProcessingController.class).caseProcessing(APPLICATION_ID, null, null))));
   }
 
   @Test
-  void viewDocumentInstances_noConsentDataFound() throws Exception {
+  void viewConsentPreparationPage_noConsentDataFound() throws Exception {
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
     when(consentDataService.findConsentData(application)).thenReturn(Optional.empty());
 
-    mockMvc.perform(get(ReverseRouter.route(on(ConsentPreparationController.class).viewDocumentInstances(APPLICATION_ID)))
+    mockMvc.perform(get(ReverseRouter.route(on(ConsentPreparationController.class).viewConsentPreparationPage(APPLICATION_ID)))
             .with(user(user)))
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ConsentDataController.class).editConsentData(APPLICATION_ID))));

@@ -16,6 +16,8 @@ group = 'uk.co.nstauthority'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '17'
 
+def fileUploadLibraryVersion = 'v2.3.0'
+
 repositories {
   mavenCentral()
   maven {
@@ -55,7 +57,7 @@ dependencies {
   implementation 'uk.co.fivium.energyportalapi:client:v6.5.0'
   implementation 'uk.co.fivium.digital.energyportalteamaccesslibrary:energy-portal-team-access-libray:develop-SNAPSHOT'
   implementation 'uk.co.fivium.digitalformlibrary:digital-form-library:develop-SNAPSHOT'
-  implementation 'uk.co.fivium:file-upload-spring-boot-starter:v2.2.0'
+  implementation "uk.co.fivium:file-upload-spring-boot-starter:${fileUploadLibraryVersion}"
   implementation 'uk.co.fivium:digital-payments-library-spring-boot-starter:1.0.0'
 
   implementation 'org.springframework.boot:spring-boot-starter-jooq'
@@ -72,6 +74,8 @@ dependencies {
 
   // Using H2 for the tests as a temporary measure until a final decision is made on which database is being used.
   testImplementation 'com.h2database:h2'
+
+  testImplementation "uk.co.fivium:file-upload-spring-boot-starter-test:${fileUploadLibraryVersion}"
 
   testImplementation 'com.tngtech.archunit:archunit-junit5:1.0.1'
   testImplementation 'org.springframework.boot:spring-boot-starter-test'

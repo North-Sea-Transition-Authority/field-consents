@@ -18,7 +18,7 @@
       ${consentDataView.consentStartDate()}
     </@fdsSummaryList.summaryListRowNoAction>
     <@fdsSummaryList.summaryListRowNoAction keyText="Consent end date">
-        ${consentDataView.consentEndDate()}
+      ${consentDataView.consentEndDate()}
     </@fdsSummaryList.summaryListRowNoAction>
   </@fdsSummaryList.summaryListCard>
 </#macro>

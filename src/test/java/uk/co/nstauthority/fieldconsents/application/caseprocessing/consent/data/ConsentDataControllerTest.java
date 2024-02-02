@@ -36,7 +36,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentPreparationController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.ConsentPreparationController;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
@@ -132,7 +132,7 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
         .getConsentDataAndRedirect(APPLICATION_ID)))
         .with(user(user)))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(ConsentPreparationController.class).viewDocumentInstances(APPLICATION_ID))));
+        .andExpect(redirectedUrl(ReverseRouter.route(on(ConsentPreparationController.class).viewConsentPreparationPage(APPLICATION_ID))));
   }
 
   @Test
@@ -182,7 +182,7 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
         .param("consentEndDate.month", "1")
         .param("consentEndDate.day", "1"))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(ConsentPreparationController.class).viewDocumentInstances(APPLICATION_ID))))
+        .andExpect(redirectedUrl(ReverseRouter.route(on(ConsentPreparationController.class).viewConsentPreparationPage(APPLICATION_ID))))
         .andExpect(notificationBanner(NotificationBanner.builder()
             .withBannerType(NotificationBannerType.SUCCESS)
             .withHeadingContent("Consent data saved")

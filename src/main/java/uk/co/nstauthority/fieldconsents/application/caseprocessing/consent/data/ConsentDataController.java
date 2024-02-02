@@ -13,7 +13,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentPreparationController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.ConsentPreparationController;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -43,7 +43,7 @@ public class ConsentDataController {
     var consentDataOptional = consentDataService.findConsentData(application);
 
     if (consentDataOptional.isPresent()) {
-      return ReverseRouter.redirect(on(ConsentPreparationController.class).viewDocumentInstances(applicationId));
+      return ReverseRouter.redirect(on(ConsentPreparationController.class).viewConsentPreparationPage(applicationId));
     }
 
     return ReverseRouter.redirect(on(this.getClass()).editConsentData(applicationId));
@@ -75,7 +75,7 @@ public class ConsentDataController {
 
     NotificationBannerUtil.addSuccessNotification(redirectAttributes, "Consent data saved");
 
-    return ReverseRouter.redirect(on(ConsentPreparationController.class).viewDocumentInstances(applicationId));
+    return ReverseRouter.redirect(on(ConsentPreparationController.class).viewConsentPreparationPage(applicationId));
   }
 
   private ModelAndView modelAndView(ConsentDataForm form) {
