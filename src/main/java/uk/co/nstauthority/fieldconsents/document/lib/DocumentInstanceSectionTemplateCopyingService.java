@@ -49,7 +49,10 @@ class DocumentInstanceSectionTemplateCopyingService {
   ) {
     var conditionMnemonic = documentTemplateSection.getConditionMnemonic();
     if (conditionMnemonic != null) {
-      var condition = documentTemplateSectionConditionService.getDocumentTemplateSectionConditionOrThrow(conditionMnemonic);
+      var condition = documentTemplateSectionConditionService.getApplicableDocumentTemplateSectionConditionOrThrow(
+          DocumentTemplateDto.from(documentInstance.getDocumentTemplate()),
+          conditionMnemonic
+      );
       if (!condition.evaluate(DocumentInstanceDto.from(documentInstance))) {
         return List.of();
       }

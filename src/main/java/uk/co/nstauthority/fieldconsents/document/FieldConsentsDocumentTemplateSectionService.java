@@ -67,8 +67,10 @@ public class FieldConsentsDocumentTemplateSectionService {
 
       var conditionMnemonic = documentTemplateSectionDto.conditionMnemonic();
       var conditionTitle = conditionMnemonic != null
-          ? documentTemplateSectionConditionService.getDocumentTemplateSectionConditionOrThrow(conditionMnemonic)
-              .getTitle()
+          ? documentTemplateSectionConditionService.getApplicableDocumentTemplateSectionConditionOrThrow(
+              documentTemplateSectionDto.documentTemplateDto(),
+              conditionMnemonic
+          ).getTitle()
           : null;
 
       var documentTemplateSectionSummaryView =

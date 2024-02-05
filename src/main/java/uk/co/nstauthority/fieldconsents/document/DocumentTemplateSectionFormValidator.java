@@ -28,7 +28,10 @@ class DocumentTemplateSectionFormValidator {
 
     var conditionMnemonic = form.conditionMnemonic();
     if (conditionMnemonic != null) {
-      var condition = documentTemplateSectionConditionService.getDocumentTemplateSectionCondition(conditionMnemonic);
+      var condition = documentTemplateSectionConditionService.getApplicableDocumentTemplateSectionCondition(
+          documentTemplateDto,
+          conditionMnemonic
+      );
       if (condition.isEmpty()) {
         errors.rejectValue("conditionMnemonic", "conditionMnemonic.invalid", "Select a valid condition");
       }

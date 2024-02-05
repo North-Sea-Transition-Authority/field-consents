@@ -6,5 +6,7 @@ public interface DocumentTemplateSectionCondition {
 
   String getTitle();
 
+  boolean isApplicable(DocumentTemplateDto documentTemplateDto);
+
   boolean evaluate(DocumentInstanceDto documentInstanceDto);
 }

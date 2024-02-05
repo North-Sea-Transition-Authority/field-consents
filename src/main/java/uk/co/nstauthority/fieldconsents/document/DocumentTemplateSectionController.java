@@ -157,7 +157,7 @@ public class DocumentTemplateSectionController {
         .addObject("pageTitle", ADD_PAGE_TITLE)
         .addObject(
             "conditionsFdsSelectMap",
-            fieldConsentsDocumentTemplateSectionConditionService.getConditionsFdsSelectMap()
+            fieldConsentsDocumentTemplateSectionConditionService.getConditionsFdsSelectMap(documentTemplateDto)
         )
         .addObject(
             "mailMergeFieldViews",
@@ -244,7 +244,7 @@ public class DocumentTemplateSectionController {
         .addObject("pageTitle", EDIT_PAGE_TITLE)
         .addObject(
             "conditionsFdsSelectMap",
-            fieldConsentsDocumentTemplateSectionConditionService.getConditionsFdsSelectMap()
+            fieldConsentsDocumentTemplateSectionConditionService.getConditionsFdsSelectMap(documentTemplateDto)
         )
         .addObject(
             "mailMergeFieldViews",

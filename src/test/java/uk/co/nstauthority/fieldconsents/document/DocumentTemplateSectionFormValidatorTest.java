@@ -81,8 +81,12 @@ class DocumentTemplateSectionFormValidatorTest {
     var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
     var errors = new BeanPropertyBindingResult(form, "form");
 
-    when(documentTemplateSectionConditionService.getDocumentTemplateSectionCondition(conditionMnemonic))
-        .thenReturn(Optional.empty());
+    when(
+        documentTemplateSectionConditionService.getApplicableDocumentTemplateSectionCondition(
+            documentTemplateDto,
+            conditionMnemonic
+        )
+    ).thenReturn(Optional.empty());
     when(documentMailMergeFieldService.validateMailMergeFields(documentTemplateDto, form.content()))
         .thenReturn(DocumentMailMergeValidationResult.valid());
 
@@ -111,8 +115,12 @@ class DocumentTemplateSectionFormValidatorTest {
 
     var documentTemplateSectionCondition = DocumentTemplateSectionConditionTestUtil.builder().build();
 
-    when(documentTemplateSectionConditionService.getDocumentTemplateSectionCondition(conditionMnemonic))
-        .thenReturn(Optional.of(documentTemplateSectionCondition));
+    when(
+        documentTemplateSectionConditionService.getApplicableDocumentTemplateSectionCondition(
+            documentTemplateDto,
+            conditionMnemonic
+        )
+    ).thenReturn(Optional.of(documentTemplateSectionCondition));
     when(documentMailMergeFieldService.validateMailMergeFields(documentTemplateDto, form.content()))
         .thenReturn(DocumentMailMergeValidationResult.valid());
 

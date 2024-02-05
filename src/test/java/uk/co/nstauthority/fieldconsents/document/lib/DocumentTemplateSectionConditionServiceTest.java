@@ -1,8 +1,9 @@
 package uk.co.nstauthority.fieldconsents.document.lib;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -26,61 +27,124 @@ class DocumentTemplateSectionConditionServiceTest {
   private DocumentTemplateSectionConditionService documentTemplateSectionConditionService;
 
   @Test
-  void getDocumentTemplateSectionConditions() {
-    assertThat(documentTemplateSectionConditionService.getDocumentTemplateSectionConditions())
-        .isEqualTo(documentTemplateSectionConditions);
+  void getApplicableDocumentTemplateSectionConditions() {
+    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
+
+    var documentTemplateSectionCondition1 = mock(DocumentTemplateSectionCondition.class);
+    var documentTemplateSectionCondition2 = mock(DocumentTemplateSectionCondition.class);
+    var documentTemplateSectionCondition3 = mock(DocumentTemplateSectionCondition.class);
+
+    when(documentTemplateSectionCondition1.isApplicable(documentTemplateDto)).thenReturn(true);
+    when(documentTemplateSectionCondition2.isApplicable(documentTemplateDto)).thenReturn(true);
+    when(documentTemplateSectionCondition3.isApplicable(documentTemplateDto)).thenReturn(false);
+
+    when(documentTemplateSectionConditions.stream()).thenReturn(
+        Stream.of(
+            documentTemplateSectionCondition1,
+            documentTemplateSectionCondition2,
+            documentTemplateSectionCondition3
+        )
+    );
+
+    assertThat(
+        documentTemplateSectionConditionService.getApplicableDocumentTemplateSectionConditions(documentTemplateDto)
+    ).containsExactly(documentTemplateSectionCondition1, documentTemplateSectionCondition2);
   }
 
   @Test
-  void getDocumentTemplateSectionConditionOrThrow_documentTemplateSectionConditionDoesNotExist() {
-    var conditionMnemonic = "TEST_CONDITION_MNEMONIC";
+  void getApplicableDocumentTemplateSectionConditionOrThrow_applicableDocumentTemplateSectionConditionNotFound() {
+    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
+    var mnemonic = "TEST_MNEMONIC";
 
     doReturn(Optional.empty())
         .when(documentTemplateSectionConditionService)
-        .getDocumentTemplateSectionCondition(conditionMnemonic);
+        .getApplicableDocumentTemplateSectionCondition(documentTemplateDto, mnemonic);
 
     assertThatThrownBy(
-        () -> documentTemplateSectionConditionService.getDocumentTemplateSectionConditionOrThrow(conditionMnemonic)
+        () -> documentTemplateSectionConditionService.getApplicableDocumentTemplateSectionConditionOrThrow(
+            documentTemplateDto,
+            mnemonic
+        )
     ).isInstanceOf(IllegalStateException.class);
   }
 
   @Test
-  void getDocumentTemplateSectionConditionOrThrow_documentTemplateSectionConditionExists() {
-    var conditionMnemonic = "TEST_CONDITION_MNEMONIC";
+  void getApplicableDocumentTemplateSectionConditionOrThrow_applicableDocumentTemplateSectionConditionFound() {
+    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
+    var mnemonic = "TEST_MNEMONIC";
 
     var condition = DocumentTemplateSectionConditionTestUtil.builder()
-        .withMnemonic(conditionMnemonic)
+        .withMnemonic(mnemonic)
         .build();
 
     doReturn(Optional.of(condition))
         .when(documentTemplateSectionConditionService)
-        .getDocumentTemplateSectionCondition(conditionMnemonic);
+        .getApplicableDocumentTemplateSectionCondition(documentTemplateDto, mnemonic);
 
-    assertThat(documentTemplateSectionConditionService.getDocumentTemplateSectionConditionOrThrow(conditionMnemonic))
-        .isEqualTo(condition);
+    assertThat(
+        documentTemplateSectionConditionService.getApplicableDocumentTemplateSectionConditionOrThrow(
+            documentTemplateDto,
+            mnemonic
+        )
+    ).isEqualTo(condition);
   }
 
   @Test
-  void getDocumentTemplateSectionCondition_documentTemplateSectionConditionDoesNotExist() {
-    var conditionMnemonic = "TEST_CONDITION_MNEMONIC";
+  void getApplicableDocumentTemplateSectionCondition_documentTemplateSectionConditionNotFound() {
+    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
+    var mnemonic = "TEST_MNEMONIC";
 
-    assertThat(documentTemplateSectionConditionService.getDocumentTemplateSectionCondition(conditionMnemonic)).isEmpty();
+    var documentTemplateSectionCondition = mock(DocumentTemplateSectionCondition.class);
+
+    when(documentTemplateSectionConditions.stream()).thenReturn(Stream.of(documentTemplateSectionCondition));
+
+    when(documentTemplateSectionCondition.getMnemonic()).thenReturn("OTHER_MNEMONIC");
+
+    assertThat(
+        documentTemplateSectionConditionService.getApplicableDocumentTemplateSectionCondition(
+            documentTemplateDto,
+            mnemonic
+        )
+    ).isEmpty();
   }
 
   @Test
-  void getDocumentTemplateSectionCondition_documentTemplateSectionConditionExists() {
-    var conditionMnemonic = "TEST_CONDITION_MNEMONIC";
+  void getApplicableDocumentTemplateSectionCondition_documentTemplateSectionConditionFoundAndIsNotApplicable() {
+    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
+    var mnemonic = "TEST_MNEMONIC";
 
-    var condition1 = DocumentTemplateSectionConditionTestUtil.builder()
-        .withMnemonic("OTHER_CONDITION_MNEMONIC")
-        .build();
-    var condition2 = DocumentTemplateSectionConditionTestUtil.builder()
-        .withMnemonic(conditionMnemonic)
-        .build();
+    var documentTemplateSectionCondition = mock(DocumentTemplateSectionCondition.class);
 
-    when(documentTemplateSectionConditions.stream()).thenReturn(Stream.of(condition1, condition2));
+    when(documentTemplateSectionConditions.stream()).thenReturn(Stream.of(documentTemplateSectionCondition));
 
-    assertThat(documentTemplateSectionConditionService.getDocumentTemplateSectionCondition(conditionMnemonic))
-        .contains(condition2);
+    when(documentTemplateSectionCondition.getMnemonic()).thenReturn(mnemonic);
+    when(documentTemplateSectionCondition.isApplicable(documentTemplateDto)).thenReturn(false);
+
+    assertThat(
+        documentTemplateSectionConditionService.getApplicableDocumentTemplateSectionCondition(
+            documentTemplateDto,
+            mnemonic
+        )
+    ).isEmpty();
+  }
+
+  @Test
+  void getApplicableDocumentTemplateSectionCondition_documentTemplateSectionConditionFoundAndIsApplicable() {
+    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
+    var mnemonic = "TEST_MNEMONIC";
+
+    var documentTemplateSectionCondition = mock(DocumentTemplateSectionCondition.class);
+
+    when(documentTemplateSectionConditions.stream()).thenReturn(Stream.of(documentTemplateSectionCondition));
+
+    when(documentTemplateSectionCondition.getMnemonic()).thenReturn(mnemonic);
+    when(documentTemplateSectionCondition.isApplicable(documentTemplateDto)).thenReturn(true);
+
+    assertThat(
+        documentTemplateSectionConditionService.getApplicableDocumentTemplateSectionCondition(
+            documentTemplateDto,
+            mnemonic
+        )
+    ).contains(documentTemplateSectionCondition);
   }
 }

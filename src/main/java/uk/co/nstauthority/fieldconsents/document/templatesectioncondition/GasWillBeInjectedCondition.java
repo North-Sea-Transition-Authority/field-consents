@@ -5,7 +5,9 @@ import org.springframework.stereotype.Component;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
 import uk.co.nstauthority.fieldconsents.document.DocumentInstanceLinkingService;
+import uk.co.nstauthority.fieldconsents.document.DocumentTemplateType;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceDto;
+import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateSectionCondition;
 
 @Component
@@ -31,6 +33,13 @@ class GasWillBeInjectedCondition implements DocumentTemplateSectionCondition {
   @Override
   public String getTitle() {
     return "Gas will be injected";
+  }
+
+  @Override
+  public boolean isApplicable(DocumentTemplateDto documentTemplateDto) {
+    var documentTemplateType = DocumentTemplateType.getByMnemonic(documentTemplateDto.mnemonic());
+
+    return documentTemplateType == DocumentTemplateType.FIELD_PRODUCTION_CONSENT;
   }
 
   @Override

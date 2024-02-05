@@ -52,6 +52,8 @@ class FieldConsentsDocumentTemplateSectionServiceTest {
   void getDocumentTemplateSectionSummaryViewsForSectionSiblings() {
     var parentSectionNumberString = "1";
 
+    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
+
     var conditionMnemonic1 = "TEST_CONDITION_MNEMONIC_1";
     var conditionMnemonic2 = "TEST_CONDITION_MNEMONIC_2";
 
@@ -68,6 +70,7 @@ class FieldConsentsDocumentTemplateSectionServiceTest {
 
     var siblingDocumentTemplateSectionDto2Child1 =
         DocumentTemplateSectionDtoTestUtil.builder()
+            .withDocumentTemplateDto(documentTemplateDto)
             .withConditionMnemonic(conditionMnemonic2)
             .withDisplayOrder(1)
             .withChildren(List.of(siblingDocumentTemplateSectionDto2Child1Child1))
@@ -84,6 +87,7 @@ class FieldConsentsDocumentTemplateSectionServiceTest {
 
     var siblingDocumentTemplateSectionDto2 =
         DocumentTemplateSectionDtoTestUtil.builder()
+            .withDocumentTemplateDto(documentTemplateDto)
             .withConditionMnemonic(conditionMnemonic1)
             .withDisplayOrder(2)
             .withChildren(
@@ -98,10 +102,18 @@ class FieldConsentsDocumentTemplateSectionServiceTest {
     var siblingDocumentTemplateSectionDtos =
         List.of(siblingDocumentTemplateSectionDto1, siblingDocumentTemplateSectionDto2);
 
-    when(documentTemplateSectionConditionService.getDocumentTemplateSectionConditionOrThrow(conditionMnemonic1))
-        .thenReturn(condition1);
-    when(documentTemplateSectionConditionService.getDocumentTemplateSectionConditionOrThrow(conditionMnemonic2))
-        .thenReturn(condition2);
+    when(
+        documentTemplateSectionConditionService.getApplicableDocumentTemplateSectionConditionOrThrow(
+            documentTemplateDto,
+            conditionMnemonic1
+        )
+    ).thenReturn(condition1);
+    when(
+        documentTemplateSectionConditionService.getApplicableDocumentTemplateSectionConditionOrThrow(
+            documentTemplateDto,
+            conditionMnemonic2
+        )
+    ).thenReturn(condition2);
 
     assertThat(
         fieldConsentsDocumentTemplateSectionService.getDocumentTemplateSectionSummaryViewsForSectionSiblings(

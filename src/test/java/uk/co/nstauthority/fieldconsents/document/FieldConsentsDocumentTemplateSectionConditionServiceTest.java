@@ -23,6 +23,8 @@ class FieldConsentsDocumentTemplateSectionConditionServiceTest {
 
   @Test
   void getConditionsFdsSelectMap() {
+    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
+
     var documentTemplateSectionCondition1 = DocumentTemplateSectionConditionTestUtil.builder()
         .withMnemonic("TEST_MNEMONIC_1")
         .withTitle("Test title 1")
@@ -32,12 +34,13 @@ class FieldConsentsDocumentTemplateSectionConditionServiceTest {
         .withTitle("Test title 2")
         .build();
 
-    when(documentTemplateSectionConditionService.getDocumentTemplateSectionConditions())
+    when(documentTemplateSectionConditionService.getApplicableDocumentTemplateSectionConditions(documentTemplateDto))
         .thenReturn(List.of(documentTemplateSectionCondition1, documentTemplateSectionCondition2));
 
-    assertThat(fieldConsentsDocumentTemplateSectionConditionService.getConditionsFdsSelectMap()).containsOnly(
-        entry(documentTemplateSectionCondition1.getMnemonic(), documentTemplateSectionCondition1.getTitle()),
-        entry(documentTemplateSectionCondition2.getMnemonic(), documentTemplateSectionCondition2.getTitle())
-    );
+    assertThat(fieldConsentsDocumentTemplateSectionConditionService.getConditionsFdsSelectMap(documentTemplateDto))
+        .containsOnly(
+            entry(documentTemplateSectionCondition1.getMnemonic(), documentTemplateSectionCondition1.getTitle()),
+            entry(documentTemplateSectionCondition2.getMnemonic(), documentTemplateSectionCondition2.getTitle())
+        );
   }
 }

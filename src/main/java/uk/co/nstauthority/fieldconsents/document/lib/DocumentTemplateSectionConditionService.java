@@ -15,19 +15,30 @@ public class DocumentTemplateSectionConditionService {
     this.documentTemplateSectionConditions = documentTemplateSectionConditions;
   }
 
-  public List<DocumentTemplateSectionCondition> getDocumentTemplateSectionConditions() {
-    return documentTemplateSectionConditions;
+  public List<DocumentTemplateSectionCondition> getApplicableDocumentTemplateSectionConditions(
+      DocumentTemplateDto documentTemplateDto
+  ) {
+    return documentTemplateSectionConditions.stream()
+        .filter(documentTemplateSectionCondition -> documentTemplateSectionCondition.isApplicable(documentTemplateDto))
+        .toList();
   }
 
-  public DocumentTemplateSectionCondition getDocumentTemplateSectionConditionOrThrow(String conditionMnemonic) {
-    return getDocumentTemplateSectionCondition(conditionMnemonic).orElseThrow(() ->
-        new IllegalStateException("Unable to find document section condition %s".formatted(conditionMnemonic))
+  public DocumentTemplateSectionCondition getApplicableDocumentTemplateSectionConditionOrThrow(
+      DocumentTemplateDto documentTemplateDto,
+      String mnemonic
+  ) {
+    return getApplicableDocumentTemplateSectionCondition(documentTemplateDto, mnemonic).orElseThrow(() ->
+        new IllegalStateException("Unable to find applicable document section condition %s".formatted(mnemonic))
     );
   }
 
-  public Optional<DocumentTemplateSectionCondition> getDocumentTemplateSectionCondition(String conditionMnemonic) {
+  public Optional<DocumentTemplateSectionCondition> getApplicableDocumentTemplateSectionCondition(
+      DocumentTemplateDto documentTemplateDto,
+      String mnemonic
+  ) {
     return documentTemplateSectionConditions.stream()
-        .filter(documentSectionCondition -> documentSectionCondition.getMnemonic().equals(conditionMnemonic))
+        .filter(documentTemplateSectionCondition -> documentTemplateSectionCondition.getMnemonic().equals(mnemonic))
+        .filter(documentTemplateSectionCondition -> documentTemplateSectionCondition.isApplicable(documentTemplateDto))
         .findFirst();
   }
 }

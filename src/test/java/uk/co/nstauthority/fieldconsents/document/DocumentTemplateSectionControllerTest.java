@@ -87,7 +87,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
     when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
-    when(fieldConsentsDocumentTemplateSectionConditionService.getConditionsFdsSelectMap())
+    when(fieldConsentsDocumentTemplateSectionConditionService.getConditionsFdsSelectMap(documentTemplateDto))
         .thenReturn(conditionsFdsSelectMap);
     when(fieldConsentsDocumentMailMergeFieldService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
         .thenReturn(applicableDocumentMailMergeFieldViews);
@@ -148,7 +148,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
         .when(documentTemplateSectionFormValidator)
         .validate(any(), any(), any());
 
-    when(fieldConsentsDocumentTemplateSectionConditionService.getConditionsFdsSelectMap())
+    when(fieldConsentsDocumentTemplateSectionConditionService.getConditionsFdsSelectMap(documentTemplateDto))
         .thenReturn(conditionsFdsSelectMap);
     when(fieldConsentsDocumentMailMergeFieldService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
         .thenReturn(applicableDocumentMailMergeFieldViews);
@@ -275,7 +275,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
     when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
-    when(fieldConsentsDocumentTemplateSectionConditionService.getConditionsFdsSelectMap())
+    when(fieldConsentsDocumentTemplateSectionConditionService.getConditionsFdsSelectMap(documentTemplateDto))
         .thenReturn(conditionsFdsSelectMap);
     when(fieldConsentsDocumentMailMergeFieldService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
         .thenReturn(applicableDocumentMailMergeFieldViews);
@@ -336,7 +336,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
         .when(documentTemplateSectionFormValidator)
         .validate(any(), any(), any());
 
-    when(fieldConsentsDocumentTemplateSectionConditionService.getConditionsFdsSelectMap())
+    when(fieldConsentsDocumentTemplateSectionConditionService.getConditionsFdsSelectMap(documentTemplateDto))
         .thenReturn(conditionsFdsSelectMap);
     when(fieldConsentsDocumentMailMergeFieldService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
         .thenReturn(applicableDocumentMailMergeFieldViews);
@@ -463,7 +463,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
     when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
-    when(fieldConsentsDocumentTemplateSectionConditionService.getConditionsFdsSelectMap())
+    when(fieldConsentsDocumentTemplateSectionConditionService.getConditionsFdsSelectMap(documentTemplateDto))
         .thenReturn(conditionsFdsSelectMap);
     when(fieldConsentsDocumentMailMergeFieldService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
         .thenReturn(applicableDocumentMailMergeFieldViews);
@@ -526,7 +526,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
         .when(documentTemplateSectionFormValidator)
         .validate(any(), any(), any());
 
-    when(fieldConsentsDocumentTemplateSectionConditionService.getConditionsFdsSelectMap())
+    when(fieldConsentsDocumentTemplateSectionConditionService.getConditionsFdsSelectMap(documentTemplateDto))
         .thenReturn(conditionsFdsSelectMap);
 
     mockMvc.perform(post(ReverseRouter.route(on(DocumentTemplateSectionController.class)
@@ -612,7 +612,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
     when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
-    when(fieldConsentsDocumentTemplateSectionConditionService.getConditionsFdsSelectMap())
+    when(fieldConsentsDocumentTemplateSectionConditionService.getConditionsFdsSelectMap(documentTemplateDto))
         .thenReturn(conditionsFdsSelectMap);
     when(fieldConsentsDocumentMailMergeFieldService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
         .thenReturn(applicableDocumentMailMergeFieldViews);
@@ -673,7 +673,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
         .when(documentTemplateSectionFormValidator)
         .validate(any(), any(), any());
 
-    when(fieldConsentsDocumentTemplateSectionConditionService.getConditionsFdsSelectMap())
+    when(fieldConsentsDocumentTemplateSectionConditionService.getConditionsFdsSelectMap(documentTemplateDto))
         .thenReturn(conditionsFdsSelectMap);
     when(fieldConsentsDocumentMailMergeFieldService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
         .thenReturn(applicableDocumentMailMergeFieldViews);

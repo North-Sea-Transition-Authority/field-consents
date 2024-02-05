@@ -105,8 +105,12 @@ class DocumentInstanceSectionTemplateCopyingServiceTest {
 
     var condition = mock(DocumentTemplateSectionCondition.class);
 
-    when(documentTemplateSectionConditionService.getDocumentTemplateSectionConditionOrThrow(conditionMnemonic))
-        .thenReturn(condition);
+    when(
+        documentTemplateSectionConditionService.getApplicableDocumentTemplateSectionConditionOrThrow(
+            DocumentTemplateDto.from(documentInstance.getDocumentTemplate()),
+            conditionMnemonic
+        )
+    ).thenReturn(condition);
     when(condition.evaluate(DocumentInstanceDto.from(documentInstance))).thenReturn(false);
 
     assertThat(documentInstanceSectionTemplateCopyingService.tryCopyDocumentTemplateSectionAndChildren(
@@ -146,8 +150,12 @@ class DocumentInstanceSectionTemplateCopyingServiceTest {
 
     var condition = mock(DocumentTemplateSectionCondition.class);
 
-    when(documentTemplateSectionConditionService.getDocumentTemplateSectionConditionOrThrow(conditionMnemonic))
-        .thenReturn(condition);
+    when(
+        documentTemplateSectionConditionService.getApplicableDocumentTemplateSectionConditionOrThrow(
+            DocumentTemplateDto.from(documentInstance.getDocumentTemplate()),
+            conditionMnemonic
+        )
+    ).thenReturn(condition);
     when(condition.evaluate(DocumentInstanceDto.from(documentInstance))).thenReturn(true);
 
     var documentInstanceSection = DocumentInstanceSectionTestUtil.builder().build();
@@ -273,13 +281,23 @@ class DocumentInstanceSectionTemplateCopyingServiceTest {
         documentTemplateSectionChild2
     );
 
+    var documentTemplateDto = DocumentTemplateDto.from(documentInstance.getDocumentTemplate());
+
     var trueCondition = mock(DocumentTemplateSectionCondition.class);
     var falseCondition = mock(DocumentTemplateSectionCondition.class);
 
-    when(documentTemplateSectionConditionService.getDocumentTemplateSectionConditionOrThrow(trueConditionMnemonic))
-        .thenReturn(trueCondition);
-    when(documentTemplateSectionConditionService.getDocumentTemplateSectionConditionOrThrow(falseConditionMnemonic))
-        .thenReturn(falseCondition);
+    when(
+        documentTemplateSectionConditionService.getApplicableDocumentTemplateSectionConditionOrThrow(
+            documentTemplateDto,
+            trueConditionMnemonic
+        )
+    ).thenReturn(trueCondition);
+    when(
+        documentTemplateSectionConditionService.getApplicableDocumentTemplateSectionConditionOrThrow(
+            documentTemplateDto,
+            falseConditionMnemonic
+        )
+    ).thenReturn(falseCondition);
     when(trueCondition.evaluate(DocumentInstanceDto.from(documentInstance))).thenReturn(true);
     when(falseCondition.evaluate(DocumentInstanceDto.from(documentInstance))).thenReturn(false);
 

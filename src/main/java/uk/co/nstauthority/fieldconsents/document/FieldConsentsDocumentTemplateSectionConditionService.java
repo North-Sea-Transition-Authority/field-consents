@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateSectionCondition;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateSectionConditionService;
 
@@ -19,8 +20,9 @@ class FieldConsentsDocumentTemplateSectionConditionService {
     this.documentTemplateSectionConditionService = documentTemplateSectionConditionService;
   }
 
-  Map<String, String> getConditionsFdsSelectMap() {
-    return documentTemplateSectionConditionService.getDocumentTemplateSectionConditions().stream()
+  Map<String, String> getConditionsFdsSelectMap(DocumentTemplateDto documentTemplateDto) {
+    return documentTemplateSectionConditionService.getApplicableDocumentTemplateSectionConditions(documentTemplateDto)
+        .stream()
         .collect(
             Collectors.toMap(
                 DocumentTemplateSectionCondition::getMnemonic,

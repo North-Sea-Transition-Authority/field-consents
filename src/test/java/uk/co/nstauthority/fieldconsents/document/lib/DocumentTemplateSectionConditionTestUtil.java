@@ -50,6 +50,11 @@ class DocumentTemplateSectionConditionTestUtil {
     }
 
     @Override
+    public boolean isApplicable(DocumentTemplateDto documentTemplateDto) {
+      return false;
+    }
+
+    @Override
     public boolean evaluate(DocumentInstanceDto documentInstanceDto) {
       return false;
     }

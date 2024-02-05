@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -17,6 +18,8 @@ import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
 import uk.co.nstauthority.fieldconsents.document.DocumentInstanceDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.document.DocumentInstanceLinkingService;
+import uk.co.nstauthority.fieldconsents.document.DocumentTemplateDtoTestUtil;
+import uk.co.nstauthority.fieldconsents.document.DocumentTemplateType;
 
 @ExtendWith(MockitoExtension.class)
 class GasWillBeInjectedConditionTest {
@@ -38,6 +41,17 @@ class GasWillBeInjectedConditionTest {
   @Test
   void getTitle() {
     assertThat(gasWillBeInjectedCondition.getTitle()).isEqualTo("Gas will be injected");
+  }
+
+  @ParameterizedTest
+  @EnumSource(DocumentTemplateType.class)
+  void isApplicable(DocumentTemplateType documentTemplateType) {
+    var template = DocumentTemplateDtoTestUtil.builder()
+        .withMnemonic(documentTemplateType.getMnemonic())
+        .build();
+
+    assertThat(gasWillBeInjectedCondition.isApplicable(template))
+        .isEqualTo(documentTemplateType == DocumentTemplateType.FIELD_PRODUCTION_CONSENT);
   }
 
   @Test

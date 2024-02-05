@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.document;
 
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceDto;
+import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateSectionCondition;
 
 class DocumentTemplateSectionConditionTestUtil {
@@ -50,6 +51,11 @@ class DocumentTemplateSectionConditionTestUtil {
     @Override
     public String getTitle() {
       return title;
+    }
+
+    @Override
+    public boolean isApplicable(DocumentTemplateDto documentTemplateDto) {
+      return false;
     }
 
     @Override
