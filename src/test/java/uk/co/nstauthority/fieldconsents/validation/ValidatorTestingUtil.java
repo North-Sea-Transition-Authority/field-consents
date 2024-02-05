@@ -43,7 +43,12 @@ public class ValidatorTestingUtil {
   }
 
   public static CustomerBrandingConfigurationProperties getCustomerBrandingConfigurationProperties() {
-    return new CustomerBrandingConfigurationProperties("Customer Name", "CUSTMNEM", "Customer Email");
+    return new CustomerBrandingConfigurationProperties(
+        "Customer Name",
+        "CUSTMNEM",
+        "Customer Email",
+        "Regulator Legal Name"
+    );
   }
 
   // Below methods extractErrors and extractErrorMessages copied from WIOS in the teams copy

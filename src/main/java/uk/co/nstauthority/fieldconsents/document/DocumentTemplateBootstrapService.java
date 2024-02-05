@@ -70,7 +70,7 @@ class DocumentTemplateBootstrapService {
         "Consents to",
         """
         In accordance with the clause titled “Development and production programmes” set out in or otherwise \
-        incorporated into the Licence(s), the Oil and Gas Authority hereby consents to:
+        incorporated into the Licence(s), the ((REGULATOR_LEGAL_NAME)) hereby consents to:
         """,
         null,
         true,
@@ -169,7 +169,9 @@ class DocumentTemplateBootstrapService {
         fieldProductionConsentDocumentTemplateDto,
         null,
         "TODO FCS-610: This consent supersedes",
-        "[This consent supersedes the consent [CONSENT REFERENCE] granted by the Oil and Gas Authority dated [DATE].]",
+        """
+        [This consent supersedes the consent [CONSENT REFERENCE] granted by the ((REGULATOR_LEGAL_NAME)) dated [DATE].]
+        """,
         null,
         true,
         6
@@ -181,9 +183,9 @@ class DocumentTemplateBootstrapService {
         "Consents to the use of gas",
         """
         In accordance with sub-clause (3)(b) of the clause titled “Avoidance of harmful methods of working” set out in \
-        or otherwise incorporated into the Licence(s), the Oil and Gas Authority hereby consents to the use of gas for \
-        the purpose of creating or increasing the pressure by means of which petroleum is obtained from the licensed \
-        area of the Licence(s).
+        or otherwise incorporated into the Licence(s), the ((REGULATOR_LEGAL_NAME)) hereby consents to the use of gas \
+        for the purpose of creating or increasing the pressure by means of which petroleum is obtained from the \
+        licensed area of the Licence(s).
         """,
         "GAS_WILL_BE_INJECTED",
         true,
@@ -243,7 +245,7 @@ class DocumentTemplateBootstrapService {
         "Consents to",
         """
         In accordance with paragraph (3)(a) of the clause titled “Avoidance of harmful methods of working” set out in \
-        or otherwise incorporated into the Licence(s), the Oil and Gas Authority hereby consents to the flaring, of \
+        or otherwise incorporated into the Licence(s), the ((REGULATOR_LEGAL_NAME)) hereby consents to the flaring, of \
         natural gas obtained from those parts of the licensed area known as the ((PRIMARY_AND_ADDITIONAL_FIELD_NAMES)) \
         field(s) during the Period.
         """,
@@ -295,7 +297,9 @@ class DocumentTemplateBootstrapService {
         fieldFlareConsentDocumentTemplateDto,
         null,
         "TODO FCS-610: This consent supersedes",
-        "[This consent supersedes the consent [CONSENT REFERENCE] granted by the Oil and Gas Authority dated [DATE].]",
+        """
+        [This consent supersedes the consent [CONSENT REFERENCE] granted by the ((REGULATOR_LEGAL_NAME)) dated [DATE].]
+        """,
         null,
         true,
         6
@@ -353,10 +357,10 @@ class DocumentTemplateBootstrapService {
         null,
         "Consents to",
         """
-        Pursuant to section 12A(1)(a) of the Energy Act 1976, the Oil and Gas Authority hereby consents to the flaring \
-        from the relevant oil processing facility or relevant gas processing facility, being the ((FACILITY_NAME)) \
-        (the “Facility”), of natural gas originally won from the fields with a right to have the natural gas processed \
-        by the Facility.
+        Pursuant to section 12A(1)(a) of the Energy Act 1976, the ((REGULATOR_LEGAL_NAME)) hereby consents to the \
+        flaring from the relevant oil processing facility or relevant gas processing facility, being the \
+        ((FACILITY_NAME)) (the “Facility”), of natural gas originally won from the fields with a right to have the \
+        natural gas processed by the Facility.
         """,
         null,
         true,
@@ -390,7 +394,9 @@ class DocumentTemplateBootstrapService {
         terminalFlareConsentDocumentTemplateDto,
         null,
         "TODO FCS-610: This consent supersedes",
-        "[This consent supersedes the consent [CONSENT REFERENCE] granted by the Oil and Gas Authority dated [DATE].]",
+        """
+        [This consent supersedes the consent [CONSENT REFERENCE] granted by the ((REGULATOR_LEGAL_NAME)) dated [DATE].]
+        """,
         null,
         true,
         5
@@ -435,7 +441,7 @@ class DocumentTemplateBootstrapService {
         null,
         "Consents to",
         """
-        Pursuant to section 12A(1)(b) of the Energy Act 1976, the Oil and Gas Authority hereby consents to the \
+        Pursuant to section 12A(1)(b) of the Energy Act 1976, the ((REGULATOR_LEGAL_NAME)) hereby consents to the \
         releasing unignited into the atmosphere of natural gas obtained from those parts of the licensed area of the \
         Licence(s) known as the ((PRIMARY_AND_ADDITIONAL_FIELD_NAMES)) field(s) during the Period.
         """,
@@ -522,7 +528,7 @@ class DocumentTemplateBootstrapService {
         null,
         "Consents to",
         """
-        Pursuant to section 12A(1)(a) of the Energy Act 1976, the Oil and Gas Authority hereby consents to the \
+        Pursuant to section 12A(1)(a) of the Energy Act 1976, the ((REGULATOR_LEGAL_NAME)) hereby consents to the \
         releasing unignited into the atmosphere from the relevant oil processing facility or relevant gas processing \
         facility, being the ((FACILITY_NAME)) (the “Facility”), of natural gas originally won from the fields with a \
         right to have the natural gas processed by the Facility.
@@ -559,7 +565,9 @@ class DocumentTemplateBootstrapService {
         terminalVentConsentDocumentTemplateDto,
         null,
         "TODO FCS-610: This consent supersedes",
-        "[This consent supersedes the consent [CONSENT REFERENCE] granted by the Oil and Gas Authority dated [DATE].]",
+        """
+        [This consent supersedes the consent [CONSENT REFERENCE] granted by the ((REGULATOR_LEGAL_NAME)) dated [DATE].]
+        """,
         null,
         true,
         5

@@ -20,7 +20,8 @@ class TeamViewComparatorTest {
     var customerBrandingConfigurationProperties = new CustomerBrandingConfigurationProperties(
         "stub",
         "mnem",
-        "email@fcs.co.uk"
+        "email@fcs.co.uk",
+        "regulator legal name"
     );
     var firstTeam = TeamTestUtil.Builder()
         .withTeamType(TeamType.REGULATOR)
@@ -44,7 +45,8 @@ class TeamViewComparatorTest {
     var customerBrandingConfigurationProperties = new CustomerBrandingConfigurationProperties(
         "stub",
         "mnem",
-        "email@fcs.co.uk"
+        "email@fcs.co.uk",
+        "regulator legal name"
     );
     var firstTeam = TeamTestUtil.Builder()
         .withTeamType(TeamType.INDUSTRY)

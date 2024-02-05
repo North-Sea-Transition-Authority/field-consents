@@ -19,7 +19,8 @@ class TeamViewTest {
     this.customerBrandingConfigurationProperties = new CustomerBrandingConfigurationProperties(
         "stub",
         "mnem",
-        "email@fcs.co.uk"
+        "email@fcs.co.uk",
+        "regulator legal name"
     );
   }
 

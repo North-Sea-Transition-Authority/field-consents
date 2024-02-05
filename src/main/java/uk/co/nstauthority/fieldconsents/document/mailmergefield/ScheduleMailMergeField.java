@@ -14,7 +14,7 @@ import uk.co.nstauthority.fieldconsents.document.lib.DocumentMailMergeField;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
 import uk.co.nstauthority.fieldconsents.document.lib.FreeMarkerTemplateRenderingService;
 
-@Order(10)
+@Order(11)
 @Component
 class ScheduleMailMergeField implements DocumentMailMergeField {
 

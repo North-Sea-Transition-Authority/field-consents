@@ -21,7 +21,7 @@ class TeamManagementServiceTest {
   @BeforeEach
   void setUp() {
     customerBrandingConfigurationProperties = new CustomerBrandingConfigurationProperties(
-        "name", "mnem", "business@email.com"
+        "name", "mnem", "business@email.com", "regulator legal name"
     );
     teamManagementService = new TeamManagementService(customerBrandingConfigurationProperties);
   }
