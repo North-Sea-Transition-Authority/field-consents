@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.flarevent.category123.flare.Flare123Row;
 
 @ExtendWith(MockitoExtension.class)
 class FlareReport123ServiceTest {
@@ -39,8 +40,8 @@ class FlareReport123ServiceTest {
     flareReport123MonthsOrdered = flareReport123Months
         .stream()
         .sorted(Comparator
-            .comparing(FlareReport123Month::getYear)
-            .thenComparing(flareReport123Month -> flareReport123Month.getMonth().getValue()))
+            .comparing(Flare123Row::getYear)
+            .thenComparing(Flare123Row::getMonth))
         .toList();
     when(flareReport123MonthRepository.findAllByApplicationVersion(applicationVersion))
         .thenReturn(flareReport123Months);
