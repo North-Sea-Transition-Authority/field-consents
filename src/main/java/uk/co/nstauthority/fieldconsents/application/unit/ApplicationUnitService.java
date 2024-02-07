@@ -53,7 +53,7 @@ public class ApplicationUnitService implements ApplicationListener<ConsentLength
     if (FlareVentUnit.TONNES_PER_MONTH.equals(applicationUnit.getFlareCategoryUnit())) {
       return FlareVentUnit.TONNES_PER_DAY;
     } else {
-      throw new RuntimeException(AVERAGE_UNIT_EXCEPTION_MESSAGE
+      throw new IllegalStateException(AVERAGE_UNIT_EXCEPTION_MESSAGE
           .formatted("flare", applicationUnit.getFlareCategoryUnit().name()));
     }
   }
@@ -67,7 +67,7 @@ public class ApplicationUnitService implements ApplicationListener<ConsentLength
     if (FlareVentUnit.TONNES_PER_MONTH.equals(applicationUnit.getVentCategoryUnit())) {
       return FlareVentUnit.TONNES_PER_DAY;
     } else {
-      throw new RuntimeException(AVERAGE_UNIT_EXCEPTION_MESSAGE
+      throw new IllegalStateException(AVERAGE_UNIT_EXCEPTION_MESSAGE
           .formatted("vent", applicationUnit.getVentCategoryUnit().name()));
     }
   }
@@ -113,9 +113,30 @@ public class ApplicationUnitService implements ApplicationListener<ConsentLength
     } else if (ProductionUnit.SCM_PER_MONTH.equals(oilUnit) && ProductionUnit.KSCM_PER_MONTH.equals(gasUnit)) {
       averageUnit = ProductionUnit.KSCM_PER_DAY;
     } else {
-      throw new RuntimeException("Mismatched production units found. Cannot work out the unit for the averages.");
+      throw new IllegalStateException("Mismatched production units found. Cannot work out the unit for the averages.");
     }
     return averageUnit;
+  }
+
+  /**
+   * This function will only return anything other than 1 for migrated case units as these are the only cases where
+   * the entered production data mismatches how we want to show the daily averages.
+   *
+   * @param productionUnit        The production unit in use (on the form data).
+   * @param averageProductionUnit The unit in use for the averages.
+   * @return The factor used to convert the production data into the unit in use for the averages.
+   */
+  public int getProductionAverageConversionFactor(ProductionUnit productionUnit, ProductionUnit averageProductionUnit) {
+    if (ProductionUnit.KSCM_PER_MONTH.equals(productionUnit) && ProductionUnit.KSCM_PER_DAY.equals(averageProductionUnit)) {
+      return 1;
+    } else if (ProductionUnit.SCM_PER_MONTH.equals(productionUnit) && ProductionUnit.SCM_PER_DAY.equals(averageProductionUnit)) {
+      return 1;
+    } else if (ProductionUnit.SCM_PER_MONTH.equals(productionUnit) && ProductionUnit.KSCM_PER_DAY.equals(averageProductionUnit)) {
+      return 1000;
+    } else {
+      throw new IllegalStateException(
+          "Unhandled production units found. Cannot work out the production average conversion factor.");
+    }
   }
 
   @Transactional
@@ -144,7 +165,7 @@ public class ApplicationUnitService implements ApplicationListener<ConsentLength
               null, null,
               FlareVentUnit.KG_PER_CUBIC_METER, FlareVentUnit.MASS_PERCENTAGE,
               EmissionCategoryType.CATEGORY_ABC);
-      default -> throw new RuntimeException("Incorrect application type: " + applicationType);
+      default -> throw new IllegalStateException("Incorrect application type: " + applicationType);
     }
 
     applicationUnitRepository.save(applicationUnit);

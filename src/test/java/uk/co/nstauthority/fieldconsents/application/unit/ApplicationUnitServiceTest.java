@@ -43,6 +43,9 @@ class ApplicationUnitServiceTest {
   private static final String MISMATCHED_UNITS_EXCEPTION_MESSAGE =
       "Mismatched %s category unit (%s). Cannot work out the unit for the averages.";
 
+  private static final String UNHANDLED_PRODUCTION_UNITS_EXCEPTION_MESSAGE =
+      "Unhandled production units found. Cannot work out the production average conversion factor.";
+
   @Mock
   private ApplicationUnitRepository applicationUnitRepository;
 
@@ -233,7 +236,7 @@ class ApplicationUnitServiceTest {
         .thenReturn(Optional.of(applicationUnit));
 
     assertThatThrownBy(() -> applicationUnitService.getFlareAverageUnit(flareAppVersion))
-        .isInstanceOf(RuntimeException.class)
+        .isInstanceOf(IllegalStateException.class)
         .hasMessage(MISMATCHED_UNITS_EXCEPTION_MESSAGE.formatted("flare", flareUnit.name()));
   }
 
@@ -354,7 +357,7 @@ class ApplicationUnitServiceTest {
         .thenReturn(Optional.of(applicationUnit));
 
     assertThatThrownBy(() -> applicationUnitService.getVentAverageUnit(ventAppVersion))
-        .isInstanceOf(RuntimeException.class)
+        .isInstanceOf(IllegalStateException.class)
         .hasMessage(MISMATCHED_UNITS_EXCEPTION_MESSAGE.formatted("vent", ventUnit.name()));
   }
 
@@ -466,7 +469,7 @@ class ApplicationUnitServiceTest {
         .thenReturn(ConsentLengthTestUtil.getConsentLengthDetailsForLongTerm(productionAppVersion));
 
     assertThatThrownBy(() -> applicationUnitService.getProductionAverageUnit(productionAppVersion))
-        .isInstanceOf(RuntimeException.class)
+        .isInstanceOf(IllegalStateException.class)
         .hasMessage(MISMATCHED_PRODUCTION_UNITS_EXCEPTION_MESSAGE);
   }
 
@@ -507,7 +510,7 @@ class ApplicationUnitServiceTest {
         .thenReturn(Optional.of(applicationUnit));
 
     assertThatThrownBy(() -> applicationUnitService.getProductionAverageUnit(productionAppVersion))
-        .isInstanceOf(RuntimeException.class)
+        .isInstanceOf(IllegalStateException.class)
         .hasMessage(MISMATCHED_PRODUCTION_UNITS_EXCEPTION_MESSAGE);
   }
 
@@ -522,6 +525,54 @@ class ApplicationUnitServiceTest {
         Arguments.of(ProductionUnit.SCM_PER_DAY, ProductionUnit.SCM_PER_MONTH),
         Arguments.of(ProductionUnit.SCM_PER_DAY, ProductionUnit.KSCM_PER_MONTH),
         Arguments.of(ProductionUnit.KSCM_PER_DAY, ProductionUnit.SCM_PER_DAY),
+        Arguments.of(ProductionUnit.KSCM_PER_DAY, ProductionUnit.SCM_PER_MONTH),
+        Arguments.of(ProductionUnit.KSCM_PER_DAY, ProductionUnit.KSCM_PER_MONTH)
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource("getNonMigrationProductionUnits")
+  void getProductionAverageConversionFactor_nonMigrationUnits(ProductionUnit productionUnit, ProductionUnit averageProductionUnit) {
+    assertThat(applicationUnitService.getProductionAverageConversionFactor(productionUnit, averageProductionUnit)).isEqualTo(1);
+  }
+
+  @Test
+  void getProductionAverageConversionFactor_migrationUnits() {
+    var productionUnit = ProductionUnit.SCM_PER_MONTH;
+    var averageProductionUnit = ProductionUnit.KSCM_PER_DAY;
+
+    assertThat(applicationUnitService.getProductionAverageConversionFactor(productionUnit, averageProductionUnit))
+        .isEqualTo(1000);
+  }
+
+  @ParameterizedTest
+  @MethodSource("getUnhandledProductionUnits")
+  void getProductionAverageConversionFactor_mismatchUnits(ProductionUnit productionUnit, ProductionUnit averageProductionUnit) {
+    assertThatThrownBy(() -> applicationUnitService.getProductionAverageConversionFactor(productionUnit, averageProductionUnit))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage(UNHANDLED_PRODUCTION_UNITS_EXCEPTION_MESSAGE);
+  }
+
+  private static Stream<Arguments> getNonMigrationProductionUnits() {
+    return Stream.of(
+        Arguments.of(ProductionUnit.SCM_PER_MONTH, ProductionUnit.SCM_PER_DAY),
+        Arguments.of(ProductionUnit.KSCM_PER_MONTH, ProductionUnit.KSCM_PER_DAY)
+    );
+  }
+
+  private static Stream<Arguments> getUnhandledProductionUnits() {
+    return Stream.of(
+        Arguments.of(ProductionUnit.SCM_PER_MONTH, ProductionUnit.SCM_PER_MONTH),
+        Arguments.of(ProductionUnit.SCM_PER_MONTH, ProductionUnit.KSCM_PER_MONTH),
+        Arguments.of(ProductionUnit.KSCM_PER_MONTH, ProductionUnit.SCM_PER_DAY),
+        Arguments.of(ProductionUnit.KSCM_PER_MONTH, ProductionUnit.SCM_PER_MONTH),
+        Arguments.of(ProductionUnit.KSCM_PER_MONTH, ProductionUnit.KSCM_PER_MONTH),
+        Arguments.of(ProductionUnit.SCM_PER_DAY, ProductionUnit.SCM_PER_DAY),
+        Arguments.of(ProductionUnit.SCM_PER_DAY, ProductionUnit.KSCM_PER_DAY),
+        Arguments.of(ProductionUnit.SCM_PER_DAY, ProductionUnit.SCM_PER_MONTH),
+        Arguments.of(ProductionUnit.SCM_PER_DAY, ProductionUnit.KSCM_PER_MONTH),
+        Arguments.of(ProductionUnit.KSCM_PER_DAY, ProductionUnit.SCM_PER_DAY),
+        Arguments.of(ProductionUnit.KSCM_PER_DAY, ProductionUnit.KSCM_PER_DAY),
         Arguments.of(ProductionUnit.KSCM_PER_DAY, ProductionUnit.SCM_PER_MONTH),
         Arguments.of(ProductionUnit.KSCM_PER_DAY, ProductionUnit.KSCM_PER_MONTH)
     );

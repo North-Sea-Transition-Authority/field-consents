@@ -11,6 +11,7 @@ import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.A
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -29,11 +30,18 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataTestUtil;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataView;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentFigureUnitService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentFigureUnitView;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionFiguresDto;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.documents.ConsentPreparationDocumentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.documents.ConsentPreparationDocumentsController;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.document.DocumentInstanceSummaryViewTestUtil;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryFileView;
 
@@ -45,6 +53,12 @@ class ConsentPreparationControllerTest extends AbstractApplicationControllerTest
 
   @MockBean
   private ConsentDataService consentDataService;
+
+  @MockBean
+  private ConsentFigureUnitService consentFigureUnitService;
+
+  @MockBean
+  private ConsentLengthService consentLengthService;
 
   @MockBean
   private ConsentPreparationDocumentService consentDocumentService;
@@ -79,8 +93,16 @@ class ConsentPreparationControllerTest extends AbstractApplicationControllerTest
 
   @Test
   void viewConsentPreparationPage() throws Exception {
+    var consentLengthType = ConsentLengthType.SHORT_TERM;
+    var consentLengthDetails = new ConsentLengthDetails();
+    consentLengthDetails.setConsentLength(consentLengthType);
+
     var consentData = ConsentDataTestUtil.newBuilder().build();
-    var consentDataView = ConsentDataView.from(consentData);
+    var consentDataView = ConsentDataView.fromShortTermOrAnnualProductionApplication(
+        consentData,
+        new ConsentProductionFiguresDto(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO)
+    );
+    var consentFigureUnitView = ConsentFigureUnitView.fromShortTermOrAnnualProductionApplication(ProductionUnit.KSCM_PER_DAY);
     var documentsInstanceSummaryView = DocumentInstanceSummaryViewTestUtil.newBuilder().build();
     var consentDocumentsSummaryCard = SummaryCard.filesSummaryCardWithHeading(
         "Consent documents",
@@ -88,7 +110,12 @@ class ConsentPreparationControllerTest extends AbstractApplicationControllerTest
     );
 
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
     when(consentDataService.findConsentData(application)).thenReturn(Optional.of(consentData));
+    when(consentDataService.getConsentDataView(applicationVersion, consentData, consentLengthType)).thenReturn(consentDataView);
+    when(consentFigureUnitService.getConsentFigureUnitView(applicationVersion, consentLengthType))
+        .thenReturn(consentFigureUnitView);
     when(consentDocumentService.getConsentDocumentsSummaryCard(application)).thenReturn(consentDocumentsSummaryCard);
 
     mockMvc.perform(get(ReverseRouter.route(on(ConsentPreparationController.class).viewConsentPreparationPage(APPLICATION_ID)))
@@ -96,6 +123,8 @@ class ConsentPreparationControllerTest extends AbstractApplicationControllerTest
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/application/consent/consentPreparation"))
         .andExpect(model().attribute("pageTitle", "Consent preparation"))
+        .andExpect(model().attribute("applicationType", application.getType()))
+        .andExpect(model().attribute("consentLengthType", consentLengthType))
         .andExpect(model().attribute("consentDocumentsSummaryCard", consentDocumentsSummaryCard))
         .andExpect(model().attribute("consentDataView", consentDataView))
         .andExpect(model().attribute("consentDataEditUrl",
@@ -108,7 +137,13 @@ class ConsentPreparationControllerTest extends AbstractApplicationControllerTest
 
   @Test
   void viewConsentPreparationPage_noConsentDataFound() throws Exception {
+    var consentLengthType = ConsentLengthType.SHORT_TERM;
+    var consentLengthDetails = new ConsentLengthDetails();
+    consentLengthDetails.setConsentLength(consentLengthType);
+
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
     when(consentDataService.findConsentData(application)).thenReturn(Optional.empty());
 
     mockMvc.perform(get(ReverseRouter.route(on(ConsentPreparationController.class).viewConsentPreparationPage(APPLICATION_ID)))

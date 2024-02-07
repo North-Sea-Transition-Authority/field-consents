@@ -1,12 +1,10 @@
 package uk.co.nstauthority.fieldconsents.production.summary;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.formatting.DecimalFormatUtils.bigDecimalToFormattedString;
 import static uk.co.nstauthority.fieldconsents.production.ProductionUnit.KSCM_PER_DAY;
 import static uk.co.nstauthority.fieldconsents.production.ProductionUnit.KSCM_PER_MONTH;
-import static uk.co.nstauthority.fieldconsents.production.ProductionUnit.SCM_PER_DAY;
 import static uk.co.nstauthority.fieldconsents.production.ProductionUnit.SCM_PER_MONTH;
 import static uk.co.nstauthority.fieldconsents.production.summary.ProductionSummaryService.AVERAGE_PROMPT;
 import static uk.co.nstauthority.fieldconsents.production.summary.ProductionSummaryService.CONSENT_DAYS_HEADING;
@@ -25,9 +23,6 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -53,12 +48,6 @@ import uk.co.nstauthority.fieldconsents.util.BigDecimalUtil;
 
 @ExtendWith(MockitoExtension.class)
 class ProductionSummaryServiceTest {
-
-  private static final String UNHANDLED_PRODUCTION_UNITS_EXCEPTION_MESSAGE =
-      "Unhandled production units found. Cannot work out the production average conversion factor.";
-
-  private static final int PRODUCTION_AVERAGE_CONVERSION_FACTOR = 1;
-  private static final int MIGRATION_PRODUCTION_AVERAGE_CONVERSION_FACTOR = 1000;
 
   @Mock
   private ShortTermProductionService shortTermProductionService;
@@ -91,9 +80,11 @@ class ProductionSummaryServiceTest {
         .isEqualTo(SummaryCard.emptySummaryCard());
   }
 
-  @ParameterizedTest
-  @MethodSource("getNonMigrationProductionUnits")
-  void getShortTermConsentSummaryCard_nonMigrationUnits(ProductionUnit productionUnit, ProductionUnit averageProductionUnit) {
+  @Test
+  void getShortTermConsentSummaryCard() {
+    var productionUnit = SCM_PER_MONTH;
+    var averageProductionUnit = KSCM_PER_DAY;
+    var productionAverageConversionFactor = 1000;
     var productionMonths = ProductionTestUtils.getShortTermProductionMonthsData(applicationVersion);
 
     when(shortTermProductionService.getShortTermProductionMonths(applicationVersion))
@@ -104,53 +95,16 @@ class ProductionSummaryServiceTest {
         .thenReturn(productionUnit);
     when(applicationUnitService.getProductionAverageUnit(applicationVersion))
         .thenReturn(averageProductionUnit);
+    when(applicationUnitService.getProductionAverageConversionFactor(productionUnit, averageProductionUnit))
+        .thenReturn(productionAverageConversionFactor);
 
     var shortTermConsentSummaryCard = productionSummaryService.getShortTermConsentSummaryCard(applicationVersion);
 
     assertShortTermConsentSummaryCard(
         productionMonths, shortTermConsentSummaryCard,
         productionUnit, productionUnit, averageProductionUnit,
-        PRODUCTION_AVERAGE_CONVERSION_FACTOR);
-  }
-
-  @Test
-  void getShortTermConsentSummaryCard_migrationUnits() {
-    var productionMonths = ProductionTestUtils.getShortTermProductionMonthsData(applicationVersion);
-
-    when(shortTermProductionService.getShortTermProductionMonths(applicationVersion))
-        .thenReturn(productionMonths);
-    when(applicationUnitService.getProductionOilUnit(applicationVersion))
-        .thenReturn(SCM_PER_MONTH);
-    when(applicationUnitService.getProductionGasUnit(applicationVersion))
-        .thenReturn(KSCM_PER_MONTH);
-    when(applicationUnitService.getProductionAverageUnit(applicationVersion))
-        .thenReturn(KSCM_PER_DAY);
-
-    var shortTermConsentSummaryCard = productionSummaryService.getShortTermConsentSummaryCard(applicationVersion);
-
-    assertShortTermConsentSummaryCard(
-        productionMonths, shortTermConsentSummaryCard,
-        SCM_PER_MONTH, KSCM_PER_MONTH, KSCM_PER_DAY,
-        MIGRATION_PRODUCTION_AVERAGE_CONVERSION_FACTOR);
-  }
-
-  @ParameterizedTest
-  @MethodSource("getUnhandledProductionUnits")
-  void getShortTermConsentSummaryCard_unhandledUnits(ProductionUnit productionUnit, ProductionUnit averageProductionUnit) {
-    var productionMonths = ProductionTestUtils.getShortTermProductionMonthsData(applicationVersion);
-
-    when(shortTermProductionService.getShortTermProductionMonths(applicationVersion))
-        .thenReturn(productionMonths);
-    when(applicationUnitService.getProductionOilUnit(applicationVersion))
-        .thenReturn(productionUnit);
-    when(applicationUnitService.getProductionGasUnit(applicationVersion))
-        .thenReturn(productionUnit);
-    when(applicationUnitService.getProductionAverageUnit(applicationVersion))
-        .thenReturn(averageProductionUnit);
-
-    assertThatThrownBy(() -> productionSummaryService.getShortTermConsentSummaryCard(applicationVersion))
-        .isInstanceOf(RuntimeException.class)
-        .hasMessage(UNHANDLED_PRODUCTION_UNITS_EXCEPTION_MESSAGE);
+        productionAverageConversionFactor
+    );
   }
 
   private void assertShortTermConsentSummaryCard(List<ShortTermProductionMonth> productionMonths,
@@ -236,9 +190,11 @@ class ProductionSummaryServiceTest {
         .isEqualTo(SummaryCard.emptySummaryCard());
   }
 
-  @ParameterizedTest
-  @MethodSource("getNonMigrationProductionUnits")
-  void getAnnualConsentSummaryCard_nonMigrationUnits(ProductionUnit productionUnit, ProductionUnit averageProductionUnit) {
+  @Test
+  void getAnnualConsentSummaryCard() {
+    var productionUnit = SCM_PER_MONTH;
+    var averageProductionUnit = KSCM_PER_DAY;
+    var productionAverageConversionFactor = 1000;
     var productionMonths = ProductionTestUtils.getAnnualProductionMonthsData(applicationVersion);
 
     when(annualProductionService.getAnnualProductionMonths(applicationVersion))
@@ -249,53 +205,16 @@ class ProductionSummaryServiceTest {
         .thenReturn(productionUnit);
     when(applicationUnitService.getProductionAverageUnit(applicationVersion))
         .thenReturn(averageProductionUnit);
+    when(applicationUnitService.getProductionAverageConversionFactor(productionUnit, averageProductionUnit))
+        .thenReturn(productionAverageConversionFactor);
 
     var annualConsentSummaryCard = productionSummaryService.getAnnualConsentSummaryCard(applicationVersion);
 
     assertAnnualConsentSummaryCard(
         productionMonths, annualConsentSummaryCard,
         productionUnit, productionUnit, averageProductionUnit,
-        PRODUCTION_AVERAGE_CONVERSION_FACTOR);
-  }
-
-  @Test
-  void getAnnualConsentSummaryCard_migrationUnits() {
-    var productionMonths = ProductionTestUtils.getAnnualProductionMonthsData(applicationVersion);
-
-    when(annualProductionService.getAnnualProductionMonths(applicationVersion))
-        .thenReturn(productionMonths);
-    when(applicationUnitService.getProductionOilUnit(applicationVersion))
-        .thenReturn(SCM_PER_MONTH);
-    when(applicationUnitService.getProductionGasUnit(applicationVersion))
-        .thenReturn(KSCM_PER_MONTH);
-    when(applicationUnitService.getProductionAverageUnit(applicationVersion))
-        .thenReturn(KSCM_PER_DAY);
-
-    var annualConsentSummaryCard = productionSummaryService.getAnnualConsentSummaryCard(applicationVersion);
-
-    assertAnnualConsentSummaryCard(
-        productionMonths, annualConsentSummaryCard,
-        SCM_PER_MONTH, KSCM_PER_MONTH, KSCM_PER_DAY,
-        MIGRATION_PRODUCTION_AVERAGE_CONVERSION_FACTOR);
-  }
-
-  @ParameterizedTest
-  @MethodSource("getUnhandledProductionUnits")
-  void getAnnualConsentSummaryCard_unhandledUnits(ProductionUnit productionUnit, ProductionUnit averageProductionUnit) {
-    var productionMonths = ProductionTestUtils.getAnnualProductionMonthsData(applicationVersion);
-
-    when(annualProductionService.getAnnualProductionMonths(applicationVersion))
-        .thenReturn(productionMonths);
-    when(applicationUnitService.getProductionOilUnit(applicationVersion))
-        .thenReturn(productionUnit);
-    when(applicationUnitService.getProductionGasUnit(applicationVersion))
-        .thenReturn(productionUnit);
-    when(applicationUnitService.getProductionAverageUnit(applicationVersion))
-        .thenReturn(averageProductionUnit);
-
-    assertThatThrownBy(() -> productionSummaryService.getAnnualConsentSummaryCard(applicationVersion))
-        .isInstanceOf(RuntimeException.class)
-        .hasMessage(UNHANDLED_PRODUCTION_UNITS_EXCEPTION_MESSAGE);
+        productionAverageConversionFactor
+    );
   }
 
   private void assertAnnualConsentSummaryCard(List<AnnualProductionMonth> productionMonths,
@@ -409,18 +328,18 @@ class ProductionSummaryServiceTest {
                             MIN_GAS_HEADING.apply(gasUnit.getDisplayName()),
                             MAX_GAS_HEADING.apply(gasUnit.getDisplayName())
                         )),
-                        getSummaryTableRowForLongTermMonth(productionYears.get(0)),
-                        getSummaryTableRowForLongTermMonth(productionYears.get(1)),
-                        getSummaryTableRowForLongTermMonth(productionYears.get(2)),
-                        getSummaryTableRowForLongTermMonth(productionYears.get(3)),
-                        getSummaryTableRowForLongTermMonth(productionYears.get(4))
+                        getSummaryTableRowForLongTermYear(productionYears.get(0)),
+                        getSummaryTableRowForLongTermYear(productionYears.get(1)),
+                        getSummaryTableRowForLongTermYear(productionYears.get(2)),
+                        getSummaryTableRowForLongTermYear(productionYears.get(3)),
+                        getSummaryTableRowForLongTermYear(productionYears.get(4))
                     )
                 )
             )
         );
   }
 
-  private SummaryTableRow getSummaryTableRowForLongTermMonth(LongTermProductionYear productionYear) {
+  private SummaryTableRow getSummaryTableRowForLongTermYear(LongTermProductionYear productionYear) {
     return new SummaryTableRow(List.of(
         String.valueOf(productionYear.getYear()),
         bigDecimalToFormattedString(productionYear.getOilMinValue()),
@@ -428,30 +347,5 @@ class ProductionSummaryServiceTest {
         bigDecimalToFormattedString(productionYear.getGasMinValue()),
         bigDecimalToFormattedString(productionYear.getGasMaxValue())
     ));
-  }
-
-  private static Stream<Arguments> getNonMigrationProductionUnits() {
-    return Stream.of(
-        Arguments.of(SCM_PER_MONTH, SCM_PER_DAY),
-        Arguments.of(KSCM_PER_MONTH, KSCM_PER_DAY)
-    );
-  }
-
-  private static Stream<Arguments> getUnhandledProductionUnits() {
-    return Stream.of(
-        Arguments.of(SCM_PER_MONTH, SCM_PER_MONTH),
-        Arguments.of(SCM_PER_MONTH, KSCM_PER_MONTH),
-        Arguments.of(KSCM_PER_MONTH, SCM_PER_DAY),
-        Arguments.of(KSCM_PER_MONTH, SCM_PER_MONTH),
-        Arguments.of(KSCM_PER_MONTH, KSCM_PER_MONTH),
-        Arguments.of(SCM_PER_DAY, SCM_PER_DAY),
-        Arguments.of(SCM_PER_DAY, KSCM_PER_DAY),
-        Arguments.of(SCM_PER_DAY, SCM_PER_MONTH),
-        Arguments.of(SCM_PER_DAY, KSCM_PER_MONTH),
-        Arguments.of(KSCM_PER_DAY, SCM_PER_DAY),
-        Arguments.of(KSCM_PER_DAY, KSCM_PER_DAY),
-        Arguments.of(KSCM_PER_DAY, SCM_PER_MONTH),
-        Arguments.of(KSCM_PER_DAY, KSCM_PER_MONTH)
-    );
   }
 }

@@ -5,16 +5,24 @@
 <@defaultPage
   htmlTitle=pageTitle
   pageHeading=pageTitle
-  backLinkUrl=springUrl(backLinkUrl)>
+  pageSize=PageSize.FULL_WIDTH
+  backLinkUrl=springUrl(backLinkUrl)
+>
   <@consentDataSummary.summaryCard
+    applicationType=applicationType
+    consentLengthType=consentLengthType
     consentDataView=consentDataView
-    editUrl=consentDataEditUrl/>
+    consentFigureUnitView=consentFigureUnitView
+    editUrl=consentDataEditUrl
+  />
   <@consentFilesSummary.summary
     heading=consentDocumentsSummaryCard.displayName()
     fileViews=consentDocumentsSummaryCard.summaryData()
-    editUrl=consentDocumentsEditUrl/>
+    editUrl=consentDocumentsEditUrl
+  />
   <@fdsAction.link
     linkText="Save and continue"
     linkClass="govuk-button"
-    linkUrl=springUrl(backLinkUrl)/>
+    linkUrl=springUrl(backLinkUrl)
+  />
 </@defaultPage>
