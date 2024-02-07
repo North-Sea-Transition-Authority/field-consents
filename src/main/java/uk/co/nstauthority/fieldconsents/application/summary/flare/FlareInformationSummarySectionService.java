@@ -19,6 +19,7 @@ import uk.co.nstauthority.fieldconsents.flarevent.flare.annual.FlareAnnualServic
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportService;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereportgas.FlareReportGasDataService;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flares.FlareSummaryService;
+import uk.co.nstauthority.fieldconsents.flarevent.flare.longterm.FlareLongTermSummaryService;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.shortterm.FlareShortTermService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryItem;
 import uk.co.nstauthority.fieldconsents.summary.SummarySection;
@@ -26,7 +27,6 @@ import uk.co.nstauthority.fieldconsents.summary.SummarySectionService;
 
 @Service
 public class FlareInformationSummarySectionService implements SummarySectionService<ApplicationVersion> {
-
   private final ConsentLengthService consentLengthService;
   private final ApplicationUnitService applicationUnitService;
   private final FlareAnnualService flareAnnualService;
@@ -38,6 +38,7 @@ public class FlareInformationSummarySectionService implements SummarySectionServ
   private final FlareShortTerm123SummaryService flareShortTerm123SummaryService;
   private final FlareReport123SummaryService flareReport123SummaryService;
   private final FlareReport123GasDataSummaryService flareReport123GasDataSummaryService;
+  private final FlareLongTermSummaryService flareLongTermSummaryService;
 
   @Autowired
   public FlareInformationSummarySectionService(ConsentLengthService consentLengthService,
@@ -50,7 +51,8 @@ public class FlareInformationSummarySectionService implements SummarySectionServ
                                                FlareAnnual123SummaryService flareAnnual123SummaryService,
                                                FlareShortTerm123SummaryService flareShortTerm123SummaryService,
                                                FlareReport123SummaryService flareReport123SummaryService,
-                                               FlareReport123GasDataSummaryService flareReport123GasDataSummaryService) {
+                                               FlareReport123GasDataSummaryService flareReport123GasDataSummaryService,
+                                               FlareLongTermSummaryService flareLongTermSummaryService) {
     this.consentLengthService = consentLengthService;
     this.applicationUnitService = applicationUnitService;
     this.flareAnnualService = flareAnnualService;
@@ -62,6 +64,7 @@ public class FlareInformationSummarySectionService implements SummarySectionServ
     this.flareShortTerm123SummaryService = flareShortTerm123SummaryService;
     this.flareReport123SummaryService = flareReport123SummaryService;
     this.flareReport123GasDataSummaryService = flareReport123GasDataSummaryService;
+    this.flareLongTermSummaryService = flareLongTermSummaryService;
   }
 
   @Override
@@ -83,12 +86,14 @@ public class FlareInformationSummarySectionService implements SummarySectionServ
 
     var summaryItems = new ArrayList<SummaryItem>();
 
-    summaryItems.add(getFlaresSummaryItem(applicationVersion));
-
-    // reports exist for all ABC cases but only annual 123 cases
-    if (EmissionCategoryType.CATEGORY_ABC.equals(emissionCategoryType)
-        || (EmissionCategoryType.CATEGORY_123.equals(emissionCategoryType)
-            && ConsentLengthType.ANNUAL.equals(consentLengthType))) {
+    // flares and reports exist for
+    // - all annual cases (category ABC and 123)
+    // - only category ABC short term case
+    // - no long term cases
+    if (ConsentLengthType.ANNUAL.equals(consentLengthType)
+        || (ConsentLengthType.SHORT_TERM.equals(consentLengthType)
+            && EmissionCategoryType.CATEGORY_ABC.equals(emissionCategoryType))) {
+      summaryItems.add(getFlaresSummaryItem(applicationVersion));
       summaryItems.add(getFlareReportSummaryItem(applicationVersion, emissionCategoryType));
       summaryItems.add(getFlareReportGasDataSummaryItem(applicationVersion, emissionCategoryType));
     }
@@ -110,6 +115,7 @@ public class FlareInformationSummarySectionService implements SummarySectionServ
         switch (emissionCategoryType) {
           case CATEGORY_123 -> List.of(flareReport123SummaryService.getFlareReport123SummaryCard(applicationVersion));
           case CATEGORY_ABC -> flareReportService.getFlareReportSummaryCards(applicationVersion);
+          case LEGACY_LONG_TERM -> throw emissionCategoryType.unsupportedOperation();
         }
     );
   }
@@ -121,6 +127,7 @@ public class FlareInformationSummarySectionService implements SummarySectionServ
           case CATEGORY_123 ->
               List.of(flareReport123GasDataSummaryService.getFlareReport123GasDataSummaryCard(applicationVersion));
           case CATEGORY_ABC -> flareReportGasDataService.getFlareReportGasDataSummaryCards(applicationVersion);
+          case LEGACY_LONG_TERM -> throw emissionCategoryType.unsupportedOperation();
         }
     );
   }
@@ -135,6 +142,7 @@ public class FlareInformationSummarySectionService implements SummarySectionServ
               switch (emissionCategoryType) {
                 case CATEGORY_123 -> flareShortTerm123SummaryService.getFlareShortTerm123SummaryCard(applicationVersion);
                 case CATEGORY_ABC -> flareShortTermService.getFlareShortTermSummaryCard(applicationVersion);
+                case LEGACY_LONG_TERM -> throw emissionCategoryType.unsupportedOperation();
               }
           );
       case ANNUAL ->
@@ -142,10 +150,16 @@ public class FlareInformationSummarySectionService implements SummarySectionServ
               switch (emissionCategoryType) {
                 case CATEGORY_123 -> flareAnnual123SummaryService.getFlareAnnual123SummaryCard(applicationVersion);
                 case CATEGORY_ABC -> flareAnnualService.getFlareAnnualSummaryCard(applicationVersion);
+                case LEGACY_LONG_TERM -> throw emissionCategoryType.unsupportedOperation();
               }
           );
-      default ->
-          throw new RuntimeException("Incorrect consent length type: " + consentLengthType);
+      case LONG_TERM -> switch (emissionCategoryType) {
+        case LEGACY_LONG_TERM ->
+            SummaryItem.withCard(consentLengthType.getDisplayName(),
+                flareLongTermSummaryService.getFlareLongTermSummaryCard(applicationVersion)
+            );
+        case CATEGORY_123, CATEGORY_ABC -> throw emissionCategoryType.unsupportedOperation();
+      };
     };
   }
 }

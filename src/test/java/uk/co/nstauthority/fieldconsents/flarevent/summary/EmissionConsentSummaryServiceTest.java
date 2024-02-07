@@ -14,8 +14,10 @@ import static uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionSummary
 import static uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionSummaryUtil.CATEGORY_TOTAL_HEADING_WITH_UNIT;
 import static uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionSummaryUtil.COMMENTS_HEADING;
 import static uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionSummaryUtil.CONSENT_DAYS_HEADING;
+import static uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionSummaryUtil.GAS_HEADING_WITH_UNIT;
 import static uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionSummaryUtil.MONTH_HEADING;
 import static uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionSummaryUtil.TOTAL_PROMPT;
+import static uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionSummaryUtil.YEAR_HEADING;
 import static uk.co.nstauthority.fieldconsents.formatting.DecimalFormatUtils.bigDecimalToFormattedString;
 
 import java.math.BigDecimal;
@@ -31,12 +33,15 @@ import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
+import uk.co.nstauthority.fieldconsents.flarevent.EmissionLongTermYear;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentRow;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentUnit;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.annual.FlareAnnualTestUtil;
+import uk.co.nstauthority.fieldconsents.flarevent.flare.longterm.FlareLongTermTestUtil;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.shortterm.FlareShortTermMonth;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.shortterm.FlareShortTermTestUtil;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.annual.VentAnnualTestUtil;
+import uk.co.nstauthority.fieldconsents.flarevent.vent.longterm.VentLongTermTestUtil;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.shortterm.VentShortTermMonth;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.shortterm.VentShortTermTestUtil;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreport.VentReportTestUtil;
@@ -218,7 +223,7 @@ class EmissionConsentSummaryServiceTest {
 
   @ParameterizedTest
   @MethodSource("getAnnualConsentMonths")
-  void getAnnualConsentSummaryCard_vent(List<? extends FlareVentRow> consentMonths) {
+  void getAnnualConsentSummaryCard(List<? extends FlareVentRow> consentMonths) {
     var categoryUnit = FlareVentUnit.TONNES_PER_MONTH;
     var averageUnit = FlareVentUnit.TONNES_PER_DAY;
 
@@ -318,5 +323,52 @@ class EmissionConsentSummaryServiceTest {
         bigDecimalToFormattedString(BigDecimalUtil.divideRound(categoryTotal, totalDays)),
         null).toList()
     );
+  }
+
+  @ParameterizedTest
+  @MethodSource("getLongTermConsentMonths")
+  void getLongTermConsentSummaryCard(List<? extends EmissionLongTermYear> consentYears) {
+    var gasUnit = FlareVentUnit.TONNES_PER_DAY;
+
+    assertThat(emissionConsentSummaryService.getLongTermConsentSummaryCard(consentYears, gasUnit))
+        .isEqualTo(
+            new SummaryCard(
+                null,
+                SummaryCardType.TABLE_SUMMARY,
+                new SummaryTableView(
+                    List.of(
+                        getSummaryTableRowLongTermHeading(gasUnit),
+                        getSummaryTableRowForLongTermYear(consentYears.get(0)),
+                        getSummaryTableRowForLongTermYear(consentYears.get(1)),
+                        getSummaryTableRowForLongTermYear(consentYears.get(2)),
+                        getSummaryTableRowForLongTermYear(consentYears.get(3)),
+                        getSummaryTableRowForLongTermYear(consentYears.get(4))
+                    )
+                )
+            )
+        );
+  }
+
+  private static Stream<Arguments> getLongTermConsentMonths() {
+    return Stream.of(
+        Arguments.of(FlareLongTermTestUtil.getFlareLongTermYears(
+            ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE), 2021, 2025)),
+        Arguments.of(VentLongTermTestUtil.getVentLongTermYears(
+            ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT), 2021, 2025))
+    );
+  }
+
+  private SummaryTableRow getSummaryTableRowLongTermHeading(FlareVentUnit gasUnit) {
+    return new SummaryTableRow(List.of(
+        YEAR_HEADING,
+        GAS_HEADING_WITH_UNIT.apply(gasUnit.getDisplayName())
+    ));
+  }
+
+  private SummaryTableRow getSummaryTableRowForLongTermYear(EmissionLongTermYear consentYear) {
+    return new SummaryTableRow(List.of(
+        String.valueOf(consentYear.getYear()),
+        bigDecimalToFormattedString(consentYear.getGas())
+    ));
   }
 }

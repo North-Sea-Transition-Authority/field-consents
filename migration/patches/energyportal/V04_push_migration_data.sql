@@ -29,6 +29,8 @@
 --DELETE FROM "fcs"."payments_library_payments"@fcs_postgres_db;
 --
 ---- delete data from tables we are migrating too
+--DELETE FROM "fcs"."fcs_migration.vent_long_term_years"@fcs_postgres_db;
+--DELETE FROM "fcs"."fcs_migration.flare_long_term_years"@fcs_postgres_db;
 --DELETE FROM "fcs"."file_upload_library_uploaded_files"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_technical_reviews"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_updates"@fcs_postgres_db;
@@ -255,7 +257,7 @@ END;
 -- dev to local: 45s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.application_units) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.application_units ORDER BY id) LOOP
   
     INSERT INTO "fcs"."application_units"@fcs_postgres_db (
       "id"
@@ -690,6 +692,32 @@ BEGIN
 END;
 /
 
+--
+-- flare_long_term_years
+--
+
+-- Execution time
+-- dev to local: ?s
+BEGIN
+
+  FOR rec IN (SELECT * FROM fcs_migration.flare_long_term_years ORDER BY id) LOOP
+  
+    INSERT INTO "fcs"."flare_long_term_years"@fcs_postgres_db (
+      "id"
+    , "application_version_id"
+    , "year"
+    , "gas"
+    ) VALUES (
+      rec.id
+    , rec.application_version_id
+    , rec.year
+    , rec.gas
+    );
+  
+  END LOOP;
+
+END;
+/
 
 --
 -- flare_report_gas_data
@@ -1064,6 +1092,33 @@ BEGIN
     , rec.end_date
     , rec.category_1
     , rec.comments
+    );
+  
+  END LOOP;
+
+END;
+/
+
+--
+-- vent_long_term_years
+--
+
+-- Execution time
+-- dev to local: ?s
+BEGIN
+
+  FOR rec IN (SELECT * FROM fcs_migration.vent_long_term_years ORDER BY id) LOOP
+  
+    INSERT INTO "fcs"."vent_long_term_years"@fcs_postgres_db (
+      "id"
+    , "application_version_id"
+    , "year"
+    , "gas"
+    ) VALUES (
+      rec.id
+    , rec.application_version_id
+    , rec.year
+    , rec.gas
     );
   
   END LOOP;

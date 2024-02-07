@@ -1,4 +1,6 @@
 
+--DELETE FROM fcs_migration.vent_long_term_years;
+--DELETE FROM fcs_migration.flare_long_term_years;
 --DELETE FROM fcs_migration.file_upload_library_uploaded_files;
 --DELETE FROM fcs_migration.application_technical_reviews;
 --DELETE FROM fcs_migration.application_updates;
@@ -454,9 +456,13 @@ SELECT
   END flare_category_unit
 , 'G_PER_MOL' flare_gas_density_unit
 , 'MOL_PERCENTAGE' flare_gas_content_unit
-, CASE cat.categories
-  WHEN '1_2_3' THEN 'CATEGORY_123'
-  WHEN 'A_B_C' THEN 'CATEGORY_ABC'
+, CASE cl.consent_length
+  WHEN 'LONG_TERM' THEN 'LEGACY_LONG_TERM'
+  ELSE
+    CASE cat.categories
+    WHEN '1_2_3' THEN 'CATEGORY_123'
+    WHEN 'A_B_C' THEN 'CATEGORY_ABC'
+    END
   END emission_category_type
 FROM fcs_migration.applications a
 JOIN fcs_migration.application_versions av ON av.application_id = a.id
@@ -489,9 +495,13 @@ SELECT
   END vent_category_unit
 , 'G_PER_MOL' vent_gas_density_unit
 , 'MOL_PERCENTAGE' vent_gas_content_unit
-, CASE cat.categories
-  WHEN '1_2_3' THEN 'CATEGORY_123'
-  WHEN 'A_B_C' THEN 'CATEGORY_ABC'
+, CASE cl.consent_length
+  WHEN 'LONG_TERM' THEN 'LEGACY_LONG_TERM'
+  ELSE
+    CASE cat.categories
+    WHEN '1_2_3' THEN 'CATEGORY_123'
+    WHEN 'A_B_C' THEN 'CATEGORY_ABC'
+    END
   END emission_category_type
 FROM fcs_migration.applications a
 JOIN fcs_migration.application_versions av ON av.application_id = a.id
@@ -923,6 +933,26 @@ JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
 JOIN fcs_migration.field_consent_short_term_emission_data ed ON ed.fcd_id = fcd.id
 WHERE fcd.application_type = 'FCON'
 AND ed.categories = '1_2_3';
+/
+
+--
+-- flare_long_term_years
+--
+INSERT INTO fcs_migration.flare_long_term_years (
+  id
+, application_version_id
+, year
+, gas
+)
+SELECT
+  fcs_migration.flare_long_term_year_id_seq.nextval id
+, fcd.id application_version_id
+, ed.year
+, ed.gas
+FROM fcs_migration.application_versions av
+JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+JOIN fcs_migration.field_consent_long_term_emission_data ed ON ed.fcd_id = fcd.id
+WHERE fcd.application_type = 'FCON';
 /
 
 --
@@ -1375,6 +1405,26 @@ WHERE fcd.application_type = 'VCON'
 AND ed.categories = '1_2_3'
 -- category_1 data is null for the legacy terminal apps (i.e. there's no consent months data so don't migrate)
 AND ed.category_1 IS NOT NULL;
+/
+
+--
+-- vent_long_term_years
+--
+INSERT INTO fcs_migration.vent_long_term_years (
+  id
+, application_version_id
+, year
+, gas
+)
+SELECT
+  fcs_migration.vent_long_term_year_id_seq.nextval id
+, fcd.id application_version_id
+, ed.year
+, ed.gas
+FROM fcs_migration.application_versions av
+JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+JOIN fcs_migration.field_consent_long_term_emission_data ed ON ed.fcd_id = fcd.id
+WHERE fcd.application_type = 'VCON';
 /
 
 --

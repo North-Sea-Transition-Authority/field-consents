@@ -7,13 +7,16 @@ import static uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionSummary
 import static uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionSummaryUtil.CATEGORY_TOTAL_HEADING_WITH_UNIT;
 import static uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionSummaryUtil.COMMENTS_HEADING;
 import static uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionSummaryUtil.CONSENT_DAYS_HEADING;
+import static uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionSummaryUtil.GAS_HEADING_WITH_UNIT;
 import static uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionSummaryUtil.MONTH_HEADING;
 import static uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionSummaryUtil.TOTAL_PROMPT;
+import static uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionSummaryUtil.YEAR_HEADING;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
 import org.springframework.stereotype.Service;
+import uk.co.nstauthority.fieldconsents.flarevent.EmissionLongTermYear;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentRow;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentUnit;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.shortterm.FlareShortTermMonth;
@@ -155,6 +158,25 @@ public class EmissionConsentSummaryService {
             BigDecimalUtil.divideRound(categoryTotal, totalDays),
             null
         );
+
+    return SummaryCard.tableSummaryCard(summaryTable);
+  }
+
+  // migrated cases only
+  public SummaryCard getLongTermConsentSummaryCard(List<? extends EmissionLongTermYear> emissionLongTermYears,
+                                                   FlareVentUnit gasUnit) {
+
+    var summaryTable = SummaryTableView.newWithHeading(
+        YEAR_HEADING,
+        GAS_HEADING_WITH_UNIT.apply(gasUnit.getDisplayName())
+    );
+
+    for (var emissionLongTermYear : emissionLongTermYears) {
+      summaryTable.addRow(
+          emissionLongTermYear.getYear(),
+          emissionLongTermYear.getGas()
+      );
+    }
 
     return SummaryCard.tableSummaryCard(summaryTable);
   }

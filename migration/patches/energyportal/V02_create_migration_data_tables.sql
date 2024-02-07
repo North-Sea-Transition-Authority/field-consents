@@ -1,4 +1,8 @@
 
+--DROP TABLE fcs_migration.vent_long_term_years;
+--DROP SEQUENCE fcs_migration.vent_long_term_year_id_seq;
+--DROP TABLE fcs_migration.flare_long_term_years;
+--DROP SEQUENCE fcs_migration.flare_long_term_year_id_seq;
 --DROP TABLE fcs_migration.file_upload_library_uploaded_files;
 --DROP SEQUENCE fcs_migration.application_technical_review_id_seq;
 --DROP TABLE fcs_migration.application_technical_reviews;
@@ -387,6 +391,21 @@ CREATE TABLE fcs_migration.flare_short_term_123_months (
 );
 
 --
+-- flare_long_term_years
+--
+
+CREATE SEQUENCE fcs_migration.flare_long_term_year_id_seq;
+
+CREATE TABLE fcs_migration.flare_long_term_years (
+  id                     INTEGER PRIMARY KEY
+, application_version_id INTEGER NOT NULL
+                         CONSTRAINT flare_long_term_years_fk1_av_id
+                         REFERENCES fcs_migration.application_versions
+, year                   INTEGER NOT NULL
+, gas                    NUMBER NOT NULL
+);
+
+--
 -- flare_report_gas_data
 --
 
@@ -579,6 +598,21 @@ CREATE TABLE fcs_migration.vent_short_term_123_months (
 , end_date               DATE
 , category_1             NUMBER NOT NULL
 , comments               VARCHAR2(4000)
+);
+
+--
+-- vent_long_term_years
+--
+
+CREATE SEQUENCE fcs_migration.vent_long_term_year_id_seq;
+
+CREATE TABLE fcs_migration.vent_long_term_years (
+  id                     INTEGER PRIMARY KEY
+, application_version_id INTEGER NOT NULL
+                         CONSTRAINT vent_long_term_years_fk1_av_id
+                         REFERENCES fcs_migration.application_versions
+, year                   INTEGER NOT NULL
+, gas                    NUMBER NOT NULL
 );
 
 --

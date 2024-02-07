@@ -27,11 +27,9 @@
 --    - production annual and long term uplift %
 --      /*/ANNUAL_PRODUCTION/UPLIFT
 --      /*/LONG_TERM_PRODUCTION/UPLIFT
---    - flare category 1/2/3 values (report and consents pages)
---      /*/CONSENT/CONSENT_DATA_LIST/CONSENT_DATA/CATEGORY_1 | CATEGORY_2 | CATEGORY_3 (Annual)
---      /*/SHORT_TERM_CONSENT/CONSENT_DATA_LIST/CONSENT_DATA/CATEGORY_1 | CATEGORY_2 | CATEGORY_3 (Short term)
---    - flare - long term data
---      /*/LONG_TERM_CONSENT/DATA_LIST/DATA/YEAR | GAS
+--    - flare and vent long term report data (on cover page)
+--      /*/COVER_INFO/FLARE_CONSENT_HISTORY | FLARE_ACTUALS
+--      /*/COVER_INFO/VENT_CONSENT_HISTORY | VENT_ACTUALS
 --
 -- 6) LOCATION application_assets - some have no operator (see devukmgr.field_operator_view), so we can't migrate yet
 --    Issues: on dev: SUTTON MANOR COAL MINE VENT
@@ -210,7 +208,7 @@ JOIN application_versions av ON av.application_id = ap.id
 JOIN consent_lengths cl ON cl.application_version_id = av.id
 JOIN application_units au ON au.application_version_id = av.id
 --WHERE av.cached_primary_operator_name IS NULL
-WHERE ap.type = 'VENT'
+WHERE ap.type = 'FLARE'
 AND cl.consent_length = 'LONG_TERM'
 ORDER BY ap.application_no ASC, ap.id ASC, av.id ASC
 /
@@ -850,9 +848,13 @@ SELECT
   END flare_category_unit
 , 'G_PER_MOL' flare_gas_density_unit
 , 'MOL_PERCENTAGE' flare_gas_content_unit
-, CASE cat.categories
-  WHEN '1_2_3' THEN 'CATEGORY_123'
-  WHEN 'A_B_C' THEN 'CATEGORY_ABC'
+, CASE cl.consent_length
+  WHEN 'LONG_TERM' THEN 'LEGACY_LONG_TERM'
+  ELSE
+    CASE cat.categories
+    WHEN '1_2_3' THEN 'CATEGORY_123'
+    WHEN 'A_B_C' THEN 'CATEGORY_ABC'
+    END
   END emission_category_type
 FROM fcs_migration.applications a
 JOIN fcs_migration.application_versions av ON av.application_id = a.id
@@ -878,9 +880,13 @@ SELECT
   END vent_category_unit
 , 'G_PER_MOL' vent_gas_density_unit
 , 'MOL_PERCENTAGE' vent_gas_content_unit
-, CASE cat.categories
-  WHEN '1_2_3' THEN 'CATEGORY_123'
-  WHEN 'A_B_C' THEN 'CATEGORY_ABC'
+, CASE cl.consent_length
+  WHEN 'LONG_TERM' THEN 'LEGACY_LONG_TERM'
+  ELSE
+    CASE cat.categories
+    WHEN '1_2_3' THEN 'CATEGORY_123'
+    WHEN 'A_B_C' THEN 'CATEGORY_ABC'
+    END
   END emission_category_type
 FROM fcs_migration.applications a
 JOIN fcs_migration.application_versions av ON av.application_id = a.id
@@ -1327,6 +1333,21 @@ WHERE fcd.application_type = 'FCON'
 AND ed.categories = '1_2_3'
 ORDER BY ed.fcd_id, ed.ed_rownum;
 /
+
+--
+-- flare_long_term_years
+--
+SELECT
+  null --fcs_migration.flare_long_term_year_id_seq.nextval id
+, fcd.id application_version_id
+, ed.year
+, ed.gas
+FROM fcs_migration.application_versions av
+JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+JOIN fcs_migration.field_consent_long_term_emission_data ed ON ed.fcd_id = fcd.id
+WHERE fcd.application_type = 'FCON'
+/
+
 
 --
 -- flare_report_gas_data
@@ -1812,6 +1833,20 @@ AND ed.categories = '1_2_3'
 AND ed.category_1 IS NOT NULL
 ORDER BY fcd.id, ed.ed_rownum;
 / 
+
+--
+-- vent_long_term_years
+--
+SELECT
+  null --fcs_migration.vent_long_term_year_id_seq.nextval id
+, fcd.id application_version_id
+, ed.year
+, ed.gas
+FROM fcs_migration.application_versions av
+JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
+JOIN fcs_migration.field_consent_long_term_emission_data ed ON ed.fcd_id = fcd.id
+WHERE fcd.application_type = 'VCON'
+/
 
 
 --

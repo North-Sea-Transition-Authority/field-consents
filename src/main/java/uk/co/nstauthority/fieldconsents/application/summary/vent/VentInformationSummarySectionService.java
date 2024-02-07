@@ -16,6 +16,7 @@ import uk.co.nstauthority.fieldconsents.flarevent.category123.vent.shortterm.Ven
 import uk.co.nstauthority.fieldconsents.flarevent.category123.vent.ventreport.VentReport123SummaryService;
 import uk.co.nstauthority.fieldconsents.flarevent.category123.vent.ventreportgas.VentReport123GasDataSummaryService;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.annual.VentAnnualService;
+import uk.co.nstauthority.fieldconsents.flarevent.vent.longterm.VentLongTermSummaryService;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.shortterm.VentShortTermService;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreport.VentReportService;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreportgas.VentReportGasDataService;
@@ -26,7 +27,6 @@ import uk.co.nstauthority.fieldconsents.summary.SummarySectionService;
 
 @Service
 public class VentInformationSummarySectionService implements SummarySectionService<ApplicationVersion> {
-
   private final ConsentLengthService consentLengthService;
   private final ApplicationUnitService applicationUnitService;
   private final VentAnnualService ventAnnualService;
@@ -38,6 +38,7 @@ public class VentInformationSummarySectionService implements SummarySectionServi
   private final VentShortTerm123SummaryService ventShortTerm123SummaryService;
   private final VentReport123SummaryService ventReport123SummaryService;
   private final VentReport123GasDataSummaryService ventReport123GasDataSummaryService;
+  private final VentLongTermSummaryService ventLongTermSummaryService;
 
   @Autowired
   public VentInformationSummarySectionService(ConsentLengthService consentLengthService,
@@ -50,7 +51,8 @@ public class VentInformationSummarySectionService implements SummarySectionServi
                                               VentAnnual123SummaryService ventAnnual123SummaryService,
                                               VentShortTerm123SummaryService ventShortTerm123SummaryService,
                                               VentReport123SummaryService ventReport123SummaryService,
-                                              VentReport123GasDataSummaryService ventReport123GasDataSummaryService) {
+                                              VentReport123GasDataSummaryService ventReport123GasDataSummaryService,
+                                              VentLongTermSummaryService ventLongTermSummaryService) {
     this.consentLengthService = consentLengthService;
     this.applicationUnitService = applicationUnitService;
     this.ventAnnualService = ventAnnualService;
@@ -62,6 +64,7 @@ public class VentInformationSummarySectionService implements SummarySectionServi
     this.ventShortTerm123SummaryService = ventShortTerm123SummaryService;
     this.ventReport123SummaryService = ventReport123SummaryService;
     this.ventReport123GasDataSummaryService = ventReport123GasDataSummaryService;
+    this.ventLongTermSummaryService = ventLongTermSummaryService;
   }
 
   @Override
@@ -83,12 +86,14 @@ public class VentInformationSummarySectionService implements SummarySectionServi
 
     var summaryItems = new ArrayList<SummaryItem>();
 
-    summaryItems.add(getVentsSummaryItem(applicationVersion));
-
-    // reports exist for all ABC cases but only annual 123 cases
-    if (EmissionCategoryType.CATEGORY_ABC.equals(emissionCategoryType)
-        || (EmissionCategoryType.CATEGORY_123.equals(emissionCategoryType)
-        && ConsentLengthType.ANNUAL.equals(consentLengthType))) {
+    // vents and reports exist for
+    // - all annual cases (category ABC and 123)
+    // - only category ABC short term case
+    // - no long term cases
+    if (ConsentLengthType.ANNUAL.equals(consentLengthType)
+        || (ConsentLengthType.SHORT_TERM.equals(consentLengthType)
+        && EmissionCategoryType.CATEGORY_ABC.equals(emissionCategoryType))) {
+      summaryItems.add(getVentsSummaryItem(applicationVersion));
       summaryItems.add(getVentReportSummaryItem(applicationVersion, emissionCategoryType));
       summaryItems.add(getVentReportGasDataSummaryItem(applicationVersion, emissionCategoryType));
     }
@@ -110,6 +115,7 @@ public class VentInformationSummarySectionService implements SummarySectionServi
         switch (emissionCategoryType) {
           case CATEGORY_123 -> List.of(ventReport123SummaryService.getVentReport123SummaryCard(applicationVersion));
           case CATEGORY_ABC -> ventReportService.getVentReportSummaryCards(applicationVersion);
+          case LEGACY_LONG_TERM -> throw emissionCategoryType.unsupportedOperation();
         }
     );
   }
@@ -121,6 +127,7 @@ public class VentInformationSummarySectionService implements SummarySectionServi
           case CATEGORY_123 ->
               List.of(ventReport123GasDataSummaryService.getVentReport123GasDataSummaryCard(applicationVersion));
           case CATEGORY_ABC -> ventReportGasDataService.getVentReportGasDataSummaryCards(applicationVersion);
+          case LEGACY_LONG_TERM -> throw emissionCategoryType.unsupportedOperation();
         }
     );
   }
@@ -135,6 +142,7 @@ public class VentInformationSummarySectionService implements SummarySectionServi
               switch (emissionCategoryType) {
                 case CATEGORY_123 -> ventShortTerm123SummaryService.getVentShortTerm123SummaryCard(applicationVersion);
                 case CATEGORY_ABC -> ventShortTermService.getVentShortTermSummaryCard(applicationVersion);
+                case LEGACY_LONG_TERM -> throw emissionCategoryType.unsupportedOperation();
               }
           );
       case ANNUAL ->
@@ -142,10 +150,16 @@ public class VentInformationSummarySectionService implements SummarySectionServi
               switch (emissionCategoryType) {
                 case CATEGORY_123 -> ventAnnual123SummaryService.getVentAnnual123SummaryCard(applicationVersion);
                 case CATEGORY_ABC -> ventAnnualService.getVentAnnualSummaryCard(applicationVersion);
+                case LEGACY_LONG_TERM -> throw emissionCategoryType.unsupportedOperation();
               }
           );
-      default ->
-          throw new RuntimeException("Incorrect consent length type: " + consentLengthType);
+      case LONG_TERM -> switch (emissionCategoryType) {
+        case LEGACY_LONG_TERM ->
+            SummaryItem.withCard(consentLengthType.getDisplayName(),
+                ventLongTermSummaryService.getVentLongTermSummaryCard(applicationVersion)
+            );
+        case CATEGORY_123, CATEGORY_ABC -> throw emissionCategoryType.unsupportedOperation();
+      };
     };
   }
 }

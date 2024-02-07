@@ -35,6 +35,7 @@ import uk.co.nstauthority.fieldconsents.flarevent.category123.vent.shortterm.Ven
 import uk.co.nstauthority.fieldconsents.flarevent.category123.vent.ventreport.VentReport123SummaryService;
 import uk.co.nstauthority.fieldconsents.flarevent.category123.vent.ventreportgas.VentReport123GasDataSummaryService;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.annual.VentAnnualService;
+import uk.co.nstauthority.fieldconsents.flarevent.vent.longterm.VentLongTermSummaryService;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.shortterm.VentShortTermService;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreport.VentReportService;
 import uk.co.nstauthority.fieldconsents.flarevent.vent.ventreportgas.VentReportGasDataService;
@@ -50,6 +51,8 @@ class VentInformationSummarySectionServiceTest {
   private static final String VENT_REPORT_ITEM = "Vent report";
 
   private static final String VENT_REPORT_GAS_PROPERTIES_ITEM = "Vent report gas properties";
+
+  private static final String UNSUPPORTED_OPERATION_EXCEPTION_MESSAGE = "Unsupported operation for %s";
 
   @Mock
   private ConsentLengthService consentLengthService;
@@ -83,6 +86,9 @@ class VentInformationSummarySectionServiceTest {
 
   @Mock
   private VentReport123GasDataSummaryService ventReport123GasDataSummaryService;
+
+  @Mock
+  private VentLongTermSummaryService ventLongTermSummaryService;
 
   @InjectMocks
   private VentInformationSummarySectionService ventInformationSummarySectionService;
@@ -166,13 +172,11 @@ class VentInformationSummarySectionServiceTest {
       verifyNoInteractions(ventShortTermService);
     }
 
+    verify(ventSummaryService, times(1)).getSummariesForVents(applicationVersion);
     verify(ventReportService, times(1)).getVentReportSummaryCards(applicationVersion);
     verify(ventReportGasDataService, times(1)).getVentReportGasDataSummaryCards(applicationVersion);
 
-    verifyNoInteractions(ventReport123SummaryService);
-    verifyNoInteractions(ventReport123GasDataSummaryService);
-    verifyNoInteractions(ventAnnual123SummaryService);
-    verifyNoInteractions(ventShortTerm123SummaryService);
+    verifyNo123Interactions();
   }
 
   @Test
@@ -184,8 +188,6 @@ class VentInformationSummarySectionServiceTest {
         .thenReturn(Optional.of(consentLengthDetails));
     when(applicationUnitService.getEmissionCategoryType(applicationVersion))
         .thenReturn(EmissionCategoryType.CATEGORY_123);
-    when(ventSummaryService.getSummariesForVents(applicationVersion))
-        .thenReturn(List.of(expectedSummaryCard));
     when(ventShortTerm123SummaryService.getVentShortTerm123SummaryCard(applicationVersion))
         .thenReturn(expectedSummaryCard);
 
@@ -196,10 +198,9 @@ class VentInformationSummarySectionServiceTest {
     assertSummarySection(summarySection, VENT_INFORMATION_DISPLAY_ORDER);
 
     var summaryItems = summarySection.summaryItems();
-    assertThat(summaryItems).hasSize(2);
+    assertThat(summaryItems).hasSize(1);
 
-    assertSummaryItem(summaryItems.get(0), VENTS_ITEM, 1);
-    assertSummaryItem(summaryItems.get(1), ConsentLengthType.SHORT_TERM.getDisplayName(), 1);
+    assertSummaryItem(summaryItems.get(0), ConsentLengthType.SHORT_TERM.getDisplayName(), 1);
 
     for (SummaryItem summaryItem : summaryItems) {
       assertEmptySummaryCard(summaryItem.summaryCards().get(0));
@@ -208,6 +209,7 @@ class VentInformationSummarySectionServiceTest {
     verify(ventShortTerm123SummaryService, times(1))
         .getVentShortTerm123SummaryCard(applicationVersion);
 
+    verifyNoInteractions(ventSummaryService);
     verifyNoInteractions(ventAnnual123SummaryService);
     verifyNoInteractions(ventReport123SummaryService);
     verifyNoInteractions(ventReport123GasDataSummaryService);
@@ -250,6 +252,7 @@ class VentInformationSummarySectionServiceTest {
       assertEmptySummaryCard(summaryItem.summaryCards().get(0));
     }
 
+    verify(ventSummaryService, times(1)).getSummariesForVents(applicationVersion);
     verify(ventReport123SummaryService, times(1))
         .getVentReport123SummaryCard(applicationVersion);
     verify(ventReport123GasDataSummaryService, times(1))
@@ -261,6 +264,13 @@ class VentInformationSummarySectionServiceTest {
     verifyNoABCInteractions();
   }
 
+  private void verifyNo123Interactions() {
+    verifyNoInteractions(ventShortTerm123SummaryService);
+    verifyNoInteractions(ventAnnual123SummaryService);
+    verifyNoInteractions(ventReport123SummaryService);
+    verifyNoInteractions(ventReport123GasDataSummaryService);
+  }
+
   private void verifyNoABCInteractions() {
     verifyNoInteractions(ventShortTermService);
     verifyNoInteractions(ventAnnualService);
@@ -270,11 +280,82 @@ class VentInformationSummarySectionServiceTest {
 
   @Test
   void getSummarySection_longTerm() {
+    var emissionCategoryType = EmissionCategoryType.LEGACY_LONG_TERM;
+    var expectedSummaryCard = SummaryCard.emptySummaryCard();
+    var consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForLongTerm(applicationVersion);
+
     when(consentLengthService.findConsentLengthDetails(applicationVersion))
-        .thenReturn(Optional.of(ConsentLengthTestUtil.getConsentLengthDetailsForLongTerm(applicationVersion)));
+        .thenReturn(Optional.of(consentLengthDetails));
+    when(applicationUnitService.getEmissionCategoryType(applicationVersion))
+        .thenReturn(emissionCategoryType);
+    when(ventLongTermSummaryService.getVentLongTermSummaryCard(applicationVersion))
+        .thenReturn(expectedSummaryCard);
+
+    var summarySectionOptional = ventInformationSummarySectionService.getSummarySection(applicationVersion);
+
+    assertThat(summarySectionOptional).isNotEmpty();
+    var summarySection = summarySectionOptional.get();
+    assertSummarySection(summarySection, VENT_INFORMATION_DISPLAY_ORDER);
+
+    var summaryItems = summarySection.summaryItems();
+    assertThat(summaryItems).hasSize(1);
+
+    assertSummaryItem(summaryItems.get(0), ConsentLengthType.LONG_TERM.getDisplayName(), 1);
+
+    for (SummaryItem summaryItem : summaryItems) {
+      assertEmptySummaryCard(summaryItem.summaryCards().get(0));
+    }
+
+    verify(ventLongTermSummaryService, times(1))
+        .getVentLongTermSummaryCard(applicationVersion);
+
+    verifyNoInteractions(ventSummaryService);
+    verifyNo123Interactions();
+    verifyNoABCInteractions();
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = EmissionCategoryType.class, mode = EnumSource.Mode.EXCLUDE, names = "LEGACY_LONG_TERM")
+  void getSummarySection_longTerm_invalid(EmissionCategoryType emissionCategoryType) {
+    var consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForLongTerm(applicationVersion);
+
+    when(consentLengthService.findConsentLengthDetails(applicationVersion))
+        .thenReturn(Optional.of(consentLengthDetails));
+    when(applicationUnitService.getEmissionCategoryType(applicationVersion))
+        .thenReturn(emissionCategoryType);
 
     assertThatThrownBy(() -> ventInformationSummarySectionService.getSummarySection(applicationVersion))
         .isInstanceOf(RuntimeException.class)
-        .hasMessage("Incorrect consent length type: " + ConsentLengthType.LONG_TERM);
+        .hasMessage(UNSUPPORTED_OPERATION_EXCEPTION_MESSAGE.formatted(emissionCategoryType.name()));
+  }
+
+  @Test
+  void getSummarySection_shortTerm_invalid() {
+    var emissionCategoryType = EmissionCategoryType.LEGACY_LONG_TERM;
+    var consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(applicationVersion);
+
+    when(consentLengthService.findConsentLengthDetails(applicationVersion))
+        .thenReturn(Optional.of(consentLengthDetails));
+    when(applicationUnitService.getEmissionCategoryType(applicationVersion))
+        .thenReturn(emissionCategoryType);
+
+    assertThatThrownBy(() -> ventInformationSummarySectionService.getSummarySection(applicationVersion))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessage(UNSUPPORTED_OPERATION_EXCEPTION_MESSAGE.formatted(emissionCategoryType.name()));
+  }
+
+  @Test
+  void getSummarySection_annual_invalid() {
+    var emissionCategoryType = EmissionCategoryType.LEGACY_LONG_TERM;
+    var consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForAnnual(applicationVersion);
+
+    when(consentLengthService.findConsentLengthDetails(applicationVersion))
+        .thenReturn(Optional.of(consentLengthDetails));
+    when(applicationUnitService.getEmissionCategoryType(applicationVersion))
+        .thenReturn(emissionCategoryType);
+
+    assertThatThrownBy(() -> ventInformationSummarySectionService.getSummarySection(applicationVersion))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessage(UNSUPPORTED_OPERATION_EXCEPTION_MESSAGE.formatted(emissionCategoryType.name()));
   }
 }

@@ -38,6 +38,7 @@ import uk.co.nstauthority.fieldconsents.flarevent.flare.annual.FlareAnnualServic
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereport.FlareReportService;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flarereportgas.FlareReportGasDataService;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.flares.FlareSummaryService;
+import uk.co.nstauthority.fieldconsents.flarevent.flare.longterm.FlareLongTermSummaryService;
 import uk.co.nstauthority.fieldconsents.flarevent.flare.shortterm.FlareShortTermService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryItem;
@@ -50,6 +51,8 @@ class FlareInformationSummarySectionServiceTest {
   private static final String FLARE_REPORT_ITEM = "Flare report";
 
   private static final String FLARE_REPORT_GAS_PROPERTIES_ITEM = "Flare report gas properties";
+
+  private static final String UNSUPPORTED_OPERATION_EXCEPTION_MESSAGE = "Unsupported operation for %s";
 
   @Mock
   private ConsentLengthService consentLengthService;
@@ -83,6 +86,9 @@ class FlareInformationSummarySectionServiceTest {
 
   @Mock
   private FlareReport123GasDataSummaryService flareReport123GasDataSummaryService;
+
+  @Mock
+  private FlareLongTermSummaryService flareLongTermSummaryService;
 
   @InjectMocks
   private FlareInformationSummarySectionService flareInformationSummarySectionService;
@@ -166,6 +172,7 @@ class FlareInformationSummarySectionServiceTest {
       verifyNoInteractions(flareShortTermService);
     }
 
+    verify(flareSummaryService, times(1)).getSummariesForFlares(applicationVersion);
     verify(flareReportService, times(1)).getFlareReportSummaryCards(applicationVersion);
     verify(flareReportGasDataService, times(1)).getFlareReportGasDataSummaryCards(applicationVersion);
 
@@ -184,8 +191,6 @@ class FlareInformationSummarySectionServiceTest {
         .thenReturn(Optional.of(consentLengthDetails));
     when(applicationUnitService.getEmissionCategoryType(applicationVersion))
         .thenReturn(EmissionCategoryType.CATEGORY_123);
-    when(flareSummaryService.getSummariesForFlares(applicationVersion))
-        .thenReturn(List.of(expectedSummaryCard));
     when(flareShortTerm123SummaryService.getFlareShortTerm123SummaryCard(applicationVersion))
         .thenReturn(expectedSummaryCard);
 
@@ -196,10 +201,9 @@ class FlareInformationSummarySectionServiceTest {
     assertSummarySection(summarySection, FLARE_INFORMATION_DISPLAY_ORDER);
 
     var summaryItems = summarySection.summaryItems();
-    assertThat(summaryItems).hasSize(2);
+    assertThat(summaryItems).hasSize(1);
 
-    assertSummaryItem(summaryItems.get(0), FLARES_ITEM, 1);
-    assertSummaryItem(summaryItems.get(1), ConsentLengthType.SHORT_TERM.getDisplayName(), 1);
+    assertSummaryItem(summaryItems.get(0), ConsentLengthType.SHORT_TERM.getDisplayName(), 1);
 
     for (SummaryItem summaryItem : summaryItems) {
       assertEmptySummaryCard(summaryItem.summaryCards().get(0));
@@ -208,6 +212,7 @@ class FlareInformationSummarySectionServiceTest {
     verify(flareShortTerm123SummaryService, times(1))
         .getFlareShortTerm123SummaryCard(applicationVersion);
 
+    verifyNoInteractions(flareSummaryService);
     verifyNoInteractions(flareAnnual123SummaryService);
     verifyNoInteractions(flareReport123SummaryService);
     verifyNoInteractions(flareReport123GasDataSummaryService);
@@ -250,6 +255,7 @@ class FlareInformationSummarySectionServiceTest {
       assertEmptySummaryCard(summaryItem.summaryCards().get(0));
     }
 
+    verify(flareSummaryService, times(1)).getSummariesForFlares(applicationVersion);
     verify(flareReport123SummaryService, times(1))
         .getFlareReport123SummaryCard(applicationVersion);
     verify(flareReport123GasDataSummaryService, times(1))
@@ -261,6 +267,13 @@ class FlareInformationSummarySectionServiceTest {
     verifyNoABCInteractions();
   }
 
+  private void verifyNo123Interactions() {
+    verifyNoInteractions(flareReport123SummaryService);
+    verifyNoInteractions(flareReport123GasDataSummaryService);
+    verifyNoInteractions(flareAnnual123SummaryService);
+    verifyNoInteractions(flareShortTerm123SummaryService);
+  }
+
   private void verifyNoABCInteractions() {
     verifyNoInteractions(flareShortTermService);
     verifyNoInteractions(flareAnnualService);
@@ -270,11 +283,82 @@ class FlareInformationSummarySectionServiceTest {
 
   @Test
   void getSummarySection_longTerm() {
+    var emissionCategoryType = EmissionCategoryType.LEGACY_LONG_TERM;
+    var expectedSummaryCard = SummaryCard.emptySummaryCard();
+    var consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForLongTerm(applicationVersion);
+
     when(consentLengthService.findConsentLengthDetails(applicationVersion))
-        .thenReturn(Optional.of(ConsentLengthTestUtil.getConsentLengthDetailsForLongTerm(applicationVersion)));
+        .thenReturn(Optional.of(consentLengthDetails));
+    when(applicationUnitService.getEmissionCategoryType(applicationVersion))
+        .thenReturn(emissionCategoryType);
+    when(flareLongTermSummaryService.getFlareLongTermSummaryCard(applicationVersion))
+        .thenReturn(expectedSummaryCard);
+
+    var summarySectionOptional = flareInformationSummarySectionService.getSummarySection(applicationVersion);
+
+    assertThat(summarySectionOptional).isNotEmpty();
+    var summarySection = summarySectionOptional.get();
+    assertSummarySection(summarySection, FLARE_INFORMATION_DISPLAY_ORDER);
+
+    var summaryItems = summarySection.summaryItems();
+    assertThat(summaryItems).hasSize(1);
+
+    assertSummaryItem(summaryItems.get(0), ConsentLengthType.LONG_TERM.getDisplayName(), 1);
+
+    for (SummaryItem summaryItem : summaryItems) {
+      assertEmptySummaryCard(summaryItem.summaryCards().get(0));
+    }
+
+    verify(flareLongTermSummaryService, times(1))
+        .getFlareLongTermSummaryCard(applicationVersion);
+
+    verifyNoInteractions(flareSummaryService);
+    verifyNo123Interactions();
+    verifyNoABCInteractions();
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = EmissionCategoryType.class, mode = EnumSource.Mode.EXCLUDE, names = "LEGACY_LONG_TERM")
+  void getSummarySection_longTerm_invalid(EmissionCategoryType emissionCategoryType) {
+    var consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForLongTerm(applicationVersion);
+
+    when(consentLengthService.findConsentLengthDetails(applicationVersion))
+        .thenReturn(Optional.of(consentLengthDetails));
+    when(applicationUnitService.getEmissionCategoryType(applicationVersion))
+        .thenReturn(emissionCategoryType);
 
     assertThatThrownBy(() -> flareInformationSummarySectionService.getSummarySection(applicationVersion))
         .isInstanceOf(RuntimeException.class)
-        .hasMessage("Incorrect consent length type: " + ConsentLengthType.LONG_TERM);
+        .hasMessage(UNSUPPORTED_OPERATION_EXCEPTION_MESSAGE.formatted(emissionCategoryType.name()));
+  }
+
+  @Test
+  void getSummarySection_shortTerm_invalid() {
+    var emissionCategoryType = EmissionCategoryType.LEGACY_LONG_TERM;
+    var consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForShortTerm(applicationVersion);
+
+    when(consentLengthService.findConsentLengthDetails(applicationVersion))
+        .thenReturn(Optional.of(consentLengthDetails));
+    when(applicationUnitService.getEmissionCategoryType(applicationVersion))
+        .thenReturn(emissionCategoryType);
+
+    assertThatThrownBy(() -> flareInformationSummarySectionService.getSummarySection(applicationVersion))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessage(UNSUPPORTED_OPERATION_EXCEPTION_MESSAGE.formatted(emissionCategoryType.name()));
+  }
+
+  @Test
+  void getSummarySection_annual_invalid() {
+    var emissionCategoryType = EmissionCategoryType.LEGACY_LONG_TERM;
+    var consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForAnnual(applicationVersion);
+
+    when(consentLengthService.findConsentLengthDetails(applicationVersion))
+        .thenReturn(Optional.of(consentLengthDetails));
+    when(applicationUnitService.getEmissionCategoryType(applicationVersion))
+        .thenReturn(emissionCategoryType);
+
+    assertThatThrownBy(() -> flareInformationSummarySectionService.getSummarySection(applicationVersion))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessage(UNSUPPORTED_OPERATION_EXCEPTION_MESSAGE.formatted(emissionCategoryType.name()));
   }
 }

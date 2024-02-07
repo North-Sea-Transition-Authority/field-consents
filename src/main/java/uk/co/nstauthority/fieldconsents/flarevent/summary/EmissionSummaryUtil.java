@@ -23,4 +23,6 @@ public class EmissionSummaryUtil {
   public static final String SHUTDOWN_DAYS_HEADING = "Days of total shutdown";
   public static final UnaryOperator<String> AVERAGE_PROMPT_WITH_UNIT = "Daily average (%s)"::formatted;
   public static final String COMMENTS_HEADING = "Comments";
+  public static final String YEAR_HEADING = "Year";
+  public static final UnaryOperator<String> GAS_HEADING_WITH_UNIT = "Gas (%s)"::formatted;
 }
