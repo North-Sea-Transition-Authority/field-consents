@@ -11,6 +11,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.UnaryOperator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +36,8 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.Reg
 @Service
 public class CaseAssignmentService {
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(CaseAssignmentService.class);
+
   static final UnaryOperator<String> USER_NOT_IN_CASE_OFFICER_ROLE =
       "Cannot assign case officer as user with wua id %s is not in a regulator case officer role"::formatted;
 
@@ -43,6 +47,7 @@ public class CaseAssignmentService {
   private final ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
   private final EnergyPortalUserService energyPortalUserService;
   private final TeamService teamService;
+  private final CaseAssignmentEmailService caseAssignmentEmailService;
 
   @Autowired
   public CaseAssignmentService(ApplicationVersionRepository applicationVersionRepository,
@@ -50,13 +55,15 @@ public class CaseAssignmentService {
                                TeamMemberViewService teamMemberViewService,
                                ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService,
                                EnergyPortalUserService energyPortalUserService,
-                               TeamService teamService) {
+                               TeamService teamService,
+                               CaseAssignmentEmailService caseAssignmentEmailService) {
     this.applicationVersionRepository = applicationVersionRepository;
     this.regulatorTeamService = regulatorTeamService;
     this.teamMemberViewService = teamMemberViewService;
     this.applicationWorkAreaPriorityService = applicationWorkAreaPriorityService;
     this.energyPortalUserService = energyPortalUserService;
     this.teamService = teamService;
+    this.caseAssignmentEmailService = caseAssignmentEmailService;
   }
 
   @Transactional
@@ -83,6 +90,14 @@ public class CaseAssignmentService {
         applicationWorkAreaPriorityReason,
         ApplicationWorkAreaPriorityGroup.REGULATOR
     );
+
+    try {
+      caseAssignmentEmailService.sendCaseAssignmentEmail(applicationVersion, caseOfficerUser, actionUser);
+    } catch (Exception exception) {
+      LOGGER.error("An attempt to send a case assignment notification to case officer with wuaId {} for application version " +
+              "with id {} failed. Note: this hasn't prevented the assignment of the case to the case officer.",
+          caseOfficerUser.wuaId(), applicationVersion.getId(), exception);
+    }
   }
 
   @Transactional

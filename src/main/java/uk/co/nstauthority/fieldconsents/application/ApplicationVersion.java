@@ -16,12 +16,13 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.Objects;
 import org.hibernate.envers.Audited;
+import uk.co.fivium.digitalnotificationlibrary.core.notification.DomainReference;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @Entity
 @Audited
 @Table(name = "application_versions")
-public class ApplicationVersion {
+public class ApplicationVersion implements DomainReference {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Integer id;
@@ -216,5 +217,15 @@ public class ApplicationVersion {
   @Override
   public int hashCode() {
     return Objects.hash(id);
+  }
+
+  @Override
+  public String getDomainId() {
+    return String.valueOf(id);
+  }
+
+  @Override
+  public String getDomainType() {
+    return "APPLICATION_VERSION";
   }
 }

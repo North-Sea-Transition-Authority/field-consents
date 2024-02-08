@@ -2,7 +2,8 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.times;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.USER_WUA_ID;
@@ -103,6 +104,9 @@ class CaseAssignmentServiceTest {
   @Mock
   private TeamService teamService;
 
+  @Mock
+  private CaseAssignmentEmailService caseAssignmentEmailService;
+
   @InjectMocks
   private CaseAssignmentService caseAssignmentService;
 
@@ -138,14 +142,14 @@ class CaseAssignmentServiceTest {
 
     var applicationVersionArgumentCaptor = ArgumentCaptor.forClass(ApplicationVersion.class);
 
-    verify(applicationVersionRepository, times(1))
-        .save(applicationVersionArgumentCaptor.capture());
+    verify(applicationVersionRepository).save(applicationVersionArgumentCaptor.capture());
 
     assertThat(applicationVersionArgumentCaptor.getValue().getCaseOfficerWuaId())
         .isEqualTo(WEB_USER_ACCOUNT_ID.id());
 
-    verify(applicationWorkAreaPriorityService, times(1))
-        .prioritiseApplicationInWorkArea(applicationVersion, USER, CASE_OFFICER_TAKE_OWNERSHIP, REGULATOR);
+    verify(applicationWorkAreaPriorityService).prioritiseApplicationInWorkArea(applicationVersion, USER, CASE_OFFICER_TAKE_OWNERSHIP, REGULATOR);
+
+    verify(caseAssignmentEmailService).sendCaseAssignmentEmail(applicationVersion, USER, USER);
   }
 
   @Test
@@ -157,16 +161,45 @@ class CaseAssignmentServiceTest {
 
     var applicationVersionArgumentCaptor = ArgumentCaptor.forClass(ApplicationVersion.class);
 
-    verify(applicationVersionRepository, times(1))
-        .save(applicationVersionArgumentCaptor.capture());
+    verify(applicationVersionRepository).save(applicationVersionArgumentCaptor.capture());
 
     var actualApplicationVersion = applicationVersionArgumentCaptor.getValue();
 
     assertThat(actualApplicationVersion.getCaseOfficerWuaId()).isEqualTo(WEB_USER_ACCOUNT_ID.id());
     assertThat(actualApplicationVersion.getCurrentCaseOwner()).isEqualTo(CASE_OFFICER);
 
-    verify(applicationWorkAreaPriorityService, times(1))
-        .prioritiseApplicationInWorkArea(applicationVersion, USER2, CASE_OFFICER_ASSIGN_OWNERSHIP, REGULATOR);
+    verify(applicationWorkAreaPriorityService).prioritiseApplicationInWorkArea(applicationVersion, USER2, CASE_OFFICER_ASSIGN_OWNERSHIP, REGULATOR);
+
+    verify(caseAssignmentEmailService).sendCaseAssignmentEmail(applicationVersion, USER, USER2);
+  }
+
+  @Test
+  void assignCaseOfficer_whenSendCaseAssignmentEmailFails_thenApplicationVersionCaseOfficerWuaIsStillUpdated() {
+    when(regulatorTeamService.isCaseOfficer(WEB_USER_ACCOUNT_ID))
+        .thenReturn(true);
+
+    // WHEN the email service call throws an exception
+    doThrow(new RuntimeException("Failed to send email"))
+        .when(caseAssignmentEmailService)
+        .sendCaseAssignmentEmail(applicationVersion, USER, USER2);
+
+    // THEN it will be caught by the caller and not re-thrown
+    assertDoesNotThrow(
+        () -> caseAssignmentService.assignCaseOfficer(applicationVersion, USER, USER2)
+    );
+
+    var applicationVersionArgumentCaptor = ArgumentCaptor.forClass(ApplicationVersion.class);
+
+    verify(applicationVersionRepository).save(applicationVersionArgumentCaptor.capture());
+
+    var actualApplicationVersion = applicationVersionArgumentCaptor.getValue();
+
+    assertThat(actualApplicationVersion.getCaseOfficerWuaId()).isEqualTo(WEB_USER_ACCOUNT_ID.id());
+    assertThat(actualApplicationVersion.getCurrentCaseOwner()).isEqualTo(CASE_OFFICER);
+
+    verify(applicationWorkAreaPriorityService).prioritiseApplicationInWorkArea(applicationVersion, USER2, CASE_OFFICER_ASSIGN_OWNERSHIP, REGULATOR);
+
+    verify(caseAssignmentEmailService).sendCaseAssignmentEmail(applicationVersion, USER, USER2);
   }
 
   @Test
@@ -176,16 +209,14 @@ class CaseAssignmentServiceTest {
 
     var applicationVersionArgumentCaptor = ArgumentCaptor.forClass(ApplicationVersion.class);
 
-    verify(applicationVersionRepository, times(1))
-        .save(applicationVersionArgumentCaptor.capture());
+    verify(applicationVersionRepository).save(applicationVersionArgumentCaptor.capture());
 
     var actualApplicationVersion = applicationVersionArgumentCaptor.getValue();
 
     assertThat(actualApplicationVersion.getCaseOfficerWuaId()).isNull();
     assertThat(actualApplicationVersion.getCurrentCaseOwner()).isNull();
 
-    verify(applicationWorkAreaPriorityService, times(1))
-        .prioritiseApplicationInWorkArea(applicationVersion, USER, CASE_OFFICER_RELEASE_OWNERSHIP, REGULATOR);
+    verify(applicationWorkAreaPriorityService).prioritiseApplicationInWorkArea(applicationVersion, USER, CASE_OFFICER_RELEASE_OWNERSHIP, REGULATOR);
   }
 
   @Test
@@ -344,16 +375,14 @@ class CaseAssignmentServiceTest {
 
     var applicationVersionArgumentCaptor = ArgumentCaptor.forClass(ApplicationVersion.class);
 
-    verify(applicationVersionRepository, times(1))
-        .save(applicationVersionArgumentCaptor.capture());
+    verify(applicationVersionRepository).save(applicationVersionArgumentCaptor.capture());
 
     var actualApplicationVersion = applicationVersionArgumentCaptor.getValue();
 
     assertThat(actualApplicationVersion.getCamWuaId()).isNull();
     assertThat(actualApplicationVersion.getCurrentCaseOwner()).isEqualTo(CASE_OFFICER);
 
-    verify(applicationWorkAreaPriorityService, times(1))
-        .prioritiseApplicationInWorkArea(applicationVersion, USER2, CASE_OFFICER_ASSIGN_OWNERSHIP, REGULATOR);
+    verify(applicationWorkAreaPriorityService).prioritiseApplicationInWorkArea(applicationVersion, USER2, CASE_OFFICER_ASSIGN_OWNERSHIP, REGULATOR);
   }
 
   @Test
