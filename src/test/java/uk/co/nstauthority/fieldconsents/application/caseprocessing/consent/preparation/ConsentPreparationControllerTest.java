@@ -21,10 +21,11 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.Application;
-import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataService;
@@ -38,6 +39,9 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.prepa
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
+import uk.co.nstauthority.fieldconsents.application.fieldequitypartner.FieldEquityPartnerService;
+import uk.co.nstauthority.fieldconsents.application.fieldequitypartner.FieldEquityPartnersViewTestUtil;
+import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.document.DocumentInstanceSummaryViewTestUtil;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -47,9 +51,6 @@ import uk.co.nstauthority.fieldconsents.summary.SummaryFileView;
 
 @ContextConfiguration(classes = ConsentPreparationController.class)
 class ConsentPreparationControllerTest extends AbstractApplicationControllerTest {
-
-  @MockBean
-  private ApplicationService applicationService;
 
   @MockBean
   private ConsentDataService consentDataService;
@@ -62,6 +63,12 @@ class ConsentPreparationControllerTest extends AbstractApplicationControllerTest
 
   @MockBean
   private ConsentPreparationDocumentService consentDocumentService;
+
+  @MockBean
+  private FieldEquityPartnerService fieldEquityPartnerService;
+
+  @MockBean
+  private ApplicationAssetService applicationAssetService;
 
   private Application application;
   private ApplicationVersion applicationVersion;
@@ -97,6 +104,9 @@ class ConsentPreparationControllerTest extends AbstractApplicationControllerTest
     var consentLengthDetails = new ConsentLengthDetails();
     consentLengthDetails.setConsentLength(consentLengthType);
 
+    var applicationAsset = ApplicationAssetTestUtil.newBuilder().withAssetType(AssetType.FIELD).build();
+    var fieldEquityPartnerView = FieldEquityPartnersViewTestUtil.newBuilder().build();
+
     var consentData = ConsentDataTestUtil.newBuilder().build();
     var consentDataView = ConsentDataView.fromShortTermOrAnnualProductionApplication(
         consentData,
@@ -109,14 +119,14 @@ class ConsentPreparationControllerTest extends AbstractApplicationControllerTest
         List.of(SummaryFileView.previewSummaryFrom(documentsInstanceSummaryView))
     );
 
-    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
     when(consentDataService.findConsentData(application)).thenReturn(Optional.of(consentData));
     when(consentDataService.getConsentDataView(applicationVersion, consentData, consentLengthType)).thenReturn(consentDataView);
-    when(consentFigureUnitService.getConsentFigureUnitView(applicationVersion, consentLengthType))
-        .thenReturn(consentFigureUnitView);
+    when(consentFigureUnitService.getConsentFigureUnitView(applicationVersion, consentLengthType)).thenReturn(consentFigureUnitView);
     when(consentDocumentService.getConsentDocumentsSummaryCard(application)).thenReturn(consentDocumentsSummaryCard);
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(applicationAsset);
+    when(fieldEquityPartnerService.getFieldEquityPartnersView(applicationVersion)).thenReturn(fieldEquityPartnerView);
 
     mockMvc.perform(get(ReverseRouter.route(on(ConsentPreparationController.class).viewConsentPreparationPage(APPLICATION_ID)))
         .with(user(user)))
@@ -125,6 +135,7 @@ class ConsentPreparationControllerTest extends AbstractApplicationControllerTest
         .andExpect(model().attribute("pageTitle", "Consent preparation"))
         .andExpect(model().attribute("applicationType", application.getType()))
         .andExpect(model().attribute("consentLengthType", consentLengthType))
+        .andExpect(model().attribute("fieldEquityPartnersView", fieldEquityPartnerView))
         .andExpect(model().attribute("consentDocumentsSummaryCard", consentDocumentsSummaryCard))
         .andExpect(model().attribute("consentDataView", consentDataView))
         .andExpect(model().attribute("consentDataEditUrl",
@@ -141,7 +152,6 @@ class ConsentPreparationControllerTest extends AbstractApplicationControllerTest
     var consentLengthDetails = new ConsentLengthDetails();
     consentLengthDetails.setConsentLength(consentLengthType);
 
-    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
     when(consentDataService.findConsentData(application)).thenReturn(Optional.empty());

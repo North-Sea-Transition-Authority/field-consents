@@ -20,6 +20,15 @@
     fileViews=consentDocumentsSummaryCard.summaryData()
     editUrl=consentDocumentsEditUrl
   />
+  <#if fieldEquityPartnersView?has_content>
+    <@fdsDetails.summaryDetails summaryTitle="Field equity partners">
+      <ul class="govuk-list">
+        <#list fieldEquityPartnersView.fieldEquityPartnerNames() as fieldEquityPartnerName>
+          <li class="govuk-list__item">${fieldEquityPartnerName}</li>
+        </#list>
+      </ul>
+    </@fdsDetails.summaryDetails>
+  </#if>
   <@fdsAction.link
     linkText="Save and continue"
     linkClass="govuk-button"
