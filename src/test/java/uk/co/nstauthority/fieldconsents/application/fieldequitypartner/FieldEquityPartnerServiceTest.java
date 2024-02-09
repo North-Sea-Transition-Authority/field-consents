@@ -54,14 +54,7 @@ class FieldEquityPartnerServiceTest {
   void getFieldEquityPartnersView() {
     var fieldEquityPartnerNames = List.of("a", "b", "c");
 
-    var applicationAssets = List.of(
-      ApplicationAssetTestUtil.newBuilder().build(),
-      ApplicationAssetTestUtil.newBuilder().build(),
-      ApplicationAssetTestUtil.newBuilder().build()
-    );
-
-    when(applicationAssetService.findAssetsByApplicationVersionAndAssetTypeAndAssetRoles(applicationVersion, AssetType.FIELD, EnumSet.of(AssetRole.PRIMARY, AssetRole.SECONDARY))).thenReturn(applicationAssets);
-    doReturn(fieldEquityPartnerNames).when(fieldEquityPartnerService).getFieldEquityPartnerNames(applicationAssets);
+    doReturn(fieldEquityPartnerNames).when(fieldEquityPartnerService).getFieldEquityPartnerNames(applicationVersion);
 
     var fieldEquityPartnersView = fieldEquityPartnerService.getFieldEquityPartnersView(applicationVersion);
 
@@ -71,9 +64,9 @@ class FieldEquityPartnerServiceTest {
   @Test
   void getFieldEquityPartnerNames() {
     var applicationAssets = List.of(
-      ApplicationAssetTestUtil.newBuilder().withAssetType(AssetType.FIELD).withAssetId(1).build(),
-      ApplicationAssetTestUtil.newBuilder().withAssetType(AssetType.FIELD).withAssetId(2).build(),
-      ApplicationAssetTestUtil.newBuilder().withAssetType(AssetType.FIELD).withAssetId(3).build()
+      ApplicationAssetTestUtil.newBuilder().withAssetType(AssetType.FIELD).withAssetRole(AssetRole.PRIMARY).withAssetId(1).build(),
+      ApplicationAssetTestUtil.newBuilder().withAssetType(AssetType.FIELD).withAssetRole(AssetRole.SECONDARY).withAssetId(2).build(),
+      ApplicationAssetTestUtil.newBuilder().withAssetType(AssetType.FIELD).withAssetRole(AssetRole.SECONDARY).withAssetId(3).build()
     );
 
     var fields = List.of(
@@ -84,9 +77,10 @@ class FieldEquityPartnerServiceTest {
 
     var assetIds = applicationAssets.stream().map(ApplicationAsset::getAssetId).toList();
 
+    when(applicationAssetService.findAssetsByApplicationVersionAndAssetTypeAndAssetRoles(applicationVersion, AssetType.FIELD, EnumSet.of(AssetRole.PRIMARY, AssetRole.SECONDARY))).thenReturn(applicationAssets);
     when(fieldApi.getFieldsByIds(eq(assetIds), any(FieldsProjectionRoot.class), any(RequestPurpose.class))).thenReturn(fields);
 
-    assertThat(fieldEquityPartnerService.getFieldEquityPartnerNames(applicationAssets)).containsExactly("a", "b", "c");
+    assertThat(fieldEquityPartnerService.getFieldEquityPartnerNames(applicationVersion)).containsExactly("a", "b", "c");
   }
 
   private Field getFieldWithFieldEquityPartnerName(String fieldEquityPartnerName) {

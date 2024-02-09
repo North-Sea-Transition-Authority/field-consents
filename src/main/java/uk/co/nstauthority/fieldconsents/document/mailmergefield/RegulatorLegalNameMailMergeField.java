@@ -7,7 +7,7 @@ import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceDto;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentMailMergeField;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
 
-@Order(10)
+@Order(11)
 @Component
 public class RegulatorLegalNameMailMergeField implements DocumentMailMergeField {
 

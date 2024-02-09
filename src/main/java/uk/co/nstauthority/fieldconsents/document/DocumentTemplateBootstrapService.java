@@ -209,7 +209,7 @@ class DocumentTemplateBootstrapService {
         """
         ((PRIMARY_FIELD_NAME))
         LICENCE(S) ((LICENCE_REFERENCE_LIST))
-        [TODO FCS-611: All Licensees]
+        FIELD EQUITY PARTNER(S) ((FIELD_EQUITY_PARTNER_LIST))
         """,
         null,
         false,
@@ -322,7 +322,7 @@ class DocumentTemplateBootstrapService {
         """
         ((PRIMARY_AND_ADDITIONAL_FIELD_NAMES))
         LICENCE(S) ((LICENCE_REFERENCE_LIST))
-        [TODO FCS-611: All Licensees]
+        FIELD EQUITY PARTNER(S) ((FIELD_EQUITY_PARTNER_LIST))
         """,
         null,
         false,
@@ -493,7 +493,7 @@ class DocumentTemplateBootstrapService {
         """
         ((PRIMARY_AND_ADDITIONAL_FIELD_NAMES))
         LICENCE(S) ((LICENCE_REFERENCE_LIST))
-        [TODO FCS-611: All Licensees]
+        FIELD EQUITY PARTNER(S) ((FIELD_EQUITY_PARTNER_LIST))
         """,
         null,
         false,

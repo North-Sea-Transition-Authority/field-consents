@@ -123,6 +123,10 @@ public class ApplicationAsset {
     return assetType == AssetType.FIELD;
   }
 
+  public boolean isPrimary() {
+    return assetRole == AssetRole.PRIMARY;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
