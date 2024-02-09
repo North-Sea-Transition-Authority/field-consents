@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.USER_WUA_ID;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus.SUBMITTED;
@@ -149,11 +150,11 @@ class CaseAssignmentServiceTest {
 
     verify(applicationWorkAreaPriorityService).prioritiseApplicationInWorkArea(applicationVersion, USER, CASE_OFFICER_TAKE_OWNERSHIP, REGULATOR);
 
-    verify(caseAssignmentEmailService).sendCaseAssignmentEmail(applicationVersion, USER, USER);
+    verifyNoInteractions(caseAssignmentEmailService);
   }
 
   @Test
-  void assignCaseOfficer_whenInCaseOfficerRoleAndAssigningOwnership_thenApplicationVersionCaseOfficerWuaUpdated() {
+  void assignCaseOfficer_whenAssigneeInCaseOfficerRoleAndBeingAssignedOwnership_thenApplicationVersionCaseOfficerWuaUpdated() {
     when(regulatorTeamService.isCaseOfficer(WEB_USER_ACCOUNT_ID))
         .thenReturn(true);
 

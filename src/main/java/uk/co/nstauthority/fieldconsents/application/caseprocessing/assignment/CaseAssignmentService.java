@@ -80,7 +80,8 @@ public class CaseAssignmentService {
 
     // figure out the work area priority reason, if the person making the assignment is the same as the assignee
     // then we must be taking ownership, otherwise a case officer is being assigned by another user
-    var applicationWorkAreaPriorityReason = actionUser.equals(caseOfficerUser)
+    var isTakeOwnership = actionUser.equals(caseOfficerUser);
+    var applicationWorkAreaPriorityReason = isTakeOwnership
         ? CASE_OFFICER_TAKE_OWNERSHIP
         : CASE_OFFICER_ASSIGN_OWNERSHIP;
 
@@ -91,12 +92,15 @@ public class CaseAssignmentService {
         ApplicationWorkAreaPriorityGroup.REGULATOR
     );
 
-    try {
-      caseAssignmentEmailService.sendCaseAssignmentEmail(applicationVersion, caseOfficerUser, actionUser);
-    } catch (Exception exception) {
-      LOGGER.error("An attempt to send a case assignment notification to case officer with wuaId {} for application version " +
-              "with id {} failed. Note: this hasn't prevented the assignment of the case to the case officer.",
-          caseOfficerUser.wuaId(), applicationVersion.getId(), exception);
+    // If the user assigning the case isn't the same as the assignee then send an email to the assigned case officer
+    if (!isTakeOwnership) {
+      try {
+        caseAssignmentEmailService.sendCaseAssignmentEmail(applicationVersion, caseOfficerUser, actionUser);
+      } catch (Exception exception) {
+        LOGGER.error("An attempt to send a case assignment notification to case officer with wuaId {} for application version " +
+                "with id {} failed. Note: this hasn't prevented the assignment of the case to the case officer.",
+            caseOfficerUser.wuaId(), applicationVersion.getId(), exception);
+      }
     }
   }
 
