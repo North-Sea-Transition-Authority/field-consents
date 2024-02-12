@@ -218,6 +218,36 @@ class CaseAssignmentServiceTest {
     assertThat(actualApplicationVersion.getCurrentCaseOwner()).isNull();
 
     verify(applicationWorkAreaPriorityService).prioritiseApplicationInWorkArea(applicationVersion, USER, CASE_OFFICER_RELEASE_OWNERSHIP, REGULATOR);
+
+    verify(caseAssignmentEmailService).sendCaseOwnershipReleasedEmail(applicationVersion, USER);
+  }
+
+  @Test
+  void unassignCaseOfficer_whenSendCaseOwnershipReleasedEmailFails_thenApplicationVersionCaseOfficerWuaIsStillNulled() {
+    applicationVersion.setCaseOfficerWuaId(1L);
+
+    // WHEN the email service call throws an exception
+    doThrow(new RuntimeException("Failed to send email"))
+        .when(caseAssignmentEmailService)
+        .sendCaseOwnershipReleasedEmail(applicationVersion, USER);
+
+    // THEN it will be caught by the caller and not re-thrown
+    assertDoesNotThrow(
+        () -> caseAssignmentService.unassignCaseOfficer(applicationVersion, USER)
+    );
+
+    var applicationVersionArgumentCaptor = ArgumentCaptor.forClass(ApplicationVersion.class);
+
+    verify(applicationVersionRepository).save(applicationVersionArgumentCaptor.capture());
+
+    var actualApplicationVersion = applicationVersionArgumentCaptor.getValue();
+
+    assertThat(actualApplicationVersion.getCaseOfficerWuaId()).isNull();
+    assertThat(actualApplicationVersion.getCurrentCaseOwner()).isNull();
+
+    verify(applicationWorkAreaPriorityService).prioritiseApplicationInWorkArea(applicationVersion, USER, CASE_OFFICER_RELEASE_OWNERSHIP, REGULATOR);
+
+    verify(caseAssignmentEmailService).sendCaseOwnershipReleasedEmail(applicationVersion, USER);
   }
 
   @Test

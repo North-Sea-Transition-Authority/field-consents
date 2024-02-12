@@ -8,7 +8,9 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.fieldconsents.email.EmailService.SALUTATION;
 import static uk.co.nstauthority.fieldconsents.email.EmailService.TEST_PREFIX;
+import static uk.co.nstauthority.fieldconsents.email.EmailService.VALEDICTION;
 
 import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
@@ -33,6 +35,7 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthS
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryController;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil;
+import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.branding.ServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.correlationid.CorrelationIdUtil;
 import uk.co.nstauthority.fieldconsents.mvc.AbsoluteUrlService;
@@ -43,6 +46,14 @@ class EmailServiceTest {
   private static final ServiceBrandingConfigurationProperties SERVICE_BRANDING_CONFIGURATION_PROPERTIES = new ServiceBrandingConfigurationProperties(
       "name",
       "mnemonic"
+  );
+
+  private static final CustomerBrandingConfigurationProperties CUSTOMER_BRANDING_CONFIGURATION_PROPERTIES = new CustomerBrandingConfigurationProperties(
+      "name",
+      "mnemonic",
+      "email@fcs.co.uk",
+      "regulator legal name",
+      "team name"
   );
 
   private static final GovukNotifyTemplate GOVUK_NOTIFY_TEMPLATE = GovukNotifyTemplate.CASE_ASSIGNED_TO_CASE_OFFICER;
@@ -81,6 +92,7 @@ class EmailServiceTest {
     emailService = new EmailService(
         notificationLibraryClient,
         SERVICE_BRANDING_CONFIGURATION_PROPERTIES,
+        CUSTOMER_BRANDING_CONFIGURATION_PROPERTIES,
         applicationService,
         applicationAssetService,
         consentLengthService,
@@ -131,7 +143,10 @@ class EmailServiceTest {
                 tuple("APPLICATION_REFERENCE", "PCON/1/0 (Version 1)"),
                 tuple("PRIMARY_ASSET", FieldTestUtil.field1Json.getName()),
                 tuple("APPLICATION_DURATION", consentDuration.getConsentLength().getShortDisplayName()),
-                tuple("APPLICATION_URL", "/application-url"));
+                tuple("APPLICATION_URL", "/application-url"),
+                tuple("SALUTATION", SALUTATION),
+                tuple("VALEDICTION", VALEDICTION),
+                tuple("CONSENTS_TEAM_NAME", CUSTOMER_BRANDING_CONFIGURATION_PROPERTIES.teamName()));
       }
     }
 
@@ -161,7 +176,10 @@ class EmailServiceTest {
                 tuple("APPLICATION_REFERENCE", "PCON/1/0 (Version 1)"),
                 tuple("PRIMARY_ASSET", FieldTestUtil.field1Json.getName()),
                 tuple("APPLICATION_DURATION", consentDuration.getConsentLength().getShortDisplayName()),
-                tuple("APPLICATION_URL", "/application-url"));
+                tuple("APPLICATION_URL", "/application-url"),
+                tuple("SALUTATION", SALUTATION),
+                tuple("VALEDICTION", VALEDICTION),
+                tuple("CONSENTS_TEAM_NAME", CUSTOMER_BRANDING_CONFIGURATION_PROPERTIES.teamName()));
       }
     }
   }

@@ -114,6 +114,14 @@ public class CaseAssignmentService {
         user,
         ApplicationWorkAreaPriorityReason.CASE_OFFICER_RELEASE_OWNERSHIP,
         ApplicationWorkAreaPriorityGroup.REGULATOR);
+
+    try {
+      caseAssignmentEmailService.sendCaseOwnershipReleasedEmail(applicationVersion, user);
+    } catch (Exception exception) {
+      LOGGER.error("An attempt to send a case ownership released notification by case officer with wuaId {} " +
+              "for application version with id {} failed. Note: this hasn't prevented the ownership of the case to be released.",
+          user.wuaId(), applicationVersion.getId(), exception);
+    }
   }
 
   public List<TeamMemberView> getCaseOfficerAssignmentCandidates(ApplicationVersion applicationVersion,

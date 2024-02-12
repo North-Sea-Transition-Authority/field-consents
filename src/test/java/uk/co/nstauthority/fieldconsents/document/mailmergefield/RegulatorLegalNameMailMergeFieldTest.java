@@ -13,7 +13,7 @@ class RegulatorLegalNameMailMergeFieldTest {
   private static final String MNEMONIC = "REGULATOR_LEGAL_NAME";
   private static final String DESCRIPTION = "The regulator's legal name";
 
-  private final CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties = new CustomerBrandingConfigurationProperties(null, null, null, REGULATOR_LEGAL_NAME);
+  private final CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties = new CustomerBrandingConfigurationProperties(null, null, null, REGULATOR_LEGAL_NAME, null);
   private final RegulatorLegalNameMailMergeField mailMergeField = new RegulatorLegalNameMailMergeField(customerBrandingConfigurationProperties);
 
   @Test

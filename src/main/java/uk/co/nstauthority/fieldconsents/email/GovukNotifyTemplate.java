@@ -2,7 +2,8 @@ package uk.co.nstauthority.fieldconsents.email;
 
 public enum GovukNotifyTemplate {
 
-  CASE_ASSIGNED_TO_CASE_OFFICER("2b76efda-65ee-43c4-8365-9af47582fa78");
+  CASE_ASSIGNED_TO_CASE_OFFICER("520086fe-dfb3-4110-a6b2-c29f35fbc46a"),
+  CASE_RELEASED_BY_CASE_OFFICER("4745d25f-7787-4bfe-be94-126d0e7997e4");
 
   private final String templateId;
 

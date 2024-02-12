@@ -10,5 +10,6 @@ public record CustomerBrandingConfigurationProperties(
     @NotNull String name,
     @NotNull String mnemonic,
     @NotNull String email,
-    @NotNull String regulatorLegalName
+    @NotNull String regulatorLegalName,
+    @NotNull String teamName
 ) {}

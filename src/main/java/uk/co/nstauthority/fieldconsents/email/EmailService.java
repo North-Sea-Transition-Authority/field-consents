@@ -13,6 +13,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryController;
+import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.branding.ServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.correlationid.CorrelationIdUtil;
 import uk.co.nstauthority.fieldconsents.mvc.AbsoluteUrlService;
@@ -22,9 +23,12 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 public class EmailService {
 
   static final String TEST_PREFIX = "***TEST***";
+  static final String SALUTATION = "Dear";
+  static final String VALEDICTION = "Kind regards";
 
   private final NotificationLibraryClient notificationLibraryClient;
   private final ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties;
+  private final CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties;
   private final ApplicationService applicationService;
   private final ApplicationAssetService applicationAssetService;
   private final ConsentLengthService consentLengthService;
@@ -33,12 +37,14 @@ public class EmailService {
   @Autowired
   public EmailService(NotificationLibraryClient notificationLibraryClient,
                       ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties,
+                      CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties,
                       ApplicationService applicationService,
                       ApplicationAssetService applicationAssetService,
                       ConsentLengthService consentLengthService,
                       AbsoluteUrlService absoluteUrlService) {
     this.notificationLibraryClient = notificationLibraryClient;
     this.serviceBrandingConfigurationProperties = serviceBrandingConfigurationProperties;
+    this.customerBrandingConfigurationProperties = customerBrandingConfigurationProperties;
     this.applicationService = applicationService;
     this.applicationAssetService = applicationAssetService;
     this.consentLengthService = consentLengthService;
@@ -62,7 +68,10 @@ public class EmailService {
         .withMailMergeField("PRIMARY_ASSET", primaryAssetName)
         .withMailMergeField("APPLICATION_DURATION",
             consentLengthService.getConsentLengthDetails(applicationVersion).getConsentLength().getShortDisplayName())
-        .withMailMergeField("APPLICATION_URL", applicationUrl);
+        .withMailMergeField("APPLICATION_URL", applicationUrl)
+        .withMailMergeField("SALUTATION", SALUTATION)
+        .withMailMergeField("VALEDICTION", VALEDICTION)
+        .withMailMergeField("CONSENTS_TEAM_NAME", customerBrandingConfigurationProperties.teamName());
   }
 
   public void sendEmail(MergedTemplate mergedTemplate,

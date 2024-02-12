@@ -6,7 +6,9 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
@@ -20,11 +22,15 @@ public class TeamMemberViewService {
 
   private final TeamMemberService teamMemberService;
   private final EnergyPortalUserService energyPortalUserService;
+  private final TeamService teamService;
 
   @Autowired
-  public TeamMemberViewService(TeamMemberService teamMemberService, EnergyPortalUserService energyPortalUserService) {
+  public TeamMemberViewService(TeamMemberService teamMemberService,
+                               EnergyPortalUserService energyPortalUserService,
+                               TeamService teamService) {
     this.teamMemberService = teamMemberService;
     this.energyPortalUserService = energyPortalUserService;
+    this.teamService = teamService;
   }
 
   public List<TeamMemberView> getTeamMemberViewsForTeam(Team team) {
@@ -92,5 +98,21 @@ public class TeamMemberViewService {
         .collect(StreamUtils.toLinkedHashMap(
             teamMemberView -> teamMemberView.wuaId().toString(),
             TeamMemberView::getDisplayName));
+  }
+
+  private List<TeamMemberView> getTeamMemberViewsWithRolesForTeam(Team team, Set<TeamRole> teamRoles) {
+    var members = teamMemberService.getTeamMembers(team)
+        .stream()
+        .filter(teamMember -> CollectionUtils.containsAny(teamMember.roles(), teamRoles))
+        .toList();
+    return createUserViewsFromTeamMembers(members);
+  }
+
+  public List<TeamMemberView> getTeamMemberViewsWithRolesForTeamType(TeamType teamType, Set<TeamRole> teamRoles) {
+    return teamService.getTeamsByType(teamType)
+        .stream()
+        .map(team -> getTeamMemberViewsWithRolesForTeam(team, teamRoles))
+        .flatMap(Collection::stream)
+        .toList();
   }
 }

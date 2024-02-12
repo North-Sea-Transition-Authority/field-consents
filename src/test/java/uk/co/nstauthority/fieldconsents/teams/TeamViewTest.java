@@ -20,7 +20,8 @@ class TeamViewTest {
         "stub",
         "mnem",
         "email@fcs.co.uk",
-        "regulator legal name"
+        "regulator legal name",
+        "team name"
     );
   }
 
