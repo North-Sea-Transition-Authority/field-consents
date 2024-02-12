@@ -140,6 +140,7 @@ class EmailServiceTest {
             .containsExactlyInAnyOrder(
                 tuple("SUBJECT_PREFIX", TEST_PREFIX),
                 tuple("SERVICE_FULL_NAME", SERVICE_BRANDING_CONFIGURATION_PROPERTIES.name()),
+                tuple("REGULATOR_MNEMONIC", CUSTOMER_BRANDING_CONFIGURATION_PROPERTIES.mnemonic()),
                 tuple("APPLICATION_REFERENCE", "PCON/1/0 (Version 1)"),
                 tuple("PRIMARY_ASSET", FieldTestUtil.field1Json.getName()),
                 tuple("APPLICATION_DURATION", consentDuration.getConsentLength().getShortDisplayName()),
@@ -173,6 +174,7 @@ class EmailServiceTest {
             .containsExactlyInAnyOrder(
                 tuple("SUBJECT_PREFIX", ""),
                 tuple("SERVICE_FULL_NAME", SERVICE_BRANDING_CONFIGURATION_PROPERTIES.name()),
+                tuple("REGULATOR_MNEMONIC", CUSTOMER_BRANDING_CONFIGURATION_PROPERTIES.mnemonic()),
                 tuple("APPLICATION_REFERENCE", "PCON/1/0 (Version 1)"),
                 tuple("PRIMARY_ASSET", FieldTestUtil.field1Json.getName()),
                 tuple("APPLICATION_DURATION", consentDuration.getConsentLength().getShortDisplayName()),

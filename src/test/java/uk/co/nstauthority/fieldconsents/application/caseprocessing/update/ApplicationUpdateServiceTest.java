@@ -2,8 +2,10 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.update;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -60,6 +62,9 @@ class ApplicationUpdateServiceTest {
 
   @Mock
   private ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
+
+  @Mock
+  private ApplicationUpdateEmailService applicationUpdateEmailService;
 
   @InjectMocks
   private ApplicationUpdateService applicationUpdateService;
@@ -172,8 +177,10 @@ class ApplicationUpdateServiceTest {
   void saveApplicationUpdateRequest() {
     when(clock.instant()).thenReturn(CURRENT_INSTANT);
 
+    var deadlineInstant = clock.instant().plus(DEADLINE_AHEAD_HOURS, ChronoUnit.HOURS);
+
     applicationUpdateService.saveApplicationUpdateRequest(applicationVersion,
-        clock.instant().plus(DEADLINE_AHEAD_HOURS, ChronoUnit.HOURS),
+        deadlineInstant,
         APPLICATION_UPDATE_REQUEST_TEXT,
         USER
     );
@@ -188,6 +195,42 @@ class ApplicationUpdateServiceTest {
 
     verify(applicationWorkAreaPriorityService, times(1))
         .prioritiseApplicationInWorkArea(applicationVersion, USER, APPLICATION_UPDATE_REQUEST, INDUSTRY);
+
+    verify(applicationUpdateEmailService).sendApplicationUpdateRequestEmail(applicationVersion, deadlineInstant);
+  }
+
+  @Test
+  void saveApplicationUpdateRequest_whenSendApplicationUpdateRequestEmailFails_thenUpdateRequestIsStillSentToOperator() {
+    when(clock.instant()).thenReturn(CURRENT_INSTANT);
+
+    var deadlineInstant = clock.instant().plus(DEADLINE_AHEAD_HOURS, ChronoUnit.HOURS);
+
+    // WHEN the email service call throws an exception
+    doThrow(new RuntimeException("Failed to send email"))
+        .when(applicationUpdateEmailService)
+        .sendApplicationUpdateRequestEmail(applicationVersion, deadlineInstant);
+
+    // THEN it will be caught by the caller and not re-thrown
+    assertDoesNotThrow(
+        () ->  applicationUpdateService.saveApplicationUpdateRequest(applicationVersion,
+            deadlineInstant,
+            APPLICATION_UPDATE_REQUEST_TEXT,
+            USER
+        )
+    );
+
+    ArgumentCaptor<ApplicationUpdate> applicationUpdateArgumentCaptor = ArgumentCaptor.forClass(ApplicationUpdate.class);
+    verify(applicationUpdateRepository, times(1)).save(applicationUpdateArgumentCaptor.capture());
+    var actualApplicationUpdate = applicationUpdateArgumentCaptor.getValue();
+
+    assertThat(actualApplicationUpdate)
+        .usingRecursiveComparison()
+        .isEqualTo(applicationUpdate);
+
+    verify(applicationWorkAreaPriorityService, times(1))
+        .prioritiseApplicationInWorkArea(applicationVersion, USER, APPLICATION_UPDATE_REQUEST, INDUSTRY);
+
+    verify(applicationUpdateEmailService).sendApplicationUpdateRequestEmail(applicationVersion, deadlineInstant);
   }
 
   @Test

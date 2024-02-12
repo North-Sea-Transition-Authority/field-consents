@@ -10,6 +10,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +34,8 @@ public class ApplicationUpdateService {
   static final UnaryOperator<String> OPEN_APPLICATION_UPDATE_EXISTS =
       "A application update is already open for the application with version id %s"::formatted;
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationUpdateService.class);
+
   private final ApplicationService applicationService;
 
   private final ApplicationDuplicationService applicationDuplicationService;
@@ -42,17 +46,21 @@ public class ApplicationUpdateService {
 
   private final ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
 
+  private final ApplicationUpdateEmailService applicationUpdateEmailService;
+
   @Autowired
   ApplicationUpdateService(ApplicationService applicationService,
                            ApplicationDuplicationService applicationDuplicationService,
                            ApplicationUpdateRepository applicationUpdateRepository,
                            Clock clock,
-                           ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService) {
+                           ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService,
+                           ApplicationUpdateEmailService applicationUpdateEmailService) {
     this.applicationService = applicationService;
     this.applicationDuplicationService = applicationDuplicationService;
     this.applicationUpdateRepository = applicationUpdateRepository;
     this.clock = clock;
     this.applicationWorkAreaPriorityService = applicationWorkAreaPriorityService;
+    this.applicationUpdateEmailService = applicationUpdateEmailService;
   }
 
   public boolean openApplicationUpdateExists(ApplicationVersion applicationVersion) {
@@ -98,6 +106,15 @@ public class ApplicationUpdateService {
         APPLICATION_UPDATE_REQUEST,
         INDUSTRY
     );
+
+    try {
+      applicationUpdateEmailService.sendApplicationUpdateRequestEmail(applicationVersion, deadlineInstant);
+    } catch (Exception exception) {
+      LOGGER.error("An attempt to send an application update request notification to the operator " +
+              "by user with wuaId {} for application version with id {} failed. " +
+              "Note: this hasn't prevented the application update request being sent to the operator.",
+          user.wuaId(), applicationVersion.getId(), exception);
+    }
   }
 
   @Transactional

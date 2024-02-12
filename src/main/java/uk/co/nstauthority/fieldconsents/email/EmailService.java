@@ -64,6 +64,7 @@ public class EmailService {
     return notificationLibraryClient.getTemplate(notifyTemplate.getTemplateId())
         .withMailMergeField("SUBJECT_PREFIX", subjectPrefix)
         .withMailMergeField("SERVICE_FULL_NAME", serviceBrandingConfigurationProperties.name())
+        .withMailMergeField("REGULATOR_MNEMONIC", customerBrandingConfigurationProperties.mnemonic())
         .withMailMergeField("APPLICATION_REFERENCE", applicationReference)
         .withMailMergeField("PRIMARY_ASSET", primaryAssetName)
         .withMailMergeField("APPLICATION_DURATION",
