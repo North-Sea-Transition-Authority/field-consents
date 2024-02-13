@@ -1,8 +1,7 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.InstanceOfAssertFactories.type;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -20,7 +19,6 @@ import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.u
 import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.notificationBanner;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
-import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,11 +34,17 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentFigureUnitService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentFigureUnitView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.ConsentPreparationController;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 
 @ContextConfiguration(classes = ConsentDataController.class)
 class ConsentDataControllerTest extends AbstractApplicationControllerTest {
@@ -54,7 +58,13 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
   private ConsentDataService consentDataService;
 
   @MockBean
-  private ConsentDataFormValidator validator;
+  private ConsentDataFormValidator consentDataFormValidator;
+
+  @MockBean
+  private ConsentFigureUnitService consentFigureUnitService;
+
+  @MockBean
+  private ConsentLengthService consentLengthService;
 
   @Captor
   private ArgumentCaptor<ConsentDataForm> consentDataFormCaptor;
@@ -149,38 +159,44 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
 
   @Test
   void editConsentData() throws Exception {
-    var form = ConsentDataForm.from(LocalDate.parse("2024-01-01"), LocalDate.parse("2025-01-01"));
+    var consentLengthDetails = new ConsentLengthDetails();
+    var consentLengthType = ConsentLengthType.SHORT_TERM;
+    consentLengthDetails.setConsentLength(consentLengthType);
 
-    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
-    when(consentDataService.getPrefilledConsentDataForm(application)).thenReturn(form);
+    var form = ConsentDataForm.fromShortTermOrAnnualProductionApplication(ConsentDataTestUtil.newBuilder().build());
 
-    var model = mockMvc.perform(get(ReverseRouter.route(on(ConsentDataController.class).editConsentData(APPLICATION_ID)))
+    var consentFigureUnitView = ConsentFigureUnitView.fromShortTermOrAnnualProductionApplication(ProductionUnit.KSCM_PER_DAY);
+
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
+    when(consentDataService.getPrefilledConsentDataForm(applicationVersion, consentLengthDetails)).thenReturn(form);
+    when(consentFigureUnitService.getConsentFigureUnitView(applicationVersion, consentLengthType))
+        .thenReturn(consentFigureUnitView);
+
+    mockMvc.perform(get(ReverseRouter.route(on(ConsentDataController.class).editConsentData(APPLICATION_ID)))
         .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name(VIEW_NAME))
         .andExpect(model().attribute("pageTitle", "Edit consent data"))
-        .andExpect(model().attributeExists("form"))
-        .andReturn()
-        .getModelAndView()
-        .getModel();
-
-    assertThat(model.get("form")).isEqualTo(form);
+        .andExpect(model().attribute("form", form))
+        .andExpect(model().attribute("applicationType", application.getType()))
+        .andExpect(model().attribute("consentLengthType", consentLengthType))
+        .andExpect(model().attribute("consentFigureUnitView", consentFigureUnitView));
   }
 
   @Test
   void submitConsentData() throws Exception {
-    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    var consentLengthDetails = new ConsentLengthDetails();
+    var consentLengthType = ConsentLengthType.SHORT_TERM;
+    consentLengthDetails.setConsentLength(consentLengthType);
+
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
 
     mockMvc.perform(post(ReverseRouter.route(on(ConsentDataController.class)
         .submitConsentData(APPLICATION_ID, null, null, null)))
         .with(user(user))
-        .with(csrf())
-        .param("consentStartDate.year", "2024")
-        .param("consentStartDate.month", "1")
-        .param("consentStartDate.day", "1")
-        .param("consentEndDate.year", "2025")
-        .param("consentEndDate.month", "1")
-        .param("consentEndDate.day", "1"))
+        .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ConsentPreparationController.class).viewConsentPreparationPage(APPLICATION_ID))))
         .andExpect(notificationBanner(NotificationBanner.builder()
@@ -188,62 +204,48 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
             .withHeadingContent("Consent data saved")
             .build()));
 
-    var expectedConsentStartDate = LocalDate.parse("2024-01-01");
-    var expectedConsentEndDate = LocalDate.parse("2025-01-01");
-
-    verify(validator).validate(consentDataFormCaptor.capture(), any(BindingResult.class));
+    verify(consentDataFormValidator)
+        .validate(consentDataFormCaptor.capture(), eq(application), eq(consentLengthType), any(BindingResult.class));
 
     var form = consentDataFormCaptor.getValue();
 
-    assertThat(form)
-        .extracting(
-            consentDataForm -> consentDataForm.consentStartDate().getAsLocalDate().orElseThrow(),
-            consentDataForm -> consentDataForm.consentEndDate().getAsLocalDate().orElseThrow()
-        ).containsExactly(
-            expectedConsentStartDate,
-            expectedConsentEndDate
-        );
-
-    verify(consentDataService).saveConsentData(application, form);
+    verify(consentDataService).saveConsentData(application, consentLengthType, form);
   }
 
   @Test
   void submitConsentData_validationError() throws Exception {
+    var consentLengthDetails = new ConsentLengthDetails();
+    var consentLengthType = ConsentLengthType.SHORT_TERM;
+    consentLengthDetails.setConsentLength(consentLengthType);
+
+    var consentFigureUnitView = ConsentFigureUnitView.fromShortTermOrAnnualProductionApplication(ProductionUnit.KSCM_PER_DAY);
+
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
+
     doAnswer(invocation -> {
-      var bindingResult = invocation.getArgument(1, BindingResult.class);
-      bindingResult.rejectValue("consentStartDate.yearInput.inputValue", "errorCode", "defaultMessage");
+      var bindingResult = invocation.getArgument(3, BindingResult.class);
+      bindingResult.rejectValue("consentStartDateInput.yearInput.inputValue", "errorCode", "defaultMessage");
       return null;
     })
-        .when(validator)
-        .validate(any(ConsentDataForm.class), any(BindingResult.class));
+        .when(consentDataFormValidator)
+        .validate(any(ConsentDataForm.class), eq(application), eq(consentLengthType), any(BindingResult.class));
 
-    var model = mockMvc.perform(post(ReverseRouter.route(on(ConsentDataController.class)
+    when(consentFigureUnitService.getConsentFigureUnitView(applicationVersion, consentLengthType))
+        .thenReturn(consentFigureUnitView);
+
+    mockMvc.perform(post(ReverseRouter.route(on(ConsentDataController.class)
             .submitConsentData(APPLICATION_ID, null, null, null)))
             .with(user(user))
-            .with(csrf())
-            .param("consentStartDate.year", "2024")
-            .param("consentStartDate.month", "1")
-            .param("consentStartDate.day", "1")
-            .param("consentEndDate.year", "2025")
-            .param("consentEndDate.month", "1")
-            .param("consentEndDate.day", "1"))
+            .with(csrf()))
         .andExpect(status().is2xxSuccessful())
         .andExpect(view().name(VIEW_NAME))
+        .andExpect(model().attribute("pageTitle", "Edit consent data"))
         .andExpect(model().attributeExists("form"))
-        .andReturn()
-        .getModelAndView()
-        .getModel();
+        .andExpect(model().attribute("applicationType", application.getType()))
+        .andExpect(model().attribute("consentLengthType", consentLengthType))
+        .andExpect(model().attribute("consentFigureUnitView", consentFigureUnitView));
 
-    assertThat(model.get("form"))
-        .asInstanceOf(type(ConsentDataForm.class))
-        .extracting(
-            form -> form.consentStartDate().getAsLocalDate().orElseThrow(),
-            form -> form.consentEndDate().getAsLocalDate().orElseThrow()
-        ).containsExactly(
-            LocalDate.parse("2024-01-01"),
-            LocalDate.parse("2025-01-01")
-        );
-
-    verify(consentDataService, never()).saveConsentData(any(), any());
+    verify(consentDataService, never()).saveConsentData(any(), any(), any());
   }
 }

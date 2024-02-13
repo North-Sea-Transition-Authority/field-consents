@@ -7,6 +7,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import uk.co.nstauthority.fieldconsents.application.Application;
 
@@ -25,6 +26,16 @@ public class ConsentData {
   private LocalDate consentStartDate;
 
   private LocalDate consentEndDate;
+
+  private BigDecimal shortTermOrAnnualProductionMinOil;
+
+  private BigDecimal shortTermOrAnnualProductionMaxOil;
+
+  private BigDecimal shortTermOrAnnualProductionMinGas;
+
+  private BigDecimal shortTermOrAnnualProductionMaxGas;
+
+  private BigDecimal emissionDailyAverage;
 
   public ConsentData() {
   }
@@ -59,5 +70,45 @@ public class ConsentData {
 
   public void setConsentEndDate(LocalDate consentEndDate) {
     this.consentEndDate = consentEndDate;
+  }
+
+  public BigDecimal getShortTermOrAnnualProductionMinOil() {
+    return shortTermOrAnnualProductionMinOil;
+  }
+
+  public void setShortTermOrAnnualProductionMinOil(BigDecimal shortTermOrAnnualProductionMinOil) {
+    this.shortTermOrAnnualProductionMinOil = shortTermOrAnnualProductionMinOil;
+  }
+
+  public BigDecimal getShortTermOrAnnualProductionMaxOil() {
+    return shortTermOrAnnualProductionMaxOil;
+  }
+
+  public void setShortTermOrAnnualProductionMaxOil(BigDecimal shortTermOrAnnualProductionMaxOil) {
+    this.shortTermOrAnnualProductionMaxOil = shortTermOrAnnualProductionMaxOil;
+  }
+
+  public BigDecimal getShortTermOrAnnualProductionMinGas() {
+    return shortTermOrAnnualProductionMinGas;
+  }
+
+  public void setShortTermOrAnnualProductionMinGas(BigDecimal shortTermOrAnnualProductionMinGas) {
+    this.shortTermOrAnnualProductionMinGas = shortTermOrAnnualProductionMinGas;
+  }
+
+  public BigDecimal getShortTermOrAnnualProductionMaxGas() {
+    return shortTermOrAnnualProductionMaxGas;
+  }
+
+  public void setShortTermOrAnnualProductionMaxGas(BigDecimal shortTermOrAnnualProductionMaxGas) {
+    this.shortTermOrAnnualProductionMaxGas = shortTermOrAnnualProductionMaxGas;
+  }
+
+  public BigDecimal getEmissionDailyAverage() {
+    return emissionDailyAverage;
+  }
+
+  public void setEmissionDailyAverage(BigDecimal emissionDailyAverage) {
+    this.emissionDailyAverage = emissionDailyAverage;
   }
 }

@@ -1,19 +1,23 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.entry;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.formatting.DecimalFormatUtils.bigDecimalToFormattedString;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -24,24 +28,23 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentEmissionFigureService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionFiguresDto;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionFiguresDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionFiguresService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionFiguresView;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionLongTermFiguresService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionLongTermFiguresTestUtil;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.document.FieldConsentsDocumentInstanceService;
+import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 
 @ExtendWith(MockitoExtension.class)
 class ConsentDataServiceTest {
-
-  @Mock
-  private ApplicationVersionService applicationVersionService;
 
   @Mock
   private ConsentDataRepository repository;
@@ -56,6 +59,9 @@ class ConsentDataServiceTest {
   private ConsentEmissionFigureService consentEmissionFigureService;
 
   @Mock
+  private ConsentProductionLongTermFiguresService consentProductionLongTermFiguresService;
+
+  @Mock
   private FieldConsentsDocumentInstanceService fieldConsentsDocumentInstanceService;
 
   @InjectMocks
@@ -65,15 +71,10 @@ class ConsentDataServiceTest {
   @Captor
   private ArgumentCaptor<ConsentData> consentDataCaptor;
 
-  private Application application;
-
-  @BeforeEach
-  void setUp() {
-    application = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.FLARE).getApplication();
-  }
-
   @Test
   void findConsentData() {
+    var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
+
     var consentData = ConsentDataTestUtil.newBuilder().build();
 
     when(repository.findByApplication(application)).thenReturn(Optional.of(consentData));
@@ -82,110 +83,746 @@ class ConsentDataServiceTest {
 
   @Test
   void findConsentData_notFound() {
+    var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
+
     when(repository.findByApplication(application)).thenReturn(Optional.empty());
     assertThat(consentDataService.findConsentData(application)).isEmpty();
   }
 
   @Test
   void saveConsentData_doesNotExistBeforeSaving() {
-    var startDate = LocalDate.parse("2024-01-01");
-    var endDate = LocalDate.parse("2025-01-01");
+    var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
 
-    var form = ConsentDataForm.from(startDate, endDate);
+    var form = new ConsentDataForm();
+    var consentLengthType = ConsentLengthType.SHORT_TERM;
 
     when(repository.findByApplication(application)).thenReturn(Optional.empty());
+    doNothing().when(consentDataService).updateConsentDataFromForm(any(), any(), any(), any());
 
-    consentDataService.saveConsentData(application, form);
+    consentDataService.saveConsentData(application, consentLengthType, form);
+
+    verify(consentDataService)
+        .updateConsentDataFromForm(eq(application), eq(consentLengthType), consentDataCaptor.capture(), eq(form));
+
+    var consentData = consentDataCaptor.getValue();
+
+    assertThat(consentData)
+        .extracting(
+            ConsentData::getId,
+            ConsentData::getApplication
+        ).containsExactly(
+            null,
+            application
+        );
 
     verify(fieldConsentsDocumentInstanceService).createDocumentInstancesForApplication(application);
 
-    verify(repository).save(consentDataCaptor.capture());
-    assertThat(consentDataCaptor.getValue())
+    verify(repository).save(consentData);
+
+    verify(consentProductionLongTermFiguresService, never()).saveConsentProductionLongTermFigures(application, form);
+  }
+
+  @Test
+  void saveConsentData_doesNotExistBeforeSaving_applicationTypeIsProductionAndConsentLengthIsLongTerm() {
+    var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
+
+    var form = new ConsentDataForm();
+    var consentLengthType = ConsentLengthType.LONG_TERM;
+
+    when(repository.findByApplication(application)).thenReturn(Optional.empty());
+    doNothing().when(consentDataService).updateConsentDataFromForm(any(), any(), any(), any());
+
+    consentDataService.saveConsentData(application, consentLengthType, form);
+
+    verify(consentDataService)
+        .updateConsentDataFromForm(eq(application), eq(consentLengthType), consentDataCaptor.capture(), eq(form));
+
+    var consentData = consentDataCaptor.getValue();
+
+    assertThat(consentData)
         .extracting(
             ConsentData::getId,
-            ConsentData::getApplication,
-            ConsentData::getConsentStartDate,
-            ConsentData::getConsentEndDate
+            ConsentData::getApplication
         ).containsExactly(
             null,
-            application,
-            startDate,
-            endDate
+            application
         );
+
+    verify(fieldConsentsDocumentInstanceService).createDocumentInstancesForApplication(application);
+
+    verify(repository).save(consentData);
+
+    verify(consentProductionLongTermFiguresService).saveConsentProductionLongTermFigures(application, form);
   }
 
   @Test
   void saveConsentData_doesExistBeforeSaving() {
-    var startDate = LocalDate.parse("2024-01-01");
-    var endDate = LocalDate.parse("2025-01-01");
+    var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
 
-    var form = ConsentDataForm.from(startDate, endDate);
+    var form = new ConsentDataForm();
+    var consentLengthType = ConsentLengthType.SHORT_TERM;
 
     var existingConsentData = ConsentDataTestUtil.newBuilder().build();
 
     when(repository.findByApplication(application)).thenReturn(Optional.of(existingConsentData));
+    doNothing().when(consentDataService).updateConsentDataFromForm(any(), any(), any(), any());
 
-    consentDataService.saveConsentData(application, form);
+    consentDataService.saveConsentData(application, consentLengthType, form);
+
+    verify(consentDataService)
+        .updateConsentDataFromForm(application, consentLengthType, existingConsentData, form);
+
+    assertThat(existingConsentData)
+        .extracting(
+            ConsentData::getId,
+            ConsentData::getApplication
+        ).containsExactly(
+            existingConsentData.getId(),
+            application
+        );
 
     verify(fieldConsentsDocumentInstanceService, never()).createDocumentInstancesForApplication(any());
 
-    verify(repository).save(consentDataCaptor.capture());
-    assertThat(consentDataCaptor.getValue())
+    verify(repository).save(existingConsentData);
+
+    verify(consentProductionLongTermFiguresService, never()).saveConsentProductionLongTermFigures(application, form);
+  }
+
+  @Test
+  void saveConsentData_doesExistBeforeSaving_applicationTypeIsProductionAndConsentLengthTypeIsLongTerm() {
+    var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
+
+    var form = new ConsentDataForm();
+    var consentLengthType = ConsentLengthType.LONG_TERM;
+
+    var existingConsentData = ConsentDataTestUtil.newBuilder().build();
+
+    when(repository.findByApplication(application)).thenReturn(Optional.of(existingConsentData));
+    doNothing().when(consentDataService).updateConsentDataFromForm(any(), any(), any(), any());
+
+    consentDataService.saveConsentData(application, consentLengthType, form);
+
+    verify(consentDataService)
+        .updateConsentDataFromForm(application, consentLengthType, existingConsentData, form);
+
+    assertThat(existingConsentData)
         .extracting(
             ConsentData::getId,
-            ConsentData::getApplication,
+            ConsentData::getApplication
+        ).containsExactly(
+            existingConsentData.getId(),
+            application
+        );
+
+    verify(fieldConsentsDocumentInstanceService, never()).createDocumentInstancesForApplication(any());
+
+    verify(repository).save(existingConsentData);
+
+    verify(consentProductionLongTermFiguresService).saveConsentProductionLongTermFigures(application, form);
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = ConsentLengthType.class, names = { "SHORT_TERM", "ANNUAL" }, mode = EnumSource.Mode.INCLUDE)
+  void updateConsentDataFromForm_applicationTypeIsProductionAndConsentLengthTypeIsShortTermOrAnnual(
+      ConsentLengthType consentLengthType
+  ) {
+    var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
+    var consentData = new ConsentData();
+
+    var form = new ConsentDataForm();
+
+    var startDate = LocalDate.parse("2024-01-01");
+    var endDate = LocalDate.parse("2025-01-01");
+
+    form.getConsentStartDateInput().setDate(startDate);
+    form.getConsentEndDateInput().setDate(endDate);
+
+    doNothing().when(consentDataService).updateConsentDataFromFormForShortTermOrAnnualProductionApplication(any(), any());
+
+    consentDataService.updateConsentDataFromForm(application, consentLengthType, consentData, form);
+
+    assertThat(consentData)
+        .extracting(
             ConsentData::getConsentStartDate,
             ConsentData::getConsentEndDate
         ).containsExactly(
-            existingConsentData.getId(),
-            application,
             startDate,
             endDate
+        );
+
+    verify(consentDataService).updateConsentDataFromFormForShortTermOrAnnualProductionApplication(consentData, form);
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = ApplicationType.class, names = { "FLARE", "VENT" }, mode = EnumSource.Mode.INCLUDE)
+  void updateConsentDataFromForm_applicationTypeIsFlareOrVent(ApplicationType applicationType) {
+    var application = ApplicationTestUtil.getNewApplicationWithType(applicationType);
+    var consentLengthType = ConsentLengthType.SHORT_TERM;
+    var consentData = new ConsentData();
+
+    var form = new ConsentDataForm();
+
+    var startDate = LocalDate.parse("2024-01-01");
+    var endDate = LocalDate.parse("2025-01-01");
+
+    form.getConsentStartDateInput().setDate(startDate);
+    form.getConsentEndDateInput().setDate(endDate);
+
+    doNothing().when(consentDataService).updateConsentDataFromFormForEmissionApplication(any(), any());
+
+    consentDataService.updateConsentDataFromForm(application, consentLengthType, consentData, form);
+
+    assertThat(consentData)
+        .extracting(
+            ConsentData::getConsentStartDate,
+            ConsentData::getConsentEndDate
+        ).containsExactly(
+            startDate,
+            endDate
+        );
+
+    verify(consentDataService).updateConsentDataFromFormForEmissionApplication(consentData, form);
+  }
+
+  @Test
+  void updateConsentDataFromFormForShortTermOrAnnualProductionApplication() {
+    var consentData = new ConsentData();
+    var form = new ConsentDataForm();
+
+    var consentProductionFiguresDto = ConsentProductionFiguresDtoTestUtil.builder().build();
+
+    form.getShortTermOrAnnualConsentProductionFiguresInput().setInputValuesFromDto(consentProductionFiguresDto);
+
+    consentDataService.updateConsentDataFromFormForShortTermOrAnnualProductionApplication(consentData, form);
+
+    assertThat(consentData)
+        .extracting(
+            ConsentData::getShortTermOrAnnualProductionMinOil,
+            ConsentData::getShortTermOrAnnualProductionMaxOil,
+            ConsentData::getShortTermOrAnnualProductionMinGas,
+            ConsentData::getShortTermOrAnnualProductionMaxGas
+        )
+        .containsExactly(
+            consentProductionFiguresDto.minOil(),
+            consentProductionFiguresDto.maxOil(),
+            consentProductionFiguresDto.minGas(),
+            consentProductionFiguresDto.maxGas()
         );
   }
 
   @Test
-  void getPrefilledConsentDataForm_consentDataExists() {
+  void updateConsentDataFromFormForEmissionApplication() {
+    var consentData = new ConsentData();
+    var form = new ConsentDataForm();
+
+    var emissionDailyAverage = BigDecimal.valueOf(873.46);
+
+    form.getEmissionDailyAverageInput().setInputValue(bigDecimalToFormattedString(emissionDailyAverage));
+
+    consentDataService.updateConsentDataFromFormForEmissionApplication(consentData, form);
+
+    assertThat(consentData.getEmissionDailyAverage()).isEqualTo(emissionDailyAverage);
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = ConsentLengthType.class, names = { "SHORT_TERM", "ANNUAL" }, mode = EnumSource.Mode.INCLUDE)
+  void getPrefilledConsentDataForm_applicationTypeIsProductionAndConsentLengthTypeIsShortTermOrAnnual(
+      ConsentLengthType consentLengthType
+  ) {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+
+    var consentLengthDetails = new ConsentLengthDetails();
+    consentLengthDetails.setConsentLength(consentLengthType);
+
+    var prefilledForm = new ConsentDataForm();
+
+    doReturn(prefilledForm)
+        .when(consentDataService)
+        .getPrefilledConsentDataFormForShortTermOrAnnualProductionApplication(applicationVersion, consentLengthDetails);
+
+    assertThat(consentDataService.getPrefilledConsentDataForm(applicationVersion, consentLengthDetails)).isEqualTo(prefilledForm);
+  }
+
+  @Test
+  void getPrefilledConsentDataForm_applicationTypeIsProductionAndConsentLengthTypeIsLongTerm() {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+
+    var consentLengthDetails = new ConsentLengthDetails();
+    consentLengthDetails.setConsentLength(ConsentLengthType.LONG_TERM);
+
+    var prefilledForm = new ConsentDataForm();
+
+    doReturn(prefilledForm)
+        .when(consentDataService)
+        .getPrefilledConsentDataFormForLongTermProductionApplication(applicationVersion, consentLengthDetails);
+
+    assertThat(consentDataService.getPrefilledConsentDataForm(applicationVersion, consentLengthDetails)).isEqualTo(prefilledForm);
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = ApplicationType.class, names = { "FLARE", "VENT" }, mode = EnumSource.Mode.INCLUDE)
+  void getPrefilledConsentDataForm_applicationTypeIsFlareOrVent(ApplicationType applicationType) {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
+
+    var consentLengthDetails = new ConsentLengthDetails();
+    consentLengthDetails.setConsentLength(ConsentLengthType.SHORT_TERM);
+
+    var prefilledForm = new ConsentDataForm();
+
+    doReturn(prefilledForm)
+        .when(consentDataService)
+        .getPrefilledConsentDataFormForEmissionApplication(applicationVersion, consentLengthDetails);
+
+    assertThat(consentDataService.getPrefilledConsentDataForm(applicationVersion, consentLengthDetails)).isEqualTo(prefilledForm);
+  }
+
+  @Test
+  void getPrefilledConsentDataFormForShortTermOrAnnualProductionApplication_consentDataExists() {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+
+    var consentLengthDetails = new ConsentLengthDetails();
+    consentLengthDetails.setConsentLength(ConsentLengthType.SHORT_TERM);
+
+    var shortTermOrAnnualProductionMinOil = BigDecimal.valueOf(235.79);
+    var shortTermOrAnnualProductionMaxOil = BigDecimal.valueOf(673.12);
+    var shortTermOrAnnualProductionMinGas = BigDecimal.valueOf(112.89);
+    var shortTermOrAnnualProductionMaxGas = BigDecimal.valueOf(456.99);
+
+    var consentData = ConsentDataTestUtil.newBuilder()
+        .withShortTermOrAnnualProductionMinOil(shortTermOrAnnualProductionMinOil)
+        .withShortTermOrAnnualProductionMaxOil(shortTermOrAnnualProductionMaxOil)
+        .withShortTermOrAnnualProductionMinGas(shortTermOrAnnualProductionMinGas)
+        .withShortTermOrAnnualProductionMaxGas(shortTermOrAnnualProductionMaxGas)
+        .build();
+
+    doReturn(Optional.of(consentData)).when(consentDataService).findConsentData(applicationVersion.getApplication());
+
+    assertThat(
+        consentDataService.getPrefilledConsentDataFormForShortTermOrAnnualProductionApplication(
+            applicationVersion,
+            consentLengthDetails
+        )
+    )
+        .extracting(
+            consentDataForm -> consentDataForm.getConsentStartDateInput().getAsLocalDate().orElseThrow(),
+            consentDataForm -> consentDataForm.getConsentEndDateInput().getAsLocalDate().orElseThrow(),
+            consentDataForm -> consentDataForm.getShortTermOrAnnualConsentProductionFiguresInput().getAsDtoOrThrow()
+        )
+        .containsExactly(
+            consentData.getConsentStartDate(),
+            consentData.getConsentEndDate(),
+            new ConsentProductionFiguresDto(
+                shortTermOrAnnualProductionMinOil,
+                shortTermOrAnnualProductionMaxOil,
+                shortTermOrAnnualProductionMinGas,
+                shortTermOrAnnualProductionMaxGas
+            )
+        );
+  }
+
+  @Test
+  void getPrefilledConsentDataFormForShortTermOrAnnualProductionApplication_consentDataDoesNotExist_consentLengthTypeIsShortTerm() {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+
+    var consentLengthDetails = new ConsentLengthDetails();
+    consentLengthDetails.setConsentLength(ConsentLengthType.SHORT_TERM);
+
+    var proposedConsentStartDate = LocalDate.parse("2024-01-01");
+    var proposedConsentEndDate = LocalDate.parse("2025-01-01");
+
+    var shortTermConsentProductionFiguresDto = ConsentProductionFiguresDtoTestUtil.builder().build();
+
+    doReturn(Optional.empty()).when(consentDataService).findConsentData(applicationVersion.getApplication());
+    when(consentLengthService.getProposedConsentStartDate(consentLengthDetails)).thenReturn(proposedConsentStartDate);
+    when(consentLengthService.getProposedConsentEndDate(consentLengthDetails)).thenReturn(proposedConsentEndDate);
+    when(consentProductionFiguresService.getShortTermConsentProductionFiguresDto(applicationVersion))
+        .thenReturn(shortTermConsentProductionFiguresDto);
+
+    assertThat(
+        consentDataService.getPrefilledConsentDataFormForShortTermOrAnnualProductionApplication(
+            applicationVersion,
+            consentLengthDetails
+        )
+    )
+        .extracting(
+            consentDataForm -> consentDataForm.getConsentStartDateInput().getAsLocalDate().orElseThrow(),
+            consentDataForm -> consentDataForm.getConsentEndDateInput().getAsLocalDate().orElseThrow(),
+            consentDataForm -> consentDataForm.getShortTermOrAnnualConsentProductionFiguresInput().getAsDtoOrThrow()
+        )
+        .containsExactly(
+            proposedConsentStartDate,
+            proposedConsentEndDate,
+            shortTermConsentProductionFiguresDto
+        );
+  }
+
+  @Test
+  void getPrefilledConsentDataFormForShortTermOrAnnualProductionApplication_consentDataDoesNotExist_consentLengthTypeIsAnnual() {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+
+    var consentLengthDetails = new ConsentLengthDetails();
+    consentLengthDetails.setConsentLength(ConsentLengthType.ANNUAL);
+
+    var proposedConsentStartDate = LocalDate.parse("2024-01-01");
+    var proposedConsentEndDate = LocalDate.parse("2025-01-01");
+
+    var annualConsentProductionFiguresDto = ConsentProductionFiguresDtoTestUtil.builder().build();
+
+    doReturn(Optional.empty()).when(consentDataService).findConsentData(applicationVersion.getApplication());
+    when(consentLengthService.getProposedConsentStartDate(consentLengthDetails)).thenReturn(proposedConsentStartDate);
+    when(consentLengthService.getProposedConsentEndDate(consentLengthDetails)).thenReturn(proposedConsentEndDate);
+    when(consentProductionFiguresService.getAnnualConsentProductionFiguresDto(applicationVersion))
+        .thenReturn(annualConsentProductionFiguresDto);
+
+    assertThat(
+        consentDataService.getPrefilledConsentDataFormForShortTermOrAnnualProductionApplication(
+            applicationVersion,
+            consentLengthDetails
+        )
+    )
+        .extracting(
+            consentDataForm -> consentDataForm.getConsentStartDateInput().getAsLocalDate().orElseThrow(),
+            consentDataForm -> consentDataForm.getConsentEndDateInput().getAsLocalDate().orElseThrow(),
+            consentDataForm -> consentDataForm.getShortTermOrAnnualConsentProductionFiguresInput().getAsDtoOrThrow()
+        )
+        .containsExactly(
+            proposedConsentStartDate,
+            proposedConsentEndDate,
+            annualConsentProductionFiguresDto
+        );
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = ConsentLengthType.class, names = { "SHORT_TERM", "ANNUAL" }, mode = EnumSource.Mode.EXCLUDE)
+  void getPrefilledConsentDataFormForShortTermOrAnnualProductionApplication_consentDataDoesNotExist_consentLengthTypeIsNotShortTermOrAnnual(
+      ConsentLengthType consentLengthType
+  ) {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+
+    var consentLengthDetails = new ConsentLengthDetails();
+    consentLengthDetails.setConsentLength(consentLengthType);
+
+    var proposedConsentStartDate = LocalDate.parse("2024-01-01");
+    var proposedConsentEndDate = LocalDate.parse("2025-01-01");
+
+    doReturn(Optional.empty()).when(consentDataService).findConsentData(applicationVersion.getApplication());
+    when(consentLengthService.getProposedConsentStartDate(consentLengthDetails)).thenReturn(proposedConsentStartDate);
+    when(consentLengthService.getProposedConsentEndDate(consentLengthDetails)).thenReturn(proposedConsentEndDate);
+
+    assertThatThrownBy(() ->
+        consentDataService.getPrefilledConsentDataFormForShortTermOrAnnualProductionApplication(
+            applicationVersion,
+            consentLengthDetails
+        )
+    )
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Unexpected ConsentLengthType: %s".formatted(consentLengthType));
+  }
+
+  @Test
+  void getPrefilledConsentDataFormForLongTermProductionApplication_consentDataExists() {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var application = applicationVersion.getApplication();
+
+    var consentLengthDetails = new ConsentLengthDetails();
+    consentLengthDetails.setConsentLength(ConsentLengthType.LONG_TERM);
+
     var consentData = ConsentDataTestUtil.newBuilder().build();
 
-    doReturn(Optional.of(consentData)).when(consentDataService).findConsentData(application);
+    var consentProductionLongTermFigures2024 = ConsentProductionLongTermFiguresTestUtil.builder()
+        .withYear(2024)
+        .withMinOil(BigDecimal.valueOf(428.76))
+        .withMaxOil(BigDecimal.valueOf(714.23))
+        .withMinGas(BigDecimal.valueOf(189.47))
+        .withMaxGas(BigDecimal.valueOf(837.14))
+        .build();
+    var consentProductionLongTermFigures2025 = ConsentProductionLongTermFiguresTestUtil.builder()
+        .withYear(2025)
+        .withMinOil(BigDecimal.valueOf(583.24))
+        .withMaxOil(BigDecimal.valueOf(327.89))
+        .withMinGas(BigDecimal.valueOf(901.45))
+        .withMaxGas(BigDecimal.valueOf(124.56))
+        .build();
+    var consentProductionLongTermFigures2026 = ConsentProductionLongTermFiguresTestUtil.builder()
+        .withYear(2026)
+        .withMinOil(BigDecimal.valueOf(241.57))
+        .withMaxOil(BigDecimal.valueOf(789.32))
+        .withMinGas(BigDecimal.valueOf(456.28))
+        .withMaxGas(BigDecimal.valueOf(602.11))
+        .build();
+    var consentProductionLongTermFigures2027 = ConsentProductionLongTermFiguresTestUtil.builder()
+        .withYear(2027)
+        .withMinOil(BigDecimal.valueOf(147.83))
+        .withMaxOil(BigDecimal.valueOf(562.39))
+        .withMinGas(BigDecimal.valueOf(378.21))
+        .withMaxGas(BigDecimal.valueOf(943.67))
+        .build();
+    var consentProductionLongTermFigures2028 = ConsentProductionLongTermFiguresTestUtil.builder()
+        .withYear(2028)
+        .withMinOil(BigDecimal.valueOf(689.45))
+        .withMaxOil(BigDecimal.valueOf(235.78))
+        .withMinGas(BigDecimal.valueOf(501.92))
+        .withMaxGas(BigDecimal.valueOf(789.34))
+        .build();
 
-    assertThat(consentDataService.getPrefilledConsentDataForm(application))
+    var consentProductionLongTermFiguresList = List.of(
+        consentProductionLongTermFigures2026,
+        consentProductionLongTermFigures2028,
+        consentProductionLongTermFigures2025,
+        consentProductionLongTermFigures2024,
+        consentProductionLongTermFigures2027
+    );
+
+    doReturn(Optional.of(consentData)).when(consentDataService).findConsentData(applicationVersion.getApplication());
+
+    when(consentProductionLongTermFiguresService.getConsentProductionLongTermFiguresList(application))
+        .thenReturn(consentProductionLongTermFiguresList);
+
+    var form = consentDataService.getPrefilledConsentDataFormForLongTermProductionApplication(
+        applicationVersion,
+        consentLengthDetails
+    );
+
+    assertThat(form)
         .extracting(
-            form -> form.consentStartDate().getAsLocalDate().orElseThrow(),
-            form -> form.consentEndDate().getAsLocalDate().orElseThrow()
+            consentDataForm -> consentDataForm.getConsentStartDateInput().getAsLocalDate().orElseThrow(),
+            consentDataForm -> consentDataForm.getConsentEndDateInput().getAsLocalDate().orElseThrow()
         )
         .containsExactly(
             consentData.getConsentStartDate(),
             consentData.getConsentEndDate()
         );
+
+    assertThat(
+        form.getLongTermConsentProductionFiguresInputs()
+            .entrySet()
+            .stream()
+            .collect(StreamUtils.toLinkedHashMap(Map.Entry::getKey, entry -> entry.getValue().getAsDtoOrThrow()))
+    )
+        .containsExactly(
+            entry("2024", ConsentProductionFiguresDto.fromConsentProductionLongTermFigures(consentProductionLongTermFigures2024)),
+            entry("2025", ConsentProductionFiguresDto.fromConsentProductionLongTermFigures(consentProductionLongTermFigures2025)),
+            entry("2026", ConsentProductionFiguresDto.fromConsentProductionLongTermFigures(consentProductionLongTermFigures2026)),
+            entry("2027", ConsentProductionFiguresDto.fromConsentProductionLongTermFigures(consentProductionLongTermFigures2027)),
+            entry("2028", ConsentProductionFiguresDto.fromConsentProductionLongTermFigures(consentProductionLongTermFigures2028))
+        );
   }
 
   @Test
-  void getPrefilledConsentDataForm_consentDataDoesNotExist() {
-    var applicationVersion = new ApplicationVersion();
+  void getPrefilledConsentDataFormForLongTermProductionApplication_consentDataDoesNotExist() {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
 
     var consentLengthDetails = new ConsentLengthDetails();
+    consentLengthDetails.setConsentLength(ConsentLengthType.LONG_TERM);
 
     var proposedConsentStartDate = LocalDate.parse("2024-01-01");
     var proposedConsentEndDate = LocalDate.parse("2025-01-01");
 
-    doReturn(Optional.empty()).when(consentDataService).findConsentData(application);
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(application.getId()))
-        .thenReturn(applicationVersion);
-    when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
+    var consentProductionFiguresDto2024 = ConsentProductionFiguresDtoTestUtil.builder()
+        .withMinOil(BigDecimal.valueOf(428.76))
+        .withMaxOil(BigDecimal.valueOf(714.23))
+        .withMinGas(BigDecimal.valueOf(189.47))
+        .withMaxGas(BigDecimal.valueOf(837.14))
+        .build();
+    var consentProductionFiguresDto2025 = ConsentProductionFiguresDtoTestUtil.builder()
+        .withMinOil(BigDecimal.valueOf(583.24))
+        .withMaxOil(BigDecimal.valueOf(327.89))
+        .withMinGas(BigDecimal.valueOf(901.45))
+        .withMaxGas(BigDecimal.valueOf(124.56))
+        .build();
+    var consentProductionFiguresDto2026 = ConsentProductionFiguresDtoTestUtil.builder()
+        .withMinOil(BigDecimal.valueOf(241.57))
+        .withMaxOil(BigDecimal.valueOf(789.32))
+        .withMinGas(BigDecimal.valueOf(456.28))
+        .withMaxGas(BigDecimal.valueOf(602.11))
+        .build();
+    var consentProductionFiguresDto2027 = ConsentProductionFiguresDtoTestUtil.builder()
+        .withMinOil(BigDecimal.valueOf(147.83))
+        .withMaxOil(BigDecimal.valueOf(562.39))
+        .withMinGas(BigDecimal.valueOf(378.21))
+        .withMaxGas(BigDecimal.valueOf(943.67))
+        .build();
+    var consentProductionFiguresDto2028 = ConsentProductionFiguresDtoTestUtil.builder()
+        .withMinOil(BigDecimal.valueOf(689.45))
+        .withMaxOil(BigDecimal.valueOf(235.78))
+        .withMinGas(BigDecimal.valueOf(501.92))
+        .withMaxGas(BigDecimal.valueOf(789.34))
+        .build();
+
+    var longTermConsentProductionFiguresDtos = Map.of(
+        2026, consentProductionFiguresDto2026,
+        2028, consentProductionFiguresDto2028,
+        2025, consentProductionFiguresDto2025,
+        2024, consentProductionFiguresDto2024,
+        2027, consentProductionFiguresDto2027
+    );
+
+    doReturn(Optional.empty()).when(consentDataService).findConsentData(applicationVersion.getApplication());
     when(consentLengthService.getProposedConsentStartDate(consentLengthDetails)).thenReturn(proposedConsentStartDate);
     when(consentLengthService.getProposedConsentEndDate(consentLengthDetails)).thenReturn(proposedConsentEndDate);
+    when(consentProductionFiguresService.getLongTermConsentProductionFiguresDtos(applicationVersion))
+        .thenReturn(longTermConsentProductionFiguresDtos);
 
-    assertThat(consentDataService.getPrefilledConsentDataForm(application))
+    var form = consentDataService.getPrefilledConsentDataFormForLongTermProductionApplication(
+        applicationVersion,
+        consentLengthDetails
+    );
+
+    assertThat(form)
         .extracting(
-            form -> form.consentStartDate().getAsLocalDate().orElseThrow(),
-            form -> form.consentEndDate().getAsLocalDate().orElseThrow()
+            consentDataForm -> consentDataForm.getConsentStartDateInput().getAsLocalDate().orElseThrow(),
+            consentDataForm -> consentDataForm.getConsentEndDateInput().getAsLocalDate().orElseThrow()
         )
         .containsExactly(
             proposedConsentStartDate,
             proposedConsentEndDate
         );
+
+    assertThat(
+        form.getLongTermConsentProductionFiguresInputs()
+            .entrySet()
+            .stream()
+            .collect(StreamUtils.toLinkedHashMap(Map.Entry::getKey, entry -> entry.getValue().getAsDtoOrThrow()))
+    )
+        .containsExactly(
+            entry("2024", consentProductionFiguresDto2024),
+            entry("2025", consentProductionFiguresDto2025),
+            entry("2026", consentProductionFiguresDto2026),
+            entry("2027", consentProductionFiguresDto2027),
+            entry("2028", consentProductionFiguresDto2028)
+        );
+  }
+
+  @Test
+  void getPrefilledConsentDataFormForEmissionApplication_consentDataExists() {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
+
+    var consentLengthDetails = new ConsentLengthDetails();
+    consentLengthDetails.setConsentLength(ConsentLengthType.SHORT_TERM);
+
+    var emissionDailyAverage = BigDecimal.valueOf(873.46);
+
+    var consentData = ConsentDataTestUtil.newBuilder()
+        .withEmissionDailyAverage(emissionDailyAverage)
+        .build();
+
+    doReturn(Optional.of(consentData)).when(consentDataService).findConsentData(applicationVersion.getApplication());
+
+    assertThat(
+        consentDataService.getPrefilledConsentDataFormForEmissionApplication(
+            applicationVersion,
+            consentLengthDetails
+        )
+    )
+        .extracting(
+            consentDataForm -> consentDataForm.getConsentStartDateInput().getAsLocalDate().orElseThrow(),
+            consentDataForm -> consentDataForm.getConsentEndDateInput().getAsLocalDate().orElseThrow(),
+            consentDataForm -> consentDataForm.getEmissionDailyAverageInput().getAsBigDecimal().orElseThrow()
+        )
+        .containsExactly(
+            consentData.getConsentStartDate(),
+            consentData.getConsentEndDate(),
+            emissionDailyAverage
+        );
+  }
+
+  @Test
+  void getPrefilledConsentDataFormForEmissionApplication_consentDataDoesNotExist_consentLengthTypeIsShortTerm() {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
+
+    var consentLengthDetails = new ConsentLengthDetails();
+    consentLengthDetails.setConsentLength(ConsentLengthType.SHORT_TERM);
+
+    var proposedConsentStartDate = LocalDate.parse("2024-01-01");
+    var proposedConsentEndDate = LocalDate.parse("2025-01-01");
+
+    var shortTermEmissionDailyAverage = BigDecimal.valueOf(77.77);
+
+    doReturn(Optional.empty()).when(consentDataService).findConsentData(applicationVersion.getApplication());
+    when(consentLengthService.getProposedConsentStartDate(consentLengthDetails)).thenReturn(proposedConsentStartDate);
+    when(consentLengthService.getProposedConsentEndDate(consentLengthDetails)).thenReturn(proposedConsentEndDate);
+    when(consentEmissionFigureService.getShortTermEmissionDailyAverage(applicationVersion))
+        .thenReturn(shortTermEmissionDailyAverage);
+
+    assertThat(
+        consentDataService.getPrefilledConsentDataFormForEmissionApplication(
+            applicationVersion,
+            consentLengthDetails
+        )
+    )
+        .extracting(
+            consentDataForm -> consentDataForm.getConsentStartDateInput().getAsLocalDate().orElseThrow(),
+            consentDataForm -> consentDataForm.getConsentEndDateInput().getAsLocalDate().orElseThrow(),
+            consentDataForm -> consentDataForm.getEmissionDailyAverageInput().getAsBigDecimal().orElseThrow()
+        )
+        .containsExactly(
+            proposedConsentStartDate,
+            proposedConsentEndDate,
+            shortTermEmissionDailyAverage
+        );
+  }
+
+  @Test
+  void getPrefilledConsentDataFormForEmissionApplication_consentDataDoesNotExist_consentLengthTypeIsAnnual() {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
+
+    var consentLengthDetails = new ConsentLengthDetails();
+    consentLengthDetails.setConsentLength(ConsentLengthType.ANNUAL);
+
+    var proposedConsentStartDate = LocalDate.parse("2024-01-01");
+    var proposedConsentEndDate = LocalDate.parse("2025-01-01");
+
+    var annualEmissionDailyAverage = BigDecimal.valueOf(77.77);
+
+    doReturn(Optional.empty()).when(consentDataService).findConsentData(applicationVersion.getApplication());
+    when(consentLengthService.getProposedConsentStartDate(consentLengthDetails)).thenReturn(proposedConsentStartDate);
+    when(consentLengthService.getProposedConsentEndDate(consentLengthDetails)).thenReturn(proposedConsentEndDate);
+    when(consentEmissionFigureService.getAnnualEmissionDailyAverage(applicationVersion))
+        .thenReturn(annualEmissionDailyAverage);
+
+    assertThat(
+        consentDataService.getPrefilledConsentDataFormForEmissionApplication(
+            applicationVersion,
+            consentLengthDetails
+        )
+    )
+        .extracting(
+            consentDataForm -> consentDataForm.getConsentStartDateInput().getAsLocalDate().orElseThrow(),
+            consentDataForm -> consentDataForm.getConsentEndDateInput().getAsLocalDate().orElseThrow(),
+            consentDataForm -> consentDataForm.getEmissionDailyAverageInput().getAsBigDecimal().orElseThrow()
+        )
+        .containsExactly(
+            proposedConsentStartDate,
+            proposedConsentEndDate,
+            annualEmissionDailyAverage
+        );
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = ConsentLengthType.class, names = { "SHORT_TERM", "ANNUAL" }, mode = EnumSource.Mode.EXCLUDE)
+  void getPrefilledConsentDataFormForEmissionApplication_consentDataDoesNotExist_consentLengthTypeIsNotShortTermOrAnnual(
+      ConsentLengthType consentLengthType
+  ) {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
+
+    var consentLengthDetails = new ConsentLengthDetails();
+    consentLengthDetails.setConsentLength(consentLengthType);
+
+    var proposedConsentStartDate = LocalDate.parse("2024-01-01");
+    var proposedConsentEndDate = LocalDate.parse("2025-01-01");
+
+    doReturn(Optional.empty()).when(consentDataService).findConsentData(applicationVersion.getApplication());
+    when(consentLengthService.getProposedConsentStartDate(consentLengthDetails)).thenReturn(proposedConsentStartDate);
+    when(consentLengthService.getProposedConsentEndDate(consentLengthDetails)).thenReturn(proposedConsentEndDate);
+
+    assertThatThrownBy(() ->
+        consentDataService.getPrefilledConsentDataFormForEmissionApplication(
+            applicationVersion,
+            consentLengthDetails
+        )
+    )
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Unexpected ConsentLengthType: %s".formatted(consentLengthType));
   }
 
   @ParameterizedTest
@@ -193,166 +830,86 @@ class ConsentDataServiceTest {
   void getConsentDataView_applicationTypeIsProductionAndConsentLengthTypeIsShortTermOrAnnual(
       ConsentLengthType consentLengthType
   ) {
-    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
-
+    var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
     var consentData = ConsentDataTestUtil.newBuilder().build();
 
     var consentDataView = mock(ConsentDataView.class);
 
     doReturn(consentDataView)
         .when(consentDataService)
-        .getConsentDataViewForShortTermOrAnnualProductionApplication(applicationVersion, consentData, consentLengthType);
+        .getConsentDataViewForShortTermOrAnnualProductionApplication(consentData);
 
-    assertThat(consentDataService.getConsentDataView(applicationVersion, consentData, consentLengthType))
-        .isEqualTo(consentDataView);
+    assertThat(consentDataService.getConsentDataView(application, consentData, consentLengthType)).isEqualTo(consentDataView);
   }
 
   @Test
   void getConsentDataView_applicationTypeIsProductionAndConsentLengthTypeIsLongTerm() {
-    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
-
+    var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
     var consentData = ConsentDataTestUtil.newBuilder().build();
+    var consentLengthType = ConsentLengthType.LONG_TERM;
 
     var consentDataView = mock(ConsentDataView.class);
 
     doReturn(consentDataView)
         .when(consentDataService)
-        .getConsentDataViewForLongTermProductionApplication(applicationVersion, consentData);
+        .getConsentDataViewForLongTermProductionApplication(application, consentData);
 
-    assertThat(consentDataService.getConsentDataView(applicationVersion, consentData, ConsentLengthType.LONG_TERM))
-        .isEqualTo(consentDataView);
+    assertThat(consentDataService.getConsentDataView(application, consentData, consentLengthType)).isEqualTo(consentDataView);
   }
 
   @ParameterizedTest
   @EnumSource(value = ApplicationType.class, names = { "FLARE", "VENT" }, mode = EnumSource.Mode.INCLUDE)
   void getConsentDataView_applicationTypeIsFlareOrVent(ApplicationType applicationType) {
-    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
-
+    var application = ApplicationTestUtil.getNewApplicationWithType(applicationType);
     var consentData = ConsentDataTestUtil.newBuilder().build();
-
     var consentLengthType = ConsentLengthType.SHORT_TERM;
 
     var consentDataView = mock(ConsentDataView.class);
 
     doReturn(consentDataView)
         .when(consentDataService)
-        .getConsentDataViewForFlareOrVentApplication(applicationVersion, consentData, consentLengthType);
+        .getConsentDataViewForEmissionApplication(consentData);
 
-    assertThat(consentDataService.getConsentDataView(applicationVersion, consentData, consentLengthType))
-        .isEqualTo(consentDataView);
+    assertThat(consentDataService.getConsentDataView(application, consentData, consentLengthType)).isEqualTo(consentDataView);
   }
 
   @Test
-  void getConsentDataViewForShortTermOrAnnualProductionApplication_consentLengthTypeIsShortTerm() {
-    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
-    var consentData = ConsentDataTestUtil.newBuilder().build();
+  void getConsentDataViewForShortTermOrAnnualProductionApplication() {
+    var consentData = ConsentDataTestUtil.newBuilder()
+        .withShortTermOrAnnualProductionMinOil(BigDecimal.valueOf(428.76))
+        .withShortTermOrAnnualProductionMaxOil(BigDecimal.valueOf(714.23))
+        .withShortTermOrAnnualProductionMinGas(BigDecimal.valueOf(189.47))
+        .withShortTermOrAnnualProductionMaxGas(BigDecimal.valueOf(837.14))
+        .build();
 
-    var shortTermConsentProductionFiguresDto = ConsentProductionFiguresDtoTestUtil.builder().build();
-
-    when(consentProductionFiguresService.getShortTermConsentProductionFiguresDto(applicationVersion))
-        .thenReturn(shortTermConsentProductionFiguresDto);
-
-    assertThat(
-        consentDataService.getConsentDataViewForShortTermOrAnnualProductionApplication(
-            applicationVersion,
-            consentData,
-            ConsentLengthType.SHORT_TERM
-        )
-    ).isEqualTo(
-        ConsentDataView.fromShortTermOrAnnualProductionApplication(consentData, shortTermConsentProductionFiguresDto)
-    );
-  }
-
-  @Test
-  void getConsentDataViewForShortTermOrAnnualProductionApplication_consentLengthTypeIsAnnual() {
-    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
-    var consentData = ConsentDataTestUtil.newBuilder().build();
-
-    var annualConsentProductionFiguresDto = ConsentProductionFiguresDtoTestUtil.builder().build();
-
-    when(consentProductionFiguresService.getAnnualConsentProductionFiguresDto(applicationVersion))
-        .thenReturn(annualConsentProductionFiguresDto);
-
-    assertThat(
-        consentDataService.getConsentDataViewForShortTermOrAnnualProductionApplication(
-            applicationVersion,
-            consentData,
-            ConsentLengthType.ANNUAL
-        )
-    ).isEqualTo(ConsentDataView.fromShortTermOrAnnualProductionApplication(consentData, annualConsentProductionFiguresDto));
-  }
-
-  @ParameterizedTest
-  @EnumSource(value = ConsentLengthType.class, names = { "SHORT_TERM", "ANNUAL" }, mode = EnumSource.Mode.EXCLUDE)
-  void getConsentDataViewForShortTermOrAnnualProductionApplication_consentLengthTypeIsNotShortTermOrAnnual(
-      ConsentLengthType consentLengthType
-  ) {
-    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
-    var consentData = ConsentDataTestUtil.newBuilder().build();
-
-    assertThatThrownBy(() ->
-        consentDataService.getConsentDataViewForShortTermOrAnnualProductionApplication(
-            applicationVersion,
-            consentData,
-            consentLengthType
-        )
-    )
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("Unexpected ConsentLengthType: %s".formatted(consentLengthType));
+    assertThat(consentDataService.getConsentDataViewForShortTermOrAnnualProductionApplication(consentData))
+        .isEqualTo(ConsentDataView.fromShortTermOrAnnualProductionApplication(consentData));
   }
 
   @Test
   void getConsentDataViewForLongTermProductionApplication() {
-    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
     var consentData = ConsentDataTestUtil.newBuilder().build();
 
-    var longTermConsentProductionFiguresDtos = Map.of(2024, ConsentProductionFiguresDtoTestUtil.builder().build());
+    var consentProductionLongTermFiguresViews = Map.of(
+        "2024", mock(ConsentProductionFiguresView.class),
+        "2025", mock(ConsentProductionFiguresView.class)
+    );
 
-    when(consentProductionFiguresService.getLongTermConsentProductionFiguresDtos(applicationVersion))
-        .thenReturn(longTermConsentProductionFiguresDtos);
+    when(consentProductionLongTermFiguresService.getConsentProductionLongTermFiguresViews(application))
+        .thenReturn(consentProductionLongTermFiguresViews);
 
-    assertThat(consentDataService.getConsentDataViewForLongTermProductionApplication(applicationVersion, consentData))
-        .isEqualTo(ConsentDataView.fromLongTermProductionApplication(consentData, longTermConsentProductionFiguresDtos));
+    assertThat(consentDataService.getConsentDataViewForLongTermProductionApplication(application, consentData))
+        .isEqualTo(ConsentDataView.fromLongTermProductionApplication(consentData, consentProductionLongTermFiguresViews));
   }
 
   @Test
-  void getConsentDataViewForFlareOrVentApplication_consentLengthTypeIsShortTerm() {
-    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
-    var consentData = ConsentDataTestUtil.newBuilder().build();
-    var consentLengthType = ConsentLengthType.SHORT_TERM;
+  void getConsentDataViewForEmissionApplication() {
+    var consentData = ConsentDataTestUtil.newBuilder()
+        .withEmissionDailyAverage(BigDecimal.valueOf(235.79))
+        .build();
 
-    var shortTermEmissionMaxRate = BigDecimal.valueOf(77.77);
-
-    when(consentEmissionFigureService.getShortTermEmissionMaxRate(applicationVersion)).thenReturn(shortTermEmissionMaxRate);
-
-    assertThat(consentDataService.getConsentDataViewForFlareOrVentApplication(applicationVersion, consentData, consentLengthType))
-        .isEqualTo(ConsentDataView.fromFlareOrVentApplication(consentData, shortTermEmissionMaxRate));
-  }
-
-  @Test
-  void getConsentDataViewForFlareOrVentApplication_consentLengthTypeIsAnnual() {
-    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
-    var consentData = ConsentDataTestUtil.newBuilder().build();
-    var consentLengthType = ConsentLengthType.ANNUAL;
-
-    var annualEmissionMaxRate = BigDecimal.valueOf(77.77);
-
-    when(consentEmissionFigureService.getAnnualEmissionMaxRate(applicationVersion)).thenReturn(annualEmissionMaxRate);
-
-    assertThat(consentDataService.getConsentDataViewForFlareOrVentApplication(applicationVersion, consentData, consentLengthType))
-        .isEqualTo(ConsentDataView.fromFlareOrVentApplication(consentData, annualEmissionMaxRate));
-  }
-
-  @ParameterizedTest
-  @EnumSource(value = ConsentLengthType.class, names = { "SHORT_TERM", "ANNUAL" }, mode = EnumSource.Mode.EXCLUDE)
-  void getConsentDataViewForFlareOrVentApplication_consentLengthTypeIsNotShortTermOrAnnual(ConsentLengthType consentLengthType) {
-    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
-    var consentData = ConsentDataTestUtil.newBuilder().build();
-
-    assertThatThrownBy(() ->
-        consentDataService.getConsentDataViewForFlareOrVentApplication(applicationVersion, consentData, consentLengthType)
-    )
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("Unexpected ConsentLengthType: %s".formatted(consentLengthType));
+    assertThat(consentDataService.getConsentDataViewForEmissionApplication(consentData))
+        .isEqualTo(ConsentDataView.fromEmissionApplication(consentData));
   }
 }

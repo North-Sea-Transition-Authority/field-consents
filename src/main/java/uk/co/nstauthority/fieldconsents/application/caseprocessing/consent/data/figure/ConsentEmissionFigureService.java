@@ -34,7 +34,7 @@ public class ConsentEmissionFigureService {
     this.ventAnnualService = ventAnnualService;
   }
 
-  public BigDecimal getShortTermEmissionMaxRate(ApplicationVersion applicationVersion) {
+  public BigDecimal getShortTermEmissionDailyAverage(ApplicationVersion applicationVersion) {
     var applicationType = applicationVersion.getApplication().getType();
 
     var shortTermConsentMonths = switch (applicationType) {
@@ -56,7 +56,7 @@ public class ConsentEmissionFigureService {
     return BigDecimalUtil.divideRound(categoryTotal, totalDays);
   }
 
-  public BigDecimal getAnnualEmissionMaxRate(ApplicationVersion applicationVersion) {
+  public BigDecimal getAnnualEmissionDailyAverage(ApplicationVersion applicationVersion) {
     var applicationType = applicationVersion.getApplication().getType();
 
     var annualConsentMonths = switch (applicationType) {

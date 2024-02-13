@@ -71,7 +71,7 @@ class ConsentFigureUnitServiceTest {
 
     doReturn(consentFigureUnitView)
         .when(consentFigureUnitService)
-        .getConsentFigureUnitViewForFlareOrVentApplication(applicationVersion);
+        .getConsentFigureUnitViewForEmissionApplication(applicationVersion);
 
     assertThat(consentFigureUnitService.getConsentFigureUnitView(applicationVersion, ConsentLengthType.SHORT_TERM))
         .isEqualTo(consentFigureUnitView);
@@ -104,35 +104,35 @@ class ConsentFigureUnitServiceTest {
   }
 
   @Test
-  void getConsentFigureUnitViewForFlareOrVentApplication_applicationTypeIsFlare() {
+  void getConsentFigureUnitViewForEmissionApplication_applicationTypeIsFlare() {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
 
     var flareAverageUnit = FlareVentUnit.TONNES_PER_DAY;
 
     when(applicationUnitService.getFlareAverageUnit(applicationVersion)).thenReturn(flareAverageUnit);
 
-    assertThat(consentFigureUnitService.getConsentFigureUnitViewForFlareOrVentApplication(applicationVersion))
-        .isEqualTo(ConsentFigureUnitView.fromFlareOrVentApplication(flareAverageUnit));
+    assertThat(consentFigureUnitService.getConsentFigureUnitViewForEmissionApplication(applicationVersion))
+        .isEqualTo(ConsentFigureUnitView.fromEmissionApplication(flareAverageUnit));
   }
 
   @Test
-  void getConsentFigureUnitViewForFlareOrVentApplication_applicationTypeIsVent() {
+  void getConsentFigureUnitViewForEmissionApplication_applicationTypeIsVent() {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
 
     var ventAverageUnit = FlareVentUnit.TONNES_PER_DAY;
 
     when(applicationUnitService.getVentAverageUnit(applicationVersion)).thenReturn(ventAverageUnit);
 
-    assertThat(consentFigureUnitService.getConsentFigureUnitViewForFlareOrVentApplication(applicationVersion))
-        .isEqualTo(ConsentFigureUnitView.fromFlareOrVentApplication(ventAverageUnit));
+    assertThat(consentFigureUnitService.getConsentFigureUnitViewForEmissionApplication(applicationVersion))
+        .isEqualTo(ConsentFigureUnitView.fromEmissionApplication(ventAverageUnit));
   }
 
   @ParameterizedTest
   @EnumSource(value = ApplicationType.class, names = { "FLARE", "VENT" }, mode = EnumSource.Mode.EXCLUDE)
-  void getConsentFigureUnitViewForFlareOrVentApplication_applicationTypeIsNotFlareOrVent(ApplicationType applicationType) {
+  void getConsentFigureUnitViewForEmissionApplication_applicationTypeIsNotEmission(ApplicationType applicationType) {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
 
-    assertThatThrownBy(() -> consentFigureUnitService.getConsentFigureUnitViewForFlareOrVentApplication(applicationVersion))
+    assertThatThrownBy(() -> consentFigureUnitService.getConsentFigureUnitViewForEmissionApplication(applicationVersion))
         .isInstanceOf(IllegalStateException.class)
         .hasMessage("Unexpected ApplicationType: %s".formatted(applicationType));
   }

@@ -47,7 +47,7 @@ class ConsentEmissionFigureServiceTest {
   private ConsentEmissionFigureService consentEmissionFigureService;
 
   @Test
-  void getShortTermEmissionMaxRate_applicationTypeIsFlare() {
+  void getShortTermEmissionDailyAverage_applicationTypeIsFlare() {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
 
     var consentMonths = FlareShortTermTestUtil.getFlareShortTermMonthsForPeriod(
@@ -66,12 +66,12 @@ class ConsentEmissionFigureServiceTest {
     var categoryCTotal = getCategoryCTotal(consentMonths);
     var categoryTotal = BigDecimalUtil.sum(categoryATotal, categoryBTotal, categoryCTotal);
 
-    assertThat(consentEmissionFigureService.getShortTermEmissionMaxRate(applicationVersion))
+    assertThat(consentEmissionFigureService.getShortTermEmissionDailyAverage(applicationVersion))
         .isEqualTo(BigDecimalUtil.divideRound(categoryTotal, totalDays));
   }
 
   @Test
-  void getShortTermEmissionMaxRate_applicationTypeIsVent() {
+  void getShortTermEmissionDailyAverage_applicationTypeIsVent() {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
 
     var consentMonths = VentShortTermTestUtil.getVentShortTermMonthsForPeriod(
@@ -90,21 +90,21 @@ class ConsentEmissionFigureServiceTest {
     var categoryCTotal = getCategoryCTotal(consentMonths);
     var categoryTotal = BigDecimalUtil.sum(categoryATotal, categoryBTotal, categoryCTotal);
 
-    assertThat(consentEmissionFigureService.getShortTermEmissionMaxRate(applicationVersion))
+    assertThat(consentEmissionFigureService.getShortTermEmissionDailyAverage(applicationVersion))
         .isEqualTo(BigDecimalUtil.divideRound(categoryTotal, totalDays));
   }
 
   @Test
-  void getShortTermEmissionMaxRate_applicationTypeIsProduction() {
+  void getShortTermEmissionDailyAverage_applicationTypeIsProduction() {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
 
-    assertThatThrownBy(() -> consentEmissionFigureService.getShortTermEmissionMaxRate(applicationVersion))
+    assertThatThrownBy(() -> consentEmissionFigureService.getShortTermEmissionDailyAverage(applicationVersion))
         .isInstanceOf(IllegalStateException.class)
         .hasMessage("Unexpected ApplicationType: PRODUCTION");
   }
 
   @Test
-  void getAnnualEmissionMaxRate_applicationTypeIsFlare() {
+  void getAnnualEmissionDailyAverage_applicationTypeIsFlare() {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
 
     var consentMonths = FlareAnnualTestUtil.getFlareAnnualMonthsForYear(applicationVersion, 2024);
@@ -119,12 +119,12 @@ class ConsentEmissionFigureServiceTest {
     var categoryCTotal = getCategoryCTotal(consentMonths);
     var categoryTotal = BigDecimalUtil.sum(categoryATotal, categoryBTotal, categoryCTotal);
 
-    assertThat(consentEmissionFigureService.getAnnualEmissionMaxRate(applicationVersion))
+    assertThat(consentEmissionFigureService.getAnnualEmissionDailyAverage(applicationVersion))
         .isEqualTo(BigDecimalUtil.divideRound(categoryTotal, totalDays));
   }
 
   @Test
-  void getAnnualEmissionMaxRate_applicationTypeIsVent() {
+  void getAnnualEmissionDailyAverage_applicationTypeIsVent() {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
 
     var consentMonths = VentAnnualTestUtil.getVentAnnualMonthsForYear(applicationVersion, 2024);
@@ -139,15 +139,15 @@ class ConsentEmissionFigureServiceTest {
     var categoryCTotal = getCategoryCTotal(consentMonths);
     var categoryTotal = BigDecimalUtil.sum(categoryATotal, categoryBTotal, categoryCTotal);
 
-    assertThat(consentEmissionFigureService.getAnnualEmissionMaxRate(applicationVersion))
+    assertThat(consentEmissionFigureService.getAnnualEmissionDailyAverage(applicationVersion))
         .isEqualTo(BigDecimalUtil.divideRound(categoryTotal, totalDays));
   }
 
   @Test
-  void getAnnualEmissionMaxRate_applicationTypeIsProduction() {
+  void getAnnualEmissionDailyAverage_applicationTypeIsProduction() {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
 
-    assertThatThrownBy(() -> consentEmissionFigureService.getAnnualEmissionMaxRate(applicationVersion))
+    assertThatThrownBy(() -> consentEmissionFigureService.getAnnualEmissionDailyAverage(applicationVersion))
         .isInstanceOf(IllegalStateException.class)
         .hasMessage("Unexpected ApplicationType: PRODUCTION");
   }

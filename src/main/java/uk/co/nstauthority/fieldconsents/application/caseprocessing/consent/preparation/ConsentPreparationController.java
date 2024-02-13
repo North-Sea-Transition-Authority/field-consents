@@ -58,10 +58,12 @@ public class ConsentPreparationController {
   @GetMapping
   public ModelAndView viewConsentPreparationPage(@PathVariable Integer applicationId) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
+    var application = applicationVersion.getApplication();
+
     var consentLengthType = consentLengthService.getConsentLengthDetails(applicationVersion).getConsentLength();
 
-    return consentDataService.findConsentData(applicationVersion.getApplication())
-        .map(consentData -> consentDataService.getConsentDataView(applicationVersion, consentData, consentLengthType))
+    return consentDataService.findConsentData(application)
+        .map(consentData -> consentDataService.getConsentDataView(application, consentData, consentLengthType))
         .map(consentDataView -> getModelAndView(applicationVersion, consentDataView, consentLengthType))
         .orElse(ReverseRouter.redirect(on(ConsentDataController.class).editConsentData(applicationId)));
   }

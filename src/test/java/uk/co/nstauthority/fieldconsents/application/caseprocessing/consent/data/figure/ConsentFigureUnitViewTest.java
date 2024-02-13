@@ -26,10 +26,10 @@ class ConsentFigureUnitViewTest {
   }
 
   @Test
-  void fromFlareOrVentApplication() {
+  void fromEmissionApplication() {
     var emissionAverageUnit = FlareVentUnit.TONNES_PER_DAY;
 
-    assertThat(ConsentFigureUnitView.fromFlareOrVentApplication(emissionAverageUnit))
+    assertThat(ConsentFigureUnitView.fromEmissionApplication(emissionAverageUnit))
         .isEqualTo(new ConsentFigureUnitView(null, null, emissionAverageUnit));
   }
 }

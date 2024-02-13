@@ -11,7 +11,6 @@ import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.A
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
-import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -33,7 +32,6 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentFigureUnitService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentFigureUnitView;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionFiguresDto;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.documents.ConsentPreparationDocumentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.documents.ConsentPreparationDocumentsController;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
@@ -108,10 +106,7 @@ class ConsentPreparationControllerTest extends AbstractApplicationControllerTest
     var fieldEquityPartnerView = FieldEquityPartnersViewTestUtil.newBuilder().build();
 
     var consentData = ConsentDataTestUtil.newBuilder().build();
-    var consentDataView = ConsentDataView.fromShortTermOrAnnualProductionApplication(
-        consentData,
-        new ConsentProductionFiguresDto(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO)
-    );
+    var consentDataView = ConsentDataView.fromShortTermOrAnnualProductionApplication(consentData);
     var consentFigureUnitView = ConsentFigureUnitView.fromShortTermOrAnnualProductionApplication(ProductionUnit.KSCM_PER_DAY);
     var documentsInstanceSummaryView = DocumentInstanceSummaryViewTestUtil.newBuilder().build();
     var consentDocumentsSummaryCard = SummaryCard.filesSummaryCardWithHeading(
@@ -122,8 +117,9 @@ class ConsentPreparationControllerTest extends AbstractApplicationControllerTest
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
     when(consentDataService.findConsentData(application)).thenReturn(Optional.of(consentData));
-    when(consentDataService.getConsentDataView(applicationVersion, consentData, consentLengthType)).thenReturn(consentDataView);
-    when(consentFigureUnitService.getConsentFigureUnitView(applicationVersion, consentLengthType)).thenReturn(consentFigureUnitView);
+    when(consentDataService.getConsentDataView(application, consentData, consentLengthType)).thenReturn(consentDataView);
+    when(consentFigureUnitService.getConsentFigureUnitView(applicationVersion, consentLengthType))
+        .thenReturn(consentFigureUnitView);
     when(consentDocumentService.getConsentDocumentsSummaryCard(application)).thenReturn(consentDocumentsSummaryCard);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(applicationAsset);
     when(fieldEquityPartnerService.getFieldEquityPartnersView(applicationVersion)).thenReturn(fieldEquityPartnerView);

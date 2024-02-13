@@ -1,36 +1,66 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data;
 
-import org.springframework.stereotype.Service;
+import java.math.BigDecimal;
+import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
-import org.springframework.validation.Validator;
 import uk.co.fivium.formlibrary.validator.date.ThreeFieldDateInputValidator;
+import uk.co.fivium.formlibrary.validator.decimal.DecimalInputValidator;
+import uk.co.nstauthority.fieldconsents.application.Application;
+import uk.co.nstauthority.fieldconsents.application.ApplicationType;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionFiguresInputValidator;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
+import uk.co.nstauthority.fieldconsents.validation.ValidatorUtils;
 
-@Service
-class ConsentDataFormValidator implements Validator {
+@Component
+class ConsentDataFormValidator {
 
-  @Override
-  public boolean supports(Class<?> clazz) {
-    return ConsentDataForm.class.equals(clazz);
+  private final ConsentProductionFiguresInputValidator consentProductionFiguresInputValidator;
+
+  ConsentDataFormValidator(ConsentProductionFiguresInputValidator consentProductionFiguresInputValidator) {
+    this.consentProductionFiguresInputValidator = consentProductionFiguresInputValidator;
   }
 
-  @Override
-  public void validate(Object target, Errors errors) {
-    var form = (ConsentDataForm) target;
-
-    var consentStartDateInput = form.consentStartDate();
+  public void validate(ConsentDataForm form, Application application, ConsentLengthType consentLengthType, Errors errors) {
+    var consentStartDateInput = form.getConsentStartDateInput();
     var consentStartDateOptional = consentStartDateInput.getAsLocalDate();
 
     ThreeFieldDateInputValidator.builder().validate(consentStartDateInput, errors);
 
-    if (consentStartDateOptional.isEmpty() || errors.hasErrors()) {
-      return;
+    if (!errors.hasErrors()) {
+      var consentStartDate = consentStartDateOptional.orElseThrow();
+
+      ThreeFieldDateInputValidator.builder()
+          .mustBeAfterOrEqualTo(consentStartDate)
+          .mustBeAfterOrEqualToErrorMessage("Consent end date must be on or after the consent start date")
+          .validate(form.getConsentEndDateInput(), errors);
     }
 
-    var consentStartDate = consentStartDateOptional.get();
-
-    ThreeFieldDateInputValidator.builder()
-        .mustBeAfterOrEqualTo(consentStartDate)
-        .mustBeAfterOrEqualToErrorMessage("Consent end date must be on or after the consent start date")
-        .validate(form.consentEndDate(), errors);
+    var applicationType = application.getType();
+    if (applicationType == ApplicationType.PRODUCTION) {
+      if (consentLengthType == ConsentLengthType.SHORT_TERM || consentLengthType == ConsentLengthType.ANNUAL) {
+        ValidatorUtils.invokeNestedValidator(
+            errors,
+            consentProductionFiguresInputValidator,
+            "shortTermOrAnnualConsentProductionFiguresInput",
+            form.getShortTermOrAnnualConsentProductionFiguresInput(),
+            errors
+        );
+      } else if (consentLengthType == ConsentLengthType.LONG_TERM) {
+        form.getLongTermConsentProductionFiguresInputs().forEach((year, consentProductionFiguresInput) ->
+            ValidatorUtils.invokeNestedValidator(
+                errors,
+                consentProductionFiguresInputValidator,
+                "longTermConsentProductionFiguresInputs[%s]".formatted(year),
+                consentProductionFiguresInput,
+                errors
+            )
+        );
+      }
+    } else if (applicationType == ApplicationType.FLARE || applicationType == ApplicationType.VENT) {
+      DecimalInputValidator.builder()
+          .mustBeMoreThanOrEqualTo(BigDecimal.ZERO)
+          .mustHaveNoMoreThanDecimalPlaces(ValidatorUtils.MAX_DECIMAL_PLACES)
+          .validate(form.getEmissionDailyAverageInput(), errors);
+    }
   }
 }

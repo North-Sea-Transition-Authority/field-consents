@@ -1,13 +1,12 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static uk.co.nstauthority.fieldconsents.formatting.DecimalFormatUtils.bigDecimalToFormattedString;
 
 import java.math.BigDecimal;
 import org.junit.jupiter.api.Test;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataTestUtil;
 
-class ConsentProductionFiguresViewTest {
+class ConsentProductionFiguresDtoTest {
 
   @Test
   void fromShortTermOrAnnualConsentProductionFigures() {
@@ -23,12 +22,12 @@ class ConsentProductionFiguresViewTest {
         .withShortTermOrAnnualProductionMaxGas(shortTermOrAnnualProductionMaxGas)
         .build();
 
-    assertThat(ConsentProductionFiguresView.fromShortTermOrAnnualConsentProductionFigures(consentData)).isEqualTo(
-        new ConsentProductionFiguresView(
-            bigDecimalToFormattedString(shortTermOrAnnualProductionMinOil),
-            bigDecimalToFormattedString(shortTermOrAnnualProductionMaxOil),
-            bigDecimalToFormattedString(shortTermOrAnnualProductionMinGas),
-            bigDecimalToFormattedString(shortTermOrAnnualProductionMaxGas)
+    assertThat(ConsentProductionFiguresDto.fromShortTermOrAnnualConsentProductionFigures(consentData)).isEqualTo(
+        new ConsentProductionFiguresDto(
+            shortTermOrAnnualProductionMinOil,
+            shortTermOrAnnualProductionMaxOil,
+            shortTermOrAnnualProductionMinGas,
+            shortTermOrAnnualProductionMaxGas
         )
     );
   }
@@ -37,12 +36,12 @@ class ConsentProductionFiguresViewTest {
   void fromConsentProductionLongTermFigures() {
     var consentProductionLongTermFigures = ConsentProductionLongTermFiguresTestUtil.builder().build();
 
-    assertThat(ConsentProductionFiguresView.fromConsentProductionLongTermFigures(consentProductionLongTermFigures)).isEqualTo(
-        new ConsentProductionFiguresView(
-            bigDecimalToFormattedString(consentProductionLongTermFigures.getMinOil()),
-            bigDecimalToFormattedString(consentProductionLongTermFigures.getMaxOil()),
-            bigDecimalToFormattedString(consentProductionLongTermFigures.getMinGas()),
-            bigDecimalToFormattedString(consentProductionLongTermFigures.getMaxGas())
+    assertThat(ConsentProductionFiguresDto.fromConsentProductionLongTermFigures(consentProductionLongTermFigures)).isEqualTo(
+        new ConsentProductionFiguresDto(
+            consentProductionLongTermFigures.getMinOil(),
+            consentProductionLongTermFigures.getMaxOil(),
+            consentProductionLongTermFigures.getMinGas(),
+            consentProductionLongTermFigures.getMaxGas()
         )
     );
   }

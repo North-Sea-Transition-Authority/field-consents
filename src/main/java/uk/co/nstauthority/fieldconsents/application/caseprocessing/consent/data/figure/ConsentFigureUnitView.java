@@ -20,7 +20,7 @@ public record ConsentFigureUnitView(
     return new ConsentFigureUnitView(productionOilUnit, productionGasUnit, null);
   }
 
-  public static ConsentFigureUnitView fromFlareOrVentApplication(FlareVentUnit emissionAverageUnit) {
+  public static ConsentFigureUnitView fromEmissionApplication(FlareVentUnit emissionAverageUnit) {
     return new ConsentFigureUnitView(null, null, emissionAverageUnit);
   }
 }

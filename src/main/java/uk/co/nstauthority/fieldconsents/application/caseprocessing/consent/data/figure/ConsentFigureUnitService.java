@@ -23,7 +23,7 @@ public class ConsentFigureUnitService {
         case SHORT_TERM, ANNUAL -> getConsentFigureUnitViewForShortTermOrAnnualProductionApplication(applicationVersion);
         case LONG_TERM -> getConsentFigureUnitViewForLongTermProductionApplication(applicationVersion);
       };
-      case FLARE, VENT -> getConsentFigureUnitViewForFlareOrVentApplication(applicationVersion);
+      case FLARE, VENT -> getConsentFigureUnitViewForEmissionApplication(applicationVersion);
     };
   }
 
@@ -40,7 +40,7 @@ public class ConsentFigureUnitService {
     return ConsentFigureUnitView.fromLongTermProductionApplication(productionOilUnit, productionGasUnit);
   }
 
-  ConsentFigureUnitView getConsentFigureUnitViewForFlareOrVentApplication(ApplicationVersion applicationVersion) {
+  ConsentFigureUnitView getConsentFigureUnitViewForEmissionApplication(ApplicationVersion applicationVersion) {
     var applicationType = applicationVersion.getApplication().getType();
 
     var emissionAverageUnit = switch (applicationType) {
@@ -49,6 +49,6 @@ public class ConsentFigureUnitService {
       default -> throw new IllegalStateException("Unexpected ApplicationType: %s".formatted(applicationType));
     };
 
-    return ConsentFigureUnitView.fromFlareOrVentApplication(emissionAverageUnit);
+    return ConsentFigureUnitView.fromEmissionApplication(emissionAverageUnit);
   }
 }

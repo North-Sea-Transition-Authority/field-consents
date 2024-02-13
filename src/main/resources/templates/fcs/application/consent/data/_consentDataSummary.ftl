@@ -55,7 +55,7 @@
       </@fdsSummaryList.summaryListRowNoAction>
     <#elseif applicationType.name() == "FLARE" || applicationType.name() == "VENT">
       <@fdsSummaryList.summaryListRowNoAction keyText="Daily average (${consentFigureUnitView.emissionAverageUnit().getDisplayName()})">
-        ${consentDataView.emissionMaxRate()}
+        ${consentDataView.emissionDailyAverage()}
       </@fdsSummaryList.summaryListRowNoAction>
     </#if>
   </@fdsSummaryList.summaryListCard>

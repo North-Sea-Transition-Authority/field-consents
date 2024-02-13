@@ -26,7 +26,7 @@ public class ApplicationTestUtil {
 
   public static final String APPLICATION_REFERENCE = "PCON/500/0";
 
-  private static Application getNewApplicationWithType(ApplicationType applicationType) {
+  public static Application getNewApplicationWithType(ApplicationType applicationType) {
     return new Application(APPLICATION_ID, applicationType, Instant.now(), USER_WUA_ID, 0, null);
   }
 
