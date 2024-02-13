@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.teams;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -38,6 +39,22 @@ public class TeamMemberService {
         .map(entry -> new TeamMember(entry.getKey(), createTeamView(team),
             mapMemberRolesToTeamRoles(entry.getValue(), team)))
         .toList();
+  }
+
+  public Set<Team> getTeamsWhereMemberExistsWithRole(Collection<Team> teams, TeamRole teamRole) {
+    var teamIds = new HashSet<Integer>();
+    var uniqueTeams = new HashSet<Team>();
+
+    for (var teamMemberRole : teamMemberRoleRepository.findAllByRoleAndTeamIn(teamRole.name(), teams)) {
+      var team = teamMemberRole.getTeam();
+      if (!teamIds.add(team.getId())) {
+        continue;
+      }
+
+      uniqueTeams.add(team);
+    }
+
+    return uniqueTeams;
   }
 
   public Optional<TeamMember> getTeamMember(Team team, WebUserAccountId wuaId) {
@@ -96,5 +113,4 @@ public class TeamMemberService {
         })
         .collect(Collectors.toSet());
   }
-
 }

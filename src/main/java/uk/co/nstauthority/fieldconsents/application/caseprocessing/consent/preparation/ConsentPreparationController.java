@@ -23,6 +23,8 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthT
 import uk.co.nstauthority.fieldconsents.application.fieldequitypartner.FieldEquityPartnerService;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @Controller
 @RequestMapping("/applications/{applicationId}/consent-preparation")
@@ -95,7 +97,11 @@ public class ConsentPreparationController {
 
     if (applicationAssetService.getPrimaryAsset(applicationVersion).isField()) {
       var fieldEquityPartnersView = fieldEquityPartnerService.getFieldEquityPartnersView(applicationVersion);
-      modelAndView.addObject("fieldEquityPartnersView", fieldEquityPartnersView);
+      modelAndView
+          .addObject("fieldEquityPartnersView", fieldEquityPartnersView)
+          .addObject("regulatorIndustryAccessManagerRole", RegulatorTeamRole.INDUSTRY_ACCESS_MANAGER)
+          .addObject("industryAccessManagerRole", IndustryTeamRole.ACCESS_MANAGER)
+          .addObject("consentRecipientRole", IndustryTeamRole.CONSENT_RECIPIENT);
     }
 
     return modelAndView;

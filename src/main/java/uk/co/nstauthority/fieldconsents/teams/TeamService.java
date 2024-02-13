@@ -35,6 +35,10 @@ public class TeamService {
     return teamRepository.findByIdAndTeamType(teamId.id(), teamType);
   }
 
+  public List<Team> getTeamsByOrganisationGroupIds(Collection<Integer> organisationGroupIds) {
+    return teamRepository.findAllByOrganisationGroupIdIn(organisationGroupIds);
+  }
+
   public List<Team> getTeamsByType(TeamType teamType) {
     return teamRepository.findAllByTeamTypeIn(Collections.singleton(teamType));
   }

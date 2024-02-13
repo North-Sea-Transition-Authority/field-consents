@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.teams;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import org.springframework.data.repository.CrudRepository;
@@ -11,6 +12,8 @@ import uk.co.nstauthority.fieldconsents.application.duplication.NotDuplicationSo
 interface TeamMemberRoleRepository extends CrudRepository<TeamMemberRole, Integer> {
 
   List<TeamMemberRole> findAllByTeam(Team team);
+
+  List<TeamMemberRole> findAllByRoleAndTeamIn(String role, Collection<Team> teams);
 
   boolean existsByWuaIdAndTeam_Id(long wuaId, Integer teamId);
 

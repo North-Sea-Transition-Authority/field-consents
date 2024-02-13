@@ -139,6 +139,24 @@ class TeamMemberServiceTest {
   }
 
   @Test
+  void getTeamsWhereMemberExistsWithRole() {
+    var role = IndustryTeamRole.CONSENT_RECIPIENT;
+
+    var team1 = TeamTestUtil.Builder().withId(1).build();
+    var team2 = TeamTestUtil.Builder().withId(2).build();
+    var teams = List.of(team1, team2);
+
+    var teamMemberRole1 = TeamMemberRoleTestUtil.Builder().withTeam(team1).build();
+    var teamMemberRole2 = TeamMemberRoleTestUtil.Builder().withTeam(team2).build();
+    var teamMemberRole3 = TeamMemberRoleTestUtil.Builder().withTeam(team2).build();
+    var teamMemberRoles = List.of(teamMemberRole1, teamMemberRole2, teamMemberRole3);
+
+    when(teamMemberRoleRepository.findAllByRoleAndTeamIn(role.name(), teams)).thenReturn(teamMemberRoles);
+
+    assertThat(teamMemberService.getTeamsWhereMemberExistsWithRole(teams, role)).containsExactlyInAnyOrder(team1, team2);
+  }
+
+  @Test
   void getTeamMembers_whenTeamMemberHasMultipleRoles_thenRolesMappedCorrectly() {
 
     var team = TeamTestUtil.Builder().build();

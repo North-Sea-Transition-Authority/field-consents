@@ -15,7 +15,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.fieldequitypartner.FieldEquityPartnerService;
 import uk.co.nstauthority.fieldconsents.document.DocumentInstanceDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.document.DocumentInstanceLinkingService;
@@ -33,9 +32,6 @@ class FieldEquityPartnerNameListMailMergeFieldTest {
 
   @Mock
   private FieldEquityPartnerService fieldEquityPartnerService;
-
-  @Mock
-  private ApplicationAssetService applicationAssetService;
 
   @InjectMocks
   private FieldEquityPartnerNameListMailMergeField fieldEquityPartnerNameListMailMergeField;

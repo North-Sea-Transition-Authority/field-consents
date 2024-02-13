@@ -1,6 +1,7 @@
 <#include '../../layout/layout.ftl'>
 <#import 'data/_consentDataSummary.ftl' as consentDataSummary>
 <#import 'documents/_consentFilesSummary.ftl' as consentFilesSummary>
+<#import '_fieldEquityPartner.ftl' as fieldEquityPartner>
 
 <@defaultPage
   htmlTitle=pageTitle
@@ -8,6 +9,17 @@
   pageSize=PageSize.FULL_WIDTH
   backLinkUrl=springUrl(backLinkUrl)
 >
+  <#if fieldEquityPartnersView?has_content>
+    <#if fieldEquityPartnersView.organisationGroupNamesWithoutConsentRecipients()?has_content>
+      <@fieldEquityPartner.notificationBanner
+        fieldEquityPartnersView
+        regulatorIndustryAccessManagerRole
+        industryAccessManagerRole
+        consentRecipientRole
+      />
+    </#if>
+    <@fieldEquityPartner.summaryList fieldEquityPartnersView/>
+  </#if>
   <@consentDataSummary.summaryCard
     applicationType=applicationType
     consentLengthType=consentLengthType
@@ -18,17 +30,7 @@
   <@consentFilesSummary.summary
     heading=consentDocumentsSummaryCard.displayName()
     fileViews=consentDocumentsSummaryCard.summaryData()
-    editUrl=consentDocumentsEditUrl
-  />
-  <#if fieldEquityPartnersView?has_content>
-    <@fdsDetails.summaryDetails summaryTitle="Field equity partners">
-      <ul class="govuk-list">
-        <#list fieldEquityPartnersView.fieldEquityPartnerNames() as fieldEquityPartnerName>
-          <li class="govuk-list__item">${fieldEquityPartnerName}</li>
-        </#list>
-      </ul>
-    </@fdsDetails.summaryDetails>
-  </#if>
+    editUrl=consentDocumentsEditUrl/>
   <@fdsAction.link
     linkText="Save and continue"
     linkClass="govuk-button"

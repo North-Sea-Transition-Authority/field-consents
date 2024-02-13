@@ -418,6 +418,16 @@ class TeamServiceTest {
         .containsAll(Collections.emptySet());
   }
 
+  @Test
+  void getTeamsByOrganisationGroupIds() {
+    var organisationIds = Set.of(1, 2, 3);
+    var teams = List.of(TeamTestUtil.Builder().build());
+
+    when(teamRepository.findAllByOrganisationGroupIdIn(organisationIds)).thenReturn(teams);
+
+    assertThat(teamService.getTeamsByOrganisationGroupIds(organisationIds)).isEqualTo(teams);
+  }
+
   @ParameterizedTest
   @EnumSource(TeamType.class)
   void getTeamsByType(TeamType teamType) {

@@ -62,6 +62,12 @@ public enum IndustryTeamRole implements TeamRole {
           RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS,
           RolePermission.VIEW_FCS_APPLICATIONS
       )
+  ),
+  CONSENT_RECIPIENT(
+      "Consent recipient",
+      "Can view consents for the organisation group and will receive a notification upon consent issue",
+      70,
+      EnumSet.of(RolePermission.VIEW_FCS_CONSENTS)
   );
 
   private final String displayName;
