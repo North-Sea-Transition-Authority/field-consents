@@ -13,7 +13,7 @@
   <tbody class="govuk-table__body">
     <tr class="govuk-table__row">
       <td class="govuk-table__cell">${consentStartDate} to ${consentEndDate}</td>
-      <td class="govuk-table__cell">[TODO FCS-610]</td>
+      <td class="govuk-table__cell">${emissionDailyAverage}</td>
     </tr>
   </tbody>
 </table>

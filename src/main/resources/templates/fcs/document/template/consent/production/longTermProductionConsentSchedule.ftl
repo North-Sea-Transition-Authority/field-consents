@@ -15,27 +15,15 @@
     </tr>
   </thead>
   <tbody class="govuk-table__body">
-    <tr class="govuk-table__row">
-      <td class="govuk-table__cell">[TODO FCS-610] (1)</td>
-      <td class="govuk-table__cell">[TODO FCS-610]</td>
-      <td class="govuk-table__cell">[TODO FCS-610]</td>
-      <td class="govuk-table__cell">[TODO FCS-610]</td>
-      <td class="govuk-table__cell">[TODO FCS-610]</td>
-    </tr>
-    <tr class="govuk-table__row">
-      <td class="govuk-table__cell">[TODO FCS-610]</td>
-      <td class="govuk-table__cell">[TODO FCS-610]</td>
-      <td class="govuk-table__cell">[TODO FCS-610]</td>
-      <td class="govuk-table__cell">[TODO FCS-610]</td>
-      <td class="govuk-table__cell">[TODO FCS-610]</td>
-    </tr>
-    <tr class="govuk-table__row">
-      <td class="govuk-table__cell">[TODO FCS-610] (2)</td>
-      <td class="govuk-table__cell">[TODO FCS-610]</td>
-      <td class="govuk-table__cell">[TODO FCS-610]</td>
-      <td class="govuk-table__cell">[TODO FCS-610]</td>
-      <td class="govuk-table__cell">[TODO FCS-610]</td>
-    </tr>
+    <#list consentProductionFiguresViews as year, consentProductionFiguresView>
+      <tr class="govuk-table__row">
+        <td class="govuk-table__cell">${year}<#if year?is_first> (1)</#if><#if year?is_last> (2)</#if></td>
+        <td class="govuk-table__cell">${consentProductionFiguresView.minOil()}</td>
+        <td class="govuk-table__cell">${consentProductionFiguresView.maxOil()}</td>
+        <td class="govuk-table__cell">${consentProductionFiguresView.minGas()}</td>
+        <td class="govuk-table__cell">${consentProductionFiguresView.maxGas()}</td>
+      </tr>
+    </#list>
   </tbody>
 </table>
 

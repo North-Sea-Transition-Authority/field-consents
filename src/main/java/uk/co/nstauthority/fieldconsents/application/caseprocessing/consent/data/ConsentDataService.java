@@ -12,7 +12,6 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
-import uk.co.nstauthority.fieldconsents.document.FieldConsentsDocumentInstanceService;
 
 @Service
 public class ConsentDataService {
@@ -22,26 +21,29 @@ public class ConsentDataService {
   private final ConsentProductionFiguresService consentProductionFiguresService;
   private final ConsentEmissionFigureService consentEmissionFigureService;
   private final ConsentProductionLongTermFiguresService consentProductionLongTermFiguresService;
-  private final FieldConsentsDocumentInstanceService fieldConsentsDocumentInstanceService;
 
   ConsentDataService(
       ConsentDataRepository repository,
       ConsentLengthService consentLengthService,
       ConsentProductionFiguresService consentProductionFiguresService,
       ConsentEmissionFigureService consentEmissionFigureService,
-      ConsentProductionLongTermFiguresService consentProductionLongTermFiguresService,
-      FieldConsentsDocumentInstanceService fieldConsentsDocumentInstanceService
+      ConsentProductionLongTermFiguresService consentProductionLongTermFiguresService
   ) {
     this.repository = repository;
     this.consentLengthService = consentLengthService;
     this.consentProductionFiguresService = consentProductionFiguresService;
     this.consentEmissionFigureService = consentEmissionFigureService;
     this.consentProductionLongTermFiguresService = consentProductionLongTermFiguresService;
-    this.fieldConsentsDocumentInstanceService = fieldConsentsDocumentInstanceService;
   }
 
   public Optional<ConsentData> findConsentData(Application application) {
     return repository.findByApplication(application);
+  }
+
+  public ConsentData getConsentData(Application application) {
+    return findConsentData(application).orElseThrow(() ->
+        new IllegalStateException("Unable to find consent data for application: %s".formatted(application.getId()))
+    );
   }
 
   @Transactional
@@ -52,10 +54,6 @@ public class ConsentDataService {
     consentData.setApplication(application);
 
     updateConsentDataFromForm(application, consentLengthType, consentData, form);
-
-    if (consentDataOptional.isEmpty()) {
-      fieldConsentsDocumentInstanceService.createDocumentInstancesForApplication(application);
-    }
 
     repository.save(consentData);
 

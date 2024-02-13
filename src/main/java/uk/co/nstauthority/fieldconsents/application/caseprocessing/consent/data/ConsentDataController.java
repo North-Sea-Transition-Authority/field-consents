@@ -20,6 +20,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.prepa
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
+import uk.co.nstauthority.fieldconsents.document.FieldConsentsDocumentInstanceService;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
@@ -34,6 +35,7 @@ public class ConsentDataController {
   private final ConsentDataFormValidator consentDataFormValidator;
   private final ConsentFigureUnitService consentFigureUnitService;
   private final ConsentLengthService consentLengthService;
+  private final FieldConsentsDocumentInstanceService fieldConsentsDocumentInstanceService;
 
   ConsentDataController(
       ApplicationService applicationService,
@@ -41,7 +43,8 @@ public class ConsentDataController {
       ConsentDataService consentDataService,
       ConsentDataFormValidator consentDataFormValidator,
       ConsentFigureUnitService consentFigureUnitService,
-      ConsentLengthService consentLengthService
+      ConsentLengthService consentLengthService,
+      FieldConsentsDocumentInstanceService fieldConsentsDocumentInstanceService
   ) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
@@ -49,6 +52,7 @@ public class ConsentDataController {
     this.consentDataFormValidator = consentDataFormValidator;
     this.consentFigureUnitService = consentFigureUnitService;
     this.consentLengthService = consentLengthService;
+    this.fieldConsentsDocumentInstanceService = fieldConsentsDocumentInstanceService;
   }
 
   @GetMapping
@@ -91,6 +95,10 @@ public class ConsentDataController {
 
     if (bindingResult.hasErrors()) {
       return modelAndView(applicationVersion, consentLengthType, form);
+    }
+
+    if (consentDataService.findConsentData(application).isEmpty()) {
+      fieldConsentsDocumentInstanceService.createDocumentInstancesForApplication(application);
     }
 
     consentDataService.saveConsentData(application, consentLengthType, form);

@@ -69,7 +69,7 @@ class DocumentTemplateBootstrapServiceTest {
             DocumentTemplateType.FIELD_PRODUCTION_CONSENT.getMnemonic(),
             "Field Production Consent",
             "Document template used for creating Field Production Consent documents",
-            "fcs/document/template/consent/production/productionConsent.ftl",
+            "fcs/document/template/consent/consent.ftl",
             1
         )
     ).thenReturn(fieldProductionConsentDocumentTemplateDto);
@@ -240,7 +240,7 @@ class DocumentTemplateBootstrapServiceTest {
             DocumentTemplateType.FIELD_FLARE_CONSENT.getMnemonic(),
             "Field Flare Consent",
             "Document template used for creating Field Flare Consent documents",
-            "fcs/document/template/consent/flare/flareConsent.ftl",
+            "fcs/document/template/consent/consent.ftl",
             2
         )
     ).thenReturn(fieldFlareConsentDocumentTemplateDto);
@@ -360,7 +360,7 @@ class DocumentTemplateBootstrapServiceTest {
             DocumentTemplateType.TERMINAL_FLARE_CONSENT.getMnemonic(),
             "Facility Flare Consent",
             "Document template used for creating Facility Flare Consent documents",
-            "fcs/document/template/consent/flare/flareConsent.ftl",
+            "fcs/document/template/consent/consent.ftl",
             3
         )
     ).thenReturn(terminalFlareConsentDocumentTemplateDto);
@@ -450,7 +450,7 @@ class DocumentTemplateBootstrapServiceTest {
             DocumentTemplateType.FIELD_VENT_CONSENT.getMnemonic(),
             "Field Vent Consent",
             "Document template used for creating Field Vent Consent documents",
-            "fcs/document/template/consent/vent/ventConsent.ftl",
+            "fcs/document/template/consent/consent.ftl",
             4
         )
     ).thenReturn(fieldVentConsentDocumentTemplateDto);
@@ -545,7 +545,7 @@ class DocumentTemplateBootstrapServiceTest {
             DocumentTemplateType.TERMINAL_VENT_CONSENT.getMnemonic(),
             "Facility Vent Consent",
             "Document template used for creating Facility Vent Consent documents",
-            "fcs/document/template/consent/vent/ventConsent.ftl",
+            "fcs/document/template/consent/consent.ftl",
             5
         )
     ).thenReturn(terminalVentConsentDocumentTemplateDto);

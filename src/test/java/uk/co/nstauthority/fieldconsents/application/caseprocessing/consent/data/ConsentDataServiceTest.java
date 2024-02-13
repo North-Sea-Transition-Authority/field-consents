@@ -40,7 +40,6 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
-import uk.co.nstauthority.fieldconsents.document.FieldConsentsDocumentInstanceService;
 import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -60,9 +59,6 @@ class ConsentDataServiceTest {
 
   @Mock
   private ConsentProductionLongTermFiguresService consentProductionLongTermFiguresService;
-
-  @Mock
-  private FieldConsentsDocumentInstanceService fieldConsentsDocumentInstanceService;
 
   @InjectMocks
   @Spy
@@ -90,6 +86,28 @@ class ConsentDataServiceTest {
   }
 
   @Test
+  void getConsentData() {
+    var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
+
+    var consentData = ConsentDataTestUtil.newBuilder().build();
+
+    doReturn(Optional.of(consentData)).when(consentDataService).findConsentData(application);
+
+    assertThat(consentDataService.getConsentData(application)).isEqualTo(consentData);
+  }
+
+  @Test
+  void getConsentData_notFound() {
+    var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
+
+    doReturn(Optional.empty()).when(consentDataService).findConsentData(application);
+
+    assertThatThrownBy(() -> consentDataService.getConsentData(application))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Unable to find consent data for application: %s".formatted(application.getId()));
+  }
+
+  @Test
   void saveConsentData_doesNotExistBeforeSaving() {
     var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
 
@@ -114,8 +132,6 @@ class ConsentDataServiceTest {
             null,
             application
         );
-
-    verify(fieldConsentsDocumentInstanceService).createDocumentInstancesForApplication(application);
 
     verify(repository).save(consentData);
 
@@ -148,8 +164,6 @@ class ConsentDataServiceTest {
             application
         );
 
-    verify(fieldConsentsDocumentInstanceService).createDocumentInstancesForApplication(application);
-
     verify(repository).save(consentData);
 
     verify(consentProductionLongTermFiguresService).saveConsentProductionLongTermFigures(application, form);
@@ -181,8 +195,6 @@ class ConsentDataServiceTest {
             application
         );
 
-    verify(fieldConsentsDocumentInstanceService, never()).createDocumentInstancesForApplication(any());
-
     verify(repository).save(existingConsentData);
 
     verify(consentProductionLongTermFiguresService, never()).saveConsentProductionLongTermFigures(application, form);
@@ -213,8 +225,6 @@ class ConsentDataServiceTest {
             existingConsentData.getId(),
             application
         );
-
-    verify(fieldConsentsDocumentInstanceService, never()).createDocumentInstancesForApplication(any());
 
     verify(repository).save(existingConsentData);
 

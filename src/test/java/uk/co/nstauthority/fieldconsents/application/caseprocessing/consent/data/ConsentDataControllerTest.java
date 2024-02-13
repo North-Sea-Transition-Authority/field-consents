@@ -41,6 +41,7 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthD
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
+import uk.co.nstauthority.fieldconsents.document.FieldConsentsDocumentInstanceService;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -65,6 +66,9 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
 
   @MockBean
   private ConsentLengthService consentLengthService;
+
+  @MockBean
+  private FieldConsentsDocumentInstanceService fieldConsentsDocumentInstanceService;
 
   @Captor
   private ArgumentCaptor<ConsentDataForm> consentDataFormCaptor;
@@ -185,13 +189,14 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
   }
 
   @Test
-  void submitConsentData() throws Exception {
+  void submitConsentData_consentDataDoesNotExist() throws Exception {
     var consentLengthDetails = new ConsentLengthDetails();
     var consentLengthType = ConsentLengthType.SHORT_TERM;
     consentLengthDetails.setConsentLength(consentLengthType);
 
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
+    when(consentDataService.findConsentData(application)).thenReturn(Optional.empty());
 
     mockMvc.perform(post(ReverseRouter.route(on(ConsentDataController.class)
         .submitConsentData(APPLICATION_ID, null, null, null)))
@@ -209,6 +214,40 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
 
     var form = consentDataFormCaptor.getValue();
 
+    verify(fieldConsentsDocumentInstanceService).createDocumentInstancesForApplication(application);
+    verify(consentDataService).saveConsentData(application, consentLengthType, form);
+  }
+
+  @Test
+  void submitConsentData_consentDataDoesExist() throws Exception {
+    var consentLengthDetails = new ConsentLengthDetails();
+    var consentLengthType = ConsentLengthType.SHORT_TERM;
+    consentLengthDetails.setConsentLength(consentLengthType);
+
+    var consentData = ConsentDataTestUtil.newBuilder().build();
+
+    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
+    when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
+    when(consentDataService.findConsentData(application)).thenReturn(Optional.of(consentData));
+
+    mockMvc.perform(post(ReverseRouter.route(on(ConsentDataController.class)
+            .submitConsentData(APPLICATION_ID, null, null, null)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(ReverseRouter.route(on(ConsentPreparationController.class).viewConsentPreparationPage(APPLICATION_ID))))
+        .andExpect(notificationBanner(NotificationBanner.builder()
+            .withBannerType(NotificationBannerType.SUCCESS)
+            .withHeadingContent("Consent data saved")
+            .build()));
+
+    verify(consentDataFormValidator)
+        .validate(consentDataFormCaptor.capture(), eq(application), eq(consentLengthType), any(BindingResult.class));
+
+    var form = consentDataFormCaptor.getValue();
+
+    verify(fieldConsentsDocumentInstanceService, never()).createDocumentInstancesForApplication(any());
     verify(consentDataService).saveConsentData(application, consentLengthType, form);
   }
 
@@ -246,6 +285,7 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
         .andExpect(model().attribute("consentLengthType", consentLengthType))
         .andExpect(model().attribute("consentFigureUnitView", consentFigureUnitView));
 
+    verify(fieldConsentsDocumentInstanceService, never()).createDocumentInstancesForApplication(any());
     verify(consentDataService, never()).saveConsentData(any(), any(), any());
   }
 }
