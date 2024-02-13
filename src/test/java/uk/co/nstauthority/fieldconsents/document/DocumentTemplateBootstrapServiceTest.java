@@ -223,7 +223,7 @@ class DocumentTemplateBootstrapServiceTest {
         """
         ((PRIMARY_FIELD_NAME))
         LICENCE(S) ((LICENCE_REFERENCE_LIST))
-        FIELD EQUITY PARTNER(S) ((FIELD_EQUITY_PARTNER_LIST))
+        FIELD EQUITY PARTNER(S) ((FIELD_EQUITY_PARTNER_NAME_LIST))
         """,
         null,
         false,
@@ -343,7 +343,7 @@ class DocumentTemplateBootstrapServiceTest {
         """
         ((PRIMARY_AND_ADDITIONAL_FIELD_NAMES))
         LICENCE(S) ((LICENCE_REFERENCE_LIST))
-        FIELD EQUITY PARTNER(S) ((FIELD_EQUITY_PARTNER_LIST))
+        FIELD EQUITY PARTNER(S) ((FIELD_EQUITY_PARTNER_NAME_LIST))
         """,
         null,
         false,
@@ -528,7 +528,7 @@ class DocumentTemplateBootstrapServiceTest {
         """
         ((PRIMARY_AND_ADDITIONAL_FIELD_NAMES))
         LICENCE(S) ((LICENCE_REFERENCE_LIST))
-        FIELD EQUITY PARTNER(S) ((FIELD_EQUITY_PARTNER_LIST))
+        FIELD EQUITY PARTNER(S) ((FIELD_EQUITY_PARTNER_NAME_LIST))
         """,
         null,
         false,
