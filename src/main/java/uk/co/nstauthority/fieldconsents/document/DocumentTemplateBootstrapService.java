@@ -169,9 +169,7 @@ class DocumentTemplateBootstrapService {
         fieldProductionConsentDocumentTemplateDto,
         null,
         "TODO FCS-610: This consent supersedes",
-        """
-        [This consent supersedes the consent [CONSENT REFERENCE] granted by the ((REGULATOR_LEGAL_NAME)) dated [DATE].]
-        """,
+        "[This consent supersedes the consent [CONSENT REFERENCE] granted by the ((REGULATOR_LEGAL_NAME)) dated [DATE].]",
         null,
         true,
         6
@@ -297,9 +295,7 @@ class DocumentTemplateBootstrapService {
         fieldFlareConsentDocumentTemplateDto,
         null,
         "TODO FCS-610: This consent supersedes",
-        """
-        [This consent supersedes the consent [CONSENT REFERENCE] granted by the ((REGULATOR_LEGAL_NAME)) dated [DATE].]
-        """,
+        "[This consent supersedes the consent [CONSENT REFERENCE] granted by the ((REGULATOR_LEGAL_NAME)) dated [DATE].]",
         null,
         true,
         6
@@ -394,9 +390,7 @@ class DocumentTemplateBootstrapService {
         terminalFlareConsentDocumentTemplateDto,
         null,
         "TODO FCS-610: This consent supersedes",
-        """
-        [This consent supersedes the consent [CONSENT REFERENCE] granted by the ((REGULATOR_LEGAL_NAME)) dated [DATE].]
-        """,
+        "[This consent supersedes the consent [CONSENT REFERENCE] granted by the ((REGULATOR_LEGAL_NAME)) dated [DATE].]",
         null,
         true,
         5
@@ -479,11 +473,21 @@ class DocumentTemplateBootstrapService {
     documentTemplateSectionService.createDocumentTemplateSection(
         fieldVentConsentDocumentTemplateDto,
         null,
+        "TODO FCS-610: This consent supersedes",
+        "[This consent supersedes the consent [CONSENT REFERENCE] granted by the ((REGULATOR_LEGAL_NAME)) dated [DATE].]",
+        null,
+        true,
+        5
+    );
+
+    documentTemplateSectionService.createDocumentTemplateSection(
+        fieldVentConsentDocumentTemplateDto,
+        null,
         "Schedule",
         "((SCHEDULE))",
         null,
         false,
-        5
+        6
     );
 
     documentTemplateSectionService.createDocumentTemplateSection(
@@ -497,7 +501,7 @@ class DocumentTemplateBootstrapService {
         """,
         null,
         false,
-        6
+        7
     );
   }
 
@@ -565,9 +569,7 @@ class DocumentTemplateBootstrapService {
         terminalVentConsentDocumentTemplateDto,
         null,
         "TODO FCS-610: This consent supersedes",
-        """
-        [This consent supersedes the consent [CONSENT REFERENCE] granted by the ((REGULATOR_LEGAL_NAME)) dated [DATE].]
-        """,
+        "[This consent supersedes the consent [CONSENT REFERENCE] granted by the ((REGULATOR_LEGAL_NAME)) dated [DATE].]",
         null,
         true,
         5
