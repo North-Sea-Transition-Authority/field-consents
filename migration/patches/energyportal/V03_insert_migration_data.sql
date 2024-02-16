@@ -1,7 +1,6 @@
 
 --DELETE FROM fcs_migration.vent_long_term_years;
 --DELETE FROM fcs_migration.flare_long_term_years;
---DELETE FROM fcs_migration.file_upload_library_uploaded_files;
 --DELETE FROM fcs_migration.application_technical_reviews;
 --DELETE FROM fcs_migration.application_updates;
 --DELETE FROM fcs_migration.application_case_notes;
@@ -1939,9 +1938,3 @@ LEFT JOIN isets ON isets.is_id = rasd.intention_set_id
 LEFT JOIN aac_wuas ON aac_wuas.aac_id = rreq.aac_id
 WHERE rid.status_control = 'C';
 /
-
---
--- file_upload_library_uploaded_files
---
--- supporting info docs
---

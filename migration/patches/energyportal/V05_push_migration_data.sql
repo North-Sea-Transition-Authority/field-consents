@@ -1513,17 +1513,61 @@ END;
 --
 -- file_upload_library_uploaded_files
 --
--- TODO
+BEGIN
 
---BEGIN
---
---  FOR rec IN (SELECT * FROM fcs_migration.) LOOP
---  
---    INSERT INTO "fcs".""@fcs_postgres_db (
---    ) VALUES (
---    );
---  
---  END LOOP;
---
---END;
+  FOR rec IN (
+    SELECT *
+    FROM fcs_migration.file_upload_library_uploaded_files f
+    ORDER BY to_number(usage_id), uploaded_at
+  ) LOOP
+  
+    INSERT INTO "fcs"."file_upload_library_uploaded_files"@fcs_postgres_db (
+      "id"
+    , "bucket"
+    , "key"
+    , "name"
+    , "content_type"
+    , "content_length"
+    , "uploaded_at"
+    , "usage_id"
+    , "usage_type"
+    , "document_type"
+    , "description"
+    , "uploaded_by"
+    ) VALUES (
+      rec.id
+    , rec.bucket
+    , rec.key
+    , rec.name
+    , rec.content_type
+    , rec.content_length
+    , rec.uploaded_at
+    , rec.usage_id
+    , rec.usage_type
+    , rec.document_type
+    , rec.description
+    , rec.uploaded_by
+    );
+  
+  END LOOP;
+
+END;
+/
+---- manual export/import (for local dev import)
+--SELECT
+--  f.id
+--, f.bucket
+--, f.key
+--, f.name
+--, f.content_type
+--, f.content_length
+--, to_char(f.uploaded_at, 'YYYY-MM-DD HH24:MI:SS') uploaded_at
+--, f.usage_id
+--, f.usage_type
+--, f.document_type
+--, f.description
+--, f.uploaded_by
+--FROM fcs_migration.file_upload_library_uploaded_files f
+--WHERE f.key LIKE '%local'
+--ORDER BY usage_id, uploaded_at
 --/

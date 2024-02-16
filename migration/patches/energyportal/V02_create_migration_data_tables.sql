@@ -797,9 +797,9 @@ CREATE TABLE fcs_migration.application_technical_reviews (
 -- file_upload_library_uploaded_files
 --
 CREATE TABLE fcs_migration.file_upload_library_uploaded_files (
-  id             VARCHAR2(4000) PRIMARY KEY -- this is a UUID (might not need here)
+  id             VARCHAR2(36) PRIMARY KEY -- UUID
 , bucket         VARCHAR2(4000) NOT NULL -- field-consents
-, key            VARCHAR2(4000) NOT NULL -- an AWS S3 UUID ?
+, key            VARCHAR2(4000) NOT NULL -- a unique file id - FUSS uses a UUID
 , name           VARCHAR2(4000) NOT NULL -- file name e.g. test1.txt
 , content_type   VARCHAR2(4000) NOT NULL -- file type e.g. text/plain application/vnd.ms-excel application/pdf image/jpeg
 , content_length INTEGER NOT NULL -- file size
@@ -807,6 +807,6 @@ CREATE TABLE fcs_migration.file_upload_library_uploaded_files (
 , usage_id       VARCHAR2(4000) -- the application version id
 , usage_type     VARCHAR2(4000) -- will be ApplicationVersion for supporting docs
 , document_type  VARCHAR2(4000) -- e.g. supporting-document
-, description    VARCHAR2(4000) -- file description 
+, description    VARCHAR2(4000) -- file description
 , uploaded_by    VARCHAR2(4000) -- wua id
 );

@@ -1,57 +1,7 @@
+--
+-- TODOs - see https://ogajira3.atlassian.net/browse/FCS-656
+--
 
--- TODO
---
--- 1) We have Long Term Flare and Vent cases in the legacy system but not in the
---    new system. Data is being migrated but we have no long term flare/vent screens
---    to show the data. Also the new screen likely won't cope well with these cases.
---    This all needs screen testing before deciding what to do.
-
--- 2) Some Vent apps have COVER_INFO/TERMINAL_NAME and TERMINAL_LOCATION data, these then don't have
---    the report or consent data. Need to investigate these. See action-onUpdateFieldLocation,
---    seem to change the APP_TYPE_DEFAULT if SHORT_TERM/ANNUAL and FIELD_LOCATION= IS or SNS
---    These types of apps are no longer allowed, i.e. we now want the report and consent data
---    values.
---    A good example of the terminal version of these Vent apps is: CLIPPER SOUTH (INEOS UK SNS LIMITED)
---
--- 3) Need to update the flare/vent gas data prompts for Standard density when the unit is g/mol.
---    Instead of: Standard density (kg/m3)
---    Should read: Stream Mol Wt (g/mol)
---    Maybe add a gas data prompt in FlareVentUnit?
--- 
--- 4) For EIA data what about the FCON and VCON data in the legacy system? The new FCS apps will
---    only show/ask for this data for PRODUCTION apps. See 5)
---
--- 5) For app data which we no longer has a place, we need to migrate to another specific migration data table
---    and display in the app summary in some way
---    Examples:
---    - production annual and long term uplift %
---      /*/ANNUAL_PRODUCTION/UPLIFT
---      /*/LONG_TERM_PRODUCTION/UPLIFT
---    - flare and vent long term report data (on cover page)
---      /*/COVER_INFO/FLARE_CONSENT_HISTORY | FLARE_ACTUALS
---      /*/COVER_INFO/VENT_CONSENT_HISTORY | VENT_ACTUALS
---
--- 6) LOCATION application_assets - some have no operator (see devukmgr.field_operator_view), so we can't migrate yet
---    Issues: on dev: SUTTON MANOR COAL MINE VENT
---            on st: SUTTON MANOR COAL MINE VENT
---                   CLIPPER SOUTH
---                   BENTLEY
---                   ALVHEIM
---                   ALMA
---                   BOULTON H
---            on uat and live: ALVHEIM
---                             STATFJORD(CROSS BORDER)
---
--- 7) Do we need to migrate legacy payments?
---    CT thinks no - they can access via the portal payments screens.
---                   Also the legacy system doesn't let then see the payments from within Field Consent cases.
--- 
--- 8) Still need to consider the consent processing data. i.e. the consented figures and also the field equity partners and the
---    items that drive the Consent docs and Cover letter. I don't have anywhere for this data to go yet.
---    Plus the actual consent output documents.
---
--- 9) Need to migrate the supporting docs file uploads.
---
 --
 -- NOTES
 -- a) for a variation the fc_id stays the same (the variation no is on the detail row
@@ -77,7 +27,7 @@
 -- e) For legacy Short Term Flare/Vent 1_2_3 cases there are no reports (the dom elements exist
 --    but there are no figures as you can't get to the report page for 1_2_3 cases).
 --
--- f) Ensure NSTA are aware that the totals and averages are not being migrated, but instead
+-- f) NSTA are aware that the totals and averages are not being migrated, but instead
 --    we will calculate on the fly when showing the applications summary. Note - specifically
 --    highlight that the shutdown days are not now taken off the total days when working out
 --    the daily averages.
@@ -2507,7 +2457,7 @@ JOIN bpmmgr.review_advisor_slot_details rasd ON ras.id = rasd.ras_id AND rasd.st
 LEFT JOIN isets ON isets.is_id = rasd.intention_set_id
 LEFT JOIN aac_wuas ON aac_wuas.aac_id = aac.id
 --JOIN decmgr.resource_usages_current ru ON ru.uref = aac.id||'AAC' -- AND (xrad.review_delivered_date BETWEEN ru.start_datetime AND coalesce(ru.end_datetime, sysdate))
---JOIN decmgr.resource_member_current_simple rmc ON rmc.res_id = ru.res_id AND rmc.role_name = 'ELECTRONIC_ADVISOR_AUTO' -- TODO this could add cardinality - check that all the field consents aac team have just one ELECTRONIC_ADVISOR_AUTO on live / dev
+--JOIN decmgr.resource_member_current_simple rmc ON rmc.res_id = ru.res_id AND rmc.role_name = 'ELECTRONIC_ADVISOR_AUTO' -- this could add cardinality - check that all the field consents aac team have just one ELECTRONIC_ADVISOR_AUTO on live / dev Done
 WHERE rid.status_control = 'C'
 -- this is version 4 what happens when we do an update and get version 5? do the reviews get copied forward / repointed to the new FC uref (this is the detail id!) ?
 -- ah, the uref for the rid gets repointed at the new uref! so we loose the context of which app version the review was requested on ummmmm TODO need to think about this 
@@ -2647,11 +2597,10 @@ ORDER BY requested_date_time DESC
 /
 
 --
--- file_upload_library_uploaded_files
+-- file_upload_library_uploaded_files / promotemgr.s3_file_migration
 --
 -- supporting info docs
 --
-
 -- note - as per the new system the files are cloned to a new file folder for
 -- an application update, i.e. new application version
 
@@ -2661,15 +2610,69 @@ SELECT count(*)
 FROM envmgr.xview_field_consent_details fcd
 LEFT JOIN decmgr.file_folders ff ON ff.id = fcd.folder_id
 LEFT JOIN decmgr.file_folder_usages ffu ON ffu.uref = fcd.uref;
-
+/
+SELECT count(DISTINCT ffu.uref) -- we have 1 for every fcd
+FROM decmgr.file_folder_usages ffu
+WHERE ffu.uref LIKE '%FC'
 /
 
---
--- File migration proposed method
---
--- 1) insert data we have into fcs_migration.file_upload_library_uploaded_files (will be missing the id and key)
--- 2) insert data required (blobs etc) into promotemgr.s3_file_migration
--- 3) run the Java file migration tool (from the bastion for uat and prod)
---    -- generate the uuid key (stored at text in FUSS) here? or at step (2)?
--- 4) get the key from promotemgr.s3_file_migration and update fcs_migration.file_upload_library_uploaded_files
--- 5) push the data from Oracle to Postgress
+-- note: directory/filename has to be unique
+
+--INSERT INTO promotemgr.s3_file_migration( 
+--  fox_file_id -- actual fv fox_file_id
+--, application -- FCS
+--, reference -- use application_version_id
+--, directory -- set to "migrated"
+--, filename -- needs to be a unique key (use the fox_file_id)
+--, content -- the actual BLOB (need to get via the file_versions secure_lob)
+--, s3_endpoint -- will get set after migration
+--, s3_bucket -- will get set after migration
+--, s3_path -- will get set after migration (directory/filename)
+--, migrated_timestamp -- will get set after migration
+--)
+SELECT
+  sd.fox_file_id
+, 'FCS' application
+, av.id reference
+, 'migrated' directory
+, sd.fox_file_id filename
+, sd.file_blob_content
+, sd.calculated_file_size
+, sd.file_size
+FROM fcs_migration.application_versions av
+JOIN fcs_migration.field_consent_supporting_docs sd ON sd.fcd_id = av.id
+ORDER BY av.id, sd.fv_id
+/
+--fcs_migration.file_upload_library_uploaded_files (
+--  id             VARCHAR2(36) PRIMARY KEY -- this is a UUID
+--, bucket         VARCHAR2(4000) NOT NULL -- for dev this is fcs.dev.fivium.co.uk
+--, key            VARCHAR2(4000) NOT NULL -- an AWS S3 key UUID ? use s3_path after migration run
+--, name           VARCHAR2(4000) NOT NULL -- file name e.g. test1.txt
+--, content_type   VARCHAR2(4000) NOT NULL -- file type e.g. text/plain application/vnd.ms-excel application/pdf image/jpeg
+--, content_length INTEGER NOT NULL -- file size
+--, uploaded_at    DATE NOT NULL
+--, usage_id       VARCHAR2(4000) -- the application version id
+--, usage_type     VARCHAR2(4000) -- will be ApplicationVersion for supporting docs
+--, document_type  VARCHAR2(4000) -- e.g. supporting-document
+--, description    VARCHAR2(4000) -- file description 
+--, uploaded_by    VARCHAR2(4000) -- wua id
+--);
+
+SELECT
+  null id
+, fm.s3_bucket bucket
+, fm.s3_path key
+, sd.filename name
+, sd.content_type
+, sd.calculated_file_size content_length
+, sd.upload_date_time uploaded_at
+, av.id usage_id
+, 'ApplicationVersion' usage_type
+, 'supporting-document' document_type
+, sd.file_description description
+, sd.uploaded_by_wua_id uploaded_by
+FROM fcs_migration.application_versions av
+JOIN fcs_migration.field_consent_supporting_docs sd ON sd.fcd_id = av.id
+JOIN promotemgr.s3_file_migration fm ON fm.fox_file_id = sd.fox_file_id
+WHERE fm.migrated_timestamp IS NOT NULL;
+/

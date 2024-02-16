@@ -21,7 +21,21 @@ On schema `fcs_migration` run the following patch:
 On schema `fcs_migration` run the following patch:
 - `/energyportal/V03_insert_mirgation_data.sql`
 
-## 4. Setup a DB link from Oracle to Postgres
+## 4. Stage/flatten the file data and migrate the files to S3
+
+On schema `fcs_migration` run through the following patch:
+- `/energyportal/V04_s3_file_migration.sql`
+
+Part of the above will also involve running the S3 migration tool s3-file-migrator.
+- https://github.com/Fivium/s3-file-migrator
+
+### File migration method
+1) insert data we have (inc blobs etc) into promotemgr.s3_file_migration
+2) run the Java file migration tool (from the bastion for uat and prod)
+3) insert data we have into fcs_migration.file_upload_library_uploaded_files (generate uuid here for the id)
+4) push the data from Oracle to Postgres
+
+## 5. Setup a DB link from Oracle to Postgres
 
 Run through the following guide per environment (sys admin/DBA job):
 - https://medium.com/analytics-vidhya/oracle-database-link-to-postgresql-database-b5ac1006f47a
@@ -36,14 +50,14 @@ USING 'fcs_postgres';
 
 Environments - `local`, `dev`, `st`, `preprod`, `prod`
 
-## 5a. Push the data over the DB link to the new field consents Postgres database
+## 6a. Push the data over the DB link to the new field consents Postgres database
 
 On schema `fcs_migration` run the following patch:
-- `/energyportal/V04_push_mirgation_data.sql`
+- `/energyportal/V05_push_mirgation_data.sql`
 
 Note - you will need to have a clean DB to migrate to otherwise the ids will likely clash.
 
-## 5b. Manual extract/import
+## 6b. Manual extract/import
 
 CLOBs are not supported over the DB link so the following tables have been migrated manually via extract/import (for now):
 - application_supporting_information
@@ -62,26 +76,6 @@ CLOBs are not supported over the DB link so the following tables have been migra
 ## 6. Post migration sync Postgres sequences
 
 On the FCS Postgres database (`fcs` schema) run the following patch:
-- `/energyportal/V05_restart_postgres_sequences.sql`
+- `/energyportal/V06_restart_postgres_sequences.sql`
 
 This will look at all the migrated ids and ensure the sequence next values are in sync.
-
-# Scratch notes
-
-FLARE ANNUAL MIGRATION (Legacy test case FCON/2041/0 (Version 1), local test case FCON/28/0 (Version 1))
-- on the legacy system the report page subtracts the shutdown days prior to calculating the daily avergage...this seems wrong
-- Data we don't have in new FCS 
-  - Cover info - Year 2023 History - Flare Consent (tonnes/day)
-  - Flare report
-    - Stream Mol Wt is now -> Standard density (kg/m3)
-    - Inert Gas Content (mol %) (or specify full composition) is now -> Inert gas content (mass %)
-    - Hydrocarbon content (mol %) (or specify full composition) is now -> Hydrocarbon content (mass %)
-  - Additional info - Does the activity as described in the consent application constitute a project under the Offshore Oil and
-  Gas Exploration, Production, Unloading and Storage (Environmental Impact Assessment) Regulations 2020? Yes/No
-  - Application copy PDF
-
-CASE NOTES
-- where are these in the legacy system? (intentions?)
-
-PAYMENTS
-- what do I need to migrate for this?

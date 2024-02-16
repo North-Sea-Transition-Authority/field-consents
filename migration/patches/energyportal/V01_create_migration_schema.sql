@@ -16,3 +16,11 @@ GRANT CREATE TABLE TO fcs_migration;
 GRANT CREATE SEQUENCE TO fcs_migration;
 
 GRANT CREATE VIEW TO fcs_migration;
+
+GRANT CREATE PROCEDURE TO fcs_migration;
+
+GRANT EXECUTE ON securemgr.secure_lob TO fcs_migration;
+
+GRANT INSERT ON promotemgr.s3_file_migration TO fcs_migration;
+
+GRANT DELETE ON promotemgr.s3_file_migration TO fcs_migration;
