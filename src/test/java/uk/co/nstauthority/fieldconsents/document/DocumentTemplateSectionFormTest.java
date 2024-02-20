@@ -8,7 +8,7 @@ class DocumentTemplateSectionFormTest {
 
   @Test
   void empty() {
-    assertThat(DocumentTemplateSectionForm.empty()).isEqualTo(new DocumentTemplateSectionForm(null, null, null, null));
+    assertThat(DocumentTemplateSectionForm.empty()).isEqualTo(new DocumentTemplateSectionForm(null, null, null, null, null));
   }
 
   @Test
@@ -20,7 +20,8 @@ class DocumentTemplateSectionFormTest {
             documentTemplateSectionDto.title(),
             documentTemplateSectionDto.content(),
             documentTemplateSectionDto.conditionMnemonic(),
-            documentTemplateSectionDto.numbered()
+            documentTemplateSectionDto.numbered(),
+            documentTemplateSectionDto.hasPageBreakBefore()
         )
     );
   }

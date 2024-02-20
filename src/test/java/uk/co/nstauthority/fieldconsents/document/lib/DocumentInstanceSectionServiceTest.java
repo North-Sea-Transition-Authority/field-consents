@@ -40,6 +40,7 @@ class DocumentInstanceSectionServiceTest {
     var title = "Test title";
     var content = "Test content";
     var numbered = true;
+    var hasPageBreakBefore = false;
     var displayOrder = 1;
 
     var documentInstance = DocumentInstanceTestUtil.builder().build();
@@ -64,6 +65,7 @@ class DocumentInstanceSectionServiceTest {
         title,
         content,
         numbered,
+        hasPageBreakBefore,
         displayOrder
     );
 
@@ -85,6 +87,7 @@ class DocumentInstanceSectionServiceTest {
             DocumentInstanceSection::getTitle,
             DocumentInstanceSection::getContent,
             DocumentInstanceSection::isNumbered,
+            DocumentInstanceSection::hasPageBreakBefore,
             DocumentInstanceSection::getDisplayOrder
         )
         .containsExactly(
@@ -93,6 +96,7 @@ class DocumentInstanceSectionServiceTest {
             title,
             content,
             numbered,
+            hasPageBreakBefore,
             displayOrder
         );
 
@@ -113,6 +117,7 @@ class DocumentInstanceSectionServiceTest {
     var title = "Test title";
     var content = "Test content";
     var numbered = true;
+    var hasPageBreakBefore = false;
     var displayOrder = 1;
 
     var documentInstance = DocumentInstanceTestUtil.builder().build();
@@ -139,6 +144,7 @@ class DocumentInstanceSectionServiceTest {
         title,
         content,
         numbered,
+        hasPageBreakBefore,
         displayOrder
     );
 
@@ -160,6 +166,7 @@ class DocumentInstanceSectionServiceTest {
             DocumentInstanceSection::getTitle,
             DocumentInstanceSection::getContent,
             DocumentInstanceSection::isNumbered,
+            DocumentInstanceSection::hasPageBreakBefore,
             DocumentInstanceSection::getDisplayOrder
         )
         .containsExactly(
@@ -168,6 +175,7 @@ class DocumentInstanceSectionServiceTest {
             title,
             content,
             numbered,
+            hasPageBreakBefore,
             displayOrder
         );
 
@@ -184,6 +192,7 @@ class DocumentInstanceSectionServiceTest {
     var title = "Test edited title";
     var content = "Test edited content";
     var numbered = true;
+    var hasPageBreakBefore = false;
 
     var documentInstanceSection = DocumentInstanceSectionTestUtil.builder().build();
 
@@ -191,18 +200,20 @@ class DocumentInstanceSectionServiceTest {
         .when(documentInstanceSectionService)
         .getDocumentInstanceSectionOrThrow(documentInstanceSectionDto.id());
 
-    documentInstanceSectionService.editDocumentInstanceSection(documentInstanceSectionDto, title, content, numbered);
+    documentInstanceSectionService.editDocumentInstanceSection(documentInstanceSectionDto, title, content, numbered, hasPageBreakBefore);
 
     assertThat(documentInstanceSection)
         .extracting(
             DocumentInstanceSection::getTitle,
             DocumentInstanceSection::getContent,
-            DocumentInstanceSection::isNumbered
+            DocumentInstanceSection::isNumbered,
+            DocumentInstanceSection::hasPageBreakBefore
         )
         .containsExactly(
             title,
             content,
-            numbered
+            numbered,
+            hasPageBreakBefore
         );
 
     verify(documentInstanceSectionRepository).save(documentInstanceSection);

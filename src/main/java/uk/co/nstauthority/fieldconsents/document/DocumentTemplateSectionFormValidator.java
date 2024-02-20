@@ -50,5 +50,13 @@ class DocumentTemplateSectionFormValidator {
     if (form.numbered() == null) {
       errors.rejectValue("numbered", "numbered.required", "Select if this section should be numbered");
     }
+
+    if (form.hasPageBreakBefore() == null) {
+      errors.rejectValue(
+          "hasPageBreakBefore",
+          "hasPageBreakBefore.required",
+          "Select if this section should start on a new page"
+      );
+    }
   }
 }

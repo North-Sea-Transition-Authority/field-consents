@@ -41,6 +41,7 @@ class DocumentTemplateSectionServiceTest {
     var content = "Test content";
     var conditionMnemonic = "Test condition mnemonic";
     var numbered = true;
+    var hasPageBreakBefore = false;
     var displayOrder = 1;
 
     var documentTemplate = DocumentTemplateTestUtil.builder().build();
@@ -66,6 +67,7 @@ class DocumentTemplateSectionServiceTest {
         content,
         conditionMnemonic,
         numbered,
+        hasPageBreakBefore,
         displayOrder
     );
 
@@ -88,6 +90,7 @@ class DocumentTemplateSectionServiceTest {
             DocumentTemplateSection::getContent,
             DocumentTemplateSection::getConditionMnemonic,
             DocumentTemplateSection::isNumbered,
+            DocumentTemplateSection::hasPageBreakBefore,
             DocumentTemplateSection::getDisplayOrder
         )
         .containsExactly(
@@ -97,6 +100,7 @@ class DocumentTemplateSectionServiceTest {
             content,
             conditionMnemonic,
             numbered,
+            hasPageBreakBefore,
             displayOrder
         );
 
@@ -118,6 +122,7 @@ class DocumentTemplateSectionServiceTest {
     var content = "Test content";
     var conditionMnemonic = "TEST_CONDITION_MNEMONIC";
     var numbered = true;
+    var hasPageBreakBefore = false;
     var displayOrder = 1;
 
     var documentTemplate = DocumentTemplateTestUtil.builder().build();
@@ -145,6 +150,7 @@ class DocumentTemplateSectionServiceTest {
         content,
         conditionMnemonic,
         numbered,
+        hasPageBreakBefore,
         displayOrder
     );
 
@@ -167,6 +173,7 @@ class DocumentTemplateSectionServiceTest {
             DocumentTemplateSection::getContent,
             DocumentTemplateSection::getConditionMnemonic,
             DocumentTemplateSection::isNumbered,
+            DocumentTemplateSection::hasPageBreakBefore,
             DocumentTemplateSection::getDisplayOrder
         )
         .containsExactly(
@@ -176,6 +183,7 @@ class DocumentTemplateSectionServiceTest {
             content,
             conditionMnemonic,
             numbered,
+            hasPageBreakBefore,
             displayOrder
         );
 
@@ -193,6 +201,7 @@ class DocumentTemplateSectionServiceTest {
     var content = "Test edited content";
     var conditionMnemonic = "TEST_CONDITION_MNEMONIC";
     var numbered = true;
+    var hasPageBreakBefore = false;
 
     var documentTemplateSection = DocumentTemplateSectionTestUtil.builder().build();
 
@@ -205,7 +214,8 @@ class DocumentTemplateSectionServiceTest {
         title,
         content,
         conditionMnemonic,
-        numbered
+        numbered,
+        hasPageBreakBefore
     );
 
     assertThat(documentTemplateSection)
@@ -213,13 +223,15 @@ class DocumentTemplateSectionServiceTest {
             DocumentTemplateSection::getTitle,
             DocumentTemplateSection::getContent,
             DocumentTemplateSection::getConditionMnemonic,
-            DocumentTemplateSection::isNumbered
+            DocumentTemplateSection::isNumbered,
+            DocumentTemplateSection::hasPageBreakBefore
         )
         .containsExactly(
             title,
             content,
             conditionMnemonic,
-            numbered
+            numbered,
+            hasPageBreakBefore
         );
 
     verify(documentTemplateSectionRepository).save(documentTemplateSection);

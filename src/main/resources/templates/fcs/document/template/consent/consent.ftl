@@ -29,6 +29,11 @@
       <#assign nestingLevel = documentInstanceSectionSummaryView.nestingLevel()>
       <#assign sectionNumber = documentInstanceSectionSummaryView.sectionNumber()!>
       <#assign content = documentInstanceSectionSummaryView.content()!>
+
+      <#if documentInstanceSectionSummaryView.hasPageBreakBefore()>
+        <div style="page-break-before: always;"></div>
+      </#if>
+
       <table style="padding-left: ${nestingLevel}rem; padding-bottom: 0.75rem;">
         <tbody>
           <tr>

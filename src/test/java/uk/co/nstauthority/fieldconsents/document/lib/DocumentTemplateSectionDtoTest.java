@@ -27,6 +27,7 @@ class DocumentTemplateSectionDtoTest {
             documentTemplateSection.getContent(),
             documentTemplateSection.getConditionMnemonic(),
             documentTemplateSection.isNumbered(),
+            documentTemplateSection.hasPageBreakBefore(),
             documentTemplateSection.getDisplayOrder(),
             children
         )
@@ -55,6 +56,7 @@ class DocumentTemplateSectionDtoTest {
             documentTemplateSection.getContent(),
             documentTemplateSection.getConditionMnemonic(),
             documentTemplateSection.isNumbered(),
+            documentTemplateSection.hasPageBreakBefore(),
             documentTemplateSection.getDisplayOrder(),
             children
         )

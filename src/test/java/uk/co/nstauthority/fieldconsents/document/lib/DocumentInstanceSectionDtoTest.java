@@ -28,6 +28,7 @@ class DocumentInstanceSectionDtoTest {
             documentInstanceSection.getTitle(),
             documentInstanceSection.getContent(),
             documentInstanceSection.isNumbered(),
+            documentInstanceSection.hasPageBreakBefore(),
             documentInstanceSection.getDisplayOrder(),
             0,
             children
@@ -58,6 +59,7 @@ class DocumentInstanceSectionDtoTest {
             documentInstanceSection.getTitle(),
             documentInstanceSection.getContent(),
             documentInstanceSection.isNumbered(),
+            documentInstanceSection.hasPageBreakBefore(),
             documentInstanceSection.getDisplayOrder(),
             1,
             children
@@ -90,6 +92,7 @@ class DocumentInstanceSectionDtoTest {
             documentInstanceSection.getTitle(),
             documentInstanceSection.getContent(),
             documentInstanceSection.isNumbered(),
+            documentInstanceSection.hasPageBreakBefore(),
             documentInstanceSection.getDisplayOrder(),
             nestingLevel,
             children

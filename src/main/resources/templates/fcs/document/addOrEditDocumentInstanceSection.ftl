@@ -17,6 +17,11 @@
       <@fdsRadio.radioNo path="form.numbered" />
     </@fdsRadio.radioGroup>
 
+    <@fdsRadio.radioGroup path="form.hasPageBreakBefore" labelText="Should this section start on a new page?">
+      <@fdsRadio.radioYes path="form.hasPageBreakBefore" />
+      <@fdsRadio.radioNo path="form.hasPageBreakBefore" />
+    </@fdsRadio.radioGroup>
+
     <#if mailMergeFieldViews?has_content>
       <@_mailMergeFieldSummaryDetails.mailMergeFieldSummaryDetails mailMergeFieldViews />
     </#if>

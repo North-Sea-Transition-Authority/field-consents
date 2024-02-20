@@ -44,6 +44,7 @@ class DocumentInstanceSectionSummaryViewTest {
                 sectionNumberString,
                 documentInstanceSectionDto.title(),
                 content,
+                documentInstanceSectionDto.hasPageBreakBefore(),
                 ReverseRouter.route(on(DocumentInstanceSectionController.class)
                     .getAddDocumentInstanceSectionBefore(documentInstanceSectionId)),
                 ReverseRouter.route(on(DocumentInstanceSectionController.class)

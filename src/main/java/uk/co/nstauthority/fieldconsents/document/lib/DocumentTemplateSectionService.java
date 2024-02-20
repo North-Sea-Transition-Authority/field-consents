@@ -33,6 +33,7 @@ public class DocumentTemplateSectionService {
       String content,
       String conditionMnemonic,
       boolean numbered,
+      boolean hasPageBreakBefore,
       int displayOrder
   ) {
     var documentTemplate = documentTemplateService.getDocumentTemplateOrThrow(documentTemplateDto.id());
@@ -47,6 +48,7 @@ public class DocumentTemplateSectionService {
     documentTemplateSection.setContent(content);
     documentTemplateSection.setConditionMnemonic(conditionMnemonic);
     documentTemplateSection.setNumbered(numbered);
+    documentTemplateSection.setHasPageBreakBefore(hasPageBreakBefore);
     documentTemplateSection.setDisplayOrder(displayOrder);
 
     var documentTemplateSectionsToSave = new ArrayList<DocumentTemplateSection>();
@@ -81,7 +83,8 @@ public class DocumentTemplateSectionService {
       String title,
       String content,
       String conditionMnemonic,
-      boolean numbered
+      boolean numbered,
+      boolean hasPageBreakBefore
   ) {
     var documentTemplateSection = getDocumentTemplateSectionOrThrow(documentTemplateSectionDto.id());
 
@@ -89,6 +92,7 @@ public class DocumentTemplateSectionService {
     documentTemplateSection.setContent(content);
     documentTemplateSection.setConditionMnemonic(conditionMnemonic);
     documentTemplateSection.setNumbered(numbered);
+    documentTemplateSection.setHasPageBreakBefore(hasPageBreakBefore);
 
     documentTemplateSectionRepository.save(documentTemplateSection);
   }

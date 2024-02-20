@@ -12,6 +12,7 @@ class DocumentTemplateSectionFormTestUtil {
     private String content = "Test form content";
     private String conditionMnemonic;
     private Boolean numbered = true;
+    private Boolean hasPageBreakBefore = false;
 
     private Builder() {
     }
@@ -36,8 +37,13 @@ class DocumentTemplateSectionFormTestUtil {
       return this;
     }
 
+    Builder withPageBreakBefore(Boolean hasPageBreakBefore) {
+      this.hasPageBreakBefore = hasPageBreakBefore;
+      return this;
+    }
+
     DocumentTemplateSectionForm build() {
-      return new DocumentTemplateSectionForm(title, content, conditionMnemonic, numbered);
+      return new DocumentTemplateSectionForm(title, content, conditionMnemonic, numbered, hasPageBreakBefore);
     }
   }
 }

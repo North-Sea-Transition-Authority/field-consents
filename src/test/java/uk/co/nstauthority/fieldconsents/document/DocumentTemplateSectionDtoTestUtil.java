@@ -20,6 +20,7 @@ class DocumentTemplateSectionDtoTestUtil {
     private String content = "Test content";
     private String conditionMnemonic;
     private boolean numbered = true;
+    private boolean hasPageBreakBefore = false;
     private int displayOrder = 1;
     private List<DocumentTemplateSectionDto> children = List.of();
 
@@ -61,6 +62,11 @@ class DocumentTemplateSectionDtoTestUtil {
       return this;
     }
 
+    Builder withPageBreakBefore(boolean hasPageBreakBefore) {
+      this.hasPageBreakBefore = hasPageBreakBefore;
+      return this;
+    }
+
     Builder withDisplayOrder(int displayOrder) {
       this.displayOrder = displayOrder;
       return this;
@@ -80,6 +86,7 @@ class DocumentTemplateSectionDtoTestUtil {
           content,
           conditionMnemonic,
           numbered,
+          hasPageBreakBefore,
           displayOrder,
           children
       );

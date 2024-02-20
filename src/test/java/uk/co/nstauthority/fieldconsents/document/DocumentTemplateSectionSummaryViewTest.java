@@ -45,6 +45,7 @@ class DocumentTemplateSectionSummaryViewTest {
                 documentTemplateSectionDto.title(),
                 documentTemplateSectionDto.content(),
                 conditionTitle,
+                documentTemplateSectionDto.hasPageBreakBefore(),
                 ReverseRouter.route(on(DocumentTemplateSectionController.class)
                     .getAddDocumentTemplateSectionBefore(documentTemplateSectionId)),
                 ReverseRouter.route(on(DocumentTemplateSectionController.class)

@@ -6,11 +6,12 @@ public record DocumentTemplateSectionForm(
     String title,
     String content,
     String conditionMnemonic,
-    Boolean numbered
+    Boolean numbered,
+    Boolean hasPageBreakBefore
 ) {
 
   static DocumentTemplateSectionForm empty() {
-    return new DocumentTemplateSectionForm(null, null, null, null);
+    return new DocumentTemplateSectionForm(null, null, null, null, null);
   }
 
   static DocumentTemplateSectionForm from(DocumentTemplateSectionDto documentTemplateSectionDto) {
@@ -18,7 +19,8 @@ public record DocumentTemplateSectionForm(
         documentTemplateSectionDto.title(),
         documentTemplateSectionDto.content(),
         documentTemplateSectionDto.conditionMnemonic(),
-        documentTemplateSectionDto.numbered()
+        documentTemplateSectionDto.numbered(),
+        documentTemplateSectionDto.hasPageBreakBefore()
     );
   }
 }

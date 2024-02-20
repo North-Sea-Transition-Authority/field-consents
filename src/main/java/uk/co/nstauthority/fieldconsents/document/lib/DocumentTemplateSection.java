@@ -33,6 +33,8 @@ class DocumentTemplateSection {
 
   private boolean numbered;
 
+  private boolean hasPageBreakBefore;
+
   private int displayOrder;
 
   protected DocumentTemplateSection() {
@@ -92,6 +94,14 @@ class DocumentTemplateSection {
 
   void setNumbered(boolean numbered) {
     this.numbered = numbered;
+  }
+
+  boolean hasPageBreakBefore() {
+    return hasPageBreakBefore;
+  }
+
+  void setHasPageBreakBefore(boolean hasPageBreakBefore) {
+    this.hasPageBreakBefore = hasPageBreakBefore;
   }
 
   int getDisplayOrder() {

@@ -17,6 +17,7 @@ class DocumentTemplateSectionTestUtil {
     private String content = "Test content";
     private String conditionMnemonic;
     private boolean numbered = true;
+    private boolean hasPageBreakBefore = false;
     private int displayOrder = 1;
 
     private Builder() {
@@ -57,6 +58,11 @@ class DocumentTemplateSectionTestUtil {
       return this;
     }
 
+    Builder withPageBreakBefore(Boolean hasPageBreakBefore) {
+      this.hasPageBreakBefore = hasPageBreakBefore;
+      return this;
+    }
+
     Builder withDisplayOrder(int displayOrder) {
       this.displayOrder = displayOrder;
       return this;
@@ -71,6 +77,7 @@ class DocumentTemplateSectionTestUtil {
       documentTemplateSection.setContent(content);
       documentTemplateSection.setConditionMnemonic(conditionMnemonic);
       documentTemplateSection.setNumbered(numbered);
+      documentTemplateSection.setHasPageBreakBefore(hasPageBreakBefore);
       documentTemplateSection.setDisplayOrder(displayOrder);
 
       return documentTemplateSection;

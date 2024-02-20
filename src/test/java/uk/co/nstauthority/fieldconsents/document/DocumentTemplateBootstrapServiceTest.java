@@ -82,6 +82,7 @@ class DocumentTemplateBootstrapServiceTest {
             any(),
             any(),
             anyBoolean(),
+            anyBoolean(),
             anyInt()
         )
     ).thenReturn(null, consentsToSection, thisConsentIsGivenSection);
@@ -97,6 +98,7 @@ class DocumentTemplateBootstrapServiceTest {
         ((CONSENT_LENGTH_UPPER_CASE)) DEVELOPMENT AND PRODUCTION CONSENT
         """,
         null,
+        false,
         false,
         1
     );
@@ -114,6 +116,7 @@ class DocumentTemplateBootstrapServiceTest {
         """,
         null,
         true,
+        false,
         1
     );
 
@@ -124,6 +127,7 @@ class DocumentTemplateBootstrapServiceTest {
         "the getting of petroleum from the Field during the Period as by means of such relevant works.",
         null,
         true,
+        false,
         2
     );
 
@@ -137,6 +141,7 @@ class DocumentTemplateBootstrapServiceTest {
         """,
         null,
         true,
+        false,
         3
     );
 
@@ -150,6 +155,7 @@ class DocumentTemplateBootstrapServiceTest {
         """,
         null,
         true,
+        false,
         1
     );
 
@@ -163,6 +169,7 @@ class DocumentTemplateBootstrapServiceTest {
         """,
         null,
         true,
+        false,
         2
     );
 
@@ -176,6 +183,7 @@ class DocumentTemplateBootstrapServiceTest {
         """,
         null,
         true,
+        false,
         5
     );
 
@@ -186,6 +194,7 @@ class DocumentTemplateBootstrapServiceTest {
         "[This consent supersedes the consent [CONSENT REFERENCE] granted by the ((REGULATOR_LEGAL_NAME)) dated [DATE].]",
         null,
         true,
+        false,
         6
     );
 
@@ -201,6 +210,7 @@ class DocumentTemplateBootstrapServiceTest {
         """,
         "GAS_WILL_BE_INJECTED",
         true,
+        false,
         7
     );
 
@@ -211,6 +221,7 @@ class DocumentTemplateBootstrapServiceTest {
         "((SCHEDULE))",
         null,
         false,
+        true,
         8
     );
 
@@ -225,6 +236,7 @@ class DocumentTemplateBootstrapServiceTest {
         """,
         null,
         false,
+        true,
         9
     );
   }
@@ -255,6 +267,7 @@ class DocumentTemplateBootstrapServiceTest {
         """,
         null,
         false,
+        false,
         1
     );
 
@@ -270,6 +283,7 @@ class DocumentTemplateBootstrapServiceTest {
         """,
         null,
         true,
+        false,
         2
     );
 
@@ -283,6 +297,7 @@ class DocumentTemplateBootstrapServiceTest {
         """,
         null,
         true,
+        false,
         3
     );
 
@@ -296,6 +311,7 @@ class DocumentTemplateBootstrapServiceTest {
         """,
         null,
         true,
+        false,
         4
     );
 
@@ -309,6 +325,7 @@ class DocumentTemplateBootstrapServiceTest {
         """,
         null,
         true,
+        false,
         5
     );
 
@@ -319,6 +336,7 @@ class DocumentTemplateBootstrapServiceTest {
         "[This consent supersedes the consent [CONSENT REFERENCE] granted by the ((REGULATOR_LEGAL_NAME)) dated [DATE].]",
         null,
         true,
+        false,
         6
     );
 
@@ -329,6 +347,7 @@ class DocumentTemplateBootstrapServiceTest {
         "((SCHEDULE))",
         null,
         false,
+        true,
         7
     );
 
@@ -343,6 +362,7 @@ class DocumentTemplateBootstrapServiceTest {
         """,
         null,
         false,
+        true,
         8
     );
   }
@@ -373,6 +393,7 @@ class DocumentTemplateBootstrapServiceTest {
         """,
         null,
         false,
+        false,
         1
     );
 
@@ -388,6 +409,7 @@ class DocumentTemplateBootstrapServiceTest {
         """,
         null,
         true,
+        false,
         2
     );
 
@@ -398,6 +420,7 @@ class DocumentTemplateBootstrapServiceTest {
         "This consent shall commence on ((CONSENT_START_DATE)) and expire on ((CONSENT_END_DATE)) (the “Period”).",
         null,
         true,
+        false,
         3
     );
 
@@ -411,6 +434,7 @@ class DocumentTemplateBootstrapServiceTest {
         """,
         null,
         true,
+        false,
         4
     );
 
@@ -421,6 +445,7 @@ class DocumentTemplateBootstrapServiceTest {
         "[This consent supersedes the consent [CONSENT REFERENCE] granted by the ((REGULATOR_LEGAL_NAME)) dated [DATE].]",
         null,
         true,
+        false,
         5
     );
 
@@ -431,6 +456,7 @@ class DocumentTemplateBootstrapServiceTest {
         "((SCHEDULE))",
         null,
         false,
+        true,
         6
     );
   }
@@ -462,6 +488,7 @@ class DocumentTemplateBootstrapServiceTest {
         """,
         null,
         false,
+        false,
         1
     );
 
@@ -476,6 +503,7 @@ class DocumentTemplateBootstrapServiceTest {
         """,
         null,
         true,
+        false,
         2
     );
 
@@ -489,6 +517,7 @@ class DocumentTemplateBootstrapServiceTest {
         """,
         null,
         true,
+        false,
         3
     );
 
@@ -502,6 +531,7 @@ class DocumentTemplateBootstrapServiceTest {
         """,
         null,
         true,
+        false,
         4
     );
 
@@ -512,6 +542,7 @@ class DocumentTemplateBootstrapServiceTest {
         "[This consent supersedes the consent [CONSENT REFERENCE] granted by the ((REGULATOR_LEGAL_NAME)) dated [DATE].]",
         null,
         true,
+        false,
         5
     );
 
@@ -522,6 +553,7 @@ class DocumentTemplateBootstrapServiceTest {
         "((SCHEDULE))",
         null,
         false,
+        true,
         6
     );
 
@@ -536,6 +568,7 @@ class DocumentTemplateBootstrapServiceTest {
         """,
         null,
         false,
+        true,
         7
     );
   }
@@ -566,6 +599,7 @@ class DocumentTemplateBootstrapServiceTest {
         """,
         null,
         false,
+        false,
         1
     );
 
@@ -581,6 +615,7 @@ class DocumentTemplateBootstrapServiceTest {
         """,
         null,
         true,
+        false,
         2
     );
 
@@ -591,6 +626,7 @@ class DocumentTemplateBootstrapServiceTest {
         "This consent shall commence on ((CONSENT_START_DATE)) and expire on ((CONSENT_END_DATE)) (the “Period”).",
         null,
         true,
+        false,
         3
     );
 
@@ -604,6 +640,7 @@ class DocumentTemplateBootstrapServiceTest {
         """,
         null,
         true,
+        false,
         4
     );
 
@@ -614,6 +651,7 @@ class DocumentTemplateBootstrapServiceTest {
         "[This consent supersedes the consent [CONSENT REFERENCE] granted by the ((REGULATOR_LEGAL_NAME)) dated [DATE].]",
         null,
         true,
+        false,
         5
     );
 
@@ -624,6 +662,7 @@ class DocumentTemplateBootstrapServiceTest {
         "((SCHEDULE))",
         null,
         false,
+        true,
         6
     );
   }

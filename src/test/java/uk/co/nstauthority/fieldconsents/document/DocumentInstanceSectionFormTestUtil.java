@@ -11,6 +11,7 @@ class DocumentInstanceSectionFormTestUtil {
     private String title = "Test form title";
     private String content = "Test form content";
     private Boolean numbered = true;
+    private Boolean hasPageBreakBefore = false;
 
     private Builder() {
     }
@@ -30,8 +31,13 @@ class DocumentInstanceSectionFormTestUtil {
       return this;
     }
 
+    Builder withPageBreakBefore(Boolean hasPageBreakBefore) {
+      this.hasPageBreakBefore = hasPageBreakBefore;
+      return this;
+    }
+
     DocumentInstanceSectionForm build() {
-      return new DocumentInstanceSectionForm(title, content, numbered);
+      return new DocumentInstanceSectionForm(title, content, numbered, hasPageBreakBefore);
     }
   }
 }

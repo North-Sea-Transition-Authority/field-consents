@@ -11,6 +11,7 @@ public record DocumentInstanceSectionSummaryView(
     @Nullable String sectionNumber,
     String title,
     String content,
+    boolean hasPageBreakBefore,
     String addSectionBeforeUrl,
     String addSectionAfterUrl,
     String addSubsectionUrl,
@@ -38,6 +39,7 @@ public record DocumentInstanceSectionSummaryView(
         sectionNumberString,
         documentInstanceSectionDto.title(),
         content,
+        documentInstanceSectionDto.hasPageBreakBefore(),
         ReverseRouter.route(on(DocumentInstanceSectionController.class)
             .getAddDocumentInstanceSectionBefore(documentInstanceSectionId)),
         ReverseRouter.route(on(DocumentInstanceSectionController.class)

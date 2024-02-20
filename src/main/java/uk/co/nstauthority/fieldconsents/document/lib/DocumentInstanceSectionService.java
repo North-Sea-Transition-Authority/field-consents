@@ -32,6 +32,7 @@ public class DocumentInstanceSectionService {
       String title,
       String content,
       boolean numbered,
+      boolean hasPageBreakBefore,
       int displayOrder
   ) {
     var documentInstance = documentInstanceService.getDocumentInstanceOrThrow(documentInstanceDto.id());
@@ -45,6 +46,7 @@ public class DocumentInstanceSectionService {
     documentInstanceSection.setTitle(title);
     documentInstanceSection.setContent(content);
     documentInstanceSection.setNumbered(numbered);
+    documentInstanceSection.setHasPageBreakBefore(hasPageBreakBefore);
     documentInstanceSection.setDisplayOrder(displayOrder);
 
     var documentInstanceSectionsToSave = new ArrayList<DocumentInstanceSection>();
@@ -78,13 +80,15 @@ public class DocumentInstanceSectionService {
       DocumentInstanceSectionDto documentInstanceSectionDto,
       String title,
       String content,
-      boolean numbered
+      boolean numbered,
+      boolean hasPageBreakBefore
   ) {
     var documentInstanceSection = getDocumentInstanceSectionOrThrow(documentInstanceSectionDto.id());
 
     documentInstanceSection.setTitle(title);
     documentInstanceSection.setContent(content);
     documentInstanceSection.setNumbered(numbered);
+    documentInstanceSection.setHasPageBreakBefore(hasPageBreakBefore);
 
     documentInstanceSectionRepository.save(documentInstanceSection);
   }

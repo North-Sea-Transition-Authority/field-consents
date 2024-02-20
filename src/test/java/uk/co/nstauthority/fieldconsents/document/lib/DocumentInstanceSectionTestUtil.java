@@ -18,6 +18,7 @@ class DocumentInstanceSectionTestUtil {
     private String title = "Test title";
     private String content = "Test content";
     private boolean numbered = true;
+    private boolean hasPageBreakBefore = false;
     private int displayOrder = 1;
 
     private Builder() {
@@ -58,6 +59,11 @@ class DocumentInstanceSectionTestUtil {
       return this;
     }
 
+    Builder withPageBreakBefore(Boolean hasPageBreakBefore) {
+      this.hasPageBreakBefore = hasPageBreakBefore;
+      return this;
+    }
+
     Builder withDisplayOrder(int displayOrder) {
       this.displayOrder = displayOrder;
       return this;
@@ -72,6 +78,7 @@ class DocumentInstanceSectionTestUtil {
       documentInstanceSection.setTitle(title);
       documentInstanceSection.setContent(content);
       documentInstanceSection.setNumbered(numbered);
+      documentInstanceSection.setHasPageBreakBefore(hasPageBreakBefore);
       documentInstanceSection.setDisplayOrder(displayOrder);
 
       return documentInstanceSection;

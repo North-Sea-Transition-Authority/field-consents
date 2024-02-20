@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.document;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -34,8 +35,7 @@ class FieldConsentsDocumentInstanceSectionServiceTest {
 
     var topLevelDocumentInstanceSectionDtos = List.of(DocumentInstanceSectionDtoTestUtil.builder().build());
 
-    var documentInstanceSectionSummaryViewsForSectionSiblings =
-        List.of(new DocumentInstanceSectionSummaryView(0, null, null, null, null, null, null, null, null));
+    var documentInstanceSectionSummaryViewsForSectionSiblings = List.of(mock(DocumentInstanceSectionSummaryView.class));
 
     when(documentInstanceSectionService.getTopLevelDocumentInstanceSectionDtos(documentInstanceDto))
         .thenReturn(topLevelDocumentInstanceSectionDtos);
@@ -169,6 +169,7 @@ class FieldConsentsDocumentInstanceSectionServiceTest {
         form.title(),
         form.content(),
         form.numbered(),
+        form.hasPageBreakBefore(),
         displayOrder
     );
   }
@@ -184,7 +185,8 @@ class FieldConsentsDocumentInstanceSectionServiceTest {
         documentInstanceSectionDto,
         form.title(),
         form.content(),
-        form.numbered()
+        form.numbered(),
+        form.hasPageBreakBefore()
     );
   }
 }

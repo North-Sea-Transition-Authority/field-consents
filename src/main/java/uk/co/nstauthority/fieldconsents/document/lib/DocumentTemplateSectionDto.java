@@ -13,6 +13,7 @@ public record DocumentTemplateSectionDto(
     String content,
     String conditionMnemonic,
     boolean numbered,
+    boolean hasPageBreakBefore,
     int displayOrder,
     List<DocumentTemplateSectionDto> children
 ) {
@@ -37,6 +38,7 @@ public record DocumentTemplateSectionDto(
         documentTemplateSection.getContent(),
         documentTemplateSection.getConditionMnemonic(),
         documentTemplateSection.isNumbered(),
+        documentTemplateSection.hasPageBreakBefore(),
         documentTemplateSection.getDisplayOrder(),
         children
     );

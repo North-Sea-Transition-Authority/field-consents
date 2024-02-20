@@ -13,6 +13,7 @@ public record DocumentInstanceSectionDto(
     String title,
     String content,
     boolean numbered,
+    boolean hasPageBreakBefore,
     int displayOrder,
     int nestingLevel,
     List<DocumentInstanceSectionDto> children
@@ -40,6 +41,7 @@ public record DocumentInstanceSectionDto(
         documentInstanceSection.getTitle(),
         documentInstanceSection.getContent(),
         documentInstanceSection.isNumbered(),
+        documentInstanceSection.hasPageBreakBefore(),
         documentInstanceSection.getDisplayOrder(),
         nestingLevel,
         children

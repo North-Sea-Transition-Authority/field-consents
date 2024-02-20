@@ -100,6 +100,7 @@ public class FieldConsentsDocumentTemplateSectionService {
         form.content(),
         form.conditionMnemonic(),
         form.numbered(),
+        form.hasPageBreakBefore(),
         displayOrder
     );
   }
@@ -113,7 +114,8 @@ public class FieldConsentsDocumentTemplateSectionService {
         form.title(),
         form.content(),
         form.conditionMnemonic(),
-        form.numbered()
+        form.numbered(),
+        form.hasPageBreakBefore()
     );
   }
 }

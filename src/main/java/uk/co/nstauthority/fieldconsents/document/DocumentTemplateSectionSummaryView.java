@@ -11,6 +11,7 @@ public record DocumentTemplateSectionSummaryView(
     String title,
     String content,
     @Nullable String conditionTitle,
+    boolean hasPageBreakBefore,
     String addSectionBeforeUrl,
     String addSectionAfterUrl,
     String addSubsectionUrl,
@@ -38,6 +39,7 @@ public record DocumentTemplateSectionSummaryView(
         documentTemplateSectionDto.title(),
         documentTemplateSectionDto.content(),
         conditionTitle,
+        documentTemplateSectionDto.hasPageBreakBefore(),
         ReverseRouter.route(on(DocumentTemplateSectionController.class)
             .getAddDocumentTemplateSectionBefore(documentTemplateSectionId)),
         ReverseRouter.route(on(DocumentTemplateSectionController.class)

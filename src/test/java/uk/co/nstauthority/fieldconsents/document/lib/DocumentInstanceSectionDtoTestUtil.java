@@ -18,6 +18,7 @@ class DocumentInstanceSectionDtoTestUtil {
     private String title = "Test title";
     private String content = "Test content";
     private boolean numbered = true;
+    private boolean hasPageBreakBefore = false;
     private int displayOrder = 1;
     private int nestingLevel = 0;
     private List<DocumentInstanceSectionDto> children = List.of();
@@ -60,6 +61,11 @@ class DocumentInstanceSectionDtoTestUtil {
       return this;
     }
 
+    Builder withPageBreakBefore(boolean hasPageBreakBefore) {
+      this.hasPageBreakBefore = hasPageBreakBefore;
+      return this;
+    }
+
     Builder withDisplayOrder(int displayOrder) {
       this.displayOrder = displayOrder;
       return this;
@@ -84,6 +90,7 @@ class DocumentInstanceSectionDtoTestUtil {
           title,
           content,
           numbered,
+          hasPageBreakBefore,
           displayOrder,
           nestingLevel,
           children

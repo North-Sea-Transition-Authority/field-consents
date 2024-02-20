@@ -8,7 +8,7 @@ class DocumentInstanceSectionFormTest {
 
   @Test
   void empty() {
-    assertThat(DocumentInstanceSectionForm.empty()).isEqualTo(new DocumentInstanceSectionForm(null, null, null));
+    assertThat(DocumentInstanceSectionForm.empty()).isEqualTo(new DocumentInstanceSectionForm(null, null, null, null));
   }
 
   @Test
@@ -19,7 +19,8 @@ class DocumentInstanceSectionFormTest {
         new DocumentInstanceSectionForm(
             documentInstanceSectionDto.title(),
             documentInstanceSectionDto.content(),
-            documentInstanceSectionDto.numbered()
+            documentInstanceSectionDto.numbered(),
+            documentInstanceSectionDto.hasPageBreakBefore()
         )
     );
   }

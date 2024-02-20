@@ -93,6 +93,7 @@ public class FieldConsentsDocumentInstanceSectionService {
         form.title(),
         form.content(),
         form.numbered(),
+        form.hasPageBreakBefore(),
         displayOrder
     );
   }
@@ -105,7 +106,8 @@ public class FieldConsentsDocumentInstanceSectionService {
         documentInstanceSectionDto,
         form.title(),
         form.content(),
-        form.numbered()
+        form.numbered(),
+        form.hasPageBreakBefore()
     );
   }
 }

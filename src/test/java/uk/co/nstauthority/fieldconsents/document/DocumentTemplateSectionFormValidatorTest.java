@@ -176,4 +176,28 @@ class DocumentTemplateSectionFormValidatorTest {
             tuple("numbered", "numbered.required", "Select if this section should be numbered")
         );
   }
+
+  @Test
+  void validate_hasPageBreakBeforeNull() {
+    var form = DocumentTemplateSectionFormTestUtil.builder()
+        .withPageBreakBefore(null)
+        .build();
+    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
+    var errors = new BeanPropertyBindingResult(form, "form");
+
+    when(documentMailMergeFieldService.validateMailMergeFields(documentTemplateDto, form.content()))
+        .thenReturn(DocumentMailMergeValidationResult.valid());
+
+    documentTemplateSectionFormValidator.validate(form, documentTemplateDto, errors);
+
+    assertThat(errors.getFieldErrors())
+        .extracting(
+            FieldError::getField,
+            FieldError::getCode,
+            FieldError::getDefaultMessage
+        )
+        .containsExactly(
+            tuple("hasPageBreakBefore", "hasPageBreakBefore.required", "Select if this section should start on a new page")
+        );
+  }
 }
