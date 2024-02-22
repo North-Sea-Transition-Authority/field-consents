@@ -14,7 +14,9 @@ import java.util.Optional;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
@@ -234,6 +236,17 @@ public class ApplicationAssetService {
         .stream()
         .map(this::getAssetJsonForApplicationAsset)
         .toList();
+  }
+
+  public boolean completedProductionApplicationExistsWithPrimaryField(Integer fieldId) {
+    return applicationAssetRepository
+        .existsByAssetTypeAndAssetIdAndAssetRoleAndApplicationVersion_Application_TypeAndApplicationVersion_Status(
+            FIELD,
+            fieldId,
+            AssetRole.PRIMARY,
+            ApplicationType.PRODUCTION,
+            ApplicationVersionStatus.COMPLETED
+        );
   }
 
   @Transactional

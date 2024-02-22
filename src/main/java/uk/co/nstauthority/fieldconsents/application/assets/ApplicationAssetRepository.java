@@ -6,7 +6,9 @@ import java.util.Optional;
 import java.util.Set;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
+import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.duplication.NotDuplicationSource;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 
@@ -50,4 +52,12 @@ public interface ApplicationAssetRepository extends CrudRepository<ApplicationAs
   );
 
   List<ApplicationAsset> findAllByApplicationVersion(ApplicationVersion applicationVersion);
+
+  boolean existsByAssetTypeAndAssetIdAndAssetRoleAndApplicationVersion_Application_TypeAndApplicationVersion_Status(
+      AssetType assetType,
+      Integer assetId,
+      AssetRole assetRole,
+      ApplicationType applicationType,
+      ApplicationVersionStatus applicationVersionStatus
+  );
 }

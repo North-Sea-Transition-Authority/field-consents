@@ -10,6 +10,7 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceDto;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceService;
@@ -45,27 +46,33 @@ public class FieldConsentsDocumentInstanceService {
 
   public void createDocumentInstancesForApplication(Application application) {
     var applicationId = application.getId();
-    var consentDocumentType = getConsentDocumentType(application);
+
     var itemReference = getItemReference(application);
 
-    var documentTemplateDto = documentTemplateService.getDocumentTemplateDtoByMnemonicOrThrow(consentDocumentType.getMnemonic());
-    var documentInstanceDtoOptional = documentInstanceService
-        .getDocumentInstanceDtoByItemReferenceAndItemTypeAndDocumentTemplateDto(
-            itemReference,
-            APPLICATION_DOCUMENT_INSTANCE_ITEM_TYPE,
-            documentTemplateDto
+    getApplicableDocumentTemplateTypes(application).forEach(documentTemplateType -> {
+      var documentTemplateTypeMnemonic = documentTemplateType.getMnemonic();
+
+      var documentTemplateDto =
+          documentTemplateService.getDocumentTemplateDtoByMnemonicOrThrow(documentTemplateTypeMnemonic);
+      var documentInstanceDtoOptional = documentInstanceService
+          .getDocumentInstanceDtoByItemReferenceAndItemTypeAndDocumentTemplateDto(
+              itemReference,
+              APPLICATION_DOCUMENT_INSTANCE_ITEM_TYPE,
+              documentTemplateDto
+          );
+
+      if (documentInstanceDtoOptional.isPresent()) {
+        LOGGER.debug(
+            "Not creating {} document instance for application [{}], since one or more already exist",
+            documentTemplateTypeMnemonic,
+            applicationId
         );
+        return;
+      }
 
-    if (documentInstanceDtoOptional.isPresent()) {
-      LOGGER.debug(
-          "Not creating consent document instance for application [{}], since one or more already exist",
-          applicationId
-      );
-      return;
-    }
-
-    createDocumentInstance(application, documentTemplateDto, consentDocumentType);
-    LOGGER.debug("Created consent document instance for application [{}]", applicationId);
+      createDocumentInstance(application, documentTemplateDto, documentTemplateType);
+      LOGGER.debug("Created {} document instance for application [{}]", documentTemplateTypeMnemonic, applicationId);
+    });
   }
 
   DocumentInstanceDto createDocumentInstance(
@@ -104,24 +111,37 @@ public class FieldConsentsDocumentInstanceService {
     return documentInstanceService.renderPdf(documentInstanceDto, templateModel);
   }
 
-  DocumentTemplateType getConsentDocumentType(Application application) {
+  List<DocumentTemplateType> getApplicableDocumentTemplateTypes(Application application) {
+    var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(application.getId());
+    var primaryAsset = applicationAssetService.getPrimaryAsset(applicationVersion);
+
     return switch (application.getType()) {
-      case PRODUCTION -> DocumentTemplateType.FIELD_PRODUCTION_CONSENT;
-      case FLARE -> isPrimaryAssetField(application)
-          ? DocumentTemplateType.FIELD_FLARE_CONSENT
-          : DocumentTemplateType.TERMINAL_FLARE_CONSENT;
-      case VENT -> isPrimaryAssetField(application)
-          ? DocumentTemplateType.FIELD_VENT_CONSENT
-          : DocumentTemplateType.TERMINAL_VENT_CONSENT;
+      case PRODUCTION -> {
+        if (!primaryAsset.isField()) {
+          throw new IllegalStateException(
+              "Primary asset %d is not field [asset type: %s]".formatted(primaryAsset.getId(), primaryAsset.getAssetType())
+          );
+        }
+
+        yield isFlareCommissioningLetterApplicableForProductionApplication(primaryAsset)
+            ? List.of(DocumentTemplateType.FIELD_PRODUCTION_CONSENT, DocumentTemplateType.FLARE_AND_COMMISSIONING_LETTER)
+            : List.of(DocumentTemplateType.FIELD_PRODUCTION_CONSENT);
+      }
+      case FLARE -> primaryAsset.isField()
+          ? List.of(DocumentTemplateType.FIELD_FLARE_CONSENT)
+          : List.of(DocumentTemplateType.TERMINAL_FLARE_CONSENT);
+      case VENT -> primaryAsset.isField()
+          ? List.of(DocumentTemplateType.FIELD_VENT_CONSENT)
+          : List.of(DocumentTemplateType.TERMINAL_VENT_CONSENT);
     };
   }
 
-  boolean isPrimaryAssetField(Application application) {
-    var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(application.getId());
+  boolean isFlareCommissioningLetterApplicableForProductionApplication(ApplicationAsset primaryAsset) {
+    if (!primaryAsset.isField()) {
+      return false;
+    }
 
-    var primaryAsset = applicationAssetService.getPrimaryAsset(applicationVersion);
-
-    return primaryAsset.isField();
+    return !applicationAssetService.completedProductionApplicationExistsWithPrimaryField(primaryAsset.getAssetId());
   }
 
   String getItemReference(Application application) {

@@ -42,6 +42,13 @@ public class ApplicationAsset {
 
   private String cachedAssetOperatorName;
 
+  public ApplicationAsset() {
+  }
+
+  public ApplicationAsset(Integer id) {
+    this.id = id;
+  }
+
   public Integer getId() {
     return id;
   }

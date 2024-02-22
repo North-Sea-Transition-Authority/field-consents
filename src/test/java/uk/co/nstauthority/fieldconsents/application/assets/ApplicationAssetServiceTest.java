@@ -33,6 +33,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
@@ -40,6 +41,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
@@ -537,6 +539,25 @@ class ApplicationAssetServiceTest {
 
     assertThat(applicationAssetService.getAssetJsonListFor(applicationVersion, assetRole))
         .isEqualTo(Collections.singletonList(terminal1Json));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = { true, false })
+  void completedProductionApplicationExistsWithPrimaryField(boolean exists) {
+    var fieldId = 1;
+
+    when(
+        applicationAssetRepository
+            .existsByAssetTypeAndAssetIdAndAssetRoleAndApplicationVersion_Application_TypeAndApplicationVersion_Status(
+                AssetType.FIELD,
+                fieldId,
+                AssetRole.PRIMARY,
+                ApplicationType.PRODUCTION,
+                ApplicationVersionStatus.COMPLETED
+            )
+    ).thenReturn(exists);
+
+    assertThat(applicationAssetService.completedProductionApplicationExistsWithPrimaryField(fieldId)).isEqualTo(exists);
   }
 
   @ParameterizedTest
