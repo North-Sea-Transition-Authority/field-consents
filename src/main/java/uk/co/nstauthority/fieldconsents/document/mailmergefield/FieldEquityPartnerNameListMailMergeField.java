@@ -41,7 +41,8 @@ public class FieldEquityPartnerNameListMailMergeField implements DocumentMailMer
   @Override
   public boolean isApplicable(DocumentTemplateDto documentTemplateDto) {
     var documentTemplateType = DocumentTemplateType.getByMnemonic(documentTemplateDto.mnemonic());
-    return DocumentTemplateType.isField(documentTemplateType);
+
+    return documentTemplateType.isApplicableToFieldApplications();
   }
 
   @Override

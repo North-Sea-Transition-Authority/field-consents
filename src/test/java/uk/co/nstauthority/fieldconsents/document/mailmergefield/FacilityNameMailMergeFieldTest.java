@@ -46,12 +46,12 @@ class FacilityNameMailMergeFieldTest {
   @ParameterizedTest
   @EnumSource(DocumentTemplateType.class)
   void isApplicable(DocumentTemplateType documentTemplateType) {
-    var template = DocumentTemplateDtoTestUtil.builder()
+    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder()
         .withMnemonic(documentTemplateType.getMnemonic())
         .build();
 
-    assertThat(facilityNameMailMergeField.isApplicable(template))
-        .isEqualTo(DocumentTemplateType.isTerminal(documentTemplateType));
+    assertThat(facilityNameMailMergeField.isApplicable(documentTemplateDto))
+        .isEqualTo(documentTemplateType.isApplicableToTerminalApplications());
   }
 
   @ParameterizedTest
@@ -89,7 +89,7 @@ class FacilityNameMailMergeFieldTest {
     when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
         .thenReturn(applicationVersion);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(applicationAsset);
-    when(terminalService.getTerminal(applicationAsset.getAssetId(), "Terminal lookup for application asset"))
+    when(terminalService.getTerminal(applicationAsset.getAssetId(), "Terminal lookup for FACILITY_NAME mail merge field"))
         .thenReturn(terminalJson);
 
     assertThat(facilityNameMailMergeField.resolve(documentInstanceDto)).isEqualTo(terminalName);

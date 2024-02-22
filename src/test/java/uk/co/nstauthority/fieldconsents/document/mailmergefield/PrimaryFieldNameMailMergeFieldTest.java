@@ -57,7 +57,8 @@ class PrimaryFieldNameMailMergeFieldTest {
         .build();
 
     assertThat(primaryFieldNameMailMergeField.isApplicable(template))
-        .isEqualTo(documentTemplateType == DocumentTemplateType.FIELD_PRODUCTION_CONSENT);
+        .isEqualTo(documentTemplateType == DocumentTemplateType.FIELD_PRODUCTION_CONSENT
+            || documentTemplateType == DocumentTemplateType.FLARE_AND_COMMISSIONING_LETTER);
   }
 
   @ParameterizedTest
@@ -95,7 +96,7 @@ class PrimaryFieldNameMailMergeFieldTest {
     when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
         .thenReturn(applicationVersion);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(applicationAsset);
-    when(fieldService.getField(applicationAsset.getAssetId(), "Field lookup for application asset"))
+    when(fieldService.getField(applicationAsset.getAssetId(), "Field lookup for PRIMARY_FIELD_NAME mail merge field"))
         .thenReturn(fieldJson);
 
     assertThat(primaryFieldNameMailMergeField.resolve(documentInstanceDto)).isEqualTo(fieldName);

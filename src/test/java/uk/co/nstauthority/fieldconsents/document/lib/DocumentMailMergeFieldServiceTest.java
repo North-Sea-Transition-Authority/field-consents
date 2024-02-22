@@ -56,6 +56,10 @@ class DocumentMailMergeFieldServiceTest {
         
         ((MAIL_MERGE_FIELD_1))
         ((MAIL_MERGE_FIELD_2))
+        (((MAIL_MERGE_FIELD_2)))
+        ((((MAIL_MERGE_FIELD_2))))
+        (((((MAIL_MERGE_FIELD_2)))))
+        (Example text in brackets)
         """;
 
     doReturn(Optional.of(DocumentMailMergeFieldTestUtil.builder().build()))
@@ -186,6 +190,10 @@ class DocumentMailMergeFieldServiceTest {
             
             ((MAIL_MERGE_FIELD_1))
             ((MAIL_MERGE_FIELD_2))
+            (((MAIL_MERGE_FIELD_2)))
+            ((((MAIL_MERGE_FIELD_2))))
+            (((((MAIL_MERGE_FIELD_2)))))
+            (Example text in brackets)
             """
         )
         .build();
@@ -211,6 +219,10 @@ class DocumentMailMergeFieldServiceTest {
         
         Resolved mail merge field 1
         Resolved mail merge field 2
+        (Resolved mail merge field 2)
+        ((Resolved mail merge field 2))
+        (((Resolved mail merge field 2)))
+        (Example text in brackets)
         """
     );
   }

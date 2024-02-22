@@ -73,12 +73,11 @@ class ScheduleMailMergeFieldTest {
   @ParameterizedTest
   @EnumSource(DocumentTemplateType.class)
   void isApplicable(DocumentTemplateType documentTemplateType) {
-    var template = DocumentTemplateDtoTestUtil.builder()
+    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder()
         .withMnemonic(documentTemplateType.getMnemonic())
         .build();
 
-    assertThat(scheduleMailMergeField.isApplicable(template))
-        .isEqualTo(DocumentTemplateType.isConsent(documentTemplateType));
+    assertThat(scheduleMailMergeField.isApplicable(documentTemplateDto)).isEqualTo(documentTemplateType.isConsent());
   }
 
   @ParameterizedTest

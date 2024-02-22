@@ -7,24 +7,24 @@ import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceDto;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentMailMergeField;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
 
-@Order(15)
+@Order(16)
 @Component
-class RegulatorLegalNameMailMergeField implements DocumentMailMergeField {
+class RegulatorLegalMnemonicMailMergeField implements DocumentMailMergeField {
 
   private final CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties;
 
-  RegulatorLegalNameMailMergeField(CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties) {
+  RegulatorLegalMnemonicMailMergeField(CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties) {
     this.customerBrandingConfigurationProperties = customerBrandingConfigurationProperties;
   }
 
   @Override
   public String getMnemonic() {
-    return "REGULATOR_LEGAL_NAME";
+    return "REGULATOR_LEGAL_MNEMONIC";
   }
 
   @Override
   public String getDescription() {
-    return "The regulator's legal name";
+    return "The regulator's legal mnemonic";
   }
 
   @Override
@@ -34,6 +34,6 @@ class RegulatorLegalNameMailMergeField implements DocumentMailMergeField {
 
   @Override
   public String resolve(DocumentInstanceDto documentInstanceDto) {
-    return customerBrandingConfigurationProperties.legalName();
+    return customerBrandingConfigurationProperties.legalMnemonic();
   }
 }

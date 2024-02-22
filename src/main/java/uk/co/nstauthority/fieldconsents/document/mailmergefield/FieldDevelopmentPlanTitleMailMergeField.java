@@ -13,7 +13,7 @@ import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceDto;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentMailMergeField;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
 
-@Order(7)
+@Order(8)
 @Component
 public class FieldDevelopmentPlanTitleMailMergeField implements DocumentMailMergeField {
 
@@ -50,7 +50,7 @@ public class FieldDevelopmentPlanTitleMailMergeField implements DocumentMailMerg
   public boolean isApplicable(DocumentTemplateDto documentTemplateDto) {
     var documentTemplateType = DocumentTemplateType.getByMnemonic(documentTemplateDto.mnemonic());
 
-    return DocumentTemplateType.isField(documentTemplateType);
+    return documentTemplateType.isApplicableToFieldApplications();
   }
 
   @Override

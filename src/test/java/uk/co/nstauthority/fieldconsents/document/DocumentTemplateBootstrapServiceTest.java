@@ -42,6 +42,7 @@ class DocumentTemplateBootstrapServiceTest {
     verify(documentTemplateBootstrapService, never()).createTerminalFlareConsentDocumentTemplate();
     verify(documentTemplateBootstrapService, never()).createFieldVentConsentDocumentTemplate();
     verify(documentTemplateBootstrapService, never()).createTerminalVentConsentDocumentTemplate();
+    verify(documentTemplateBootstrapService, never()).createFlareAndCommissioningLetterDocumentTemplate();
   }
 
   @Test
@@ -55,6 +56,7 @@ class DocumentTemplateBootstrapServiceTest {
     verify(documentTemplateBootstrapService).createTerminalFlareConsentDocumentTemplate();
     verify(documentTemplateBootstrapService).createFieldVentConsentDocumentTemplate();
     verify(documentTemplateBootstrapService).createTerminalVentConsentDocumentTemplate();
+    verify(documentTemplateBootstrapService).createFlareAndCommissioningLetterDocumentTemplate();
   }
 
   @Test
@@ -69,7 +71,7 @@ class DocumentTemplateBootstrapServiceTest {
             DocumentTemplateType.FIELD_PRODUCTION_CONSENT.getMnemonic(),
             "Field Production Consent",
             "Document template used for creating Field Production Consent documents",
-            "fcs/document/template/consent/consent.ftl",
+            "fcs/document/template/document.ftl",
             1
         )
     ).thenReturn(fieldProductionConsentDocumentTemplateDto);
@@ -250,7 +252,7 @@ class DocumentTemplateBootstrapServiceTest {
             DocumentTemplateType.FIELD_FLARE_CONSENT.getMnemonic(),
             "Field Flare Consent",
             "Document template used for creating Field Flare Consent documents",
-            "fcs/document/template/consent/consent.ftl",
+            "fcs/document/template/document.ftl",
             2
         )
     ).thenReturn(fieldFlareConsentDocumentTemplateDto);
@@ -376,7 +378,7 @@ class DocumentTemplateBootstrapServiceTest {
             DocumentTemplateType.TERMINAL_FLARE_CONSENT.getMnemonic(),
             "Facility Flare Consent",
             "Document template used for creating Facility Flare Consent documents",
-            "fcs/document/template/consent/consent.ftl",
+            "fcs/document/template/document.ftl",
             3
         )
     ).thenReturn(terminalFlareConsentDocumentTemplateDto);
@@ -470,7 +472,7 @@ class DocumentTemplateBootstrapServiceTest {
             DocumentTemplateType.FIELD_VENT_CONSENT.getMnemonic(),
             "Field Vent Consent",
             "Document template used for creating Field Vent Consent documents",
-            "fcs/document/template/consent/consent.ftl",
+            "fcs/document/template/document.ftl",
             4
         )
     ).thenReturn(fieldVentConsentDocumentTemplateDto);
@@ -582,7 +584,7 @@ class DocumentTemplateBootstrapServiceTest {
             DocumentTemplateType.TERMINAL_VENT_CONSENT.getMnemonic(),
             "Facility Vent Consent",
             "Document template used for creating Facility Vent Consent documents",
-            "fcs/document/template/consent/consent.ftl",
+            "fcs/document/template/document.ftl",
             5
         )
     ).thenReturn(terminalVentConsentDocumentTemplateDto);
@@ -664,6 +666,143 @@ class DocumentTemplateBootstrapServiceTest {
         false,
         true,
         6
+    );
+  }
+
+  @Test
+  void createFlareAndCommissioningLetterDocumentTemplate() {
+    var flaringAndCommissioningLetterDocumentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
+
+    when(
+        documentTemplateService.createDocumentTemplate(
+            DocumentTemplateType.FLARE_AND_COMMISSIONING_LETTER.getMnemonic(),
+            "Flare and Commissioning Letter",
+            "Document template used for creating Flare and Commissioning Letter documents",
+            "fcs/document/template/document.ftl",
+            6
+        )
+    ).thenReturn(flaringAndCommissioningLetterDocumentTemplateDto);
+
+    documentTemplateBootstrapService.createFlareAndCommissioningLetterDocumentTemplate();
+
+    verify(documentTemplateSectionService).createDocumentTemplateSection(
+        flaringAndCommissioningLetterDocumentTemplateDto,
+        null,
+        "Cover letter",
+        """
+        Regulation Directorate
+        3rd Floor
+        1 Marischal Square
+        Broad Street
+        Aberdeen
+        AB10 1BL
+        
+        [TODO FCS-663: ISSUE DATE]
+                   
+        ((PRIMARY_FIELD_NAME)) Field – Serving Notice for Flaring and Commissioning Strategy Requested
+                
+        I now serve the formal notice in Annex A which invites you to make an application in writing for consent to flare gas \
+        throughout the life of field. Annex B outlines the requirements for the Commissioning Strategy document which must be \
+        submitted 6 months prior to first hydrocarbons for ((REGULATOR_MNEMONIC)) consideration.
+                
+        The ((REGULATOR_NAME)) (((REGULATOR_MNEMONIC))) is the business name of the ((REGULATOR_LEGAL_NAME)) \
+        (((REGULATOR_LEGAL_MNEMONIC))). The ((REGULATOR_LEGAL_MNEMONIC)) remains the legal name of the company. References to \
+        the ((REGULATOR_MNEMONIC)) should be interpreted as the ((REGULATOR_LEGAL_MNEMONIC)).
+                
+        Yours sincerely
+        ((CONSENTS_TEAM_NAME))
+        """,
+        null,
+        false,
+        false,
+        1
+    );
+
+    verify(documentTemplateSectionService).createDocumentTemplateSection(
+        flaringAndCommissioningLetterDocumentTemplateDto,
+        null,
+        "Annex A",
+        """
+        Annex A
+
+        PETROLEUM PRODUCTION LICENCE NO(S) ((LICENCE_REFERENCE_LIST))
+        APPLICATIONS TO FLARE GAS FROM THE ((PRIMARY_FIELD_NAME)) FIELD
+
+        The ((REGULATOR_LEGAL_NAME)) hereby gives notice, in accordance with paragraph (3)(a) of the clause titled “Avoidance of \
+        harmful methods of working” set out in or otherwise incorporated into the Licence(s) that, in consequence of plans \
+        comprised in the document entitled “((FIELD_DEVELOPMENT_PLAN_TITLE))” submitted to the ((REGULATOR_LEGAL_NAME)) on \
+        ((FIELD_DEVELOPMENT_PLAN_DATE)) for the getting of petroleum from those parts of the licensed area known as the \
+        ((PRIMARY_FIELD_NAME)) field, which the ((REGULATOR_LEGAL_NAME)) considers reasonable, the ((REGULATOR_LEGAL_NAME)) will \
+        entertain applications in writing from ((PRIMARY_OPERATOR_NAME)) for consent to flare gas throughout the life of the \
+        ((PRIMARY_FIELD_NAME)) field in any case where the application specifies the date on which it is proposed flaring should \
+        commence, being a date not before the expiration of 7 days, beginning with the date on which the \
+        ((REGULATOR_LEGAL_NAME)) receives the application.
+
+        The ((REGULATOR_NAME)) (((REGULATOR_MNEMONIC))) is the business name of the ((REGULATOR_LEGAL_NAME)) \
+        (((REGULATOR_LEGAL_MNEMONIC))). The ((REGULATOR_LEGAL_MNEMONIC)) remains the legal name of the company. References to \
+        the ((REGULATOR_MNEMONIC)) should be interpreted as the ((REGULATOR_LEGAL_MNEMONIC)).
+
+        Yours sincerely
+        ((CONSENTS_TEAM_NAME))
+        """,
+        null,
+        false,
+        true,
+        2
+    );
+
+    verify(documentTemplateSectionService).createDocumentTemplateSection(
+        flaringAndCommissioningLetterDocumentTemplateDto,
+        null,
+        "Annex B",
+        """
+        Annex B
+
+        ((PRIMARY_FIELD_NAME)) FIELD – START-UP FLARE CONSENT AND COMMISSIONING STRATEGY
+
+        I now outline the start-up requirements for the ((PRIMARY_FIELD_NAME)) Field. The document should include the following: -
+
+        History of ((PRIMARY_FIELD_NAME)) – An introductory paragraph covering the history of the Field.
+
+        Production Facilities – A brief description of the production facilities and how the various components will be \
+        commissioned from start-up to the end of the commissioning period.
+
+        Commissioning – Details of how the system(s) will be commissioned, how wells will be brought on stream during the \
+        commissioning period, the anticipated production rates, the commissioning milestones on the gas side (where applicable) \
+        e.g. predicted date of fuel gas, gas export, the length of time to reach stability and the design flaring level.
+
+        Flaring / Venting - An outline of the anticipated flaring during the commissioning period and target flare for the field \
+        when it is operating at stable conditions. Anticipated flaring levels for the first 28 days of production, with \
+        assumptions. Consents to flare gas will be normally remain on short-term periods until there is an improvement in the \
+        plant and stability is reached.
+
+        Reporting – During the period of short-term consents, reports will normally be called for on a weekly basis. These will \
+        normally include:
+
+        a) Details of the gas handling plant during the period.
+
+        b) Daily rates in respect of oil and gas production, fuel gas, gas export and gas flare rates.
+
+        c) Cumulative averages for production and flare.
+
+        d) Monthly calculations of gas compressor efficiency.
+
+        Once we have received and reviewed your commissioning strategy document, we may be in touch to arrange a meeting to \
+        discuss the plan in more detail. Should you have any questions regarding the content please do not hesitate to contact us.
+
+        Please email your plan to ((REGULATOR_EMAIL)).
+        
+        The ((REGULATOR_NAME)) (((REGULATOR_MNEMONIC))) is the business name of the ((REGULATOR_LEGAL_NAME)) \
+        (((REGULATOR_LEGAL_MNEMONIC))). The ((REGULATOR_LEGAL_MNEMONIC)) remains the legal name of the company. References to \
+        the ((REGULATOR_MNEMONIC)) should be interpreted as the ((REGULATOR_LEGAL_MNEMONIC)).
+
+        Yours sincerely
+        ((CONSENTS_TEAM_NAME))
+        """,
+        null,
+        false,
+        true,
+        3
     );
   }
 }

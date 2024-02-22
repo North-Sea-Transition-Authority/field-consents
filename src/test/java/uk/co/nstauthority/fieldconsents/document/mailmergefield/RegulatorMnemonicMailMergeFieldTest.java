@@ -16,22 +16,22 @@ import uk.co.nstauthority.fieldconsents.document.DocumentTemplateDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.document.DocumentTemplateType;
 
 @ExtendWith(MockitoExtension.class)
-class RegulatorLegalNameMailMergeFieldTest {
+class RegulatorMnemonicMailMergeFieldTest {
 
   @Mock
   private CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties;
 
   @InjectMocks
-  private RegulatorLegalNameMailMergeField regulatorLegalNameMailMergeField;
+  private RegulatorMnemonicMailMergeField regulatorMnemonicMailMergeField;
 
   @Test
   void getMnemonic() {
-    assertThat(regulatorLegalNameMailMergeField.getMnemonic()).isEqualTo("REGULATOR_LEGAL_NAME");
+    assertThat(regulatorMnemonicMailMergeField.getMnemonic()).isEqualTo("REGULATOR_MNEMONIC");
   }
 
   @Test
   void getDescription() {
-    assertThat(regulatorLegalNameMailMergeField.getDescription()).isEqualTo("The regulator's legal name");
+    assertThat(regulatorMnemonicMailMergeField.getDescription()).isEqualTo("The regulator's mnemonic");
   }
 
   @ParameterizedTest
@@ -41,17 +41,17 @@ class RegulatorLegalNameMailMergeFieldTest {
         .withMnemonic(documentTemplateType.getMnemonic())
         .build();
 
-    assertThat(regulatorLegalNameMailMergeField.isApplicable(documentTemplateDto)).isTrue();
+    assertThat(regulatorMnemonicMailMergeField.isApplicable(documentTemplateDto)).isTrue();
   }
 
   @Test
   void resolve() {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
 
-    var legalName = "Test legal name";
+    var mnemonic = "TEST_MNEMONIC";
 
-    when(customerBrandingConfigurationProperties.legalName()).thenReturn(legalName);
+    when(customerBrandingConfigurationProperties.mnemonic()).thenReturn(mnemonic);
 
-    assertThat(regulatorLegalNameMailMergeField.resolve(documentInstanceDto)).isEqualTo(legalName);
+    assertThat(regulatorMnemonicMailMergeField.resolve(documentInstanceDto)).isEqualTo(mnemonic);
   }
 }

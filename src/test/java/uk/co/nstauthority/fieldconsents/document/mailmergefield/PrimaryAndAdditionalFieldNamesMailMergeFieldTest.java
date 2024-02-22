@@ -134,7 +134,8 @@ class PrimaryAndAdditionalFieldNamesMailMergeFieldTest {
             Set.of(AssetRole.PRIMARY, AssetRole.SECONDARY)
         )
     ).thenReturn(applicationAssets);
-    when(fieldService.findFieldsByIds(fieldIds, "Field lookup for application assets")).thenReturn(fieldJsons);
+    when(fieldService.findFieldsByIds(fieldIds, "Fields lookup for PRIMARY_AND_ADDITIONAL_FIELD_NAMES mail merge field"))
+        .thenReturn(fieldJsons);
 
     assertThat(primaryAndAdditionalFieldNamesMailMergeField.resolve(documentInstanceDto)).isEqualTo(expected);
   }

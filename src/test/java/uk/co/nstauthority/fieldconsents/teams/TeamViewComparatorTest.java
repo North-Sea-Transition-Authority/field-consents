@@ -21,7 +21,8 @@ class TeamViewComparatorTest {
         "stub",
         "mnem",
         "email@fcs.co.uk",
-        "regulator legal name",
+        "legal name",
+        "legal mnem",
         "team name"
     );
     var firstTeam = TeamTestUtil.Builder()
@@ -47,7 +48,8 @@ class TeamViewComparatorTest {
         "stub",
         "mnem",
         "email@fcs.co.uk",
-        "regulator legal name",
+        "legal name",
+        "legal mnem",
         "team name"
     );
     var firstTeam = TeamTestUtil.Builder()

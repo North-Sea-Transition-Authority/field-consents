@@ -1,38 +1,36 @@
 package uk.co.nstauthority.fieldconsents.document.mailmergefield;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
-import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.document.DocumentInstanceLinkingService;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceDto;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentMailMergeField;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 
-@Order(7)
+@Order(4)
 @Component
-class ConsentLengthUpperCaseMailMergeField implements DocumentMailMergeField {
+class PrimaryOperatorNameMailMergeField implements DocumentMailMergeField {
 
   private final DocumentInstanceLinkingService documentInstanceLinkingService;
-  private final ConsentLengthService consentLengthService;
+  private final OrganisationUnitService organisationUnitService;
 
-  @Autowired
-  ConsentLengthUpperCaseMailMergeField(
+  PrimaryOperatorNameMailMergeField(
       DocumentInstanceLinkingService documentInstanceLinkingService,
-      ConsentLengthService consentLengthService
+      OrganisationUnitService organisationUnitService
   ) {
     this.documentInstanceLinkingService = documentInstanceLinkingService;
-    this.consentLengthService = consentLengthService;
+    this.organisationUnitService = organisationUnitService;
   }
 
   @Override
   public String getMnemonic() {
-    return "CONSENT_LENGTH_UPPER_CASE";
+    return "PRIMARY_OPERATOR_NAME";
   }
 
   @Override
   public String getDescription() {
-    return "The length of the Consent in upper case";
+    return "The name of the primary operator on the application";
   }
 
   @Override
@@ -44,8 +42,13 @@ class ConsentLengthUpperCaseMailMergeField implements DocumentMailMergeField {
   public String resolve(DocumentInstanceDto documentInstanceDto) {
     var applicationVersion =
         documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto);
-    var consentLengthDetails = consentLengthService.getConsentLengthDetails(applicationVersion);
 
-    return consentLengthDetails.getConsentLength().getShortDisplayName().toUpperCase();
+    var organisationUnitJson = organisationUnitService.getOrganisationUnitById(
+        applicationVersion.getPrimaryOperatorOuId(),
+        "Organisation unit lookup for %s mail merge field".formatted(getMnemonic())
+    );
+
+    return organisationUnitJson.name();
   }
 }
+

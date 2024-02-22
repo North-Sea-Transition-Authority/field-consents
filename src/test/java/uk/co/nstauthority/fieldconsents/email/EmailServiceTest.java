@@ -52,7 +52,8 @@ class EmailServiceTest {
       "name",
       "mnemonic",
       "email@fcs.co.uk",
-      "regulator legal name",
+      "legal name",
+      "legal mnemonic",
       "team name"
   );
 

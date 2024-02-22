@@ -46,12 +46,11 @@ class ConsentLengthUpperCaseMailMergeFieldTest {
   @ParameterizedTest
   @EnumSource(DocumentTemplateType.class)
   void isApplicable(DocumentTemplateType documentTemplateType) {
-    var template = DocumentTemplateDtoTestUtil.builder()
+    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder()
         .withMnemonic(documentTemplateType.getMnemonic())
         .build();
 
-    assertThat(consentLengthUpperCaseMailMergeField.isApplicable(template))
-        .isEqualTo(DocumentTemplateType.isConsent(documentTemplateType));
+    assertThat(consentLengthUpperCaseMailMergeField.isApplicable(documentTemplateDto)).isTrue();
   }
 
   @ParameterizedTest

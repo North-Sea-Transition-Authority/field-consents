@@ -12,7 +12,7 @@ import uk.co.nstauthority.fieldconsents.document.lib.DocumentMailMergeField;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
 import uk.co.nstauthority.fieldconsents.util.StringUtil;
 
-@Order(9)
+@Order(11)
 @Component
 class LicenceReferenceListMailMergeField implements DocumentMailMergeField {
 
@@ -42,7 +42,7 @@ class LicenceReferenceListMailMergeField implements DocumentMailMergeField {
   public boolean isApplicable(DocumentTemplateDto documentTemplateDto) {
     var documentTemplateType = DocumentTemplateType.getByMnemonic(documentTemplateDto.mnemonic());
 
-    return DocumentTemplateType.isField(documentTemplateType) && DocumentTemplateType.isConsent(documentTemplateType);
+    return documentTemplateType.isApplicableToFieldApplications();
   }
 
   @Override

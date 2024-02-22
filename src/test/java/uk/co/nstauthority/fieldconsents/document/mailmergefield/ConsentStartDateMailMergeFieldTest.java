@@ -58,12 +58,11 @@ class ConsentStartDateMailMergeFieldTest {
   @ParameterizedTest
   @EnumSource(DocumentTemplateType.class)
   void isApplicable(DocumentTemplateType documentTemplateType) {
-    var template = DocumentTemplateDtoTestUtil.builder()
+    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder()
         .withMnemonic(documentTemplateType.getMnemonic())
         .build();
 
-    assertThat(consentStartDateMailMergeField.isApplicable(template))
-        .isEqualTo(DocumentTemplateType.isConsent(documentTemplateType));
+    assertThat(consentStartDateMailMergeField.isApplicable(documentTemplateDto)).isTrue();
   }
 
   @Test

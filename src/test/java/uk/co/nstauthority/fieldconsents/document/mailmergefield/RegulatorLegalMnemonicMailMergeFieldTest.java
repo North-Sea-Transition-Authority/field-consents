@@ -16,22 +16,22 @@ import uk.co.nstauthority.fieldconsents.document.DocumentTemplateDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.document.DocumentTemplateType;
 
 @ExtendWith(MockitoExtension.class)
-class RegulatorLegalNameMailMergeFieldTest {
+class RegulatorLegalMnemonicMailMergeFieldTest {
 
   @Mock
   private CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties;
 
   @InjectMocks
-  private RegulatorLegalNameMailMergeField regulatorLegalNameMailMergeField;
+  private RegulatorLegalMnemonicMailMergeField regulatorLegalMnemonicMailMergeField;
 
   @Test
   void getMnemonic() {
-    assertThat(regulatorLegalNameMailMergeField.getMnemonic()).isEqualTo("REGULATOR_LEGAL_NAME");
+    assertThat(regulatorLegalMnemonicMailMergeField.getMnemonic()).isEqualTo("REGULATOR_LEGAL_MNEMONIC");
   }
 
   @Test
   void getDescription() {
-    assertThat(regulatorLegalNameMailMergeField.getDescription()).isEqualTo("The regulator's legal name");
+    assertThat(regulatorLegalMnemonicMailMergeField.getDescription()).isEqualTo("The regulator's legal mnemonic");
   }
 
   @ParameterizedTest
@@ -41,17 +41,17 @@ class RegulatorLegalNameMailMergeFieldTest {
         .withMnemonic(documentTemplateType.getMnemonic())
         .build();
 
-    assertThat(regulatorLegalNameMailMergeField.isApplicable(documentTemplateDto)).isTrue();
+    assertThat(regulatorLegalMnemonicMailMergeField.isApplicable(documentTemplateDto)).isTrue();
   }
 
   @Test
   void resolve() {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
 
-    var legalName = "Test legal name";
+    var legalMnemonic = "TEST_LEGAL_MNEMONIC";
 
-    when(customerBrandingConfigurationProperties.legalName()).thenReturn(legalName);
+    when(customerBrandingConfigurationProperties.legalMnemonic()).thenReturn(legalMnemonic);
 
-    assertThat(regulatorLegalNameMailMergeField.resolve(documentInstanceDto)).isEqualTo(legalName);
+    assertThat(regulatorLegalMnemonicMailMergeField.resolve(documentInstanceDto)).isEqualTo(legalMnemonic);
   }
 }

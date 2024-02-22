@@ -7,6 +7,7 @@ public enum DocumentTemplateType {
   TERMINAL_FLARE_CONSENT("Flare Consent document for this application"),
   FIELD_VENT_CONSENT("Vent Consent document for this application"),
   TERMINAL_VENT_CONSENT("Vent Consent document for this application"),
+  FLARE_AND_COMMISSIONING_LETTER("Flare and Commissioning letter document for this application")
   ;
 
   private final String documentInstanceDescription;
@@ -23,25 +24,26 @@ public enum DocumentTemplateType {
     return documentInstanceDescription;
   }
 
+  public boolean isApplicableToFieldApplications() {
+    return this == FIELD_PRODUCTION_CONSENT
+        || this == FIELD_FLARE_CONSENT
+        || this == FIELD_VENT_CONSENT
+        || this == FLARE_AND_COMMISSIONING_LETTER;
+  }
+
+  public boolean isApplicableToTerminalApplications() {
+    return this == TERMINAL_FLARE_CONSENT || this == TERMINAL_VENT_CONSENT;
+  }
+
+  public boolean isConsent() {
+    return this == FIELD_PRODUCTION_CONSENT
+        || this == FIELD_FLARE_CONSENT
+        || this == TERMINAL_FLARE_CONSENT
+        || this == FIELD_VENT_CONSENT
+        || this == TERMINAL_VENT_CONSENT;
+  }
+
   public static DocumentTemplateType getByMnemonic(String mnemonic) {
     return valueOf(mnemonic);
-  }
-
-  public static boolean isField(DocumentTemplateType documentTemplateType) {
-    return documentTemplateType == FIELD_PRODUCTION_CONSENT
-        || documentTemplateType == FIELD_FLARE_CONSENT
-        || documentTemplateType == FIELD_VENT_CONSENT;
-  }
-
-  public static boolean isTerminal(DocumentTemplateType documentTemplateType) {
-    return documentTemplateType == TERMINAL_FLARE_CONSENT || documentTemplateType == TERMINAL_VENT_CONSENT;
-  }
-
-  public static boolean isConsent(DocumentTemplateType documentTemplateType) {
-    return documentTemplateType == FIELD_PRODUCTION_CONSENT
-        || documentTemplateType == FIELD_FLARE_CONSENT
-        || documentTemplateType == TERMINAL_FLARE_CONSENT
-        || documentTemplateType == FIELD_VENT_CONSENT
-        || documentTemplateType == TERMINAL_VENT_CONSENT;
   }
 }

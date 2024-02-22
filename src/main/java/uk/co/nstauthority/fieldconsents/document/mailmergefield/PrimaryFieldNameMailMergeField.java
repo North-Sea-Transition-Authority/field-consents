@@ -44,7 +44,8 @@ class PrimaryFieldNameMailMergeField implements DocumentMailMergeField {
   public boolean isApplicable(DocumentTemplateDto documentTemplateDto) {
     var documentTemplateType = DocumentTemplateType.getByMnemonic(documentTemplateDto.mnemonic());
 
-    return documentTemplateType == DocumentTemplateType.FIELD_PRODUCTION_CONSENT;
+    return documentTemplateType == DocumentTemplateType.FIELD_PRODUCTION_CONSENT
+        || documentTemplateType == DocumentTemplateType.FLARE_AND_COMMISSIONING_LETTER;
   }
 
   @Override
@@ -59,6 +60,9 @@ class PrimaryFieldNameMailMergeField implements DocumentMailMergeField {
       );
     }
 
-    return fieldService.getField(primaryAsset.getAssetId(), "Field lookup for application asset").getName();
+    var fieldJson =
+        fieldService.getField(primaryAsset.getAssetId(), "Field lookup for %s mail merge field".formatted(getMnemonic()));
+
+    return fieldJson.getName();
   }
 }

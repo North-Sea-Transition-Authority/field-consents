@@ -47,7 +47,8 @@ public class ValidatorTestingUtil {
         "Customer Name",
         "CUSTMNEM",
         "Customer Email",
-        "Regulator Legal Name",
+        "Customer Legal Name",
+        "CUSTLEGALMNEM",
         "Team Name"
     );
   }

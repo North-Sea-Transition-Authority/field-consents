@@ -46,13 +46,12 @@ class LicenceReferenceListMailMergeFieldTest {
   @ParameterizedTest
   @EnumSource(DocumentTemplateType.class)
   void isApplicable(DocumentTemplateType documentTemplateType) {
-    var template = DocumentTemplateDtoTestUtil.builder()
+    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder()
         .withMnemonic(documentTemplateType.getMnemonic())
         .build();
 
-    assertThat(licenceReferenceListMailMergeField.isApplicable(template))
-        .isEqualTo(DocumentTemplateType.isField(documentTemplateType)
-            && DocumentTemplateType.isConsent(documentTemplateType));
+    assertThat(licenceReferenceListMailMergeField.isApplicable(documentTemplateDto))
+        .isEqualTo(documentTemplateType.isApplicableToFieldApplications());
   }
 
   @Test

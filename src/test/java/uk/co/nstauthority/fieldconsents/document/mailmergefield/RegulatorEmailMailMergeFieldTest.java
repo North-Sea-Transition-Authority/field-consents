@@ -16,22 +16,22 @@ import uk.co.nstauthority.fieldconsents.document.DocumentTemplateDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.document.DocumentTemplateType;
 
 @ExtendWith(MockitoExtension.class)
-class RegulatorLegalNameMailMergeFieldTest {
+class RegulatorEmailMailMergeFieldTest {
 
   @Mock
   private CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties;
 
   @InjectMocks
-  private RegulatorLegalNameMailMergeField regulatorLegalNameMailMergeField;
+  private RegulatorEmailMailMergeField regulatorEmailMailMergeField;
 
   @Test
   void getMnemonic() {
-    assertThat(regulatorLegalNameMailMergeField.getMnemonic()).isEqualTo("REGULATOR_LEGAL_NAME");
+    assertThat(regulatorEmailMailMergeField.getMnemonic()).isEqualTo("REGULATOR_EMAIL");
   }
 
   @Test
   void getDescription() {
-    assertThat(regulatorLegalNameMailMergeField.getDescription()).isEqualTo("The regulator's legal name");
+    assertThat(regulatorEmailMailMergeField.getDescription()).isEqualTo("The regulator's email address");
   }
 
   @ParameterizedTest
@@ -41,17 +41,17 @@ class RegulatorLegalNameMailMergeFieldTest {
         .withMnemonic(documentTemplateType.getMnemonic())
         .build();
 
-    assertThat(regulatorLegalNameMailMergeField.isApplicable(documentTemplateDto)).isTrue();
+    assertThat(regulatorEmailMailMergeField.isApplicable(documentTemplateDto)).isTrue();
   }
 
   @Test
   void resolve() {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
 
-    var legalName = "Test legal name";
+    var email = "test@email.com";
 
-    when(customerBrandingConfigurationProperties.legalName()).thenReturn(legalName);
+    when(customerBrandingConfigurationProperties.email()).thenReturn(email);
 
-    assertThat(regulatorLegalNameMailMergeField.resolve(documentInstanceDto)).isEqualTo(legalName);
+    assertThat(regulatorEmailMailMergeField.resolve(documentInstanceDto)).isEqualTo(email);
   }
 }

@@ -77,7 +77,8 @@ class PrimaryAndAdditionalFieldNamesMailMergeField implements DocumentMailMergeF
 
     var fieldIds = applicationAssets.stream().map(ApplicationAsset::getAssetId).toList();
 
-    var fieldJsonsById = fieldService.findFieldsByIds(fieldIds, "Field lookup for application assets").stream()
+    var fieldJsons = fieldService.findFieldsByIds(fieldIds, "Fields lookup for %s mail merge field".formatted(getMnemonic()));
+    var fieldJsonsById = fieldJsons.stream()
         .collect(Collectors.toMap(FieldJson::getId, Function.identity()));
 
     var primaryFieldName = Optional.ofNullable(fieldJsonsById.get(primaryFieldId))

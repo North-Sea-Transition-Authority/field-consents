@@ -10,45 +10,46 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.document.DocumentInstanceDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.document.DocumentInstanceLinkingService;
 import uk.co.nstauthority.fieldconsents.document.DocumentTemplateDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.document.DocumentTemplateType;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 
 @ExtendWith(MockitoExtension.class)
-class ApplicationReferenceMailMergeFieldTest {
+class PrimaryOperatorNameMailMergeFieldTest {
 
   @Mock
   private DocumentInstanceLinkingService documentInstanceLinkingService;
 
   @Mock
-  private ApplicationService applicationService;
+  private OrganisationUnitService organisationUnitService;
 
   @InjectMocks
-  private ApplicationReferenceMailMergeField applicationReferenceMailMergeField;
+  private PrimaryOperatorNameMailMergeField primaryOperatorNameMailMergeField;
 
   @Test
   void getMnemonic() {
-    assertThat(applicationReferenceMailMergeField.getMnemonic()).isEqualTo("APPLICATION_REFERENCE");
+    assertThat(primaryOperatorNameMailMergeField.getMnemonic()).isEqualTo("PRIMARY_OPERATOR_NAME");
   }
 
   @Test
   void getDescription() {
-    assertThat(applicationReferenceMailMergeField.getDescription())
-        .isEqualTo("The reference assigned to the application");
+    assertThat(primaryOperatorNameMailMergeField.getDescription())
+        .isEqualTo("The name of the primary operator on the application");
   }
 
   @ParameterizedTest
   @EnumSource(DocumentTemplateType.class)
   void isApplicable(DocumentTemplateType documentTemplateType) {
-    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder()
+    var template = DocumentTemplateDtoTestUtil.builder()
         .withMnemonic(documentTemplateType.getMnemonic())
         .build();
 
-    assertThat(applicationReferenceMailMergeField.isApplicable(documentTemplateDto)).isTrue();
+    assertThat(primaryOperatorNameMailMergeField.isApplicable(template)).isTrue();
   }
 
   @Test
@@ -56,12 +57,19 @@ class ApplicationReferenceMailMergeFieldTest {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
 
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
-    var applicationReference = "Test/application/reference";
+
+    var organisationUnitName = "Test organisation unit name";
+    var organisationUnitJson = new OrganisationUnitJson(null, organisationUnitName);
 
     when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
         .thenReturn(applicationVersion);
-    when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
+    when(
+        organisationUnitService.getOrganisationUnitById(
+            applicationVersion.getPrimaryOperatorOuId(),
+            "Organisation unit lookup for PRIMARY_OPERATOR_NAME mail merge field"
+        )
+    ).thenReturn(organisationUnitJson);
 
-    assertThat(applicationReferenceMailMergeField.resolve(documentInstanceDto)).isEqualTo(applicationReference);
+    assertThat(primaryOperatorNameMailMergeField.resolve(documentInstanceDto)).isEqualTo(organisationUnitName);
   }
 }

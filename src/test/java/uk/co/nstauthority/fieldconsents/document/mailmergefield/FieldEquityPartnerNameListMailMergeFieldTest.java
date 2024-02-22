@@ -56,10 +56,12 @@ class FieldEquityPartnerNameListMailMergeFieldTest {
   @ParameterizedTest
   @EnumSource(DocumentTemplateType.class)
   void isApplicable(DocumentTemplateType documentTemplateType) {
-    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().withMnemonic(documentTemplateType.getMnemonic()).build();
+    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder()
+        .withMnemonic(documentTemplateType.getMnemonic())
+        .build();
 
     assertThat(fieldEquityPartnerNameListMailMergeField.isApplicable(documentTemplateDto))
-        .isEqualTo(DocumentTemplateType.isField(documentTemplateType));
+        .isEqualTo(documentTemplateType.isApplicableToFieldApplications());
   }
 
   @Test

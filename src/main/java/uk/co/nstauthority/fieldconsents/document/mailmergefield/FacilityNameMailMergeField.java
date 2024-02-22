@@ -44,7 +44,7 @@ class FacilityNameMailMergeField implements DocumentMailMergeField {
   public boolean isApplicable(DocumentTemplateDto documentTemplateDto) {
     var documentTemplateType = DocumentTemplateType.getByMnemonic(documentTemplateDto.mnemonic());
 
-    return DocumentTemplateType.isTerminal(documentTemplateType);
+    return documentTemplateType.isApplicableToTerminalApplications();
   }
 
   @Override
@@ -59,6 +59,11 @@ class FacilityNameMailMergeField implements DocumentMailMergeField {
       );
     }
 
-    return terminalService.getTerminal(primaryAsset.getAssetId(), "Terminal lookup for application asset").getName();
+    var terminalJson = terminalService.getTerminal(
+        primaryAsset.getAssetId(),
+        "Terminal lookup for %s mail merge field".formatted(getMnemonic())
+    );
+
+    return terminalJson.getName();
   }
 }

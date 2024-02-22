@@ -5,13 +5,12 @@ import org.springframework.stereotype.Component;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentData;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataRepository;
 import uk.co.nstauthority.fieldconsents.document.DocumentInstanceLinkingService;
-import uk.co.nstauthority.fieldconsents.document.DocumentTemplateType;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceDto;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentMailMergeField;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 
-@Order(4)
+@Order(5)
 @Component
 public class ConsentStartDateMailMergeField implements DocumentMailMergeField {
 
@@ -41,9 +40,7 @@ public class ConsentStartDateMailMergeField implements DocumentMailMergeField {
 
   @Override
   public boolean isApplicable(DocumentTemplateDto documentTemplateDto) {
-    var documentTemplateType = DocumentTemplateType.getByMnemonic(documentTemplateDto.mnemonic());
-
-    return DocumentTemplateType.isConsent(documentTemplateType);
+    return true;
   }
 
   @Override

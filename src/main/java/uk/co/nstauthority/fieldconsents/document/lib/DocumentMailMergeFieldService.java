@@ -12,7 +12,10 @@ import uk.co.nstauthority.fieldconsents.util.StringUtil;
 @Service
 public class DocumentMailMergeFieldService {
 
-  private static final Pattern MAIL_MERGE_FIELD_PATTERN = Pattern.compile("\\(\\((.*?)\\)\\)");
+  // This is the same regex as GOV.UK Notify uses:
+  // https://github.com/alphagov/notifications-utils/blob/main/notifications_utils/field.py#L64
+  // This must only match the inner most brackets, e.g. (((TEST))) should match ((TEST)).
+  private static final Pattern MAIL_MERGE_FIELD_PATTERN = Pattern.compile("\\({2}([^()]+)\\){2}");
 
   static final String SINGLE_INVALID_MAIL_MERGE_FIELD_ERROR_MESSAGE = "Mail merge field %s is not valid";
   static final String MULTIPLE_INVALID_MAIL_MERGE_FIELDS_ERROR_MESSAGE = "Mail merge fields %s are not valid";

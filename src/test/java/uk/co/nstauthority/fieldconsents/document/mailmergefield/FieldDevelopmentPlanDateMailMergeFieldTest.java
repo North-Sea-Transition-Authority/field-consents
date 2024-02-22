@@ -68,12 +68,12 @@ class FieldDevelopmentPlanDateMailMergeFieldTest {
   @ParameterizedTest
   @EnumSource(DocumentTemplateType.class)
   void isApplicable(DocumentTemplateType documentTemplateType) {
-    var template = DocumentTemplateDtoTestUtil.builder()
+    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder()
         .withMnemonic(documentTemplateType.getMnemonic())
         .build();
 
-    assertThat(fieldDevelopmentPlanDateMailMergeField.isApplicable(template))
-        .isEqualTo(DocumentTemplateType.isField(documentTemplateType));
+    assertThat(fieldDevelopmentPlanDateMailMergeField.isApplicable(documentTemplateDto))
+        .isEqualTo(documentTemplateType.isApplicableToFieldApplications());
   }
 
   @Test
