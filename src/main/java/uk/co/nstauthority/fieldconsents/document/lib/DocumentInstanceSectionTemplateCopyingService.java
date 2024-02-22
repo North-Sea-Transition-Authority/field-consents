@@ -88,6 +88,7 @@ class DocumentInstanceSectionTemplateCopyingService {
     documentInstanceSection.setTitle(documentTemplateSection.getTitle());
     documentInstanceSection.setContent(documentTemplateSection.getContent());
     documentInstanceSection.setNumbered(documentTemplateSection.isNumbered());
+    documentInstanceSection.setHasPageBreakBefore(documentTemplateSection.hasPageBreakBefore());
     documentInstanceSection.setDisplayOrder(documentTemplateSection.getDisplayOrder());
 
     return documentInstanceSection;

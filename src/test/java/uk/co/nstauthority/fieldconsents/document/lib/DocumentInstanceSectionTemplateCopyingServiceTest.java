@@ -344,6 +344,7 @@ class DocumentInstanceSectionTemplateCopyingServiceTest {
         DocumentInstanceSection::getTitle,
         DocumentInstanceSection::getContent,
         DocumentInstanceSection::isNumbered,
+        DocumentInstanceSection::hasPageBreakBefore,
         DocumentInstanceSection::getDisplayOrder
     ).containsExactly(
         documentInstance,
@@ -352,6 +353,7 @@ class DocumentInstanceSectionTemplateCopyingServiceTest {
         documentTemplateSection.getTitle(),
         documentTemplateSection.getContent(),
         documentTemplateSection.isNumbered(),
+        documentTemplateSection.hasPageBreakBefore(),
         documentTemplateSection.getDisplayOrder()
     );
   }
