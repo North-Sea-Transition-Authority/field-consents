@@ -3,7 +3,7 @@ SELECT
   fcd.id fcd_id
 , ed.ed_rownum
 , ed.year
-, ed.gas
+, coalesce(ed.gas, 0) gas
 FROM envmgr.field_consent_details fcd
 JOIN envmgr.xview_field_consent_details xfcd ON xfcd.fcd_id = fcd.id
 CROSS JOIN XMLTABLE(

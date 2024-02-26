@@ -1,3 +1,9 @@
+--
+-- Run script with F5 in Toad
+--
+-- Full execution run times:
+-- UAT 5 mins 7 secs
+--
 
 --DELETE FROM fcs_migration.vent_long_term_years;
 --DELETE FROM fcs_migration.flare_long_term_years;
@@ -1377,7 +1383,6 @@ AND ed.categories = 'A_B_C';
 --
 -- vent_short_term_123_months
 --
-
 INSERT INTO fcs_migration.vent_short_term_123_months (
   id
 , application_version_id
@@ -1937,4 +1942,6 @@ JOIN bpmmgr.review_advisor_slot_details rasd ON ras.id = rasd.ras_id AND rasd.st
 LEFT JOIN isets ON isets.is_id = rasd.intention_set_id
 LEFT JOIN aac_wuas ON aac_wuas.aac_id = rreq.aac_id
 WHERE rid.status_control = 'C';
+/
+COMMIT;
 /

@@ -14,9 +14,9 @@ SELECT
     WHEN 'VCON' THEN 'OTHER_VENT'
     END
   END type
-, es.description
+, clean_text(es.description) description
 , es.metered
-, es.comments
+, clean_text(es.comments) comments
 FROM envmgr.field_consent_details fcd
 JOIN envmgr.xview_field_consent_details xfcd ON xfcd.fcd_id = fcd.id
 CROSS JOIN XMLTABLE(

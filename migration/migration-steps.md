@@ -11,10 +11,12 @@ The plan is to flatten the data required for migration and insert into tables in
 Run the following patch create the migration schema `fcs_migration`. Note, this will need to be run in a schema such as `XVIEWMGR` which has permission to create users and grant roles.
 - `/energyportal/V01_create_migration_schema.sql`
 
-## 2. Create the tables required for the migration 
+## 2. Create the tables and build the views/functions required for the migration 
 
-On schema `fcs_migration` run the following patch:
+On schema `fcs_migration` run the following patch and build the views/functions:
 - `/energyportal/V02_create_mirgation_data_tables.sql`
+- `/energyportal/views`
+- `/energyportal/functions`
 
 ## 3. Stage/flatten the legacy field consents data ready for migration
 
@@ -42,10 +44,10 @@ Run through the following guide per environment (sys admin/DBA job):
 
 Example final DB link creation from the Oracle side:
 ```
-CREATE PUBLIC DATABASE LINK FCS_POSTGRES_DB
+CREATE PUBLIC DATABASE LINK fcs_postgres_db
 CONNECT TO "fcs_app"
 IDENTIFIED BY <password>
-USING 'fcs_postgres';
+USING 'fcs_postgres_[dev|st|preprod|prod]';
 ```
 
 Environments - `local`, `dev`, `st`, `preprod`, `prod`
@@ -65,12 +67,27 @@ CLOBs are not supported over the DB link so the following tables have been migra
 - application_updates
 - application_technical_reviews
 
-### Methdod
+### Method
+#### Export
 - Query the data in Toad
-- Ctrl-A (select all the data) -> Right click "Export dataset..."
-- Export as pipe separated txt file
-- In IntelliJ connect to the appropriate Postgres DB and navigate to the appropriate table
+- Use the "Export dataset" button
+- Export as pipe separated txt file (ASCII, with no header row, double quote string columns, ensure CLOBs aren't excluded)
+
+#### Import with IntelliJ
+- connect to the appropriate Postgres DB and navigate to the appropriate table
 - Right click -> Import/Export -> Import Data From File(s) -> select the appropriate file and choose the correct import setting for pipe separated data
+- Run the Import
+
+#### Import with PGAdmin
+- connect to the appropriate Postgres DB and navigate to the appropriate table
+- Right click -> Import/Export
+- select the appropriate txt file and choose the correct import setting for pipe separated data
+  - Format: csv
+  - Encoding: WIN1252
+  - OID and Header: No
+  - Delimiter: | (pipe)
+  - Quote: \"
+  - Escape: \" (must be the same as the quote character)
 - Run the Import
 
 ## 6. Post migration sync Postgres sequences

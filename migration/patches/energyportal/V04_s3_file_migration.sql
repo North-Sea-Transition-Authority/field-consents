@@ -8,6 +8,11 @@
 -- supporting info docs
 --
 
+
+-- Execution run times for insert into promotemgr.s3_file_migration :
+-- UAT 4 mins 17 secs (for 5172 files)
+--
+
 -- queue the files to be migrated
 INSERT INTO promotemgr.s3_file_migration ( 
   fox_file_id
@@ -27,6 +32,9 @@ SELECT
 FROM fcs_migration.application_versions av
 JOIN fcs_migration.field_consent_supporting_docs sd ON sd.fcd_id = av.id
 WHERE sd.calculated_file_size > 0;
+/
+COMMIT;
+/
 
 -- *********************************************
 -- Now run the migration tool (s3_file_migrator)
@@ -35,7 +43,12 @@ WHERE sd.calculated_file_size > 0;
 -- Examples (local and dev) (can also use the VERIFY mode to check that he upload to S3 has worked)
 -- java -DdbUrl=db-ogadev1.sb2.dev:1521/ogadev1 -DdbUser=promotemgr -DdbPassword=? -DaccessKey=dummy -DsecretKey=dummy -Dbucket=field-consents -Dregion=example -DendpointUrl=http://localhost:9090 -jar build/libs/s3-file-migrator.jar MIGRATE
 -- java -DdbUrl=db-ogadev1.sb2.dev:1521/ogadev1 -DdbUser=promotemgr -DdbPassword=? -DaccessKey=? -DsecretKey=? -Dbucket=fcs.dev.fivium.co.uk -Dregion=eu-west-2 -DendpointUrl=s3.eu-west-2.amazonaws.com -jar build/libs/s3-file-migrator.jar MIGRATE
+-- java -DdbUrl=db-ogast1.sb2.dev:1521/ogast1 -DdbUser=promotemgr -DdbPassword=? -DaccessKey=? -DsecretKey=? -Dbucket=fcs.st.fivium.co.uk -Dregion=eu-west-2 -DendpointUrl=s3.eu-west-2.amazonaws.com -jar build/libs/s3-file-migrator.jar MIGRATE
+-- Run from Powershell on the Bastion (needs the double quotes) 
+-- java -DdbUrl="db-ogacl1.oga.sb1.prod:1521/ogacl1" -DdbUser="promotemgr" -DdbPassword="?" -DaccessKey="?" -DsecretKey="?" -Dbucket="fcs.preprod.nstauthority.co.uk" -Dregion="eu-west-2" -DendpointUrl="s3.eu-west-2.amazonaws.com" -jar ./s3-file-migrator.jar MIGRATE
 --
+-- Execution run times for uploading the files to S3 using the s3_file_migrator
+-- UAT 11 mins 15 secs (for 5172 files - 8.93GB)
 
 -- queue the FUSS data for each migrated file
 INSERT INTO fcs_migration.file_upload_library_uploaded_files (
@@ -69,3 +82,6 @@ FROM fcs_migration.application_versions av
 JOIN fcs_migration.field_consent_supporting_docs sd ON sd.fcd_id = av.id
 JOIN promotemgr.s3_file_migration fm ON fm.fox_file_id = sd.fox_file_id
 WHERE fm.migrated_timestamp IS NOT NULL;
+/
+COMMIT;
+/

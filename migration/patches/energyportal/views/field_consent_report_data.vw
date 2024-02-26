@@ -16,9 +16,7 @@ SELECT
 , st.to_number_safe(rd.category_c) category_c
 , rd.total_flare_gas
 , rd.days_total_shutdown
--- replace multibyte characters as they cause issues with the db link push:
--- � and �
-, replace(replace(rd.comments, CHR(191), NULL), CHR(183), '-') comments
+, clean_text(rd.comments) comments
 FROM envmgr.field_consent_details fcd
 CROSS JOIN XMLTABLE(
   '/FIELD_CONSENT'

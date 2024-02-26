@@ -4,12 +4,14 @@ AS $$
 DECLARE
     l_seq_start_value INTEGER;
 BEGIN
-    EXECUTE 'SELECT max(id) + 1 FROM fcs.'||p_table_name INTO l_seq_start_value;
+    EXECUTE 'SELECT coalesce(max(id), 0) + 1 FROM fcs.'||p_table_name INTO l_seq_start_value;
     EXECUTE 'ALTER SEQUENCE fcs.'||p_table_name||'_id_seq RESTART WITH '||l_seq_start_value;
 END;
 $$;
 
 CALL fcs.post_migration_sync_table_sequence('applications');
+CALL fcs.post_migration_sync_table_sequence('application_consent_data');
+CALL fcs.post_migration_sync_table_sequence('application_consent_production_long_term_figures');
 CALL fcs.post_migration_sync_table_sequence('application_versions');
 CALL fcs.post_migration_sync_table_sequence('consent_lengths');
 CALL fcs.post_migration_sync_table_sequence('application_assets');
@@ -44,10 +46,19 @@ CALL fcs.post_migration_sync_table_sequence('vent_report_123_months');
 CALL fcs.post_migration_sync_table_sequence('application_case_notes');
 CALL fcs.post_migration_sync_table_sequence('application_updates');
 CALL fcs.post_migration_sync_table_sequence('application_technical_reviews');
+CALL fcs.post_migration_sync_table_sequence('flare_long_term_years');
+CALL fcs.post_migration_sync_table_sequence('vent_long_term_years');
+CALL fcs.post_migration_sync_table_sequence('application_consultations');
+CALL fcs.post_migration_sync_table_sequence('application_consultation_further_information');
+CALL fcs.post_migration_sync_table_sequence('application_withdrawals');
+CALL fcs.post_migration_sync_table_sequence('application_rationale');
+CALL fcs.post_migration_sync_table_sequence('application_work_area_priorities');
 
 DROP PROCEDURE fcs.post_migration_sync_table_sequence(TEXT);
 
 SELECT * FROM fcs.applications_id_seq;
+SELECT * FROM fcs.application_consent_data_id_seq;
+SELECT * FROM fcs.application_consent_production_long_term_figures_id_seq;
 SELECT * FROM fcs.application_versions_id_seq;
 SELECT * FROM fcs.consent_lengths_id_seq;
 SELECT * FROM fcs.application_assets_id_seq;
@@ -82,3 +93,10 @@ SELECT * FROM fcs.vent_report_123_months_id_seq;
 SELECT * FROM fcs.application_case_notes_id_seq;
 SELECT * FROM fcs.application_updates_id_seq;
 SELECT * FROM fcs.application_technical_reviews_id_seq;
+SELECT * FROM fcs.flare_long_term_years_id_seq;
+SELECT * FROM fcs.vent_long_term_years_id_seq;
+SELECT * FROM fcs.application_consultations_id_seq;
+SELECT * FROM fcs.application_consultation_further_information_id_seq;
+SELECT * FROM fcs.application_withdrawals_id_seq;
+SELECT * FROM fcs.application_rationale_id_seq;
+SELECT * FROM fcs.application_work_area_priorities_id_seq;

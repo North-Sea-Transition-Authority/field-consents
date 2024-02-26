@@ -1,0 +1,2 @@
+ALTER SEQUENCE application_consultation_further_information_requests_id_seq
+RENAME TO application_consultation_further_information_id_seq;

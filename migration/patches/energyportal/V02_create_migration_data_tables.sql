@@ -1,3 +1,6 @@
+--
+-- Run script with F5 in Toad
+--
 
 --DROP TABLE fcs_migration.vent_long_term_years;
 --DROP SEQUENCE fcs_migration.vent_long_term_year_id_seq;

@@ -2,10 +2,13 @@
 -- Full execution time
 -- dev to local: 32mins 39secs - run 1
 -- dev to local: 12mins 01secs - run 2
+-- st to st: 3mins 5secs - run 1
+-- uat to uat: 13min 42secs - full run 1
 
---SELECT *
+--SELECT count(*)
 --FROM "fcs"."applications"@fcs_postgres_db;
 --/
+
 
 --
 -- wipe DB prior to migration run
@@ -19,6 +22,7 @@
 --DELETE FROM "fcs"."application_flags_aud"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_versions_aud"@fcs_postgres_db;
 --DELETE FROM "fcs"."payments_library_payments_aud"@fcs_postgres_db;
+--DELETE FROM "fcs"."notification_library_notifications_aud"@fcs_postgres_db;
 --
 ---- we aren't migrating to these table but the data still needs deleting
 --DELETE FROM "fcs"."application_work_area_priorities"@fcs_postgres_db;
@@ -27,10 +31,11 @@
 --DELETE FROM "fcs"."application_consultation_further_information"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_consultations"@fcs_postgres_db;
 --DELETE FROM "fcs"."payments_library_payments"@fcs_postgres_db;
+--DELETE FROM "fcs"."notification_library_notifications"@fcs_postgres_db;
 --
 ---- delete data from tables we are migrating too
---DELETE FROM "fcs"."fcs_migration.vent_long_term_years"@fcs_postgres_db;
---DELETE FROM "fcs"."fcs_migration.flare_long_term_years"@fcs_postgres_db;
+--DELETE FROM "fcs"."vent_long_term_years"@fcs_postgres_db;
+--DELETE FROM "fcs"."flare_long_term_years"@fcs_postgres_db;
 --DELETE FROM "fcs"."file_upload_library_uploaded_files"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_technical_reviews"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_updates"@fcs_postgres_db;
@@ -66,7 +71,16 @@
 --DELETE FROM "fcs"."application_assets"@fcs_postgres_db;
 --DELETE FROM "fcs"."consent_lengths"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_versions"@fcs_postgres_db;
+--DELETE FROM "fcs"."application_consent_production_long_term_figures"@fcs_postgres_db;
+--DELETE FROM "fcs"."application_consent_data"@fcs_postgres_db;
 --DELETE FROM "fcs"."applications"@fcs_postgres_db;
+
+-- work around DB link timeout issues from sqlnet.ora param SQLNET.INBOUND_CONNECT_TIMEOUT
+BEGIN
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
+END;
+/
 
 --
 -- applications
@@ -74,9 +88,10 @@
 
 -- Run times
 -- dev to local: 38s
+-- dev to dev pg: 12s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.applications) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.applications ORDER BY id) LOOP
   
     INSERT INTO "fcs"."applications"@fcs_postgres_db (
       "id"
@@ -105,9 +120,16 @@ END;
 
 -- Run times
 -- dev to local: 59s
+-- dev to dev pg: 15s (keeps failing midway with error)
+--ORA-02055: distributed update operation failed; rollback required
+--ORA-28511: lost RPC connection to heterogeneous remote agent using SID=ORA-28511: lost RPC connection to heterogeneous remote agent using SID=(DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SID=fcs_postgres)))
+--ORA-02055: distributed update operation failed; rollback required
+--ORA-02063: preceding lines from FCS_POSTGRES_DB
+--ORA-06512: at line 5
+--ORA-06512: at line 5
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.application_versions) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.application_versions WHERE id > 0 ORDER BY id) LOOP
   
     INSERT INTO "fcs"."application_versions"@fcs_postgres_db (
       "id"
@@ -140,6 +162,12 @@ BEGIN
     , rec.current_case_owner
     , rec.migrated
     );
+    
+--    -- work around DB link timeout issues from sqlnet.ora param SQLNET.INBOUND_CONNECT_TIMEOUT=15
+--    IF mod(rec.id, 1000) = 0 THEN
+--      COMMIT;
+--      DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
+--    END IF;
   
   END LOOP;
 
@@ -153,9 +181,10 @@ END;
 
 -- Run times
 -- dev to local: 58s
+-- dev to dev pg: 15s (kept failing midway with error as above for application_versions)
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.consent_lengths) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.consent_lengths WHERE id > 0 ORDER BY id) LOOP
   
     INSERT INTO "fcs"."consent_lengths"@fcs_postgres_db (
       "id"
@@ -191,7 +220,7 @@ END;
 -- dev to local: 162s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.application_assets) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.application_assets WHERE id > 0 ORDER BY id) LOOP
   
     INSERT INTO "fcs"."application_assets"@fcs_postgres_db (
       "id"
@@ -228,7 +257,7 @@ END;
 -- dev to local: 167s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.application_asset_licences) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.application_asset_licences WHERE id > 0 ORDER BY id) LOOP
   
     INSERT INTO "fcs"."application_asset_licences"@fcs_postgres_db (
       "id"
@@ -257,7 +286,7 @@ END;
 -- dev to local: 45s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.application_units ORDER BY id) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.application_units WHERE id > 0 ORDER BY id) LOOP
   
     INSERT INTO "fcs"."application_units"@fcs_postgres_db (
       "id"
@@ -298,7 +327,7 @@ END;
 -- dev to local: 181s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.application_flags) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.application_flags WHERE id > 0 ORDER BY id) LOOP
   
     INSERT INTO "fcs"."application_flags"@fcs_postgres_db (
       "id"
@@ -325,7 +354,7 @@ END;
 -- dev to local: 1s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.application_eia_directions) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.application_eia_directions WHERE id > 0 ORDER BY id) LOOP
   
     INSERT INTO "fcs"."application_eia_directions"@fcs_postgres_db (
       "id"
@@ -360,6 +389,26 @@ END;
 --/
 -- Run time
 -- dev to local: s
+--BEGIN
+--
+--  FOR rec IN (SELECT * FROM fcs_migration.application_supporting_information si WHERE id > 0 ORDER BY id) LOOP
+--  
+--    INSERT INTO "fcs"."application_supporting_information"@fcs_postgres_db (
+--      "id"
+--    , "application_version_id"
+--    , "notes"
+--    , "erap_notes"
+--    ) VALUES (
+--      rec.id
+--    , rec.application_version_id
+--    , rec.notes
+--    , rec.erap_notes
+--    );
+--  
+--  END LOOP;
+--
+--END;
+--/
 --DECLARE
 --  l_loop_count INTEGER;
 --  l_notes VARCHAR2(32767);
@@ -412,6 +461,19 @@ END;
 --
 --END;
 --/
+--SELECT si.*
+--, length(si.notes) notes_length
+--, length(si.erap_notes) erap_notes_length
+--FROM fcs_migration.application_supporting_information si
+--WHERE (length(si.notes) > 4000 OR length(si.erap_notes) > 4000)
+--/
+
+-- work around DB link timeout issues from sqlnet.ora param SQLNET.INBOUND_CONNECT_TIMEOUT
+BEGIN
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
+END;
+/
 
 --
 -- long_term_production_years
@@ -421,7 +483,7 @@ END;
 -- dev to local: 80s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.long_term_production_years) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.long_term_production_years WHERE id > 0 ORDER BY id) LOOP
   
     INSERT INTO "fcs"."long_term_production_years"@fcs_postgres_db (
       "id"
@@ -454,7 +516,7 @@ END;
 -- dev to local: 86s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.annual_production_months) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.annual_production_months WHERE id > 0 ORDER BY id) LOOP
   
     INSERT INTO "fcs"."annual_production_months"@fcs_postgres_db (
       "id"
@@ -489,7 +551,7 @@ END;
 -- dev to local: 1s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.short_term_production_months) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.short_term_production_months WHERE id > 0 ORDER BY id) LOOP
   
     INSERT INTO "fcs"."short_term_production_months"@fcs_postgres_db (
       "id"
@@ -520,6 +582,13 @@ BEGIN
 END;
 /
 
+-- work around DB link timeout issues from sqlnet.ora param SQLNET.INBOUND_CONNECT_TIMEOUT
+BEGIN
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
+END;
+/
+
 --
 -- flare_annual_months
 --
@@ -528,7 +597,7 @@ END;
 -- dev to local: 1s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.flare_annual_months ORDER BY id) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.flare_annual_months WHERE id > 0 ORDER BY id) LOOP
   
     INSERT INTO "fcs"."flare_annual_months"@fcs_postgres_db (
       "id"
@@ -563,10 +632,8 @@ END;
 -- dev to local: 3 mins
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.flare_annual_123_months ORDER BY id) LOOP
-  
-    --dbms_output.put_line('inserting id: '||rec.id);
-  
+  FOR rec IN (SELECT * FROM fcs_migration.flare_annual_123_months WHERE id > 0 ORDER BY id) LOOP
+
     INSERT INTO "fcs"."flare_annual_123_months"@fcs_postgres_db (
       "id"
     , "application_version_id"
@@ -586,7 +653,7 @@ BEGIN
     , rec.category_3
     , rec.comments
     );
-  
+
   END LOOP;
 
 END;
@@ -612,6 +679,9 @@ END;
 --AND f.id IN (9078, 10466)
 --ORDER by f.id
 --/
+--SELECT ASCII('ø'), ASCII('•'), ASCII('–'), ASCII('’'), ASCII('‘'), ASCII('£'), ASCII('!')
+--from dual;
+--/
 
 
 --
@@ -622,7 +692,7 @@ END;
 -- dev to local: 1s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.flare_short_term_months ORDER BY id) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.flare_short_term_months WHERE id > 0 ORDER BY id) LOOP
   
     INSERT INTO "fcs"."flare_short_term_months"@fcs_postgres_db (
       "id"
@@ -661,7 +731,7 @@ END;
 -- dev to local: 1s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.flare_short_term_123_months ORDER BY id) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.flare_short_term_123_months WHERE id > 0 ORDER BY id) LOOP
   
     INSERT INTO "fcs"."flare_short_term_123_months"@fcs_postgres_db (
       "id"
@@ -700,7 +770,7 @@ END;
 -- dev to local: ?s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.flare_long_term_years ORDER BY id) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.flare_long_term_years WHERE id > 0 ORDER BY id) LOOP
   
     INSERT INTO "fcs"."flare_long_term_years"@fcs_postgres_db (
       "id"
@@ -727,7 +797,7 @@ END;
 -- dev to local: 1s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.flare_report_gas_data ORDER BY id) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.flare_report_gas_data WHERE id > 0 ORDER BY id) LOOP
   
     INSERT INTO "fcs"."flare_report_gas_data"@fcs_postgres_db (
       "id"
@@ -772,7 +842,7 @@ END;
 -- dev to local: 10s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.flare_report_123_gas_data ORDER BY id) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.flare_report_123_gas_data WHERE id > 0 ORDER BY id) LOOP
   
     INSERT INTO "fcs"."flare_report_123_gas_data"@fcs_postgres_db (
       "id"
@@ -814,7 +884,7 @@ END;
 -- dev to local: 13s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.flare_report_periods ORDER BY id) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.flare_report_periods WHERE id > 0 ORDER BY id) LOOP
   
     INSERT INTO "fcs"."flare_report_periods"@fcs_postgres_db (
       "id"
@@ -841,7 +911,7 @@ END;
 -- dev to local: 2s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.flare_report_months ORDER BY id) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.flare_report_months WHERE id > 0 ORDER BY id) LOOP
   
     INSERT INTO "fcs"."flare_report_months"@fcs_postgres_db (
       "id"
@@ -878,7 +948,7 @@ END;
 -- dev to local: 2 mins
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.flare_report_123_months ORDER BY id) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.flare_report_123_months WHERE id > 0 ORDER BY id) LOOP
   
     INSERT INTO "fcs"."flare_report_123_months"@fcs_postgres_db (
       "id"
@@ -921,9 +991,14 @@ END;
 --AND f.id IN (7041)
 --ORDER by f.id
 --/
---SELECT ASCII('�'), ASCII('�')
+--SELECT ASCII('   TAR  6th June  6th July  requires a full depressurisation.'), ASCII('“'), ASCII('”'), ASCII('�'), ASCII('�'), ASCII('£')
 --from dual;
 --/
+--SELECT CHR(160)
+--FROM dual
+--/
+
+
 
 --
 -- flares
@@ -933,7 +1008,7 @@ END;
 -- dev to local: 54s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.flares ORDER BY id) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.flares WHERE id > 0 ORDER BY id) LOOP
   
     INSERT INTO "fcs"."flares"@fcs_postgres_db (
       "id"
@@ -958,6 +1033,13 @@ BEGIN
 END;
 /
 
+-- work around DB link timeout issues from sqlnet.ora param SQLNET.INBOUND_CONNECT_TIMEOUT
+BEGIN
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
+END;
+/
+
 --
 -- vent_annual_months
 --
@@ -966,7 +1048,7 @@ END;
 -- dev to local: 1s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.vent_annual_months ORDER BY id) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.vent_annual_months WHERE id > 0 ORDER BY id) LOOP
   
     INSERT INTO "fcs"."vent_annual_months"@fcs_postgres_db (
       "id"
@@ -1001,7 +1083,7 @@ END;
 -- dev to local: 80s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.vent_annual_123_months ORDER BY id) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.vent_annual_123_months WHERE id > 0 ORDER BY id) LOOP
   
     INSERT INTO "fcs"."vent_annual_123_months"@fcs_postgres_db (
       "id"
@@ -1033,7 +1115,7 @@ END;
 -- dev to local: 1s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.vent_short_term_months ORDER BY id) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.vent_short_term_months WHERE id > 0 ORDER BY id) LOOP
   
     INSERT INTO "fcs"."vent_short_term_months"@fcs_postgres_db (
       "id"
@@ -1072,7 +1154,7 @@ END;
 -- dev to local: 1s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.vent_short_term_123_months ORDER BY id) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.vent_short_term_123_months WHERE id > 0 ORDER BY id) LOOP
   
     INSERT INTO "fcs"."vent_short_term_123_months"@fcs_postgres_db (
       "id"
@@ -1107,7 +1189,7 @@ END;
 -- dev to local: ?s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.vent_long_term_years ORDER BY id) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.vent_long_term_years WHERE id > 0 ORDER BY id) LOOP
   
     INSERT INTO "fcs"."vent_long_term_years"@fcs_postgres_db (
       "id"
@@ -1134,7 +1216,7 @@ END;
 -- dev to local: 1s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.vent_report_gas_data ORDER BY id) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.vent_report_gas_data WHERE id > 0 ORDER BY id) LOOP
   
     INSERT INTO "fcs"."vent_report_gas_data"@fcs_postgres_db (
       "id"
@@ -1179,7 +1261,7 @@ END;
 -- dev to local: 3s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.vent_report_123_gas_data ORDER BY id) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.vent_report_123_gas_data WHERE id > 0 ORDER BY id) LOOP
   
     INSERT INTO "fcs"."vent_report_123_gas_data"@fcs_postgres_db (
       "id"
@@ -1208,7 +1290,7 @@ END;
 -- dev to local: 10s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.vent_report_periods ORDER BY id) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.vent_report_periods WHERE id > 0 ORDER BY id) LOOP
   
     INSERT INTO "fcs"."vent_report_periods"@fcs_postgres_db (
       "id"
@@ -1235,7 +1317,7 @@ END;
 -- dev to local: 1s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.vent_report_months ORDER BY id) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.vent_report_months WHERE id > 0 ORDER BY id) LOOP
   
     INSERT INTO "fcs"."vent_report_months"@fcs_postgres_db (
       "id"
@@ -1272,7 +1354,7 @@ END;
 -- dev to local: 60s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.vent_report_123_months ORDER BY id) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.vent_report_123_months WHERE id > 0 ORDER BY id) LOOP
   
     INSERT INTO "fcs"."vent_report_123_months"@fcs_postgres_db (
       "id"
@@ -1305,7 +1387,7 @@ END;
 -- dev to local: 13s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.vents ORDER BY id) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.vents WHERE id > 0 ORDER BY id) LOOP
   
     INSERT INTO "fcs"."vents"@fcs_postgres_db (
       "id"
@@ -1330,8 +1412,15 @@ BEGIN
 END;
 /
 
+-- work around DB link timeout issues from sqlnet.ora param SQLNET.INBOUND_CONNECT_TIMEOUT
+BEGIN
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
+END;
+/
+
 --
--- case_notes
+-- application_case_notes
 --
 
 -- TODO - getting error
@@ -1354,7 +1443,7 @@ END;
 -- dev to local: s
 --BEGIN
 --
---  FOR rec IN (SELECT * FROM fcs_migration.application_case_notes) LOOP
+--  FOR rec IN (SELECT * FROM fcs_migration.application_case_notes WHERE id > 0 ORDER BY id) LOOP
 --  
 --    INSERT INTO "fcs"."application_case_notes"@fcs_postgres_db (
 --      "id"
@@ -1374,6 +1463,14 @@ END;
 --
 --END;
 --/
+--SELECT
+--  cn.*
+--, length(cn.case_note_text)
+--FROM fcs_migration.application_case_notes cn
+--WHERE length(cn.case_note_text) > 4000
+--ORDER BY id
+--/
+
 
 --
 -- application_updates
@@ -1406,7 +1503,7 @@ END;
 -- dev to local: s
 --BEGIN
 --
---  FOR rec IN (SELECT * FROM fcs_migration.application_updates) LOOP
+--  FOR rec IN (SELECT * FROM fcs_migration.application_updates WHERE id > 0 ORDER BY id) LOOP
 --  
 --    INSERT INTO "fcs"."application_updates"@fcs_postgres_db (
 --      "id"
@@ -1439,6 +1536,12 @@ END;
 --  END LOOP;
 --
 --END;
+--/
+--SELECT au.*
+--, length(au.request_text)
+--, length(au.response_text)
+--FROM fcs_migration.application_updates au
+--WHERE (length(au.request_text) > 4000 OR length(au.response_text) > 4000)
 --/
 
 --
@@ -1473,7 +1576,7 @@ END;
 -- dev to local: s
 --BEGIN
 --
---  FOR rec IN (SELECT * FROM fcs_migration.application_technical_reviews) LOOP
+--  FOR rec IN (SELECT * FROM fcs_migration.application_technical_reviews WHERE id > 0 ORDER BY id) LOOP
 --  
 --    INSERT INTO "fcs"."application_technical_reviews"@fcs_postgres_db (
 --      "id"
@@ -1509,6 +1612,12 @@ END;
 --
 --END;
 --/
+--SELECT tr.*
+--, length(tr.response_text)
+--FROM fcs_migration.application_technical_reviews tr
+--WHERE length(tr.response_text) > 4000
+--/
+
 
 --
 -- file_upload_library_uploaded_files
@@ -1570,4 +1679,25 @@ END;
 --FROM fcs_migration.file_upload_library_uploaded_files f
 --WHERE f.key LIKE '%local'
 --ORDER BY usage_id, uploaded_at
+--/
+
+-- work around DB link timeout issues from sqlnet.ora param SQLNET.INBOUND_CONNECT_TIMEOUT
+BEGIN
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
+END;
+/
+
+-- manual export/import rowcount checks
+--SELECT count(*)
+--FROM fcs_migration.application_supporting_information
+--/
+--SELECT count(*)
+--FROM fcs_migration.application_case_notes
+--/
+--SELECT count(*)
+--FROM fcs_migration.application_updates
+--/
+--SELECT count(*)
+--FROM fcs_migration.application_technical_reviews
 --/

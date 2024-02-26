@@ -8,7 +8,7 @@ SELECT
 , aud.file_size
 , fv.create_by_wua_id uploaded_by_wua_id
 , to_date(aud.upload_date_time, 'YYYY-MM-DD"T"HH24:MI:SS') upload_date_time
-, coalesce(aud.description1, aud.description2, aud.filename) file_description
+, clean_text(coalesce(aud.description1, aud.description2, aud.filename)) file_description
 , fv.secure_lob_ref
 , fv.secure_lob_ref.get_blob() file_blob_content
 , fv.secure_lob_ref.get_size() calculated_file_size

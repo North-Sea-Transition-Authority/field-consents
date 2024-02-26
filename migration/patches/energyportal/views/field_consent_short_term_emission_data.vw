@@ -17,9 +17,7 @@ WITH base AS (
   , st.to_number_safe(ed.category_b) category_b
   , st.to_number_safe(ed.category_c) category_c
   , coalesce(ed.total_flare_gas, ed.total_vent_gas) total_gas
-  -- replace multibyte characters as they cause issues with the db link push:
-  -- � and �
-  , replace(replace(ed.comments, CHR(191), NULL), CHR(183), '-') comments
+  , clean_text(ed.comments) comments
   FROM envmgr.field_consent_details fcd
   JOIN envmgr.xview_field_consent_details xfcd ON xfcd.fcd_id = fcd.id
   CROSS JOIN XMLTABLE(
