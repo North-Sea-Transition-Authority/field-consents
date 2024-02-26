@@ -49,7 +49,7 @@ import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummarySe
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
-import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
+import uk.co.nstauthority.fieldconsents.file.FileControllerHelperService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
@@ -73,7 +73,7 @@ class TechnicalReviewResponseControllerTest extends AbstractApplicationControlle
   private ApplicationService applicationService;
 
   @MockBean
-  private FieldConsentsFileService fieldConsentsFileService;
+  private FileControllerHelperService fileControllerHelperService;
 
   @MockBean
   private TechnicalReviewResponseFormValidator validator;
@@ -243,7 +243,7 @@ class TechnicalReviewResponseControllerTest extends AbstractApplicationControlle
   private void mockGetFormInteractions() {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(technicalReviewService.getOpenTechnicalReview(applicationVersion)).thenReturn(technicalReview);
-    when(fieldConsentsFileService.fileUploadComponentAttributes(Collections.emptyList())).thenReturn(FILE_UPLOAD_COMPONENT_ATTRIBUTES);
+    when(fileControllerHelperService.fileUploadComponentAttributes(eq(Collections.emptyList()), eq(TechnicalReviewResponseFileController.class), any(), any())).thenReturn(FILE_UPLOAD_COMPONENT_ATTRIBUTES);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(APPLICATION_REFERENCE);
     doAnswer(invocation -> {
       addTechnicalReviewAttributes(invocation.getArgument(1, ModelAndView.class));

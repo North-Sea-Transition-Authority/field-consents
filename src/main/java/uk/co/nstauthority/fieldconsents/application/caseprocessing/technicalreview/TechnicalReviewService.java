@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.response.document.TechnicalReviewFileUsage;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.response.TechnicalReviewFileUsage;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;

@@ -76,7 +76,7 @@ class ConsentPreparationDocumentServiceTest {
         new SummaryFileView(
             supportingConsentUploadedFile.getName(),
             supportingConsentUploadedFile.getDescription(),
-            ReverseRouter.route(on(ConsentPreparationDocumentsController.class).download(APPLICATION_ID, supportingConsentUploadedFile.getId()))
+            ReverseRouter.route(on(ConsentPreparationFileController.class).download(APPLICATION_ID, supportingConsentUploadedFile.getId(), null))
         )
     );
 

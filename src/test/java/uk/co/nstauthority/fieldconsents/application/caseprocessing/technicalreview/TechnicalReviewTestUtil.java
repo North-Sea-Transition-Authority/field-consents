@@ -41,6 +41,7 @@ public class TechnicalReviewTestUtil {
 
   public static TechnicalReview getOpenTechnicalReview(ApplicationVersion applicationVersion) {
     var technicalReview = new TechnicalReview();
+    technicalReview.setId(1);
     technicalReview.setRequestApplicationVersion(applicationVersion);
     technicalReview.setTechnicalReviewStatus(OPEN);
     technicalReview.setTechnicalReviewerWuaId(TECHNICAL_REVIEWER_USER.wuaId());

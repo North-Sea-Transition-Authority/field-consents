@@ -12,10 +12,10 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.techni
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService.OPEN_TECHNICAL_REVIEW_EXISTS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService.TECHNICAL_REVIEW_NOT_FOUND;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewStatus.OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.CASE_OFFICER_USER;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.CURRENT_INSTANT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.DEADLINE_AHEAD_HOURS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.TECHNICAL_REVIEW_REQUEST_TEXT;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.CASE_OFFICER_USER;
 
 import jakarta.persistence.EntityNotFoundException;
 import java.time.Clock;
@@ -37,7 +37,7 @@ import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.response.document.TechnicalReviewFileUsage;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.response.TechnicalReviewFileUsage;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
 

@@ -1,7 +1,6 @@
 package uk.co.nstauthority.fieldconsents.file;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
-import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import jakarta.transaction.Transactional;
 import java.util.Collection;
@@ -16,10 +15,8 @@ import uk.co.fivium.fileuploadlibrary.FileUploadLibraryUtils;
 import uk.co.fivium.fileuploadlibrary.core.FileService;
 import uk.co.fivium.fileuploadlibrary.core.FileUsage;
 import uk.co.fivium.fileuploadlibrary.core.UploadedFile;
-import uk.co.fivium.fileuploadlibrary.fds.FileUploadComponentAttributes;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @Service
 public class FieldConsentsFileService {
@@ -95,16 +92,6 @@ public class FieldConsentsFileService {
         .withUsageId(fileUsage.usageId())
         .withUsageType(fileUsage.usageType())
         .withDocumentType(fileUsage.documentType())
-        .build();
-  }
-
-  public FileUploadComponentAttributes fileUploadComponentAttributes(List<UploadedFileForm> uploadedFileForms) {
-    return fileService.getFileUploadAttributes()
-        .withPath("form.documents")
-        .withUploadUrl(ReverseRouter.route(on(UnlinkedFileController.class).upload(null, null)))
-        .withDownloadUrl(ReverseRouter.route(on(UnlinkedFileController.class).download(null, null)))
-        .withDeleteUrl(ReverseRouter.route(on(UnlinkedFileController.class).delete(null, null)))
-        .withExistingFiles(uploadedFileForms)
         .build();
   }
 

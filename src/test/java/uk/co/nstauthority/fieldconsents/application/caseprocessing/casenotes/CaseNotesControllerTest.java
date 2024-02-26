@@ -1,6 +1,8 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.casenotes;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -17,8 +19,6 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.EXISTING_DOCUMENTS;
 import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.FILE_ID;
-import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.FILE_NAME_1;
-import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.FILE_UPLOAD_COMPONENT_ATTRIBUTES;
 import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.getFileUploadComponentAttributesBuilder;
 import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.notificationBanner;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
@@ -27,12 +27,18 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.fivium.fileuploadlibrary.fds.FileUploadComponentAttributes;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
@@ -44,8 +50,8 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCa
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
-import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
-import uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil;
+import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileUsage;
+import uk.co.nstauthority.fieldconsents.file.FileControllerHelperService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @ContextConfiguration(classes = CaseNotesController.class)
@@ -63,7 +69,10 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
   private CaseNoteFormValidator caseNoteFormValidator;
 
   @MockBean
-  private FieldConsentsFileService fieldConsentsFileService;
+  private FileControllerHelperService fileControllerHelperService;
+
+  @Captor
+  private ArgumentCaptor<Supplier<FieldConsentsFileUsage>> fileUsageSupplierCaptor;
 
   private ApplicationVersion applicationVersion;
 
@@ -72,7 +81,11 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
-    fileUploadComponentAttributes = getFileUploadComponentAttributesBuilder().build();
+
+    fileUploadComponentAttributes = getFileUploadComponentAttributesBuilder()
+        .withDownloadUrl(ReverseRouter.route(on(CaseNotesController.class).downloadFile(APPLICATION_ID, null, null)))
+        .withDeleteUrl(ReverseRouter.route(on(CaseNotesController.class).deleteFile(APPLICATION_ID, null, null)))
+        .build();
 
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
@@ -105,8 +118,8 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(DUMMY_APP_REF);
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(REGULATOR_ADD_CASE_NOTE));
-    when(fieldConsentsFileService.fileUploadComponentAttributes(EXISTING_DOCUMENTS))
-        .thenReturn(FILE_UPLOAD_COMPONENT_ATTRIBUTES);
+    when(fileControllerHelperService.fileUploadComponentAttributes(eq(EXISTING_DOCUMENTS), eq(CaseNotesController.class), any(), any()))
+        .thenReturn(fileUploadComponentAttributes);
 
     mockMvc.perform(get(ReverseRouter.route(on(CaseNotesController.class)
             .getNewCaseNote(APPLICATION_ID)))
@@ -127,7 +140,7 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(DUMMY_APP_REF);
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(REGULATOR_ADD_CASE_NOTE));
-    when(fieldConsentsFileService.fileUploadComponentAttributes(Collections.emptyList()))
+    when(fileControllerHelperService.fileUploadComponentAttributes(eq(Collections.emptyList()), eq(CaseNotesController.class), any(), any()))
         .thenReturn(fileUploadComponentAttributes);
 
     mockMvc.perform(get(ReverseRouter.route(on(CaseNotesController.class)
@@ -161,7 +174,7 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(applicationVersion);
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(REGULATOR_ADD_CASE_NOTE));
-    when(fieldConsentsFileService.fileUploadComponentAttributes(Collections.emptyList()))
+    when(fileControllerHelperService.fileUploadComponentAttributes(eq(Collections.emptyList()), eq(CaseNotesController.class), any(), any()))
         .thenReturn(fileUploadComponentAttributes);
 
     doCallRealMethod().when(caseNoteFormValidator).validate(any(), any());
@@ -188,15 +201,10 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(applicationVersion);
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(REGULATOR_ADD_CASE_NOTE));
-    when(fieldConsentsFileService.fileUploadComponentAttributes(Collections.emptyList()))
+    when(fileControllerHelperService.fileUploadComponentAttributes(eq(Collections.emptyList()), eq(CaseNotesController.class), any(), any()))
         .thenReturn(fileUploadComponentAttributes);
 
     doCallRealMethod().when(caseNoteFormValidator).validate(any(), any());
-
-    var persistedFileAsForm = FileUploadTestUtil.getUploadedFileFormWithDescription(FILE_NAME_1, "old description");
-
-    when(fieldConsentsFileService.getUploadedFileForms(Collections.singleton(FILE_ID)))
-        .thenReturn(Collections.singletonList(persistedFileAsForm));
 
     mockMvc.perform(
             post(ReverseRouter.route(on(CaseNotesController.class)
@@ -222,7 +230,7 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(applicationVersion);
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(REGULATOR_ADD_CASE_NOTE));
-    when(fieldConsentsFileService.fileUploadComponentAttributes(Collections.emptyList()))
+    when(fileControllerHelperService.fileUploadComponentAttributes(eq(Collections.emptyList()), eq(CaseNoteFileController.class), any(), any()))
         .thenReturn(fileUploadComponentAttributes);
 
     doCallRealMethod().when(caseNoteFormValidator).validate(any(), any());
@@ -243,7 +251,42 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
             .caseProcessing(APPLICATION_ID, null, null))))
         .andExpect(notificationBanner(expectedNotificationBanner));
   }
-  
+
+  @Test
+  void downloadFile() throws Exception {
+    var fileId = UUID.randomUUID();
+
+    when(fileControllerHelperService.download(eq(fileId), fileUsageSupplierCaptor.capture(), eq(user)))
+        .thenReturn(ResponseEntity.ok().build());
+
+    mockMvc.perform(get(ReverseRouter.route(on(CaseNotesController.class)
+        .downloadFile(APPLICATION_ID, fileId, null)))
+        .with(user(user)))
+        .andExpect(status().isOk());
+
+    assertThatThrownBy(() -> fileUsageSupplierCaptor.getValue().get())
+        .isInstanceOf(UnsupportedOperationException.class)
+        .hasMessage("Usage lookup for unlinked file");
+  }
+
+  @Test
+  void deleteFile() throws Exception {
+    var fileId = UUID.randomUUID();
+
+    when(fileControllerHelperService.delete(eq(fileId), fileUsageSupplierCaptor.capture(), eq(user)))
+        .thenReturn(ResponseEntity.ok().build());
+
+    mockMvc.perform(post(ReverseRouter.route(on(CaseNotesController.class)
+            .deleteFile(APPLICATION_ID, fileId, null)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().isOk());
+
+    assertThatThrownBy(() -> fileUsageSupplierCaptor.getValue().get())
+        .isInstanceOf(UnsupportedOperationException.class)
+        .hasMessage("Usage lookup for unlinked file");
+  }
+
   private static Stream<Arguments> getSubmittedApplicationVersions() {
     return Stream.of(
         Arguments.of(ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION)),

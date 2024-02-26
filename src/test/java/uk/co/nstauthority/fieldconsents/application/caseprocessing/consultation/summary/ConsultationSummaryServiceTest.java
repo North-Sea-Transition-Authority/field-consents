@@ -43,7 +43,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformation;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationView;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.response.ConsultationResponseDocumentController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.response.ConsultationResponseFileController;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
@@ -545,7 +545,7 @@ class ConsultationSummaryServiceTest {
 
     var summaryFileViews = Collections.singletonList(SummaryFileView.from(
         uploadedFile,
-        ReverseRouter.route(on(ConsultationResponseDocumentController.class).download(APPLICATION_ID, CONSULTATION_ID, null))
+        ReverseRouter.route(on(ConsultationResponseFileController.class).download(APPLICATION_ID, CONSULTATION_ID, null, null))
     ));
 
     assertThat(consultationSummaryService.getFilesSummaryCard(consultation))

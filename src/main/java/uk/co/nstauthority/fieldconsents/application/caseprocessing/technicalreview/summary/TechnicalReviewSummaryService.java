@@ -19,8 +19,8 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalrevi
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewResponseType;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewStatus;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.response.document.TechnicalReviewFileUsage;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.response.document.TechnicalReviewResponseDocumentController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.response.TechnicalReviewFileUsage;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.response.TechnicalReviewResponseFileController;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
@@ -151,8 +151,8 @@ public class TechnicalReviewSummaryService {
   private SummaryFileView getSummaryFileView(UploadedFile uploadedFile, Integer applicationId, Integer technicalReviewId) {
     return SummaryFileView.from(
         uploadedFile,
-        ReverseRouter.route(on(TechnicalReviewResponseDocumentController.class)
-            .download(applicationId, technicalReviewId, uploadedFile.getId()))
+        ReverseRouter.route(on(TechnicalReviewResponseFileController.class)
+            .download(applicationId, technicalReviewId, uploadedFile.getId(), null))
     );
   }
 }

@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.response.document;
+package uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.response;
 
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReview;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileUsage;

@@ -49,7 +49,7 @@ import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummarySe
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
-import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
+import uk.co.nstauthority.fieldconsents.file.FileControllerHelperService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
@@ -74,7 +74,7 @@ class ConsultationResponseControllerTest extends AbstractApplicationControllerTe
   private ConsultationService consultationService;
 
   @MockBean
-  private FieldConsentsFileService fieldConsentsFileService;
+  private FileControllerHelperService fileControllerHelperService;
 
   private ApplicationVersion applicationVersion;
 
@@ -244,7 +244,7 @@ class ConsultationResponseControllerTest extends AbstractApplicationControllerTe
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(APPLICATION_REFERENCE);
     when(consultationService.getLatestOpenConsultation(application)).thenReturn(consultation);
     when(consultationService.requiresEiaRegsResponse(applicationVersion)).thenReturn(requiresEiaRegsResponse);
-    when(fieldConsentsFileService.fileUploadComponentAttributes(EXISTING_DOCUMENTS)).thenReturn(FILE_UPLOAD_COMPONENT_ATTRIBUTES);
+    when(fileControllerHelperService.fileUploadComponentAttributes(eq(EXISTING_DOCUMENTS), eq(ConsultationResponseFileController.class), any(), any())).thenReturn(FILE_UPLOAD_COMPONENT_ATTRIBUTES);
 
     doAnswer(invocation -> {
       addApplicationSummaryAttributes(invocation.getArgument(1, ModelAndView.class));

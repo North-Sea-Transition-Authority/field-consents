@@ -10,7 +10,8 @@ import java.util.UUID;
 import org.springframework.util.unit.DataSize;
 import uk.co.fivium.fileuploadlibrary.fds.FileUploadComponentAttributes;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
-import uk.co.nstauthority.fieldconsents.file.UnlinkedFileController;
+import uk.co.nstauthority.fieldconsents.file.TestFileController;
+import uk.co.nstauthority.fieldconsents.file.UnlinkedFileUploadController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 public class FileUploadTestUtil {
@@ -27,9 +28,9 @@ public class FileUploadTestUtil {
       .withPath("form.documents")
       .withMaximumSize(DataSize.ofMegabytes(50))
       .withAllowedExtensions(Set.of("pdf"))
-      .withUploadUrl(ReverseRouter.route(on(UnlinkedFileController.class).upload(null, null)))
-      .withDownloadUrl(ReverseRouter.route(on(UnlinkedFileController.class).download(null, null)))
-      .withDeleteUrl(ReverseRouter.route(on(UnlinkedFileController.class).delete(null, null)))
+      .withUploadUrl(ReverseRouter.route(on(UnlinkedFileUploadController.class).upload(null, null)))
+      .withDownloadUrl(ReverseRouter.route(on(TestFileController.class).download(null)))
+      .withDeleteUrl(ReverseRouter.route(on(TestFileController.class).delete(null)))
       .withExistingFiles(EXISTING_DOCUMENTS)
       .build();
 
@@ -64,9 +65,9 @@ public class FileUploadTestUtil {
     return FileUploadComponentAttributes.newBuilder()
         .withPath("form.documents")
         .withMaximumSize(DataSize.ofMegabytes(50))
-        .withUploadUrl("/upload")
-        .withDownloadUrl("/download")
-        .withDeleteUrl("/delete")
+        .withUploadUrl(ReverseRouter.route(on(TestFileController.class).upload(null)))
+        .withDownloadUrl(ReverseRouter.route(on(TestFileController.class).download(null)))
+        .withDeleteUrl(ReverseRouter.route(on(TestFileController.class).delete(null)))
         .withAllowedExtensions(Set.of("csv", "pdf"))
         .withExistingFiles(Collections.emptyList());
   }

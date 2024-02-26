@@ -3,7 +3,7 @@ package uk.co.nstauthority.fieldconsents;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-import java.util.List;
+import java.util.Arrays;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,27 +68,6 @@ public abstract class AbstractApplicationControllerTest extends AbstractControll
   }
 
   void setupWhenUserCanCallAllActionEndPoints() {
-    when(caseProcessingActionService.getUserActionItems(any(), any()))
-        .thenReturn(List.of(
-            CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP,
-            CaseProcessingActionItem.CASE_OFFICER_RELEASE_OWNERSHIP,
-            CaseProcessingActionItem.CASE_OFFICER_ASSIGN_OWNERSHIP,
-            CaseProcessingActionItem.CASE_OFFICER_REASSIGN_OWNERSHIP,
-            CaseProcessingActionItem.CHANGE_ACE_STATUS,
-            CaseProcessingActionItem.TECHNICAL_REVIEWS,
-            CaseProcessingActionItem.TECHNICAL_REVIEW_REQUEST,
-            CaseProcessingActionItem.TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP,
-            CaseProcessingActionItem.OPERATOR_UPDATE_APPLICATION,
-            CaseProcessingActionItem.APPLICATION_UPDATES,
-            CaseProcessingActionItem.APPLICATION_UPDATE_REQUEST,
-            CaseProcessingActionItem.CONSULTATIONS,
-            CaseProcessingActionItem.CONSULTATION_REQUEST,
-            CaseProcessingActionItem.CONSULTATION_RESPONSE,
-            CaseProcessingActionItem.CONSULTATION_FURTHER_INFORMATION_REQUEST,
-            CaseProcessingActionItem.CONSULTATION_FURTHER_INFORMATION_RESPOND,
-            CaseProcessingActionItem.CAM_ASSIGN_OWNERSHIP,
-            CaseProcessingActionItem.RETURN_TO_CASE_OFFICER,
-            CaseProcessingActionItem.CONSENT_PREPARATION
-        ));
+    when(caseProcessingActionService.getUserActionItems(any(), any())).thenReturn(Arrays.asList(CaseProcessingActionItem.values()));
   }
 }

@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import uk.co.fivium.fileuploadlibrary.FileUploadLibraryUtils;
 import uk.co.fivium.formlibrary.input.StringInput;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
@@ -28,7 +27,7 @@ import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummarySe
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
-import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
+import uk.co.nstauthority.fieldconsents.file.FileControllerHelperService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
@@ -44,7 +43,7 @@ public class ConsultationResponseController {
   private final ApplicationSummaryService applicationSummaryService;
   private final ConsultationResponseFormValidator validator;
   private final ConsultationService consultationService;
-  private final FieldConsentsFileService fieldConsentsFileService;
+  private final FileControllerHelperService fileControllerHelperService;
 
   ConsultationResponseController(
       ApplicationService applicationService,
@@ -52,14 +51,14 @@ public class ConsultationResponseController {
       ApplicationSummaryService applicationSummaryService,
       ConsultationResponseFormValidator validator,
       ConsultationService consultationService,
-      FieldConsentsFileService fieldConsentsFileService
+      FileControllerHelperService fileControllerHelperService
   ) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.applicationSummaryService = applicationSummaryService;
     this.validator = validator;
     this.consultationService = consultationService;
-    this.fieldConsentsFileService = fieldConsentsFileService;
+    this.fileControllerHelperService = fileControllerHelperService;
   }
 
   @GetMapping
@@ -84,12 +83,6 @@ public class ConsultationResponseController {
     validator.validate(form, bindingResult, applicationVersion);
 
     if (bindingResult.hasErrors()) {
-      // TODO: https://jira.fivium.co.uk/browse/FDS-460
-      var descriptionsByFileId = FileUploadLibraryUtils.getFileDescriptionsByFileId(form.documents());
-      form.documents().clear();
-      form.documents().addAll(fieldConsentsFileService.getUploadedFileForms(descriptionsByFileId.keySet()));
-      form.documents().forEach(fileForm -> fileForm.setFileDescription(descriptionsByFileId.get(fileForm.getFileId())));
-
       return getModelAndView(applicationVersion, consultation, form);
     }
 
@@ -121,7 +114,15 @@ public class ConsultationResponseController {
     var application = applicationVersion.getApplication();
     var applicationId = application.getId();
     var applicationReference = applicationService.generateApplicationReference(applicationVersion);
-    var fileUploadAttributes = fieldConsentsFileService.fileUploadComponentAttributes(form.documents());
+
+    var consultationId = consultation.getId();
+
+    var fileUploadAttributes = fileControllerHelperService.fileUploadComponentAttributes(
+        form.documents(),
+        ConsultationResponseFileController.class,
+        controller -> controller.download(applicationId, consultationId, null, null),
+        controller -> controller.delete(applicationId, consultationId, null, null)
+    );
 
     var modelAndView = new ModelAndView("fcs/application/consultation/responseForm")
         .addObject("pageTitle", PAGE_TITLE)

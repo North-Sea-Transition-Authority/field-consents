@@ -221,7 +221,7 @@ class SupportingInformationServiceTest {
             Collections.singletonList(new SummaryFileView(
                 uploadedFile.getName(),
                 uploadedFile.getDescription(),
-                ReverseRouter.route(on(SupportingInformationDocumentController.class).download(applicationId, uploadedFile.getId()))
+                ReverseRouter.route(on(SupportingInformationFileController.class).download(applicationId, uploadedFile.getId(), null))
             ))
         ));
   }

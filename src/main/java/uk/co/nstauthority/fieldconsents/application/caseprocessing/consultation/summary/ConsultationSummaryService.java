@@ -21,7 +21,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationView;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.response.ConsultationResponseDocumentController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.response.ConsultationResponseFileController;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
@@ -171,7 +171,7 @@ public class ConsultationSummaryService {
         .stream()
         .map(uploadedFile -> SummaryFileView.from(
             uploadedFile,
-            ReverseRouter.route(on(ConsultationResponseDocumentController.class).download(applicationId, consultationId, null))
+            ReverseRouter.route(on(ConsultationResponseFileController.class).download(applicationId, consultationId, null, null))
         ))
         .toList();
 

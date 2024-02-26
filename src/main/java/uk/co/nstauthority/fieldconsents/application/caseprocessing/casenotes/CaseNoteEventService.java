@@ -57,7 +57,7 @@ public class CaseNoteEventService implements CaseEventService<Application> {
   private SummaryFileView getSummaryFileView(UploadedFile uploadedFile, Integer applicationId, Integer caseNoteId) {
     return SummaryFileView.from(
         uploadedFile,
-        ReverseRouter.route(on(CaseNotesDocumentController.class).download(applicationId, caseNoteId, uploadedFile.getId()))
+        ReverseRouter.route(on(CaseNoteFileController.class).download(applicationId, caseNoteId, uploadedFile.getId(), null))
     );
   }
 

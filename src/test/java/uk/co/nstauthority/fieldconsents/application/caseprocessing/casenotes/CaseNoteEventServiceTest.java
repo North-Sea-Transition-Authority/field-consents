@@ -70,10 +70,12 @@ class CaseNoteEventServiceTest {
     var summaryFileView = new SummaryFileView(
         uploadedFile.getName(),
         uploadedFile.getDescription(),
-        ReverseRouter.route(on(CaseNotesDocumentController.class).download(
+        ReverseRouter.route(on(CaseNoteFileController.class).download(
             applicationVersion.getApplication().getId(),
             CASE_NOTE_ID,
-            uploadedFile.getId()))
+            uploadedFile.getId(),
+            null
+        ))
     );
 
     var caseEvents = caseNoteEventService.getCaseEvents(applicationVersion.getApplication());

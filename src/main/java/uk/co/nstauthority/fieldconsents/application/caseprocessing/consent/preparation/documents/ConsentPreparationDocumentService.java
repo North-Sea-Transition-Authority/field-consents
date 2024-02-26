@@ -43,8 +43,8 @@ public class ConsentPreparationDocumentService {
     fieldConsentsFileService.getUploadedFiles(getFileUsage(application)).stream()
         .map(uploadedFile -> SummaryFileView.from(
             uploadedFile,
-            ReverseRouter.route(on(ConsentPreparationDocumentsController.class)
-                .download(application.getId(), uploadedFile.getId())))
+            ReverseRouter.route(on(ConsentPreparationFileController.class)
+                .download(application.getId(), uploadedFile.getId(), null)))
         )
         .forEach(filesSummary::add);
 

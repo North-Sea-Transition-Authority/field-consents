@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import uk.co.fivium.fileuploadlibrary.FileUploadLibraryUtils;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
@@ -25,7 +24,7 @@ import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummarySe
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
-import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
+import uk.co.nstauthority.fieldconsents.file.FileControllerHelperService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
@@ -37,22 +36,24 @@ public class TechnicalReviewResponseController {
   private final TechnicalReviewService technicalReviewService;
   private final ApplicationService applicationService;
   private final ApplicationVersionService applicationVersionService;
-  private final FieldConsentsFileService fieldConsentsFileService;
   private final TechnicalReviewResponseFormValidator validator;
   private final ApplicationSummaryService applicationSummaryService;
+  private final FileControllerHelperService fileControllerHelperService;
 
-  TechnicalReviewResponseController(TechnicalReviewService technicalReviewService,
-                                    ApplicationService applicationService,
-                                    ApplicationVersionService applicationVersionService,
-                                    FieldConsentsFileService fieldConsentsFileService,
-                                    TechnicalReviewResponseFormValidator validator,
-                                    ApplicationSummaryService applicationSummaryService) {
+  TechnicalReviewResponseController(
+      TechnicalReviewService technicalReviewService,
+      ApplicationService applicationService,
+      ApplicationVersionService applicationVersionService,
+      TechnicalReviewResponseFormValidator validator,
+      ApplicationSummaryService applicationSummaryService,
+      FileControllerHelperService fileControllerHelperService
+  ) {
     this.technicalReviewService = technicalReviewService;
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
-    this.fieldConsentsFileService = fieldConsentsFileService;
     this.validator = validator;
     this.applicationSummaryService = applicationSummaryService;
+    this.fileControllerHelperService = fileControllerHelperService;
   }
 
   @GetMapping
@@ -76,11 +77,6 @@ public class TechnicalReviewResponseController {
     var technicalReview = technicalReviewService.getOpenTechnicalReview(applicationVersion);
 
     if (bindingResult.hasErrors()) {
-      // TODO: https://jira.fivium.co.uk/browse/FDS-460
-      var descriptionsByFileId = FileUploadLibraryUtils.getFileDescriptionsByFileId(form.documents());
-      form.documents().clear();
-      form.documents().addAll(fieldConsentsFileService.getUploadedFileForms(descriptionsByFileId.keySet()));
-      form.documents().forEach(uff -> uff.setFileDescription(descriptionsByFileId.get(uff.getFileId())));
       return getModelAndView(applicationVersion, technicalReview, form);
     }
 
@@ -108,7 +104,14 @@ public class TechnicalReviewResponseController {
                                        TechnicalReviewResponseForm form) {
     var applicationReference = applicationService.generateApplicationReference(applicationVersion);
     var applicationId = applicationVersion.getApplication().getId();
-    var fileUploadAttributes = fieldConsentsFileService.fileUploadComponentAttributes(form.documents());
+    var technicalReviewId = technicalReview.getId();
+
+    var fileUploadAttributes = fileControllerHelperService.fileUploadComponentAttributes(
+        form.documents(),
+        TechnicalReviewResponseFileController.class,
+        controller -> controller.download(applicationId, technicalReviewId, null, null),
+        controller -> controller.delete(applicationId, technicalReviewId, null, null)
+    );
     var backLinkUrl = ReverseRouter.route(on(ApplicationCaseProcessingController.class)
         .caseProcessing(applicationId, null, null));
 
