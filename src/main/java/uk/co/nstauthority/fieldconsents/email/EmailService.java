@@ -26,6 +26,9 @@ public class EmailService {
   static final String SALUTATION = "Dear";
   static final String VALEDICTION = "Kind regards";
 
+  public static final String RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME = "RECIPIENT_IDENTIFIER";
+  public static final String REQUEST_DEADLINE_MERGE_FIELD_NAME = "REQUEST_DEADLINE";
+
   private final NotificationLibraryClient notificationLibraryClient;
   private final ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties;
   private final CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties;

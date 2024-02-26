@@ -28,6 +28,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.email.EmailService;
+import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipient;
 import uk.co.nstauthority.fieldconsents.email.GovukNotifyTemplate;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.teams.Team;
@@ -111,7 +112,7 @@ class CaseAssignmentEmailServiceTest {
     when(emailService.getTemplate(GovukNotifyTemplate.CASE_ASSIGNED_TO_CASE_OFFICER, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
-    caseAssignmentEmailService.sendCaseAssignmentEmail(applicationVersion, CASE_OFFICER, CASE_MANAGER_1);
+    caseAssignmentEmailService.sendCaseAssignmentEmail(applicationVersion, FieldConsentsEmailRecipient.from(CASE_OFFICER), CASE_MANAGER_1);
 
     var templateCaptor = ArgumentCaptor.forClass(MergedTemplate.class);
     var emailRecipientCaptor = ArgumentCaptor.forClass(EmailRecipient.class);
@@ -131,7 +132,7 @@ class CaseAssignmentEmailServiceTest {
         );
 
     assertThat(emailRecipientCaptor.getValue().getEmailAddress())
-        .isEqualTo(CASE_OFFICER.getEmailAddress());
+        .isEqualTo(FieldConsentsEmailRecipient.from(CASE_OFFICER).getEmailAddress());
 
     assertThat(domainReferenceCaptor.getValue().getDomainId())
         .isEqualTo(applicationVersion.getId().toString());
@@ -181,7 +182,7 @@ class CaseAssignmentEmailServiceTest {
         );
 
     assertThat(emailRecipientCaptor.getValue().getEmailAddress())
-        .isEqualTo(CASE_MANAGER_1.getEmailAddress());
+        .isEqualTo(FieldConsentsEmailRecipient.from(CASE_MANAGER_1).getEmailAddress());
 
     assertThat(domainReferenceCaptor.getValue().getDomainId())
         .isEqualTo(applicationVersion.getId().toString());
@@ -234,9 +235,9 @@ class CaseAssignmentEmailServiceTest {
     assertThat(testEmailRecipients).hasSize(2);
 
     assertThat(testEmailRecipients.get(0).getEmailAddress())
-        .isEqualTo(CASE_MANAGER_1.getEmailAddress());
+        .isEqualTo(FieldConsentsEmailRecipient.from(CASE_MANAGER_1).getEmailAddress());
     assertThat(testEmailRecipients.get(1).getEmailAddress())
-        .isEqualTo(CASE_MANAGER_2.getEmailAddress());
+        .isEqualTo(FieldConsentsEmailRecipient.from(CASE_MANAGER_2).getEmailAddress());
 
     // verify domain reference
     assertThat(domainReferenceCaptor.getValue().getDomainId())

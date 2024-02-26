@@ -44,6 +44,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionRepository
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipient;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
@@ -171,7 +172,7 @@ class CaseAssignmentServiceTest {
 
     verify(applicationWorkAreaPriorityService).prioritiseApplicationInWorkArea(applicationVersion, USER2, CASE_OFFICER_ASSIGN_OWNERSHIP, REGULATOR);
 
-    verify(caseAssignmentEmailService).sendCaseAssignmentEmail(applicationVersion, USER, USER2);
+    verify(caseAssignmentEmailService).sendCaseAssignmentEmail(applicationVersion, FieldConsentsEmailRecipient.from(USER), USER2);
   }
 
   @Test
@@ -182,7 +183,7 @@ class CaseAssignmentServiceTest {
     // WHEN the email service call throws an exception
     doThrow(new RuntimeException("Failed to send email"))
         .when(caseAssignmentEmailService)
-        .sendCaseAssignmentEmail(applicationVersion, USER, USER2);
+        .sendCaseAssignmentEmail(applicationVersion, FieldConsentsEmailRecipient.from(USER), USER2);
 
     // THEN it will be caught by the caller and not re-thrown
     assertDoesNotThrow(
@@ -200,7 +201,7 @@ class CaseAssignmentServiceTest {
 
     verify(applicationWorkAreaPriorityService).prioritiseApplicationInWorkArea(applicationVersion, USER2, CASE_OFFICER_ASSIGN_OWNERSHIP, REGULATOR);
 
-    verify(caseAssignmentEmailService).sendCaseAssignmentEmail(applicationVersion, USER, USER2);
+    verify(caseAssignmentEmailService).sendCaseAssignmentEmail(applicationVersion, FieldConsentsEmailRecipient.from(USER), USER2);
   }
 
   @Test

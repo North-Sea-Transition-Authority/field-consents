@@ -3,7 +3,6 @@ package uk.co.nstauthority.fieldconsents.teams;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.util.Set;
-import uk.co.fivium.digitalnotificationlibrary.core.notification.email.EmailRecipient;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.TeamRole;
@@ -24,7 +23,7 @@ public record TeamMemberView(
     String contactEmail,
     String contactNumber,
     Set<TeamRole> teamRoles
-) implements EmailRecipient {
+) {
 
   public String getDisplayName() {
     return UserDisplayNameUtil.getUserDisplayName(firstName, lastName);
@@ -50,10 +49,5 @@ public record TeamMemberView(
       case OPRED -> ReverseRouter.route(on(OpredEditMemberController.class)
           .renderEditMember(teamView.teamId(), wuaId));
     };
-  }
-
-  @Override
-  public String getEmailAddress() {
-    return contactEmail;
   }
 }

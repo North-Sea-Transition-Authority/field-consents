@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -196,7 +197,7 @@ class ApplicationUpdateServiceTest {
     verify(applicationWorkAreaPriorityService, times(1))
         .prioritiseApplicationInWorkArea(applicationVersion, USER, APPLICATION_UPDATE_REQUEST, INDUSTRY);
 
-    verify(applicationUpdateEmailService).sendApplicationUpdateRequestEmail(applicationVersion, deadlineInstant);
+    verify(applicationUpdateEmailService).sendApplicationUpdateRequestEmail(actualApplicationUpdate);
   }
 
   @Test
@@ -208,7 +209,7 @@ class ApplicationUpdateServiceTest {
     // WHEN the email service call throws an exception
     doThrow(new RuntimeException("Failed to send email"))
         .when(applicationUpdateEmailService)
-        .sendApplicationUpdateRequestEmail(applicationVersion, deadlineInstant);
+        .sendApplicationUpdateRequestEmail(applicationUpdate);
 
     // THEN it will be caught by the caller and not re-thrown
     assertDoesNotThrow(
@@ -230,7 +231,7 @@ class ApplicationUpdateServiceTest {
     verify(applicationWorkAreaPriorityService, times(1))
         .prioritiseApplicationInWorkArea(applicationVersion, USER, APPLICATION_UPDATE_REQUEST, INDUSTRY);
 
-    verify(applicationUpdateEmailService).sendApplicationUpdateRequestEmail(applicationVersion, deadlineInstant);
+    verify(applicationUpdateEmailService).sendApplicationUpdateRequestEmail(actualApplicationUpdate);
   }
 
   @Test
@@ -275,6 +276,7 @@ class ApplicationUpdateServiceTest {
         .hasMessage("Application update for application version id %s with status %s cannot be submitted (status %s expected)"
             .formatted(applicationVersionUpdate.getId(), applicationVersionUpdate.getStatus().name(),
                 ApplicationVersionStatus.IN_PROGRESS.name()));
+    verify(applicationUpdateEmailService, never()).sendApplicationUpdateResponseEmail(applicationUpdate);
   }
 
   @Test
@@ -291,6 +293,8 @@ class ApplicationUpdateServiceTest {
     );
 
     assertSavedApplicationUpdate();
+
+    verify(applicationUpdateEmailService).sendApplicationUpdateResponseEmail(closedApplicationUpdate);
   }
 
   @Test
@@ -309,6 +313,33 @@ class ApplicationUpdateServiceTest {
     );
 
     assertSavedApplicationUpdate();
+
+    verify(applicationUpdateEmailService).sendApplicationUpdateResponseEmail(closedApplicationUpdate);
+  }
+
+  @Test
+  void saveApplicationUpdateResponseAndSubmitApplicationUpdate_whenSendApplicationUpdateResponseEmailFails_thenUpdateIsStillSubmitted() {
+    when(applicationUpdateRepository
+        .findByApplicationVersion_ApplicationAndApplicationUpdateStatus(applicationVersionUpdate.getApplication(), OPEN))
+        .thenReturn(Optional.of(closedApplicationUpdate));
+
+    // WHEN the email service call throws an exception
+    doThrow(new RuntimeException("Failed to send email"))
+        .when(applicationUpdateEmailService)
+        .sendApplicationUpdateResponseEmail(closedApplicationUpdate);
+
+    // THEN it will be caught by the caller and not re-thrown
+    assertDoesNotThrow(
+        () ->  applicationUpdateService.saveApplicationUpdateResponseAndSubmitApplicationUpdate(
+            applicationVersionUpdate,
+            ApplicationUpdateResponseType.REQUESTED_CHANGES_ONLY,
+            APPLICATION_UPDATE_RESPONSE_TEXT,
+            USER)
+    );
+
+    assertSavedApplicationUpdate();
+
+    verify(applicationUpdateEmailService).sendApplicationUpdateResponseEmail(closedApplicationUpdate);
   }
 
   private void assertSavedApplicationUpdate() {

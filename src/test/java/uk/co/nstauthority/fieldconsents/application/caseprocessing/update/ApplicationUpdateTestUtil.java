@@ -11,10 +11,30 @@ import java.time.temporal.ChronoUnit;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.response.ApplicationUpdateResponseType;
+import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
+import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDtoTestUtil;
 
 public class ApplicationUpdateTestUtil {
 
   public static final Long UPDATE_REQUESTER_USER_WUA_ID = 1L;
+
+  static final EnergyPortalUserDto UPDATE_REQUESTER_ENERGY_PORTAL_USER_DTO =
+      EnergyPortalUserDtoTestUtil.Builder()
+          .withId(UPDATE_REQUESTER_USER_WUA_ID)
+          .withWebUserAccountId(UPDATE_REQUESTER_USER_WUA_ID)
+          .withForename("Update Requester Forename")
+          .withSurname("Update Requester Surname")
+          .build();
+
+  static final Long TECHNICAL_REVIEWER_WUA_ID = 2L;
+
+  static final EnergyPortalUserDto TECHNICAL_REVIEWER_ENERGY_PORTAL_USER_DTO =
+      EnergyPortalUserDtoTestUtil.Builder()
+          .withId(TECHNICAL_REVIEWER_WUA_ID)
+          .withWebUserAccountId(TECHNICAL_REVIEWER_WUA_ID)
+          .withForename("Technical Reviewer Forename")
+          .withSurname("Technical Reviewer Surname")
+          .build();
 
   public static final Long UPDATE_RESPONDER_USER_WUA_ID = 2L;
 

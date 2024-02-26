@@ -23,6 +23,7 @@ import uk.co.nstauthority.fieldconsents.application.workareapriority.Application
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipient;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
@@ -95,7 +96,10 @@ public class CaseAssignmentService {
     // If the user assigning the case isn't the same as the assignee then send an email to the assigned case officer
     if (!isTakeOwnership) {
       try {
-        caseAssignmentEmailService.sendCaseAssignmentEmail(applicationVersion, caseOfficerUser, actionUser);
+        caseAssignmentEmailService.sendCaseAssignmentEmail(
+            applicationVersion,
+            FieldConsentsEmailRecipient.from(caseOfficerUser),
+            actionUser);
       } catch (Exception exception) {
         LOGGER.error("An attempt to send a case assignment notification to case officer with wuaId {} for application version " +
                 "with id {} failed. Note: this hasn't prevented the assignment of the case to the case officer.",

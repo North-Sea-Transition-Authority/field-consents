@@ -108,11 +108,13 @@ public class ApplicationUpdateService {
     );
 
     try {
-      applicationUpdateEmailService.sendApplicationUpdateRequestEmail(applicationVersion, deadlineInstant);
+      applicationUpdateEmailService.sendApplicationUpdateRequestEmail(applicationUpdate);
     } catch (Exception exception) {
-      LOGGER.error("An attempt to send an application update request notification to the operator " +
-              "by user with wuaId {} for application version with id {} failed. " +
-              "Note: this hasn't prevented the application update request being sent to the operator.",
+      LOGGER.error("""
+              An attempt to send an application update request notification to the operator \
+              by user with wuaId [{}] for application version with id [{}] failed. \
+              Note: this hasn't prevented the application update request being sent to the operator.
+              """,
           user.wuaId(), applicationVersion.getId(), exception);
     }
   }
@@ -158,5 +160,16 @@ public class ApplicationUpdateService {
     applicationUpdateRepository.save(applicationUpdate);
 
     applicationService.submitApplicationUpdate(applicationVersion, user);
+
+    try {
+      applicationUpdateEmailService.sendApplicationUpdateResponseEmail(applicationUpdate);
+    } catch (Exception exception) {
+      LOGGER.error("""
+              An attempt to send an application update response notification to the update requester \
+              by user with wuaId [{}] for application version with id [{}] failed. \
+              Note: this hasn't prevented the application update response being sent to the requester.
+              """,
+          user.wuaId(), applicationVersion.getId(), exception);
+    }
   }
 }
