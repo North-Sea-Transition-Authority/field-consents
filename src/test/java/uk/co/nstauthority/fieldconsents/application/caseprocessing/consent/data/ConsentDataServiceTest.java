@@ -28,8 +28,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentEmissionFigureService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionFiguresDto;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionFiguresDtoTestUtil;
@@ -37,6 +40,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionFiguresView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionLongTermFiguresService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionLongTermFiguresTestUtil;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthChangeEvent;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
@@ -63,6 +67,9 @@ class ConsentDataServiceTest {
   @InjectMocks
   @Spy
   private ConsentDataService consentDataService;
+
+  @Mock
+  private ApplicationVersionService applicationVersionService;
 
   @Captor
   private ArgumentCaptor<ConsentData> consentDataCaptor;
@@ -105,6 +112,24 @@ class ConsentDataServiceTest {
     assertThatThrownBy(() -> consentDataService.getConsentData(application))
         .isInstanceOf(IllegalStateException.class)
         .hasMessage("Unable to find consent data for application: %s".formatted(application.getId()));
+  }
+
+  @Test
+  void onConsentLengthChangeEvent() {
+    var application = new Application();
+
+    var applicationVersionId = 1;
+    var applicationVersion = new ApplicationVersion();
+    applicationVersion.setApplication(application);
+
+    var event = new ConsentLengthChangeEvent(this.getClass(), applicationVersionId);
+
+    when(applicationVersionService.getApplicationVersionById(applicationVersionId)).thenReturn(applicationVersion);
+
+    consentDataService.onConsentLengthChangeEvent(event);
+
+    verify(consentProductionLongTermFiguresService).deleteConsentProductionLongTermFigures(application);
+    verify(repository).deleteByApplication(application);
   }
 
   @Test

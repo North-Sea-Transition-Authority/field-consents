@@ -37,7 +37,6 @@ public class ConsentLengthDetails {
 
   private Integer longTermEndYear;
 
-
   public Integer getId() {
     return id;
   }

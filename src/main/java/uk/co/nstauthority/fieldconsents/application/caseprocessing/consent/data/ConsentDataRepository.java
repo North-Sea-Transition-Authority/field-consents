@@ -11,4 +11,6 @@ public interface ConsentDataRepository extends ListCrudRepository<ConsentData, U
 
   Optional<ConsentData> findByApplication(Application application);
 
+  void deleteByApplication(Application application);
+
 }

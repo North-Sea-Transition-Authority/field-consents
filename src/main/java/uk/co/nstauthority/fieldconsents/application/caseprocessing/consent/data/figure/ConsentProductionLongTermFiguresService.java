@@ -46,6 +46,11 @@ public class ConsentProductionLongTermFiguresService {
     consentProductionLongTermFiguresRepository.saveAll(consentProductionLongTermFiguresList);
   }
 
+  @Transactional
+  public void deleteConsentProductionLongTermFigures(Application application) {
+    consentProductionLongTermFiguresRepository.deleteAllByApplication(application);
+  }
+
   private ConsentProductionLongTermFigures newConsentProductionLongTermFigures(
       Application application,
       int year,

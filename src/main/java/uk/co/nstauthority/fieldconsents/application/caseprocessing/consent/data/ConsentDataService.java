@@ -3,12 +3,16 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data
 import jakarta.transaction.Transactional;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentEmissionFigureService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionFiguresService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionLongTermFiguresService;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthChangeEvent;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
@@ -21,19 +25,22 @@ public class ConsentDataService {
   private final ConsentProductionFiguresService consentProductionFiguresService;
   private final ConsentEmissionFigureService consentEmissionFigureService;
   private final ConsentProductionLongTermFiguresService consentProductionLongTermFiguresService;
+  private final ApplicationVersionService applicationVersionService;
 
   ConsentDataService(
       ConsentDataRepository repository,
       ConsentLengthService consentLengthService,
       ConsentProductionFiguresService consentProductionFiguresService,
       ConsentEmissionFigureService consentEmissionFigureService,
-      ConsentProductionLongTermFiguresService consentProductionLongTermFiguresService
+      ConsentProductionLongTermFiguresService consentProductionLongTermFiguresService,
+      ApplicationVersionService applicationVersionService
   ) {
     this.repository = repository;
     this.consentLengthService = consentLengthService;
     this.consentProductionFiguresService = consentProductionFiguresService;
     this.consentEmissionFigureService = consentEmissionFigureService;
     this.consentProductionLongTermFiguresService = consentProductionLongTermFiguresService;
+    this.applicationVersionService = applicationVersionService;
   }
 
   public Optional<ConsentData> findConsentData(Application application) {
@@ -44,6 +51,20 @@ public class ConsentDataService {
     return findConsentData(application).orElseThrow(() ->
         new IllegalStateException("Unable to find consent data for application: %s".formatted(application.getId()))
     );
+  }
+
+  /**
+   * We want this event listener to be BEFORE_COMMIT because by default (AFTER_COMMIT) Spring will execute this method
+   * after the event producing method's transaction has committed. This means any changes in this method won't be committed.
+   */
+  @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
+  void onConsentLengthChangeEvent(ConsentLengthChangeEvent event) {
+    var applicationVersion = applicationVersionService.getApplicationVersionById(event.getApplicationVersionId());
+    var application = applicationVersion.getApplication();
+
+    consentProductionLongTermFiguresService.deleteConsentProductionLongTermFigures(application);
+
+    repository.deleteByApplication(application);
   }
 
   @Transactional

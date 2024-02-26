@@ -18,6 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataForm;
@@ -216,5 +217,12 @@ class ConsentProductionLongTermFiguresServiceTest {
                 consentProductionFiguresDto2028.maxGas()
             )
         );
+  }
+
+  @Test
+  void deleteConsentProductionLongTermFigures() {
+    var application = new Application();
+    consentProductionLongTermFiguresService.deleteConsentProductionLongTermFigures(application);
+    verify(consentProductionLongTermFiguresRepository).deleteAllByApplication(application);
   }
 }
