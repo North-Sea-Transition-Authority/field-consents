@@ -27,6 +27,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
+import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceSectionControllerHelperService;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceService;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateService;
 
@@ -36,13 +37,13 @@ class FieldConsentsDocumentInstanceServiceTest {
   private static final String APPLICATION_DOCUMENT_INSTANCE_ITEM_TYPE = "APPLICATION";
 
   @Mock
-  private DocumentInstanceService documentInstanceService;
-
-  @Mock
   private DocumentTemplateService documentTemplateService;
 
   @Mock
-  private FieldConsentsDocumentInstanceSectionService fieldConsentsDocumentInstanceSectionService;
+  private DocumentInstanceService documentInstanceService;
+
+  @Mock
+  private DocumentInstanceSectionControllerHelperService documentInstanceSectionControllerHelperService;
 
   @Mock
   private ApplicationVersionService applicationVersionService;
@@ -205,29 +206,19 @@ class FieldConsentsDocumentInstanceServiceTest {
   }
 
   @Test
-  void getDocumentInstanceSummaryViews() {
-    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
-    var application = applicationVersion.getApplication();
+  void getDocumentInstanceDtos() {
+    var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.VENT);
     var itemReference = application.getId().toString();
 
-    var documentTemplateDto1 = DocumentTemplateDtoTestUtil.builder().withDisplayOrder(1).build();
-    var documentInstanceDto1 = DocumentInstanceDtoTestUtil.builder().withDocumentTemplate(documentTemplateDto1).build();
-
-    var documentTemplateDto2 = DocumentTemplateDtoTestUtil.builder().withDisplayOrder(2).build();
-    var documentInstanceDto2 = DocumentInstanceDtoTestUtil.builder().withDocumentTemplate(documentTemplateDto2).build();
-
-    var documentTemplateDto3 = DocumentTemplateDtoTestUtil.builder().withDisplayOrder(3).build();
-    var documentInstanceDto3 = DocumentInstanceDtoTestUtil.builder().withDocumentTemplate(documentTemplateDto3).build();
+    var documentInstanceDtos = List.of(
+        DocumentInstanceDtoTestUtil.builder().build(),
+        DocumentInstanceDtoTestUtil.builder().build()
+    );
 
     when(documentInstanceService.getDocumentInstanceDtosByItemReference(itemReference))
-        .thenReturn(List.of(documentInstanceDto2, documentInstanceDto1, documentInstanceDto3));
+        .thenReturn(documentInstanceDtos);
 
-    assertThat(fieldConsentsDocumentInstanceService.getDocumentInstanceSummaryViews(application))
-        .containsExactly(
-            DocumentInstanceSummaryView.from(documentInstanceDto1),
-            DocumentInstanceSummaryView.from(documentInstanceDto2),
-            DocumentInstanceSummaryView.from(documentInstanceDto3)
-        );
+    assertThat(fieldConsentsDocumentInstanceService.getDocumentInstanceDtos(application)).isEqualTo(documentInstanceDtos);
   }
 
   @Test
@@ -239,7 +230,10 @@ class FieldConsentsDocumentInstanceServiceTest {
 
     Map<String, Object> expectedTemplateModel = Map.of(
         "documentInstanceSectionSummaryViews",
-        fieldConsentsDocumentInstanceSectionService.getDocumentInstanceSectionSummaryViews(documentInstanceDto),
+        documentInstanceSectionControllerHelperService.getDocumentInstanceSectionSummaryViews(
+            documentInstanceDto,
+            FieldConsentsDocumentInstanceSectionController.class
+        ),
         "previewWatermark",
         pdfRenderingOptions.previewWatermark()
     );

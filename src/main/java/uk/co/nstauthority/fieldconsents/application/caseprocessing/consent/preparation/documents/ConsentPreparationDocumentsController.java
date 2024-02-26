@@ -21,7 +21,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.ConsentPreparationController;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
-import uk.co.nstauthority.fieldconsents.document.FieldConsentsDocumentInstanceService;
+import uk.co.nstauthority.fieldconsents.document.FieldConsentsDocumentInstanceControllerHelperService;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -34,7 +34,7 @@ public class ConsentPreparationDocumentsController {
   private final ApplicationService applicationService;
   private final ConsentPreparationDocumentService consentDocumentService;
   private final ConsentPreparationSupportingDocumentsFormValidator consentSupportingDocumentsFormValidator;
-  private final FieldConsentsDocumentInstanceService fieldConsentsDocumentInstanceService;
+  private final FieldConsentsDocumentInstanceControllerHelperService fieldConsentsDocumentInstanceControllerHelperService;
   private final FieldConsentsFileService fieldConsentsFileService;
   private final FileService fileService;
 
@@ -42,14 +42,14 @@ public class ConsentPreparationDocumentsController {
       ApplicationService applicationService,
       ConsentPreparationDocumentService consentDocumentService,
       ConsentPreparationSupportingDocumentsFormValidator consentPreparationSupportingDocumentsFormValidator,
-      FieldConsentsDocumentInstanceService fieldConsentsDocumentInstanceService,
+      FieldConsentsDocumentInstanceControllerHelperService fieldConsentsDocumentInstanceControllerHelperService,
       FieldConsentsFileService fieldConsentsFileService,
       FileService fileService
   ) {
     this.applicationService = applicationService;
     this.consentDocumentService = consentDocumentService;
     this.consentSupportingDocumentsFormValidator = consentPreparationSupportingDocumentsFormValidator;
-    this.fieldConsentsDocumentInstanceService = fieldConsentsDocumentInstanceService;
+    this.fieldConsentsDocumentInstanceControllerHelperService = fieldConsentsDocumentInstanceControllerHelperService;
     this.fieldConsentsFileService = fieldConsentsFileService;
     this.fileService = fileService;
   }
@@ -89,7 +89,7 @@ public class ConsentPreparationDocumentsController {
     var usage = ApplicationFileUsage.supportingConsentDocumentFrom(application);
     var uploadedFile = fileService.find(fileId)
         .orElseThrow(() -> fieldConsentsFileService.getFileNotFoundException(fileId, usage));
-    
+
     fieldConsentsFileService.throwIfFileDoesNotBelongToUsage(uploadedFile, usage);
 
     return fileService.download(uploadedFile);
@@ -97,7 +97,8 @@ public class ConsentPreparationDocumentsController {
 
   private ModelAndView getModelAndView(Application application, ConsentPreparationSupportingDocumentsForm form) {
     var fileUploadAttributes = fieldConsentsFileService.fileUploadComponentAttributes(form.getDocuments());
-    var documentInstanceSummaryViews = fieldConsentsDocumentInstanceService.getDocumentInstanceSummaryViews(application);
+    var documentInstanceSummaryViews =
+        fieldConsentsDocumentInstanceControllerHelperService.getDocumentInstanceSummaryViews(application);
 
     return new ModelAndView("fcs/application/consent/documents/consentDocumentsForm")
         .addObject("documentInstanceSummaryViews", documentInstanceSummaryViews)

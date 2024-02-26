@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.Set;
 import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.BulkCaseActionSearchController;
 import uk.co.nstauthority.fieldconsents.assets.AssetSelectionController;
-import uk.co.nstauthority.fieldconsents.document.DocumentTemplateController;
+import uk.co.nstauthority.fieldconsents.document.FieldConsentsDocumentTemplateController;
 import uk.co.nstauthority.fieldconsents.fee.FeePeriodController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.search.SearchController;
@@ -40,7 +40,7 @@ public enum TopNavigationItem {
       Set.of(MANAGE_FEE_PERIODS)
   ),
   DOCUMENT_TEMPLATES("Document templates",
-      ReverseRouter.route(on(DocumentTemplateController.class).getDocumentTemplates()),
+      ReverseRouter.route(on(FieldConsentsDocumentTemplateController.class).getDocumentTemplates()),
       Set.of(MANAGE_DOCUMENT_TEMPLATES)
   ),
   BULK_ACTIONS("Bulk actions",

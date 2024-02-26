@@ -1,6 +1,6 @@
 package uk.co.nstauthority.fieldconsents.document.lib;
 
-public class DocumentSectionNumberingUtil {
+class DocumentSectionNumberingUtil {
 
   private DocumentSectionNumberingUtil() {
     throw new IllegalStateException(
@@ -8,7 +8,7 @@ public class DocumentSectionNumberingUtil {
     );
   }
 
-  public static String getFullNumberSectionNumberString(String parentSectionNumberString, int sectionNumber) {
+  static String getFullNumberSectionNumberString(String parentSectionNumberString, int sectionNumber) {
     if (parentSectionNumberString == null) {
       return "%d".formatted(sectionNumber);
     }

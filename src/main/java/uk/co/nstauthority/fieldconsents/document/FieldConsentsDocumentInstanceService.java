@@ -1,11 +1,9 @@
 package uk.co.nstauthority.fieldconsents.document;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.Application;
@@ -13,6 +11,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceDto;
+import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceSectionControllerHelperService;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceService;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateService;
@@ -23,23 +22,22 @@ public class FieldConsentsDocumentInstanceService {
   private static final String APPLICATION_DOCUMENT_INSTANCE_ITEM_TYPE = "APPLICATION";
   private static final Logger LOGGER = LoggerFactory.getLogger(FieldConsentsDocumentInstanceService.class);
 
-  private final DocumentInstanceService documentInstanceService;
   private final DocumentTemplateService documentTemplateService;
-  private final FieldConsentsDocumentInstanceSectionService fieldConsentsDocumentInstanceSectionService;
+  private final DocumentInstanceService documentInstanceService;
+  private final DocumentInstanceSectionControllerHelperService documentInstanceSectionControllerHelperService;
   private final ApplicationVersionService applicationVersionService;
   private final ApplicationAssetService applicationAssetService;
 
-  @Autowired
   FieldConsentsDocumentInstanceService(
-      DocumentInstanceService documentInstanceService,
       DocumentTemplateService documentTemplateService,
-      FieldConsentsDocumentInstanceSectionService fieldConsentsDocumentInstanceSectionService,
+      DocumentInstanceService documentInstanceService,
+      DocumentInstanceSectionControllerHelperService documentInstanceSectionControllerHelperService,
       ApplicationVersionService applicationVersionService,
       ApplicationAssetService applicationAssetService
   ) {
-    this.documentInstanceService = documentInstanceService;
     this.documentTemplateService = documentTemplateService;
-    this.fieldConsentsDocumentInstanceSectionService = fieldConsentsDocumentInstanceSectionService;
+    this.documentInstanceService = documentInstanceService;
+    this.documentInstanceSectionControllerHelperService = documentInstanceSectionControllerHelperService;
     this.applicationVersionService = applicationVersionService;
     this.applicationAssetService = applicationAssetService;
   }
@@ -89,12 +87,8 @@ public class FieldConsentsDocumentInstanceService {
     );
   }
 
-  public List<DocumentInstanceSummaryView> getDocumentInstanceSummaryViews(Application application) {
-    return documentInstanceService.getDocumentInstanceDtosByItemReference(getItemReference(application))
-        .stream()
-        .sorted(Comparator.comparingInt(documentInstance -> documentInstance.documentTemplateDto().displayOrder()))
-        .map(DocumentInstanceSummaryView::from)
-        .toList();
+  List<DocumentInstanceDto> getDocumentInstanceDtos(Application application) {
+    return documentInstanceService.getDocumentInstanceDtosByItemReference(getItemReference(application));
   }
 
   public ByteArrayResource renderPdf(
@@ -103,7 +97,10 @@ public class FieldConsentsDocumentInstanceService {
   ) {
     Map<String, Object> templateModel = Map.of(
         "documentInstanceSectionSummaryViews",
-        fieldConsentsDocumentInstanceSectionService.getDocumentInstanceSectionSummaryViews(documentInstanceDto),
+        documentInstanceSectionControllerHelperService.getDocumentInstanceSectionSummaryViews(
+            documentInstanceDto,
+            FieldConsentsDocumentInstanceSectionController.class
+        ),
         "previewWatermark",
         pdfRenderingOptions.previewWatermark()
     );

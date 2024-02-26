@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationFileUsage;
-import uk.co.nstauthority.fieldconsents.document.FieldConsentsDocumentInstanceService;
+import uk.co.nstauthority.fieldconsents.document.FieldConsentsDocumentInstanceControllerHelperService;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileUsage;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -19,14 +19,14 @@ import uk.co.nstauthority.fieldconsents.summary.SummaryFileView;
 public class ConsentPreparationDocumentService {
 
   private final FieldConsentsFileService fieldConsentsFileService;
-  private final FieldConsentsDocumentInstanceService fieldConsentsDocumentInstanceService;
+  private final FieldConsentsDocumentInstanceControllerHelperService fieldConsentsDocumentInstanceControllerHelperService;
 
   ConsentPreparationDocumentService(
       FieldConsentsFileService fieldConsentsFileService,
-      FieldConsentsDocumentInstanceService fieldConsentsDocumentInstanceService
+      FieldConsentsDocumentInstanceControllerHelperService fieldConsentsDocumentInstanceControllerHelperService
   ) {
     this.fieldConsentsFileService = fieldConsentsFileService;
-    this.fieldConsentsDocumentInstanceService = fieldConsentsDocumentInstanceService;
+    this.fieldConsentsDocumentInstanceControllerHelperService = fieldConsentsDocumentInstanceControllerHelperService;
   }
 
   public void saveSupportingConsentDocuments(Application application, Collection<UploadedFileForm> fileForms) {
@@ -36,7 +36,7 @@ public class ConsentPreparationDocumentService {
   public SummaryCard getConsentDocumentsSummaryCard(Application application) {
     var filesSummary = new ArrayList<SummaryFileView>();
 
-    fieldConsentsDocumentInstanceService.getDocumentInstanceSummaryViews(application).stream()
+    fieldConsentsDocumentInstanceControllerHelperService.getDocumentInstanceSummaryViews(application).stream()
         .map(SummaryFileView::previewSummaryFrom)
         .forEach(filesSummary::add);
 
@@ -54,7 +54,7 @@ public class ConsentPreparationDocumentService {
   ConsentPreparationSupportingDocumentsForm getConsentSupportingDocumentsForm(Application application) {
     return ConsentPreparationSupportingDocumentsForm.from(fieldConsentsFileService.getUploadedFiles(getFileUsage(application)));
   }
-  
+
   private FieldConsentsFileUsage getFileUsage(Application application) {
     return ApplicationFileUsage.supportingConsentDocumentFrom(application);
   }

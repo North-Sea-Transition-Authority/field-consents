@@ -33,7 +33,7 @@ public class DocumentMailMergeFieldService {
         .toList();
   }
 
-  public DocumentMailMergeValidationResult validateMailMergeFields(
+  DocumentMailMergeValidationResult validateMailMergeFields(
       DocumentTemplateDto documentTemplateDto,
       String text
   ) {
@@ -56,7 +56,7 @@ public class DocumentMailMergeFieldService {
     return DocumentMailMergeValidationResult.invalid(errorMessage);
   }
 
-  public String resolveMailMergeFields(DocumentInstanceSectionDto documentInstanceSectionDto) {
+  String resolveMailMergeFields(DocumentInstanceSectionDto documentInstanceSectionDto) {
     var documentInstanceDto = documentInstanceSectionDto.documentInstanceDto();
     var documentTemplateDto = documentInstanceDto.documentTemplateDto();
 
