@@ -2,8 +2,10 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalrev
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -57,6 +59,9 @@ class TechnicalReviewServiceTest {
 
   @Mock
   private FieldConsentsFileService fieldConsentsFileService;
+
+  @Mock
+  private TechnicalReviewEmailService technicalReviewEmailService;
 
   @InjectMocks
   private TechnicalReviewService technicalReviewService;
@@ -248,6 +253,40 @@ class TechnicalReviewServiceTest {
 
     verify(technicalReviewAssignmentService, times(1))
         .assignTechnicalReviewer(actualTechnicalReview, SERVICE_USER_DETAIL_USER_5, CASE_OFFICER_USER);
+
+    verify(technicalReviewEmailService).sendTechnicalReviewRequestEmail(actualTechnicalReview, CASE_OFFICER_USER);
+  }
+
+  @Test
+  void saveTechnicalReviewRequest_whenSendTechnicalReviewRequestEmailFails_thenTechnicalReviewRequestIsStillSubmitted() {
+    when(clock.instant()).thenReturn(CURRENT_INSTANT);
+
+    // WHEN the email service call throws an exception
+    doThrow(new RuntimeException("Failed to send email"))
+        .when(technicalReviewEmailService)
+        .sendTechnicalReviewRequestEmail(technicalReview, CASE_OFFICER_USER);
+
+    // THEN it will be caught by the caller and not re-thrown
+    assertDoesNotThrow(
+        () -> technicalReviewService.saveTechnicalReviewRequest(applicationVersion,
+            clock.instant().plus(DEADLINE_AHEAD_HOURS, ChronoUnit.HOURS),
+            TECHNICAL_REVIEW_REQUEST_TEXT,
+            SERVICE_USER_DETAIL_USER_5,
+            CASE_OFFICER_USER
+        )
+    );
+
+    verify(technicalReviewRepository).save(technicalReviewCaptor.capture());
+    var actualTechnicalReview = technicalReviewCaptor.getValue();
+
+    assertThat(actualTechnicalReview)
+        .usingRecursiveComparison()
+        .isEqualTo(technicalReview);
+
+    verify(technicalReviewAssignmentService, times(1))
+        .assignTechnicalReviewer(actualTechnicalReview, SERVICE_USER_DETAIL_USER_5, CASE_OFFICER_USER);
+
+    verify(technicalReviewEmailService).sendTechnicalReviewRequestEmail(actualTechnicalReview, CASE_OFFICER_USER);
   }
 
   @ParameterizedTest
@@ -283,5 +322,53 @@ class TechnicalReviewServiceTest {
             TechnicalReviewResponseType.REJECT.equals(responseType) ? rejectionReason : consentCondition,
             TechnicalReviewStatus.CLOSED
         );
+
+    verify(technicalReviewEmailService).sendTechnicalReviewResponseEmail(technicalReview, SERVICE_USER_DETAIL_USER_5);
+  }
+
+  @ParameterizedTest
+  @EnumSource(TechnicalReviewResponseType.class)
+  void saveTechnicalReviewResponse_whenSendTechnicalReviewResponseEmailFails_thenTechnicalReviewResponseIsStillSubmitted(TechnicalReviewResponseType responseType) {
+    var consentCondition = "consent condition";
+    var rejectionReason = "rejection reason";
+    var uploadedFileForms = Collections.singletonList(new UploadedFileForm());
+
+    technicalReview.setId(TECHNICAL_REVIEW_ID);
+
+    // WHEN the email service call throws an exception
+    doThrow(new RuntimeException("Failed to send email"))
+        .when(technicalReviewEmailService)
+        .sendTechnicalReviewResponseEmail(technicalReview, SERVICE_USER_DETAIL_USER_5);
+
+    // THEN it will be caught by the caller and not re-thrown
+    assertDoesNotThrow(
+        () -> technicalReviewService.saveTechnicalReviewResponse(
+            applicationVersion,
+            technicalReview,
+            SERVICE_USER_DETAIL_USER_5,
+            responseType,
+            consentCondition,
+            rejectionReason,
+            uploadedFileForms
+        )
+    );
+
+    verify(fieldConsentsFileService).saveDocuments(TechnicalReviewFileUsage.responseFrom(technicalReview), uploadedFileForms);
+
+    verify(technicalReviewRepository).save(technicalReviewCaptor.capture());
+    assertThat(technicalReviewCaptor.getValue())
+        .extracting(
+            TechnicalReview::getRespondedByWuaId,
+            TechnicalReview::getRespondedDateTime,
+            TechnicalReview::getResponseText,
+            TechnicalReview::getTechnicalReviewStatus
+        ).containsExactly(
+            SERVICE_USER_DETAIL_USER_5.wuaId(),
+            CURRENT_INSTANT,
+            TechnicalReviewResponseType.REJECT.equals(responseType) ? rejectionReason : consentCondition,
+            TechnicalReviewStatus.CLOSED
+        );
+
+    verify(technicalReviewEmailService).sendTechnicalReviewResponseEmail(technicalReview, SERVICE_USER_DETAIL_USER_5);
   }
 }

@@ -38,7 +38,6 @@ import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.aceflag.AceFlagService;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
@@ -80,9 +79,6 @@ class ApplicationServiceTest {
   @Mock
   private ApplicationVersionService applicationVersionService;
 
-  @Mock
-  private TechnicalReviewService technicalReviewService;
-
   private ApplicationService applicationService;
 
   @BeforeEach
@@ -99,8 +95,7 @@ class ApplicationServiceTest {
         aceFlagService,
         applicationWorkAreaPriorityService,
         clock,
-        applicationVersionService,
-        technicalReviewService
+        applicationVersionService
     );
 
     newApplication = new Application(1, ApplicationType.PRODUCTION, Instant.now(), USER_WUA_ID, 0, null);
@@ -417,24 +412,8 @@ class ApplicationServiceTest {
   }
 
   @Test
-  void submitApplicationUpdate_withNoOpenTechnicalReview() {
+  void submitApplicationUpdate() {
     var draftApplicationVersion = ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.PRODUCTION, 2, 2);
-    when(technicalReviewService.openTechnicalReviewExists(draftApplicationVersion))
-        .thenReturn(false);
-
-    applicationService.submitApplicationUpdate(draftApplicationVersion, USER);
-
-    verify(applicationWorkAreaPriorityService)
-        .prioritiseApplicationInWorkArea(draftApplicationVersion, USER, UPDATE_SUBMITTED, INDUSTRY);
-    verify(applicationWorkAreaPriorityService)
-        .prioritiseApplicationInWorkArea(draftApplicationVersion, USER, UPDATE_SUBMITTED, REGULATOR);
-  }
-
-  @Test
-  void submitApplicationUpdate_withTechnicalReviewOpen() {
-    var draftApplicationVersion = ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.PRODUCTION, 2, 2);
-    when(technicalReviewService.openTechnicalReviewExists(draftApplicationVersion))
-        .thenReturn(true);
 
     applicationService.submitApplicationUpdate(draftApplicationVersion, USER);
 

@@ -16,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAssetLicenceService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.aceflag.AceFlagService;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorAndLicencesJson;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalWithOperatorJson;
@@ -50,8 +49,6 @@ public class ApplicationService {
 
   private final ApplicationVersionService applicationVersionService;
 
-  private final TechnicalReviewService technicalReviewService;
-
   public ApplicationService(ApplicationRepository applicationRepository,
                             ApplicationVersionRepository applicationVersionRepository,
                             ApplicationAssetService applicationAssetService,
@@ -60,8 +57,7 @@ public class ApplicationService {
                             AceFlagService aceFlagService,
                             ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService,
                             Clock clock,
-                            ApplicationVersionService applicationVersionService,
-                            TechnicalReviewService technicalReviewService) {
+                            ApplicationVersionService applicationVersionService) {
     this.applicationRepository = applicationRepository;
     this.applicationVersionRepository = applicationVersionRepository;
     this.applicationAssetService = applicationAssetService;
@@ -71,7 +67,6 @@ public class ApplicationService {
     this.applicationWorkAreaPriorityService = applicationWorkAreaPriorityService;
     this.clock = clock;
     this.applicationVersionService = applicationVersionService;
-    this.technicalReviewService = technicalReviewService;
   }
 
   private ApplicationVersion createNewApplication(ApplicationType applicationType,
@@ -216,10 +211,8 @@ public class ApplicationService {
         .prioritiseApplicationInWorkArea(applicationVersion, user, UPDATE_SUBMITTED, INDUSTRY);
     applicationWorkAreaPriorityService
         .prioritiseApplicationInWorkArea(applicationVersion, user, UPDATE_SUBMITTED, REGULATOR);
-    if (technicalReviewService.openTechnicalReviewExists(applicationVersion)) {
-      applicationWorkAreaPriorityService
-          .prioritiseApplicationInWorkArea(applicationVersion, user, UPDATE_SUBMITTED, REGULATOR_TECHNICAL_REVIEWER);
-    }
+    applicationWorkAreaPriorityService
+        .prioritiseApplicationInWorkArea(applicationVersion, user, UPDATE_SUBMITTED, REGULATOR_TECHNICAL_REVIEWER);
   }
 
   @Transactional

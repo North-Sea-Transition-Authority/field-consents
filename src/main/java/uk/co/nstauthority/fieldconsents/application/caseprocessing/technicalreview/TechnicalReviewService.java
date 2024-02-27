@@ -8,6 +8,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
@@ -20,6 +22,8 @@ import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
 
 @Service
 public class TechnicalReviewService {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(TechnicalReviewService.class);
 
   static final UnaryOperator<String> NO_OPEN_TECHNICAL_REVIEW_EXISTS =
       "Open technical review not found for application with version id %s"::formatted;
@@ -37,14 +41,18 @@ public class TechnicalReviewService {
 
   private final FieldConsentsFileService fieldConsentsFileService;
 
+  private final TechnicalReviewEmailService technicalReviewEmailService;
+
   public TechnicalReviewService(Clock clock,
                                 TechnicalReviewRepository technicalReviewRepository,
                                 TechnicalReviewAssignmentService technicalReviewAssignmentService,
-                                FieldConsentsFileService fieldConsentsFileService) {
+                                FieldConsentsFileService fieldConsentsFileService,
+                                TechnicalReviewEmailService technicalReviewEmailService) {
     this.clock = clock;
     this.technicalReviewRepository = technicalReviewRepository;
     this.technicalReviewAssignmentService = technicalReviewAssignmentService;
     this.fieldConsentsFileService = fieldConsentsFileService;
+    this.technicalReviewEmailService = technicalReviewEmailService;
   }
 
   public boolean openTechnicalReviewExists(ApplicationVersion applicationVersion) {
@@ -99,6 +107,17 @@ public class TechnicalReviewService {
     technicalReview.setDeadlineDateTime(deadlineInstant);
     technicalReviewRepository.save(technicalReview);
     technicalReviewAssignmentService.assignTechnicalReviewer(technicalReview, technicalReviewerUser, user);
+
+    try {
+      technicalReviewEmailService.sendTechnicalReviewRequestEmail(technicalReview, user);
+    } catch (Exception exception) {
+      LOGGER.error("""
+              An attempt to send a technical review request notification by user with wuaId [{}] for application \
+              version with id [{}] failed. \
+              Note: this hasn't prevented the technical review request being submitted.
+              """,
+          user.wuaId(), requestForApplicationVersion.getId(), exception);
+    }
   }
 
   public List<TechnicalReview> getTechnicalReviewsByApplication(Application application) {
@@ -127,6 +146,19 @@ public class TechnicalReviewService {
     var fileUsage = TechnicalReviewFileUsage.responseFrom(technicalReview);
     fieldConsentsFileService.saveDocuments(fileUsage, documents);
     technicalReviewRepository.save(technicalReview);
+
+    try {
+      technicalReviewEmailService.sendTechnicalReviewResponseEmail(
+          technicalReview,
+          serviceUserDetail);
+    } catch (Exception exception) {
+      LOGGER.error("""
+              An attempt to send a technical review response notification by user with wuaId [{}] for application \
+              version with id [{}] failed. \
+              Note: this hasn't prevented the technical review response being submitted.
+              """,
+          serviceUserDetail.wuaId(), responseForApplicationVersion.getId(), exception);
+    }
   }
 
 }
