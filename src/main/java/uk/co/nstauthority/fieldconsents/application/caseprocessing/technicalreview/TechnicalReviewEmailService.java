@@ -36,7 +36,7 @@ public class TechnicalReviewEmailService {
         .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, technicalReviewer.displayName())
         .withMailMergeField("REQUESTER_USER", requesterUser.displayName())
         .withMailMergeField(REQUEST_DEADLINE_MERGE_FIELD_NAME,
-            DateUtils.format(technicalReview.getRequestedDateTime(), DATE_TIME))
+            DateUtils.format(technicalReview.getDeadlineDateTime(), DATE_TIME))
         .merge();
 
     emailService.sendEmail(

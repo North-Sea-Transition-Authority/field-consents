@@ -86,7 +86,7 @@ class TechnicalReviewEmailServiceTest {
         .containsOnly(
             tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, TECHNICAL_REVIEWER_USER.displayName()),
             tuple("REQUESTER_USER", FieldConsentsEmailRecipient.from(CASE_OFFICER_USER).displayName()),
-            tuple(REQUEST_DEADLINE_MERGE_FIELD_NAME, DateUtils.format(technicalReview.getRequestedDateTime(), DATE_TIME))
+            tuple(REQUEST_DEADLINE_MERGE_FIELD_NAME, DateUtils.format(technicalReview.getDeadlineDateTime(), DATE_TIME))
         );
 
     assertThat(emailRecipientCaptor.getValue().getEmailAddress())
