@@ -118,9 +118,9 @@ public class ConsentDataService {
   }
 
   void updateConsentDataFromFormForLongTermProductionApplication(ConsentData consentData, ConsentDataForm form) {
-    var longTermProductionConsentScheduleStartDate =
-        form.getLongTermProductionConsentScheduleStartDateInput().getAsLocalDate().orElseThrow();
-    consentData.setLongTermProductionConsentScheduleStartDate(longTermProductionConsentScheduleStartDate);
+    var longTermProductionConsentProductionFromDate =
+        form.getLongTermProductionConsentProductionFromDateInput().getAsLocalDate().orElseThrow();
+    consentData.setLongTermProductionConsentProductionFromDate(longTermProductionConsentProductionFromDate);
   }
 
   void updateConsentDataFromFormForEmissionApplication(ConsentData consentData, ConsentDataForm form) {

@@ -150,10 +150,10 @@ class ScheduleMailMergeFieldTest {
 
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
 
-    var longTermProductionConsentScheduleStartDate = LocalDate.parse("2024-02-23");
+    var longTermProductionConsentProductionFromDate = LocalDate.parse("2024-02-23");
 
     var consentData = ConsentDataTestUtil.newBuilder()
-        .withLongTermProductionConsentScheduleStartDate(longTermProductionConsentScheduleStartDate)
+        .withLongTermProductionConsentProductionFromDate(longTermProductionConsentProductionFromDate)
         .build();
 
     var consentLengthDetails = new ConsentLengthDetails();
@@ -187,8 +187,8 @@ class ScheduleMailMergeFieldTest {
                 WordUtils.capitalizeFully(ConsentLengthType.LONG_TERM.getShortDisplayName()),
                 "primaryFieldName",
                 primaryFieldName,
-                "scheduleStartDate",
-                DateUtils.format(longTermProductionConsentScheduleStartDate, DateUtils.LONG_DATE),
+                "productionFromDate",
+                DateUtils.format(longTermProductionConsentProductionFromDate, DateUtils.LONG_DATE),
                 "consentEndDate",
                 consentEndDate,
                 "consentProductionFiguresViews",

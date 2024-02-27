@@ -51,10 +51,10 @@ class ConsentDataFormValidator {
         if (!consentStartDateInput.fieldHasErrors(errors) && !consentEndDateInput.fieldHasErrors(errors)) {
           ThreeFieldDateInputValidator.builder()
               .mustBeAfterOrEqualTo(consentStartDateInput.getAsLocalDate().orElseThrow())
-              .mustBeAfterOrEqualToErrorMessage("Consent schedule start date must be on or after the consent start date")
+              .mustBeAfterOrEqualToErrorMessage("Consent production from date must be on or after the consent start date")
               .mustBeBeforeOrEqualTo(consentEndDateInput.getAsLocalDate().orElseThrow())
-              .mustBeBeforeOrEqualToErrorMessage("Consent schedule start date must be on or before the consent end date")
-              .validate(form.getLongTermProductionConsentScheduleStartDateInput(), errors);
+              .mustBeBeforeOrEqualToErrorMessage("Consent production from date must be on or before the consent end date")
+              .validate(form.getLongTermProductionConsentProductionFromDateInput(), errors);
         }
 
         form.getLongTermConsentProductionFiguresInputs().forEach((year, consentProductionFiguresInput) ->

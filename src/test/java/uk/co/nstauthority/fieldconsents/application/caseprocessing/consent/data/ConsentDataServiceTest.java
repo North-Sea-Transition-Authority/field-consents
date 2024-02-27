@@ -379,14 +379,14 @@ class ConsentDataServiceTest {
     var consentData = new ConsentData();
     var form = new ConsentDataForm();
 
-    var longTermProductionConsentScheduleStartDate = LocalDate.parse("2024-02-23");
+    var longTermProductionConsentProductionFromDate = LocalDate.parse("2024-02-23");
 
-    form.getLongTermProductionConsentScheduleStartDateInput().setDate(longTermProductionConsentScheduleStartDate);
+    form.getLongTermProductionConsentProductionFromDateInput().setDate(longTermProductionConsentProductionFromDate);
 
     consentDataService.updateConsentDataFromFormForLongTermProductionApplication(consentData, form);
 
-    assertThat(consentData.getLongTermProductionConsentScheduleStartDate())
-        .isEqualTo(longTermProductionConsentScheduleStartDate);
+    assertThat(consentData.getLongTermProductionConsentProductionFromDate())
+        .isEqualTo(longTermProductionConsentProductionFromDate);
   }
 
   @Test

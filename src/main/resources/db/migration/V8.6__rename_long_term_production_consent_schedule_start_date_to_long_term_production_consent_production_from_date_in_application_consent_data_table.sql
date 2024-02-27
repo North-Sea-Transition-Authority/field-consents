@@ -1,0 +1,1 @@
+ALTER TABLE application_consent_data RENAME COLUMN long_term_production_consent_schedule_start_date TO long_term_production_consent_production_from_date;

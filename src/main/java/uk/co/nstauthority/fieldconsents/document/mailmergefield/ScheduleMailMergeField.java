@@ -102,9 +102,9 @@ class ScheduleMailMergeField implements DocumentMailMergeField {
           case LONG_TERM:
             templateName = "fcs/document/template/consent/production/longTermProductionConsentSchedule.ftl";
 
-            var scheduleStartDate =
-                DateUtils.format(consentData.getLongTermProductionConsentScheduleStartDate(), DateUtils.LONG_DATE);
-            model.put("scheduleStartDate", scheduleStartDate);
+            var productionFromDate =
+                DateUtils.format(consentData.getLongTermProductionConsentProductionFromDate(), DateUtils.LONG_DATE);
+            model.put("productionFromDate", productionFromDate);
             model.put("consentEndDate", consentEndDateMailMergeField.resolve(documentInstanceDto));
 
             var consentProductionFiguresViews =

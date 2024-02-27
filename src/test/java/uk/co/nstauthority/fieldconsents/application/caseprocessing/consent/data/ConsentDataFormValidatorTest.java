@@ -147,11 +147,11 @@ class ConsentDataFormValidatorTest {
   }
 
   @Test
-  void validate_applicationTypeIsProductionAndConsentLengthTypeIsLongTerm_noLongTermProductionConsentScheduleStartDate() {
+  void validate_applicationTypeIsProductionAndConsentLengthTypeIsLongTerm_noLongTermProductionConsentProductionFromDate() {
     form.getConsentStartDateInput().setDate(LocalDate.parse("2024-01-01"));
     form.getConsentEndDateInput().setDate(LocalDate.parse("2025-01-01"));
 
-    form.getLongTermProductionConsentScheduleStartDateInput().setDate(null);
+    form.getLongTermProductionConsentProductionFromDateInput().setDate(null);
 
     var longTermConsentProductionFiguresInput2024 = mock(ConsentProductionFiguresInput.class);
     var longTermConsentProductionFiguresInput2025 = mock(ConsentProductionFiguresInput.class);
@@ -177,28 +177,28 @@ class ConsentDataFormValidatorTest {
 
     assertThat(errorMap).containsOnly(
         entry(
-            "longTermProductionConsentScheduleStartDateInput.dayInput.inputValue",
-            List.of("Consent schedule start date must be a real date")
+            "longTermProductionConsentProductionFromDateInput.dayInput.inputValue",
+            List.of("Consent production from date must be a real date")
         ),
         entry(
-            "longTermProductionConsentScheduleStartDateInput.monthInput.inputValue",
+            "longTermProductionConsentProductionFromDateInput.monthInput.inputValue",
             List.of("")
         ),
         entry(
-            "longTermProductionConsentScheduleStartDateInput.yearInput.inputValue",
+            "longTermProductionConsentProductionFromDateInput.yearInput.inputValue",
             List.of("")
         )
     );
   }
 
   @Test
-  void validate_applicationTypeIsProductionAndConsentLengthTypeIsLongTerm_longTermProductionConsentScheduleStartDateBeforeConsentStartDate() {
+  void validate_applicationTypeIsProductionAndConsentLengthTypeIsLongTerm_longTermProductionConsentProductionFromDateBeforeConsentStartDate() {
     var consentStartDate = LocalDate.parse("2024-01-01");
 
     form.getConsentStartDateInput().setDate(consentStartDate);
     form.getConsentEndDateInput().setDate(LocalDate.parse("2025-01-01"));
 
-    form.getLongTermProductionConsentScheduleStartDateInput().setDate(consentStartDate.minusDays(1));
+    form.getLongTermProductionConsentProductionFromDateInput().setDate(consentStartDate.minusDays(1));
 
     var longTermConsentProductionFiguresInput2024 = mock(ConsentProductionFiguresInput.class);
     var longTermConsentProductionFiguresInput2025 = mock(ConsentProductionFiguresInput.class);
@@ -224,28 +224,28 @@ class ConsentDataFormValidatorTest {
 
     assertThat(errorMap).containsOnly(
         entry(
-            "longTermProductionConsentScheduleStartDateInput.dayInput.inputValue",
-            List.of("Consent schedule start date must be on or after the consent start date")
+            "longTermProductionConsentProductionFromDateInput.dayInput.inputValue",
+            List.of("Consent production from date must be on or after the consent start date")
         ),
         entry(
-            "longTermProductionConsentScheduleStartDateInput.monthInput.inputValue",
+            "longTermProductionConsentProductionFromDateInput.monthInput.inputValue",
             List.of("")
         ),
         entry(
-            "longTermProductionConsentScheduleStartDateInput.yearInput.inputValue",
+            "longTermProductionConsentProductionFromDateInput.yearInput.inputValue",
             List.of("")
         )
     );
   }
 
   @Test
-  void validate_applicationTypeIsProductionAndConsentLengthTypeIsLongTerm_longTermProductionConsentScheduleStartDateAfterConsentEndDate() {
+  void validate_applicationTypeIsProductionAndConsentLengthTypeIsLongTerm_longTermProductionConsentProductionFromDateAfterConsentEndDate() {
     form.getConsentStartDateInput().setDate(LocalDate.parse("2024-01-01"));
 
     var consentEndDate = LocalDate.parse("2025-01-01");
     form.getConsentEndDateInput().setDate(consentEndDate);
 
-    form.getLongTermProductionConsentScheduleStartDateInput().setDate(consentEndDate.plusDays(1));
+    form.getLongTermProductionConsentProductionFromDateInput().setDate(consentEndDate.plusDays(1));
 
     var longTermConsentProductionFiguresInput2024 = mock(ConsentProductionFiguresInput.class);
     var longTermConsentProductionFiguresInput2025 = mock(ConsentProductionFiguresInput.class);
@@ -271,15 +271,15 @@ class ConsentDataFormValidatorTest {
 
     assertThat(errorMap).containsOnly(
         entry(
-            "longTermProductionConsentScheduleStartDateInput.dayInput.inputValue",
-            List.of("Consent schedule start date must be on or before the consent end date")
+            "longTermProductionConsentProductionFromDateInput.dayInput.inputValue",
+            List.of("Consent production from date must be on or before the consent end date")
         ),
         entry(
-            "longTermProductionConsentScheduleStartDateInput.monthInput.inputValue",
+            "longTermProductionConsentProductionFromDateInput.monthInput.inputValue",
             List.of("")
         ),
         entry(
-            "longTermProductionConsentScheduleStartDateInput.yearInput.inputValue",
+            "longTermProductionConsentProductionFromDateInput.yearInput.inputValue",
             List.of("")
         )
     );

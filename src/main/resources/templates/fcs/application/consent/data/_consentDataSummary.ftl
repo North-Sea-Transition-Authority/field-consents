@@ -25,8 +25,8 @@
 
     <#if applicationType.name() == "PRODUCTION">
       <#if consentLengthType.name() == "LONG_TERM">
-        <@fdsSummaryList.summaryListRowNoAction keyText="Consent schedule start date">
-          ${consentDataView.longTermProductionConsentScheduleStartDate()}
+        <@fdsSummaryList.summaryListRowNoAction keyText="Consent production from date">
+          ${consentDataView.longTermProductionConsentProductionFromDate()}
         </@fdsSummaryList.summaryListRowNoAction>
       </#if>
 

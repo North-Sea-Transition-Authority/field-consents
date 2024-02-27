@@ -38,10 +38,10 @@ class ConsentDataViewTest {
 
   @Test
   void fromLongTermProductionApplication() {
-    var longTermProductionConsentScheduleStartDate = LocalDate.parse("2024-02-23");
+    var longTermProductionConsentProductionFromDate = LocalDate.parse("2024-02-23");
 
     var consentData = ConsentDataTestUtil.newBuilder()
-        .withLongTermProductionConsentScheduleStartDate(longTermProductionConsentScheduleStartDate)
+        .withLongTermProductionConsentProductionFromDate(longTermProductionConsentProductionFromDate)
         .build();
 
     var consentProductionLongTermFiguresViews = Map.of(
@@ -53,7 +53,7 @@ class ConsentDataViewTest {
         new ConsentDataView(
             format(consentData.getConsentStartDate(), DateUtils.LONG_DATE),
             format(consentData.getConsentEndDate(), DateUtils.LONG_DATE),
-            format(longTermProductionConsentScheduleStartDate, DateUtils.LONG_DATE),
+            format(longTermProductionConsentProductionFromDate, DateUtils.LONG_DATE),
             null,
             consentProductionLongTermFiguresViews,
             null

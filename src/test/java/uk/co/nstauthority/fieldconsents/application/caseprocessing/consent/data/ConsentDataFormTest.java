@@ -131,7 +131,7 @@ class ConsentDataFormTest {
         .extracting(
             consentDataForm -> consentDataForm.getConsentStartDateInput().getAsLocalDate().orElseThrow(),
             consentDataForm -> consentDataForm.getConsentEndDateInput().getAsLocalDate().orElseThrow(),
-            consentDataForm -> consentDataForm.getLongTermProductionConsentScheduleStartDateInput().getAsLocalDate().orElseThrow()
+            consentDataForm -> consentDataForm.getLongTermProductionConsentProductionFromDateInput().getAsLocalDate().orElseThrow()
         )
         .containsExactly(
             startDate,
@@ -156,10 +156,10 @@ class ConsentDataFormTest {
 
   @Test
   void fromLongTermProductionApplication_withConsentData() {
-    var longTermProductionConsentScheduleStartDate = LocalDate.parse("2024-02-23");
+    var longTermProductionConsentProductionFromDate = LocalDate.parse("2024-02-23");
 
     var consentData = ConsentDataTestUtil.newBuilder()
-        .withLongTermProductionConsentScheduleStartDate(longTermProductionConsentScheduleStartDate)
+        .withLongTermProductionConsentProductionFromDate(longTermProductionConsentProductionFromDate)
         .build();
 
     var consentProductionLongTermFigures2024 = ConsentProductionLongTermFiguresTestUtil.builder()
@@ -212,12 +212,12 @@ class ConsentDataFormTest {
         .extracting(
             consentDataForm -> consentDataForm.getConsentStartDateInput().getAsLocalDate().orElseThrow(),
             consentDataForm -> consentDataForm.getConsentEndDateInput().getAsLocalDate().orElseThrow(),
-            consentDataForm -> consentDataForm.getLongTermProductionConsentScheduleStartDateInput().getAsLocalDate().orElseThrow()
+            consentDataForm -> consentDataForm.getLongTermProductionConsentProductionFromDateInput().getAsLocalDate().orElseThrow()
         )
         .containsExactly(
             consentData.getConsentStartDate(),
             consentData.getConsentEndDate(),
-            longTermProductionConsentScheduleStartDate
+            longTermProductionConsentProductionFromDate
         );
 
     assertThat(

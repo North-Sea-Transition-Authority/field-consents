@@ -25,11 +25,11 @@
     <#if applicationType.name() == "PRODUCTION">
       <#if consentLengthType.name() == "LONG_TERM">
         <@fdsDateInput.dateInput
-          labelText="Consent schedule start date"
-          formId="form.longTermProductionConsentScheduleStartDateInput"
-          dayPath="form.longTermProductionConsentScheduleStartDateInput.dayInput.inputValue"
-          monthPath="form.longTermProductionConsentScheduleStartDateInput.monthInput.inputValue"
-          yearPath="form.longTermProductionConsentScheduleStartDateInput.yearInput.inputValue"
+          labelText="Consent production from date"
+          formId="form.longTermProductionConsentProductionFromDateInput"
+          dayPath="form.longTermProductionConsentProductionFromDateInput.dayInput.inputValue"
+          monthPath="form.longTermProductionConsentProductionFromDateInput.monthInput.inputValue"
+          yearPath="form.longTermProductionConsentProductionFromDateInput.yearInput.inputValue"
         />
       </#if>
 
