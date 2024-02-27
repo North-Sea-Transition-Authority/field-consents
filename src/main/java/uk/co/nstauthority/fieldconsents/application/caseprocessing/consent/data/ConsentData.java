@@ -27,6 +27,8 @@ public class ConsentData {
 
   private LocalDate consentEndDate;
 
+  private LocalDate longTermProductionConsentScheduleStartDate;
+
   private BigDecimal shortTermOrAnnualProductionMinOil;
 
   private BigDecimal shortTermOrAnnualProductionMaxOil;
@@ -70,6 +72,14 @@ public class ConsentData {
 
   public void setConsentEndDate(LocalDate consentEndDate) {
     this.consentEndDate = consentEndDate;
+  }
+
+  public LocalDate getLongTermProductionConsentScheduleStartDate() {
+    return longTermProductionConsentScheduleStartDate;
+  }
+
+  public void setLongTermProductionConsentScheduleStartDate(LocalDate longTermProductionConsentScheduleStartDate) {
+    this.longTermProductionConsentScheduleStartDate = longTermProductionConsentScheduleStartDate;
   }
 
   public BigDecimal getShortTermOrAnnualProductionMinOil() {

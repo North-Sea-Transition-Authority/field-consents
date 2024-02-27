@@ -6,6 +6,7 @@ import static uk.co.nstauthority.fieldconsents.formatting.DateUtils.format;
 import static uk.co.nstauthority.fieldconsents.formatting.DecimalFormatUtils.bigDecimalToFormattedString;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionFiguresView;
@@ -27,6 +28,7 @@ class ConsentDataViewTest {
             new ConsentDataView(
                 format(consentData.getConsentStartDate(), DateUtils.LONG_DATE),
                 format(consentData.getConsentEndDate(), DateUtils.LONG_DATE),
+                null,
                 ConsentProductionFiguresView.fromShortTermOrAnnualConsentProductionFigures(consentData),
                 null,
                 null
@@ -36,7 +38,11 @@ class ConsentDataViewTest {
 
   @Test
   void fromLongTermProductionApplication() {
-    var consentData = ConsentDataTestUtil.newBuilder().build();
+    var longTermProductionConsentScheduleStartDate = LocalDate.parse("2024-02-23");
+
+    var consentData = ConsentDataTestUtil.newBuilder()
+        .withLongTermProductionConsentScheduleStartDate(longTermProductionConsentScheduleStartDate)
+        .build();
 
     var consentProductionLongTermFiguresViews = Map.of(
         "2024", mock(ConsentProductionFiguresView.class),
@@ -47,6 +53,7 @@ class ConsentDataViewTest {
         new ConsentDataView(
             format(consentData.getConsentStartDate(), DateUtils.LONG_DATE),
             format(consentData.getConsentEndDate(), DateUtils.LONG_DATE),
+            format(longTermProductionConsentScheduleStartDate, DateUtils.LONG_DATE),
             null,
             consentProductionLongTermFiguresViews,
             null
@@ -66,6 +73,7 @@ class ConsentDataViewTest {
         new ConsentDataView(
             format(consentData.getConsentStartDate(), DateUtils.LONG_DATE),
             format(consentData.getConsentEndDate(), DateUtils.LONG_DATE),
+            null,
             null,
             null,
             bigDecimalToFormattedString(emissionDailyAverage)

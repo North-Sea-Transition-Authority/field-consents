@@ -17,6 +17,7 @@ import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceDto;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentMailMergeField;
 import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
 import uk.co.nstauthority.fieldconsents.document.lib.FreeMarkerTemplateRenderingService;
+import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 
 @Order(18)
 @Component
@@ -75,12 +76,10 @@ class ScheduleMailMergeField implements DocumentMailMergeField {
     var application = applicationVersion.getApplication();
 
     String templateName;
-
     Map<String, Object> model = new HashMap<>();
-    model.put("consentStartDate", consentStartDateMailMergeField.resolve(documentInstanceDto));
-    model.put("consentEndDate", consentEndDateMailMergeField.resolve(documentInstanceDto));
 
     var documentTemplateType = DocumentTemplateType.getByMnemonic(documentInstanceDto.documentTemplateDto().mnemonic());
+    var consentData = consentDataService.getConsentData(application);
 
     switch (documentTemplateType) {
       case FIELD_PRODUCTION_CONSENT:
@@ -93,18 +92,23 @@ class ScheduleMailMergeField implements DocumentMailMergeField {
           case SHORT_TERM, ANNUAL:
             templateName = "fcs/document/template/consent/production/shortTermOrAnnualProductionConsentSchedule.ftl";
 
-            var consentData = consentDataService.getConsentData(application);
+            model.put("consentStartDate", consentStartDateMailMergeField.resolve(documentInstanceDto));
+            model.put("consentEndDate", consentEndDateMailMergeField.resolve(documentInstanceDto));
+
             var consentProductionFiguresView =
                 ConsentProductionFiguresView.fromShortTermOrAnnualConsentProductionFigures(consentData);
-
             model.put("consentProductionFiguresView", consentProductionFiguresView);
             break;
           case LONG_TERM:
             templateName = "fcs/document/template/consent/production/longTermProductionConsentSchedule.ftl";
 
+            var scheduleStartDate =
+                DateUtils.format(consentData.getLongTermProductionConsentScheduleStartDate(), DateUtils.LONG_DATE);
+            model.put("scheduleStartDate", scheduleStartDate);
+            model.put("consentEndDate", consentEndDateMailMergeField.resolve(documentInstanceDto));
+
             var consentProductionFiguresViews =
                 consentProductionLongTermFiguresService.getConsentProductionLongTermFiguresViews(application);
-
             model.put("consentProductionFiguresViews", consentProductionFiguresViews);
             break;
           default:
@@ -114,9 +118,10 @@ class ScheduleMailMergeField implements DocumentMailMergeField {
       case FIELD_FLARE_CONSENT, TERMINAL_FLARE_CONSENT, FIELD_VENT_CONSENT, TERMINAL_VENT_CONSENT:
         templateName = "fcs/document/template/consent/emission/emissionConsentSchedule.ftl";
 
-        var consentData = consentDataService.getConsentData(application);
-        var emissionDailyAverage = bigDecimalToFormattedString(consentData.getEmissionDailyAverage());
+        model.put("consentStartDate", consentStartDateMailMergeField.resolve(documentInstanceDto));
+        model.put("consentEndDate", consentEndDateMailMergeField.resolve(documentInstanceDto));
 
+        var emissionDailyAverage = bigDecimalToFormattedString(consentData.getEmissionDailyAverage());
         model.put("emissionDailyAverage", emissionDailyAverage);
         break;
       default:

@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -146,9 +147,11 @@ class ConsentDataFormValidatorTest {
   }
 
   @Test
-  void validate_applicationTypeIsProductionAndConsentLengthTypeIsLongTerm() {
+  void validate_applicationTypeIsProductionAndConsentLengthTypeIsLongTerm_noLongTermProductionConsentScheduleStartDate() {
     form.getConsentStartDateInput().setDate(LocalDate.parse("2024-01-01"));
     form.getConsentEndDateInput().setDate(LocalDate.parse("2025-01-01"));
+
+    form.getLongTermProductionConsentScheduleStartDateInput().setDate(null);
 
     var longTermConsentProductionFiguresInput2024 = mock(ConsentProductionFiguresInput.class);
     var longTermConsentProductionFiguresInput2025 = mock(ConsentProductionFiguresInput.class);
@@ -169,6 +172,117 @@ class ConsentDataFormValidatorTest {
 
     verify(consentProductionFiguresInputValidator).validate(longTermConsentProductionFiguresInput2024, bindingResult);
     verify(consentProductionFiguresInputValidator).validate(longTermConsentProductionFiguresInput2025, bindingResult);
+
+    var errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(bindingResult);
+
+    assertThat(errorMap).containsOnly(
+        entry(
+            "longTermProductionConsentScheduleStartDateInput.dayInput.inputValue",
+            List.of("Consent schedule start date must be a real date")
+        ),
+        entry(
+            "longTermProductionConsentScheduleStartDateInput.monthInput.inputValue",
+            List.of("")
+        ),
+        entry(
+            "longTermProductionConsentScheduleStartDateInput.yearInput.inputValue",
+            List.of("")
+        )
+    );
+  }
+
+  @Test
+  void validate_applicationTypeIsProductionAndConsentLengthTypeIsLongTerm_longTermProductionConsentScheduleStartDateBeforeConsentStartDate() {
+    var consentStartDate = LocalDate.parse("2024-01-01");
+
+    form.getConsentStartDateInput().setDate(consentStartDate);
+    form.getConsentEndDateInput().setDate(LocalDate.parse("2025-01-01"));
+
+    form.getLongTermProductionConsentScheduleStartDateInput().setDate(consentStartDate.minusDays(1));
+
+    var longTermConsentProductionFiguresInput2024 = mock(ConsentProductionFiguresInput.class);
+    var longTermConsentProductionFiguresInput2025 = mock(ConsentProductionFiguresInput.class);
+
+    var longTermConsentProductionFiguresInputs = Map.of(
+        "2024", longTermConsentProductionFiguresInput2024,
+        "2025", longTermConsentProductionFiguresInput2025
+    );
+
+    form.setLongTermConsentProductionFiguresInputs(longTermConsentProductionFiguresInputs);
+
+    var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
+    var consentLengthType = ConsentLengthType.LONG_TERM;
+
+    when(consentProductionFiguresInputValidator.supports(ConsentProductionFiguresInput.class)).thenReturn(true);
+
+    validator.validate(form, application, consentLengthType, bindingResult);
+
+    verify(consentProductionFiguresInputValidator).validate(longTermConsentProductionFiguresInput2024, bindingResult);
+    verify(consentProductionFiguresInputValidator).validate(longTermConsentProductionFiguresInput2025, bindingResult);
+
+    var errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(bindingResult);
+
+    assertThat(errorMap).containsOnly(
+        entry(
+            "longTermProductionConsentScheduleStartDateInput.dayInput.inputValue",
+            List.of("Consent schedule start date must be on or after the consent start date")
+        ),
+        entry(
+            "longTermProductionConsentScheduleStartDateInput.monthInput.inputValue",
+            List.of("")
+        ),
+        entry(
+            "longTermProductionConsentScheduleStartDateInput.yearInput.inputValue",
+            List.of("")
+        )
+    );
+  }
+
+  @Test
+  void validate_applicationTypeIsProductionAndConsentLengthTypeIsLongTerm_longTermProductionConsentScheduleStartDateAfterConsentEndDate() {
+    form.getConsentStartDateInput().setDate(LocalDate.parse("2024-01-01"));
+
+    var consentEndDate = LocalDate.parse("2025-01-01");
+    form.getConsentEndDateInput().setDate(consentEndDate);
+
+    form.getLongTermProductionConsentScheduleStartDateInput().setDate(consentEndDate.plusDays(1));
+
+    var longTermConsentProductionFiguresInput2024 = mock(ConsentProductionFiguresInput.class);
+    var longTermConsentProductionFiguresInput2025 = mock(ConsentProductionFiguresInput.class);
+
+    var longTermConsentProductionFiguresInputs = Map.of(
+        "2024", longTermConsentProductionFiguresInput2024,
+        "2025", longTermConsentProductionFiguresInput2025
+    );
+
+    form.setLongTermConsentProductionFiguresInputs(longTermConsentProductionFiguresInputs);
+
+    var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
+    var consentLengthType = ConsentLengthType.LONG_TERM;
+
+    when(consentProductionFiguresInputValidator.supports(ConsentProductionFiguresInput.class)).thenReturn(true);
+
+    validator.validate(form, application, consentLengthType, bindingResult);
+
+    verify(consentProductionFiguresInputValidator).validate(longTermConsentProductionFiguresInput2024, bindingResult);
+    verify(consentProductionFiguresInputValidator).validate(longTermConsentProductionFiguresInput2025, bindingResult);
+
+    var errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(bindingResult);
+
+    assertThat(errorMap).containsOnly(
+        entry(
+            "longTermProductionConsentScheduleStartDateInput.dayInput.inputValue",
+            List.of("Consent schedule start date must be on or before the consent end date")
+        ),
+        entry(
+            "longTermProductionConsentScheduleStartDateInput.monthInput.inputValue",
+            List.of("")
+        ),
+        entry(
+            "longTermProductionConsentScheduleStartDateInput.yearInput.inputValue",
+            List.of("")
+        )
+    );
   }
 
   @ParameterizedTest

@@ -21,6 +21,8 @@ public class ConsentDataForm {
       new ThreeFieldDateInput("consentStartDateInput", "consent start date");
   private ThreeFieldDateInput consentEndDateInput =
       new ThreeFieldDateInput("consentEndDateInput", "consent end date");
+  private ThreeFieldDateInput longTermProductionConsentScheduleStartDateInput =
+      new ThreeFieldDateInput("longTermProductionConsentScheduleStartDateInput", "consent schedule start date");
   private ConsentProductionFiguresInput shortTermOrAnnualConsentProductionFiguresInput =
       new ConsentProductionFiguresInput();
   private Map<String, ConsentProductionFiguresInput> longTermConsentProductionFiguresInputs = new LinkedHashMap<>();
@@ -60,6 +62,7 @@ public class ConsentDataForm {
 
     form.consentStartDateInput.setDate(startDate);
     form.consentEndDateInput.setDate(endDate);
+    form.longTermProductionConsentScheduleStartDateInput.setDate(startDate);
     form.longTermConsentProductionFiguresInputs.putAll(
         longTermConsentProductionFiguresDtos.entrySet().stream()
             .sorted(Map.Entry.comparingByKey())
@@ -81,6 +84,7 @@ public class ConsentDataForm {
 
     form.consentStartDateInput.setDate(consentData.getConsentStartDate());
     form.consentEndDateInput.setDate(consentData.getConsentEndDate());
+    form.longTermProductionConsentScheduleStartDateInput.setDate(consentData.getLongTermProductionConsentScheduleStartDate());
     form.longTermConsentProductionFiguresInputs.putAll(
         consentProductionLongTermFiguresList.stream()
             .sorted(Comparator.comparing(ConsentProductionLongTermFigures::getYear))
@@ -134,6 +138,16 @@ public class ConsentDataForm {
 
   public void setConsentEndDateInput(ThreeFieldDateInput consentEndDateInput) {
     this.consentEndDateInput = consentEndDateInput;
+  }
+
+  public ThreeFieldDateInput getLongTermProductionConsentScheduleStartDateInput() {
+    return longTermProductionConsentScheduleStartDateInput;
+  }
+
+  public void setLongTermProductionConsentScheduleStartDateInput(
+      ThreeFieldDateInput longTermProductionConsentScheduleStartDateInput
+  ) {
+    this.longTermProductionConsentScheduleStartDateInput = longTermProductionConsentScheduleStartDateInput;
   }
 
   public ConsentProductionFiguresInput getShortTermOrAnnualConsentProductionFiguresInput() {

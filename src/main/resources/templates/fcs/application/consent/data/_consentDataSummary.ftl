@@ -24,6 +24,12 @@
     </@fdsSummaryList.summaryListRowNoAction>
 
     <#if applicationType.name() == "PRODUCTION">
+      <#if consentLengthType.name() == "LONG_TERM">
+        <@fdsSummaryList.summaryListRowNoAction keyText="Consent schedule start date">
+          ${consentDataView.longTermProductionConsentScheduleStartDate()}
+        </@fdsSummaryList.summaryListRowNoAction>
+      </#if>
+
       <@fdsSummaryList.summaryListRowNoAction keyText="Consent figures">
         <table class="govuk-table">
           <thead class="govuk-table__head">

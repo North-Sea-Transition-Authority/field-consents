@@ -18,6 +18,7 @@ public class ConsentDataTestUtil {
     private Application application = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION).getApplication();
     private LocalDate consentStartDate = LocalDate.parse("2024-01-01");
     private LocalDate consentEndDate = consentStartDate.plusYears(1);
+    private LocalDate longTermProductionConsentScheduleStartDate;
     private BigDecimal shortTermOrAnnualProductionMinOil = BigDecimal.valueOf(235.79);
     private BigDecimal shortTermOrAnnualProductionMaxOil = BigDecimal.valueOf(673.12);
     private BigDecimal shortTermOrAnnualProductionMinGas = BigDecimal.valueOf(112.89);
@@ -41,6 +42,11 @@ public class ConsentDataTestUtil {
 
     public Builder withConsentEndDate(LocalDate consentEndDate) {
       this.consentEndDate = consentEndDate;
+      return this;
+    }
+
+    public Builder withLongTermProductionConsentScheduleStartDate(LocalDate longTermProductionConsentScheduleStartDate) {
+      this.longTermProductionConsentScheduleStartDate = longTermProductionConsentScheduleStartDate;
       return this;
     }
 
@@ -74,6 +80,7 @@ public class ConsentDataTestUtil {
       consentData.setApplication(application);
       consentData.setConsentStartDate(consentStartDate);
       consentData.setConsentEndDate(consentEndDate);
+      consentData.setLongTermProductionConsentScheduleStartDate(longTermProductionConsentScheduleStartDate);
       consentData.setShortTermOrAnnualProductionMinOil(shortTermOrAnnualProductionMinOil);
       consentData.setShortTermOrAnnualProductionMaxOil(shortTermOrAnnualProductionMaxOil);
       consentData.setShortTermOrAnnualProductionMinGas(shortTermOrAnnualProductionMinGas);

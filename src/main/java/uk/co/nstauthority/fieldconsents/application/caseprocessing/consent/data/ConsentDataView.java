@@ -10,6 +10,7 @@ import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 public record ConsentDataView(
     String consentStartDate,
     String consentEndDate,
+    String longTermProductionConsentScheduleStartDate,
     ConsentProductionFiguresView shortTermOrAnnualConsentProductionFiguresView,
     Map<String, ConsentProductionFiguresView> longTermConsentProductionFiguresViews,
     String emissionDailyAverage
@@ -19,6 +20,7 @@ public record ConsentDataView(
     return new ConsentDataView(
         format(consentData.getConsentStartDate(), DateUtils.LONG_DATE),
         format(consentData.getConsentEndDate(), DateUtils.LONG_DATE),
+        null,
         ConsentProductionFiguresView.fromShortTermOrAnnualConsentProductionFigures(consentData),
         null,
         null
@@ -32,6 +34,7 @@ public record ConsentDataView(
     return new ConsentDataView(
         format(consentData.getConsentStartDate(), DateUtils.LONG_DATE),
         format(consentData.getConsentEndDate(), DateUtils.LONG_DATE),
+        format(consentData.getLongTermProductionConsentScheduleStartDate(), DateUtils.LONG_DATE),
         null,
         consentProductionLongTermFiguresViews,
         null
@@ -42,6 +45,7 @@ public record ConsentDataView(
     return new ConsentDataView(
         format(consentData.getConsentStartDate(), DateUtils.LONG_DATE),
         format(consentData.getConsentEndDate(), DateUtils.LONG_DATE),
+        null,
         null,
         null,
         bigDecimalToFormattedString(consentData.getEmissionDailyAverage())

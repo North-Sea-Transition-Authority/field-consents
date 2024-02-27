@@ -1,0 +1,1 @@
+ALTER TABLE application_consent_data ADD COLUMN long_term_production_consent_schedule_start_date DATE;

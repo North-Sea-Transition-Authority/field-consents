@@ -288,6 +288,35 @@ class ConsentDataServiceTest {
     verify(consentDataService).updateConsentDataFromFormForShortTermOrAnnualProductionApplication(consentData, form);
   }
 
+  @Test
+  void updateConsentDataFromForm_applicationTypeIsProductionAndConsentLengthTypeIsLongTerm() {
+    var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
+    var consentData = new ConsentData();
+
+    var form = new ConsentDataForm();
+
+    var startDate = LocalDate.parse("2024-01-01");
+    var endDate = LocalDate.parse("2025-01-01");
+
+    form.getConsentStartDateInput().setDate(startDate);
+    form.getConsentEndDateInput().setDate(endDate);
+
+    doNothing().when(consentDataService).updateConsentDataFromFormForLongTermProductionApplication(any(), any());
+
+    consentDataService.updateConsentDataFromForm(application, ConsentLengthType.LONG_TERM, consentData, form);
+
+    assertThat(consentData)
+        .extracting(
+            ConsentData::getConsentStartDate,
+            ConsentData::getConsentEndDate
+        ).containsExactly(
+            startDate,
+            endDate
+        );
+
+    verify(consentDataService).updateConsentDataFromFormForLongTermProductionApplication(consentData, form);
+  }
+
   @ParameterizedTest
   @EnumSource(value = ApplicationType.class, names = { "FLARE", "VENT" }, mode = EnumSource.Mode.INCLUDE)
   void updateConsentDataFromForm_applicationTypeIsFlareOrVent(ApplicationType applicationType) {
@@ -343,6 +372,21 @@ class ConsentDataServiceTest {
             consentProductionFiguresDto.minGas(),
             consentProductionFiguresDto.maxGas()
         );
+  }
+
+  @Test
+  void updateConsentDataFromFormForLongTermProductionApplication() {
+    var consentData = new ConsentData();
+    var form = new ConsentDataForm();
+
+    var longTermProductionConsentScheduleStartDate = LocalDate.parse("2024-02-23");
+
+    form.getLongTermProductionConsentScheduleStartDateInput().setDate(longTermProductionConsentScheduleStartDate);
+
+    consentDataService.updateConsentDataFromFormForLongTermProductionApplication(consentData, form);
+
+    assertThat(consentData.getLongTermProductionConsentScheduleStartDate())
+        .isEqualTo(longTermProductionConsentScheduleStartDate);
   }
 
   @Test

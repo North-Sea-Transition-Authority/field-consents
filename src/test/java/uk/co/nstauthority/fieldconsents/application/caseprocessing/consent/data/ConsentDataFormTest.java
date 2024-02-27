@@ -130,11 +130,13 @@ class ConsentDataFormTest {
     assertThat(form)
         .extracting(
             consentDataForm -> consentDataForm.getConsentStartDateInput().getAsLocalDate().orElseThrow(),
-            consentDataForm -> consentDataForm.getConsentEndDateInput().getAsLocalDate().orElseThrow()
+            consentDataForm -> consentDataForm.getConsentEndDateInput().getAsLocalDate().orElseThrow(),
+            consentDataForm -> consentDataForm.getLongTermProductionConsentScheduleStartDateInput().getAsLocalDate().orElseThrow()
         )
         .containsExactly(
             startDate,
-            endDate
+            endDate,
+            startDate
         );
 
     assertThat(
@@ -154,7 +156,11 @@ class ConsentDataFormTest {
 
   @Test
   void fromLongTermProductionApplication_withConsentData() {
-    var consentData = ConsentDataTestUtil.newBuilder().build();
+    var longTermProductionConsentScheduleStartDate = LocalDate.parse("2024-02-23");
+
+    var consentData = ConsentDataTestUtil.newBuilder()
+        .withLongTermProductionConsentScheduleStartDate(longTermProductionConsentScheduleStartDate)
+        .build();
 
     var consentProductionLongTermFigures2024 = ConsentProductionLongTermFiguresTestUtil.builder()
         .withYear(2024)
@@ -205,11 +211,13 @@ class ConsentDataFormTest {
     assertThat(form)
         .extracting(
             consentDataForm -> consentDataForm.getConsentStartDateInput().getAsLocalDate().orElseThrow(),
-            consentDataForm -> consentDataForm.getConsentEndDateInput().getAsLocalDate().orElseThrow()
+            consentDataForm -> consentDataForm.getConsentEndDateInput().getAsLocalDate().orElseThrow(),
+            consentDataForm -> consentDataForm.getLongTermProductionConsentScheduleStartDateInput().getAsLocalDate().orElseThrow()
         )
         .containsExactly(
             consentData.getConsentStartDate(),
-            consentData.getConsentEndDate()
+            consentData.getConsentEndDate(),
+            longTermProductionConsentScheduleStartDate
         );
 
     assertThat(

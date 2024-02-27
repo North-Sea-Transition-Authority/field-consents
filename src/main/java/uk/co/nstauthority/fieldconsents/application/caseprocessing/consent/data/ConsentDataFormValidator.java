@@ -46,6 +46,17 @@ class ConsentDataFormValidator {
             errors
         );
       } else if (consentLengthType == ConsentLengthType.LONG_TERM) {
+        var consentEndDateInput = form.getConsentEndDateInput();
+
+        if (!consentStartDateInput.fieldHasErrors(errors) && !consentEndDateInput.fieldHasErrors(errors)) {
+          ThreeFieldDateInputValidator.builder()
+              .mustBeAfterOrEqualTo(consentStartDateInput.getAsLocalDate().orElseThrow())
+              .mustBeAfterOrEqualToErrorMessage("Consent schedule start date must be on or after the consent start date")
+              .mustBeBeforeOrEqualTo(consentEndDateInput.getAsLocalDate().orElseThrow())
+              .mustBeBeforeOrEqualToErrorMessage("Consent schedule start date must be on or before the consent end date")
+              .validate(form.getLongTermProductionConsentScheduleStartDateInput(), errors);
+        }
+
         form.getLongTermConsentProductionFiguresInputs().forEach((year, consentProductionFiguresInput) ->
             ValidatorUtils.invokeNestedValidator(
                 errors,

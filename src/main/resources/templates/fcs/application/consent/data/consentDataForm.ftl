@@ -23,6 +23,16 @@
     />
 
     <#if applicationType.name() == "PRODUCTION">
+      <#if consentLengthType.name() == "LONG_TERM">
+        <@fdsDateInput.dateInput
+          labelText="Consent schedule start date"
+          formId="form.longTermProductionConsentScheduleStartDateInput"
+          dayPath="form.longTermProductionConsentScheduleStartDateInput.dayInput.inputValue"
+          monthPath="form.longTermProductionConsentScheduleStartDateInput.monthInput.inputValue"
+          yearPath="form.longTermProductionConsentScheduleStartDateInput.yearInput.inputValue"
+        />
+      </#if>
+
       <h2 class="govuk-heading-s">Consent figures</h2>
 
       <table class="govuk-table">

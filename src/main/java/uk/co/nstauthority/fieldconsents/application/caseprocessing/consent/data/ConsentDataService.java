@@ -93,9 +93,12 @@ public class ConsentDataService {
     consentData.setConsentEndDate(form.getConsentEndDateInput().getAsLocalDate().orElseThrow());
 
     var applicationType = application.getType();
-    if (applicationType == ApplicationType.PRODUCTION
-        && (consentLengthType == ConsentLengthType.SHORT_TERM || consentLengthType == ConsentLengthType.ANNUAL)) {
-      updateConsentDataFromFormForShortTermOrAnnualProductionApplication(consentData, form);
+    if (applicationType == ApplicationType.PRODUCTION) {
+      if (consentLengthType == ConsentLengthType.SHORT_TERM || consentLengthType == ConsentLengthType.ANNUAL) {
+        updateConsentDataFromFormForShortTermOrAnnualProductionApplication(consentData, form);
+      } else if (consentLengthType == ConsentLengthType.LONG_TERM) {
+        updateConsentDataFromFormForLongTermProductionApplication(consentData, form);
+      }
       return;
     }
 
@@ -112,6 +115,12 @@ public class ConsentDataService {
     consentData.setShortTermOrAnnualProductionMaxOil(consentProductionFiguresDto.maxOil());
     consentData.setShortTermOrAnnualProductionMinGas(consentProductionFiguresDto.minGas());
     consentData.setShortTermOrAnnualProductionMaxGas(consentProductionFiguresDto.maxGas());
+  }
+
+  void updateConsentDataFromFormForLongTermProductionApplication(ConsentData consentData, ConsentDataForm form) {
+    var longTermProductionConsentScheduleStartDate =
+        form.getLongTermProductionConsentScheduleStartDateInput().getAsLocalDate().orElseThrow();
+    consentData.setLongTermProductionConsentScheduleStartDate(longTermProductionConsentScheduleStartDate);
   }
 
   void updateConsentDataFromFormForEmissionApplication(ConsentData consentData, ConsentDataForm form) {

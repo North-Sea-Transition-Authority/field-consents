@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.formatting.DecimalFormatUtils.bigDecimalToFormattedString;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Map;
 import org.apache.commons.text.WordUtils;
 import org.junit.jupiter.api.Test;
@@ -29,6 +30,7 @@ import uk.co.nstauthority.fieldconsents.document.DocumentInstanceLinkingService;
 import uk.co.nstauthority.fieldconsents.document.DocumentTemplateDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.document.DocumentTemplateType;
 import uk.co.nstauthority.fieldconsents.document.lib.FreeMarkerTemplateRenderingService;
+import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 
 @ExtendWith(MockitoExtension.class)
 class ScheduleMailMergeFieldTest {
@@ -95,38 +97,38 @@ class ScheduleMailMergeFieldTest {
 
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
 
-    var consentStartDate = "17/01/2024";
-    var consentEndDate = "17/01/2024";
+    var consentData = ConsentDataTestUtil.newBuilder().build();
 
     var consentLengthDetails = new ConsentLengthDetails();
     consentLengthDetails.setConsentLength(consentLengthType);
 
     var primaryFieldName = "Test primary field name";
 
-    var consentData = ConsentDataTestUtil.newBuilder().build();
+    var consentStartDate = "17/01/2024";
+    var consentEndDate = "17/01/2024";
 
     var html = "<html></html>";
 
     when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
         .thenReturn(applicationVersion);
-    when(consentStartDateMailMergeField.resolve(documentInstanceDto)).thenReturn(consentStartDate);
-    when(consentEndDateMailMergeField.resolve(documentInstanceDto)).thenReturn(consentEndDate);
+    when(consentDataService.getConsentData(applicationVersion.getApplication())).thenReturn(consentData);
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
     when(primaryFieldNameMailMergeField.resolve(documentInstanceDto)).thenReturn(primaryFieldName);
-    when(consentDataService.getConsentData(applicationVersion.getApplication())).thenReturn(consentData);
+    when(consentStartDateMailMergeField.resolve(documentInstanceDto)).thenReturn(consentStartDate);
+    when(consentEndDateMailMergeField.resolve(documentInstanceDto)).thenReturn(consentEndDate);
 
     when(
         freeMarkerTemplateRenderingService.renderTemplate(
             "fcs/document/template/consent/production/shortTermOrAnnualProductionConsentSchedule.ftl",
             Map.of(
-                "consentStartDate",
-                consentStartDate,
-                "consentEndDate",
-                consentEndDate,
                 "capitalizedConsentLengthType",
                 WordUtils.capitalizeFully(consentLengthType.getShortDisplayName()),
                 "primaryFieldName",
                 primaryFieldName,
+                "consentStartDate",
+                consentStartDate,
+                "consentEndDate",
+                consentEndDate,
                 "consentProductionFiguresView",
                 ConsentProductionFiguresView.fromShortTermOrAnnualConsentProductionFigures(consentData)
             )
@@ -148,13 +150,18 @@ class ScheduleMailMergeFieldTest {
 
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
 
-    var consentStartDate = "17/01/2024";
-    var consentEndDate = "17/01/2024";
+    var longTermProductionConsentScheduleStartDate = LocalDate.parse("2024-02-23");
+
+    var consentData = ConsentDataTestUtil.newBuilder()
+        .withLongTermProductionConsentScheduleStartDate(longTermProductionConsentScheduleStartDate)
+        .build();
 
     var consentLengthDetails = new ConsentLengthDetails();
     consentLengthDetails.setConsentLength(ConsentLengthType.LONG_TERM);
 
     var primaryFieldName = "Test primary field name";
+
+    var consentEndDate = "17/01/2024";
 
     var consentProductionFiguresViews = Map.of(
         "2024", mock(ConsentProductionFiguresView.class),
@@ -165,10 +172,10 @@ class ScheduleMailMergeFieldTest {
 
     when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
         .thenReturn(applicationVersion);
-    when(consentStartDateMailMergeField.resolve(documentInstanceDto)).thenReturn(consentStartDate);
-    when(consentEndDateMailMergeField.resolve(documentInstanceDto)).thenReturn(consentEndDate);
+    when(consentDataService.getConsentData(applicationVersion.getApplication())).thenReturn(consentData);
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
     when(primaryFieldNameMailMergeField.resolve(documentInstanceDto)).thenReturn(primaryFieldName);
+    when(consentEndDateMailMergeField.resolve(documentInstanceDto)).thenReturn(consentEndDate);
     when(consentProductionLongTermFiguresService.getConsentProductionLongTermFiguresViews(applicationVersion.getApplication()))
         .thenReturn(consentProductionFiguresViews);
 
@@ -176,14 +183,14 @@ class ScheduleMailMergeFieldTest {
         freeMarkerTemplateRenderingService.renderTemplate(
             "fcs/document/template/consent/production/longTermProductionConsentSchedule.ftl",
             Map.of(
-                "consentStartDate",
-                consentStartDate,
-                "consentEndDate",
-                consentEndDate,
                 "capitalizedConsentLengthType",
                 WordUtils.capitalizeFully(ConsentLengthType.LONG_TERM.getShortDisplayName()),
                 "primaryFieldName",
                 primaryFieldName,
+                "scheduleStartDate",
+                DateUtils.format(longTermProductionConsentScheduleStartDate, DateUtils.LONG_DATE),
+                "consentEndDate",
+                consentEndDate,
                 "consentProductionFiguresViews",
                 consentProductionFiguresViews
             )
@@ -212,22 +219,22 @@ class ScheduleMailMergeFieldTest {
 
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
 
-    var consentStartDate = "17/01/2024";
-    var consentEndDate = "17/01/2024";
-
     var emissionDailyAverage = BigDecimal.valueOf(235.79);
 
     var consentData = ConsentDataTestUtil.newBuilder()
         .withEmissionDailyAverage(emissionDailyAverage)
         .build();
 
+    var consentStartDate = "17/01/2024";
+    var consentEndDate = "17/01/2024";
+
     var html = "<html></html>";
 
     when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
         .thenReturn(applicationVersion);
+    when(consentDataService.getConsentData(applicationVersion.getApplication())).thenReturn(consentData);
     when(consentStartDateMailMergeField.resolve(documentInstanceDto)).thenReturn(consentStartDate);
     when(consentEndDateMailMergeField.resolve(documentInstanceDto)).thenReturn(consentEndDate);
-    when(consentDataService.getConsentData(applicationVersion.getApplication())).thenReturn(consentData);
 
     when(
         freeMarkerTemplateRenderingService.renderTemplate(

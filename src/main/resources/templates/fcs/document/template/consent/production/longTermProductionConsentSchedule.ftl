@@ -29,5 +29,5 @@
 
 <p class="govuk-body">NOTES:</p>
 
-<p class="govuk-body govuk-!-margin-bottom-0">(1) Production from ${consentStartDate}.</p>
+<p class="govuk-body govuk-!-margin-bottom-0">(1) Production from ${scheduleStartDate}.</p>
 <p class="govuk-body">(2) Production to ${consentEndDate}.</p>
