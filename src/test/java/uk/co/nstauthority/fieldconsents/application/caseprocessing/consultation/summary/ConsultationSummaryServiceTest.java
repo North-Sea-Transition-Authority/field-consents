@@ -9,6 +9,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
+import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.FILE_ID;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -124,6 +125,7 @@ class ConsultationSummaryServiceTest {
     furtherInformation.setConsultation(consultation);
 
     uploadedFile = new UploadedFile();
+    uploadedFile.setId(FILE_ID);
     uploadedFile.setName("example.pdf");
     uploadedFile.setDescription("description");
   }
@@ -545,7 +547,7 @@ class ConsultationSummaryServiceTest {
 
     var summaryFileViews = Collections.singletonList(SummaryFileView.from(
         uploadedFile,
-        ReverseRouter.route(on(ConsultationResponseFileController.class).download(APPLICATION_ID, CONSULTATION_ID, null, null))
+        ReverseRouter.route(on(ConsultationResponseFileController.class).download(APPLICATION_ID, CONSULTATION_ID, FILE_ID, null))
     ));
 
     assertThat(consultationSummaryService.getFilesSummaryCard(consultation))

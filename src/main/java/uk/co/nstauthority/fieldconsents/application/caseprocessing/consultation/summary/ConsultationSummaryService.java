@@ -171,7 +171,12 @@ public class ConsultationSummaryService {
         .stream()
         .map(uploadedFile -> SummaryFileView.from(
             uploadedFile,
-            ReverseRouter.route(on(ConsultationResponseFileController.class).download(applicationId, consultationId, null, null))
+            ReverseRouter.route(on(ConsultationResponseFileController.class).download(
+                applicationId,
+                consultationId,
+                uploadedFile.getId(),
+                null
+            ))
         ))
         .toList();
 

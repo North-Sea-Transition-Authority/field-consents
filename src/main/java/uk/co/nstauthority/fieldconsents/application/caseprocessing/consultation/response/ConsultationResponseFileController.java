@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.response;
 
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_RESPONSE;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.RESPOND_TO_CONSULTATION;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_CASE_PROCESSING_DOCUMENTS;
 
 import java.util.UUID;
@@ -40,7 +41,7 @@ public class ConsultationResponseFileController {
   }
 
   @GetMapping("/{fileId}")
-  @HasApplicationPermission(permissions = VIEW_FCS_CASE_PROCESSING_DOCUMENTS)
+  @HasApplicationPermission(permissions = {VIEW_FCS_CASE_PROCESSING_DOCUMENTS, RESPOND_TO_CONSULTATION})
   public ResponseEntity<InputStreamResource> download(
       @PathVariable Integer applicationId,
       @PathVariable Integer consultationId,
