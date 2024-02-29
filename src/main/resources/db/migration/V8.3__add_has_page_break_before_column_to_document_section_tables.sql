@@ -1,7 +1,0 @@
-ALTER TABLE document_library_document_template_sections ADD COLUMN has_page_break_before BOOLEAN;
-UPDATE document_library_document_template_sections SET has_page_break_before = false;
-ALTER TABLE document_library_document_template_sections ALTER COLUMN has_page_break_before SET NOT NULL;
-
-ALTER TABLE document_library_document_instance_sections ADD COLUMN has_page_break_before BOOLEAN;
-UPDATE document_library_document_instance_sections SET has_page_break_before = false;
-ALTER TABLE document_library_document_instance_sections ALTER COLUMN has_page_break_before SET NOT NULL;

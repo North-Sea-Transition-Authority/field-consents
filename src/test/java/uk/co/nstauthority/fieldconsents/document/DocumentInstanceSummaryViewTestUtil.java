@@ -1,7 +1,7 @@
 package uk.co.nstauthority.fieldconsents.document;
 
 import java.util.UUID;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceSummaryView;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSummaryView;
 
 public class DocumentInstanceSummaryViewTestUtil {
 

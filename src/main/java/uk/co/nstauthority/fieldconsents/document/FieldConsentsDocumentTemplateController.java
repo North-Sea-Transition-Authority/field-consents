@@ -6,11 +6,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateController;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateControllerHelperService;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionControllerHelperService;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateService;
 import uk.co.nstauthority.fieldconsents.authorisation.HasPermission;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateController;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateControllerHelperService;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateSectionControllerHelperService;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateService;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Controller

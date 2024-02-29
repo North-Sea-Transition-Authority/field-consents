@@ -6,15 +6,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceDto;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionControllerHelperService;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceService;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateDto;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateService;
 import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceDto;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceSectionControllerHelperService;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceService;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateService;
 
 @Service
 public class FieldConsentsDocumentInstanceService {

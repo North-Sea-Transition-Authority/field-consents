@@ -14,8 +14,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateSectionService;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateService;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionService;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateService;
 
 @ExtendWith(MockitoExtension.class)
 class DocumentTemplateBootstrapServiceTest {

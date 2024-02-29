@@ -6,8 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateSectionService;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateService;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionService;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateService;
 
 @Service
 class DocumentTemplateBootstrapService {

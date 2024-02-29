@@ -1,8 +1,8 @@
 package uk.co.nstauthority.fieldconsents.document;
 
 import java.util.UUID;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceDto;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceDto;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateDto;
 
 public class DocumentInstanceDtoTestUtil {
 

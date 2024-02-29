@@ -2,13 +2,13 @@ package uk.co.nstauthority.fieldconsents.document.templatesectioncondition;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceDto;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateDto;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionCondition;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagService;
 import uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType;
 import uk.co.nstauthority.fieldconsents.document.DocumentInstanceLinkingService;
 import uk.co.nstauthority.fieldconsents.document.DocumentTemplateType;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceDto;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateSectionCondition;
 
 @Component
 class GasWillBeInjectedCondition implements DocumentTemplateSectionCondition {

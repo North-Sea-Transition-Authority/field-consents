@@ -2,6 +2,9 @@ package uk.co.nstauthority.fieldconsents.document.mailmergefield;
 
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceDto;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeField;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateDto;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.field.FieldApi;
 import uk.co.fivium.energyportalapi.generated.client.FieldProjectionRoot;
@@ -9,9 +12,6 @@ import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetServi
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.document.DocumentInstanceLinkingService;
 import uk.co.nstauthority.fieldconsents.document.DocumentTemplateType;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceDto;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentMailMergeField;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
 
 @Order(8)
 @Component

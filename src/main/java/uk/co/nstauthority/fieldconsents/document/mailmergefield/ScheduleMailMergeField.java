@@ -7,16 +7,16 @@ import java.util.Map;
 import org.apache.commons.text.WordUtils;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceDto;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeField;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateDto;
+import uk.co.fivium.digitaldocumentlibrary.document.FreeMarkerTemplateRenderingService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionFiguresView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionLongTermFiguresService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.document.DocumentInstanceLinkingService;
 import uk.co.nstauthority.fieldconsents.document.DocumentTemplateType;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceDto;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentMailMergeField;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateDto;
-import uk.co.nstauthority.fieldconsents.document.lib.FreeMarkerTemplateRenderingService;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 
 @Order(18)

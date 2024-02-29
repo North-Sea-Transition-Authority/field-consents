@@ -1,6 +1,6 @@
 package uk.co.nstauthority.fieldconsents.document.mailmergefield;
 
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceDto;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceDto;
 
 public class MailMergeFieldFailedToResolveException extends IllegalStateException {
 

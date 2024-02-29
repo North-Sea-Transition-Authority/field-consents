@@ -19,6 +19,9 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ByteArrayResource;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionControllerHelperService;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceService;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateService;
 import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
@@ -27,9 +30,6 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceSectionControllerHelperService;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentInstanceService;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateService;
 
 @ExtendWith(MockitoExtension.class)
 class FieldConsentsDocumentInstanceServiceTest {

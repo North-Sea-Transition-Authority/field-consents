@@ -15,13 +15,13 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateControllerHelperService;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionControllerHelperService;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionSummaryView;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateService;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSummaryView;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateControllerHelperService;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateSectionControllerHelperService;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateSectionSummaryView;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateService;
-import uk.co.nstauthority.fieldconsents.document.lib.DocumentTemplateSummaryView;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
