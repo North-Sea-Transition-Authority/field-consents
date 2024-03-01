@@ -6,8 +6,10 @@ import static uk.co.nstauthority.fieldconsents.formatting.DateUtils.DATE_TIME;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.email.EmailService;
@@ -16,12 +18,13 @@ import uk.co.nstauthority.fieldconsents.email.GovukNotifyTemplate;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 
 @Service
 public class ApplicationUpdateEmailService {
 
-  private static final String ORGANISATION_LOOKUP_PURPOSE = "Organisation lookup for application update response notification";
+  private static final String ORGANISATION_LOOKUP_PURPOSE = "Organisation lookup for application update notification";
 
   private final EmailService emailService;
   private final EnergyPortalUserService energyPortalUserService;
@@ -45,16 +48,51 @@ public class ApplicationUpdateEmailService {
         energyPortalUserService.getByWuaId(WebUserAccountId.from(applicationVersion.getSubmittedByWuaId()))
     );
 
-    var mergedTemplate = emailService
-        .getTemplate(GovukNotifyTemplate.APPLICATION_UPDATE_REQUEST, applicationVersion)
+    var mergedOperatorTemplate = emailService
+        .getTemplate(GovukNotifyTemplate.APPLICATION_UPDATE_REQUEST_OPERATOR, applicationVersion)
         .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, applicationSubmitter.displayName())
         .withMailMergeField(REQUEST_DEADLINE_MERGE_FIELD_NAME,
             DateUtils.format(applicationUpdate.getDeadlineDateTime(), DATE_TIME))
         .merge();
 
     emailService.sendEmail(
-        mergedTemplate,
+        mergedOperatorTemplate,
         FieldConsentsEmailRecipient.from(applicationSubmitter),
+        applicationVersion
+    );
+
+    // If the case officer is the current owner of the application and the update request was submitted by a user
+    // different from the assigned case officer, notify the case officer about the update request.
+    if (Objects.nonNull(applicationVersion.getCaseOfficerWuaId())
+        && !applicationUpdate.getRequestedByWuaId().equals(applicationVersion.getCaseOfficerWuaId())) {
+      sendApplicationUpdateRequestEmailToCaseOfficer(applicationUpdate);
+    }
+  }
+
+  private void sendApplicationUpdateRequestEmailToCaseOfficer(ApplicationUpdate applicationUpdate) {
+    var applicationVersion = applicationUpdate.getApplicationVersion();
+    var primaryOperator = getApplicationPrimaryOperator(applicationVersion);
+
+    var updateRequestedByWuaId = WebUserAccountId.from(applicationUpdate.getRequestedByWuaId());
+    var caseOfficerWuaId = WebUserAccountId.from(applicationVersion.getCaseOfficerWuaId());
+    var applicationUpdateUserWuaIds = List.of(updateRequestedByWuaId, caseOfficerWuaId);
+
+    var applicationUpdatePortalUserDtos = energyPortalUserService.getEnergyPortalUserMap(applicationUpdateUserWuaIds);
+
+    var caseOfficerDto = applicationUpdatePortalUserDtos.get(caseOfficerWuaId);
+    var updateRequestedByDto = applicationUpdatePortalUserDtos.get(updateRequestedByWuaId);
+    var mergedCaseOfficerTemplate = emailService
+        .getTemplate(GovukNotifyTemplate.APPLICATION_UPDATE_REQUEST_CASE_OFFICER, applicationVersion)
+        .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, caseOfficerDto.displayName())
+        .withMailMergeField(REQUEST_DEADLINE_MERGE_FIELD_NAME,
+            DateUtils.format(applicationUpdate.getDeadlineDateTime(), DATE_TIME))
+        .withMailMergeField("PRIMARY_OPERATOR_NAME", primaryOperator.name())
+        .withMailMergeField("REQUESTER_USER", updateRequestedByDto.displayName())
+        .merge();
+
+    emailService.sendEmail(
+        mergedCaseOfficerTemplate,
+        FieldConsentsEmailRecipient.from(caseOfficerDto),
         applicationVersion
     );
   }
@@ -62,10 +100,7 @@ public class ApplicationUpdateEmailService {
   public void sendApplicationUpdateResponseEmail(ApplicationUpdate applicationUpdate) {
     var applicationVersion = applicationUpdate.getApplicationVersion();
 
-    var primaryOperator = organisationUnitService.getOrganisationUnitByIdOrFallback(
-        applicationVersion.getPrimaryOperatorOuId(),
-        ORGANISATION_LOOKUP_PURPOSE,
-        applicationVersion.getCachedPrimaryOperatorName());
+    var primaryOperator = getApplicationPrimaryOperator(applicationVersion);
 
     var mergedTemplateBuilder = emailService
         .getTemplate(GovukNotifyTemplate.APPLICATION_UPDATE_RESPONSE, applicationVersion)
@@ -87,14 +122,22 @@ public class ApplicationUpdateEmailService {
     });
   }
 
+  private OrganisationUnitJson getApplicationPrimaryOperator(ApplicationVersion applicationVersion) {
+    return organisationUnitService.getOrganisationUnitByIdOrFallback(
+        applicationVersion.getPrimaryOperatorOuId(),
+        ORGANISATION_LOOKUP_PURPOSE,
+        applicationVersion.getCachedPrimaryOperatorName());
+  }
+
   private List<FieldConsentsEmailRecipient> getApplicationUpdateResponseEmailRecipients(ApplicationUpdate applicationUpdate) {
     var applicationVersion = applicationUpdate.getApplicationVersion();
     var emailRecipientWuaIds = new HashSet<Long>();
 
-    var updateRequestedByWuaId = applicationUpdate.getRequestedByWuaId();
-    var caseOfficerWuaId = applicationVersion.getCaseOfficerWuaId();
-    emailRecipientWuaIds.add(updateRequestedByWuaId);
-    emailRecipientWuaIds.add(caseOfficerWuaId);
+    emailRecipientWuaIds.add(applicationUpdate.getRequestedByWuaId());
+
+    if (Objects.nonNull(applicationVersion.getCaseOfficerWuaId())) {
+      emailRecipientWuaIds.add(applicationVersion.getCaseOfficerWuaId());
+    }
 
     technicalReviewService.findOpenTechnicalReview(applicationVersion)
         .ifPresent(technicalReview -> emailRecipientWuaIds.add(technicalReview.getTechnicalReviewerWuaId()));

@@ -11,3 +11,5 @@ CVE-2022-41854
 CVE-2023-3635
 # org.apache.santuario:xmlsec
 CVE-2023-44483
+# org.bitbucket.b_c:jose4j (app.jar)
+CVE-2023-51775

@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.CASE_OFFICER_EPU;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateTestUtil.APPLICATION_UPDATE_RESPONSE_TEXT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateTestUtil.CURRENT_INSTANT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateTestUtil.TECHNICAL_REVIEWER_ENERGY_PORTAL_USER_DTO;
@@ -18,10 +19,13 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update
 import static uk.co.nstauthority.fieldconsents.email.EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME;
 import static uk.co.nstauthority.fieldconsents.email.EmailService.REQUEST_DEADLINE_MERGE_FIELD_NAME;
 import static uk.co.nstauthority.fieldconsents.formatting.DateUtils.DATE_TIME;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.CASE_OFFICER_ENERGY_PORTAL_USER_DTO;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.ENERGY_PORTAL_USER_DTO;
 
 import java.time.Clock;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
@@ -89,8 +93,7 @@ class ApplicationUpdateEmailServiceTest {
         emailService,
         energyPortalUserService,
         technicalReviewService,
-        organisationUnitService
-    );
+        organisationUnitService);
     ApplicationVersion applicationVersionUpdate = ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(
         ApplicationType.PRODUCTION, 2, 2
     );
@@ -106,12 +109,12 @@ class ApplicationUpdateEmailServiceTest {
   }
 
   @Test
-  void sendApplicationUpdateRequestEmail() {
-    var serviceDetailUser = ServiceUserDetail.from(UPDATE_REQUESTER_ENERGY_PORTAL_USER_DTO);
+  void sendApplicationUpdateRequestEmail_whenCaseOfficerRequestsAnUpdate_thenAnEmailIsSentToTheOperatorOnly() {
+    var serviceDetailSubmitter = ServiceUserDetail.from(ENERGY_PORTAL_USER_DTO);
 
-    when(emailService.getTemplate(GovukNotifyTemplate.APPLICATION_UPDATE_REQUEST, applicationVersion))
+    when(emailService.getTemplate(GovukNotifyTemplate.APPLICATION_UPDATE_REQUEST_OPERATOR, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
-    when(energyPortalUserService.getByWuaId(any())).thenReturn(UPDATE_REQUESTER_ENERGY_PORTAL_USER_DTO);
+    when(energyPortalUserService.getByWuaId(any())).thenReturn(ENERGY_PORTAL_USER_DTO);
 
     applicationUpdateEmailService.sendApplicationUpdateRequestEmail(applicationUpdate);
 
@@ -128,18 +131,136 @@ class ApplicationUpdateEmailServiceTest {
     assertThat(templateCaptor.getValue().getMailMergeFields())
         .extracting(MailMergeField::name, MailMergeField::value)
         .containsOnly(
-            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, UPDATE_REQUESTER_ENERGY_PORTAL_USER_DTO.displayName()),
+            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, ENERGY_PORTAL_USER_DTO.displayName()),
             tuple(REQUEST_DEADLINE_MERGE_FIELD_NAME, DateUtils.format(applicationUpdate.getDeadlineDateTime(), DATE_TIME))
         );
 
     assertThat(emailRecipientCaptor.getValue().getEmailAddress())
-        .isEqualTo(FieldConsentsEmailRecipient.from(serviceDetailUser).getEmailAddress());
+        .isEqualTo(FieldConsentsEmailRecipient.from(serviceDetailSubmitter).getEmailAddress());
 
     assertThat(domainReferenceCaptor.getValue().getDomainId())
         .isEqualTo(applicationVersion.getId().toString());
 
     assertThat(domainReferenceCaptor.getValue().getDomainType())
-        .isEqualTo("APPLICATION_VERSION");
+        .isEqualTo(APPLICATION_VERSION_DOMAIN_REFERENCE);
+  }
+
+  @Test
+  void sendApplicationUpdateRequestEmail_whenUserDifferentFromCaseOfficerRequestsAnUpdate_thenAnEmailIsSentToTheOperatorAndCaseOfficer() {
+    var serviceDetailSubmitter = ServiceUserDetail.from(ENERGY_PORTAL_USER_DTO);
+    var serviceDetailCaseOfficer = ServiceUserDetail.from(CASE_OFFICER_ENERGY_PORTAL_USER_DTO);
+
+    applicationUpdate.setRequestedByWuaId(TECHNICAL_REVIEWER_WUA_ID);
+
+    when(organisationUnitService.getOrganisationUnitByIdOrFallback(
+        eq(applicationVersion.getPrimaryOperatorOuId()),
+        anyString(),
+        eq(applicationVersion.getCachedPrimaryOperatorName()))
+    ).thenReturn(primaryOperator);
+    when(emailService.getTemplate(GovukNotifyTemplate.APPLICATION_UPDATE_REQUEST_OPERATOR, applicationVersion))
+        .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
+    when(emailService.getTemplate(GovukNotifyTemplate.APPLICATION_UPDATE_REQUEST_CASE_OFFICER, applicationVersion))
+        .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
+    when(energyPortalUserService.getByWuaId(any())).thenReturn(ENERGY_PORTAL_USER_DTO);
+
+    when(energyPortalUserService.getEnergyPortalUserMap(
+        List.of(
+            WebUserAccountId.from(TECHNICAL_REVIEWER_WUA_ID),
+            WebUserAccountId.from(CASE_OFFICER_EPU.webUserAccountId())))
+    ).thenReturn(
+        Map.of(
+            WebUserAccountId.from(TECHNICAL_REVIEWER_WUA_ID), TECHNICAL_REVIEWER_ENERGY_PORTAL_USER_DTO,
+            WebUserAccountId.from(CASE_OFFICER_EPU.webUserAccountId()), CASE_OFFICER_EPU
+        ));
+
+    applicationUpdateEmailService.sendApplicationUpdateRequestEmail(applicationUpdate);
+
+    var templateCaptor = ArgumentCaptor.forClass(MergedTemplate.class);
+    var emailRecipientCaptor = ArgumentCaptor.forClass(EmailRecipient.class);
+    var domainReferenceCaptor = ArgumentCaptor.forClass(DomainReference.class);
+
+    verify(emailService, Mockito.times(2)).sendEmail(
+        templateCaptor.capture(),
+        emailRecipientCaptor.capture(),
+        domainReferenceCaptor.capture()
+    );
+
+    // verify emails merge fields
+    var emailTemplates = templateCaptor.getAllValues();
+
+    var firstEmailMergeFields = emailTemplates.get(0).getMailMergeFields();
+    assertThat(firstEmailMergeFields)
+        .extracting(MailMergeField::name, MailMergeField::value)
+        .containsOnly(
+            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, ENERGY_PORTAL_USER_DTO.displayName()),
+            tuple(REQUEST_DEADLINE_MERGE_FIELD_NAME, DateUtils.format(applicationUpdate.getDeadlineDateTime(), DATE_TIME))
+        );
+
+    var secondEmailMergeFields = emailTemplates.get(1).getMailMergeFields();
+    assertThat(secondEmailMergeFields)
+        .extracting(MailMergeField::name, MailMergeField::value)
+        .containsOnly(
+            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, CASE_OFFICER_EPU.displayName()),
+            tuple(REQUEST_DEADLINE_MERGE_FIELD_NAME, DateUtils.format(applicationUpdate.getDeadlineDateTime(), DATE_TIME)),
+            tuple(PRIMARY_OPERATOR_NAME_MAIL_MERGE_FIELD, primaryOperator.name()),
+            tuple("REQUESTER_USER", TECHNICAL_REVIEWER_ENERGY_PORTAL_USER_DTO.displayName())
+        );
+
+    // verify email recipients
+    var testEmailRecipients = emailRecipientCaptor.getAllValues();
+    assertThat(testEmailRecipients).hasSize(2);
+
+    assertThat(testEmailRecipients.get(0).getEmailAddress())
+        .isEqualTo(FieldConsentsEmailRecipient.from(serviceDetailSubmitter).getEmailAddress());
+    assertThat(testEmailRecipients.get(1).getEmailAddress())
+        .isEqualTo(FieldConsentsEmailRecipient.from(serviceDetailCaseOfficer).getEmailAddress());
+
+    // verify domain reference
+    assertThat(domainReferenceCaptor.getValue().getDomainId())
+        .isEqualTo(applicationVersion.getId().toString());
+
+    assertThat(domainReferenceCaptor.getValue().getDomainType())
+        .isEqualTo(APPLICATION_VERSION_DOMAIN_REFERENCE);
+  }
+
+  @Test
+  void sendApplicationUpdateRequestEmail_whenUserRequestsAnUpdateAndCaseOfficerHasReleasedOwnership_thenAnEmailIsSentToTheOperatorOnly() {
+    var serviceDetailSubmitter = ServiceUserDetail.from(ENERGY_PORTAL_USER_DTO);
+
+    applicationVersion.setCaseOfficerWuaId(null);
+    applicationUpdate.setRequestedByWuaId(TECHNICAL_REVIEWER_WUA_ID);
+
+    when(emailService.getTemplate(GovukNotifyTemplate.APPLICATION_UPDATE_REQUEST_OPERATOR, applicationVersion))
+        .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
+    when(energyPortalUserService.getByWuaId(any())).thenReturn(ENERGY_PORTAL_USER_DTO);
+
+    applicationUpdateEmailService.sendApplicationUpdateRequestEmail(applicationUpdate);
+
+    var templateCaptor = ArgumentCaptor.forClass(MergedTemplate.class);
+    var emailRecipientCaptor = ArgumentCaptor.forClass(EmailRecipient.class);
+    var domainReferenceCaptor = ArgumentCaptor.forClass(DomainReference.class);
+
+    verify(emailService).sendEmail(
+        templateCaptor.capture(),
+        emailRecipientCaptor.capture(),
+        domainReferenceCaptor.capture()
+    );
+
+    assertThat(templateCaptor.getValue().getMailMergeFields())
+        .extracting(MailMergeField::name, MailMergeField::value)
+        .containsOnly(
+            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, ENERGY_PORTAL_USER_DTO.displayName()),
+            tuple(REQUEST_DEADLINE_MERGE_FIELD_NAME, DateUtils.format(applicationUpdate.getDeadlineDateTime(), DATE_TIME))
+        );
+
+    assertThat(emailRecipientCaptor.getValue().getEmailAddress())
+        .isEqualTo(FieldConsentsEmailRecipient.from(serviceDetailSubmitter).getEmailAddress());
+
+    assertThat(domainReferenceCaptor.getValue().getDomainId())
+        .isEqualTo(applicationVersion.getId().toString());
+
+    assertThat(domainReferenceCaptor.getValue().getDomainType())
+        .isEqualTo(APPLICATION_VERSION_DOMAIN_REFERENCE);
   }
 
   @Test
@@ -204,8 +325,8 @@ class ApplicationUpdateEmailServiceTest {
   @Test
   void sendApplicationUpdateResponseEmail_withOpenTechnicalReviewAndBothCaseOfficerAndTechnicalReviewerNotified() {
     var technicalReview = new TechnicalReview();
-    technicalReview.setTechnicalReviewerWuaId(2L);
-    
+    technicalReview.setTechnicalReviewerWuaId(TECHNICAL_REVIEWER_WUA_ID);
+
     when(organisationUnitService.getOrganisationUnitByIdOrFallback(
         eq(applicationVersion.getPrimaryOperatorOuId()),
         anyString(),
@@ -259,6 +380,53 @@ class ApplicationUpdateEmailServiceTest {
         .isEqualTo(FieldConsentsEmailRecipient.from(TECHNICAL_REVIEWER_ENERGY_PORTAL_USER_DTO).getEmailAddress());
 
     // verify domain reference
+    assertThat(domainReferenceCaptor.getValue().getDomainId())
+        .isEqualTo(applicationVersion.getId().toString());
+
+    assertThat(domainReferenceCaptor.getValue().getDomainType())
+        .isEqualTo(APPLICATION_VERSION_DOMAIN_REFERENCE);
+  }
+
+  @Test
+  void sendApplicationUpdateResponseEmail_whenTechnicalReviewHasRequestedTheUpdateAndCaseOfficerHasReleasedOwnership_thenAnEmailIsSentToTheOperatorOnly() {
+    var technicalReview = new TechnicalReview();
+    technicalReview.setTechnicalReviewerWuaId(2L);
+    applicationVersion.setCaseOfficerWuaId(null);
+    applicationUpdate.setRequestedByWuaId(TECHNICAL_REVIEWER_WUA_ID);
+
+    when(organisationUnitService.getOrganisationUnitByIdOrFallback(
+        eq(applicationVersion.getPrimaryOperatorOuId()),
+        anyString(),
+        eq(applicationVersion.getCachedPrimaryOperatorName()))
+    ).thenReturn(primaryOperator);
+    when(emailService.getTemplate(GovukNotifyTemplate.APPLICATION_UPDATE_RESPONSE, applicationVersion))
+        .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
+    when(technicalReviewService.findOpenTechnicalReview(applicationVersion)).thenReturn(Optional.of(technicalReview));
+    when(energyPortalUserService.findByWuaIds(List.of(WebUserAccountId.from(TECHNICAL_REVIEWER_WUA_ID))))
+        .thenReturn(List.of(TECHNICAL_REVIEWER_ENERGY_PORTAL_USER_DTO));
+
+    applicationUpdateEmailService.sendApplicationUpdateResponseEmail(applicationUpdate);
+
+    var templateCaptor = ArgumentCaptor.forClass(MergedTemplate.class);
+    var emailRecipientCaptor = ArgumentCaptor.forClass(EmailRecipient.class);
+    var domainReferenceCaptor = ArgumentCaptor.forClass(DomainReference.class);
+
+    verify(emailService).sendEmail(
+        templateCaptor.capture(),
+        emailRecipientCaptor.capture(),
+        domainReferenceCaptor.capture()
+    );
+
+    assertThat(templateCaptor.getValue().getMailMergeFields())
+        .extracting(MailMergeField::name, MailMergeField::value)
+        .containsOnly(
+            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, TECHNICAL_REVIEWER_ENERGY_PORTAL_USER_DTO.displayName()),
+            tuple(PRIMARY_OPERATOR_NAME_MAIL_MERGE_FIELD, primaryOperator.name())
+        );
+
+    assertThat(emailRecipientCaptor.getValue().getEmailAddress())
+        .isEqualTo(FieldConsentsEmailRecipient.from(TECHNICAL_REVIEWER_ENERGY_PORTAL_USER_DTO).getEmailAddress());
+
     assertThat(domainReferenceCaptor.getValue().getDomainId())
         .isEqualTo(applicationVersion.getId().toString());
 
