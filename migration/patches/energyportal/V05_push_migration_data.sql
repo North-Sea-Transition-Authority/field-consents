@@ -1681,6 +1681,60 @@ END;
 --ORDER BY usage_id, uploaded_at
 --/
 
+--
+-- application_other_legacy_data
+--
+BEGIN
+
+  FOR rec IN (SELECT * FROM fcs_migration.application_other_legacy_data WHERE id > 0 ORDER BY id) LOOP
+  
+    INSERT INTO "fcs"."application_other_legacy_data"@fcs_postgres_db (
+      "id"
+    , "application_version_id"
+    , "increase_in_production"
+    , "es_reference"
+    , "uplift_percentage"
+    , "field_location"
+    , "previous_year_consent_history"
+    , "previous_year_actuals"
+    , "terminal_name"
+    , "terminal_location"
+    , "project_under_eia_regs"
+    ) VALUES (
+      rec.id
+    , rec.application_version_id
+    , rec.increase_in_production
+    , rec.es_reference
+    , rec.uplift_percentage
+    , rec.field_location
+    , rec.previous_year_consent_history
+    , rec.previous_year_actuals
+    , rec.terminal_name
+    , rec.terminal_location
+    , rec.project_under_eia_regs
+    );
+  
+  END LOOP;
+
+END;
+/
+---- manual export/import (for local dev import)
+--SELECT
+--  ld.id
+--, ld.application_version_id
+--, ld.increase_in_production
+--, ld.es_reference
+--, ld.uplift_percentage
+--, ld.field_location
+--, ld.previous_year_consent_history
+--, ld.previous_year_actuals
+--, ld.terminal_name
+--, ld.terminal_location
+--, ld.project_under_eia_regs
+--FROM fcs_migration.application_other_legacy_data ld
+--ORDER BY id
+--/
+
 -- work around DB link timeout issues from sqlnet.ora param SQLNET.INBOUND_CONNECT_TIMEOUT
 BEGIN
   COMMIT;

@@ -2676,3 +2676,33 @@ JOIN fcs_migration.field_consent_supporting_docs sd ON sd.fcd_id = av.id
 JOIN promotemgr.s3_file_migration fm ON fm.fox_file_id = sd.fox_file_id
 WHERE fm.migrated_timestamp IS NOT NULL;
 /
+
+--
+-- application_other_legacy_data
+--
+SELECT
+  null --id
+, av.id application_version_id
+, ld.increase_in_production
+, ld.es_reference
+, ld.uplift_percentage
+, ld.field_location
+, ld.previous_year_consent_history
+, ld.previous_year_actuals
+, ld.terminal_name
+, ld.terminal_location
+, ld.project_under_eia_regs
+, a.fc_id
+FROM fcs_migration.application_versions av
+JOIN fcs_migration.field_consent_other_legacy_data ld ON ld.fcd_id = av.id
+JOIN fcs_migration.applications a ON a.id = av.application_id
+WHERE (
+  coalesce(ld.increase_in_production, ld.es_reference, ld.field_location, ld.terminal_name, ld.terminal_location, ld.project_under_eia_regs) IS NOT NULL
+  OR coalesce(ld.uplift_percentage, ld.previous_year_consent_history, ld.previous_year_actuals) IS NOT NULL
+)
+--AND ld.terminal_name IS NULL AND coalesce(ld.previous_year_consent_history, ld.previous_year_actuals) IS NULL
+--AND ld.field_location IS NOT NULL
+--AND ld.vent_app_type_default = 'false' AND coalesce(ld.previous_year_consent_history, ld.previous_year_actuals) IS NULL
+--AND ld.increase_in_production IS NOT NULL AND ld.es_reference IS NOT NULL AND ld.uplift_percentage IS NOT NULL
+ORDER BY av.id ASC
+/

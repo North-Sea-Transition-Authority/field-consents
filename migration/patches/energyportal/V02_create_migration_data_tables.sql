@@ -2,6 +2,8 @@
 -- Run script with F5 in Toad
 --
 
+--DROP TABLE fcs_migration.application_other_legacy_data;
+--DROP SEQUENCE fcs_migration.application_other_legacy_data_id_seq;
 --DROP TABLE fcs_migration.vent_long_term_years;
 --DROP SEQUENCE fcs_migration.vent_long_term_year_id_seq;
 --DROP TABLE fcs_migration.flare_long_term_years;
@@ -812,4 +814,26 @@ CREATE TABLE fcs_migration.file_upload_library_uploaded_files (
 , document_type  VARCHAR2(4000) -- e.g. supporting-document
 , description    VARCHAR2(4000) -- file description
 , uploaded_by    VARCHAR2(4000) -- wua id
+);
+
+--
+-- application_other_legacy_data
+--
+CREATE SEQUENCE fcs_migration.application_other_legacy_data_id_seq;
+
+CREATE TABLE fcs_migration.application_other_legacy_data (
+  id                              INTEGER PRIMARY KEY
+, application_version_id          INTEGER NOT NULL
+                                  UNIQUE
+                                  CONSTRAINT application_other_legacy_data_fk1_av_id
+                                  REFERENCES fcs_migration.application_versions
+, increase_in_production          VARCHAR2(5) -- true/false
+, es_reference                    VARCHAR2(4000)
+, uplift_percentage               INTEGER
+, field_location                  VARCHAR2(4000)
+, previous_year_consent_history   NUMBER
+, previous_year_actuals           NUMBER
+, terminal_name                   VARCHAR2(4000)
+, terminal_location               VARCHAR2(4000)
+, project_under_eia_regs          VARCHAR2(5) -- true/false
 );

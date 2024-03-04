@@ -9,6 +9,7 @@ import static uk.co.nstauthority.fieldconsents.application.summary.shared.Additi
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,6 +25,8 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil;
 import uk.co.nstauthority.fieldconsents.application.eiadirection.EiaDirectionService;
+import uk.co.nstauthority.fieldconsents.application.otherlegacydata.OtherLegacyData;
+import uk.co.nstauthority.fieldconsents.application.otherlegacydata.OtherLegacyDataSummaryService;
 import uk.co.nstauthority.fieldconsents.application.supportinginformation.SupportingInformationService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil;
@@ -37,6 +40,8 @@ class AdditionalInformationSummarySectionServiceTest {
 
   private static final String SUPPORTING_INFORMATION_ITEM = "Supporting information";
 
+  private static final String OTHER_LEGACY_APPLICATION_DETAILS_ITEM = "Other legacy application details";
+
   @Mock
   private SupportingInformationService supportingInformationService;
 
@@ -49,6 +54,9 @@ class AdditionalInformationSummarySectionServiceTest {
   @Mock
   private EiaDirectionService eiaDirectionService;
 
+  @Mock
+  private OtherLegacyDataSummaryService otherLegacyDataSummaryService;
+
   @InjectMocks
   private AdditionalInformationSummarySectionService additionalInformationSummarySectionService;
 
@@ -56,18 +64,24 @@ class AdditionalInformationSummarySectionServiceTest {
   @MethodSource("getProductionTypeSummaryCard")
   void getSummarySection_production_offshore(ApplicationType applicationType, SummaryCard summaryCard) {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
+    var otherLegacyData = new OtherLegacyData();
     when(eiaDirectionService.getEiaDirectionSummaryCard(applicationVersion)).thenReturn(summaryCard);
     when(supportingInformationService.getSupportingInformationSummaryCards(applicationVersion)).thenReturn(List.of(summaryCard, summaryCard));
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.fieldAsset1);
     when(fieldService.getField(ApplicationAssetTestUtil.fieldAsset1.getAssetId(), FIELD_LOOKUP_PURPOSE))
         .thenReturn(FieldTestUtil.field1Json);
+    when(otherLegacyDataSummaryService.findOtherLegacyData(applicationVersion))
+        .thenReturn(Optional.of(otherLegacyData));
+    when(otherLegacyDataSummaryService.getOtherLegacyDataSummaryCard(otherLegacyData))
+        .thenReturn(summaryCard);
 
     var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion).orElseThrow();
     assertSummarySection(summarySection, ADDITIONAL_INFORMATION_DISPLAY_ORDER);
     assertThat(summarySection.summaryItems())
         .containsExactly(
             SummaryItem.withCard(EIA_SCREENING_DIRECTION_ITEM, summaryCard),
-            SummaryItem.withCards(SUPPORTING_INFORMATION_ITEM, List.of(summaryCard, summaryCard))
+            SummaryItem.withCards(SUPPORTING_INFORMATION_ITEM, List.of(summaryCard, summaryCard)),
+            SummaryItem.withCard(OTHER_LEGACY_APPLICATION_DETAILS_ITEM, summaryCard)
         );
   }
 
@@ -86,6 +100,8 @@ class AdditionalInformationSummarySectionServiceTest {
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.fieldAsset2);
     when(fieldService.getField(ApplicationAssetTestUtil.fieldAsset2.getAssetId(), FIELD_LOOKUP_PURPOSE))
         .thenReturn(FieldTestUtil.field2Json);
+    when(otherLegacyDataSummaryService.findOtherLegacyData(applicationVersion))
+        .thenReturn(Optional.empty());
 
     var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion).orElseThrow();
     assertSummarySection(summarySection, ADDITIONAL_INFORMATION_DISPLAY_ORDER);
@@ -99,13 +115,19 @@ class AdditionalInformationSummarySectionServiceTest {
   @EnumSource(value = ApplicationType.class, names = "PRODUCTION", mode = EnumSource.Mode.EXCLUDE)
   void getSummarySection_nonProduction_onshore(ApplicationType applicationType) {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
+    var otherLegacyData = new OtherLegacyData();
     when(supportingInformationService.getSupportingInformationSummaryCards(applicationVersion)).thenReturn(List.of(simpleSummaryCard));
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.fieldAsset2);
+    when(otherLegacyDataSummaryService.findOtherLegacyData(applicationVersion))
+        .thenReturn(Optional.of(otherLegacyData));
+    when(otherLegacyDataSummaryService.getOtherLegacyDataSummaryCard(otherLegacyData))
+        .thenReturn(simpleSummaryCard);
 
     var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion).orElseThrow();
     assertThat(summarySection.summaryItems())
         .containsExactly(
-            SummaryItem.withCards(SUPPORTING_INFORMATION_ITEM, Collections.singletonList(simpleSummaryCard))
+            SummaryItem.withCards(SUPPORTING_INFORMATION_ITEM, Collections.singletonList(simpleSummaryCard)),
+            SummaryItem.withCard(OTHER_LEGACY_APPLICATION_DETAILS_ITEM, simpleSummaryCard)
         );
   }
 
@@ -115,6 +137,8 @@ class AdditionalInformationSummarySectionServiceTest {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
     when(supportingInformationService.getSupportingInformationSummaryCards(applicationVersion)).thenReturn(List.of(simpleSummaryCard));
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.fieldAsset3);
+    when(otherLegacyDataSummaryService.findOtherLegacyData(applicationVersion))
+        .thenReturn(Optional.empty());
 
     var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion).orElseThrow();
     assertSummarySection(summarySection, ADDITIONAL_INFORMATION_DISPLAY_ORDER);
@@ -130,6 +154,8 @@ class AdditionalInformationSummarySectionServiceTest {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
     when(supportingInformationService.getSupportingInformationSummaryCards(applicationVersion)).thenReturn(List.of(simpleSummaryCard));
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.terminalAsset1);
+    when(otherLegacyDataSummaryService.findOtherLegacyData(applicationVersion))
+        .thenReturn(Optional.empty());
 
     var summarySection = additionalInformationSummarySectionService.getSummarySection(applicationVersion).orElseThrow();
     assertSummarySection(summarySection, ADDITIONAL_INFORMATION_DISPLAY_ORDER);

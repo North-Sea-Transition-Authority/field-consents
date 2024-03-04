@@ -5,6 +5,7 @@
 -- UAT 5 mins 7 secs
 --
 
+--DELETE FROM fcs_migration.application_other_legacy_data;
 --DELETE FROM fcs_migration.vent_long_term_years;
 --DELETE FROM fcs_migration.flare_long_term_years;
 --DELETE FROM fcs_migration.application_technical_reviews;
@@ -632,7 +633,7 @@ CROSS JOIN XMLTABLE(
     project_under_eia_regs VARCHAR(5) PATH 'ADDITIONAL_INFO/PROJECT_UNDER_EIA_REGS/text()'
 ) eia
 WHERE eia.project_under_eia_regs IS NOT NULL
-AND fcd.application_type = 'PCON'; -- TODO - what about the FCON and VCON data?
+AND fcd.application_type = 'PCON';
 /
 
 --
@@ -1943,5 +1944,40 @@ LEFT JOIN isets ON isets.is_id = rasd.intention_set_id
 LEFT JOIN aac_wuas ON aac_wuas.aac_id = rreq.aac_id
 WHERE rid.status_control = 'C';
 /
+
+--
+-- application_other_legacy_data
+--
+INSERT INTO fcs_migration.application_other_legacy_data (
+  id
+, application_version_id
+, increase_in_production
+, es_reference
+, uplift_percentage
+, field_location
+, previous_year_consent_history
+, previous_year_actuals
+, terminal_name
+, terminal_location
+, project_under_eia_regs
+)
+SELECT
+  fcs_migration.application_other_legacy_data_id_seq.nextval
+, av.id
+, ld.increase_in_production
+, ld.es_reference
+, ld.uplift_percentage
+, ld.field_location
+, ld.previous_year_consent_history
+, ld.previous_year_actuals
+, ld.terminal_name
+, ld.terminal_location
+, ld.project_under_eia_regs
+FROM fcs_migration.application_versions av
+JOIN fcs_migration.field_consent_other_legacy_data ld ON ld.fcd_id = av.id
+WHERE coalesce(ld.increase_in_production, ld.es_reference, ld.field_location, ld.terminal_name, ld.terminal_location, ld.project_under_eia_regs) IS NOT NULL
+OR coalesce(ld.uplift_percentage, ld.previous_year_consent_history, ld.previous_year_actuals) IS NOT NULL;
+/
+
 COMMIT;
 /
