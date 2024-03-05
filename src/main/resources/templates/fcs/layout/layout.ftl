@@ -139,6 +139,10 @@
     <@_serviceHeader pageSize=PageSize.TWO_THIRDS_COLUMN />
   </#assign>
 
+  <#assign footerContent>
+    <@fdsNstaFooter.nstaFooter wrapperWidth=fullPageWidth />
+  </#assign>
+
   <@fdsLeftSubNavPageTemplate
     htmlTitle=htmlTitle
     serviceName=serviceName
@@ -149,6 +153,7 @@
     serviceUrl=serviceHomeUrl
     homePageUrl=serviceHomeUrl
     topNavigation=showNavigationItems
+    footerContent=footerContent
   >
     <#nested />
   </@fdsLeftSubNavPageTemplate>
