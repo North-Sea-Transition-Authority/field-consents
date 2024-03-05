@@ -107,17 +107,6 @@ public class TechnicalReviewService {
     technicalReview.setDeadlineDateTime(deadlineInstant);
     technicalReviewRepository.save(technicalReview);
     technicalReviewAssignmentService.assignTechnicalReviewer(technicalReview, technicalReviewerUser, user);
-
-    try {
-      technicalReviewEmailService.sendTechnicalReviewRequestEmail(technicalReview, user);
-    } catch (Exception exception) {
-      LOGGER.error("""
-              An attempt to send a technical review request notification by user with wuaId [{}] for application \
-              version with id [{}] failed. \
-              Note: this hasn't prevented the technical review request being submitted.
-              """,
-          user.wuaId(), requestForApplicationVersion.getId(), exception);
-    }
   }
 
   public List<TechnicalReview> getTechnicalReviewsByApplication(Application application) {

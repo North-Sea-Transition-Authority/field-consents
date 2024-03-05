@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.UnaryOperator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
@@ -28,6 +30,8 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.Reg
 @Service
 public class TechnicalReviewAssignmentService {
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(TechnicalReviewAssignmentService.class);
+
   static final UnaryOperator<String> USER_NOT_IN_TECHNICAL_REVIEWER_ROLE =
       "Cannot assign technical reviewer as user with wua id %s is not in a regulator technical reviewer role"::formatted;
 
@@ -37,19 +41,22 @@ public class TechnicalReviewAssignmentService {
   private final ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
   private final EnergyPortalUserService energyPortalUserService;
   private final TeamService teamService;
+  private final TechnicalReviewEmailService technicalReviewEmailService;
 
   public TechnicalReviewAssignmentService(TechnicalReviewRepository technicalReviewRepository,
                                           RegulatorTeamService regulatorTeamService,
                                           TeamMemberViewService teamMemberViewService,
                                           ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService,
                                           EnergyPortalUserService energyPortalUserService,
-                                          TeamService teamService) {
+                                          TeamService teamService,
+                                          TechnicalReviewEmailService technicalReviewEmailService) {
     this.technicalReviewRepository = technicalReviewRepository;
     this.regulatorTeamService = regulatorTeamService;
     this.teamMemberViewService = teamMemberViewService;
     this.applicationWorkAreaPriorityService = applicationWorkAreaPriorityService;
     this.energyPortalUserService = energyPortalUserService;
     this.teamService = teamService;
+    this.technicalReviewEmailService = technicalReviewEmailService;
   }
 
   @Transactional
@@ -74,6 +81,17 @@ public class TechnicalReviewAssignmentService {
         priorityReason,
         REGULATOR_TECHNICAL_REVIEWER
     );
+
+    try {
+      technicalReviewEmailService.sendTechnicalReviewRequestEmail(technicalReview, actionUser);
+    } catch (Exception exception) {
+      LOGGER.error("""
+              An attempt to send a technical review notification by user with wuaId [{}] for application \
+              version with id [{}] failed. \
+              Note: this hasn't prevented the assignment of the case to the technical reviewer.
+              """,
+          actionUser.wuaId(), technicalReview.getRequestApplicationVersion().getId(), exception);
+    }
   }
 
   public List<TeamMemberView> getTechnicalReviewerAssignmentCandidates(ServiceUserDetail user) {

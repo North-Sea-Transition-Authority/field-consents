@@ -2,7 +2,8 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalrev
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.times;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.ACCESS_MANGER_TEAM_MEMBER_VIEW;
@@ -63,6 +64,9 @@ class TechnicalReviewAssignmentServiceTest {
   @Mock
   private ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
 
+  @Mock
+  private TechnicalReviewEmailService technicalReviewEmailService;
+
   @InjectMocks
   private TechnicalReviewAssignmentService technicalReviewAssignmentService;
 
@@ -98,16 +102,18 @@ class TechnicalReviewAssignmentServiceTest {
 
     var technicalReviewArgumentCaptor = ArgumentCaptor.forClass(TechnicalReview.class);
 
-    verify(technicalReviewRepository, times(1))
+    verify(technicalReviewRepository)
         .save(technicalReviewArgumentCaptor.capture());
 
     var updatedTechnicalReview = technicalReviewArgumentCaptor.getValue();
     assertThat(updatedTechnicalReview.getTechnicalReviewerWuaId())
         .isEqualTo(USER_WEB_USER_ACCOUNT_ID.id());
 
-    verify(applicationWorkAreaPriorityService, times(1))
+    verify(applicationWorkAreaPriorityService)
         .prioritiseApplicationInWorkArea(updatedTechnicalReview.getRequestApplicationVersion(), USER,
             TECHNICAL_REVIEW_REQUEST, REGULATOR_TECHNICAL_REVIEWER);
+
+    verify(technicalReviewEmailService).sendTechnicalReviewRequestEmail(technicalReview, USER);
   }
 
   @Test
@@ -119,16 +125,18 @@ class TechnicalReviewAssignmentServiceTest {
 
     var technicalReviewArgumentCaptor = ArgumentCaptor.forClass(TechnicalReview.class);
 
-    verify(technicalReviewRepository, times(1))
+    verify(technicalReviewRepository)
         .save(technicalReviewArgumentCaptor.capture());
 
     var updatedTechnicalReview = technicalReviewArgumentCaptor.getValue();
     assertThat(updatedTechnicalReview.getTechnicalReviewerWuaId())
         .isEqualTo(USER2_WEB_USER_ACCOUNT_ID.id());
 
-    verify(applicationWorkAreaPriorityService, times(1))
+    verify(applicationWorkAreaPriorityService)
         .prioritiseApplicationInWorkArea(updatedTechnicalReview.getRequestApplicationVersion(), USER2,
             TECHNICAL_REVIEWER_ASSIGN_OWNERSHIP, REGULATOR_TECHNICAL_REVIEWER);
+
+    verify(technicalReviewEmailService).sendTechnicalReviewRequestEmail(technicalReview, USER2);
   }
 
   @Test
@@ -140,16 +148,46 @@ class TechnicalReviewAssignmentServiceTest {
 
     var technicalReviewArgumentCaptor = ArgumentCaptor.forClass(TechnicalReview.class);
 
-    verify(technicalReviewRepository, times(1))
+    verify(technicalReviewRepository)
         .save(technicalReviewArgumentCaptor.capture());
 
     var updatedTechnicalReview = technicalReviewArgumentCaptor.getValue();
     assertThat(updatedTechnicalReview.getTechnicalReviewerWuaId())
         .isEqualTo(USER2_WEB_USER_ACCOUNT_ID.id());
 
-    verify(applicationWorkAreaPriorityService, times(1))
+    verify(applicationWorkAreaPriorityService)
         .prioritiseApplicationInWorkArea(updatedTechnicalReview.getRequestApplicationVersion(), USER,
             TECHNICAL_REVIEWER_ASSIGN_OWNERSHIP, REGULATOR_TECHNICAL_REVIEWER);
+
+    verify(technicalReviewEmailService).sendTechnicalReviewRequestEmail(technicalReview, USER);
+  }
+
+  @Test
+  void assignTechnicalReviewer_whenSendTechnicalReviewRequestEmailFails_thenTechnicalReviewerWuaIdIsStillUpdated() {
+    when(regulatorTeamService.isTechnicalReviewer(USER2_WEB_USER_ACCOUNT_ID))
+        .thenReturn(true);
+    var technicalReviewArgumentCaptor = ArgumentCaptor.forClass(TechnicalReview.class);
+
+    // WHEN the email service call throws an exception
+    doThrow(new RuntimeException("Failed to send email"))
+        .when(technicalReviewEmailService)
+        .sendTechnicalReviewRequestEmail(technicalReview, USER);
+
+    // THEN it will be caught by the caller and not re-thrown
+    assertDoesNotThrow(() -> technicalReviewAssignmentService.assignTechnicalReviewer(technicalReview, USER2, USER));
+
+    verify(technicalReviewRepository)
+        .save(technicalReviewArgumentCaptor.capture());
+
+    var updatedTechnicalReview = technicalReviewArgumentCaptor.getValue();
+    assertThat(updatedTechnicalReview.getTechnicalReviewerWuaId())
+        .isEqualTo(USER2_WEB_USER_ACCOUNT_ID.id());
+
+    verify(applicationWorkAreaPriorityService)
+        .prioritiseApplicationInWorkArea(updatedTechnicalReview.getRequestApplicationVersion(), USER,
+            TECHNICAL_REVIEWER_ASSIGN_OWNERSHIP, REGULATOR_TECHNICAL_REVIEWER);
+
+    verify(technicalReviewEmailService).sendTechnicalReviewRequestEmail(technicalReview, USER);
   }
 
   @Test

@@ -253,40 +253,6 @@ class TechnicalReviewServiceTest {
 
     verify(technicalReviewAssignmentService, times(1))
         .assignTechnicalReviewer(actualTechnicalReview, SERVICE_USER_DETAIL_USER_5, CASE_OFFICER_USER);
-
-    verify(technicalReviewEmailService).sendTechnicalReviewRequestEmail(actualTechnicalReview, CASE_OFFICER_USER);
-  }
-
-  @Test
-  void saveTechnicalReviewRequest_whenSendTechnicalReviewRequestEmailFails_thenTechnicalReviewRequestIsStillSubmitted() {
-    when(clock.instant()).thenReturn(CURRENT_INSTANT);
-
-    // WHEN the email service call throws an exception
-    doThrow(new RuntimeException("Failed to send email"))
-        .when(technicalReviewEmailService)
-        .sendTechnicalReviewRequestEmail(technicalReview, CASE_OFFICER_USER);
-
-    // THEN it will be caught by the caller and not re-thrown
-    assertDoesNotThrow(
-        () -> technicalReviewService.saveTechnicalReviewRequest(applicationVersion,
-            clock.instant().plus(DEADLINE_AHEAD_HOURS, ChronoUnit.HOURS),
-            TECHNICAL_REVIEW_REQUEST_TEXT,
-            SERVICE_USER_DETAIL_USER_5,
-            CASE_OFFICER_USER
-        )
-    );
-
-    verify(technicalReviewRepository).save(technicalReviewCaptor.capture());
-    var actualTechnicalReview = technicalReviewCaptor.getValue();
-
-    assertThat(actualTechnicalReview)
-        .usingRecursiveComparison()
-        .isEqualTo(technicalReview);
-
-    verify(technicalReviewAssignmentService, times(1))
-        .assignTechnicalReviewer(actualTechnicalReview, SERVICE_USER_DETAIL_USER_5, CASE_OFFICER_USER);
-
-    verify(technicalReviewEmailService).sendTechnicalReviewRequestEmail(actualTechnicalReview, CASE_OFFICER_USER);
   }
 
   @ParameterizedTest

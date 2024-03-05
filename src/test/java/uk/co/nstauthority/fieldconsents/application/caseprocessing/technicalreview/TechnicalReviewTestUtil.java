@@ -21,11 +21,17 @@ public class TechnicalReviewTestUtil {
   public static final EnergyPortalUserDto CASE_OFFICER_EPU =
       AssignmentTestUtil.ENERGY_PORTAL_USER_1;
 
-  public static final ServiceUserDetail TECHNICAL_REVIEWER_USER =
+  public static final ServiceUserDetail TECHNICAL_REVIEWER_USER_1 =
       AssignmentTestUtil.SERVICE_USER_DETAIL_USER_5;
 
-  public static final EnergyPortalUserDto TECHNICAL_REVIEWER_EPU =
+  public static final EnergyPortalUserDto TECHNICAL_REVIEWER_EPU_1 =
       AssignmentTestUtil.ENERGY_PORTAL_USER_5;
+
+  public static final ServiceUserDetail TECHNICAL_REVIEWER_USER_2 =
+      AssignmentTestUtil.SERVICE_USER_DETAIL_USER_6;
+
+  public static final EnergyPortalUserDto TECHNICAL_REVIEWER_EPU_2 =
+      AssignmentTestUtil.ENERGY_PORTAL_USER_6;
 
   static final LocalDate CURRENT_DATE = LocalDate.now();
 
@@ -44,7 +50,7 @@ public class TechnicalReviewTestUtil {
     technicalReview.setId(1);
     technicalReview.setRequestApplicationVersion(applicationVersion);
     technicalReview.setTechnicalReviewStatus(OPEN);
-    technicalReview.setTechnicalReviewerWuaId(TECHNICAL_REVIEWER_USER.wuaId());
+    technicalReview.setTechnicalReviewerWuaId(TECHNICAL_REVIEWER_USER_1.wuaId());
     technicalReview.setRequestedByWuaId(CASE_OFFICER_USER.wuaId());
     technicalReview.setRequestedDateTime(Instant.now());
     technicalReview.setRequestText(TECHNICAL_REVIEW_REQUEST_TEXT);
@@ -71,7 +77,7 @@ public class TechnicalReviewTestUtil {
     var technicalReview = getOpenTechnicalReview(applicationVersion);
     technicalReview.setTechnicalReviewStatus(CLOSED);
     technicalReview.setResponseApplicationVersion(applicationVersion);
-    technicalReview.setRespondedByWuaId(TECHNICAL_REVIEWER_USER.wuaId());
+    technicalReview.setRespondedByWuaId(TECHNICAL_REVIEWER_USER_1.wuaId());
     technicalReview.setRespondedDateTime(technicalReview.getRequestedDateTime().plus(1, ChronoUnit.DAYS));
     technicalReview.setResponseText(TECHNICAL_REVIEW_RESPONSE_TEXT);
     technicalReview.setResponseType(technicalReviewResponseType);

@@ -5,8 +5,8 @@ import static org.mockito.Mockito.when;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.CASE_OFFICER_EPU;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.CASE_OFFICER_USER;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.TECHNICAL_REVIEWER_EPU;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.TECHNICAL_REVIEWER_USER;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.TECHNICAL_REVIEWER_EPU_1;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.TECHNICAL_REVIEWER_USER_1;
 import static uk.co.nstauthority.fieldconsents.file.FieldConsentsFileTestUtil.createUploadedFile;
 import static uk.co.nstauthority.fieldconsents.formatting.DateUtils.DATE_TIME;
 
@@ -109,10 +109,10 @@ class TechnicalReviewSummaryServiceTest {
         .thenReturn(technicalReviews);
 
     var webUserAccountIds =
-        List.of(WebUserAccountId.from(CASE_OFFICER_USER.wuaId()), WebUserAccountId.from(TECHNICAL_REVIEWER_USER.wuaId()));
+        List.of(WebUserAccountId.from(CASE_OFFICER_USER.wuaId()), WebUserAccountId.from(TECHNICAL_REVIEWER_USER_1.wuaId()));
     var energyPortalUserMap = Map.of(
         WebUserAccountId.from(CASE_OFFICER_EPU.webUserAccountId()),CASE_OFFICER_EPU,
-        WebUserAccountId.from(TECHNICAL_REVIEWER_EPU.webUserAccountId()), TECHNICAL_REVIEWER_EPU);
+        WebUserAccountId.from(TECHNICAL_REVIEWER_EPU_1.webUserAccountId()), TECHNICAL_REVIEWER_EPU_1);
     when(energyPortalUserService.getEnergyPortalUserMap(webUserAccountIds))
         .thenReturn(energyPortalUserMap);
 
@@ -169,12 +169,12 @@ class TechnicalReviewSummaryServiceTest {
         .addKeyValue("Requested on", DateUtils.format(technicalReview.getRequestedDateTime(), DATE_TIME))
         .addKeyValue("Notes for the reviewer", technicalReview.getRequestText())
         .addKeyValue("Deadline", DateUtils.format(technicalReview.getDeadlineDateTime(), DATE_TIME))
-        .addKeyValue("Technical reviewer", TECHNICAL_REVIEWER_EPU.displayName());
+        .addKeyValue("Technical reviewer", TECHNICAL_REVIEWER_EPU_1.displayName());
 
     if (TechnicalReviewStatus.CLOSED.equals(technicalReview.getTechnicalReviewStatus())) {
       summaryData
           .addKeyValue("Response application version", technicalReview.getResponseApplicationVersion().getVersion().toString())
-          .addKeyValue("Responded by", TECHNICAL_REVIEWER_EPU.displayName())
+          .addKeyValue("Responded by", TECHNICAL_REVIEWER_EPU_1.displayName())
           .addKeyValue("Responded on", DateUtils.format(technicalReview.getRespondedDateTime(), DATE_TIME))
           .addKeyValue("Decision", Objects.nonNull(technicalReview.getResponseType()) // null check to cope with migrated data
               ? technicalReview.getResponseType().getDisplayName() : null)
