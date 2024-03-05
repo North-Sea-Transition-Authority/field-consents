@@ -73,33 +73,39 @@ public class ApplicationRationaleFlareService {
   public SummaryCard getSummaryCard(ApplicationVersion applicationVersion) {
     var applicationRationaleOptional = applicationRationaleService.findByApplicationVersion(applicationVersion);
 
-    if (applicationRationaleOptional.isEmpty()) {
-      return SummaryCard.emptySummaryCard();
-    }
-
-    var applicationRationale = applicationRationaleOptional.get();
-
     var summaryDataView = new SummaryDataView(new ArrayList<>());
 
-    var increaseOrDecrease = applicationRationale.getRationaleType();
-    summaryDataView.addKeyValue("Is this application for an increase or decrease?", increaseOrDecrease.getDisplayName());
+    if (applicationRationaleOptional.isPresent()) {
+      var applicationRationale = applicationRationaleOptional.get();
 
-    if (ApplicationRationaleType.INCREASE.equals(increaseOrDecrease)) {
-      summaryDataView.addKeyValue("Why are you asking for an increase?", applicationRationale.getComment());
+      var increaseOrDecrease = applicationRationale.getRationaleType();
+      summaryDataView.addKeyValue("Is this application for an increase or decrease?", increaseOrDecrease.getDisplayName());
+
+      if (ApplicationRationaleType.INCREASE.equals(increaseOrDecrease)) {
+        summaryDataView.addKeyValue("Why are you asking for an increase?", applicationRationale.getComment());
+      }
     }
 
     var flaringLocations = applicationRationaleService.getLocations(applicationVersion)
         .stream()
         .map(assetJson -> ApplicationAssetView.from(assetJson).getName())
         .collect(Collectors.joining(", "));
-    summaryDataView.addKeyValue("Where does the flaring take place?", flaringLocations);
+    if (!flaringLocations.isEmpty()) {
+      summaryDataView.addKeyValue("Where does the flaring take place?", flaringLocations);
+    }
 
     var hostLocation = applicationAssetService.getAssetJsonListFor(applicationVersion, AssetRole.HOST)
         .stream()
         .findFirst()
         .map(AssetJson::getSelectionText)
         .orElse("");
-    summaryDataView.addKeyValue("What is the host?", hostLocation);
+    if (!hostLocation.isEmpty()) {
+      summaryDataView.addKeyValue("What is the host?", hostLocation);
+    }
+
+    if (summaryDataView.keyValues().isEmpty()) {
+      return SummaryCard.emptySummaryCard();
+    }
 
     return SummaryCard.simpleSummaryCard(summaryDataView);
   }

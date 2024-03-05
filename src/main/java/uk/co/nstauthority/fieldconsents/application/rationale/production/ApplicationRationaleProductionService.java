@@ -71,39 +71,45 @@ public class ApplicationRationaleProductionService {
   public SummaryCard getSummaryCard(ApplicationVersion applicationVersion) {
     var applicationRationaleOptional = applicationRationaleService.findByApplicationVersion(applicationVersion);
 
-    if (applicationRationaleOptional.isEmpty()) {
-      return SummaryCard.emptySummaryCard();
-    }
-
-    var applicationRationale = applicationRationaleOptional.get();
-
     var summaryDataView = new SummaryDataView(new ArrayList<>());
 
-    var rationaleType = applicationRationale.getRationaleType();
-    summaryDataView.addKeyValue(
-        "Is this application for an increase, decrease, extension or other?",
-        rationaleType.getDisplayName()
-    );
+    if (applicationRationaleOptional.isPresent()) {
+      var applicationRationale = applicationRationaleOptional.get();
 
-    if (ApplicationRationaleType.EXTENSION.equals(rationaleType)) {
-      summaryDataView.addKeyValue("Explain why you are requesting an extension", applicationRationale.getComment());
-    }
-    if (ApplicationRationaleType.OTHER.equals(rationaleType)) {
-      summaryDataView.addKeyValue("Explain why you have selected 'other'", applicationRationale.getComment());
+      var rationaleType = applicationRationale.getRationaleType();
+      summaryDataView.addKeyValue(
+          "Is this application for an increase, decrease, extension or other?",
+          rationaleType.getDisplayName()
+      );
+
+      if (ApplicationRationaleType.EXTENSION.equals(rationaleType)) {
+        summaryDataView.addKeyValue("Explain why you are requesting an extension", applicationRationale.getComment());
+      }
+      if (ApplicationRationaleType.OTHER.equals(rationaleType)) {
+        summaryDataView.addKeyValue("Explain why you have selected 'other'", applicationRationale.getComment());
+      }
     }
 
-    var flaringLocations = applicationRationaleService.getLocations(applicationVersion)
+    var productionLocations = applicationRationaleService.getLocations(applicationVersion)
         .stream()
         .map(assetJson -> ApplicationAssetView.from(assetJson).getName())
         .collect(Collectors.joining(", "));
-    summaryDataView.addKeyValue("At which location are the production activities?", flaringLocations);
+    if (!productionLocations.isEmpty()) {
+      summaryDataView.addKeyValue("At which location are the production activities?", productionLocations);
+    }
 
     var hostLocation = applicationAssetService.getAssetJsonListFor(applicationVersion, AssetRole.HOST)
         .stream()
         .findFirst()
         .map(AssetJson::getSelectionText)
         .orElse("");
-    summaryDataView.addKeyValue("What is the host?", hostLocation);
+    if (!hostLocation.isEmpty()) {
+      summaryDataView.addKeyValue("What is the host?", hostLocation);
+    }
+
+    if (summaryDataView.keyValues().isEmpty()) {
+      return SummaryCard.emptySummaryCard();
+    }
 
     return SummaryCard.simpleSummaryCard(summaryDataView);
   }

@@ -196,6 +196,27 @@ class ApplicationRationaleFlareServiceTest {
   }
 
   @Test
+  void getSummaryCard_onlyFlaringLocationData() {
+    when(applicationRationaleService.findByApplicationVersion(applicationVersion))
+        .thenReturn(Optional.empty());
+
+    var locations = List.of(field1Json, field2Json, terminal1Json, terminal2Json);
+    when(applicationRationaleService.getLocations(applicationVersion)).thenReturn(locations);
+
+    var expectedLocationsString = "%s, %s, %s, %s".formatted(
+        field1Json.getName(), field2Json.getName(), terminal1Json.getName(), terminal2Json.getName());
+
+    when(applicationAssetService.getAssetJsonListFor(applicationVersion, AssetRole.HOST))
+        .thenReturn(Collections.emptyList());
+
+    assertThat(applicationRationaleFlareService.getSummaryCard(applicationVersion))
+        .isEqualTo(SummaryCard.simpleSummaryCard(
+                SummaryDataView.newWithKeyValue("Where does the flaring take place?", expectedLocationsString)
+            )
+        );
+  }
+
+  @Test
   void getSummaryCard_hostLocation() {
     when(applicationRationaleService.findByApplicationVersion(applicationVersion)).thenReturn(Optional.of(applicationRationale));
 
@@ -209,6 +230,36 @@ class ApplicationRationaleFlareServiceTest {
         .contains(tuple("What is the host?", field1Json.getSelectionText()));
   }
 
+  @Test
+  void getSummaryCard_onlyHostLocationData() {
+    when(applicationRationaleService.findByApplicationVersion(applicationVersion))
+        .thenReturn(Optional.empty());
+    when(applicationRationaleService.getLocations(applicationVersion))
+        .thenReturn(Collections.emptyList());
+    when(applicationAssetService.getAssetJsonListFor(applicationVersion, AssetRole.HOST))
+        .thenReturn(Collections.singletonList(field1Json));
+
+    assertThat(applicationRationaleFlareService.getSummaryCard(applicationVersion))
+        .isEqualTo(SummaryCard.simpleSummaryCard(
+                SummaryDataView.newWithKeyValue("What is the host?", field1Json.getSelectionText())
+            )
+        );
+  }
+
+  @Test
+  void getSummaryCard_noData() {
+    when(applicationRationaleService.findByApplicationVersion(applicationVersion))
+        .thenReturn(Optional.empty());
+    when(applicationRationaleService.getLocations(applicationVersion))
+        .thenReturn(Collections.emptyList());
+    when(applicationAssetService.getAssetJsonListFor(applicationVersion, AssetRole.HOST))
+        .thenReturn(Collections.emptyList());
+
+    assertThat(applicationRationaleFlareService.getSummaryCard(applicationVersion))
+        .isEqualTo(SummaryCard.emptySummaryCard());
+  }
+
+
   private ListAssert<SummaryKeyValue> getSummaryKeyValuesFrom(SummaryCard summaryCard) {
     return assertThat(summaryCard)
         .extracting(SummaryCard::summaryData)
@@ -216,5 +267,4 @@ class ApplicationRationaleFlareServiceTest {
         .extracting(SummaryDataView::keyValues)
         .asInstanceOf(list(SummaryKeyValue.class));
   }
-
 }
