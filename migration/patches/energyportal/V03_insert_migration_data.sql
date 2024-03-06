@@ -1753,13 +1753,15 @@ INSERT INTO fcs_migration.application_case_notes (
 , added_by_wua_id
 , added_date_time
 , case_note_text
+, case_note_text_html
 )
 SELECT
   fcs_migration.application_case_note_id_seq.nextval id
 , fci.fcd_id application_version_id
 , fci.created_by_wua_id added_by_wua_id
 , fci.created_datetime added_date_time
-, fci.intention_html case_note_text
+, fci.intention_text case_note_text
+, fci.intention_text_html case_note_text_html
 FROM fcs_migration.application_versions av
 JOIN fcs_migration.field_consent_intentions fci ON fci.fcd_id = av.id
 WHERE fci.class_type = 'FC_GENERAL_NOTE';
@@ -1774,6 +1776,7 @@ INSERT INTO fcs_migration.application_updates (
 , requested_by_wua_id
 , requested_date_time
 , request_text
+, request_text_html
 , deadline_date_time
 , responded_by_wua_id
 , responded_date_time
@@ -1803,7 +1806,8 @@ WITH resp AS (
     av.id application_version_id
   , fci.created_by_wua_id requested_by_wua_id
   , fci.created_datetime requested_date_time
-  , fci.intention_html request_text
+  , fci.intention_text request_text 
+  , fci.intention_text_html request_text_html
   -- you have to do the subqueries here as you can't LEFT OUTER JOIN on and INSERT INTO
   , (SELECT r.responded_by_wua_id FROM resp r WHERE r.application_version_id = av.id) responded_by_wua_id
   , (SELECT r.responded_date_time FROM resp r WHERE r.application_version_id = av.id) responded_date_time
@@ -1822,6 +1826,7 @@ SELECT
 , b.requested_by_wua_id
 , b.requested_date_time
 , b.request_text
+, b.request_text_html
 , NULL deadline_date_time
 , b.responded_by_wua_id
 , b.responded_date_time
@@ -1846,13 +1851,15 @@ INSERT INTO fcs_migration.application_technical_reviews (
 , responded_by_wua_id
 , responded_date_time
 , response_text
+, response_text_html
 , response_type
 , technical_review_status
 , response_application_version_id
 )
 WITH isetins AS (
   SELECT isi.is_id
-  , '<p>'||xtcd.title||':</p>'||XMLQUERY('/CLAUSE_TEXT/node()' PASSING xid.clause_text RETURNING CONTENT).getClobVal() response_text
+  , xtcd.title||':'||CHR(10)||st.html_to_string(xid.clause_text) response_text
+  , '<p>'||xtcd.title||':</p>'||XMLQUERY('/CLAUSE_TEXT/node()' PASSING xid.clause_text RETURNING CONTENT).getClobVal() response_text_html
   FROM bpmmgr.review_advisor_slot_details rasd
   JOIN bpmmgr.xview_intention_sets xis ON xis.is_id = rasd.intention_set_id
   JOIN bpmmgr.intention_set_intentions isi ON isi.is_id = xis.is_id AND isi.end_datetime IS NULL
@@ -1866,7 +1873,8 @@ WITH isetins AS (
 )
 , isets AS (
   SELECT i.is_id
-  , st.joinclob(staggclob(i.response_text), '<br/><br/>') response_text
+  , st.joinclob(staggclob(i.response_text), CHR(10)||CHR(10)) response_text
+  , st.joinclob(staggclob(i.response_text_html), '<br/><br/>') response_text_html
   FROM isetins i
   GROUP BY i.is_id
 )
@@ -1911,6 +1919,7 @@ SELECT
 , rasd.status_by_wua_id response_wua_id
 , coalesce(xrad.review_completed_date, xrad.review_closed_date) responded_date_time
 , isets.response_text
+, isets.response_text_html
 , CASE rasd.response_decision
   WHEN 'ISSUE_CONSENT' THEN 'APPROVE'
   WHEN 'UPDATE_REQUIRED' THEN 'REJECT'

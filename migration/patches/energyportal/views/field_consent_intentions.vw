@@ -8,7 +8,8 @@ SELECT
 , xid.created_datetime
 , xid.class_type
 , xid.severity
-, XMLQUERY('/CLAUSE_TEXT/node()' PASSING xid.clause_text RETURNING CONTENT).getClobVal() intention_html
+, st.html_to_string(xid.clause_text) intention_text
+, XMLQUERY('/CLAUSE_TEXT/node()' PASSING xid.clause_text RETURNING CONTENT).getClobVal() intention_text_html
 FROM envmgr.field_consent_details fcd
 JOIN bpmmgr.xview_intention_sets xis ON xis.primary_data_uref = fcd.id||'FC'
 JOIN bpmmgr.intention_set_intentions isi ON isi.is_id = xis.is_id AND isi.end_datetime IS NULL

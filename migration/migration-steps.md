@@ -75,7 +75,10 @@ CLOBs are not supported over the DB link so the following tables have been migra
 
 #### Import with IntelliJ
 - connect to the appropriate Postgres DB and navigate to the appropriate table
-- Right click -> Import/Export -> Import Data From File(s) -> select the appropriate file and choose the correct import setting for pipe separated data
+- Right click -> Import/Export -> Import Data From File(s) -> select the appropriate file and choose the correct import settings
+  - Encoding: WIN1252
+  - Untick first row is header
+  - Delimiter: | (pipe)
 - Run the Import
 
 #### Import with PGAdmin

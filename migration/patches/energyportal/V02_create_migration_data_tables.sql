@@ -746,6 +746,7 @@ CREATE TABLE fcs_migration.application_case_notes (
 , added_by_wua_id        INTEGER NOT NULL
 , added_date_time        DATE NOT NULL
 , case_note_text         CLOB NOT NULL
+, case_note_text_html    CLOB NOT NULL
 );
 
 --
@@ -761,10 +762,11 @@ CREATE TABLE fcs_migration.application_updates (
 , requested_by_wua_id             INTEGER NOT NULL
 , requested_date_time             DATE NOT NULL
 , request_text                    CLOB NOT NULL
+, request_text_html               CLOB NOT NULL
 , deadline_date_time              DATE
 , responded_by_wua_id             INTEGER
 , responded_date_time             DATE
-, response_text                   CLOB
+, response_text                   VARCHAR2(4000)
 , response_type                   VARCHAR2(4000)
 , application_update_status       VARCHAR2(4000) NOT NULL
 , response_application_version_id INTEGER
@@ -791,6 +793,7 @@ CREATE TABLE fcs_migration.application_technical_reviews (
 , responded_by_wua_id             INTEGER
 , responded_date_time             DATE
 , response_text                   CLOB
+, response_text_html              CLOB
 , response_type                   VARCHAR2(4000)
 , technical_review_status         VARCHAR2(4000) NOT NULL
 , response_application_version_id INTEGER

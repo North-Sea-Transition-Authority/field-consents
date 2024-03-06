@@ -2099,13 +2099,27 @@ SELECT
 , fci.created_by_wua_id
 , fci.created_datetime
 , fci.intention_text case_note_text
+, fci.intention_text_html case_note_text_html
 , fci.*
 FROM fcs_migration.application_versions av
 JOIN fcs_migration.field_consent_intentions fci ON fci.fcd_id = av.id
 WHERE fci.class_type = 'FC_GENERAL_NOTE'
 ORDER BY fci.in_id DESC, fci.id_id DESC
 /
-
+--SELECT
+--  'CHR191:'||CHR(191)||CHR(10)||
+--  'CHR183:'||CHR(183)||CHR(10)||
+--  'CHR163:'||CHR(163)||CHR(10)||
+--  'CHR145:'||CHR(145)||CHR(10)||
+--  'CHR146:'||CHR(146)||CHR(10)||
+--  'CHR150:'||CHR(150)||CHR(10)||
+--  'CHR149:'||CHR(149)||CHR(10)||
+--  'CHR248:'||CHR(248)||CHR(10)||
+--  'CHR147:'||CHR(147)||CHR(10)||
+--  'CHR148:'||CHR(148)||CHR(10)||
+--  'CHR160:'||CHR(160)
+--FROM dual
+--/
 --SELECT xis.*, xfcd.intention_set_id, xfcd.*
 --FROM bpmmgr.xview_intention_sets xis
 --JOIN envmgr.field_consent_details fcd ON fcd.id||'FC' = xis.primary_data_uref
@@ -2223,6 +2237,7 @@ SELECT
 , fci.created_by_wua_id requested_by_wua_id
 , fci.created_datetime requested_date_time
 , fci.intention_text request_text
+, fci.intention_text_html request_text_html
 , fci.created_datetime deadline_date_time -- TODO set as the request date or leave null?
 , avnext.submitted_by_wua_id responded_by_wua_id
 , avnext.submitted_date_time responded_date_time
@@ -2320,8 +2335,8 @@ WHERE ri.id = (SELECT ri.ri_id FROM ri)
 
 WITH isetins AS (
   SELECT isi.is_id
---  , xtcd.title||': '||st.html_to_string(xid.clause_text) response_text
-  , '<p>'||xtcd.title||'</p>'||XMLQUERY('/CLAUSE_TEXT/node()' PASSING xid.clause_text RETURNING CONTENT).getClobVal() response_text
+  , xtcd.title||':'||CHR(10)||st.html_to_string(xid.clause_text) response_text
+  , '<p>'||xtcd.title||':</p>'||XMLQUERY('/CLAUSE_TEXT/node()' PASSING xid.clause_text RETURNING CONTENT).getClobVal() response_text_html
   FROM bpmmgr.review_advisor_slot_details rasd
   JOIN bpmmgr.xview_intention_sets xis ON xis.is_id = rasd.intention_set_id
   JOIN bpmmgr.intention_set_intentions isi ON isi.is_id = xis.is_id AND isi.end_datetime IS NULL
@@ -2336,7 +2351,8 @@ WITH isetins AS (
 )
 , isets AS (
   SELECT i.is_id
-  , st.joinclob(staggclob(i.response_text), '<br/><br/>') response_text
+  , st.joinclob(staggclob(i.response_text), CHR(10)||CHR(10)) response_text
+  , st.joinclob(staggclob(i.response_text_html), '<br/><br/>') response_text_html
   FROM isetins i
   GROUP BY i.is_id
 )
