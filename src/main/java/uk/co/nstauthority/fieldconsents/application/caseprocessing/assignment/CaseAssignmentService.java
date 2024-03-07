@@ -24,6 +24,7 @@ import uk.co.nstauthority.fieldconsents.application.workareapriority.Application
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipient;
+import uk.co.nstauthority.fieldconsents.email.GovukNotifyTemplate;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
@@ -98,6 +99,7 @@ public class CaseAssignmentService {
       try {
         caseAssignmentEmailService.sendCaseAssignmentEmail(
             applicationVersion,
+            GovukNotifyTemplate.CASE_ASSIGNED_TO_CASE_OFFICER,
             FieldConsentsEmailRecipient.from(caseOfficerUser),
             actionUser);
       } catch (Exception exception) {
@@ -122,8 +124,10 @@ public class CaseAssignmentService {
     try {
       caseAssignmentEmailService.sendCaseOwnershipReleasedEmail(applicationVersion, user);
     } catch (Exception exception) {
-      LOGGER.error("An attempt to send a case ownership released notification by case officer with wuaId {} " +
-              "for application version with id {} failed. Note: this hasn't prevented the ownership of the case to be released.",
+      LOGGER.error("""
+              An attempt to send a case ownership released notification by case officer with wuaId {} \
+              for application version with id {} failed. \
+              Note: this hasn't prevented the ownership of the case to be released.""",
           user.wuaId(), applicationVersion.getId(), exception);
     }
   }
@@ -185,6 +189,16 @@ public class CaseAssignmentService {
         CASE_OFFICER_ASSIGN_OWNERSHIP,
         ApplicationWorkAreaPriorityGroup.REGULATOR
     );
+
+    try {
+      caseAssignmentEmailService.sendCaseReturnedToCaseOfficerByCamEmail(applicationVersion, actionUser);
+    } catch (Exception exception) {
+      LOGGER.error("""
+              An attempt to send a case returned to case officer notification by cam user with wuaId {} \
+              for application version with id {} failed. \
+              Note: this hasn't prevented the case to be returned to the case officer.""",
+          actionUser.wuaId(), applicationVersion.getId(), exception);
+    }
   }
 
   public Optional<WebUserAccountId> findCaseOfficerWuaId(ApplicationVersion applicationVersion) {

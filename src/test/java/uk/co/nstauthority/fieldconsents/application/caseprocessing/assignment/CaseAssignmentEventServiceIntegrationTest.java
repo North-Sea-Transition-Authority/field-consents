@@ -2,8 +2,6 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventType.CASE_OFFICER_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventType.CASE_OFFICER_OWNERSHIP_RELEASED;
@@ -67,9 +65,6 @@ class CaseAssignmentEventServiceIntegrationTest extends AbstractIntegrationTest 
   @MockBean
   private RegulatorTeamService regulatorTeamService;
 
-  @MockBean
-  private CaseAssignmentEmailService caseAssignmentEmailService;
-
   private ApplicationVersion applicationVersion;
 
   @BeforeEach
@@ -91,8 +86,6 @@ class CaseAssignmentEventServiceIntegrationTest extends AbstractIntegrationTest 
     consentLengthService.saveConsentLengthDetails(applicationVersion, consentLengthForm);
 
     applicationService.submitApplication(applicationVersion, INDUSTRY_USER_DETAIL);
-
-    doNothing().when(caseAssignmentEmailService).sendCaseAssignmentEmail(any(), any(), any());
   }
 
   @Test

@@ -45,6 +45,7 @@ import uk.co.nstauthority.fieldconsents.application.workareapriority.Application
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipient;
+import uk.co.nstauthority.fieldconsents.email.GovukNotifyTemplate;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
@@ -172,7 +173,11 @@ class CaseAssignmentServiceTest {
 
     verify(applicationWorkAreaPriorityService).prioritiseApplicationInWorkArea(applicationVersion, USER2, CASE_OFFICER_ASSIGN_OWNERSHIP, REGULATOR);
 
-    verify(caseAssignmentEmailService).sendCaseAssignmentEmail(applicationVersion, FieldConsentsEmailRecipient.from(USER), USER2);
+    verify(caseAssignmentEmailService).sendCaseAssignmentEmail(
+        applicationVersion,
+        GovukNotifyTemplate.CASE_ASSIGNED_TO_CASE_OFFICER,
+        FieldConsentsEmailRecipient.from(USER),
+        USER2);
   }
 
   @Test
@@ -183,7 +188,11 @@ class CaseAssignmentServiceTest {
     // WHEN the email service call throws an exception
     doThrow(new RuntimeException("Failed to send email"))
         .when(caseAssignmentEmailService)
-        .sendCaseAssignmentEmail(applicationVersion, FieldConsentsEmailRecipient.from(USER), USER2);
+        .sendCaseAssignmentEmail(
+            applicationVersion,
+            GovukNotifyTemplate.CASE_ASSIGNED_TO_CASE_OFFICER,
+            FieldConsentsEmailRecipient.from(USER),
+            USER2);
 
     // THEN it will be caught by the caller and not re-thrown
     assertDoesNotThrow(
@@ -201,7 +210,11 @@ class CaseAssignmentServiceTest {
 
     verify(applicationWorkAreaPriorityService).prioritiseApplicationInWorkArea(applicationVersion, USER2, CASE_OFFICER_ASSIGN_OWNERSHIP, REGULATOR);
 
-    verify(caseAssignmentEmailService).sendCaseAssignmentEmail(applicationVersion, FieldConsentsEmailRecipient.from(USER), USER2);
+    verify(caseAssignmentEmailService).sendCaseAssignmentEmail(
+        applicationVersion,
+        GovukNotifyTemplate.CASE_ASSIGNED_TO_CASE_OFFICER,
+        FieldConsentsEmailRecipient.from(USER),
+        USER2);
   }
 
   @Test
@@ -415,6 +428,36 @@ class CaseAssignmentServiceTest {
     assertThat(actualApplicationVersion.getCurrentCaseOwner()).isEqualTo(CASE_OFFICER);
 
     verify(applicationWorkAreaPriorityService).prioritiseApplicationInWorkArea(applicationVersion, USER2, CASE_OFFICER_ASSIGN_OWNERSHIP, REGULATOR);
+
+    verify(caseAssignmentEmailService).sendCaseReturnedToCaseOfficerByCamEmail(applicationVersion, USER2);
+  }
+
+  @Test
+  void returnToCaseOfficer_whenSendCaseReturnedToCaseOfficerByCamEmail_thenApplicationVersionCamWuaIdIsStillNulled() {
+    applicationVersion.setCaseOfficerWuaId(WEB_USER_ACCOUNT_ID.id());
+
+    // WHEN the email service call throws an exception
+    doThrow(new RuntimeException("Failed to send email"))
+        .when(caseAssignmentEmailService)
+        .sendCaseReturnedToCaseOfficerByCamEmail(applicationVersion, USER2);
+
+    // THEN it will be caught by the caller and not re-thrown
+    assertDoesNotThrow(
+        () -> caseAssignmentService.returnToCaseOfficer(applicationVersion, USER2)
+    );
+
+    var applicationVersionArgumentCaptor = ArgumentCaptor.forClass(ApplicationVersion.class);
+
+    verify(applicationVersionRepository).save(applicationVersionArgumentCaptor.capture());
+
+    var actualApplicationVersion = applicationVersionArgumentCaptor.getValue();
+
+    assertThat(actualApplicationVersion.getCamWuaId()).isNull();
+    assertThat(actualApplicationVersion.getCurrentCaseOwner()).isEqualTo(CASE_OFFICER);
+
+    verify(applicationWorkAreaPriorityService).prioritiseApplicationInWorkArea(applicationVersion, USER2, CASE_OFFICER_ASSIGN_OWNERSHIP, REGULATOR);
+
+    verify(caseAssignmentEmailService).sendCaseReturnedToCaseOfficerByCamEmail(applicationVersion, USER2);
   }
 
   @Test

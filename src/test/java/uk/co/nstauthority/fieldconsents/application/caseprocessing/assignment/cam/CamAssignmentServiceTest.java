@@ -2,6 +2,10 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.c
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -33,9 +37,12 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionRepository;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentEmailService;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipient;
+import uk.co.nstauthority.fieldconsents.email.GovukNotifyTemplate;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.teams.Team;
 import uk.co.nstauthority.fieldconsents.teams.TeamMember;
@@ -78,6 +85,9 @@ class CamAssignmentServiceTest {
   @Mock
   private ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
 
+  @Mock
+  private CaseAssignmentEmailService caseAssignmentEmailService;
+
   @InjectMocks
   private CamAssignmentService camAssignmentService;
 
@@ -104,6 +114,8 @@ class CamAssignmentServiceTest {
         camAssignmentService.assignCamUser(applicationVersion, CAM_USER, USER))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage(USER_NOT_IN_CAM_ROLE.apply(String.valueOf(CAM_USER.wuaId())));
+
+    verify(caseAssignmentEmailService, never()).sendCaseAssignmentEmail(any(), any(), any(), any());
   }
 
   @Test
@@ -130,8 +142,58 @@ class CamAssignmentServiceTest {
 
     verify(applicationWorkAreaPriorityService, times(1))
         .prioritiseApplicationInWorkArea(applicationVersion, USER, CAM_ASSIGN_OWNERSHIP, REGULATOR);
+
+    verify(caseAssignmentEmailService).sendCaseAssignmentEmail(
+        applicationVersion,
+        GovukNotifyTemplate.CASE_ASSIGNED_TO_CAM_USER,
+        FieldConsentsEmailRecipient.from(CAM_USER),
+        USER);
   }
-  
+
+  @Test
+  void assignCamUser_whenSendCamAssignmentEmailFails_thenApplicationVersionCamDetailsAreStillUpdated() {
+    when(regulatorTeamService.isCamUser(WEB_CAM_USER_ACCOUNT_ID))
+        .thenReturn(true);
+
+    // WHEN the email service call throws an exception
+    doThrow(new RuntimeException("Failed to send email"))
+        .when(caseAssignmentEmailService)
+        .sendCaseAssignmentEmail(
+            applicationVersion,
+            GovukNotifyTemplate.CASE_ASSIGNED_TO_CAM_USER,
+            FieldConsentsEmailRecipient.from(CAM_USER),
+            USER);
+
+    // THEN it will be caught by the caller and not re-thrown
+    assertDoesNotThrow(
+        () -> camAssignmentService.assignCamUser(applicationVersion, CAM_USER, USER)
+    );
+
+    var applicationVersionArgumentCaptor = ArgumentCaptor.forClass(ApplicationVersion.class);
+
+    verify(applicationVersionRepository, times(1))
+        .save(applicationVersionArgumentCaptor.capture());
+
+    assertThat(applicationVersionArgumentCaptor.getValue()).extracting(
+        ApplicationVersion::getCaseOfficerWuaId,
+        ApplicationVersion::getCamWuaId,
+        ApplicationVersion::getCurrentCaseOwner
+    ).contains(
+        WEB_USER_ACCOUNT_ID.id(),
+        WEB_CAM_USER_ACCOUNT_ID.id(),
+        CONSENTS_AND_AUTHORISATIONS_MANAGER
+    );
+
+    verify(applicationWorkAreaPriorityService, times(1))
+        .prioritiseApplicationInWorkArea(applicationVersion, USER, CAM_ASSIGN_OWNERSHIP, REGULATOR);
+
+    verify(caseAssignmentEmailService).sendCaseAssignmentEmail(
+        applicationVersion,
+        GovukNotifyTemplate.CASE_ASSIGNED_TO_CAM_USER,
+        FieldConsentsEmailRecipient.from(CAM_USER),
+        USER);
+  }
+
   @Test
   void getCamUserAssignmentCandidates_whenUserNotRegulatorTeam_thenEmpty() {
     when(regulatorTeamService.getRegulatorTeamForUser(USER))

@@ -5,7 +5,6 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService.CONSULTATION_TEAM_TYPE;
@@ -73,7 +72,6 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.assets.AdditionalAssetsService;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentEmailService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.cam.CamAssignmentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
@@ -145,9 +143,6 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
 
   @MockBean
   private OpredTeamService opredTeamService;
-
-  @MockBean
-  private CaseAssignmentEmailService caseAssignmentEmailService;
 
   @Autowired
   private CaseAssignmentService caseAssignmentService;
@@ -252,8 +247,6 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
     when(energyPortalUserService.findByWuaIds(List.of(WebUserAccountId.from(CONSULTEE_ALLOCATOR_DETAIL))))
         .thenReturn(List.of(CONSULTEE_ALLOCATOR_ENERGY_PORTAL_USER_DTO));
     when(opredTeamService.isAccessManager(CONSULTATION_TEAM.toTeamId(), CONSULTEE_ALLOCATOR_DETAIL)).thenReturn(true);
-
-    doNothing().when(caseAssignmentEmailService).sendCaseAssignmentEmail(any(), any(), any());
   }
 
   /*********************************** REFERENCE NUMBER ***********************************/
