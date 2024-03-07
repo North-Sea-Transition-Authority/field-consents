@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.Application;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.response.ApplicationUpdateResponseType;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
@@ -105,10 +106,18 @@ public class ApplicationUpdateSummaryService {
     var responseType = applicationUpdate.getResponseType();
 
     summaryDataView
-        .addKeyValue("Response application version", applicationUpdate.getResponseApplicationVersion().getVersion())
-        .addKeyValue("Responded by", energyPortalUserByWuaId.get(applicationUpdate.getRespondedByWuaId()).displayName())
+        // null checks to cope with migrated data
+        .addKeyValue("Response application version",
+            Optional.ofNullable(applicationUpdate.getResponseApplicationVersion())
+                .map(ApplicationVersion::getVersion)
+                .orElse(null)
+        )
+        .addKeyValue("Responded by",
+            Optional.ofNullable(applicationUpdate.getRespondedByWuaId())
+                .map(respondedByWuaId -> energyPortalUserByWuaId.get(respondedByWuaId).displayName())
+                .orElse(null)
+        )
         .addKeyValue("Responded on", DateUtils.format(applicationUpdate.getRespondedDateTime(), DateUtils.DATE_TIME))
-        // null check to cope with migrated data
         .addKeyValue("Update type",
             Optional.ofNullable(responseType)
                 .map(ApplicationUpdateResponseType::getDisplayName)

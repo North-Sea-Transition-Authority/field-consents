@@ -138,6 +138,36 @@ class ApplicationUpdateCaseEventServiceTest {
     assertUpdateCaseEvents(completedApplicationUpdate);
   }
 
+  @Test
+  void getCaseEvents_withApplicationUpdateSubmitted_withMissingRequestDataAndAllResponseDataMissing_noUpdateCompletedEvent() {
+    openApplicationUpdate.setRequestText(null);
+    openApplicationUpdate.setDeadlineDateTime(null);
+    var completedApplicationUpdate = ApplicationUpdateTestUtil.getClosedApplicationUpdate(
+        applicationVersion,
+        null,
+        null,
+        null,
+        clock
+    );
+    completedApplicationUpdate.setRequestText(null);
+    completedApplicationUpdate.setDeadlineDateTime(null);
+    completedApplicationUpdate.setRespondedByWuaId(null);
+    completedApplicationUpdate.setRespondedDateTime(null);
+
+    updateRequestedEvent = CaseHistoryEventTestUtil.getApplicationUpdateRequestedEvent(openApplicationUpdate);
+
+    when(applicationUpdateService.getApplicationUpdatesByApplication(applicationVersion.getApplication()))
+        .thenReturn(List.of(completedApplicationUpdate));
+
+    var caseEvents = applicationUpdateCaseEventService.getCaseEvents(applicationVersion.getApplication());
+
+    assertThat(caseEvents)
+        .containsExactly(
+            updateRequestedEvent
+        );
+  }
+
+
   private void assertUpdateCaseEvents(ApplicationUpdate completedApplicationUpdate) {
     updateRequestedEvent = CaseHistoryEventTestUtil.getApplicationUpdateRequestedEvent(openApplicationUpdate);
     CaseEvent updateCompletedEvent = CaseHistoryEventTestUtil.getApplicationUpdateSubmittedEvent(

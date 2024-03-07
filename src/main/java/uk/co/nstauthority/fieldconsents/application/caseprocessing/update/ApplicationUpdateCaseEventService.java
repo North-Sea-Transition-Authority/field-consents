@@ -29,7 +29,9 @@ public class ApplicationUpdateCaseEventService implements CaseEventService<Appli
           getApplicationUpdateRequestedEvent(applicationUpdate)
       );
 
-      if (ApplicationUpdateStatus.CLOSED.equals(applicationUpdate.getApplicationUpdateStatus())) {
+      if (ApplicationUpdateStatus.CLOSED.equals(applicationUpdate.getApplicationUpdateStatus())
+          && applicationUpdate.getResponseApplicationVersion() != null // null check to cope with migrated data
+      ) {
         caseEvents.add(
             getApplicationUpdateCompletedEvent(applicationUpdate)
         );

@@ -196,6 +196,7 @@ class ApplicationUpdateSummaryServiceTest {
     applicationUpdate.setRequestedByWuaId(REQUESTER_WUA_ID.id());
     applicationUpdate.setRequestedDateTime(REQUESTED_AT);
     applicationUpdate.setRequestText(REQUEST_TEXT);
+    applicationUpdate.setDeadlineDateTime(DEADLINE);
 
     assertThat(applicationUpdateSummaryService.getSummaryCard(applicationUpdate, energyPortalUserDtoByWuaId))
         .extracting(SummaryCard::displayName, SummaryCard::summaryCardType, SummaryCard::summaryData)
@@ -220,6 +221,7 @@ class ApplicationUpdateSummaryServiceTest {
     applicationUpdate.setRequestedByWuaId(REQUESTER_WUA_ID.id());
     applicationUpdate.setRequestedDateTime(REQUESTED_AT);
     applicationUpdate.setRequestText(REQUEST_TEXT);
+    applicationUpdate.setDeadlineDateTime(DEADLINE);
 
     applicationUpdate.setResponseApplicationVersion(responseApplicationVersion);
     applicationUpdate.setRespondedByWuaId(RESPONDER_WUA_ID.id());
@@ -252,6 +254,7 @@ class ApplicationUpdateSummaryServiceTest {
     applicationUpdate.setRequestedByWuaId(REQUESTER_WUA_ID.id());
     applicationUpdate.setRequestedDateTime(REQUESTED_AT);
     applicationUpdate.setRequestText(REQUEST_TEXT);
+    applicationUpdate.setDeadlineDateTime(DEADLINE);
 
     applicationUpdate.setResponseApplicationVersion(responseApplicationVersion);
     applicationUpdate.setRespondedByWuaId(RESPONDER_WUA_ID.id());
@@ -284,6 +287,7 @@ class ApplicationUpdateSummaryServiceTest {
     applicationUpdate.setRequestedByWuaId(REQUESTER_WUA_ID.id());
     applicationUpdate.setRequestedDateTime(REQUESTED_AT);
     applicationUpdate.setRequestText(REQUEST_TEXT);
+    applicationUpdate.setDeadlineDateTime(DEADLINE);
 
     applicationUpdate.setResponseApplicationVersion(responseApplicationVersion);
     applicationUpdate.setRespondedByWuaId(RESPONDER_WUA_ID.id());
@@ -311,4 +315,36 @@ class ApplicationUpdateSummaryServiceTest {
         );
   }
 
+  @Test
+  void getSummaryCard_closed_nullResponseDataAndDeadline() {
+    applicationUpdate.setApplicationUpdateStatus(ApplicationUpdateStatus.CLOSED);
+    applicationUpdate.setApplicationVersion(applicationVersion);
+    applicationUpdate.setRequestedByWuaId(REQUESTER_WUA_ID.id());
+    applicationUpdate.setRequestedDateTime(REQUESTED_AT);
+    applicationUpdate.setRequestText(REQUEST_TEXT);
+    applicationUpdate.setDeadlineDateTime(null);
+
+    applicationUpdate.setResponseApplicationVersion(null);
+    applicationUpdate.setRespondedByWuaId(null);
+    applicationUpdate.setRespondedDateTime(null);
+    applicationUpdate.setResponseType(null);
+
+    assertThat(applicationUpdateSummaryService.getSummaryCard(applicationUpdate, energyPortalUserDtoByWuaId))
+        .extracting(SummaryCard::displayName, SummaryCard::summaryCardType, SummaryCard::summaryData)
+        .containsExactly(
+            null,
+            SummaryCardType.SIMPLE_SUMMARY,
+            SummaryDataView
+                .newWithKeyValue("Update status", applicationUpdate.getApplicationUpdateStatus().getDisplayName())
+                .addKeyValue("Request application version", applicationUpdate.getApplicationVersion().getVersion())
+                .addKeyValue("Requested by", requesterUser.displayName())
+                .addKeyValue("Requested on", DateUtils.format(applicationUpdate.getRequestedDateTime(), DateUtils.DATE_TIME))
+                .addKeyValue("Request details", applicationUpdate.getRequestText())
+                .addKeyValue("Deadline", "")
+                .addKeyValue("Response application version", null)
+                .addKeyValue("Responded by", null)
+                .addKeyValue("Responded on", "")
+                .addKeyValue("Update type", null)
+        );
+  }
 }
