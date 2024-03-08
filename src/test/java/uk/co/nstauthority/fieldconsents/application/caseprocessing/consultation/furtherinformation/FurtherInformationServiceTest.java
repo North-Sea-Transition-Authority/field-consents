@@ -3,9 +3,11 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mock.Strictness.LENIENT;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -54,9 +56,9 @@ import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 @ExtendWith(MockitoExtension.class)
 class FurtherInformationServiceTest {
 
-  private static final int CONSULTATION_ID = 1;
+  static final int CONSULTATION_ID = 1;
   private static final int FURTHER_INFORMATION_ID = 10;
-  private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().withWuaId(1L).build();
+  static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().withWuaId(1L).build();
   private static final String REQUEST_TEXT = "request text";
   private static final String RESPONSE_TEXT = "response text";
 
@@ -73,6 +75,9 @@ class FurtherInformationServiceTest {
 
   @Mock
   private EnergyPortalUserService energyPortalUserService;
+
+  @Mock
+  private FurtherInformationEmailService furtherInformationEmailService;
 
   @Spy
   @InjectMocks
@@ -146,7 +151,9 @@ class FurtherInformationServiceTest {
         CONSULTATION_FURTHER_INFORMATION_REQUESTED, CONSULTEE);
 
     verify(repository).save(furtherInformationArgumentCaptor.capture());
-    assertThat(furtherInformationArgumentCaptor.getValue())
+
+    var actualFurtherInformation = furtherInformationArgumentCaptor.getValue();
+    assertThat(actualFurtherInformation)
         .extracting(
             FurtherInformation::getStatus,
             FurtherInformation::getConsultation,
@@ -160,6 +167,45 @@ class FurtherInformationServiceTest {
             USER.wuaId(),
             REQUEST_TEXT
         );
+
+    verify(furtherInformationEmailService).sendFurtherInformationRequestEmail(actualFurtherInformation);
+  }
+
+  @Test
+  void saveFurtherInformation_whenSendFurtherInformationRequestEmailFails_thenFurtherInformationRequestIsStillSubmitted() {
+    // WHEN the email service call throws an exception
+    doThrow(new RuntimeException("Failed to send email"))
+        .when(furtherInformationEmailService).sendFurtherInformationRequestEmail(furtherInformation);
+
+    // THEN it will be caught by the caller and not re-thrown
+    assertDoesNotThrow(
+        () -> furtherInformationService.saveFurtherInformationRequest(consultation, USER, REQUEST_TEXT)
+    );
+
+    verify(priorityService).prioritiseApplicationInWorkArea(applicationVersion, USER,
+        CONSULTATION_FURTHER_INFORMATION_REQUESTED, REGULATOR);
+    verify(priorityService).prioritiseApplicationInWorkArea(applicationVersion, USER,
+        CONSULTATION_FURTHER_INFORMATION_REQUESTED, CONSULTEE);
+
+    verify(repository).save(furtherInformationArgumentCaptor.capture());
+
+    var actualFurtherInformation = furtherInformationArgumentCaptor.getValue();
+    assertThat(actualFurtherInformation)
+        .extracting(
+            FurtherInformation::getStatus,
+            FurtherInformation::getConsultation,
+            FurtherInformation::getRequestedAtDatetime,
+            FurtherInformation::getRequestedByWuaId,
+            FurtherInformation::getRequestText
+        ).containsExactly(
+            FurtherInformationStatus.OPEN,
+            consultation,
+            NOW,
+            USER.wuaId(),
+            REQUEST_TEXT
+        );
+
+    verify(furtherInformationEmailService).sendFurtherInformationRequestEmail(actualFurtherInformation);
   }
 
   @Test
@@ -172,7 +218,9 @@ class FurtherInformationServiceTest {
         CONSULTATION_FURTHER_INFORMATION_RESPONDED, CONSULTEE);
 
     verify(repository).save(furtherInformationArgumentCaptor.capture());
-    assertThat(furtherInformationArgumentCaptor.getValue())
+
+    var actualFurtherInformation = furtherInformationArgumentCaptor.getValue();
+    assertThat(actualFurtherInformation)
         .extracting(
             FurtherInformation::getStatus,
             FurtherInformation::getRespondedAtDatetime,
@@ -184,6 +232,43 @@ class FurtherInformationServiceTest {
             USER.wuaId(),
             RESPONSE_TEXT
         );
+
+    verify(furtherInformationEmailService).sendFurtherInformationResponseEmail(actualFurtherInformation);
+  }
+
+  @Test
+  void saveFurtherInformationResponse_whenSendFurtherInformationResponseEmailFails_thenFurtherInformationResponseIsStillSubmitted() {
+    // WHEN the email service call throws an exception
+    doThrow(new RuntimeException("Failed to send email"))
+        .when(furtherInformationEmailService).sendFurtherInformationResponseEmail(furtherInformation);
+
+    // THEN it will be caught by the caller and not re-thrown
+    assertDoesNotThrow(
+        () -> furtherInformationService.saveFurtherInformationResponse(furtherInformation, USER, RESPONSE_TEXT)
+    );
+
+    verify(priorityService).prioritiseApplicationInWorkArea(applicationVersion, USER,
+        CONSULTATION_FURTHER_INFORMATION_RESPONDED, REGULATOR);
+    verify(priorityService).prioritiseApplicationInWorkArea(applicationVersion, USER,
+        CONSULTATION_FURTHER_INFORMATION_RESPONDED, CONSULTEE);
+
+    verify(repository).save(furtherInformationArgumentCaptor.capture());
+
+    var actualFurtherInformation = furtherInformationArgumentCaptor.getValue();
+    assertThat(actualFurtherInformation)
+        .extracting(
+            FurtherInformation::getStatus,
+            FurtherInformation::getRespondedAtDatetime,
+            FurtherInformation::getRespondedByWuaId,
+            FurtherInformation::getResponseText
+        ).containsExactly(
+            CLOSED,
+            NOW,
+            USER.wuaId(),
+            RESPONSE_TEXT
+        );
+
+    verify(furtherInformationEmailService).sendFurtherInformationResponseEmail(actualFurtherInformation);
   }
 
   @ParameterizedTest
@@ -203,6 +288,7 @@ class FurtherInformationServiceTest {
 
     verify(repository, never()).save(any());
     verify(priorityService, never()).prioritiseApplicationInWorkArea(any(), any(), any(), any());
+    verify(furtherInformationEmailService, never()).sendFurtherInformationResponseEmail(any());
   }
 
   @Test

@@ -19,6 +19,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
@@ -30,21 +32,26 @@ import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserServic
 @Service
 public class FurtherInformationService {
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(FurtherInformationService.class);
+
   private final Clock clock;
   private final FurtherInformationRepository repository;
   private final ApplicationWorkAreaPriorityService priorityService;
   private final EnergyPortalUserService energyPortalUserService;
+  private final FurtherInformationEmailService furtherInformationEmailService;
 
   FurtherInformationService(
       Clock clock,
       FurtherInformationRepository repository,
       ApplicationWorkAreaPriorityService priorityService,
-      EnergyPortalUserService energyPortalUserService
+      EnergyPortalUserService energyPortalUserService,
+      FurtherInformationEmailService furtherInformationEmailService
   ) {
     this.clock = clock;
     this.repository = repository;
     this.priorityService = priorityService;
     this.energyPortalUserService = energyPortalUserService;
+    this.furtherInformationEmailService = furtherInformationEmailService;
   }
 
   public Optional<FurtherInformation> findLatestOpenFurtherInformation(Consultation consultation) {
@@ -76,6 +83,17 @@ public class FurtherInformationService {
     var reason = CONSULTATION_FURTHER_INFORMATION_REQUESTED;
     priorityService.prioritiseApplicationInWorkArea(applicationVersion, user, reason, REGULATOR);
     priorityService.prioritiseApplicationInWorkArea(applicationVersion, user, reason, CONSULTEE);
+
+    try {
+      furtherInformationEmailService.sendFurtherInformationRequestEmail(furtherInformation);
+    } catch (Exception exception) {
+      LOGGER.error("""
+              An attempt to send a further information request notification by user with wuaId [{}] for application \
+              version with id [{}] failed. \
+              Note: this hasn't prevented the further information request being submitted.
+              """,
+          user.wuaId(), applicationVersion.getId(), exception);
+    }
   }
 
   @Transactional
@@ -96,6 +114,17 @@ public class FurtherInformationService {
     var reason = CONSULTATION_FURTHER_INFORMATION_RESPONDED;
     priorityService.prioritiseApplicationInWorkArea(applicationVersion, user, reason, REGULATOR);
     priorityService.prioritiseApplicationInWorkArea(applicationVersion, user, reason, CONSULTEE);
+
+    try {
+      furtherInformationEmailService.sendFurtherInformationResponseEmail(furtherInformation);
+    } catch (Exception exception) {
+      LOGGER.error("""
+              An attempt to send a further information response notification by user with wuaId [{}] for application \
+              version with id [{}] failed. \
+              Note: this hasn't prevented the further information response being submitted.
+              """,
+          user.wuaId(), applicationVersion.getId(), exception);
+    }
   }
 
   public FurtherInformationView getFurtherInformationView(FurtherInformation furtherInformation) {
