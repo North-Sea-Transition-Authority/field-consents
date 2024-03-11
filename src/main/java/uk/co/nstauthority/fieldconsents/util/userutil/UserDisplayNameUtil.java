@@ -11,4 +11,8 @@ public class UserDisplayNameUtil {
   public static String getUserDisplayName(String forename, String surname) {
     return "%s %s".formatted(forename, surname);
   }
+
+  public static String getUserDisplayNameAndEmail(String forename, String surname, String emailAddress) {
+    return "%s (%s)".formatted(getUserDisplayName(forename, surname), emailAddress);
+  }
 }

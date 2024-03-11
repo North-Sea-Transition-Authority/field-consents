@@ -33,7 +33,7 @@ class PaymentsTabPaymentSummaryViewTest {
             PaymentsTabPaymentSummaryView.PAID_STATUS,
             paymentDtoDescription,
             DecimalFormatUtils.formatMoney((double) paymentDtoAmountPence / 100),
-            "%s (%s)".formatted(createdByUser.displayName(), createdByUser.emailAddress()),
+            createdByUser.displayNameAndEmail(),
             DateUtils.format(paymentDtoGovUkPayCaptureSubmitInstant, DateUtils.DATE_TIME),
             paymentDtoItemReference
         )

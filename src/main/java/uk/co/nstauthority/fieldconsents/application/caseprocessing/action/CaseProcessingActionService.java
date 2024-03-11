@@ -4,6 +4,7 @@ import static java.util.Map.entry;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature.CONSULTATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.APPLICATION_UPDATES;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.APPLICATION_UPDATE_REQUEST;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.APPROVE_FOR_ISSUING;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CAM_ASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CAM_REASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_ASSIGN_OWNERSHIP;
@@ -12,6 +13,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_WITHDRAWAL_RESPONSE;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CHANGE_ACE_STATUS;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSENT_ISSUING;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSENT_PREPARATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATIONS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_FURTHER_INFORMATION_REQUEST;
@@ -35,6 +37,8 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casest
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_NOTES_ALLOWED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSENT_DATA_EXISTS;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSENT_NOT_APPROVED_FOR_ISSUE;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_FURTHER_INFORMATION_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_APPLICATION_UPDATE_OPEN;
@@ -142,9 +146,11 @@ public class CaseProcessingActionService {
               OPERATOR_WITHDRAWAL_REQUEST,
               OPERATOR_UPDATE_APPLICATION,
               CAM_ASSIGN_OWNERSHIP,
-              RETURN_TO_CASE_OFFICER,
               CAM_REASSIGN_OWNERSHIP,
-              CONSENT_PREPARATION
+              CONSENT_PREPARATION,
+              CONSENT_ISSUING,
+              APPROVE_FOR_ISSUING,
+              RETURN_TO_CASE_OFFICER
           )
       );
 
@@ -167,7 +173,7 @@ public class CaseProcessingActionService {
           entry(TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP, EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS)),
           entry(APPLICATION_UPDATES, EnumSet.of(VIEW_FCS_CASE_PROCESSING_DOCUMENTS)),
           entry(APPLICATION_UPDATE_REQUEST, EnumSet.of(PROCESS_FCS_APPLICATIONS, TECHNICAL_REVIEW_FCS_APPLICATIONS)),
-          entry(CONSENT_PREPARATION, EnumSet.of(VIEW_FCS_CASE_PROCESSING_DOCUMENTS)),
+          entry(CONSENT_PREPARATION, EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS)),
           entry(OPERATOR_PAY_AND_SUBMIT_APPLICATION, EnumSet.of(PAY_AND_SUBMIT_FCS_APPLICATIONS)),
           entry(OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT, EnumSet.of(
               EDIT_FCS_APPLICATIONS)),
@@ -176,6 +182,8 @@ public class CaseProcessingActionService {
           entry(CONSULTATION_FURTHER_INFORMATION_REQUEST, EnumSet.of(RESPOND_TO_CONSULTATION)),
           entry(CONSULTATION_FURTHER_INFORMATION_RESPOND, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
           entry(CAM_ASSIGN_OWNERSHIP, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
+          entry(CONSENT_ISSUING, EnumSet.of(AUTHORISE_FCS_CONSENTS)),
+          entry(APPROVE_FOR_ISSUING, EnumSet.of(AUTHORISE_FCS_CONSENTS)),
           entry(RETURN_TO_CASE_OFFICER, EnumSet.of(AUTHORISE_FCS_CONSENTS)),
           entry(CAM_REASSIGN_OWNERSHIP, EnumSet.of(AUTHORISE_FCS_CONSENTS, ASSIGN_FCS_APPLICATIONS))
       );
@@ -212,7 +220,9 @@ public class CaseProcessingActionService {
                   NO_APPLICATION_UPDATE_OPEN,
                   NO_CONSULTATION_OPEN)
           ),
-          entry(RETURN_TO_CASE_OFFICER, EnumSet.of(CAM_ASSIGNED, CASE_OFFICER_NOT_ASSIGNED)),
+          entry(CONSENT_ISSUING, EnumSet.of(CONSENT_DATA_EXISTS)),
+          entry(APPROVE_FOR_ISSUING, EnumSet.of(CONSENT_DATA_EXISTS, CONSENT_NOT_APPROVED_FOR_ISSUE)),
+          entry(RETURN_TO_CASE_OFFICER, EnumSet.of(CAM_ASSIGNED, CASE_OFFICER_NOT_ASSIGNED, CONSENT_NOT_APPROVED_FOR_ISSUE)),
           entry(CAM_REASSIGN_OWNERSHIP, EnumSet.of(CAM_ASSIGNED, CASE_OFFICER_NOT_ASSIGNED))
       );
 
@@ -229,6 +239,7 @@ public class CaseProcessingActionService {
           entry(CONSULTATION_FURTHER_INFORMATION_REQUEST, EnumSet.of(RESPONDER)),
           entry(CONSULTATION_FURTHER_INFORMATION_RESPOND, EnumSet.of(CASE_OFFICER)),
           entry(CAM_ASSIGN_OWNERSHIP, EnumSet.of(CASE_OFFICER)),
+          entry(APPROVE_FOR_ISSUING, EnumSet.of(CONSENTS_AND_AUTHORISATIONS_MANAGER)),
           entry(RETURN_TO_CASE_OFFICER, EnumSet.of(CONSENTS_AND_AUTHORISATIONS_MANAGER))
       );
   /*
@@ -246,18 +257,24 @@ public class CaseProcessingActionService {
           TECHNICAL_REVIEWS, CASE_TASKS,
           CONSULTATIONS, CASE_TASKS,
           CONSENT_PREPARATION, CASE_TASKS,
+          CONSENT_ISSUING, CASE_TASKS,
           CHANGE_ACE_STATUS, OPTIONAL_CASE_TASKS,
           APPLICATION_UPDATES, OPTIONAL_CASE_TASKS,
           REGULATOR_ADD_CASE_NOTE, OPTIONAL_CASE_TASKS
       );
 
   // If an action is here it will be displayed only on the action groups page
-  private final Map<CaseProcessingActionItem, CaseProcessingActionGroup> actionsToCaseProcessingActionGroup =
+  private final Map<CaseProcessingActionItem, Set<CaseProcessingActionGroup>> actionsToCaseProcessingActionGroup =
       Map.of(
-          TECHNICAL_REVIEW_REQUEST, CaseProcessingActionGroup.TECHNICAL_REVIEWS,
-          CONSULTATION_REQUEST, CaseProcessingActionGroup.CONSULTATIONS,
-          CONSULTATION_FURTHER_INFORMATION_RESPOND, CaseProcessingActionGroup.CONSULTATIONS,
-          APPLICATION_UPDATE_REQUEST, CaseProcessingActionGroup.APPLICATION_UPDATES
+          TECHNICAL_REVIEW_REQUEST, EnumSet.of(CaseProcessingActionGroup.TECHNICAL_REVIEWS),
+          CONSULTATION_REQUEST, EnumSet.of(CaseProcessingActionGroup.CONSULTATIONS),
+          CONSULTATION_FURTHER_INFORMATION_RESPOND, EnumSet.of(CaseProcessingActionGroup.CONSULTATIONS),
+          APPLICATION_UPDATE_REQUEST, EnumSet.of(CaseProcessingActionGroup.APPLICATION_UPDATES),
+          CAM_ASSIGN_OWNERSHIP, EnumSet.of(CaseProcessingActionGroup.CONSENT_PREPARATION),
+          CAM_REASSIGN_OWNERSHIP, EnumSet.of(CaseProcessingActionGroup.CONSENT_PREPARATION,
+              CaseProcessingActionGroup.CONSENT_ISSUING),
+          RETURN_TO_CASE_OFFICER, EnumSet.of(CaseProcessingActionGroup.CONSENT_ISSUING),
+          APPROVE_FOR_ISSUING, EnumSet.of(CaseProcessingActionGroup.CONSENT_ISSUING)
       );
 
   @Autowired
@@ -317,7 +334,7 @@ public class CaseProcessingActionService {
     return getUserActionItems(applicationVersion, user)
         .stream()
         .filter(actionsToCaseProcessingActionGroup::containsKey)
-        .filter(action -> actionsToCaseProcessingActionGroup.get(action).equals(actionGroup))
+        .filter(action -> actionsToCaseProcessingActionGroup.get(action).contains(actionGroup))
         .sorted(Comparator.comparingInt(CaseProcessingActionItem::getDisplayOrder))
         .map(action -> CaseProcessingActionView.from(action, applicationVersion))
         .toList();

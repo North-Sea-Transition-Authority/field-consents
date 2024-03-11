@@ -72,6 +72,7 @@ public class FieldConsentsDocumentInstanceController implements DocumentInstance
   }
 
   @GetMapping("/{documentInstanceId}/preview")
+  @HasPermission(permissions = { RolePermission.PROCESS_FCS_APPLICATIONS, RolePermission.AUTHORISE_FCS_CONSENTS })
   public ResponseEntity<?> getPreviewDocumentInstance(@PathVariable UUID documentInstanceId) {
     var documentInstanceDto = documentInstanceService.getDocumentInstanceDtoOrThrow(documentInstanceId);
     var byteArrayResource = fieldConsentsDocumentInstanceService.renderPdf(

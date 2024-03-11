@@ -8,6 +8,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.Ca
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.cam.CamAssignmentController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casenotes.CaseNotesController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.ConsentIssuingController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.allocation.ConsultationAllocationController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.request.FurtherInformationRequestController;
@@ -107,7 +108,12 @@ public enum CaseProcessingActionItem implements Displayable {
   CONSULTATION_FURTHER_INFORMATION_RESPOND("Respond to further information request", 3, true, false, null,
       applicationId -> ReverseRouter.route(on(FurtherInformationResponseController.class).getResponseForm(applicationId))),
   // CAM actions
-  RETURN_TO_CASE_OFFICER("Return to case officer", 1, true, false,
+  CONSENT_ISSUING("Consent issuing", 8, false, false, null,
+      applicationId -> ReverseRouter.route(on(ConsentIssuingController.class).getConsentIssuing(applicationId, null))),
+  APPROVE_FOR_ISSUING("Ready to grant and issue", 1, true, true,
+      applicationId -> ReverseRouter.route(on(ConsentIssuingController.class).approveForIssuing(applicationId, null, null)),
+      null),
+  RETURN_TO_CASE_OFFICER("Return to case officer", 2, true, false,
       applicationId -> ReverseRouter.route(on(CaseAssignmentController.class)
           .returnToCaseOfficer(applicationId, null, null)), null)
   ;

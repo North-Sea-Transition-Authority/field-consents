@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.documents;
 
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSENT_ISSUING;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSENT_PREPARATION;
 
 import java.util.UUID;
@@ -35,6 +36,7 @@ public class ConsentPreparationFileController {
   }
 
   @GetMapping("/{fileId}")
+  @ActionEndPoint({ CONSENT_PREPARATION, CONSENT_ISSUING })
   public ResponseEntity<InputStreamResource> download(
       @PathVariable Integer applicationId,
       @PathVariable UUID fileId,

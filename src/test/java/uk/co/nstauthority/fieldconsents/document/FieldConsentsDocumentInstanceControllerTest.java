@@ -20,8 +20,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
@@ -59,9 +57,6 @@ class FieldConsentsDocumentInstanceControllerTest extends AbstractControllerTest
 
   @MockBean
   private ApplicationService applicationService;
-
-  @Captor
-  private ArgumentCaptor<PdfRenderingOptions> pdfRenderingOptionsCaptor;
 
   @SecurityTest
   void getViewDocumentInstance_noUser() throws Exception {
@@ -142,8 +137,9 @@ class FieldConsentsDocumentInstanceControllerTest extends AbstractControllerTest
   }
 
   @SecurityTest
-  void getPreviewDocumentInstance_userDoesNotHaveProcessFcsApplicationsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(false);
+  void getPreviewDocumentInstance_userDoesNotHaveProcessFcsApplicationsOrAuthoriseFcsConsentsPermission() throws Exception {
+    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS, RolePermission.AUTHORISE_FCS_CONSENTS)))
+        .thenReturn(false);
 
     mockMvc.perform(get(ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
             .getPreviewDocumentInstance(DOCUMENT_INSTANCE_ID)))
@@ -156,7 +152,8 @@ class FieldConsentsDocumentInstanceControllerTest extends AbstractControllerTest
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
     var byteArrayResource = new ByteArrayResource(new byte[] {1, 2, 3});
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
+    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS, RolePermission.AUTHORISE_FCS_CONSENTS)))
+        .thenReturn(true);
     when(documentInstanceService.getDocumentInstanceDtoOrThrow(DOCUMENT_INSTANCE_ID))
         .thenReturn(documentInstanceDto);
     when(fieldConsentsDocumentInstanceService.renderPdf(

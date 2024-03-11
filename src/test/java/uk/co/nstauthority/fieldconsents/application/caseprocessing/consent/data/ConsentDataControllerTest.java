@@ -146,7 +146,8 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
         .getConsentDataAndRedirect(APPLICATION_ID)))
         .with(user(user)))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(ConsentPreparationController.class).viewConsentPreparationPage(APPLICATION_ID))));
+        .andExpect(redirectedUrl(ReverseRouter.route(on(ConsentPreparationController.class)
+            .viewConsentPreparationPage(APPLICATION_ID, null))));
   }
 
   @Test
@@ -203,7 +204,8 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
         .with(user(user))
         .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(ConsentPreparationController.class).viewConsentPreparationPage(APPLICATION_ID))))
+        .andExpect(redirectedUrl(ReverseRouter.route(on(ConsentPreparationController.class)
+            .viewConsentPreparationPage(APPLICATION_ID, null))))
         .andExpect(notificationBanner(NotificationBanner.builder()
             .withBannerType(NotificationBannerType.SUCCESS)
             .withHeadingContent("Consent data saved")
@@ -236,7 +238,8 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
             .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(ConsentPreparationController.class).viewConsentPreparationPage(APPLICATION_ID))))
+        .andExpect(redirectedUrl(ReverseRouter.route(on(ConsentPreparationController.class)
+            .viewConsentPreparationPage(APPLICATION_ID, null))))
         .andExpect(notificationBanner(NotificationBanner.builder()
             .withBannerType(NotificationBannerType.SUCCESS)
             .withHeadingContent("Consent data saved")

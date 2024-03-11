@@ -72,7 +72,7 @@ public class ConsentPreparationDocumentsController {
 
     NotificationBannerUtil.addSuccessNotification(redirectAttributes, "Consent documents saved");
 
-    return ReverseRouter.redirect(on(ConsentPreparationController.class).viewConsentPreparationPage(applicationId));
+    return ReverseRouter.redirect(on(ConsentPreparationController.class).viewConsentPreparationPage(applicationId, null));
   }
 
   private ModelAndView getModelAndView(Application application, ConsentPreparationSupportingDocumentsForm form) {
@@ -89,7 +89,7 @@ public class ConsentPreparationDocumentsController {
         .addObject("documentInstanceSummaryViews", documentInstanceSummaryViews)
         .addObject("form", form)
         .addObject("cancelUrl",
-            ReverseRouter.route(on(ConsentPreparationController.class).viewConsentPreparationPage(application.getId())))
+            ReverseRouter.route(on(ConsentPreparationController.class).viewConsentPreparationPage(application.getId(), null)))
         .addObject("fileUploadAttributes", fileUploadAttributes);
   }
 }

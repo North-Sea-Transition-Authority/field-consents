@@ -12,6 +12,8 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionGroup;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataView;
@@ -21,6 +23,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.prepa
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.application.fieldequitypartner.FieldEquityPartnerService;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.IndustryTeamRole;
@@ -38,6 +41,7 @@ public class ConsentPreparationController {
   private final ConsentPreparationDocumentService consentPreparationDocumentService;
   private final FieldEquityPartnerService fieldEquityPartnerService;
   private final ApplicationAssetService applicationAssetService;
+  private final CaseProcessingActionService caseProcessingActionService;
 
   ConsentPreparationController(
       ApplicationVersionService applicationVersionService,
@@ -46,7 +50,8 @@ public class ConsentPreparationController {
       ConsentLengthService consentLengthService,
       ConsentPreparationDocumentService consentPreparationDocumentService,
       FieldEquityPartnerService fieldEquityPartnerService,
-      ApplicationAssetService applicationAssetService
+      ApplicationAssetService applicationAssetService,
+      CaseProcessingActionService caseProcessingActionService
   ) {
     this.applicationVersionService = applicationVersionService;
     this.consentDataService = consentDataService;
@@ -55,10 +60,11 @@ public class ConsentPreparationController {
     this.consentPreparationDocumentService = consentPreparationDocumentService;
     this.fieldEquityPartnerService = fieldEquityPartnerService;
     this.applicationAssetService = applicationAssetService;
+    this.caseProcessingActionService = caseProcessingActionService;
   }
 
   @GetMapping
-  public ModelAndView viewConsentPreparationPage(@PathVariable Integer applicationId) {
+  public ModelAndView viewConsentPreparationPage(@PathVariable Integer applicationId, ServiceUserDetail user) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var application = applicationVersion.getApplication();
 
@@ -66,17 +72,24 @@ public class ConsentPreparationController {
 
     return consentDataService.findConsentData(application)
         .map(consentData -> consentDataService.getConsentDataView(application, consentData, consentLengthType))
-        .map(consentDataView -> getModelAndView(applicationVersion, consentDataView, consentLengthType))
+        .map(consentDataView -> getModelAndView(applicationVersion, consentDataView, consentLengthType, user))
         .orElse(ReverseRouter.redirect(on(ConsentDataController.class).editConsentData(applicationId)));
   }
 
   private ModelAndView getModelAndView(
       ApplicationVersion applicationVersion,
       ConsentDataView consentDataView,
-      ConsentLengthType consentLengthType
+      ConsentLengthType consentLengthType,
+      ServiceUserDetail user
   ) {
     var application = applicationVersion.getApplication();
     var applicationId = application.getId();
+
+    var actionList = caseProcessingActionService.getUserActionViewsForGroup(
+        applicationVersion,
+        user,
+        CaseProcessingActionGroup.CONSENT_PREPARATION
+    );
 
     var modelAndView = new ModelAndView("fcs/application/consent/consentPreparation")
         .addObject("pageTitle", CONSENT_PREPARATION.getDisplayName())
@@ -93,7 +106,8 @@ public class ConsentPreparationController {
         .addObject("consentDocumentsEditUrl", ReverseRouter.route(on(ConsentPreparationDocumentsController.class)
             .editDocuments(applicationId)))
         .addObject("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .caseProcessing(applicationId, null, null)));
+            .caseProcessing(applicationId, null, null)))
+        .addObject("actionList", actionList);
 
     if (applicationAssetService.getPrimaryAsset(applicationVersion).isField()) {
       var fieldEquityPartnersView = fieldEquityPartnerService.getFieldEquityPartnersView(applicationVersion);

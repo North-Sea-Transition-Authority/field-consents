@@ -7,6 +7,8 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casest
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_NOTES_ALLOWED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSENT_DATA_EXISTS;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSENT_NOT_APPROVED_FOR_ISSUE;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_FURTHER_INFORMATION_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_UNASSIGNED;
@@ -25,8 +27,11 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import org.springframework.stereotype.Service;
+import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval.ConsentIssuingApprovalService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationService;
@@ -42,23 +47,31 @@ public class CaseStatusFlagService {
   private final ApplicationUpdateService applicationUpdateService;
   private final ConsultationService consultationService;
   private final FurtherInformationService furtherInformationService;
+  private final ConsentDataService consentDataService;
+  private final ConsentIssuingApprovalService consentIssuingApprovalService;
 
   CaseStatusFlagService(
       ApplicationWithdrawalService applicationWithdrawalService,
       TechnicalReviewService technicalReviewService,
       ApplicationUpdateService applicationUpdateService,
       ConsultationService consultationService,
-      FurtherInformationService furtherInformationService
+      FurtherInformationService furtherInformationService,
+      ConsentDataService consentDataService,
+      ConsentIssuingApprovalService consentIssuingApprovalService
   ) {
     this.applicationWithdrawalService = applicationWithdrawalService;
     this.technicalReviewService = technicalReviewService;
     this.applicationUpdateService = applicationUpdateService;
     this.consultationService = consultationService;
     this.furtherInformationService = furtherInformationService;
+    this.consentDataService = consentDataService;
+    this.consentIssuingApprovalService = consentIssuingApprovalService;
   }
 
   public Set<CaseStatusFlag> getCaseStatusFlags(ApplicationVersion applicationVersion) {
     var caseStatusFlags = new HashSet<CaseStatusFlag>();
+
+    var application = applicationVersion.getApplication();
 
     caseStatusFlags.addAll(getDefaultFlags());
     caseStatusFlags.addAll(getCaseOfficerAssignmentFlag(applicationVersion));
@@ -68,6 +81,8 @@ public class CaseStatusFlagService {
     caseStatusFlags.addAll(getUpdateRequestFlag(applicationVersion));
     caseStatusFlags.addAll(getConsultationFlags(applicationVersion));
     caseStatusFlags.addAll(getCamAssignmentFlag(applicationVersion));
+    caseStatusFlags.addAll(getConsentDataExistsFlag(application));
+    caseStatusFlags.addAll(getConsentNotApprovedForIssueFlag(application));
 
     return caseStatusFlags;
   }
@@ -153,5 +168,18 @@ public class CaseStatusFlagService {
     }
 
     return Collections.singleton(CAM_NOT_ASSIGNED);
+  }
+
+  Set<CaseStatusFlag> getConsentDataExistsFlag(Application application) {
+    return consentDataService.findConsentData(application)
+        .map(consentData -> Set.of(CONSENT_DATA_EXISTS))
+        .orElse(Set.of());
+  }
+
+  Set<CaseStatusFlag> getConsentNotApprovedForIssueFlag(Application application) {
+    if (!consentIssuingApprovalService.isApplicationApprovedForConsentIssuing(application)) {
+      return Set.of(CONSENT_NOT_APPROVED_FOR_ISSUE);
+    }
+    return Set.of();
   }
 }

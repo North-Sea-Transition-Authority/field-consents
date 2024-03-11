@@ -1,4 +1,5 @@
 <#include '../../layout/layout.ftl'>
+<#import '../_caseProcessingActions.ftl' as caseProcessingActions>
 <#import 'data/_consentDataSummary.ftl' as consentDataSummary>
 <#import 'documents/_consentFilesSummary.ftl' as consentFilesSummary>
 <#import '_fieldEquityPartner.ftl' as fieldEquityPartner>
@@ -9,6 +10,8 @@
   pageSize=PageSize.FULL_WIDTH
   backLinkUrl=springUrl(backLinkUrl)
 >
+  <@caseProcessingActions.caseActions actions=actionList />
+
   <#if fieldEquityPartnersView?has_content>
     <#if fieldEquityPartnersView.organisationGroupNamesWithoutConsentRecipients()?has_content>
       <@fieldEquityPartner.notificationBanner
@@ -30,7 +33,9 @@
   <@consentFilesSummary.summary
     heading=consentDocumentsSummaryCard.displayName()
     fileViews=consentDocumentsSummaryCard.summaryData()
-    editUrl=consentDocumentsEditUrl/>
+    editable=true
+    editUrl=consentDocumentsEditUrl
+  />
   <@fdsAction.link
     linkText="Save and continue"
     linkClass="govuk-button"

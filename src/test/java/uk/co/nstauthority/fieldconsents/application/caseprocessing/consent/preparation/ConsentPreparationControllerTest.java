@@ -26,6 +26,9 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionGroup;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataTestUtil;
@@ -83,7 +86,7 @@ class ConsentPreparationControllerTest extends AbstractApplicationControllerTest
   @SecurityTest
   void viewConsentPreparationPage_notSignedIn() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(ConsentPreparationController.class)
-        .viewConsentPreparationPage(APPLICATION_ID))))
+        .viewConsentPreparationPage(APPLICATION_ID, null))))
         .andExpect(redirectionToLoginUrl());
   }
 
@@ -91,7 +94,7 @@ class ConsentPreparationControllerTest extends AbstractApplicationControllerTest
   void viewConsentPreparationPage_doesNotHavePermission() throws Exception {
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Collections.emptyList());
     mockMvc.perform(get(ReverseRouter.route(on(ConsentPreparationController.class)
-            .viewConsentPreparationPage(APPLICATION_ID)))
+            .viewConsentPreparationPage(APPLICATION_ID, null)))
             .with(user(user)))
         .andExpect(status().isForbidden());
   }
@@ -107,6 +110,7 @@ class ConsentPreparationControllerTest extends AbstractApplicationControllerTest
 
     var consentData = ConsentDataTestUtil.newBuilder().build();
     var consentDataView = ConsentDataView.fromShortTermOrAnnualProductionApplication(consentData);
+    var actionList = List.of(CaseProcessingActionView.from(CaseProcessingActionItem.CAM_ASSIGN_OWNERSHIP, applicationVersion));
     var consentFigureUnitView = ConsentFigureUnitView.fromShortTermOrAnnualProductionApplication(ProductionUnit.KSCM_PER_DAY);
     var documentsInstanceSummaryView = DocumentInstanceSummaryViewTestUtil.newBuilder().build();
     var consentDocumentsSummaryCard = SummaryCard.filesSummaryCardWithHeading(
@@ -118,13 +122,21 @@ class ConsentPreparationControllerTest extends AbstractApplicationControllerTest
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
     when(consentDataService.findConsentData(application)).thenReturn(Optional.of(consentData));
     when(consentDataService.getConsentDataView(application, consentData, consentLengthType)).thenReturn(consentDataView);
+    when(
+        caseProcessingActionService.getUserActionViewsForGroup(
+            applicationVersion,
+            user,
+            CaseProcessingActionGroup.CONSENT_PREPARATION
+        )
+    ).thenReturn(actionList);
     when(consentFigureUnitService.getConsentFigureUnitView(applicationVersion, consentLengthType))
         .thenReturn(consentFigureUnitView);
     when(consentDocumentService.getConsentDocumentsSummaryCard(application)).thenReturn(consentDocumentsSummaryCard);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(applicationAsset);
     when(fieldEquityPartnerService.getFieldEquityPartnersView(applicationVersion)).thenReturn(fieldEquityPartnerView);
 
-    mockMvc.perform(get(ReverseRouter.route(on(ConsentPreparationController.class).viewConsentPreparationPage(APPLICATION_ID)))
+    mockMvc.perform(get(ReverseRouter.route(on(ConsentPreparationController.class)
+            .viewConsentPreparationPage(APPLICATION_ID, null)))
         .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/application/consent/consentPreparation"))
@@ -139,7 +151,8 @@ class ConsentPreparationControllerTest extends AbstractApplicationControllerTest
         .andExpect(model().attribute("consentDocumentsEditUrl",
             ReverseRouter.route(on(ConsentPreparationDocumentsController.class).editDocuments(APPLICATION_ID))))
         .andExpect(model().attribute("backLinkUrl",
-            ReverseRouter.route(on(ApplicationCaseProcessingController.class).caseProcessing(APPLICATION_ID, null, null))));
+            ReverseRouter.route(on(ApplicationCaseProcessingController.class).caseProcessing(APPLICATION_ID, null, null))))
+        .andExpect(model().attribute("actionList", actionList));
   }
 
   @Test
@@ -152,7 +165,8 @@ class ConsentPreparationControllerTest extends AbstractApplicationControllerTest
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
     when(consentDataService.findConsentData(application)).thenReturn(Optional.empty());
 
-    mockMvc.perform(get(ReverseRouter.route(on(ConsentPreparationController.class).viewConsentPreparationPage(APPLICATION_ID)))
+    mockMvc.perform(get(ReverseRouter.route(on(ConsentPreparationController.class)
+            .viewConsentPreparationPage(APPLICATION_ID, null)))
             .with(user(user)))
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ConsentDataController.class).editConsentData(APPLICATION_ID))));

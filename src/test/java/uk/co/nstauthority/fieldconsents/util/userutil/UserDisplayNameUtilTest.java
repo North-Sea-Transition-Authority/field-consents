@@ -12,4 +12,14 @@ class UserDisplayNameUtilTest {
     var surname = "Surname";
     assertThat(UserDisplayNameUtil.getUserDisplayName(forename, surname)).isEqualTo(forename + " " + surname);
   }
+
+  @Test
+  void getUserDisplayNameAndEmail() {
+    var forename = "Forename";
+    var surname = "Surname";
+    var emailAddress = "test@test.com";
+
+    assertThat(UserDisplayNameUtil.getUserDisplayNameAndEmail(forename, surname, emailAddress))
+        .isEqualTo(forename + " " + surname + " (" + emailAddress + ")");
+  }
 }

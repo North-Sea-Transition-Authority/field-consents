@@ -1,11 +1,14 @@
 <#include '../../../layout/layout.ftl'>
 
-<#macro summary heading fileViews editUrl>
+<#macro summary heading fileViews editable editUrl="">
   <#assign summaryCardActions>
-    <@fdsSummaryList.summaryListCardActionItem
-      itemUrl=springUrl(editUrl)
-      itemText="Edit"
-      itemScreenReaderText="Edit consent documents"/>
+    <#if editable>
+      <@fdsSummaryList.summaryListCardActionItem
+        itemUrl=springUrl(editUrl)
+        itemText="Edit"
+        itemScreenReaderText="Edit consent documents"
+      />
+    </#if>
   </#assign>
   <@fdsSummaryList.summaryListCard
     headingText=heading

@@ -14,6 +14,8 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casest
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_NOTES_ALLOWED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSENT_DATA_EXISTS;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSENT_NOT_APPROVED_FOR_ISSUE;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_FURTHER_INFORMATION_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_UNASSIGNED;
@@ -40,6 +42,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataTestUtil;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval.ConsentIssuingApprovalService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationStatus;
@@ -69,6 +74,12 @@ class CaseStatusFlagServiceTest {
 
   @Mock
   private FurtherInformationService furtherInformationService;
+
+  @Mock
+  private ConsentDataService consentDataService;
+
+  @Mock
+  private ConsentIssuingApprovalService consentIssuingApprovalService;
 
   @Spy
   @InjectMocks
@@ -100,6 +111,8 @@ class CaseStatusFlagServiceTest {
     doReturn(EMPTY_SET).when(caseStatusFlagService).getUpdateRequestFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getConsultationFlags(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getCamAssignmentFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getConsentDataExistsFlag(application);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getConsentNotApprovedForIssueFlag(application);
 
     assertThat(caseStatusFlagService.getCaseStatusFlags(applicationVersion)).isEmpty();
 
@@ -110,7 +123,9 @@ class CaseStatusFlagServiceTest {
     verify(caseStatusFlagService).getFurtherInformationFlag(applicationVersion);
     verify(caseStatusFlagService).getUpdateRequestFlag(applicationVersion);
     verify(caseStatusFlagService).getConsultationFlags(applicationVersion);
-    verify(caseStatusFlagService).getConsultationFlags(applicationVersion);
+    verify(caseStatusFlagService).getCamAssignmentFlag(applicationVersion);
+    verify(caseStatusFlagService).getConsentDataExistsFlag(application);
+    verify(caseStatusFlagService).getConsentNotApprovedForIssueFlag(application);
   }
 
   @Test
@@ -123,6 +138,8 @@ class CaseStatusFlagServiceTest {
     doReturn(EMPTY_SET).when(caseStatusFlagService).getUpdateRequestFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getConsultationFlags(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getCamAssignmentFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getConsentDataExistsFlag(application);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getConsentNotApprovedForIssueFlag(application);
 
     getCaseStatusFlags_assertFlagAndVerify();
   }
@@ -137,6 +154,8 @@ class CaseStatusFlagServiceTest {
     doReturn(EMPTY_SET).when(caseStatusFlagService).getUpdateRequestFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getConsultationFlags(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getCamAssignmentFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getConsentDataExistsFlag(application);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getConsentNotApprovedForIssueFlag(application);
 
     getCaseStatusFlags_assertFlagAndVerify();
   }
@@ -151,6 +170,8 @@ class CaseStatusFlagServiceTest {
     doReturn(EMPTY_SET).when(caseStatusFlagService).getUpdateRequestFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getConsultationFlags(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getCamAssignmentFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getConsentDataExistsFlag(application);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getConsentNotApprovedForIssueFlag(application);
 
     getCaseStatusFlags_assertFlagAndVerify();
   }
@@ -165,6 +186,8 @@ class CaseStatusFlagServiceTest {
     doReturn(EMPTY_SET).when(caseStatusFlagService).getUpdateRequestFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getConsultationFlags(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getCamAssignmentFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getConsentDataExistsFlag(application);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getConsentNotApprovedForIssueFlag(application);
 
     getCaseStatusFlags_assertFlagAndVerify();
   }
@@ -179,6 +202,8 @@ class CaseStatusFlagServiceTest {
     doReturn(EMPTY_SET).when(caseStatusFlagService).getUpdateRequestFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getConsultationFlags(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getCamAssignmentFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getConsentDataExistsFlag(application);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getConsentNotApprovedForIssueFlag(application);
 
     getCaseStatusFlags_assertFlagAndVerify();
   }
@@ -194,6 +219,8 @@ class CaseStatusFlagServiceTest {
     doReturn(singleton(DEFAULT_TEST_FLAG)).when(caseStatusFlagService).getUpdateRequestFlag(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getConsultationFlags(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getCamAssignmentFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getConsentDataExistsFlag(application);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getConsentNotApprovedForIssueFlag(application);
 
     getCaseStatusFlags_assertFlagAndVerify();
   }
@@ -208,6 +235,56 @@ class CaseStatusFlagServiceTest {
     doReturn(EMPTY_SET).when(caseStatusFlagService).getUpdateRequestFlag(applicationVersion);
     doReturn(singleton(DEFAULT_TEST_FLAG)).when(caseStatusFlagService).getConsultationFlags(applicationVersion);
     doReturn(EMPTY_SET).when(caseStatusFlagService).getCamAssignmentFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getConsentDataExistsFlag(application);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getConsentNotApprovedForIssueFlag(application);
+
+    getCaseStatusFlags_assertFlagAndVerify();
+  }
+
+  @Test
+  void getCaseStatusFlags_getCamAssignmentFlag() {
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getDefaultFlags();
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getCaseOfficerAssignmentFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getWithdrawalFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getTechnicalReviewFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getFurtherInformationFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getUpdateRequestFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getConsultationFlags(applicationVersion);
+    doReturn(singleton(DEFAULT_TEST_FLAG)).when(caseStatusFlagService).getCamAssignmentFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getConsentDataExistsFlag(application);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getConsentNotApprovedForIssueFlag(application);
+
+    getCaseStatusFlags_assertFlagAndVerify();
+  }
+
+  @Test
+  void getCaseStatusFlags_getConsentDataExistsFlag() {
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getDefaultFlags();
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getCaseOfficerAssignmentFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getWithdrawalFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getTechnicalReviewFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getFurtherInformationFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getUpdateRequestFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getConsultationFlags(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getCamAssignmentFlag(applicationVersion);
+    doReturn(singleton(DEFAULT_TEST_FLAG)).when(caseStatusFlagService).getConsentDataExistsFlag(application);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getConsentNotApprovedForIssueFlag(application);
+
+    getCaseStatusFlags_assertFlagAndVerify();
+  }
+
+  @Test
+  void getCaseStatusFlags_getConsentNotApprovedForIssueFlag() {
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getDefaultFlags();
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getCaseOfficerAssignmentFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getWithdrawalFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getTechnicalReviewFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getFurtherInformationFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getUpdateRequestFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getConsultationFlags(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getCamAssignmentFlag(applicationVersion);
+    doReturn(EMPTY_SET).when(caseStatusFlagService).getConsentDataExistsFlag(application);
+    doReturn(singleton(DEFAULT_TEST_FLAG)).when(caseStatusFlagService).getConsentNotApprovedForIssueFlag(application);
 
     getCaseStatusFlags_assertFlagAndVerify();
   }
@@ -222,20 +299,8 @@ class CaseStatusFlagServiceTest {
     verify(caseStatusFlagService).getUpdateRequestFlag(applicationVersion);
     verify(caseStatusFlagService).getConsultationFlags(applicationVersion);
     verify(caseStatusFlagService).getCamAssignmentFlag(applicationVersion);
-  }
-
-  @Test
-  void getCaseStatusFlags_getCamAssignmentFlag() {
-    doReturn(EMPTY_SET).when(caseStatusFlagService).getDefaultFlags();
-    doReturn(EMPTY_SET).when(caseStatusFlagService).getCaseOfficerAssignmentFlag(applicationVersion);
-    doReturn(EMPTY_SET).when(caseStatusFlagService).getWithdrawalFlag(applicationVersion);
-    doReturn(EMPTY_SET).when(caseStatusFlagService).getTechnicalReviewFlag(applicationVersion);
-    doReturn(EMPTY_SET).when(caseStatusFlagService).getFurtherInformationFlag(applicationVersion);
-    doReturn(EMPTY_SET).when(caseStatusFlagService).getUpdateRequestFlag(applicationVersion);
-    doReturn(EMPTY_SET).when(caseStatusFlagService).getConsultationFlags(applicationVersion);
-    doReturn(singleton(DEFAULT_TEST_FLAG)).when(caseStatusFlagService).getCamAssignmentFlag(applicationVersion);
-
-    getCaseStatusFlags_assertFlagAndVerify();
+    verify(caseStatusFlagService).getConsentDataExistsFlag(application);
+    verify(caseStatusFlagService).getConsentNotApprovedForIssueFlag(application);
   }
 
   @Test
@@ -367,5 +432,35 @@ class CaseStatusFlagServiceTest {
   @Test
   void getCamAssignmentFlag_notAssigned() {
     assertThat(caseStatusFlagService.getCamAssignmentFlag(applicationVersion)).containsExactly(CAM_NOT_ASSIGNED);
+  }
+
+  @Test
+  void getConsentDataExistsFlag_consentDataDoesNotExist() {
+    when(consentDataService.findConsentData(application)).thenReturn(Optional.empty());
+
+    assertThat(caseStatusFlagService.getConsentDataExistsFlag(application)).isEmpty();
+  }
+
+  @Test
+  void getConsentDataExistsFlag_consentDataExists() {
+    var consentData = ConsentDataTestUtil.newBuilder().build();
+
+    when(consentDataService.findConsentData(application)).thenReturn(Optional.of(consentData));
+
+    assertThat(caseStatusFlagService.getConsentDataExistsFlag(application)).containsExactly(CONSENT_DATA_EXISTS);
+  }
+
+  @Test
+  void getConsentNotApprovedForIssueFlag_consentNotApprovedForIssue() {
+    when(consentIssuingApprovalService.isApplicationApprovedForConsentIssuing(application)).thenReturn(false);
+
+    assertThat(caseStatusFlagService.getConsentNotApprovedForIssueFlag(application)).containsExactly(CONSENT_NOT_APPROVED_FOR_ISSUE);
+  }
+
+  @Test
+  void getConsentNotApprovedForIssueFlag_consentApprovedForIssue() {
+    when(consentIssuingApprovalService.isApplicationApprovedForConsentIssuing(application)).thenReturn(true);
+
+    assertThat(caseStatusFlagService.getConsentNotApprovedForIssueFlag(application)).isEmpty();
   }
 }

@@ -61,7 +61,7 @@ public class ConsentDataController {
     var consentDataOptional = consentDataService.findConsentData(application);
 
     if (consentDataOptional.isPresent()) {
-      return ReverseRouter.redirect(on(ConsentPreparationController.class).viewConsentPreparationPage(applicationId));
+      return ReverseRouter.redirect(on(ConsentPreparationController.class).viewConsentPreparationPage(applicationId, null));
     }
 
     return ReverseRouter.redirect(on(this.getClass()).editConsentData(applicationId));
@@ -105,7 +105,7 @@ public class ConsentDataController {
 
     NotificationBannerUtil.addSuccessNotification(redirectAttributes, "Consent data saved");
 
-    return ReverseRouter.redirect(on(ConsentPreparationController.class).viewConsentPreparationPage(applicationId));
+    return ReverseRouter.redirect(on(ConsentPreparationController.class).viewConsentPreparationPage(applicationId, null));
   }
 
   private ModelAndView modelAndView(

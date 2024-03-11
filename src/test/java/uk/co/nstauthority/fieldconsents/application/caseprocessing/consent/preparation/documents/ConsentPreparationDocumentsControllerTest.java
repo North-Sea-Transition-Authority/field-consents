@@ -116,7 +116,8 @@ class ConsentPreparationDocumentsControllerTest extends AbstractApplicationContr
         .andExpect(view().name("fcs/application/consent/documents/consentDocumentsForm"))
         .andExpect(model().attribute("documentInstanceSummaryViews", documentInstanceSummaryViews))
         .andExpect(model().attribute("form", consentSupportingDocumentForm))
-        .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(ConsentPreparationController.class).viewConsentPreparationPage(APPLICATION_ID))))
+        .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(ConsentPreparationController.class)
+            .viewConsentPreparationPage(APPLICATION_ID, null))))
         .andExpect(model().attribute("fileUploadAttributes", FILE_UPLOAD_COMPONENT_ATTRIBUTES));
   }
 
@@ -136,7 +137,8 @@ class ConsentPreparationDocumentsControllerTest extends AbstractApplicationContr
         .param("documents[0].fileDescription", uploadedFile.getDescription())
         .param("documents[0].fileUploadedAt", uploadedFile.getUploadedAt().toString()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(ConsentPreparationController.class).viewConsentPreparationPage(APPLICATION_ID))))
+        .andExpect(redirectedUrl(ReverseRouter.route(on(ConsentPreparationController.class)
+            .viewConsentPreparationPage(APPLICATION_ID, null))))
         .andExpect(notificationBanner(NotificationBanner.builder()
             .withBannerType(NotificationBannerType.SUCCESS)
             .withHeadingContent("Consent documents saved")
@@ -192,7 +194,8 @@ class ConsentPreparationDocumentsControllerTest extends AbstractApplicationContr
         .andExpect(status().is2xxSuccessful())
         .andExpect(view().name("fcs/application/consent/documents/consentDocumentsForm"))
         .andExpect(model().attribute("documentInstanceSummaryViews", documentInstanceSummaryViews))
-        .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(ConsentPreparationController.class).viewConsentPreparationPage(APPLICATION_ID))))
+        .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(ConsentPreparationController.class)
+            .viewConsentPreparationPage(APPLICATION_ID, null))))
         .andExpect(model().attribute("fileUploadAttributes", FILE_UPLOAD_COMPONENT_ATTRIBUTES))
         .andExpect(model().attributeExists("form"))
         .andReturn()
