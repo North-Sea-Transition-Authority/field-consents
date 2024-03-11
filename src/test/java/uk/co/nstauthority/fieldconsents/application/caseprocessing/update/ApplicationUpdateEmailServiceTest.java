@@ -17,6 +17,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateTestUtil.UPDATE_REQUESTER_ENERGY_PORTAL_USER_DTO;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateTestUtil.UPDATE_REQUESTER_USER_WUA_ID;
 import static uk.co.nstauthority.fieldconsents.email.EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME;
+import static uk.co.nstauthority.fieldconsents.email.EmailService.REQUESTER_USER_MERGE_FIELD_NAME;
 import static uk.co.nstauthority.fieldconsents.email.EmailService.REQUEST_DEADLINE_MERGE_FIELD_NAME;
 import static uk.co.nstauthority.fieldconsents.formatting.DateUtils.DATE_TIME;
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.CASE_OFFICER_ENERGY_PORTAL_USER_DTO;
@@ -203,7 +204,7 @@ class ApplicationUpdateEmailServiceTest {
             tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, CASE_OFFICER_EPU.displayName()),
             tuple(REQUEST_DEADLINE_MERGE_FIELD_NAME, DateUtils.format(applicationUpdate.getDeadlineDateTime(), DATE_TIME)),
             tuple(PRIMARY_OPERATOR_NAME_MAIL_MERGE_FIELD, primaryOperator.name()),
-            tuple("REQUESTER_USER", TECHNICAL_REVIEWER_ENERGY_PORTAL_USER_DTO.displayName())
+            tuple(REQUESTER_USER_MERGE_FIELD_NAME, TECHNICAL_REVIEWER_ENERGY_PORTAL_USER_DTO.displayName())
         );
 
     // verify email recipients

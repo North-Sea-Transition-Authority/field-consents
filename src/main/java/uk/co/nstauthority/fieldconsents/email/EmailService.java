@@ -29,6 +29,7 @@ public class EmailService {
   public static final String RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME = "RECIPIENT_IDENTIFIER";
   public static final String SENDER_IDENTIFIER_MERGE_FIELD_NAME = "SENDER_IDENTIFIER";
   public static final String REQUEST_DEADLINE_MERGE_FIELD_NAME = "REQUEST_DEADLINE";
+  public static final String REQUESTER_USER_MERGE_FIELD_NAME = "REQUESTER_USER";
 
   private final NotificationLibraryClient notificationLibraryClient;
   private final ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties;

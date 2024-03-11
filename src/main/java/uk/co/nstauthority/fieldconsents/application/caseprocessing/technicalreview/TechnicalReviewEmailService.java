@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview;
 
 import static uk.co.nstauthority.fieldconsents.email.EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME;
+import static uk.co.nstauthority.fieldconsents.email.EmailService.REQUESTER_USER_MERGE_FIELD_NAME;
 import static uk.co.nstauthority.fieldconsents.email.EmailService.REQUEST_DEADLINE_MERGE_FIELD_NAME;
 import static uk.co.nstauthority.fieldconsents.formatting.DateUtils.DATE_TIME;
 
@@ -39,7 +40,7 @@ public class TechnicalReviewEmailService {
       var mergedTemplate = emailService
           .getTemplate(GovukNotifyTemplate.TECHNICAL_REVIEW_REQUEST, applicationVersion)
           .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, technicalReviewer.displayName())
-          .withMailMergeField("REQUESTER_USER", requesterUser.displayName())
+          .withMailMergeField(REQUESTER_USER_MERGE_FIELD_NAME, requesterUser.displayName())
           .withMailMergeField(REQUEST_DEADLINE_MERGE_FIELD_NAME,
               DateUtils.format(technicalReview.getDeadlineDateTime(), DATE_TIME))
           .merge();
@@ -78,7 +79,7 @@ public class TechnicalReviewEmailService {
         .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, caseOfficerDto.displayName())
         .withMailMergeField(REQUEST_DEADLINE_MERGE_FIELD_NAME,
             DateUtils.format(technicalReview.getDeadlineDateTime(), DATE_TIME))
-        .withMailMergeField("REQUESTER_USER", requestedByDto.displayName())
+        .withMailMergeField(REQUESTER_USER_MERGE_FIELD_NAME, requestedByDto.displayName())
         .withMailMergeField("TECHNICAL_REVIEWER", technicalReviewerDto.displayName())
         .merge();
 

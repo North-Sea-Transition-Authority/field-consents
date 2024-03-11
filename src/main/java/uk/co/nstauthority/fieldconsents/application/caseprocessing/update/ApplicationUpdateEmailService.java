@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.update;
 
 import static uk.co.nstauthority.fieldconsents.email.EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME;
+import static uk.co.nstauthority.fieldconsents.email.EmailService.REQUESTER_USER_MERGE_FIELD_NAME;
 import static uk.co.nstauthority.fieldconsents.email.EmailService.REQUEST_DEADLINE_MERGE_FIELD_NAME;
 import static uk.co.nstauthority.fieldconsents.formatting.DateUtils.DATE_TIME;
 
@@ -87,7 +88,7 @@ public class ApplicationUpdateEmailService {
         .withMailMergeField(REQUEST_DEADLINE_MERGE_FIELD_NAME,
             DateUtils.format(applicationUpdate.getDeadlineDateTime(), DATE_TIME))
         .withMailMergeField("PRIMARY_OPERATOR_NAME", primaryOperator.name())
-        .withMailMergeField("REQUESTER_USER", updateRequestedByDto.displayName())
+        .withMailMergeField(REQUESTER_USER_MERGE_FIELD_NAME, updateRequestedByDto.displayName())
         .merge();
 
     emailService.sendEmail(

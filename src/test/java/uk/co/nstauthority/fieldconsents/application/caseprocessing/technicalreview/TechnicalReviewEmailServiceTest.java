@@ -14,6 +14,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.techni
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.TECHNICAL_REVIEWER_USER_1;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.TECHNICAL_REVIEWER_USER_2;
 import static uk.co.nstauthority.fieldconsents.email.EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME;
+import static uk.co.nstauthority.fieldconsents.email.EmailService.REQUESTER_USER_MERGE_FIELD_NAME;
 import static uk.co.nstauthority.fieldconsents.email.EmailService.REQUEST_DEADLINE_MERGE_FIELD_NAME;
 import static uk.co.nstauthority.fieldconsents.formatting.DateUtils.DATE_TIME;
 
@@ -100,7 +101,7 @@ class TechnicalReviewEmailServiceTest {
         .extracting(MailMergeField::name, MailMergeField::value)
         .containsOnly(
             tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, TECHNICAL_REVIEWER_USER_1.displayName()),
-            tuple("REQUESTER_USER", FieldConsentsEmailRecipient.from(CASE_OFFICER_USER).displayName()),
+            tuple(REQUESTER_USER_MERGE_FIELD_NAME, FieldConsentsEmailRecipient.from(CASE_OFFICER_USER).displayName()),
             tuple(REQUEST_DEADLINE_MERGE_FIELD_NAME, DateUtils.format(technicalReview.getDeadlineDateTime(), DATE_TIME))
         );
 
@@ -152,7 +153,7 @@ class TechnicalReviewEmailServiceTest {
         .extracting(MailMergeField::name, MailMergeField::value)
         .containsOnly(
             tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, TECHNICAL_REVIEWER_USER_2.displayName()),
-            tuple("REQUESTER_USER", FieldConsentsEmailRecipient.from(TECHNICAL_REVIEWER_USER_1).displayName()),
+            tuple(REQUESTER_USER_MERGE_FIELD_NAME, FieldConsentsEmailRecipient.from(TECHNICAL_REVIEWER_USER_1).displayName()),
             tuple(REQUEST_DEADLINE_MERGE_FIELD_NAME, DateUtils.format(technicalReview.getDeadlineDateTime(), DATE_TIME))
         );
 
@@ -162,7 +163,7 @@ class TechnicalReviewEmailServiceTest {
         .containsOnly(
             tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, CASE_OFFICER_EPU.displayName()),
             tuple(REQUEST_DEADLINE_MERGE_FIELD_NAME, DateUtils.format(technicalReview.getDeadlineDateTime(), DATE_TIME)),
-            tuple("REQUESTER_USER", FieldConsentsEmailRecipient.from(TECHNICAL_REVIEWER_USER_1).displayName()),
+            tuple(REQUESTER_USER_MERGE_FIELD_NAME, FieldConsentsEmailRecipient.from(TECHNICAL_REVIEWER_USER_1).displayName()),
             tuple("TECHNICAL_REVIEWER", FieldConsentsEmailRecipient.from(TECHNICAL_REVIEWER_USER_2).displayName())
         );
 
@@ -204,7 +205,7 @@ class TechnicalReviewEmailServiceTest {
         .extracting(MailMergeField::name, MailMergeField::value)
         .containsOnly(
             tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, TECHNICAL_REVIEWER_USER_2.displayName()),
-            tuple("REQUESTER_USER", FieldConsentsEmailRecipient.from(TECHNICAL_REVIEWER_USER_1).displayName()),
+            tuple(REQUESTER_USER_MERGE_FIELD_NAME, FieldConsentsEmailRecipient.from(TECHNICAL_REVIEWER_USER_1).displayName()),
             tuple(REQUEST_DEADLINE_MERGE_FIELD_NAME, DateUtils.format(technicalReview.getDeadlineDateTime(), DATE_TIME))
         );
 
@@ -246,7 +247,7 @@ class TechnicalReviewEmailServiceTest {
         .containsOnly(
             tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, CASE_OFFICER_EPU.displayName()),
             tuple(REQUEST_DEADLINE_MERGE_FIELD_NAME, DateUtils.format(technicalReview.getDeadlineDateTime(), DATE_TIME)),
-            tuple("REQUESTER_USER", FieldConsentsEmailRecipient.from(TECHNICAL_REVIEWER_USER_1).displayName()),
+            tuple(REQUESTER_USER_MERGE_FIELD_NAME, FieldConsentsEmailRecipient.from(TECHNICAL_REVIEWER_USER_1).displayName()),
             tuple("TECHNICAL_REVIEWER", FieldConsentsEmailRecipient.from(TECHNICAL_REVIEWER_USER_1).displayName())
         );
 

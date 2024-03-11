@@ -15,6 +15,8 @@ import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.fieldconsents.application.Application;
@@ -36,6 +38,7 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.opred.OpredTe
 public class ConsultationService {
 
   public static final TeamType CONSULTATION_TEAM_TYPE = TeamType.OPRED;
+  private static final Logger LOGGER = LoggerFactory.getLogger(ConsultationService.class);
 
   private final TeamService teamService;
   private final ConsultationRepository repository;
@@ -44,6 +47,7 @@ public class ConsultationService {
   private final OpredTeamService opredTeamService;
   private final TeamMemberViewService teamMemberViewService;
   private final FieldConsentsFileService fieldConsentsFileService;
+  private final ConsultationEmailService consultationEmailService;
 
   ConsultationService(
       TeamService teamService,
@@ -52,7 +56,8 @@ public class ConsultationService {
       ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService,
       OpredTeamService opredTeamService,
       TeamMemberViewService teamMemberViewService,
-      FieldConsentsFileService fieldConsentsFileService
+      FieldConsentsFileService fieldConsentsFileService,
+      ConsultationEmailService consultationEmailService
   ) {
     this.teamService = teamService;
     this.repository = repository;
@@ -61,6 +66,7 @@ public class ConsultationService {
     this.opredTeamService = opredTeamService;
     this.teamMemberViewService = teamMemberViewService;
     this.fieldConsentsFileService = fieldConsentsFileService;
+    this.consultationEmailService = consultationEmailService;
   }
 
   public Optional<Consultation> findLatestOpenConsultation(Application application) {
@@ -110,6 +116,17 @@ public class ConsultationService {
         CONSULTATION_REQUEST,
         CONSULTEE
     );
+
+    try {
+      consultationEmailService.sendConsultationRequestEmail(consultation);
+    } catch (Exception exception) {
+      LOGGER.error("""
+              An attempt to send a consultation request notification by user with wuaId [{}] for application \
+              version with id [{}] failed. \
+              Note: this hasn't prevented the consultation request being saved.
+              """,
+          user.wuaId(), applicationVersion.getId(), exception);
+    }
   }
 
   public Team getConsultationTeam() {
@@ -147,6 +164,17 @@ public class ConsultationService {
         CONSULTATION_RESPONDER_ASSIGNMENT,
         CONSULTEE
     );
+
+    try {
+      consultationEmailService.sendConsultationAssignmentEmail(consultation, assigner);
+    } catch (Exception exception) {
+      LOGGER.error("""
+              An attempt to send a consultation assignment notification to the consultee responder by user with wuaId [{}]
+              for application version with id [{}] failed. \
+              Note: this hasn't prevented the assignment of the consultation to the consultee responder.
+              """,
+          assigner.wuaId(), consultation.getRequestApplicationVersion().getId(), exception);
+    }
   }
 
   @Transactional

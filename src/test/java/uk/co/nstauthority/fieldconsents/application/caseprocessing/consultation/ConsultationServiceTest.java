@@ -3,10 +3,13 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation
 import static java.time.temporal.ChronoUnit.DAYS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.params.provider.EnumSource.Mode.EXCLUDE;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mock.Strictness.LENIENT;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -65,10 +68,12 @@ class ConsultationServiceTest {
   private static final ServiceUserDetail ASSIGNER_USER = ServiceUserDetailTestUtil.Builder().withWuaId(WUA_ID + 1).build();
   private static final TeamType CONSULTATION_TEAM_TYPE = TeamType.OPRED;
   private static final Integer CONSULTATION_ID = 1;
-  private static final Team CONSULTATION_TEAM = new TeamTestUtil.TeamBuilder()
+  static final Team CONSULTATION_TEAM = new TeamTestUtil.TeamBuilder()
       .withId(1)
       .withTeamType(TeamType.OPRED)
       .build();
+  private static final Long REQUESTER_USER_WUA_ID = 6L;
+  private static final ServiceUserDetail REQUESTER_USER = ServiceUserDetailTestUtil.Builder().withWuaId(REQUESTER_USER_WUA_ID).build();
 
   @Mock
   private TeamService teamService;
@@ -90,6 +95,9 @@ class ConsultationServiceTest {
 
   @Mock
   private FieldConsentsFileService fieldConsentsFileService;
+
+  @Mock
+  private ConsultationEmailService consultationEmailService;
 
   @InjectMocks
   private ConsultationService consultationService;
@@ -194,12 +202,13 @@ class ConsultationServiceTest {
     when(teamService.getTeamsByType(CONSULTATION_TEAM_TYPE)).thenReturn(Collections.singletonList(CONSULTATION_TEAM));
 
     var deadline = clock.instant().plus(1, DAYS);
-    consultationService.requestConsultation(applicationVersion, deadline, RESPONDER_USER);
+    consultationService.requestConsultation(applicationVersion, deadline, REQUESTER_USER);
 
     verify(repository).save(consultationArgumentCaptor.capture());
-    verify(applicationWorkAreaPriorityService).prioritiseApplicationInWorkArea(applicationVersion, RESPONDER_USER, CONSULTATION_REQUEST, CONSULTEE);
+    verify(applicationWorkAreaPriorityService).prioritiseApplicationInWorkArea(applicationVersion, REQUESTER_USER, CONSULTATION_REQUEST, CONSULTEE);
 
-    assertThat(consultationArgumentCaptor.getValue())
+    var actualConsultation = consultationArgumentCaptor.getValue();
+    assertThat(actualConsultation)
         .extracting(
             Consultation::getRequestApplicationVersion,
             Consultation::getStatus,
@@ -213,8 +222,49 @@ class ConsultationServiceTest {
             deadline,
             CONSULTATION_TEAM,
             clock.instant(),
-            WUA_ID
+            REQUESTER_USER_WUA_ID
         );
+
+    verify(consultationEmailService).sendConsultationRequestEmail(actualConsultation);
+  }
+
+  @Test
+  void requestConsultation_whenSendConsultationRequestEmailFails_thenConsultationRequestIsStillSubmitted() {
+    when(teamService.getTeamsByType(CONSULTATION_TEAM_TYPE)).thenReturn(Collections.singletonList(CONSULTATION_TEAM));
+
+    var deadline = clock.instant().plus(1, DAYS);
+
+    // WHEN the email service call throws an exception
+    doThrow(new RuntimeException("Failed to send email"))
+        .when(consultationEmailService).sendConsultationRequestEmail(consultation);
+
+    // THEN it will be caught by the caller and not re-thrown
+    assertDoesNotThrow(
+        () -> consultationService.requestConsultation(applicationVersion, deadline, REQUESTER_USER)
+    );
+
+    verify(repository).save(consultationArgumentCaptor.capture());
+    verify(applicationWorkAreaPriorityService).prioritiseApplicationInWorkArea(applicationVersion, REQUESTER_USER, CONSULTATION_REQUEST, CONSULTEE);
+
+    var actualConsultation = consultationArgumentCaptor.getValue();
+    assertThat(actualConsultation)
+        .extracting(
+            Consultation::getRequestApplicationVersion,
+            Consultation::getStatus,
+            Consultation::getRequestDeadline,
+            Consultation::getConsultationTeam,
+            Consultation::getRequestedAtDatetime,
+            Consultation::getRequestedByWuaId
+        ).containsExactly(
+            applicationVersion,
+            OPEN,
+            deadline,
+            CONSULTATION_TEAM,
+            clock.instant(),
+            REQUESTER_USER_WUA_ID
+        );
+
+    verify(consultationEmailService).sendConsultationRequestEmail(actualConsultation);
   }
 
   @Test
@@ -302,6 +352,32 @@ class ConsultationServiceTest {
     verify(applicationWorkAreaPriorityService).prioritiseApplicationInWorkArea(applicationVersion, ASSIGNER_USER, CONSULTATION_RESPONDER_ASSIGNMENT, CONSULTEE);
     verifyNoMoreInteractions(consultation);
     verify(repository).save(consultation);
+    verify(consultationEmailService).sendConsultationAssignmentEmail(consultation, ASSIGNER_USER);
+  }
+
+  @Test
+  void assignResponderToConsultation_whenSendConsultationAssignmentEmailFails_thenConsultationIsStillAssigned() {
+    var consultation = mock(Consultation.class);
+    when(consultation.getRequestApplicationVersion()).thenReturn(applicationVersion);
+    when(consultation.getConsultationTeam()).thenReturn(CONSULTATION_TEAM);
+
+    var consultationTeamId = TeamId.valueOf(consultation.getConsultationTeam());
+    when(opredTeamService.isResponder(consultationTeamId, RESPONDER_USER)).thenReturn(true);
+
+    // WHEN the email service call throws an exception
+    doThrow(new RuntimeException("Failed to send email"))
+        .when(consultationEmailService).sendConsultationAssignmentEmail(consultation, ASSIGNER_USER);
+
+    // THEN it will be caught by the caller and not re-thrown
+    assertDoesNotThrow(
+        () -> consultationService.assignResponderToConsultation(consultation, ASSIGNER_USER, RESPONDER_USER)
+    );
+
+    verify(consultation).setResponderWuaId(RESPONDER_USER.wuaId());
+    verify(applicationWorkAreaPriorityService).prioritiseApplicationInWorkArea(applicationVersion, ASSIGNER_USER, CONSULTATION_RESPONDER_ASSIGNMENT, CONSULTEE);
+    verifyNoMoreInteractions(consultation);
+    verify(repository).save(consultation);
+    verify(consultationEmailService).sendConsultationAssignmentEmail(consultation, ASSIGNER_USER);
   }
 
   @Test
@@ -315,6 +391,8 @@ class ConsultationServiceTest {
     assertThatThrownBy(() -> consultationService.assignResponderToConsultation(consultation, ASSIGNER_USER,RESPONDER_USER))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("Responder must be a member of team [%s]".formatted(consultation.getConsultationTeam().getId()));
+
+    verify(consultationEmailService, never()).sendConsultationAssignmentEmail(consultation, ASSIGNER_USER);
   }
 
   @Test
