@@ -16,6 +16,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldResolveResult;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
@@ -137,7 +138,8 @@ class PrimaryAndAdditionalFieldNamesMailMergeFieldTest {
     when(fieldService.findFieldsByIds(fieldIds, "Fields lookup for PRIMARY_AND_ADDITIONAL_FIELD_NAMES mail merge field"))
         .thenReturn(fieldJsons);
 
-    assertThat(primaryAndAdditionalFieldNamesMailMergeField.resolve(documentInstanceDto)).isEqualTo(expected);
+    assertThat(primaryAndAdditionalFieldNamesMailMergeField.resolve(documentInstanceDto))
+        .isEqualTo(DocumentMailMergeFieldResolveResult.success(expected));
   }
 
   private static Stream<Arguments> getResolveArguments() {

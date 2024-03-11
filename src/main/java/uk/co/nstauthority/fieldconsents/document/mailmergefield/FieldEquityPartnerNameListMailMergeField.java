@@ -4,6 +4,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceDto;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeField;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldResolveResult;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateDto;
 import uk.co.nstauthority.fieldconsents.application.fieldequitypartner.FieldEquityPartnerService;
 import uk.co.nstauthority.fieldconsents.document.DocumentInstanceLinkingService;
@@ -46,11 +47,13 @@ public class FieldEquityPartnerNameListMailMergeField implements DocumentMailMer
   }
 
   @Override
-  public String resolve(DocumentInstanceDto documentInstanceDto) {
+  public DocumentMailMergeFieldResolveResult resolve(DocumentInstanceDto documentInstanceDto) {
     var applicationVersion =
         documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto);
 
-    var fieldEquityPartnerNames = fieldEquityPartnerService.getFieldEquityPartnerNames(applicationVersion);
-    return StringUtil.formatStringList(fieldEquityPartnerNames);
+    var fieldEquityPartnerNames =
+        StringUtil.formatStringList(fieldEquityPartnerService.getFieldEquityPartnerNames(applicationVersion));
+
+    return DocumentMailMergeFieldResolveResult.success(fieldEquityPartnerNames);
   }
 }

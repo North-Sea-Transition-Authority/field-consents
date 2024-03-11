@@ -25,12 +25,12 @@
     <#if previewWatermark?has_content>
       <watermark>PREVIEW DOCUMENT</watermark>
     </#if>
-    <#list documentInstanceSectionSummaryViews as documentInstanceSectionSummaryView>
-      <#assign nestingLevel = documentInstanceSectionSummaryView.nestingLevel()>
-      <#assign sectionNumber = documentInstanceSectionSummaryView.sectionNumber()!>
-      <#assign content = documentInstanceSectionSummaryView.content()!>
+    <#list documentInstanceSectionsSummaryView.sectionSummaryViews() as sectionSummaryView>
+      <#assign nestingLevel = sectionSummaryView.nestingLevel()>
+      <#assign sectionNumber = sectionSummaryView.sectionNumber()!>
+      <#assign content = sectionSummaryView.content()!>
 
-      <#if documentInstanceSectionSummaryView.hasPageBreakBefore()>
+      <#if sectionSummaryView.hasPageBreakBefore()>
         <div style="page-break-before: always;"></div>
       </#if>
 

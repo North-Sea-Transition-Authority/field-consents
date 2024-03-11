@@ -16,6 +16,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldResolveResult;
 import uk.co.fivium.digitaldocumentlibrary.document.FreeMarkerTemplateRenderingService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
@@ -113,9 +114,9 @@ class ScheduleMailMergeFieldTest {
         .thenReturn(applicationVersion);
     when(consentDataService.getConsentData(applicationVersion.getApplication())).thenReturn(consentData);
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
-    when(primaryFieldNameMailMergeField.resolve(documentInstanceDto)).thenReturn(primaryFieldName);
-    when(consentStartDateMailMergeField.resolve(documentInstanceDto)).thenReturn(consentStartDate);
-    when(consentEndDateMailMergeField.resolve(documentInstanceDto)).thenReturn(consentEndDate);
+    when(primaryFieldNameMailMergeField.resolve(documentInstanceDto)).thenReturn(DocumentMailMergeFieldResolveResult.success(primaryFieldName));
+    when(consentStartDateMailMergeField.resolve(documentInstanceDto)).thenReturn(DocumentMailMergeFieldResolveResult.success(consentStartDate));
+    when(consentEndDateMailMergeField.resolve(documentInstanceDto)).thenReturn(DocumentMailMergeFieldResolveResult.success(consentEndDate));
 
     when(
         freeMarkerTemplateRenderingService.renderTemplate(
@@ -135,7 +136,8 @@ class ScheduleMailMergeFieldTest {
         )
     ).thenReturn(html);
 
-    assertThat(scheduleMailMergeField.resolve(documentInstanceDto)).isEqualTo(html);
+    assertThat(scheduleMailMergeField.resolve(documentInstanceDto))
+        .isEqualTo(DocumentMailMergeFieldResolveResult.success(html));
   }
 
   @Test
@@ -174,8 +176,8 @@ class ScheduleMailMergeFieldTest {
         .thenReturn(applicationVersion);
     when(consentDataService.getConsentData(applicationVersion.getApplication())).thenReturn(consentData);
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
-    when(primaryFieldNameMailMergeField.resolve(documentInstanceDto)).thenReturn(primaryFieldName);
-    when(consentEndDateMailMergeField.resolve(documentInstanceDto)).thenReturn(consentEndDate);
+    when(primaryFieldNameMailMergeField.resolve(documentInstanceDto)).thenReturn(DocumentMailMergeFieldResolveResult.success(primaryFieldName));
+    when(consentEndDateMailMergeField.resolve(documentInstanceDto)).thenReturn(DocumentMailMergeFieldResolveResult.success(consentEndDate));
     when(consentProductionLongTermFiguresService.getConsentProductionLongTermFiguresViews(applicationVersion.getApplication()))
         .thenReturn(consentProductionFiguresViews);
 
@@ -197,7 +199,8 @@ class ScheduleMailMergeFieldTest {
         )
     ).thenReturn(html);
 
-    assertThat(scheduleMailMergeField.resolve(documentInstanceDto)).isEqualTo(html);
+    assertThat(scheduleMailMergeField.resolve(documentInstanceDto))
+        .isEqualTo(DocumentMailMergeFieldResolveResult.success(html));
   }
 
   @ParameterizedTest
@@ -230,11 +233,10 @@ class ScheduleMailMergeFieldTest {
 
     var html = "<html></html>";
 
-    when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
-        .thenReturn(applicationVersion);
+    when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto)).thenReturn(applicationVersion);
     when(consentDataService.getConsentData(applicationVersion.getApplication())).thenReturn(consentData);
-    when(consentStartDateMailMergeField.resolve(documentInstanceDto)).thenReturn(consentStartDate);
-    when(consentEndDateMailMergeField.resolve(documentInstanceDto)).thenReturn(consentEndDate);
+    when(consentStartDateMailMergeField.resolve(documentInstanceDto)).thenReturn(DocumentMailMergeFieldResolveResult.success(consentStartDate));
+    when(consentEndDateMailMergeField.resolve(documentInstanceDto)).thenReturn(DocumentMailMergeFieldResolveResult.success(consentEndDate));
 
     when(
         freeMarkerTemplateRenderingService.renderTemplate(
@@ -250,6 +252,7 @@ class ScheduleMailMergeFieldTest {
         )
     ).thenReturn(html);
 
-    assertThat(scheduleMailMergeField.resolve(documentInstanceDto)).isEqualTo(html);
+    assertThat(scheduleMailMergeField.resolve(documentInstanceDto))
+        .isEqualTo(DocumentMailMergeFieldResolveResult.success(html));
   }
 }

@@ -5,6 +5,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceDto;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeField;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldResolveResult;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateDto;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
@@ -49,7 +50,7 @@ class PrimaryFieldNameMailMergeField implements DocumentMailMergeField {
   }
 
   @Override
-  public String resolve(DocumentInstanceDto documentInstanceDto) {
+  public DocumentMailMergeFieldResolveResult resolve(DocumentInstanceDto documentInstanceDto) {
     var applicationVersion =
         documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto);
 
@@ -63,6 +64,6 @@ class PrimaryFieldNameMailMergeField implements DocumentMailMergeField {
     var fieldJson =
         fieldService.getField(primaryAsset.getAssetId(), "Field lookup for %s mail merge field".formatted(getMnemonic()));
 
-    return fieldJson.getName();
+    return DocumentMailMergeFieldResolveResult.success(fieldJson.getName());
   }
 }

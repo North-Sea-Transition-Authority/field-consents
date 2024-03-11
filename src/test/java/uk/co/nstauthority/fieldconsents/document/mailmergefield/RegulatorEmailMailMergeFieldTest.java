@@ -10,6 +10,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldResolveResult;
 import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.document.DocumentInstanceDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.document.DocumentTemplateDtoTestUtil;
@@ -52,6 +53,7 @@ class RegulatorEmailMailMergeFieldTest {
 
     when(customerBrandingConfigurationProperties.email()).thenReturn(email);
 
-    assertThat(regulatorEmailMailMergeField.resolve(documentInstanceDto)).isEqualTo(email);
+    assertThat(regulatorEmailMailMergeField.resolve(documentInstanceDto))
+        .isEqualTo(DocumentMailMergeFieldResolveResult.success(email));
   }
 }

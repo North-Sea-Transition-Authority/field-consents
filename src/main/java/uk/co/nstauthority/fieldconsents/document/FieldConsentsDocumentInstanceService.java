@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceDto;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionControllerHelperService;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceService;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldFormatter;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateDto;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateService;
 import uk.co.nstauthority.fieldconsents.application.Application;
@@ -96,10 +97,11 @@ public class FieldConsentsDocumentInstanceService {
       PdfRenderingOptions pdfRenderingOptions
   ) {
     Map<String, Object> templateModel = Map.of(
-        "documentInstanceSectionSummaryViews",
-        documentInstanceSectionControllerHelperService.getDocumentInstanceSectionSummaryViews(
+        "documentInstanceSectionsSummaryView",
+        documentInstanceSectionControllerHelperService.getDocumentInstanceSectionsSummaryView(
             documentInstanceDto,
-            FieldConsentsDocumentInstanceSectionController.class
+            FieldConsentsDocumentInstanceSectionController.class,
+            DocumentMailMergeFieldFormatter.noOp()
         ),
         "previewWatermark",
         pdfRenderingOptions.previewWatermark()

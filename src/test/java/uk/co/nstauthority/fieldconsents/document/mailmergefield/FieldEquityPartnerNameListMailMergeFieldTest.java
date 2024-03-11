@@ -12,6 +12,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldResolveResult;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
@@ -72,7 +73,8 @@ class FieldEquityPartnerNameListMailMergeFieldTest {
     when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto)).thenReturn(applicationVersion);
     when(fieldEquityPartnerService.getFieldEquityPartnerNames(applicationVersion)).thenReturn(fieldEquityPartnerNames);
 
-    assertThat(fieldEquityPartnerNameListMailMergeField.resolve(documentInstanceDto)).isEqualTo("first, second and third");
+    assertThat(fieldEquityPartnerNameListMailMergeField.resolve(documentInstanceDto))
+        .isEqualTo(DocumentMailMergeFieldResolveResult.success("first, second and third"));
   }
 
 }

@@ -10,6 +10,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldResolveResult;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.document.DocumentInstanceDtoTestUtil;
@@ -63,13 +64,12 @@ class PrimaryOperatorNameMailMergeFieldTest {
 
     when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
         .thenReturn(applicationVersion);
-    when(
-        organisationUnitService.getOrganisationUnitById(
-            applicationVersion.getPrimaryOperatorOuId(),
-            "Organisation unit lookup for PRIMARY_OPERATOR_NAME mail merge field"
-        )
-    ).thenReturn(organisationUnitJson);
+    when(organisationUnitService.getOrganisationUnitById(
+        applicationVersion.getPrimaryOperatorOuId(),
+        "Organisation unit lookup for PRIMARY_OPERATOR_NAME mail merge field"
+    )).thenReturn(organisationUnitJson);
 
-    assertThat(primaryOperatorNameMailMergeField.resolve(documentInstanceDto)).isEqualTo(organisationUnitName);
+    assertThat(primaryOperatorNameMailMergeField.resolve(documentInstanceDto))
+        .isEqualTo(DocumentMailMergeFieldResolveResult.success(organisationUnitName));
   }
 }

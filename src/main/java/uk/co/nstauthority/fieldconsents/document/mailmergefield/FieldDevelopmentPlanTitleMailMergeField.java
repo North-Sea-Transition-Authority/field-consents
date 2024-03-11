@@ -4,6 +4,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceDto;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeField;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldResolveResult;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateDto;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.field.FieldApi;
@@ -20,7 +21,7 @@ public class FieldDevelopmentPlanTitleMailMergeField implements DocumentMailMerg
   static final String MNEMONIC = "FIELD_DEVELOPMENT_PLAN_TITLE";
   static final String DESCRIPTION = "The Field Development Plan title";
   static final RequestPurpose REQUEST_PURPOSE = new RequestPurpose("Mail merging field development plan title");
-  static final FieldProjectionRoot QUERY = new FieldProjectionRoot().fieldDevelopmentPlan().title().root();
+  static final FieldProjectionRoot QUERY = new FieldProjectionRoot().fieldName().fieldDevelopmentPlan().title().root();
 
   private final ApplicationAssetService applicationAssetService;
   private final DocumentInstanceLinkingService documentInstanceLinkingService;
@@ -54,7 +55,7 @@ public class FieldDevelopmentPlanTitleMailMergeField implements DocumentMailMerg
   }
 
   @Override
-  public String resolve(DocumentInstanceDto documentInstanceDto) {
+  public DocumentMailMergeFieldResolveResult resolve(DocumentInstanceDto documentInstanceDto) {
     var applicationVersion =
         documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto);
 
@@ -69,11 +70,20 @@ public class FieldDevelopmentPlanTitleMailMergeField implements DocumentMailMerg
           ));
     }
 
-    return fieldApi
-        .findFieldById(primaryAsset.getAssetId(), QUERY, REQUEST_PURPOSE)
-        .map(field -> field.getFieldDevelopmentPlan().getTitle())
-        .orElseThrow(() -> new MailMergeFieldFailedToResolveException(
-            "Field development plan does not exist for field [%s]".formatted(primaryAsset.getAssetId())
-        ));
+    var fieldOptional = fieldApi.findFieldById(primaryAsset.getAssetId(), QUERY, REQUEST_PURPOSE);
+    if (fieldOptional.isEmpty()) {
+      throw new MailMergeFieldFailedToResolveException("Field not found for primary application asset [%s]"
+          .formatted(primaryAsset.getId()));
+    }
+
+    var field = fieldOptional.get();
+
+    try {
+      var title = FieldDevelopmentPlanMailMergeUtil.getTitle(field);
+      return DocumentMailMergeFieldResolveResult.success(title);
+    } catch (Exception e) {
+      return DocumentMailMergeFieldResolveResult.error("Mail merge field %s is not valid. %s"
+          .formatted(MNEMONIC, e.getMessage()));
+    }
   }
 }

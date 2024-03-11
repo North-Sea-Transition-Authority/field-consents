@@ -9,6 +9,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceDto;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeField;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldResolveResult;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateDto;
 import uk.co.fivium.digitaldocumentlibrary.document.FreeMarkerTemplateRenderingService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataService;
@@ -64,13 +65,16 @@ class ScheduleMailMergeField implements DocumentMailMergeField {
 
   @Override
   public boolean isApplicable(DocumentTemplateDto documentTemplateDto) {
-    var documentTemplateType = DocumentTemplateType.getByMnemonic(documentTemplateDto.mnemonic());
-
-    return documentTemplateType.isConsent();
+    return DocumentTemplateType.getByMnemonic(documentTemplateDto.mnemonic()).isConsent();
   }
 
   @Override
-  public String resolve(DocumentInstanceDto documentInstanceDto) {
+  public DocumentMailMergeFieldResolveResult resolve(DocumentInstanceDto documentInstanceDto) {
+    var scheduleContent = getScheduleContent(documentInstanceDto);
+    return DocumentMailMergeFieldResolveResult.success(scheduleContent);
+  }
+
+  private String getScheduleContent(DocumentInstanceDto documentInstanceDto) {
     var applicationVersion =
         documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto);
     var application = applicationVersion.getApplication();
@@ -86,14 +90,14 @@ class ScheduleMailMergeField implements DocumentMailMergeField {
         var consentLengthType = consentLengthService.getConsentLengthDetails(applicationVersion).getConsentLength();
 
         model.put("capitalizedConsentLengthType", WordUtils.capitalizeFully(consentLengthType.getShortDisplayName()));
-        model.put("primaryFieldName", primaryFieldNameMailMergeField.resolve(documentInstanceDto));
+        model.put("primaryFieldName", primaryFieldNameMailMergeField.resolve(documentInstanceDto).resolvedValueOrThrow());
 
         switch (consentLengthType) {
           case SHORT_TERM, ANNUAL:
             templateName = "fcs/document/template/consent/production/shortTermOrAnnualProductionConsentSchedule.ftl";
 
-            model.put("consentStartDate", consentStartDateMailMergeField.resolve(documentInstanceDto));
-            model.put("consentEndDate", consentEndDateMailMergeField.resolve(documentInstanceDto));
+            model.put("consentStartDate", consentStartDateMailMergeField.resolve(documentInstanceDto).resolvedValueOrThrow());
+            model.put("consentEndDate", consentEndDateMailMergeField.resolve(documentInstanceDto).resolvedValueOrThrow());
 
             var consentProductionFiguresView =
                 ConsentProductionFiguresView.fromShortTermOrAnnualConsentProductionFigures(consentData);
@@ -105,7 +109,7 @@ class ScheduleMailMergeField implements DocumentMailMergeField {
             var productionFromDate =
                 DateUtils.format(consentData.getLongTermProductionConsentProductionFromDate(), DateUtils.LONG_DATE);
             model.put("productionFromDate", productionFromDate);
-            model.put("consentEndDate", consentEndDateMailMergeField.resolve(documentInstanceDto));
+            model.put("consentEndDate", consentEndDateMailMergeField.resolve(documentInstanceDto).resolvedValueOrThrow());
 
             var consentProductionFiguresViews =
                 consentProductionLongTermFiguresService.getConsentProductionLongTermFiguresViews(application);
@@ -118,8 +122,8 @@ class ScheduleMailMergeField implements DocumentMailMergeField {
       case FIELD_FLARE_CONSENT, TERMINAL_FLARE_CONSENT, FIELD_VENT_CONSENT, TERMINAL_VENT_CONSENT:
         templateName = "fcs/document/template/consent/emission/emissionConsentSchedule.ftl";
 
-        model.put("consentStartDate", consentStartDateMailMergeField.resolve(documentInstanceDto));
-        model.put("consentEndDate", consentEndDateMailMergeField.resolve(documentInstanceDto));
+        model.put("consentStartDate", consentStartDateMailMergeField.resolve(documentInstanceDto).resolvedValueOrThrow());
+        model.put("consentEndDate", consentEndDateMailMergeField.resolve(documentInstanceDto).resolvedValueOrThrow());
 
         var emissionDailyAverage = bigDecimalToFormattedString(consentData.getEmissionDailyAverage());
         model.put("emissionDailyAverage", emissionDailyAverage);
@@ -139,4 +143,5 @@ class ScheduleMailMergeField implements DocumentMailMergeField {
       );
     }
   }
+
 }

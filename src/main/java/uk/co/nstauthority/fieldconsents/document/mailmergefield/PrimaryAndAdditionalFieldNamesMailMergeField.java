@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.document.mailmergefield;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -10,6 +11,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceDto;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeField;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldResolveResult;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateDto;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
@@ -59,7 +61,12 @@ class PrimaryAndAdditionalFieldNamesMailMergeField implements DocumentMailMergeF
   }
 
   @Override
-  public String resolve(DocumentInstanceDto documentInstanceDto) {
+  public DocumentMailMergeFieldResolveResult resolve(DocumentInstanceDto documentInstanceDto) {
+    var fieldNames = getFieldNames(documentInstanceDto);
+    return DocumentMailMergeFieldResolveResult.success(StringUtil.formatStringList(fieldNames));
+  }
+
+  private List<String> getFieldNames(DocumentInstanceDto documentInstanceDto) {
     var applicationVersion =
         documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto);
 
@@ -104,8 +111,7 @@ class PrimaryAndAdditionalFieldNamesMailMergeField implements DocumentMailMergeF
         .sorted()
         .toList();
 
-    var fieldNames = Stream.concat(Stream.of(primaryFieldName), secondaryFieldNames.stream()).toList();
-
-    return StringUtil.formatStringList(fieldNames);
+    return Stream.concat(Stream.of(primaryFieldName), secondaryFieldNames.stream()).toList();
   }
+
 }

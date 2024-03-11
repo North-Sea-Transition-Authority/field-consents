@@ -10,6 +10,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldResolveResult;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
@@ -19,7 +20,6 @@ import uk.co.nstauthority.fieldconsents.document.DocumentInstanceDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.document.DocumentInstanceLinkingService;
 import uk.co.nstauthority.fieldconsents.document.DocumentTemplateDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.document.DocumentTemplateType;
-
 @ExtendWith(MockitoExtension.class)
 class ConsentLengthUpperCaseMailMergeFieldTest {
 
@@ -68,6 +68,6 @@ class ConsentLengthUpperCaseMailMergeFieldTest {
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
 
     assertThat(consentLengthUpperCaseMailMergeField.resolve(documentInstanceDto))
-        .isEqualTo(consentLengthType.getShortDisplayName().toUpperCase());
+        .isEqualTo(DocumentMailMergeFieldResolveResult.success(consentLengthType.getShortDisplayName().toUpperCase()));
   }
 }

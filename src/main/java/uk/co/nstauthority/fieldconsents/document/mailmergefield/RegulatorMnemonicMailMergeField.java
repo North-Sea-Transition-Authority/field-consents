@@ -4,6 +4,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceDto;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeField;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldResolveResult;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateDto;
 import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
 
@@ -33,7 +34,7 @@ class RegulatorMnemonicMailMergeField implements DocumentMailMergeField {
   }
 
   @Override
-  public String resolve(DocumentInstanceDto documentInstanceDto) {
-    return customerBrandingConfigurationProperties.mnemonic();
+  public DocumentMailMergeFieldResolveResult resolve(DocumentInstanceDto documentInstanceDto) {
+    return DocumentMailMergeFieldResolveResult.success(customerBrandingConfigurationProperties.mnemonic());
   }
 }

@@ -4,6 +4,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceDto;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeField;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldResolveResult;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateDto;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.field.FieldApi;
@@ -12,7 +13,6 @@ import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetServi
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.document.DocumentInstanceLinkingService;
 import uk.co.nstauthority.fieldconsents.document.DocumentTemplateType;
-import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 
 @Order(9)
 @Component
@@ -20,7 +20,7 @@ public class FieldDevelopmentPlanDateMailMergeField implements DocumentMailMerge
 
   static final String MNEMONIC = "FIELD_DEVELOPMENT_PLAN_DATE";
   static final String DESCRIPTION = "The Field Development Plan date";
-  static final FieldProjectionRoot QUERY = new FieldProjectionRoot().fieldDevelopmentPlan().date().root();
+  static final FieldProjectionRoot QUERY = new FieldProjectionRoot().fieldName().fieldDevelopmentPlan().date().root();
   static final RequestPurpose REQUEST_PURPOSE = new RequestPurpose("Mail merging field development plan date");
 
   private final ApplicationAssetService applicationAssetService;
@@ -55,7 +55,7 @@ public class FieldDevelopmentPlanDateMailMergeField implements DocumentMailMerge
   }
 
   @Override
-  public String resolve(DocumentInstanceDto documentInstanceDto) {
+  public DocumentMailMergeFieldResolveResult resolve(DocumentInstanceDto documentInstanceDto) {
     var applicationVersion =
         documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto);
 
@@ -70,12 +70,20 @@ public class FieldDevelopmentPlanDateMailMergeField implements DocumentMailMerge
           ));
     }
 
-    return fieldApi
-        .findFieldById(primaryAsset.getAssetId(), QUERY, REQUEST_PURPOSE)
-        .map(field -> field.getFieldDevelopmentPlan().getDate())
-        .map(date -> DateUtils.format(date, DateUtils.LONG_DATE))
-        .orElseThrow(() -> new MailMergeFieldFailedToResolveException(
-            "Field development plan does not exist for field [%s]".formatted(primaryAsset.getAssetId())
-        ));
+    var fieldOptional = fieldApi.findFieldById(primaryAsset.getAssetId(), QUERY, REQUEST_PURPOSE);
+    if (fieldOptional.isEmpty()) {
+      throw new MailMergeFieldFailedToResolveException("Field not found for primary application asset [%s]"
+          .formatted(primaryAsset.getId()));
+    }
+
+    var field = fieldOptional.get();
+
+    try {
+      var date = FieldDevelopmentPlanMailMergeUtil.getDate(field);
+      return DocumentMailMergeFieldResolveResult.success(date);
+    } catch (Exception e) {
+      return DocumentMailMergeFieldResolveResult.error("Mail merge field %s is not valid. %s"
+          .formatted(MNEMONIC, e.getMessage()));
+    }
   }
 }

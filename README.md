@@ -139,4 +139,4 @@ The application will be running [here](http://localhost:8080/fcs)
 5. Select `devtools/checkstyle.xml`
 6. Check the "Active" box next to the new profile
 
-Note that Checkstyle rules are checked during the build process and any broken rules will fail the build.
+Note that Checkstyle rules are checked during the build process and any broken rules will fail the build

@@ -5,6 +5,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceDto;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeField;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldResolveResult;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateDto;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.document.DocumentInstanceLinkingService;
@@ -41,11 +42,12 @@ class ConsentLengthUpperCaseMailMergeField implements DocumentMailMergeField {
   }
 
   @Override
-  public String resolve(DocumentInstanceDto documentInstanceDto) {
+  public DocumentMailMergeFieldResolveResult resolve(DocumentInstanceDto documentInstanceDto) {
     var applicationVersion =
         documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto);
     var consentLengthDetails = consentLengthService.getConsentLengthDetails(applicationVersion);
+    var shortDisplayName = consentLengthDetails.getConsentLength().getShortDisplayName();
 
-    return consentLengthDetails.getConsentLength().getShortDisplayName().toUpperCase();
+    return DocumentMailMergeFieldResolveResult.success(shortDisplayName.toUpperCase());
   }
 }

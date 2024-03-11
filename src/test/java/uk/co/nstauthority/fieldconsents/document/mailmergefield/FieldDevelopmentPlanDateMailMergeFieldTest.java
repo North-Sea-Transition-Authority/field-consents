@@ -18,6 +18,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldResolveResult;
 import uk.co.fivium.energyportalapi.client.field.FieldApi;
 import uk.co.fivium.energyportalapi.generated.types.Field;
 import uk.co.fivium.energyportalapi.generated.types.FieldDevelopmentPlan;
@@ -95,7 +96,7 @@ class FieldDevelopmentPlanDateMailMergeFieldTest {
         .thenReturn(Optional.of(field));
 
     assertThat(fieldDevelopmentPlanDateMailMergeField.resolve(documentInstanceDto))
-        .isEqualTo(DateUtils.format(fieldDevelopmentPlanDate, DateUtils.LONG_DATE));
+        .isEqualTo(DocumentMailMergeFieldResolveResult.success(DateUtils.format(fieldDevelopmentPlanDate, DateUtils.LONG_DATE)));
   }
 
   @ParameterizedTest
@@ -117,14 +118,54 @@ class FieldDevelopmentPlanDateMailMergeFieldTest {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
     var primaryApplicationAsset = ApplicationAssetTestUtil.newBuilder().withAssetType(AssetType.FIELD).build();
 
-    when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
-        .thenReturn(applicationVersion);
+    when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto)).thenReturn(applicationVersion);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
-    when(fieldApi.findFieldById(primaryApplicationAsset.getAssetId(), QUERY, REQUEST_PURPOSE))
-        .thenReturn(Optional.empty());
+    when(fieldApi.findFieldById(primaryApplicationAsset.getAssetId(), QUERY, REQUEST_PURPOSE)).thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> fieldDevelopmentPlanDateMailMergeField.resolve(documentInstanceDto))
-        .isInstanceOf(MailMergeFieldFailedToResolveException.class);
+        .isInstanceOf(MailMergeFieldFailedToResolveException.class)
+        .hasMessage("Field not found for primary application asset [%s]".formatted(primaryApplicationAsset.getId()));
+  }
+
+  @Test
+  void resolve_fieldDoesNotHaveFieldDevelopmentPlan() {
+    var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
+    var primaryApplicationAsset = ApplicationAssetTestUtil.newBuilder().withAssetType(AssetType.FIELD).build();
+
+    var field = Field.newBuilder()
+        .fieldName("field name")
+        .build();
+
+    when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto)).thenReturn(applicationVersion);
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
+    when(fieldApi.findFieldById(primaryApplicationAsset.getAssetId(), QUERY, REQUEST_PURPOSE)).thenReturn(Optional.of(field));
+
+    assertThat(fieldDevelopmentPlanDateMailMergeField.resolve(documentInstanceDto))
+        .isEqualTo(DocumentMailMergeFieldResolveResult.error(
+            "Mail merge field %s is not valid. Field Development Plan does not exist for field %s"
+                .formatted(MNEMONIC, field.getFieldName())
+        ));
+  }
+
+  @Test
+  void resolve_fieldDevelopmentPlan_missing_date() {
+    var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
+    var primaryApplicationAsset = ApplicationAssetTestUtil.newBuilder().withAssetType(AssetType.FIELD).build();
+
+    var field = Field.newBuilder()
+        .fieldName("field name")
+        .fieldDevelopmentPlan(FieldDevelopmentPlan.newBuilder().build())
+        .build();
+
+    when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto)).thenReturn(applicationVersion);
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
+    when(fieldApi.findFieldById(primaryApplicationAsset.getAssetId(), QUERY, REQUEST_PURPOSE)).thenReturn(Optional.of(field));
+
+    assertThat(fieldDevelopmentPlanDateMailMergeField.resolve(documentInstanceDto))
+        .isEqualTo(DocumentMailMergeFieldResolveResult.error(
+            "Mail merge field %s is not valid. Field Development Plan for field %s does not have a date"
+                .formatted(MNEMONIC, field.getFieldName())
+        ));
   }
 
 }

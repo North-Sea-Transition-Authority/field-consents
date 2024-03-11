@@ -18,6 +18,7 @@ import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionContr
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.authorisation.HasPermission;
+import uk.co.nstauthority.fieldconsents.document.mailmergefield.FieldConsentsDocumentMailMergeFieldFormatter;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
@@ -31,6 +32,7 @@ public class FieldConsentsDocumentInstanceController implements DocumentInstance
   private final DocumentInstanceService documentInstanceService;
   private final DocumentInstanceLinkingService documentInstanceLinkingService;
   private final DocumentInstanceSectionControllerHelperService documentInstanceSectionControllerHelperService;
+  private final FieldConsentsDocumentMailMergeFieldFormatter documentMailMergeFieldFormatter;
   private final ApplicationService applicationService;
 
   FieldConsentsDocumentInstanceController(
@@ -38,12 +40,14 @@ public class FieldConsentsDocumentInstanceController implements DocumentInstance
       DocumentInstanceService documentInstanceService,
       DocumentInstanceLinkingService documentInstanceLinkingService,
       DocumentInstanceSectionControllerHelperService documentInstanceSectionControllerHelperService,
+      FieldConsentsDocumentMailMergeFieldFormatter documentMailMergeFieldFormatter,
       ApplicationService applicationService
   ) {
     this.fieldConsentsDocumentInstanceService = fieldConsentsDocumentInstanceService;
     this.documentInstanceService = documentInstanceService;
     this.documentInstanceLinkingService = documentInstanceLinkingService;
     this.documentInstanceSectionControllerHelperService = documentInstanceSectionControllerHelperService;
+    this.documentMailMergeFieldFormatter = documentMailMergeFieldFormatter;
     this.applicationService = applicationService;
   }
 
@@ -55,10 +59,11 @@ public class FieldConsentsDocumentInstanceController implements DocumentInstance
     return new ModelAndView("fcs/document/viewDocumentInstance")
         .addObject("pageTitle", documentInstanceDto.documentTemplateDto().title())
         .addObject(
-            "documentInstanceSectionSummaryViews",
-            documentInstanceSectionControllerHelperService.getDocumentInstanceSectionSummaryViews(
+            "documentInstanceSectionsSummaryView",
+            documentInstanceSectionControllerHelperService.getDocumentInstanceSectionsSummaryView(
                 documentInstanceDto,
-                FieldConsentsDocumentInstanceSectionController.class
+                FieldConsentsDocumentInstanceSectionController.class,
+                documentMailMergeFieldFormatter
             )
         )
         .addObject(

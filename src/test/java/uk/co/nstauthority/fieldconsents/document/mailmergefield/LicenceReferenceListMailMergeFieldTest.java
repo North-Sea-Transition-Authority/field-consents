@@ -11,6 +11,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldResolveResult;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAssetLicence;
@@ -69,7 +70,7 @@ class LicenceReferenceListMailMergeFieldTest {
         .thenReturn(List.of(applicationAssetLicence));
 
     assertThat(licenceReferenceListMailMergeField.resolve(documentInstanceDto))
-        .isEqualTo("test/ref");
+        .isEqualTo(DocumentMailMergeFieldResolveResult.success("test/ref"));
   }
 
   @Test
@@ -90,7 +91,7 @@ class LicenceReferenceListMailMergeFieldTest {
         .thenReturn(List.of(applicationAssetLicence1, applicationAssetLicence2));
 
     assertThat(licenceReferenceListMailMergeField.resolve(documentInstanceDto))
-        .isEqualTo("test/ref/1 and test/ref/2");
+        .isEqualTo(DocumentMailMergeFieldResolveResult.success("test/ref/1 and test/ref/2"));
   }
 
   @Test
@@ -113,7 +114,7 @@ class LicenceReferenceListMailMergeFieldTest {
         .thenReturn(List.of(applicationAssetLicence1, applicationAssetLicence2, applicationAssetLicence3));
 
     assertThat(licenceReferenceListMailMergeField.resolve(documentInstanceDto))
-        .isEqualTo("test/ref/1, test/ref/2 and test/ref/3");
+        .isEqualTo(DocumentMailMergeFieldResolveResult.success("test/ref/1, test/ref/2 and test/ref/3"));
   }
 
   @Test
@@ -136,6 +137,6 @@ class LicenceReferenceListMailMergeFieldTest {
         .thenReturn(List.of(applicationAssetLicence1, applicationAssetLicence2, applicationAssetLicence3));
 
     assertThat(licenceReferenceListMailMergeField.resolve(documentInstanceDto))
-        .isEqualTo("test/ref/1 and test/ref/2");
+        .isEqualTo(DocumentMailMergeFieldResolveResult.success("test/ref/1 and test/ref/2"));
   }
 }

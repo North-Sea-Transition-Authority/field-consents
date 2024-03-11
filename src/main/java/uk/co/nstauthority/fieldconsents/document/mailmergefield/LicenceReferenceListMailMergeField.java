@@ -5,6 +5,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceDto;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeField;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldResolveResult;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateDto;
 import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAssetLicence;
 import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAssetLicenceService;
@@ -46,7 +47,7 @@ class LicenceReferenceListMailMergeField implements DocumentMailMergeField {
   }
 
   @Override
-  public String resolve(DocumentInstanceDto documentInstanceDto) {
+  public DocumentMailMergeFieldResolveResult resolve(DocumentInstanceDto documentInstanceDto) {
     var applicationVersion =
         documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto);
 
@@ -55,6 +56,6 @@ class LicenceReferenceListMailMergeField implements DocumentMailMergeField {
         .distinct()
         .toList();
 
-    return StringUtil.formatStringList(licenceReferences);
+    return DocumentMailMergeFieldResolveResult.success(StringUtil.formatStringList(licenceReferences));
   }
 }

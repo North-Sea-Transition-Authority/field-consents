@@ -16,6 +16,7 @@ import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.u
 import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.notificationBanner;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -27,12 +28,14 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionControllerHelperService;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionSummaryView;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionsSummaryView;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceService;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
+import uk.co.nstauthority.fieldconsents.document.mailmergefield.FieldConsentsDocumentMailMergeFieldFormatter;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -54,6 +57,9 @@ class FieldConsentsDocumentInstanceControllerTest extends AbstractControllerTest
 
   @MockBean
   private DocumentInstanceSectionControllerHelperService documentInstanceSectionControllerHelperService;
+
+  @MockBean
+  private FieldConsentsDocumentMailMergeFieldFormatter documentMailMergeFieldFormatter;
 
   @MockBean
   private ApplicationService applicationService;
@@ -86,6 +92,7 @@ class FieldConsentsDocumentInstanceControllerTest extends AbstractControllerTest
             "Test title 1",
             "Test content 1",
             false,
+            Collections.emptyList(),
             "test-add-section-before-url-1",
             "test-add-section-after-url-1",
             "test-add-subsection-url-1",
@@ -98,6 +105,7 @@ class FieldConsentsDocumentInstanceControllerTest extends AbstractControllerTest
             "Test title 2",
             "Test content 2",
             false,
+            Collections.emptyList(),
             "test-add-section-before-url-2",
             "test-add-section-after-url-2",
             "test-add-subsection-url-2",
@@ -106,15 +114,21 @@ class FieldConsentsDocumentInstanceControllerTest extends AbstractControllerTest
         )
     );
 
+    var documentInstanceSectionsSummaryView = new DocumentInstanceSectionsSummaryView(
+        documentInstanceSectionSummaryViews,
+        Collections.emptyList()
+    );
+
     when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
     when(documentInstanceService.getDocumentInstanceDtoOrThrow(DOCUMENT_INSTANCE_ID))
         .thenReturn(documentInstanceDto);
     when(
-        documentInstanceSectionControllerHelperService.getDocumentInstanceSectionSummaryViews(
+        documentInstanceSectionControllerHelperService.getDocumentInstanceSectionsSummaryView(
             documentInstanceDto,
-            FieldConsentsDocumentInstanceSectionController.class
+            FieldConsentsDocumentInstanceSectionController.class,
+            documentMailMergeFieldFormatter
         )
-    ).thenReturn(documentInstanceSectionSummaryViews);
+    ).thenReturn(documentInstanceSectionsSummaryView);
 
     mockMvc.perform(get(ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
             .getViewDocumentInstance(DOCUMENT_INSTANCE_ID)))
@@ -122,7 +136,7 @@ class FieldConsentsDocumentInstanceControllerTest extends AbstractControllerTest
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/document/viewDocumentInstance"))
         .andExpect(model().attribute("pageTitle", documentInstanceDto.documentTemplateDto().title()))
-        .andExpect(model().attribute("documentInstanceSectionSummaryViews", documentInstanceSectionSummaryViews))
+        .andExpect(model().attribute("documentInstanceSectionsSummaryView", documentInstanceSectionsSummaryView))
         .andExpect(model().attribute("previewUrl", ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
             .getPreviewDocumentInstance(DOCUMENT_INSTANCE_ID))))
         .andExpect(model().attribute("reloadUrl", ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)

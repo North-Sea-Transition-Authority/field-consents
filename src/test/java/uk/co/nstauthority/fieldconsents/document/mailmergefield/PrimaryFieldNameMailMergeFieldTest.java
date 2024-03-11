@@ -11,6 +11,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldResolveResult;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
@@ -99,6 +100,7 @@ class PrimaryFieldNameMailMergeFieldTest {
     when(fieldService.getField(applicationAsset.getAssetId(), "Field lookup for PRIMARY_FIELD_NAME mail merge field"))
         .thenReturn(fieldJson);
 
-    assertThat(primaryFieldNameMailMergeField.resolve(documentInstanceDto)).isEqualTo(fieldName);
+    assertThat(primaryFieldNameMailMergeField.resolve(documentInstanceDto))
+        .isEqualTo(DocumentMailMergeFieldResolveResult.success(fieldName));
   }
 }

@@ -1,13 +1,28 @@
 <#include '../layout/layout.ftl'>
 
+<#--Error Summary/Input Errors Component without jump links-->
+<#-- https://design-system.service.gov.uk/components/error-summary/ -->
+<#macro errorSummary errors>
+  <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" data-module="govuk-error-summary">
+    <h2 class="govuk-error-summary__title" id="error-summary-title">There is a problem</h2>
+    <div class="govuk-error-summary__body">
+      <ul class="govuk-list govuk-error-summary__list">
+        <#list errors as error>
+          <li class="fcs-error-summary__message">${error}</li>
+        </#list>
+      </ul>
+    </div>
+  </div>
+</#macro>
+
 <@defaultPageWithSubNavigation htmlTitle=pageTitle>
   <@defaultPageWithSubNavigationSubNav smallSubnav=true>
     <@fdsSubNavigation.subNavigation>
       <@fdsSubNavigation.subNavigationSection>
-        <#list documentInstanceSectionSummaryViews as documentInstanceSectionSummaryView>
+        <#list documentInstanceSectionsSummaryView.sectionSummaryViews() as sectionSummaryView>
           <@fdsSubNavigation.subNavigationNestedLink
-            linkText=documentInstanceSectionSummaryView.titleWithSectionNumber()
-            linkUrl="#${documentInstanceSectionSummaryView.titleWithSectionNumber()}"
+            linkText=sectionSummaryView.titleWithSectionNumber()
+            linkUrl="#${sectionSummaryView.titleWithSectionNumber()}"
           />
         </#list>
       </@fdsSubNavigation.subNavigationSection>
@@ -15,6 +30,10 @@
   </@defaultPageWithSubNavigationSubNav>
 
   <@defaultPageWithSubNavigationContent pageHeading=pageTitle>
+    <#if documentInstanceSectionsSummaryView.errorMessages()?has_content>
+      <@errorSummary errors=documentInstanceSectionsSummaryView.errorMessages()/>
+    </#if>
+
     <@fdsAction.link
       linkText="Preview document"
       linkUrl=springUrl(previewUrl)
@@ -30,12 +49,12 @@
       role=true
     />
 
-    <#list documentInstanceSectionSummaryViews as documentInstanceSectionSummaryView>
+    <#list documentInstanceSectionsSummaryView.sectionSummaryViews() as sectionSummaryView>
       <div>
-        <h2 id="${documentInstanceSectionSummaryView.titleWithSectionNumber()}" class="govuk-heading-l govuk-!-margin-bottom-2">
-          ${documentInstanceSectionSummaryView.titleWithSectionNumber()}
+        <h2 id="${sectionSummaryView.titleWithSectionNumber()}" class="govuk-heading-l govuk-!-margin-bottom-2">
+          ${sectionSummaryView.titleWithSectionNumber()}
         </h2>
-        <#if documentInstanceSectionSummaryView.hasPageBreakBefore()>
+        <#if sectionSummaryView.hasPageBreakBefore()>
           <strong class="govuk-tag govuk-tag--blue govuk-body govuk-secondary-text-colour govuk-!-font-weight-bold">NEW PAGE</strong>
         </#if>
       </div>
@@ -44,40 +63,40 @@
         <@fdsActionDropdown.actionDropdownItem
           actionText="Add section before"
           linkAction=true
-          linkActionUrl=springUrl(documentInstanceSectionSummaryView.addSectionBeforeUrl())
-          linkActionScreenReaderText=documentInstanceSectionSummaryView.titleWithSectionNumber()
+          linkActionUrl=springUrl(sectionSummaryView.addSectionBeforeUrl())
+          linkActionScreenReaderText=sectionSummaryView.titleWithSectionNumber()
         />
 
         <@fdsActionDropdown.actionDropdownItem
           actionText="Add section after"
           linkAction=true
-          linkActionUrl=springUrl(documentInstanceSectionSummaryView.addSectionAfterUrl())
-          linkActionScreenReaderText=documentInstanceSectionSummaryView.titleWithSectionNumber()
+          linkActionUrl=springUrl(sectionSummaryView.addSectionAfterUrl())
+          linkActionScreenReaderText=sectionSummaryView.titleWithSectionNumber()
         />
 
         <@fdsActionDropdown.actionDropdownItem
           actionText="Add subsection"
           linkAction=true
-          linkActionUrl=springUrl(documentInstanceSectionSummaryView.addSubsectionUrl())
-          linkActionScreenReaderText=documentInstanceSectionSummaryView.titleWithSectionNumber()
+          linkActionUrl=springUrl(sectionSummaryView.addSubsectionUrl())
+          linkActionScreenReaderText=sectionSummaryView.titleWithSectionNumber()
         />
 
         <@fdsActionDropdown.actionDropdownItem
           actionText="Edit"
           linkAction=true
-          linkActionUrl=springUrl(documentInstanceSectionSummaryView.editUrl())
-          linkActionScreenReaderText=documentInstanceSectionSummaryView.titleWithSectionNumber()
+          linkActionUrl=springUrl(sectionSummaryView.editUrl())
+          linkActionScreenReaderText=sectionSummaryView.titleWithSectionNumber()
         />
 
         <@fdsActionDropdown.actionDropdownItem
           actionText="Remove"
           linkAction=true
-          linkActionUrl=springUrl(documentInstanceSectionSummaryView.removeUrl())
-          linkActionScreenReaderText=documentInstanceSectionSummaryView.titleWithSectionNumber()
+          linkActionUrl=springUrl(sectionSummaryView.removeUrl())
+          linkActionScreenReaderText=sectionSummaryView.titleWithSectionNumber()
         />
       </@fdsActionDropdown.actionDropdown>
 
-      <p class="govuk-body govuk-body__preserve-whitespace govuk-!-margin-top-4">${documentInstanceSectionSummaryView.content()!?no_esc}</p>
+      <p class="govuk-body govuk-body__preserve-whitespace govuk-!-margin-top-4">${sectionSummaryView.content()!?no_esc}</p>
     </#list>
   </@defaultPageWithSubNavigationContent>
 </@defaultPageWithSubNavigation>

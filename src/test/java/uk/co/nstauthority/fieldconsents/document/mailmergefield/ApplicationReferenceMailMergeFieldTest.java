@@ -10,6 +10,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldResolveResult;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
@@ -62,6 +63,7 @@ class ApplicationReferenceMailMergeFieldTest {
         .thenReturn(applicationVersion);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
 
-    assertThat(applicationReferenceMailMergeField.resolve(documentInstanceDto)).isEqualTo(applicationReference);
+    assertThat(applicationReferenceMailMergeField.resolve(documentInstanceDto))
+        .isEqualTo(DocumentMailMergeFieldResolveResult.success(applicationReference));
   }
 }

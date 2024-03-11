@@ -13,6 +13,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldResolveResult;
 import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
@@ -74,7 +75,7 @@ class ConsentEndDateMailMergeFieldTest {
     when(repository.findByApplication(application)).thenReturn(Optional.of(consentData));
 
     assertThat(consentEndDateMailMergeField.resolve(documentInstanceDto))
-        .isEqualTo(DateUtils.format(consentData.getConsentEndDate(), DateUtils.LONG_DATE));
+        .isEqualTo(DocumentMailMergeFieldResolveResult.success(DateUtils.format(consentData.getConsentEndDate(), DateUtils.LONG_DATE)));
   }
 
   @Test

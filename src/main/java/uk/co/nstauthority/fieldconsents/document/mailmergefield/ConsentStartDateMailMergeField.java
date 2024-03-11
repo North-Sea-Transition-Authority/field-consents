@@ -4,6 +4,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceDto;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeField;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldResolveResult;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateDto;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentData;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataRepository;
@@ -44,11 +45,12 @@ public class ConsentStartDateMailMergeField implements DocumentMailMergeField {
   }
 
   @Override
-  public String resolve(DocumentInstanceDto documentInstanceDto) {
+  public DocumentMailMergeFieldResolveResult resolve(DocumentInstanceDto documentInstanceDto) {
     var application = documentInstanceLinkingService.getApplicationFromDocumentInstanceDto(documentInstanceDto);
     return repository.findByApplication(application)
         .map(ConsentData::getConsentStartDate)
         .map(date -> DateUtils.format(date, DateUtils.LONG_DATE))
+        .map(DocumentMailMergeFieldResolveResult::success)
         .orElseThrow(() -> MailMergeFieldFailedToResolveException
             .mnemonicDoesNotExistOnDocumentInstance(MNEMONIC, documentInstanceDto));
   }
