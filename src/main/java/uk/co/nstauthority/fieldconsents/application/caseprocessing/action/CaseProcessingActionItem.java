@@ -115,7 +115,10 @@ public enum CaseProcessingActionItem implements Displayable {
       null),
   RETURN_TO_CASE_OFFICER("Return to case officer", 2, true, false,
       applicationId -> ReverseRouter.route(on(CaseAssignmentController.class)
-          .returnToCaseOfficer(applicationId, null, null)), null)
+          .returnToCaseOfficer(applicationId, null, null)), null),
+  ISSUE_CONSENT("Grant consent and issue", 1, true, true, null,
+      applicationId -> ReverseRouter.route(on(ConsentIssuingController.class)
+          .getIssueConsent(applicationId)))
   ;
 
   private final String displayName;

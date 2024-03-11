@@ -21,6 +21,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_MANAGE_RESPONDER;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_RESPONSE;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.ISSUE_CONSENT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_PAY_AND_SUBMIT_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_UPDATE_APPLICATION;
@@ -37,6 +38,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casest
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_NOTES_ALLOWED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSENT_APPROVED_FOR_ISSUE;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSENT_DATA_EXISTS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSENT_NOT_APPROVED_FOR_ISSUE;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_FURTHER_INFORMATION_OPEN;
@@ -150,7 +152,8 @@ public class CaseProcessingActionService {
               CONSENT_PREPARATION,
               CONSENT_ISSUING,
               APPROVE_FOR_ISSUING,
-              RETURN_TO_CASE_OFFICER
+              RETURN_TO_CASE_OFFICER,
+              ISSUE_CONSENT
           )
       );
 
@@ -185,6 +188,7 @@ public class CaseProcessingActionService {
           entry(CONSENT_ISSUING, EnumSet.of(AUTHORISE_FCS_CONSENTS)),
           entry(APPROVE_FOR_ISSUING, EnumSet.of(AUTHORISE_FCS_CONSENTS)),
           entry(RETURN_TO_CASE_OFFICER, EnumSet.of(AUTHORISE_FCS_CONSENTS)),
+          entry(ISSUE_CONSENT, EnumSet.of(AUTHORISE_FCS_CONSENTS)),
           entry(CAM_REASSIGN_OWNERSHIP, EnumSet.of(AUTHORISE_FCS_CONSENTS, ASSIGN_FCS_APPLICATIONS))
       );
 
@@ -223,6 +227,7 @@ public class CaseProcessingActionService {
           entry(CONSENT_ISSUING, EnumSet.of(CONSENT_DATA_EXISTS)),
           entry(APPROVE_FOR_ISSUING, EnumSet.of(CONSENT_DATA_EXISTS, CONSENT_NOT_APPROVED_FOR_ISSUE)),
           entry(RETURN_TO_CASE_OFFICER, EnumSet.of(CAM_ASSIGNED, CASE_OFFICER_NOT_ASSIGNED, CONSENT_NOT_APPROVED_FOR_ISSUE)),
+          entry(ISSUE_CONSENT, EnumSet.of(CAM_ASSIGNED, CASE_OFFICER_NOT_ASSIGNED, CONSENT_APPROVED_FOR_ISSUE)),
           entry(CAM_REASSIGN_OWNERSHIP, EnumSet.of(CAM_ASSIGNED, CASE_OFFICER_NOT_ASSIGNED))
       );
 
@@ -240,7 +245,8 @@ public class CaseProcessingActionService {
           entry(CONSULTATION_FURTHER_INFORMATION_RESPOND, EnumSet.of(CASE_OFFICER)),
           entry(CAM_ASSIGN_OWNERSHIP, EnumSet.of(CASE_OFFICER)),
           entry(APPROVE_FOR_ISSUING, EnumSet.of(CONSENTS_AND_AUTHORISATIONS_MANAGER)),
-          entry(RETURN_TO_CASE_OFFICER, EnumSet.of(CONSENTS_AND_AUTHORISATIONS_MANAGER))
+          entry(RETURN_TO_CASE_OFFICER, EnumSet.of(CONSENTS_AND_AUTHORISATIONS_MANAGER)),
+          entry(ISSUE_CONSENT, EnumSet.of(CONSENTS_AND_AUTHORISATIONS_MANAGER))
       );
   /*
    * If an actionItem is not here, it will be allowed by default. If multiple features are present for an action,
@@ -274,7 +280,8 @@ public class CaseProcessingActionService {
           CAM_REASSIGN_OWNERSHIP, EnumSet.of(CaseProcessingActionGroup.CONSENT_PREPARATION,
               CaseProcessingActionGroup.CONSENT_ISSUING),
           RETURN_TO_CASE_OFFICER, EnumSet.of(CaseProcessingActionGroup.CONSENT_ISSUING),
-          APPROVE_FOR_ISSUING, EnumSet.of(CaseProcessingActionGroup.CONSENT_ISSUING)
+          APPROVE_FOR_ISSUING, EnumSet.of(CaseProcessingActionGroup.CONSENT_ISSUING),
+          ISSUE_CONSENT, EnumSet.of(CaseProcessingActionGroup.CONSENT_ISSUING)
       );
 
   @Autowired

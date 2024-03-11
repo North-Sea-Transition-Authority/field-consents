@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import uk.co.nstauthority.fieldconsents.application.ApplicationContextService;
+import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionGroup;
@@ -25,18 +27,24 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 @RequestMapping("/applications/{applicationId}/consent-issuing")
 public class ConsentIssuingController {
 
+  private final ApplicationService applicationService;
   private final ApplicationVersionService applicationVersionService;
+  private final ApplicationContextService applicationContextService;
   private final CaseProcessingActionService caseProcessingActionService;
   private final ConsentPreparationDocumentService consentPreparationDocumentService;
   private final ConsentIssuingApprovalService consentIssuingApprovalService;
 
   ConsentIssuingController(
+      ApplicationService applicationService,
       ApplicationVersionService applicationVersionService,
+      ApplicationContextService applicationContextService,
       CaseProcessingActionService caseProcessingActionService,
       ConsentPreparationDocumentService consentPreparationDocumentService,
       ConsentIssuingApprovalService consentIssuingApprovalService
   ) {
+    this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
+    this.applicationContextService = applicationContextService;
     this.caseProcessingActionService = caseProcessingActionService;
     this.consentPreparationDocumentService = consentPreparationDocumentService;
     this.consentIssuingApprovalService = consentIssuingApprovalService;
@@ -85,5 +93,17 @@ public class ConsentIssuingController {
     );
 
     return ReverseRouter.redirect(on(ConsentIssuingController.class).getConsentIssuing(applicationId, null));
+  }
+
+  @GetMapping("/issue-consent")
+  @ActionEndPoint(CaseProcessingActionItem.ISSUE_CONSENT)
+  public ModelAndView getIssueConsent(@PathVariable Integer applicationId) {
+    var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
+
+    return new ModelAndView("fcs/application/consent/issueConsent")
+        .addObject("pageTitle", applicationService.generateApplicationReference(applicationVersion))
+        .addObject("applicationContext", applicationContextService.getApplicationContext(applicationVersion))
+        .addObject("cancelUrl", ReverseRouter.route(on(ConsentIssuingController.class)
+            .getConsentIssuing(applicationId, null)));
   }
 }

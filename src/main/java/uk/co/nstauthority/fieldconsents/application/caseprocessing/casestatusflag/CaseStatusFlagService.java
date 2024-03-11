@@ -7,6 +7,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casest
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_NOTES_ALLOWED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CASE_OFFICER_NOT_ASSIGNED;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSENT_APPROVED_FOR_ISSUE;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSENT_DATA_EXISTS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSENT_NOT_APPROVED_FOR_ISSUE;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_FURTHER_INFORMATION_OPEN;
@@ -82,7 +83,7 @@ public class CaseStatusFlagService {
     caseStatusFlags.addAll(getConsultationFlags(applicationVersion));
     caseStatusFlags.addAll(getCamAssignmentFlag(applicationVersion));
     caseStatusFlags.addAll(getConsentDataExistsFlag(application));
-    caseStatusFlags.addAll(getConsentNotApprovedForIssueFlag(application));
+    caseStatusFlags.addAll(getConsentApprovalForIssueFlag(application));
 
     return caseStatusFlags;
   }
@@ -176,10 +177,10 @@ public class CaseStatusFlagService {
         .orElse(Set.of());
   }
 
-  Set<CaseStatusFlag> getConsentNotApprovedForIssueFlag(Application application) {
-    if (!consentIssuingApprovalService.isApplicationApprovedForConsentIssuing(application)) {
-      return Set.of(CONSENT_NOT_APPROVED_FOR_ISSUE);
+  Set<CaseStatusFlag> getConsentApprovalForIssueFlag(Application application) {
+    if (consentIssuingApprovalService.isApplicationApprovedForConsentIssuing(application)) {
+      return Set.of(CONSENT_APPROVED_FOR_ISSUE);
     }
-    return Set.of();
+    return Set.of(CONSENT_NOT_APPROVED_FOR_ISSUE);
   }
 }

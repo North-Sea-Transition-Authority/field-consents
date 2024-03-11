@@ -22,6 +22,9 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.Application;
+import uk.co.nstauthority.fieldconsents.application.ApplicationContext;
+import uk.co.nstauthority.fieldconsents.application.ApplicationContextService;
+import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
@@ -31,6 +34,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CasePr
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.ConsentIssuingController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.documents.ConsentPreparationDocumentService;
+import uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.document.DocumentInstanceSummaryViewTestUtil;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
@@ -43,6 +47,12 @@ import uk.co.nstauthority.fieldconsents.summary.SummaryFileView;
 class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
 
   private static final int APPLICATION_ID = 1;
+
+  @MockBean
+  private ApplicationService applicationService;
+
+  @MockBean
+  private ApplicationContextService applicationContextService;
 
   @MockBean
   private ConsentPreparationDocumentService consentPreparationDocumentService;
@@ -185,5 +195,44 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
             .getConsentIssuing(APPLICATION_ID, null))));
 
     verify(consentIssuingApprovalService).approveApplicationForConsentIssuing(application, user);
+  }
+
+  @SecurityTest
+  void getIssueConsent_noUser() throws Exception {
+    mockMvc.perform(get(ReverseRouter.route(on(ConsentIssuingController.class).getIssueConsent(APPLICATION_ID))))
+        .andExpect(redirectionToLoginUrl());
+  }
+
+  @SecurityTest
+  void getIssueConsent_userDoesNotHaveIssueConsentCaseProcessingAction() throws Exception {
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
+
+    mockMvc.perform(get(ReverseRouter.route(on(ConsentIssuingController.class).getIssueConsent(APPLICATION_ID)))
+            .with(user(user)))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void getIssueConsent() throws Exception {
+    var applicationReference = "Test/application/reference";
+    var applicationContext = ApplicationContext.newBuilder()
+        .withPrimaryAsset(FieldTestUtil.field1Json)
+        .withPrimaryOperator("Primary operator")
+        .withApplicationVersionStatus(applicationVersion.getStatus())
+        .build();
+
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CaseProcessingActionItem.ISSUE_CONSENT));
+    when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
+    when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(applicationContext);
+
+    mockMvc.perform(get(ReverseRouter.route(on(ConsentIssuingController.class).getIssueConsent(APPLICATION_ID)))
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/consent/issueConsent"))
+        .andExpect(model().attribute("pageTitle", applicationReference))
+        .andExpect(model().attribute("applicationContext", applicationContext))
+        .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(ConsentIssuingController.class)
+            .getConsentIssuing(APPLICATION_ID, null))));
   }
 }
