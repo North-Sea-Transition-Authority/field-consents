@@ -93,19 +93,20 @@ public class ApplicationSubmissionController {
         user, applicationVersion, RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS
     );
 
+    var submittable = applicationSubmissionService.isSubmittable(applicationVersion);
+
     var modelAndView = new ModelAndView("fcs/application/reviewAndSubmit")
         .addObject("pageTitle", "Check your answers before submitting")
         .addObject("submitUrl", ReverseRouter.route(on(ApplicationSubmissionController.class)
             .submitApplication(applicationId, null, null, null)))
         .addObject("backLinkUrl",
             ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId)))
-        .addObject("isSubmittable", applicationSubmissionService.isSubmittable(applicationVersion))
+        .addObject("isSubmittable", submittable)
         .addObject("userHasPayAndSubmitPermission", userHasPayAndSubmitPermission)
         .addObject("applicationReference",
             applicationService.getApplicationReference(applicationVersion));
 
     var applicationUpdateOpen = applicationUpdateService.openApplicationUpdateExists(applicationVersion);
-    var paymentRequired = false;
 
     if (applicationUpdateOpen) {
       modelAndView
@@ -114,11 +115,13 @@ public class ApplicationSubmissionController {
           .addObject("form", form)
           .addObject("requestedChangesOnlyRadio", ApplicationUpdateResponseType.REQUESTED_CHANGES_ONLY)
           .addObject("otherChangesRadio", ApplicationUpdateResponseType.OTHER_CHANGES);
-    } else {
-      paymentRequired = applicationPaymentService.getPaymentAmountPence(applicationVersion) > 0;
     }
 
-    modelAndView.addObject("paymentRequired", paymentRequired);
+    if (submittable && userHasPayAndSubmitPermission) {
+      var paymentRequired = !applicationUpdateOpen && applicationPaymentService.getPaymentAmountPence(applicationVersion) > 0;
+
+      modelAndView.addObject("paymentRequired", paymentRequired);
+    }
 
     applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView);
 

@@ -124,7 +124,7 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
 
   @ParameterizedTest
   @MethodSource("getInProgressApplicationVersions")
-  void getReviewAndSubmit_whenInProgressAndUserHasPayAndSubmitPermissionAndPaymentAmountPenceGreaterThanZero(
+  void getReviewAndSubmit_whenInProgressAndNotSubmittableAndUserDoesNotHavePayAndSubmitPermission(
       ApplicationVersion applicationVersion
   ) throws Exception {
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
@@ -135,6 +135,88 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
     when(applicationSummaryService.getSummarySections(applicationVersion))
         .thenReturn(Collections.emptyList());
     when(applicationSubmissionService.isSubmittable(applicationVersion)).thenReturn(false);
+    when(applicationAccessService.hasApplicationPermission(
+        user, applicationVersion, RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS
+    )).thenReturn(false);
+    when(applicationService.getApplicationReference(applicationVersion))
+        .thenReturn(NO_APP_REF);
+    when(applicationUpdateService.openApplicationUpdateExists(applicationVersion))
+        .thenReturn(false);
+
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationSubmissionController.class)
+            .getReviewAndSubmit(APPLICATION_ID, null)))
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/reviewAndSubmit"))
+        .andExpect(model().attribute("pageTitle", "Check your answers before submitting"))
+        .andExpect(model().attribute("accordionId", applicationVersion.getId()))
+        .andExpect(model().attribute("submitUrl", ReverseRouter.route(on(ApplicationSubmissionController.class)
+            .submitApplication(APPLICATION_ID, null, null, null))))
+        .andExpect(model().attribute("backLinkUrl", ReverseRouter.route(on(ApplicationTaskListController.class)
+            .getTaskList(APPLICATION_ID))))
+        .andExpect(model().attribute("isSubmittable", false))
+        .andExpect(model().attribute("userHasPayAndSubmitPermission", false))
+        .andExpect(model().attribute("applicationReference", NO_APP_REF))
+        .andExpect(model().attributeDoesNotExist("paymentRequired"))
+        .andExpect(model().attributeExists("summarySections", "wideSummaryDisplay"));
+
+    verify(applicationPaymentService, never()).getPaymentAmountPence(any());
+  }
+
+  @ParameterizedTest
+  @MethodSource("getInProgressApplicationVersions")
+  void getReviewAndSubmit_whenInProgressAndSubmittableAndUserDoesNotHavePayAndSubmitPermission(
+      ApplicationVersion applicationVersion
+  ) throws Exception {
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
+    doCallRealMethod().when(applicationSummaryService).addSummarySectionsToModelAndView(any(), any());
+    when(applicationSummaryService.getSummarySections(applicationVersion))
+        .thenReturn(Collections.emptyList());
+    when(applicationSubmissionService.isSubmittable(applicationVersion)).thenReturn(true);
+    when(applicationAccessService.hasApplicationPermission(
+        user, applicationVersion, RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS
+    )).thenReturn(false);
+    when(applicationService.getApplicationReference(applicationVersion))
+        .thenReturn(NO_APP_REF);
+    when(applicationUpdateService.openApplicationUpdateExists(applicationVersion))
+        .thenReturn(false);
+
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationSubmissionController.class)
+            .getReviewAndSubmit(APPLICATION_ID, null)))
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/reviewAndSubmit"))
+        .andExpect(model().attribute("pageTitle", "Check your answers before submitting"))
+        .andExpect(model().attribute("accordionId", applicationVersion.getId()))
+        .andExpect(model().attribute("submitUrl", ReverseRouter.route(on(ApplicationSubmissionController.class)
+            .submitApplication(APPLICATION_ID, null, null, null))))
+        .andExpect(model().attribute("backLinkUrl", ReverseRouter.route(on(ApplicationTaskListController.class)
+            .getTaskList(APPLICATION_ID))))
+        .andExpect(model().attribute("isSubmittable", true))
+        .andExpect(model().attribute("userHasPayAndSubmitPermission", false))
+        .andExpect(model().attribute("applicationReference", NO_APP_REF))
+        .andExpect(model().attributeDoesNotExist("paymentRequired"))
+        .andExpect(model().attributeExists("summarySections", "wideSummaryDisplay"));
+
+    verify(applicationPaymentService, never()).getPaymentAmountPence(any());
+  }
+
+  @ParameterizedTest
+  @MethodSource("getInProgressApplicationVersions")
+  void getReviewAndSubmit_whenInProgressAndSubmittableAndUserHasPayAndSubmitPermissionAndPaymentAmountPenceGreaterThanZero(
+      ApplicationVersion applicationVersion
+  ) throws Exception {
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
+    doCallRealMethod().when(applicationSummaryService).addSummarySectionsToModelAndView(any(), any());
+    when(applicationSummaryService.getSummarySections(applicationVersion))
+        .thenReturn(Collections.emptyList());
+    when(applicationSubmissionService.isSubmittable(applicationVersion)).thenReturn(true);
     when(applicationAccessService.hasApplicationPermission(
         user, applicationVersion, RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS
     )).thenReturn(true);
@@ -155,7 +237,7 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
             .submitApplication(APPLICATION_ID, null, null, null))))
         .andExpect(model().attribute("backLinkUrl", ReverseRouter.route(on(ApplicationTaskListController.class)
             .getTaskList(APPLICATION_ID))))
-        .andExpect(model().attribute("isSubmittable", false))
+        .andExpect(model().attribute("isSubmittable", true))
         .andExpect(model().attribute("userHasPayAndSubmitPermission", true))
         .andExpect(model().attribute("applicationReference", NO_APP_REF))
         .andExpect(model().attribute("paymentRequired", true))
@@ -164,7 +246,7 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
 
   @ParameterizedTest
   @MethodSource("getInProgressApplicationVersions")
-  void getReviewAndSubmit_whenInProgressAndUserHasPayAndSubmitPermissionAndPaymentAmountPenceZero(
+  void getReviewAndSubmit_whenInProgressAndSubmittableAndUserHasPayAndSubmitPermissionAndPaymentAmountPenceZero(
       ApplicationVersion applicationVersion
   ) throws Exception {
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
@@ -174,7 +256,7 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
     doCallRealMethod().when(applicationSummaryService).addSummarySectionsToModelAndView(any(), any());
     when(applicationSummaryService.getSummarySections(applicationVersion))
         .thenReturn(Collections.emptyList());
-    when(applicationSubmissionService.isSubmittable(applicationVersion)).thenReturn(false);
+    when(applicationSubmissionService.isSubmittable(applicationVersion)).thenReturn(true);
     when(applicationAccessService.hasApplicationPermission(
         user, applicationVersion, RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS
     )).thenReturn(true);
@@ -195,7 +277,7 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
             .submitApplication(APPLICATION_ID, null, null, null))))
         .andExpect(model().attribute("backLinkUrl", ReverseRouter.route(on(ApplicationTaskListController.class)
             .getTaskList(APPLICATION_ID))))
-        .andExpect(model().attribute("isSubmittable", false))
+        .andExpect(model().attribute("isSubmittable", true))
         .andExpect(model().attribute("userHasPayAndSubmitPermission", true))
         .andExpect(model().attribute("applicationReference", NO_APP_REF))
         .andExpect(model().attribute("paymentRequired", false))
@@ -204,7 +286,7 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
 
   @ParameterizedTest
   @MethodSource("getInProgressV2ApplicationVersions")
-  void getReviewAndSubmit_whenInProgressUpdatesAndUserHasPayAndSubmitPermission(ApplicationVersion applicationVersion) throws Exception {
+  void getReviewAndSubmit_whenInProgressUpdatesAndSubmittableAndUserHasPayAndSubmitPermission(ApplicationVersion applicationVersion) throws Exception {
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
@@ -212,7 +294,7 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
     doCallRealMethod().when(applicationSummaryService).addSummarySectionsToModelAndView(any(), any());
     when(applicationSummaryService.getSummarySections(applicationVersion))
         .thenReturn(Collections.emptyList());
-    when(applicationSubmissionService.isSubmittable(applicationVersion)).thenReturn(false);
+    when(applicationSubmissionService.isSubmittable(applicationVersion)).thenReturn(true);
     when(applicationAccessService.hasApplicationPermission(
         user, applicationVersion, RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS
     )).thenReturn(true);
@@ -234,7 +316,7 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
             .submitApplication(APPLICATION_ID, null, null, null))))
         .andExpect(model().attribute("backLinkUrl", ReverseRouter.route(on(ApplicationTaskListController.class)
             .getTaskList(APPLICATION_ID))))
-        .andExpect(model().attribute("isSubmittable", false))
+        .andExpect(model().attribute("isSubmittable", true))
         .andExpect(model().attribute("userHasPayAndSubmitPermission", true))
         .andExpect(model().attribute("applicationReference", DUMMY_APP_REF))
         .andExpect(model().attribute("applicationUpdateRequestView", applicationUpdateRequestView))
@@ -242,6 +324,8 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
         .andExpect(model().attribute("otherChangesRadio", ApplicationUpdateResponseType.OTHER_CHANGES))
         .andExpect(model().attribute("paymentRequired", false))
         .andExpect(model().attributeExists("summarySections", "wideSummaryDisplay", "form"));
+
+    verify(applicationPaymentService, never()).getPaymentAmountPence(any());
   }
 
   @Test
