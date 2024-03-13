@@ -5,7 +5,7 @@ SELECT
   WHEN 'PCON' THEN ld.increase_in_production
   END increase_in_production
 , CASE fcd.application_type
-  WHEN 'PCON' THEN ld.es_reference
+  WHEN 'PCON' THEN clean_text(ld.es_reference)
   END es_reference
 , CASE fcd.application_type
   WHEN 'PCON' THEN
@@ -41,12 +41,12 @@ SELECT
 , CASE
   -- the vent_app_type_default check ensures we only have visible (not stale) dom data
   WHEN fcd.application_type = 'VCON' AND ld.vent_app_type_default = 'false' THEN
-    ld.terminal_name
+    clean_text(ld.terminal_name)
   END terminal_name
 , CASE
   -- the vent_app_type_default check ensures we only have visible (not stale) dom data
   WHEN fcd.application_type = 'VCON' AND ld.vent_app_type_default = 'false' THEN
-    ld.terminal_location
+    clean_text(ld.terminal_location)
   END terminal_location
 , CASE
   WHEN fcd.application_type IN ('FCON', 'VCON') THEN -- we are already migrating this for PCON cases
