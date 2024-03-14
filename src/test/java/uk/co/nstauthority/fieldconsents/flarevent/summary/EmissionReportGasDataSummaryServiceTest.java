@@ -12,6 +12,8 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportGasData;
@@ -40,10 +42,10 @@ class EmissionReportGasDataSummaryServiceTest {
     reportGasData = FlareVentReportGasTestUtil.getCompleteAndValidFlareReportGasData();
   }
 
-  @Test
-  void getReportGasDataTableSummaryCard() {
+  @ParameterizedTest
+  @EnumSource(value = FlareVentUnit.class, names = {"KG_PER_CUBIC_METER", "G_PER_MOL"}, mode = EnumSource.Mode.INCLUDE)
+  void getReportGasDataTableSummaryCard(FlareVentUnit densityUnit) {
     var reportPeriod = FlareReportTestUtil.getFullFlareReportPeriod();
-    var densityUnit = FlareVentUnit.KG_PER_CUBIC_METER;
     var gasContentUnit = FlareVentUnit.MASS_PERCENTAGE;
 
     var summaryCard = emissionReportGasDataSummaryService.getReportGasDataTableSummaryCard(
@@ -68,7 +70,9 @@ class EmissionReportGasDataSummaryServiceTest {
                             CATEGORY_C_HEADING
                         ).toList()),
                         new SummaryTableRow(List.of(
-                            "Standard density (%s)".formatted(densityUnit.getDisplayName()),
+                            densityUnit.equals(FlareVentUnit.G_PER_MOL)
+                                ? "Stream mol wt (%s)".formatted(densityUnit.getDisplayName())
+                                : "Standard density (%s)".formatted(densityUnit.getDisplayName()),
                             bigDecimalToFormattedString(reportGasData.getCategoryADensity()),
                             bigDecimalToFormattedString(reportGasData.getCategoryBDensity()),
                             bigDecimalToFormattedString(reportGasData.getCategoryCDensity())

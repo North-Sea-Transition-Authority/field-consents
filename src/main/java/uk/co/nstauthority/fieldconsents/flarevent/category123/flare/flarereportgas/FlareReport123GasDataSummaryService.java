@@ -5,10 +5,10 @@ import static uk.co.nstauthority.fieldconsents.flarevent.category123.flare.summa
 import static uk.co.nstauthority.fieldconsents.flarevent.category123.flare.summary.Flare123SummaryUtil.CATEGORY_3_HEADING;
 import static uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionReportGasDataSummaryService.HYDROCARBON_CONTENT_PROMPT_WITH_UNIT;
 import static uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionReportGasDataSummaryService.INERT_GAS_CONTENT_PROMPT_WITH_UNIT;
+import static uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionReportGasDataSummaryService.STREAM_MOL_WT_PROMPT_WITH_UNIT;
 import static uk.co.nstauthority.fieldconsents.formatting.DateUtils.LONG_MONTH_YEAR;
 
 import java.util.Optional;
-import java.util.function.UnaryOperator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
@@ -20,8 +20,6 @@ import uk.co.nstauthority.fieldconsents.summary.SummaryTableView;
 
 @Service
 public class FlareReport123GasDataSummaryService {
-
-  private static final UnaryOperator<String> DENSITY_PROMPT_WITH_UNIT = "Stream mol wt (%s)"::formatted;
 
   private final FlareReport123GasDataRepository flareReport123GasDataRepository;
   private final FlareReport123Service flareReport123Service;
@@ -60,7 +58,7 @@ public class FlareReport123GasDataSummaryService {
             CATEGORY_3_HEADING
         )
         .addRow(
-            DENSITY_PROMPT_WITH_UNIT.apply(densityUnit.getDisplayName()),
+            STREAM_MOL_WT_PROMPT_WITH_UNIT.apply(densityUnit.getDisplayName()),
             reportGasData.getCategory1Density(),
             reportGasData.getCategory2Density(),
             reportGasData.getCategory3Density()
