@@ -26,7 +26,6 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
-import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionControllerHelperService;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionSummaryView;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionsSummaryView;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceService;
@@ -35,7 +34,6 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
-import uk.co.nstauthority.fieldconsents.document.mailmergefield.FieldConsentsDocumentMailMergeFieldFormatter;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -50,16 +48,13 @@ class FieldConsentsDocumentInstanceControllerTest extends AbstractControllerTest
   private FieldConsentsDocumentInstanceService fieldConsentsDocumentInstanceService;
 
   @MockBean
+  private FieldConsentsDocumentInstanceSectionControllerHelperService fieldConsentsDocumentInstanceSectionControllerHelperService;
+
+  @MockBean
   private DocumentInstanceService documentInstanceService;
 
   @MockBean
   private DocumentInstanceLinkingService documentInstanceLinkingService;
-
-  @MockBean
-  private DocumentInstanceSectionControllerHelperService documentInstanceSectionControllerHelperService;
-
-  @MockBean
-  private FieldConsentsDocumentMailMergeFieldFormatter documentMailMergeFieldFormatter;
 
   @MockBean
   private ApplicationService applicationService;
@@ -93,11 +88,7 @@ class FieldConsentsDocumentInstanceControllerTest extends AbstractControllerTest
             "Test content 1",
             false,
             Collections.emptyList(),
-            "test-add-section-before-url-1",
-            "test-add-section-after-url-1",
-            "test-add-subsection-url-1",
-            "test-edit-url-1",
-            "test-remove-url-1"
+            DocumentInstanceSectionUrlsTestUtil.newBuilderWithUrlSuffix("-1").build()
         ),
         new DocumentInstanceSectionSummaryView(
             0,
@@ -106,11 +97,7 @@ class FieldConsentsDocumentInstanceControllerTest extends AbstractControllerTest
             "Test content 2",
             false,
             Collections.emptyList(),
-            "test-add-section-before-url-2",
-            "test-add-section-after-url-2",
-            "test-add-subsection-url-2",
-            "test-edit-url-2",
-            "test-remove-url-2"
+            DocumentInstanceSectionUrlsTestUtil.newBuilderWithUrlSuffix("-2").build()
         )
     );
 
@@ -123,10 +110,9 @@ class FieldConsentsDocumentInstanceControllerTest extends AbstractControllerTest
     when(documentInstanceService.getDocumentInstanceDtoOrThrow(DOCUMENT_INSTANCE_ID))
         .thenReturn(documentInstanceDto);
     when(
-        documentInstanceSectionControllerHelperService.getDocumentInstanceSectionsSummaryView(
+        fieldConsentsDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionsSummaryView(
             documentInstanceDto,
-            FieldConsentsDocumentInstanceSectionController.class,
-            documentMailMergeFieldFormatter
+            true
         )
     ).thenReturn(documentInstanceSectionsSummaryView);
 

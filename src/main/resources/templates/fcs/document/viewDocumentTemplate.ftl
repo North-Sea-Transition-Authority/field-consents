@@ -33,35 +33,35 @@
         <@fdsActionDropdown.actionDropdownItem
           actionText="Add section before"
           linkAction=true
-          linkActionUrl=springUrl(documentTemplateSectionSummaryView.addSectionBeforeUrl())
+          linkActionUrl=springUrl(documentTemplateSectionSummaryView.documentTemplateSectionUrls().addSectionBeforeUrl())
           linkActionScreenReaderText=documentTemplateSectionSummaryView.titleWithSectionNumber()
         />
 
         <@fdsActionDropdown.actionDropdownItem
           actionText="Add section after"
           linkAction=true
-          linkActionUrl=springUrl(documentTemplateSectionSummaryView.addSectionAfterUrl())
+          linkActionUrl=springUrl(documentTemplateSectionSummaryView.documentTemplateSectionUrls().addSectionAfterUrl())
           linkActionScreenReaderText=documentTemplateSectionSummaryView.titleWithSectionNumber()
         />
 
         <@fdsActionDropdown.actionDropdownItem
           actionText="Add subsection"
           linkAction=true
-          linkActionUrl=springUrl(documentTemplateSectionSummaryView.addSubsectionUrl())
+          linkActionUrl=springUrl(documentTemplateSectionSummaryView.documentTemplateSectionUrls().addSubsectionUrl())
           linkActionScreenReaderText=documentTemplateSectionSummaryView.titleWithSectionNumber()
         />
 
         <@fdsActionDropdown.actionDropdownItem
           actionText="Edit"
           linkAction=true
-          linkActionUrl=springUrl(documentTemplateSectionSummaryView.editUrl())
+          linkActionUrl=springUrl(documentTemplateSectionSummaryView.documentTemplateSectionUrls().editUrl())
           linkActionScreenReaderText=documentTemplateSectionSummaryView.titleWithSectionNumber()
         />
 
         <@fdsActionDropdown.actionDropdownItem
           actionText="Remove"
           linkAction=true
-          linkActionUrl=springUrl(documentTemplateSectionSummaryView.removeUrl())
+          linkActionUrl=springUrl(documentTemplateSectionSummaryView.documentTemplateSectionUrls().removeUrl())
           linkActionScreenReaderText=documentTemplateSectionSummaryView.titleWithSectionNumber()
         />
       </@fdsActionDropdown.actionDropdown>

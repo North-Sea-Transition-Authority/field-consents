@@ -63,35 +63,35 @@
         <@fdsActionDropdown.actionDropdownItem
           actionText="Add section before"
           linkAction=true
-          linkActionUrl=springUrl(sectionSummaryView.addSectionBeforeUrl())
+          linkActionUrl=springUrl(sectionSummaryView.documentInstanceSectionUrls().addSectionBeforeUrl())
           linkActionScreenReaderText=sectionSummaryView.titleWithSectionNumber()
         />
 
         <@fdsActionDropdown.actionDropdownItem
           actionText="Add section after"
           linkAction=true
-          linkActionUrl=springUrl(sectionSummaryView.addSectionAfterUrl())
+          linkActionUrl=springUrl(sectionSummaryView.documentInstanceSectionUrls().addSectionAfterUrl())
           linkActionScreenReaderText=sectionSummaryView.titleWithSectionNumber()
         />
 
         <@fdsActionDropdown.actionDropdownItem
           actionText="Add subsection"
           linkAction=true
-          linkActionUrl=springUrl(sectionSummaryView.addSubsectionUrl())
+          linkActionUrl=springUrl(sectionSummaryView.documentInstanceSectionUrls().addSubsectionUrl())
           linkActionScreenReaderText=sectionSummaryView.titleWithSectionNumber()
         />
 
         <@fdsActionDropdown.actionDropdownItem
           actionText="Edit"
           linkAction=true
-          linkActionUrl=springUrl(sectionSummaryView.editUrl())
+          linkActionUrl=springUrl(sectionSummaryView.documentInstanceSectionUrls().editUrl())
           linkActionScreenReaderText=sectionSummaryView.titleWithSectionNumber()
         />
 
         <@fdsActionDropdown.actionDropdownItem
           actionText="Remove"
           linkAction=true
-          linkActionUrl=springUrl(sectionSummaryView.removeUrl())
+          linkActionUrl=springUrl(sectionSummaryView.documentInstanceSectionUrls().removeUrl())
           linkActionScreenReaderText=sectionSummaryView.titleWithSectionNumber()
         />
       </@fdsActionDropdown.actionDropdown>

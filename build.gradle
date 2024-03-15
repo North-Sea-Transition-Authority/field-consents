@@ -61,7 +61,7 @@ dependencies {
   implementation "uk.co.fivium:file-upload-spring-boot-starter:${fileUploadLibraryVersion}"
   implementation 'uk.co.fivium:digital-payments-library-spring-boot-starter:1.0.0'
   implementation 'uk.co.fivium:spring-boot-starter-digital-notification-library:rename-domain-reference-properties-SNAPSHOT'
-  implementation 'uk.co.fivium:spring-boot-starter-digital-document-library:fcs-645-handle-missing-mail-merge-values-SNAPSHOT'
+  implementation 'uk.co.fivium:digital-document-library-spring-boot-starter:FCS-697-rework-view-url-code-to-not-use-controller-interfaces-SNAPSHOT'
 
   implementation 'org.springframework.boot:spring-boot-starter-jooq'
   implementation 'org.jooq:jooq-codegen'

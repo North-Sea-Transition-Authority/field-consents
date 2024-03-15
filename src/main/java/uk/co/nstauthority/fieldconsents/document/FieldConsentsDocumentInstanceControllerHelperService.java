@@ -1,10 +1,13 @@
 package uk.co.nstauthority.fieldconsents.document;
 
+import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+
 import java.util.List;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceControllerHelperService;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSummaryView;
 import uk.co.nstauthority.fieldconsents.application.Application;
+import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @Service
 public class FieldConsentsDocumentInstanceControllerHelperService {
@@ -25,7 +28,8 @@ public class FieldConsentsDocumentInstanceControllerHelperService {
 
     return documentInstanceControllerHelperService.getDocumentInstanceSummaryViews(
         documentInstanceDtos,
-        FieldConsentsDocumentInstanceController.class
+        documentInstanceDto -> ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
+            .getViewDocumentInstance(documentInstanceDto.id()))
     );
   }
 }

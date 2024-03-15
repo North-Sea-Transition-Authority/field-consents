@@ -15,8 +15,6 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
-import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateControllerHelperService;
-import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionControllerHelperService;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionSummaryView;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateService;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSummaryView;
@@ -31,13 +29,13 @@ class FieldConsentsDocumentTemplateControllerTest extends AbstractControllerTest
   private static final UUID DOCUMENT_TEMPLATE_ID = UUID.randomUUID();
 
   @MockBean
+  private FieldConsentsDocumentTemplateControllerHelperService fieldConsentsDocumentTemplateControllerHelperService;
+
+  @MockBean
+  private FieldConsentsDocumentTemplateSectionControllerHelperService fieldConsentsDocumentTemplateSectionControllerHelperService;
+
+  @MockBean
   private DocumentTemplateService documentTemplateService;
-
-  @MockBean
-  private DocumentTemplateControllerHelperService documentTemplateControllerHelperService;
-
-  @MockBean
-  private DocumentTemplateSectionControllerHelperService documentTemplateSectionControllerHelperService;
 
   @SecurityTest
   void getDocumentTemplates_noUser() throws Exception {
@@ -62,7 +60,7 @@ class FieldConsentsDocumentTemplateControllerTest extends AbstractControllerTest
     );
 
     when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
-    when(documentTemplateControllerHelperService.getDocumentTemplateSummaryViews(FieldConsentsDocumentTemplateController.class))
+    when(fieldConsentsDocumentTemplateControllerHelperService.getDocumentTemplateSummaryViews())
         .thenReturn(documentTemplateSummaryViews);
 
     mockMvc.perform(get(ReverseRouter.route(on(FieldConsentsDocumentTemplateController.class).getDocumentTemplates()))
@@ -100,11 +98,7 @@ class FieldConsentsDocumentTemplateControllerTest extends AbstractControllerTest
             "Test content 1",
             "TEST_CONDITION_TITLE_1",
             false,
-            "test-add-section-before-url-1",
-            "test-add-section-after-url-1",
-            "test-add-subsection-url-1",
-            "test-edit-url-1",
-            "test-remove-url-1"
+            DocumentTemplateSectionUrlsTestUtil.newBuilderWithUrlSuffix("-1").build()
         ),
         new DocumentTemplateSectionSummaryView(
             "1",
@@ -112,11 +106,7 @@ class FieldConsentsDocumentTemplateControllerTest extends AbstractControllerTest
             "Test content 2",
             "TEST_CONDITION_TITLE_2",
             false,
-            "test-add-section-before-url-2",
-            "test-add-section-after-url-2",
-            "test-add-subsection-url-2",
-            "test-edit-url-2",
-            "test-remove-url-2"
+            DocumentTemplateSectionUrlsTestUtil.newBuilderWithUrlSuffix("-2").build()
         )
     );
 
@@ -124,9 +114,8 @@ class FieldConsentsDocumentTemplateControllerTest extends AbstractControllerTest
     when(documentTemplateService.getDocumentTemplateDtoOrThrow(DOCUMENT_TEMPLATE_ID))
         .thenReturn(documentTemplateDto);
     when(
-        documentTemplateSectionControllerHelperService.getDocumentTemplateSectionSummaryViews(
-            documentTemplateDto,
-            FieldConsentsDocumentTemplateSectionController.class
+        fieldConsentsDocumentTemplateSectionControllerHelperService.getDocumentTemplateSectionSummaryViews(
+            documentTemplateDto
         )
     ).thenReturn(documentTemplateSectionSummaryViews);
 

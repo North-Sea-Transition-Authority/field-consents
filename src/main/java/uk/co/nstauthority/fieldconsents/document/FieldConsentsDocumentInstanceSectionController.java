@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionController;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionControllerHelperService;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionDto;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionForm;
@@ -28,7 +27,7 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
 @Controller
 @RequestMapping("/document-instances/section/{documentInstanceSectionId}")
 @HasPermission(permissions = RolePermission.PROCESS_FCS_APPLICATIONS)
-public class FieldConsentsDocumentInstanceSectionController implements DocumentInstanceSectionController {
+public class FieldConsentsDocumentInstanceSectionController {
 
   static final String ADD_PAGE_TITLE = "Add section";
   static final String ADD_SUBMIT_BUTTON_TEXT = "Add";
@@ -53,7 +52,6 @@ public class FieldConsentsDocumentInstanceSectionController implements DocumentI
   }
 
   @GetMapping("/add-before")
-  @Override
   public ModelAndView getAddDocumentInstanceSectionBefore(@PathVariable UUID documentInstanceSectionId) {
     var documentInstanceSectionDto =
         documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(documentInstanceSectionId);
@@ -87,7 +85,6 @@ public class FieldConsentsDocumentInstanceSectionController implements DocumentI
   }
 
   @GetMapping("/add-after")
-  @Override
   public ModelAndView getAddDocumentInstanceSectionAfter(@PathVariable UUID documentInstanceSectionId) {
     var documentInstanceSectionDto =
         documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(documentInstanceSectionId);
@@ -121,7 +118,6 @@ public class FieldConsentsDocumentInstanceSectionController implements DocumentI
   }
 
   @GetMapping("/add-subsection")
-  @Override
   public ModelAndView getAddDocumentInstanceSubsection(@PathVariable UUID documentInstanceSectionId) {
     var documentInstanceSectionDto =
         documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(documentInstanceSectionId);
@@ -201,7 +197,6 @@ public class FieldConsentsDocumentInstanceSectionController implements DocumentI
   }
 
   @GetMapping("/edit")
-  @Override
   public ModelAndView getEditDocumentInstanceSection(@PathVariable UUID documentInstanceSectionId) {
     var documentInstanceSectionDto =
         documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(documentInstanceSectionId);
@@ -258,7 +253,6 @@ public class FieldConsentsDocumentInstanceSectionController implements DocumentI
   }
 
   @GetMapping("/remove")
-  @Override
   public ModelAndView getRemoveDocumentInstanceSection(@PathVariable UUID documentInstanceSectionId) {
     var documentInstanceSectionDto =
         documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(documentInstanceSectionId);

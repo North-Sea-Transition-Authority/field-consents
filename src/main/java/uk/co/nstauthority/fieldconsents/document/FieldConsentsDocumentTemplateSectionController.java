@@ -15,7 +15,6 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldControllerHelperService;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionConditionControllerHelperService;
-import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionController;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionControllerHelperService;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionDto;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionForm;
@@ -29,7 +28,7 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
 @Controller
 @RequestMapping("/document-templates/section/{documentTemplateSectionId}")
 @HasPermission(permissions = RolePermission.MANAGE_DOCUMENT_TEMPLATES)
-public class FieldConsentsDocumentTemplateSectionController implements DocumentTemplateSectionController {
+public class FieldConsentsDocumentTemplateSectionController {
 
   static final String ADD_PAGE_TITLE = "Add section";
   static final String ADD_SUBMIT_BUTTON_TEXT = "Add";
@@ -57,7 +56,6 @@ public class FieldConsentsDocumentTemplateSectionController implements DocumentT
   }
 
   @GetMapping("/add-before")
-  @Override
   public ModelAndView getAddDocumentTemplateSectionBefore(@PathVariable UUID documentTemplateSectionId) {
     var documentTemplateSectionDto =
         documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(documentTemplateSectionId);
@@ -91,7 +89,6 @@ public class FieldConsentsDocumentTemplateSectionController implements DocumentT
   }
 
   @GetMapping("/add-after")
-  @Override
   public ModelAndView getAddDocumentTemplateSectionAfter(@PathVariable UUID documentTemplateSectionId) {
     var documentTemplateSectionDto =
         documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(documentTemplateSectionId);
@@ -125,7 +122,6 @@ public class FieldConsentsDocumentTemplateSectionController implements DocumentT
   }
 
   @GetMapping("/add-subsection")
-  @Override
   public ModelAndView getAddDocumentTemplateSubsection(@PathVariable UUID documentTemplateSectionId) {
     var documentTemplateSectionDto =
         documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(documentTemplateSectionId);
@@ -208,7 +204,6 @@ public class FieldConsentsDocumentTemplateSectionController implements DocumentT
   }
 
   @GetMapping("/edit")
-  @Override
   public ModelAndView getEditDocumentTemplateSection(@PathVariable UUID documentTemplateSectionId) {
     var documentTemplateSectionDto =
         documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(documentTemplateSectionId);
@@ -268,7 +263,6 @@ public class FieldConsentsDocumentTemplateSectionController implements DocumentT
   }
 
   @GetMapping("/remove")
-  @Override
   public ModelAndView getRemoveDocumentTemplateSection(@PathVariable UUID documentTemplateSectionId) {
     var documentTemplateSectionDto =
         documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(documentTemplateSectionId);

@@ -7,9 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceDto;
-import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionControllerHelperService;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceService;
-import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldFormatter;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateDto;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateService;
 import uk.co.nstauthority.fieldconsents.application.Application;
@@ -23,22 +21,24 @@ public class FieldConsentsDocumentInstanceService {
   private static final String APPLICATION_DOCUMENT_INSTANCE_ITEM_TYPE = "APPLICATION";
   private static final Logger LOGGER = LoggerFactory.getLogger(FieldConsentsDocumentInstanceService.class);
 
+  private final FieldConsentsDocumentInstanceSectionControllerHelperService
+      fieldConsentsDocumentInstanceSectionControllerHelperService;
   private final DocumentTemplateService documentTemplateService;
   private final DocumentInstanceService documentInstanceService;
-  private final DocumentInstanceSectionControllerHelperService documentInstanceSectionControllerHelperService;
   private final ApplicationVersionService applicationVersionService;
   private final ApplicationAssetService applicationAssetService;
 
   FieldConsentsDocumentInstanceService(
+      FieldConsentsDocumentInstanceSectionControllerHelperService fieldConsentsDocumentInstanceSectionControllerHelperService,
       DocumentTemplateService documentTemplateService,
       DocumentInstanceService documentInstanceService,
-      DocumentInstanceSectionControllerHelperService documentInstanceSectionControllerHelperService,
       ApplicationVersionService applicationVersionService,
       ApplicationAssetService applicationAssetService
   ) {
+    this.fieldConsentsDocumentInstanceSectionControllerHelperService =
+        fieldConsentsDocumentInstanceSectionControllerHelperService;
     this.documentTemplateService = documentTemplateService;
     this.documentInstanceService = documentInstanceService;
-    this.documentInstanceSectionControllerHelperService = documentInstanceSectionControllerHelperService;
     this.applicationVersionService = applicationVersionService;
     this.applicationAssetService = applicationAssetService;
   }
@@ -96,15 +96,12 @@ public class FieldConsentsDocumentInstanceService {
       DocumentInstanceDto documentInstanceDto,
       PdfRenderingOptions pdfRenderingOptions
   ) {
+    var documentInstanceSectionsSummaryView = fieldConsentsDocumentInstanceSectionControllerHelperService
+        .getDocumentInstanceSectionsSummaryView(documentInstanceDto, false);
+
     Map<String, Object> templateModel = Map.of(
-        "documentInstanceSectionsSummaryView",
-        documentInstanceSectionControllerHelperService.getDocumentInstanceSectionsSummaryView(
-            documentInstanceDto,
-            FieldConsentsDocumentInstanceSectionController.class,
-            DocumentMailMergeFieldFormatter.noOp()
-        ),
-        "previewWatermark",
-        pdfRenderingOptions.previewWatermark()
+        "documentInstanceSectionsSummaryView", documentInstanceSectionsSummaryView,
+        "previewWatermark", pdfRenderingOptions.previewWatermark()
     );
 
     return documentInstanceService.renderPdf(documentInstanceDto, templateModel);

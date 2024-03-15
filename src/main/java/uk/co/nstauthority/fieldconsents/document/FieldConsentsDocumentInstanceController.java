@@ -13,12 +13,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceController;
-import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionControllerHelperService;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.authorisation.HasPermission;
-import uk.co.nstauthority.fieldconsents.document.mailmergefield.FieldConsentsDocumentMailMergeFieldFormatter;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
@@ -26,46 +23,40 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
 @Controller
 @RequestMapping("/document-instances")
 @HasPermission(permissions = RolePermission.PROCESS_FCS_APPLICATIONS)
-public class FieldConsentsDocumentInstanceController implements DocumentInstanceController {
+public class FieldConsentsDocumentInstanceController {
 
   private final FieldConsentsDocumentInstanceService fieldConsentsDocumentInstanceService;
+  private final FieldConsentsDocumentInstanceSectionControllerHelperService
+      fieldConsentsDocumentInstanceSectionControllerHelperService;
   private final DocumentInstanceService documentInstanceService;
   private final DocumentInstanceLinkingService documentInstanceLinkingService;
-  private final DocumentInstanceSectionControllerHelperService documentInstanceSectionControllerHelperService;
-  private final FieldConsentsDocumentMailMergeFieldFormatter documentMailMergeFieldFormatter;
   private final ApplicationService applicationService;
 
   FieldConsentsDocumentInstanceController(
       FieldConsentsDocumentInstanceService fieldConsentsDocumentInstanceService,
+      FieldConsentsDocumentInstanceSectionControllerHelperService fieldConsentsDocumentInstanceSectionControllerHelperService,
       DocumentInstanceService documentInstanceService,
       DocumentInstanceLinkingService documentInstanceLinkingService,
-      DocumentInstanceSectionControllerHelperService documentInstanceSectionControllerHelperService,
-      FieldConsentsDocumentMailMergeFieldFormatter documentMailMergeFieldFormatter,
       ApplicationService applicationService
   ) {
     this.fieldConsentsDocumentInstanceService = fieldConsentsDocumentInstanceService;
+    this.fieldConsentsDocumentInstanceSectionControllerHelperService =
+        fieldConsentsDocumentInstanceSectionControllerHelperService;
     this.documentInstanceService = documentInstanceService;
     this.documentInstanceLinkingService = documentInstanceLinkingService;
-    this.documentInstanceSectionControllerHelperService = documentInstanceSectionControllerHelperService;
-    this.documentMailMergeFieldFormatter = documentMailMergeFieldFormatter;
     this.applicationService = applicationService;
   }
 
   @GetMapping("/{documentInstanceId}")
-  @Override
   public ModelAndView getViewDocumentInstance(@PathVariable UUID documentInstanceId) {
     var documentInstanceDto = documentInstanceService.getDocumentInstanceDtoOrThrow(documentInstanceId);
 
+    var documentInstanceSectionsSummaryView = fieldConsentsDocumentInstanceSectionControllerHelperService
+        .getDocumentInstanceSectionsSummaryView(documentInstanceDto, true);
+
     return new ModelAndView("fcs/document/viewDocumentInstance")
         .addObject("pageTitle", documentInstanceDto.documentTemplateDto().title())
-        .addObject(
-            "documentInstanceSectionsSummaryView",
-            documentInstanceSectionControllerHelperService.getDocumentInstanceSectionsSummaryView(
-                documentInstanceDto,
-                FieldConsentsDocumentInstanceSectionController.class,
-                documentMailMergeFieldFormatter
-            )
-        )
+        .addObject("documentInstanceSectionsSummaryView", documentInstanceSectionsSummaryView)
         .addObject(
             "previewUrl",
             ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class).getPreviewDocumentInstance(documentInstanceId))
