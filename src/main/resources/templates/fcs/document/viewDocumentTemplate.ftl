@@ -66,7 +66,9 @@
         />
       </@fdsActionDropdown.actionDropdown>
 
-      <p class="govuk-body govuk-body__preserve-whitespace govuk-!-margin-top-4">${documentTemplateSectionSummaryView.content()!}</p>
+      <div class="govuk-body govuk-!-margin-top-4">
+        ${(documentTemplateSectionSummaryView.content()!)?no_esc}
+      </div>
     </#list>
   </@defaultPageWithSubNavigationContent>
 </@defaultPageWithSubNavigation>

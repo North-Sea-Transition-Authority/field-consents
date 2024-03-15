@@ -1,4 +1,5 @@
 <#include '../layout/layout.ftl'>
+<#include 'richTextEditor.ftl'>
 
 <#import '_mailMergeFieldSummaryDetails.ftl' as _mailMergeFieldSummaryDetails>
 
@@ -6,7 +7,7 @@
   <@fdsForm.htmlForm>
     <@fdsTextInput.textInput
       path="form.title"
-      labelText="Title"
+      labelText="Section title"
       hintText="This will be shown in the document sidebar"
     />
 
@@ -21,7 +22,7 @@
       />
     </#if>
 
-    <@fdsTextarea.textarea path="form.content" labelText="Text" rows = "12" />
+    <@richTextEditor path="form.content" labelText="Section content"/>
 
     <@fdsRadio.radioGroup path="form.numbered" labelText="Should this section be numbered?">
       <@fdsRadio.radioYes path="form.numbered" />
