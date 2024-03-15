@@ -67,7 +67,9 @@ public class IndustryCaseProcessingController {
   @HasApplicationStatus(statuses = {
       ApplicationVersionStatus.IN_PROGRESS,
       ApplicationVersionStatus.AWAITING_PAYMENT,
-      ApplicationVersionStatus.SUBMITTED
+      ApplicationVersionStatus.SUBMITTED,
+      ApplicationVersionStatus.COMPLETED,
+      ApplicationVersionStatus.WITHDRAWN
   })
   @HasApplicationPermission(permissions = {
       RolePermission.EDIT_FCS_APPLICATIONS,

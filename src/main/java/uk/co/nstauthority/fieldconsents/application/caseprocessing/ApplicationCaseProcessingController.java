@@ -34,7 +34,12 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.Reg
 
 @Controller
 @RequestMapping("applications/{applicationId}")
-@HasApplicationStatus(statuses = ApplicationVersionStatus.SUBMITTED)
+@HasApplicationStatus(statuses = {
+    ApplicationVersionStatus.IN_PROGRESS,
+    ApplicationVersionStatus.SUBMITTED,
+    ApplicationVersionStatus.COMPLETED,
+    ApplicationVersionStatus.WITHDRAWN
+})
 @HasApplicationPermission(permissions = {
     RolePermission.PROCESS_FCS_APPLICATIONS,
     RolePermission.ASSIGN_FCS_APPLICATIONS,

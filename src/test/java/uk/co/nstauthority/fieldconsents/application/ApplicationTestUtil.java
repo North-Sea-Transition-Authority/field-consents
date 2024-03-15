@@ -53,8 +53,24 @@ public class ApplicationTestUtil {
         false);
   }
 
-  private static Application getAwaitingPaymentApplicationWithType(ApplicationType applicationType) {
-    return new Application(APPLICATION_ID, applicationType, Instant.now(), USER_WUA_ID, 0, null);
+  public static ApplicationVersion getNewApplicationVersionWithTypeAndStatus(
+      ApplicationType applicationType,
+      ApplicationVersionStatus applicationVersionStatus) {
+
+    var newApplication = getNewApplicationWithType(applicationType);
+    return new ApplicationVersion(
+        APPLICATION_VERSION_ID,
+        newApplication,
+        APPLICATION_VERSION_NUMBER,
+        PRIMARY_OPERATOR_OU_ID_1,
+        CACHED_PRIMARY_OPERATOR_NAME_1,
+        Instant.now(),
+        USER_WUA_ID,
+        null,
+        null,
+        applicationVersionStatus,
+        null,
+        false);
   }
 
   public static ApplicationVersion getAwaitingPaymentApplicationVersionWithType(ApplicationType applicationType) {
@@ -115,5 +131,47 @@ public class ApplicationTestUtil {
     submittedApplicationVersion.setSubmittedDateTime(Instant.now().plus(3, ChronoUnit.DAYS));
     submittedApplicationVersion.setSubmittedByWuaId(USER_WUA_ID);
     return submittedApplicationVersion;
+  }
+
+  public static ApplicationVersion getWithdrawnApplicationVersionWithType(ApplicationType applicationType) {
+    var submittedApplication = getSubmittedApplicationWithType(applicationType);
+    var withdrawnApplicationVersion = new ApplicationVersion(
+        APPLICATION_VERSION_ID,
+        submittedApplication,
+        APPLICATION_VERSION_NUMBER,
+        PRIMARY_OPERATOR_OU_ID_1,
+        CACHED_PRIMARY_OPERATOR_NAME_1,
+        Instant.now().minusSeconds(60),
+        USER_WUA_ID,
+        Instant.now(),
+        USER_WUA_ID,
+        ApplicationVersionStatus.WITHDRAWN,
+        CASE_OFFICER_WUA_ID,
+        false);
+
+    withdrawnApplicationVersion.setSubmittedDateTime(Instant.now().plus(3, ChronoUnit.DAYS));
+    withdrawnApplicationVersion.setSubmittedByWuaId(USER_WUA_ID);
+    return withdrawnApplicationVersion;
+  }
+
+  public static ApplicationVersion getCompletedApplicationVersionWithType(ApplicationType applicationType) {
+    var submittedApplication = getSubmittedApplicationWithType(applicationType);
+    var completedApplicationVersion = new ApplicationVersion(
+        APPLICATION_VERSION_ID,
+        submittedApplication,
+        APPLICATION_VERSION_NUMBER,
+        PRIMARY_OPERATOR_OU_ID_1,
+        CACHED_PRIMARY_OPERATOR_NAME_1,
+        Instant.now().minusSeconds(60),
+        USER_WUA_ID,
+        Instant.now(),
+        USER_WUA_ID,
+        ApplicationVersionStatus.COMPLETED,
+        CASE_OFFICER_WUA_ID,
+        false);
+
+    completedApplicationVersion.setSubmittedDateTime(Instant.now().plus(3, ChronoUnit.DAYS));
+    completedApplicationVersion.setSubmittedByWuaId(USER_WUA_ID);
+    return completedApplicationVersion;
   }
 }

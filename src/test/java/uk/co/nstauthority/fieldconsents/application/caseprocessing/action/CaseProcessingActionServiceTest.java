@@ -172,6 +172,20 @@ class CaseProcessingActionServiceTest {
     getUserActionItems(applicationVersion, rolePermissions, caseStatusFlags, expectedActions.submittedActions());
   }
 
+  @ParameterizedTest
+  @MethodSource("getUserActionItems_arguments")
+  void getUserActionItems_withdrawn(Set<RolePermission> rolePermissions, Set<CaseStatusFlag> caseStatusFlags, ExpectedActions expectedActions) {
+    var applicationVersion = ApplicationTestUtil.getWithdrawnApplicationVersionWithType(PRODUCTION);
+    getUserActionItems(applicationVersion, rolePermissions, caseStatusFlags, expectedActions.withdrawnActions());
+  }
+
+  @ParameterizedTest
+  @MethodSource("getUserActionItems_arguments")
+  void getUserActionItems_completed(Set<RolePermission> rolePermissions, Set<CaseStatusFlag> caseStatusFlags, ExpectedActions expectedActions) {
+    var applicationVersion = ApplicationTestUtil.getCompletedApplicationVersionWithType(PRODUCTION);
+    getUserActionItems(applicationVersion, rolePermissions, caseStatusFlags, expectedActions.completedActions());
+  }
+
   private void getUserActionItems(
       ApplicationVersion applicationVersion,
       Set<RolePermission> rolePermissions,
@@ -227,7 +241,6 @@ class CaseProcessingActionServiceTest {
             Set.of(TECHNICAL_REVIEW_FCS_APPLICATIONS),
             Set.of(CaseStatusFlag.TECHNICAL_REVIEW_OPEN),
             ExpectedActions.newBuilder()
-                .inProgressActions(TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP)
                 .submittedActions(TECHNICAL_REVIEWER_SUBMIT_REVIEW, TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP)
                 .build()
         ),
@@ -309,7 +322,10 @@ class CaseProcessingActionServiceTest {
             Set.of(VIEW_FCS_CASE_PROCESSING_DOCUMENTS),
             Set.of(),
             ExpectedActions.newBuilder()
+                .inProgressActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES)
                 .submittedActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES)
+                .withdrawnActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES)
+                .completedActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES)
                 .build()
         ),
         arguments(
@@ -318,13 +334,14 @@ class CaseProcessingActionServiceTest {
             ExpectedActions.newBuilder()
                 .inProgressActions(REGULATOR_ADD_CASE_NOTE)
                 .submittedActions(REGULATOR_ADD_CASE_NOTE)
+                .withdrawnActions(REGULATOR_ADD_CASE_NOTE)
+                .completedActions(REGULATOR_ADD_CASE_NOTE)
                 .build()
         ),
         arguments(
             Set.of(TECHNICAL_REVIEW_FCS_APPLICATIONS),
             Set.of(CaseStatusFlag.TECHNICAL_REVIEW_OPEN),
             ExpectedActions.newBuilder()
-                .inProgressActions(TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP)
                 .submittedActions(TECHNICAL_REVIEWER_SUBMIT_REVIEW, TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP)
                 .build()
         ),
@@ -695,7 +712,9 @@ class CaseProcessingActionServiceTest {
   private record ExpectedActions(
       List<CaseProcessingActionItem> inProgressActions,
       List<CaseProcessingActionItem> awaitingPaymentActions,
-      List<CaseProcessingActionItem> submittedActions
+      List<CaseProcessingActionItem> submittedActions,
+      List<CaseProcessingActionItem> withdrawnActions,
+      List<CaseProcessingActionItem> completedActions
   ) {
 
     public static Builder newBuilder() {
@@ -707,6 +726,8 @@ class CaseProcessingActionServiceTest {
       private final List<CaseProcessingActionItem> inProgressActions = new ArrayList<>();
       private final List<CaseProcessingActionItem> awaitingPaymentActions = new ArrayList<>();
       private final List<CaseProcessingActionItem> submittedActions = new ArrayList<>();
+      private final List<CaseProcessingActionItem> withdrawnActions = new ArrayList<>();
+      private final List<CaseProcessingActionItem> completedActions = new ArrayList<>();
 
       public Builder inProgressActions(CaseProcessingActionItem... caseProcessingActionItems) {
         Collections.addAll(inProgressActions, caseProcessingActionItems);
@@ -723,8 +744,23 @@ class CaseProcessingActionServiceTest {
         return this;
       }
 
+      public Builder withdrawnActions(CaseProcessingActionItem... caseProcessingActionItems) {
+        Collections.addAll(withdrawnActions, caseProcessingActionItems);
+        return this;
+      }
+
+      public Builder completedActions(CaseProcessingActionItem... caseProcessingActionItems) {
+        Collections.addAll(completedActions, caseProcessingActionItems);
+        return this;
+      }
+
       public ExpectedActions build() {
-        return new ExpectedActions(inProgressActions, awaitingPaymentActions, submittedActions);
+        return new ExpectedActions(
+            inProgressActions,
+            awaitingPaymentActions,
+            submittedActions,
+            withdrawnActions,
+            completedActions);
       }
 
       private Builder() {

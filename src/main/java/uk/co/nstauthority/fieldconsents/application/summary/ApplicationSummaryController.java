@@ -10,10 +10,12 @@ import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePe
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.RESPOND_TO_CONSULTATION;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
@@ -58,8 +60,11 @@ public class ApplicationSummaryController {
     return switch (applicationVersion.getStatus()) {
       case IN_PROGRESS -> getInProgressModelAndView(applicationVersion, user);
       case AWAITING_PAYMENT -> getAwaitingPaymentModelAndView(applicationVersion, user);
-      case SUBMITTED -> getSubmittedModelAndView(applicationVersion, user);
-      default -> getSummaryModelAndView(applicationVersion);
+      case SUBMITTED, COMPLETED, WITHDRAWN -> getCaseProcessingModelAndView(applicationVersion, user);
+      default -> throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "Unsupported application status %s for summary".formatted(applicationVersion.getStatus())
+      );
     };
   }
 
@@ -75,7 +80,7 @@ public class ApplicationSummaryController {
     );
   }
 
-  private ModelAndView getSubmittedModelAndView(ApplicationVersion applicationVersion, ServiceUserDetail user) {
+  private ModelAndView getCaseProcessingModelAndView(ApplicationVersion applicationVersion, ServiceUserDetail user) {
     var applicationId = applicationVersion.getApplication().getId();
 
     if (isRegulatorCaseProcessingUser(user, applicationVersion)) {
@@ -109,17 +114,32 @@ public class ApplicationSummaryController {
 
   private ModelAndView getInProgressModelAndView(ApplicationVersion applicationVersion, ServiceUserDetail user) {
     var applicationId = applicationVersion.getApplication().getId();
+    var isUpdateVersion = applicationVersion.isUpdateVersion();
 
-    if (!isIndustryCaseProcessingUser(user, applicationVersion)) {
-      return getSummaryModelAndView(applicationVersion);
+    // Regulator users can see the case processing task list when an application update is in progress
+    if (isRegulatorCaseProcessingUser(user, applicationVersion) && isUpdateVersion) {
+      return ReverseRouter.redirect(on(ApplicationCaseProcessingController.class)
+          .caseProcessing(applicationId, null, null));
     }
 
-    if (applicationVersion.isUpdateVersion()) {
-      return ReverseRouter.redirect(on(IndustryCaseProcessingController.class)
-          .getIndustryCaseProcessing(applicationId, null, null));
+    // Consultee users can see the case processing tabs when an application update is in progress
+    // (only if they've been consulted on the case)
+    if (isConsulteeCaseProcessingUser(user, applicationVersion) && isUpdateVersion) {
+      return ReverseRouter.redirect(on(ConsulteeCaseProcessingController.class)
+          .caseProcessing(applicationId, null, null));
     }
 
-    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+    // Industry users can access the task-list of applications in progress and resume an update on
+    // application updates currently in progress
+    if (isIndustryCaseProcessingUser(user, applicationVersion)) {
+      if (isUpdateVersion) {
+        return ReverseRouter.redirect(on(IndustryCaseProcessingController.class)
+            .getIndustryCaseProcessing(applicationId, null, null));
+      }
+      return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+    }
+
+    return getSummaryModelAndView(applicationVersion);
   }
 
   private boolean isRegulatorCaseProcessingUser(ServiceUserDetail userDetail, ApplicationVersion applicationVersion) {

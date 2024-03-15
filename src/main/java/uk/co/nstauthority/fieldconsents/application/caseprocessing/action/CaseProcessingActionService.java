@@ -110,15 +110,17 @@ public class CaseProcessingActionService {
       Map.of(
           ApplicationVersionStatus.IN_PROGRESS,
           EnumSet.of(
-              CHANGE_ACE_STATUS,
               CASE_OFFICER_TAKE_OWNERSHIP,
               CASE_OFFICER_RELEASE_OWNERSHIP,
               CASE_OFFICER_ASSIGN_OWNERSHIP,
               CASE_OFFICER_REASSIGN_OWNERSHIP,
-              REGULATOR_ADD_CASE_NOTE,
-              TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP,
-              OPERATOR_UPDATE_APPLICATION
-          ),
+              TECHNICAL_REVIEWS,
+              CONSULTATIONS,
+              CHANGE_ACE_STATUS,
+              APPLICATION_UPDATES,
+              OPERATOR_UPDATE_APPLICATION,
+              REGULATOR_ADD_CASE_NOTE
+              ),
           ApplicationVersionStatus.AWAITING_PAYMENT,
           EnumSet.of(
               OPERATOR_PAY_AND_SUBMIT_APPLICATION,
@@ -154,6 +156,20 @@ public class CaseProcessingActionService {
               APPROVE_FOR_ISSUING,
               RETURN_TO_CASE_OFFICER,
               ISSUE_CONSENT
+          ),
+          ApplicationVersionStatus.COMPLETED,
+          EnumSet.of(
+              TECHNICAL_REVIEWS,
+              CONSULTATIONS,
+              APPLICATION_UPDATES,
+              REGULATOR_ADD_CASE_NOTE
+          ),
+          ApplicationVersionStatus.WITHDRAWN,
+          EnumSet.of(
+              TECHNICAL_REVIEWS,
+              CONSULTATIONS,
+              APPLICATION_UPDATES,
+              REGULATOR_ADD_CASE_NOTE
           )
       );
 

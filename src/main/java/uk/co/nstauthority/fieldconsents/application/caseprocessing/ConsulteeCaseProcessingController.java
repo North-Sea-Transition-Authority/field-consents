@@ -29,7 +29,12 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @Controller
 @RequestMapping("applications/{applicationId}/consultation-case-processing")
-@HasApplicationStatus(statuses = ApplicationVersionStatus.SUBMITTED)
+@HasApplicationStatus(statuses = {
+    ApplicationVersionStatus.IN_PROGRESS,
+    ApplicationVersionStatus.SUBMITTED,
+    ApplicationVersionStatus.COMPLETED,
+    ApplicationVersionStatus.WITHDRAWN
+})
 @HasApplicationPermission(permissions = {ALLOCATE_CONSULTATION, RESPOND_TO_CONSULTATION})
 public class ConsulteeCaseProcessingController {
 
