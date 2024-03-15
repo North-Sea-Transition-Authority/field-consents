@@ -199,9 +199,15 @@ AND fcd.fc_id IS NOT NULL; -- implies never submitted (don't migrate)
 UPDATE fcs_migration.application_versions
 SET current_case_owner =
   CASE
-  WHEN cam_wua_id IS NOT NULL THEN 'CONSENTS_AND_AUTHORISATIONS_MANAGER' -- assigned after the case officer
+  -- only set as CONSENTS_AND_AUTHORISATIONS_MANAGER for COMPLETED case
+  WHEN cam_wua_id IS NOT NULL AND status = 'COMPLETED' THEN 'CONSENTS_AND_AUTHORISATIONS_MANAGER' -- assigned after the case officer
   WHEN case_officer_wua_id IS NOT NULL THEN 'CASE_OFFICER'
   END;
+/
+-- remove cam_wua_id for cases that are with the case officer (this replicates the new system functionality)
+UPDATE fcs_migration.application_versions
+SET cam_wua_id = NULL
+WHERE current_case_owner = 'CASE_OFFICER';
 /
 
 
