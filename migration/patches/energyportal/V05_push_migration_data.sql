@@ -15,6 +15,7 @@
 --
 
 ---- audit tables (not migrating to but need clearing)
+--DELETE FROM "fcs"."application_consent_issuing_approvals_aud"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_consultations_aud"@fcs_postgres_db;
 --DELETE FROM "fcs"."file_upload_library_uploaded_files_aud"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_technical_reviews_aud"@fcs_postgres_db;
@@ -25,6 +26,7 @@
 --DELETE FROM "fcs"."notification_library_notifications_aud"@fcs_postgres_db;
 --
 ---- we aren't migrating to these table but the data still needs deleting
+--DELETE FROM "fcs"."application_consent_issuing_approvals"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_work_area_priorities"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_rationale"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_withdrawals"@fcs_postgres_db;
@@ -34,6 +36,7 @@
 --DELETE FROM "fcs"."notification_library_notifications"@fcs_postgres_db;
 --
 ---- delete data from tables we are migrating too
+--DELETE FROM "fcs"."application_other_legacy_data"@fcs_postgres_db;
 --DELETE FROM "fcs"."vent_long_term_years"@fcs_postgres_db;
 --DELETE FROM "fcs"."flare_long_term_years"@fcs_postgres_db;
 --DELETE FROM "fcs"."file_upload_library_uploaded_files"@fcs_postgres_db;
@@ -76,11 +79,11 @@
 --DELETE FROM "fcs"."applications"@fcs_postgres_db;
 
 -- work around DB link timeout issues from sqlnet.ora param SQLNET.INBOUND_CONNECT_TIMEOUT
-BEGIN
-  COMMIT;
-  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
-END;
-/
+--BEGIN
+--  COMMIT;
+--  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
+--END;
+--/
 
 --
 -- applications

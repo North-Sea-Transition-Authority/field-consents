@@ -297,18 +297,15 @@ ORDER BY a.id ASC
 WITH stage_assignments AS (
   SELECT /*+ materialize */
     xbc.primary_data_uref fcd_uref
-  , xa.assignee_uref
   , wua.id wua_id
-  , wua.login_id
-  , bs.stage_label
   , bs.end_datetime bs_end_datetime
   , CASE c.assignment
-    WHEN 'FC_R10_DTI_ADMIN' THEN 'CAM'
+    WHEN 'FC_R10_DTI_ADMIN' THEN 'CONSENTS_AND_AUTHORISATIONS_MANAGER'
     ELSE 'CASE_OFFICER'
     END assignment_role
   FROM bpmmgr.xview_business_contexts xbc
   JOIN bpmmgr.business_routine_contexts brc ON xbc.bc_id = brc.bc_id
-  JOIN bpmmgr.business_stages bs ON brc.id = bs.brc_id --AND bs.end_datetime IS NULL
+  JOIN bpmmgr.business_stages bs ON brc.id = bs.brc_id
   JOIN bpmmgr.xview_bpd_stages xbpds ON xbpds.stage_label = bs.stage_label AND xbpds.bp_id = bs.bp_id AND xbpds.stage_classification = 'TOP-LEVEL'
   JOIN bpmmgr.business_processes bp ON bp.id = bs.bp_id
   JOIN bpmmgr.xview_bpd_stage_clocks c ON bs.stage_label = c.stage_label -- if a stage has multiple CLOCK assignments defined then this adds cardinality
@@ -323,7 +320,7 @@ WITH stage_assignments AS (
 , ranked_stage_assignments AS (
   SELECT
     sa.*
-  , RANK () OVER (PARTITION BY sa.fcd_uref, sa.assignment_role ORDER BY sa.bs_end_datetime DESC NULLS FIRST) rank_rownum
+  , RANK () OVER (PARTITION BY sa.fcd_uref, sa.assignment_role ORDER BY sa.bs_end_datetime DESC NULLS FIRST) rank_rownum -- unended stages are at the top
   FROM stage_assignments sa
 )
 , tip_assignments AS (
@@ -332,11 +329,9 @@ WITH stage_assignments AS (
   FROM ranked_stage_assignments rsa
   WHERE rsa.rank_rownum = 1
 )
-, t AS (
 SELECT
-  fcd.id
-, fcd.fc_id
-, ap.id application_no
+  fcd.id -- this is using the fcd_id as the app version id
+, ap.id application_id
 , fcd.version_no
 , xfcd.operator_ou_id primary_operator_ou_id
 , ou.name cached_primary_operator_name
@@ -346,17 +341,22 @@ SELECT
   -- CANCELLED CURRENT
   --  - if fc_id empty     => a cancelled initial version that was never submitted (don't migrate)
   --  - if fc_id non-empty => a cancelled version that was submitted and then withdrawn (migrate to WITHDRAWN)
-  WHEN fcd.status = 'CANCELLED' AND fcd.version_status = 'CURRENT' AND fcd.fc_id IS NOT NULL THEN 'WITHDRAWN'
+  WHEN fcd.status = 'CANCELLED' AND fcd.version_status = 'CURRENT' THEN 'WITHDRAWN'
   -- RECEIVEDBYBERR ARCHIVED - a submitted version that has been superceeded
   -- RECEIVEDBYBERR CURRENT - the tip submitted version
   WHEN fcd.status = 'RECEIVEDBYBERR' THEN 'SUBMITTED'
   -- COMPLETED CURRENT - the tip version row - consented
   WHEN fcd.status = 'COMPLETED' THEN 'COMPLETED'
-  END new_status
+  END status
 , fcd.created_date created_date_time
 , fcd.created_by created_by_wua_id
 , fcd.submitted_date submitted_date_time
-, fcd.submitted_by submitted_by_wua_id
+-- cater for error in the submitted_by user which is set to 1 for any apps that are paid electronically
+, CASE
+  WHEN to_number(fcd.submitted_by) = 1 THEN
+    coalesce(ptd.submitted_by_wua_id, to_number(fcd.submitted_by))
+  ELSE to_number(fcd.submitted_by)
+  END submitted_by_wua_id
 , (
     SELECT ta.wua_id
     FROM tip_assignments ta
@@ -367,34 +367,50 @@ SELECT
     SELECT ta.wua_id
     FROM tip_assignments ta
     WHERE ta.fcd_uref = fcd.id||'FC'
-    AND ta.assignment_role = 'CAM'
+    AND ta.assignment_role = 'CONSENTS_AND_AUTHORISATIONS_MANAGER'
   ) cam_wua_id
-, fcd.status
-, fcd.version_status
-, fcd.variation_no
-, xfcd.ref_number
---DISTINCT fcd.status, fcd.version_status
---, xfcd.*
---count(*)
+, 'true' migrated
+--, ptd.*
+--, to_number(fcd.submitted_by) old_submitted_by_wua_id
+--, ap.id
+--, ap.fc_id
 FROM envmgr.field_consent_details fcd
 JOIN fcs_migration.applications ap ON ap.fc_id = fcd.fc_id AND ap.variation_no = fcd.variation_no  
 JOIN envmgr.xview_field_consent_details xfcd ON xfcd.fcd_id = fcd.id
 JOIN decmgr.xview_organisation_units ou ON ou.organ_id = xfcd.operator_ou_id
+LEFT JOIN securemgr.pay_transaction_details ptd ON ptd.transaction_uref = fcd.id||'FC' AND ptd.status = 'COMPLETE' AND ptd.record_status = 'CURRENT'
 WHERE (fcd.status, fcd.version_status) NOT IN (
   ('INPROGRESS', 'PENDING') -- an unsubmitted application update (for any version/variation) (don't migrate)
 , ('INPROGRESS', 'CURRENT') -- an unsubmitted application (version 1 variation 0) (don't migrate)
 )
 AND fcd.fc_id IS NOT NULL -- implies never submitted (don't migrate)
-ORDER BY fcd.fc_id ASC, fcd.id ASC
-)
-SELECT
---DISTINCT t.new_status, t.status, t.version_status
-t.*
-FROM t
---WHERE t.new_status IN ('WITHDRAWN')
---OR t.new_status IS NULL
---AND t.application_id IS NULL
+--AND to_number(fcd.submitted_by) = 1
+--AND ptd.submitted_by_wua_id IS NOT NULL
 /
+
+--SELECT av.*
+--, (
+--  SELECT ptd.submitted_by_wua_id
+--  FROM securemgr.pay_transaction_details ptd
+--  WHERE ptd.transaction_uref = av.id||'FC'
+--  AND ptd.status = 'COMPLETE'
+--  AND ptd.record_status = 'CURRENT'
+--  ) new_submitted_by_wua_id
+--FROM fcs_migration.application_versions av
+--WHERE av.submitted_by_wua_id = 1
+--/
+--UPDATE fcs_migration.application_versions av
+--SET av.submitted_by_wua_id = (
+--  SELECT ptd.submitted_by_wua_id
+--  FROM securemgr.pay_transaction_details ptd
+--  WHERE ptd.transaction_uref = av.id||'FC'
+--  AND ptd.status = 'COMPLETE'
+--  AND ptd.record_status = 'CURRENT'
+--)
+--WHERE av.submitted_by_wua_id = 1
+--/
+
+
 SELECT -- DISTINCT fcd.status, fcd.version_status
   fcd.id
 , fcd.fc_id

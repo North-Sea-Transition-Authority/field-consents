@@ -151,7 +151,7 @@ WITH stage_assignments AS (
 )
 SELECT
   fcd.id -- this is using the fcd_id as the app version id
-, ap.id application_no
+, ap.id application_id
 , fcd.version_no
 , xfcd.operator_ou_id primary_operator_ou_id
 , ou.name cached_primary_operator_name
@@ -171,7 +171,12 @@ SELECT
 , fcd.created_date created_date_time
 , fcd.created_by created_by_wua_id
 , fcd.submitted_date submitted_date_time
-, fcd.submitted_by submitted_by_wua_id
+-- cater for error in the submitted_by user which is set to 1 for any apps that are paid electronically
+, CASE
+  WHEN to_number(fcd.submitted_by) = 1 THEN
+    coalesce(ptd.submitted_by_wua_id, to_number(fcd.submitted_by))
+  ELSE to_number(fcd.submitted_by)
+  END submitted_by_wua_id
 , (
     SELECT ta.wua_id
     FROM tip_assignments ta
@@ -189,6 +194,7 @@ FROM envmgr.field_consent_details fcd
 JOIN fcs_migration.applications ap ON ap.fc_id = fcd.fc_id AND ap.variation_no = fcd.variation_no  
 JOIN envmgr.xview_field_consent_details xfcd ON xfcd.fcd_id = fcd.id
 JOIN decmgr.xview_organisation_units ou ON ou.organ_id = xfcd.operator_ou_id
+LEFT JOIN securemgr.pay_transaction_details ptd ON ptd.transaction_uref = fcd.id||'FC' AND ptd.status = 'COMPLETE' AND ptd.record_status = 'CURRENT'
 WHERE (fcd.status, fcd.version_status) NOT IN (
   ('INPROGRESS', 'PENDING') -- an unsubmitted application update (for any version/variation) (don't migrate)
 , ('INPROGRESS', 'CURRENT') -- an unsubmitted application (version 1 variation 0) (don't migrate)
