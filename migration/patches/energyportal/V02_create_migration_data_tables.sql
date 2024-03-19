@@ -747,6 +747,7 @@ CREATE TABLE fcs_migration.application_case_notes (
 , added_date_time        DATE NOT NULL
 , case_note_text         CLOB NOT NULL
 , case_note_text_html    CLOB NOT NULL
+, intention_detail_id    INTEGER NOT NULL
 );
 
 --

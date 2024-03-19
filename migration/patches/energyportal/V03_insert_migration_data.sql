@@ -1760,6 +1760,7 @@ INSERT INTO fcs_migration.application_case_notes (
 , added_date_time
 , case_note_text
 , case_note_text_html
+, intention_detail_id
 )
 SELECT
   fcs_migration.application_case_note_id_seq.nextval id
@@ -1768,10 +1769,19 @@ SELECT
 , fci.created_datetime added_date_time
 , fci.intention_text case_note_text
 , fci.intention_text_html case_note_text_html
+, fci.id_id
 FROM fcs_migration.application_versions av
 JOIN fcs_migration.field_consent_intentions fci ON fci.fcd_id = av.id
-WHERE fci.class_type = 'FC_GENERAL_NOTE';
+-- migrate all intentions to case notes apart from those used to create the application updates
+WHERE (fci.class_type, fci.severity) IN (
+  ('FC_GENERAL_NOTE', 'NONE')
+, ('FC_REVIEW_DECISION', 'APPROVE')
+, ('FC_SUBMISSION', 'NONE')
+, ('FC_SUBMISSION_APPROVAL', 'NONE')
+, ('FC_SUBMISSION_EMAIL', 'NONE')
+);
 /
+
 
 --
 -- application_updates

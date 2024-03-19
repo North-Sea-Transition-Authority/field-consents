@@ -56,11 +56,11 @@
 --FC_SUBMISSION
 --FC_SUBMISSION_APPROVAL
 --FC_SUBMISSION_EMAIL
-SELECT DISTINCT xid.class_type--, xid.clause_type, xid.status
+SELECT DISTINCT xid.class_type, xid.severity--, xid.clause_type--, xid.status
 FROM bpmmgr.xview_intention_details xid
 WHERE xid.clause_type = 'FIELD_CONSENTS'
 AND xid.end_datetime IS NULL
-ORDER BY 1 --2, 3
+ORDER BY 1, 2--, 3
 /
 
 
@@ -79,7 +79,7 @@ ORDER BY 1 --2, 3
 --DONE application_flags
 --NA application_rationale (LOCATION assets migrated but we don't have the data for this table)
 
---PARTIALLY DONE (check TODOs) application_eia_directions
+--DONE application_eia_directions
 --DONE application_supporting_information
 
 --DONE long_term_production_years
@@ -939,8 +939,6 @@ WHERE av.submitted_date_time IS NOT NULL;
 --
 -- application_eia_directions
 --
-
--- TODO there is data for Flare and Vent apps but this section/question doesn't appear on the new system unless it's a production app
 SELECT fcd.id, fcd.fc_id, fcd.application_type
 , eia.*
 FROM fcs_migration.application_versions av
@@ -2106,6 +2104,39 @@ JOIN fcs_migration.field_consent_intentions fci ON fci.fcd_id = av.id
 WHERE fci.class_type = 'FC_GENERAL_NOTE'
 ORDER BY fci.in_id DESC, fci.id_id DESC
 /
+
+SELECT
+--  fci.fcd_id application_version_id
+--, fci.created_by_wua_id
+--, fci.created_datetime
+--, fci.intention_text case_note_text
+--, fci.intention_text_html case_note_text_html
+  fci.*
+--, xtcd.title
+--, CASE fci.class_type
+--  WHEN 'FC_REVIEW_DECISION' THEN 'Review Decision:'||CHR(10)
+--  WHEN 'FC_SUBMISSION' THEN 'Submission:'||CHR(10)
+--  WHEN 'FC_SUBMISSION_APPROVAL' THEN 'Submission Approval:'||CHR(10)
+--  WHEN 'FC_SUBMISSION_EMAIL' THEN 'Submission Email:'||CHR(10)
+--  END new_title
+--DISTINCT fci.class_type, fci.severity
+, app.*
+FROM fcs_migration.application_versions av
+JOIN fcs_migration.applications app ON app.id = av.application_id
+JOIN fcs_migration.field_consent_intentions fci ON fci.fcd_id = av.id
+--JOIN bpmmgr.xview_template_clause_details xtcd ON xtcd.clause_type_id = fci.clause_type AND xtcd.class = fci.class_type AND xtcd.default_severity = fci.severity
+WHERE (fci.class_type, fci.severity) IN (
+  ('FC_GENERAL_NOTE', 'NONE')
+, ('FC_REVIEW_DECISION', 'APPROVE')
+, ('FC_SUBMISSION', 'NONE')
+, ('FC_SUBMISSION_APPROVAL', 'NONE')
+, ('FC_SUBMISSION_EMAIL', 'NONE')
+)
+--AND fci.class_type = 'FC_SUBMISSION_EMAIL'
+ORDER BY fci.in_id DESC, fci.id_id DESC
+/
+
+
 --SELECT
 --  'CHR191:'||CHR(191)||CHR(10)||
 --  'CHR183:'||CHR(183)||CHR(10)||
@@ -2238,12 +2269,12 @@ SELECT
 , fci.created_datetime requested_date_time
 , fci.intention_text request_text
 , fci.intention_text_html request_text_html
-, fci.created_datetime deadline_date_time -- TODO set as the request date or leave null?
+, NULL deadline_date_time
 , avnext.submitted_by_wua_id responded_by_wua_id
 , avnext.submitted_date_time responded_date_time
 , null response_text
 , null response_type
-, 'CLOSED' application_update_status -- TODO best to mark all closed I think
+, 'CLOSED' application_update_status
 , avnext.id response_application_version_id
 --a.*, av.*
 --, avnext.*
@@ -2476,7 +2507,7 @@ LEFT JOIN aac_wuas ON aac_wuas.aac_id = aac.id
 --JOIN decmgr.resource_member_current_simple rmc ON rmc.res_id = ru.res_id AND rmc.role_name = 'ELECTRONIC_ADVISOR_AUTO' -- this could add cardinality - check that all the field consents aac team have just one ELECTRONIC_ADVISOR_AUTO on live / dev Done
 WHERE rid.status_control = 'C'
 -- this is version 4 what happens when we do an update and get version 5? do the reviews get copied forward / repointed to the new FC uref (this is the detail id!) ?
--- ah, the uref for the rid gets repointed at the new uref! so we loose the context of which app version the review was requested on ummmmm TODO need to think about this 
+-- ah, the uref for the rid gets repointed at the new uref! so we loose the context of which app version the review was requested on (just get the tip app version at the time of the review)
 --AND rid.primary_data_uref = '4326FC'
 ORDER BY av.id DESC, xrad.review_delivered_date DESC
 /
@@ -2540,7 +2571,7 @@ JOIN bpmmgr.advisory_communities ac ON ac.ab_id = ab.id
 JOIN bpmmgr.advice_advisory_communities aac ON aac.ac_id = ac.id
 JOIN decmgr.resource_usages_current ru ON ru.uref = aac.id||'AAC' -- AND (xrad.review_delivered_date BETWEEN ru.start_datetime AND coalesce(ru.end_datetime, sysdate))
 LEFT JOIN decmgr.xview_resource_members_history mh ON mh.res_id = ru.res_id AND mh.role_name = 'ELECTRONIC_ADVISOR_AUTO' AND mh.status_control = 'C'
---LEFT JOIN decmgr.resource_member_current_simple rmc ON rmc.res_id = ru.res_id AND rmc.role_name = 'ELECTRONIC_ADVISOR_AUTO' -- TODO this could add cardinality - check that all the field consents aac team have just one ELECTRONIC_ADVISOR_AUTO on live / dev
+--LEFT JOIN decmgr.resource_member_current_simple rmc ON rmc.res_id = ru.res_id AND rmc.role_name = 'ELECTRONIC_ADVISOR_AUTO' -- this could add cardinality - have checked that all the field consents aac team have just one ELECTRONIC_ADVISOR_AUTO on live / dev etc
 WHERE aac.advice_type = 'FIELD_CONSENTS'
 --GROUP BY aac.id
 ORDER BY aac.id
