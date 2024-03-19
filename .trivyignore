@@ -14,3 +14,7 @@ CVE-2023-3635
 CVE-2023-44483
 # org.bitbucket.b_c:jose4j (app.jar)
 CVE-2023-51775
+# org.springframework.security:spring-security-core
+CVE-2024-22257
+# ring-web
+CVE-2024-22259

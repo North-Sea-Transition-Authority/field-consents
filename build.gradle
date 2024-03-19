@@ -55,7 +55,7 @@ dependencies {
   implementation 'org.apache.commons:commons-lang3:3.12.0'
   implementation 'commons-collections:commons-collections:3.2.2'
 
-  implementation 'uk.co.fivium.energyportalapi:client:develop-SNAPSHOT'
+  implementation 'uk.co.fivium.energyportalapi:client:v8.1.0'
   implementation 'uk.co.fivium.digital.energyportalteamaccesslibrary:energy-portal-team-access-libray:develop-SNAPSHOT'
   implementation 'uk.co.fivium.digitalformlibrary:digital-form-library:develop-SNAPSHOT'
   implementation "uk.co.fivium:file-upload-spring-boot-starter:${fileUploadLibraryVersion}"
