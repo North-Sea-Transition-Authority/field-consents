@@ -8,6 +8,8 @@ import static uk.co.nstauthority.fieldconsents.application.workareapriority.Appl
 import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
@@ -24,6 +26,8 @@ public class ApplicationWithdrawalService {
   static final String OPEN_WITHDRAWAL_FOUND_FOR_APPLICATION_WITH_ID =
       "A withdrawal request has already been submitted for the application with id %s";
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationWithdrawalService.class);
+
   private final Clock clock;
 
   private final ApplicationVersionService applicationVersionService;
@@ -32,14 +36,18 @@ public class ApplicationWithdrawalService {
 
   private final ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
 
+  private final ApplicationWithdrawalEmailService applicationWithdrawalEmailService;
+
   public ApplicationWithdrawalService(Clock clock,
                                       ApplicationVersionService applicationVersionService,
                                       ApplicationWithdrawalRepository applicationWithdrawalRepository,
-                                      ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService) {
+                                      ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService,
+                                      ApplicationWithdrawalEmailService applicationWithdrawalEmailService) {
     this.clock = clock;
     this.applicationVersionService = applicationVersionService;
     this.applicationWithdrawalRepository = applicationWithdrawalRepository;
     this.applicationWorkAreaPriorityService = applicationWorkAreaPriorityService;
+    this.applicationWithdrawalEmailService = applicationWithdrawalEmailService;
   }
 
   public boolean openWithdrawalExists(ApplicationVersion applicationVersion) {
@@ -71,6 +79,17 @@ public class ApplicationWithdrawalService {
         OPERATOR_WITHDRAWAL_REQUEST, INDUSTRY);
     applicationWorkAreaPriorityService.prioritiseApplicationInWorkArea(applicationVersion, user,
         OPERATOR_WITHDRAWAL_REQUEST, REGULATOR);
+
+    try {
+      applicationWithdrawalEmailService.sendApplicationWithdrawalRequestEmail(applicationWithdrawal);
+    } catch (Exception exception) {
+      LOGGER.error("""
+              An attempt to send an application withdrawal request notification \
+              by user with wuaId [{}] for application version with id [{}] failed. \
+              Note: this hasn't prevented the application withdrawal request being saved.
+              """,
+          user.wuaId(), applicationVersion.getId(), exception);
+    }
   }
 
   private Optional<ApplicationWithdrawal> findOpenApplicationWithdrawal(ApplicationVersion applicationVersion) {
@@ -116,6 +135,17 @@ public class ApplicationWithdrawalService {
           user,
           REGULATOR_REJECT_WITHDRAWAL_REQUEST, INDUSTRY
       );
+    }
+
+    try {
+      applicationWithdrawalEmailService.sendApplicationWithdrawalResponseEmail(applicationWithdrawal);
+    } catch (Exception exception) {
+      LOGGER.error("""
+              An attempt to send an application withdrawal response notification \
+              by user with wuaId [{}] for application version with id [{}] failed. \
+              Note: this hasn't prevented the application withdrawal response being saved.
+              """,
+          user.wuaId(), applicationVersion.getId(), exception);
     }
   }
 }

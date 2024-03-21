@@ -10,6 +10,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.consul
 import static uk.co.nstauthority.fieldconsents.email.EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME;
 import static uk.co.nstauthority.fieldconsents.email.EmailService.REQUESTER_USER_MERGE_FIELD_NAME;
 import static uk.co.nstauthority.fieldconsents.email.EmailService.REQUEST_DEADLINE_MERGE_FIELD_NAME;
+import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.APPLICATION_VERSION_DOMAIN_REFERENCE;
 import static uk.co.nstauthority.fieldconsents.formatting.DateUtils.DATE_TIME;
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.ENERGY_PORTAL_USER_DTO;
 
@@ -85,8 +86,6 @@ class ConsultationEmailServiceTest {
       "06789",
       Set.of(OpredTeamRole.ALLOCATOR)
   );
-
-  private static final String APPLICATION_VERSION_DOMAIN_REFERENCE = "APPLICATION_VERSION";
 
   @Mock
   private EmailService emailService;

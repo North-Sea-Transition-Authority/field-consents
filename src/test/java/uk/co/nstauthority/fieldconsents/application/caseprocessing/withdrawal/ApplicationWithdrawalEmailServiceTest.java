@@ -1,19 +1,23 @@
-package uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment;
+package uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.ENERGY_PORTAL_USER_1;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalEmailService.CASE_MANAGERS_RECIPIENT_DISPLAY_NAME;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalTestUtil.getOpenApplicationWithdrawal;
 import static uk.co.nstauthority.fieldconsents.email.EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME;
-import static uk.co.nstauthority.fieldconsents.email.EmailService.SENDER_IDENTIFIER_MERGE_FIELD_NAME;
 import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.APPLICATION_VERSION_DOMAIN_REFERENCE;
-import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.CAM_USER;
 import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.CASE_MANAGER_1;
 import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.CASE_MANAGER_2;
 import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.CASE_OFFICER;
 import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.CASE_OFFICER_EPU;
+import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.PRIMARY_OPERATOR_NAME_MAIL_MERGE_FIELD;
 import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.TEAM_MEMBER_VIEW_CASE_MANAGER_1;
 import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.TEAM_MEMBER_VIEW_CASE_MANAGER_2;
 
@@ -40,18 +44,23 @@ import uk.co.nstauthority.fieldconsents.email.EmailService;
 import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipient;
 import uk.co.nstauthority.fieldconsents.email.GovukNotifyTemplate;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @ExtendWith(MockitoExtension.class)
-class CaseAssignmentEmailServiceTest {
+class ApplicationWithdrawalEmailServiceTest {
 
   @Mock
   private EmailService emailService;
 
   @Mock
   private TeamMemberViewService teamMemberViewService;
+
+  @Mock
+  private OrganisationUnitService organisationUnitService;
 
   @Mock
   private EnergyPortalUserService energyPortalUserService;
@@ -65,30 +74,42 @@ class CaseAssignmentEmailServiceTest {
   @Captor
   private ArgumentCaptor<DomainReference>  domainReferenceCaptor;
 
-  private CaseAssignmentEmailService caseAssignmentEmailService;
+  private ApplicationWithdrawalEmailService applicationWithdrawalEmailService;
 
   private ApplicationVersion applicationVersion;
+
+  private OrganisationUnitJson primaryOperator;
+
+  private ApplicationWithdrawal applicationWithdrawal;
 
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
-    caseAssignmentEmailService = new CaseAssignmentEmailService(
+    applicationWithdrawalEmailService = new ApplicationWithdrawalEmailService(
         emailService,
         teamMemberViewService,
-        energyPortalUserService
+        energyPortalUserService,
+        organisationUnitService
     );
+    primaryOperator = new OrganisationUnitJson(applicationVersion.getPrimaryOperatorOuId(), applicationVersion.getCachedPrimaryOperatorName());
+    applicationWithdrawal = getOpenApplicationWithdrawal(applicationVersion);
   }
 
   @Test
-  void sendCaseAssignmentEmail_whenAssignedToCaseOfficer() {
-    when(emailService.getTemplate(GovukNotifyTemplate.CASE_ASSIGNED_TO_CASE_OFFICER, applicationVersion))
-        .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
+  void sendApplicationWithdrawalRequestEmail_whenCaseOfficerIsCurrentOwner() {
+    applicationVersion.setCaseOfficerWuaId(CASE_OFFICER.wuaId());
 
-    caseAssignmentEmailService.sendCaseAssignmentEmail(
-        applicationVersion,
-        GovukNotifyTemplate.CASE_ASSIGNED_TO_CASE_OFFICER,
-        FieldConsentsEmailRecipient.from(CASE_OFFICER),
-        CASE_MANAGER_1);
+    when(organisationUnitService.getOrganisationUnitByIdOrFallback(
+        eq(applicationVersion.getPrimaryOperatorOuId()),
+        anyString(),
+        eq(applicationVersion.getCachedPrimaryOperatorName()))
+    ).thenReturn(primaryOperator);
+
+    when(emailService.getTemplate(GovukNotifyTemplate.APPLICATION_WITHDRAWAL_REQUEST, applicationVersion))
+        .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
+    when(energyPortalUserService.getByWuaId(any())).thenReturn(CASE_OFFICER_EPU);
+
+    applicationWithdrawalEmailService.sendApplicationWithdrawalRequestEmail(applicationWithdrawal);
 
     verify(emailService).sendEmail(
         templateCaptor.capture(),
@@ -99,12 +120,12 @@ class CaseAssignmentEmailServiceTest {
     assertThat(templateCaptor.getValue().getMailMergeFields())
         .extracting(MailMergeField::name, MailMergeField::value)
         .containsOnly(
-            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, CASE_OFFICER.displayName()),
-            tuple(SENDER_IDENTIFIER_MERGE_FIELD_NAME, CASE_MANAGER_1.displayName())
+            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, CASE_OFFICER_EPU.displayName()),
+            tuple(PRIMARY_OPERATOR_NAME_MAIL_MERGE_FIELD, primaryOperator.name())
         );
 
     assertThat(emailRecipientCaptor.getValue().getEmailAddress())
-        .isEqualTo(FieldConsentsEmailRecipient.from(CASE_OFFICER).getEmailAddress());
+        .isEqualTo(FieldConsentsEmailRecipient.from(CASE_OFFICER_EPU).getEmailAddress());
 
     assertThat(domainReferenceCaptor.getValue().getDomainId())
         .isEqualTo(applicationVersion.getId().toString());
@@ -114,61 +135,41 @@ class CaseAssignmentEmailServiceTest {
   }
 
   @Test
-  void sendCaseAssignmentEmail_whenAssignedToCamUser() {
-    when(emailService.getTemplate(GovukNotifyTemplate.CASE_ASSIGNED_TO_CAM_USER, applicationVersion))
+  void sendApplicationWithdrawalRequestEmail_whenCaseOfficerIsNotAssigned_withNoCaseManagersToNotify() {
+    when(organisationUnitService.getOrganisationUnitByIdOrFallback(
+        eq(applicationVersion.getPrimaryOperatorOuId()),
+        anyString(),
+        eq(applicationVersion.getCachedPrimaryOperatorName()))
+    ).thenReturn(primaryOperator);
+
+    when(emailService.getTemplate(GovukNotifyTemplate.APPLICATION_WITHDRAWAL_REQUEST, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
-    caseAssignmentEmailService.sendCaseAssignmentEmail(
-        applicationVersion,
-        GovukNotifyTemplate.CASE_ASSIGNED_TO_CAM_USER,
-        FieldConsentsEmailRecipient.from(CAM_USER),
-        CASE_OFFICER);
-
-    verify(emailService).sendEmail(
-        templateCaptor.capture(),
-        emailRecipientCaptor.capture(),
-        domainReferenceCaptor.capture()
-    );
-
-    assertThat(templateCaptor.getValue().getMailMergeFields())
-        .extracting(MailMergeField::name, MailMergeField::value)
-        .containsOnly(
-            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, CAM_USER.displayName()),
-            tuple(SENDER_IDENTIFIER_MERGE_FIELD_NAME, CASE_OFFICER.displayName())
-        );
-
-    assertThat(emailRecipientCaptor.getValue().getEmailAddress())
-        .isEqualTo(FieldConsentsEmailRecipient.from(CAM_USER).getEmailAddress());
-
-    assertThat(domainReferenceCaptor.getValue().getDomainId())
-        .isEqualTo(applicationVersion.getId().toString());
-
-    assertThat(domainReferenceCaptor.getValue().getDomainType())
-        .isEqualTo(APPLICATION_VERSION_DOMAIN_REFERENCE);
-  }
-
-  @Test
-  void sendCaseOwnershipReleasedEmail_withNoCaseManagersToNotify() {
-    when(emailService.getTemplate(GovukNotifyTemplate.CASE_RELEASED_BY_CASE_OFFICER, applicationVersion))
-        .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
     when(teamMemberViewService
         .getTeamMemberViewsWithRolesForTeamType(TeamType.REGULATOR, Set.of(RegulatorTeamRole.CASE_MANAGER)))
         .thenReturn(Collections.emptyList());
 
-    caseAssignmentEmailService.sendCaseOwnershipReleasedEmail(applicationVersion, CASE_OFFICER);
+    applicationWithdrawalEmailService.sendApplicationWithdrawalRequestEmail(applicationWithdrawal);
 
     verify(emailService, never()).sendEmail(any(), any(), any());
   }
 
   @Test
-  void sendCaseOwnershipReleasedEmail_withOneCaseManagerToNotify() {
-    when(emailService.getTemplate(GovukNotifyTemplate.CASE_RELEASED_BY_CASE_OFFICER, applicationVersion))
+  void sendApplicationWithdrawalRequestEmail_whenCaseOfficerIsNotAssigned_withOneCaseManagerToNotify() {
+    when(organisationUnitService.getOrganisationUnitByIdOrFallback(
+        eq(applicationVersion.getPrimaryOperatorOuId()),
+        anyString(),
+        eq(applicationVersion.getCachedPrimaryOperatorName()))
+    ).thenReturn(primaryOperator);
+
+    when(emailService.getTemplate(GovukNotifyTemplate.APPLICATION_WITHDRAWAL_REQUEST, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
+
     when(teamMemberViewService
         .getTeamMemberViewsWithRolesForTeamType(TeamType.REGULATOR, Set.of(RegulatorTeamRole.CASE_MANAGER)))
         .thenReturn(List.of(TEAM_MEMBER_VIEW_CASE_MANAGER_1));
 
-    caseAssignmentEmailService.sendCaseOwnershipReleasedEmail(applicationVersion, CASE_OFFICER);
+    applicationWithdrawalEmailService.sendApplicationWithdrawalRequestEmail(applicationWithdrawal);
 
     verify(emailService).sendEmail(
         templateCaptor.capture(),
@@ -179,8 +180,8 @@ class CaseAssignmentEmailServiceTest {
     assertThat(templateCaptor.getValue().getMailMergeFields())
         .extracting(MailMergeField::name, MailMergeField::value)
         .containsOnly(
-            tuple(SENDER_IDENTIFIER_MERGE_FIELD_NAME, CASE_OFFICER.displayName()),
-            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, CASE_MANAGER_1.displayName())
+            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, CASE_MANAGERS_RECIPIENT_DISPLAY_NAME),
+            tuple(PRIMARY_OPERATOR_NAME_MAIL_MERGE_FIELD, primaryOperator.name())
         );
 
     assertThat(emailRecipientCaptor.getValue().getEmailAddress())
@@ -194,14 +195,21 @@ class CaseAssignmentEmailServiceTest {
   }
 
   @Test
-  void sendCaseOwnershipReleasedEmail_withMultipleCaseManagersToNotify() {
-    when(emailService.getTemplate(GovukNotifyTemplate.CASE_RELEASED_BY_CASE_OFFICER, applicationVersion))
+  void sendApplicationWithdrawalRequestEmail_whenCaseOfficerIsNotAssigned_withMultipleCaseManagersToNotify() {
+    when(organisationUnitService.getOrganisationUnitByIdOrFallback(
+        eq(applicationVersion.getPrimaryOperatorOuId()),
+        anyString(),
+        eq(applicationVersion.getCachedPrimaryOperatorName()))
+    ).thenReturn(primaryOperator);
+
+    when(emailService.getTemplate(GovukNotifyTemplate.APPLICATION_WITHDRAWAL_REQUEST, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
+
     when(teamMemberViewService
         .getTeamMemberViewsWithRolesForTeamType(TeamType.REGULATOR, Set.of(RegulatorTeamRole.CASE_MANAGER)))
         .thenReturn(List.of(TEAM_MEMBER_VIEW_CASE_MANAGER_1, TEAM_MEMBER_VIEW_CASE_MANAGER_2));
 
-    caseAssignmentEmailService.sendCaseOwnershipReleasedEmail(applicationVersion, CASE_OFFICER);
+    applicationWithdrawalEmailService.sendApplicationWithdrawalRequestEmail(applicationWithdrawal);
 
     verify(emailService, Mockito.times(2)).sendEmail(
         templateCaptor.capture(),
@@ -216,16 +224,16 @@ class CaseAssignmentEmailServiceTest {
     assertThat(firstEmailMergeFields)
         .extracting(MailMergeField::name, MailMergeField::value)
         .containsOnly(
-            tuple(SENDER_IDENTIFIER_MERGE_FIELD_NAME, CASE_OFFICER.displayName()),
-            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, CASE_MANAGER_1.displayName())
+            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, CASE_MANAGERS_RECIPIENT_DISPLAY_NAME),
+            tuple(PRIMARY_OPERATOR_NAME_MAIL_MERGE_FIELD, primaryOperator.name())
         );
 
     var secondEmailMergeFields = emailTemplates.get(1).getMailMergeFields();
     assertThat(secondEmailMergeFields)
         .extracting(MailMergeField::name, MailMergeField::value)
         .containsOnly(
-            tuple(SENDER_IDENTIFIER_MERGE_FIELD_NAME, CASE_OFFICER.displayName()),
-            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, CASE_MANAGER_2.displayName())
+            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, CASE_MANAGERS_RECIPIENT_DISPLAY_NAME),
+            tuple(PRIMARY_OPERATOR_NAME_MAIL_MERGE_FIELD, primaryOperator.name())
         );
 
     // verify email recipients
@@ -246,14 +254,12 @@ class CaseAssignmentEmailServiceTest {
   }
 
   @Test
-  void sendCaseReturnedToCaseOfficerByCamEmail() {
-    when(emailService.getTemplate(GovukNotifyTemplate.CASE_RETURNED_TO_CASE_OFFICER_BY_CAM_USER, applicationVersion))
+  void sendApplicationWithdrawalResponseEmail() {
+    when(emailService.getTemplate(GovukNotifyTemplate.APPLICATION_WITHDRAWAL_RESPONSE, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
+    when(energyPortalUserService.getByWuaId(any())).thenReturn(ENERGY_PORTAL_USER_1);
 
-    applicationVersion.setCaseOfficerWuaId(CASE_OFFICER.wuaId());
-    when(energyPortalUserService.getByWuaId(any())).thenReturn(CASE_OFFICER_EPU);
-
-    caseAssignmentEmailService.sendCaseReturnedToCaseOfficerByCamEmail(applicationVersion, CAM_USER);
+    applicationWithdrawalEmailService.sendApplicationWithdrawalResponseEmail(applicationWithdrawal);
 
     verify(emailService).sendEmail(
         templateCaptor.capture(),
@@ -264,12 +270,11 @@ class CaseAssignmentEmailServiceTest {
     assertThat(templateCaptor.getValue().getMailMergeFields())
         .extracting(MailMergeField::name, MailMergeField::value)
         .containsOnly(
-            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, CASE_OFFICER_EPU.displayName()),
-            tuple(SENDER_IDENTIFIER_MERGE_FIELD_NAME, CAM_USER.displayName())
+            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, ENERGY_PORTAL_USER_1.displayName())
         );
 
     assertThat(emailRecipientCaptor.getValue().getEmailAddress())
-        .isEqualTo(FieldConsentsEmailRecipient.from(CASE_OFFICER_EPU).getEmailAddress());
+        .isEqualTo(FieldConsentsEmailRecipient.from(ENERGY_PORTAL_USER_1).getEmailAddress());
 
     assertThat(domainReferenceCaptor.getValue().getDomainId())
         .isEqualTo(applicationVersion.getId().toString());

@@ -16,6 +16,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.techni
 import static uk.co.nstauthority.fieldconsents.email.EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME;
 import static uk.co.nstauthority.fieldconsents.email.EmailService.REQUESTER_USER_MERGE_FIELD_NAME;
 import static uk.co.nstauthority.fieldconsents.email.EmailService.REQUEST_DEADLINE_MERGE_FIELD_NAME;
+import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.APPLICATION_VERSION_DOMAIN_REFERENCE;
 import static uk.co.nstauthority.fieldconsents.formatting.DateUtils.DATE_TIME;
 
 import java.time.Clock;
@@ -46,8 +47,6 @@ import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 
 @ExtendWith(MockitoExtension.class)
 class TechnicalReviewEmailServiceTest {
-
-  private static final String APPLICATION_VERSION_DOMAIN_REFERENCE = "APPLICATION_VERSION";
 
   @Mock
   private Clock clock;

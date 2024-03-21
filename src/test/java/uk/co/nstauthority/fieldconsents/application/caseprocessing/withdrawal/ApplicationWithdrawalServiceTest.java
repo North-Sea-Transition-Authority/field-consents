@@ -2,8 +2,10 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -52,6 +54,9 @@ class ApplicationWithdrawalServiceTest {
 
   @Mock
   private ApplicationVersionService applicationVersionService;
+
+  @Mock
+  private ApplicationWithdrawalEmailService applicationWithdrawalEmailService;
 
   @InjectMocks
   private ApplicationWithdrawalService applicationWithdrawalService;
@@ -123,6 +128,34 @@ class ApplicationWithdrawalServiceTest {
         .prioritiseApplicationInWorkArea(applicationVersion, user, OPERATOR_WITHDRAWAL_REQUEST, INDUSTRY);
     verify(applicationWorkAreaPriorityService, times(1))
         .prioritiseApplicationInWorkArea(applicationVersion, user, OPERATOR_WITHDRAWAL_REQUEST, REGULATOR);
+    verify(applicationWithdrawalEmailService).sendApplicationWithdrawalRequestEmail(actualApplicationWithdrawal);
+  }
+
+  @Test
+  void saveWithdrawalRequest_whenSendApplicationWithdrawalRequestEmailFails_thenApplicationWithdrawalRequestIsStillSubmitted() {
+    when(clock.instant()).thenReturn(CURRENT_INSTANT);
+
+    var applicationWithdrawal = getOpenApplicationWithdrawal(applicationVersion);
+
+    // WHEN the email service call throws an exception
+    doThrow(new RuntimeException("Failed to send email"))
+        .when(applicationWithdrawalEmailService)
+        .sendApplicationWithdrawalRequestEmail(applicationWithdrawal);
+
+    // THEN it will be caught by the caller and not re-thrown
+    assertDoesNotThrow(
+        () -> applicationWithdrawalService.saveWithdrawalRequest(applicationVersion, WITHDRAWAL_REQUEST_TEXT, user)
+    );
+
+    ApplicationWithdrawal actualApplicationWithdrawal = getCapturedApplicationWithdrawal();
+
+    assertThat(actualApplicationWithdrawal).usingRecursiveComparison().isEqualTo(applicationWithdrawal);
+
+    verify(applicationWorkAreaPriorityService, times(1))
+        .prioritiseApplicationInWorkArea(applicationVersion, user, OPERATOR_WITHDRAWAL_REQUEST, INDUSTRY);
+    verify(applicationWorkAreaPriorityService, times(1))
+        .prioritiseApplicationInWorkArea(applicationVersion, user, OPERATOR_WITHDRAWAL_REQUEST, REGULATOR);
+    verify(applicationWithdrawalEmailService).sendApplicationWithdrawalRequestEmail(actualApplicationWithdrawal);
   }
 
   @Test
@@ -215,6 +248,36 @@ class ApplicationWithdrawalServiceTest {
     assertThat(actualApplicationWithdrawal).usingRecursiveComparison().isEqualTo(applicationWithdrawal);
 
     verify(applicationVersionService, times(1)).withdrawApplicationVersion(applicationVersion);
+
+    verify(applicationWithdrawalEmailService).sendApplicationWithdrawalResponseEmail(actualApplicationWithdrawal);
+  }
+
+  @Test
+  void saveWithdrawalResponse_whenAcceptedAndSendApplicationWithdrawalResponseEmailFails_thenApplicationWithdrawalResponseIsStillSubmitted() {
+    when(clock.instant()).thenReturn(CURRENT_INSTANT);
+
+    var applicationWithdrawal = getOpenApplicationWithdrawal(applicationVersion);
+    when(applicationWithdrawalRepository
+        .findByApplicationVersion_ApplicationAndWithdrawalStatus(applicationVersion.getApplication(), OPEN))
+        .thenReturn(Optional.of(applicationWithdrawal));
+
+    // WHEN the email service call throws an exception
+    doThrow(new RuntimeException("Failed to send email"))
+        .when(applicationWithdrawalEmailService)
+        .sendApplicationWithdrawalResponseEmail(applicationWithdrawal);
+
+    // THEN it will be caught by the caller and not re-thrown
+    assertDoesNotThrow(
+        () -> applicationWithdrawalService.saveWithdrawalResponse(applicationVersion, WithdrawalStatus.ACCEPTED, null, user)
+    );
+
+    ApplicationWithdrawal actualApplicationWithdrawal = getCapturedApplicationWithdrawal();
+
+    assertThat(actualApplicationWithdrawal).usingRecursiveComparison().isEqualTo(applicationWithdrawal);
+
+    verify(applicationVersionService, times(1)).withdrawApplicationVersion(applicationVersion);
+
+    verify(applicationWithdrawalEmailService).sendApplicationWithdrawalResponseEmail(actualApplicationWithdrawal);
   }
 
   @Test
@@ -234,6 +297,37 @@ class ApplicationWithdrawalServiceTest {
 
     verify(applicationWorkAreaPriorityService, times(1))
         .prioritiseApplicationInWorkArea(applicationVersion, user, REGULATOR_REJECT_WITHDRAWAL_REQUEST, INDUSTRY);
+
+    verify(applicationWithdrawalEmailService).sendApplicationWithdrawalResponseEmail(actualApplicationWithdrawal);
+  }
+
+  @Test
+  void saveWithdrawalResponse_whenRejectedAndSendApplicationWithdrawalResponseEmailFails_thenApplicationWithdrawalResponseIsStillSubmitted() {
+    when(clock.instant()).thenReturn(CURRENT_INSTANT);
+
+    var applicationWithdrawal = getOpenApplicationWithdrawal(applicationVersion);
+    when(applicationWithdrawalRepository
+        .findByApplicationVersion_ApplicationAndWithdrawalStatus(applicationVersion.getApplication(), OPEN))
+        .thenReturn(Optional.of(applicationWithdrawal));
+
+    // WHEN the email service call throws an exception
+    doThrow(new RuntimeException("Failed to send email"))
+        .when(applicationWithdrawalEmailService)
+        .sendApplicationWithdrawalResponseEmail(applicationWithdrawal);
+
+    // THEN it will be caught by the caller and not re-thrown
+    assertDoesNotThrow(
+        () -> applicationWithdrawalService.saveWithdrawalResponse(applicationVersion, WithdrawalStatus.REJECTED, "request rejected", user)
+    );
+
+    ApplicationWithdrawal actualApplicationWithdrawal = getCapturedApplicationWithdrawal();
+
+    assertThat(actualApplicationWithdrawal).usingRecursiveComparison().isEqualTo(applicationWithdrawal);
+
+    verify(applicationWorkAreaPriorityService, times(1))
+        .prioritiseApplicationInWorkArea(applicationVersion, user, REGULATOR_REJECT_WITHDRAWAL_REQUEST, INDUSTRY);
+
+    verify(applicationWithdrawalEmailService).sendApplicationWithdrawalResponseEmail(actualApplicationWithdrawal);
   }
 
   private ApplicationWithdrawal getCapturedApplicationWithdrawal() {

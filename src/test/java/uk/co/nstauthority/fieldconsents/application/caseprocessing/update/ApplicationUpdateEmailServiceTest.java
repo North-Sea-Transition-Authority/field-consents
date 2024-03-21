@@ -19,6 +19,8 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update
 import static uk.co.nstauthority.fieldconsents.email.EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME;
 import static uk.co.nstauthority.fieldconsents.email.EmailService.REQUESTER_USER_MERGE_FIELD_NAME;
 import static uk.co.nstauthority.fieldconsents.email.EmailService.REQUEST_DEADLINE_MERGE_FIELD_NAME;
+import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.APPLICATION_VERSION_DOMAIN_REFERENCE;
+import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.PRIMARY_OPERATOR_NAME_MAIL_MERGE_FIELD;
 import static uk.co.nstauthority.fieldconsents.formatting.DateUtils.DATE_TIME;
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.CASE_OFFICER_ENERGY_PORTAL_USER_DTO;
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.ENERGY_PORTAL_USER_DTO;
@@ -59,9 +61,6 @@ import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationUpdateEmailServiceTest {
-
-  private static final String APPLICATION_VERSION_DOMAIN_REFERENCE = "APPLICATION_VERSION";
-  private static final String PRIMARY_OPERATOR_NAME_MAIL_MERGE_FIELD = "PRIMARY_OPERATOR_NAME";
 
   @Mock
   private EmailService emailService;
