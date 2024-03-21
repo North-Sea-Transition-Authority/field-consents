@@ -21,9 +21,9 @@ import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.n
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.List;
-import java.util.Set;
+import java.util.Optional;
 import java.util.UUID;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
@@ -33,17 +33,26 @@ import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionFormV
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionService;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldControllerHelperService;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldView;
-import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
+import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
+import uk.co.nstauthority.fieldconsents.application.Application;
+import uk.co.nstauthority.fieldconsents.application.ApplicationService;
+import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
+import uk.co.nstauthority.fieldconsents.application.ApplicationType;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @ContextConfiguration(classes = FieldConsentsDocumentInstanceSectionController.class)
-class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControllerTest {
+class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractApplicationControllerTest {
 
+  private static final int APPLICATION_ID = 1;
   private static final UUID DOCUMENT_INSTANCE_SECTION_ID = UUID.randomUUID();
+
+  @MockBean
+  private FieldConsentsDocumentInstanceSectionControllerHelperService fieldConsentsDocumentInstanceSectionControllerHelperService;
 
   @MockBean
   private DocumentInstanceSectionService documentInstanceSectionService;
@@ -57,24 +66,39 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
   @MockBean
   private DocumentMailMergeFieldControllerHelperService documentMailMergeFieldControllerHelperService;
 
+  @MockBean
+  private ApplicationService applicationService;
+
+  private ApplicationVersion applicationVersion;
+  private Application application;
+
+  @BeforeEach
+  void beforeEach() {
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    application = applicationVersion.getApplication();
+
+    // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
+  }
+
   @SecurityTest
   void getAddDocumentInstanceSectionBefore_noUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .getAddDocumentInstanceSectionBefore(DOCUMENT_INSTANCE_SECTION_ID))))
+            .getAddDocumentInstanceSectionBefore(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID))))
         .andExpect(redirectionToLoginUrl());
   }
 
   @SecurityTest
-  void getAddDocumentInstanceSectionBefore_userDoesNotHaveProcessFcsApplicationsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(false);
+  void getAddDocumentInstanceSectionBefore_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .getAddDocumentInstanceSectionBefore(DOCUMENT_INSTANCE_SECTION_ID)))
+            .getAddDocumentInstanceSectionBefore(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID)))
             .with(user(user)))
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void getAddDocumentInstanceSectionBefore() throws Exception {
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
     var documentInstanceDto = documentInstanceSectionDto.documentInstanceDto();
@@ -84,8 +108,10 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
         new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
     );
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
-    when(documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(DOCUMENT_INSTANCE_SECTION_ID))
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(fieldConsentsDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
     when(
         documentMailMergeFieldControllerHelperService.getApplicableDocumentMailMergeFieldViews(
@@ -94,7 +120,7 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
     ).thenReturn(applicableDocumentMailMergeFieldViews);
 
     mockMvc.perform(get(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .getAddDocumentInstanceSectionBefore(DOCUMENT_INSTANCE_SECTION_ID)))
+            .getAddDocumentInstanceSectionBefore(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/document/addOrEditDocumentInstanceSection"))
@@ -103,29 +129,29 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
         .andExpect(model().attribute("mailMergeFieldViews", applicableDocumentMailMergeFieldViews))
         .andExpect(model().attribute("submitButtonText", FieldConsentsDocumentInstanceSectionController.ADD_SUBMIT_BUTTON_TEXT))
         .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-            .getViewDocumentInstance(documentInstanceDto.id()))));
+            .getViewDocumentInstance(APPLICATION_ID, documentInstanceDto.id()))));
   }
 
   @SecurityTest
   void addDocumentInstanceSectionBefore_noUser() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .addDocumentInstanceSectionBefore(DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
+            .addDocumentInstanceSectionBefore(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
             .with(csrf()))
         .andExpect(redirectionToLoginUrl());
   }
 
   @SecurityTest
-  void addDocumentInstanceSectionBefore_userDoesNotHaveProcessFcsApplicationsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(false);
+  void addDocumentInstanceSectionBefore_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
 
     mockMvc.perform(post(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .addDocumentInstanceSectionBefore(DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
+            .addDocumentInstanceSectionBefore(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
             .with(csrf())
             .with(user(user)))
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void addDocumentInstanceSectionBefore_invalidForm() throws Exception {
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
     var documentInstanceDto = documentInstanceSectionDto.documentInstanceDto();
@@ -135,8 +161,10 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
         new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
     );
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
-    when(documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(DOCUMENT_INSTANCE_SECTION_ID))
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(fieldConsentsDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
 
     doAnswer(invocation -> {
@@ -154,7 +182,7 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
     ).thenReturn(applicableDocumentMailMergeFieldViews);
 
     mockMvc.perform(post(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .addDocumentInstanceSectionBefore(DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
+            .addDocumentInstanceSectionBefore(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
             .with(csrf())
             .with(user(user)))
         .andExpect(status().isOk())
@@ -164,7 +192,7 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
         .andExpect(model().attribute("mailMergeFieldViews", applicableDocumentMailMergeFieldViews))
         .andExpect(model().attribute("submitButtonText", FieldConsentsDocumentInstanceSectionController.ADD_SUBMIT_BUTTON_TEXT))
         .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-            .getViewDocumentInstance(documentInstanceDto.id()))));
+            .getViewDocumentInstance(APPLICATION_ID, documentInstanceDto.id()))));
 
     verify(documentInstanceSectionFormValidator).validate(any(), any(), any());
 
@@ -172,12 +200,14 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
         .createDocumentInstanceSection(any(), any(), any(), anyInt());
   }
 
-  @Test
+  @SecurityTest
   void addDocumentInstanceSectionBefore_nullParent() throws Exception {
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
-    when(documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(DOCUMENT_INSTANCE_SECTION_ID))
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(fieldConsentsDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
 
     var expectedNotificationBanner = NotificationBanner.builder()
@@ -186,13 +216,13 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
         .build();
 
     mockMvc.perform(post(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .addDocumentInstanceSectionBefore(DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
+            .addDocumentInstanceSectionBefore(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
             .with(csrf())
             .with(user(user)))
         .andExpect(status().is3xxRedirection())
         .andExpect(notificationBanner(expectedNotificationBanner))
         .andExpect(redirectedUrl(ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-            .getViewDocumentInstance(documentInstanceSectionDto.documentInstanceDto().id()))));
+            .getViewDocumentInstance(APPLICATION_ID, documentInstanceSectionDto.documentInstanceDto().id()))));
 
     verify(documentInstanceSectionFormValidator).validate(any(), any(), any());
 
@@ -204,7 +234,7 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
     );
   }
 
-  @Test
+  @SecurityTest
   void addDocumentInstanceSectionBefore_nonNullParent() throws Exception {
     var parentDocumentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
     var parentId = parentDocumentInstanceSectionDto.id();
@@ -213,8 +243,10 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
         .withParentId(parentId)
         .build();
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
-    when(documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(DOCUMENT_INSTANCE_SECTION_ID))
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(fieldConsentsDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
     when(documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(parentId))
         .thenReturn(parentDocumentInstanceSectionDto);
@@ -225,13 +257,13 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
         .build();
 
     mockMvc.perform(post(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .addDocumentInstanceSectionBefore(DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
+            .addDocumentInstanceSectionBefore(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
             .with(csrf())
             .with(user(user)))
         .andExpect(status().is3xxRedirection())
         .andExpect(notificationBanner(expectedNotificationBanner))
         .andExpect(redirectedUrl(ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-            .getViewDocumentInstance(documentInstanceSectionDto.documentInstanceDto().id()))));
+            .getViewDocumentInstance(APPLICATION_ID, documentInstanceSectionDto.documentInstanceDto().id()))));
 
     verify(documentInstanceSectionFormValidator).validate(any(), any(), any());
 
@@ -246,21 +278,21 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
   @SecurityTest
   void getAddDocumentInstanceSectionAfter_noUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .getAddDocumentInstanceSectionAfter(DOCUMENT_INSTANCE_SECTION_ID))))
+            .getAddDocumentInstanceSectionAfter(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID))))
         .andExpect(redirectionToLoginUrl());
   }
 
   @SecurityTest
-  void getAddDocumentInstanceSectionAfter_userDoesNotHaveProcessFcsApplicationsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(false);
+  void getAddDocumentInstanceSectionAfter_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .getAddDocumentInstanceSectionAfter(DOCUMENT_INSTANCE_SECTION_ID)))
+            .getAddDocumentInstanceSectionAfter(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID)))
             .with(user(user)))
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void getAddDocumentInstanceSectionAfter() throws Exception {
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
     var documentInstanceDto = documentInstanceSectionDto.documentInstanceDto();
@@ -270,8 +302,10 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
         new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
     );
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
-    when(documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(DOCUMENT_INSTANCE_SECTION_ID))
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(fieldConsentsDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
     when(
         documentMailMergeFieldControllerHelperService.getApplicableDocumentMailMergeFieldViews(
@@ -280,7 +314,7 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
     ).thenReturn(applicableDocumentMailMergeFieldViews);
 
     mockMvc.perform(get(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .getAddDocumentInstanceSectionAfter(DOCUMENT_INSTANCE_SECTION_ID)))
+            .getAddDocumentInstanceSectionAfter(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/document/addOrEditDocumentInstanceSection"))
@@ -289,29 +323,29 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
         .andExpect(model().attribute("mailMergeFieldViews", applicableDocumentMailMergeFieldViews))
         .andExpect(model().attribute("submitButtonText", FieldConsentsDocumentInstanceSectionController.ADD_SUBMIT_BUTTON_TEXT))
         .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-            .getViewDocumentInstance(documentInstanceDto.id()))));
+            .getViewDocumentInstance(APPLICATION_ID, documentInstanceDto.id()))));
   }
 
   @SecurityTest
   void addDocumentInstanceSectionAfter_noUser() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .addDocumentInstanceSectionAfter(DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
+            .addDocumentInstanceSectionAfter(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
             .with(csrf()))
         .andExpect(redirectionToLoginUrl());
   }
 
   @SecurityTest
-  void addDocumentInstanceSectionAfter_userDoesNotHaveProcessFcsApplicationsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(false);
+  void addDocumentInstanceSectionAfter_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
 
     mockMvc.perform(post(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .addDocumentInstanceSectionAfter(DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
+            .addDocumentInstanceSectionAfter(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
             .with(csrf())
             .with(user(user)))
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void addDocumentInstanceSectionAfter_invalidForm() throws Exception {
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
     var documentInstanceDto = documentInstanceSectionDto.documentInstanceDto();
@@ -321,8 +355,10 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
         new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
     );
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
-    when(documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(DOCUMENT_INSTANCE_SECTION_ID))
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(fieldConsentsDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
 
     doAnswer(invocation -> {
@@ -340,7 +376,7 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
     ).thenReturn(applicableDocumentMailMergeFieldViews);
 
     mockMvc.perform(post(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .addDocumentInstanceSectionAfter(DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
+            .addDocumentInstanceSectionAfter(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
             .with(csrf())
             .with(user(user)))
         .andExpect(status().isOk())
@@ -350,7 +386,7 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
         .andExpect(model().attribute("mailMergeFieldViews", applicableDocumentMailMergeFieldViews))
         .andExpect(model().attribute("submitButtonText", FieldConsentsDocumentInstanceSectionController.ADD_SUBMIT_BUTTON_TEXT))
         .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-            .getViewDocumentInstance(documentInstanceDto.id()))));
+            .getViewDocumentInstance(APPLICATION_ID, documentInstanceDto.id()))));
 
     verify(documentInstanceSectionFormValidator).validate(any(), any(), any());
 
@@ -358,12 +394,14 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
         .createDocumentInstanceSection(any(), any(), any(), anyInt());
   }
 
-  @Test
+  @SecurityTest
   void addDocumentInstanceSectionAfter_nullParent() throws Exception {
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
-    when(documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(DOCUMENT_INSTANCE_SECTION_ID))
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(fieldConsentsDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
 
     var expectedNotificationBanner = NotificationBanner.builder()
@@ -372,13 +410,13 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
         .build();
 
     mockMvc.perform(post(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .addDocumentInstanceSectionAfter(DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
+            .addDocumentInstanceSectionAfter(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
             .with(csrf())
             .with(user(user)))
         .andExpect(status().is3xxRedirection())
         .andExpect(notificationBanner(expectedNotificationBanner))
         .andExpect(redirectedUrl(ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-            .getViewDocumentInstance(documentInstanceSectionDto.documentInstanceDto().id()))));
+            .getViewDocumentInstance(APPLICATION_ID, documentInstanceSectionDto.documentInstanceDto().id()))));
 
     verify(documentInstanceSectionFormValidator).validate(any(), any(), any());
 
@@ -390,7 +428,7 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
     );
   }
 
-  @Test
+  @SecurityTest
   void addDocumentInstanceSectionAfter_nonNullParent() throws Exception {
     var parentDocumentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
     var parentId = parentDocumentInstanceSectionDto.id();
@@ -399,8 +437,10 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
         .withParentId(parentId)
         .build();
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
-    when(documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(DOCUMENT_INSTANCE_SECTION_ID))
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(fieldConsentsDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
     when(documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(parentId))
         .thenReturn(parentDocumentInstanceSectionDto);
@@ -411,13 +451,13 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
         .build();
 
     mockMvc.perform(post(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .addDocumentInstanceSectionAfter(DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
+            .addDocumentInstanceSectionAfter(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
             .with(csrf())
             .with(user(user)))
         .andExpect(status().is3xxRedirection())
         .andExpect(notificationBanner(expectedNotificationBanner))
         .andExpect(redirectedUrl(ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-            .getViewDocumentInstance(documentInstanceSectionDto.documentInstanceDto().id()))));
+            .getViewDocumentInstance(APPLICATION_ID, documentInstanceSectionDto.documentInstanceDto().id()))));
 
     verify(documentInstanceSectionFormValidator).validate(any(), any(), any());
 
@@ -432,21 +472,21 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
   @SecurityTest
   void getAddDocumentInstanceSubsection_noUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .getAddDocumentInstanceSubsection(DOCUMENT_INSTANCE_SECTION_ID))))
+            .getAddDocumentInstanceSubsection(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID))))
         .andExpect(redirectionToLoginUrl());
   }
 
   @SecurityTest
-  void getAddDocumentInstanceSubsection_userDoesNotHaveProcessFcsApplicationsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(false);
+  void getAddDocumentInstanceSubsection_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .getAddDocumentInstanceSubsection(DOCUMENT_INSTANCE_SECTION_ID)))
+            .getAddDocumentInstanceSubsection(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID)))
             .with(user(user)))
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void getAddDocumentInstanceSubsection() throws Exception {
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
     var documentInstanceDto = documentInstanceSectionDto.documentInstanceDto();
@@ -456,8 +496,10 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
         new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
     );
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
-    when(documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(DOCUMENT_INSTANCE_SECTION_ID))
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(fieldConsentsDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
     when(
         documentMailMergeFieldControllerHelperService.getApplicableDocumentMailMergeFieldViews(
@@ -466,7 +508,7 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
     ).thenReturn(applicableDocumentMailMergeFieldViews);
 
     mockMvc.perform(get(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .getAddDocumentInstanceSubsection(DOCUMENT_INSTANCE_SECTION_ID)))
+            .getAddDocumentInstanceSubsection(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/document/addOrEditDocumentInstanceSection"))
@@ -475,29 +517,29 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
         .andExpect(model().attribute("mailMergeFieldViews", applicableDocumentMailMergeFieldViews))
         .andExpect(model().attribute("submitButtonText", FieldConsentsDocumentInstanceSectionController.ADD_SUBMIT_BUTTON_TEXT))
         .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-            .getViewDocumentInstance(documentInstanceDto.id()))));
+            .getViewDocumentInstance(APPLICATION_ID, documentInstanceDto.id()))));
   }
 
   @SecurityTest
   void addDocumentInstanceSubsection_noUser() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .addDocumentInstanceSubsection(DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
+            .addDocumentInstanceSubsection(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
             .with(csrf()))
         .andExpect(redirectionToLoginUrl());
   }
 
   @SecurityTest
-  void addDocumentInstanceSubsection_userDoesNotHaveProcessFcsApplicationsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(false);
+  void addDocumentInstanceSubsection_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
 
     mockMvc.perform(post(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .addDocumentInstanceSubsection(DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
+            .addDocumentInstanceSubsection(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
             .with(csrf())
             .with(user(user)))
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void addDocumentInstanceSubsection_invalidForm() throws Exception {
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
     var documentInstanceDto = documentInstanceSectionDto.documentInstanceDto();
@@ -507,8 +549,10 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
         new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
     );
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
-    when(documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(DOCUMENT_INSTANCE_SECTION_ID))
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(fieldConsentsDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
     when(
         documentMailMergeFieldControllerHelperService.getApplicableDocumentMailMergeFieldViews(
@@ -525,7 +569,7 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
         .validate(any(), any(), any());
 
     mockMvc.perform(post(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .addDocumentInstanceSubsection(DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
+            .addDocumentInstanceSubsection(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
             .with(csrf())
             .with(user(user)))
         .andExpect(status().isOk())
@@ -535,7 +579,7 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
         .andExpect(model().attribute("mailMergeFieldViews", applicableDocumentMailMergeFieldViews))
         .andExpect(model().attribute("submitButtonText", FieldConsentsDocumentInstanceSectionController.ADD_SUBMIT_BUTTON_TEXT))
         .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-            .getViewDocumentInstance(documentInstanceDto.id()))));
+            .getViewDocumentInstance(APPLICATION_ID, documentInstanceDto.id()))));
 
     verify(documentInstanceSectionFormValidator).validate(any(), any(), any());
 
@@ -543,12 +587,14 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
         .createDocumentInstanceSection(any(), any(), any(), anyInt());
   }
 
-  @Test
+  @SecurityTest
   void addDocumentInstanceSubsection() throws Exception {
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
-    when(documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(DOCUMENT_INSTANCE_SECTION_ID))
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(fieldConsentsDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
 
     var expectedNotificationBanner = NotificationBanner.builder()
@@ -557,13 +603,13 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
         .build();
 
     mockMvc.perform(post(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .addDocumentInstanceSubsection(DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
+            .addDocumentInstanceSubsection(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
             .with(csrf())
             .with(user(user)))
         .andExpect(status().is3xxRedirection())
         .andExpect(notificationBanner(expectedNotificationBanner))
         .andExpect(redirectedUrl(ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-            .getViewDocumentInstance(documentInstanceSectionDto.documentInstanceDto().id()))));
+            .getViewDocumentInstance(APPLICATION_ID, documentInstanceSectionDto.documentInstanceDto().id()))));
 
     verify(documentInstanceSectionFormValidator).validate(any(), any(), any());
 
@@ -578,21 +624,21 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
   @SecurityTest
   void getEditDocumentInstanceSection_noUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .getEditDocumentInstanceSection(DOCUMENT_INSTANCE_SECTION_ID))))
+            .getEditDocumentInstanceSection(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID))))
         .andExpect(redirectionToLoginUrl());
   }
 
   @SecurityTest
-  void getEditDocumentInstanceSection_userDoesNotHaveProcessFcsApplicationsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(false);
+  void getEditDocumentInstanceSection_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .getEditDocumentInstanceSection(DOCUMENT_INSTANCE_SECTION_ID)))
+            .getEditDocumentInstanceSection(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID)))
             .with(user(user)))
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void getEditDocumentInstanceSection() throws Exception {
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
     var documentInstanceDto = documentInstanceSectionDto.documentInstanceDto();
@@ -602,8 +648,10 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
         new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
     );
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
-    when(documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(DOCUMENT_INSTANCE_SECTION_ID))
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(fieldConsentsDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
     when(
         documentMailMergeFieldControllerHelperService.getApplicableDocumentMailMergeFieldViews(
@@ -612,7 +660,7 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
     ).thenReturn(applicableDocumentMailMergeFieldViews);
 
     mockMvc.perform(get(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .getEditDocumentInstanceSection(DOCUMENT_INSTANCE_SECTION_ID)))
+            .getEditDocumentInstanceSection(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/document/addOrEditDocumentInstanceSection"))
@@ -621,29 +669,29 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
         .andExpect(model().attribute("mailMergeFieldViews", applicableDocumentMailMergeFieldViews))
         .andExpect(model().attribute("submitButtonText", FieldConsentsDocumentInstanceSectionController.EDIT_SUBMIT_BUTTON_TEXT))
         .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-            .getViewDocumentInstance(documentInstanceDto.id()))));
+            .getViewDocumentInstance(APPLICATION_ID, documentInstanceDto.id()))));
   }
 
   @SecurityTest
   void editDocumentInstanceSection_noUser() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .editDocumentInstanceSection(DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
+            .editDocumentInstanceSection(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
             .with(csrf()))
         .andExpect(redirectionToLoginUrl());
   }
 
   @SecurityTest
-  void editDocumentInstanceSection_userDoesNotHaveProcessFcsApplicationsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(false);
+  void editDocumentInstanceSection_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
 
     mockMvc.perform(post(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .editDocumentInstanceSection(DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
+            .editDocumentInstanceSection(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
             .with(csrf())
             .with(user(user)))
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void editDocumentInstanceSection_invalidForm() throws Exception {
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
     var documentInstanceDto = documentInstanceSectionDto.documentInstanceDto();
@@ -653,8 +701,10 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
         new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
     );
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
-    when(documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(DOCUMENT_INSTANCE_SECTION_ID))
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(fieldConsentsDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
 
     doAnswer(invocation -> {
@@ -672,7 +722,7 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
     ).thenReturn(applicableDocumentMailMergeFieldViews);
 
     mockMvc.perform(post(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .editDocumentInstanceSection(DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
+            .editDocumentInstanceSection(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
             .with(csrf())
             .with(user(user)))
         .andExpect(status().isOk())
@@ -682,7 +732,7 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
         .andExpect(model().attribute("mailMergeFieldViews", applicableDocumentMailMergeFieldViews))
         .andExpect(model().attribute("submitButtonText", FieldConsentsDocumentInstanceSectionController.EDIT_SUBMIT_BUTTON_TEXT))
         .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-            .getViewDocumentInstance(documentInstanceDto.id()))));
+            .getViewDocumentInstance(APPLICATION_ID, documentInstanceDto.id()))));
 
     verify(documentInstanceSectionFormValidator).validate(any(), any(), any());
 
@@ -690,12 +740,14 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
         .editDocumentInstanceSection(any(), any());
   }
 
-  @Test
+  @SecurityTest
   void editDocumentInstanceSection() throws Exception {
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
-    when(documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(DOCUMENT_INSTANCE_SECTION_ID))
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(fieldConsentsDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
 
     var expectedNotificationBanner = NotificationBanner.builder()
@@ -704,13 +756,13 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
         .build();
 
     mockMvc.perform(post(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .editDocumentInstanceSection(DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
+            .editDocumentInstanceSection(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
             .with(csrf())
             .with(user(user)))
         .andExpect(status().is3xxRedirection())
         .andExpect(notificationBanner(expectedNotificationBanner))
         .andExpect(redirectedUrl(ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-            .getViewDocumentInstance(documentInstanceSectionDto.documentInstanceDto().id()))));
+            .getViewDocumentInstance(APPLICATION_ID, documentInstanceSectionDto.documentInstanceDto().id()))));
 
     verify(documentInstanceSectionFormValidator).validate(any(), any(), any());
 
@@ -721,64 +773,68 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
   @SecurityTest
   void getRemoveDocumentInstanceSection_noUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .getRemoveDocumentInstanceSection(DOCUMENT_INSTANCE_SECTION_ID))))
+            .getRemoveDocumentInstanceSection(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID))))
         .andExpect(redirectionToLoginUrl());
   }
 
   @SecurityTest
-  void getRemoveDocumentInstanceSection_userDoesNotHaveProcessFcsApplicationsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(false);
+  void getRemoveDocumentInstanceSection_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .getRemoveDocumentInstanceSection(DOCUMENT_INSTANCE_SECTION_ID)))
+            .getRemoveDocumentInstanceSection(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID)))
             .with(user(user)))
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void getRemoveDocumentInstanceSection() throws Exception {
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
-    when(documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(DOCUMENT_INSTANCE_SECTION_ID))
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(fieldConsentsDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
 
     mockMvc.perform(get(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .getRemoveDocumentInstanceSection(DOCUMENT_INSTANCE_SECTION_ID)))
+            .getRemoveDocumentInstanceSection(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/document/removeDocumentSection"))
         .andExpect(model().attribute("documentSectionDto", documentInstanceSectionDto))
         .andExpect(model().attribute("documentSectionDtoDescendants", documentInstanceSectionDto.descendants()))
         .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-            .getViewDocumentInstance(documentInstanceSectionDto.documentInstanceDto().id()))));
+            .getViewDocumentInstance(APPLICATION_ID, documentInstanceSectionDto.documentInstanceDto().id()))));
   }
 
   @SecurityTest
   void removeDocumentInstanceSection_noUser() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .removeDocumentInstanceSection(DOCUMENT_INSTANCE_SECTION_ID, null)))
+            .removeDocumentInstanceSection(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID, null)))
             .with(csrf()))
         .andExpect(redirectionToLoginUrl());
   }
 
   @SecurityTest
-  void removeDocumentInstanceSection_userDoesNotHaveProcessFcsApplicationsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(false);
+  void removeDocumentInstanceSection_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
 
     mockMvc.perform(post(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .removeDocumentInstanceSection(DOCUMENT_INSTANCE_SECTION_ID, null)))
+            .removeDocumentInstanceSection(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID, null)))
             .with(csrf())
             .with(user(user)))
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void removeDocumentInstanceSection() throws Exception {
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
-    when(documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(DOCUMENT_INSTANCE_SECTION_ID))
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(fieldConsentsDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
 
     var expectedNotificationBanner = NotificationBanner.builder()
@@ -787,13 +843,13 @@ class FieldConsentsDocumentInstanceSectionControllerTest extends AbstractControl
         .build();
 
     mockMvc.perform(post(ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-            .removeDocumentInstanceSection(DOCUMENT_INSTANCE_SECTION_ID, null)))
+            .removeDocumentInstanceSection(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID, null)))
             .with(csrf())
             .with(user(user)))
         .andExpect(status().is3xxRedirection())
         .andExpect(notificationBanner(expectedNotificationBanner))
         .andExpect(redirectedUrl(ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-            .getViewDocumentInstance(documentInstanceSectionDto.documentInstanceDto().id()))));
+            .getViewDocumentInstance(APPLICATION_ID, documentInstanceSectionDto.documentInstanceDto().id()))));
 
     verify(documentInstanceSectionService)
         .deleteDocumentInstanceSection(documentInstanceSectionDto);

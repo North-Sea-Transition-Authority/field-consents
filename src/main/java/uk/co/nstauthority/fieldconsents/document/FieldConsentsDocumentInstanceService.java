@@ -93,11 +93,12 @@ public class FieldConsentsDocumentInstanceService {
   }
 
   public ByteArrayResource renderPdf(
+      Application application,
       DocumentInstanceDto documentInstanceDto,
       PdfRenderingOptions pdfRenderingOptions
   ) {
     var documentInstanceSectionsSummaryView = fieldConsentsDocumentInstanceSectionControllerHelperService
-        .getDocumentInstanceSectionsSummaryView(documentInstanceDto, false);
+        .getDocumentInstanceSectionsSummaryView(application, documentInstanceDto, false);
 
     Map<String, Object> templateModel = Map.of(
         "documentInstanceSectionsSummaryView", documentInstanceSectionsSummaryView,

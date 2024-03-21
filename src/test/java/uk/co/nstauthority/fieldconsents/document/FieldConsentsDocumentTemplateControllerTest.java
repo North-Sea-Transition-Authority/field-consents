@@ -12,7 +12,6 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionSummaryView;
@@ -52,7 +51,7 @@ class FieldConsentsDocumentTemplateControllerTest extends AbstractControllerTest
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void getDocumentTemplates() throws Exception {
     var documentTemplateSummaryViews = List.of(
         new DocumentTemplateSummaryView("Test title 1", "Test description 1", "test-view-url-1"),
@@ -87,7 +86,7 @@ class FieldConsentsDocumentTemplateControllerTest extends AbstractControllerTest
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void getViewDocumentTemplate() throws Exception {
     var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
 

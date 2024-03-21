@@ -26,16 +26,16 @@ public class DocumentInstanceLinkingService {
   }
 
   public ApplicationVersion getLatestApplicationVersionFromDocumentInstanceDto(DocumentInstanceDto documentInstanceDto) {
-    var applicationId = getApplicationIdOrThrowIfInvalidItemType(documentInstanceDto);
+    var applicationId = getApplicationIdFromDocumentInstanceDtoOrThrowIfInvalidItemType(documentInstanceDto);
     return applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
   }
 
   public Application getApplicationFromDocumentInstanceDto(DocumentInstanceDto documentInstanceDto) {
-    var applicationId = getApplicationIdOrThrowIfInvalidItemType(documentInstanceDto);
+    var applicationId = getApplicationIdFromDocumentInstanceDtoOrThrowIfInvalidItemType(documentInstanceDto);
     return applicationService.getApplicationById(applicationId);
   }
 
-  int getApplicationIdOrThrowIfInvalidItemType(DocumentInstanceDto documentInstanceDto) {
+  public int getApplicationIdFromDocumentInstanceDtoOrThrowIfInvalidItemType(DocumentInstanceDto documentInstanceDto) {
     var documentInstanceItemType = documentInstanceDto.itemType();
     if (!APPLICATION_DOCUMENT_INSTANCE_ITEM_TYPE.equals(documentInstanceItemType)) {
       throw new IllegalStateException("Expected itemType %s but found %s".formatted(

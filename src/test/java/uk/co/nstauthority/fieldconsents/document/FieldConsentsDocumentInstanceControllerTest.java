@@ -18,9 +18,10 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
+import java.util.Optional;
 import java.util.UUID;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
@@ -29,23 +30,30 @@ import org.springframework.test.context.ContextConfiguration;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionSummaryView;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionsSummaryView;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceService;
-import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
+import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
+import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
+import uk.co.nstauthority.fieldconsents.authorisation.ParameterizedSecurityTest;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @ContextConfiguration(classes = FieldConsentsDocumentInstanceController.class)
-class FieldConsentsDocumentInstanceControllerTest extends AbstractControllerTest {
+class FieldConsentsDocumentInstanceControllerTest extends AbstractApplicationControllerTest {
 
+  private static final int APPLICATION_ID = 1;
   private static final UUID DOCUMENT_INSTANCE_ID = UUID.randomUUID();
 
   @MockBean
   private FieldConsentsDocumentInstanceService fieldConsentsDocumentInstanceService;
+
+  @MockBean
+  private FieldConsentsDocumentInstanceControllerHelperService fieldConsentsDocumentInstanceControllerHelperService;
 
   @MockBean
   private FieldConsentsDocumentInstanceSectionControllerHelperService fieldConsentsDocumentInstanceSectionControllerHelperService;
@@ -54,29 +62,38 @@ class FieldConsentsDocumentInstanceControllerTest extends AbstractControllerTest
   private DocumentInstanceService documentInstanceService;
 
   @MockBean
-  private DocumentInstanceLinkingService documentInstanceLinkingService;
-
-  @MockBean
   private ApplicationService applicationService;
+
+  private ApplicationVersion applicationVersion;
+  private Application application;
+
+  @BeforeEach
+  void beforeEach() {
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    application = applicationVersion.getApplication();
+
+    // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
+  }
 
   @SecurityTest
   void getViewDocumentInstance_noUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-            .getViewDocumentInstance(DOCUMENT_INSTANCE_ID))))
+            .getViewDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID))))
         .andExpect(redirectionToLoginUrl());
   }
 
   @SecurityTest
-  void getViewDocumentInstance_userDoesNotHaveProcessFcsApplicationsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(false);
+  void getViewDocumentInstance_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-            .getViewDocumentInstance(DOCUMENT_INSTANCE_ID)))
+            .getViewDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID)))
             .with(user(user)))
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void getViewDocumentInstance() throws Exception {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
 
@@ -106,57 +123,62 @@ class FieldConsentsDocumentInstanceControllerTest extends AbstractControllerTest
         Collections.emptyList()
     );
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
-    when(documentInstanceService.getDocumentInstanceDtoOrThrow(DOCUMENT_INSTANCE_ID))
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(fieldConsentsDocumentInstanceControllerHelperService.getDocumentInstanceDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_ID))
         .thenReturn(documentInstanceDto);
     when(
         fieldConsentsDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionsSummaryView(
+            application,
             documentInstanceDto,
             true
         )
     ).thenReturn(documentInstanceSectionsSummaryView);
 
     mockMvc.perform(get(ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-            .getViewDocumentInstance(DOCUMENT_INSTANCE_ID)))
+            .getViewDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/document/viewDocumentInstance"))
         .andExpect(model().attribute("pageTitle", documentInstanceDto.documentTemplateDto().title()))
         .andExpect(model().attribute("documentInstanceSectionsSummaryView", documentInstanceSectionsSummaryView))
         .andExpect(model().attribute("previewUrl", ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-            .getPreviewDocumentInstance(DOCUMENT_INSTANCE_ID))))
+            .getPreviewDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID))))
         .andExpect(model().attribute("reloadUrl", ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-            .getReloadDocumentInstance(DOCUMENT_INSTANCE_ID))));
+            .getReloadDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID))));
   }
 
   @SecurityTest
   void getPreviewDocumentInstance_noUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-            .getPreviewDocumentInstance(DOCUMENT_INSTANCE_ID))))
+            .getPreviewDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID))))
         .andExpect(redirectionToLoginUrl());
   }
 
   @SecurityTest
-  void getPreviewDocumentInstance_userDoesNotHaveProcessFcsApplicationsOrAuthoriseFcsConsentsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS, RolePermission.AUTHORISE_FCS_CONSENTS)))
-        .thenReturn(false);
+  void getPreviewDocumentInstance_userDoesNotHaveConsentPreparationOrConsentIssuingCaseProcessingActionItems() throws Exception {
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-            .getPreviewDocumentInstance(DOCUMENT_INSTANCE_ID)))
+            .getPreviewDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID)))
             .with(user(user)))
         .andExpect(status().isForbidden());
   }
 
-  @Test
-  void getPreviewDocumentInstance() throws Exception {
+  @ParameterizedSecurityTest
+  @EnumSource(value = CaseProcessingActionItem.class, names = { "CONSENT_PREPARATION", "CONSENT_ISSUING" })
+  void getPreviewDocumentInstance(CaseProcessingActionItem caseProcessingActionItem) throws Exception {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
     var byteArrayResource = new ByteArrayResource(new byte[] {1, 2, 3});
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS, RolePermission.AUTHORISE_FCS_CONSENTS)))
-        .thenReturn(true);
-    when(documentInstanceService.getDocumentInstanceDtoOrThrow(DOCUMENT_INSTANCE_ID))
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(caseProcessingActionItem));
+    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(fieldConsentsDocumentInstanceControllerHelperService.getDocumentInstanceDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_ID))
         .thenReturn(documentInstanceDto);
     when(fieldConsentsDocumentInstanceService.renderPdf(
+        application,
         documentInstanceDto,
         PdfRenderingOptions.newBuilder().withPreviewWatermark(true).build())
     ).thenReturn(byteArrayResource);
@@ -164,7 +186,7 @@ class FieldConsentsDocumentInstanceControllerTest extends AbstractControllerTest
     var fileName = "PREVIEW %s.pdf".formatted(documentInstanceDto.title());
 
     mockMvc.perform(get(ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-            .getPreviewDocumentInstance(DOCUMENT_INSTANCE_ID)))
+            .getPreviewDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_PDF))
@@ -175,70 +197,71 @@ class FieldConsentsDocumentInstanceControllerTest extends AbstractControllerTest
   @SecurityTest
   void getReloadDocumentInstance_noUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-            .getReloadDocumentInstance(DOCUMENT_INSTANCE_ID))))
+            .getReloadDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID))))
         .andExpect(redirectionToLoginUrl());
   }
 
   @SecurityTest
-  void getReloadDocumentInstance_userDoesNotHaveProcessFcsApplicationsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(false);
+  void getReloadDocumentInstance_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-            .getReloadDocumentInstance(DOCUMENT_INSTANCE_ID)))
+            .getReloadDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID)))
             .with(user(user)))
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void getReloadDocumentInstance() throws Exception {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
-    var applicationVersion =
-        ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
     var applicationReference = "Test/application/reference";
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
-    when(documentInstanceService.getDocumentInstanceDtoOrThrow(DOCUMENT_INSTANCE_ID))
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(fieldConsentsDocumentInstanceControllerHelperService.getDocumentInstanceDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_ID))
         .thenReturn(documentInstanceDto);
-    when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
-        .thenReturn(applicationVersion);
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
 
     mockMvc.perform(get(ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-            .getReloadDocumentInstance(DOCUMENT_INSTANCE_ID)))
+            .getReloadDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/document/reloadDocumentInstance"))
         .andExpect(model().attribute("documentTitle", documentInstanceDto.documentTemplateDto().title()))
         .andExpect(model().attribute("applicationReference", applicationReference))
         .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-            .getViewDocumentInstance(DOCUMENT_INSTANCE_ID))));
+            .getViewDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID))));
   }
 
   @SecurityTest
   void reloadDocumentInstance_noUser() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-            .reloadDocumentInstance(DOCUMENT_INSTANCE_ID, null)))
+            .reloadDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID, null)))
             .with(csrf()))
         .andExpect(redirectionToLoginUrl());
   }
 
   @SecurityTest
-  void reloadDocumentInstance_userDoesNotHaveProcessFcsApplicationsPermission() throws Exception {
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(false);
+  void reloadDocumentInstance_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
 
     mockMvc.perform(post(ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-            .reloadDocumentInstance(DOCUMENT_INSTANCE_ID, null)))
+            .reloadDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID, null)))
             .with(csrf())
             .with(user(user)))
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void reloadDocumentInstance() throws Exception {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
 
-    when(permissionService.hasPermission(user, Set.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
-    when(documentInstanceService.getDocumentInstanceDtoOrThrow(DOCUMENT_INSTANCE_ID))
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(fieldConsentsDocumentInstanceControllerHelperService.getDocumentInstanceDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_ID))
         .thenReturn(documentInstanceDto);
 
     var expectedNotificationBanner = NotificationBanner.builder()
@@ -247,13 +270,13 @@ class FieldConsentsDocumentInstanceControllerTest extends AbstractControllerTest
         .build();
 
     mockMvc.perform(post(ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-            .reloadDocumentInstance(DOCUMENT_INSTANCE_ID, null)))
+            .reloadDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID, null)))
             .with(csrf())
             .with(user(user)))
         .andExpect(status().is3xxRedirection())
         .andExpect(notificationBanner(expectedNotificationBanner))
         .andExpect(redirectedUrl(ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-            .getViewDocumentInstance(DOCUMENT_INSTANCE_ID))));
+            .getViewDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID))));
 
     verify(documentInstanceService).reloadDocumentInstance(documentInstanceDto);
   }

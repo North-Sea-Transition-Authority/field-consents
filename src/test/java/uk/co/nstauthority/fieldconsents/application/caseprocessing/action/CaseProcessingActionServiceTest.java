@@ -30,6 +30,8 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_MANAGE_RESPONDER;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_RESPONSE;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.EDIT_CONSENT_DATA;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.ISSUE_CONSENT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_PAY_AND_SUBMIT_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT;
@@ -289,6 +291,20 @@ class CaseProcessingActionServiceTest {
                 .build()
         ),
         arguments(
+            Set.of(PROCESS_FCS_APPLICATIONS),
+            Set.of(CASE_OFFICER_ASSIGNED, CAM_NOT_ASSIGNED, CONSENT_NOT_APPROVED_FOR_ISSUE),
+            ExpectedActions.newBuilder()
+                .inProgressActions(CHANGE_ACE_STATUS, CASE_OFFICER_RELEASE_OWNERSHIP)
+                .submittedActions(
+                    CHANGE_ACE_STATUS,
+                    CASE_OFFICER_RELEASE_OWNERSHIP,
+                    EDIT_CONSENT_DATA,
+                    EDIT_CONSENT_DOCUMENTS,
+                    CONSENT_PREPARATION
+                )
+                .build()
+        ),
+        arguments(
             Set.of(ASSIGN_FCS_APPLICATIONS),
             Set.of(CASE_OFFICER_NOT_ASSIGNED, CAM_NOT_ASSIGNED),
             ExpectedActions.newBuilder()
@@ -435,6 +451,8 @@ class CaseProcessingActionServiceTest {
         CONSULTATION_REQUEST,
         CONSULTATION_FURTHER_INFORMATION_RESPOND,
         APPLICATION_UPDATE_REQUEST,
+        EDIT_CONSENT_DATA,
+        EDIT_CONSENT_DOCUMENTS,
         CAM_ASSIGN_OWNERSHIP,
         CAM_REASSIGN_OWNERSHIP,
         RETURN_TO_CASE_OFFICER,
@@ -492,6 +510,14 @@ class CaseProcessingActionServiceTest {
         arguments(
             CaseProcessingActionGroup.CONSENT_PREPARATION,
             List.of(CAM_ASSIGN_OWNERSHIP, CAM_REASSIGN_OWNERSHIP)
+        ),
+        arguments(
+            CaseProcessingActionGroup.CONSENT_PREPARATION_CONSENT_DATA_CARD,
+            List.of(EDIT_CONSENT_DATA)
+        ),
+        arguments(
+            CaseProcessingActionGroup.CONSENT_PREPARATION_CONSENT_DOCUMENTS_CARD,
+            List.of(EDIT_CONSENT_DOCUMENTS)
         ),
         arguments(
             CaseProcessingActionGroup.CONSENT_ISSUING,
@@ -628,6 +654,8 @@ class CaseProcessingActionServiceTest {
         arguments(CONSULTATION_RESPONSE, responderAssigneeMap, true),
         arguments(CONSULTATION_FURTHER_INFORMATION_REQUEST, responderAssigneeMap, true),
         arguments(CONSULTATION_FURTHER_INFORMATION_RESPOND, caseOfficerAssigneeMap, true),
+        arguments(EDIT_CONSENT_DATA, caseOfficerAssigneeMap, true),
+        arguments(EDIT_CONSENT_DOCUMENTS, caseOfficerAssigneeMap, true),
         arguments(APPROVE_FOR_ISSUING, consentsAndAuthorisationsManagerMap, true),
         arguments(RETURN_TO_CASE_OFFICER, consentsAndAuthorisationsManagerMap, true),
         arguments(ISSUE_CONSENT, consentsAndAuthorisationsManagerMap, true),
@@ -644,6 +672,8 @@ class CaseProcessingActionServiceTest {
         arguments(CONSULTATION_RESPONSE, emptyMap(), false),
         arguments(CONSULTATION_FURTHER_INFORMATION_REQUEST, emptyMap(), false),
         arguments(CONSULTATION_FURTHER_INFORMATION_RESPOND, emptyMap(), false),
+        arguments(EDIT_CONSENT_DATA, emptyMap(), false),
+        arguments(EDIT_CONSENT_DOCUMENTS, emptyMap(), false),
         arguments(APPROVE_FOR_ISSUING, emptyMap(), false),
         arguments(RETURN_TO_CASE_OFFICER, emptyMap(), false),
         arguments(ISSUE_CONSENT, emptyMap(), false)

@@ -23,7 +23,7 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @Controller
 @RequestMapping("/applications/{applicationId}/consent-preparation/documents")
-@ActionEndPoint(CaseProcessingActionItem.CONSENT_PREPARATION)
+@ActionEndPoint(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS)
 public class ConsentPreparationDocumentsController {
 
   private final ApplicationService applicationService;

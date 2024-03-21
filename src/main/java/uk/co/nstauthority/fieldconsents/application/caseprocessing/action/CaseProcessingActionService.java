@@ -21,6 +21,8 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_MANAGE_RESPONDER;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSULTATION_RESPONSE;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.EDIT_CONSENT_DATA;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.ISSUE_CONSENT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_PAY_AND_SUBMIT_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT;
@@ -152,6 +154,8 @@ public class CaseProcessingActionService {
               CAM_ASSIGN_OWNERSHIP,
               CAM_REASSIGN_OWNERSHIP,
               CONSENT_PREPARATION,
+              EDIT_CONSENT_DATA,
+              EDIT_CONSENT_DOCUMENTS,
               CONSENT_ISSUING,
               APPROVE_FOR_ISSUING,
               RETURN_TO_CASE_OFFICER,
@@ -193,6 +197,8 @@ public class CaseProcessingActionService {
           entry(APPLICATION_UPDATES, EnumSet.of(VIEW_FCS_CASE_PROCESSING_DOCUMENTS)),
           entry(APPLICATION_UPDATE_REQUEST, EnumSet.of(PROCESS_FCS_APPLICATIONS, TECHNICAL_REVIEW_FCS_APPLICATIONS)),
           entry(CONSENT_PREPARATION, EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS)),
+          entry(EDIT_CONSENT_DATA, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
+          entry(EDIT_CONSENT_DOCUMENTS, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
           entry(OPERATOR_PAY_AND_SUBMIT_APPLICATION, EnumSet.of(PAY_AND_SUBMIT_FCS_APPLICATIONS)),
           entry(OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT, EnumSet.of(
               EDIT_FCS_APPLICATIONS)),
@@ -233,6 +239,8 @@ public class CaseProcessingActionService {
           entry(CONSULTATION_FURTHER_INFORMATION_REQUEST, EnumSet.of(NO_CONSULTATION_FURTHER_INFORMATION_OPEN)),
           entry(CONSULTATION_FURTHER_INFORMATION_RESPOND,
               EnumSet.of(CONSULTATION_FURTHER_INFORMATION_OPEN, NO_APPLICATION_UPDATE_OPEN)),
+          entry(EDIT_CONSENT_DATA, EnumSet.of(CASE_OFFICER_ASSIGNED, CAM_NOT_ASSIGNED, CONSENT_NOT_APPROVED_FOR_ISSUE)),
+          entry(EDIT_CONSENT_DOCUMENTS, EnumSet.of(CASE_OFFICER_ASSIGNED, CAM_NOT_ASSIGNED, CONSENT_NOT_APPROVED_FOR_ISSUE)),
           entry(CAM_ASSIGN_OWNERSHIP,
               EnumSet.of(
                   CASE_OFFICER_ASSIGNED,
@@ -259,6 +267,8 @@ public class CaseProcessingActionService {
           entry(CONSULTATION_RESPONSE, EnumSet.of(RESPONDER)),
           entry(CONSULTATION_FURTHER_INFORMATION_REQUEST, EnumSet.of(RESPONDER)),
           entry(CONSULTATION_FURTHER_INFORMATION_RESPOND, EnumSet.of(CASE_OFFICER)),
+          entry(EDIT_CONSENT_DATA, EnumSet.of(CASE_OFFICER)),
+          entry(EDIT_CONSENT_DOCUMENTS, EnumSet.of(CASE_OFFICER)),
           entry(CAM_ASSIGN_OWNERSHIP, EnumSet.of(CASE_OFFICER)),
           entry(APPROVE_FOR_ISSUING, EnumSet.of(CONSENTS_AND_AUTHORISATIONS_MANAGER)),
           entry(RETURN_TO_CASE_OFFICER, EnumSet.of(CONSENTS_AND_AUTHORISATIONS_MANAGER)),
@@ -285,19 +295,21 @@ public class CaseProcessingActionService {
           REGULATOR_ADD_CASE_NOTE, OPTIONAL_CASE_TASKS
       );
 
-  // If an action is here it will be displayed only on the action groups page
+  // If an action is here it will be displayed only within an action group
   private final Map<CaseProcessingActionItem, Set<CaseProcessingActionGroup>> actionsToCaseProcessingActionGroup =
-      Map.of(
-          TECHNICAL_REVIEW_REQUEST, EnumSet.of(CaseProcessingActionGroup.TECHNICAL_REVIEWS),
-          CONSULTATION_REQUEST, EnumSet.of(CaseProcessingActionGroup.CONSULTATIONS),
-          CONSULTATION_FURTHER_INFORMATION_RESPOND, EnumSet.of(CaseProcessingActionGroup.CONSULTATIONS),
-          APPLICATION_UPDATE_REQUEST, EnumSet.of(CaseProcessingActionGroup.APPLICATION_UPDATES),
-          CAM_ASSIGN_OWNERSHIP, EnumSet.of(CaseProcessingActionGroup.CONSENT_PREPARATION),
-          CAM_REASSIGN_OWNERSHIP, EnumSet.of(CaseProcessingActionGroup.CONSENT_PREPARATION,
-              CaseProcessingActionGroup.CONSENT_ISSUING),
-          RETURN_TO_CASE_OFFICER, EnumSet.of(CaseProcessingActionGroup.CONSENT_ISSUING),
-          APPROVE_FOR_ISSUING, EnumSet.of(CaseProcessingActionGroup.CONSENT_ISSUING),
-          ISSUE_CONSENT, EnumSet.of(CaseProcessingActionGroup.CONSENT_ISSUING)
+      Map.ofEntries(
+          entry(TECHNICAL_REVIEW_REQUEST, EnumSet.of(CaseProcessingActionGroup.TECHNICAL_REVIEWS)),
+          entry(CONSULTATION_REQUEST, EnumSet.of(CaseProcessingActionGroup.CONSULTATIONS)),
+          entry(CONSULTATION_FURTHER_INFORMATION_RESPOND, EnumSet.of(CaseProcessingActionGroup.CONSULTATIONS)),
+          entry(APPLICATION_UPDATE_REQUEST, EnumSet.of(CaseProcessingActionGroup.APPLICATION_UPDATES)),
+          entry(EDIT_CONSENT_DATA, EnumSet.of(CaseProcessingActionGroup.CONSENT_PREPARATION_CONSENT_DATA_CARD)),
+          entry(EDIT_CONSENT_DOCUMENTS, EnumSet.of(CaseProcessingActionGroup.CONSENT_PREPARATION_CONSENT_DOCUMENTS_CARD)),
+          entry(CAM_ASSIGN_OWNERSHIP, EnumSet.of(CaseProcessingActionGroup.CONSENT_PREPARATION)),
+          entry(CAM_REASSIGN_OWNERSHIP, EnumSet.of(CaseProcessingActionGroup.CONSENT_PREPARATION,
+              CaseProcessingActionGroup.CONSENT_ISSUING)),
+          entry(RETURN_TO_CASE_OFFICER, EnumSet.of(CaseProcessingActionGroup.CONSENT_ISSUING)),
+          entry(APPROVE_FOR_ISSUING, EnumSet.of(CaseProcessingActionGroup.CONSENT_ISSUING)),
+          entry(ISSUE_CONSENT, EnumSet.of(CaseProcessingActionGroup.CONSENT_ISSUING))
       );
 
   @Autowired

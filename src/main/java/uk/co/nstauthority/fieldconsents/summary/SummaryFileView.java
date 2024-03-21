@@ -4,6 +4,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSummaryView;
 import uk.co.fivium.fileuploadlibrary.core.UploadedFile;
+import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.document.FieldConsentsDocumentInstanceController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
@@ -21,13 +22,15 @@ public record SummaryFileView(
     );
   }
 
-  public static SummaryFileView previewSummaryFrom(DocumentInstanceSummaryView documentInstanceSummaryView) {
+  public static SummaryFileView previewSummaryFrom(
+      Application application,
+      DocumentInstanceSummaryView documentInstanceSummaryView
+  ) {
     return new SummaryFileView(
         documentInstanceSummaryView.title(),
         documentInstanceSummaryView.description(),
         ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-            .getPreviewDocumentInstance(documentInstanceSummaryView.documentInstanceId()))
+            .getPreviewDocumentInstance(application.getId(), documentInstanceSummaryView.documentInstanceId()))
     );
   }
-
 }

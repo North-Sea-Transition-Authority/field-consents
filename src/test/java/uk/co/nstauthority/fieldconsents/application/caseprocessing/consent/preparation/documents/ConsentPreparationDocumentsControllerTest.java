@@ -23,11 +23,9 @@ import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.n
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -41,6 +39,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.ConsentPreparationController;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.document.DocumentInstanceSummaryViewTestUtil;
@@ -91,20 +90,22 @@ class ConsentPreparationDocumentsControllerTest extends AbstractApplicationContr
   }
 
   @SecurityTest
-  void editDocuments_doesNotHavePermission() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Collections.emptyList());
+  void editDocuments_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
     mockMvc.perform(get(ReverseRouter.route(on(ConsentPreparationDocumentsController.class)
             .editDocuments(APPLICATION_ID)))
             .with(user(user)))
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void editDocuments() throws Exception {
     var documentInstanceSummaryViews = List.of(DocumentInstanceSummaryViewTestUtil.newBuilder().build());
     var uploadedFileForms = List.of(new UploadedFileForm());
     var consentSupportingDocumentForm = new ConsentPreparationSupportingDocumentsForm(uploadedFileForms);
 
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
     when(consentDocumentService.getConsentSupportingDocumentsForm(application)).thenReturn(consentSupportingDocumentForm);
     when(fileControllerHelperService.fileUploadComponentAttributes(eq(uploadedFileForms), eq(ConsentPreparationFileController.class), any(), any())).thenReturn(FILE_UPLOAD_COMPONENT_ATTRIBUTES);
@@ -121,10 +122,12 @@ class ConsentPreparationDocumentsControllerTest extends AbstractApplicationContr
         .andExpect(model().attribute("fileUploadAttributes", FILE_UPLOAD_COMPONENT_ATTRIBUTES));
   }
 
-  @Test
+  @SecurityTest
   void saveDocuments() throws Exception {
     var uploadedFile = UploadedFileTestUtil.newBuilder().build();
 
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
 
     mockMvc.perform(post(ReverseRouter.route(on(ConsentPreparationDocumentsController.class)
@@ -160,11 +163,14 @@ class ConsentPreparationDocumentsControllerTest extends AbstractApplicationContr
         .isEqualTo(uploadedFile.getId());
   }
 
-  @Test
+  @SecurityTest
   void saveDocuments_withValidationError() throws Exception {
     var documentInstanceSummaryViews = List.of(DocumentInstanceSummaryViewTestUtil.newBuilder().build());
     var uploadedFile = UploadedFileTestUtil.newBuilder().withDescription(null).build();
     var consentSupportingDocumentForm = ConsentPreparationSupportingDocumentsForm.from(List.of(uploadedFile));
+
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
 
     doAnswer(invocation -> {
       var bindingResult = invocation.getArgument(1, BindingResult.class);

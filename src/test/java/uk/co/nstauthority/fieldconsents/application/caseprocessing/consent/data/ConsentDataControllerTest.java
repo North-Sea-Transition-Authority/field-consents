@@ -20,9 +20,9 @@ import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.n
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -30,10 +30,10 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.Application;
-import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentFigureUnitService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentFigureUnitView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.ConsentPreparationController;
@@ -51,9 +51,6 @@ import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 class ConsentDataControllerTest extends AbstractApplicationControllerTest {
 
   private static final String VIEW_NAME = "fcs/application/consent/data/consentDataForm";
-
-  @MockBean
-  private ApplicationService applicationService;
 
   @MockBean
   private ConsentDataService consentDataService;
@@ -86,22 +83,6 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
   }
 
   @SecurityTest
-  void getConsentDataAndRedirect_notSignedIn() throws Exception {
-    mockMvc.perform(get(ReverseRouter.route(on(ConsentDataController.class)
-            .getConsentDataAndRedirect(APPLICATION_ID))))
-        .andExpect(redirectionToLoginUrl());
-  }
-
-  @SecurityTest
-  void getConsentDataAndRedirect_doesNotHavePermission() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Collections.emptyList());
-    mockMvc.perform(get(ReverseRouter.route(on(ConsentDataController.class)
-            .getConsentDataAndRedirect(APPLICATION_ID)))
-            .with(user(user)))
-        .andExpect(status().isForbidden());
-  }
-
-  @SecurityTest
   void editConsentData_notSignedIn() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(ConsentDataController.class)
             .editConsentData(APPLICATION_ID))))
@@ -109,7 +90,7 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
   }
 
   @SecurityTest
-  void editConsentData_doesNotHavePermission() throws Exception {
+  void editConsentData_userDoesNotHaveEditConsentDataCaseProcessingActionItem() throws Exception {
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Collections.emptyList());
     mockMvc.perform(get(ReverseRouter.route(on(ConsentDataController.class)
             .editConsentData(APPLICATION_ID)))
@@ -126,7 +107,7 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
   }
 
   @SecurityTest
-  void submitConsentData_doesNotHavePermission() throws Exception {
+  void submitConsentData_userDoesNotHaveEditConsentDataCaseProcessingActionItem() throws Exception {
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Collections.emptyList());
     mockMvc.perform(post(ReverseRouter.route(on(ConsentDataController.class)
             .submitConsentData(APPLICATION_ID, null, null, null)))
@@ -135,34 +116,7 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
         .andExpect(status().isForbidden());
   }
 
-  @Test
-  void getConsentDataAndRedirect_consentDataExists() throws Exception {
-    var consentData = ConsentDataTestUtil.newBuilder().build();
-
-    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
-    when(consentDataService.findConsentData(application)).thenReturn(Optional.of(consentData));
-
-    mockMvc.perform(get(ReverseRouter.route(on(ConsentDataController.class)
-        .getConsentDataAndRedirect(APPLICATION_ID)))
-        .with(user(user)))
-        .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(ConsentPreparationController.class)
-            .viewConsentPreparationPage(APPLICATION_ID, null))));
-  }
-
-  @Test
-  void getConsentDataAndRedirect_consentDataDoesNotExist() throws Exception {
-    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
-    when(consentDataService.findConsentData(application)).thenReturn(Optional.empty());
-
-    mockMvc.perform(get(ReverseRouter.route(on(ConsentDataController.class)
-            .getConsentDataAndRedirect(APPLICATION_ID)))
-            .with(user(user)))
-        .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(ConsentDataController.class).editConsentData(APPLICATION_ID))));
-  }
-
-  @Test
+  @SecurityTest
   void editConsentData() throws Exception {
     var consentLengthDetails = new ConsentLengthDetails();
     var consentLengthType = ConsentLengthType.SHORT_TERM;
@@ -172,6 +126,8 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
 
     var consentFigureUnitView = ConsentFigureUnitView.fromShortTermOrAnnualProductionApplication(ProductionUnit.KSCM_PER_DAY);
 
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DATA));
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
     when(consentDataService.getPrefilledConsentDataForm(applicationVersion, consentLengthDetails)).thenReturn(form);
@@ -189,12 +145,14 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
         .andExpect(model().attribute("consentFigureUnitView", consentFigureUnitView));
   }
 
-  @Test
+  @SecurityTest
   void submitConsentData_consentDataDoesNotExist() throws Exception {
     var consentLengthDetails = new ConsentLengthDetails();
     var consentLengthType = ConsentLengthType.SHORT_TERM;
     consentLengthDetails.setConsentLength(consentLengthType);
 
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DATA));
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
     when(consentDataService.findConsentData(application)).thenReturn(Optional.empty());
@@ -220,7 +178,7 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
     verify(consentDataService).saveConsentData(application, consentLengthType, form);
   }
 
-  @Test
+  @SecurityTest
   void submitConsentData_consentDataDoesExist() throws Exception {
     var consentLengthDetails = new ConsentLengthDetails();
     var consentLengthType = ConsentLengthType.SHORT_TERM;
@@ -228,7 +186,8 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
 
     var consentData = ConsentDataTestUtil.newBuilder().build();
 
-    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DATA));
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
     when(consentDataService.findConsentData(application)).thenReturn(Optional.of(consentData));
@@ -254,7 +213,7 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
     verify(consentDataService).saveConsentData(application, consentLengthType, form);
   }
 
-  @Test
+  @SecurityTest
   void submitConsentData_validationError() throws Exception {
     var consentLengthDetails = new ConsentLengthDetails();
     var consentLengthType = ConsentLengthType.SHORT_TERM;
@@ -262,6 +221,8 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
 
     var consentFigureUnitView = ConsentFigureUnitView.fromShortTermOrAnnualProductionApplication(ProductionUnit.KSCM_PER_DAY);
 
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DATA));
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
 

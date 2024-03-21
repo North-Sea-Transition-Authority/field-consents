@@ -224,6 +224,7 @@ class FieldConsentsDocumentInstanceServiceTest {
 
   @Test
   void renderPdf() {
+    var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
     var pdfRenderingOptions = PdfRenderingOptions.newBuilder().build();
     var documentInstanceSectionsSummaryView = mock(DocumentInstanceSectionsSummaryView.class);
@@ -235,6 +236,7 @@ class FieldConsentsDocumentInstanceServiceTest {
 
     when(
         fieldConsentsDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionsSummaryView(
+            application,
             documentInstanceDto,
             false
         )
@@ -243,7 +245,7 @@ class FieldConsentsDocumentInstanceServiceTest {
     when(documentInstanceService.renderPdf(documentInstanceDto, expectedTemplateModel))
         .thenReturn(byteArrayResource);
 
-    assertThat(fieldConsentsDocumentInstanceService.renderPdf(documentInstanceDto, pdfRenderingOptions))
+    assertThat(fieldConsentsDocumentInstanceService.renderPdf(application, documentInstanceDto, pdfRenderingOptions))
         .isEqualTo(byteArrayResource);
   }
 

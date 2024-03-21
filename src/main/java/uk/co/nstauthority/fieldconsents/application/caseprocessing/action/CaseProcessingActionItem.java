@@ -9,6 +9,8 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ca
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casenotes.CaseNotesController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.ConsentIssuingController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.ConsentPreparationController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.documents.ConsentPreparationDocumentsController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.allocation.ConsultationAllocationController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.request.FurtherInformationRequestController;
@@ -43,6 +45,10 @@ public enum CaseProcessingActionItem implements Displayable {
   TECHNICAL_REVIEW_REQUEST("Request technical review", 5, true, false, null,
       applicationId -> ReverseRouter.route(on(TechnicalReviewController.class)
           .getTechnicalReviewRequest(applicationId, null))),
+  EDIT_CONSENT_DATA("Edit", 1, true, false, null,
+      applicationId -> ReverseRouter.route(on(ConsentDataController.class).editConsentData(applicationId))),
+  EDIT_CONSENT_DOCUMENTS("Edit", 1, true, false, null,
+      applicationId -> ReverseRouter.route(on(ConsentPreparationDocumentsController.class).editDocuments(applicationId))),
   CAM_ASSIGN_OWNERSHIP("Assign to CAM", 6, true, false, null,
       applicationId -> ReverseRouter.route(on(CamAssignmentController.class)
           .getCamAssignment(applicationId, null))),
@@ -67,8 +73,8 @@ public enum CaseProcessingActionItem implements Displayable {
       applicationId -> ReverseRouter.route(on(ApplicationUpdateController.class)
           .getApplicationUpdates(applicationId, null))),
   CONSENT_PREPARATION("Consent preparation", 7, false, false, null,
-      applicationId -> ReverseRouter.route(on(ConsentDataController.class)
-          .getConsentDataAndRedirect(applicationId))),
+      applicationId -> ReverseRouter.route(on(ConsentPreparationController.class)
+          .viewConsentPreparationPage(applicationId, null))),
   REGULATOR_ADD_CASE_NOTE("Add case note", 99, false, false, null,
       applicationId -> ReverseRouter.route(on(CaseNotesController.class)
           .getNewCaseNote(applicationId))),

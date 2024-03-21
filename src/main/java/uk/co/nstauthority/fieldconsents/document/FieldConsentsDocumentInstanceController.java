@@ -15,63 +15,82 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
-import uk.co.nstauthority.fieldconsents.authorisation.HasPermission;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
+import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Controller
-@RequestMapping("/document-instances")
-@HasPermission(permissions = RolePermission.PROCESS_FCS_APPLICATIONS)
+@RequestMapping("/applications/{applicationId}/document-instances/{documentInstanceId}")
 public class FieldConsentsDocumentInstanceController {
 
   private final FieldConsentsDocumentInstanceService fieldConsentsDocumentInstanceService;
+  private final FieldConsentsDocumentInstanceControllerHelperService fieldConsentsDocumentInstanceControllerHelperService;
   private final FieldConsentsDocumentInstanceSectionControllerHelperService
       fieldConsentsDocumentInstanceSectionControllerHelperService;
   private final DocumentInstanceService documentInstanceService;
-  private final DocumentInstanceLinkingService documentInstanceLinkingService;
   private final ApplicationService applicationService;
+  private final ApplicationVersionService applicationVersionService;
 
   FieldConsentsDocumentInstanceController(
       FieldConsentsDocumentInstanceService fieldConsentsDocumentInstanceService,
+      FieldConsentsDocumentInstanceControllerHelperService fieldConsentsDocumentInstanceControllerHelperService,
       FieldConsentsDocumentInstanceSectionControllerHelperService fieldConsentsDocumentInstanceSectionControllerHelperService,
       DocumentInstanceService documentInstanceService,
-      DocumentInstanceLinkingService documentInstanceLinkingService,
-      ApplicationService applicationService
+      ApplicationService applicationService,
+      ApplicationVersionService applicationVersionService
   ) {
     this.fieldConsentsDocumentInstanceService = fieldConsentsDocumentInstanceService;
+    this.fieldConsentsDocumentInstanceControllerHelperService = fieldConsentsDocumentInstanceControllerHelperService;
     this.fieldConsentsDocumentInstanceSectionControllerHelperService =
         fieldConsentsDocumentInstanceSectionControllerHelperService;
     this.documentInstanceService = documentInstanceService;
-    this.documentInstanceLinkingService = documentInstanceLinkingService;
+    this.applicationVersionService = applicationVersionService;
     this.applicationService = applicationService;
   }
 
-  @GetMapping("/{documentInstanceId}")
-  public ModelAndView getViewDocumentInstance(@PathVariable UUID documentInstanceId) {
-    var documentInstanceDto = documentInstanceService.getDocumentInstanceDtoOrThrow(documentInstanceId);
+  @GetMapping
+  @ActionEndPoint(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS)
+  public ModelAndView getViewDocumentInstance(@PathVariable Integer applicationId, @PathVariable UUID documentInstanceId) {
+    var application = applicationService.getApplicationById(applicationId);
+    var documentInstanceDto = fieldConsentsDocumentInstanceControllerHelperService.getDocumentInstanceDtoForApplicationOrThrow(
+        application,
+        documentInstanceId
+    );
 
     var documentInstanceSectionsSummaryView = fieldConsentsDocumentInstanceSectionControllerHelperService
-        .getDocumentInstanceSectionsSummaryView(documentInstanceDto, true);
+        .getDocumentInstanceSectionsSummaryView(application, documentInstanceDto, true);
 
     return new ModelAndView("fcs/document/viewDocumentInstance")
         .addObject("pageTitle", documentInstanceDto.documentTemplateDto().title())
         .addObject("documentInstanceSectionsSummaryView", documentInstanceSectionsSummaryView)
         .addObject(
             "previewUrl",
-            ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class).getPreviewDocumentInstance(documentInstanceId))
+            ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
+                .getPreviewDocumentInstance(applicationId, documentInstanceId))
         )
         .addObject(
             "reloadUrl",
-            ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class).getReloadDocumentInstance(documentInstanceId))
+            ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
+                .getReloadDocumentInstance(applicationId, documentInstanceId))
         );
   }
 
-  @GetMapping("/{documentInstanceId}/preview")
-  @HasPermission(permissions = { RolePermission.PROCESS_FCS_APPLICATIONS, RolePermission.AUTHORISE_FCS_CONSENTS })
-  public ResponseEntity<?> getPreviewDocumentInstance(@PathVariable UUID documentInstanceId) {
-    var documentInstanceDto = documentInstanceService.getDocumentInstanceDtoOrThrow(documentInstanceId);
+  @GetMapping("/preview")
+  @ActionEndPoint({ CaseProcessingActionItem.CONSENT_PREPARATION, CaseProcessingActionItem.CONSENT_ISSUING })
+  public ResponseEntity<?> getPreviewDocumentInstance(
+      @PathVariable Integer applicationId,
+      @PathVariable UUID documentInstanceId
+  ) {
+    var application = applicationService.getApplicationById(applicationId);
+    var documentInstanceDto = fieldConsentsDocumentInstanceControllerHelperService.getDocumentInstanceDtoForApplicationOrThrow(
+        application,
+        documentInstanceId
+    );
+
     var byteArrayResource = fieldConsentsDocumentInstanceService.renderPdf(
+        application,
         documentInstanceDto,
         PdfRenderingOptions.newBuilder().withPreviewWatermark(true).build()
     );
@@ -84,11 +103,19 @@ public class FieldConsentsDocumentInstanceController {
         .body(byteArrayResource);
   }
 
-  @GetMapping("/{documentInstanceId}/reload")
-  public ModelAndView getReloadDocumentInstance(@PathVariable UUID documentInstanceId) {
-    var documentInstanceDto = documentInstanceService.getDocumentInstanceDtoOrThrow(documentInstanceId);
-    var applicationVersion =
-        documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto);
+  @GetMapping("/reload")
+  @ActionEndPoint(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS)
+  public ModelAndView getReloadDocumentInstance(
+      @PathVariable Integer applicationId,
+      @PathVariable UUID documentInstanceId
+  ) {
+    var application = applicationService.getApplicationById(applicationId);
+    var documentInstanceDto = fieldConsentsDocumentInstanceControllerHelperService.getDocumentInstanceDtoForApplicationOrThrow(
+        application,
+        documentInstanceId
+    );
+
+    var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var applicationReference = applicationService.generateApplicationReference(applicationVersion);
 
     return new ModelAndView("fcs/document/reloadDocumentInstance")
@@ -96,21 +123,29 @@ public class FieldConsentsDocumentInstanceController {
         .addObject("applicationReference", applicationReference)
         .addObject(
             "cancelUrl",
-            ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class).getViewDocumentInstance(documentInstanceId))
+            ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
+                .getViewDocumentInstance(applicationId, documentInstanceId))
         );
   }
 
-  @PostMapping("/{documentInstanceId}/reload")
+  @PostMapping("/reload")
+  @ActionEndPoint(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS)
   public ModelAndView reloadDocumentInstance(
+      @PathVariable Integer applicationId,
       @PathVariable UUID documentInstanceId,
       RedirectAttributes redirectAttributes
   ) {
-    var documentInstanceDto = documentInstanceService.getDocumentInstanceDtoOrThrow(documentInstanceId);
+    var application = applicationService.getApplicationById(applicationId);
+    var documentInstanceDto = fieldConsentsDocumentInstanceControllerHelperService.getDocumentInstanceDtoForApplicationOrThrow(
+        application,
+        documentInstanceId
+    );
 
     documentInstanceService.reloadDocumentInstance(documentInstanceDto);
 
     NotificationBannerUtil.addSuccessNotification(redirectAttributes, "Document reloaded");
 
-    return ReverseRouter.redirect(on(FieldConsentsDocumentInstanceController.class).getViewDocumentInstance(documentInstanceId));
+    return ReverseRouter.redirect(on(FieldConsentsDocumentInstanceController.class)
+        .getViewDocumentInstance(applicationId, documentInstanceId));
   }
 }

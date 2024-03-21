@@ -2,7 +2,9 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.prep
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSENT_PREPARATION;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.EDIT_CONSENT_DATA;
 
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,14 +16,12 @@ import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetServi
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionGroup;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentData;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataService;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentFigureUnitService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.documents.ConsentPreparationDocumentService;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.documents.ConsentPreparationDocumentsController;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
-import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.application.fieldequitypartner.FieldEquityPartnerService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
@@ -68,24 +68,27 @@ public class ConsentPreparationController {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var application = applicationVersion.getApplication();
 
-    var consentLengthType = consentLengthService.getConsentLengthDetails(applicationVersion).getConsentLength();
+    var consentDataOptional = consentDataService.findConsentData(application);
 
-    return consentDataService.findConsentData(application)
-        .map(consentData -> consentDataService.getConsentDataView(application, consentData, consentLengthType))
-        .map(consentDataView -> getModelAndView(applicationVersion, consentDataView, consentLengthType, user))
-        .orElse(ReverseRouter.redirect(on(ConsentDataController.class).editConsentData(applicationId)));
+    if (consentDataOptional.isEmpty()) {
+      var hasEditConsentDataAction = caseProcessingActionService.getUserActionItems(applicationVersion, user)
+          .contains(EDIT_CONSENT_DATA);
+      if (hasEditConsentDataAction) {
+        return ReverseRouter.redirect(on(ConsentDataController.class).editConsentData(applicationId));
+      }
+    }
+
+    return getModelAndViewWithConsentData(applicationVersion, consentDataOptional.orElse(null), user);
   }
 
-  private ModelAndView getModelAndView(
+  private ModelAndView getModelAndViewWithConsentData(
       ApplicationVersion applicationVersion,
-      ConsentDataView consentDataView,
-      ConsentLengthType consentLengthType,
+      @Nullable ConsentData consentData,
       ServiceUserDetail user
   ) {
     var application = applicationVersion.getApplication();
-    var applicationId = application.getId();
 
-    var actionList = caseProcessingActionService.getUserActionViewsForGroup(
+    var consentPreparationGroupActionViewList = caseProcessingActionService.getUserActionViewsForGroup(
         applicationVersion,
         user,
         CaseProcessingActionGroup.CONSENT_PREPARATION
@@ -94,28 +97,47 @@ public class ConsentPreparationController {
     var modelAndView = new ModelAndView("fcs/application/consent/consentPreparation")
         .addObject("pageTitle", CONSENT_PREPARATION.getDisplayName())
         .addObject("applicationType", application.getType())
-        .addObject("consentLengthType", consentLengthType)
-        .addObject("consentDocumentsSummaryCard", consentPreparationDocumentService.getConsentDocumentsSummaryCard(application))
-        .addObject("consentDataView", consentDataView)
-        .addObject(
-            "consentFigureUnitView",
-            consentFigureUnitService.getConsentFigureUnitView(applicationVersion, consentLengthType)
-        )
-        .addObject("consentDataEditUrl", ReverseRouter.route(on(ConsentDataController.class)
-            .editConsentData(applicationId)))
-        .addObject("consentDocumentsEditUrl", ReverseRouter.route(on(ConsentPreparationDocumentsController.class)
-            .editDocuments(applicationId)))
         .addObject("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .caseProcessing(applicationId, null, null)))
-        .addObject("actionList", actionList);
+            .caseProcessing(application.getId(), null, null)))
+        .addObject("consentPreparationGroupActionViewList", consentPreparationGroupActionViewList);
 
-    if (applicationAssetService.getPrimaryAsset(applicationVersion).isField()) {
-      var fieldEquityPartnersView = fieldEquityPartnerService.getFieldEquityPartnersView(applicationVersion);
+    if (consentData != null) {
+      var consentLengthType = consentLengthService.getConsentLengthDetails(applicationVersion).getConsentLength();
+
+      var consentDataView = consentDataService.getConsentDataView(application, consentData, consentLengthType);
+      var consentFigureUnitView = consentFigureUnitService.getConsentFigureUnitView(applicationVersion, consentLengthType);
+      var consentPreparationConsentDataCardGroupActionViewList = caseProcessingActionService.getUserActionViewsForGroup(
+          applicationVersion,
+          user,
+          CaseProcessingActionGroup.CONSENT_PREPARATION_CONSENT_DATA_CARD
+      );
+
+      var consentDocumentsSummaryCard = consentPreparationDocumentService.getConsentDocumentsSummaryCard(application);
+      var consentPreparationConsentDocumentsCardGroupActionViewList = caseProcessingActionService.getUserActionViewsForGroup(
+          applicationVersion,
+          user,
+          CaseProcessingActionGroup.CONSENT_PREPARATION_CONSENT_DOCUMENTS_CARD
+      );
+
       modelAndView
-          .addObject("fieldEquityPartnersView", fieldEquityPartnersView)
-          .addObject("regulatorIndustryAccessManagerRole", RegulatorTeamRole.INDUSTRY_ACCESS_MANAGER)
-          .addObject("industryAccessManagerRole", IndustryTeamRole.ACCESS_MANAGER)
-          .addObject("consentRecipientRole", IndustryTeamRole.CONSENT_RECIPIENT);
+          .addObject("consentLengthType", consentLengthType)
+          .addObject("consentDataView", consentDataView)
+          .addObject("consentFigureUnitView", consentFigureUnitView)
+          .addObject("consentPreparationConsentDataCardGroupActionViewList", consentPreparationConsentDataCardGroupActionViewList)
+          .addObject("consentDocumentsSummaryCard", consentDocumentsSummaryCard)
+          .addObject(
+              "consentPreparationConsentDocumentsCardGroupActionViewList",
+              consentPreparationConsentDocumentsCardGroupActionViewList
+          );
+
+      if (applicationAssetService.getPrimaryAsset(applicationVersion).isField()) {
+        var fieldEquityPartnersView = fieldEquityPartnerService.getFieldEquityPartnersView(applicationVersion);
+        modelAndView
+            .addObject("fieldEquityPartnersView", fieldEquityPartnersView)
+            .addObject("regulatorIndustryAccessManagerRole", RegulatorTeamRole.INDUSTRY_ACCESS_MANAGER)
+            .addObject("industryAccessManagerRole", IndustryTeamRole.ACCESS_MANAGER)
+            .addObject("consentRecipientRole", IndustryTeamRole.CONSENT_RECIPIENT);
+      }
     }
 
     return modelAndView;

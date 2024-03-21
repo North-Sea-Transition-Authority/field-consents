@@ -19,11 +19,11 @@
     </@fdsNotificationBanner.notificationBannerInfo>
   </#if>
 
-  <@caseProcessingActions.caseActions actions=actionList />
+  <@caseProcessingActions.caseActions actions=consentIssuingGroupActionViewList />
 
   <@consentFilesSummary.summary
     heading=consentDocumentsSummaryCard.displayName()
     fileViews=consentDocumentsSummaryCard.summaryData()
-    editable=false
+    caseProcessingActionViewList=consentPreparationConsentDocumentsCardGroupActionViewList
   />
 </@defaultPage>

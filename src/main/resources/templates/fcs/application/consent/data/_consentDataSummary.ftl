@@ -1,14 +1,11 @@
 <#include '../../../layout/layout.ftl'>
+<#import '../../_caseProcessingActions.ftl' as caseProcessingActions>
 
 <#-- @ftlvariable name="consentDataView" type="uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataView" -->
 
-<#macro summaryCard applicationType consentLengthType consentDataView consentFigureUnitView editUrl>
+<#macro summaryCard applicationType consentLengthType consentDataView consentFigureUnitView caseProcessingActionViewList>
   <#assign summaryCardActions>
-    <@fdsSummaryList.summaryListCardActionItem
-      itemUrl=springUrl(editUrl)
-      itemText="Edit"
-      itemScreenReaderText="Edit consent data"
-    />
+    <@caseProcessingActions.summaryCardActions actionViews=caseProcessingActionViewList />
   </#assign>
   <@fdsSummaryList.summaryListCard
     headingText="Consent data"

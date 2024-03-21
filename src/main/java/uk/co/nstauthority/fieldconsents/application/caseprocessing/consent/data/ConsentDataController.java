@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
@@ -26,10 +25,9 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @Controller
 @RequestMapping("/applications/{applicationId}/consent-data")
-@ActionEndPoint(CaseProcessingActionItem.CONSENT_PREPARATION)
+@ActionEndPoint(CaseProcessingActionItem.EDIT_CONSENT_DATA)
 public class ConsentDataController {
 
-  private final ApplicationService applicationService;
   private final ApplicationVersionService applicationVersionService;
   private final ConsentDataService consentDataService;
   private final ConsentDataFormValidator consentDataFormValidator;
@@ -38,7 +36,6 @@ public class ConsentDataController {
   private final FieldConsentsDocumentInstanceService fieldConsentsDocumentInstanceService;
 
   ConsentDataController(
-      ApplicationService applicationService,
       ApplicationVersionService applicationVersionService,
       ConsentDataService consentDataService,
       ConsentDataFormValidator consentDataFormValidator,
@@ -46,25 +43,12 @@ public class ConsentDataController {
       ConsentLengthService consentLengthService,
       FieldConsentsDocumentInstanceService fieldConsentsDocumentInstanceService
   ) {
-    this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.consentDataService = consentDataService;
     this.consentDataFormValidator = consentDataFormValidator;
     this.consentFigureUnitService = consentFigureUnitService;
     this.consentLengthService = consentLengthService;
     this.fieldConsentsDocumentInstanceService = fieldConsentsDocumentInstanceService;
-  }
-
-  @GetMapping
-  public ModelAndView getConsentDataAndRedirect(@PathVariable Integer applicationId) {
-    var application = applicationService.getApplicationById(applicationId);
-    var consentDataOptional = consentDataService.findConsentData(application);
-
-    if (consentDataOptional.isPresent()) {
-      return ReverseRouter.redirect(on(ConsentPreparationController.class).viewConsentPreparationPage(applicationId, null));
-    }
-
-    return ReverseRouter.redirect(on(this.getClass()).editConsentData(applicationId));
   }
 
   @GetMapping("/edit")

@@ -1,11 +1,13 @@
 package uk.co.nstauthority.fieldconsents.document;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.function.Function;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,11 +16,15 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.server.ResponseStatusException;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionControllerHelperService;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionDto;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionService;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionUrls;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionsSummaryView;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldFormatter;
+import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
+import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.document.mailmergefield.FieldConsentsDocumentMailMergeFieldFormatter;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
@@ -29,7 +35,13 @@ class FieldConsentsDocumentInstanceSectionControllerHelperServiceTest {
   private FieldConsentsDocumentMailMergeFieldFormatter fieldConsentsDocumentMailMergeFieldFormatter;
 
   @Mock
+  private DocumentInstanceSectionService documentInstanceSectionService;
+
+  @Mock
   private DocumentInstanceSectionControllerHelperService documentInstanceSectionControllerHelperService;
+
+  @Mock
+  private DocumentInstanceLinkingService documentInstanceLinkingService;
 
   @InjectMocks
   private FieldConsentsDocumentInstanceSectionControllerHelperService fieldConsentsDocumentInstanceSectionControllerHelperService;
@@ -38,7 +50,50 @@ class FieldConsentsDocumentInstanceSectionControllerHelperServiceTest {
   private ArgumentCaptor<Function<DocumentInstanceSectionDto, DocumentInstanceSectionUrls>> urlsFunctionCaptor;
 
   @Test
+  void getDocumentInstanceSectionDtoForApplicationOrThrow_applicationIdEqualsDocumentInstanceApplicationId() {
+    var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.VENT);
+    var documentInstanceSectionId = UUID.randomUUID();
+
+    var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
+    var documentInstanceDto = documentInstanceSectionDto.documentInstanceDto();
+
+    when(documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(documentInstanceSectionId))
+        .thenReturn(documentInstanceSectionDto);
+    when(documentInstanceLinkingService.getApplicationIdFromDocumentInstanceDtoOrThrowIfInvalidItemType(documentInstanceDto))
+        .thenReturn(application.getId());
+
+    assertThat(
+        fieldConsentsDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(
+            application,
+            documentInstanceSectionId
+        )
+    ).isEqualTo(documentInstanceSectionDto);
+  }
+
+  @Test
+  void getDocumentInstanceSectionDtoForApplicationOrThrow_applicationIdDoesNotEqualDocumentInstanceApplicationId() {
+    var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.VENT);
+    var documentInstanceSectionId = UUID.randomUUID();
+
+    var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
+    var documentInstanceDto = documentInstanceSectionDto.documentInstanceDto();
+
+    when(documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(documentInstanceSectionId))
+        .thenReturn(documentInstanceSectionDto);
+    when(documentInstanceLinkingService.getApplicationIdFromDocumentInstanceDtoOrThrowIfInvalidItemType(documentInstanceDto))
+        .thenReturn(1000);
+
+    assertThatThrownBy(() ->
+        fieldConsentsDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(
+            application,
+            documentInstanceSectionId
+        )
+    ).isInstanceOf(ResponseStatusException.class);
+  }
+
+  @Test
   void getDocumentInstanceSectionsSummaryView_useDocumentMailMergeFieldFormatterIsTrue() {
+    var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
 
     var documentInstanceSectionsSummaryView = new DocumentInstanceSectionsSummaryView(List.of(), List.of());
@@ -53,11 +108,13 @@ class FieldConsentsDocumentInstanceSectionControllerHelperServiceTest {
 
     assertThat(
         fieldConsentsDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionsSummaryView(
+            application,
             documentInstanceDto,
             true
         )
     ).isEqualTo(documentInstanceSectionsSummaryView);
 
+    var applicationId = application.getId();
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
     var documentInstanceSectionId = documentInstanceSectionDto.id();
 
@@ -67,21 +124,22 @@ class FieldConsentsDocumentInstanceSectionControllerHelperServiceTest {
         .isEqualTo(
             new DocumentInstanceSectionUrls(
                 ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-                    .getAddDocumentInstanceSectionBefore(documentInstanceSectionId)),
+                    .getAddDocumentInstanceSectionBefore(applicationId, documentInstanceSectionId)),
                 ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-                    .getAddDocumentInstanceSectionAfter(documentInstanceSectionId)),
+                    .getAddDocumentInstanceSectionAfter(applicationId, documentInstanceSectionId)),
                 ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-                    .getAddDocumentInstanceSubsection(documentInstanceSectionId)),
+                    .getAddDocumentInstanceSubsection(applicationId, documentInstanceSectionId)),
                 ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-                    .getEditDocumentInstanceSection(documentInstanceSectionId)),
+                    .getEditDocumentInstanceSection(applicationId, documentInstanceSectionId)),
                 ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-                    .getRemoveDocumentInstanceSection(documentInstanceSectionId))
+                    .getRemoveDocumentInstanceSection(applicationId, documentInstanceSectionId))
             )
         );
   }
 
   @Test
   void getDocumentInstanceSectionsSummaryView_useDocumentMailMergeFieldFormatterIsFalse() {
+    var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
 
     var documentInstanceSectionsSummaryView = new DocumentInstanceSectionsSummaryView(List.of(), List.of());
@@ -96,11 +154,13 @@ class FieldConsentsDocumentInstanceSectionControllerHelperServiceTest {
 
     assertThat(
         fieldConsentsDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionsSummaryView(
+            application,
             documentInstanceDto,
             false
         )
     ).isEqualTo(documentInstanceSectionsSummaryView);
 
+    var applicationId = application.getId();
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
     var documentInstanceSectionId = documentInstanceSectionDto.id();
 
@@ -110,15 +170,15 @@ class FieldConsentsDocumentInstanceSectionControllerHelperServiceTest {
         .isEqualTo(
             new DocumentInstanceSectionUrls(
                 ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-                    .getAddDocumentInstanceSectionBefore(documentInstanceSectionId)),
+                    .getAddDocumentInstanceSectionBefore(applicationId, documentInstanceSectionId)),
                 ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-                    .getAddDocumentInstanceSectionAfter(documentInstanceSectionId)),
+                    .getAddDocumentInstanceSectionAfter(applicationId, documentInstanceSectionId)),
                 ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-                    .getAddDocumentInstanceSubsection(documentInstanceSectionId)),
+                    .getAddDocumentInstanceSubsection(applicationId, documentInstanceSectionId)),
                 ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-                    .getEditDocumentInstanceSection(documentInstanceSectionId)),
+                    .getEditDocumentInstanceSection(applicationId, documentInstanceSectionId)),
                 ReverseRouter.route(on(FieldConsentsDocumentInstanceSectionController.class)
-                    .getRemoveDocumentInstanceSection(documentInstanceSectionId))
+                    .getRemoveDocumentInstanceSection(applicationId, documentInstanceSectionId))
             )
         );
   }

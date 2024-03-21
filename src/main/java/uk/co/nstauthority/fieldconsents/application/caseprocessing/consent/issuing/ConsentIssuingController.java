@@ -56,10 +56,16 @@ public class ConsentIssuingController {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var application = applicationVersion.getApplication();
 
-    var actionList = caseProcessingActionService.getUserActionViewsForGroup(
+    var consentIssuingGroupActionViewList = caseProcessingActionService.getUserActionViewsForGroup(
         applicationVersion,
         user,
         CaseProcessingActionGroup.CONSENT_ISSUING
+    );
+
+    var consentPreparationConsentDocumentsCardGroupActionViewList = caseProcessingActionService.getUserActionViewsForGroup(
+        applicationVersion,
+        user,
+        CaseProcessingActionGroup.CONSENT_PREPARATION_CONSENT_DOCUMENTS_CARD
     );
 
     var consentDocumentsSummaryCard = consentPreparationDocumentService.getConsentDocumentsSummaryCard(application);
@@ -70,7 +76,11 @@ public class ConsentIssuingController {
     return new ModelAndView("fcs/application/consent/consentIssuing")
         .addObject("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class)
             .caseProcessing(applicationId, null, null)))
-        .addObject("actionList", actionList)
+        .addObject("consentIssuingGroupActionViewList", consentIssuingGroupActionViewList)
+        .addObject(
+            "consentPreparationConsentDocumentsCardGroupActionViewList",
+            consentPreparationConsentDocumentsCardGroupActionViewList
+        )
         .addObject("consentDocumentsSummaryCard", consentDocumentsSummaryCard)
         .addObject("consentIssuingApprovalSummaryView", consentIssuingApprovalSummaryView);
   }

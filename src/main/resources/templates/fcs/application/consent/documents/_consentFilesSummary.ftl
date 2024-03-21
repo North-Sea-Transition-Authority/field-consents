@@ -1,14 +1,9 @@
 <#include '../../../layout/layout.ftl'>
+<#import '../../_caseProcessingActions.ftl' as caseProcessingActions>
 
-<#macro summary heading fileViews editable editUrl="">
+<#macro summary heading fileViews caseProcessingActionViewList>
   <#assign summaryCardActions>
-    <#if editable>
-      <@fdsSummaryList.summaryListCardActionItem
-        itemUrl=springUrl(editUrl)
-        itemText="Edit"
-        itemScreenReaderText="Edit consent documents"
-      />
-    </#if>
+    <@caseProcessingActions.summaryCardActions actionViews=caseProcessingActionViewList />
   </#assign>
   <@fdsSummaryList.summaryListCard
     headingText=heading

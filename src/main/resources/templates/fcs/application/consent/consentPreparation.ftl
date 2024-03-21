@@ -10,35 +10,35 @@
   pageSize=PageSize.FULL_WIDTH
   backLinkUrl=springUrl(backLinkUrl)
 >
-  <@caseProcessingActions.caseActions actions=actionList />
+  <@caseProcessingActions.caseActions actions=consentPreparationGroupActionViewList />
 
-  <#if fieldEquityPartnersView?has_content>
-    <#if fieldEquityPartnersView.organisationGroupNamesWithoutConsentRecipients()?has_content>
-      <@fieldEquityPartner.notificationBanner
-        fieldEquityPartnersView
-        regulatorIndustryAccessManagerRole
-        industryAccessManagerRole
-        consentRecipientRole
-      />
+  <#if consentDataView?has_content>
+    <#if fieldEquityPartnersView?has_content>
+      <#if fieldEquityPartnersView.organisationGroupNamesWithoutConsentRecipients()?has_content>
+        <@fieldEquityPartner.notificationBanner
+          fieldEquityPartnersView
+          regulatorIndustryAccessManagerRole
+          industryAccessManagerRole
+          consentRecipientRole
+        />
+      </#if>
+      <@fieldEquityPartner.summaryList fieldEquityPartnersView/>
     </#if>
-    <@fieldEquityPartner.summaryList fieldEquityPartnersView/>
+    <@consentDataSummary.summaryCard
+      applicationType=applicationType
+      consentLengthType=consentLengthType
+      consentDataView=consentDataView
+      consentFigureUnitView=consentFigureUnitView
+      caseProcessingActionViewList=consentPreparationConsentDataCardGroupActionViewList
+    />
+    <@consentFilesSummary.summary
+      heading=consentDocumentsSummaryCard.displayName()
+      fileViews=consentDocumentsSummaryCard.summaryData()
+      caseProcessingActionViewList=consentPreparationConsentDocumentsCardGroupActionViewList
+    />
+  <#else>
+    <@fdsInsetText.insetText>
+      No consent data has been provided yet by the assigned case officer.
+    </@fdsInsetText.insetText>
   </#if>
-  <@consentDataSummary.summaryCard
-    applicationType=applicationType
-    consentLengthType=consentLengthType
-    consentDataView=consentDataView
-    consentFigureUnitView=consentFigureUnitView
-    editUrl=consentDataEditUrl
-  />
-  <@consentFilesSummary.summary
-    heading=consentDocumentsSummaryCard.displayName()
-    fileViews=consentDocumentsSummaryCard.summaryData()
-    editable=true
-    editUrl=consentDocumentsEditUrl
-  />
-  <@fdsAction.link
-    linkText="Save and continue"
-    linkClass="govuk-button"
-    linkUrl=springUrl(backLinkUrl)
-  />
 </@defaultPage>

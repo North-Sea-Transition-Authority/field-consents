@@ -37,7 +37,7 @@ public class ConsentPreparationDocumentService {
     var filesSummary = new ArrayList<SummaryFileView>();
 
     fieldConsentsDocumentInstanceControllerHelperService.getDocumentInstanceSummaryViews(application).stream()
-        .map(SummaryFileView::previewSummaryFrom)
+        .map(documentInstanceSummaryView -> SummaryFileView.previewSummaryFrom(application, documentInstanceSummaryView))
         .forEach(filesSummary::add);
 
     fieldConsentsFileService.getUploadedFiles(getFileUsage(application)).stream()

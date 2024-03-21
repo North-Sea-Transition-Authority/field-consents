@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
@@ -79,7 +78,7 @@ class FieldConsentsDocumentTemplateSectionControllerTest extends AbstractControl
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void getAddDocumentTemplateSectionBefore() throws Exception {
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
     var documentTemplateDto = documentTemplateSectionDto.documentTemplateDto();
@@ -131,7 +130,7 @@ class FieldConsentsDocumentTemplateSectionControllerTest extends AbstractControl
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void addDocumentTemplateSectionBefore_invalidForm() throws Exception {
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
     var documentTemplateDto = documentTemplateSectionDto.documentTemplateDto();
@@ -179,7 +178,7 @@ class FieldConsentsDocumentTemplateSectionControllerTest extends AbstractControl
         .createDocumentTemplateSection(any(), any(), any(), anyInt());
   }
 
-  @Test
+  @SecurityTest
   void addDocumentTemplateSectionBefore_nullParent() throws Exception {
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
 
@@ -211,7 +210,7 @@ class FieldConsentsDocumentTemplateSectionControllerTest extends AbstractControl
     );
   }
 
-  @Test
+  @SecurityTest
   void addDocumentTemplateSectionBefore_nonNullParent() throws Exception {
     var parentDocumentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
     var parentId = parentDocumentTemplateSectionDto.id();
@@ -267,7 +266,7 @@ class FieldConsentsDocumentTemplateSectionControllerTest extends AbstractControl
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void getAddDocumentTemplateSectionAfter() throws Exception {
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
     var documentTemplateDto = documentTemplateSectionDto.documentTemplateDto();
@@ -319,7 +318,7 @@ class FieldConsentsDocumentTemplateSectionControllerTest extends AbstractControl
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void addDocumentTemplateSectionAfter_invalidForm() throws Exception {
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
     var documentTemplateDto = documentTemplateSectionDto.documentTemplateDto();
@@ -367,7 +366,7 @@ class FieldConsentsDocumentTemplateSectionControllerTest extends AbstractControl
         .createDocumentTemplateSection(any(), any(), any(), anyInt());
   }
 
-  @Test
+  @SecurityTest
   void addDocumentTemplateSectionAfter_nullParent() throws Exception {
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
 
@@ -399,7 +398,7 @@ class FieldConsentsDocumentTemplateSectionControllerTest extends AbstractControl
     );
   }
 
-  @Test
+  @SecurityTest
   void addDocumentTemplateSectionAfter_nonNullParent() throws Exception {
     var parentDocumentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
     var parentId = parentDocumentTemplateSectionDto.id();
@@ -455,7 +454,7 @@ class FieldConsentsDocumentTemplateSectionControllerTest extends AbstractControl
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void getAddDocumentTemplateSubsection() throws Exception {
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
     var documentTemplateDto = documentTemplateSectionDto.documentTemplateDto();
@@ -507,7 +506,7 @@ class FieldConsentsDocumentTemplateSectionControllerTest extends AbstractControl
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void addDocumentTemplateSubsection_invalidForm() throws Exception {
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
     var documentTemplateDto = documentTemplateSectionDto.documentTemplateDto();
@@ -555,7 +554,7 @@ class FieldConsentsDocumentTemplateSectionControllerTest extends AbstractControl
         .createDocumentTemplateSection(any(), any(), any(), anyInt());
   }
 
-  @Test
+  @SecurityTest
   void addDocumentTemplateSubsection() throws Exception {
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
 
@@ -604,7 +603,7 @@ class FieldConsentsDocumentTemplateSectionControllerTest extends AbstractControl
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void getEditDocumentTemplateSection() throws Exception {
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
     var documentTemplateDto = documentTemplateSectionDto.documentTemplateDto();
@@ -656,7 +655,7 @@ class FieldConsentsDocumentTemplateSectionControllerTest extends AbstractControl
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void editDocumentTemplateSection_invalidForm() throws Exception {
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
     var documentTemplateDto = documentTemplateSectionDto.documentTemplateDto();
@@ -704,7 +703,7 @@ class FieldConsentsDocumentTemplateSectionControllerTest extends AbstractControl
         .editDocumentTemplateSection(any(), any());
   }
 
-  @Test
+  @SecurityTest
   void editDocumentTemplateSection() throws Exception {
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
 
@@ -749,7 +748,7 @@ class FieldConsentsDocumentTemplateSectionControllerTest extends AbstractControl
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void getRemoveDocumentTemplateSection() throws Exception {
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
 
@@ -787,7 +786,7 @@ class FieldConsentsDocumentTemplateSectionControllerTest extends AbstractControl
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void removeDocumentTemplateSection() throws Exception {
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
 

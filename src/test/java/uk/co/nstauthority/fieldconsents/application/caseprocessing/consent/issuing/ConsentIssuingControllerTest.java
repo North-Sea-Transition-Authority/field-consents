@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval;
+package uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -17,7 +17,6 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
@@ -32,7 +31,8 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCa
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionGroup;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionView;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.ConsentIssuingController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval.ConsentIssuingApprovalService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval.ConsentIssuingApprovalSummaryView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.documents.ConsentPreparationDocumentService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
@@ -81,7 +81,7 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
   }
 
   @SecurityTest
-  void getConsentIssuing_userDoesNotHaveConsentIssuingCaseProcessingAction() throws Exception {
+  void getConsentIssuing_userDoesNotHaveConsentIssuingCaseProcessingActionItem() throws Exception {
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(ConsentIssuingController.class).getConsentIssuing(APPLICATION_ID, null)))
@@ -89,14 +89,16 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void getConsentIssuing_consentIssuingApprovalSummaryViewIsNull() throws Exception {
-    var actionList = List.of(CaseProcessingActionView.from(CaseProcessingActionItem.APPROVE_FOR_ISSUING, applicationVersion));
+    var consentIssuingGroupActionViewList = List.of(CaseProcessingActionView.from(CaseProcessingActionItem.APPROVE_FOR_ISSUING, applicationVersion));
+    var consentPreparationConsentDocumentsCardGroupActionViewList =
+        List.of(CaseProcessingActionView.from(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS, applicationVersion));
 
     var documentsInstanceSummaryView = DocumentInstanceSummaryViewTestUtil.newBuilder().build();
     var consentDocumentsSummaryCard = SummaryCard.filesSummaryCardWithHeading(
         "Consent documents",
-        List.of(SummaryFileView.previewSummaryFrom(documentsInstanceSummaryView))
+        List.of(SummaryFileView.previewSummaryFrom(application, documentsInstanceSummaryView))
     );
 
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
@@ -107,7 +109,14 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
             user,
             CaseProcessingActionGroup.CONSENT_ISSUING
         )
-    ).thenReturn(actionList);
+    ).thenReturn(consentIssuingGroupActionViewList);
+    when(
+        caseProcessingActionService.getUserActionViewsForGroup(
+            applicationVersion,
+            user,
+            CaseProcessingActionGroup.CONSENT_PREPARATION_CONSENT_DOCUMENTS_CARD
+        )
+    ).thenReturn(consentPreparationConsentDocumentsCardGroupActionViewList);
     when(consentPreparationDocumentService.getConsentDocumentsSummaryCard(application)).thenReturn(consentDocumentsSummaryCard);
     when(consentIssuingApprovalService.getConsentIssuingApprovalSummaryView(application)).thenReturn(Optional.empty());
 
@@ -117,23 +126,32 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
         .andExpect(view().name("fcs/application/consent/consentIssuing"))
         .andExpect(model().attribute("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class)
             .caseProcessing(APPLICATION_ID, null, null))))
-        .andExpect(model().attribute("actionList", actionList))
+        .andExpect(model().attribute("consentIssuingGroupActionViewList", consentIssuingGroupActionViewList))
+        .andExpect(
+            model().attribute(
+                "consentPreparationConsentDocumentsCardGroupActionViewList",
+                consentPreparationConsentDocumentsCardGroupActionViewList
+            )
+        )
         .andExpect(model().attribute("consentDocumentsSummaryCard", consentDocumentsSummaryCard))
         .andExpect(model().attributeDoesNotExist("consentIssuingApprovalSummaryView"));
   }
 
-  @Test
+  @SecurityTest
   void getConsentIssuing_consentIssuingApprovalSummaryViewIsNotNull() throws Exception {
-    var actionList = List.of(CaseProcessingActionView.from(CaseProcessingActionItem.APPROVE_FOR_ISSUING, applicationVersion));
+    var consentIssuingGroupActionViewList =
+        List.of(CaseProcessingActionView.from(CaseProcessingActionItem.APPROVE_FOR_ISSUING, applicationVersion));
+    var consentPreparationConsentDocumentsCardGroupActionViewList =
+        List.of(CaseProcessingActionView.from(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS, applicationVersion));
 
     var documentsInstanceSummaryView = DocumentInstanceSummaryViewTestUtil.newBuilder().build();
     var consentDocumentsSummaryCard = SummaryCard.filesSummaryCardWithHeading(
         "Consent documents",
-        List.of(SummaryFileView.previewSummaryFrom(documentsInstanceSummaryView))
+        List.of(SummaryFileView.previewSummaryFrom(application, documentsInstanceSummaryView))
     );
 
     var consentIssuingApprovalSummaryView =
-        new ConsentIssuingApprovalSummaryView("Test user (test@test.com)", "6 Mar 2024 11:18");
+        new ConsentIssuingApprovalSummaryView("Test user (test@SecurityTest.com)", "6 Mar 2024 11:18");
 
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(CaseProcessingActionItem.CONSENT_ISSUING));
@@ -143,7 +161,14 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
             user,
             CaseProcessingActionGroup.CONSENT_ISSUING
         )
-    ).thenReturn(actionList);
+    ).thenReturn(consentIssuingGroupActionViewList);
+    when(
+        caseProcessingActionService.getUserActionViewsForGroup(
+            applicationVersion,
+            user,
+            CaseProcessingActionGroup.CONSENT_PREPARATION_CONSENT_DOCUMENTS_CARD
+        )
+    ).thenReturn(consentPreparationConsentDocumentsCardGroupActionViewList);
     when(consentPreparationDocumentService.getConsentDocumentsSummaryCard(application)).thenReturn(consentDocumentsSummaryCard);
     when(consentIssuingApprovalService.getConsentIssuingApprovalSummaryView(application))
         .thenReturn(Optional.of(consentIssuingApprovalSummaryView));
@@ -154,7 +179,13 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
         .andExpect(view().name("fcs/application/consent/consentIssuing"))
         .andExpect(model().attribute("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class)
             .caseProcessing(APPLICATION_ID, null, null))))
-        .andExpect(model().attribute("actionList", actionList))
+        .andExpect(model().attribute("consentIssuingGroupActionViewList", consentIssuingGroupActionViewList))
+        .andExpect(
+            model().attribute(
+                "consentPreparationConsentDocumentsCardGroupActionViewList",
+                consentPreparationConsentDocumentsCardGroupActionViewList
+            )
+        )
         .andExpect(model().attribute("consentDocumentsSummaryCard", consentDocumentsSummaryCard))
         .andExpect(model().attribute("consentIssuingApprovalSummaryView", consentIssuingApprovalSummaryView));
   }
@@ -167,7 +198,7 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
   }
 
   @SecurityTest
-  void approveForIssuing_userDoesNotHaveApproveForIssuingCaseProcessingAction() throws Exception {
+  void approveForIssuing_userDoesNotHaveApproveForIssuingCaseProcessingActionItem() throws Exception {
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
 
     mockMvc.perform(post(ReverseRouter.route(on(ConsentIssuingController.class).approveForIssuing(APPLICATION_ID, null, null)))
@@ -176,7 +207,7 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void approveForIssuing() throws Exception {
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(CaseProcessingActionItem.APPROVE_FOR_ISSUING));
@@ -204,7 +235,7 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
   }
 
   @SecurityTest
-  void getIssueConsent_userDoesNotHaveIssueConsentCaseProcessingAction() throws Exception {
+  void getIssueConsent_userDoesNotHaveIssueConsentCaseProcessingActionItem() throws Exception {
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(ConsentIssuingController.class).getIssueConsent(APPLICATION_ID)))
@@ -212,7 +243,7 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void getIssueConsent() throws Exception {
     var applicationReference = "Test/application/reference";
     var applicationContext = ApplicationContext.newBuilder()

@@ -19,14 +19,16 @@ import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionForm;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionFormValidator;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionService;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldControllerHelperService;
-import uk.co.nstauthority.fieldconsents.authorisation.HasPermission;
+import uk.co.nstauthority.fieldconsents.application.Application;
+import uk.co.nstauthority.fieldconsents.application.ApplicationService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
+import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Controller
-@RequestMapping("/document-instances/section/{documentInstanceSectionId}")
-@HasPermission(permissions = RolePermission.PROCESS_FCS_APPLICATIONS)
+@RequestMapping("/applications/{applicationId}/document-instances/section/{documentInstanceSectionId}")
+@ActionEndPoint(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS)
 public class FieldConsentsDocumentInstanceSectionController {
 
   static final String ADD_PAGE_TITLE = "Add section";
@@ -34,40 +36,64 @@ public class FieldConsentsDocumentInstanceSectionController {
   static final String EDIT_PAGE_TITLE = "Edit section";
   static final String EDIT_SUBMIT_BUTTON_TEXT = "Save";
 
+  private final FieldConsentsDocumentInstanceSectionControllerHelperService
+      fieldConsentsDocumentInstanceSectionControllerHelperService;
   private final DocumentInstanceSectionService documentInstanceSectionService;
   private final DocumentInstanceSectionFormValidator documentInstanceSectionFormValidator;
   private final DocumentInstanceSectionControllerHelperService documentInstanceSectionControllerHelperService;
   private final DocumentMailMergeFieldControllerHelperService documentMailMergeFieldControllerHelperService;
+  private final ApplicationService applicationService;
 
   FieldConsentsDocumentInstanceSectionController(
+      FieldConsentsDocumentInstanceSectionControllerHelperService fieldConsentsDocumentInstanceSectionControllerHelperService,
       DocumentInstanceSectionService documentInstanceSectionService,
       DocumentInstanceSectionFormValidator documentInstanceSectionFormValidator,
       DocumentInstanceSectionControllerHelperService documentInstanceSectionControllerHelperService,
-      DocumentMailMergeFieldControllerHelperService documentMailMergeFieldControllerHelperService
+      DocumentMailMergeFieldControllerHelperService documentMailMergeFieldControllerHelperService,
+      ApplicationService applicationService
   ) {
+    this.fieldConsentsDocumentInstanceSectionControllerHelperService =
+        fieldConsentsDocumentInstanceSectionControllerHelperService;
     this.documentInstanceSectionService = documentInstanceSectionService;
     this.documentInstanceSectionFormValidator = documentInstanceSectionFormValidator;
     this.documentInstanceSectionControllerHelperService = documentInstanceSectionControllerHelperService;
     this.documentMailMergeFieldControllerHelperService = documentMailMergeFieldControllerHelperService;
+    this.applicationService = applicationService;
   }
 
   @GetMapping("/add-before")
-  public ModelAndView getAddDocumentInstanceSectionBefore(@PathVariable UUID documentInstanceSectionId) {
+  public ModelAndView getAddDocumentInstanceSectionBefore(
+      @PathVariable Integer applicationId,
+      @PathVariable UUID documentInstanceSectionId
+  ) {
+    var application = applicationService.getApplicationById(applicationId);
     var documentInstanceSectionDto =
-        documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(documentInstanceSectionId);
+        fieldConsentsDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(
+            application,
+            documentInstanceSectionId
+        );
 
-    return getAddDocumentInstanceSectionModelAndView(documentInstanceSectionDto, DocumentInstanceSectionForm.empty());
+    return getAddDocumentInstanceSectionModelAndView(
+        application,
+        documentInstanceSectionDto,
+        DocumentInstanceSectionForm.empty()
+    );
   }
 
   @PostMapping("/add-before")
   public ModelAndView addDocumentInstanceSectionBefore(
+      @PathVariable Integer applicationId,
       @PathVariable UUID documentInstanceSectionId,
       @ModelAttribute("form") DocumentInstanceSectionForm form,
       BindingResult bindingResult,
       RedirectAttributes redirectAttributes
   ) {
+    var application = applicationService.getApplicationById(applicationId);
     var documentInstanceSectionDto =
-        documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(documentInstanceSectionId);
+        fieldConsentsDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(
+            application,
+            documentInstanceSectionId
+        );
 
     var parentId = documentInstanceSectionDto.parentId();
     var parentDocumentInstanceSectionDto = parentId != null
@@ -75,6 +101,7 @@ public class FieldConsentsDocumentInstanceSectionController {
         : null;
 
     return addDocumentSection(
+        application,
         documentInstanceSectionDto,
         form,
         bindingResult,
@@ -85,22 +112,38 @@ public class FieldConsentsDocumentInstanceSectionController {
   }
 
   @GetMapping("/add-after")
-  public ModelAndView getAddDocumentInstanceSectionAfter(@PathVariable UUID documentInstanceSectionId) {
+  public ModelAndView getAddDocumentInstanceSectionAfter(
+      @PathVariable Integer applicationId,
+      @PathVariable UUID documentInstanceSectionId
+  ) {
+    var application = applicationService.getApplicationById(applicationId);
     var documentInstanceSectionDto =
-        documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(documentInstanceSectionId);
+        fieldConsentsDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(
+            application,
+            documentInstanceSectionId
+        );
 
-    return getAddDocumentInstanceSectionModelAndView(documentInstanceSectionDto, DocumentInstanceSectionForm.empty());
+    return getAddDocumentInstanceSectionModelAndView(
+        application,
+        documentInstanceSectionDto,
+        DocumentInstanceSectionForm.empty()
+    );
   }
 
   @PostMapping("/add-after")
   public ModelAndView addDocumentInstanceSectionAfter(
+      @PathVariable Integer applicationId,
       @PathVariable UUID documentInstanceSectionId,
       @ModelAttribute("form") DocumentInstanceSectionForm form,
       BindingResult bindingResult,
       RedirectAttributes redirectAttributes
   ) {
+    var application = applicationService.getApplicationById(applicationId);
     var documentInstanceSectionDto =
-        documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(documentInstanceSectionId);
+        fieldConsentsDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(
+            application,
+            documentInstanceSectionId
+        );
 
     var parentId = documentInstanceSectionDto.parentId();
     var parentDocumentInstanceSectionDto = parentId != null
@@ -108,6 +151,7 @@ public class FieldConsentsDocumentInstanceSectionController {
         : null;
 
     return addDocumentSection(
+        application,
         documentInstanceSectionDto,
         form,
         bindingResult,
@@ -118,24 +162,41 @@ public class FieldConsentsDocumentInstanceSectionController {
   }
 
   @GetMapping("/add-subsection")
-  public ModelAndView getAddDocumentInstanceSubsection(@PathVariable UUID documentInstanceSectionId) {
+  public ModelAndView getAddDocumentInstanceSubsection(
+      @PathVariable Integer applicationId,
+      @PathVariable UUID documentInstanceSectionId
+  ) {
+    var application = applicationService.getApplicationById(applicationId);
     var documentInstanceSectionDto =
-        documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(documentInstanceSectionId);
+        fieldConsentsDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(
+            application,
+            documentInstanceSectionId
+        );
 
-    return getAddDocumentInstanceSectionModelAndView(documentInstanceSectionDto, DocumentInstanceSectionForm.empty());
+    return getAddDocumentInstanceSectionModelAndView(
+        application,
+        documentInstanceSectionDto,
+        DocumentInstanceSectionForm.empty()
+    );
   }
 
   @PostMapping("/add-subsection")
   public ModelAndView addDocumentInstanceSubsection(
+      @PathVariable Integer applicationId,
       @PathVariable UUID documentInstanceSectionId,
       @ModelAttribute("form") DocumentInstanceSectionForm form,
       BindingResult bindingResult,
       RedirectAttributes redirectAttributes
   ) {
+    var application = applicationService.getApplicationById(applicationId);
     var documentInstanceSectionDto =
-        documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(documentInstanceSectionId);
+        fieldConsentsDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(
+            application,
+            documentInstanceSectionId
+        );
 
     return addDocumentSection(
+        application,
         documentInstanceSectionDto,
         form,
         bindingResult,
@@ -146,6 +207,7 @@ public class FieldConsentsDocumentInstanceSectionController {
   }
 
   private ModelAndView getAddDocumentInstanceSectionModelAndView(
+      Application application,
       DocumentInstanceSectionDto documentInstanceSectionDto,
       DocumentInstanceSectionForm form
   ) {
@@ -163,11 +225,12 @@ public class FieldConsentsDocumentInstanceSectionController {
         .addObject(
             "cancelUrl",
             ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-                .getViewDocumentInstance(documentInstanceDto.id()))
+                .getViewDocumentInstance(application.getId(), documentInstanceDto.id()))
         );
   }
 
   private ModelAndView addDocumentSection(
+      Application application,
       DocumentInstanceSectionDto documentInstanceSectionDto,
       DocumentInstanceSectionForm form,
       BindingResult bindingResult,
@@ -180,7 +243,7 @@ public class FieldConsentsDocumentInstanceSectionController {
     documentInstanceSectionFormValidator.validate(form, documentInstanceDto, bindingResult);
 
     if (bindingResult.hasErrors()) {
-      return getAddDocumentInstanceSectionModelAndView(documentInstanceSectionDto, form);
+      return getAddDocumentInstanceSectionModelAndView(application, documentInstanceSectionDto, form);
     }
 
     documentInstanceSectionControllerHelperService.createDocumentInstanceSection(
@@ -193,33 +256,45 @@ public class FieldConsentsDocumentInstanceSectionController {
     NotificationBannerUtil.addSuccessNotification(redirectAttributes, "Section added");
 
     return ReverseRouter.redirect(on(FieldConsentsDocumentInstanceController.class)
-        .getViewDocumentInstance(documentInstanceDto.id()));
+        .getViewDocumentInstance(application.getId(), documentInstanceDto.id()));
   }
 
   @GetMapping("/edit")
-  public ModelAndView getEditDocumentInstanceSection(@PathVariable UUID documentInstanceSectionId) {
+  public ModelAndView getEditDocumentInstanceSection(
+      @PathVariable Integer applicationId,
+      @PathVariable UUID documentInstanceSectionId
+  ) {
+    var application = applicationService.getApplicationById(applicationId);
     var documentInstanceSectionDto =
-        documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(documentInstanceSectionId);
+        fieldConsentsDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(
+            application,
+            documentInstanceSectionId
+        );
     var form = DocumentInstanceSectionForm.from(documentInstanceSectionDto);
 
-    return getEditDocumentInstanceSectionModelAndView(documentInstanceSectionDto, form);
+    return getEditDocumentInstanceSectionModelAndView(application, documentInstanceSectionDto, form);
   }
 
   @PostMapping("/edit")
   public ModelAndView editDocumentInstanceSection(
+      @PathVariable Integer applicationId,
       @PathVariable UUID documentInstanceSectionId,
       @ModelAttribute("form") DocumentInstanceSectionForm form,
       BindingResult bindingResult,
       RedirectAttributes redirectAttributes
   ) {
+    var application = applicationService.getApplicationById(applicationId);
     var documentInstanceSectionDto =
-        documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(documentInstanceSectionId);
+        fieldConsentsDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(
+            application,
+            documentInstanceSectionId
+        );
     var documentInstanceDto = documentInstanceSectionDto.documentInstanceDto();
 
     documentInstanceSectionFormValidator.validate(form, documentInstanceDto, bindingResult);
 
     if (bindingResult.hasErrors()) {
-      return getEditDocumentInstanceSectionModelAndView(documentInstanceSectionDto, form);
+      return getEditDocumentInstanceSectionModelAndView(application, documentInstanceSectionDto, form);
     }
 
     documentInstanceSectionControllerHelperService.editDocumentInstanceSection(documentInstanceSectionDto, form);
@@ -227,10 +302,11 @@ public class FieldConsentsDocumentInstanceSectionController {
     NotificationBannerUtil.addSuccessNotification(redirectAttributes, "Section saved");
 
     return ReverseRouter.redirect(on(FieldConsentsDocumentInstanceController.class)
-        .getViewDocumentInstance(documentInstanceDto.id()));
+        .getViewDocumentInstance(applicationId, documentInstanceDto.id()));
   }
 
   private ModelAndView getEditDocumentInstanceSectionModelAndView(
+      Application application,
       DocumentInstanceSectionDto documentInstanceSectionDto,
       DocumentInstanceSectionForm form
   ) {
@@ -248,14 +324,21 @@ public class FieldConsentsDocumentInstanceSectionController {
         .addObject(
             "cancelUrl",
             ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-                .getViewDocumentInstance(documentInstanceDto.id()))
+                .getViewDocumentInstance(application.getId(), documentInstanceDto.id()))
         );
   }
 
   @GetMapping("/remove")
-  public ModelAndView getRemoveDocumentInstanceSection(@PathVariable UUID documentInstanceSectionId) {
+  public ModelAndView getRemoveDocumentInstanceSection(
+      @PathVariable Integer applicationId,
+      @PathVariable UUID documentInstanceSectionId
+  ) {
+    var application = applicationService.getApplicationById(applicationId);
     var documentInstanceSectionDto =
-        documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(documentInstanceSectionId);
+        fieldConsentsDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(
+            application,
+            documentInstanceSectionId
+        );
 
     return new ModelAndView("fcs/document/removeDocumentSection")
         .addObject("documentSectionDto", documentInstanceSectionDto)
@@ -263,23 +346,28 @@ public class FieldConsentsDocumentInstanceSectionController {
         .addObject(
             "cancelUrl",
             ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
-                .getViewDocumentInstance(documentInstanceSectionDto.documentInstanceDto().id()))
+                .getViewDocumentInstance(applicationId, documentInstanceSectionDto.documentInstanceDto().id()))
         );
   }
 
   @PostMapping("/remove")
   public ModelAndView removeDocumentInstanceSection(
+      @PathVariable Integer applicationId,
       @PathVariable UUID documentInstanceSectionId,
       RedirectAttributes redirectAttributes
   ) {
+    var application = applicationService.getApplicationById(applicationId);
     var documentInstanceSectionDto =
-        documentInstanceSectionService.getDocumentInstanceSectionDtoOrThrow(documentInstanceSectionId);
+        fieldConsentsDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(
+            application,
+            documentInstanceSectionId
+        );
 
     documentInstanceSectionService.deleteDocumentInstanceSection(documentInstanceSectionDto);
 
     NotificationBannerUtil.addSuccessNotification(redirectAttributes, "Section removed");
 
     return ReverseRouter.redirect(on(FieldConsentsDocumentInstanceController.class)
-        .getViewDocumentInstance(documentInstanceSectionDto.documentInstanceDto().id()));
+        .getViewDocumentInstance(applicationId, documentInstanceSectionDto.documentInstanceDto().id()));
   }
 }

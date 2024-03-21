@@ -27,3 +27,15 @@
     </@fdsAction.buttonGroup>
   </#if>
 </#macro>
+
+<#macro summaryCardActions actionViews>
+  <#list actionViews as actionView>
+    <#if actionView.redirectUrl()?has_content>
+      <@fdsSummaryList.summaryListCardActionItem
+        itemUrl=springUrl(actionView.redirectUrl())
+        itemText=actionView.displayName()
+        itemScreenReaderText=actionView.displayName()
+      />
+    </#if>
+  </#list>
+</#macro>
