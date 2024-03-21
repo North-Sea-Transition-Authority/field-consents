@@ -19,10 +19,10 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataRepository;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataTestUtil;
-import uk.co.nstauthority.fieldconsents.document.DocumentInstanceDtoTestUtil;
-import uk.co.nstauthority.fieldconsents.document.DocumentInstanceLinkingService;
-import uk.co.nstauthority.fieldconsents.document.DocumentTemplateDtoTestUtil;
-import uk.co.nstauthority.fieldconsents.document.DocumentTemplateType;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceLinkingService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.DocumentInstanceDtoTestUtil;
+import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateDtoTestUtil;
+import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateType;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -31,7 +31,7 @@ class ConsentEndDateMailMergeFieldTest {
   private static final String MNEMONIC = "CONSENT_END_DATE";
 
   @Mock
-  private DocumentInstanceLinkingService documentInstanceLinkingService;
+  private ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService;
 
   @Mock
   private ConsentDataRepository repository;
@@ -71,7 +71,7 @@ class ConsentEndDateMailMergeFieldTest {
     var consentData = ConsentDataTestUtil.newBuilder().build();
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
 
-    when(documentInstanceLinkingService.getApplicationFromDocumentInstanceDto(documentInstanceDto)).thenReturn(application);
+    when(applicationDocumentInstanceLinkingService.getApplicationFromDocumentInstanceDto(documentInstanceDto)).thenReturn(application);
     when(repository.findByApplication(application)).thenReturn(Optional.of(consentData));
 
     assertThat(consentEndDateMailMergeField.resolve(documentInstanceDto))
@@ -82,7 +82,7 @@ class ConsentEndDateMailMergeFieldTest {
   void resolve_whenConsentDataDoesNotExist() {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
 
-    when(documentInstanceLinkingService.getApplicationFromDocumentInstanceDto(documentInstanceDto)).thenReturn(application);
+    when(applicationDocumentInstanceLinkingService.getApplicationFromDocumentInstanceDto(documentInstanceDto)).thenReturn(application);
     when(repository.findByApplication(application)).thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> consentEndDateMailMergeField.resolve(documentInstanceDto))

@@ -10,9 +10,9 @@ import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.field.FieldApi;
 import uk.co.fivium.energyportalapi.generated.client.FieldProjectionRoot;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceLinkingService;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
-import uk.co.nstauthority.fieldconsents.document.DocumentInstanceLinkingService;
-import uk.co.nstauthority.fieldconsents.document.DocumentTemplateType;
+import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateType;
 
 @Order(8)
 @Component
@@ -24,16 +24,16 @@ public class FieldDevelopmentPlanTitleMailMergeField implements DocumentMailMerg
   static final FieldProjectionRoot QUERY = new FieldProjectionRoot().fieldName().fieldDevelopmentPlan().title().root();
 
   private final ApplicationAssetService applicationAssetService;
-  private final DocumentInstanceLinkingService documentInstanceLinkingService;
+  private final ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService;
   private final FieldApi fieldApi;
 
   FieldDevelopmentPlanTitleMailMergeField(
       ApplicationAssetService applicationAssetService,
-      DocumentInstanceLinkingService documentInstanceLinkingService,
+      ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService,
       FieldApi fieldApi
   ) {
     this.applicationAssetService = applicationAssetService;
-    this.documentInstanceLinkingService = documentInstanceLinkingService;
+    this.applicationDocumentInstanceLinkingService = applicationDocumentInstanceLinkingService;
     this.fieldApi = fieldApi;
   }
 
@@ -57,7 +57,7 @@ public class FieldDevelopmentPlanTitleMailMergeField implements DocumentMailMerg
   @Override
   public DocumentMailMergeFieldResolveResult resolve(DocumentInstanceDto documentInstanceDto) {
     var applicationVersion =
-        documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto);
+        applicationDocumentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto);
 
     var primaryAsset = applicationAssetService.getPrimaryAsset(applicationVersion);
     if (!primaryAsset.isField()) {

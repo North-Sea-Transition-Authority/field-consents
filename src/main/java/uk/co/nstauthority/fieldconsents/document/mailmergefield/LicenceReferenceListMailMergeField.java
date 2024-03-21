@@ -9,23 +9,23 @@ import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldResolv
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateDto;
 import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAssetLicence;
 import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAssetLicenceService;
-import uk.co.nstauthority.fieldconsents.document.DocumentInstanceLinkingService;
-import uk.co.nstauthority.fieldconsents.document.DocumentTemplateType;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceLinkingService;
+import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateType;
 import uk.co.nstauthority.fieldconsents.util.StringUtil;
 
 @Order(11)
 @Component
 class LicenceReferenceListMailMergeField implements DocumentMailMergeField {
 
-  private final DocumentInstanceLinkingService documentInstanceLinkingService;
+  private final ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService;
   private final ApplicationAssetLicenceService applicationAssetLicenceService;
 
   @Autowired
   LicenceReferenceListMailMergeField(
-      DocumentInstanceLinkingService documentInstanceLinkingService,
+      ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService,
       ApplicationAssetLicenceService applicationAssetLicenceService
   ) {
-    this.documentInstanceLinkingService = documentInstanceLinkingService;
+    this.applicationDocumentInstanceLinkingService = applicationDocumentInstanceLinkingService;
     this.applicationAssetLicenceService = applicationAssetLicenceService;
   }
 
@@ -49,7 +49,7 @@ class LicenceReferenceListMailMergeField implements DocumentMailMergeField {
   @Override
   public DocumentMailMergeFieldResolveResult resolve(DocumentInstanceDto documentInstanceDto) {
     var applicationVersion =
-        documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto);
+        applicationDocumentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto);
 
     var licenceReferences = applicationAssetLicenceService.getAssetLicences(applicationVersion).stream()
         .map(ApplicationAssetLicence::getCachedLicenceRef)

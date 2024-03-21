@@ -16,28 +16,28 @@ import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateDto;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceLinkingService;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
-import uk.co.nstauthority.fieldconsents.document.DocumentInstanceLinkingService;
-import uk.co.nstauthority.fieldconsents.document.DocumentTemplateType;
+import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateType;
 import uk.co.nstauthority.fieldconsents.util.StringUtil;
 
 @Order(2)
 @Component
 class PrimaryAndAdditionalFieldNamesMailMergeField implements DocumentMailMergeField {
 
-  private final DocumentInstanceLinkingService documentInstanceLinkingService;
+  private final ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService;
   private final ApplicationAssetService applicationAssetService;
   private final FieldService fieldService;
 
   @Autowired
   PrimaryAndAdditionalFieldNamesMailMergeField(
-      DocumentInstanceLinkingService documentInstanceLinkingService,
+      ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService,
       ApplicationAssetService applicationAssetService,
       FieldService fieldService
   ) {
-    this.documentInstanceLinkingService = documentInstanceLinkingService;
+    this.applicationDocumentInstanceLinkingService = applicationDocumentInstanceLinkingService;
     this.applicationAssetService = applicationAssetService;
     this.fieldService = fieldService;
   }
@@ -68,7 +68,7 @@ class PrimaryAndAdditionalFieldNamesMailMergeField implements DocumentMailMergeF
 
   private List<String> getFieldNames(DocumentInstanceDto documentInstanceDto) {
     var applicationVersion =
-        documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto);
+        applicationDocumentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto);
 
     var applicationAssets = applicationAssetService.findAssetsByApplicationVersionAndAssetTypeAndAssetRoles(
         applicationVersion,

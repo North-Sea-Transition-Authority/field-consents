@@ -19,9 +19,9 @@ import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationFileUsage;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
-import uk.co.nstauthority.fieldconsents.document.DocumentInstanceSummaryViewTestUtil;
-import uk.co.nstauthority.fieldconsents.document.FieldConsentsDocumentInstanceController;
-import uk.co.nstauthority.fieldconsents.document.FieldConsentsDocumentInstanceControllerHelperService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceControllerHelperService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.DocumentInstanceSummaryViewTestUtil;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileUsage;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -36,7 +36,7 @@ class ConsentPreparationDocumentServiceTest {
   private FieldConsentsFileService fieldConsentsFileService;
 
   @Mock
-  private FieldConsentsDocumentInstanceControllerHelperService fieldConsentsDocumentInstanceControllerHelperService;
+  private ApplicationDocumentInstanceControllerHelperService applicationDocumentInstanceControllerHelperService;
 
   @InjectMocks
   private ConsentPreparationDocumentService consentDocumentService;
@@ -71,7 +71,7 @@ class ConsentPreparationDocumentServiceTest {
         new SummaryFileView(
             documentInstanceSummaryView.title(),
             documentInstanceSummaryView.description(),
-            ReverseRouter.route(on(FieldConsentsDocumentInstanceController.class)
+            ReverseRouter.route(on(ApplicationDocumentInstanceController.class)
                 .getPreviewDocumentInstance(APPLICATION_ID, documentInstanceSummaryView.documentInstanceId()))),
         new SummaryFileView(
             supportingConsentUploadedFile.getName(),
@@ -80,7 +80,7 @@ class ConsentPreparationDocumentServiceTest {
         )
     );
 
-    when(fieldConsentsDocumentInstanceControllerHelperService.getDocumentInstanceSummaryViews(application))
+    when(applicationDocumentInstanceControllerHelperService.getDocumentInstanceSummaryViews(application))
         .thenReturn(List.of(documentInstanceSummaryView));
     when(fieldConsentsFileService.getUploadedFiles(fileUsage)).thenReturn(List.of(supportingConsentUploadedFile));
 

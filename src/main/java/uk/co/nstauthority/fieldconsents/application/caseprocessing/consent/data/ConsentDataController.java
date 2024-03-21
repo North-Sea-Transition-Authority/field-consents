@@ -16,10 +16,10 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentFigureUnitService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.ConsentPreparationController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
-import uk.co.nstauthority.fieldconsents.document.FieldConsentsDocumentInstanceService;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
@@ -33,7 +33,7 @@ public class ConsentDataController {
   private final ConsentDataFormValidator consentDataFormValidator;
   private final ConsentFigureUnitService consentFigureUnitService;
   private final ConsentLengthService consentLengthService;
-  private final FieldConsentsDocumentInstanceService fieldConsentsDocumentInstanceService;
+  private final ApplicationDocumentInstanceService applicationDocumentInstanceService;
 
   ConsentDataController(
       ApplicationVersionService applicationVersionService,
@@ -41,14 +41,14 @@ public class ConsentDataController {
       ConsentDataFormValidator consentDataFormValidator,
       ConsentFigureUnitService consentFigureUnitService,
       ConsentLengthService consentLengthService,
-      FieldConsentsDocumentInstanceService fieldConsentsDocumentInstanceService
+      ApplicationDocumentInstanceService applicationDocumentInstanceService
   ) {
     this.applicationVersionService = applicationVersionService;
     this.consentDataService = consentDataService;
     this.consentDataFormValidator = consentDataFormValidator;
     this.consentFigureUnitService = consentFigureUnitService;
     this.consentLengthService = consentLengthService;
-    this.fieldConsentsDocumentInstanceService = fieldConsentsDocumentInstanceService;
+    this.applicationDocumentInstanceService = applicationDocumentInstanceService;
   }
 
   @GetMapping("/edit")
@@ -82,7 +82,7 @@ public class ConsentDataController {
     }
 
     if (consentDataService.findConsentData(application).isEmpty()) {
-      fieldConsentsDocumentInstanceService.createDocumentInstancesForApplication(application);
+      applicationDocumentInstanceService.createDocumentInstancesForApplication(application);
     }
 
     consentDataService.saveConsentData(application, consentLengthType, form);

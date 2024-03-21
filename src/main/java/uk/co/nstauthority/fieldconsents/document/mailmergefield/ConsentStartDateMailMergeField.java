@@ -8,7 +8,7 @@ import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldResolv
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateDto;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentData;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataRepository;
-import uk.co.nstauthority.fieldconsents.document.DocumentInstanceLinkingService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceLinkingService;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 
 @Order(5)
@@ -18,14 +18,14 @@ public class ConsentStartDateMailMergeField implements DocumentMailMergeField {
   private static final String MNEMONIC = "CONSENT_START_DATE";
   private static final String DESCRIPTION = "The Consent start date for this application";
 
-  private final DocumentInstanceLinkingService documentInstanceLinkingService;
+  private final ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService;
   private final ConsentDataRepository repository;
 
   ConsentStartDateMailMergeField(
-      DocumentInstanceLinkingService documentInstanceLinkingService,
+      ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService,
       ConsentDataRepository repository
   ) {
-    this.documentInstanceLinkingService = documentInstanceLinkingService;
+    this.applicationDocumentInstanceLinkingService = applicationDocumentInstanceLinkingService;
     this.repository = repository;
   }
 
@@ -46,7 +46,7 @@ public class ConsentStartDateMailMergeField implements DocumentMailMergeField {
 
   @Override
   public DocumentMailMergeFieldResolveResult resolve(DocumentInstanceDto documentInstanceDto) {
-    var application = documentInstanceLinkingService.getApplicationFromDocumentInstanceDto(documentInstanceDto);
+    var application = applicationDocumentInstanceLinkingService.getApplicationFromDocumentInstanceDto(documentInstanceDto);
     return repository.findByApplication(application)
         .map(ConsentData::getConsentStartDate)
         .map(date -> DateUtils.format(date, DateUtils.LONG_DATE))

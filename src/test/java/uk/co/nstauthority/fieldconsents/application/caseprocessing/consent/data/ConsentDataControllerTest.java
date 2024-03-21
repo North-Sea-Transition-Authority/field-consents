@@ -37,11 +37,11 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CasePr
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentFigureUnitService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentFigureUnitView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.ConsentPreparationController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
-import uk.co.nstauthority.fieldconsents.document.FieldConsentsDocumentInstanceService;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -65,7 +65,7 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
   private ConsentLengthService consentLengthService;
 
   @MockBean
-  private FieldConsentsDocumentInstanceService fieldConsentsDocumentInstanceService;
+  private ApplicationDocumentInstanceService applicationDocumentInstanceService;
 
   @Captor
   private ArgumentCaptor<ConsentDataForm> consentDataFormCaptor;
@@ -174,7 +174,7 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
 
     var form = consentDataFormCaptor.getValue();
 
-    verify(fieldConsentsDocumentInstanceService).createDocumentInstancesForApplication(application);
+    verify(applicationDocumentInstanceService).createDocumentInstancesForApplication(application);
     verify(consentDataService).saveConsentData(application, consentLengthType, form);
   }
 
@@ -209,7 +209,7 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
 
     var form = consentDataFormCaptor.getValue();
 
-    verify(fieldConsentsDocumentInstanceService, never()).createDocumentInstancesForApplication(any());
+    verify(applicationDocumentInstanceService, never()).createDocumentInstancesForApplication(any());
     verify(consentDataService).saveConsentData(application, consentLengthType, form);
   }
 
@@ -249,7 +249,7 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
         .andExpect(model().attribute("consentLengthType", consentLengthType))
         .andExpect(model().attribute("consentFigureUnitView", consentFigureUnitView));
 
-    verify(fieldConsentsDocumentInstanceService, never()).createDocumentInstancesForApplication(any());
+    verify(applicationDocumentInstanceService, never()).createDocumentInstancesForApplication(any());
     verify(consentDataService, never()).saveConsentData(any(), any(), any());
   }
 }

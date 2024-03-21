@@ -14,16 +14,16 @@ import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldResolv
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
-import uk.co.nstauthority.fieldconsents.document.DocumentInstanceDtoTestUtil;
-import uk.co.nstauthority.fieldconsents.document.DocumentInstanceLinkingService;
-import uk.co.nstauthority.fieldconsents.document.DocumentTemplateDtoTestUtil;
-import uk.co.nstauthority.fieldconsents.document.DocumentTemplateType;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceLinkingService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.DocumentInstanceDtoTestUtil;
+import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateDtoTestUtil;
+import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateType;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationReferenceMailMergeFieldTest {
 
   @Mock
-  private DocumentInstanceLinkingService documentInstanceLinkingService;
+  private ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService;
 
   @Mock
   private ApplicationService applicationService;
@@ -59,7 +59,7 @@ class ApplicationReferenceMailMergeFieldTest {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
     var applicationReference = "Test/application/reference";
 
-    when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
+    when(applicationDocumentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
         .thenReturn(applicationVersion);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
 

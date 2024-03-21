@@ -6,21 +6,21 @@ import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceDto;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeField;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldResolveResult;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateDto;
-import uk.co.nstauthority.fieldconsents.document.DocumentInstanceLinkingService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceLinkingService;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 
 @Order(4)
 @Component
 class PrimaryOperatorNameMailMergeField implements DocumentMailMergeField {
 
-  private final DocumentInstanceLinkingService documentInstanceLinkingService;
+  private final ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService;
   private final OrganisationUnitService organisationUnitService;
 
   PrimaryOperatorNameMailMergeField(
-      DocumentInstanceLinkingService documentInstanceLinkingService,
+      ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService,
       OrganisationUnitService organisationUnitService
   ) {
-    this.documentInstanceLinkingService = documentInstanceLinkingService;
+    this.applicationDocumentInstanceLinkingService = applicationDocumentInstanceLinkingService;
     this.organisationUnitService = organisationUnitService;
   }
 
@@ -42,7 +42,7 @@ class PrimaryOperatorNameMailMergeField implements DocumentMailMergeField {
   @Override
   public DocumentMailMergeFieldResolveResult resolve(DocumentInstanceDto documentInstanceDto) {
     var applicationVersion =
-        documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto);
+        applicationDocumentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto);
 
     var organisationUnitJson = organisationUnitService.getOrganisationUnitById(
         applicationVersion.getPrimaryOperatorOuId(),

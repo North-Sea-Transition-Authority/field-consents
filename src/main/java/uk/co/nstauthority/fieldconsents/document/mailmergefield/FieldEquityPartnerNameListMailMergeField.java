@@ -6,9 +6,9 @@ import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceDto;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeField;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldResolveResult;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateDto;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceLinkingService;
 import uk.co.nstauthority.fieldconsents.application.fieldequitypartner.FieldEquityPartnerService;
-import uk.co.nstauthority.fieldconsents.document.DocumentInstanceLinkingService;
-import uk.co.nstauthority.fieldconsents.document.DocumentTemplateType;
+import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateType;
 import uk.co.nstauthority.fieldconsents.util.StringUtil;
 
 @Order(10)
@@ -18,14 +18,14 @@ public class FieldEquityPartnerNameListMailMergeField implements DocumentMailMer
   private static final String MNEMONIC = "FIELD_EQUITY_PARTNER_NAME_LIST";
   private static final String DESCRIPTION = "A list of field equity partner names associated to the fields on this application";
 
-  private final DocumentInstanceLinkingService documentInstanceLinkingService;
+  private final ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService;
   private final FieldEquityPartnerService fieldEquityPartnerService;
 
   FieldEquityPartnerNameListMailMergeField(
-      DocumentInstanceLinkingService documentInstanceLinkingService,
+      ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService,
       FieldEquityPartnerService fieldEquityPartnerService
   ) {
-    this.documentInstanceLinkingService = documentInstanceLinkingService;
+    this.applicationDocumentInstanceLinkingService = applicationDocumentInstanceLinkingService;
     this.fieldEquityPartnerService = fieldEquityPartnerService;
   }
 
@@ -49,7 +49,7 @@ public class FieldEquityPartnerNameListMailMergeField implements DocumentMailMer
   @Override
   public DocumentMailMergeFieldResolveResult resolve(DocumentInstanceDto documentInstanceDto) {
     var applicationVersion =
-        documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto);
+        applicationDocumentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto);
 
     var fieldEquityPartnerNames =
         StringUtil.formatStringList(fieldEquityPartnerService.getFieldEquityPartnerNames(applicationVersion));

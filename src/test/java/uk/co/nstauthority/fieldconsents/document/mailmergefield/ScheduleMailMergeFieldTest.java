@@ -24,20 +24,20 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataTestUtil;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionFiguresView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionLongTermFiguresService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceLinkingService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.DocumentInstanceDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
-import uk.co.nstauthority.fieldconsents.document.DocumentInstanceDtoTestUtil;
-import uk.co.nstauthority.fieldconsents.document.DocumentInstanceLinkingService;
-import uk.co.nstauthority.fieldconsents.document.DocumentTemplateDtoTestUtil;
-import uk.co.nstauthority.fieldconsents.document.DocumentTemplateType;
+import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateDtoTestUtil;
+import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateType;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 
 @ExtendWith(MockitoExtension.class)
 class ScheduleMailMergeFieldTest {
 
   @Mock
-  private DocumentInstanceLinkingService documentInstanceLinkingService;
+  private ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService;
 
   @Mock
   private ConsentDataService consentDataService;
@@ -110,7 +110,7 @@ class ScheduleMailMergeFieldTest {
 
     var html = "<html></html>";
 
-    when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
+    when(applicationDocumentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
         .thenReturn(applicationVersion);
     when(consentDataService.getConsentData(applicationVersion.getApplication())).thenReturn(consentData);
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
@@ -120,7 +120,7 @@ class ScheduleMailMergeFieldTest {
 
     when(
         freeMarkerTemplateRenderingService.renderTemplate(
-            "fcs/document/template/consent/production/shortTermOrAnnualProductionConsentSchedule.ftl",
+            "fcs/application/caseprocessing/document/instance/pdftemplate/consent/production/shortTermOrAnnualProductionConsentSchedule.ftl",
             Map.of(
                 "capitalizedConsentLengthType",
                 WordUtils.capitalizeFully(consentLengthType.getShortDisplayName()),
@@ -172,7 +172,7 @@ class ScheduleMailMergeFieldTest {
 
     var html = "<html></html>";
 
-    when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
+    when(applicationDocumentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
         .thenReturn(applicationVersion);
     when(consentDataService.getConsentData(applicationVersion.getApplication())).thenReturn(consentData);
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
@@ -183,7 +183,7 @@ class ScheduleMailMergeFieldTest {
 
     when(
         freeMarkerTemplateRenderingService.renderTemplate(
-            "fcs/document/template/consent/production/longTermProductionConsentSchedule.ftl",
+            "fcs/application/caseprocessing/document/instance/pdftemplate/consent/production/longTermProductionConsentSchedule.ftl",
             Map.of(
                 "capitalizedConsentLengthType",
                 WordUtils.capitalizeFully(ConsentLengthType.LONG_TERM.getShortDisplayName()),
@@ -233,14 +233,14 @@ class ScheduleMailMergeFieldTest {
 
     var html = "<html></html>";
 
-    when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto)).thenReturn(applicationVersion);
+    when(applicationDocumentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto)).thenReturn(applicationVersion);
     when(consentDataService.getConsentData(applicationVersion.getApplication())).thenReturn(consentData);
     when(consentStartDateMailMergeField.resolve(documentInstanceDto)).thenReturn(DocumentMailMergeFieldResolveResult.success(consentStartDate));
     when(consentEndDateMailMergeField.resolve(documentInstanceDto)).thenReturn(DocumentMailMergeFieldResolveResult.success(consentEndDate));
 
     when(
         freeMarkerTemplateRenderingService.renderTemplate(
-            "fcs/document/template/consent/emission/emissionConsentSchedule.ftl",
+            "fcs/application/caseprocessing/document/instance/pdftemplate/consent/emission/emissionConsentSchedule.ftl",
             Map.of(
                 "consentStartDate",
                 consentStartDate,

@@ -16,11 +16,11 @@ import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldResolv
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceLinkingService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.DocumentInstanceDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.application.fieldequitypartner.FieldEquityPartnerService;
-import uk.co.nstauthority.fieldconsents.document.DocumentInstanceDtoTestUtil;
-import uk.co.nstauthority.fieldconsents.document.DocumentInstanceLinkingService;
-import uk.co.nstauthority.fieldconsents.document.DocumentTemplateDtoTestUtil;
-import uk.co.nstauthority.fieldconsents.document.DocumentTemplateType;
+import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateDtoTestUtil;
+import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateType;
 
 @ExtendWith(MockitoExtension.class)
 class FieldEquityPartnerNameListMailMergeFieldTest {
@@ -29,7 +29,7 @@ class FieldEquityPartnerNameListMailMergeFieldTest {
   private static final String DESCRIPTION = "A list of field equity partner names associated to the fields on this application";
 
   @Mock
-  private DocumentInstanceLinkingService documentInstanceLinkingService;
+  private ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService;
 
   @Mock
   private FieldEquityPartnerService fieldEquityPartnerService;
@@ -70,7 +70,7 @@ class FieldEquityPartnerNameListMailMergeFieldTest {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
     var fieldEquityPartnerNames = List.of("first", "second", "third");
 
-    when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto)).thenReturn(applicationVersion);
+    when(applicationDocumentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto)).thenReturn(applicationVersion);
     when(fieldEquityPartnerService.getFieldEquityPartnerNames(applicationVersion)).thenReturn(fieldEquityPartnerNames);
 
     assertThat(fieldEquityPartnerNameListMailMergeField.resolve(documentInstanceDto))

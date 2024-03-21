@@ -11,10 +11,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldResolveResult;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.DocumentInstanceDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
-import uk.co.nstauthority.fieldconsents.document.DocumentInstanceDtoTestUtil;
-import uk.co.nstauthority.fieldconsents.document.DocumentTemplateDtoTestUtil;
-import uk.co.nstauthority.fieldconsents.document.DocumentTemplateType;
+import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateDtoTestUtil;
+import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateType;
 
 @ExtendWith(MockitoExtension.class)
 class ConsentsTeamNameMailMergeFieldTest {

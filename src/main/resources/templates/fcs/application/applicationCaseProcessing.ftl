@@ -1,13 +1,13 @@
 <#include '../layout/layout.ftl'>
-<#include '../application/caseprocessingtabs/caseProccessingTabs.ftl'>
+<#include '../application/caseprocessing/tab/caseProccessingTabs.ftl'>
 <#import '../functions/_getPageSize.ftl' as getPageSize>
 <#import '../summary/_applicationSummary.ftl' as applicationSummary>
 <#import '_caseProcessingActions.ftl' as caseProcessingActions>
 <#import './_applicationContext.ftl' as applicationContextInfo>
-<#import './caseprocessingtabs/_caseHistoryTab.ftl' as caseHistoryTab>
+<#import './caseprocessing/tab/_caseHistoryTab.ftl' as caseHistoryTab>
 <#import 'review/technicalReviewDetails.ftl' as technicalReviewDetails/>
 <#import '../application/consultation/further-information/furtherInformation.ftl' as furtherInformation/>
-<#import './caseprocessingtabs/_paymentsTab.ftl' as paymentsTab>
+<#import './caseprocessing/tab/_paymentsTab.ftl' as paymentsTab>
 
 <#-- @ftlvariable name="technicalReviewSummaryView" type="uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewSummaryView" -->
 <#-- @ftlvariable name="taskListSections" type="java.util.List<uk.co.nstauthority.fieldconsents.tasklist.TaskListSection>" -->

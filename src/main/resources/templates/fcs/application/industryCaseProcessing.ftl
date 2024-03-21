@@ -1,11 +1,11 @@
 <#include '../layout/layout.ftl'>
-<#include '../application/caseprocessingtabs/caseProccessingTabs.ftl'>
+<#include '../application/caseprocessing/tab/caseProccessingTabs.ftl'>
 <#import '../functions/_getPageSize.ftl' as getPageSize>
 <#import '../summary/_applicationSummary.ftl' as applicationSummary>
 <#import '_caseProcessingActions.ftl' as caseProcessingActions>
 <#import './_applicationContext.ftl' as applicationContextInfo>
 <#import 'update/_applicationUpdateRequestBanner.ftl' as applicationUpdateRequestBanner>
-<#import './caseprocessingtabs/_paymentsTab.ftl' as paymentsTab>
+<#import './caseprocessing/tab/_paymentsTab.ftl' as paymentsTab>
 
 <#-- @ftlvariable name="applicationUpdateRequestView" type="uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestView" -->
 

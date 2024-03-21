@@ -15,8 +15,8 @@ import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.ConsentPreparationController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceControllerHelperService;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
-import uk.co.nstauthority.fieldconsents.document.FieldConsentsDocumentInstanceControllerHelperService;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.fieldconsents.file.FileControllerHelperService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -29,20 +29,20 @@ public class ConsentPreparationDocumentsController {
   private final ApplicationService applicationService;
   private final ConsentPreparationDocumentService consentDocumentService;
   private final ConsentPreparationSupportingDocumentsFormValidator consentSupportingDocumentsFormValidator;
-  private final FieldConsentsDocumentInstanceControllerHelperService fieldConsentsDocumentInstanceControllerHelperService;
+  private final ApplicationDocumentInstanceControllerHelperService applicationDocumentInstanceControllerHelperService;
   private final FileControllerHelperService fileControllerHelperService;
 
   ConsentPreparationDocumentsController(
       ApplicationService applicationService,
       ConsentPreparationDocumentService consentDocumentService,
       ConsentPreparationSupportingDocumentsFormValidator consentPreparationSupportingDocumentsFormValidator,
-      FieldConsentsDocumentInstanceControllerHelperService fieldConsentsDocumentInstanceControllerHelperService,
+      ApplicationDocumentInstanceControllerHelperService applicationDocumentInstanceControllerHelperService,
       FileControllerHelperService fileControllerHelperService
   ) {
     this.applicationService = applicationService;
     this.consentDocumentService = consentDocumentService;
     this.consentSupportingDocumentsFormValidator = consentPreparationSupportingDocumentsFormValidator;
-    this.fieldConsentsDocumentInstanceControllerHelperService = fieldConsentsDocumentInstanceControllerHelperService;
+    this.applicationDocumentInstanceControllerHelperService = applicationDocumentInstanceControllerHelperService;
     this.fileControllerHelperService = fileControllerHelperService;
   }
 
@@ -83,7 +83,7 @@ public class ConsentPreparationDocumentsController {
         controller -> controller.delete(application.getId(), null, null)
     );
     var documentInstanceSummaryViews =
-        fieldConsentsDocumentInstanceControllerHelperService.getDocumentInstanceSummaryViews(application);
+        applicationDocumentInstanceControllerHelperService.getDocumentInstanceSummaryViews(application);
 
     return new ModelAndView("fcs/application/consent/documents/consentDocumentsForm")
         .addObject("documentInstanceSummaryViews", documentInstanceSummaryViews)

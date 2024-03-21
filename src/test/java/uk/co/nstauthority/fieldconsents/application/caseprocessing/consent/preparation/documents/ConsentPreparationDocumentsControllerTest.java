@@ -41,9 +41,9 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.ConsentPreparationController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceControllerHelperService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.DocumentInstanceSummaryViewTestUtil;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
-import uk.co.nstauthority.fieldconsents.document.DocumentInstanceSummaryViewTestUtil;
-import uk.co.nstauthority.fieldconsents.document.FieldConsentsDocumentInstanceControllerHelperService;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.fieldconsents.file.FileControllerHelperService;
@@ -62,7 +62,7 @@ class ConsentPreparationDocumentsControllerTest extends AbstractApplicationContr
   private ConsentPreparationSupportingDocumentsFormValidator consentPreparationSupportingDocumentsFormValidator;
 
   @MockBean
-  private FieldConsentsDocumentInstanceControllerHelperService fieldConsentsDocumentInstanceControllerHelperService;
+  private ApplicationDocumentInstanceControllerHelperService applicationDocumentInstanceControllerHelperService;
 
   @MockBean
   private FileControllerHelperService fileControllerHelperService;
@@ -109,7 +109,7 @@ class ConsentPreparationDocumentsControllerTest extends AbstractApplicationContr
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
     when(consentDocumentService.getConsentSupportingDocumentsForm(application)).thenReturn(consentSupportingDocumentForm);
     when(fileControllerHelperService.fileUploadComponentAttributes(eq(uploadedFileForms), eq(ConsentPreparationFileController.class), any(), any())).thenReturn(FILE_UPLOAD_COMPONENT_ATTRIBUTES);
-    when(fieldConsentsDocumentInstanceControllerHelperService.getDocumentInstanceSummaryViews(application))
+    when(applicationDocumentInstanceControllerHelperService.getDocumentInstanceSummaryViews(application))
         .thenReturn(documentInstanceSummaryViews);
 
     mockMvc.perform(get(ReverseRouter.route(on(ConsentPreparationDocumentsController.class).editDocuments(APPLICATION_ID)))
@@ -186,7 +186,7 @@ class ConsentPreparationDocumentsControllerTest extends AbstractApplicationContr
     ArgumentCaptor<List<UploadedFileForm>> uploadedFileFormsCaptor = ArgumentCaptor.forClass(List.class);
     when(fileControllerHelperService.fileUploadComponentAttributes(uploadedFileFormsCaptor.capture(), eq(ConsentPreparationFileController.class), any(), any())).thenReturn(FILE_UPLOAD_COMPONENT_ATTRIBUTES);
 
-    when(fieldConsentsDocumentInstanceControllerHelperService.getDocumentInstanceSummaryViews(application))
+    when(applicationDocumentInstanceControllerHelperService.getDocumentInstanceSummaryViews(application))
         .thenReturn(documentInstanceSummaryViews);
 
     var model = mockMvc.perform(post(ReverseRouter.route(on(ConsentPreparationDocumentsController.class)

@@ -16,16 +16,16 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAssetLicence;
 import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAssetLicenceService;
-import uk.co.nstauthority.fieldconsents.document.DocumentInstanceDtoTestUtil;
-import uk.co.nstauthority.fieldconsents.document.DocumentInstanceLinkingService;
-import uk.co.nstauthority.fieldconsents.document.DocumentTemplateDtoTestUtil;
-import uk.co.nstauthority.fieldconsents.document.DocumentTemplateType;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceLinkingService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.DocumentInstanceDtoTestUtil;
+import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateDtoTestUtil;
+import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateType;
 
 @ExtendWith(MockitoExtension.class)
 class LicenceReferenceListMailMergeFieldTest {
 
   @Mock
-  private DocumentInstanceLinkingService documentInstanceLinkingService;
+  private ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService;
 
   @Mock
   private ApplicationAssetLicenceService applicationAssetLicenceService;
@@ -64,7 +64,7 @@ class LicenceReferenceListMailMergeFieldTest {
     var applicationAssetLicence = new ApplicationAssetLicence();
     applicationAssetLicence.setCachedLicenceRef("test/ref");
 
-    when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
+    when(applicationDocumentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
         .thenReturn(applicationVersion);
     when(applicationAssetLicenceService.getAssetLicences(applicationVersion))
         .thenReturn(List.of(applicationAssetLicence));
@@ -85,7 +85,7 @@ class LicenceReferenceListMailMergeFieldTest {
     applicationAssetLicence1.setCachedLicenceRef("test/ref/1");
     applicationAssetLicence2.setCachedLicenceRef("test/ref/2");
 
-    when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
+    when(applicationDocumentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
         .thenReturn(applicationVersion);
     when(applicationAssetLicenceService.getAssetLicences(applicationVersion))
         .thenReturn(List.of(applicationAssetLicence1, applicationAssetLicence2));
@@ -108,7 +108,7 @@ class LicenceReferenceListMailMergeFieldTest {
     applicationAssetLicence2.setCachedLicenceRef("test/ref/2");
     applicationAssetLicence3.setCachedLicenceRef("test/ref/3");
 
-    when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
+    when(applicationDocumentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
         .thenReturn(applicationVersion);
     when(applicationAssetLicenceService.getAssetLicences(applicationVersion))
         .thenReturn(List.of(applicationAssetLicence1, applicationAssetLicence2, applicationAssetLicence3));
@@ -131,7 +131,7 @@ class LicenceReferenceListMailMergeFieldTest {
     applicationAssetLicence2.setCachedLicenceRef("test/ref/2");
     applicationAssetLicence3.setCachedLicenceRef("test/ref/2");
 
-    when(documentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
+    when(applicationDocumentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
         .thenReturn(applicationVersion);
     when(applicationAssetLicenceService.getAssetLicences(applicationVersion))
         .thenReturn(List.of(applicationAssetLicence1, applicationAssetLicence2, applicationAssetLicence3));

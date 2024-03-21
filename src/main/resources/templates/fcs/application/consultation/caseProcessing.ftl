@@ -1,5 +1,5 @@
 <#include '../../layout/layout.ftl'>
-<#include '../caseprocessingtabs/caseProccessingTabs.ftl'>
+<#include '../caseprocessing/tab/caseProccessingTabs.ftl'>
 <#import '../../functions/_getPageSize.ftl' as getPageSize>
 <#import '../../summary/_applicationSummary.ftl' as applicationSummary>
 <#import '../_caseProcessingActions.ftl' as caseProcessingActions>

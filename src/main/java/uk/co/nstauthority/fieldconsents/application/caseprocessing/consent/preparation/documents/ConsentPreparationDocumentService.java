@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationFileUsage;
-import uk.co.nstauthority.fieldconsents.document.FieldConsentsDocumentInstanceControllerHelperService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceControllerHelperService;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileUsage;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -19,14 +19,14 @@ import uk.co.nstauthority.fieldconsents.summary.SummaryFileView;
 public class ConsentPreparationDocumentService {
 
   private final FieldConsentsFileService fieldConsentsFileService;
-  private final FieldConsentsDocumentInstanceControllerHelperService fieldConsentsDocumentInstanceControllerHelperService;
+  private final ApplicationDocumentInstanceControllerHelperService applicationDocumentInstanceControllerHelperService;
 
   ConsentPreparationDocumentService(
       FieldConsentsFileService fieldConsentsFileService,
-      FieldConsentsDocumentInstanceControllerHelperService fieldConsentsDocumentInstanceControllerHelperService
+      ApplicationDocumentInstanceControllerHelperService applicationDocumentInstanceControllerHelperService
   ) {
     this.fieldConsentsFileService = fieldConsentsFileService;
-    this.fieldConsentsDocumentInstanceControllerHelperService = fieldConsentsDocumentInstanceControllerHelperService;
+    this.applicationDocumentInstanceControllerHelperService = applicationDocumentInstanceControllerHelperService;
   }
 
   public void saveSupportingConsentDocuments(Application application, Collection<UploadedFileForm> fileForms) {
@@ -36,7 +36,7 @@ public class ConsentPreparationDocumentService {
   public SummaryCard getConsentDocumentsSummaryCard(Application application) {
     var filesSummary = new ArrayList<SummaryFileView>();
 
-    fieldConsentsDocumentInstanceControllerHelperService.getDocumentInstanceSummaryViews(application).stream()
+    applicationDocumentInstanceControllerHelperService.getDocumentInstanceSummaryViews(application).stream()
         .map(documentInstanceSummaryView -> SummaryFileView.previewSummaryFrom(application, documentInstanceSummaryView))
         .forEach(filesSummary::add);
 
