@@ -421,15 +421,15 @@ CREATE TABLE fcs_migration.flare_report_gas_data (
 , application_version_id             INTEGER NOT NULL
                                      CONSTRAINT flare_report_gas_data_fk1_av_id
                                      REFERENCES fcs_migration.application_versions
-, category_a_density                 NUMBER NOT NULL
-, category_a_inert_percentage        NUMBER NOT NULL
-, category_a_hydro_percentage        NUMBER NOT NULL
-, category_b_density                 NUMBER NOT NULL
-, category_b_inert_percentage        NUMBER NOT NULL
-, category_b_hydro_percentage        NUMBER NOT NULL
-, category_c_density                 NUMBER NOT NULL
-, category_c_inert_percentage        NUMBER NOT NULL
-, category_c_hydro_percentage        NUMBER NOT NULL
+, category_a_density                 NUMBER
+, category_a_inert_percentage        NUMBER
+, category_a_hydro_percentage        NUMBER
+, category_b_density                 NUMBER
+, category_b_inert_percentage        NUMBER
+, category_b_hydro_percentage        NUMBER
+, category_c_density                 NUMBER
+, category_c_inert_percentage        NUMBER
+, category_c_hydro_percentage        NUMBER
 , evaluated_per_category             VARCHAR2(5)  -- true/false
 , evaluated_per_category_explanation VARCHAR2(4000)
 );
@@ -488,7 +488,7 @@ CREATE TABLE fcs_migration.flare_report_months (
 , category_b             NUMBER NOT NULL
 , category_c             NUMBER NOT NULL
 , shut_down_days         INTEGER NOT NULL
-, comments               VARCHAR2(4000)
+, comments               CLOB
 );
 
 --
@@ -631,15 +631,15 @@ CREATE TABLE fcs_migration.vent_report_gas_data (
 , application_version_id             INTEGER NOT NULL
                                      CONSTRAINT vent_report_gas_data_fk1_av_id
                                      REFERENCES fcs_migration.application_versions
-, category_a_density                 NUMBER NOT NULL
-, category_a_inert_percentage        NUMBER NOT NULL
-, category_a_hydro_percentage        NUMBER NOT NULL
-, category_b_density                 NUMBER NOT NULL
-, category_b_inert_percentage        NUMBER NOT NULL
-, category_b_hydro_percentage        NUMBER NOT NULL
-, category_c_density                 NUMBER NOT NULL
-, category_c_inert_percentage        NUMBER NOT NULL
-, category_c_hydro_percentage        NUMBER NOT NULL
+, category_a_density                 NUMBER
+, category_a_inert_percentage        NUMBER
+, category_a_hydro_percentage        NUMBER
+, category_b_density                 NUMBER
+, category_b_inert_percentage        NUMBER
+, category_b_hydro_percentage        NUMBER
+, category_c_density                 NUMBER
+, category_c_inert_percentage        NUMBER
+, category_c_hydro_percentage        NUMBER
 , evaluated_per_category             VARCHAR2(5)  -- true/false
 , evaluated_per_category_explanation VARCHAR2(4000)
 );
@@ -693,7 +693,7 @@ CREATE TABLE fcs_migration.vent_report_months (
 , category_b             NUMBER NOT NULL
 , category_c             NUMBER NOT NULL
 , shut_down_days         INTEGER NOT NULL
-, comments               VARCHAR2(4000)
+, comments               CLOB
 );
 
 --

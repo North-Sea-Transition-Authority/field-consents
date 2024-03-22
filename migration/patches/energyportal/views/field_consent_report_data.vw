@@ -16,7 +16,7 @@ SELECT
 , st.to_number_safe(rd.category_c) category_c
 , rd.total_flare_gas
 , rd.days_total_shutdown
-, clean_text(rd.comments) comments
+, clean_clob(rd.comments) comments
 FROM envmgr.field_consent_details fcd
 CROSS JOIN XMLTABLE(
   '/FIELD_CONSENT'
@@ -43,5 +43,5 @@ CROSS JOIN XMLTABLE(
   , category_c VARCHAR2(4000) PATH './CATEGORY_C/text()'
   , total_flare_gas NUMBER PATH './TOTAL_FLARE_GAS/text()'
   , days_total_shutdown INTEGER PATH './DAYS_TOTAL_SHUTDOWN/text()'
-  , comments VARCHAR2(4000) PATH './COMMENTS/text()'
+  , comments CLOB PATH './COMMENTS/text()'
 ) rd;

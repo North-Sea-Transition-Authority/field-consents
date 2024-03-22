@@ -3,6 +3,7 @@
 --
 -- Full execution run times:
 -- UAT 5 mins 7 secs
+-- LIVE 8 mins 29 secs (22/03/2024 - CLOB investigation run)
 --
 
 --DELETE FROM fcs_migration.application_other_legacy_data;
@@ -660,8 +661,8 @@ INSERT INTO fcs_migration.application_supporting_information (
 SELECT
   fcs_migration.application_supporting_information_id_seq.nextval id
 , fcd.id
-, hi.note_text
-, hi.imp_note_text
+, clean_clob(hi.note_text)
+, clean_clob(hi.imp_note_text)
 FROM fcs_migration.application_versions av
 JOIN envmgr.field_consent_details fcd ON fcd.id = av.id
 CROSS JOIN XMLTABLE(
@@ -1038,7 +1039,7 @@ SELECT
 FROM base_av b
 LEFT JOIN base bd ON bd.application_version_id = b.application_version_id AND bd.data_type = 'DENSITY'
 LEFT JOIN base bi ON bi.application_version_id = b.application_version_id AND bi.data_type = 'INERT'
-LEFT JOIN base bh ON bh.application_version_id = b.application_version_id AND bh.data_type = 'HYDRO'
+LEFT JOIN base bh ON bh.application_version_id = b.application_version_id AND bh.data_type = 'HYDRO';
 /
 
 --
@@ -1102,7 +1103,7 @@ SELECT
 FROM base_av b
 LEFT JOIN base bd ON bd.application_version_id = b.application_version_id AND bd.data_type = 'DENSITY'
 LEFT JOIN base bi ON bi.application_version_id = b.application_version_id AND bi.data_type = 'INERT'
-LEFT JOIN base bh ON bh.application_version_id = b.application_version_id AND bh.data_type = 'HYDRO'
+LEFT JOIN base bh ON bh.application_version_id = b.application_version_id AND bh.data_type = 'HYDRO';
 /
 
 --
@@ -1880,7 +1881,7 @@ INSERT INTO fcs_migration.application_technical_reviews (
 )
 WITH isetins AS (
   SELECT isi.is_id
-  , xtcd.title||':'||CHR(10)||st.html_to_string(xid.clause_text) response_text
+  , xtcd.title||':'||CHR(10)||clean_clob(st.html_to_string(xid.clause_text)) response_text
   , '<p>'||xtcd.title||':</p>'||XMLQUERY('/CLAUSE_TEXT/node()' PASSING xid.clause_text RETURNING CONTENT).getClobVal() response_text_html
   FROM bpmmgr.review_advisor_slot_details rasd
   JOIN bpmmgr.xview_intention_sets xis ON xis.is_id = rasd.intention_set_id
