@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval;
 
+import jakarta.persistence.EntityNotFoundException;
 import java.time.Clock;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
@@ -49,5 +50,16 @@ public class ConsentIssuingApprovalService {
 
       return ConsentIssuingApprovalSummaryView.from(consentIssuingApproval, approvedByUser);
     });
+  }
+
+  @Transactional
+  public void deleteConsentIssuingApproval(Application application) {
+    var optionalConsentIssuingApproval = consentIssuingApprovalRepository.findByApplicationId(application.getId());
+
+    if (optionalConsentIssuingApproval.isEmpty()) {
+      throw new EntityNotFoundException("Consent issuing approval not found for application with id: %s"
+          .formatted(application.getId()));
+    }
+    consentIssuingApprovalRepository.delete(optionalConsentIssuingApproval.get());
   }
 }

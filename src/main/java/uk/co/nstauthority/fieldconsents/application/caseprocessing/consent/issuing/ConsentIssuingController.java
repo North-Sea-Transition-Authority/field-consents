@@ -116,4 +116,22 @@ public class ConsentIssuingController {
         .addObject("cancelUrl", ReverseRouter.route(on(ConsentIssuingController.class)
             .getConsentIssuing(applicationId, null)));
   }
+
+  @PostMapping("/unmark-for-issuing")
+  @ActionEndPoint(CaseProcessingActionItem.UNAPPROVE_FOR_ISSUING)
+  public ModelAndView unapproveForIssuing(
+      @PathVariable Integer applicationId,
+      RedirectAttributes redirectAttributes
+  ) {
+    var application = applicationService.getApplicationById(applicationId);
+
+    consentIssuingApprovalService.deleteConsentIssuingApproval(application);
+
+    NotificationBannerUtil.addSuccessNotification(
+        redirectAttributes,
+        "Application unmarked as ready to grant and issue"
+    );
+
+    return ReverseRouter.redirect(on(ConsentIssuingController.class).getConsentIssuing(applicationId, null));
+  }
 }

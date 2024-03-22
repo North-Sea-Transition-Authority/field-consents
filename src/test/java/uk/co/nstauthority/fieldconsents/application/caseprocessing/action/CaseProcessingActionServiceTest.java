@@ -43,6 +43,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWER_SUBMIT_REVIEW;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEW_REQUEST;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.UNAPPROVE_FOR_ISSUING;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.APPLICATION_UPDATE_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CAM_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CAM_NOT_ASSIGNED;
@@ -457,7 +458,8 @@ class CaseProcessingActionServiceTest {
         CAM_REASSIGN_OWNERSHIP,
         RETURN_TO_CASE_OFFICER,
         APPROVE_FOR_ISSUING,
-        ISSUE_CONSENT
+        ISSUE_CONSENT,
+        UNAPPROVE_FOR_ISSUING
     );
 
     var actionViews = actionItems.stream()
@@ -521,7 +523,7 @@ class CaseProcessingActionServiceTest {
         ),
         arguments(
             CaseProcessingActionGroup.CONSENT_ISSUING,
-            List.of(CAM_REASSIGN_OWNERSHIP, RETURN_TO_CASE_OFFICER, APPROVE_FOR_ISSUING, ISSUE_CONSENT)
+            List.of(CAM_REASSIGN_OWNERSHIP, RETURN_TO_CASE_OFFICER, APPROVE_FOR_ISSUING, ISSUE_CONSENT, UNAPPROVE_FOR_ISSUING)
         )
     );
   }

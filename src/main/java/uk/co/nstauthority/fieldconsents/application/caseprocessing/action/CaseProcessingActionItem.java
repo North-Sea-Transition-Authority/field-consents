@@ -124,7 +124,10 @@ public enum CaseProcessingActionItem implements Displayable {
           .returnToCaseOfficer(applicationId, null, null)), null),
   ISSUE_CONSENT("Grant consent and issue", 1, true, true, null,
       applicationId -> ReverseRouter.route(on(ConsentIssuingController.class)
-          .getIssueConsent(applicationId)))
+          .getIssueConsent(applicationId))),
+  UNAPPROVE_FOR_ISSUING("Unmark as ready to grant and issue", 2, true, false,
+      applicationId -> ReverseRouter.route(on(ConsentIssuingController.class).unapproveForIssuing(applicationId, null)),
+      null)
   ;
 
   private final String displayName;

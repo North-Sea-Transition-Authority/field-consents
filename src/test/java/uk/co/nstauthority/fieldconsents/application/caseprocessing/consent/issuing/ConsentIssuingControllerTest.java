@@ -266,4 +266,44 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
         .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(ConsentIssuingController.class)
             .getConsentIssuing(APPLICATION_ID, null))));
   }
+
+  @SecurityTest
+  void unapproveForIssuing_noUser() throws Exception {
+    mockMvc.perform(post(ReverseRouter.route(on(ConsentIssuingController.class).unapproveForIssuing(APPLICATION_ID, null)))
+            .with(csrf()))
+        .andExpect(redirectionToLoginUrl());
+  }
+
+  @SecurityTest
+  void unapproveForIssuing_userDoesNotHaveUnapproveForIssuingCaseProcessingActionItem() throws Exception {
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
+
+    mockMvc.perform(post(ReverseRouter.route(on(ConsentIssuingController.class).unapproveForIssuing(APPLICATION_ID, null)))
+            .with(csrf())
+            .with(user(user)))
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void unapproveForIssuing() throws Exception {
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CaseProcessingActionItem.UNAPPROVE_FOR_ISSUING));
+    when(applicationService.getApplicationById(APPLICATION_ID))
+        .thenReturn(application);
+
+    var expectedNotificationBanner = NotificationBanner.builder()
+        .withBannerType(NotificationBannerType.SUCCESS)
+        .withHeadingContent("Application unmarked as ready to grant and issue")
+        .build();
+
+    mockMvc.perform(post(ReverseRouter.route(on(ConsentIssuingController.class).unapproveForIssuing(APPLICATION_ID, null)))
+            .with(csrf())
+            .with(user(user)))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(notificationBanner(expectedNotificationBanner))
+        .andExpect(redirectedUrl(ReverseRouter.route(on(ConsentIssuingController.class)
+            .getConsentIssuing(APPLICATION_ID, null))));
+
+    verify(consentIssuingApprovalService).deleteConsentIssuingApproval(application);
+  }
 }

@@ -4,10 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import jakarta.persistence.EntityNotFoundException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Optional;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,19 +36,21 @@ class ConsentIssuingApprovalServiceTest {
   @Mock
   private EnergyPortalUserService energyPortalUserService;
 
-  private final Clock clock = Clock.fixed(Instant.now(), ZoneId.systemDefault());;
+  private final Clock clock = Clock.fixed(Instant.now(), ZoneId.systemDefault());
 
   private ConsentIssuingApprovalService consentIssuingApprovalService;
 
+  private Application application;
+
   @BeforeEach
   void beforeEach() {
+    application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
     consentIssuingApprovalService =
         new ConsentIssuingApprovalService(consentIssuingApprovalRepository, energyPortalUserService, clock);
   }
 
   @Test
   void approveApplicationForConsentIssuing() {
-    var application = new Application();
     var user = ServiceUserDetailTestUtil.Builder().build();
 
     var consentIssuingApprovalCaptor = ArgumentCaptor.forClass(ConsentIssuingApproval.class);
@@ -72,8 +76,6 @@ class ConsentIssuingApprovalServiceTest {
   @ParameterizedTest
   @ValueSource(booleans = { true, false })
   void isApplicationApprovedForConsentIssuing(boolean consentIssuingApprovalExists) {
-    var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
-
     when(consentIssuingApprovalRepository.existsByApplicationId(application.getId())).thenReturn(consentIssuingApprovalExists);
 
     assertThat(consentIssuingApprovalService.isApplicationApprovedForConsentIssuing(application))
@@ -82,8 +84,6 @@ class ConsentIssuingApprovalServiceTest {
 
   @Test
   void getConsentIssuingApprovalSummaryView_consentIssuingApprovalDoesNotExist() {
-    var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
-
     when(consentIssuingApprovalRepository.findByApplicationId(application.getId())).thenReturn(Optional.empty());
 
     assertThat(consentIssuingApprovalService.getConsentIssuingApprovalSummaryView(application)).isEmpty();
@@ -91,8 +91,6 @@ class ConsentIssuingApprovalServiceTest {
 
   @Test
   void getConsentIssuingApprovalSummaryView_consentIssuingApprovalExists() {
-    var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
-
     var consentIssuingApproval = ConsentIssuingApprovalTestUtil.newBuilder().build();
 
     var energyPortalUserDto = EnergyPortalUserDtoTestUtil.Builder().build();
@@ -106,5 +104,31 @@ class ConsentIssuingApprovalServiceTest {
 
     assertThat(consentIssuingApprovalService.getConsentIssuingApprovalSummaryView(application))
         .contains(ConsentIssuingApprovalSummaryView.from(consentIssuingApproval, approvedByUser));
+  }
+
+  @Test
+  void deleteConsentIssuingApproval_whenConsentIssuingApprovalFound_thenItIsDeleted() {
+    var consentIssuingApproval = ConsentIssuingApprovalTestUtil.newBuilder().build();
+
+    when(consentIssuingApprovalRepository.findByApplicationId(application.getId()))
+        .thenReturn(Optional.of(consentIssuingApproval));
+
+    consentIssuingApprovalService.deleteConsentIssuingApproval(application);
+
+    verify(consentIssuingApprovalRepository).delete(consentIssuingApproval);
+  }
+
+  @Test
+  void deleteConsentIssuingApproval_whenConsentIssuingApprovalNotFound_thenThrowEntityNotFoundException() {
+    when(consentIssuingApprovalRepository.findByApplicationId(application.getId()))
+        .thenReturn(Optional.empty());
+
+    var exception = Assertions.assertThrows(
+        EntityNotFoundException.class,
+        () -> consentIssuingApprovalService.deleteConsentIssuingApproval(application)
+    );
+
+    Assertions.assertEquals("Consent issuing approval not found for application with id: 1",
+        exception.getMessage());
   }
 }

@@ -34,6 +34,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWER_SUBMIT_REVIEW;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEW_REQUEST;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.UNAPPROVE_FOR_ISSUING;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.APPLICATION_UPDATE_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CAM_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CAM_NOT_ASSIGNED;
@@ -159,8 +160,9 @@ public class CaseProcessingActionService {
               CONSENT_ISSUING,
               APPROVE_FOR_ISSUING,
               RETURN_TO_CASE_OFFICER,
-              ISSUE_CONSENT
-          ),
+              ISSUE_CONSENT,
+              UNAPPROVE_FOR_ISSUING
+              ),
           ApplicationVersionStatus.COMPLETED,
           EnumSet.of(
               TECHNICAL_REVIEWS,
@@ -211,6 +213,7 @@ public class CaseProcessingActionService {
           entry(APPROVE_FOR_ISSUING, EnumSet.of(AUTHORISE_FCS_CONSENTS)),
           entry(RETURN_TO_CASE_OFFICER, EnumSet.of(AUTHORISE_FCS_CONSENTS)),
           entry(ISSUE_CONSENT, EnumSet.of(AUTHORISE_FCS_CONSENTS)),
+          entry(UNAPPROVE_FOR_ISSUING, EnumSet.of(AUTHORISE_FCS_CONSENTS)),
           entry(CAM_REASSIGN_OWNERSHIP, EnumSet.of(AUTHORISE_FCS_CONSENTS, ASSIGN_FCS_APPLICATIONS))
       );
 
@@ -252,6 +255,7 @@ public class CaseProcessingActionService {
           entry(APPROVE_FOR_ISSUING, EnumSet.of(CONSENT_DATA_EXISTS, CONSENT_NOT_APPROVED_FOR_ISSUE)),
           entry(RETURN_TO_CASE_OFFICER, EnumSet.of(CAM_ASSIGNED, CASE_OFFICER_NOT_ASSIGNED, CONSENT_NOT_APPROVED_FOR_ISSUE)),
           entry(ISSUE_CONSENT, EnumSet.of(CAM_ASSIGNED, CASE_OFFICER_NOT_ASSIGNED, CONSENT_APPROVED_FOR_ISSUE)),
+          entry(UNAPPROVE_FOR_ISSUING, EnumSet.of(CONSENT_DATA_EXISTS, CONSENT_APPROVED_FOR_ISSUE)),
           entry(CAM_REASSIGN_OWNERSHIP, EnumSet.of(CAM_ASSIGNED, CASE_OFFICER_NOT_ASSIGNED))
       );
 
@@ -272,8 +276,9 @@ public class CaseProcessingActionService {
           entry(CAM_ASSIGN_OWNERSHIP, EnumSet.of(CASE_OFFICER)),
           entry(APPROVE_FOR_ISSUING, EnumSet.of(CONSENTS_AND_AUTHORISATIONS_MANAGER)),
           entry(RETURN_TO_CASE_OFFICER, EnumSet.of(CONSENTS_AND_AUTHORISATIONS_MANAGER)),
-          entry(ISSUE_CONSENT, EnumSet.of(CONSENTS_AND_AUTHORISATIONS_MANAGER))
-      );
+          entry(ISSUE_CONSENT, EnumSet.of(CONSENTS_AND_AUTHORISATIONS_MANAGER)),
+          entry(UNAPPROVE_FOR_ISSUING, EnumSet.of(CONSENTS_AND_AUTHORISATIONS_MANAGER))
+          );
   /*
    * If an actionItem is not here, it will be allowed by default. If multiple features are present for an action,
    * one of them must match for the action to be allowed.
@@ -309,7 +314,8 @@ public class CaseProcessingActionService {
               CaseProcessingActionGroup.CONSENT_ISSUING)),
           entry(RETURN_TO_CASE_OFFICER, EnumSet.of(CaseProcessingActionGroup.CONSENT_ISSUING)),
           entry(APPROVE_FOR_ISSUING, EnumSet.of(CaseProcessingActionGroup.CONSENT_ISSUING)),
-          entry(ISSUE_CONSENT, EnumSet.of(CaseProcessingActionGroup.CONSENT_ISSUING))
+          entry(ISSUE_CONSENT, EnumSet.of(CaseProcessingActionGroup.CONSENT_ISSUING)),
+          entry(UNAPPROVE_FOR_ISSUING, EnumSet.of(CaseProcessingActionGroup.CONSENT_ISSUING))
       );
 
   @Autowired
