@@ -13,7 +13,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.inst
 import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateType;
 import uk.co.nstauthority.fieldconsents.util.StringUtil;
 
-@Order(11)
+@Order(DocumentMailMergeFieldDisplayOrders.LICENCE_REFERENCE_LIST)
 @Component
 class LicenceReferenceListMailMergeField implements DocumentMailMergeField {
 

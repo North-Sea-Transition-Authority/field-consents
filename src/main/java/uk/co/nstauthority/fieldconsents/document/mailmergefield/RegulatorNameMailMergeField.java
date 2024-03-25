@@ -8,7 +8,7 @@ import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldResolv
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateDto;
 import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
 
-@Order(12)
+@Order(DocumentMailMergeFieldDisplayOrders.REGULATOR_NAME)
 @Component
 class RegulatorNameMailMergeField implements DocumentMailMergeField {
 

@@ -9,7 +9,7 @@ import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateDto;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceLinkingService;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 
-@Order(4)
+@Order(DocumentMailMergeFieldDisplayOrders.PRIMARY_OPERATOR_NAME)
 @Component
 class PrimaryOperatorNameMailMergeField implements DocumentMailMergeField {
 

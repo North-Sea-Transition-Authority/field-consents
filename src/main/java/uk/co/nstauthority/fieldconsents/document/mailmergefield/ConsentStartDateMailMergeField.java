@@ -11,7 +11,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceLinkingService;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 
-@Order(5)
+@Order(DocumentMailMergeFieldDisplayOrders.CONSENT_START_DATE)
 @Component
 public class ConsentStartDateMailMergeField implements DocumentMailMergeField {
 

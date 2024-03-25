@@ -20,7 +20,7 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthS
 import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateType;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 
-@Order(18)
+@Order(DocumentMailMergeFieldDisplayOrders.SCHEDULE)
 @Component
 class ScheduleMailMergeField implements DocumentMailMergeField {
 

@@ -10,7 +10,7 @@ import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateDto;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceLinkingService;
 
-@Order(0)
+@Order(DocumentMailMergeFieldDisplayOrders.APPLICATION_REFERENCE)
 @Component
 class ApplicationReferenceMailMergeField implements DocumentMailMergeField {
 

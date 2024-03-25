@@ -11,7 +11,7 @@ import uk.co.nstauthority.fieldconsents.application.fieldequitypartner.FieldEqui
 import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateType;
 import uk.co.nstauthority.fieldconsents.util.StringUtil;
 
-@Order(10)
+@Order(DocumentMailMergeFieldDisplayOrders.FIELD_EQUITY_PARTNER_NAME_LIST)
 @Component
 public class FieldEquityPartnerNameListMailMergeField implements DocumentMailMergeField {
 

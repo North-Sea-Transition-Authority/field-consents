@@ -14,7 +14,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.inst
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateType;
 
-@Order(9)
+@Order(DocumentMailMergeFieldDisplayOrders.FIELD_DEVELOPMENT_PLAN_DATE)
 @Component
 public class FieldDevelopmentPlanDateMailMergeField implements DocumentMailMergeField {
 

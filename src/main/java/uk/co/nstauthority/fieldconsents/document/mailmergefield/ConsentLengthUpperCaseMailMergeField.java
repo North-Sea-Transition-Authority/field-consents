@@ -10,7 +10,7 @@ import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateDto;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceLinkingService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 
-@Order(7)
+@Order(DocumentMailMergeFieldDisplayOrders.CONSENT_LENGTH_UPPER_CASE)
 @Component
 class ConsentLengthUpperCaseMailMergeField implements DocumentMailMergeField {
 

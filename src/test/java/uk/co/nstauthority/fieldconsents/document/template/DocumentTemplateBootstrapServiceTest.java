@@ -697,7 +697,7 @@ class DocumentTemplateBootstrapServiceTest {
         Aberdeen
         AB10 1BL
         
-        [TODO FCS-663: ISSUE DATE]
+        ((ISSUE_DATE))
                    
         ((PRIMARY_FIELD_NAME)) Field – Serving Notice for Flaring and Commissioning Strategy Requested
                 

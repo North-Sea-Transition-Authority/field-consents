@@ -12,7 +12,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.inst
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateType;
 
-@Order(1)
+@Order(DocumentMailMergeFieldDisplayOrders.PRIMARY_FIELD_NAME)
 @Component
 class PrimaryFieldNameMailMergeField implements DocumentMailMergeField {
 
