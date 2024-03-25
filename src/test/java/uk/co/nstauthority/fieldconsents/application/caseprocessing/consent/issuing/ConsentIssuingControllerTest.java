@@ -31,6 +31,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCa
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionGroup;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionView;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval.ConsentIssuingApprovalService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval.ConsentIssuingApprovalSummaryView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.documents.ConsentPreparationDocumentService;
@@ -42,6 +43,7 @@ import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanne
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryFileView;
+import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @ContextConfiguration(classes = ConsentIssuingController.class)
 class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
@@ -59,6 +61,9 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
 
   @MockBean
   private ConsentIssuingApprovalService consentIssuingApprovalService;
+
+  @MockBean
+  private ConsentService consentService;
 
   private ApplicationVersion applicationVersion;
   private Application application;
@@ -305,5 +310,45 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
             .getConsentIssuing(APPLICATION_ID, null))));
 
     verify(consentIssuingApprovalService).deleteConsentIssuingApproval(application);
+  }
+
+  @SecurityTest
+  void issueConsent_noUser() throws Exception {
+    mockMvc.perform(post(ReverseRouter.route(on(ConsentIssuingController.class).issueConsent(APPLICATION_ID, null, null)))
+            .with(csrf()))
+        .andExpect(redirectionToLoginUrl());
+  }
+
+  @SecurityTest
+  void issueConsent_userDoesNotHaveIssueConsentCaseProcessingActionItem() throws Exception {
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
+
+    mockMvc.perform(post(ReverseRouter.route(on(ConsentIssuingController.class).issueConsent(APPLICATION_ID, null, null)))
+            .with(csrf())
+            .with(user(user)))
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void issueConsent() throws Exception {
+    var applicationReference = "Test/application/reference";
+
+    var expectedNotificationBanner = NotificationBanner.builder()
+        .withBannerType(NotificationBannerType.SUCCESS)
+        .withHeadingContent("Consent issued for application %s".formatted(applicationReference))
+        .build();
+
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CaseProcessingActionItem.ISSUE_CONSENT));
+    when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
+
+    mockMvc.perform(post(ReverseRouter.route(on(ConsentIssuingController.class).issueConsent(APPLICATION_ID, null, null)))
+            .with(csrf())
+            .with(user(user)))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null))))
+        .andExpect(notificationBanner(expectedNotificationBanner));
+
+    verify(consentService).issueConsent(applicationVersion, user);
   }
 }

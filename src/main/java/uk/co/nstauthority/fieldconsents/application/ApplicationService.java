@@ -248,6 +248,24 @@ public class ApplicationService {
     return applicationVersionRepository.save(newApplicationVersion);
   }
 
+  @Transactional
+  public void completeApplication(ApplicationVersion applicationVersion) {
+    var applicationVersionStatus = applicationVersion.getStatus();
+    if (!ApplicationVersionStatus.SUBMITTED.equals(applicationVersionStatus)) {
+      throw new IllegalStateException(
+          String.format(
+              "Application %d cannot be completed as application version has status %s",
+              applicationVersion.getApplication().getId(),
+              applicationVersionStatus
+          )
+      );
+    }
+
+    applicationVersion.setStatus(ApplicationVersionStatus.COMPLETED);
+
+    applicationVersionRepository.save(applicationVersion);
+  }
+
   protected void submitApplicationVersion(ApplicationVersion applicationVersion,
                                           ServiceUserDetail user) {
     applicationVersion.setStatus(ApplicationVersionStatus.SUBMITTED);

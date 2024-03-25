@@ -29,6 +29,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.util.unit.DataSize;
 import uk.co.fivium.fileuploadlibrary.core.FileService;
+import uk.co.fivium.fileuploadlibrary.core.FileSource;
 import uk.co.fivium.fileuploadlibrary.core.FileUploadRequest;
 import uk.co.fivium.fileuploadlibrary.core.UploadedFile;
 import uk.co.fivium.fileuploadlibrary.fds.FileDeleteResponse;
@@ -90,7 +91,8 @@ class FileControllerHelperServiceTest {
     var userDetail = ServiceUserDetailTestUtil.Builder().build();
 
     var fileId = UUID.randomUUID();
-    var fileUploadResponse = FileUploadResponse.success(fileId, multipartFile);
+    var fileSource = FileSource.fromMultipartFile(multipartFile);
+    var fileUploadResponse = FileUploadResponse.success(fileId, fileSource);
 
     ArgumentCaptor<Function<FileUploadRequest.Builder, FileUploadRequest>> fileUploadRequestBuilderFunctionCaptor = ArgumentCaptor.forClass(Function.class);
 
@@ -114,13 +116,13 @@ class FileControllerHelperServiceTest {
             FileUploadRequest::usageType,
             FileUploadRequest::documentType,
             FileUploadRequest::uploadedBy,
-            FileUploadRequest::multipartFile
+            FileUploadRequest::fileSource
         ).containsExactly(
             null, // this is set on form submission rather than file upload, so should be null
             null, // same as above
             null, // same as above
             userDetail.wuaId().toString(),
-            multipartFile
+            fileSource
         );
   }
 

@@ -16,12 +16,14 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCa
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionGroup;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval.ConsentIssuingApprovalService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.documents.ConsentPreparationDocumentService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
 @Controller
 @RequestMapping("/applications/{applicationId}/consent-issuing")
@@ -33,6 +35,7 @@ public class ConsentIssuingController {
   private final CaseProcessingActionService caseProcessingActionService;
   private final ConsentPreparationDocumentService consentPreparationDocumentService;
   private final ConsentIssuingApprovalService consentIssuingApprovalService;
+  private final ConsentService consentService;
 
   ConsentIssuingController(
       ApplicationService applicationService,
@@ -40,7 +43,8 @@ public class ConsentIssuingController {
       ApplicationContextService applicationContextService,
       CaseProcessingActionService caseProcessingActionService,
       ConsentPreparationDocumentService consentPreparationDocumentService,
-      ConsentIssuingApprovalService consentIssuingApprovalService
+      ConsentIssuingApprovalService consentIssuingApprovalService,
+      ConsentService consentService
   ) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
@@ -48,6 +52,7 @@ public class ConsentIssuingController {
     this.caseProcessingActionService = caseProcessingActionService;
     this.consentPreparationDocumentService = consentPreparationDocumentService;
     this.consentIssuingApprovalService = consentIssuingApprovalService;
+    this.consentService = consentService;
   }
 
   @GetMapping
@@ -133,5 +138,26 @@ public class ConsentIssuingController {
     );
 
     return ReverseRouter.redirect(on(ConsentIssuingController.class).getConsentIssuing(applicationId, null));
+  }
+
+  @PostMapping("/issue-consent")
+  @ActionEndPoint(CaseProcessingActionItem.ISSUE_CONSENT)
+  public ModelAndView issueConsent(
+      @PathVariable Integer applicationId,
+      ServiceUserDetail user,
+      RedirectAttributes redirectAttributes
+  ) {
+    var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
+
+    consentService.issueConsent(applicationVersion, user);
+
+    var applicationReference = applicationService.generateApplicationReference(applicationVersion);
+
+    NotificationBannerUtil.addSuccessNotification(
+        redirectAttributes,
+        "Consent issued for application %s".formatted(applicationReference)
+    );
+
+    return ReverseRouter.redirect(on(WorkAreaController.class).getWorkArea(null, null));
   }
 }

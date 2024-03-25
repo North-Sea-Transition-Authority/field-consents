@@ -102,7 +102,7 @@ public class ApplicationTestUtil {
         false);
   }
 
-  private static Application getSubmittedApplicationWithType(ApplicationType applicationType) {
+  public static Application getSubmittedApplicationWithType(ApplicationType applicationType) {
     return new Application(APPLICATION_ID, applicationType, Instant.now(), USER_WUA_ID, 0, APPLICATION_NO);
   }
 

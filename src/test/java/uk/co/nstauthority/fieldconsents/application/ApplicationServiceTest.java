@@ -480,6 +480,35 @@ class ApplicationServiceTest {
     assertApplicationVersion(newApplicationVersion, expectedApplicationVersion);
   }
 
+  @ParameterizedTest
+  @EnumSource(value = ApplicationVersionStatus.class, names = "SUBMITTED", mode = EnumSource.Mode.EXCLUDE)
+  void completeApplication_statusNotSubmitted(ApplicationVersionStatus applicationVersionStatus) {
+    var applicationVersion
+        = ApplicationTestUtil.getNewApplicationVersionWithTypeAndStatus(ApplicationType.PRODUCTION, applicationVersionStatus);
+    applicationVersion.setStatus(applicationVersionStatus);
+
+    assertThatThrownBy(() -> applicationService.completeApplication(applicationVersion))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage(
+            String.format(
+                "Application %d cannot be completed as application version has status %s",
+                applicationVersion.getApplication().getId(),
+                applicationVersionStatus
+            )
+        );
+  }
+
+  @Test
+  void completeApplication() {
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
+
+    applicationService.completeApplication(applicationVersion);
+
+    assertThat(applicationVersion.getStatus()).isEqualTo(ApplicationVersionStatus.COMPLETED);
+
+    verify(applicationVersionRepository).save(applicationVersion);
+  }
+
   @Test
   void submitApplicationVersion() {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);

@@ -89,7 +89,7 @@ public class ApplicationDocumentInstanceService {
     );
   }
 
-  List<DocumentInstanceDto> getDocumentInstanceDtos(Application application) {
+  public List<DocumentInstanceDto> getDocumentInstanceDtos(Application application) {
     return documentInstanceService.getDocumentInstanceDtosByItemReference(getItemReference(application));
   }
 

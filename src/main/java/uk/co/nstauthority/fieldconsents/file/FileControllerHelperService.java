@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import uk.co.fivium.fileuploadlibrary.core.FileService;
+import uk.co.fivium.fileuploadlibrary.core.FileSource;
 import uk.co.fivium.fileuploadlibrary.core.UploadedFile;
 import uk.co.fivium.fileuploadlibrary.fds.FileDeleteResponse;
 import uk.co.fivium.fileuploadlibrary.fds.FileUploadComponentAttributes;
@@ -51,7 +52,7 @@ public class FileControllerHelperService {
 
   public ResponseEntity<FileUploadResponse> upload(MultipartFile multipartFile, ServiceUserDetail userDetail) {
     var result = fileService.upload(builder -> builder
-        .withMultipartFile(multipartFile)
+        .withFileSource(FileSource.fromMultipartFile(multipartFile))
         .withUploadedBy(userDetail.wuaId().toString())
         .build());
 
