@@ -100,7 +100,7 @@ public class TeamMemberViewService {
             TeamMemberView::getDisplayName));
   }
 
-  private List<TeamMemberView> getTeamMemberViewsWithRolesForTeam(Team team, Set<TeamRole> teamRoles) {
+  public List<TeamMemberView> getTeamMemberViewsWithRolesForTeam(Team team, Set<TeamRole> teamRoles) {
     var members = teamMemberService.getTeamMembers(team)
         .stream()
         .filter(teamMember -> CollectionUtils.containsAny(teamMember.roles(), teamRoles))

@@ -7,8 +7,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationServiceTest.CONSULTATION_ID;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationServiceTest.USER;
-import static uk.co.nstauthority.fieldconsents.email.EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME;
 import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.APPLICATION_VERSION_DOMAIN_REFERENCE;
+import static uk.co.nstauthority.fieldconsents.email.EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME;
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.CASE_OFFICER_ENERGY_PORTAL_USER_DTO;
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.ENERGY_PORTAL_USER_DTO;
 
@@ -33,9 +33,17 @@ import uk.co.nstauthority.fieldconsents.email.EmailService;
 import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipient;
 import uk.co.nstauthority.fieldconsents.email.GovukNotifyTemplate;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
+import uk.co.nstauthority.fieldconsents.teams.Team;
+import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @ExtendWith(MockitoExtension.class)
 class FurtherInformationEmailServiceTest {
+
+  static final Team CONSULTATION_TEAM = new TeamTestUtil.TeamBuilder()
+      .withId(1)
+      .withTeamType(TeamType.OPRED)
+      .build();
 
   @Mock
   private EmailService emailService;
@@ -66,6 +74,7 @@ class FurtherInformationEmailServiceTest {
     Consultation consultation = new Consultation();
     consultation.setId(CONSULTATION_ID);
     consultation.setRequestApplicationVersion(applicationVersion);
+    consultation.setConsultationTeam(CONSULTATION_TEAM);
 
     furtherInformation = new FurtherInformation();
     furtherInformation.setRequestedByWuaId(USER.wuaId());
@@ -91,6 +100,7 @@ class FurtherInformationEmailServiceTest {
     assertThat(templateCaptor.getValue().getMailMergeFields())
         .extracting(MailMergeField::name, MailMergeField::value)
         .containsOnly(
+            tuple("CONSULTEE_NAME", furtherInformation.getConsultation().getConsultationTeam().getDisplayName()),
             tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, CASE_OFFICER_ENERGY_PORTAL_USER_DTO.displayName())
         );
 

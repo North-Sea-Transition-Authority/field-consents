@@ -206,6 +206,17 @@ public class ConsultationService {
         CONSULTATION_RESPONSE,
         REGULATOR
     );
+
+    try {
+      consultationEmailService.sendConsultationResponseEmail(consultation);
+    } catch (Exception exception) {
+      LOGGER.error("""
+              An attempt to send a consultation response notification by user with wuaId [{}] for application \
+              version with id [{}] failed. \
+              Note: this hasn't prevented the consultation response being saved.
+              """,
+          responderUser.wuaId(), applicationVersion.getId(), exception);
+    }
   }
 
   public boolean requiresEiaRegsResponse(ApplicationVersion applicationVersion) {

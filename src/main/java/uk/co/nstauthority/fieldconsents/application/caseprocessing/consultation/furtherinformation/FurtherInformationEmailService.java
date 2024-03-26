@@ -22,11 +22,13 @@ public class FurtherInformationEmailService {
 
   public void sendFurtherInformationRequestEmail(FurtherInformation furtherInformation) {
     var applicationVersion = furtherInformation.getConsultation().getRequestApplicationVersion();
+    var consultationTeam = furtherInformation.getConsultation().getConsultationTeam();
     var caseOfficer = energyPortalUserService
         .getByWuaId(WebUserAccountId.from(applicationVersion.getCaseOfficerWuaId()));
 
     var mergedTemplate = emailService
         .getTemplate(GovukNotifyTemplate.FURTHER_INFORMATION_REQUEST, applicationVersion)
+        .withMailMergeField("CONSULTEE_NAME", consultationTeam.getDisplayName())
         .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, caseOfficer.displayName())
         .merge();
 
