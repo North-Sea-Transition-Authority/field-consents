@@ -97,7 +97,8 @@ class DocumentTemplateControllerTest extends AbstractControllerTest {
             "Test content 1",
             "TEST_CONDITION_TITLE_1",
             false,
-            DocumentTemplateSectionUrlsTestUtil.newBuilderWithUrlSuffix("-1").build()
+            DocumentTemplateSectionUrlsTestUtil.newBuilderWithUrlSuffix("-1").build(),
+            List.of()
         ),
         new DocumentTemplateSectionSummaryView(
             "1",
@@ -105,7 +106,8 @@ class DocumentTemplateControllerTest extends AbstractControllerTest {
             "Test content 2",
             "TEST_CONDITION_TITLE_2",
             false,
-            DocumentTemplateSectionUrlsTestUtil.newBuilderWithUrlSuffix("-2").build()
+            DocumentTemplateSectionUrlsTestUtil.newBuilderWithUrlSuffix("-2").build(),
+            List.of()
         )
     );
 

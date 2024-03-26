@@ -43,7 +43,8 @@ class FieldConsentsDocumentTemplateSectionControllerHelperServiceTest {
             "Test content",
             "TEST_CONDITION_TITLE",
             false,
-            DocumentTemplateSectionUrlsTestUtil.newBuilder().build()
+            DocumentTemplateSectionUrlsTestUtil.newBuilder().build(),
+            List.of()
         )
     );
 
