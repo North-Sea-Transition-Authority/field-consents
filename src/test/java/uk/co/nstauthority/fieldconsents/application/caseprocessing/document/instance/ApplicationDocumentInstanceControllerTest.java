@@ -105,7 +105,8 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
             "Test content 1",
             false,
             Collections.emptyList(),
-            DocumentInstanceSectionUrlsTestUtil.newBuilderWithUrlSuffix("-1").build()
+            DocumentInstanceSectionUrlsTestUtil.newBuilderWithUrlSuffix("-1").build(),
+            List.of()
         ),
         new DocumentInstanceSectionSummaryView(
             0,
@@ -114,7 +115,8 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
             "Test content 2",
             false,
             Collections.emptyList(),
-            DocumentInstanceSectionUrlsTestUtil.newBuilderWithUrlSuffix("-2").build()
+            DocumentInstanceSectionUrlsTestUtil.newBuilderWithUrlSuffix("-2").build(),
+            List.of()
         )
     );
 

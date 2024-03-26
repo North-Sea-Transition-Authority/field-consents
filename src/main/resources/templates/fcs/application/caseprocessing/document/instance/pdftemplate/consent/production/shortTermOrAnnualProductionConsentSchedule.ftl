@@ -1,10 +1,10 @@
-<div class="govuk-body govuk-!-font-weight-bold govuk-!-text-align-centre">
-  <p>SCHEDULE</p>
-  <p>${primaryFieldName} – ${capitalizedConsentLengthType} Development and Production Consent</p>
-  <p>Thousand Cubic Meters Per Day</p>
+<div class="govuk-body govuk-!-text-align-centre fcs-schedule-header">
+  <p><strong>SCHEDULE</strong></p>
+  <p><strong>${primaryFieldName} – ${capitalizedConsentLengthType} Development and Production Consent</strong></p>
+  <p><strong>Thousand Cubic Meters Per Day</strong></p>
 </div>
 
-<table class="govuk-table">
+<table class="govuk-table fcs-schedule-table">
   <thead class="govuk-table__head">
     <tr class="govuk-table__row">
       <th class="govuk-table__header" scope="col">PERIOD</th>

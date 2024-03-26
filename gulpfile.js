@@ -13,28 +13,16 @@ const terser = require("@rollup/plugin-terser");
 const vue = require("@vitejs/plugin-vue");
 const replace = require("@rollup/plugin-replace");
 
-const sassGlobPattern = "src/main/resources/scss/*.scss";
-const sassOptions = {
-  outputStyle: "compressed",
-  includePath: "src/main/resources/scss"
-};
-
-function compileSass(exitOnError) {
-  let sassTask = sass(sassOptions);
-
-  // Without an error handler specified, the task will exit on error, which we want for the "buildAll" task
-  if(!exitOnError) sassTask = sassTask.on("error", sass.logError);
-
+function compileSassSync(sassOptions, sassGlobPattern, dest) {
   return gulp.src(sassGlobPattern, {base: "."})
     .pipe(sourcemaps.init())
-    .pipe(sassTask)
-    .pipe(postcss([autoprefixer({ grid: true })])) // Add the plugin here instead
+    .pipe(sass(sassOptions, true))
+    .pipe(postcss([autoprefixer({ grid: true })]))
     .pipe(sourcemaps.write("./"))
     .pipe(rename(path => {
-      // E.g. src\main\resources\scss -> src\main\resources\public\assets\static\css
-      path.dirname = path.dirname.replace(/([\/\\])scss[\/\\]?/, "$1public$1assets$1static$1css");
+      path.dirname = "";
     }))
-    .pipe(gulp.dest("./"))
+    .pipe(gulp.dest(dest));
 }
 
 const babelOptions =
@@ -81,6 +69,17 @@ gulp.task("rollup-babel", () => rollup.rollup({
   })
 );
 
+gulp.task("build-document-styles", () => {
+  const dest = "src/main/resources/document-assets";
+  const sassGlobPattern = "src/main/resources/document-assets/scss/*.scss";
+  const sassOptions = {
+    outputStyle: "expanded",
+    includePath: "src/main/resources/document-assets/scss"
+  };
+
+  return compileSassSync(sassOptions, sassGlobPattern, dest);
+});
+
 // copy FDS images into public/assets
 gulp.task('copyFdsImages', () => {
   return gulp.src(['fivium-design-system-core/fds/static/images/**/*'])
@@ -121,7 +120,14 @@ gulp.task("copyHtml5Shiv", () => {
 gulp.task("initFds", gulp.series(["copyFdsResources", "copyFdsImages", "copyGovukResources", "copyHtml5Shiv", "copyJs", "copyVendorJs"]))
 
 gulp.task("sassCi", gulp.series(["initFds"], () => {
-  return compileSass(true);
+  const dest = "src/main/resources/public/assets/static/css";
+  const sassGlobPattern = "src/main/resources/scss/*.scss";
+  const sassOptions = {
+    outputStyle: "compressed",
+    includePath: "src/main/resources/scss"
+  };
+
+  return compileSassSync(sassOptions, sassGlobPattern, dest);
 }));
 
-gulp.task("buildAll", gulp.series(["sassCi", "rollup-babel"]));
+gulp.task("buildAll", gulp.series(["sassCi", "rollup-babel", "build-document-styles"]));

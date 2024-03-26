@@ -1,9 +1,9 @@
-<div class="govuk-body govuk-!-font-weight-bold govuk-!-text-align-centre">
-  <p>SCHEDULE</p>
-  <p>Maximum Average Daily Rate</p>
+<div class="govuk-body govuk-!-text-align-centre fcs-schedule-header">
+  <p><strong>SCHEDULE</strong></p>
+  <p><strong>Maximum Average Daily Rate</strong></p>
 </div>
 
-<table class="govuk-table">
+<table class="govuk-table fcs-schedule-table">
   <thead class="govuk-table__head">
     <tr class="govuk-table__row">
       <th class="govuk-table__header" scope="col">PERIOD</th>

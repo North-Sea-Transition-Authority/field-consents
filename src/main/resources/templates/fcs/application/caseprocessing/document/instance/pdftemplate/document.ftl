@@ -1,47 +1,75 @@
+<#-- @ftlvariable name="previewWatermark" type="boolean" -->
+<#-- @ftlvariable name="documentInstanceSectionsSummaryView" type="uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionsSummaryView" -->
+
 <html>
-  <head>
-    <style>
-      @page {
-        size: a4;
-
-        @top-center {
-          content: element(watermark-ref);
-        }
-      }
-
-      watermark {
-        position: running(watermark-ref);
-        z-index: -999;
-        color: #b3b3ff;
-        font-size: 100px;
-        padding-top: 115mm;
-        text-align: center;
-        font-weight: bold;
-        line-height: 90px;
-      }
-    </style>
-  </head>
-  <body>
-    <#if previewWatermark?has_content>
-      <watermark>PREVIEW DOCUMENT</watermark>
-    </#if>
-    <#list documentInstanceSectionsSummaryView.sectionSummaryViews() as sectionSummaryView>
-      <#assign nestingLevel = sectionSummaryView.nestingLevel()>
-      <#assign sectionNumber = sectionSummaryView.sectionNumber()!>
-      <#assign content = sectionSummaryView.content()!>
-
-      <#if sectionSummaryView.hasPageBreakBefore()>
-        <div style="page-break-before: always;"></div>
-      </#if>
-
-      <table style="padding-left: ${nestingLevel}rem; padding-bottom: 0.75rem;">
-        <tbody>
-          <tr>
-            <td style="padding-left: ${nestingLevel+1}rem; padding-right: 1rem; vertical-align: top;">${sectionNumber!}</td>
-            <td style="vertical-align: top; white-space: pre-line;">${content!?no_esc}</td>
-          </tr>
-        </tbody>
-      </table>
-    </#list>
-  </body>
+<head>
+  <link rel="stylesheet" href="classpath:///document-assets/all.css"/>
+</head>
+<body>
+  <table class="header">
+    <tbody>
+      <tr>
+        <td style="font-size: 10pt;">Application ref: APPLICATION_REF</td>
+        <td>
+          <img src="classpath:///document-assets/nsta-logo-landscape-black.png" alt="" style="max-height: 20px; float: right;"/>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <#if previewWatermark?has_content>
+    <div class="watermark">
+      PREVIEW DOCUMENT
+    </div>
+  </#if>
+  <table class="footer">
+    <tbody>
+      <tr>
+        <td class="page-number"></td>
+        <td>
+          North Sea Transition Authority is a business name of the Oil and Gas Authority. Oil and Gas Authority is a limited company registered in England and
+          Wales with registered number 09666504 and VAT registered number 249433979. Our registered office is at Sanctuary Buildings, 20 Great Smith Street,
+          London, SW1P 3BT.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <#list documentInstanceSectionsSummaryView.sectionSummaryViews() as sectionSummaryView>
+    <@sectionContentTable documentInstanceSectionsSummaryView=sectionSummaryView/>
+  </#list>
+</body>
 </html>
+
+<#macro sectionContentTable documentInstanceSectionsSummaryView>
+  <#assign nestingLevel = documentInstanceSectionsSummaryView.nestingLevel()>
+  <#assign sectionNumber = documentInstanceSectionsSummaryView.sectionNumber()!>
+  <#assign hasPageBreakBefore = documentInstanceSectionsSummaryView.hasPageBreakBefore()>
+  <#assign content = documentInstanceSectionsSummaryView.content()!>
+  <#assign children = documentInstanceSectionsSummaryView.children()>
+
+  <#if hasPageBreakBefore>
+    <div style="page-break-after: always;"></div>
+  </#if>
+
+  <table>
+    <tbody>
+    <tr>
+      <td style="vertical-align: top;">
+        <#if sectionNumber?has_content>
+          ${sectionNumber}
+        </#if>
+      </td>
+      <td style="vertical-align: top;">
+        ${content?no_esc}
+      </td>
+    </tr>
+    <tr>
+      <td></td>
+      <td>
+        <#list children as child>
+          <@sectionContentTable documentInstanceSectionsSummaryView=child/>
+        </#list>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</#macro>

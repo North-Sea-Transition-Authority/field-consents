@@ -50,55 +50,63 @@
     />
 
     <#list documentInstanceSectionsSummaryView.sectionSummaryViews() as sectionSummaryView>
-      <div>
-        <h2 id="${sectionSummaryView.titleWithSectionNumber()}" class="govuk-heading-l govuk-!-margin-bottom-2">
-          ${sectionSummaryView.titleWithSectionNumber()}
-        </h2>
-        <#if sectionSummaryView.hasPageBreakBefore()>
-          <strong class="govuk-tag govuk-tag--blue govuk-body govuk-secondary-text-colour govuk-!-font-weight-bold">NEW PAGE</strong>
-        </#if>
-      </div>
-
-      <@fdsActionDropdown.actionDropdown dropdownButtonText="Section actions">
-        <@fdsActionDropdown.actionDropdownItem
-          actionText="Add section before"
-          linkAction=true
-          linkActionUrl=springUrl(sectionSummaryView.documentInstanceSectionUrls().addSectionBeforeUrl())
-          linkActionScreenReaderText=sectionSummaryView.titleWithSectionNumber()
-        />
-
-        <@fdsActionDropdown.actionDropdownItem
-          actionText="Add section after"
-          linkAction=true
-          linkActionUrl=springUrl(sectionSummaryView.documentInstanceSectionUrls().addSectionAfterUrl())
-          linkActionScreenReaderText=sectionSummaryView.titleWithSectionNumber()
-        />
-
-        <@fdsActionDropdown.actionDropdownItem
-          actionText="Add subsection"
-          linkAction=true
-          linkActionUrl=springUrl(sectionSummaryView.documentInstanceSectionUrls().addSubsectionUrl())
-          linkActionScreenReaderText=sectionSummaryView.titleWithSectionNumber()
-        />
-
-        <@fdsActionDropdown.actionDropdownItem
-          actionText="Edit"
-          linkAction=true
-          linkActionUrl=springUrl(sectionSummaryView.documentInstanceSectionUrls().editUrl())
-          linkActionScreenReaderText=sectionSummaryView.titleWithSectionNumber()
-        />
-
-        <@fdsActionDropdown.actionDropdownItem
-          actionText="Remove"
-          linkAction=true
-          linkActionUrl=springUrl(sectionSummaryView.documentInstanceSectionUrls().removeUrl())
-          linkActionScreenReaderText=sectionSummaryView.titleWithSectionNumber()
-        />
-      </@fdsActionDropdown.actionDropdown>
-
-      <div class="govuk-body govuk-!-margin-top-4">
-        ${(sectionSummaryView.content()!)?no_esc}
-      </div>
+      <@documentSectionSummaryViewContent sectionSummaryView/>
     </#list>
   </@defaultPageWithSubNavigationContent>
 </@defaultPageWithSubNavigation>
+
+<#macro documentSectionSummaryViewContent sectionSummaryView>
+  <div>
+    <h2 id="${sectionSummaryView.titleWithSectionNumber()}" class="govuk-heading-l govuk-!-margin-bottom-2">
+      ${sectionSummaryView.titleWithSectionNumber()}
+    </h2>
+    <#if sectionSummaryView.hasPageBreakBefore()>
+      <strong class="govuk-tag govuk-tag--blue govuk-body govuk-secondary-text-colour govuk-!-font-weight-bold">NEW PAGE</strong>
+    </#if>
+  </div>
+
+  <@fdsActionDropdown.actionDropdown dropdownButtonText="Section actions">
+    <@fdsActionDropdown.actionDropdownItem
+      actionText="Add section before"
+      linkAction=true
+      linkActionUrl=springUrl(sectionSummaryView.documentInstanceSectionUrls().addSectionBeforeUrl())
+      linkActionScreenReaderText=sectionSummaryView.titleWithSectionNumber()
+    />
+
+    <@fdsActionDropdown.actionDropdownItem
+      actionText="Add section after"
+      linkAction=true
+      linkActionUrl=springUrl(sectionSummaryView.documentInstanceSectionUrls().addSectionAfterUrl())
+      linkActionScreenReaderText=sectionSummaryView.titleWithSectionNumber()
+    />
+
+    <@fdsActionDropdown.actionDropdownItem
+      actionText="Add subsection"
+      linkAction=true
+      linkActionUrl=springUrl(sectionSummaryView.documentInstanceSectionUrls().addSubsectionUrl())
+      linkActionScreenReaderText=sectionSummaryView.titleWithSectionNumber()
+    />
+
+    <@fdsActionDropdown.actionDropdownItem
+      actionText="Edit"
+      linkAction=true
+      linkActionUrl=springUrl(sectionSummaryView.documentInstanceSectionUrls().editUrl())
+      linkActionScreenReaderText=sectionSummaryView.titleWithSectionNumber()
+    />
+
+    <@fdsActionDropdown.actionDropdownItem
+      actionText="Remove"
+      linkAction=true
+      linkActionUrl=springUrl(sectionSummaryView.documentInstanceSectionUrls().removeUrl())
+      linkActionScreenReaderText=sectionSummaryView.titleWithSectionNumber()
+    />
+  </@fdsActionDropdown.actionDropdown>
+
+  <div class="govuk-body govuk-!-margin-top-4">
+    ${(sectionSummaryView.content()!)?no_esc}
+  </div>
+
+  <#list sectionSummaryView.children() as child>
+    <@documentSectionSummaryViewContent sectionSummaryView=child/>
+  </#list>
+</#macro>
