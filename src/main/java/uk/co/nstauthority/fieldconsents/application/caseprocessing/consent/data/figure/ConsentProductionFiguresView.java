@@ -20,14 +20,14 @@ public record ConsentProductionFiguresView(
     );
   }
 
-  public static ConsentProductionFiguresView fromConsentProductionLongTermFigures(
-      ConsentProductionLongTermFigures consentProductionLongTermFigures
+  public static ConsentProductionFiguresView fromConsentDataLongTermProductionFigures(
+      ConsentDataLongTermProductionFigures consentDataLongTermProductionFigures
   ) {
     return new ConsentProductionFiguresView(
-        bigDecimalToFormattedString(consentProductionLongTermFigures.getMinOil()),
-        bigDecimalToFormattedString(consentProductionLongTermFigures.getMaxOil()),
-        bigDecimalToFormattedString(consentProductionLongTermFigures.getMinGas()),
-        bigDecimalToFormattedString(consentProductionLongTermFigures.getMaxGas())
+        bigDecimalToFormattedString(consentDataLongTermProductionFigures.getMinOil()),
+        bigDecimalToFormattedString(consentDataLongTermProductionFigures.getMaxOil()),
+        bigDecimalToFormattedString(consentDataLongTermProductionFigures.getMinGas()),
+        bigDecimalToFormattedString(consentDataLongTermProductionFigures.getMaxGas())
     );
   }
 }

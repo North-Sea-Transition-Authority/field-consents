@@ -24,67 +24,67 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataForm;
 
 @ExtendWith(MockitoExtension.class)
-class ConsentProductionLongTermFiguresServiceTest {
+class ConsentDataLongTermProductionFiguresServiceTest {
 
   @Mock
-  private ConsentProductionLongTermFiguresRepository consentProductionLongTermFiguresRepository;
+  private ConsentDataLongTermProductionFiguresRepository consentDataLongTermProductionFiguresRepository;
 
   @InjectMocks
   @Spy
-  private ConsentProductionLongTermFiguresService consentProductionLongTermFiguresService;
+  private ConsentDataLongTermProductionFiguresService consentDataLongTermProductionFiguresService;
 
   @Captor
-  private ArgumentCaptor<List<ConsentProductionLongTermFigures>> consentProductionLongTermFiguresListCaptor;
+  private ArgumentCaptor<List<ConsentDataLongTermProductionFigures>> consentDataLongTermProductionFiguresListCaptor;
 
   @Test
-  void getConsentProductionLongTermFiguresList() {
+  void getConsentDataLongTermProductionFiguresList() {
     var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
 
-    var consentProductionLongTermFiguresList = List.of(
-        ConsentProductionLongTermFiguresTestUtil.builder().build(),
-        ConsentProductionLongTermFiguresTestUtil.builder().build()
+    var consentDataLongTermProductionFiguresList = List.of(
+        ConsentDataLongTermProductionFiguresTestUtil.builder().build(),
+        ConsentDataLongTermProductionFiguresTestUtil.builder().build()
     );
 
-    when(consentProductionLongTermFiguresRepository.findAllByApplication(application))
-        .thenReturn(consentProductionLongTermFiguresList);
+    when(consentDataLongTermProductionFiguresRepository.findAllByApplication(application))
+        .thenReturn(consentDataLongTermProductionFiguresList);
 
-    assertThat(consentProductionLongTermFiguresService.getConsentProductionLongTermFiguresList(application))
-        .isEqualTo(consentProductionLongTermFiguresList);
+    assertThat(consentDataLongTermProductionFiguresService.getConsentDataLongTermProductionFiguresList(application))
+        .isEqualTo(consentDataLongTermProductionFiguresList);
   }
 
   @Test
-  void getConsentProductionLongTermFiguresViews() {
+  void getConsentDataLongTermProductionFiguresViews() {
     var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
 
-    var consentProductionLongTermFigures2024 = ConsentProductionLongTermFiguresTestUtil.builder()
+    var consentDataLongTermProductionFigures2024 = ConsentDataLongTermProductionFiguresTestUtil.builder()
         .withYear(2024)
         .withMinOil(BigDecimal.valueOf(428.76))
         .withMaxOil(BigDecimal.valueOf(714.23))
         .withMinGas(BigDecimal.valueOf(189.47))
         .withMaxGas(BigDecimal.valueOf(837.14))
         .build();
-    var consentProductionLongTermFigures2025 = ConsentProductionLongTermFiguresTestUtil.builder()
+    var consentDataLongTermProductionFigures2025 = ConsentDataLongTermProductionFiguresTestUtil.builder()
         .withYear(2025)
         .withMinOil(BigDecimal.valueOf(583.24))
         .withMaxOil(BigDecimal.valueOf(327.89))
         .withMinGas(BigDecimal.valueOf(901.45))
         .withMaxGas(BigDecimal.valueOf(124.56))
         .build();
-    var consentProductionLongTermFigures2026 = ConsentProductionLongTermFiguresTestUtil.builder()
+    var consentDataLongTermProductionFigures2026 = ConsentDataLongTermProductionFiguresTestUtil.builder()
         .withYear(2026)
         .withMinOil(BigDecimal.valueOf(241.57))
         .withMaxOil(BigDecimal.valueOf(789.32))
         .withMinGas(BigDecimal.valueOf(456.28))
         .withMaxGas(BigDecimal.valueOf(602.11))
         .build();
-    var consentProductionLongTermFigures2027 = ConsentProductionLongTermFiguresTestUtil.builder()
+    var consentDataLongTermProductionFigures2027 = ConsentDataLongTermProductionFiguresTestUtil.builder()
         .withYear(2027)
         .withMinOil(BigDecimal.valueOf(147.83))
         .withMaxOil(BigDecimal.valueOf(562.39))
         .withMinGas(BigDecimal.valueOf(378.21))
         .withMaxGas(BigDecimal.valueOf(943.67))
         .build();
-    var consentProductionLongTermFigures2028 = ConsentProductionLongTermFiguresTestUtil.builder()
+    var consentDataLongTermProductionFigures2028 = ConsentDataLongTermProductionFiguresTestUtil.builder()
         .withYear(2028)
         .withMinOil(BigDecimal.valueOf(689.45))
         .withMaxOil(BigDecimal.valueOf(235.78))
@@ -92,29 +92,29 @@ class ConsentProductionLongTermFiguresServiceTest {
         .withMaxGas(BigDecimal.valueOf(789.34))
         .build();
 
-    var consentProductionLongTermFiguresList = List.of(
-        consentProductionLongTermFigures2026,
-        consentProductionLongTermFigures2028,
-        consentProductionLongTermFigures2025,
-        consentProductionLongTermFigures2024,
-        consentProductionLongTermFigures2027
+    var consentDataLongTermProductionFiguresList = List.of(
+        consentDataLongTermProductionFigures2026,
+        consentDataLongTermProductionFigures2028,
+        consentDataLongTermProductionFigures2025,
+        consentDataLongTermProductionFigures2024,
+        consentDataLongTermProductionFigures2027
     );
 
-    doReturn(consentProductionLongTermFiguresList)
-        .when(consentProductionLongTermFiguresService)
-        .getConsentProductionLongTermFiguresList(application);
+    doReturn(consentDataLongTermProductionFiguresList)
+        .when(consentDataLongTermProductionFiguresService)
+        .getConsentDataLongTermProductionFiguresList(application);
 
-    assertThat(consentProductionLongTermFiguresService.getConsentProductionLongTermFiguresViews(application)).containsExactly(
-        entry("2024", ConsentProductionFiguresView.fromConsentProductionLongTermFigures(consentProductionLongTermFigures2024)),
-        entry("2025", ConsentProductionFiguresView.fromConsentProductionLongTermFigures(consentProductionLongTermFigures2025)),
-        entry("2026", ConsentProductionFiguresView.fromConsentProductionLongTermFigures(consentProductionLongTermFigures2026)),
-        entry("2027", ConsentProductionFiguresView.fromConsentProductionLongTermFigures(consentProductionLongTermFigures2027)),
-        entry("2028", ConsentProductionFiguresView.fromConsentProductionLongTermFigures(consentProductionLongTermFigures2028))
+    assertThat(consentDataLongTermProductionFiguresService.getConsentDataLongTermProductionFiguresViews(application)).containsExactly(
+        entry("2024", ConsentProductionFiguresView.fromConsentDataLongTermProductionFigures(consentDataLongTermProductionFigures2024)),
+        entry("2025", ConsentProductionFiguresView.fromConsentDataLongTermProductionFigures(consentDataLongTermProductionFigures2025)),
+        entry("2026", ConsentProductionFiguresView.fromConsentDataLongTermProductionFigures(consentDataLongTermProductionFigures2026)),
+        entry("2027", ConsentProductionFiguresView.fromConsentDataLongTermProductionFigures(consentDataLongTermProductionFigures2027)),
+        entry("2028", ConsentProductionFiguresView.fromConsentDataLongTermProductionFigures(consentDataLongTermProductionFigures2028))
     );
   }
 
   @Test
-  void saveConsentProductionLongTermFigures() {
+  void saveConsentDataLongTermProductionFigures() {
     var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);;
     var form = new ConsentDataForm();
 
@@ -159,21 +159,21 @@ class ConsentProductionLongTermFiguresServiceTest {
         )
     );
 
-    consentProductionLongTermFiguresService.saveConsentProductionLongTermFigures(application, form);
+    consentDataLongTermProductionFiguresService.saveConsentDataLongTermProductionFigures(application, form);
 
-    verify(consentProductionLongTermFiguresRepository).deleteAllByApplication(application);
+    verify(consentDataLongTermProductionFiguresRepository).deleteAllByApplication(application);
 
-    verify(consentProductionLongTermFiguresRepository).saveAll(consentProductionLongTermFiguresListCaptor.capture());
+    verify(consentDataLongTermProductionFiguresRepository).saveAll(consentDataLongTermProductionFiguresListCaptor.capture());
 
-    assertThat(consentProductionLongTermFiguresListCaptor.getValue())
+    assertThat(consentDataLongTermProductionFiguresListCaptor.getValue())
         .isNotNull()
         .extracting(
-            ConsentProductionLongTermFigures::getId,
-            ConsentProductionLongTermFigures::getYear,
-            ConsentProductionLongTermFigures::getMinOil,
-            ConsentProductionLongTermFigures::getMaxOil,
-            ConsentProductionLongTermFigures::getMinGas,
-            ConsentProductionLongTermFigures::getMaxGas
+            ConsentDataLongTermProductionFigures::getId,
+            ConsentDataLongTermProductionFigures::getYear,
+            ConsentDataLongTermProductionFigures::getMinOil,
+            ConsentDataLongTermProductionFigures::getMaxOil,
+            ConsentDataLongTermProductionFigures::getMinGas,
+            ConsentDataLongTermProductionFigures::getMaxGas
         )
         .containsExactlyInAnyOrder(
             tuple(
@@ -220,9 +220,9 @@ class ConsentProductionLongTermFiguresServiceTest {
   }
 
   @Test
-  void deleteConsentProductionLongTermFigures() {
+  void deleteConsentDataLongTermProductionFigures() {
     var application = new Application();
-    consentProductionLongTermFiguresService.deleteConsentProductionLongTermFigures(application);
-    verify(consentProductionLongTermFiguresRepository).deleteAllByApplication(application);
+    consentDataLongTermProductionFiguresService.deleteConsentDataLongTermProductionFigures(application);
+    verify(consentDataLongTermProductionFiguresRepository).deleteAllByApplication(application);
   }
 }

@@ -19,14 +19,14 @@ public record ConsentProductionFiguresDto(
     );
   }
 
-  public static ConsentProductionFiguresDto fromConsentProductionLongTermFigures(
-      ConsentProductionLongTermFigures consentProductionLongTermFigures
+  public static ConsentProductionFiguresDto fromConsentDataLongTermProductionFigures(
+      ConsentDataLongTermProductionFigures consentDataLongTermProductionFigures
   ) {
     return new ConsentProductionFiguresDto(
-        consentProductionLongTermFigures.getMinOil(),
-        consentProductionLongTermFigures.getMaxOil(),
-        consentProductionLongTermFigures.getMinGas(),
-        consentProductionLongTermFigures.getMaxGas()
+        consentDataLongTermProductionFigures.getMinOil(),
+        consentDataLongTermProductionFigures.getMaxOil(),
+        consentDataLongTermProductionFigures.getMinGas(),
+        consentDataLongTermProductionFigures.getMaxGas()
     );
   }
 }

@@ -33,13 +33,13 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentDataLongTermProductionFiguresService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentDataLongTermProductionFiguresTestUtil;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentEmissionFigureService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionFiguresDto;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionFiguresDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionFiguresService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionFiguresView;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionLongTermFiguresService;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionLongTermFiguresTestUtil;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthChangeEvent;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
@@ -62,7 +62,7 @@ class ConsentDataServiceTest {
   private ConsentEmissionFigureService consentEmissionFigureService;
 
   @Mock
-  private ConsentProductionLongTermFiguresService consentProductionLongTermFiguresService;
+  private ConsentDataLongTermProductionFiguresService consentDataLongTermProductionFiguresService;
 
   @InjectMocks
   @Spy
@@ -128,7 +128,7 @@ class ConsentDataServiceTest {
 
     consentDataService.onConsentLengthChangeEvent(event);
 
-    verify(consentProductionLongTermFiguresService).deleteConsentProductionLongTermFigures(application);
+    verify(consentDataLongTermProductionFiguresService).deleteConsentDataLongTermProductionFigures(application);
     verify(repository).deleteByApplication(application);
   }
 
@@ -160,7 +160,7 @@ class ConsentDataServiceTest {
 
     verify(repository).save(consentData);
 
-    verify(consentProductionLongTermFiguresService, never()).saveConsentProductionLongTermFigures(application, form);
+    verify(consentDataLongTermProductionFiguresService, never()).saveConsentDataLongTermProductionFigures(application, form);
   }
 
   @Test
@@ -191,7 +191,7 @@ class ConsentDataServiceTest {
 
     verify(repository).save(consentData);
 
-    verify(consentProductionLongTermFiguresService).saveConsentProductionLongTermFigures(application, form);
+    verify(consentDataLongTermProductionFiguresService).saveConsentDataLongTermProductionFigures(application, form);
   }
 
   @Test
@@ -222,7 +222,7 @@ class ConsentDataServiceTest {
 
     verify(repository).save(existingConsentData);
 
-    verify(consentProductionLongTermFiguresService, never()).saveConsentProductionLongTermFigures(application, form);
+    verify(consentDataLongTermProductionFiguresService, never()).saveConsentDataLongTermProductionFigures(application, form);
   }
 
   @Test
@@ -253,7 +253,7 @@ class ConsentDataServiceTest {
 
     verify(repository).save(existingConsentData);
 
-    verify(consentProductionLongTermFiguresService).saveConsentProductionLongTermFigures(application, form);
+    verify(consentDataLongTermProductionFiguresService).saveConsentDataLongTermProductionFigures(application, form);
   }
 
   @ParameterizedTest
@@ -608,35 +608,35 @@ class ConsentDataServiceTest {
 
     var consentData = ConsentDataTestUtil.newBuilder().build();
 
-    var consentProductionLongTermFigures2024 = ConsentProductionLongTermFiguresTestUtil.builder()
+    var consentDataLongTermProductionFigures2024 = ConsentDataLongTermProductionFiguresTestUtil.builder()
         .withYear(2024)
         .withMinOil(BigDecimal.valueOf(428.76))
         .withMaxOil(BigDecimal.valueOf(714.23))
         .withMinGas(BigDecimal.valueOf(189.47))
         .withMaxGas(BigDecimal.valueOf(837.14))
         .build();
-    var consentProductionLongTermFigures2025 = ConsentProductionLongTermFiguresTestUtil.builder()
+    var consentDataLongTermProductionFigures2025 = ConsentDataLongTermProductionFiguresTestUtil.builder()
         .withYear(2025)
         .withMinOil(BigDecimal.valueOf(583.24))
         .withMaxOil(BigDecimal.valueOf(327.89))
         .withMinGas(BigDecimal.valueOf(901.45))
         .withMaxGas(BigDecimal.valueOf(124.56))
         .build();
-    var consentProductionLongTermFigures2026 = ConsentProductionLongTermFiguresTestUtil.builder()
+    var consentDataLongTermProductionFigures2026 = ConsentDataLongTermProductionFiguresTestUtil.builder()
         .withYear(2026)
         .withMinOil(BigDecimal.valueOf(241.57))
         .withMaxOil(BigDecimal.valueOf(789.32))
         .withMinGas(BigDecimal.valueOf(456.28))
         .withMaxGas(BigDecimal.valueOf(602.11))
         .build();
-    var consentProductionLongTermFigures2027 = ConsentProductionLongTermFiguresTestUtil.builder()
+    var consentDataLongTermProductionFigures2027 = ConsentDataLongTermProductionFiguresTestUtil.builder()
         .withYear(2027)
         .withMinOil(BigDecimal.valueOf(147.83))
         .withMaxOil(BigDecimal.valueOf(562.39))
         .withMinGas(BigDecimal.valueOf(378.21))
         .withMaxGas(BigDecimal.valueOf(943.67))
         .build();
-    var consentProductionLongTermFigures2028 = ConsentProductionLongTermFiguresTestUtil.builder()
+    var consentDataLongTermProductionFigures2028 = ConsentDataLongTermProductionFiguresTestUtil.builder()
         .withYear(2028)
         .withMinOil(BigDecimal.valueOf(689.45))
         .withMaxOil(BigDecimal.valueOf(235.78))
@@ -644,18 +644,18 @@ class ConsentDataServiceTest {
         .withMaxGas(BigDecimal.valueOf(789.34))
         .build();
 
-    var consentProductionLongTermFiguresList = List.of(
-        consentProductionLongTermFigures2026,
-        consentProductionLongTermFigures2028,
-        consentProductionLongTermFigures2025,
-        consentProductionLongTermFigures2024,
-        consentProductionLongTermFigures2027
+    var consentDataLongTermProductionFiguresList = List.of(
+        consentDataLongTermProductionFigures2026,
+        consentDataLongTermProductionFigures2028,
+        consentDataLongTermProductionFigures2025,
+        consentDataLongTermProductionFigures2024,
+        consentDataLongTermProductionFigures2027
     );
 
     doReturn(Optional.of(consentData)).when(consentDataService).findConsentData(applicationVersion.getApplication());
 
-    when(consentProductionLongTermFiguresService.getConsentProductionLongTermFiguresList(application))
-        .thenReturn(consentProductionLongTermFiguresList);
+    when(consentDataLongTermProductionFiguresService.getConsentDataLongTermProductionFiguresList(application))
+        .thenReturn(consentDataLongTermProductionFiguresList);
 
     var form = consentDataService.getPrefilledConsentDataFormForLongTermProductionApplication(
         applicationVersion,
@@ -679,11 +679,11 @@ class ConsentDataServiceTest {
             .collect(StreamUtils.toLinkedHashMap(Map.Entry::getKey, entry -> entry.getValue().getAsDtoOrThrow()))
     )
         .containsExactly(
-            entry("2024", ConsentProductionFiguresDto.fromConsentProductionLongTermFigures(consentProductionLongTermFigures2024)),
-            entry("2025", ConsentProductionFiguresDto.fromConsentProductionLongTermFigures(consentProductionLongTermFigures2025)),
-            entry("2026", ConsentProductionFiguresDto.fromConsentProductionLongTermFigures(consentProductionLongTermFigures2026)),
-            entry("2027", ConsentProductionFiguresDto.fromConsentProductionLongTermFigures(consentProductionLongTermFigures2027)),
-            entry("2028", ConsentProductionFiguresDto.fromConsentProductionLongTermFigures(consentProductionLongTermFigures2028))
+            entry("2024", ConsentProductionFiguresDto.fromConsentDataLongTermProductionFigures(consentDataLongTermProductionFigures2024)),
+            entry("2025", ConsentProductionFiguresDto.fromConsentDataLongTermProductionFigures(consentDataLongTermProductionFigures2025)),
+            entry("2026", ConsentProductionFiguresDto.fromConsentDataLongTermProductionFigures(consentDataLongTermProductionFigures2026)),
+            entry("2027", ConsentProductionFiguresDto.fromConsentDataLongTermProductionFigures(consentDataLongTermProductionFigures2027)),
+            entry("2028", ConsentProductionFiguresDto.fromConsentDataLongTermProductionFigures(consentDataLongTermProductionFigures2028))
         );
   }
 
@@ -970,16 +970,16 @@ class ConsentDataServiceTest {
     var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
     var consentData = ConsentDataTestUtil.newBuilder().build();
 
-    var consentProductionLongTermFiguresViews = Map.of(
+    var consentDataLongTermProductionFiguresViews = Map.of(
         "2024", mock(ConsentProductionFiguresView.class),
         "2025", mock(ConsentProductionFiguresView.class)
     );
 
-    when(consentProductionLongTermFiguresService.getConsentProductionLongTermFiguresViews(application))
-        .thenReturn(consentProductionLongTermFiguresViews);
+    when(consentDataLongTermProductionFiguresService.getConsentDataLongTermProductionFiguresViews(application))
+        .thenReturn(consentDataLongTermProductionFiguresViews);
 
     assertThat(consentDataService.getConsentDataViewForLongTermProductionApplication(application, consentData))
-        .isEqualTo(ConsentDataView.fromLongTermProductionApplication(consentData, consentProductionLongTermFiguresViews));
+        .isEqualTo(ConsentDataView.fromLongTermProductionApplication(consentData, consentDataLongTermProductionFiguresViews));
   }
 
   @Test

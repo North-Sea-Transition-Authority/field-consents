@@ -33,15 +33,15 @@ class ConsentProductionFiguresDtoTest {
   }
 
   @Test
-  void fromConsentProductionLongTermFigures() {
-    var consentProductionLongTermFigures = ConsentProductionLongTermFiguresTestUtil.builder().build();
+  void fromConsentDataLongTermProductionFigures() {
+    var consentDataLongTermProductionFigures = ConsentDataLongTermProductionFiguresTestUtil.builder().build();
 
-    assertThat(ConsentProductionFiguresDto.fromConsentProductionLongTermFigures(consentProductionLongTermFigures)).isEqualTo(
+    assertThat(ConsentProductionFiguresDto.fromConsentDataLongTermProductionFigures(consentDataLongTermProductionFigures)).isEqualTo(
         new ConsentProductionFiguresDto(
-            consentProductionLongTermFigures.getMinOil(),
-            consentProductionLongTermFigures.getMaxOil(),
-            consentProductionLongTermFigures.getMinGas(),
-            consentProductionLongTermFigures.getMaxGas()
+            consentDataLongTermProductionFigures.getMinOil(),
+            consentDataLongTermProductionFigures.getMaxOil(),
+            consentDataLongTermProductionFigures.getMinGas(),
+            consentDataLongTermProductionFigures.getMaxGas()
         )
     );
   }

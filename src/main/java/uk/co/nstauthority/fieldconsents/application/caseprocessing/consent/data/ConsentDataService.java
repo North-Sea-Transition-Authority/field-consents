@@ -9,9 +9,9 @@ import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentDataLongTermProductionFiguresService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentEmissionFigureService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionFiguresService;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionLongTermFiguresService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthChangeEvent;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
@@ -24,7 +24,7 @@ public class ConsentDataService {
   private final ConsentLengthService consentLengthService;
   private final ConsentProductionFiguresService consentProductionFiguresService;
   private final ConsentEmissionFigureService consentEmissionFigureService;
-  private final ConsentProductionLongTermFiguresService consentProductionLongTermFiguresService;
+  private final ConsentDataLongTermProductionFiguresService consentDataLongTermProductionFiguresService;
   private final ApplicationVersionService applicationVersionService;
 
   ConsentDataService(
@@ -32,14 +32,14 @@ public class ConsentDataService {
       ConsentLengthService consentLengthService,
       ConsentProductionFiguresService consentProductionFiguresService,
       ConsentEmissionFigureService consentEmissionFigureService,
-      ConsentProductionLongTermFiguresService consentProductionLongTermFiguresService,
+      ConsentDataLongTermProductionFiguresService consentDataLongTermProductionFiguresService,
       ApplicationVersionService applicationVersionService
   ) {
     this.repository = repository;
     this.consentLengthService = consentLengthService;
     this.consentProductionFiguresService = consentProductionFiguresService;
     this.consentEmissionFigureService = consentEmissionFigureService;
-    this.consentProductionLongTermFiguresService = consentProductionLongTermFiguresService;
+    this.consentDataLongTermProductionFiguresService = consentDataLongTermProductionFiguresService;
     this.applicationVersionService = applicationVersionService;
   }
 
@@ -62,7 +62,7 @@ public class ConsentDataService {
     var applicationVersion = applicationVersionService.getApplicationVersionById(event.getApplicationVersionId());
     var application = applicationVersion.getApplication();
 
-    consentProductionLongTermFiguresService.deleteConsentProductionLongTermFigures(application);
+    consentDataLongTermProductionFiguresService.deleteConsentDataLongTermProductionFigures(application);
 
     repository.deleteByApplication(application);
   }
@@ -79,7 +79,7 @@ public class ConsentDataService {
     repository.save(consentData);
 
     if (application.getType() == ApplicationType.PRODUCTION && consentLengthType == ConsentLengthType.LONG_TERM) {
-      consentProductionLongTermFiguresService.saveConsentProductionLongTermFigures(application, form);
+      consentDataLongTermProductionFiguresService.saveConsentDataLongTermProductionFigures(application, form);
     }
   }
 
@@ -170,10 +170,10 @@ public class ConsentDataService {
   ) {
     return findConsentData(applicationVersion.getApplication())
         .map(consentData -> {
-          var consentProductionLongTermFiguresList = consentProductionLongTermFiguresService
-              .getConsentProductionLongTermFiguresList(applicationVersion.getApplication());
+          var consentDataLongTermProductionFiguresList = consentDataLongTermProductionFiguresService
+              .getConsentDataLongTermProductionFiguresList(applicationVersion.getApplication());
 
-          return ConsentDataForm.fromLongTermProductionApplication(consentData, consentProductionLongTermFiguresList);
+          return ConsentDataForm.fromLongTermProductionApplication(consentData, consentDataLongTermProductionFiguresList);
         })
         .orElseGet(() -> {
           var proposedConsentStartDate = consentLengthService.getProposedConsentStartDate(consentLengthDetails);
@@ -236,10 +236,10 @@ public class ConsentDataService {
   }
 
   ConsentDataView getConsentDataViewForLongTermProductionApplication(Application application, ConsentData consentData) {
-    var consentProductionLongTermFiguresViews =
-        consentProductionLongTermFiguresService.getConsentProductionLongTermFiguresViews(application);
+    var consentDataLongTermProductionFiguresViews =
+        consentDataLongTermProductionFiguresService.getConsentDataLongTermProductionFiguresViews(application);
 
-    return ConsentDataView.fromLongTermProductionApplication(consentData, consentProductionLongTermFiguresViews);
+    return ConsentDataView.fromLongTermProductionApplication(consentData, consentDataLongTermProductionFiguresViews);
   }
 
   ConsentDataView getConsentDataViewForEmissionApplication(ConsentData consentData) {

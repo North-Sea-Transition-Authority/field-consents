@@ -13,8 +13,8 @@ import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldResolv
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateDto;
 import uk.co.fivium.digitaldocumentlibrary.document.FreeMarkerTemplateRenderingService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentDataLongTermProductionFiguresService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionFiguresView;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionLongTermFiguresService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceLinkingService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateType;
@@ -26,7 +26,7 @@ class ScheduleMailMergeField implements DocumentMailMergeField {
 
   private final ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService;
   private final ConsentDataService consentDataService;
-  private final ConsentProductionLongTermFiguresService consentProductionLongTermFiguresService;
+  private final ConsentDataLongTermProductionFiguresService consentDataLongTermProductionFiguresService;
   private final ConsentLengthService consentLengthService;
   private final FreeMarkerTemplateRenderingService freeMarkerTemplateRenderingService;
   private final PrimaryFieldNameMailMergeField primaryFieldNameMailMergeField;
@@ -36,7 +36,7 @@ class ScheduleMailMergeField implements DocumentMailMergeField {
   ScheduleMailMergeField(
       ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService,
       ConsentDataService consentDataService,
-      ConsentProductionLongTermFiguresService consentProductionLongTermFiguresService,
+      ConsentDataLongTermProductionFiguresService consentDataLongTermProductionFiguresService,
       ConsentLengthService consentLengthService,
       FreeMarkerTemplateRenderingService freeMarkerTemplateRenderingService,
       PrimaryFieldNameMailMergeField primaryFieldNameMailMergeField,
@@ -45,7 +45,7 @@ class ScheduleMailMergeField implements DocumentMailMergeField {
   ) {
     this.applicationDocumentInstanceLinkingService = applicationDocumentInstanceLinkingService;
     this.consentDataService = consentDataService;
-    this.consentProductionLongTermFiguresService = consentProductionLongTermFiguresService;
+    this.consentDataLongTermProductionFiguresService = consentDataLongTermProductionFiguresService;
     this.consentLengthService = consentLengthService;
     this.freeMarkerTemplateRenderingService = freeMarkerTemplateRenderingService;
     this.primaryFieldNameMailMergeField = primaryFieldNameMailMergeField;
@@ -114,7 +114,7 @@ class ScheduleMailMergeField implements DocumentMailMergeField {
             model.put("consentEndDate", consentEndDateMailMergeField.resolve(documentInstanceDto).resolvedValueOrThrow());
 
             var consentProductionFiguresViews =
-                consentProductionLongTermFiguresService.getConsentProductionLongTermFiguresViews(application);
+                consentDataLongTermProductionFiguresService.getConsentDataLongTermProductionFiguresViews(application);
             model.put("consentProductionFiguresViews", consentProductionFiguresViews);
             break;
           default:

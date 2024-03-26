@@ -22,8 +22,8 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataTestUtil;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentDataLongTermProductionFiguresService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionFiguresView;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionLongTermFiguresService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceLinkingService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.DocumentInstanceDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
@@ -43,7 +43,7 @@ class ScheduleMailMergeFieldTest {
   private ConsentDataService consentDataService;
 
   @Mock
-  private ConsentProductionLongTermFiguresService consentProductionLongTermFiguresService;
+  private ConsentDataLongTermProductionFiguresService consentDataLongTermProductionFiguresService;
 
   @Mock
   private ConsentLengthService consentLengthService;
@@ -178,7 +178,7 @@ class ScheduleMailMergeFieldTest {
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
     when(primaryFieldNameMailMergeField.resolve(documentInstanceDto)).thenReturn(DocumentMailMergeFieldResolveResult.success(primaryFieldName));
     when(consentEndDateMailMergeField.resolve(documentInstanceDto)).thenReturn(DocumentMailMergeFieldResolveResult.success(consentEndDate));
-    when(consentProductionLongTermFiguresService.getConsentProductionLongTermFiguresViews(applicationVersion.getApplication()))
+    when(consentDataLongTermProductionFiguresService.getConsentDataLongTermProductionFiguresViews(applicationVersion.getApplication()))
         .thenReturn(consentProductionFiguresViews);
 
     when(

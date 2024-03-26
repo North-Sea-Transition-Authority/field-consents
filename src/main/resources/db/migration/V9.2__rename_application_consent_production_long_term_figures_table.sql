@@ -1,0 +1,4 @@
+ALTER TABLE application_consent_production_long_term_figures RENAME TO application_consent_data_long_term_production_figures;
+
+ALTER SEQUENCE application_consent_production_long_term_figures_id_seq
+  RENAME TO application_consent_data_long_term_production_figures_id_seq;

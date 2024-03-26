@@ -34,15 +34,15 @@ class ConsentProductionFiguresViewTest {
   }
 
   @Test
-  void fromConsentProductionLongTermFigures() {
-    var consentProductionLongTermFigures = ConsentProductionLongTermFiguresTestUtil.builder().build();
+  void fromConsentDataLongTermProductionFigures() {
+    var consentDataLongTermProductionFigures = ConsentDataLongTermProductionFiguresTestUtil.builder().build();
 
-    assertThat(ConsentProductionFiguresView.fromConsentProductionLongTermFigures(consentProductionLongTermFigures)).isEqualTo(
+    assertThat(ConsentProductionFiguresView.fromConsentDataLongTermProductionFigures(consentDataLongTermProductionFigures)).isEqualTo(
         new ConsentProductionFiguresView(
-            bigDecimalToFormattedString(consentProductionLongTermFigures.getMinOil()),
-            bigDecimalToFormattedString(consentProductionLongTermFigures.getMaxOil()),
-            bigDecimalToFormattedString(consentProductionLongTermFigures.getMinGas()),
-            bigDecimalToFormattedString(consentProductionLongTermFigures.getMaxGas())
+            bigDecimalToFormattedString(consentDataLongTermProductionFigures.getMinOil()),
+            bigDecimalToFormattedString(consentDataLongTermProductionFigures.getMaxOil()),
+            bigDecimalToFormattedString(consentDataLongTermProductionFigures.getMinGas()),
+            bigDecimalToFormattedString(consentDataLongTermProductionFigures.getMaxGas())
         )
     );
   }

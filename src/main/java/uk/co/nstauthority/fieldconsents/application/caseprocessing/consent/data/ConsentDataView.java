@@ -29,14 +29,14 @@ public record ConsentDataView(
 
   public static ConsentDataView fromLongTermProductionApplication(
       ConsentData consentData,
-      Map<String, ConsentProductionFiguresView> consentProductionLongTermFiguresViews
+      Map<String, ConsentProductionFiguresView> consentDataLongTermProductionFiguresViews
   ) {
     return new ConsentDataView(
         format(consentData.getConsentStartDate(), DateUtils.LONG_DATE),
         format(consentData.getConsentEndDate(), DateUtils.LONG_DATE),
         format(consentData.getLongTermProductionConsentProductionFromDate(), DateUtils.LONG_DATE),
         null,
-        consentProductionLongTermFiguresViews,
+        consentDataLongTermProductionFiguresViews,
         null
     );
   }

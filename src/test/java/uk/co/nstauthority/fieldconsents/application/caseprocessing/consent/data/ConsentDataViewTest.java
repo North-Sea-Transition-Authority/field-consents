@@ -44,18 +44,18 @@ class ConsentDataViewTest {
         .withLongTermProductionConsentProductionFromDate(longTermProductionConsentProductionFromDate)
         .build();
 
-    var consentProductionLongTermFiguresViews = Map.of(
+    var consentDataLongTermProductionFiguresViews = Map.of(
         "2024", mock(ConsentProductionFiguresView.class),
         "2025", mock(ConsentProductionFiguresView.class)
     );
 
-    assertThat(ConsentDataView.fromLongTermProductionApplication(consentData, consentProductionLongTermFiguresViews)).isEqualTo(
+    assertThat(ConsentDataView.fromLongTermProductionApplication(consentData, consentDataLongTermProductionFiguresViews)).isEqualTo(
         new ConsentDataView(
             format(consentData.getConsentStartDate(), DateUtils.LONG_DATE),
             format(consentData.getConsentEndDate(), DateUtils.LONG_DATE),
             format(longTermProductionConsentProductionFromDate, DateUtils.LONG_DATE),
             null,
-            consentProductionLongTermFiguresViews,
+            consentDataLongTermProductionFiguresViews,
             null
         )
     );

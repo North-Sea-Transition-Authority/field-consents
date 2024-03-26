@@ -10,9 +10,9 @@ import java.util.List;
 import java.util.Map;
 import uk.co.fivium.formlibrary.input.DecimalInput;
 import uk.co.fivium.formlibrary.input.ThreeFieldDateInput;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentDataLongTermProductionFigures;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionFiguresDto;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionFiguresInput;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionLongTermFigures;
 import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 
 public class ConsentDataForm {
@@ -78,7 +78,7 @@ public class ConsentDataForm {
 
   public static ConsentDataForm fromLongTermProductionApplication(
       ConsentData consentData,
-      List<ConsentProductionLongTermFigures> consentProductionLongTermFiguresList
+      List<ConsentDataLongTermProductionFigures> consentDataLongTermProductionFiguresList
   ) {
     var form = new ConsentDataForm();
 
@@ -86,14 +86,16 @@ public class ConsentDataForm {
     form.consentEndDateInput.setDate(consentData.getConsentEndDate());
     form.longTermProductionConsentProductionFromDateInput.setDate(consentData.getLongTermProductionConsentProductionFromDate());
     form.longTermConsentProductionFiguresInputs.putAll(
-        consentProductionLongTermFiguresList.stream()
-            .sorted(Comparator.comparing(ConsentProductionLongTermFigures::getYear))
+        consentDataLongTermProductionFiguresList.stream()
+            .sorted(Comparator.comparing(ConsentDataLongTermProductionFigures::getYear))
             .collect(
                 StreamUtils.toLinkedHashMap(
-                    consentProductionLongTermFigures -> consentProductionLongTermFigures.getYear().toString(),
-                    consentProductionLongTermFigures ->
-                        ConsentProductionFiguresInput.withDefaultValuesFromDto(
-                            ConsentProductionFiguresDto.fromConsentProductionLongTermFigures(consentProductionLongTermFigures))
+                    consentDataLongTermProductionFigures -> consentDataLongTermProductionFigures.getYear().toString(),
+                    consentDataLongTermProductionFigures -> ConsentProductionFiguresInput.withDefaultValuesFromDto(
+                        ConsentProductionFiguresDto.fromConsentDataLongTermProductionFigures(
+                            consentDataLongTermProductionFigures
+                        )
+                    )
                 )
             ));
 

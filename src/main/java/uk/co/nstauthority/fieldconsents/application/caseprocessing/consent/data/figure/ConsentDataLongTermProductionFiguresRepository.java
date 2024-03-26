@@ -6,10 +6,10 @@ import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.duplication.NotDuplicationSource;
 
 @NotDuplicationSource
-public interface ConsentProductionLongTermFiguresRepository
-    extends ListCrudRepository<ConsentProductionLongTermFigures, Integer> {
+public interface ConsentDataLongTermProductionFiguresRepository
+    extends ListCrudRepository<ConsentDataLongTermProductionFigures, Integer> {
 
-  List<ConsentProductionLongTermFigures> findAllByApplication(Application application);
+  List<ConsentDataLongTermProductionFigures> findAllByApplication(Application application);
 
   void deleteAllByApplication(Application application);
 }

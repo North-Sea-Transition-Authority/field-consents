@@ -11,8 +11,8 @@ import java.math.BigDecimal;
 import uk.co.nstauthority.fieldconsents.application.Application;
 
 @Entity
-@Table(name = "application_consent_production_long_term_figures")
-public class ConsentProductionLongTermFigures {
+@Table(name = "application_consent_data_long_term_production_figures")
+public class ConsentDataLongTermProductionFigures {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,10 +32,10 @@ public class ConsentProductionLongTermFigures {
 
   private BigDecimal maxGas;
 
-  public ConsentProductionLongTermFigures() {
+  public ConsentDataLongTermProductionFigures() {
   }
 
-  public ConsentProductionLongTermFigures(Integer id) {
+  public ConsentDataLongTermProductionFigures(Integer id) {
     this.id = id;
   }
 

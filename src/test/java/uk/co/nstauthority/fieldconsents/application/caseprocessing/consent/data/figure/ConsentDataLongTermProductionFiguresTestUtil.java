@@ -5,7 +5,7 @@ import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 
-public class ConsentProductionLongTermFiguresTestUtil {
+public class ConsentDataLongTermProductionFiguresTestUtil {
 
   public static Builder builder() {
     return new Builder();
@@ -56,17 +56,17 @@ public class ConsentProductionLongTermFiguresTestUtil {
       return this;
     }
 
-    public ConsentProductionLongTermFigures build() {
-      var consentProductionLongTermFigures = new ConsentProductionLongTermFigures(id);
+    public ConsentDataLongTermProductionFigures build() {
+      var consentDataLongTermProductionFigures = new ConsentDataLongTermProductionFigures(id);
 
-      consentProductionLongTermFigures.setApplication(application);
-      consentProductionLongTermFigures.setYear(year);
-      consentProductionLongTermFigures.setMinOil(minOil);
-      consentProductionLongTermFigures.setMaxOil(maxOil);
-      consentProductionLongTermFigures.setMinGas(minGas);
-      consentProductionLongTermFigures.setMaxGas(maxGas);
+      consentDataLongTermProductionFigures.setApplication(application);
+      consentDataLongTermProductionFigures.setYear(year);
+      consentDataLongTermProductionFigures.setMinOil(minOil);
+      consentDataLongTermProductionFigures.setMaxOil(maxOil);
+      consentDataLongTermProductionFigures.setMinGas(minGas);
+      consentDataLongTermProductionFigures.setMaxGas(maxGas);
 
-      return consentProductionLongTermFigures;
+      return consentDataLongTermProductionFigures;
     }
   }
 }
