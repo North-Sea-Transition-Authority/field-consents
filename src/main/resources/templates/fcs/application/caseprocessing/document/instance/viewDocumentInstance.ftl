@@ -20,10 +20,7 @@
     <@fdsSubNavigation.subNavigation>
       <@fdsSubNavigation.subNavigationSection>
         <#list documentInstanceSectionsSummaryView.topLevelDocumentInstanceSectionSummaryViews() as documentInstanceSectionSummaryView>
-          <@fdsSubNavigation.subNavigationNestedLink
-            linkText=documentInstanceSectionSummaryView.titleWithSectionNumber()
-            linkUrl="#${documentInstanceSectionSummaryView.titleWithSectionNumber()}"
-          />
+          <@documentSectionSummaryViewSubnavigationItems documentInstanceSectionSummaryView/>
         </#list>
       </@fdsSubNavigation.subNavigationSection>
     </@fdsSubNavigation.subNavigation>
@@ -54,6 +51,17 @@
     </#list>
   </@defaultPageWithSubNavigationContent>
 </@defaultPageWithSubNavigation>
+
+<#macro documentSectionSummaryViewSubnavigationItems documentInstanceSectionSummaryView>
+  <@fdsSubNavigation.subNavigationNestedLink
+    linkText=documentInstanceSectionSummaryView.titleWithSectionNumber()
+    linkUrl="#${documentInstanceSectionSummaryView.titleWithSectionNumber()}"
+  />
+
+  <#list documentInstanceSectionSummaryView.children() as child>
+    <@documentSectionSummaryViewSubnavigationItems documentInstanceSectionSummaryView=child/>
+  </#list>
+</#macro>
 
 <#macro documentInstanceSectionSummaryViewContent documentInstanceSectionSummaryView>
   <div>
