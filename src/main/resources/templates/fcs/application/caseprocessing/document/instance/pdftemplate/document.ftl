@@ -40,7 +40,6 @@
 </html>
 
 <#macro sectionContentTable documentInstanceSectionsSummaryView>
-  <#assign nestingLevel = documentInstanceSectionsSummaryView.nestingLevel()>
   <#assign sectionNumber = documentInstanceSectionsSummaryView.sectionNumber()!>
   <#assign hasPageBreakBefore = documentInstanceSectionsSummaryView.hasPageBreakBefore()>
   <#assign content = documentInstanceSectionsSummaryView.content()!>

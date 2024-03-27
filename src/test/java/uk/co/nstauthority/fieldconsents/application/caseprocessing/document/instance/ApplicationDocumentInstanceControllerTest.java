@@ -99,7 +99,6 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
 
     var documentInstanceSectionSummaryViews = List.of(
         new DocumentInstanceSectionSummaryView(
-            0,
             "1",
             "Test title 1",
             "Test content 1",
@@ -109,7 +108,6 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
             List.of()
         ),
         new DocumentInstanceSectionSummaryView(
-            0,
             "2",
             "Test title 2",
             "Test content 2",

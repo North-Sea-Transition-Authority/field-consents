@@ -22,7 +22,6 @@ class DocumentInstanceSectionDtoTestUtil {
     private boolean numbered = true;
     private boolean hasPageBreakBefore = false;
     private int displayOrder = 1;
-    private int nestingLevel = 0;
     private List<DocumentInstanceSectionDto> children = List.of();
 
     private Builder() {
@@ -73,11 +72,6 @@ class DocumentInstanceSectionDtoTestUtil {
       return this;
     }
 
-    Builder withNestingLevel(int nestingLevel) {
-      this.nestingLevel = nestingLevel;
-      return this;
-    }
-
     Builder withChildren(List<DocumentInstanceSectionDto> children) {
       this.children = children;
       return this;
@@ -94,7 +88,6 @@ class DocumentInstanceSectionDtoTestUtil {
           numbered,
           hasPageBreakBefore,
           displayOrder,
-          nestingLevel,
           children
       );
     }
