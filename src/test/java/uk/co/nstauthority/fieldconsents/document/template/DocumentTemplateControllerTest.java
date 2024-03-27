@@ -90,7 +90,7 @@ class DocumentTemplateControllerTest extends AbstractControllerTest {
   void getViewDocumentTemplate() throws Exception {
     var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
 
-    var documentTemplateSectionSummaryViews = List.of(
+    var topLevelDocumentTemplateSectionSummaryViews = List.of(
         new DocumentTemplateSectionSummaryView(
             "1",
             "Test title 1",
@@ -115,10 +115,10 @@ class DocumentTemplateControllerTest extends AbstractControllerTest {
     when(documentTemplateService.getDocumentTemplateDtoOrThrow(DOCUMENT_TEMPLATE_ID))
         .thenReturn(documentTemplateDto);
     when(
-        fieldConsentsDocumentTemplateSectionControllerHelperService.getDocumentTemplateSectionSummaryViews(
+        fieldConsentsDocumentTemplateSectionControllerHelperService.getTopLevelDocumentTemplateSectionSummaryViews(
             documentTemplateDto
         )
-    ).thenReturn(documentTemplateSectionSummaryViews);
+    ).thenReturn(topLevelDocumentTemplateSectionSummaryViews);
 
     mockMvc.perform(get(ReverseRouter.route(on(DocumentTemplateController.class)
             .getViewDocumentTemplate(DOCUMENT_TEMPLATE_ID)))
@@ -126,6 +126,6 @@ class DocumentTemplateControllerTest extends AbstractControllerTest {
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/document/template/viewDocumentTemplate"))
         .andExpect(model().attribute("pageTitle", documentTemplateDto.title()))
-        .andExpect(model().attribute("documentTemplateSectionSummaryViews", documentTemplateSectionSummaryViews));
+        .andExpect(model().attribute("topLevelDocumentTemplateSectionSummaryViews", topLevelDocumentTemplateSectionSummaryViews));
   }
 }

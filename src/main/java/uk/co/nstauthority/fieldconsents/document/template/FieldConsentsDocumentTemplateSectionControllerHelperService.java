@@ -22,10 +22,10 @@ public class FieldConsentsDocumentTemplateSectionControllerHelperService {
     this.documentTemplateSectionControllerHelperService = documentTemplateSectionControllerHelperService;
   }
 
-  public List<DocumentTemplateSectionSummaryView> getDocumentTemplateSectionSummaryViews(
+  public List<DocumentTemplateSectionSummaryView> getTopLevelDocumentTemplateSectionSummaryViews(
       DocumentTemplateDto documentTemplateDto
   ) {
-    return documentTemplateSectionControllerHelperService.getDocumentTemplateSectionSummaryViews(
+    return documentTemplateSectionControllerHelperService.getTopLevelDocumentTemplateSectionSummaryViews(
         documentTemplateDto,
         this::getDocumentTemplateSectionUrls
     );

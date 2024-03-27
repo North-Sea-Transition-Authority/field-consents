@@ -4,7 +4,7 @@
   <@defaultPageWithSubNavigationSubNav smallSubnav=true>
     <@fdsSubNavigation.subNavigation>
       <@fdsSubNavigation.subNavigationSection>
-        <#list documentTemplateSectionSummaryViews as documentTemplateSectionSummaryView>
+        <#list topLevelDocumentTemplateSectionSummaryViews as documentTemplateSectionSummaryView>
           <@fdsSubNavigation.subNavigationNestedLink
             linkText=documentTemplateSectionSummaryView.titleWithSectionNumber()
             linkUrl="#${documentTemplateSectionSummaryView.titleWithSectionNumber()}"
@@ -15,7 +15,7 @@
   </@defaultPageWithSubNavigationSubNav>
 
   <@defaultPageWithSubNavigationContent pageHeading=pageTitle>
-    <#list documentTemplateSectionSummaryViews as documentTemplateSectionSummaryView>
+    <#list topLevelDocumentTemplateSectionSummaryViews as documentTemplateSectionSummaryView>
       <div>
         <h2 id="${documentTemplateSectionSummaryView.titleWithSectionNumber()}" class="govuk-heading-l govuk-!-margin-bottom-2">
           ${documentTemplateSectionSummaryView.titleWithSectionNumber()}

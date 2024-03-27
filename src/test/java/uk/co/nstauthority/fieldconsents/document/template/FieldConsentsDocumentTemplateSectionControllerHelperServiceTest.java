@@ -33,10 +33,10 @@ class FieldConsentsDocumentTemplateSectionControllerHelperServiceTest {
   private ArgumentCaptor<Function<DocumentTemplateSectionDto, DocumentTemplateSectionUrls>> urlsFunctionCaptor;
 
   @Test
-  void getDocumentTemplateSectionSummaryViews() {
+  void getTopLevelDocumentTemplateSectionSummaryViews() {
     var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();
 
-    var documentTemplateSectionSummaryViews = List.of(
+    var topLevelDocumentTemplateSectionSummaryViews = List.of(
         new DocumentTemplateSectionSummaryView(
             "1",
             "Test title",
@@ -49,15 +49,15 @@ class FieldConsentsDocumentTemplateSectionControllerHelperServiceTest {
     );
 
     when(
-        documentTemplateSectionControllerHelperService.getDocumentTemplateSectionSummaryViews(
+        documentTemplateSectionControllerHelperService.getTopLevelDocumentTemplateSectionSummaryViews(
             eq(documentTemplateDto),
             urlsFunctionCaptor.capture()
         )
-    ).thenReturn(documentTemplateSectionSummaryViews);
+    ).thenReturn(topLevelDocumentTemplateSectionSummaryViews);
 
     assertThat(
-        fieldConsentsDocumentTemplateSectionControllerHelperService.getDocumentTemplateSectionSummaryViews(documentTemplateDto)
-    ).isEqualTo(documentTemplateSectionSummaryViews);
+        fieldConsentsDocumentTemplateSectionControllerHelperService.getTopLevelDocumentTemplateSectionSummaryViews(documentTemplateDto)
+    ).isEqualTo(topLevelDocumentTemplateSectionSummaryViews);
 
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
     var documentTemplateSectionId = documentTemplateSectionDto.id();

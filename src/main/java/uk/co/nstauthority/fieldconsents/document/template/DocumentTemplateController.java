@@ -43,11 +43,11 @@ public class DocumentTemplateController {
   public ModelAndView getViewDocumentTemplate(@PathVariable UUID documentTemplateId) {
     var documentTemplateDto = documentTemplateService.getDocumentTemplateDtoOrThrow(documentTemplateId);
 
-    var documentTemplateSectionSummaryViews = fieldConsentsDocumentTemplateSectionControllerHelperService
-        .getDocumentTemplateSectionSummaryViews(documentTemplateDto);
+    var topLevelDocumentTemplateSectionSummaryViews = fieldConsentsDocumentTemplateSectionControllerHelperService
+        .getTopLevelDocumentTemplateSectionSummaryViews(documentTemplateDto);
 
     return new ModelAndView("fcs/document/template/viewDocumentTemplate")
         .addObject("pageTitle", documentTemplateDto.title())
-        .addObject("documentTemplateSectionSummaryViews", documentTemplateSectionSummaryViews);
+        .addObject("topLevelDocumentTemplateSectionSummaryViews", topLevelDocumentTemplateSectionSummaryViews);
   }
 }

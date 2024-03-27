@@ -33,17 +33,17 @@
       </tr>
     </tbody>
   </table>
-  <#list documentInstanceSectionsSummaryView.sectionSummaryViews() as sectionSummaryView>
-    <@sectionContentTable documentInstanceSectionsSummaryView=sectionSummaryView/>
+  <#list documentInstanceSectionsSummaryView.topLevelDocumentInstanceSectionSummaryViews() as documentInstanceSectionSummaryView>
+    <@sectionContentTable documentInstanceSectionSummaryView=documentInstanceSectionSummaryView/>
   </#list>
 </body>
 </html>
 
-<#macro sectionContentTable documentInstanceSectionsSummaryView>
-  <#assign sectionNumber = documentInstanceSectionsSummaryView.sectionNumber()!>
-  <#assign hasPageBreakBefore = documentInstanceSectionsSummaryView.hasPageBreakBefore()>
-  <#assign content = documentInstanceSectionsSummaryView.content()!>
-  <#assign children = documentInstanceSectionsSummaryView.children()>
+<#macro sectionContentTable documentInstanceSectionSummaryView>
+  <#assign sectionNumber = documentInstanceSectionSummaryView.sectionNumber()!>
+  <#assign hasPageBreakBefore = documentInstanceSectionSummaryView.hasPageBreakBefore()>
+  <#assign content = documentInstanceSectionSummaryView.content()!>
+  <#assign children = documentInstanceSectionSummaryView.children()>
 
   <#if hasPageBreakBefore>
     <div style="page-break-after: always;"></div>
@@ -65,7 +65,7 @@
       <td></td>
       <td>
         <#list children as child>
-          <@sectionContentTable documentInstanceSectionsSummaryView=child/>
+          <@sectionContentTable documentInstanceSectionSummaryView=child/>
         </#list>
       </td>
     </tr>
