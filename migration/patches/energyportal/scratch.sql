@@ -2769,3 +2769,102 @@ WHERE (
 --AND ld.increase_in_production IS NOT NULL AND ld.es_reference IS NOT NULL AND ld.uplift_percentage IS NOT NULL
 ORDER BY av.id ASC
 /
+
+--
+-- split_clob_legacy_data
+--
+
+SELECT length(sc.text_part) text_length, sc.* 
+FROM fcs_migration.split_clob_legacy_data sc
+ORDER BY sc.id
+/
+
+--
+-- Manual migrate queries (no longer required but saved here for local dev use)
+--
+
+-- CLOBs cause this error over the DB link
+--ORA-65510: Distributed LOB operations are not supported on pre-12.2 databases.
+--ORA-06512: at line 5
+--ORA-06512: at line 5
+
+SELECT *
+FROM fcs_migration.application_supporting_information
+ORDER BY id
+/
+SELECT
+  id
+, application_version_id
+, added_by_wua_id
+, to_char(added_date_time, 'YYYY-MM-DD HH24:MI:SS') added_date_time
+, case_note_text
+FROM fcs_migration.application_case_notes
+ORDER BY id
+/
+SELECT
+  id
+, application_version_id
+, requested_by_wua_id
+, to_char(requested_date_time, 'YYYY-MM-DD HH24:MI:SS') requested_date_time
+, request_text
+, to_char(deadline_date_time, 'YYYY-MM-DD HH24:MI:SS') deadline_date_time
+, responded_by_wua_id
+, to_char(responded_date_time, 'YYYY-MM-DD HH24:MI:SS') responded_date_time
+, response_text
+, response_type
+, application_update_status
+, response_application_version_id
+FROM fcs_migration.application_updates
+ORDER BY id
+/
+SELECT
+  id
+, request_application_version_id
+, requested_by_wua_id
+, to_char(requested_date_time, 'YYYY-MM-DD HH24:MI:SS') requested_date_time
+, request_text
+, to_char(deadline_date_time, 'YYYY-MM-DD HH24:MI:SS') deadline_date_time
+, technical_reviewer_wua_id
+, responded_by_wua_id
+, to_char(responded_date_time, 'YYYY-MM-DD HH24:MI:SS') responded_date_time
+, response_text
+, response_type
+, technical_review_status
+, response_application_version_id
+FROM fcs_migration.application_technical_reviews
+ORDER BY id
+/
+-- manual export/import (for local dev import)
+SELECT
+  f.id
+, f.bucket
+, f.key
+, f.name
+, f.content_type
+, f.content_length
+, to_char(f.uploaded_at, 'YYYY-MM-DD HH24:MI:SS') uploaded_at
+, f.usage_id
+, f.usage_type
+, f.document_type
+, f.description
+, f.uploaded_by
+FROM fcs_migration.file_upload_library_uploaded_files f
+WHERE f.key LIKE '%local'
+ORDER BY usage_id, uploaded_at
+/
+-- manual export/import (for local dev import)
+SELECT
+  ld.id
+, ld.application_version_id
+, ld.increase_in_production
+, ld.es_reference
+, ld.uplift_percentage
+, ld.field_location
+, ld.previous_year_consent_history
+, ld.previous_year_actuals
+, ld.terminal_name
+, ld.terminal_location
+, ld.project_under_eia_regs
+FROM fcs_migration.application_other_legacy_data ld
+ORDER BY id
+/

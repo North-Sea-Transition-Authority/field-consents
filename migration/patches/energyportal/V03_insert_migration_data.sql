@@ -2011,5 +2011,114 @@ WHERE coalesce(ld.increase_in_production, ld.es_reference, ld.field_location, ld
 OR coalesce(ld.uplift_percentage, ld.previous_year_consent_history, ld.previous_year_actuals) IS NOT NULL;
 /
 
+--
+-- split_clob_legacy_data
+--
+
+DECLARE
+  l_varchar2_max_length CONSTANT INTEGER := 4000;
+BEGIN
+
+  FOR rec IN (
+    WITH base AS (
+      SELECT
+        si.id source_id
+      , 'application_supporting_information' source_table_name
+      , 'notes' source_column_name
+      , si.notes clob_text
+      FROM fcs_migration.application_supporting_information si
+      WHERE length(si.notes) > l_varchar2_max_length
+          
+      UNION ALL
+          
+      SELECT
+        si.id source_id
+      , 'application_supporting_information' source_table_name
+      , 'erap_notes' source_column_name
+      , si.erap_notes clob_text
+      FROM fcs_migration.application_supporting_information si
+      WHERE length(si.erap_notes) > l_varchar2_max_length
+          
+      UNION ALL
+          
+      SELECT
+        cn.id source_id
+      , 'application_case_notes' source_table_name
+      , 'case_note_text' source_column_name
+      , cn.case_note_text clob_text
+      FROM fcs_migration.application_case_notes cn
+      WHERE length(cn.case_note_text) > l_varchar2_max_length
+      
+      UNION ALL
+      
+      SELECT
+        au.id source_id
+      , 'application_updates' source_table_name
+      , 'request_text' source_column_name
+      , au.request_text clob_text
+      FROM fcs_migration.application_updates au
+      WHERE length(au.request_text) > l_varchar2_max_length
+      
+      UNION ALL
+      
+      SELECT
+        tr.id source_id
+      , 'application_technical_reviews' source_table_name
+      , 'response_text' source_column_name
+      , tr.response_text clob_text
+      FROM fcs_migration.application_technical_reviews tr
+      WHERE length(tr.response_text) > l_varchar2_max_length
+      
+      UNION ALL
+      
+      SELECT
+        rm.id source_id
+      , 'flare_report_months' source_table_name
+      , 'comments' source_column_name
+      , rm.comments clob_text
+      FROM fcs_migration.flare_report_months rm
+      WHERE length(rm.comments) > l_varchar2_max_length
+      
+      UNION ALL
+      
+      SELECT
+        rm.id source_id
+      , 'vent_report_months' source_table_name
+      , 'comments' source_column_name
+      , rm.comments clob_text
+      FROM fcs_migration.vent_report_months rm
+      WHERE length(rm.comments) > l_varchar2_max_length
+    )
+    SELECT b.*
+    , ceil(length(b.clob_text)/l_varchar2_max_length) part_count
+    FROM base b
+    ORDER BY b.source_table_name, b.source_column_name, b.source_id
+  ) LOOP
+  
+    FOR part_index IN 1 .. rec.part_count LOOP
+    
+      INSERT INTO fcs_migration.split_clob_legacy_data (
+        id
+      , source_id
+      , source_table_name
+      , source_column_name
+      , text_part
+      , text_part_index 
+      ) VALUES (
+        fcs_migration.split_clob_legacy_data_id_seq.nextval
+      , rec.source_id
+      , rec.source_table_name
+      , rec.source_column_name
+      , dbms_lob.substr(rec.clob_text, l_varchar2_max_length, (part_index - 1) * l_varchar2_max_length + 1)
+      , part_index
+      );    
+    
+    END LOOP;
+  
+  END LOOP;
+ 
+END;
+/
+
 COMMIT;
 /

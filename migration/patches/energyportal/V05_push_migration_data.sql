@@ -2,6 +2,7 @@
 -- Full execution time
 -- dev to local: 32mins 39secs - run 1
 -- dev to local: 12mins 01secs - run 2
+-- dev to dev: 8mins 03secs
 -- st to st: 3mins 5secs - run 1
 -- uat to uat: 13min 42secs - full run 1
 
@@ -26,7 +27,10 @@
 --DELETE FROM "fcs"."notification_library_notifications_aud"@fcs_postgres_db;
 --
 ---- we aren't migrating to these table but the data still needs deleting
+--DELETE FROM "fcs"."application_consent_data_long_term_production_figures"@fcs_postgres_db;
+--DELETE FROM "fcs"."application_consent_data"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_consent_issuing_approvals"@fcs_postgres_db;
+--DELETE FROM "fcs"."application_consents"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_work_area_priorities"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_rationale"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_withdrawals"@fcs_postgres_db;
@@ -36,6 +40,7 @@
 --DELETE FROM "fcs"."notification_library_notifications"@fcs_postgres_db;
 --
 ---- delete data from tables we are migrating too
+--DELETE FROM "fcs"."split_clob_legacy_data"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_other_legacy_data"@fcs_postgres_db;
 --DELETE FROM "fcs"."vent_long_term_years"@fcs_postgres_db;
 --DELETE FROM "fcs"."flare_long_term_years"@fcs_postgres_db;
@@ -74,8 +79,6 @@
 --DELETE FROM "fcs"."application_assets"@fcs_postgres_db;
 --DELETE FROM "fcs"."consent_lengths"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_versions"@fcs_postgres_db;
---DELETE FROM "fcs"."application_consent_production_long_term_figures"@fcs_postgres_db;
---DELETE FROM "fcs"."application_consent_data"@fcs_postgres_db;
 --DELETE FROM "fcs"."applications"@fcs_postgres_db;
 
 -- work around DB link timeout issues from sqlnet.ora param SQLNET.INBOUND_CONNECT_TIMEOUT
@@ -123,13 +126,7 @@ END;
 
 -- Run times
 -- dev to local: 59s
--- dev to dev pg: 15s (keeps failing midway with error)
---ORA-02055: distributed update operation failed; rollback required
---ORA-28511: lost RPC connection to heterogeneous remote agent using SID=ORA-28511: lost RPC connection to heterogeneous remote agent using SID=(DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SID=fcs_postgres)))
---ORA-02055: distributed update operation failed; rollback required
---ORA-02063: preceding lines from FCS_POSTGRES_DB
---ORA-06512: at line 5
---ORA-06512: at line 5
+-- dev to dev pg: 15s
 BEGIN
 
   FOR rec IN (SELECT * FROM fcs_migration.application_versions WHERE id > 0 ORDER BY id) LOOP
@@ -165,13 +162,7 @@ BEGIN
     , rec.current_case_owner
     , rec.migrated
     );
-    
---    -- work around DB link timeout issues from sqlnet.ora param SQLNET.INBOUND_CONNECT_TIMEOUT=15
---    IF mod(rec.id, 1000) = 0 THEN
---      COMMIT;
---      DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
---    END IF;
-  
+ 
   END LOOP;
 
 END;
@@ -184,7 +175,7 @@ END;
 
 -- Run times
 -- dev to local: 58s
--- dev to dev pg: 15s (kept failing midway with error as above for application_versions)
+-- dev to dev pg: 15s
 BEGIN
 
   FOR rec IN (SELECT * FROM fcs_migration.consent_lengths WHERE id > 0 ORDER BY id) LOOP
@@ -378,98 +369,42 @@ END;
 -- application_supporting_information
 --
 
---SELECT si.*, length(notes), length(erap_notes)
---FROM fcs_migration.application_supporting_information si 
---WHERE length(notes) > 4000 OR length(erap_notes) > 4000;
---/
-
-
--- TODO - deal with the CLOBs!
--- For now have migrated to a pipe separated txt file and used IntelliJ to import.
---SELECT *
---FROM fcs_migration.application_supporting_information
---ORDER BY id
---/
 -- Run time
--- dev to local: s
---BEGIN
---
---  FOR rec IN (SELECT * FROM fcs_migration.application_supporting_information si WHERE id > 0 ORDER BY id) LOOP
---  
---    INSERT INTO "fcs"."application_supporting_information"@fcs_postgres_db (
---      "id"
---    , "application_version_id"
---    , "notes"
---    , "erap_notes"
---    ) VALUES (
---      rec.id
---    , rec.application_version_id
---    , rec.notes
---    , rec.erap_notes
---    );
---  
---  END LOOP;
---
---END;
---/
---DECLARE
---  l_loop_count INTEGER;
---  l_notes VARCHAR2(32767);
---  l_erap_notes VARCHAR2(32767);
---BEGIN
---
---  FOR rec IN (
---    SELECT si.*
---    , length(si.notes) notes_length
---    , length(si.erap_notes) erap_notes_length
---    FROM fcs_migration.application_supporting_information si
---    WHERE length(si.notes) > 4000
---  ) LOOP
---  
-----    l_loop_count := 1;
-----  
-----    l_notes := dbms_lob.substr(rec.notes, 4000, 1);
-----    l_erap_notes := dbms_lob.substr(rec.erap_notes, 4000, 1);
-----    
-----    dbms_output.put_line('notes_length:'||rec.notes_length);
-----    dbms_output.put_line('erap_notes_length:'||rec.erap_notes_length);
---  
---    INSERT INTO "fcs"."application_supporting_information"@fcs_postgres_db (
---      "id"
---    , "application_version_id"
---    , "notes"
---    , "erap_notes"
---    ) VALUES (
---      rec.id
---    , rec.application_version_id
---    , rec.notes_varchar2
---    , 'test erap'
---    );
---  
-----    IF (rec.notes_length > 4000) THEN
-----    
-----      l_loop_count := ceil(notes_length/4000) - 1;
-----    
-----      FOR i IN 1..l_loop_count LOOP
-----      
-----        UPDATE "fcs"."application_supporting_information"@fcs_postgres_db
-----        SET "notes" = "notes"||substr(rec.notes, l_loop_count*4000+1, l_loop_count*4000+4000)
-----        WHERE "id" = rec.id;
-----      
-----      END LOOP;
-----    
-----    END IF;
---  
---  END LOOP;
---
---END;
---/
---SELECT si.*
---, length(si.notes) notes_length
---, length(si.erap_notes) erap_notes_length
---FROM fcs_migration.application_supporting_information si
---WHERE (length(si.notes) > 4000 OR length(si.erap_notes) > 4000)
---/
+-- dev to dev: 15s
+BEGIN
+
+  FOR rec IN (
+    SELECT si.*
+    , CASE
+      WHEN length(si.notes) > 4000 THEN 'dummy text placeholder'
+      ELSE to_char(si.notes)
+      END notes_varchar2
+    , CASE
+      WHEN length(si.erap_notes) > 4000 THEN 'dummy text placeholder'
+      ELSE to_char(si.erap_notes)
+      END erap_notes_varchar2
+    FROM fcs_migration.application_supporting_information si
+    WHERE id > 0
+    ORDER BY id
+  ) LOOP
+  
+    INSERT INTO "fcs"."application_supporting_information"@fcs_postgres_db (
+      "id"
+    , "application_version_id"
+    , "notes"
+    , "erap_notes"
+    ) VALUES (
+      rec.id
+    , rec.application_version_id
+    , rec.notes_varchar2
+    , rec.erap_notes_varchar2
+    );
+  
+  END LOOP;
+
+END;
+/
+
 
 -- work around DB link timeout issues from sqlnet.ora param SQLNET.INBOUND_CONNECT_TIMEOUT
 BEGIN
@@ -911,10 +846,19 @@ END;
 --
 
 -- Execution time
--- dev to local: 2s
+-- dev to dev: 2s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.flare_report_months WHERE id > 0 ORDER BY id) LOOP
+  FOR rec IN (
+    SELECT rm.*
+    , CASE
+      WHEN length(rm.comments) > 4000 THEN 'dummy text placeholder'
+      ELSE to_char(rm.comments)
+      END comments_varchar2
+    FROM fcs_migration.flare_report_months rm
+    WHERE id > 0
+    ORDER BY id
+  ) LOOP
   
     INSERT INTO "fcs"."flare_report_months"@fcs_postgres_db (
       "id"
@@ -935,7 +879,7 @@ BEGIN
     , rec.category_b
     , rec.category_c
     , rec.shut_down_days
-    , rec.comments
+    , rec.comments_varchar2
     );
   
   END LOOP;
@@ -1320,7 +1264,16 @@ END;
 -- dev to local: 1s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.vent_report_months WHERE id > 0 ORDER BY id) LOOP
+  FOR rec IN (
+    SELECT rm.*
+    , CASE
+      WHEN length(rm.comments) > 4000 THEN 'dummy text placeholder'
+      ELSE to_char(rm.comments)
+      END comments_varchar2
+    FROM fcs_migration.vent_report_months rm
+    WHERE id > 0
+    ORDER BY id  
+  ) LOOP
   
     INSERT INTO "fcs"."vent_report_months"@fcs_postgres_db (
       "id"
@@ -1341,7 +1294,7 @@ BEGIN
     , rec.category_b
     , rec.category_c
     , rec.shut_down_days
-    , rec.comments
+    , rec.comments_varchar2
     );
   
   END LOOP;
@@ -1426,200 +1379,146 @@ END;
 -- application_case_notes
 --
 
--- TODO - getting error
---ORA-65510: Distributed LOB operations are not supported on pre-12.2 databases.
---ORA-06512: at line 5
---ORA-06512: at line 5
-
--- For now have migrated to a pipe separated txt file and used IntelliJ to import.
---SELECT
---  id
---, application_version_id
---, added_by_wua_id
---, to_char(added_date_time, 'YYYY-MM-DD HH24:MI:SS') added_date_time
---, case_note_text
---FROM fcs_migration.application_case_notes
---ORDER BY id
---/
-
 -- Execution time
--- dev to local: s
---BEGIN
---
---  FOR rec IN (SELECT * FROM fcs_migration.application_case_notes WHERE id > 0 ORDER BY id) LOOP
---  
---    INSERT INTO "fcs"."application_case_notes"@fcs_postgres_db (
---      "id"
---    , "application_version_id"
---    , "added_by_wua_id"
---    , "added_date_time"
---    , "case_note_text"
---    ) VALUES (
---      rec.id
---    , rec.application_version_id
---    , rec.added_by_wua_id
---    , rec.added_date_time
---    , rec.case_note_text
---    );
---  
---  END LOOP;
---
---END;
---/
---SELECT
---  cn.*
---, length(cn.case_note_text)
---FROM fcs_migration.application_case_notes cn
---WHERE length(cn.case_note_text) > 4000
---ORDER BY id
---/
+-- dev to dev: 35s
+BEGIN
 
+  FOR rec IN (
+    SELECT cn.*
+    , CASE
+      WHEN length(cn.case_note_text) > 4000 THEN 'dummy text placeholder'
+      ELSE to_char(cn.case_note_text)
+      END case_note_text_varchar2
+    FROM fcs_migration.application_case_notes cn
+    WHERE id > 0
+    ORDER BY id
+  ) LOOP
+  
+    INSERT INTO "fcs"."application_case_notes"@fcs_postgres_db (
+      "id"
+    , "application_version_id"
+    , "added_by_wua_id"
+    , "added_date_time"
+    , "case_note_text"
+    ) VALUES (
+      rec.id
+    , rec.application_version_id
+    , rec.added_by_wua_id
+    , rec.added_date_time
+    , rec.case_note_text_varchar2
+    );
+  
+  END LOOP;
+
+END;
+/
 
 --
 -- application_updates
 --
 
--- TODO - getting error
---ORA-65510: Distributed LOB operations are not supported on pre-12.2 databases.
---ORA-06512: at line 5
---ORA-06512: at line 5
-
--- For now have migrated to a pipe separated txt file and used IntelliJ to import.
---SELECT
---  id
---, application_version_id
---, requested_by_wua_id
---, to_char(requested_date_time, 'YYYY-MM-DD HH24:MI:SS') requested_date_time
---, request_text
---, to_char(deadline_date_time, 'YYYY-MM-DD HH24:MI:SS') deadline_date_time
---, responded_by_wua_id
---, to_char(responded_date_time, 'YYYY-MM-DD HH24:MI:SS') responded_date_time
---, response_text
---, response_type
---, application_update_status
---, response_application_version_id
---FROM fcs_migration.application_updates
---ORDER BY id
---/
-
 -- Execution time
--- dev to local: s
---BEGIN
---
---  FOR rec IN (SELECT * FROM fcs_migration.application_updates WHERE id > 0 ORDER BY id) LOOP
---  
---    INSERT INTO "fcs"."application_updates"@fcs_postgres_db (
---      "id"
---    , "application_version_id"
---    , "requested_by_wua_id"
---    , "requested_date_time"
---    , "request_text"
---    , "deadline_date_time"
---    , "responded_by_wua_id"
---    , "responded_date_time"
---    , "response_text"
---    , "response_type"
---    , "application_update_status"
---    , "response_application_version_id"
---    ) VALUES (
---      rec.id
---    , rec.application_version_id
---    , rec.requested_by_wua_id
---    , rec.requested_date_time
---    , rec.request_text
---    , rec.deadline_date_time
---    , rec.responded_by_wua_id
---    , rec.responded_date_time
---    , rec.response_text
---    , rec.response_type
---    , rec.application_update_status
---    , rec.response_application_version_id
---    );
---  
---  END LOOP;
---
---END;
---/
---SELECT au.*
---, length(au.request_text)
---, length(au.response_text)
---FROM fcs_migration.application_updates au
---WHERE (length(au.request_text) > 4000 OR length(au.response_text) > 4000)
---/
+-- dev to dev: 8s
+BEGIN
+
+  FOR rec IN (
+    SELECT au.*
+    , CASE
+      WHEN length(au.request_text) > 4000 THEN 'dummy text placeholder'
+      ELSE to_char(au.request_text)
+      END request_text_varchar2
+    FROM fcs_migration.application_updates au
+    WHERE id > 0
+    ORDER BY id
+  ) LOOP
+  
+    INSERT INTO "fcs"."application_updates"@fcs_postgres_db (
+      "id"
+    , "application_version_id"
+    , "requested_by_wua_id"
+    , "requested_date_time"
+    , "request_text"
+    , "deadline_date_time"
+    , "responded_by_wua_id"
+    , "responded_date_time"
+    , "response_text"
+    , "response_type"
+    , "application_update_status"
+    , "response_application_version_id"
+    ) VALUES (
+      rec.id
+    , rec.application_version_id
+    , rec.requested_by_wua_id
+    , rec.requested_date_time
+    , rec.request_text_varchar2
+    , rec.deadline_date_time
+    , rec.responded_by_wua_id
+    , rec.responded_date_time
+    , rec.response_text
+    , rec.response_type
+    , rec.application_update_status
+    , rec.response_application_version_id
+    );
+  
+  END LOOP;
+
+END;
+/
+
 
 --
 -- application_technical_reviews
 --
 
--- TODO - getting error
---ORA-65510: Distributed LOB operations are not supported on pre-12.2 databases.
---ORA-06512: at line 5
---ORA-06512: at line 5
-
----- For now have migrated to a pipe separated txt file and used IntelliJ to import.
---SELECT
---  id
---, request_application_version_id
---, requested_by_wua_id
---, to_char(requested_date_time, 'YYYY-MM-DD HH24:MI:SS') requested_date_time
---, request_text
---, to_char(deadline_date_time, 'YYYY-MM-DD HH24:MI:SS') deadline_date_time
---, technical_reviewer_wua_id
---, responded_by_wua_id
---, to_char(responded_date_time, 'YYYY-MM-DD HH24:MI:SS') responded_date_time
---, response_text
---, response_type
---, technical_review_status
---, response_application_version_id
---FROM fcs_migration.application_technical_reviews
---ORDER BY id
---/
-
 -- Execution time
--- dev to local: s
---BEGIN
---
---  FOR rec IN (SELECT * FROM fcs_migration.application_technical_reviews WHERE id > 0 ORDER BY id) LOOP
---  
---    INSERT INTO "fcs"."application_technical_reviews"@fcs_postgres_db (
---      "id"
---    , "request_application_version_id"
---    , "requested_by_wua_id"
---    , "requested_date_time"
---    , "request_text"
---    , "deadline_date_time"
---    , "technical_reviewer_wua_id"
---    , "responded_by_wua_id"
---    , "responded_date_time"
---    , "response_text"
---    , "response_type"
---    , "technical_review_status"
---    , "response_application_version_id"
---    ) VALUES (
---      rec.id
---    , rec.request_application_version_id
---    , rec.requested_by_wua_id
---    , rec.requested_date_time
---    , rec.request_text
---    , rec.deadline_date_time
---    , rec.technical_reviewer_wua_id
---    , rec.responded_by_wua_id
---    , rec.responded_date_time
---    , rec.response_text
---    , rec.response_type
---    , rec.technical_review_status
---    , rec.response_application_version_id
---    );
---  
---  END LOOP;
---
---END;
---/
---SELECT tr.*
---, length(tr.response_text)
---FROM fcs_migration.application_technical_reviews tr
---WHERE length(tr.response_text) > 4000
---/
+-- dev to dev: s
+BEGIN
+
+  FOR rec IN (
+    SELECT tr.*
+    , CASE
+      WHEN length(tr.response_text) > 4000 THEN 'dummy text placeholder'
+      ELSE to_char(tr.response_text)
+      END response_text_varchar2
+    FROM fcs_migration.application_technical_reviews tr
+    WHERE id > 0
+    ORDER BY id
+  ) LOOP
+  
+    INSERT INTO "fcs"."application_technical_reviews"@fcs_postgres_db (
+      "id"
+    , "request_application_version_id"
+    , "requested_by_wua_id"
+    , "requested_date_time"
+    , "request_text"
+    , "deadline_date_time"
+    , "technical_reviewer_wua_id"
+    , "responded_by_wua_id"
+    , "responded_date_time"
+    , "response_text"
+    , "response_type"
+    , "technical_review_status"
+    , "response_application_version_id"
+    ) VALUES (
+      rec.id
+    , rec.request_application_version_id
+    , rec.requested_by_wua_id
+    , rec.requested_date_time
+    , rec.request_text
+    , rec.deadline_date_time
+    , rec.technical_reviewer_wua_id
+    , rec.responded_by_wua_id
+    , rec.responded_date_time
+    , rec.response_text_varchar2
+    , rec.response_type
+    , rec.technical_review_status
+    , rec.response_application_version_id
+    );
+  
+  END LOOP;
+
+END;
+/
 
 
 --
@@ -1665,24 +1564,7 @@ BEGIN
 
 END;
 /
----- manual export/import (for local dev import)
---SELECT
---  f.id
---, f.bucket
---, f.key
---, f.name
---, f.content_type
---, f.content_length
---, to_char(f.uploaded_at, 'YYYY-MM-DD HH24:MI:SS') uploaded_at
---, f.usage_id
---, f.usage_type
---, f.document_type
---, f.description
---, f.uploaded_by
---FROM fcs_migration.file_upload_library_uploaded_files f
---WHERE f.key LIKE '%local'
---ORDER BY usage_id, uploaded_at
---/
+
 
 --
 -- application_other_legacy_data
@@ -1721,22 +1603,36 @@ BEGIN
 
 END;
 /
----- manual export/import (for local dev import)
---SELECT
---  ld.id
---, ld.application_version_id
---, ld.increase_in_production
---, ld.es_reference
---, ld.uplift_percentage
---, ld.field_location
---, ld.previous_year_consent_history
---, ld.previous_year_actuals
---, ld.terminal_name
---, ld.terminal_location
---, ld.project_under_eia_regs
---FROM fcs_migration.application_other_legacy_data ld
---ORDER BY id
---/
+
+
+--
+-- split_clob_legacy_data
+--
+BEGIN
+
+  FOR rec IN (SELECT * FROM fcs_migration.split_clob_legacy_data WHERE id > 0 ORDER BY id) LOOP
+
+    INSERT INTO "fcs"."split_clob_legacy_data"@fcs_postgres_db (
+      "id"
+    , "source_id"
+    , "source_table_name"
+    , "source_column_name"
+    , "text_part"
+    , "text_part_index"
+    ) VALUES (
+      rec.id
+    , rec.source_id
+    , rec.source_table_name
+    , rec.source_column_name
+    , rec.text_part
+    , rec.text_part_index
+    );
+  
+  END LOOP;
+
+END;
+/
+
 
 -- work around DB link timeout issues from sqlnet.ora param SQLNET.INBOUND_CONNECT_TIMEOUT
 BEGIN
@@ -1744,17 +1640,3 @@ BEGIN
   DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
-
--- manual export/import rowcount checks
---SELECT count(*)
---FROM fcs_migration.application_supporting_information
---/
---SELECT count(*)
---FROM fcs_migration.application_case_notes
---/
---SELECT count(*)
---FROM fcs_migration.application_updates
---/
---SELECT count(*)
---FROM fcs_migration.application_technical_reviews
---/

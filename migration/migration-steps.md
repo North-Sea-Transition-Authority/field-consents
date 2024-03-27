@@ -52,28 +52,35 @@ USING 'fcs_postgres_[dev|st|preprod|prod]';
 
 Environments - `local`, `dev`, `st`, `preprod`, `prod`
 
-## 6a. Push the data over the DB link to the new field consents Postgres database
+## 6. Push the data over the DB link to the new field consents Postgres database
 
 On schema `fcs_migration` run the following patch:
 - `/energyportal/V05_push_mirgation_data.sql`
 
 Note - you will need to have a clean DB to migrate to otherwise the ids will likely clash.
 
-## 6b. Manual extract/import
+## 7. Post migration sync Postgres sequences
 
-CLOBs are not supported over the DB link so the following tables have been migrated manually via extract/import (for now):
-- application_supporting_information
-- application_case_notes
-- application_updates
-- application_technical_reviews
+On the FCS Postgres database (`fcs` schema) run the following patch:
+- `/energyportal/V06_restart_postgres_sequences.sql`
 
-### Method
-#### Export
+This will look at all the migrated ids and ensure the sequence next values are in sync.
+
+## 8. Join split CLOB data and update migrated data
+
+On the FCS Postgres database (`fcs` schema) run the following patch:
+- `/energyportal/V07_join_split_clob_data.sql`
+
+This will join the split CLOB data and update the appropriate tables and columns with the reconstruction CLOBs
+
+# Archived step (might be useful if the DB link was down)
+## Manual extract/import method
+### Export
 - Query the data in Toad
 - Use the "Export dataset" button
 - Export as pipe separated txt file (ASCII, with no header row, double quote string columns, ensure CLOBs aren't excluded)
 
-#### Import with IntelliJ
+### Import with IntelliJ
 - connect to the appropriate Postgres DB and navigate to the appropriate table
 - Right click -> Import/Export -> Import Data From File(s) -> select the appropriate file and choose the correct import settings
   - Encoding: WIN1252
@@ -81,7 +88,7 @@ CLOBs are not supported over the DB link so the following tables have been migra
   - Delimiter: | (pipe)
 - Run the Import
 
-#### Import with PGAdmin
+### Import with PGAdmin
 - connect to the appropriate Postgres DB and navigate to the appropriate table
 - Right click -> Import/Export
 - select the appropriate txt file and choose the correct import setting for pipe separated data
@@ -92,10 +99,3 @@ CLOBs are not supported over the DB link so the following tables have been migra
   - Quote: \"
   - Escape: \" (must be the same as the quote character)
 - Run the Import
-
-## 6. Post migration sync Postgres sequences
-
-On the FCS Postgres database (`fcs` schema) run the following patch:
-- `/energyportal/V06_restart_postgres_sequences.sql`
-
-This will look at all the migrated ids and ensure the sequence next values are in sync.

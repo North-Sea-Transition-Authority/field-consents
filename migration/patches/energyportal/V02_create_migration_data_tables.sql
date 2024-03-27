@@ -2,6 +2,8 @@
 -- Run script with F5 in Toad
 --
 
+--DROP TABLE fcs_migration.split_clob_legacy_data;
+--DROP SEQUENCE fcs_migration.split_clob_legacy_data_id_seq;
 --DROP TABLE fcs_migration.application_other_legacy_data;
 --DROP SEQUENCE fcs_migration.application_other_legacy_data_id_seq;
 --DROP TABLE fcs_migration.vent_long_term_years;
@@ -840,4 +842,18 @@ CREATE TABLE fcs_migration.application_other_legacy_data (
 , terminal_name                   VARCHAR2(4000)
 , terminal_location               VARCHAR2(4000)
 , project_under_eia_regs          VARCHAR2(5) -- true/false
+);
+
+--
+-- split_clob_legacy_data
+--
+CREATE SEQUENCE fcs_migration.split_clob_legacy_data_id_seq;
+
+CREATE TABLE fcs_migration.split_clob_legacy_data (
+  id                              INTEGER PRIMARY KEY
+, source_id                       INTEGER NOT NULL
+, source_table_name               VARCHAR2(100) NOT NULL
+, source_column_name              VARCHAR2(100) NOT NULL
+, text_part                       VARCHAR2(4000) NOT NULL
+, text_part_index                 INTEGER NOT NULL
 );
