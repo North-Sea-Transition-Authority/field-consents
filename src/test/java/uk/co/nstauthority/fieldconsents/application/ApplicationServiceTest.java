@@ -11,11 +11,7 @@ import static uk.co.nstauthority.fieldconsents.application.ApplicationService.NO
 import static uk.co.nstauthority.fieldconsents.application.ApplicationService.START_APPLICATION_UPDATE_ERROR_MESSAGE;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.USER_WUA_ID;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.INDUSTRY;
-import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.REGULATOR;
-import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.REGULATOR_TECHNICAL_REVIEWER;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.APPLICATION_CREATED;
-import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.APPLICATION_SUBMITTED;
-import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.UPDATE_SUBMITTED;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithOperator;
 
@@ -37,7 +33,6 @@ import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAss
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.aceflag.AceFlagService;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
@@ -45,11 +40,11 @@ import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil;
 
 @ExtendWith(MockitoExtension.class)
-class ApplicationServiceTest {
+public class ApplicationServiceTest {
 
   private static final Instant CURRENT_INSTANT = Instant.now();
 
-  private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
+  public static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
 
   private static final String APPLICATION_NUMBER_START_VALUE = "50";
 
@@ -66,9 +61,6 @@ class ApplicationServiceTest {
 
   @Mock
   private ApplicationAssetLicenceService applicationAssetLicenceService;
-
-  @Mock
-  private AceFlagService aceFlagService;
 
   @Mock
   private ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
@@ -92,7 +84,6 @@ class ApplicationServiceTest {
         applicationAssetService,
         applicationAssetLicenceService,
         applicationConfigurationProperties,
-        aceFlagService,
         applicationWorkAreaPriorityService,
         clock,
         applicationVersionService
@@ -306,125 +297,6 @@ class ApplicationServiceTest {
     verify(applicationVersionRepository).save(applicationVersion);
   }
 
-  @ParameterizedTest
-  @EnumSource(
-      value = ApplicationVersionStatus.class,
-      names = { "IN_PROGRESS", "AWAITING_PAYMENT" },
-      mode = EnumSource.Mode.EXCLUDE
-  )
-  void submitApplication_statusNotInProgressOrAwaitingPayment(ApplicationVersionStatus applicationVersionStatus) {
-    var applicationVersion
-        = ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.PRODUCTION, 1, 1);
-    applicationVersion.setStatus(applicationVersionStatus);
-
-    assertThatThrownBy(() -> applicationService.submitApplication(applicationVersion, USER))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage(
-            String.format(
-                "Application %d cannot be submitted as application version has status %s",
-                applicationVersion.getApplication().getId(),
-                applicationVersionStatus
-            )
-        );
-  }
-
-  @ParameterizedTest
-  @EnumSource(value = ApplicationVersionStatus.class, names = { "IN_PROGRESS", "AWAITING_PAYMENT" })
-  void submitApplication_statusInProgressOrAwaitingPaymentAndApplicationHasNullNumber(
-      ApplicationVersionStatus applicationVersionStatus
-  ) {
-    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
-
-    applicationVersion.setStatus(applicationVersionStatus);
-
-    var application = applicationVersion.getApplication();
-
-    application.setApplicationNo(null);
-
-    when(applicationRepository.findLatestNonMigratedApplicationNumber()).thenReturn(Optional.of(1));
-
-    applicationService.submitApplication(applicationVersion, USER);
-
-    ArgumentCaptor<Application> applicationArgumentCaptor = ArgumentCaptor.forClass(Application.class);
-    verify(applicationRepository).save(applicationArgumentCaptor.capture());
-
-    var actualApplication = applicationArgumentCaptor.getValue();
-
-    assertThat(actualApplication.getVariationNo()).isEqualTo(0);
-    assertThat(actualApplication.getApplicationNo()).isEqualTo(2);
-
-    verify(applicationWorkAreaPriorityService)
-        .prioritiseApplicationInWorkArea(applicationVersion, USER, APPLICATION_SUBMITTED, INDUSTRY);
-    verify(applicationWorkAreaPriorityService)
-        .prioritiseApplicationInWorkArea(applicationVersion, USER, APPLICATION_SUBMITTED, REGULATOR);
-    verify(aceFlagService)
-        .autoSetAceFlag(applicationVersion);
-  }
-
-  @ParameterizedTest
-  @EnumSource(value = ApplicationVersionStatus.class, names = { "IN_PROGRESS", "AWAITING_PAYMENT" })
-  void submitApplication_statusInProgressOrAwaitingPaymentAndApplicationHasNonNullNumber(
-      ApplicationVersionStatus applicationVersionStatus
-  ) {
-    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
-
-    applicationVersion.setStatus(applicationVersionStatus);
-
-    var application = applicationVersion.getApplication();
-
-    application.setApplicationNo(7);
-
-    applicationService.submitApplication(applicationVersion, USER);
-
-    ArgumentCaptor<Application> applicationArgumentCaptor = ArgumentCaptor.forClass(Application.class);
-    verify(applicationRepository).save(applicationArgumentCaptor.capture());
-
-    var actualApplication = applicationArgumentCaptor.getValue();
-
-    assertThat(actualApplication.getVariationNo()).isEqualTo(0);
-    assertThat(actualApplication.getApplicationNo()).isEqualTo(7);
-
-    verify(applicationRepository, never()).findLatestNonMigratedApplicationNumber();
-    verify(applicationWorkAreaPriorityService)
-        .prioritiseApplicationInWorkArea(applicationVersion, USER, APPLICATION_SUBMITTED, INDUSTRY);
-    verify(applicationWorkAreaPriorityService)
-        .prioritiseApplicationInWorkArea(applicationVersion, USER, APPLICATION_SUBMITTED, REGULATOR);
-    verify(aceFlagService)
-        .autoSetAceFlag(applicationVersion);
-  }
-
-  @ParameterizedTest
-  @EnumSource(value = ApplicationVersionStatus.class, names = "IN_PROGRESS", mode = EnumSource.Mode.EXCLUDE)
-  void submitApplicationUpdate_statusNotInProgress(ApplicationVersionStatus applicationVersionStatus) {
-    var applicationVersion
-        = ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.PRODUCTION, 1, 1);
-    applicationVersion.setStatus(applicationVersionStatus);
-
-    assertThatThrownBy(() -> applicationService.submitApplicationUpdate(applicationVersion, USER))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage(
-            String.format(
-                "Application update cannot be submitted for application %d as application version has status %s",
-                applicationVersion.getApplication().getId(),
-                applicationVersionStatus
-            )
-        );
-  }
-
-  @Test
-  void submitApplicationUpdate() {
-    var draftApplicationVersion = ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.PRODUCTION, 2, 2);
-
-    applicationService.submitApplicationUpdate(draftApplicationVersion, USER);
-
-    verify(applicationWorkAreaPriorityService)
-        .prioritiseApplicationInWorkArea(draftApplicationVersion, USER, UPDATE_SUBMITTED, INDUSTRY);
-    verify(applicationWorkAreaPriorityService)
-        .prioritiseApplicationInWorkArea(draftApplicationVersion, USER, UPDATE_SUBMITTED, REGULATOR);
-    verify(applicationWorkAreaPriorityService)
-        .prioritiseApplicationInWorkArea(draftApplicationVersion, USER, UPDATE_SUBMITTED, REGULATOR_TECHNICAL_REVIEWER);
-  }
-
   @Test
   void startApplicationUpdate_whenNotLatestAppVersionSupplied_thenError() {
     var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
@@ -510,27 +382,6 @@ class ApplicationServiceTest {
   }
 
   @Test
-  void submitApplicationVersion() {
-    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
-
-    applicationService.submitApplicationVersion(applicationVersion, USER);
-
-    ArgumentCaptor<ApplicationVersion> applicationVersionArgumentCaptor = ArgumentCaptor.forClass(ApplicationVersion.class);
-    verify(applicationVersionRepository).save(applicationVersionArgumentCaptor.capture());
-
-    var actualApplicationVersion = applicationVersionArgumentCaptor.getValue();
-
-    assertThat(actualApplicationVersion.getId()).isEqualTo(applicationVersion.getId());
-    assertThat(actualApplicationVersion.getVersion()).isEqualTo(applicationVersion.getVersion());
-    assertThat(actualApplicationVersion.getCreatedByWuaId()).isEqualTo(applicationVersion.getCreatedByWuaId());
-    assertThat(actualApplicationVersion.getCreatedDateTime()).isEqualTo(applicationVersion.getCreatedDateTime());
-    assertThat(actualApplicationVersion.getPrimaryOperatorOuId()).isEqualTo(applicationVersion.getPrimaryOperatorOuId());
-    assertThat(actualApplicationVersion.getCachedPrimaryOperatorName()).isEqualTo(applicationVersion.getCachedPrimaryOperatorName());
-    assertThat(actualApplicationVersion.getStatus()).isEqualTo(ApplicationVersionStatus.SUBMITTED);
-    assertThat(actualApplicationVersion.getSubmittedByWuaId()).isEqualTo(USER_WUA_ID);
-  }
-
-  @Test
   void generateApplicationReference_forProductionApplication() {
     var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
 
@@ -569,13 +420,13 @@ class ApplicationServiceTest {
   void getApplicationNumber_whenOneApplicationExists() {
     when(applicationRepository.findLatestNonMigratedApplicationNumber()).thenReturn(Optional.of(1));
 
-    assertThat(applicationService.getApplicationNumber()).isEqualTo(2);
+    assertThat(applicationService.getNextApplicationNumber()).isEqualTo(2);
   }
 
   @Test
   void getApplicationNumber_whenNoApplicationExists() {
     when(applicationRepository.findLatestNonMigratedApplicationNumber()).thenReturn(Optional.empty());
 
-    assertThat(applicationService.getApplicationNumber()).isEqualTo(Integer.parseInt(APPLICATION_NUMBER_START_VALUE));
+    assertThat(applicationService.getNextApplicationNumber()).isEqualTo(Integer.parseInt(APPLICATION_NUMBER_START_VALUE));
   }
 }

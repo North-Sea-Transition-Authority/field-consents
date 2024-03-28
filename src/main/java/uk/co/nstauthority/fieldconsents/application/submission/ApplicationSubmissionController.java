@@ -167,7 +167,7 @@ public class ApplicationSubmissionController {
 
       return ReverseRouter.redirect(on(ApplicationPaymentController.class).getStartPayment(applicationId, null));
     } else {
-      applicationService.submitApplication(applicationVersion, user);
+      applicationSubmissionService.submitApplication(applicationVersion, user);
 
       return ReverseRouter.redirect(on(ApplicationSubmissionController.class).getApplicationSubmitted(applicationId));
     }

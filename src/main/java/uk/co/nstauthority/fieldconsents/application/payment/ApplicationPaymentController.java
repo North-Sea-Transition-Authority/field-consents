@@ -24,6 +24,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionService;
 import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionController;
+import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionService;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
@@ -50,6 +51,7 @@ public class ApplicationPaymentController {
   private final CaseProcessingActionService caseProcessingActionService;
   private final ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties;
   private final CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties;
+  private final ApplicationSubmissionService applicationSubmissionService;
 
   @Autowired
   ApplicationPaymentController(
@@ -60,7 +62,8 @@ public class ApplicationPaymentController {
       AbsoluteUrlService absoluteUrlService,
       CaseProcessingActionService caseProcessingActionService,
       ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties,
-      CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties
+      CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties,
+      ApplicationSubmissionService applicationSubmissionService
   ) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
@@ -70,6 +73,7 @@ public class ApplicationPaymentController {
     this.caseProcessingActionService = caseProcessingActionService;
     this.serviceBrandingConfigurationProperties = serviceBrandingConfigurationProperties;
     this.customerBrandingConfigurationProperties = customerBrandingConfigurationProperties;
+    this.applicationSubmissionService = applicationSubmissionService;
   }
 
   @GetMapping
@@ -126,7 +130,7 @@ public class ApplicationPaymentController {
           applicationId
       );
 
-      applicationService.submitApplication(applicationVersion, user);
+      applicationSubmissionService.submitApplication(applicationVersion, user);
 
       return ReverseRouter.redirect(on(ApplicationSubmissionController.class)
           .getApplicationSubmitted(applicationId));
@@ -146,7 +150,7 @@ public class ApplicationPaymentController {
             applicationId
         );
 
-        applicationService.submitApplication(applicationVersion, user);
+        applicationSubmissionService.submitApplication(applicationVersion, user);
 
         return ReverseRouter.redirect(on(ApplicationSubmissionController.class)
             .getApplicationPaidAndSubmitted(applicationId));
@@ -174,7 +178,7 @@ public class ApplicationPaymentController {
           applicationId
       );
 
-      applicationService.submitApplication(applicationVersion, user);
+      applicationSubmissionService.submitApplication(applicationVersion, user);
 
       return ReverseRouter.redirect(on(ApplicationSubmissionController.class)
           .getApplicationPaidAndSubmitted(applicationId));
@@ -207,7 +211,7 @@ public class ApplicationPaymentController {
     var paymentStatus = applicationPaymentService.handlePaymentProcessed(paymentId);
 
     if (paymentStatus == PaymentStatus.SUCCESS) {
-      applicationService.submitApplication(applicationVersion, user);
+      applicationSubmissionService.submitApplication(applicationVersion, user);
 
       return ReverseRouter.redirect(on(ApplicationSubmissionController.class)
           .getApplicationPaidAndSubmitted(applicationId));

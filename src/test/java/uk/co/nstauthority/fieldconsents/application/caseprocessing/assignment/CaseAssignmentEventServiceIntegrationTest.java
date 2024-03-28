@@ -22,6 +22,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.Ca
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthForm;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
+import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionService;
 import uk.co.nstauthority.fieldconsents.authentication.SamlAuthenticationUtil;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
@@ -52,6 +53,9 @@ class CaseAssignmentEventServiceIntegrationTest extends AbstractIntegrationTest 
 
   @Autowired
   private ApplicationService applicationService;
+
+  @Autowired
+  private ApplicationSubmissionService applicationSubmissionService;
 
   @Autowired
   private ConsentLengthService consentLengthService;
@@ -85,7 +89,7 @@ class CaseAssignmentEventServiceIntegrationTest extends AbstractIntegrationTest 
     consentLengthForm.getAnnualConsentYear().setInteger(LocalDate.now().getYear());
     consentLengthService.saveConsentLengthDetails(applicationVersion, consentLengthForm);
 
-    applicationService.submitApplication(applicationVersion, INDUSTRY_USER_DETAIL);
+    applicationSubmissionService.submitApplication(applicationVersion, INDUSTRY_USER_DETAIL);
   }
 
   @Test

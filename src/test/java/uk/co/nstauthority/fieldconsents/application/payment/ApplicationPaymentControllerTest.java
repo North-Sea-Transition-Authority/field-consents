@@ -44,6 +44,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionController;
+import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionService;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
@@ -62,6 +63,9 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
 
   @MockBean
   private ApplicationService applicationService;
+
+  @MockBean
+  private ApplicationSubmissionService applicationSubmissionService;
 
   @MockBean
   private ApplicationContextService applicationContextService;
@@ -246,7 +250,7 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
         .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationSubmissionController.class)
             .getApplicationSubmitted(APPLICATION_ID))));
 
-    verify(applicationService).submitApplication(applicationVersion, user);
+    verify(applicationSubmissionService).submitApplication(applicationVersion, user);
     verify(applicationPaymentService, never()).createPayment(any(), any(), any());
   }
 
@@ -274,7 +278,7 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
 
     assertThat(returnUrlArgumentCaptor.getValue().apply(paymentId)).isEqualTo(absoluteGetPaymentProcessedUrl);
 
-    verify(applicationService).submitApplication(applicationVersion, user);
+    verify(applicationSubmissionService).submitApplication(applicationVersion, user);
   }
 
   @Test
@@ -302,7 +306,7 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
 
     assertThat(returnUrlArgumentCaptor.getValue().apply(paymentId)).isEqualTo(absoluteGetPaymentProcessedUrl);
 
-    verify(applicationService, never()).submitApplication(any(), any());
+    verify(applicationSubmissionService, never()).submitApplication(any(), any());
   }
 
   @SecurityTest
@@ -346,7 +350,7 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
         .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationSubmissionController.class)
             .getApplicationPaidAndSubmitted(APPLICATION_ID))));
 
-    verify(applicationService).submitApplication(applicationVersion, user);
+    verify(applicationSubmissionService).submitApplication(applicationVersion, user);
     verify(applicationPaymentService, never()).cancelInProgressPayments(any());
     verify(applicationService, never()).returnApplicationToInProgressFromAwaitingPayment(any());
   }
@@ -371,7 +375,7 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
         .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationTaskListController.class)
             .getTaskList(APPLICATION_ID))));
 
-    verify(applicationService, never()).submitApplication(any(), any());
+    verify(applicationSubmissionService, never()).submitApplication(any(), any());
     verify(applicationPaymentService).cancelInProgressPayments(paymentDtos);
     verify(applicationService).returnApplicationToInProgressFromAwaitingPayment(applicationVersion);
   }
@@ -444,6 +448,6 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
         .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationPaymentController.class)
             .getStartPayment(APPLICATION_ID, null))));
 
-    verify(applicationService, never()).submitApplication(any(), any());
+    verify(applicationSubmissionService, never()).submitApplication(any(), any());
   }
 }

@@ -81,6 +81,7 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthF
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
+import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionService;
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
@@ -158,6 +159,9 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
 
   @Autowired
   private ApplicationService applicationService;
+
+  @Autowired
+  private ApplicationSubmissionService applicationSubmissionService;
 
   @Autowired
   private ConsentLengthService consentLengthService;
@@ -1093,7 +1097,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
 
   private ApplicationVersion createSubmittedApplicationVersion(ApplicationType applicationType, ConsentLengthForm consentLengthForm) {
     var applicationVersion = createAwaitingForPaymentApplicationVersion(applicationType, consentLengthForm);
-    applicationService.submitApplication(applicationVersion, USER_DETAIL);
+    applicationSubmissionService.submitApplication(applicationVersion, USER_DETAIL);
 
     return applicationVersion;
   }
@@ -1208,7 +1212,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
 
   private ApplicationVersion createApplicationVersionWithOpenUpdateRequest(ApplicationType applicationType, ConsentLengthForm consentLengthForm, Instant deadlineInstant) {
     var applicationVersion = createAwaitingForPaymentApplicationVersion(applicationType, consentLengthForm);
-    applicationService.submitApplication(applicationVersion, USER_DETAIL);
+    applicationSubmissionService.submitApplication(applicationVersion, USER_DETAIL);
 
     applicationUpdateService.saveApplicationUpdateRequest(
         applicationVersion,

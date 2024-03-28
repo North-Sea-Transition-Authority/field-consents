@@ -1,11 +1,7 @@
 package uk.co.nstauthority.fieldconsents.application;
 
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.INDUSTRY;
-import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.REGULATOR;
-import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup.REGULATOR_TECHNICAL_REVIEWER;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.APPLICATION_CREATED;
-import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.APPLICATION_SUBMITTED;
-import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.UPDATE_SUBMITTED;
 
 import jakarta.persistence.EntityNotFoundException;
 import java.time.Clock;
@@ -15,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAssetLicenceService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.aceflag.AceFlagService;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorAndLicencesJson;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalWithOperatorJson;
@@ -41,8 +36,6 @@ public class ApplicationService {
 
   private final ApplicationConfigurationProperties applicationConfigurationProperties;
 
-  private final AceFlagService aceFlagService;
-
   private final ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
 
   private final Clock clock;
@@ -54,7 +47,6 @@ public class ApplicationService {
                             ApplicationAssetService applicationAssetService,
                             ApplicationAssetLicenceService applicationAssetLicenceService,
                             ApplicationConfigurationProperties applicationConfigurationProperties,
-                            AceFlagService aceFlagService,
                             ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService,
                             Clock clock,
                             ApplicationVersionService applicationVersionService) {
@@ -63,7 +55,6 @@ public class ApplicationService {
     this.applicationAssetService = applicationAssetService;
     this.applicationAssetLicenceService = applicationAssetLicenceService;
     this.applicationConfigurationProperties = applicationConfigurationProperties;
-    this.aceFlagService = aceFlagService;
     this.applicationWorkAreaPriorityService = applicationWorkAreaPriorityService;
     this.clock = clock;
     this.applicationVersionService = applicationVersionService;
@@ -134,7 +125,7 @@ public class ApplicationService {
     // If the application has previously been in awaiting payment status it will already have a number assigned, so
     // don't assign a new one.
     if (application.getApplicationNo() == null) {
-      application.setApplicationNo(getApplicationNumber());
+      application.setApplicationNo(getNextApplicationNumber());
     }
 
     applicationVersion.setStatus(ApplicationVersionStatus.AWAITING_PAYMENT);
@@ -159,60 +150,6 @@ public class ApplicationService {
     applicationVersion.setStatus(ApplicationVersionStatus.IN_PROGRESS);
 
     applicationVersionRepository.save(applicationVersion);
-  }
-
-  @Transactional
-  public void submitApplication(ApplicationVersion applicationVersion, ServiceUserDetail user) {
-    var applicationVersionStatus = applicationVersion.getStatus();
-    if (!ApplicationVersionStatus.IN_PROGRESS.equals(applicationVersionStatus)
-        && !ApplicationVersionStatus.AWAITING_PAYMENT.equals(applicationVersionStatus)) {
-      throw new IllegalStateException(
-          String.format(
-              "Application %d cannot be submitted as application version has status %s",
-              applicationVersion.getApplication().getId(),
-              applicationVersionStatus
-          )
-      );
-    }
-
-    var application = applicationVersion.getApplication();
-
-    // If the application has not been in AWAITING_PAYMENT status if a payment is not required, it won't have a number,
-    // so assign one.
-    if (application.getApplicationNo() == null) {
-      application.setApplicationNo(getApplicationNumber());
-    }
-
-    submitApplicationVersion(applicationVersion, user);
-    applicationRepository.save(application);
-    aceFlagService.autoSetAceFlag(applicationVersion);
-    applicationWorkAreaPriorityService
-        .prioritiseApplicationInWorkArea(applicationVersion, user, APPLICATION_SUBMITTED, INDUSTRY);
-    applicationWorkAreaPriorityService
-        .prioritiseApplicationInWorkArea(applicationVersion, user, APPLICATION_SUBMITTED, REGULATOR);
-  }
-
-  @Transactional
-  public void submitApplicationUpdate(ApplicationVersion applicationVersion, ServiceUserDetail user) {
-    var applicationVersionStatus = applicationVersion.getStatus();
-    if (!ApplicationVersionStatus.IN_PROGRESS.equals(applicationVersionStatus)) {
-      throw new IllegalStateException(
-          String.format(
-              "Application update cannot be submitted for application %d as application version has status %s",
-              applicationVersion.getApplication().getId(),
-              applicationVersionStatus
-          )
-      );
-    }
-
-    submitApplicationVersion(applicationVersion, user);
-
-    applicationWorkAreaPriorityService
-        .prioritiseApplicationInWorkArea(applicationVersion, user, UPDATE_SUBMITTED, INDUSTRY);
-    applicationWorkAreaPriorityService
-        .prioritiseApplicationInWorkArea(applicationVersion, user, UPDATE_SUBMITTED, REGULATOR);
-    applicationWorkAreaPriorityService
-        .prioritiseApplicationInWorkArea(applicationVersion, user, UPDATE_SUBMITTED, REGULATOR_TECHNICAL_REVIEWER);
   }
 
   @Transactional
@@ -266,14 +203,6 @@ public class ApplicationService {
     applicationVersionRepository.save(applicationVersion);
   }
 
-  protected void submitApplicationVersion(ApplicationVersion applicationVersion,
-                                          ServiceUserDetail user) {
-    applicationVersion.setStatus(ApplicationVersionStatus.SUBMITTED);
-    applicationVersion.setSubmittedDateTime(clock.instant());
-    applicationVersion.setSubmittedByWuaId(user.wuaId());
-    applicationVersionRepository.save(applicationVersion);
-  }
-
   public String generateApplicationReference(ApplicationVersion applicationVersion) {
     var application = applicationVersion.getApplication();
     return "%s/%d/%d (Version %d)".formatted(
@@ -289,7 +218,7 @@ public class ApplicationService {
         : "";
   }
 
-  protected int getApplicationNumber() {
+  public int getNextApplicationNumber() {
     return applicationRepository.findLatestNonMigratedApplicationNumber()
         .map(latestApplicationNumber -> latestApplicationNumber + 1)
         .orElse(Integer.valueOf(applicationConfigurationProperties.applicationNoStartValue()));

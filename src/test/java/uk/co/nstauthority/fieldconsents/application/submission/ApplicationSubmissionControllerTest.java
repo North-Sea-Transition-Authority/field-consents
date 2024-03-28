@@ -343,7 +343,7 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
             .getStartPayment(APPLICATION_ID, null))));
 
     verify(applicationService).prepareApplicationForPayment(applicationVersion);
-    verify(applicationService, never()).submitApplication(any(), any());
+    verify(applicationSubmissionService, never()).submitApplication(any(), any());
   }
 
   @Test
@@ -360,7 +360,7 @@ class ApplicationSubmissionControllerTest extends AbstractApplicationControllerT
         .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationSubmissionController.class)
             .getApplicationSubmitted(APPLICATION_ID))));
 
-    verify(applicationService).submitApplication(applicationVersion, user);
+    verify(applicationSubmissionService).submitApplication(applicationVersion, user);
     verify(applicationService, never()).prepareApplicationForPayment(any());
   }
 

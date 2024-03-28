@@ -73,4 +73,15 @@ public class EmailMergeFieldTestUtil {
       "06789",
       Set.of(RegulatorTeamRole.CASE_MANAGER)
   );
+
+  public static final TeamMemberView TEAM_MEMBER_VIEW_CASE_OFFICER = new TeamMemberView(
+      WebUserAccountId.from(CASE_OFFICER),
+      new TeamView(REGULATOR_TEAM.toTeamId(), TeamType.REGULATOR, "Regulator team"),
+      "Mr",
+      "Case",
+      "Officer",
+      "case.officer@email.co.uk",
+      "012345",
+      Set.of(RegulatorTeamRole.CASE_OFFICER)
+  );
 }

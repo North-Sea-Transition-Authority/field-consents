@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.aceflag;
 
 import static uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType.IS_ACE_APPLICATION;
 
+import jakarta.persistence.EntityNotFoundException;
 import java.time.Clock;
 import java.time.ZonedDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,5 +51,11 @@ public class AceFlagService {
 
   public void setAceFlag(ApplicationVersion applicationVersion, boolean aceFlag) {
     applicationFlagService.addOrUpdateApplicationFlag(applicationVersion, IS_ACE_APPLICATION, aceFlag);
+  }
+
+  public boolean isAceApplication(ApplicationVersion applicationVersion) {
+    return applicationFlagService.findFlagValue(applicationVersion, IS_ACE_APPLICATION)
+        .orElseThrow(() -> new EntityNotFoundException("IS_ACE_APPLICATION flag not found for application version with id %s"
+            .formatted(applicationVersion.getId())));
   }
 }

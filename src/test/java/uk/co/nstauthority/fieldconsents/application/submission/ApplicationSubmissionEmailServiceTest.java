@@ -1,0 +1,172 @@
+package uk.co.nstauthority.fieldconsents.application.submission;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.APPLICATION_VERSION_DOMAIN_REFERENCE;
+import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.CASE_MANAGER_1;
+import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.CASE_MANAGER_2;
+import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.CASE_OFFICER;
+import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.PRIMARY_OPERATOR_NAME_MAIL_MERGE_FIELD;
+import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.TEAM_MEMBER_VIEW_CASE_MANAGER_1;
+import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.TEAM_MEMBER_VIEW_CASE_MANAGER_2;
+import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.TEAM_MEMBER_VIEW_CASE_OFFICER;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.digitalnotificationlibrary.core.notification.DomainReference;
+import uk.co.fivium.digitalnotificationlibrary.core.notification.MailMergeField;
+import uk.co.fivium.digitalnotificationlibrary.core.notification.MergedTemplate;
+import uk.co.fivium.digitalnotificationlibrary.core.notification.Template;
+import uk.co.fivium.digitalnotificationlibrary.core.notification.email.EmailRecipient;
+import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
+import uk.co.nstauthority.fieldconsents.application.ApplicationType;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.email.EmailService;
+import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipient;
+import uk.co.nstauthority.fieldconsents.email.GovukNotifyTemplate;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
+import uk.co.nstauthority.fieldconsents.teams.TeamMemberViewService;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
+
+@ExtendWith(MockitoExtension.class)
+class ApplicationSubmissionEmailServiceTest {
+
+  @Mock
+  private EmailService emailService;
+
+  @Mock
+  private TeamMemberViewService teamMemberViewService;
+
+  @Mock
+  private OrganisationUnitService organisationUnitService;
+
+  @Captor
+  private ArgumentCaptor<MergedTemplate> templateCaptor;
+
+  @Captor
+  private ArgumentCaptor<EmailRecipient> emailRecipientCaptor;
+
+  @Captor
+  private ArgumentCaptor<DomainReference>  domainReferenceCaptor;
+
+  private ApplicationVersion applicationVersion;
+
+  private OrganisationUnitJson primaryOperator;
+
+  private ApplicationSubmissionEmailService applicationSubmissionEmailService;
+
+
+  @BeforeEach
+  void setUp() {
+    applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
+    applicationSubmissionEmailService = new ApplicationSubmissionEmailService(
+        emailService,
+        teamMemberViewService,
+        organisationUnitService
+    );
+    primaryOperator = new OrganisationUnitJson(applicationVersion.getPrimaryOperatorOuId(), applicationVersion.getCachedPrimaryOperatorName());
+  }
+
+  @Test
+  void sendNonAceApplicationSubmissionEmail_withNoCaseOfficersOrCaseManagersToNotify() {
+    when(organisationUnitService.getOrganisationUnitByIdOrFallback(
+        eq(applicationVersion.getPrimaryOperatorOuId()),
+        anyString(),
+        eq(applicationVersion.getCachedPrimaryOperatorName()))
+    ).thenReturn(primaryOperator);
+
+    when(emailService.getTemplate(GovukNotifyTemplate.NON_ACE_APPLICATION_SUBMISSION, applicationVersion))
+        .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
+
+    when(teamMemberViewService
+        .getTeamMemberViewsWithRolesForTeamType(TeamType.REGULATOR, Set.of(RegulatorTeamRole.CASE_OFFICER, RegulatorTeamRole.CASE_MANAGER)))
+        .thenReturn(Collections.emptyList());
+
+    applicationSubmissionEmailService.sendNonAceApplicationSubmissionEmail(applicationVersion);
+
+    verify(emailService, never()).sendEmail(any(), any(), any());
+  }
+
+  @Test
+  void sendNonAceApplicationSubmissionEmail_withCaseOfficersAndCaseManagersToNotify() {
+    when(organisationUnitService.getOrganisationUnitByIdOrFallback(
+        eq(applicationVersion.getPrimaryOperatorOuId()),
+        anyString(),
+        eq(applicationVersion.getCachedPrimaryOperatorName()))
+    ).thenReturn(primaryOperator);
+
+    when(emailService.getTemplate(GovukNotifyTemplate.NON_ACE_APPLICATION_SUBMISSION, applicationVersion))
+        .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
+
+    when(teamMemberViewService
+        .getTeamMemberViewsWithRolesForTeamType(TeamType.REGULATOR, Set.of(RegulatorTeamRole.CASE_OFFICER, RegulatorTeamRole.CASE_MANAGER)))
+        .thenReturn(List.of(TEAM_MEMBER_VIEW_CASE_OFFICER, TEAM_MEMBER_VIEW_CASE_MANAGER_1, TEAM_MEMBER_VIEW_CASE_MANAGER_2));
+
+    applicationSubmissionEmailService.sendNonAceApplicationSubmissionEmail(applicationVersion);
+
+    verify(emailService, Mockito.times(3)).sendEmail(
+        templateCaptor.capture(),
+        emailRecipientCaptor.capture(),
+        domainReferenceCaptor.capture()
+    );
+
+    // verify emails merge fields
+    var emailTemplates = templateCaptor.getAllValues();
+
+    var firstEmailMergeFields = emailTemplates.get(0).getMailMergeFields();
+    assertThat(firstEmailMergeFields)
+        .extracting(MailMergeField::name, MailMergeField::value)
+        .containsOnly(
+            tuple(PRIMARY_OPERATOR_NAME_MAIL_MERGE_FIELD, primaryOperator.name())
+        );
+
+    var secondEmailMergeFields = emailTemplates.get(1).getMailMergeFields();
+    assertThat(secondEmailMergeFields)
+        .extracting(MailMergeField::name, MailMergeField::value)
+        .containsOnly(
+            tuple(PRIMARY_OPERATOR_NAME_MAIL_MERGE_FIELD, primaryOperator.name())
+        );
+
+    var thirdEmailMergeFields = emailTemplates.get(2).getMailMergeFields();
+    assertThat(thirdEmailMergeFields)
+        .extracting(MailMergeField::name, MailMergeField::value)
+        .containsOnly(
+            tuple(PRIMARY_OPERATOR_NAME_MAIL_MERGE_FIELD, primaryOperator.name())
+        );
+
+    // verify email recipients
+    var testEmailRecipients = emailRecipientCaptor.getAllValues();
+    assertThat(testEmailRecipients).hasSize(3);
+
+    assertThat(testEmailRecipients.get(0).getEmailAddress())
+        .isEqualTo(FieldConsentsEmailRecipient.from(CASE_OFFICER).getEmailAddress());
+    assertThat(testEmailRecipients.get(1).getEmailAddress())
+        .isEqualTo(FieldConsentsEmailRecipient.from(CASE_MANAGER_1).getEmailAddress());
+    assertThat(testEmailRecipients.get(2).getEmailAddress())
+        .isEqualTo(FieldConsentsEmailRecipient.from(CASE_MANAGER_2).getEmailAddress());
+
+    // verify domain reference
+    assertThat(domainReferenceCaptor.getValue().getDomainId())
+        .isEqualTo(applicationVersion.getId().toString());
+
+    assertThat(domainReferenceCaptor.getValue().getDomainType())
+        .isEqualTo(APPLICATION_VERSION_DOMAIN_REFERENCE);
+  }
+}

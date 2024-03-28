@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType.IS_ACE_APPLICATION;
 
+import jakarta.persistence.EntityNotFoundException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -13,6 +14,7 @@ import java.time.Year;
 import java.time.ZoneId;
 import java.util.Optional;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -187,5 +189,27 @@ class AceFlagServiceTest {
         Arguments.of(CURRENT_DATE.plusYears(2),
             CURRENT_DATE.plusYears(2).plusMonths(3))
     );
+  }
+
+  @Test
+  void isAceApplication_whenFlagFound_thenReturnAceFlagValue() {
+    when(applicationFlagService.findFlagValue(applicationVersion, IS_ACE_APPLICATION))
+        .thenReturn(Optional.of(true));
+
+    assertThat(aceFlagService.isAceApplication(applicationVersion)).isTrue();
+  }
+
+  @Test
+  void isAceApplication_whenFlagNotFound_thenThrowException() {
+    when(applicationFlagService.findFlagValue(applicationVersion, IS_ACE_APPLICATION))
+        .thenReturn(Optional.empty());
+
+    var exception = Assertions.assertThrows(
+        EntityNotFoundException.class,
+        () -> aceFlagService.isAceApplication(applicationVersion)
+    );
+
+    Assertions.assertEquals("IS_ACE_APPLICATION flag not found for application version with id 1",
+        exception.getMessage());
   }
 }

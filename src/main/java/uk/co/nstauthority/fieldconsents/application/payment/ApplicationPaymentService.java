@@ -24,6 +24,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentrevision.ConsentRevisionType;
+import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
@@ -44,6 +45,7 @@ public class ApplicationPaymentService {
   private final PaymentService paymentService;
   private final FeePeriodService feePeriodService;
   private final EnergyPortalUserService energyPortalUserService;
+  private final ApplicationSubmissionService applicationSubmissionService;
 
   @Autowired
   ApplicationPaymentService(
@@ -54,7 +56,8 @@ public class ApplicationPaymentService {
       ConsentLengthService consentLengthService,
       PaymentService paymentService,
       FeePeriodService feePeriodService,
-      EnergyPortalUserService energyPortalUserService
+      EnergyPortalUserService energyPortalUserService,
+      ApplicationSubmissionService applicationSubmissionService
   ) {
     this.applicationService = applicationService;
     this.applicationContextService = applicationContextService;
@@ -64,6 +67,7 @@ public class ApplicationPaymentService {
     this.paymentService = paymentService;
     this.feePeriodService = feePeriodService;
     this.energyPortalUserService = energyPortalUserService;
+    this.applicationSubmissionService = applicationSubmissionService;
   }
 
   public int getPaymentAmountPence(ApplicationVersion applicationVersion) {
@@ -204,6 +208,6 @@ public class ApplicationPaymentService {
     var user = ServiceUserDetail.from(energyPortalUserService.getByWuaId(WebUserAccountId.valueOf(
         paymentDto.createdByUserId())));
 
-    applicationService.submitApplication(applicationVersion, user);
+    applicationSubmissionService.submitApplication(applicationVersion, user);
   }
 }

@@ -22,6 +22,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestForm;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.response.ApplicationUpdateResponseType;
 import uk.co.nstauthority.fieldconsents.application.duplication.ApplicationDuplicationService;
+import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionService;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 
@@ -48,19 +49,23 @@ public class ApplicationUpdateService {
 
   private final ApplicationUpdateEmailService applicationUpdateEmailService;
 
+  private final ApplicationSubmissionService applicationSubmissionService;
+
   @Autowired
   ApplicationUpdateService(ApplicationService applicationService,
                            ApplicationDuplicationService applicationDuplicationService,
                            ApplicationUpdateRepository applicationUpdateRepository,
                            Clock clock,
                            ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService,
-                           ApplicationUpdateEmailService applicationUpdateEmailService) {
+                           ApplicationUpdateEmailService applicationUpdateEmailService,
+                           ApplicationSubmissionService applicationSubmissionService) {
     this.applicationService = applicationService;
     this.applicationDuplicationService = applicationDuplicationService;
     this.applicationUpdateRepository = applicationUpdateRepository;
     this.clock = clock;
     this.applicationWorkAreaPriorityService = applicationWorkAreaPriorityService;
     this.applicationUpdateEmailService = applicationUpdateEmailService;
+    this.applicationSubmissionService = applicationSubmissionService;
   }
 
   public boolean openApplicationUpdateExists(ApplicationVersion applicationVersion) {
@@ -159,7 +164,7 @@ public class ApplicationUpdateService {
 
     applicationUpdateRepository.save(applicationUpdate);
 
-    applicationService.submitApplicationUpdate(applicationVersion, user);
+    applicationSubmissionService.submitApplicationUpdate(applicationVersion, user);
 
     try {
       applicationUpdateEmailService.sendApplicationUpdateResponseEmail(applicationUpdate);

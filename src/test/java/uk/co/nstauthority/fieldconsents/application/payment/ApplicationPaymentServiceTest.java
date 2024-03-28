@@ -42,6 +42,7 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthD
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.application.consentrevision.ConsentRevisionType;
+import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionService;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalJson;
@@ -57,6 +58,9 @@ class ApplicationPaymentServiceTest {
 
   @Mock
   private ApplicationService applicationService;
+
+  @Mock
+  private ApplicationSubmissionService applicationSubmissionService;
 
   @Mock
   private ApplicationContextService applicationContextService;
@@ -432,7 +436,7 @@ class ApplicationPaymentServiceTest {
     assertThatThrownBy(() -> applicationPaymentService.onPaymentReconcileSuccessEvent(paymentDto))
         .isInstanceOf(IllegalStateException.class);
 
-    verify(applicationService, never()).submitApplication(any(), any());
+    verify(applicationSubmissionService, never()).submitApplication(any(), any());
   }
 
   @Test
@@ -453,7 +457,7 @@ class ApplicationPaymentServiceTest {
     assertThatThrownBy(() -> applicationPaymentService.onPaymentReconcileSuccessEvent(paymentDto))
         .isInstanceOf(IllegalStateException.class);
 
-    verify(applicationService, never()).submitApplication(any(), any());
+    verify(applicationSubmissionService, never()).submitApplication(any(), any());
   }
 
   @Test
@@ -481,7 +485,7 @@ class ApplicationPaymentServiceTest {
 
     var userCaptor = ArgumentCaptor.forClass(ServiceUserDetail.class);
 
-    verify(applicationService).submitApplication(eq(applicationVersion), userCaptor.capture());
+    verify(applicationSubmissionService).submitApplication(eq(applicationVersion), userCaptor.capture());
 
     assertThat(userCaptor.getValue().wuaId()).isEqualTo(Long.valueOf(createdByUserId));
   }

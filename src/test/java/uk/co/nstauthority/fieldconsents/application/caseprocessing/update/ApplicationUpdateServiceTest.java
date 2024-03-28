@@ -40,6 +40,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestForm;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.response.ApplicationUpdateResponseType;
 import uk.co.nstauthority.fieldconsents.application.duplication.ApplicationDuplicationService;
+import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionService;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
@@ -51,6 +52,9 @@ class ApplicationUpdateServiceTest {
 
   @Mock
   private ApplicationService applicationService;
+
+  @Mock
+  private ApplicationSubmissionService applicationSubmissionService;
 
   @Mock
   private ApplicationDuplicationService applicationDuplicationService;
@@ -351,7 +355,7 @@ class ApplicationUpdateServiceTest {
         .usingRecursiveComparison()
         .isEqualTo(closedApplicationUpdate);
 
-    verify(applicationService, times(1))
+    verify(applicationSubmissionService, times(1))
         .submitApplicationUpdate(applicationVersionUpdate, USER);
   }
 }
