@@ -1,6 +1,8 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.consent;
 
 import java.time.Clock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,6 +12,7 @@ import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationFileUsage;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.ConsentEmailService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.PdfRenderingOptions;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
@@ -18,12 +21,15 @@ import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
 @Service
 public class ConsentService {
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(ConsentService.class);
+
   private final ApplicationService applicationService;
   private final ApplicationDocumentInstanceService applicationDocumentInstanceService;
   private final ConsentRepository consentRepository;
   private final FieldConsentsFileService fieldConsentsFileService;
   private final FileService fileService;
   private final Clock clock;
+  private final ConsentEmailService consentEmailService;
 
   ConsentService(
       ApplicationService applicationService,
@@ -31,7 +37,8 @@ public class ConsentService {
       ConsentRepository consentRepository,
       FieldConsentsFileService fieldConsentsFileService,
       FileService fileService,
-      Clock clock
+      Clock clock,
+      ConsentEmailService consentEmailService
   ) {
     this.applicationService = applicationService;
     this.applicationDocumentInstanceService = applicationDocumentInstanceService;
@@ -39,6 +46,7 @@ public class ConsentService {
     this.fieldConsentsFileService = fieldConsentsFileService;
     this.fileService = fileService;
     this.clock = clock;
+    this.consentEmailService = consentEmailService;
   }
 
   @Transactional
@@ -57,6 +65,17 @@ public class ConsentService {
     copySupportingDocumentsToConsent(application, consent);
 
     applicationService.completeApplication(applicationVersion);
+
+    try {
+      consentEmailService.sendConsentIssuedEmailToOperator(applicationVersion);
+    } catch (Exception exception) {
+      LOGGER.error("""
+              An attempt to send a consent issued notification to the operator \
+              by user with wuaId [{}] for application version with id [{}] failed. \
+              Note: this hasn't prevented the consent being issued.
+              """,
+          user.wuaId(), applicationVersion.getId(), exception);
+    }
   }
 
   void generateDocumentInstancesAndSaveToConsent(Application application, Consent consent) {

@@ -2,8 +2,10 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.consent;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -31,6 +33,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationFileUsage;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.ConsentEmailService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.DocumentInstanceDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.PdfRenderingOptions;
@@ -56,6 +59,9 @@ class ConsentServiceTest {
   @Mock
   private FileService fileService;
 
+  @Mock
+  private ConsentEmailService consentEmailService;
+
   private final Clock clock = Clock.fixed(Instant.now(), ZoneId.systemDefault());
 
   private ConsentService consentService;
@@ -68,7 +74,8 @@ class ConsentServiceTest {
         consentRepository,
         fieldConsentsFileService,
         fileService,
-        clock
+        clock,
+        consentEmailService
     ));
   }
 
@@ -106,6 +113,52 @@ class ConsentServiceTest {
     verify(consentService).copySupportingDocumentsToConsent(application, consent);
 
     verify(applicationService).completeApplication(applicationVersion);
+    verify(consentEmailService).sendConsentIssuedEmailToOperator(applicationVersion);
+  }
+
+  @Test
+  void issueConsent_whenSendConsentIssuingEmailToOperatorFails_thenConsentIsStillIssued() {
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var application = applicationVersion.getApplication();
+
+    var user = ServiceUserDetailTestUtil.Builder().build();
+
+    var consentCaptor = ArgumentCaptor.forClass(Consent.class);
+
+    doNothing().when(consentService).generateDocumentInstancesAndSaveToConsent(any(), any());
+    doNothing().when(consentService).copySupportingDocumentsToConsent(any(), any());
+
+    // WHEN the email service call throws an exception
+    doThrow(new RuntimeException("Failed to send email"))
+        .when(consentEmailService)
+        .sendConsentIssuedEmailToOperator(applicationVersion);
+
+    // THEN it will be caught by the caller and not re-thrown
+    assertDoesNotThrow(
+        () -> consentService.issueConsent(applicationVersion, user)
+    );
+
+    verify(consentRepository).save(consentCaptor.capture());
+
+    var consent = consentCaptor.getValue();
+
+    assertThat(consent)
+        .isNotNull()
+        .extracting(
+            Consent::getApplication,
+            Consent::getIssuedByWuaId,
+            Consent::getIssuedInstant
+        ).containsExactly(
+            application,
+            user.wuaId(),
+            clock.instant()
+        );
+
+    verify(consentService).generateDocumentInstancesAndSaveToConsent(application, consent);
+    verify(consentService).copySupportingDocumentsToConsent(application, consent);
+
+    verify(applicationService).completeApplication(applicationVersion);
+    verify(consentEmailService).sendConsentIssuedEmailToOperator(applicationVersion);
   }
 
   @Test
