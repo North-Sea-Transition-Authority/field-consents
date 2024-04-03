@@ -73,6 +73,15 @@ On the FCS Postgres database (`fcs` schema) run the following patch:
 
 This will join the split CLOB data and update the appropriate tables and columns with the reconstruction CLOBs
 
+## 9. Replace the special character placeholders with the actual characters
+
+On the FCS Postgres database (`fcs` schema) run the following patch:
+- `/energyportal/V08_replace_special_character_placeholders.sql`
+
+This will replace the special character placeholders with the actual characters. The placeholders are pushed over
+the DB link above, for example `[_CHR189_]` then we find these and replace with the appropriate actual character,
+in this case `CHR(189)`, i.e. `½`
+
 # Archived step (might be useful if the DB link was down)
 ## Manual extract/import method
 ### Export

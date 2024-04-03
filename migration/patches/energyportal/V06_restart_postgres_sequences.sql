@@ -55,6 +55,7 @@ CALL fcs.post_migration_sync_table_sequence('application_withdrawals');
 CALL fcs.post_migration_sync_table_sequence('application_rationale');
 CALL fcs.post_migration_sync_table_sequence('application_work_area_priorities');
 CALL fcs.post_migration_sync_table_sequence('application_other_legacy_data');
+CALL fcs.post_migration_sync_table_sequence('split_clob_legacy_data');
 
 DROP PROCEDURE fcs.post_migration_sync_table_sequence(TEXT);
 
@@ -104,3 +105,4 @@ DROP PROCEDURE fcs.post_migration_sync_table_sequence(TEXT);
 -- SELECT * FROM fcs.application_rationale_id_seq;
 -- SELECT * FROM fcs.application_work_area_priorities_id_seq;
 -- SELECT * FROM fcs.application_other_legacy_data_id_seq;
+-- SELECT * FROM fcs.split_clob_legacy_data_id_seq;
