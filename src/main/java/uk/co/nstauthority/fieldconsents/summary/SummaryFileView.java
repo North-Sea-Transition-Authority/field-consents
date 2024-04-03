@@ -24,13 +24,14 @@ public record SummaryFileView(
 
   public static SummaryFileView previewSummaryFrom(
       Application application,
-      DocumentInstanceSummaryView documentInstanceSummaryView
+      DocumentInstanceSummaryView documentInstanceSummaryView,
+      boolean downloadDocument
   ) {
     return new SummaryFileView(
         documentInstanceSummaryView.title(),
         documentInstanceSummaryView.description(),
         ReverseRouter.route(on(ApplicationDocumentInstanceController.class)
-            .getPreviewDocumentInstance(application.getId(), documentInstanceSummaryView.documentInstanceId()))
+            .getPreviewDocumentInstance(application.getId(), documentInstanceSummaryView.documentInstanceId(), downloadDocument))
     );
   }
 }

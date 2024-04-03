@@ -155,7 +155,7 @@ class ConsentPreparationControllerTest extends AbstractApplicationControllerTest
     var documentInstanceSummaryView = DocumentInstanceSummaryViewTestUtil.newBuilder().build();
     var consentDocumentsSummaryCard = SummaryCard.filesSummaryCardWithHeading(
         "Consent documents",
-        List.of(SummaryFileView.previewSummaryFrom(application, documentInstanceSummaryView))
+        List.of(SummaryFileView.previewSummaryFrom(application, documentInstanceSummaryView, true))
     );
     var consentPreparationConsentDocumentsCardGroupActionViewList =
         List.of(CaseProcessingActionView.from(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS, applicationVersion));

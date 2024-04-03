@@ -103,7 +103,7 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
     var documentsInstanceSummaryView = DocumentInstanceSummaryViewTestUtil.newBuilder().build();
     var consentDocumentsSummaryCard = SummaryCard.filesSummaryCardWithHeading(
         "Consent documents",
-        List.of(SummaryFileView.previewSummaryFrom(application, documentsInstanceSummaryView))
+        List.of(SummaryFileView.previewSummaryFrom(application, documentsInstanceSummaryView, true))
     );
 
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
@@ -152,7 +152,7 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
     var documentsInstanceSummaryView = DocumentInstanceSummaryViewTestUtil.newBuilder().build();
     var consentDocumentsSummaryCard = SummaryCard.filesSummaryCardWithHeading(
         "Consent documents",
-        List.of(SummaryFileView.previewSummaryFrom(application, documentsInstanceSummaryView))
+        List.of(SummaryFileView.previewSummaryFrom(application, documentsInstanceSummaryView, true))
     );
 
     var consentIssuingApprovalSummaryView =

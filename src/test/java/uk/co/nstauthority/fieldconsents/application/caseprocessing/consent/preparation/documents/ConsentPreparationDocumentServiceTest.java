@@ -72,7 +72,7 @@ class ConsentPreparationDocumentServiceTest {
             documentInstanceSummaryView.title(),
             documentInstanceSummaryView.description(),
             ReverseRouter.route(on(ApplicationDocumentInstanceController.class)
-                .getPreviewDocumentInstance(APPLICATION_ID, documentInstanceSummaryView.documentInstanceId()))),
+                .getPreviewDocumentInstance(APPLICATION_ID, documentInstanceSummaryView.documentInstanceId(), true))),
         new SummaryFileView(
             supportingConsentUploadedFile.getName(),
             supportingConsentUploadedFile.getDescription(),

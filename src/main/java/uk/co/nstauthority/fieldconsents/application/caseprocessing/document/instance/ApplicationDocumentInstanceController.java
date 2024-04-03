@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceService;
@@ -68,7 +69,7 @@ public class ApplicationDocumentInstanceController {
         .addObject(
             "previewUrl",
             ReverseRouter.route(on(ApplicationDocumentInstanceController.class)
-                .getPreviewDocumentInstance(applicationId, documentInstanceId))
+                .getPreviewDocumentInstance(applicationId, documentInstanceId, false))
         )
         .addObject(
             "reloadUrl",
@@ -81,7 +82,8 @@ public class ApplicationDocumentInstanceController {
   @ActionEndPoint({ CaseProcessingActionItem.CONSENT_PREPARATION, CaseProcessingActionItem.CONSENT_ISSUING })
   public ResponseEntity<?> getPreviewDocumentInstance(
       @PathVariable Integer applicationId,
-      @PathVariable UUID documentInstanceId
+      @PathVariable UUID documentInstanceId,
+      @RequestParam(name = "download", required = false) boolean download
   ) {
     var application = applicationService.getApplicationById(applicationId);
     var documentInstanceDto = applicationDocumentInstanceControllerHelperService.getDocumentInstanceDtoForApplicationOrThrow(
@@ -94,13 +96,20 @@ public class ApplicationDocumentInstanceController {
         documentInstanceDto,
         PdfRenderingOptions.newBuilder().withPreviewWatermark(true).build()
     );
-    var fileName = "PREVIEW %s.pdf".formatted(documentInstanceDto.title());
+    var filename = "PREVIEW %s.pdf".formatted(documentInstanceDto.title());
+    var contentDisposition = getContentDisposition(download, filename);
 
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_PDF)
         .contentLength(byteArrayResource.contentLength())
-        .header(HttpHeaders.CONTENT_DISPOSITION, String.format("filename=\"%s\"", fileName))
+        .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
         .body(byteArrayResource);
+  }
+
+  private String getContentDisposition(boolean download, String filename) {
+    return download
+        ? "attachment; filename=\"%s\"".formatted(filename)
+        : "filename=\"%s\"".formatted(filename);
   }
 
   @GetMapping("/reload")
