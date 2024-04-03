@@ -10,7 +10,7 @@
       </@fdsSummaryList.summaryListRowNoAction>
 
       <@fdsSummaryList.summaryListRowNoAction keyText="Text">
-        <p class="govuk-body govuk-body__preserve-whitespace">${documentSectionDto.content()!}</p>
+        <p class="govuk-body govuk-body__preserve-whitespace">${(documentSectionDto.content()!)?no_esc}</p>
       </@fdsSummaryList.summaryListRowNoAction>
     </@fdsSummaryList.summaryListCard>
 
