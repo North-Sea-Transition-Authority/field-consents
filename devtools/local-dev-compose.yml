@@ -19,12 +19,15 @@ services:
     ports:
     - "3310:3310"
 
-  s3mock:
-    image: adobe/s3mock:latest
+  minio:
+    image: bitnami/minio:latest
     ports:
-      - "9090:9090"
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
     environment:
-      initialBuckets: field-consents
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+      MINIO_DEFAULT_BUCKETS: field-consents
 
 volumes:
   db-volume:
