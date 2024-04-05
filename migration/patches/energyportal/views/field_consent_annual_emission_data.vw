@@ -13,7 +13,7 @@ SELECT
 , st.to_number_safe(ed.category_b) category_b
 , st.to_number_safe(ed.category_c) category_c
 , coalesce(ed.total_flare_gas, ed.total_vent_gas) total_gas
-, clean_text(ed.comments) comments
+, clean_clob(ed.comments) comments
 FROM envmgr.field_consent_details fcd
 JOIN envmgr.xview_field_consent_details xfcd ON xfcd.fcd_id = fcd.id
 CROSS JOIN XMLTABLE(
@@ -40,6 +40,6 @@ CROSS JOIN XMLTABLE(
   , category_c VARCHAR2(4000) PATH './CATEGORY_C/text()'
   , total_flare_gas NUMBER PATH './TOTAL_FLARE_GAS/text()'
   , total_vent_gas NUMBER PATH './TOTAL_VENT_GAS/text()'
-  , comments VARCHAR2(4000) PATH './COMMENTS/text()'
+  , comments CLOB PATH './COMMENTS/text()'
 ) ed
 WHERE xfcd.app_length = 'ANNUAL';

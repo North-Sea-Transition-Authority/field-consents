@@ -333,7 +333,7 @@ CREATE TABLE fcs_migration.flare_annual_months (
 , category_a             NUMBER NOT NULL
 , category_b             NUMBER NOT NULL
 , category_c             NUMBER NOT NULL
-, comments               VARCHAR2(4000)
+, comments               CLOB
 );
 
 --
@@ -352,7 +352,7 @@ CREATE TABLE fcs_migration.flare_annual_123_months (
 , category_1             NUMBER NOT NULL
 , category_2             NUMBER NOT NULL
 , category_3             NUMBER NOT NULL
-, comments               VARCHAR2(4000)
+, comments               CLOB
 );
 
 --
@@ -547,7 +547,7 @@ CREATE TABLE fcs_migration.vent_annual_months (
 , category_a             NUMBER NOT NULL
 , category_b             NUMBER NOT NULL
 , category_c             NUMBER NOT NULL
-, comments               VARCHAR2(4000)
+, comments               CLOB
 );
 
 --
@@ -564,7 +564,7 @@ CREATE TABLE fcs_migration.vent_annual_123_months (
 , year                   INTEGER NOT NULL
 , month                  VARCHAR2(4000) NOT NULL
 , category_1             NUMBER NOT NULL
-, comments               VARCHAR2(4000)
+, comments               CLOB
 );
 
 --

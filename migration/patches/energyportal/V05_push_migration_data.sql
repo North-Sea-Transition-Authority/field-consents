@@ -81,7 +81,7 @@
 --DELETE FROM "fcs"."application_versions"@fcs_postgres_db;
 --DELETE FROM "fcs"."applications"@fcs_postgres_db;
 
--- work around DB link timeout issues from sqlnet.ora param SQLNET.INBOUND_CONNECT_TIMEOUT
+---- work around DB link timeout issues from sqlnet.ora param SQLNET.INBOUND_CONNECT_TIMEOUT
 --BEGIN
 --  COMMIT;
 --  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
@@ -91,10 +91,6 @@
 --
 -- applications
 --
-
--- Run times
--- dev to local: 38s
--- dev to dev pg: 12s
 BEGIN
 
   FOR rec IN (SELECT * FROM fcs_migration.applications ORDER BY id) LOOP
@@ -123,10 +119,6 @@ END;
 --
 -- application_versions
 --
-
--- Run times
--- dev to local: 59s
--- dev to dev pg: 15s
 BEGIN
 
   FOR rec IN (SELECT * FROM fcs_migration.application_versions WHERE id > 0 ORDER BY id) LOOP
@@ -172,10 +164,6 @@ END;
 --
 -- consent_lengths
 --
-
--- Run times
--- dev to local: 58s
--- dev to dev pg: 15s
 BEGIN
 
   FOR rec IN (SELECT * FROM fcs_migration.consent_lengths WHERE id > 0 ORDER BY id) LOOP
@@ -209,9 +197,6 @@ END;
 --
 -- application_assets
 --
-
--- Run times
--- dev to local: 162s
 BEGIN
 
   FOR rec IN (SELECT * FROM fcs_migration.application_assets WHERE id > 0 ORDER BY id) LOOP
@@ -246,9 +231,6 @@ END;
 --
 -- application_asset_licences
 --
-
--- Run time
--- dev to local: 167s
 BEGIN
 
   FOR rec IN (SELECT * FROM fcs_migration.application_asset_licences WHERE id > 0 ORDER BY id) LOOP
@@ -275,9 +257,6 @@ END;
 --
 -- application_units
 --
-
--- Run time
--- dev to local: 45s
 BEGIN
 
   FOR rec IN (SELECT * FROM fcs_migration.application_units WHERE id > 0 ORDER BY id) LOOP
@@ -316,9 +295,6 @@ END;
 --
 -- application_flags
 --
-
--- Run time
--- dev to local: 181s
 BEGIN
 
   FOR rec IN (SELECT * FROM fcs_migration.application_flags WHERE id > 0 ORDER BY id) LOOP
@@ -343,9 +319,6 @@ END;
 --
 -- application_eia_directions
 --
-
--- Run time
--- dev to local: 1s
 BEGIN
 
   FOR rec IN (SELECT * FROM fcs_migration.application_eia_directions WHERE id > 0 ORDER BY id) LOOP
@@ -368,9 +341,6 @@ END;
 --
 -- application_supporting_information
 --
-
--- Run time
--- dev to dev: 15s
 BEGIN
 
   FOR rec IN (
@@ -416,9 +386,6 @@ END;
 --
 -- long_term_production_years
 --
-
--- Execution time
--- dev to local: 80s
 BEGIN
 
   FOR rec IN (SELECT * FROM fcs_migration.long_term_production_years WHERE id > 0 ORDER BY id) LOOP
@@ -449,9 +416,6 @@ END;
 --
 -- annual_production_months
 --
-
--- Execution time
--- dev to local: 86s
 BEGIN
 
   FOR rec IN (SELECT * FROM fcs_migration.annual_production_months WHERE id > 0 ORDER BY id) LOOP
@@ -484,9 +448,6 @@ END;
 --
 -- short_term_production_months
 --
-
--- Execution time
--- dev to local: 1s
 BEGIN
 
   FOR rec IN (SELECT * FROM fcs_migration.short_term_production_months WHERE id > 0 ORDER BY id) LOOP
@@ -530,12 +491,18 @@ END;
 --
 -- flare_annual_months
 --
-
--- Execution time
--- dev to local: 1s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.flare_annual_months WHERE id > 0 ORDER BY id) LOOP
+  FOR rec IN (
+    SELECT t.*
+    , CASE
+      WHEN length(t.comments) > 4000 THEN 'dummy text placeholder'
+      ELSE to_char(t.comments)
+      END comments_varchar2
+    FROM fcs_migration.flare_annual_months t
+    WHERE id > 0
+    ORDER BY id
+  ) LOOP
   
     INSERT INTO "fcs"."flare_annual_months"@fcs_postgres_db (
       "id"
@@ -554,7 +521,7 @@ BEGIN
     , rec.category_a
     , rec.category_b
     , rec.category_c
-    , rec.comments
+    , rec.comments_varchar2
     );
   
   END LOOP;
@@ -565,12 +532,18 @@ END;
 --
 -- flare_annual_123_months
 --
-
--- Execution time
--- dev to local: 3 mins
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.flare_annual_123_months WHERE id > 0 ORDER BY id) LOOP
+  FOR rec IN (
+    SELECT t.*
+    , CASE
+      WHEN length(t.comments) > 4000 THEN 'dummy text placeholder'
+      ELSE to_char(t.comments)
+      END comments_varchar2
+    FROM fcs_migration.flare_annual_123_months t
+    WHERE id > 0
+    ORDER BY id
+  ) LOOP
 
     INSERT INTO "fcs"."flare_annual_123_months"@fcs_postgres_db (
       "id"
@@ -589,7 +562,7 @@ BEGIN
     , rec.category_1
     , rec.category_2
     , rec.category_3
-    , rec.comments
+    , rec.comments_varchar2
     );
 
   END LOOP;
@@ -597,37 +570,9 @@ BEGIN
 END;
 /
 
--- bad rows on dev for ids: 9078 and 10466
--- the comments data had a strange bullet character which caused the following
--- error in the above script
---ORA-02055: distributed update operation failed; rollback required
---ORA-28500: connection from ORACLE to a non-Oracle system returned this message:
---ERROR: invalid byte sequence for encoding "UTF8": 0xb7;
---Error while executing the query {22021,NativeErr = 7}
---ORA-02063: preceding 3 lines from FCS_POSTGRES_DB
---ORA-06512: at line 5
---ORA-06512: at line 5
---
--- to fix I added a replace in the view fcs_migration.field_consent_annual_emission_data
--- i.e. replace(ed.comments, '�', '-')
---SELECT f.*--, replace(f.comments, '�', '-'), av.* 
---FROM fcs_migration.flare_annual_123_months f
---join fcs_migration.application_versions av ON av.id = f.application_version_id 
---where comments is not null
---AND f.id IN (9078, 10466)
---ORDER by f.id
---/
---SELECT ASCII('ø'), ASCII('•'), ASCII('–'), ASCII('’'), ASCII('‘'), ASCII('£'), ASCII('!')
---from dual;
---/
-
-
 --
 -- flare_short_term_months
 --
-
--- Execution time
--- dev to local: 1s
 BEGIN
 
   FOR rec IN (SELECT * FROM fcs_migration.flare_short_term_months WHERE id > 0 ORDER BY id) LOOP
@@ -664,9 +609,6 @@ END;
 --
 -- flare_short_term_123_months
 --
-
--- Execution time
--- dev to local: 1s
 BEGIN
 
   FOR rec IN (SELECT * FROM fcs_migration.flare_short_term_123_months WHERE id > 0 ORDER BY id) LOOP
@@ -703,9 +645,6 @@ END;
 --
 -- flare_long_term_years
 --
-
--- Execution time
--- dev to local: ?s
 BEGIN
 
   FOR rec IN (SELECT * FROM fcs_migration.flare_long_term_years WHERE id > 0 ORDER BY id) LOOP
@@ -730,9 +669,6 @@ END;
 --
 -- flare_report_gas_data
 --
-
--- Execution time
--- dev to local: 1s
 BEGIN
 
   FOR rec IN (SELECT * FROM fcs_migration.flare_report_gas_data WHERE id > 0 ORDER BY id) LOOP
@@ -775,9 +711,6 @@ END;
 --
 -- flare_report_123_gas_data
 --
-
--- Execution time
--- dev to local: 10s
 BEGIN
 
   FOR rec IN (SELECT * FROM fcs_migration.flare_report_123_gas_data WHERE id > 0 ORDER BY id) LOOP
@@ -817,9 +750,6 @@ END;
 --
 -- flare_report_periods
 --
-
--- Execution time
--- dev to local: 13s
 BEGIN
 
   FOR rec IN (SELECT * FROM fcs_migration.flare_report_periods WHERE id > 0 ORDER BY id) LOOP
@@ -844,9 +774,6 @@ END;
 --
 -- flare_report_months
 --
-
--- Execution time
--- dev to dev: 2s
 BEGIN
 
   FOR rec IN (
@@ -890,9 +817,6 @@ END;
 --
 -- flare_report_123_months
 --
-
--- Execution time
--- dev to local: 2 mins
 BEGIN
 
   FOR rec IN (SELECT * FROM fcs_migration.flare_report_123_months WHERE id > 0 ORDER BY id) LOOP
@@ -923,36 +847,11 @@ BEGIN
 
 END;
 /
---ORA-02055: distributed update operation failed; rollback required
---ORA-28500: connection from ORACLE to a non-Oracle system returned this message:
---ERROR: invalid byte sequence for encoding "UTF8": 0xbf;
---Error while executing the query {22021,NativeErr = 7}
---ORA-02063: preceding 3 lines from FCS_POSTGRES_DB
---ORA-06512: at line 5
---ORA-06512: at line 5
---
---SELECT f.*, replace(f.comments, CHR(191), NULL)--, av.* 
---FROM fcs_migration.flare_report_123_months f
---join fcs_migration.application_versions av ON av.id = f.application_version_id 
---where f.comments is not null
---AND f.id IN (7041)
---ORDER by f.id
---/
---SELECT ASCII('   TAR  6th June  6th July  requires a full depressurisation.'), ASCII('“'), ASCII('”'), ASCII('�'), ASCII('�'), ASCII('£')
---from dual;
---/
---SELECT CHR(160)
---FROM dual
---/
-
 
 
 --
 -- flares
 --
-
--- Execution time
--- dev to local: 54s
 BEGIN
 
   FOR rec IN (SELECT * FROM fcs_migration.flares WHERE id > 0 ORDER BY id) LOOP
@@ -990,12 +889,18 @@ END;
 --
 -- vent_annual_months
 --
-
--- Execution time
--- dev to local: 1s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.vent_annual_months WHERE id > 0 ORDER BY id) LOOP
+  FOR rec IN (
+    SELECT t.*
+    , CASE
+      WHEN length(t.comments) > 4000 THEN 'dummy text placeholder'
+      ELSE to_char(t.comments)
+      END comments_varchar2
+    FROM fcs_migration.vent_annual_months t
+    WHERE id > 0
+    ORDER BY id
+  ) LOOP
   
     INSERT INTO "fcs"."vent_annual_months"@fcs_postgres_db (
       "id"
@@ -1014,7 +919,7 @@ BEGIN
     , rec.category_a
     , rec.category_b
     , rec.category_c
-    , rec.comments
+    , rec.comments_varchar2
     );
   
   END LOOP;
@@ -1025,12 +930,18 @@ END;
 --
 -- vent_annual_123_months
 --
-
--- Execution time
--- dev to local: 80s
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.vent_annual_123_months WHERE id > 0 ORDER BY id) LOOP
+  FOR rec IN (
+    SELECT t.*
+    , CASE
+      WHEN length(t.comments) > 4000 THEN 'dummy text placeholder'
+      ELSE to_char(t.comments)
+      END comments_varchar2
+    FROM fcs_migration.vent_annual_123_months t
+    WHERE id > 0
+    ORDER BY id
+  ) LOOP
   
     INSERT INTO "fcs"."vent_annual_123_months"@fcs_postgres_db (
       "id"
@@ -1045,7 +956,7 @@ BEGIN
     , rec.year
     , rec.month
     , rec.category_1
-    , rec.comments
+    , rec.comments_varchar2
     );
   
   END LOOP;
@@ -1057,9 +968,6 @@ END;
 --
 -- vent_short_term_months
 --
-
--- Execution time
--- dev to local: 1s
 BEGIN
 
   FOR rec IN (SELECT * FROM fcs_migration.vent_short_term_months WHERE id > 0 ORDER BY id) LOOP
@@ -1096,9 +1004,6 @@ END;
 --
 -- vent_short_term_123_months
 --
-
--- Execution time
--- dev to local: 1s
 BEGIN
 
   FOR rec IN (SELECT * FROM fcs_migration.vent_short_term_123_months WHERE id > 0 ORDER BY id) LOOP
@@ -1131,9 +1036,6 @@ END;
 --
 -- vent_long_term_years
 --
-
--- Execution time
--- dev to local: ?s
 BEGIN
 
   FOR rec IN (SELECT * FROM fcs_migration.vent_long_term_years WHERE id > 0 ORDER BY id) LOOP
@@ -1158,9 +1060,6 @@ END;
 --
 -- vent_report_gas_data
 --
-
--- Execution time
--- dev to local: 1s
 BEGIN
 
   FOR rec IN (SELECT * FROM fcs_migration.vent_report_gas_data WHERE id > 0 ORDER BY id) LOOP
@@ -1203,9 +1102,6 @@ END;
 --
 -- vent_report_123_gas_data
 --
-
--- Execution time
--- dev to local: 3s
 BEGIN
 
   FOR rec IN (SELECT * FROM fcs_migration.vent_report_123_gas_data WHERE id > 0 ORDER BY id) LOOP
@@ -1232,9 +1128,6 @@ END;
 --
 -- vent_report_periods
 --
-
--- Execution time
--- dev to local: 10s
 BEGIN
 
   FOR rec IN (SELECT * FROM fcs_migration.vent_report_periods WHERE id > 0 ORDER BY id) LOOP
@@ -1259,9 +1152,6 @@ END;
 --
 -- vent_report_months
 --
-
--- Execution time
--- dev to local: 1s
 BEGIN
 
   FOR rec IN (
@@ -1305,9 +1195,6 @@ END;
 --
 -- vent_report_123_months
 --
-
--- Execution time
--- dev to local: 60s
 BEGIN
 
   FOR rec IN (SELECT * FROM fcs_migration.vent_report_123_months WHERE id > 0 ORDER BY id) LOOP
@@ -1338,9 +1225,6 @@ END;
 --
 -- vents
 --
-
--- Execution time
--- dev to local: 13s
 BEGIN
 
   FOR rec IN (SELECT * FROM fcs_migration.vents WHERE id > 0 ORDER BY id) LOOP
@@ -1378,9 +1262,6 @@ END;
 --
 -- application_case_notes
 --
-
--- Execution time
--- dev to dev: 35s
 BEGIN
 
   FOR rec IN (
@@ -1416,9 +1297,6 @@ END;
 --
 -- application_updates
 --
-
--- Execution time
--- dev to dev: 8s
 BEGIN
 
   FOR rec IN (
@@ -1469,9 +1347,6 @@ END;
 --
 -- application_technical_reviews
 --
-
--- Execution time
--- dev to dev: s
 BEGIN
 
   FOR rec IN (

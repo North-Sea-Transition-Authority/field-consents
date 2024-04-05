@@ -2072,12 +2072,52 @@ BEGIN
       UNION ALL
       
       SELECT
+        t.id source_id
+      , 'flare_annual_months' source_table_name
+      , 'comments' source_column_name
+      , t.comments clob_text
+      FROM fcs_migration.flare_annual_months t
+      WHERE length(t.comments) > l_varchar2_max_length
+      
+      UNION ALL
+      
+      SELECT
+        t.id source_id
+      , 'flare_annual_123_months' source_table_name
+      , 'comments' source_column_name
+      , t.comments clob_text
+      FROM fcs_migration.flare_annual_123_months t
+      WHERE length(t.comments) > l_varchar2_max_length
+      
+      UNION ALL
+      
+      SELECT
         rm.id source_id
       , 'flare_report_months' source_table_name
       , 'comments' source_column_name
       , rm.comments clob_text
       FROM fcs_migration.flare_report_months rm
       WHERE length(rm.comments) > l_varchar2_max_length
+      
+      UNION ALL
+      
+      SELECT
+        t.id source_id
+      , 'vent_annual_months' source_table_name
+      , 'comments' source_column_name
+      , t.comments clob_text
+      FROM fcs_migration.vent_annual_months t
+      WHERE length(t.comments) > l_varchar2_max_length
+      
+      UNION ALL
+      
+      SELECT
+        t.id source_id
+      , 'vent_annual_123_months' source_table_name
+      , 'comments' source_column_name
+      , t.comments clob_text
+      FROM fcs_migration.vent_annual_123_months t
+      WHERE length(t.comments) > l_varchar2_max_length
       
       UNION ALL
       
