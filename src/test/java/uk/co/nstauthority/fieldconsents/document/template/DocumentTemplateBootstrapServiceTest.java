@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -91,13 +92,19 @@ class DocumentTemplateBootstrapServiceTest {
 
     documentTemplateBootstrapService.createFieldProductionConsentDocumentTemplate();
 
-    verify(documentTemplateSectionService).createDocumentTemplateSection(
+    documentTemplateSectionService.createDocumentTemplateSection(
         fieldProductionConsentDocumentTemplateDto,
         null,
         "Header",
         """
-        PETROLEUM PRODUCTION LICENCE No(s). ((LICENCE_REFERENCE_LIST)) (“Licence(s)”)
-        ((CONSENT_LENGTH_UPPER_CASE)) DEVELOPMENT AND PRODUCTION CONSENT
+        <p>Date: ((ISSUE_DATE))</p>\
+        <p>\
+        <strong>\
+        PETROLEUM PRODUCTION LICENCE No(s). ((LICENCE_REFERENCE_LIST)) (“Licence(s)”)<br/>\
+        ((CONSENT_LENGTH_UPPER_CASE))  DEVELOPMENT AND PRODUCTION CONSENT\
+        </strong>\
+        <p>\
+        <p>To: Licensees of Petroleum Production Licences ((LICENCE_REFERENCE_LIST)) (listed in schedule 2 hereto).</p>\
         """,
         null,
         false,
@@ -107,14 +114,34 @@ class DocumentTemplateBootstrapServiceTest {
 
     verify(documentTemplateSectionService).createDocumentTemplateSection(
         fieldProductionConsentDocumentTemplateDto,
+        null,
+        "Consents to",
+        """
+        <p style="text-align: justify;">\
+        In accordance with the clause titled “Development and production programmes” set out in or otherwise \
+        incorporated into the Licence(s), the ((REGULATOR_LEGAL_NAME)) hereby consents to:\
+        </p>\
+        """,
+        null,
+        true,
+        false,
+        2
+    );
+
+    verify(documentTemplateSectionService).createDocumentTemplateSection(
+        fieldProductionConsentDocumentTemplateDto,
         consentsToSection,
         "The erection or carrying out of the relevant works",
         """
+        <p style="text-align: justify;">\
         the erection or carrying out of the relevant works, as defined in the Licence(s) and described in the document \
-        entitled ((FIELD_DEVELOPMENT_PLAN_TITLE)) dated ((FIELD_DEVELOPMENT_PLAN_DATE)) (the “Development Plan”), \
-        during the Period (as defined in paragraph 2 below) for the purpose of getting petroleum from those parts \
-        of the licensed area known as the ((PRIMARY_FIELD_NAME)) field, as defined in the Development Plan \
-        (the “Field"), or for the purpose of conveying, to a place on land petroleum got from the Field; and
+        entitled ((FIELD_DEVELOPMENT_PLAN_TITLE)) dated ((FIELD_DEVELOPMENT_PLAN_DATE)) \
+        (the “<strong>Development Plan</strong>”), during the Period (as defined in paragraph 2 below) for the purpose \
+        of getting petroleum from those parts of the licensed area known as the \
+        <strong>((PRIMARY_FIELD_NAME))</strong> field, as defined in the Development Plan \
+        (the “<strong>Field</strong>”), or for the purpose of conveying, to a place on land petroleum got from the \
+        Field; and \
+        </p>\
         """,
         null,
         true,
@@ -126,7 +153,11 @@ class DocumentTemplateBootstrapServiceTest {
         fieldProductionConsentDocumentTemplateDto,
         consentsToSection,
         "The getting of petroleum",
-        "the getting of petroleum from the Field during the Period as by means of such relevant works.",
+        """
+        <p style="text-align: justify;">\
+        the getting of petroleum from the Field during the Period as by means of such relevant works.\
+        </p>\
+        """,
         null,
         true,
         false,
@@ -138,8 +169,10 @@ class DocumentTemplateBootstrapServiceTest {
         null,
         "This consent shall commence on",
         """
+        <p style="text-align: justify;">\
         This consent shall commence on ((CONSENT_START_DATE)) and expire on the earlier of ((CONSENT_END_DATE)) or the \
-        date of expiry or determination of any Licence (the “Period").
+        date of expiry or determination of any Licence (the “<strong>Period</strong>”).\
+        </p>\
         """,
         null,
         true,
@@ -149,11 +182,28 @@ class DocumentTemplateBootstrapServiceTest {
 
     verify(documentTemplateSectionService).createDocumentTemplateSection(
         fieldProductionConsentDocumentTemplateDto,
+        null,
+        "This consent is given",
+        """
+        <p style="text-align: justify;">\
+        This consent is given subject always to the following conditions:\
+        </p>\
+        """,
+        null,
+        true,
+        false,
+        4
+    );
+
+    verify(documentTemplateSectionService).createDocumentTemplateSection(
+        fieldProductionConsentDocumentTemplateDto,
         thisConsentIsGivenSection,
         "Any activities carried out pursuant",
         """
+        <p style="text-align: justify;">\
         any activities carried out pursuant to this consent shall be carried out in accordance with the Development \
-        Plan; and
+        Plan; and\
+        </p>\
         """,
         null,
         true,
@@ -166,8 +216,10 @@ class DocumentTemplateBootstrapServiceTest {
         thisConsentIsGivenSection,
         "During the Period, the quantity of petroleum",
         """
+        <p style="text-align: justify;">\
         during the Period, the quantity of petroleum got from the Field shall not be greater than the maximum quantity \
-        nor less than the minimum quantity specified in the schedule hereto.
+        nor less than the minimum quantity specified in the schedule hereto.\
+        </p>\
         """,
         null,
         true,
@@ -180,8 +232,10 @@ class DocumentTemplateBootstrapServiceTest {
         null,
         "This consent is given for the purposes",
         """
+        <p style="text-align: justify;">\
         This consent is given for the purposes of the said clause titled “Development and production programmes” and \
-        without prejudice to the operation of any other provision of the Licence(s) or otherwise.
+        without prejudice to the operation of any other provision of the Licence(s) or otherwise.\
+        </p>\
         """,
         null,
         true,
@@ -193,7 +247,12 @@ class DocumentTemplateBootstrapServiceTest {
         fieldProductionConsentDocumentTemplateDto,
         null,
         "TODO FCS-610: This consent supersedes",
-        "[This consent supersedes the consent [CONSENT REFERENCE] granted by the ((REGULATOR_LEGAL_NAME)) dated [DATE].]",
+        """
+        <p style="text-align: justify;">\
+        [This consent supersedes the consent [CONSENT REFERENCE] granted by the ((REGULATOR_LEGAL_NAME)) \
+        dated [DATE].]\
+        </p>\
+        """,
         null,
         true,
         false,
@@ -205,10 +264,12 @@ class DocumentTemplateBootstrapServiceTest {
         null,
         "Consents to the use of gas",
         """
+        <p style="text-align: justify;">\
         In accordance with sub-clause (3)(b) of the clause titled “Avoidance of harmful methods of working” set out in \
         or otherwise incorporated into the Licence(s), the ((REGULATOR_LEGAL_NAME)) hereby consents to the use of gas \
         for the purpose of creating or increasing the pressure by means of which petroleum is obtained from the \
-        licensed area of the Licence(s).
+        licensed area of the Licence(s).\
+        </p>\
         """,
         "GAS_WILL_BE_INJECTED",
         true,
@@ -219,7 +280,7 @@ class DocumentTemplateBootstrapServiceTest {
     verify(documentTemplateSectionService).createDocumentTemplateSection(
         fieldProductionConsentDocumentTemplateDto,
         null,
-        "Schedule",
+        "Schedule 1",
         "((SCHEDULE))",
         null,
         false,
@@ -230,17 +291,23 @@ class DocumentTemplateBootstrapServiceTest {
     verify(documentTemplateSectionService).createDocumentTemplateSection(
         fieldProductionConsentDocumentTemplateDto,
         null,
-        "Backplate",
+        "Schedule 2",
         """
-        ((PRIMARY_FIELD_NAME))
-        LICENCE(S) ((LICENCE_REFERENCE_LIST))
-        FIELD EQUITY PARTNER(S) ((FIELD_EQUITY_PARTNER_NAME_LIST))
+        <p style="text-align: center;"><strong>SCHEDULE 2</strong></p>\
+        <p><strong>Field</strong></p>\
+        <p>((PRIMARY_FIELD_NAME))</p>\
+        <p><strong>Licences</strong></p>\
+        <p>((LICENCE_REFERENCE_LIST))</p>\
+        <p><strong>Field Equity Partners</strong></p>\
+        <p>((FIELD_EQUITY_PARTNER_NAME_LIST))</p>\
         """,
         null,
         false,
         true,
         9
     );
+
+    verifyNoMoreInteractions(documentTemplateSectionService);
   }
 
   @Test
@@ -264,8 +331,14 @@ class DocumentTemplateBootstrapServiceTest {
         null,
         "Header",
         """
-        ((CONSENT_LENGTH_UPPER_CASE)) FLARE CONSENT
-        PETROLEUM PRODUCTION LICENCE No(s). ((LICENCE_REFERENCE_LIST)) (“Licence(s)”)
+        <p>Date: ((ISSUE_DATE))</p>\
+        <p>\
+        <strong>\
+        ((CONSENT_LENGTH_UPPER_CASE)) FLARE CONSENT<br/>\
+        PETROLEUM PRODUCTION LICENCE No(s). ((LICENCE_REFERENCE_LIST)) (“Licence(s)”)<br/>\
+        </strong>\
+        </p>\
+        <p>To: Licensees of Petroleum Production Licences ((LICENCE_REFERENCE_LIST)) (listed in schedule 2 hereto).</p>\
         """,
         null,
         false,
@@ -278,10 +351,12 @@ class DocumentTemplateBootstrapServiceTest {
         null,
         "Consents to",
         """
+        <p style="text-align: justify;">\
         In accordance with paragraph (3)(a) of the clause titled “Avoidance of harmful methods of working” set out in \
         or otherwise incorporated into the Licence(s), the ((REGULATOR_LEGAL_NAME)) hereby consents to the flaring, of \
         natural gas obtained from those parts of the licensed area known as the ((PRIMARY_AND_ADDITIONAL_FIELD_NAMES)) \
-        field(s) during the Period.
+        field(s) during the Period.\
+        </p>\
         """,
         null,
         true,
@@ -294,8 +369,10 @@ class DocumentTemplateBootstrapServiceTest {
         null,
         "This consent is given",
         """
+        <p style="text-align: justify;">\
         This consent is given subject always to the condition that natural gas shall not be flared at an average daily \
-        rate greater than the maximum specified in the schedule hereto.
+        rate greater than the maximum specified in the schedule hereto.\
+        </p>\
         """,
         null,
         true,
@@ -308,8 +385,10 @@ class DocumentTemplateBootstrapServiceTest {
         null,
         "This consent shall commence on",
         """
+        <p style="text-align: justify;">\
         This consent shall commence on ((CONSENT_START_DATE)) and expire on the earlier of ((CONSENT_END_DATE)) or the \
-        date of expiry or determination of any Licence (the “Period").
+        date of expiry or determination of any Licence (the “<strong>Period</strong>”).\
+        </p>\
         """,
         null,
         true,
@@ -322,8 +401,11 @@ class DocumentTemplateBootstrapServiceTest {
         null,
         "This consent is given for the purposes",
         """
+        <p style="text-align: justify;">\
         This consent is given for the purposes of the said paragraph (3)(a) of the clause titled “Avoidance of harmful \
-        methods of working” and without prejudice to the operation of any other provision of the Licence(s) or otherwise.
+        methods of working” and without prejudice to the operation of any other provision of the Licence(s) or \
+        otherwise.\
+        </p>\
         """,
         null,
         true,
@@ -335,7 +417,12 @@ class DocumentTemplateBootstrapServiceTest {
         fieldFlareConsentDocumentTemplateDto,
         null,
         "TODO FCS-610: This consent supersedes",
-        "[This consent supersedes the consent [CONSENT REFERENCE] granted by the ((REGULATOR_LEGAL_NAME)) dated [DATE].]",
+        """
+        <p style="text-align: justify;">\
+        [This consent supersedes the consent [CONSENT REFERENCE] granted by the ((REGULATOR_LEGAL_NAME)) \
+        dated [DATE].]\
+        </p>\
+        """,
         null,
         true,
         false,
@@ -345,7 +432,7 @@ class DocumentTemplateBootstrapServiceTest {
     verify(documentTemplateSectionService).createDocumentTemplateSection(
         fieldFlareConsentDocumentTemplateDto,
         null,
-        "Schedule",
+        "Schedule 1",
         "((SCHEDULE))",
         null,
         false,
@@ -356,17 +443,23 @@ class DocumentTemplateBootstrapServiceTest {
     verify(documentTemplateSectionService).createDocumentTemplateSection(
         fieldFlareConsentDocumentTemplateDto,
         null,
-        "Backplate",
+        "Schedule 2",
         """
-        ((PRIMARY_AND_ADDITIONAL_FIELD_NAMES))
-        LICENCE(S) ((LICENCE_REFERENCE_LIST))
-        FIELD EQUITY PARTNER(S) ((FIELD_EQUITY_PARTNER_NAME_LIST))
+        <p style="text-align: center;"><strong>SCHEDULE 2</strong></p>\
+        <p><strong>Fields</strong></p>\
+        <p>((PRIMARY_AND_ADDITIONAL_FIELD_NAMES))</p>\
+        <p><strong>Licences</strong></p>\
+        <p>((LICENCE_REFERENCE_LIST))</p>\
+        <p><strong>Field Equity Partners</strong></p>\
+        <p>((FIELD_EQUITY_PARTNER_NAME_LIST))</p>\
         """,
         null,
         false,
         true,
         8
     );
+
+    verifyNoMoreInteractions(documentTemplateSectionService);
   }
 
   @Test
@@ -390,8 +483,13 @@ class DocumentTemplateBootstrapServiceTest {
         null,
         "Header",
         """
-        ENERGY ACT 1976
-        CONSENT TO DISPOSE OF NATURAL GAS AT ((FACILITY_NAME))
+        <p>Date: ((ISSUE_DATE))</p>\
+        <p>\
+        <strong>\
+        ENERGY ACT 1976<br/>\
+        CONSENT TO DISPOSE OF NATURAL GAS AT ((FACILITY_NAME))\
+        </strong>\
+        </p>\
         """,
         null,
         false,
@@ -404,10 +502,12 @@ class DocumentTemplateBootstrapServiceTest {
         null,
         "Consents to",
         """
+        <p style="text-align: justify;">\
         Pursuant to section 12A(1)(a) of the Energy Act 1976, the ((REGULATOR_LEGAL_NAME)) hereby consents to the \
         flaring from the relevant oil processing facility or relevant gas processing facility, being the \
-        ((FACILITY_NAME)) (the “Facility”), of natural gas originally won from the fields with a right to have the \
-        natural gas processed by the Facility.
+        ((FACILITY_NAME)) (the “<strong>Facility</strong>”), of natural gas originally won from the fields with a \
+        right to have the natural gas processed by the Facility.\
+        </p>\
         """,
         null,
         true,
@@ -419,7 +519,12 @@ class DocumentTemplateBootstrapServiceTest {
         terminalFlareConsentDocumentTemplateDto,
         null,
         "This consent shall commence on",
-        "This consent shall commence on ((CONSENT_START_DATE)) and expire on ((CONSENT_END_DATE)) (the “Period”).",
+        """
+        <p style="text-align: justify;">\
+        This consent shall commence on ((CONSENT_START_DATE)) and expire on ((CONSENT_END_DATE)) \
+        (the “<strong>Period</strong>”).\
+        </p>\
+        """,
         null,
         true,
         false,
@@ -431,8 +536,10 @@ class DocumentTemplateBootstrapServiceTest {
         null,
         "This consent is given",
         """
+        <p style="text-align: justify;">\
         This consent is given subject always to the condition that, during the Period, natural gas shall not be flared \
-        at an average daily rate greater than the maximum specified in the schedule hereto.
+        at an average daily rate greater than the maximum specified in the schedule hereto.\
+        </p>\
         """,
         null,
         true,
@@ -444,7 +551,12 @@ class DocumentTemplateBootstrapServiceTest {
         terminalFlareConsentDocumentTemplateDto,
         null,
         "TODO FCS-610: This consent supersedes",
-        "[This consent supersedes the consent [CONSENT REFERENCE] granted by the ((REGULATOR_LEGAL_NAME)) dated [DATE].]",
+        """
+        <p style="text-align: justify;">\
+        [This consent supersedes the consent [CONSENT REFERENCE] granted by the ((REGULATOR_LEGAL_NAME)) \
+        dated [DATE].]\
+        </p>\
+        """,
         null,
         true,
         false,
@@ -461,6 +573,8 @@ class DocumentTemplateBootstrapServiceTest {
         true,
         6
     );
+
+    verifyNoMoreInteractions(documentTemplateSectionService);
   }
 
   @Test
@@ -484,9 +598,15 @@ class DocumentTemplateBootstrapServiceTest {
         null,
         "Header",
         """
-        ENERGY ACT 1976
-        PETROLEUM PRODUCTION LICENCE No(s). ((LICENCE_REFERENCE_LIST)) (“Licence(s)”)
-        ((CONSENT_LENGTH_UPPER_CASE)) VENT CONSENT
+        <p>Date: ((ISSUE_DATE))</p>\
+        <p>\
+        <strong>\
+        ENERGY ACT 1976<br/>\
+        PETROLEUM PRODUCTION LICENCE No(s). ((LICENCE_REFERENCE_LIST)) (“Licence(s)”)<br/>\
+        ((CONSENT_LENGTH_UPPER_CASE)) VENT CONSENT\
+        </strong>\
+        </p>\
+        <p>To: Licensees of Petroleum Production Licences ((LICENCE_REFERENCE_LIST)) (listed in schedule 2 hereto).</p>\
         """,
         null,
         false,
@@ -499,9 +619,11 @@ class DocumentTemplateBootstrapServiceTest {
         null,
         "Consents to",
         """
+        <p style="text-align: justify;">\
         Pursuant to section 12A(1)(b) of the Energy Act 1976, the ((REGULATOR_LEGAL_NAME)) hereby consents to the \
         releasing unignited into the atmosphere of natural gas obtained from those parts of the licensed area of the \
-        Licence(s) known as the ((PRIMARY_AND_ADDITIONAL_FIELD_NAMES)) field(s) during the Period.
+        Licence(s) known as the ((PRIMARY_AND_ADDITIONAL_FIELD_NAMES)) field(s) during the Period.\
+        </p>\
         """,
         null,
         true,
@@ -514,8 +636,10 @@ class DocumentTemplateBootstrapServiceTest {
         null,
         "This consent shall commence on",
         """
+        <p style="text-align: justify;">\
         This consent shall commence on ((CONSENT_START_DATE)) and expire on the earlier of ((CONSENT_END_DATE)) or the \
-        date of expiry or determination of any Licence (the “Period").
+        date of expiry or determination of any Licence (the “<strong>Period</strong>”).\
+        </p>\
         """,
         null,
         true,
@@ -528,8 +652,10 @@ class DocumentTemplateBootstrapServiceTest {
         null,
         "This consent is given",
         """
+        <p style="text-align: justify;">\
         This consent is given subject always to the condition that natural gas shall not be disposed of at an average \
-        daily rate greater than the maximum specified in the schedule hereto.
+        daily rate greater than the maximum specified in the schedule hereto.\
+        </p>\
         """,
         null,
         true,
@@ -541,7 +667,11 @@ class DocumentTemplateBootstrapServiceTest {
         fieldVentConsentDocumentTemplateDto,
         null,
         "TODO FCS-610: This consent supersedes",
-        "[This consent supersedes the consent [CONSENT REFERENCE] granted by the ((REGULATOR_LEGAL_NAME)) dated [DATE].]",
+        """
+        <p style="text-align: justify;">\
+        [This consent supersedes the consent [CONSENT REFERENCE] granted by the ((REGULATOR_LEGAL_NAME)) dated [DATE].]\
+        </p>\
+        """,
         null,
         true,
         false,
@@ -551,7 +681,7 @@ class DocumentTemplateBootstrapServiceTest {
     verify(documentTemplateSectionService).createDocumentTemplateSection(
         fieldVentConsentDocumentTemplateDto,
         null,
-        "Schedule",
+        "Schedule 1",
         "((SCHEDULE))",
         null,
         false,
@@ -562,17 +692,23 @@ class DocumentTemplateBootstrapServiceTest {
     verify(documentTemplateSectionService).createDocumentTemplateSection(
         fieldVentConsentDocumentTemplateDto,
         null,
-        "Backplate",
+        "Schedule 2",
         """
-        ((PRIMARY_AND_ADDITIONAL_FIELD_NAMES))
-        LICENCE(S) ((LICENCE_REFERENCE_LIST))
-        FIELD EQUITY PARTNER(S) ((FIELD_EQUITY_PARTNER_NAME_LIST))
+        <p style="text-align: center;"><strong>SCHEDULE 2</strong></p>\
+        <p><strong>Fields</strong></p>\
+        <p>((PRIMARY_AND_ADDITIONAL_FIELD_NAMES))</p>\
+        <p><strong>Licences</strong></p>\
+        <p>((LICENCE_REFERENCE_LIST))</p>\
+        <p><strong>Field Equity Partners</strong></p>\
+        <p>((FIELD_EQUITY_PARTNER_NAME_LIST))</p>\
         """,
         null,
         false,
         true,
         7
     );
+
+    verifyNoMoreInteractions(documentTemplateSectionService);
   }
 
   @Test
@@ -596,8 +732,13 @@ class DocumentTemplateBootstrapServiceTest {
         null,
         "Header",
         """
-        ENERGY ACT 1976
-        CONSENT TO DISPOSE OF NATURAL GAS AT ((FACILITY_NAME))
+        <p>Date: ((ISSUE_DATE))</p>
+        <p>\
+        <strong>\
+        ENERGY ACT 1976<br/>\
+        CONSENT TO DISPOSE OF NATURAL GAS AT ((FACILITY_NAME))\
+        </strong>\
+        </p>\
         """,
         null,
         false,
@@ -610,10 +751,12 @@ class DocumentTemplateBootstrapServiceTest {
         null,
         "Consents to",
         """
+        <p style="text-align: justify;">\
         Pursuant to section 12A(1)(a) of the Energy Act 1976, the ((REGULATOR_LEGAL_NAME)) hereby consents to the \
         releasing unignited into the atmosphere from the relevant oil processing facility or relevant gas processing \
-        facility, being the ((FACILITY_NAME)) (the “Facility”), of natural gas originally won from the fields with a \
-        right to have the natural gas processed by the Facility.
+        facility, being the ((FACILITY_NAME)) (the “<strong>Facility</strong>”), of natural gas originally won from \
+        the fields with a right to have the natural gas processed by the Facility.\
+        </p>\
         """,
         null,
         true,
@@ -625,7 +768,12 @@ class DocumentTemplateBootstrapServiceTest {
         terminalVentConsentDocumentTemplateDto,
         null,
         "This consent shall commence on",
-        "This consent shall commence on ((CONSENT_START_DATE)) and expire on ((CONSENT_END_DATE)) (the “Period”).",
+        """
+        <p style="text-align: justify;">\
+        This consent shall commence on ((CONSENT_START_DATE)) and expire on ((CONSENT_END_DATE)) \
+        (the “<strong>Period</strong>”).\
+        </p>\
+        """,
         null,
         true,
         false,
@@ -637,8 +785,10 @@ class DocumentTemplateBootstrapServiceTest {
         null,
         "This consent is given",
         """
+        <p style="text-align: justify;">\
         This consent is given subject always to the condition that, during the Period, natural gas shall not be \
-        disposed of at an average daily rate greater than the maximum specified in the schedule hereto.
+        disposed of at an average daily rate greater than the maximum specified in the schedule hereto.\
+        </p>\
         """,
         null,
         true,
@@ -650,7 +800,12 @@ class DocumentTemplateBootstrapServiceTest {
         terminalVentConsentDocumentTemplateDto,
         null,
         "TODO FCS-610: This consent supersedes",
-        "[This consent supersedes the consent [CONSENT REFERENCE] granted by the ((REGULATOR_LEGAL_NAME)) dated [DATE].]",
+        """
+        <p style="text-align: justify;">\
+        [This consent supersedes the consent [CONSENT REFERENCE] granted by the ((REGULATOR_LEGAL_NAME)) \
+        dated [DATE].]\
+        </p>
+        """,
         null,
         true,
         false,
@@ -667,6 +822,8 @@ class DocumentTemplateBootstrapServiceTest {
         true,
         6
     );
+
+    verifyNoMoreInteractions(documentTemplateSectionService);
   }
 
   @Test
@@ -690,27 +847,37 @@ class DocumentTemplateBootstrapServiceTest {
         null,
         "Cover letter",
         """
-        Regulation Directorate
-        3rd Floor
-        1 Marischal Square
-        Broad Street
-        Aberdeen
-        AB10 1BL
-        
-        ((ISSUE_DATE))
-                   
-        ((PRIMARY_FIELD_NAME)) Field – Serving Notice for Flaring and Commissioning Strategy Requested
-                
-        I now serve the formal notice in Annex A which invites you to make an application in writing for consent to flare gas \
-        throughout the life of field. Annex B outlines the requirements for the Commissioning Strategy document which must be \
-        submitted 6 months prior to first hydrocarbons for ((REGULATOR_MNEMONIC)) consideration.
-                
+        <p style="text-align: right">\
+        Regulation Directorate<br/>\
+        3rd Floor<br/>\
+        1 Marischal Square<br/>\
+        Broad Street<br/>\
+        Aberdeen<br/>\
+        AB10 1BL<br/>\
+        </p>\
+        <p>((ISSUE_DATE))</p>\
+        <p>\
+        <strong>\
+        <u>\
+        ((PRIMARY_FIELD_NAME)) Field – Serving Notice for Flaring and Commissioning Strategy Requested\
+        </u>\
+        </strong>\
+        </p>\
+        <p style="text-align: justify;">\
+        I now serve the formal notice in Annex A which invites you to make an application in writing for consent to \
+        flare gas throughout the life of field. Annex B outlines the requirements for the Commissioning Strategy \
+        document which must be submitted 6 months prior to first hydrocarbons for ((REGULATOR_MNEMONIC)) \
+        consideration.\
+        </p>\
+        <p style="text-align: justify;">\
         The ((REGULATOR_NAME)) (((REGULATOR_MNEMONIC))) is the business name of the ((REGULATOR_LEGAL_NAME)) \
-        (((REGULATOR_LEGAL_MNEMONIC))). The ((REGULATOR_LEGAL_MNEMONIC)) remains the legal name of the company. References to \
-        the ((REGULATOR_MNEMONIC)) should be interpreted as the ((REGULATOR_LEGAL_MNEMONIC)).
-                
-        Yours sincerely
-        ((CONSENTS_TEAM_NAME))
+        (((REGULATOR_LEGAL_MNEMONIC))). The ((REGULATOR_LEGAL_MNEMONIC)) remains the legal name of the company. \
+        References to the ((REGULATOR_MNEMONIC)) should be interpreted as the ((REGULATOR_LEGAL_MNEMONIC)).\
+        </p>\
+        <p>\
+        Yours sincerely<br/>\
+        ((CONSENTS_TEAM_NAME))\
+        </p>\
         """,
         null,
         false,
@@ -723,27 +890,33 @@ class DocumentTemplateBootstrapServiceTest {
         null,
         "Annex A",
         """
-        Annex A
-
-        PETROLEUM PRODUCTION LICENCE NO(S) ((LICENCE_REFERENCE_LIST))
-        APPLICATIONS TO FLARE GAS FROM THE ((PRIMARY_FIELD_NAME)) FIELD
-
-        The ((REGULATOR_LEGAL_NAME)) hereby gives notice, in accordance with paragraph (3)(a) of the clause titled “Avoidance of \
-        harmful methods of working” set out in or otherwise incorporated into the Licence(s) that, in consequence of plans \
-        comprised in the document entitled “((FIELD_DEVELOPMENT_PLAN_TITLE))” submitted to the ((REGULATOR_LEGAL_NAME)) on \
-        ((FIELD_DEVELOPMENT_PLAN_DATE)) for the getting of petroleum from those parts of the licensed area known as the \
-        ((PRIMARY_FIELD_NAME)) field, which the ((REGULATOR_LEGAL_NAME)) considers reasonable, the ((REGULATOR_LEGAL_NAME)) will \
-        entertain applications in writing from ((PRIMARY_OPERATOR_NAME)) for consent to flare gas throughout the life of the \
-        ((PRIMARY_FIELD_NAME)) field in any case where the application specifies the date on which it is proposed flaring should \
-        commence, being a date not before the expiration of 7 days, beginning with the date on which the \
-        ((REGULATOR_LEGAL_NAME)) receives the application.
-
+        <p><strong>Annex A</strong></p>\
+        <p>\
+        <strong>\
+        PETROLEUM PRODUCTION LICENCE NO(S) ((LICENCE_REFERENCE_LIST))<br/>\
+        APPLICATIONS TO FLARE GAS FROM THE ((PRIMARY_FIELD_NAME)) FIELD\
+        </strong>\
+        </p>\
+        <p style="text-align: justify;">\
+        The ((REGULATOR_LEGAL_NAME)) hereby gives notice, in accordance with paragraph (3)(a) of the clause titled \
+        “Avoidance of harmful methods of working” set out in or otherwise incorporated into the Licence(s) that, in \
+        consequence of plans comprised in the document entitled “((FIELD_DEVELOPMENT_PLAN_TITLE))” submitted to the \
+        ((REGULATOR_LEGAL_NAME)) on ((FIELD_DEVELOPMENT_PLAN_DATE)) for the getting of petroleum from those parts of \
+        the licensed area known as the ((PRIMARY_FIELD_NAME)) field, which the ((REGULATOR_LEGAL_NAME)) considers \
+        reasonable, the ((REGULATOR_LEGAL_NAME)) will entertain applications in writing from ((PRIMARY_OPERATOR_NAME)) \
+        for consent to flare gas throughout the life of the ((PRIMARY_FIELD_NAME)) field in any case where the \
+        application specifies the date on which it is proposed flaring should commence, being a date not before the \
+        expiration of 7 days, beginning with the date on which the ((REGULATOR_LEGAL_NAME)) receives the application.\
+        </p>\
+        <p style="text-align: justify;">\
         The ((REGULATOR_NAME)) (((REGULATOR_MNEMONIC))) is the business name of the ((REGULATOR_LEGAL_NAME)) \
-        (((REGULATOR_LEGAL_MNEMONIC))). The ((REGULATOR_LEGAL_MNEMONIC)) remains the legal name of the company. References to \
-        the ((REGULATOR_MNEMONIC)) should be interpreted as the ((REGULATOR_LEGAL_MNEMONIC)).
-
-        Yours sincerely
-        ((CONSENTS_TEAM_NAME))
+        (((REGULATOR_LEGAL_MNEMONIC))). The ((REGULATOR_LEGAL_MNEMONIC)) remains the legal name of the company. \
+        References to the ((REGULATOR_MNEMONIC)) should be interpreted as the ((REGULATOR_LEGAL_MNEMONIC)).\
+        </p>\
+        <p>\
+        Yours sincerely<br/>\
+        ((CONSENTS_TEAM_NAME))\
+        </p>\
         """,
         null,
         false,
@@ -756,53 +929,62 @@ class DocumentTemplateBootstrapServiceTest {
         null,
         "Annex B",
         """
-        Annex B
-
-        ((PRIMARY_FIELD_NAME)) FIELD – START-UP FLARE CONSENT AND COMMISSIONING STRATEGY
-
-        I now outline the start-up requirements for the ((PRIMARY_FIELD_NAME)) Field. The document should include the following: -
-
-        History of ((PRIMARY_FIELD_NAME)) – An introductory paragraph covering the history of the Field.
-
-        Production Facilities – A brief description of the production facilities and how the various components will be \
-        commissioned from start-up to the end of the commissioning period.
-
-        Commissioning – Details of how the system(s) will be commissioned, how wells will be brought on stream during the \
-        commissioning period, the anticipated production rates, the commissioning milestones on the gas side (where applicable) \
-        e.g. predicted date of fuel gas, gas export, the length of time to reach stability and the design flaring level.
-
-        Flaring / Venting - An outline of the anticipated flaring during the commissioning period and target flare for the field \
-        when it is operating at stable conditions. Anticipated flaring levels for the first 28 days of production, with \
-        assumptions. Consents to flare gas will be normally remain on short-term periods until there is an improvement in the \
-        plant and stability is reached.
-
-        Reporting – During the period of short-term consents, reports will normally be called for on a weekly basis. These will \
-        normally include:
-
-        a) Details of the gas handling plant during the period.
-
-        b) Daily rates in respect of oil and gas production, fuel gas, gas export and gas flare rates.
-
-        c) Cumulative averages for production and flare.
-
-        d) Monthly calculations of gas compressor efficiency.
-
-        Once we have received and reviewed your commissioning strategy document, we may be in touch to arrange a meeting to \
-        discuss the plan in more detail. Should you have any questions regarding the content please do not hesitate to contact us.
-
-        Please email your plan to ((REGULATOR_EMAIL)).
-        
+        <p><strong>Annex B</strong></p>\
+        <p><strong>((PRIMARY_FIELD_NAME)) FIELD – START-UP FLARE CONSENT AND COMMISSIONING STRATEGY</strong></p>\
+        <p style="text-align: justify;">\
+        I now outline the start-up requirements for the ((PRIMARY_FIELD_NAME)) Field. The document should include the \
+        following: -\
+        </p>\
+        <p style="text-align: justify;">\
+        <strong>History of ((PRIMARY_FIELD_NAME))</strong> – An introductory paragraph covering the history of the \
+        Field.\
+        </p>\
+        <p style="text-align: justify;">\
+        <strong>Production Facilities</strong> – A brief description of the production facilities and how the various \
+        components will be commissioned from start-up to the end of the commissioning period.\
+        </p>\
+        <p style="text-align: justify;">\
+        <strong>Commissioning</strong> – Details of how the system(s) will be commissioned, how wells will be brought \
+        on stream during the commissioning period, the anticipated production rates, the commissioning milestones on \
+        the gas side (where applicable) e.g. predicted date of fuel gas, gas export, the length of time to reach \
+        stability and the design flaring level.\
+        </p>\
+        <p style="text-align: justify;">\
+        <strong>Flaring / Venting</strong> - An outline of the anticipated flaring during the commissioning period and \
+        target flare for the field when it is operating at stable conditions. Anticipated flaring levels for the first \
+        28 days of production, with assumptions. Consents to flare gas will be normally remain on short-term periods \
+        until there is an improvement in the plant and stability is reached.\
+        </p>\
+        <p style="text-align: justify;">\
+        <strong>Reporting</strong> – During the period of short-term consents, reports will normally be called for on \
+        a weekly basis. These will normally include:\
+        </p>\
+        <p>a) Details of the gas handling plant during the period.</p>\
+        <p>b) Daily rates in respect of oil and gas production, fuel gas, gas export and gas flare rates.</p>\
+        <p>c) Cumulative averages for production and flare.</p>\
+        <p>d) Monthly calculations of gas compressor efficiency.</p>\
+        <p>\
+        Once we have received and reviewed your commissioning strategy document, we may be in touch to arrange a \
+        meeting to discuss the plan in more detail. Should you have any questions regarding the content please do not \
+        hesitate to contact us.\
+        </p>\
+        <p>Please email your plan to ((REGULATOR_EMAIL)).</p>\
+        <p style="text-align: justify;">\
         The ((REGULATOR_NAME)) (((REGULATOR_MNEMONIC))) is the business name of the ((REGULATOR_LEGAL_NAME)) \
-        (((REGULATOR_LEGAL_MNEMONIC))). The ((REGULATOR_LEGAL_MNEMONIC)) remains the legal name of the company. References to \
-        the ((REGULATOR_MNEMONIC)) should be interpreted as the ((REGULATOR_LEGAL_MNEMONIC)).
-
-        Yours sincerely
-        ((CONSENTS_TEAM_NAME))
+        (((REGULATOR_LEGAL_MNEMONIC))). The ((REGULATOR_LEGAL_MNEMONIC)) remains the legal name of the company. \
+        References to the ((REGULATOR_MNEMONIC)) should be interpreted as the ((REGULATOR_LEGAL_MNEMONIC)).\
+        </p>\
+        <p>\
+        Yours sincerely<br/>\
+        ((CONSENTS_TEAM_NAME))\
+        </p>\
         """,
         null,
         false,
         true,
         3
     );
+
+    verifyNoMoreInteractions(documentTemplateSectionService);
   }
 }

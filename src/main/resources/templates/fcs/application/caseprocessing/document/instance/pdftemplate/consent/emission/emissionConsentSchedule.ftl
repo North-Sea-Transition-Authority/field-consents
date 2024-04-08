@@ -1,5 +1,5 @@
 <div class="govuk-body govuk-!-text-align-centre fcs-schedule-header">
-  <p><strong>SCHEDULE</strong></p>
+  <p><strong>SCHEDULE 1</strong></p>
   <p><strong>Maximum Average Daily Rate</strong></p>
 </div>
 
