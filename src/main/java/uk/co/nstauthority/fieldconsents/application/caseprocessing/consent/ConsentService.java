@@ -76,6 +76,16 @@ public class ConsentService {
               """,
           user.wuaId(), applicationVersion.getId(), exception);
     }
+    try {
+      consentEmailService.sendConsentIssuedEmailToCaseOfficer(applicationVersion);
+    } catch (Exception exception) {
+      LOGGER.error("""
+              An attempt to send a consent issued notification to case officer \
+              by user with wuaId [{}] for application version with id [{}] failed. \
+              Note: this hasn't prevented the consent being issued.
+              """,
+          user.wuaId(), applicationVersion.getId(), exception);
+    }
   }
 
   void generateDocumentInstancesAndSaveToConsent(Application application, Consent consent) {

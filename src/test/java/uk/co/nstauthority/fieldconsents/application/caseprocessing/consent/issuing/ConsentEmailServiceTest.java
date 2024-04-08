@@ -9,6 +9,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.CACHED_PRIMARY_OPERATOR_NAME_1;
 import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.APPLICATION_VERSION_DOMAIN_REFERENCE;
+import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.CASE_OFFICER;
+import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.CASE_OFFICER_EPU;
 import static uk.co.nstauthority.fieldconsents.email.EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME;
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.ENERGY_PORTAL_USER_DTO;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.ORG_GROUP_1;
@@ -290,6 +292,38 @@ class ConsentEmailServiceTest {
         .isEqualTo(FieldConsentsEmailRecipient.from(CONSENT_RECIPIENT_1).getEmailAddress());
 
     // verify domain reference
+    assertThat(domainReferenceCaptor.getValue().getDomainId())
+        .isEqualTo(applicationVersion.getId().toString());
+
+    assertThat(domainReferenceCaptor.getValue().getDomainType())
+        .isEqualTo(APPLICATION_VERSION_DOMAIN_REFERENCE);
+  }
+
+  @Test
+  void sendConsentIssuedEmailToCaseOfficer() {
+    when(emailService.getTemplate(GovukNotifyTemplate.CONSENT_ISSUED_TO_CASE_OFFICER, applicationVersion))
+        .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
+
+    applicationVersion.setCaseOfficerWuaId(CASE_OFFICER.wuaId());
+    when(energyPortalUserService.getByWuaId(any())).thenReturn(CASE_OFFICER_EPU);
+
+    consentEmailService.sendConsentIssuedEmailToCaseOfficer(applicationVersion);
+
+    verify(emailService).sendEmail(
+        templateCaptor.capture(),
+        emailRecipientCaptor.capture(),
+        domainReferenceCaptor.capture()
+    );
+
+    assertThat(templateCaptor.getValue().getMailMergeFields())
+        .extracting(MailMergeField::name, MailMergeField::value)
+        .containsOnly(
+            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, CASE_OFFICER_EPU.displayName())
+        );
+
+    assertThat(emailRecipientCaptor.getValue().getEmailAddress())
+        .isEqualTo(FieldConsentsEmailRecipient.from(CASE_OFFICER_EPU).getEmailAddress());
+
     assertThat(domainReferenceCaptor.getValue().getDomainId())
         .isEqualTo(applicationVersion.getId().toString());
 

@@ -114,10 +114,11 @@ class ConsentServiceTest {
 
     verify(applicationService).completeApplication(applicationVersion);
     verify(consentEmailService).sendConsentIssuedEmailToOperator(applicationVersion);
+    verify(consentEmailService).sendConsentIssuedEmailToCaseOfficer(applicationVersion);
   }
 
   @Test
-  void issueConsent_whenSendConsentIssuingEmailToOperatorFails_thenConsentIsStillIssued() {
+  void issueConsent_whenSendConsentIssuedEmailToOperatorFails_thenConsentIsStillIssued() {
     var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
     var application = applicationVersion.getApplication();
 
@@ -159,6 +160,51 @@ class ConsentServiceTest {
 
     verify(applicationService).completeApplication(applicationVersion);
     verify(consentEmailService).sendConsentIssuedEmailToOperator(applicationVersion);
+  }
+
+  @Test
+  void issueConsent_whenSendConsentIssuedEmailToCaseOfficerFails_thenConsentIsStillIssued() {
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var application = applicationVersion.getApplication();
+
+    var user = ServiceUserDetailTestUtil.Builder().build();
+
+    var consentCaptor = ArgumentCaptor.forClass(Consent.class);
+
+    doNothing().when(consentService).generateDocumentInstancesAndSaveToConsent(any(), any());
+    doNothing().when(consentService).copySupportingDocumentsToConsent(any(), any());
+
+    // WHEN the email service call throws an exception
+    doThrow(new RuntimeException("Failed to send email"))
+        .when(consentEmailService)
+        .sendConsentIssuedEmailToCaseOfficer(applicationVersion);
+
+    // THEN it will be caught by the caller and not re-thrown
+    assertDoesNotThrow(
+        () -> consentService.issueConsent(applicationVersion, user)
+    );
+
+    verify(consentRepository).save(consentCaptor.capture());
+
+    var consent = consentCaptor.getValue();
+
+    assertThat(consent)
+        .isNotNull()
+        .extracting(
+            Consent::getApplication,
+            Consent::getIssuedByWuaId,
+            Consent::getIssuedInstant
+        ).containsExactly(
+            application,
+            user.wuaId(),
+            clock.instant()
+        );
+
+    verify(consentService).generateDocumentInstancesAndSaveToConsent(application, consent);
+    verify(consentService).copySupportingDocumentsToConsent(application, consent);
+
+    verify(applicationService).completeApplication(applicationVersion);
+    verify(consentEmailService).sendConsentIssuedEmailToCaseOfficer(applicationVersion);
   }
 
   @Test

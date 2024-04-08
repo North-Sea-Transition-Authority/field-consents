@@ -5,6 +5,7 @@ import static uk.co.nstauthority.fieldconsents.email.EmailService.RECIPIENT_IDEN
 import java.util.HashSet;
 import java.util.Set;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.digitalnotificationlibrary.core.notification.MergedTemplate;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.email.EmailService;
 import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipient;
@@ -87,5 +88,22 @@ public class ConsentEmailService {
       }
     });
     return emailRecipients;
+  }
+
+  public void sendConsentIssuedEmailToCaseOfficer(ApplicationVersion applicationVersion) {
+    var caseOfficer = FieldConsentsEmailRecipient.from(
+        energyPortalUserService.getByWuaId(WebUserAccountId.from(applicationVersion.getCaseOfficerWuaId()))
+    );
+
+    MergedTemplate mergedTemplate = emailService
+        .getTemplate(GovukNotifyTemplate.CONSENT_ISSUED_TO_CASE_OFFICER, applicationVersion)
+        .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, caseOfficer.displayName())
+        .merge();
+
+    emailService.sendEmail(
+        mergedTemplate,
+        caseOfficer,
+        applicationVersion
+    );
   }
 }
