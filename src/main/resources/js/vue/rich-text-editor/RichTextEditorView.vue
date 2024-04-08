@@ -42,6 +42,10 @@ const editor = useEditor({
     OrderedList,
     ListItem
   ],
+  parseOptions: {
+     // The following must be set or `&nbsp;` will be inserted on lines which end with whitespace. When used with openhtmltopdf this breaks PDF rendering
+    preserveWhitespace: true
+  },
   onUpdate: ({editor}) => editorOutput.setAttribute("value", editor.getHTML()),
 });
 
