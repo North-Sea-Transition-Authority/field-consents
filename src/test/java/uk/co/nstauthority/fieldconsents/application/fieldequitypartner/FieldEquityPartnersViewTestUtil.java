@@ -10,11 +10,14 @@ public class FieldEquityPartnersViewTestUtil {
 
   public static class Builder {
 
-    private List<String> fieldEquityPartnerNames = List.of("BP", "SHELL");
-    private List<String> organisationGroupsWithoutConsentRecipients = List.of("BP");
+    private List<FormattedFieldEquityPartner> formattedFieldEquityPartners = List.of(
+        FormattedFieldEquityPartnerTestUtil.newBuilder().build(),
+        FormattedFieldEquityPartnerTestUtil.newBuilder().withOrganisationUnitName("SHELL").withRegisteredNumber("100").build()
+    );
+    private List<String> organisationGroupsWithoutConsentRecipients = List.of("SHELL GROUP");
 
-    public Builder withFieldEquityPartnerNames(List<String> fieldEquityPartnerNames) {
-      this.fieldEquityPartnerNames = fieldEquityPartnerNames;
+    public Builder withFormattedFieldEquityPartners(List<FormattedFieldEquityPartner> formattedFieldEquityPartners) {
+      this.formattedFieldEquityPartners = formattedFieldEquityPartners;
       return this;
     }
 
@@ -25,7 +28,7 @@ public class FieldEquityPartnersViewTestUtil {
 
     public FieldEquityPartnersView build() {
       return new FieldEquityPartnersView(
-          fieldEquityPartnerNames,
+          formattedFieldEquityPartners,
           organisationGroupsWithoutConsentRecipients
       );
     }

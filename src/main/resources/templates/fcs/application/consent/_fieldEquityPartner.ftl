@@ -32,8 +32,8 @@
 <#macro summaryList fieldEquityPartnersView>
   <@fdsDetails.summaryDetails summaryTitle="Field Equity Partners">
     <ul class="govuk-list govuk-list--bullet">
-      <#list fieldEquityPartnersView.fieldEquityPartnerNames() as fieldEquityPartnerName>
-        <li class="govuk-list__item">${fieldEquityPartnerName}</li>
+      <#list fieldEquityPartnersView.formattedFieldEquityPartners() as formattedFieldEquityPartner>
+        <li class="govuk-list__item">${formattedFieldEquityPartner.getFormattedValue()}</li>
       </#list>
     </ul>
   </@fdsDetails.summaryDetails>

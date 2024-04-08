@@ -44,16 +44,15 @@ public class FieldEquityPartnerService {
 
   public FieldEquityPartnersView getFieldEquityPartnersView(ApplicationVersion applicationVersion) {
     var fields = getFieldsWithFieldEquityPartners(applicationVersion);
-
-    var fieldEquityPartnerNames = getFieldEquityPartnerNames(fields);
+    var formattedFieldEquityPartners = getFormattedFieldEquityPartners(fields);
     var organisationGroupNamesWithoutConsentRecipients = getOrganisationGroupNamesWithoutConsentRecipients(fields);
 
-    return new FieldEquityPartnersView(fieldEquityPartnerNames, organisationGroupNamesWithoutConsentRecipients);
+    return new FieldEquityPartnersView(formattedFieldEquityPartners, organisationGroupNamesWithoutConsentRecipients);
   }
 
-  public List<String> getFieldEquityPartnerNames(ApplicationVersion applicationVersion) {
+  public List<FormattedFieldEquityPartner> getFormattedFieldEquityPartners(ApplicationVersion applicationVersion) {
     var fields = getFieldsWithFieldEquityPartners(applicationVersion);
-    return getFieldEquityPartnerNames(fields);
+    return getFormattedFieldEquityPartners(fields);
   }
 
   List<Field> getFieldsWithFieldEquityPartners(ApplicationVersion applicationVersion) {
@@ -78,6 +77,7 @@ public class FieldEquityPartnerService {
         .fieldEquityPartners()
           .organisationUnit()
             .name()
+            .registeredNumber()
             .organisationGroups()
               .organisationGroupId()
               .name()
@@ -87,11 +87,11 @@ public class FieldEquityPartnerService {
     return fieldApi.getFieldsByIds(fieldIds, query, FIELD_EQUITY_PARTNER_LOOKUP_REQUEST_PURPOSE);
   }
 
-  List<String> getFieldEquityPartnerNames(List<Field> fields) {
+  List<FormattedFieldEquityPartner> getFormattedFieldEquityPartners(List<Field> fields) {
     return fields
         .stream()
         .flatMap(field -> field.getFieldEquityPartners().stream())
-        .map(fieldEquityPartner -> fieldEquityPartner.getOrganisationUnit().getName())
+        .map(FormattedFieldEquityPartner::from)
         .distinct()
         .sorted()
         .toList();

@@ -13,7 +13,7 @@ public class DocumentMailMergeFieldDisplayOrders {
   public static final int CONSENT_LENGTH_UPPER_CASE = 8;
   public static final int FIELD_DEVELOPMENT_PLAN_TITLE = 9;
   public static final int FIELD_DEVELOPMENT_PLAN_DATE = 10;
-  public static final int FIELD_EQUITY_PARTNER_NAME_LIST = 11;
+  public static final int FIELD_EQUITY_PARTNER_LIST = 11;
   public static final int LICENCE_REFERENCE_LIST = 12;
   public static final int REGULATOR_NAME = 13;
   public static final int REGULATOR_MNEMONIC = 14;

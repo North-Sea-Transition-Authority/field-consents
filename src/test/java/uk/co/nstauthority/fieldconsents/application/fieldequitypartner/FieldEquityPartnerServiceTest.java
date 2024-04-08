@@ -66,22 +66,40 @@ class FieldEquityPartnerServiceTest {
 
   @Test
   void getFieldEquityPartnersView_byApplicationVersion() {
-    var fieldEquityPartnerNames = List.of("a", "b", "c");
-    var organisationGroupsWithoutConsentRecipients = List.of("a", "b");
-
     var fields = List.of(
-        getFieldWithFieldEquityPartnerName("a"),
-        getFieldWithFieldEquityPartnerName("b"),
-        getFieldWithFieldEquityPartnerName("c")
+        getFieldWithFieldEquityPartner("aaa"),
+        getFieldWithFieldEquityPartner("b"),
+        getFieldWithFieldEquityPartner("cc")
     );
 
+    var formattedFieldEquityPartners = fields.stream()
+        .map(Field::getFieldEquityPartners)
+        .flatMap(List::stream)
+        .map(FormattedFieldEquityPartner::from)
+        .toList();
+
+    var organisationGroupsWithoutConsentRecipients = List.of("a", "b");
+
     doReturn(fields).when(fieldEquityPartnerService).getFieldsWithFieldEquityPartners(applicationVersion);
-    doReturn(fieldEquityPartnerNames).when(fieldEquityPartnerService).getFieldEquityPartnerNames(fields);
+    doReturn(formattedFieldEquityPartners).when(fieldEquityPartnerService).getFormattedFieldEquityPartners(fields);
     doReturn(organisationGroupsWithoutConsentRecipients).when(fieldEquityPartnerService).getOrganisationGroupNamesWithoutConsentRecipients(fields);
 
     var actualFieldEquityPartnersView = fieldEquityPartnerService.getFieldEquityPartnersView(applicationVersion);
     var expectedFieldEquityPartnersView = FieldEquityPartnersViewTestUtil.newBuilder()
-        .withFieldEquityPartnerNames(fieldEquityPartnerNames)
+        .withFormattedFieldEquityPartners(List.of(
+            FormattedFieldEquityPartnerTestUtil.newBuilder()
+                .withOrganisationUnitName("aaa")
+                .withRegisteredNumber("3")
+                .build(),
+            FormattedFieldEquityPartnerTestUtil.newBuilder()
+                .withOrganisationUnitName("b")
+                .withRegisteredNumber("1")
+                .build(),
+            FormattedFieldEquityPartnerTestUtil.newBuilder()
+                .withOrganisationUnitName("cc")
+                .withRegisteredNumber("2")
+                .build()
+        ))
         .withOrganisationGroupsWithoutConsentRecipients(organisationGroupsWithoutConsentRecipients)
         .build();
 
@@ -89,18 +107,24 @@ class FieldEquityPartnerServiceTest {
   }
 
   @Test
-  void getFieldEquityPartnerNames_byApplicationVersion() {
+  void getFormattedFieldEquityPartners_byApplicationVersion() {
     var fields = List.of(
-        getFieldWithFieldEquityPartnerName("b"),
-        getFieldWithFieldEquityPartnerName("c"),
-        getFieldWithFieldEquityPartnerName("a")
+        getFieldWithFieldEquityPartner("b"),
+        getFieldWithFieldEquityPartner("c"),
+        getFieldWithFieldEquityPartner("a")
     );
-    var fieldEquityPartnerNames = List.of("a", "b", "c");
+
+    var formattedFieldEquityPartners = fields
+        .stream()
+        .map(Field::getFieldEquityPartners)
+        .flatMap(List::stream)
+        .map(FormattedFieldEquityPartner::from)
+        .toList();
 
     doReturn(fields).when(fieldEquityPartnerService).getFieldsWithFieldEquityPartners(applicationVersion);
-    doReturn(fieldEquityPartnerNames).when(fieldEquityPartnerService).getFieldEquityPartnerNames(fields);
+    doReturn(formattedFieldEquityPartners).when(fieldEquityPartnerService).getFormattedFieldEquityPartners(fields);
 
-    assertThat(fieldEquityPartnerService.getFieldEquityPartnerNames(applicationVersion)).isEqualTo(fieldEquityPartnerNames);
+    assertThat(fieldEquityPartnerService.getFormattedFieldEquityPartners(applicationVersion)).isEqualTo(formattedFieldEquityPartners);
   }
 
   @Test
@@ -125,9 +149,9 @@ class FieldEquityPartnerServiceTest {
     var fieldIds = applicationAssets.stream().map(ApplicationAsset::getAssetId).toList();
 
     var fields = List.of(
-        getFieldWithFieldEquityPartnerName("a"),
-        getFieldWithFieldEquityPartnerName("b"),
-        getFieldWithFieldEquityPartnerName("c")
+        getFieldWithFieldEquityPartner("a"),
+        getFieldWithFieldEquityPartner("b"),
+        getFieldWithFieldEquityPartner("c")
     );
 
     when(applicationAssetService.findAssetsByApplicationVersionAndAssetTypeAndAssetRoles(
@@ -142,7 +166,7 @@ class FieldEquityPartnerServiceTest {
   }
 
   @Test
-  void getFieldsWithFieldEquityPartners_withoutPrimaryField() {
+  void getFormattedFieldEquityPartners_withoutPrimaryField() {
     var nonPrimaryApplicationAssets = List.of(
         ApplicationAssetTestUtil.newBuilder()
             .withAssetId(1)
@@ -162,15 +186,19 @@ class FieldEquityPartnerServiceTest {
   }
 
   @Test
-  void getFieldEquityPartnerNames_byFields() {
+  void getFormattedFieldEquityPartners_byFields() {
     var fields = List.of(
-        getFieldWithFieldEquityPartnerName("b"),
-        getFieldWithFieldEquityPartnerName("c"),
-        getFieldWithFieldEquityPartnerName("a"),
-        getFieldWithFieldEquityPartnerName("a")
+        getFieldWithFieldEquityPartner("b"),
+        getFieldWithFieldEquityPartner("cc"),
+        getFieldWithFieldEquityPartner("aaa"),
+        getFieldWithFieldEquityPartner("aaa")
     );
 
-    assertThat(fieldEquityPartnerService.getFieldEquityPartnerNames(fields)).containsExactly("a", "b", "c");
+    assertThat(fieldEquityPartnerService.getFormattedFieldEquityPartners(fields)).containsExactly(
+        new FormattedFieldEquityPartner("aaa", "3"),
+        new FormattedFieldEquityPartner("b", "1"),
+        new FormattedFieldEquityPartner("cc", "2")
+    );
   }
 
   @Test
@@ -209,10 +237,13 @@ class FieldEquityPartnerServiceTest {
         .containsExactly(team2.getDisplayName());
   }
 
-  private Field getFieldWithFieldEquityPartnerName(String fieldEquityPartnerName) {
+  private Field getFieldWithFieldEquityPartner(String fieldEquityPartnerName) {
     var fieldEquityPartners = List.of(
         FieldEquityPartner.newBuilder()
-            .organisationUnit(OrganisationUnit.newBuilder().name(fieldEquityPartnerName).build())
+            .organisationUnit(OrganisationUnit.newBuilder()
+                .name(fieldEquityPartnerName)
+                .registeredNumber(String.valueOf(fieldEquityPartnerName.length()))
+                .build())
             .build()
     );
 

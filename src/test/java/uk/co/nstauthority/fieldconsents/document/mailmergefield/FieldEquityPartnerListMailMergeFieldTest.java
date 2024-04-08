@@ -19,14 +19,15 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceLinkingService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.DocumentInstanceDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.application.fieldequitypartner.FieldEquityPartnerService;
+import uk.co.nstauthority.fieldconsents.application.fieldequitypartner.FormattedFieldEquityPartner;
 import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateType;
 
 @ExtendWith(MockitoExtension.class)
-class FieldEquityPartnerNameListMailMergeFieldTest {
+class FieldEquityPartnerListMailMergeFieldTest {
 
-  private static final String MNEMONIC = "FIELD_EQUITY_PARTNER_NAME_LIST";
-  private static final String DESCRIPTION = "A list of field equity partner names associated to the fields on this application";
+  private static final String MNEMONIC = "FIELD_EQUITY_PARTNER_LIST";
+  private static final String DESCRIPTION = "A list of field equity partners associated to the fields on this application. Includes the organisation name and registered number";
 
   @Mock
   private ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService;
@@ -35,7 +36,7 @@ class FieldEquityPartnerNameListMailMergeFieldTest {
   private FieldEquityPartnerService fieldEquityPartnerService;
 
   @InjectMocks
-  private FieldEquityPartnerNameListMailMergeField fieldEquityPartnerNameListMailMergeField;
+  private FieldEquityPartnerListMailMergeField fieldEquityPartnerListMailMergeField;
 
   private ApplicationVersion applicationVersion;
 
@@ -46,12 +47,12 @@ class FieldEquityPartnerNameListMailMergeFieldTest {
 
   @Test
   void getMnemonic() {
-    assertThat(fieldEquityPartnerNameListMailMergeField.getMnemonic()).isEqualTo(MNEMONIC);
+    assertThat(fieldEquityPartnerListMailMergeField.getMnemonic()).isEqualTo(MNEMONIC);
   }
 
   @Test
   void getDescription() {
-    assertThat(fieldEquityPartnerNameListMailMergeField.getDescription()).isEqualTo(DESCRIPTION);
+    assertThat(fieldEquityPartnerListMailMergeField.getDescription()).isEqualTo(DESCRIPTION);
   }
 
   @ParameterizedTest
@@ -61,20 +62,20 @@ class FieldEquityPartnerNameListMailMergeFieldTest {
         .withMnemonic(documentTemplateType.getMnemonic())
         .build();
 
-    assertThat(fieldEquityPartnerNameListMailMergeField.isApplicable(documentTemplateDto))
+    assertThat(fieldEquityPartnerListMailMergeField.isApplicable(documentTemplateDto))
         .isEqualTo(documentTemplateType.isApplicableToFieldApplications());
   }
 
   @Test
   void resolve() {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
-    var fieldEquityPartnerNames = List.of("first", "second", "third");
+    var formattedFieldEquityPartner = new FormattedFieldEquityPartner("first", "001");
+    var formattedFieldEquityPartners = List.of(formattedFieldEquityPartner);
 
     when(applicationDocumentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto)).thenReturn(applicationVersion);
-    when(fieldEquityPartnerService.getFieldEquityPartnerNames(applicationVersion)).thenReturn(fieldEquityPartnerNames);
+    when(fieldEquityPartnerService.getFormattedFieldEquityPartners(applicationVersion)).thenReturn(formattedFieldEquityPartners);
 
-    assertThat(fieldEquityPartnerNameListMailMergeField.resolve(documentInstanceDto))
-        .isEqualTo(DocumentMailMergeFieldResolveResult.success("first, second and third"));
+    assertThat(fieldEquityPartnerListMailMergeField.resolve(documentInstanceDto))
+        .isEqualTo(DocumentMailMergeFieldResolveResult.success(formattedFieldEquityPartner.getFormattedValue()));
   }
-
 }

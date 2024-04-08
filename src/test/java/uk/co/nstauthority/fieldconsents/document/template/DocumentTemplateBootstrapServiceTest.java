@@ -299,7 +299,7 @@ class DocumentTemplateBootstrapServiceTest {
         <p><strong>Licences</strong></p>\
         <p>((LICENCE_REFERENCE_LIST))</p>\
         <p><strong>Field Equity Partners</strong></p>\
-        <p>((FIELD_EQUITY_PARTNER_NAME_LIST))</p>\
+        <p>((FIELD_EQUITY_PARTNER_LIST))</p>\
         """,
         null,
         false,
@@ -451,7 +451,7 @@ class DocumentTemplateBootstrapServiceTest {
         <p><strong>Licences</strong></p>\
         <p>((LICENCE_REFERENCE_LIST))</p>\
         <p><strong>Field Equity Partners</strong></p>\
-        <p>((FIELD_EQUITY_PARTNER_NAME_LIST))</p>\
+        <p>((FIELD_EQUITY_PARTNER_LIST))</p>\
         """,
         null,
         false,
@@ -700,7 +700,7 @@ class DocumentTemplateBootstrapServiceTest {
         <p><strong>Licences</strong></p>\
         <p>((LICENCE_REFERENCE_LIST))</p>\
         <p><strong>Field Equity Partners</strong></p>\
-        <p>((FIELD_EQUITY_PARTNER_NAME_LIST))</p>\
+        <p>((FIELD_EQUITY_PARTNER_LIST))</p>\
         """,
         null,
         false,
