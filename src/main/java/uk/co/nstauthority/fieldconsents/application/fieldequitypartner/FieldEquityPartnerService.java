@@ -76,6 +76,7 @@ public class FieldEquityPartnerService {
     var query = new FieldsProjectionRoot()
         .fieldEquityPartners()
           .organisationUnit()
+            .organisationUnitId()
             .name()
             .registeredNumber()
             .organisationGroups()
@@ -124,5 +125,4 @@ public class FieldEquityPartnerService {
         .sorted()
         .toList();
   }
-
 }

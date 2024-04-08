@@ -40,6 +40,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issui
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.DocumentInstanceDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.PdfRenderingOptions;
+import uk.co.nstauthority.fieldconsents.application.fieldequitypartner.ConsentFieldEquityPartnerService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
 
@@ -65,6 +66,9 @@ class ConsentServiceTest {
   @Mock
   private ConsentEmailService consentEmailService;
 
+  @Mock
+  private ConsentFieldEquityPartnerService consentFieldEquityPartnerService;
+
   private final Clock clock = Clock.fixed(Instant.now(), ZoneId.systemDefault());
 
   private ConsentService consentService;
@@ -78,7 +82,8 @@ class ConsentServiceTest {
         fieldConsentsFileService,
         fileService,
         clock,
-        consentEmailService
+        consentEmailService,
+        consentFieldEquityPartnerService
     ));
   }
 

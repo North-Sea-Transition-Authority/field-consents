@@ -17,6 +17,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.ConsentEmailService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.PdfRenderingOptions;
+import uk.co.nstauthority.fieldconsents.application.fieldequitypartner.ConsentFieldEquityPartnerService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
 
@@ -32,6 +33,7 @@ public class ConsentService {
   private final FileService fileService;
   private final Clock clock;
   private final ConsentEmailService consentEmailService;
+  private final ConsentFieldEquityPartnerService consentFieldEquityPartnerService;
 
   ConsentService(
       ApplicationService applicationService,
@@ -40,7 +42,8 @@ public class ConsentService {
       FieldConsentsFileService fieldConsentsFileService,
       FileService fileService,
       Clock clock,
-      ConsentEmailService consentEmailService
+      ConsentEmailService consentEmailService,
+      ConsentFieldEquityPartnerService consentFieldEquityPartnerService
   ) {
     this.applicationService = applicationService;
     this.applicationDocumentInstanceService = applicationDocumentInstanceService;
@@ -49,6 +52,7 @@ public class ConsentService {
     this.fileService = fileService;
     this.clock = clock;
     this.consentEmailService = consentEmailService;
+    this.consentFieldEquityPartnerService = consentFieldEquityPartnerService;
   }
 
   @Transactional
@@ -62,6 +66,7 @@ public class ConsentService {
     consent.setIssuedInstant(clock.instant());
 
     consentRepository.save(consent);
+    consentFieldEquityPartnerService.saveFieldEquityPartners(consent, applicationVersion);
 
     generateDocumentInstancesAndSaveToConsent(applicationVersion, consent);
     copySupportingDocumentsToConsent(application, consent);

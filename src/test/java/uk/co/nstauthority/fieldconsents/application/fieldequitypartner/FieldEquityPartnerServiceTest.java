@@ -59,9 +59,32 @@ class FieldEquityPartnerServiceTest {
 
   private ApplicationVersion applicationVersion;
 
+  private List<ApplicationAsset> applicationAssets;
+
+  private List<Integer> fieldIds;
+
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
+
+    applicationAssets = List.of(
+        ApplicationAssetTestUtil.newBuilder()
+            .withAssetId(1)
+            .withAssetType(AssetType.FIELD)
+            .withAssetRole(AssetRole.PRIMARY)
+            .build(),
+        ApplicationAssetTestUtil.newBuilder()
+            .withAssetId(2)
+            .withAssetType(AssetType.FIELD)
+            .withAssetRole(AssetRole.SECONDARY)
+            .build(),
+        ApplicationAssetTestUtil.newBuilder()
+            .withAssetId(3)
+            .withAssetType(AssetType.FIELD)
+            .withAssetRole(AssetRole.SECONDARY)
+            .build()
+    );
+    fieldIds = applicationAssets.stream().map(ApplicationAsset::getAssetId).toList();
   }
 
   @Test
@@ -129,25 +152,6 @@ class FieldEquityPartnerServiceTest {
 
   @Test
   void getFieldsWithFieldEquityPartners() {
-    var applicationAssets = List.of(
-        ApplicationAssetTestUtil.newBuilder()
-            .withAssetId(1)
-            .withAssetType(AssetType.FIELD)
-            .withAssetRole(AssetRole.PRIMARY)
-            .build(),
-        ApplicationAssetTestUtil.newBuilder()
-            .withAssetId(2)
-            .withAssetType(AssetType.FIELD)
-            .withAssetRole(AssetRole.SECONDARY)
-            .build(),
-        ApplicationAssetTestUtil.newBuilder()
-            .withAssetId(3)
-            .withAssetType(AssetType.FIELD)
-            .withAssetRole(AssetRole.SECONDARY)
-            .build()
-    );
-    var fieldIds = applicationAssets.stream().map(ApplicationAsset::getAssetId).toList();
-
     var fields = List.of(
         getFieldWithFieldEquityPartner("a"),
         getFieldWithFieldEquityPartner("b"),
@@ -271,5 +275,4 @@ class FieldEquityPartnerServiceTest {
         ))
         .build();
   }
-
 }
