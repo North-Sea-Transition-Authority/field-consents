@@ -26,6 +26,7 @@ import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
 import uk.co.nstauthority.fieldconsents.startapplication.StartApplicationFromTerminalController;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @ContextConfiguration(classes = TerminalController.class)
 public class TerminalControllerTest extends AbstractControllerTest {
@@ -66,7 +67,7 @@ public class TerminalControllerTest extends AbstractControllerTest {
     when(terminalService.getTerminalWithOperator(eq(terminal1JsonWithNullOperator.getId()), any()))
         .thenReturn(terminal1JsonWithNullOperator);
 
-    when(organisationUnitPermissionService.hasOperatorPermission(any(), any(), any()))
+    when(organisationUnitPermissionService.hasOperatorPermission(any(), any(), any(RolePermission[].class)))
         .thenReturn(userHasCreatePermission);
 
     var modelAndView = mockMvc
@@ -87,7 +88,7 @@ public class TerminalControllerTest extends AbstractControllerTest {
     when(terminalService.getTerminalWithOperator(eq(terminal1JsonWithOperator.getId()), any()))
         .thenReturn(terminal1JsonWithOperator);
 
-    when(organisationUnitPermissionService.hasOperatorPermission(any(), any(), any()))
+    when(organisationUnitPermissionService.hasOperatorPermission(any(), any(), any(RolePermission[].class)))
         .thenReturn(userHasCreatePermission);
 
     var modelAndView = mockMvc

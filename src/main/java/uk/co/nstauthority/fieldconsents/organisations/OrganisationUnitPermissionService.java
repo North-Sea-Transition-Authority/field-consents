@@ -31,10 +31,20 @@ public class OrganisationUnitPermissionService {
     this.permissionService = permissionService;
   }
 
-  public boolean hasOperatorPermission(ServiceUserDetail user,
-                                       Integer operatorOuId,
-                                       RolePermission... requiredPermissions) {
-    var requiredPermissionsSet = Set.of(requiredPermissions);
+
+  public boolean hasOperatorPermission(
+      ServiceUserDetail user,
+      Integer operatorOuId,
+      RolePermission... requiredPermissions
+  ) {
+    return hasOperatorPermission(user, operatorOuId, Set.of(requiredPermissions));
+  }
+
+  public boolean hasOperatorPermission(
+      ServiceUserDetail user,
+      Integer operatorOuId,
+      Set<RolePermission> requiredPermissions
+  ) {
     var organisationUnitWithGroups = organisationUnitService.getOrganisationUnitWithGroupsById(
         operatorOuId,
         "Lookup organisation unit with groups for application security check"
@@ -48,7 +58,7 @@ public class OrganisationUnitPermissionService {
 
     // loop over the organisation groups for the operator
     // (there is typically 1 but can be more, so we have to cater for this here)
-    var requiredPermissionNames = requiredPermissionsSet
+    var requiredPermissionNames = requiredPermissions
         .stream()
         .map(RolePermission::name)
         .collect(Collectors.joining(","));
@@ -61,7 +71,7 @@ public class OrganisationUnitPermissionService {
         continue;
       }
 
-      if (permissionService.hasPermissionForTeam(teamOptional.get(), user, requiredPermissionsSet)) {
+      if (permissionService.hasPermissionForTeam(teamOptional.get(), user, requiredPermissions)) {
         return true; // return as soon as we find a team the user has permissions in
       }
 

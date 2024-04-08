@@ -14,6 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature.WIDE_SUMMARY_DISPLAY;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseProcessingTab.CONSENT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseProcessingTab.PAYMENTS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseProcessingTab.VIEW_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateTestUtil.applicationUpdateRequestView;
@@ -35,6 +36,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
+import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationContext;
 import uk.co.nstauthority.fieldconsents.application.ApplicationContextService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
@@ -43,6 +45,8 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionView;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentTabConsentSummaryView;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentTabService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.payment.PaymentsTabPaymentSummaryView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.payment.PaymentsTabService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
@@ -50,6 +54,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.reques
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.summary.SummaryFileView;
 import uk.co.nstauthority.fieldconsents.summary.SummarySection;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
@@ -80,6 +85,9 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
   @MockBean
   private PaymentsTabService paymentsTabService;
 
+  @MockBean
+  private ConsentTabService consentTabService;
+
   private List<CaseProcessingActionView> caseProcessingActionViews;
 
   private List<SummarySection> summarySections;
@@ -87,6 +95,8 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
   private List<CaseProcessingTab> caseProcessingTabs;
 
   private List<PaymentsTabPaymentSummaryView> paymentsTabPaymentSummaryViews;
+
+  private ConsentTabConsentSummaryView consentTabConsentSummaryView;
 
   @BeforeEach
   void setUp() {
@@ -107,6 +117,12 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
         "testFormattedPaymentDate",
         "testGovUkPayReference"
     ));
+
+    consentTabConsentSummaryView = new ConsentTabConsentSummaryView(
+        "Test issued by user",
+        "04/04/2024",
+        List.of(new SummaryFileView("Test file name", "Test description", "http://test.url"))
+    );
   }
 
   @SecurityTest
@@ -175,7 +191,7 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
   }
 
   @SecurityTest
-  void getIndustryCaseProcessing_checkEndPointSecurityOnly_whenMissingEditPermissionAndPayAndSubmitPermission_thenForbidden() throws Exception {
+  void getIndustryCaseProcessing_checkEndPointSecurityOnly_whenMissingEditPermissionAndPayAndSubmitPermissionAndViewFcsConsentsPermission_thenForbidden() throws Exception {
     var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
@@ -183,7 +199,8 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
         user,
         applicationVersion,
         RolePermission.EDIT_FCS_APPLICATIONS,
-        RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS
+        RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS,
+        RolePermission.VIEW_FCS_CONSENTS
     )).thenReturn(false);
 
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(ApplicationContext.newBuilder()
@@ -282,12 +299,32 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
     verify(applicationUpdateRequestViewService).getOpenApplicationUpdateRequestView(applicationVersion);
   }
 
+  @ParameterizedTest
+  @MethodSource("getInProgressAndSubmittedApplicationVersions")
+  void getIndustryCaseProcessing_consent(ApplicationVersion applicationVersion) throws Exception {
+    var application = applicationVersion.getApplication();
+
+    stubBaseServiceCalls(applicationVersion);
+    stubConsentServiceCall(application);
+
+    var tabParam = "?tab=%s".formatted(CONSENT.getAnchor());
+
+    mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
+            .getIndustryCaseProcessing(APPLICATION_ID, null, null)) + tabParam)
+            .with(user(user)))
+        .andExpectAll(commonAttributesForTab(CONSENT, applicationVersion));
+
+    verify(consentTabService).addConsentTabContentToModelAndView(eq(application), any());
+
+    verifyNoInteractions(applicationUpdateRequestViewService);
+  }
+
   private void stubBaseServiceCalls(ApplicationVersion applicationVersion) {
     // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
 
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
-    when(caseProcessingTabService.getTabsAvailableToUser(user)).thenReturn(caseProcessingTabs);
+    when(caseProcessingTabService.getTabsAvailableToUser(user, applicationVersion)).thenReturn(caseProcessingTabs);
     when(caseProcessingActionService.getUserActionViews(applicationVersion, user)).thenReturn(caseProcessingActionViews);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(DUMMY_APP_REF);
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(ApplicationContext.newBuilder()
@@ -318,6 +355,16 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
     })
         .when(paymentsTabService)
         .addPaymentsTabContentToModelAndView(eq(applicationVersion), any(ModelAndView.class));
+  }
+
+  private void stubConsentServiceCall(Application application) {
+    doAnswer(invocation -> {
+      invocation.getArgument(1, ModelAndView.class)
+          .addObject("consentTabConsentSummaryView", consentTabConsentSummaryView);
+      return null;
+    })
+        .when(consentTabService)
+        .addConsentTabContentToModelAndView(eq(application), any(ModelAndView.class));
   }
 
   private ResultMatcher[] commonAttributesForTab(CaseProcessingTab tab, ApplicationVersion applicationVersion) {

@@ -6,6 +6,7 @@
 <#import './_applicationContext.ftl' as applicationContextInfo>
 <#import 'update/_applicationUpdateRequestBanner.ftl' as applicationUpdateRequestBanner>
 <#import './caseprocessing/tab/_paymentsTab.ftl' as paymentsTab>
+<#import './caseprocessing/tab/_consentTab.ftl' as consentTab>
 
 <#-- @ftlvariable name="applicationUpdateRequestView" type="uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestView" -->
 
@@ -25,6 +26,9 @@
     </#if>
     <#if selectedTab == "PAYMENTS">
       <@paymentsTab.tab paymentsTabPaymentSummaryViews=paymentsTabPaymentSummaryViews/>
+    </#if>
+    <#if selectedTab == "CONSENT">
+      <@consentTab.tab showIssuedByUser=false consentTabConsentSummaryView=consentTabConsentSummaryView/>
     </#if>
   </@caseProcessingTabsWithContent>
 </@defaultPage>

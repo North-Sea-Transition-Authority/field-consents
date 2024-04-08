@@ -17,6 +17,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseHistoryTabContentService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentTabService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.payment.PaymentsTabService;
@@ -44,7 +45,8 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.Reg
     RolePermission.PROCESS_FCS_APPLICATIONS,
     RolePermission.ASSIGN_FCS_APPLICATIONS,
     RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS,
-    RolePermission.AUTHORISE_FCS_CONSENTS
+    RolePermission.VIEW_FCS_CONSENTS,
+    RolePermission.AUTHORISE_FCS_CONSENTS,
 })
 public class ApplicationCaseProcessingController {
 
@@ -61,6 +63,7 @@ public class ApplicationCaseProcessingController {
   private final ConsultationService consultationService;
   private final FurtherInformationService furtherInformationService;
   private final PaymentsTabService paymentsTabService;
+  private final ConsentTabService consentTabService;
 
   @Autowired
   ApplicationCaseProcessingController(
@@ -76,7 +79,8 @@ public class ApplicationCaseProcessingController {
       RegulatorTeamService regulatorTeamService,
       ConsultationService consultationService,
       FurtherInformationService furtherInformationService,
-      PaymentsTabService paymentsTabService
+      PaymentsTabService paymentsTabService,
+      ConsentTabService consentTabService
   ) {
     this.applicationService = applicationService;
     this.applicationContextService = applicationContextService;
@@ -91,6 +95,7 @@ public class ApplicationCaseProcessingController {
     this.consultationService = consultationService;
     this.furtherInformationService = furtherInformationService;
     this.paymentsTabService = paymentsTabService;
+    this.consentTabService = consentTabService;
   }
 
   @GetMapping("case-processing")
@@ -104,18 +109,20 @@ public class ApplicationCaseProcessingController {
 
   private ModelAndView renderCaseProcessingOnTab(Integer applicationId, CaseProcessingTab tab, ServiceUserDetail user) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
-    var applicationType = applicationVersion.getApplication().getType();
+    var application = applicationVersion.getApplication();
+    var applicationType = application.getType();
 
     var modelAndView = new ModelAndView("fcs/application/applicationCaseProcessing")
         .addObject("selectedTab", tab)
         .addObject("controllerUrl", ReverseRouter.route(on(this.getClass()).caseProcessing(applicationId, null, null)))
         .addObject("actionList", caseProcessingActionService.getUserActionViews(applicationVersion, user))
         .addObject("applicationContext", applicationContextService.getApplicationContext(applicationVersion))
-        .addObject("caseProcessingTabs", caseProcessingTabService.getTabsAvailableToUser(user))
+        .addObject("caseProcessingTabs", caseProcessingTabService.getTabsAvailableToUser(user, applicationVersion))
         .addObject("wideSummaryDisplay", WIDE_SUMMARY_DISPLAY.allowed(applicationType))
         .addObject("pageTitle", applicationService.generateApplicationReference(applicationVersion));
 
     switch (tab) {
+      case CONSENT -> consentTabService.addConsentTabContentToModelAndView(application, modelAndView);
       case PAYMENTS -> paymentsTabService.addPaymentsTabContentToModelAndView(applicationVersion, modelAndView);
       case CASE_HISTORY -> addCaseHistoryTab(modelAndView, applicationVersion);
       case TASKS -> addTasksTab(modelAndView, applicationVersion, user);
@@ -129,7 +136,7 @@ public class ApplicationCaseProcessingController {
     }
 
     if (regulatorTeamService.isCaseOfficer(WebUserAccountId.from(user))) {
-      consultationService.findLatestOpenConsultation(applicationVersion.getApplication())
+      consultationService.findLatestOpenConsultation(application)
           .flatMap(furtherInformationService::findLatestOpenFurtherInformation)
           .map(furtherInformationService::getFurtherInformationView)
           .ifPresent(view -> modelAndView.addObject("furtherInformationView", view));
@@ -147,5 +154,4 @@ public class ApplicationCaseProcessingController {
     var taskListSections = caseProcessingTaskListService.getTaskListSections(applicationVersion, user);
     modelAndView.addObject("taskListSections", taskListSections);
   }
-
 }

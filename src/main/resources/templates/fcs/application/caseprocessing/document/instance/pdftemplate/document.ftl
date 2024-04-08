@@ -16,7 +16,7 @@
       </tr>
     </tbody>
   </table>
-  <#if previewWatermark?has_content>
+  <#if previewWatermark>
     <div class="watermark">
       PREVIEW DOCUMENT
     </div>

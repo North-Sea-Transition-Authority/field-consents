@@ -16,6 +16,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentTabService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.payment.PaymentsTabService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestViewService;
@@ -39,6 +40,7 @@ public class IndustryCaseProcessingController {
   private final ApplicationUpdateService applicationUpdateService;
   private final ApplicationUpdateRequestViewService applicationUpdateRequestViewService;
   private final PaymentsTabService paymentsTabService;
+  private final ConsentTabService consentTabService;
 
   @Autowired
   IndustryCaseProcessingController(
@@ -50,7 +52,8 @@ public class IndustryCaseProcessingController {
       CaseProcessingTabService caseProcessingTabService,
       ApplicationUpdateService applicationUpdateService,
       ApplicationUpdateRequestViewService applicationUpdateRequestViewService,
-      PaymentsTabService paymentsTabService
+      PaymentsTabService paymentsTabService,
+      ConsentTabService consentTabService
   ) {
     this.applicationService = applicationService;
     this.applicationContextService = applicationContextService;
@@ -61,6 +64,7 @@ public class IndustryCaseProcessingController {
     this.applicationUpdateService = applicationUpdateService;
     this.applicationUpdateRequestViewService = applicationUpdateRequestViewService;
     this.paymentsTabService = paymentsTabService;
+    this.consentTabService = consentTabService;
   }
 
   @GetMapping("industry-case-processing")
@@ -73,7 +77,8 @@ public class IndustryCaseProcessingController {
   })
   @HasApplicationPermission(permissions = {
       RolePermission.EDIT_FCS_APPLICATIONS,
-      RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS
+      RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS,
+      RolePermission.VIEW_FCS_CONSENTS
   })
   public ModelAndView getIndustryCaseProcessing(
       @PathVariable Integer applicationId,
@@ -100,14 +105,14 @@ public class IndustryCaseProcessingController {
         )
         .addObject("actionList", caseProcessingActionService.getUserActionViews(applicationVersion, user))
         .addObject("applicationContext", applicationContextService.getApplicationContext(applicationVersion))
-        .addObject("caseProcessingTabs", caseProcessingTabService.getTabsAvailableToUser(user))
+        .addObject("caseProcessingTabs", caseProcessingTabService.getTabsAvailableToUser(user, applicationVersion))
         .addObject("wideSummaryDisplay", WIDE_SUMMARY_DISPLAY.allowed(application.getType()))
         .addObject("pageTitle", applicationService.generateApplicationReference(applicationVersion));
 
-    if (CaseProcessingTab.PAYMENTS.equals(tab)) {
-      paymentsTabService.addPaymentsTabContentToModelAndView(applicationVersion, modelAndView);
-    } else {
-      applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView);
+    switch (tab) {
+      case CONSENT -> consentTabService.addConsentTabContentToModelAndView(application, modelAndView);
+      case PAYMENTS -> paymentsTabService.addPaymentsTabContentToModelAndView(applicationVersion, modelAndView);
+      default -> applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView);
     }
 
     if (applicationUpdateService.openApplicationUpdateExists(applicationVersion)) {

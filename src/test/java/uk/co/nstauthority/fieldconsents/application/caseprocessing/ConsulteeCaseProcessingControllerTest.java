@@ -204,7 +204,7 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
         .build());
     when(caseProcessingActionService.getUserActionViews(applicationVersion, user)).thenReturn(caseProcessingActionViews);
     when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication())).thenReturn(Optional.ofNullable(consultation));
-    when(caseProcessingTabService.getTabsAvailableToUser(user)).thenReturn(caseProcessingTabs);
+    when(caseProcessingTabService.getTabsAvailableToUser(user, applicationVersion)).thenReturn(caseProcessingTabs);
 
     var applicationType = applicationVersion.getApplication().getType();
 

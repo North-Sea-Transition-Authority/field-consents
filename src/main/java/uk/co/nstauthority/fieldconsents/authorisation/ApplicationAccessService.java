@@ -31,13 +31,21 @@ public class ApplicationAccessService {
     this.consultationService = consultationService;
   }
 
-  public boolean hasApplicationPermission(ServiceUserDetail user,
-                                          ApplicationVersion applicationVersion,
-                                          RolePermission... requiredPermissions) {
+  public boolean hasApplicationPermission(
+      ServiceUserDetail user,
+      ApplicationVersion applicationVersion,
+      RolePermission... requiredPermissions
+  ) {
+    return hasApplicationPermission(user, applicationVersion, Set.of(requiredPermissions));
+  }
 
-    var requiredPermissionsSet = Set.of(requiredPermissions);
+  public boolean hasApplicationPermission(
+      ServiceUserDetail user,
+      ApplicationVersion applicationVersion,
+      Set<RolePermission> requiredPermissions
+  ) {
     var userRegulatorTeamsWithPermission =
-        teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, requiredPermissionsSet);
+        teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, requiredPermissions);
 
     // user has permission as a regulator so has access to all applications
     if (!userRegulatorTeamsWithPermission.isEmpty()) {
@@ -45,7 +53,7 @@ public class ApplicationAccessService {
     }
 
     var userConsulteeTeamsWithPermission =
-        teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.OPRED, requiredPermissionsSet);
+        teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.OPRED, requiredPermissions);
 
     // user has permission as a consultee and there's a consultation for the application
     if (!userConsulteeTeamsWithPermission.isEmpty()) {

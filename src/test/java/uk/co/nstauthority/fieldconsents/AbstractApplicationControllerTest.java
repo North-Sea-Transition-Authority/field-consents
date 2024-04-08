@@ -18,6 +18,7 @@ import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.authorisation.rules.ActionEndPointInterceptorRule;
 import uk.co.nstauthority.fieldconsents.authorisation.rules.ApplicationAccessInterceptorRule;
 import uk.co.nstauthority.fieldconsents.authorisation.rules.ApplicationStatusInterceptorRule;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Import({
     ApplicationAccessInterceptorRule.class,
@@ -57,13 +58,7 @@ public abstract class AbstractApplicationControllerTest extends AbstractControll
   }
 
   void setupWhenUserHasApplicationAccessPermission() {
-    when(applicationAccessService.hasApplicationPermission(any(), any(), any()))
-        .thenReturn(true);
-    when(applicationAccessService.hasApplicationPermission(any(), any(), any(), any()))
-        .thenReturn(true);
-    when(applicationAccessService.hasApplicationPermission(any(), any(), any(), any(), any()))
-        .thenReturn(true);
-    when(applicationAccessService.hasApplicationPermission(any(), any(), any(), any(), any(), any()))
+    when(applicationAccessService.hasApplicationPermission(any(), any(), any(RolePermission[].class)))
         .thenReturn(true);
   }
 

@@ -1,10 +1,12 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.consent;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -15,6 +17,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 import org.junit.jupiter.api.BeforeEach;
@@ -242,31 +245,34 @@ class ConsentServiceTest {
             FileUploadRequest::usageId,
             FileUploadRequest::usageType,
             FileUploadRequest::documentType,
+            FileUploadRequest::description,
             FileUploadRequest::validate
         )
         .containsExactly(
             tuple(
                 FileSource.fromInputStreamSource(
                     byteArrayResource1,
-                    documentInstanceDto1.title(),
+                    "%s.%s".formatted(documentInstanceDto1.title(), MediaType.APPLICATION_PDF.getSubtype()),
                     MediaType.APPLICATION_PDF_VALUE,
                     byteArrayResource1.contentLength()
                 ),
                 consentFileUsage.usageId(),
                 consentFileUsage.usageType(),
                 consentFileUsage.documentType(),
+                documentInstanceDto1.description(),
                 false
             ),
             tuple(
                 FileSource.fromInputStreamSource(
                     byteArrayResource2,
-                    documentInstanceDto2.title(),
+                    "%s.%s".formatted(documentInstanceDto2.title(), MediaType.APPLICATION_PDF.getSubtype()),
                     MediaType.APPLICATION_PDF_VALUE,
                     byteArrayResource2.contentLength()
                 ),
                 consentFileUsage.usageId(),
                 consentFileUsage.usageType(),
                 consentFileUsage.documentType(),
+                documentInstanceDto2.description(),
                 false
             )
         );
@@ -286,5 +292,45 @@ class ConsentServiceTest {
         supportingConsentDocumentApplicationFileUsage,
         supportingConsentDocumentConsentFileUsage
     );
+  }
+
+  @Test
+  void findConsent_consentDoesNotExist() {
+    var application = ApplicationTestUtil.getSubmittedApplicationWithType(ApplicationType.PRODUCTION);
+
+    when(consentRepository.findByApplication_Id(application.getId())).thenReturn(Optional.empty());
+
+    assertThat(consentService.findConsent(application)).isEmpty();
+  }
+
+  @Test
+  void findConsent_consentExists() {
+    var application = ApplicationTestUtil.getSubmittedApplicationWithType(ApplicationType.PRODUCTION);
+    var consent = ConsentTestUtil.newBuilder().build();
+
+    when(consentRepository.findByApplication_Id(application.getId())).thenReturn(Optional.of(consent));
+
+    assertThat(consentService.findConsent(application)).contains(consent);
+  }
+
+  @Test
+  void getConsent_consentDoesNotExist() {
+    var application = ApplicationTestUtil.getSubmittedApplicationWithType(ApplicationType.PRODUCTION);
+
+    doReturn(Optional.empty()).when(consentService).findConsent(application);
+
+    assertThatThrownBy(() -> consentService.getConsent(application))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Unable to find consent for application %d".formatted(application.getId()));
+  }
+
+  @Test
+  void getConsent_consentExists() {
+    var application = ApplicationTestUtil.getSubmittedApplicationWithType(ApplicationType.PRODUCTION);
+    var consent = ConsentTestUtil.newBuilder().build();
+
+    doReturn(Optional.of(consent)).when(consentService).findConsent(application);
+
+    assertThat(consentService.getConsent(application)).isEqualTo(consent);
   }
 }

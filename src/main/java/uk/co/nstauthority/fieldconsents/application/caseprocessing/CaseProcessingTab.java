@@ -3,10 +3,13 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ALLOCATE_CONSULTATION;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ASSIGN_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.AUTHORISE_FCS_CONSENTS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.RESPOND_TO_CONSULTATION;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_CONSENTS;
 
 import java.util.EnumSet;
 import java.util.Set;
@@ -36,13 +39,26 @@ public enum CaseProcessingTab {
       "Payments",
       "payments",
       "payments",
-      EnumSet.of(VIEW_FCS_APPLICATIONS)
+      EnumSet.of(
+          PROCESS_FCS_APPLICATIONS,
+          ASSIGN_FCS_APPLICATIONS,
+          TECHNICAL_REVIEW_FCS_APPLICATIONS,
+          AUTHORISE_FCS_CONSENTS,
+          EDIT_FCS_APPLICATIONS,
+          PAY_AND_SUBMIT_FCS_APPLICATIONS
+      )
   ),
   FURTHER_INFORMATION(
       "Further information requests",
       "furtherInformationRequests",
       "further-information-requests",
       EnumSet.of(ALLOCATE_CONSULTATION, RESPOND_TO_CONSULTATION)
+  ),
+  CONSENT(
+      "Consent",
+      "consent",
+      "consent",
+      EnumSet.of(VIEW_FCS_CONSENTS)
   );
 
   private final String label;

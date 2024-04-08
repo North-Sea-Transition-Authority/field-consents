@@ -30,6 +30,7 @@ import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
 import uk.co.nstauthority.fieldconsents.startapplication.StartApplicationFromFieldController;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @ContextConfiguration(classes = FieldController.class)
 public class FieldControllerTest extends AbstractControllerTest {
@@ -69,7 +70,7 @@ public class FieldControllerTest extends AbstractControllerTest {
     when(fieldService.getFieldWithOperatorAndLicences(eq(field1JsonWithOperatorAndLicences.getId()), anyString()))
         .thenReturn(field1JsonWithOperatorAndLicences);
 
-    when(organisationUnitPermissionService.hasOperatorPermission(any(), any(), any()))
+    when(organisationUnitPermissionService.hasOperatorPermission(any(), any(), any(RolePermission[].class)))
         .thenReturn(userHasCreatePermission);
 
     var modelAndView =
@@ -90,7 +91,7 @@ public class FieldControllerTest extends AbstractControllerTest {
     when(fieldService.getFieldWithOperatorAndLicences(eq(field1JsonWithNoOperatorButLicences.getId()), anyString()))
         .thenReturn(field1JsonWithNoOperatorButLicences);
 
-    when(organisationUnitPermissionService.hasOperatorPermission(any(), any(), any()))
+    when(organisationUnitPermissionService.hasOperatorPermission(any(), any(), any(RolePermission[].class)))
         .thenReturn(userHasCreatePermission);
 
     var modelAndView =
@@ -112,7 +113,7 @@ public class FieldControllerTest extends AbstractControllerTest {
     when(fieldService.getFieldWithOperatorAndLicences(eq(field1JsonWithOperatorButEmptyLicences.getId()), anyString()))
         .thenReturn(field1JsonWithOperatorButEmptyLicences);
 
-    when(organisationUnitPermissionService.hasOperatorPermission(any(), any(), any()))
+    when(organisationUnitPermissionService.hasOperatorPermission(any(), any(), any(RolePermission[].class)))
         .thenReturn(userHasCreatePermission);
 
     var modelAndView =
@@ -134,7 +135,7 @@ public class FieldControllerTest extends AbstractControllerTest {
     when(fieldService.getFieldWithOperatorAndLicences(eq(field1JsonWithNullOperatorAndLicences.getId()), anyString()))
         .thenReturn(field1JsonWithNullOperatorAndLicences);
 
-    when(organisationUnitPermissionService.hasOperatorPermission(any(), any(), any()))
+    when(organisationUnitPermissionService.hasOperatorPermission(any(), any(), any(RolePermission[].class)))
         .thenReturn(userHasCreatePermission);
 
     var modelAndView =

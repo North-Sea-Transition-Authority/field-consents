@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.consent;
 
 import java.time.Clock;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -98,7 +99,7 @@ public class ConsentService {
 
       var fileSource = FileSource.fromInputStreamSource(
           byteArrayResource,
-          documentInstanceDto.title(),
+          "%s.%s".formatted(documentInstanceDto.title(), MediaType.APPLICATION_PDF.getSubtype()),
           MediaType.APPLICATION_PDF_VALUE,
           byteArrayResource.contentLength()
       );
@@ -108,6 +109,7 @@ public class ConsentService {
       var fileUploadResponse = fileService.upload(builder -> builder
           .withFileSource(fileSource)
           .withUsage(consentFileUsage.usageId(), consentFileUsage.usageType(), consentFileUsage.documentType())
+          .withDescription(documentInstanceDto.description())
           .withValidate(false)
           .build());
       var error = fileUploadResponse.getError();
@@ -125,5 +127,14 @@ public class ConsentService {
         supportingConsentDocumentApplicationFileUsage,
         supportingConsentDocumentConsentFileUsage
     );
+  }
+
+  Optional<Consent> findConsent(Application application) {
+    return consentRepository.findByApplication_Id(application.getId());
+  }
+
+  Consent getConsent(Application application) {
+    return findConsent(application)
+        .orElseThrow(() -> new IllegalStateException("Unable to find consent for application %d".formatted(application.getId())));
   }
 }

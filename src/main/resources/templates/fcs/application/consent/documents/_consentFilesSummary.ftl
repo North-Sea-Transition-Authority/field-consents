@@ -1,9 +1,11 @@
 <#include '../../../layout/layout.ftl'>
 <#import '../../_caseProcessingActions.ftl' as caseProcessingActions>
 
-<#macro summary heading fileViews caseProcessingActionViewList>
+<#macro summary heading fileViews caseProcessingActionViewList=[]>
   <#assign summaryCardActions>
-    <@caseProcessingActions.summaryCardActions actionViews=caseProcessingActionViewList />
+    <#if caseProcessingActionViewList?has_content>
+      <@caseProcessingActions.summaryCardActions actionViews=caseProcessingActionViewList />
+    </#if>
   </#assign>
   <@fdsSummaryList.summaryListCard
     headingText=heading

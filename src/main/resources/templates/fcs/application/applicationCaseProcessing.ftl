@@ -8,6 +8,7 @@
 <#import 'review/technicalReviewDetails.ftl' as technicalReviewDetails/>
 <#import '../application/consultation/further-information/furtherInformation.ftl' as furtherInformation/>
 <#import './caseprocessing/tab/_paymentsTab.ftl' as paymentsTab>
+<#import './caseprocessing/tab/_consentTab.ftl' as consentTab>
 
 <#-- @ftlvariable name="technicalReviewSummaryView" type="uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewSummaryView" -->
 <#-- @ftlvariable name="taskListSections" type="java.util.List<uk.co.nstauthority.fieldconsents.tasklist.TaskListSection>" -->
@@ -39,6 +40,9 @@
     </#if>
     <#if selectedTab == "PAYMENTS">
       <@paymentsTab.tab paymentsTabPaymentSummaryViews=paymentsTabPaymentSummaryViews/>
+    </#if>
+    <#if selectedTab == "CONSENT">
+      <@consentTab.tab showIssuedByUser=true consentTabConsentSummaryView=consentTabConsentSummaryView/>
     </#if>
   </@caseProcessingTabsWithContent>
 </@defaultPage>
