@@ -24,6 +24,7 @@ import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionsSumm
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceService;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateService;
 import uk.co.nstauthority.fieldconsents.application.Application;
+import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
@@ -47,6 +48,9 @@ class ApplicationDocumentInstanceServiceTest {
 
   @Mock
   private DocumentInstanceService documentInstanceService;
+
+  @Mock
+  private ApplicationService applicationService;
 
   @Mock
   private ApplicationVersionService applicationVersionService;
@@ -226,28 +230,30 @@ class ApplicationDocumentInstanceServiceTest {
 
   @Test
   void renderPdf() {
-    var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
     var pdfRenderingOptions = PdfRenderingOptions.newBuilder().build();
     var documentInstanceSectionsSummaryView = mock(DocumentInstanceSectionsSummaryView.class);
     var byteArrayResource = new ByteArrayResource(new byte[] {1, 2, 3});
+    var applicationReference = "Application reference";
     var expectedTemplateModel = Map.of(
         "documentInstanceSectionsSummaryView", documentInstanceSectionsSummaryView,
-        "previewWatermark", pdfRenderingOptions.previewWatermark()
+        "previewWatermark", pdfRenderingOptions.previewWatermark(),
+        "applicationReference", applicationReference
     );
 
-    when(
-        applicationDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionsSummaryView(
-            application,
-            documentInstanceDto,
-            false
-        )
-    ).thenReturn(documentInstanceSectionsSummaryView);
+    when(applicationDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionsSummaryView(
+        applicationVersion.getApplication(),
+        documentInstanceDto,
+        false
+    )).thenReturn(documentInstanceSectionsSummaryView);
+
+    when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
 
     when(documentInstanceService.renderPdf(documentInstanceDto, expectedTemplateModel))
         .thenReturn(byteArrayResource);
 
-    assertThat(applicationDocumentInstanceService.renderPdf(application, documentInstanceDto, pdfRenderingOptions))
+    assertThat(applicationDocumentInstanceService.renderPdf(applicationVersion, documentInstanceDto, pdfRenderingOptions))
         .isEqualTo(byteArrayResource);
   }
 

@@ -11,6 +11,8 @@ import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceService;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateDto;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateService;
 import uk.co.nstauthority.fieldconsents.application.Application;
+import uk.co.nstauthority.fieldconsents.application.ApplicationService;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
@@ -26,6 +28,7 @@ public class ApplicationDocumentInstanceService {
       applicationDocumentInstanceSectionControllerHelperService;
   private final DocumentTemplateService documentTemplateService;
   private final DocumentInstanceService documentInstanceService;
+  private final ApplicationService applicationService;
   private final ApplicationVersionService applicationVersionService;
   private final ApplicationAssetService applicationAssetService;
 
@@ -33,6 +36,7 @@ public class ApplicationDocumentInstanceService {
       ApplicationDocumentInstanceSectionControllerHelperService applicationDocumentInstanceSectionControllerHelperService,
       DocumentTemplateService documentTemplateService,
       DocumentInstanceService documentInstanceService,
+      ApplicationService applicationService,
       ApplicationVersionService applicationVersionService,
       ApplicationAssetService applicationAssetService
   ) {
@@ -40,6 +44,7 @@ public class ApplicationDocumentInstanceService {
         applicationDocumentInstanceSectionControllerHelperService;
     this.documentTemplateService = documentTemplateService;
     this.documentInstanceService = documentInstanceService;
+    this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.applicationAssetService = applicationAssetService;
   }
@@ -94,16 +99,21 @@ public class ApplicationDocumentInstanceService {
   }
 
   public ByteArrayResource renderPdf(
-      Application application,
+      ApplicationVersion applicationVersion,
       DocumentInstanceDto documentInstanceDto,
       PdfRenderingOptions pdfRenderingOptions
   ) {
-    var documentInstanceSectionsSummaryView = applicationDocumentInstanceSectionControllerHelperService
-        .getDocumentInstanceSectionsSummaryView(application, documentInstanceDto, false);
+    var documentInstanceSectionsSummaryView =
+        applicationDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionsSummaryView(
+            applicationVersion.getApplication(),
+            documentInstanceDto,
+            false
+        );
 
     Map<String, Object> templateModel = Map.of(
         "documentInstanceSectionsSummaryView", documentInstanceSectionsSummaryView,
-        "previewWatermark", pdfRenderingOptions.previewWatermark()
+        "previewWatermark", pdfRenderingOptions.previewWatermark(),
+        "applicationReference", applicationService.generateApplicationReference(applicationVersion)
     );
 
     return documentInstanceService.renderPdf(documentInstanceDto, templateModel);

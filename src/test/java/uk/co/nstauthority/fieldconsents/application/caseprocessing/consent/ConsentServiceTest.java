@@ -112,7 +112,7 @@ class ConsentServiceTest {
             clock.instant()
         );
 
-    verify(consentService).generateDocumentInstancesAndSaveToConsent(application, consent);
+    verify(consentService).generateDocumentInstancesAndSaveToConsent(applicationVersion, consent);
     verify(consentService).copySupportingDocumentsToConsent(application, consent);
 
     verify(applicationService).completeApplication(applicationVersion);
@@ -158,7 +158,7 @@ class ConsentServiceTest {
             clock.instant()
         );
 
-    verify(consentService).generateDocumentInstancesAndSaveToConsent(application, consent);
+    verify(consentService).generateDocumentInstancesAndSaveToConsent(applicationVersion, consent);
     verify(consentService).copySupportingDocumentsToConsent(application, consent);
 
     verify(applicationService).completeApplication(applicationVersion);
@@ -203,7 +203,7 @@ class ConsentServiceTest {
             clock.instant()
         );
 
-    verify(consentService).generateDocumentInstancesAndSaveToConsent(application, consent);
+    verify(consentService).generateDocumentInstancesAndSaveToConsent(applicationVersion, consent);
     verify(consentService).copySupportingDocumentsToConsent(application, consent);
 
     verify(applicationService).completeApplication(applicationVersion);
@@ -212,7 +212,7 @@ class ConsentServiceTest {
 
   @Test
   void generateDocumentInstancesAndSaveToConsent() {
-    var application = ApplicationTestUtil.getSubmittedApplicationWithType(ApplicationType.PRODUCTION);
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
     var consent = ConsentTestUtil.newBuilder().build();
 
     var documentInstanceDto1 = DocumentInstanceDtoTestUtil.builder().build();
@@ -221,11 +221,11 @@ class ConsentServiceTest {
     var byteArrayResource1 = mock(ByteArrayResource.class);
     var byteArrayResource2 = mock(ByteArrayResource.class);
 
-    when(applicationDocumentInstanceService.getDocumentInstanceDtos(application))
+    when(applicationDocumentInstanceService.getDocumentInstanceDtos(applicationVersion.getApplication()))
         .thenReturn(List.of(documentInstanceDto1, documentInstanceDto2));
-    when(applicationDocumentInstanceService.renderPdf(application, documentInstanceDto1, PdfRenderingOptions.newBuilder().build()))
+    when(applicationDocumentInstanceService.renderPdf(applicationVersion, documentInstanceDto1, PdfRenderingOptions.newBuilder().build()))
         .thenReturn(byteArrayResource1);
-    when(applicationDocumentInstanceService.renderPdf(application, documentInstanceDto2, PdfRenderingOptions.newBuilder().build()))
+    when(applicationDocumentInstanceService.renderPdf(applicationVersion, documentInstanceDto2, PdfRenderingOptions.newBuilder().build()))
         .thenReturn(byteArrayResource2);
 
     ArgumentCaptor<Function<FileUploadRequest.Builder, FileUploadRequest>> fileUploadRequestBuilderFunctionCaptor =
@@ -234,7 +234,7 @@ class ConsentServiceTest {
     when(fileService.upload(fileUploadRequestBuilderFunctionCaptor.capture()))
         .thenReturn(FileUploadResponse.success(UUID.randomUUID(), FileSource.fromInputStreamSource(null, "test", "test/test", 1)));
 
-    consentService.generateDocumentInstancesAndSaveToConsent(application, consent);
+    consentService.generateDocumentInstancesAndSaveToConsent(applicationVersion, consent);
 
     var consentFileUsage = ConsentFileUsage.generatedConsentDocumentFrom(consent);
 

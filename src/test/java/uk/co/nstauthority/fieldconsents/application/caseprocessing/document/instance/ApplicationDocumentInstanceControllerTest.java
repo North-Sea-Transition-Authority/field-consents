@@ -174,11 +174,11 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
 
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(caseProcessingActionItem));
-    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(applicationDocumentInstanceControllerHelperService.getDocumentInstanceDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_ID))
         .thenReturn(documentInstanceDto);
     when(applicationDocumentInstanceService.renderPdf(
-        application,
+        applicationVersion,
         documentInstanceDto,
         PdfRenderingOptions.newBuilder().withPreviewWatermark(true).build())
     ).thenReturn(byteArrayResource);
@@ -202,11 +202,11 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
 
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(caseProcessingActionItem));
-    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(applicationDocumentInstanceControllerHelperService.getDocumentInstanceDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_ID))
         .thenReturn(documentInstanceDto);
     when(applicationDocumentInstanceService.renderPdf(
-        application,
+        applicationVersion,
         documentInstanceDto,
         PdfRenderingOptions.newBuilder().withPreviewWatermark(true).build())
     ).thenReturn(byteArrayResource);

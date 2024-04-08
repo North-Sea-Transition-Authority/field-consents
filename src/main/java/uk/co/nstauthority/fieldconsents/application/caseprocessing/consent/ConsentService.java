@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceDto;
 import uk.co.fivium.fileuploadlibrary.core.FileService;
 import uk.co.fivium.fileuploadlibrary.core.FileSource;
 import uk.co.nstauthority.fieldconsents.application.Application;
@@ -62,7 +63,7 @@ public class ConsentService {
 
     consentRepository.save(consent);
 
-    generateDocumentInstancesAndSaveToConsent(application, consent);
+    generateDocumentInstancesAndSaveToConsent(applicationVersion, consent);
     copySupportingDocumentsToConsent(application, consent);
 
     applicationService.completeApplication(applicationVersion);
@@ -89,34 +90,43 @@ public class ConsentService {
     }
   }
 
-  void generateDocumentInstancesAndSaveToConsent(Application application, Consent consent) {
-    applicationDocumentInstanceService.getDocumentInstanceDtos(application).forEach(documentInstanceDto -> {
-      var byteArrayResource = applicationDocumentInstanceService.renderPdf(
-          application,
-          documentInstanceDto,
-          PdfRenderingOptions.newBuilder().build()
-      );
+  void generateDocumentInstancesAndSaveToConsent(ApplicationVersion applicationVersion, Consent consent) {
+    var documentInstanceDtos = applicationDocumentInstanceService.getDocumentInstanceDtos(applicationVersion.getApplication());
+    for (var documentInstanceDto : documentInstanceDtos) {
+      generateDocumentInstanceAndSaveToConsent(applicationVersion, documentInstanceDto, consent);
+    }
+  }
 
-      var fileSource = FileSource.fromInputStreamSource(
-          byteArrayResource,
-          "%s.%s".formatted(documentInstanceDto.title(), MediaType.APPLICATION_PDF.getSubtype()),
-          MediaType.APPLICATION_PDF_VALUE,
-          byteArrayResource.contentLength()
-      );
+  private void generateDocumentInstanceAndSaveToConsent(
+      ApplicationVersion applicationVersion,
+      DocumentInstanceDto documentInstanceDto,
+      Consent consent
+  ) {
+    var byteArrayResource = applicationDocumentInstanceService.renderPdf(
+        applicationVersion,
+        documentInstanceDto,
+        PdfRenderingOptions.newBuilder().build()
+    );
 
-      var consentFileUsage = ConsentFileUsage.generatedConsentDocumentFrom(consent);
+    var fileSource = FileSource.fromInputStreamSource(
+        byteArrayResource,
+        "%s.%s".formatted(documentInstanceDto.title(), MediaType.APPLICATION_PDF.getSubtype()),
+        MediaType.APPLICATION_PDF_VALUE,
+        byteArrayResource.contentLength()
+    );
 
-      var fileUploadResponse = fileService.upload(builder -> builder
-          .withFileSource(fileSource)
-          .withUsage(consentFileUsage.usageId(), consentFileUsage.usageType(), consentFileUsage.documentType())
-          .withDescription(documentInstanceDto.description())
-          .withValidate(false)
-          .build());
-      var error = fileUploadResponse.getError();
-      if (error != null) {
-        throw new IllegalStateException("Failed to upload file: %s".formatted(error));
-      }
-    });
+    var consentFileUsage = ConsentFileUsage.generatedConsentDocumentFrom(consent);
+
+    var fileUploadResponse = fileService.upload(builder -> builder
+        .withFileSource(fileSource)
+        .withUsage(consentFileUsage.usageId(), consentFileUsage.usageType(), consentFileUsage.documentType())
+        .withDescription(documentInstanceDto.description())
+        .withValidate(false)
+        .build());
+    var error = fileUploadResponse.getError();
+    if (error != null) {
+      throw new IllegalStateException("Failed to upload file: %s".formatted(error));
+    }
   }
 
   void copySupportingDocumentsToConsent(Application application, Consent consent) {

@@ -85,14 +85,14 @@ public class ApplicationDocumentInstanceController {
       @PathVariable UUID documentInstanceId,
       @RequestParam(name = "download", required = false) boolean download
   ) {
-    var application = applicationService.getApplicationById(applicationId);
+    var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var documentInstanceDto = applicationDocumentInstanceControllerHelperService.getDocumentInstanceDtoForApplicationOrThrow(
-        application,
+        applicationVersion.getApplication(),
         documentInstanceId
     );
 
     var byteArrayResource = applicationDocumentInstanceService.renderPdf(
-        application,
+        applicationVersion,
         documentInstanceDto,
         PdfRenderingOptions.newBuilder().withPreviewWatermark(true).build()
     );

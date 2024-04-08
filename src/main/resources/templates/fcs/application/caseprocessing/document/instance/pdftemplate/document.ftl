@@ -1,4 +1,5 @@
 <#-- @ftlvariable name="previewWatermark" type="boolean" -->
+<#-- @ftlvariable name="applicationReference" type="java.lang.String" -->
 <#-- @ftlvariable name="documentInstanceSectionsSummaryView" type="uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionsSummaryView" -->
 
 <html>
@@ -9,7 +10,7 @@
   <table class="header">
     <tbody>
       <tr>
-        <td style="font-size: 10pt;">Application ref: APPLICATION_REF</td>
+        <td style="font-size: 10pt;">Application ref: ${applicationReference}</td>
         <td>
           <img src="classpath:///document-assets/nsta-logo-landscape-black.png" alt="" style="max-height: 20px; float: right;"/>
         </td>
