@@ -16,6 +16,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
+import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateType;
 
 @Service
@@ -31,6 +32,7 @@ public class ApplicationDocumentInstanceService {
   private final ApplicationService applicationService;
   private final ApplicationVersionService applicationVersionService;
   private final ApplicationAssetService applicationAssetService;
+  private final CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties;
 
   ApplicationDocumentInstanceService(
       ApplicationDocumentInstanceSectionControllerHelperService applicationDocumentInstanceSectionControllerHelperService,
@@ -38,15 +40,16 @@ public class ApplicationDocumentInstanceService {
       DocumentInstanceService documentInstanceService,
       ApplicationService applicationService,
       ApplicationVersionService applicationVersionService,
-      ApplicationAssetService applicationAssetService
+      ApplicationAssetService applicationAssetService,
+      CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties
   ) {
-    this.applicationDocumentInstanceSectionControllerHelperService =
-        applicationDocumentInstanceSectionControllerHelperService;
+    this.applicationDocumentInstanceSectionControllerHelperService = applicationDocumentInstanceSectionControllerHelperService;
     this.documentTemplateService = documentTemplateService;
     this.documentInstanceService = documentInstanceService;
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.applicationAssetService = applicationAssetService;
+    this.customerBrandingConfigurationProperties = customerBrandingConfigurationProperties;
   }
 
   public void createDocumentInstancesForApplication(Application application) {
@@ -113,7 +116,8 @@ public class ApplicationDocumentInstanceService {
     Map<String, Object> templateModel = Map.of(
         "documentInstanceSectionsSummaryView", documentInstanceSectionsSummaryView,
         "previewWatermark", pdfRenderingOptions.previewWatermark(),
-        "applicationReference", applicationService.generateApplicationReference(applicationVersion)
+        "applicationReference", applicationService.generateApplicationReference(applicationVersion),
+        "customerBrandingConfigurationProperties", customerBrandingConfigurationProperties
     );
 
     return documentInstanceService.renderPdf(documentInstanceDto, templateModel);

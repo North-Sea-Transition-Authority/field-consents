@@ -5,19 +5,19 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ByteArrayResource;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionsSummaryView;
@@ -32,6 +32,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
+import uk.co.nstauthority.fieldconsents.branding.BrandingTestUtil;
 import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateType;
 
@@ -58,9 +59,20 @@ class ApplicationDocumentInstanceServiceTest {
   @Mock
   private ApplicationAssetService applicationAssetService;
 
-  @InjectMocks
-  @Spy
   private ApplicationDocumentInstanceService applicationDocumentInstanceService;
+
+  @BeforeEach
+  void setUp() {
+    applicationDocumentInstanceService = spy(new ApplicationDocumentInstanceService(
+        applicationDocumentInstanceSectionControllerHelperService,
+        documentTemplateService,
+        documentInstanceService,
+        applicationService,
+        applicationVersionService,
+        applicationAssetService,
+        BrandingTestUtil.CUSTOMER_BRANDING_CONFIGURATION_PROPERTIES
+    ));
+  }
 
   @Test
   void createDocumentInstancesForApplication() {
@@ -236,10 +248,12 @@ class ApplicationDocumentInstanceServiceTest {
     var documentInstanceSectionsSummaryView = mock(DocumentInstanceSectionsSummaryView.class);
     var byteArrayResource = new ByteArrayResource(new byte[] {1, 2, 3});
     var applicationReference = "Application reference";
+
     var expectedTemplateModel = Map.of(
         "documentInstanceSectionsSummaryView", documentInstanceSectionsSummaryView,
         "previewWatermark", pdfRenderingOptions.previewWatermark(),
-        "applicationReference", applicationReference
+        "applicationReference", applicationReference,
+        "customerBrandingConfigurationProperties", BrandingTestUtil.CUSTOMER_BRANDING_CONFIGURATION_PROPERTIES
     );
 
     when(applicationDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionsSummaryView(

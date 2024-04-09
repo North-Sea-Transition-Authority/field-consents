@@ -29,7 +29,7 @@ import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.assets.AssetTestUtil;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil;
-import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.branding.BrandingTestUtil;
 import uk.co.nstauthority.fieldconsents.validation.ValidatorTestingUtil;
 
 @ExtendWith(MockitoExtension.class)
@@ -43,9 +43,6 @@ class AdditionalAssetSelectionFormValidatorTest {
 
   @Mock
   private ApplicationAssetService applicationAssetService;
-
-  private final CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties
-      = ValidatorTestingUtil.getCustomerBrandingConfigurationProperties();
 
   private AdditionalAssetSelectionFormValidator validator;
 
@@ -63,8 +60,9 @@ class AdditionalAssetSelectionFormValidatorTest {
     validator = new AdditionalAssetSelectionFormValidator(
         assetService,
         fieldService,
-        customerBrandingConfigurationProperties,
-        applicationAssetService);
+        BrandingTestUtil.CUSTOMER_BRANDING_CONFIGURATION_PROPERTIES,
+        applicationAssetService
+    );
     form = new AssetSelectionForm(ASSET_KEY, applicationVersion);
     errors = new BeanPropertyBindingResult(form, "form");
   }
@@ -116,7 +114,7 @@ class AdditionalAssetSelectionFormValidatorTest {
             Collections.singletonList(
                 AdditionalAssetSelectionFormValidator.ASSET_MUST_HAVE_OPERATOR +
                 AdditionalAssetSelectionFormValidator.ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL
-                    .formatted(customerBrandingConfigurationProperties.email())))
+                    .formatted(BrandingTestUtil.CUSTOMER_BRANDING_CONFIGURATION_PROPERTIES.email())))
     );
   }
 
@@ -137,7 +135,7 @@ class AdditionalAssetSelectionFormValidatorTest {
             Collections.singletonList(
                 AdditionalAssetSelectionFormValidator.ASSET_MUST_HAVE_LICENCES +
                 AdditionalAssetSelectionFormValidator.ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL
-                    .formatted(customerBrandingConfigurationProperties.email())))
+                    .formatted(BrandingTestUtil.CUSTOMER_BRANDING_CONFIGURATION_PROPERTIES.email())))
     );
   }
 
@@ -158,7 +156,7 @@ class AdditionalAssetSelectionFormValidatorTest {
             Collections.singletonList(
                 AdditionalAssetSelectionFormValidator.ASSET_MUST_HAVE_OPERATOR_LICENCES +
                 AdditionalAssetSelectionFormValidator.ASSET_MUST_HAVE_OPERATOR_LICENCES_TAIL
-                    .formatted(customerBrandingConfigurationProperties.email())))
+                    .formatted(BrandingTestUtil.CUSTOMER_BRANDING_CONFIGURATION_PROPERTIES.email())))
     );
   }
 

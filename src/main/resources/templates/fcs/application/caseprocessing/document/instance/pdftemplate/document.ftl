@@ -1,6 +1,7 @@
 <#-- @ftlvariable name="previewWatermark" type="boolean" -->
 <#-- @ftlvariable name="applicationReference" type="java.lang.String" -->
 <#-- @ftlvariable name="documentInstanceSectionsSummaryView" type="uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionsSummaryView" -->
+<#-- @ftlvariable name="customerBrandingConfigurationProperties" type="uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties" -->
 
 <html>
 <head>
@@ -27,9 +28,10 @@
       <tr>
         <td class="page-number"></td>
         <td>
-          North Sea Transition Authority is a business name of the Oil and Gas Authority. Oil and Gas Authority is a limited company registered in England and
-          Wales with registered number 09666504 and VAT registered number 249433979. Our registered office is at Sanctuary Buildings, 20 Great Smith Street,
-          London, SW1P 3BT.
+          ${customerBrandingConfigurationProperties.name()} is a business name of the ${customerBrandingConfigurationProperties.legalName()}.
+          ${customerBrandingConfigurationProperties.legalName()} is a limited company registered in England and Wales with
+          registered number ${customerBrandingConfigurationProperties.registeredNumber()} and VAT registered number
+          ${customerBrandingConfigurationProperties.vatNumber()}. Our registered office is at ${customerBrandingConfigurationProperties.address()}.
         </td>
       </tr>
     </tbody>

@@ -35,7 +35,7 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthS
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthTestUtil;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryController;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil;
-import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.branding.BrandingTestUtil;
 import uk.co.nstauthority.fieldconsents.branding.ServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.correlationid.CorrelationIdUtil;
 import uk.co.nstauthority.fieldconsents.mvc.AbsoluteUrlService;
@@ -46,15 +46,6 @@ class EmailServiceTest {
   private static final ServiceBrandingConfigurationProperties SERVICE_BRANDING_CONFIGURATION_PROPERTIES = new ServiceBrandingConfigurationProperties(
       "name",
       "mnemonic"
-  );
-
-  private static final CustomerBrandingConfigurationProperties CUSTOMER_BRANDING_CONFIGURATION_PROPERTIES = new CustomerBrandingConfigurationProperties(
-      "name",
-      "mnemonic",
-      "email@fcs.co.uk",
-      "legal name",
-      "legal mnemonic",
-      "team name"
   );
 
   private static final GovukNotifyTemplate GOVUK_NOTIFY_TEMPLATE = GovukNotifyTemplate.CASE_ASSIGNED_TO_CASE_OFFICER;
@@ -93,7 +84,7 @@ class EmailServiceTest {
     emailService = new EmailService(
         notificationLibraryClient,
         SERVICE_BRANDING_CONFIGURATION_PROPERTIES,
-        CUSTOMER_BRANDING_CONFIGURATION_PROPERTIES,
+        BrandingTestUtil.CUSTOMER_BRANDING_CONFIGURATION_PROPERTIES,
         applicationService,
         applicationAssetService,
         consentLengthService,
@@ -141,14 +132,14 @@ class EmailServiceTest {
             .containsExactlyInAnyOrder(
                 tuple("SUBJECT_PREFIX", TEST_PREFIX),
                 tuple("SERVICE_FULL_NAME", SERVICE_BRANDING_CONFIGURATION_PROPERTIES.name()),
-                tuple("REGULATOR_MNEMONIC", CUSTOMER_BRANDING_CONFIGURATION_PROPERTIES.mnemonic()),
+                tuple("REGULATOR_MNEMONIC", BrandingTestUtil.CUSTOMER_BRANDING_CONFIGURATION_PROPERTIES.mnemonic()),
                 tuple("APPLICATION_REFERENCE", "PCON/1/0 (Version 1)"),
                 tuple("PRIMARY_ASSET", FieldTestUtil.field1Json.getName()),
                 tuple("APPLICATION_DURATION", consentDuration.getConsentLength().getShortDisplayName()),
                 tuple("APPLICATION_URL", "/application-url"),
                 tuple("SALUTATION", SALUTATION),
                 tuple("VALEDICTION", VALEDICTION),
-                tuple("CONSENTS_TEAM_NAME", CUSTOMER_BRANDING_CONFIGURATION_PROPERTIES.teamName()));
+                tuple("CONSENTS_TEAM_NAME", BrandingTestUtil.CUSTOMER_BRANDING_CONFIGURATION_PROPERTIES.teamName()));
       }
     }
 
@@ -175,14 +166,14 @@ class EmailServiceTest {
             .containsExactlyInAnyOrder(
                 tuple("SUBJECT_PREFIX", ""),
                 tuple("SERVICE_FULL_NAME", SERVICE_BRANDING_CONFIGURATION_PROPERTIES.name()),
-                tuple("REGULATOR_MNEMONIC", CUSTOMER_BRANDING_CONFIGURATION_PROPERTIES.mnemonic()),
+                tuple("REGULATOR_MNEMONIC", BrandingTestUtil.CUSTOMER_BRANDING_CONFIGURATION_PROPERTIES.mnemonic()),
                 tuple("APPLICATION_REFERENCE", "PCON/1/0 (Version 1)"),
                 tuple("PRIMARY_ASSET", FieldTestUtil.field1Json.getName()),
                 tuple("APPLICATION_DURATION", consentDuration.getConsentLength().getShortDisplayName()),
                 tuple("APPLICATION_URL", "/application-url"),
                 tuple("SALUTATION", SALUTATION),
                 tuple("VALEDICTION", VALEDICTION),
-                tuple("CONSENTS_TEAM_NAME", CUSTOMER_BRANDING_CONFIGURATION_PROPERTIES.teamName()));
+                tuple("CONSENTS_TEAM_NAME", BrandingTestUtil.CUSTOMER_BRANDING_CONFIGURATION_PROPERTIES.teamName()));
       }
     }
   }
