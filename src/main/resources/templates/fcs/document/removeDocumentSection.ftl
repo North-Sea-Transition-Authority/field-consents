@@ -2,14 +2,14 @@
 
 <#assign pageTitle = "Remove section"/>
 
-<@defaultPage htmlTitle=pageTitle pageHeading=pageTitle>
+<@defaultPage htmlTitle=pageTitle pageHeading=pageTitle pageSize=PageSize.FULL_WIDTH>
   <@fdsForm.htmlForm>
     <@fdsSummaryList.summaryListCard headingText="Section details" summaryListId="section-details-summary-card-list">
-      <@fdsSummaryList.summaryListRowNoAction keyText="Title">
+      <@fdsSummaryList.summaryListRowNoAction keyText="Section title">
         ${documentSectionDto.title()}
       </@fdsSummaryList.summaryListRowNoAction>
 
-      <@fdsSummaryList.summaryListRowNoAction keyText="Text">
+      <@fdsSummaryList.summaryListRowNoAction keyText="Section text">
         <p class="govuk-body govuk-body__preserve-whitespace">${(documentSectionDto.content()!)?no_esc}</p>
       </@fdsSummaryList.summaryListRowNoAction>
     </@fdsSummaryList.summaryListCard>
