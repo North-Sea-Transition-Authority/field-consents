@@ -9,7 +9,7 @@
         ${documentSectionDto.title()}
       </@fdsSummaryList.summaryListRowNoAction>
 
-      <@fdsSummaryList.summaryListRowNoAction keyText="Section text">
+      <@fdsSummaryList.summaryListRowNoAction keyText="Section content">
         <p class="govuk-body govuk-body__preserve-whitespace">${(documentSectionDto.content()!)?no_esc}</p>
       </@fdsSummaryList.summaryListRowNoAction>
     </@fdsSummaryList.summaryListCard>
