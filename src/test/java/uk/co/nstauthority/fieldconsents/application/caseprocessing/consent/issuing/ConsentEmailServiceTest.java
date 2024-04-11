@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.CACHED_PRIMARY_OPERATOR_NAME_1;
@@ -14,7 +15,9 @@ import static uk.co.nstauthority.fieldconsents.email.EmailMergeFieldTestUtil.CAS
 import static uk.co.nstauthority.fieldconsents.email.EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME;
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.ENERGY_PORTAL_USER_DTO;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.ORG_GROUP_1;
+import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.ORG_GROUP_2;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit1;
+import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit4;
 
 import java.util.Collections;
 import java.util.List;
@@ -36,6 +39,9 @@ import uk.co.fivium.digitalnotificationlibrary.core.notification.email.EmailReci
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.Consent;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.fieldequitypartner.ConsentFieldEquityPartner;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.fieldequitypartner.ConsentFieldEquityPartnerService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.email.EmailService;
@@ -57,11 +63,16 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.industry.Indu
 @ExtendWith(MockitoExtension.class)
 class ConsentEmailServiceTest {
 
-  static final Team INDUSTRY_TEAM = new TeamTestUtil.TeamBuilder()
+  static final Team INDUSTRY_TEAM_1 = new TeamTestUtil.TeamBuilder()
       .withId(1)
       .withTeamType(TeamType.INDUSTRY)
       .build();
-  
+
+  static final Team INDUSTRY_TEAM_2 = new TeamTestUtil.TeamBuilder()
+      .withId(2)
+      .withTeamType(TeamType.INDUSTRY)
+      .build();
+
   private static final ServiceUserDetail CONSENT_RECIPIENT_1 = ServiceUserDetailTestUtil.Builder()
       .withForename("Consent1")
       .withSurname("Recipient1")
@@ -78,7 +89,7 @@ class ConsentEmailServiceTest {
   
   private static final TeamMemberView TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_1 = new TeamMemberView(
       WebUserAccountId.from(CONSENT_RECIPIENT_1),
-      new TeamView(INDUSTRY_TEAM.toTeamId(), TeamType.INDUSTRY, "Industry team"),
+      new TeamView(INDUSTRY_TEAM_1.toTeamId(), TeamType.INDUSTRY, "Industry team"),
       "Mr",
       "Consent1",
       "Recipient1",
@@ -89,7 +100,7 @@ class ConsentEmailServiceTest {
 
   private static final TeamMemberView TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_2 = new TeamMemberView(
       WebUserAccountId.from(CONSENT_RECIPIENT_2),
-      new TeamView(INDUSTRY_TEAM.toTeamId(), TeamType.INDUSTRY, "Consent team"),
+      new TeamView(INDUSTRY_TEAM_1.toTeamId(), TeamType.INDUSTRY, "Consent team"),
       "Mr",
       "Consent2",
       "Recipient2",
@@ -113,6 +124,9 @@ class ConsentEmailServiceTest {
   @Mock
   private EnergyPortalUserService energyPortalUserService;
 
+  @Mock
+  private ConsentFieldEquityPartnerService consentFieldEquityPartnerService;
+
   @Captor
   private ArgumentCaptor<MergedTemplate> templateCaptor;
 
@@ -134,7 +148,8 @@ class ConsentEmailServiceTest {
         industryTeamService,
         teamMemberViewService,
         organisationUnitService,
-        energyPortalUserService
+        energyPortalUserService,
+        consentFieldEquityPartnerService
     );
   }
 
@@ -193,13 +208,13 @@ class ConsentEmailServiceTest {
         .thenReturn(ENERGY_PORTAL_USER_DTO);
 
     when(industryTeamService.getTeamByOrganisationGroupId(ORG_GROUP_1.getOrganisationGroupId()))
-        .thenReturn(Optional.of(INDUSTRY_TEAM));
+        .thenReturn(Optional.of(INDUSTRY_TEAM_1));
 
     when(emailService.getTemplate(GovukNotifyTemplate.CONSENT_ISSUED_TO_OPERATOR, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
     when(teamMemberViewService
-        .getTeamMemberViewsWithRolesForTeam(INDUSTRY_TEAM, Set.of(IndustryTeamRole.CONSENT_RECIPIENT)))
+        .getTeamMemberViewsWithRolesForTeam(INDUSTRY_TEAM_1, Set.of(IndustryTeamRole.CONSENT_RECIPIENT)))
         .thenReturn(Collections.emptyList());
     
     consentEmailService.sendConsentIssuedEmailToOperator(applicationVersion);
@@ -239,13 +254,13 @@ class ConsentEmailServiceTest {
         .thenReturn(ENERGY_PORTAL_USER_DTO);
 
     when(industryTeamService.getTeamByOrganisationGroupId(ORG_GROUP_1.getOrganisationGroupId()))
-        .thenReturn(Optional.of(INDUSTRY_TEAM));
+        .thenReturn(Optional.of(INDUSTRY_TEAM_1));
 
     when(emailService.getTemplate(GovukNotifyTemplate.CONSENT_ISSUED_TO_OPERATOR, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
     when(teamMemberViewService
-        .getTeamMemberViewsWithRolesForTeam(INDUSTRY_TEAM, Set.of(IndustryTeamRole.CONSENT_RECIPIENT)))
+        .getTeamMemberViewsWithRolesForTeam(INDUSTRY_TEAM_1, Set.of(IndustryTeamRole.CONSENT_RECIPIENT)))
         .thenReturn(List.of(TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_1, TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_2));
 
     consentEmailService.sendConsentIssuedEmailToOperator(applicationVersion);
@@ -258,6 +273,7 @@ class ConsentEmailServiceTest {
 
     // verify emails merge fields
     var emailTemplates = templateCaptor.getAllValues();
+    var domainReferences = domainReferenceCaptor.getAllValues();
 
     var firstEmailMergeFields = emailTemplates.get(0).getMailMergeFields();
     assertThat(firstEmailMergeFields)
@@ -291,11 +307,19 @@ class ConsentEmailServiceTest {
     assertThat(testEmailRecipients.get(2).getEmailAddress())
         .isEqualTo(FieldConsentsEmailRecipient.from(CONSENT_RECIPIENT_1).getEmailAddress());
 
-    // verify domain reference
-    assertThat(domainReferenceCaptor.getValue().getDomainId())
+    // verify domain references
+    assertThat(domainReferences.get(0).getDomainId())
+        .isEqualTo(applicationVersion.getId().toString());
+    assertThat(domainReferences.get(1).getDomainId())
+        .isEqualTo(applicationVersion.getId().toString());
+    assertThat(domainReferences.get(2).getDomainId())
         .isEqualTo(applicationVersion.getId().toString());
 
-    assertThat(domainReferenceCaptor.getValue().getDomainType())
+    assertThat(domainReferences.get(0).getDomainType())
+        .isEqualTo(APPLICATION_VERSION_DOMAIN_REFERENCE);
+    assertThat(domainReferences.get(1).getDomainType())
+        .isEqualTo(APPLICATION_VERSION_DOMAIN_REFERENCE);
+    assertThat(domainReferences.get(2).getDomainType())
         .isEqualTo(APPLICATION_VERSION_DOMAIN_REFERENCE);
   }
 
@@ -328,6 +352,204 @@ class ConsentEmailServiceTest {
         .isEqualTo(applicationVersion.getId().toString());
 
     assertThat(domainReferenceCaptor.getValue().getDomainType())
+        .isEqualTo(APPLICATION_VERSION_DOMAIN_REFERENCE);
+  }
+
+  @Test
+  void sendConsentIssuedEmailToFieldEquityPartners_whenNoFieldEquityPartners_thenNoEmailIsSent() {
+    var consent = new Consent(1);
+
+    when(consentFieldEquityPartnerService.getConsentFieldEquityPartnersByConsent(consent)).thenReturn(Collections.emptyList());
+
+    consentEmailService.sendConsentIssuedEmailToFieldEquityPartners(applicationVersion, consent);
+
+    verify(emailService, never()).sendEmail(any(), any(), any());
+  }
+
+  @Test
+  void sendConsentIssuedEmailToFieldEquityPartners_whenFieldEquityPartnerButNoMemberInConsentRecipientRole_thenNoEmailIsSent() {
+    var consent = new Consent(1);
+    var consentFieldEquityPartners = List.of(
+        new ConsentFieldEquityPartner(consent, 1, "org A", "reg A"));
+
+    when(consentFieldEquityPartnerService.getConsentFieldEquityPartnersByConsent(consent)).thenReturn(consentFieldEquityPartners);
+    when(organisationUnitService.getOrganisationUnitWithGroupsById(any(), any()))
+        .thenReturn(OrganisationUnitWithGroupsJson.from(orgUnit1));
+
+    when(industryTeamService.getTeamByOrganisationGroupId(ORG_GROUP_1.getOrganisationGroupId()))
+        .thenReturn(Optional.of(INDUSTRY_TEAM_1));
+
+    when(emailService.getTemplate(GovukNotifyTemplate.CONSENT_ISSUED_TO_FIELD_EQUITY_PARTNER, applicationVersion))
+        .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
+
+    when(teamMemberViewService
+        .getTeamMemberViewsWithRolesForTeam(INDUSTRY_TEAM_1, Set.of(IndustryTeamRole.CONSENT_RECIPIENT)))
+        .thenReturn(Collections.emptyList());
+
+    consentEmailService.sendConsentIssuedEmailToFieldEquityPartners(applicationVersion, consent);
+
+    verify(emailService, never()).sendEmail(any(), any(), any());
+  }
+
+  @Test
+  void sendConsentIssuedEmailToFieldEquityPartners_whenFieldEquityPartnerAndOneMemberInConsentRecipientRole_thenSendEmail() {
+    var consent = new Consent(1);
+    var consentFieldEquityPartners = List.of(
+        new ConsentFieldEquityPartner(consent, 1, "org A", "reg A"));
+
+    when(consentFieldEquityPartnerService.getConsentFieldEquityPartnersByConsent(consent)).thenReturn(consentFieldEquityPartners);
+    when(organisationUnitService.getOrganisationUnitWithGroupsById(any(), any()))
+        .thenReturn(OrganisationUnitWithGroupsJson.from(orgUnit1));
+
+    when(industryTeamService.getTeamByOrganisationGroupId(ORG_GROUP_1.getOrganisationGroupId()))
+        .thenReturn(Optional.of(INDUSTRY_TEAM_1));
+
+    when(emailService.getTemplate(GovukNotifyTemplate.CONSENT_ISSUED_TO_FIELD_EQUITY_PARTNER, applicationVersion))
+        .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
+
+    when(teamMemberViewService
+        .getTeamMemberViewsWithRolesForTeam(INDUSTRY_TEAM_1, Set.of(IndustryTeamRole.CONSENT_RECIPIENT)))
+        .thenReturn(List.of(TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_1));
+
+    consentEmailService.sendConsentIssuedEmailToFieldEquityPartners(applicationVersion, consent);
+
+    verify(emailService).sendEmail(
+        templateCaptor.capture(),
+        emailRecipientCaptor.capture(),
+        domainReferenceCaptor.capture()
+    );
+
+    assertThat(templateCaptor.getValue().getMailMergeFields())
+        .extracting(MailMergeField::name, MailMergeField::value)
+        .containsOnly(
+            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, "org A")
+        );
+
+    assertThat(emailRecipientCaptor.getValue().getEmailAddress())
+        .isEqualTo(TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_1.contactEmail());
+
+    assertThat(domainReferenceCaptor.getValue().getDomainId())
+        .isEqualTo(applicationVersion.getId().toString());
+
+    assertThat(domainReferenceCaptor.getValue().getDomainType())
+        .isEqualTo(APPLICATION_VERSION_DOMAIN_REFERENCE);
+  }
+
+  @Test
+  void sendConsentIssuedEmailToFieldEquityPartners_whenFieldEquityPartnerAndMultipleOrgGroupsWithTheSameMemberInConsentRecipientRole_thenSendOneEmailOnly() {
+    var consent = new Consent(1);
+    var consentFieldEquityPartners = List.of(
+        new ConsentFieldEquityPartner(consent, 1, "org A", "reg A"));
+
+    when(consentFieldEquityPartnerService.getConsentFieldEquityPartnersByConsent(consent)).thenReturn(consentFieldEquityPartners);
+    when(organisationUnitService.getOrganisationUnitWithGroupsById(any(), any()))
+        .thenReturn(OrganisationUnitWithGroupsJson.from(orgUnit4));
+
+    when(industryTeamService.getTeamByOrganisationGroupId(ORG_GROUP_1.getOrganisationGroupId()))
+        .thenReturn(Optional.of(INDUSTRY_TEAM_1));
+
+    when(industryTeamService.getTeamByOrganisationGroupId(ORG_GROUP_2.getOrganisationGroupId()))
+        .thenReturn(Optional.of(INDUSTRY_TEAM_2));
+
+    when(emailService.getTemplate(GovukNotifyTemplate.CONSENT_ISSUED_TO_FIELD_EQUITY_PARTNER, applicationVersion))
+        .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
+
+    when(teamMemberViewService
+        .getTeamMemberViewsWithRolesForTeam(INDUSTRY_TEAM_1, Set.of(IndustryTeamRole.CONSENT_RECIPIENT)))
+        .thenReturn(List.of(TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_1));
+
+    when(teamMemberViewService
+        .getTeamMemberViewsWithRolesForTeam(INDUSTRY_TEAM_2, Set.of(IndustryTeamRole.CONSENT_RECIPIENT)))
+        .thenReturn(List.of(TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_1));
+
+    consentEmailService.sendConsentIssuedEmailToFieldEquityPartners(applicationVersion, consent);
+
+    verify(emailService).sendEmail(
+        templateCaptor.capture(),
+        emailRecipientCaptor.capture(),
+        domainReferenceCaptor.capture()
+    );
+
+    assertThat(templateCaptor.getValue().getMailMergeFields())
+        .extracting(MailMergeField::name, MailMergeField::value)
+        .containsOnly(
+            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, "org A")
+        );
+
+    assertThat(emailRecipientCaptor.getValue().getEmailAddress())
+        .isEqualTo(TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_1.contactEmail());
+
+    assertThat(domainReferenceCaptor.getValue().getDomainId())
+        .isEqualTo(applicationVersion.getId().toString());
+
+    assertThat(domainReferenceCaptor.getValue().getDomainType())
+        .isEqualTo(APPLICATION_VERSION_DOMAIN_REFERENCE);
+  }
+
+  @Test
+  void sendConsentIssuedEmailToFieldEquityPartners_whenFieldEquityPartnerAndMultipleMembersInConsentRecipientRole_thenSendEmail() {
+    var consent = new Consent(1);
+    var consentFieldEquityPartners = List.of(
+        new ConsentFieldEquityPartner(consent, 1, "org A", "reg A"));
+
+    when(consentFieldEquityPartnerService.getConsentFieldEquityPartnersByConsent(consent)).thenReturn(consentFieldEquityPartners);
+    when(organisationUnitService.getOrganisationUnitWithGroupsById(any(), any()))
+        .thenReturn(OrganisationUnitWithGroupsJson.from(orgUnit1));
+
+    when(industryTeamService.getTeamByOrganisationGroupId(ORG_GROUP_1.getOrganisationGroupId()))
+        .thenReturn(Optional.of(INDUSTRY_TEAM_1));
+
+    when(emailService.getTemplate(GovukNotifyTemplate.CONSENT_ISSUED_TO_FIELD_EQUITY_PARTNER, applicationVersion))
+        .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
+
+    when(teamMemberViewService
+        .getTeamMemberViewsWithRolesForTeam(INDUSTRY_TEAM_1, Set.of(IndustryTeamRole.CONSENT_RECIPIENT)))
+        .thenReturn(List.of(TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_1, TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_2));
+
+    consentEmailService.sendConsentIssuedEmailToFieldEquityPartners(applicationVersion, consent);
+
+    verify(emailService, Mockito.times(2)).sendEmail(
+        templateCaptor.capture(),
+        emailRecipientCaptor.capture(),
+        domainReferenceCaptor.capture()
+    );
+
+    // verify emails merge fields
+    var emailTemplates = templateCaptor.getAllValues();
+    var domainReferences = domainReferenceCaptor.getAllValues();
+
+    var firstEmailMergeFields = emailTemplates.get(0).getMailMergeFields();
+    assertThat(firstEmailMergeFields)
+        .extracting(MailMergeField::name, MailMergeField::value)
+        .containsOnly(
+            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, "org A")
+        );
+
+    var secondEmailMergeFields = emailTemplates.get(1).getMailMergeFields();
+    assertThat(secondEmailMergeFields)
+        .extracting(MailMergeField::name, MailMergeField::value)
+        .containsOnly(
+            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, "org A")
+        );
+
+    // verify email recipients
+    var testEmailRecipients = emailRecipientCaptor.getAllValues();
+    assertThat(testEmailRecipients).hasSize(2);
+
+    assertThat(testEmailRecipients.get(0).getEmailAddress())
+        .isEqualTo(TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_2.contactEmail());
+    assertThat(testEmailRecipients.get(1).getEmailAddress())
+        .isEqualTo(TEAM_MEMBER_VIEW_CONSENT_RECIPIENT_1.contactEmail());
+
+    // verify domain references
+    assertThat(domainReferences.get(0).getDomainId())
+        .isEqualTo(applicationVersion.getId().toString());
+    assertThat(domainReferences.get(1).getDomainId())
+        .isEqualTo(applicationVersion.getId().toString());
+
+    assertThat(domainReferences.get(0).getDomainType())
+        .isEqualTo(APPLICATION_VERSION_DOMAIN_REFERENCE);
+    assertThat(domainReferences.get(1).getDomainType())
         .isEqualTo(APPLICATION_VERSION_DOMAIN_REFERENCE);
   }
 }

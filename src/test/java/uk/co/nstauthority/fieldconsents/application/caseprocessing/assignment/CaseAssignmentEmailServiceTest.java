@@ -211,6 +211,7 @@ class CaseAssignmentEmailServiceTest {
 
     // verify emails merge fields
     var emailTemplates = templateCaptor.getAllValues();
+    var domainReferences = domainReferenceCaptor.getAllValues();
 
     var firstEmailMergeFields = emailTemplates.get(0).getMailMergeFields();
     assertThat(firstEmailMergeFields)
@@ -237,11 +238,15 @@ class CaseAssignmentEmailServiceTest {
     assertThat(testEmailRecipients.get(1).getEmailAddress())
         .isEqualTo(FieldConsentsEmailRecipient.from(CASE_MANAGER_2).getEmailAddress());
 
-    // verify domain reference
-    assertThat(domainReferenceCaptor.getValue().getDomainId())
+    // verify domain references
+    assertThat(domainReferences.get(0).getDomainId())
+        .isEqualTo(applicationVersion.getId().toString());
+    assertThat(domainReferences.get(1).getDomainId())
         .isEqualTo(applicationVersion.getId().toString());
 
-    assertThat(domainReferenceCaptor.getValue().getDomainType())
+    assertThat(domainReferences.get(0).getDomainType())
+        .isEqualTo(APPLICATION_VERSION_DOMAIN_REFERENCE);
+    assertThat(domainReferences.get(1).getDomainType())
         .isEqualTo(APPLICATION_VERSION_DOMAIN_REFERENCE);
   }
 

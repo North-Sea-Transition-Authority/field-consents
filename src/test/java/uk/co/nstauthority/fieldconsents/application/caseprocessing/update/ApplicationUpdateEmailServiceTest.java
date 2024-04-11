@@ -187,6 +187,7 @@ class ApplicationUpdateEmailServiceTest {
 
     // verify emails merge fields
     var emailTemplates = templateCaptor.getAllValues();
+    var domainReferences = domainReferenceCaptor.getAllValues();
 
     var firstEmailMergeFields = emailTemplates.get(0).getMailMergeFields();
     assertThat(firstEmailMergeFields)
@@ -215,11 +216,15 @@ class ApplicationUpdateEmailServiceTest {
     assertThat(testEmailRecipients.get(1).getEmailAddress())
         .isEqualTo(FieldConsentsEmailRecipient.from(serviceDetailCaseOfficer).getEmailAddress());
 
-    // verify domain reference
-    assertThat(domainReferenceCaptor.getValue().getDomainId())
+    // verify domain references
+    assertThat(domainReferences.get(0).getDomainId())
+        .isEqualTo(applicationVersion.getId().toString());
+    assertThat(domainReferences.get(1).getDomainId())
         .isEqualTo(applicationVersion.getId().toString());
 
-    assertThat(domainReferenceCaptor.getValue().getDomainType())
+    assertThat(domainReferences.get(0).getDomainType())
+        .isEqualTo(APPLICATION_VERSION_DOMAIN_REFERENCE);
+    assertThat(domainReferences.get(1).getDomainType())
         .isEqualTo(APPLICATION_VERSION_DOMAIN_REFERENCE);
   }
 
@@ -353,6 +358,7 @@ class ApplicationUpdateEmailServiceTest {
 
     // verify emails merge fields
     var emailTemplates = templateCaptor.getAllValues();
+    var domainReferences = domainReferenceCaptor.getAllValues();
 
     var firstEmailMergeFields = emailTemplates.get(0).getMailMergeFields();
     assertThat(firstEmailMergeFields)
@@ -379,11 +385,15 @@ class ApplicationUpdateEmailServiceTest {
     assertThat(testEmailRecipients.get(1).getEmailAddress())
         .isEqualTo(FieldConsentsEmailRecipient.from(TECHNICAL_REVIEWER_ENERGY_PORTAL_USER_DTO).getEmailAddress());
 
-    // verify domain reference
-    assertThat(domainReferenceCaptor.getValue().getDomainId())
+    // verify domain references
+    assertThat(domainReferences.get(0).getDomainId())
+        .isEqualTo(applicationVersion.getId().toString());
+    assertThat(domainReferences.get(1).getDomainId())
         .isEqualTo(applicationVersion.getId().toString());
 
-    assertThat(domainReferenceCaptor.getValue().getDomainType())
+    assertThat(domainReferences.get(0).getDomainType())
+        .isEqualTo(APPLICATION_VERSION_DOMAIN_REFERENCE);
+    assertThat(domainReferences.get(1).getDomainType())
         .isEqualTo(APPLICATION_VERSION_DOMAIN_REFERENCE);
   }
 

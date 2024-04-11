@@ -14,10 +14,11 @@ import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationFileUsage;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.fieldequitypartner.ConsentFieldEquityPartnerService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.ConsentEmailService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.PdfRenderingOptions;
-import uk.co.nstauthority.fieldconsents.application.fieldequitypartner.ConsentFieldEquityPartnerService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
 
@@ -34,6 +35,7 @@ public class ConsentService {
   private final Clock clock;
   private final ConsentEmailService consentEmailService;
   private final ConsentFieldEquityPartnerService consentFieldEquityPartnerService;
+  private final ApplicationAssetService applicationAssetService;
 
   ConsentService(
       ApplicationService applicationService,
@@ -43,7 +45,8 @@ public class ConsentService {
       FileService fileService,
       Clock clock,
       ConsentEmailService consentEmailService,
-      ConsentFieldEquityPartnerService consentFieldEquityPartnerService
+      ConsentFieldEquityPartnerService consentFieldEquityPartnerService,
+      ApplicationAssetService applicationAssetService
   ) {
     this.applicationService = applicationService;
     this.applicationDocumentInstanceService = applicationDocumentInstanceService;
@@ -53,6 +56,7 @@ public class ConsentService {
     this.clock = clock;
     this.consentEmailService = consentEmailService;
     this.consentFieldEquityPartnerService = consentFieldEquityPartnerService;
+    this.applicationAssetService = applicationAssetService;
   }
 
   @Transactional
@@ -66,7 +70,10 @@ public class ConsentService {
     consent.setIssuedInstant(clock.instant());
 
     consentRepository.save(consent);
-    consentFieldEquityPartnerService.saveFieldEquityPartners(consent, applicationVersion);
+
+    if (applicationAssetService.getPrimaryAsset(applicationVersion).isField()) {
+      consentFieldEquityPartnerService.saveFieldEquityPartners(consent, applicationVersion);
+    }
 
     generateDocumentInstancesAndSaveToConsent(applicationVersion, consent);
     copySupportingDocumentsToConsent(application, consent);
@@ -88,6 +95,16 @@ public class ConsentService {
     } catch (Exception exception) {
       LOGGER.error("""
               An attempt to send a consent issued notification to case officer \
+              by user with wuaId [{}] for application version with id [{}] failed. \
+              Note: this hasn't prevented the consent being issued.
+              """,
+          user.wuaId(), applicationVersion.getId(), exception);
+    }
+    try {
+      consentEmailService.sendConsentIssuedEmailToFieldEquityPartners(applicationVersion, consent);
+    } catch (Exception exception) {
+      LOGGER.error("""
+              An attempt to send a consent issued notification to field equity partners \
               by user with wuaId [{}] for application version with id [{}] failed. \
               Note: this hasn't prevented the consent being issued.
               """,

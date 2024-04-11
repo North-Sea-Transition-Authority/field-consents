@@ -9,6 +9,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -32,15 +33,21 @@ import uk.co.fivium.fileuploadlibrary.core.FileService;
 import uk.co.fivium.fileuploadlibrary.core.FileSource;
 import uk.co.fivium.fileuploadlibrary.core.FileUploadRequest;
 import uk.co.fivium.fileuploadlibrary.fds.FileUploadResponse;
+import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationFileUsage;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.fieldequitypartner.ConsentFieldEquityPartnerService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.ConsentEmailService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.DocumentInstanceDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.PdfRenderingOptions;
-import uk.co.nstauthority.fieldconsents.application.fieldequitypartner.ConsentFieldEquityPartnerService;
+import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
 
@@ -69,9 +76,18 @@ class ConsentServiceTest {
   @Mock
   private ConsentFieldEquityPartnerService consentFieldEquityPartnerService;
 
+  @Mock
+  private ApplicationAssetService applicationAssetService;
+
   private final Clock clock = Clock.fixed(Instant.now(), ZoneId.systemDefault());
 
   private ConsentService consentService;
+
+  private Application application;
+
+  private ApplicationVersion applicationVersion;
+
+  private ApplicationAsset primaryApplicationAsset;
 
   @BeforeEach
   void beforeEach() {
@@ -83,19 +99,22 @@ class ConsentServiceTest {
         fileService,
         clock,
         consentEmailService,
-        consentFieldEquityPartnerService
+        consentFieldEquityPartnerService,
+        applicationAssetService
     ));
+
+    applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
+    primaryApplicationAsset = ApplicationAssetTestUtil.newBuilder().withAssetType(AssetType.FIELD).build();
+    application = applicationVersion.getApplication();
   }
 
   @Test
   void issueConsent() {
-    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
-    var application = applicationVersion.getApplication();
-
     var user = ServiceUserDetailTestUtil.Builder().build();
 
     var consentCaptor = ArgumentCaptor.forClass(Consent.class);
 
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
     doNothing().when(consentService).generateDocumentInstancesAndSaveToConsent(any(), any());
     doNothing().when(consentService).copySupportingDocumentsToConsent(any(), any());
 
@@ -119,21 +138,34 @@ class ConsentServiceTest {
 
     verify(consentService).generateDocumentInstancesAndSaveToConsent(applicationVersion, consent);
     verify(consentService).copySupportingDocumentsToConsent(application, consent);
-
     verify(applicationService).completeApplication(applicationVersion);
     verify(consentEmailService).sendConsentIssuedEmailToOperator(applicationVersion);
     verify(consentEmailService).sendConsentIssuedEmailToCaseOfficer(applicationVersion);
+    verify(consentEmailService).sendConsentIssuedEmailToFieldEquityPartners(applicationVersion, consent);
+    verify(consentFieldEquityPartnerService).saveFieldEquityPartners(consent, applicationVersion);
+  }
+
+  @Test
+  void issueConsent_whenApplicationIsForTerminal_thenFieldEquityPartnersAreNotSaved() {
+    var primaryApplicationAsset = ApplicationAssetTestUtil.newBuilder().withAssetType(AssetType.TERMINAL).build();
+    var user = ServiceUserDetailTestUtil.Builder().build();
+
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
+    doNothing().when(consentService).generateDocumentInstancesAndSaveToConsent(any(), any());
+    doNothing().when(consentService).copySupportingDocumentsToConsent(any(), any());
+
+    consentService.issueConsent(applicationVersion, user);
+
+    verify(consentFieldEquityPartnerService, never()).saveFieldEquityPartners(any(), any());
   }
 
   @Test
   void issueConsent_whenSendConsentIssuedEmailToOperatorFails_thenConsentIsStillIssued() {
-    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
-    var application = applicationVersion.getApplication();
-
     var user = ServiceUserDetailTestUtil.Builder().build();
 
     var consentCaptor = ArgumentCaptor.forClass(Consent.class);
 
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
     doNothing().when(consentService).generateDocumentInstancesAndSaveToConsent(any(), any());
     doNothing().when(consentService).copySupportingDocumentsToConsent(any(), any());
 
@@ -168,17 +200,16 @@ class ConsentServiceTest {
 
     verify(applicationService).completeApplication(applicationVersion);
     verify(consentEmailService).sendConsentIssuedEmailToOperator(applicationVersion);
+    verify(consentFieldEquityPartnerService).saveFieldEquityPartners(consent, applicationVersion);
   }
 
   @Test
   void issueConsent_whenSendConsentIssuedEmailToCaseOfficerFails_thenConsentIsStillIssued() {
-    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
-    var application = applicationVersion.getApplication();
-
     var user = ServiceUserDetailTestUtil.Builder().build();
 
     var consentCaptor = ArgumentCaptor.forClass(Consent.class);
 
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
     doNothing().when(consentService).generateDocumentInstancesAndSaveToConsent(any(), any());
     doNothing().when(consentService).copySupportingDocumentsToConsent(any(), any());
 
@@ -213,11 +244,55 @@ class ConsentServiceTest {
 
     verify(applicationService).completeApplication(applicationVersion);
     verify(consentEmailService).sendConsentIssuedEmailToCaseOfficer(applicationVersion);
+    verify(consentFieldEquityPartnerService).saveFieldEquityPartners(consent, applicationVersion);
+  }
+
+  @Test
+  void issueConsent_whenSendConsentIssuedEmailToFieldEquityPartners_thenConsentIsStillIssued() {
+    var user = ServiceUserDetailTestUtil.Builder().build();
+
+    var consentCaptor = ArgumentCaptor.forClass(Consent.class);
+
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
+    doNothing().when(consentService).generateDocumentInstancesAndSaveToConsent(any(), any());
+    doNothing().when(consentService).copySupportingDocumentsToConsent(any(), any());
+
+    // WHEN the email service call throws an exception
+    doThrow(new RuntimeException("Failed to send email"))
+        .when(consentEmailService)
+        .sendConsentIssuedEmailToFieldEquityPartners(any(), any());
+
+    // THEN it will be caught by the caller and not re-thrown
+    assertDoesNotThrow(
+        () -> consentService.issueConsent(applicationVersion, user)
+    );
+
+    verify(consentRepository).save(consentCaptor.capture());
+
+    var consent = consentCaptor.getValue();
+
+    assertThat(consent)
+        .isNotNull()
+        .extracting(
+            Consent::getApplication,
+            Consent::getIssuedByWuaId,
+            Consent::getIssuedInstant
+        ).containsExactly(
+            application,
+            user.wuaId(),
+            clock.instant()
+        );
+
+    verify(consentService).generateDocumentInstancesAndSaveToConsent(applicationVersion, consent);
+    verify(consentService).copySupportingDocumentsToConsent(application, consent);
+
+    verify(applicationService).completeApplication(applicationVersion);
+    verify(consentEmailService).sendConsentIssuedEmailToFieldEquityPartners(applicationVersion, consent);
+    verify(consentFieldEquityPartnerService).saveFieldEquityPartners(consent, applicationVersion);
   }
 
   @Test
   void generateDocumentInstancesAndSaveToConsent() {
-    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
     var consent = ConsentTestUtil.newBuilder().build();
 
     var documentInstanceDto1 = DocumentInstanceDtoTestUtil.builder().build();
@@ -285,7 +360,6 @@ class ConsentServiceTest {
 
   @Test
   void copySupportingDocumentsToConsent() {
-    var application = ApplicationTestUtil.getSubmittedApplicationWithType(ApplicationType.PRODUCTION);
     var consent = ConsentTestUtil.newBuilder().build();
 
     consentService.copySupportingDocumentsToConsent(application, consent);
@@ -301,8 +375,6 @@ class ConsentServiceTest {
 
   @Test
   void findConsent_consentDoesNotExist() {
-    var application = ApplicationTestUtil.getSubmittedApplicationWithType(ApplicationType.PRODUCTION);
-
     when(consentRepository.findByApplication_Id(application.getId())).thenReturn(Optional.empty());
 
     assertThat(consentService.findConsent(application)).isEmpty();
@@ -310,7 +382,6 @@ class ConsentServiceTest {
 
   @Test
   void findConsent_consentExists() {
-    var application = ApplicationTestUtil.getSubmittedApplicationWithType(ApplicationType.PRODUCTION);
     var consent = ConsentTestUtil.newBuilder().build();
 
     when(consentRepository.findByApplication_Id(application.getId())).thenReturn(Optional.of(consent));
@@ -320,8 +391,6 @@ class ConsentServiceTest {
 
   @Test
   void getConsent_consentDoesNotExist() {
-    var application = ApplicationTestUtil.getSubmittedApplicationWithType(ApplicationType.PRODUCTION);
-
     doReturn(Optional.empty()).when(consentService).findConsent(application);
 
     assertThatThrownBy(() -> consentService.getConsent(application))
@@ -331,7 +400,6 @@ class ConsentServiceTest {
 
   @Test
   void getConsent_consentExists() {
-    var application = ApplicationTestUtil.getSubmittedApplicationWithType(ApplicationType.PRODUCTION);
     var consent = ConsentTestUtil.newBuilder().build();
 
     doReturn(Optional.of(consent)).when(consentService).findConsent(application);

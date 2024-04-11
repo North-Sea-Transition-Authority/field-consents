@@ -55,7 +55,7 @@ public class FieldEquityPartnerService {
     return getFormattedFieldEquityPartners(fields);
   }
 
-  List<Field> getFieldsWithFieldEquityPartners(ApplicationVersion applicationVersion) {
+  public List<Field> getFieldsWithFieldEquityPartners(ApplicationVersion applicationVersion) {
     var fieldApplicationAssets = applicationAssetService.findAssetsByApplicationVersionAndAssetTypeAndAssetRoles(
         applicationVersion,
         AssetType.FIELD,

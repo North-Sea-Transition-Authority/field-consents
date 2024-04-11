@@ -1,4 +1,4 @@
-package uk.co.nstauthority.fieldconsents.application.fieldequitypartner;
+package uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.fieldequitypartner;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -48,16 +48,8 @@ public class ConsentFieldEquityPartner {
     return consent;
   }
 
-  public void setConsent(Consent consent) {
-    this.consent = consent;
-  }
-
   public Integer getOrganisationUnitId() {
     return organisationUnitId;
-  }
-
-  public void setOrganisationUnitId(Integer organisationUnitId) {
-    this.organisationUnitId = organisationUnitId;
   }
 
   public String getOrganisationName() {

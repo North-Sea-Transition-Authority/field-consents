@@ -76,4 +76,12 @@ public class OrganisationUnitTestUtil {
 
   public static List<OrganisationUnit> orgUnits =
       List.of(orgUnit1, orgUnit2, orgUnit3);
+
+  public static OrganisationUnit orgUnit4 =
+      OrganisationUnit.newBuilder()
+          .organisationUnitId(ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_1)
+          .name(ApplicationTestUtil.CACHED_PRIMARY_OPERATOR_NAME_1)
+          .organisationGroups(List.of(ORG_GROUP_1, ORG_GROUP_2))
+          .build();
+
 }
