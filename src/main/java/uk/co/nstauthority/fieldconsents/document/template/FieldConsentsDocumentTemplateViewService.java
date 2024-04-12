@@ -4,23 +4,21 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 
 import java.util.List;
 import org.springframework.stereotype.Service;
-import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateControllerHelperService;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSummaryView;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateViewService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @Service
-public class FieldConsentsDocumentTemplateControllerHelperService {
+public class FieldConsentsDocumentTemplateViewService {
 
-  private final DocumentTemplateControllerHelperService documentTemplateControllerHelperService;
+  private final DocumentTemplateViewService documentTemplateViewService;
 
-  FieldConsentsDocumentTemplateControllerHelperService(
-      DocumentTemplateControllerHelperService documentTemplateControllerHelperService
-  ) {
-    this.documentTemplateControllerHelperService = documentTemplateControllerHelperService;
+  FieldConsentsDocumentTemplateViewService(DocumentTemplateViewService documentTemplateViewService) {
+    this.documentTemplateViewService = documentTemplateViewService;
   }
 
   public List<DocumentTemplateSummaryView> getDocumentTemplateSummaryViews() {
-    return documentTemplateControllerHelperService.getDocumentTemplateSummaryViews(
+    return documentTemplateViewService.getDocumentTemplateSummaryViews(
         documentTemplateDto -> ReverseRouter.route(on(DocumentTemplateController.class)
             .getViewDocumentTemplate(documentTemplateDto.id()))
     );

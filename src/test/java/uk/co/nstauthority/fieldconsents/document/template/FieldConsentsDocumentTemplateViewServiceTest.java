@@ -13,19 +13,19 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateControllerHelperService;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateDto;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSummaryView;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateViewService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @ExtendWith(MockitoExtension.class)
-class FieldConsentsDocumentTemplateControllerHelperServiceTest {
+class FieldConsentsDocumentTemplateViewServiceTest {
 
   @Mock
-  private DocumentTemplateControllerHelperService documentTemplateControllerHelperService;
+  private DocumentTemplateViewService documentTemplateViewService;
 
   @InjectMocks
-  private FieldConsentsDocumentTemplateControllerHelperService fieldConsentsDocumentTemplateControllerHelperService;
+  private FieldConsentsDocumentTemplateViewService fieldConsentsDocumentTemplateViewService;
 
   @Captor
   private ArgumentCaptor<Function<DocumentTemplateDto, String>> viewUrlFunctionCaptor;
@@ -37,10 +37,10 @@ class FieldConsentsDocumentTemplateControllerHelperServiceTest {
         new DocumentTemplateSummaryView("Test title 2", "Test description 2", "test-view-url-2")
     );
 
-    when(documentTemplateControllerHelperService.getDocumentTemplateSummaryViews(viewUrlFunctionCaptor.capture()))
+    when(documentTemplateViewService.getDocumentTemplateSummaryViews(viewUrlFunctionCaptor.capture()))
         .thenReturn(documentTemplateSummaryViews);
 
-    assertThat(fieldConsentsDocumentTemplateControllerHelperService.getDocumentTemplateSummaryViews())
+    assertThat(fieldConsentsDocumentTemplateViewService.getDocumentTemplateSummaryViews())
         .isEqualTo(documentTemplateSummaryViews);
 
     var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().build();

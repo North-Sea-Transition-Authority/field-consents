@@ -27,10 +27,9 @@ import java.util.UUID;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
-import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldControllerHelperService;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldView;
-import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionConditionControllerHelperService;
-import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionControllerHelperService;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldViewService;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionConditionService;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionForm;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionFormValidator;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionService;
@@ -53,13 +52,10 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
   private DocumentTemplateSectionFormValidator documentTemplateSectionFormValidator;
 
   @MockBean
-  private DocumentTemplateSectionControllerHelperService documentTemplateSectionControllerHelperService;
+  private DocumentTemplateSectionConditionService documentTemplateSectionConditionService;
 
   @MockBean
-  private DocumentTemplateSectionConditionControllerHelperService documentTemplateSectionConditionControllerHelperService;
-
-  @MockBean
-  private DocumentMailMergeFieldControllerHelperService documentMailMergeFieldControllerHelperService;
+  private DocumentMailMergeFieldViewService documentMailMergeFieldViewService;
 
   @SecurityTest
   void getAddDocumentTemplateSectionBefore_noUser() throws Exception {
@@ -92,9 +88,9 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
     when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
-    when(documentTemplateSectionConditionControllerHelperService.getConditionsFdsSelectMap(documentTemplateDto))
+    when(documentTemplateSectionConditionService.getConditionsFdsSelectMap(documentTemplateDto))
         .thenReturn(conditionsFdsSelectMap);
-    when(documentMailMergeFieldControllerHelperService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
+    when(documentMailMergeFieldViewService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
         .thenReturn(applicableDocumentMailMergeFieldViews);
 
     mockMvc.perform(get(ReverseRouter.route(on(DocumentTemplateSectionController.class)
@@ -153,9 +149,9 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
         .when(documentTemplateSectionFormValidator)
         .validate(any(), any(), any());
 
-    when(documentTemplateSectionConditionControllerHelperService.getConditionsFdsSelectMap(documentTemplateDto))
+    when(documentTemplateSectionConditionService.getConditionsFdsSelectMap(documentTemplateDto))
         .thenReturn(conditionsFdsSelectMap);
-    when(documentMailMergeFieldControllerHelperService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
+    when(documentMailMergeFieldViewService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
         .thenReturn(applicableDocumentMailMergeFieldViews);
 
     mockMvc.perform(post(ReverseRouter.route(on(DocumentTemplateSectionController.class)
@@ -174,7 +170,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
 
     verify(documentTemplateSectionFormValidator).validate(any(), any(), any());
 
-    verify(documentTemplateSectionControllerHelperService, never())
+    verify(documentTemplateSectionService, never())
         .createDocumentTemplateSection(any(), any(), any(), anyInt());
   }
 
@@ -202,7 +198,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
 
     verify(documentTemplateSectionFormValidator).validate(any(), any(), any());
 
-    verify(documentTemplateSectionControllerHelperService).createDocumentTemplateSection(
+    verify(documentTemplateSectionService).createDocumentTemplateSection(
         eq(documentTemplateSectionDto.documentTemplateDto()),
         isNull(),
         any(),
@@ -241,7 +237,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
 
     verify(documentTemplateSectionFormValidator).validate(any(), any(), any());
 
-    verify(documentTemplateSectionControllerHelperService).createDocumentTemplateSection(
+    verify(documentTemplateSectionService).createDocumentTemplateSection(
         eq(documentTemplateSectionDto.documentTemplateDto()),
         eq(parentDocumentTemplateSectionDto),
         any(),
@@ -280,9 +276,9 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
     when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
-    when(documentTemplateSectionConditionControllerHelperService.getConditionsFdsSelectMap(documentTemplateDto))
+    when(documentTemplateSectionConditionService.getConditionsFdsSelectMap(documentTemplateDto))
         .thenReturn(conditionsFdsSelectMap);
-    when(documentMailMergeFieldControllerHelperService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
+    when(documentMailMergeFieldViewService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
         .thenReturn(applicableDocumentMailMergeFieldViews);
 
     mockMvc.perform(get(ReverseRouter.route(on(DocumentTemplateSectionController.class)
@@ -341,9 +337,9 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
         .when(documentTemplateSectionFormValidator)
         .validate(any(), any(), any());
 
-    when(documentTemplateSectionConditionControllerHelperService.getConditionsFdsSelectMap(documentTemplateDto))
+    when(documentTemplateSectionConditionService.getConditionsFdsSelectMap(documentTemplateDto))
         .thenReturn(conditionsFdsSelectMap);
-    when(documentMailMergeFieldControllerHelperService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
+    when(documentMailMergeFieldViewService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
         .thenReturn(applicableDocumentMailMergeFieldViews);
 
     mockMvc.perform(post(ReverseRouter.route(on(DocumentTemplateSectionController.class)
@@ -362,7 +358,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
 
     verify(documentTemplateSectionFormValidator).validate(any(), any(), any());
 
-    verify(documentTemplateSectionControllerHelperService, never())
+    verify(documentTemplateSectionService, never())
         .createDocumentTemplateSection(any(), any(), any(), anyInt());
   }
 
@@ -390,7 +386,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
 
     verify(documentTemplateSectionFormValidator).validate(any(), any(), any());
 
-    verify(documentTemplateSectionControllerHelperService).createDocumentTemplateSection(
+    verify(documentTemplateSectionService).createDocumentTemplateSection(
         eq(documentTemplateSectionDto.documentTemplateDto()),
         isNull(),
         any(),
@@ -429,7 +425,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
 
     verify(documentTemplateSectionFormValidator).validate(any(), any(), any());
 
-    verify(documentTemplateSectionControllerHelperService).createDocumentTemplateSection(
+    verify(documentTemplateSectionService).createDocumentTemplateSection(
         eq(documentTemplateSectionDto.documentTemplateDto()),
         eq(parentDocumentTemplateSectionDto),
         any(),
@@ -468,9 +464,9 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
     when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
-    when(documentTemplateSectionConditionControllerHelperService.getConditionsFdsSelectMap(documentTemplateDto))
+    when(documentTemplateSectionConditionService.getConditionsFdsSelectMap(documentTemplateDto))
         .thenReturn(conditionsFdsSelectMap);
-    when(documentMailMergeFieldControllerHelperService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
+    when(documentMailMergeFieldViewService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
         .thenReturn(applicableDocumentMailMergeFieldViews);
 
     mockMvc.perform(get(ReverseRouter.route(on(DocumentTemplateSectionController.class)
@@ -520,7 +516,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
     when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
-    when(documentMailMergeFieldControllerHelperService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
+    when(documentMailMergeFieldViewService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
         .thenReturn(applicableDocumentMailMergeFieldViews);
 
     doAnswer(invocation -> {
@@ -531,7 +527,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
         .when(documentTemplateSectionFormValidator)
         .validate(any(), any(), any());
 
-    when(documentTemplateSectionConditionControllerHelperService.getConditionsFdsSelectMap(documentTemplateDto))
+    when(documentTemplateSectionConditionService.getConditionsFdsSelectMap(documentTemplateDto))
         .thenReturn(conditionsFdsSelectMap);
 
     mockMvc.perform(post(ReverseRouter.route(on(DocumentTemplateSectionController.class)
@@ -550,7 +546,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
 
     verify(documentTemplateSectionFormValidator).validate(any(), any(), any());
 
-    verify(documentTemplateSectionControllerHelperService, never())
+    verify(documentTemplateSectionService, never())
         .createDocumentTemplateSection(any(), any(), any(), anyInt());
   }
 
@@ -578,7 +574,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
 
     verify(documentTemplateSectionFormValidator).validate(any(), any(), any());
 
-    verify(documentTemplateSectionControllerHelperService).createDocumentTemplateSection(
+    verify(documentTemplateSectionService).createDocumentTemplateSection(
         eq(documentTemplateSectionDto.documentTemplateDto()),
         eq(documentTemplateSectionDto),
         any(),
@@ -617,9 +613,9 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
     when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
     when(documentTemplateSectionService.getDocumentTemplateSectionDtoOrThrow(DOCUMENT_TEMPLATE_SECTION_ID))
         .thenReturn(documentTemplateSectionDto);
-    when(documentTemplateSectionConditionControllerHelperService.getConditionsFdsSelectMap(documentTemplateDto))
+    when(documentTemplateSectionConditionService.getConditionsFdsSelectMap(documentTemplateDto))
         .thenReturn(conditionsFdsSelectMap);
-    when(documentMailMergeFieldControllerHelperService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
+    when(documentMailMergeFieldViewService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
         .thenReturn(applicableDocumentMailMergeFieldViews);
 
     mockMvc.perform(get(ReverseRouter.route(on(DocumentTemplateSectionController.class)
@@ -678,9 +674,9 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
         .when(documentTemplateSectionFormValidator)
         .validate(any(), any(), any());
 
-    when(documentTemplateSectionConditionControllerHelperService.getConditionsFdsSelectMap(documentTemplateDto))
+    when(documentTemplateSectionConditionService.getConditionsFdsSelectMap(documentTemplateDto))
         .thenReturn(conditionsFdsSelectMap);
-    when(documentMailMergeFieldControllerHelperService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
+    when(documentMailMergeFieldViewService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto))
         .thenReturn(applicableDocumentMailMergeFieldViews);
 
     mockMvc.perform(post(ReverseRouter.route(on(DocumentTemplateSectionController.class)
@@ -699,7 +695,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
 
     verify(documentTemplateSectionFormValidator).validate(any(), any(), any());
 
-    verify(documentTemplateSectionControllerHelperService, never())
+    verify(documentTemplateSectionService, never())
         .editDocumentTemplateSection(any(), any());
   }
 
@@ -727,7 +723,7 @@ class DocumentTemplateSectionControllerTest extends AbstractControllerTest {
 
     verify(documentTemplateSectionFormValidator).validate(any(), any(), any());
 
-    verify(documentTemplateSectionControllerHelperService)
+    verify(documentTemplateSectionService)
         .editDocumentTemplateSection(eq(documentTemplateSectionDto), any());
   }
 

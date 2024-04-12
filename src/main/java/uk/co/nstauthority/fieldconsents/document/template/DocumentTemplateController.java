@@ -15,25 +15,23 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
 @HasPermission(permissions = RolePermission.MANAGE_DOCUMENT_TEMPLATES)
 public class DocumentTemplateController {
 
-  private final FieldConsentsDocumentTemplateControllerHelperService fieldConsentsDocumentTemplateControllerHelperService;
-  private final FieldConsentsDocumentTemplateSectionControllerHelperService
-      fieldConsentsDocumentTemplateSectionControllerHelperService;
+  private final FieldConsentsDocumentTemplateViewService fieldConsentsDocumentTemplateViewService;
+  private final FieldConsentsDocumentTemplateSectionViewService fieldConsentsDocumentTemplateSectionViewService;
   private final DocumentTemplateService documentTemplateService;
 
   DocumentTemplateController(
-      FieldConsentsDocumentTemplateControllerHelperService fieldConsentsDocumentTemplateControllerHelperService,
-      FieldConsentsDocumentTemplateSectionControllerHelperService fieldConsentsDocumentTemplateSectionControllerHelperService,
+      FieldConsentsDocumentTemplateViewService fieldConsentsDocumentTemplateViewService,
+      FieldConsentsDocumentTemplateSectionViewService fieldConsentsDocumentTemplateSectionViewService,
       DocumentTemplateService documentTemplateService
   ) {
-    this.fieldConsentsDocumentTemplateControllerHelperService = fieldConsentsDocumentTemplateControllerHelperService;
-    this.fieldConsentsDocumentTemplateSectionControllerHelperService =
-        fieldConsentsDocumentTemplateSectionControllerHelperService;
+    this.fieldConsentsDocumentTemplateViewService = fieldConsentsDocumentTemplateViewService;
+    this.fieldConsentsDocumentTemplateSectionViewService = fieldConsentsDocumentTemplateSectionViewService;
     this.documentTemplateService = documentTemplateService;
   }
 
   @GetMapping
   public ModelAndView getDocumentTemplates() {
-    var documentTemplateSummaryViews = fieldConsentsDocumentTemplateControllerHelperService.getDocumentTemplateSummaryViews();
+    var documentTemplateSummaryViews = fieldConsentsDocumentTemplateViewService.getDocumentTemplateSummaryViews();
 
     return new ModelAndView("fcs/document/template/documentTemplates")
         .addObject("documentTemplateSummaryViews", documentTemplateSummaryViews);
@@ -43,7 +41,7 @@ public class DocumentTemplateController {
   public ModelAndView getViewDocumentTemplate(@PathVariable UUID documentTemplateId) {
     var documentTemplateDto = documentTemplateService.getDocumentTemplateDtoOrThrow(documentTemplateId);
 
-    var topLevelDocumentTemplateSectionSummaryViews = fieldConsentsDocumentTemplateSectionControllerHelperService
+    var topLevelDocumentTemplateSectionSummaryViews = fieldConsentsDocumentTemplateSectionViewService
         .getTopLevelDocumentTemplateSectionSummaryViews(documentTemplateDto);
 
     return new ModelAndView("fcs/document/template/viewDocumentTemplate")

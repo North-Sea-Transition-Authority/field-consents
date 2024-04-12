@@ -20,7 +20,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationFileUsage;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceController;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceControllerHelperService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceViewService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.DocumentInstanceSummaryViewTestUtil;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileUsage;
@@ -36,7 +36,7 @@ class ConsentPreparationDocumentServiceTest {
   private FieldConsentsFileService fieldConsentsFileService;
 
   @Mock
-  private ApplicationDocumentInstanceControllerHelperService applicationDocumentInstanceControllerHelperService;
+  private ApplicationDocumentInstanceViewService applicationDocumentInstanceViewService;
 
   @InjectMocks
   private ConsentPreparationDocumentService consentDocumentService;
@@ -80,7 +80,7 @@ class ConsentPreparationDocumentServiceTest {
         )
     );
 
-    when(applicationDocumentInstanceControllerHelperService.getDocumentInstanceSummaryViews(application))
+    when(applicationDocumentInstanceViewService.getDocumentInstanceSummaryViews(application))
         .thenReturn(List.of(documentInstanceSummaryView));
     when(fieldConsentsFileService.getUploadedFiles(fileUsage)).thenReturn(List.of(supportingConsentUploadedFile));
 

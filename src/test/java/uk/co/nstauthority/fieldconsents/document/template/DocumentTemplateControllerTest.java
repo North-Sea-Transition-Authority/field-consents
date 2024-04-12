@@ -28,10 +28,10 @@ class DocumentTemplateControllerTest extends AbstractControllerTest {
   private static final UUID DOCUMENT_TEMPLATE_ID = UUID.randomUUID();
 
   @MockBean
-  private FieldConsentsDocumentTemplateControllerHelperService fieldConsentsDocumentTemplateControllerHelperService;
+  private FieldConsentsDocumentTemplateViewService fieldConsentsDocumentTemplateViewService;
 
   @MockBean
-  private FieldConsentsDocumentTemplateSectionControllerHelperService fieldConsentsDocumentTemplateSectionControllerHelperService;
+  private FieldConsentsDocumentTemplateSectionViewService fieldConsentsDocumentTemplateSectionViewService;
 
   @MockBean
   private DocumentTemplateService documentTemplateService;
@@ -59,7 +59,7 @@ class DocumentTemplateControllerTest extends AbstractControllerTest {
     );
 
     when(permissionService.hasPermission(user, Set.of(RolePermission.MANAGE_DOCUMENT_TEMPLATES))).thenReturn(true);
-    when(fieldConsentsDocumentTemplateControllerHelperService.getDocumentTemplateSummaryViews())
+    when(fieldConsentsDocumentTemplateViewService.getDocumentTemplateSummaryViews())
         .thenReturn(documentTemplateSummaryViews);
 
     mockMvc.perform(get(ReverseRouter.route(on(DocumentTemplateController.class).getDocumentTemplates()))
@@ -115,7 +115,7 @@ class DocumentTemplateControllerTest extends AbstractControllerTest {
     when(documentTemplateService.getDocumentTemplateDtoOrThrow(DOCUMENT_TEMPLATE_ID))
         .thenReturn(documentTemplateDto);
     when(
-        fieldConsentsDocumentTemplateSectionControllerHelperService.getTopLevelDocumentTemplateSectionSummaryViews(
+        fieldConsentsDocumentTemplateSectionViewService.getTopLevelDocumentTemplateSectionSummaryViews(
             documentTemplateDto
         )
     ).thenReturn(topLevelDocumentTemplateSectionSummaryViews);

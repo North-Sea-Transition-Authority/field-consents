@@ -28,8 +28,7 @@ public class ApplicationDocumentInstanceController {
 
   private final ApplicationDocumentInstanceService applicationDocumentInstanceService;
   private final ApplicationDocumentInstanceControllerHelperService applicationDocumentInstanceControllerHelperService;
-  private final ApplicationDocumentInstanceSectionControllerHelperService
-      applicationDocumentInstanceSectionControllerHelperService;
+  private final ApplicationDocumentInstanceSectionViewService applicationDocumentInstanceSectionViewService;
   private final DocumentInstanceService documentInstanceService;
   private final ApplicationService applicationService;
   private final ApplicationVersionService applicationVersionService;
@@ -37,18 +36,17 @@ public class ApplicationDocumentInstanceController {
   ApplicationDocumentInstanceController(
       ApplicationDocumentInstanceService applicationDocumentInstanceService,
       ApplicationDocumentInstanceControllerHelperService applicationDocumentInstanceControllerHelperService,
-      ApplicationDocumentInstanceSectionControllerHelperService applicationDocumentInstanceSectionControllerHelperService,
+      ApplicationDocumentInstanceSectionViewService applicationDocumentInstanceSectionViewService,
       DocumentInstanceService documentInstanceService,
       ApplicationService applicationService,
       ApplicationVersionService applicationVersionService
   ) {
     this.applicationDocumentInstanceService = applicationDocumentInstanceService;
     this.applicationDocumentInstanceControllerHelperService = applicationDocumentInstanceControllerHelperService;
-    this.applicationDocumentInstanceSectionControllerHelperService =
-        applicationDocumentInstanceSectionControllerHelperService;
+    this.applicationDocumentInstanceSectionViewService = applicationDocumentInstanceSectionViewService;
     this.documentInstanceService = documentInstanceService;
-    this.applicationVersionService = applicationVersionService;
     this.applicationService = applicationService;
+    this.applicationVersionService = applicationVersionService;
   }
 
   @GetMapping
@@ -60,7 +58,7 @@ public class ApplicationDocumentInstanceController {
         documentInstanceId
     );
 
-    var documentInstanceSectionsSummaryView = applicationDocumentInstanceSectionControllerHelperService
+    var documentInstanceSectionsSummaryView = applicationDocumentInstanceSectionViewService
         .getDocumentInstanceSectionsSummaryView(application, documentInstanceDto, true);
 
     return new ModelAndView("fcs/application/caseprocessing/document/instance/viewDocumentInstance")

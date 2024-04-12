@@ -5,27 +5,27 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import java.util.List;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateDto;
-import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionControllerHelperService;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionDto;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionSummaryView;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionUrls;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionViewService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @Service
-public class FieldConsentsDocumentTemplateSectionControllerHelperService {
+public class FieldConsentsDocumentTemplateSectionViewService {
 
-  private final DocumentTemplateSectionControllerHelperService documentTemplateSectionControllerHelperService;
+  private final DocumentTemplateSectionViewService documentTemplateSectionViewService;
 
-  FieldConsentsDocumentTemplateSectionControllerHelperService(
-      DocumentTemplateSectionControllerHelperService documentTemplateSectionControllerHelperService
+  FieldConsentsDocumentTemplateSectionViewService(
+      DocumentTemplateSectionViewService documentTemplateSectionViewService
   ) {
-    this.documentTemplateSectionControllerHelperService = documentTemplateSectionControllerHelperService;
+    this.documentTemplateSectionViewService = documentTemplateSectionViewService;
   }
 
   public List<DocumentTemplateSectionSummaryView> getTopLevelDocumentTemplateSectionSummaryViews(
       DocumentTemplateDto documentTemplateDto
   ) {
-    return documentTemplateSectionControllerHelperService.getTopLevelDocumentTemplateSectionSummaryViews(
+    return documentTemplateSectionViewService.getTopLevelDocumentTemplateSectionSummaryViews(
         documentTemplateDto,
         this::getDocumentTemplateSectionUrls
     );

@@ -42,7 +42,7 @@ class ApplicationDocumentInstanceServiceTest {
   private static final String APPLICATION_DOCUMENT_INSTANCE_ITEM_TYPE = "APPLICATION";
 
   @Mock
-  private ApplicationDocumentInstanceSectionControllerHelperService applicationDocumentInstanceSectionControllerHelperService;
+  private ApplicationDocumentInstanceSectionViewService applicationDocumentInstanceSectionViewService;
 
   @Mock
   private DocumentTemplateService documentTemplateService;
@@ -64,7 +64,7 @@ class ApplicationDocumentInstanceServiceTest {
   @BeforeEach
   void setUp() {
     applicationDocumentInstanceService = spy(new ApplicationDocumentInstanceService(
-        applicationDocumentInstanceSectionControllerHelperService,
+        applicationDocumentInstanceSectionViewService,
         documentTemplateService,
         documentInstanceService,
         applicationService,
@@ -256,7 +256,7 @@ class ApplicationDocumentInstanceServiceTest {
         "customerBrandingConfigurationProperties", BrandingTestUtil.CUSTOMER_BRANDING_CONFIGURATION_PROPERTIES
     );
 
-    when(applicationDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionsSummaryView(
+    when(applicationDocumentInstanceSectionViewService.getDocumentInstanceSectionsSummaryView(
         applicationVersion.getApplication(),
         documentInstanceDto,
         false

@@ -13,12 +13,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionControllerHelperService;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionDto;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionForm;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionFormValidator;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionService;
-import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldControllerHelperService;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldViewService;
 import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
@@ -40,24 +39,20 @@ public class ApplicationDocumentInstanceSectionController {
       applicationDocumentInstanceSectionControllerHelperService;
   private final DocumentInstanceSectionService documentInstanceSectionService;
   private final DocumentInstanceSectionFormValidator documentInstanceSectionFormValidator;
-  private final DocumentInstanceSectionControllerHelperService documentInstanceSectionControllerHelperService;
-  private final DocumentMailMergeFieldControllerHelperService documentMailMergeFieldControllerHelperService;
+  private final DocumentMailMergeFieldViewService documentMailMergeFieldViewService;
   private final ApplicationService applicationService;
 
   ApplicationDocumentInstanceSectionController(
       ApplicationDocumentInstanceSectionControllerHelperService applicationDocumentInstanceSectionControllerHelperService,
       DocumentInstanceSectionService documentInstanceSectionService,
       DocumentInstanceSectionFormValidator documentInstanceSectionFormValidator,
-      DocumentInstanceSectionControllerHelperService documentInstanceSectionControllerHelperService,
-      DocumentMailMergeFieldControllerHelperService documentMailMergeFieldControllerHelperService,
+      DocumentMailMergeFieldViewService documentMailMergeFieldViewService,
       ApplicationService applicationService
   ) {
-    this.applicationDocumentInstanceSectionControllerHelperService =
-        applicationDocumentInstanceSectionControllerHelperService;
+    this.applicationDocumentInstanceSectionControllerHelperService = applicationDocumentInstanceSectionControllerHelperService;
     this.documentInstanceSectionService = documentInstanceSectionService;
     this.documentInstanceSectionFormValidator = documentInstanceSectionFormValidator;
-    this.documentInstanceSectionControllerHelperService = documentInstanceSectionControllerHelperService;
-    this.documentMailMergeFieldControllerHelperService = documentMailMergeFieldControllerHelperService;
+    this.documentMailMergeFieldViewService = documentMailMergeFieldViewService;
     this.applicationService = applicationService;
   }
 
@@ -219,7 +214,7 @@ public class ApplicationDocumentInstanceSectionController {
         .addObject("pageTitle", ADD_PAGE_TITLE)
         .addObject(
             "mailMergeFieldViews",
-            documentMailMergeFieldControllerHelperService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto)
+            documentMailMergeFieldViewService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto)
         )
         .addObject("submitButtonText", ADD_SUBMIT_BUTTON_TEXT)
         .addObject(
@@ -246,7 +241,7 @@ public class ApplicationDocumentInstanceSectionController {
       return getAddDocumentInstanceSectionModelAndView(application, documentInstanceSectionDto, form);
     }
 
-    documentInstanceSectionControllerHelperService.createDocumentInstanceSection(
+    documentInstanceSectionService.createDocumentInstanceSection(
         documentInstanceDto,
         parentDto,
         form,
@@ -297,7 +292,7 @@ public class ApplicationDocumentInstanceSectionController {
       return getEditDocumentInstanceSectionModelAndView(application, documentInstanceSectionDto, form);
     }
 
-    documentInstanceSectionControllerHelperService.editDocumentInstanceSection(documentInstanceSectionDto, form);
+    documentInstanceSectionService.editDocumentInstanceSection(documentInstanceSectionDto, form);
 
     NotificationBannerUtil.addSuccessNotification(redirectAttributes, "Section saved");
 
@@ -319,7 +314,7 @@ public class ApplicationDocumentInstanceSectionController {
         .addObject("submitButtonText", EDIT_SUBMIT_BUTTON_TEXT)
         .addObject(
             "mailMergeFieldViews",
-            documentMailMergeFieldControllerHelperService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto)
+            documentMailMergeFieldViewService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto)
         )
         .addObject(
             "cancelUrl",

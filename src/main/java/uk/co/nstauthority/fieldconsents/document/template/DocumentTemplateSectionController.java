@@ -13,9 +13,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldControllerHelperService;
-import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionConditionControllerHelperService;
-import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionControllerHelperService;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldViewService;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionConditionService;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionDto;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionForm;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionFormValidator;
@@ -37,22 +36,19 @@ public class DocumentTemplateSectionController {
 
   private final DocumentTemplateSectionService documentTemplateSectionService;
   private final DocumentTemplateSectionFormValidator documentTemplateSectionFormValidator;
-  private final DocumentTemplateSectionControllerHelperService documentTemplateSectionControllerHelperService;
-  private final DocumentTemplateSectionConditionControllerHelperService documentTemplateSectionConditionControllerHelperService;
-  private final DocumentMailMergeFieldControllerHelperService documentMailMergeFieldControllerHelperService;
+  private final DocumentTemplateSectionConditionService documentTemplateSectionConditionService;
+  private final DocumentMailMergeFieldViewService documentMailMergeFieldViewService;
 
   DocumentTemplateSectionController(
       DocumentTemplateSectionService documentTemplateSectionService,
       DocumentTemplateSectionFormValidator documentTemplateSectionFormValidator,
-      DocumentTemplateSectionControllerHelperService documentTemplateSectionControllerHelperService,
-      DocumentTemplateSectionConditionControllerHelperService documentTemplateSectionConditionControllerHelperService,
-      DocumentMailMergeFieldControllerHelperService documentMailMergeFieldControllerHelperService
+      DocumentTemplateSectionConditionService documentTemplateSectionConditionService,
+      DocumentMailMergeFieldViewService documentMailMergeFieldViewService
   ) {
     this.documentTemplateSectionService = documentTemplateSectionService;
     this.documentTemplateSectionFormValidator = documentTemplateSectionFormValidator;
-    this.documentTemplateSectionControllerHelperService = documentTemplateSectionControllerHelperService;
-    this.documentTemplateSectionConditionControllerHelperService = documentTemplateSectionConditionControllerHelperService;
-    this.documentMailMergeFieldControllerHelperService = documentMailMergeFieldControllerHelperService;
+    this.documentTemplateSectionConditionService = documentTemplateSectionConditionService;
+    this.documentMailMergeFieldViewService = documentMailMergeFieldViewService;
   }
 
   @GetMapping("/add-before")
@@ -160,11 +156,11 @@ public class DocumentTemplateSectionController {
         .addObject("pageTitle", ADD_PAGE_TITLE)
         .addObject(
             "conditionsFdsSelectMap",
-            documentTemplateSectionConditionControllerHelperService.getConditionsFdsSelectMap(documentTemplateDto)
+            documentTemplateSectionConditionService.getConditionsFdsSelectMap(documentTemplateDto)
         )
         .addObject(
             "mailMergeFieldViews",
-            documentMailMergeFieldControllerHelperService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto)
+            documentMailMergeFieldViewService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto)
         )
         .addObject("submitButtonText", ADD_SUBMIT_BUTTON_TEXT)
         .addObject(
@@ -190,7 +186,7 @@ public class DocumentTemplateSectionController {
       return getAddDocumentTemplateSectionModelAndView(documentTemplateSectionDto, form);
     }
 
-    documentTemplateSectionControllerHelperService.createDocumentTemplateSection(
+    documentTemplateSectionService.createDocumentTemplateSection(
         documentTemplateDto,
         parentDto,
         form,
@@ -229,7 +225,7 @@ public class DocumentTemplateSectionController {
       return getEditDocumentTemplateSectionModelAndView(documentTemplateSectionDto, form);
     }
 
-    documentTemplateSectionControllerHelperService.editDocumentTemplateSection(documentTemplateSectionDto, form);
+    documentTemplateSectionService.editDocumentTemplateSection(documentTemplateSectionDto, form);
 
     NotificationBannerUtil.addSuccessNotification(redirectAttributes, "Section saved");
 
@@ -248,11 +244,11 @@ public class DocumentTemplateSectionController {
         .addObject("pageTitle", EDIT_PAGE_TITLE)
         .addObject(
             "conditionsFdsSelectMap",
-            documentTemplateSectionConditionControllerHelperService.getConditionsFdsSelectMap(documentTemplateDto)
+            documentTemplateSectionConditionService.getConditionsFdsSelectMap(documentTemplateDto)
         )
         .addObject(
             "mailMergeFieldViews",
-            documentMailMergeFieldControllerHelperService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto)
+            documentMailMergeFieldViewService.getApplicableDocumentMailMergeFieldViews(documentTemplateDto)
         )
         .addObject("submitButtonText", EDIT_SUBMIT_BUTTON_TEXT)
         .addObject(

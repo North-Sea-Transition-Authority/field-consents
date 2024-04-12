@@ -56,7 +56,7 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
   private ApplicationDocumentInstanceControllerHelperService applicationDocumentInstanceControllerHelperService;
 
   @MockBean
-  private ApplicationDocumentInstanceSectionControllerHelperService applicationDocumentInstanceSectionControllerHelperService;
+  private ApplicationDocumentInstanceSectionViewService applicationDocumentInstanceSectionViewService;
 
   @MockBean
   private DocumentInstanceService documentInstanceService;
@@ -129,7 +129,7 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
     when(applicationDocumentInstanceControllerHelperService.getDocumentInstanceDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_ID))
         .thenReturn(documentInstanceDto);
     when(
-        applicationDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionsSummaryView(
+        applicationDocumentInstanceSectionViewService.getDocumentInstanceSectionsSummaryView(
             application,
             documentInstanceDto,
             true

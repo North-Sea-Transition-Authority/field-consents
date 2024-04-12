@@ -27,12 +27,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
-import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionControllerHelperService;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionForm;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionFormValidator;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionService;
-import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldControllerHelperService;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldView;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldViewService;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
@@ -61,10 +60,7 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
   private DocumentInstanceSectionFormValidator documentInstanceSectionFormValidator;
 
   @MockBean
-  private DocumentInstanceSectionControllerHelperService documentInstanceSectionControllerHelperService;
-
-  @MockBean
-  private DocumentMailMergeFieldControllerHelperService documentMailMergeFieldControllerHelperService;
+  private DocumentMailMergeFieldViewService documentMailMergeFieldViewService;
 
   @MockBean
   private ApplicationService applicationService;
@@ -114,7 +110,7 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
     when(applicationDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
     when(
-        documentMailMergeFieldControllerHelperService.getApplicableDocumentMailMergeFieldViews(
+        documentMailMergeFieldViewService.getApplicableDocumentMailMergeFieldViews(
             documentInstanceDto.documentTemplateDto()
         )
     ).thenReturn(applicableDocumentMailMergeFieldViews);
@@ -176,7 +172,7 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
         .validate(any(), any(), any());
 
     when(
-        documentMailMergeFieldControllerHelperService.getApplicableDocumentMailMergeFieldViews(
+        documentMailMergeFieldViewService.getApplicableDocumentMailMergeFieldViews(
             documentInstanceDto.documentTemplateDto()
         )
     ).thenReturn(applicableDocumentMailMergeFieldViews);
@@ -196,7 +192,7 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
 
     verify(documentInstanceSectionFormValidator).validate(any(), any(), any());
 
-    verify(documentInstanceSectionControllerHelperService, never())
+    verify(documentInstanceSectionService, never())
         .createDocumentInstanceSection(any(), any(), any(), anyInt());
   }
 
@@ -226,7 +222,7 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
 
     verify(documentInstanceSectionFormValidator).validate(any(), any(), any());
 
-    verify(documentInstanceSectionControllerHelperService).createDocumentInstanceSection(
+    verify(documentInstanceSectionService).createDocumentInstanceSection(
         eq(documentInstanceSectionDto.documentInstanceDto()),
         isNull(),
         any(),
@@ -267,7 +263,7 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
 
     verify(documentInstanceSectionFormValidator).validate(any(), any(), any());
 
-    verify(documentInstanceSectionControllerHelperService).createDocumentInstanceSection(
+    verify(documentInstanceSectionService).createDocumentInstanceSection(
         eq(documentInstanceSectionDto.documentInstanceDto()),
         eq(parentDocumentInstanceSectionDto),
         any(),
@@ -308,7 +304,7 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
     when(applicationDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
     when(
-        documentMailMergeFieldControllerHelperService.getApplicableDocumentMailMergeFieldViews(
+        documentMailMergeFieldViewService.getApplicableDocumentMailMergeFieldViews(
             documentInstanceDto.documentTemplateDto()
         )
     ).thenReturn(applicableDocumentMailMergeFieldViews);
@@ -370,7 +366,7 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
         .validate(any(), any(), any());
 
     when(
-        documentMailMergeFieldControllerHelperService.getApplicableDocumentMailMergeFieldViews(
+        documentMailMergeFieldViewService.getApplicableDocumentMailMergeFieldViews(
             documentInstanceDto.documentTemplateDto()
         )
     ).thenReturn(applicableDocumentMailMergeFieldViews);
@@ -390,7 +386,7 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
 
     verify(documentInstanceSectionFormValidator).validate(any(), any(), any());
 
-    verify(documentInstanceSectionControllerHelperService, never())
+    verify(documentInstanceSectionService, never())
         .createDocumentInstanceSection(any(), any(), any(), anyInt());
   }
 
@@ -420,7 +416,7 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
 
     verify(documentInstanceSectionFormValidator).validate(any(), any(), any());
 
-    verify(documentInstanceSectionControllerHelperService).createDocumentInstanceSection(
+    verify(documentInstanceSectionService).createDocumentInstanceSection(
         eq(documentInstanceSectionDto.documentInstanceDto()),
         isNull(),
         any(),
@@ -461,7 +457,7 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
 
     verify(documentInstanceSectionFormValidator).validate(any(), any(), any());
 
-    verify(documentInstanceSectionControllerHelperService).createDocumentInstanceSection(
+    verify(documentInstanceSectionService).createDocumentInstanceSection(
         eq(documentInstanceSectionDto.documentInstanceDto()),
         eq(parentDocumentInstanceSectionDto),
         any(),
@@ -502,7 +498,7 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
     when(applicationDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
     when(
-        documentMailMergeFieldControllerHelperService.getApplicableDocumentMailMergeFieldViews(
+        documentMailMergeFieldViewService.getApplicableDocumentMailMergeFieldViews(
             documentInstanceDto.documentTemplateDto()
         )
     ).thenReturn(applicableDocumentMailMergeFieldViews);
@@ -555,7 +551,7 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
     when(applicationDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
     when(
-        documentMailMergeFieldControllerHelperService.getApplicableDocumentMailMergeFieldViews(
+        documentMailMergeFieldViewService.getApplicableDocumentMailMergeFieldViews(
             documentInstanceDto.documentTemplateDto()
         )
     ).thenReturn(applicableDocumentMailMergeFieldViews);
@@ -583,7 +579,7 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
 
     verify(documentInstanceSectionFormValidator).validate(any(), any(), any());
 
-    verify(documentInstanceSectionControllerHelperService, never())
+    verify(documentInstanceSectionService, never())
         .createDocumentInstanceSection(any(), any(), any(), anyInt());
   }
 
@@ -613,7 +609,7 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
 
     verify(documentInstanceSectionFormValidator).validate(any(), any(), any());
 
-    verify(documentInstanceSectionControllerHelperService).createDocumentInstanceSection(
+    verify(documentInstanceSectionService).createDocumentInstanceSection(
         eq(documentInstanceSectionDto.documentInstanceDto()),
         eq(documentInstanceSectionDto),
         any(),
@@ -654,7 +650,7 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
     when(applicationDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
     when(
-        documentMailMergeFieldControllerHelperService.getApplicableDocumentMailMergeFieldViews(
+        documentMailMergeFieldViewService.getApplicableDocumentMailMergeFieldViews(
             documentInstanceDto.documentTemplateDto()
         )
     ).thenReturn(applicableDocumentMailMergeFieldViews);
@@ -716,7 +712,7 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
         .validate(any(), any(), any());
 
     when(
-        documentMailMergeFieldControllerHelperService.getApplicableDocumentMailMergeFieldViews(
+        documentMailMergeFieldViewService.getApplicableDocumentMailMergeFieldViews(
             documentInstanceDto.documentTemplateDto()
         )
     ).thenReturn(applicableDocumentMailMergeFieldViews);
@@ -736,7 +732,7 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
 
     verify(documentInstanceSectionFormValidator).validate(any(), any(), any());
 
-    verify(documentInstanceSectionControllerHelperService, never())
+    verify(documentInstanceSectionService, never())
         .editDocumentInstanceSection(any(), any());
   }
 
@@ -766,7 +762,7 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
 
     verify(documentInstanceSectionFormValidator).validate(any(), any(), any());
 
-    verify(documentInstanceSectionControllerHelperService)
+    verify(documentInstanceSectionService)
         .editDocumentInstanceSection(eq(documentInstanceSectionDto), any());
   }
 

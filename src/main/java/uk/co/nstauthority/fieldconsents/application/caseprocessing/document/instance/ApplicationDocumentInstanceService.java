@@ -25,8 +25,7 @@ public class ApplicationDocumentInstanceService {
   private static final String APPLICATION_DOCUMENT_INSTANCE_ITEM_TYPE = "APPLICATION";
   private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationDocumentInstanceService.class);
 
-  private final ApplicationDocumentInstanceSectionControllerHelperService
-      applicationDocumentInstanceSectionControllerHelperService;
+  private final ApplicationDocumentInstanceSectionViewService applicationDocumentInstanceSectionViewService;
   private final DocumentTemplateService documentTemplateService;
   private final DocumentInstanceService documentInstanceService;
   private final ApplicationService applicationService;
@@ -35,15 +34,13 @@ public class ApplicationDocumentInstanceService {
   private final CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties;
 
   ApplicationDocumentInstanceService(
-      ApplicationDocumentInstanceSectionControllerHelperService applicationDocumentInstanceSectionControllerHelperService,
-      DocumentTemplateService documentTemplateService,
-      DocumentInstanceService documentInstanceService,
-      ApplicationService applicationService,
-      ApplicationVersionService applicationVersionService,
+      ApplicationDocumentInstanceSectionViewService applicationDocumentInstanceSectionViewService,
+      DocumentTemplateService documentTemplateService, DocumentInstanceService documentInstanceService,
+      ApplicationService applicationService, ApplicationVersionService applicationVersionService,
       ApplicationAssetService applicationAssetService,
       CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties
   ) {
-    this.applicationDocumentInstanceSectionControllerHelperService = applicationDocumentInstanceSectionControllerHelperService;
+    this.applicationDocumentInstanceSectionViewService = applicationDocumentInstanceSectionViewService;
     this.documentTemplateService = documentTemplateService;
     this.documentInstanceService = documentInstanceService;
     this.applicationService = applicationService;
@@ -107,7 +104,7 @@ public class ApplicationDocumentInstanceService {
       PdfRenderingOptions pdfRenderingOptions
   ) {
     var documentInstanceSectionsSummaryView =
-        applicationDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionsSummaryView(
+        applicationDocumentInstanceSectionViewService.getDocumentInstanceSectionsSummaryView(
             applicationVersion.getApplication(),
             documentInstanceDto,
             false

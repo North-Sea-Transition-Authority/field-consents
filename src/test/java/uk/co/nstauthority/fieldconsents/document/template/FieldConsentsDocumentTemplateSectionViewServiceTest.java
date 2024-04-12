@@ -14,20 +14,20 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionControllerHelperService;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionDto;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionSummaryView;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionUrls;
+import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionViewService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @ExtendWith(MockitoExtension.class)
-class FieldConsentsDocumentTemplateSectionControllerHelperServiceTest {
+class FieldConsentsDocumentTemplateSectionViewServiceTest {
 
   @Mock
-  private DocumentTemplateSectionControllerHelperService documentTemplateSectionControllerHelperService;
+  private DocumentTemplateSectionViewService documentTemplateSectionViewService;
 
   @InjectMocks
-  private FieldConsentsDocumentTemplateSectionControllerHelperService fieldConsentsDocumentTemplateSectionControllerHelperService;
+  private FieldConsentsDocumentTemplateSectionViewService fieldConsentsDocumentTemplateSectionViewService;
 
   @Captor
   private ArgumentCaptor<Function<DocumentTemplateSectionDto, DocumentTemplateSectionUrls>> urlsFunctionCaptor;
@@ -49,14 +49,14 @@ class FieldConsentsDocumentTemplateSectionControllerHelperServiceTest {
     );
 
     when(
-        documentTemplateSectionControllerHelperService.getTopLevelDocumentTemplateSectionSummaryViews(
+        documentTemplateSectionViewService.getTopLevelDocumentTemplateSectionSummaryViews(
             eq(documentTemplateDto),
             urlsFunctionCaptor.capture()
         )
     ).thenReturn(topLevelDocumentTemplateSectionSummaryViews);
 
     assertThat(
-        fieldConsentsDocumentTemplateSectionControllerHelperService.getTopLevelDocumentTemplateSectionSummaryViews(documentTemplateDto)
+        fieldConsentsDocumentTemplateSectionViewService.getTopLevelDocumentTemplateSectionSummaryViews(documentTemplateDto)
     ).isEqualTo(topLevelDocumentTemplateSectionSummaryViews);
 
     var documentTemplateSectionDto = DocumentTemplateSectionDtoTestUtil.builder().build();
