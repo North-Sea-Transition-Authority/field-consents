@@ -52,7 +52,7 @@ public class ApplicationStartUpdateController {
   public ModelAndView updateApplicationEntryPoint(@PathVariable Integer applicationId) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
 
-    if (caseStatusFlagService.getCaseStatusFlags(applicationVersion).contains(APPLICATION_UPDATE_STARTED)) {
+    if (caseStatusFlagService.isCaseStatusFlagApplicable(applicationVersion, APPLICATION_UPDATE_STARTED)) {
       return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
     } else if (ApplicationVersionStatus.SUBMITTED.equals(applicationVersion.getStatus())) {
       return ReverseRouter.redirect(on(ApplicationStartUpdateController.class).renderStartUpdate(applicationId));

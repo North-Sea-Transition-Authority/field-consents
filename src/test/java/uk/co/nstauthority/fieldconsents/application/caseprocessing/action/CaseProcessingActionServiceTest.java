@@ -44,6 +44,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEW_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.UNAPPROVE_FOR_ISSUING;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.APPLICATION_UPDATE_NOT_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.APPLICATION_UPDATE_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CAM_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CAM_NOT_ASSIGNED;
@@ -53,13 +54,12 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casest
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSENT_APPROVED_FOR_ISSUE;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSENT_DATA_EXISTS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSENT_NOT_APPROVED_FOR_ISSUE;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_FURTHER_INFORMATION_NOT_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_FURTHER_INFORMATION_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_NOT_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_OPEN;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_APPLICATION_UPDATE_OPEN;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_CONSULTATION_FURTHER_INFORMATION_OPEN;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_CONSULTATION_OPEN;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_TECHNICAL_REVIEW_OPEN;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_WITHDRAWAL_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.TECHNICAL_REVIEW_NOT_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.WITHDRAWAL_NOT_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.WITHDRAWAL_OPEN;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ALLOCATE_CONSULTATION;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ASSIGN_FCS_APPLICATIONS;
@@ -196,7 +196,11 @@ class CaseProcessingActionServiceTest {
       List<CaseProcessingActionItem> expectedActionItems
   ) {
     when(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER)).thenReturn(rolePermissions);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion)).thenReturn(caseStatusFlags);
+
+    // TODO: FCS-745
+    for (var caseStatusFlag : caseStatusFlags) {
+      lenient().when(caseStatusFlagService.isCaseStatusFlagApplicable(applicationVersion, caseStatusFlag)).thenReturn(true);
+    }
 
     var webUserAccountIdByTeamRole = Collections.<TeamRole, WebUserAccountId>emptyMap();
     doReturn(webUserAccountIdByTeamRole)
@@ -234,7 +238,7 @@ class CaseProcessingActionServiceTest {
         ),
         arguments(
             Set.of(PROCESS_FCS_APPLICATIONS),
-            Set.of(CASE_OFFICER_ASSIGNED, NO_TECHNICAL_REVIEW_OPEN, NO_APPLICATION_UPDATE_OPEN),
+            Set.of(CASE_OFFICER_ASSIGNED, TECHNICAL_REVIEW_NOT_OPEN, APPLICATION_UPDATE_NOT_OPEN),
             ExpectedActions.newBuilder()
                 .inProgressActions(CHANGE_ACE_STATUS, CASE_OFFICER_RELEASE_OWNERSHIP)
                 .submittedActions(CHANGE_ACE_STATUS, CASE_OFFICER_RELEASE_OWNERSHIP, TECHNICAL_REVIEW_REQUEST, CONSENT_PREPARATION, APPLICATION_UPDATE_REQUEST)
@@ -249,14 +253,14 @@ class CaseProcessingActionServiceTest {
         ),
         arguments(
             Set.of(PROCESS_FCS_APPLICATIONS, TECHNICAL_REVIEW_FCS_APPLICATIONS),
-            Set.of(NO_APPLICATION_UPDATE_OPEN),
+            Set.of(APPLICATION_UPDATE_NOT_OPEN),
             ExpectedActions.newBuilder()
                 .submittedActions(CONSENT_PREPARATION, APPLICATION_UPDATE_REQUEST)
                 .build()
         ),
         arguments(
             Set.of(PROCESS_FCS_APPLICATIONS),
-            Set.of(CASE_OFFICER_ASSIGNED, NO_TECHNICAL_REVIEW_OPEN, NO_CONSULTATION_OPEN),
+            Set.of(CASE_OFFICER_ASSIGNED, TECHNICAL_REVIEW_NOT_OPEN, CONSULTATION_NOT_OPEN),
             ExpectedActions.newBuilder()
                 .inProgressActions(CHANGE_ACE_STATUS, CASE_OFFICER_RELEASE_OWNERSHIP)
                 .submittedActions(CHANGE_ACE_STATUS, CASE_OFFICER_RELEASE_OWNERSHIP, CONSENT_PREPARATION, CONSULTATION_REQUEST)
@@ -264,21 +268,21 @@ class CaseProcessingActionServiceTest {
         ),
         arguments(
             Set.of(RESPOND_TO_CONSULTATION),
-            Set.of(CONSULTATION_OPEN, NO_CONSULTATION_FURTHER_INFORMATION_OPEN),
+            Set.of(CONSULTATION_OPEN, CONSULTATION_FURTHER_INFORMATION_NOT_OPEN),
             ExpectedActions.newBuilder()
                 .submittedActions(CONSULTATION_RESPONSE, CONSULTATION_FURTHER_INFORMATION_REQUEST)
                 .build()
         ),
         arguments(
             Set.of(RESPOND_TO_CONSULTATION),
-            Set.of(NO_CONSULTATION_FURTHER_INFORMATION_OPEN),
+            Set.of(CONSULTATION_FURTHER_INFORMATION_NOT_OPEN),
             ExpectedActions.newBuilder()
                 .submittedActions(CONSULTATION_FURTHER_INFORMATION_REQUEST)
                 .build()
         ),
         arguments(
             Set.of(PROCESS_FCS_APPLICATIONS),
-            Set.of(CONSULTATION_FURTHER_INFORMATION_OPEN, NO_APPLICATION_UPDATE_OPEN),
+            Set.of(CONSULTATION_FURTHER_INFORMATION_OPEN, APPLICATION_UPDATE_NOT_OPEN),
             ExpectedActions.newBuilder()
                 .submittedActions(CONSENT_PREPARATION, APPLICATION_UPDATE_REQUEST, CONSULTATION_FURTHER_INFORMATION_RESPOND)
                 .build()
@@ -364,7 +368,7 @@ class CaseProcessingActionServiceTest {
         ),
         arguments(
             Set.of(EDIT_FCS_APPLICATIONS),
-            Set.of(NO_WITHDRAWAL_OPEN, NO_APPLICATION_UPDATE_OPEN),
+            Set.of(WITHDRAWAL_NOT_OPEN, APPLICATION_UPDATE_NOT_OPEN),
             ExpectedActions.newBuilder()
                 .awaitingPaymentActions(OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT)
                 .submittedActions(OPERATOR_WITHDRAWAL_REQUEST)
@@ -387,7 +391,7 @@ class CaseProcessingActionServiceTest {
         ),
         arguments(
             Set.of(PAY_AND_SUBMIT_FCS_APPLICATIONS),
-            Set.of(NO_APPLICATION_UPDATE_OPEN),
+            Set.of(APPLICATION_UPDATE_NOT_OPEN),
             ExpectedActions.newBuilder()
                 .awaitingPaymentActions(OPERATOR_PAY_AND_SUBMIT_APPLICATION)
                 .build()

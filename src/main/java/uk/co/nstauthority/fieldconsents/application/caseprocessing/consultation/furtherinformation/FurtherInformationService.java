@@ -22,7 +22,9 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
@@ -39,19 +41,22 @@ public class FurtherInformationService {
   private final ApplicationWorkAreaPriorityService priorityService;
   private final EnergyPortalUserService energyPortalUserService;
   private final FurtherInformationEmailService furtherInformationEmailService;
+  private final ConsultationService consultationService;
 
   FurtherInformationService(
       Clock clock,
       FurtherInformationRepository repository,
       ApplicationWorkAreaPriorityService priorityService,
       EnergyPortalUserService energyPortalUserService,
-      FurtherInformationEmailService furtherInformationEmailService
+      FurtherInformationEmailService furtherInformationEmailService,
+      ConsultationService consultationService
   ) {
     this.clock = clock;
     this.repository = repository;
     this.priorityService = priorityService;
     this.energyPortalUserService = energyPortalUserService;
     this.furtherInformationEmailService = furtherInformationEmailService;
+    this.consultationService = consultationService;
   }
 
   public Optional<FurtherInformation> findLatestOpenFurtherInformation(Consultation consultation) {
@@ -66,6 +71,12 @@ public class FurtherInformationService {
     return findLatestOpenFurtherInformation(consultation)
         .orElseThrow(() -> new EntityNotFoundException(
             "Open further information not found for consultation [%s]".formatted(consultation.getId())));
+  }
+
+  public boolean isFurtherInformationRequestOpen(ApplicationVersion applicationVersion) {
+    return consultationService.findLatestOpenConsultation(applicationVersion.getApplication())
+        .flatMap(this::findLatestOpenFurtherInformation)
+        .isPresent();
   }
 
   @Transactional

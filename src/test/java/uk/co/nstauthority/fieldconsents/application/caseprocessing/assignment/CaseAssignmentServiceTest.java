@@ -23,6 +23,7 @@ import static uk.co.nstauthority.fieldconsents.application.workareapriority.Appl
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CASE_OFFICER_RELEASE_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CASE_OFFICER_TAKE_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CASE_OFFICER;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -33,6 +34,8 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -262,6 +265,62 @@ class CaseAssignmentServiceTest {
     verify(applicationWorkAreaPriorityService).prioritiseApplicationInWorkArea(applicationVersion, USER, CASE_OFFICER_RELEASE_OWNERSHIP, REGULATOR);
 
     verify(caseAssignmentEmailService).sendCaseOwnershipReleasedEmail(applicationVersion, USER);
+  }
+
+  @Test
+  void isCaseOfficerAssigned() {
+    var applicationVersion = new ApplicationVersion();
+    applicationVersion.setCaseOfficerWuaId(123L);
+    applicationVersion.setCurrentCaseOwner(CASE_OFFICER);
+
+    assertThat(caseAssignmentService.isCaseOfficerAssigned(applicationVersion)).isTrue();
+  }
+
+  @Test
+  void isCaseOfficerAssigned_noWuaId() {
+    var applicationVersion = new ApplicationVersion();
+    applicationVersion.setCaseOfficerWuaId(null);
+    applicationVersion.setCurrentCaseOwner(CASE_OFFICER);
+
+    assertThat(caseAssignmentService.isCaseOfficerAssigned(applicationVersion)).isFalse();
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = RegulatorTeamRole.class, names = "CASE_OFFICER", mode= EnumSource.Mode.EXCLUDE)
+  void isCaseOfficerAssigned_currentCaseOwnerNotCaseOfficer(RegulatorTeamRole regulatorTeamRole) {
+    var applicationVersion = new ApplicationVersion();
+    applicationVersion.setCaseOfficerWuaId(123L);
+    applicationVersion.setCurrentCaseOwner(regulatorTeamRole);
+
+    assertThat(caseAssignmentService.isCaseOfficerAssigned(applicationVersion)).isFalse();
+  }
+
+  @Test
+  void isCamAssigned() {
+    var applicationVersion = new ApplicationVersion();
+    applicationVersion.setCamWuaId(123L);
+    applicationVersion.setCurrentCaseOwner(CONSENTS_AND_AUTHORISATIONS_MANAGER);
+
+    assertThat(caseAssignmentService.isCamAssigned(applicationVersion)).isTrue();
+  }
+
+  @Test
+  void isCamAssigned_noWuaId() {
+    var applicationVersion = new ApplicationVersion();
+    applicationVersion.setCamWuaId(null);
+    applicationVersion.setCurrentCaseOwner(CONSENTS_AND_AUTHORISATIONS_MANAGER);
+
+    assertThat(caseAssignmentService.isCamAssigned(applicationVersion)).isFalse();
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = RegulatorTeamRole.class, names = "CONSENTS_AND_AUTHORISATIONS_MANAGER", mode= EnumSource.Mode.EXCLUDE)
+  void isCaseOfficerAssigned_currentCaseOwnerNotCam(RegulatorTeamRole regulatorTeamRole) {
+    var applicationVersion = new ApplicationVersion();
+    applicationVersion.setCamWuaId(123L);
+    applicationVersion.setCurrentCaseOwner(regulatorTeamRole);
+
+    assertThat(caseAssignmentService.isCamAssigned(applicationVersion)).isFalse();
   }
 
   @Test

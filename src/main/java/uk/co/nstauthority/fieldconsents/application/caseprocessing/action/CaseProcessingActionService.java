@@ -35,6 +35,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEW_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.UNAPPROVE_FOR_ISSUING;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.APPLICATION_UPDATE_NOT_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.APPLICATION_UPDATE_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CAM_ASSIGNED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CAM_NOT_ASSIGNED;
@@ -44,14 +45,13 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casest
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSENT_APPROVED_FOR_ISSUE;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSENT_DATA_EXISTS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSENT_NOT_APPROVED_FOR_ISSUE;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_FURTHER_INFORMATION_NOT_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_FURTHER_INFORMATION_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_NOT_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_OPEN;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_APPLICATION_UPDATE_OPEN;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_CONSULTATION_FURTHER_INFORMATION_OPEN;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_CONSULTATION_OPEN;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_TECHNICAL_REVIEW_OPEN;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NO_WITHDRAWAL_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.TECHNICAL_REVIEW_NOT_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.TECHNICAL_REVIEW_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.WITHDRAWAL_NOT_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.WITHDRAWAL_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.tasklist.CaseProcessingTaskListSection.CASE_TASKS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.tasklist.CaseProcessingTaskListSection.OPTIONAL_CASE_TASKS;
@@ -72,6 +72,7 @@ import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regula
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
@@ -162,7 +163,7 @@ public class CaseProcessingActionService {
               RETURN_TO_CASE_OFFICER,
               ISSUE_CONSENT,
               UNAPPROVE_FOR_ISSUING
-              ),
+          ),
           ApplicationVersionStatus.COMPLETED,
           EnumSet.of(
               TECHNICAL_REVIEWS,
@@ -224,32 +225,33 @@ public class CaseProcessingActionService {
           entry(CASE_OFFICER_RELEASE_OWNERSHIP, EnumSet.of(CASE_OFFICER_ASSIGNED)),
           entry(CASE_OFFICER_WITHDRAWAL_RESPONSE, EnumSet.of(CASE_OFFICER_ASSIGNED, WITHDRAWAL_OPEN)),
           entry(TECHNICAL_REVIEW_REQUEST,
-              EnumSet.of(CASE_OFFICER_ASSIGNED, NO_TECHNICAL_REVIEW_OPEN, NO_APPLICATION_UPDATE_OPEN)),
+              EnumSet.of(CASE_OFFICER_ASSIGNED, TECHNICAL_REVIEW_NOT_OPEN, APPLICATION_UPDATE_NOT_OPEN)),
           entry(CASE_OFFICER_ASSIGN_OWNERSHIP, EnumSet.of(CASE_OFFICER_NOT_ASSIGNED, CAM_NOT_ASSIGNED)),
           entry(CASE_OFFICER_REASSIGN_OWNERSHIP, EnumSet.of(CASE_OFFICER_ASSIGNED, CAM_NOT_ASSIGNED)),
           entry(CONSULTATION_REQUEST,
-              EnumSet.of(CASE_OFFICER_ASSIGNED, NO_TECHNICAL_REVIEW_OPEN, NO_CONSULTATION_OPEN)),
-          entry(CONSULTATION_RESPONSE, EnumSet.of(CONSULTATION_OPEN, NO_CONSULTATION_FURTHER_INFORMATION_OPEN)),
+              EnumSet.of(CASE_OFFICER_ASSIGNED, TECHNICAL_REVIEW_NOT_OPEN, CONSULTATION_NOT_OPEN)),
+          entry(CONSULTATION_RESPONSE, EnumSet.of(CONSULTATION_OPEN, CONSULTATION_FURTHER_INFORMATION_NOT_OPEN)),
           entry(CONSULTATION_MANAGE_RESPONDER, EnumSet.of(CONSULTATION_OPEN)),
           entry(REGULATOR_ADD_CASE_NOTE, EnumSet.of(CASE_NOTES_ALLOWED)),
           entry(TECHNICAL_REVIEWER_SUBMIT_REVIEW, EnumSet.of(TECHNICAL_REVIEW_OPEN)),
           entry(TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP, EnumSet.of(TECHNICAL_REVIEW_OPEN)),
-          entry(APPLICATION_UPDATE_REQUEST, EnumSet.of(NO_APPLICATION_UPDATE_OPEN)),
-          entry(OPERATOR_PAY_AND_SUBMIT_APPLICATION, EnumSet.of(NO_APPLICATION_UPDATE_OPEN)),
-          entry(OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT, EnumSet.of(NO_APPLICATION_UPDATE_OPEN)),
-          entry(OPERATOR_WITHDRAWAL_REQUEST, EnumSet.of(NO_WITHDRAWAL_OPEN, NO_APPLICATION_UPDATE_OPEN)),
+          entry(APPLICATION_UPDATE_REQUEST, EnumSet.of(APPLICATION_UPDATE_NOT_OPEN)),
+          entry(OPERATOR_PAY_AND_SUBMIT_APPLICATION, EnumSet.of(APPLICATION_UPDATE_NOT_OPEN)),
+          entry(OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT, EnumSet.of(
+              APPLICATION_UPDATE_NOT_OPEN)),
+          entry(OPERATOR_WITHDRAWAL_REQUEST, EnumSet.of(WITHDRAWAL_NOT_OPEN, APPLICATION_UPDATE_NOT_OPEN)),
           entry(OPERATOR_UPDATE_APPLICATION, EnumSet.of(APPLICATION_UPDATE_OPEN)),
-          entry(CONSULTATION_FURTHER_INFORMATION_REQUEST, EnumSet.of(NO_CONSULTATION_FURTHER_INFORMATION_OPEN)),
+          entry(CONSULTATION_FURTHER_INFORMATION_REQUEST, EnumSet.of(CONSULTATION_FURTHER_INFORMATION_NOT_OPEN)),
           entry(CONSULTATION_FURTHER_INFORMATION_RESPOND,
-              EnumSet.of(CONSULTATION_FURTHER_INFORMATION_OPEN, NO_APPLICATION_UPDATE_OPEN)),
+              EnumSet.of(CONSULTATION_FURTHER_INFORMATION_OPEN, APPLICATION_UPDATE_NOT_OPEN)),
           entry(EDIT_CONSENT_DATA, EnumSet.of(CASE_OFFICER_ASSIGNED, CAM_NOT_ASSIGNED, CONSENT_NOT_APPROVED_FOR_ISSUE)),
           entry(EDIT_CONSENT_DOCUMENTS, EnumSet.of(CASE_OFFICER_ASSIGNED, CAM_NOT_ASSIGNED, CONSENT_NOT_APPROVED_FOR_ISSUE)),
           entry(CAM_ASSIGN_OWNERSHIP,
               EnumSet.of(
                   CASE_OFFICER_ASSIGNED,
-                  NO_TECHNICAL_REVIEW_OPEN,
-                  NO_APPLICATION_UPDATE_OPEN,
-                  NO_CONSULTATION_OPEN)
+                  TECHNICAL_REVIEW_NOT_OPEN,
+                  APPLICATION_UPDATE_NOT_OPEN,
+                  CONSULTATION_NOT_OPEN)
           ),
           entry(CONSENT_ISSUING, EnumSet.of(CONSENT_DATA_EXISTS)),
           entry(APPROVE_FOR_ISSUING, EnumSet.of(CONSENT_DATA_EXISTS, CONSENT_NOT_APPROVED_FOR_ISSUE)),
@@ -278,7 +280,7 @@ public class CaseProcessingActionService {
           entry(RETURN_TO_CASE_OFFICER, EnumSet.of(CONSENTS_AND_AUTHORISATIONS_MANAGER)),
           entry(ISSUE_CONSENT, EnumSet.of(CONSENTS_AND_AUTHORISATIONS_MANAGER)),
           entry(UNAPPROVE_FOR_ISSUING, EnumSet.of(CONSENTS_AND_AUTHORISATIONS_MANAGER))
-          );
+      );
   /*
    * If an actionItem is not here, it will be allowed by default. If multiple features are present for an action,
    * one of them must match for the action to be allowed.
@@ -343,15 +345,23 @@ public class CaseProcessingActionService {
     }
 
     var userRolePermissions = applicationAccessService.getApplicationPermissionsForUser(applicationVersion, user);
-    var caseStatusFlags = caseStatusFlagService.getCaseStatusFlags(applicationVersion);
     var assigneeMap = constructAssigneeMap(applicationVersion);
+    var applicableByCaseStatusFlag = new EnumMap<CaseStatusFlag, Boolean>(CaseStatusFlag.class);
 
     return actions.stream()
         .filter(action -> applicationTypeFeatureFlagAllowed(applicationVersion, action))
         // filter actions that the user has permissions for
         .filter(action -> CollectionUtils.containsAny(actionsToPermissions.get(action), userRolePermissions))
         // filter actions that the application version has all the status flags for
-        .filter(action -> caseStatusFlags.containsAll(actionsToStatusFlags.getOrDefault(action, Set.of())))
+        .filter(action -> actionsToStatusFlags.getOrDefault(action, Set.of())
+            .stream()
+            .allMatch(caseStatusFlag ->
+                applicableByCaseStatusFlag.computeIfAbsent(
+                    caseStatusFlag,
+                    flag -> caseStatusFlagService.isCaseStatusFlagApplicable(applicationVersion, flag)
+                )
+            )
+        )
         .filter(action -> isActionEnabledForUser(action, assigneeMap, user))
         .toList();
   }

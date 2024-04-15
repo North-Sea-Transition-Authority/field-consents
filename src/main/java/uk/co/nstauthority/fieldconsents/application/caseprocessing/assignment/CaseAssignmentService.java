@@ -2,6 +2,8 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment;
 
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CASE_OFFICER_ASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.CASE_OFFICER_TAKE_OWNERSHIP;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CASE_OFFICER;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -130,6 +132,16 @@ public class CaseAssignmentService {
               Note: this hasn't prevented the ownership of the case to be released.""",
           user.wuaId(), applicationVersion.getId(), exception);
     }
+  }
+
+  public boolean isCaseOfficerAssigned(ApplicationVersion applicationVersion) {
+    return Objects.nonNull(applicationVersion.getCaseOfficerWuaId())
+        && CASE_OFFICER.equals(applicationVersion.getCurrentCaseOwner());
+  }
+
+  public boolean isCamAssigned(ApplicationVersion applicationVersion) {
+    return Objects.nonNull(applicationVersion.getCamWuaId())
+        && CONSENTS_AND_AUTHORISATIONS_MANAGER.equals(applicationVersion.getCurrentCaseOwner());
   }
 
   public List<TeamMemberView> getCaseOfficerAssignmentCandidates(ApplicationVersion applicationVersion,

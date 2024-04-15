@@ -21,7 +21,6 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -105,8 +104,8 @@ class ApplicationStartUpdateControllerTest extends AbstractApplicationController
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
-    when(caseStatusFlagService.getCaseStatusFlags(applicationVersion))
-        .thenReturn(Set.of(APPLICATION_UPDATE_STARTED));
+    when(caseStatusFlagService.isCaseStatusFlagApplicable(applicationVersion, APPLICATION_UPDATE_STARTED))
+        .thenReturn(true);
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationStartUpdateController.class)
             .updateApplicationEntryPoint(APPLICATION_ID)))

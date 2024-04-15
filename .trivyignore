@@ -18,3 +18,5 @@ CVE-2023-51775
 CVE-2024-22257
 # ring-web
 CVE-2024-22259
+# software.amazon.ion:ion-java (app.jar)
+CVE-2024-21634

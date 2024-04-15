@@ -41,10 +41,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
@@ -78,6 +80,9 @@ class FurtherInformationServiceTest {
 
   @Mock
   private FurtherInformationEmailService furtherInformationEmailService;
+
+  @Mock
+  private ConsultationService consultationService;
 
   @Spy
   @InjectMocks
@@ -140,6 +145,48 @@ class FurtherInformationServiceTest {
     assertThatThrownBy(() -> furtherInformationService.getLatestOpenFurtherInformation(consultation))
         .isInstanceOf(EntityNotFoundException.class)
         .hasMessage("Open further information not found for consultation [%s]".formatted(CONSULTATION_ID));
+  }
+
+  @Test
+  void isFurtherInformationRequestOpen() {
+    var application = new Application();
+
+    var applicationVersion = new ApplicationVersion();
+    applicationVersion.setApplication(application);
+
+    var consultation = new Consultation();
+
+    when(consultationService.findLatestOpenConsultation(application)).thenReturn(Optional.of(consultation));
+    when(repository.findByConsultationAndStatus(consultation, OPEN)).thenReturn(Optional.of(new FurtherInformation()));
+
+    assertThat(furtherInformationService.isFurtherInformationRequestOpen(applicationVersion)).isTrue();
+  }
+
+  @Test
+  void isFurtherInformationRequestOpen_consultationDoesNotExist() {
+    var application = new Application();
+
+    var applicationVersion = new ApplicationVersion();
+    applicationVersion.setApplication(application);
+
+    when(consultationService.findLatestOpenConsultation(application)).thenReturn(Optional.empty());
+
+    assertThat(furtherInformationService.isFurtherInformationRequestOpen(applicationVersion)).isFalse();
+  }
+
+  @Test
+  void isFurtherInformationRequestOpen_openFurtherInformationDoesNotExist() {
+    var application = new Application();
+
+    var applicationVersion = new ApplicationVersion();
+    applicationVersion.setApplication(application);
+
+    var consultation = new Consultation();
+
+    when(consultationService.findLatestOpenConsultation(application)).thenReturn(Optional.of(consultation));
+    when(repository.findByConsultationAndStatus(consultation, OPEN)).thenReturn(Optional.empty());
+
+    assertThat(furtherInformationService.isFurtherInformationRequestOpen(applicationVersion)).isFalse();
   }
 
   @Test
