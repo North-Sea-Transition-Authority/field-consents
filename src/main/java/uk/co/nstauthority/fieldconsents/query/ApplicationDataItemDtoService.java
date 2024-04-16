@@ -1,5 +1,8 @@
 package uk.co.nstauthority.fieldconsents.query;
 
+import static org.jooq.impl.DSL.greatest;
+import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
+
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
@@ -8,6 +11,7 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.jooq.Condition;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
@@ -45,19 +49,24 @@ public class ApplicationDataItemDtoService {
   private final ApplicationService applicationService;
   private final ApplicationVersionService applicationVersionService;
   private final PermissionService permissionService;
+  private final ApplicationDataItemQueryService applicationDataItemQueryService;
 
-  ApplicationDataItemDtoService(FieldService fieldService,
-                                EnergyPortalUserService energyPortalUserService,
-                                OrganisationUnitService organisationUnitService,
-                                ApplicationService applicationService,
-                                ApplicationVersionService applicationVersionService,
-                                PermissionService permissionService) {
+  ApplicationDataItemDtoService(
+      FieldService fieldService,
+      EnergyPortalUserService energyPortalUserService,
+      OrganisationUnitService organisationUnitService,
+      ApplicationService applicationService,
+      ApplicationVersionService applicationVersionService,
+      PermissionService permissionService,
+      ApplicationDataItemQueryService applicationDataItemQueryService
+  ) {
     this.fieldService = fieldService;
     this.energyPortalUserService = energyPortalUserService;
     this.organisationUnitService = organisationUnitService;
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.permissionService = permissionService;
+    this.applicationDataItemQueryService = applicationDataItemQueryService;
   }
 
   public List<OrganisationUnitJson> getOrganisationUnitJsonsFromApplicationDataItemDtos(
@@ -324,4 +333,11 @@ public class ApplicationDataItemDtoService {
     builder.withConsultationOpen(null).withConsultationDeadline(null);
   }
 
+  public List<ApplicationDataItemDto> runGetDataItemDtoQuery(List<Condition> conditions) {
+    return applicationDataItemQueryService.runQueryWithCustom(conditions, selectQuery ->
+            selectQuery.addOrderBy(greatest(
+                APPLICATION_VERSIONS.SUBMITTED_DATE_TIME,
+                APPLICATION_VERSIONS.CREATED_DATE_TIME).desc()),
+        ApplicationDataItemDto.class);
+  }
 }

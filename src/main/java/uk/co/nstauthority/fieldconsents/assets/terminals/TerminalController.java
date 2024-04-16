@@ -2,13 +2,14 @@ package uk.co.nstauthority.fieldconsents.assets.terminals;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 import uk.co.nstauthority.fieldconsents.assets.AssetSelectionController;
+import uk.co.nstauthority.fieldconsents.assets.ManageAssetService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.HasAssetPermission;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -22,14 +23,17 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
 public class TerminalController {
 
   private final TerminalService terminalService;
-
   private final OrganisationUnitPermissionService organisationUnitPermissionService;
+  private final ManageAssetService manageAssetService;
 
-  @Autowired
-  public TerminalController(TerminalService terminalService,
-                            OrganisationUnitPermissionService organisationUnitPermissionService) {
+  TerminalController(
+      TerminalService terminalService,
+      OrganisationUnitPermissionService organisationUnitPermissionService,
+      ManageAssetService manageAssetService
+  ) {
     this.terminalService = terminalService;
     this.organisationUnitPermissionService = organisationUnitPermissionService;
+    this.manageAssetService = manageAssetService;
   }
 
   @GetMapping
@@ -52,6 +56,7 @@ public class TerminalController {
         .addObject("backLinkUrl", ReverseRouter.route(on(AssetSelectionController.class).getAssetSelection()))
         .addObject("startApplicationUrl",
             ReverseRouter.route(on(StartApplicationFromTerminalController.class).getStartApplicationForm(terminalId))
-        );
+        )
+        .addObject("applicationDataItems", manageAssetService.getApplicationDataItems(AssetKey.from(terminalJson), user));
   }
 }

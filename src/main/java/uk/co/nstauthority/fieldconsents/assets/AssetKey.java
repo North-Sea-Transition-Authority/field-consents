@@ -6,6 +6,10 @@ import java.util.Optional;
 
 public record AssetKey(Integer assetId, AssetType assetType) {
 
+  public static AssetKey from(AssetJson assetJson) {
+    return new AssetKey(assetJson.getId(), assetJson.getAssetType());
+  }
+
   public static AssetKey from(String str) {
     return parse(str).orElseThrow(() -> new IllegalArgumentException("Invalid assetKey [%s]".formatted(str)));
   }

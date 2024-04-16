@@ -87,6 +87,9 @@ class ApplicationDataItemDtoServiceTest {
   @Mock
   private PermissionService permissionService;
 
+  @Mock
+  private ApplicationDataItemQueryService applicationDataItemQueryService;
+
   @Spy
   @InjectMocks
   private ApplicationDataItemDtoService applicationDataItemDtoService;

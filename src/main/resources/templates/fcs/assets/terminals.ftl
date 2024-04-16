@@ -1,4 +1,5 @@
 <#include '../layout/layout.ftl'>
+<#import '../dataitems/applicationDataItem.ftl' as applicationDataItem>
 
 <#-- @ftlvariable name="customerBrandingConfigurationProperties" type="uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties" -->
 <#-- @ftlvariable name="terminalJson" type="uk.co.nstauthority.fieldconsents.assets.terminals.TerminalWithOperatorJson" -->
@@ -33,4 +34,9 @@
   <#if startApplicationEnabled>
     <@fdsAction.link start=true linkText="Start application" linkUrl=springUrl(startApplicationUrl)/>
   </#if>
+  <@fdsResultList.resultList resultCount=applicationDataItems?size resultCountSuffix="application">
+    <#list applicationDataItems as dataItem>
+      <@applicationDataItem.applicationResultListItem dataItem=dataItem/>
+    </#list>
+  </@fdsResultList.resultList>
 </@defaultPage>

@@ -19,6 +19,7 @@ import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePe
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_CONSENTS;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -26,9 +27,13 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
+import uk.co.nstauthority.fieldconsents.assets.AssetKey;
+import uk.co.nstauthority.fieldconsents.assets.ManageAssetService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItem;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil;
 import uk.co.nstauthority.fieldconsents.startapplication.StartApplicationFromFieldController;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
@@ -37,6 +42,9 @@ public class FieldControllerTest extends AbstractControllerTest {
 
   @MockBean
   private OrganisationUnitPermissionService organisationUnitPermissionService;
+
+  @MockBean
+  private ManageAssetService manageAssetService;
 
   @BeforeEach
   void setUp() {
@@ -66,12 +74,16 @@ public class FieldControllerTest extends AbstractControllerTest {
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
   void manageField_fieldWithOperatorAndLicences(boolean userHasCreatePermission) throws Exception {
+    var applicationDataItems = List.of(ApplicationDataItemUtil.getApplicationDataItem());
 
     when(fieldService.getFieldWithOperatorAndLicences(eq(field1JsonWithOperatorAndLicences.getId()), anyString()))
         .thenReturn(field1JsonWithOperatorAndLicences);
 
     when(organisationUnitPermissionService.hasOperatorPermission(any(), any(), any(RolePermission[].class)))
         .thenReturn(userHasCreatePermission);
+
+    when(manageAssetService.getApplicationDataItems(AssetKey.from(field1JsonWithOperatorAndLicences), user))
+        .thenReturn(applicationDataItems);
 
     var modelAndView =
         mockMvc.perform(get(ReverseRouter.route(on(FieldController.class)
@@ -81,18 +93,22 @@ public class FieldControllerTest extends AbstractControllerTest {
         .andExpect(view().name("fcs/assets/fields"))
         .andReturn().getModelAndView();
 
-    checkModelAsserts(modelAndView, field1JsonWithOperatorAndLicences, userHasCreatePermission);
+    checkModelAsserts(modelAndView, field1JsonWithOperatorAndLicences, userHasCreatePermission, applicationDataItems);
   }
 
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
   void manageField_fieldWithNoOperatorButLicencesExist(boolean userHasCreatePermission) throws Exception {
+    var applicationDataItems = List.of(ApplicationDataItemUtil.getApplicationDataItem());
 
     when(fieldService.getFieldWithOperatorAndLicences(eq(field1JsonWithNoOperatorButLicences.getId()), anyString()))
         .thenReturn(field1JsonWithNoOperatorButLicences);
 
     when(organisationUnitPermissionService.hasOperatorPermission(any(), any(), any(RolePermission[].class)))
         .thenReturn(userHasCreatePermission);
+
+    when(manageAssetService.getApplicationDataItems(AssetKey.from(field1JsonWithNoOperatorButLicences), user))
+        .thenReturn(applicationDataItems);
 
     var modelAndView =
         mockMvc.perform(get(ReverseRouter.route(on(FieldController.class)
@@ -102,19 +118,23 @@ public class FieldControllerTest extends AbstractControllerTest {
             .andExpect(view().name("fcs/assets/fields"))
             .andReturn().getModelAndView();
 
-    checkModelAsserts(modelAndView, field1JsonWithNoOperatorButLicences, userHasCreatePermission);
+    checkModelAsserts(modelAndView, field1JsonWithNoOperatorButLicences, userHasCreatePermission, applicationDataItems);
   }
 
 
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
   void manageField_fieldWithOperatorButEmptyLicences(boolean userHasCreatePermission) throws Exception {
+    var applicationDataItems = List.of(ApplicationDataItemUtil.getApplicationDataItem());
 
     when(fieldService.getFieldWithOperatorAndLicences(eq(field1JsonWithOperatorButEmptyLicences.getId()), anyString()))
         .thenReturn(field1JsonWithOperatorButEmptyLicences);
 
     when(organisationUnitPermissionService.hasOperatorPermission(any(), any(), any(RolePermission[].class)))
         .thenReturn(userHasCreatePermission);
+
+    when(manageAssetService.getApplicationDataItems(AssetKey.from(field1JsonWithOperatorButEmptyLicences), user))
+        .thenReturn(applicationDataItems);
 
     var modelAndView =
         mockMvc.perform(get(ReverseRouter.route(on(FieldController.class)
@@ -124,19 +144,23 @@ public class FieldControllerTest extends AbstractControllerTest {
             .andExpect(view().name("fcs/assets/fields"))
             .andReturn().getModelAndView();
 
-    checkModelAsserts(modelAndView, field1JsonWithOperatorButEmptyLicences, userHasCreatePermission);
+    checkModelAsserts(modelAndView, field1JsonWithOperatorButEmptyLicences, userHasCreatePermission, applicationDataItems);
   }
 
 
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
   void manageField_fieldWithNoOperatorOrLicences(boolean userHasCreatePermission) throws Exception {
+    var applicationDataItems = List.of(ApplicationDataItemUtil.getApplicationDataItem());
 
     when(fieldService.getFieldWithOperatorAndLicences(eq(field1JsonWithNullOperatorAndLicences.getId()), anyString()))
         .thenReturn(field1JsonWithNullOperatorAndLicences);
 
     when(organisationUnitPermissionService.hasOperatorPermission(any(), any(), any(RolePermission[].class)))
         .thenReturn(userHasCreatePermission);
+
+    when(manageAssetService.getApplicationDataItems(AssetKey.from(field1JsonWithNullOperatorAndLicences), user))
+        .thenReturn(applicationDataItems);
 
     var modelAndView =
         mockMvc.perform(get(ReverseRouter.route(on(FieldController.class)
@@ -146,12 +170,15 @@ public class FieldControllerTest extends AbstractControllerTest {
             .andExpect(view().name("fcs/assets/fields"))
             .andReturn().getModelAndView();
 
-    checkModelAsserts(modelAndView, field1JsonWithNullOperatorAndLicences, userHasCreatePermission);
+    checkModelAsserts(modelAndView, field1JsonWithNullOperatorAndLicences, userHasCreatePermission, applicationDataItems);
   }
 
-  private void checkModelAsserts(ModelAndView modelAndView,
-                                 FieldWithOperatorAndLicencesJson fieldJson,
-                                 boolean userHasCreatePermission) {
+  private void checkModelAsserts(
+      ModelAndView modelAndView,
+      FieldWithOperatorAndLicencesJson fieldJson,
+      boolean userHasCreatePermission,
+      List<ApplicationDataItem> applicationDataItems
+  ) {
     assertThat(modelAndView).isNotNull();
     var model = modelAndView.getModel();
     assertThat(model)
@@ -163,6 +190,7 @@ public class FieldControllerTest extends AbstractControllerTest {
         .containsEntry("operatorName", fieldJson.getOperatorName())
         .containsEntry("licences", fieldJson.getLicencesAsString())
         .containsEntry("startApplicationUrl", ReverseRouter.route(on(StartApplicationFromFieldController.class)
-            .getStartApplicationForm(fieldJson.getId())));
+            .getStartApplicationForm(fieldJson.getId())))
+        .containsEntry("applicationDataItems", applicationDataItems);
   }
 }
