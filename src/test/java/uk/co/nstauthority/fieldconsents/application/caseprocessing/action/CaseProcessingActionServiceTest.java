@@ -58,6 +58,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casest
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_FURTHER_INFORMATION_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_NOT_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.MAIL_MERGE_ERROR_NOT_PRESENT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.TECHNICAL_REVIEW_NOT_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.WITHDRAWAL_NOT_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.WITHDRAWAL_OPEN;
@@ -412,7 +413,7 @@ class CaseProcessingActionServiceTest {
         ),
         arguments(
             Set.of(AUTHORISE_FCS_CONSENTS),
-            Set.of(CONSENT_DATA_EXISTS, CONSENT_NOT_APPROVED_FOR_ISSUE),
+            Set.of(CONSENT_DATA_EXISTS, CONSENT_NOT_APPROVED_FOR_ISSUE, MAIL_MERGE_ERROR_NOT_PRESENT),
             ExpectedActions.newBuilder()
                 .submittedActions(CONSENT_ISSUING, APPROVE_FOR_ISSUING)
                 .build()
@@ -426,7 +427,7 @@ class CaseProcessingActionServiceTest {
         ),
         arguments(
             Set.of(AUTHORISE_FCS_CONSENTS),
-            Set.of(CAM_ASSIGNED, CASE_OFFICER_NOT_ASSIGNED, CONSENT_APPROVED_FOR_ISSUE),
+            Set.of(CAM_ASSIGNED, CASE_OFFICER_NOT_ASSIGNED, CONSENT_APPROVED_FOR_ISSUE, MAIL_MERGE_ERROR_NOT_PRESENT),
             ExpectedActions.newBuilder()
                 .submittedActions(CAM_REASSIGN_OWNERSHIP, ISSUE_CONSENT)
                 .build()

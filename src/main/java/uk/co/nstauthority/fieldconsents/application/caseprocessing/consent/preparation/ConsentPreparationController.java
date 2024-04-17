@@ -16,6 +16,8 @@ import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetServi
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionGroup;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlagService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentData;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataService;
@@ -42,6 +44,7 @@ public class ConsentPreparationController {
   private final FieldEquityPartnerService fieldEquityPartnerService;
   private final ApplicationAssetService applicationAssetService;
   private final CaseProcessingActionService caseProcessingActionService;
+  private final CaseStatusFlagService caseStatusFlagService;
 
   ConsentPreparationController(
       ApplicationVersionService applicationVersionService,
@@ -51,7 +54,8 @@ public class ConsentPreparationController {
       ConsentPreparationDocumentService consentPreparationDocumentService,
       FieldEquityPartnerService fieldEquityPartnerService,
       ApplicationAssetService applicationAssetService,
-      CaseProcessingActionService caseProcessingActionService
+      CaseProcessingActionService caseProcessingActionService,
+      CaseStatusFlagService caseStatusFlagService
   ) {
     this.applicationVersionService = applicationVersionService;
     this.consentDataService = consentDataService;
@@ -61,6 +65,7 @@ public class ConsentPreparationController {
     this.fieldEquityPartnerService = fieldEquityPartnerService;
     this.applicationAssetService = applicationAssetService;
     this.caseProcessingActionService = caseProcessingActionService;
+    this.caseStatusFlagService = caseStatusFlagService;
   }
 
   @GetMapping
@@ -100,6 +105,13 @@ public class ConsentPreparationController {
         .addObject("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class)
             .caseProcessing(application.getId(), null, null)))
         .addObject("consentPreparationGroupActionViewList", consentPreparationGroupActionViewList);
+
+    if (caseStatusFlagService.isCaseStatusFlagApplicable(applicationVersion, CaseStatusFlag.MAIL_MERGE_ERROR_PRESENT)) {
+      modelAndView.addObject(
+          "singleErrorMessage",
+          "Document mail merge errors are preventing this case from being assignable to a CAM"
+      );
+    }
 
     if (consentData != null) {
       var consentLengthType = consentLengthService.getConsentLengthDetails(applicationVersion).getConsentLength();

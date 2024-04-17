@@ -23,6 +23,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issui
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalService;
@@ -53,6 +54,9 @@ class CaseStatusFlagServiceTest {
 
   @Mock
   private FurtherInformationService furtherInformationService;
+
+  @Mock
+  private ApplicationDocumentInstanceService applicationDocumentInstanceService;
 
   @InjectMocks
   private CaseStatusFlagService caseStatusFlagService;
@@ -226,9 +230,26 @@ class CaseStatusFlagServiceTest {
     when(furtherInformationService.isFurtherInformationRequestOpen(applicationVersion)).thenReturn(
         consultationFurtherInformationRequestOpen);
 
-    assertThat(caseStatusFlagService.isCaseStatusFlagApplicable(applicationVersion,
-        CaseStatusFlag.CONSULTATION_FURTHER_INFORMATION_NOT_OPEN))
+    assertThat(caseStatusFlagService.isCaseStatusFlagApplicable(applicationVersion, CaseStatusFlag.CONSULTATION_FURTHER_INFORMATION_NOT_OPEN))
         .isEqualTo(!consultationFurtherInformationRequestOpen);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void isCaseStatusFlagApplicable_MAIL_MERGE_ERROR_PRESENT(boolean mailMergeErrorPresent) {
+    when(applicationDocumentInstanceService.mailMergeErrorPresent(application)).thenReturn(mailMergeErrorPresent);
+
+    assertThat(caseStatusFlagService.isCaseStatusFlagApplicable(applicationVersion, CaseStatusFlag.MAIL_MERGE_ERROR_PRESENT))
+        .isEqualTo(mailMergeErrorPresent);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void isCaseStatusFlagApplicable_MAIL_MERGE_ERROR_NOT_PRESENT(boolean mailMergeErrorPresent) {
+    when(applicationDocumentInstanceService.mailMergeErrorPresent(application)).thenReturn(mailMergeErrorPresent);
+
+    assertThat(caseStatusFlagService.isCaseStatusFlagApplicable(applicationVersion, CaseStatusFlag.MAIL_MERGE_ERROR_NOT_PRESENT))
+        .isEqualTo(!mailMergeErrorPresent);
   }
 
   @ParameterizedTest

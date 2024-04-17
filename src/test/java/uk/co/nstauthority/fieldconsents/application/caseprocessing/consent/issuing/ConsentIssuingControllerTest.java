@@ -31,6 +31,8 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCa
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionGroup;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionView;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlagService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval.ConsentIssuingApprovalService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval.ConsentIssuingApprovalSummaryView;
@@ -64,6 +66,9 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
 
   @MockBean
   private ConsentService consentService;
+
+  @MockBean
+  private CaseStatusFlagService caseStatusFlagService;
 
   private ApplicationVersion applicationVersion;
   private Application application;
@@ -124,6 +129,8 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
     ).thenReturn(consentPreparationConsentDocumentsCardGroupActionViewList);
     when(consentPreparationDocumentService.getConsentDocumentsSummaryCard(application)).thenReturn(consentDocumentsSummaryCard);
     when(consentIssuingApprovalService.getConsentIssuingApprovalSummaryView(application)).thenReturn(Optional.empty());
+    when(caseStatusFlagService.isCaseStatusFlagApplicable(applicationVersion, CaseStatusFlag.MAIL_MERGE_ERROR_PRESENT))
+        .thenReturn(true);
 
     mockMvc.perform(get(ReverseRouter.route(on(ConsentIssuingController.class).getConsentIssuing(APPLICATION_ID, null)))
             .with(user(user)))
@@ -139,6 +146,7 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
             )
         )
         .andExpect(model().attribute("consentDocumentsSummaryCard", consentDocumentsSummaryCard))
+        .andExpect(model().attribute("singleErrorMessage", "Document mail merge errors are preventing this consent from being issuable"))
         .andExpect(model().attributeDoesNotExist("consentIssuingApprovalSummaryView"));
   }
 

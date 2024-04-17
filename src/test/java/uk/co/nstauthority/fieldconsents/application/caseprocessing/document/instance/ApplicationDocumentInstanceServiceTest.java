@@ -2,6 +2,8 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.document.ins
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -269,6 +271,48 @@ class ApplicationDocumentInstanceServiceTest {
 
     assertThat(applicationDocumentInstanceService.renderPdf(applicationVersion, documentInstanceDto, pdfRenderingOptions))
         .isEqualTo(byteArrayResource);
+  }
+
+  @Test
+  void mailMergeErrorPresent_no_errors() {
+    var application = new Application();
+
+    var documentInstanceDtos = List.of(
+        DocumentInstanceDtoTestUtil.builder().withTitle("Title 1").build(),
+        DocumentInstanceDtoTestUtil.builder().withTitle("Title 2").build(),
+        DocumentInstanceDtoTestUtil.builder().withTitle("Title 3").build()
+    );
+
+    doReturn(documentInstanceDtos).when(applicationDocumentInstanceService).getDocumentInstanceDtos(application);
+
+    when(applicationDocumentInstanceSectionViewService.getDocumentInstanceSectionsSummaryView(
+        eq(application),
+        argThat(documentInstanceDtos::contains),
+        eq(false)
+    )).thenReturn(new DocumentInstanceSectionsSummaryView(List.of(), List.of()));
+
+    assertThat(applicationDocumentInstanceService.mailMergeErrorPresent(application)).isFalse();
+  }
+
+  @Test
+  void mailMergeErrorPresent_has_errors() {
+    var application = new Application();
+
+    var documentInstanceDtos = List.of(
+        DocumentInstanceDtoTestUtil.builder().withTitle("Title 1").build(),
+        DocumentInstanceDtoTestUtil.builder().withTitle("Title 2").build(),
+        DocumentInstanceDtoTestUtil.builder().withTitle("Title 3").build()
+    );
+
+    doReturn(documentInstanceDtos).when(applicationDocumentInstanceService).getDocumentInstanceDtos(application);
+
+    when(applicationDocumentInstanceSectionViewService.getDocumentInstanceSectionsSummaryView(application, documentInstanceDtos.get(0), false))
+        .thenReturn(new DocumentInstanceSectionsSummaryView(List.of(), List.of()));
+
+    when(applicationDocumentInstanceSectionViewService.getDocumentInstanceSectionsSummaryView(application, documentInstanceDtos.get(1), false))
+        .thenReturn(new DocumentInstanceSectionsSummaryView(List.of(), List.of("error")));
+
+    assertThat(applicationDocumentInstanceService.mailMergeErrorPresent(application)).isTrue();
   }
 
   @Test

@@ -16,6 +16,8 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCa
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionGroup;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlagService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval.ConsentIssuingApprovalService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.documents.ConsentPreparationDocumentService;
@@ -36,6 +38,7 @@ public class ConsentIssuingController {
   private final ConsentPreparationDocumentService consentPreparationDocumentService;
   private final ConsentIssuingApprovalService consentIssuingApprovalService;
   private final ConsentService consentService;
+  private final CaseStatusFlagService caseStatusFlagService;
 
   ConsentIssuingController(
       ApplicationService applicationService,
@@ -44,7 +47,8 @@ public class ConsentIssuingController {
       CaseProcessingActionService caseProcessingActionService,
       ConsentPreparationDocumentService consentPreparationDocumentService,
       ConsentIssuingApprovalService consentIssuingApprovalService,
-      ConsentService consentService
+      ConsentService consentService,
+      CaseStatusFlagService caseStatusFlagService
   ) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
@@ -53,6 +57,7 @@ public class ConsentIssuingController {
     this.consentPreparationDocumentService = consentPreparationDocumentService;
     this.consentIssuingApprovalService = consentIssuingApprovalService;
     this.consentService = consentService;
+    this.caseStatusFlagService = caseStatusFlagService;
   }
 
   @GetMapping
@@ -78,7 +83,7 @@ public class ConsentIssuingController {
     var consentIssuingApprovalSummaryView = consentIssuingApprovalService.getConsentIssuingApprovalSummaryView(application)
         .orElse(null);
 
-    return new ModelAndView("fcs/application/consent/consentIssuing")
+    var modelAndView = new ModelAndView("fcs/application/consent/consentIssuing")
         .addObject("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class)
             .caseProcessing(applicationId, null, null)))
         .addObject("consentIssuingGroupActionViewList", consentIssuingGroupActionViewList)
@@ -88,6 +93,15 @@ public class ConsentIssuingController {
         )
         .addObject("consentDocumentsSummaryCard", consentDocumentsSummaryCard)
         .addObject("consentIssuingApprovalSummaryView", consentIssuingApprovalSummaryView);
+
+    if (caseStatusFlagService.isCaseStatusFlagApplicable(applicationVersion, CaseStatusFlag.MAIL_MERGE_ERROR_PRESENT)) {
+      modelAndView.addObject(
+          "singleErrorMessage",
+          "Document mail merge errors are preventing this consent from being issuable"
+      );
+    }
+
+    return modelAndView;
   }
 
   @PostMapping("/approve-for-issuing")

@@ -9,6 +9,7 @@
   pageHeading=pageTitle
   pageSize=PageSize.FULL_WIDTH
   backLinkUrl=springUrl(backLinkUrl)
+  singleErrorMessage=singleErrorMessage
 >
   <@caseProcessingActions.caseActions actions=consentPreparationGroupActionViewList />
 

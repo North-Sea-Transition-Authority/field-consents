@@ -49,6 +49,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casest
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_FURTHER_INFORMATION_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_NOT_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.MAIL_MERGE_ERROR_NOT_PRESENT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.TECHNICAL_REVIEW_NOT_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.TECHNICAL_REVIEW_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.WITHDRAWAL_NOT_OPEN;
@@ -246,17 +247,26 @@ public class CaseProcessingActionService {
               EnumSet.of(CONSULTATION_FURTHER_INFORMATION_OPEN, APPLICATION_UPDATE_NOT_OPEN)),
           entry(EDIT_CONSENT_DATA, EnumSet.of(CASE_OFFICER_ASSIGNED, CAM_NOT_ASSIGNED, CONSENT_NOT_APPROVED_FOR_ISSUE)),
           entry(EDIT_CONSENT_DOCUMENTS, EnumSet.of(CASE_OFFICER_ASSIGNED, CAM_NOT_ASSIGNED, CONSENT_NOT_APPROVED_FOR_ISSUE)),
-          entry(CAM_ASSIGN_OWNERSHIP,
-              EnumSet.of(
-                  CASE_OFFICER_ASSIGNED,
-                  TECHNICAL_REVIEW_NOT_OPEN,
-                  APPLICATION_UPDATE_NOT_OPEN,
-                  CONSULTATION_NOT_OPEN)
-          ),
+          entry(CAM_ASSIGN_OWNERSHIP, EnumSet.of(
+              CASE_OFFICER_ASSIGNED,
+              TECHNICAL_REVIEW_NOT_OPEN,
+              APPLICATION_UPDATE_NOT_OPEN,
+              CONSULTATION_NOT_OPEN,
+              MAIL_MERGE_ERROR_NOT_PRESENT
+          )),
           entry(CONSENT_ISSUING, EnumSet.of(CONSENT_DATA_EXISTS)),
-          entry(APPROVE_FOR_ISSUING, EnumSet.of(CONSENT_DATA_EXISTS, CONSENT_NOT_APPROVED_FOR_ISSUE)),
+          entry(APPROVE_FOR_ISSUING, EnumSet.of(
+              CONSENT_DATA_EXISTS,
+              CONSENT_NOT_APPROVED_FOR_ISSUE,
+              MAIL_MERGE_ERROR_NOT_PRESENT
+          )),
           entry(RETURN_TO_CASE_OFFICER, EnumSet.of(CAM_ASSIGNED, CASE_OFFICER_NOT_ASSIGNED, CONSENT_NOT_APPROVED_FOR_ISSUE)),
-          entry(ISSUE_CONSENT, EnumSet.of(CAM_ASSIGNED, CASE_OFFICER_NOT_ASSIGNED, CONSENT_APPROVED_FOR_ISSUE)),
+          entry(ISSUE_CONSENT, EnumSet.of(
+              CAM_ASSIGNED,
+              CASE_OFFICER_NOT_ASSIGNED,
+              CONSENT_APPROVED_FOR_ISSUE,
+              MAIL_MERGE_ERROR_NOT_PRESENT
+          )),
           entry(UNAPPROVE_FOR_ISSUING, EnumSet.of(CONSENT_DATA_EXISTS, CONSENT_APPROVED_FOR_ISSUE)),
           entry(CAM_REASSIGN_OWNERSHIP, EnumSet.of(CAM_ASSIGNED, CASE_OFFICER_NOT_ASSIGNED))
       );

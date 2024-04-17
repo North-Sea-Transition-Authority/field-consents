@@ -9,6 +9,7 @@
   pageHeading=pageTitle
   pageSize=PageSize.FULL_WIDTH
   backLinkUrl=springUrl(backLinkUrl)
+  singleErrorMessage=singleErrorMessage
 >
   <#if consentIssuingApprovalSummaryView?has_content>
     <@fdsNotificationBanner.notificationBannerInfo bannerTitleText="Application ready to grant and issue">

@@ -8,6 +8,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval.ConsentIssuingApprovalService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalService;
@@ -23,6 +24,7 @@ public class CaseStatusFlagService {
   private final ConsentDataService consentDataService;
   private final ConsentIssuingApprovalService consentIssuingApprovalService;
   private final FurtherInformationService furtherInformationService;
+  private final ApplicationDocumentInstanceService applicationDocumentInstanceService;
 
   CaseStatusFlagService(
       CaseAssignmentService caseAssignmentService,
@@ -32,7 +34,8 @@ public class CaseStatusFlagService {
       ConsultationService consultationService,
       ConsentDataService consentDataService,
       ConsentIssuingApprovalService consentIssuingApprovalService,
-      FurtherInformationService furtherInformationService
+      FurtherInformationService furtherInformationService,
+      ApplicationDocumentInstanceService applicationDocumentInstanceService
   ) {
     this.caseAssignmentService = caseAssignmentService;
     this.applicationWithdrawalService = applicationWithdrawalService;
@@ -42,6 +45,7 @@ public class CaseStatusFlagService {
     this.consentDataService = consentDataService;
     this.consentIssuingApprovalService = consentIssuingApprovalService;
     this.furtherInformationService = furtherInformationService;
+    this.applicationDocumentInstanceService = applicationDocumentInstanceService;
   }
 
   public boolean isCaseStatusFlagApplicable(ApplicationVersion applicationVersion, CaseStatusFlag caseStatusFlag) {
@@ -75,6 +79,10 @@ public class CaseStatusFlagService {
           furtherInformationService.isFurtherInformationRequestOpen(applicationVersion);
       case CONSULTATION_FURTHER_INFORMATION_NOT_OPEN ->
           !furtherInformationService.isFurtherInformationRequestOpen(applicationVersion);
+
+      // Mail merge
+      case MAIL_MERGE_ERROR_PRESENT -> applicationDocumentInstanceService.mailMergeErrorPresent(application);
+      case MAIL_MERGE_ERROR_NOT_PRESENT -> !applicationDocumentInstanceService.mailMergeErrorPresent(application);
 
       // Technical review
       case TECHNICAL_REVIEW_OPEN -> technicalReviewService.openTechnicalReviewExists(applicationVersion);

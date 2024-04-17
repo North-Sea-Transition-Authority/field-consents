@@ -120,6 +120,19 @@ public class ApplicationDocumentInstanceService {
     return documentInstanceService.renderPdf(documentInstanceDto, templateModel);
   }
 
+  public boolean mailMergeErrorPresent(Application application) {
+    return getDocumentInstanceDtos(application)
+        .stream()
+        .map(documentInstanceDto -> applicationDocumentInstanceSectionViewService
+            .getDocumentInstanceSectionsSummaryView(
+                application,
+                documentInstanceDto,
+                false
+            )
+        )
+        .anyMatch(view -> view.errorMessages() != null && !view.errorMessages().isEmpty());
+  }
+
   List<DocumentTemplateType> getApplicableDocumentTemplateTypes(Application application) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(application.getId());
     var primaryAsset = applicationAssetService.getPrimaryAsset(applicationVersion);

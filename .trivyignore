@@ -20,3 +20,5 @@ CVE-2024-22257
 CVE-2024-22259
 # software.amazon.ion:ion-java (app.jar)
 CVE-2024-21634
+# org.springframework:spring-web (app.jar)
+CVE-2024-22262

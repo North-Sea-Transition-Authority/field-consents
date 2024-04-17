@@ -28,6 +28,8 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCa
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionGroup;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionView;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlagService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataTestUtil;
@@ -68,6 +70,9 @@ class ConsentPreparationControllerTest extends AbstractApplicationControllerTest
 
   @MockBean
   private ApplicationAssetService applicationAssetService;
+
+  @MockBean
+  private CaseStatusFlagService caseStatusFlagService;
 
   private Application application;
   private ApplicationVersion applicationVersion;
@@ -186,6 +191,9 @@ class ConsentPreparationControllerTest extends AbstractApplicationControllerTest
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(applicationAsset);
     when(fieldEquityPartnerService.getFieldEquityPartnersView(applicationVersion)).thenReturn(fieldEquityPartnerView);
 
+    when(caseStatusFlagService.isCaseStatusFlagApplicable(applicationVersion, CaseStatusFlag.MAIL_MERGE_ERROR_PRESENT))
+        .thenReturn(true);
+
     mockMvc.perform(get(ReverseRouter.route(on(ConsentPreparationController.class)
             .viewConsentPreparationPage(APPLICATION_ID, null)))
         .with(user(user)))
@@ -202,6 +210,7 @@ class ConsentPreparationControllerTest extends AbstractApplicationControllerTest
         .andExpect(model().attribute("consentPreparationConsentDataCardGroupActionViewList", consentPreparationConsentDataCardGroupActionViewList))
         .andExpect(model().attribute("consentDocumentsSummaryCard", consentDocumentsSummaryCard))
         .andExpect(model().attribute("consentPreparationConsentDocumentsCardGroupActionViewList", consentPreparationConsentDocumentsCardGroupActionViewList))
-        .andExpect(model().attribute("fieldEquityPartnersView", fieldEquityPartnerView));
+        .andExpect(model().attribute("fieldEquityPartnersView", fieldEquityPartnerView))
+        .andExpect(model().attribute("singleErrorMessage", "Document mail merge errors are preventing this case from being assignable to a CAM"));
   }
 }
