@@ -45,6 +45,10 @@ public class SearchFilterService {
           .ifPresent(searchFilterConditions::add);
     }
 
+    if (TeamType.REGULATOR.equals(teamType) && Boolean.TRUE.equals(form.getApprovedForIssue())) {
+      searchFilterConditions.add(applicationDataFilterService.getApprovedForIssueCondition());
+    }
+
     Optional.ofNullable(form.getFieldAssetKey())
         .flatMap(AssetKey::parse)
         .map(applicationDataFilterService::getFieldCondition)

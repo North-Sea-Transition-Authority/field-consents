@@ -20,6 +20,9 @@
       <@dataItemFilter.operatorFilter form=form prefilledOperator=prefilledOperator operatorSearchRestUrl=operatorSearchRestUrl/>
       <@dataItemFilter.submittedYearFilter form=form/>
       <@consentStartYearFilter form=form/>
+      <#if approvedForIssue?has_content>
+        <@dataItemFilter.approvedForIssueFilter form=form expanded=form.approvedForIssue?has_content/>
+      </#if>
       <#if aceStatuses?has_content>
         <@dataItemFilter.aceFilter form=form expanded=form.aceFlagStatuses?has_content aceCheckboxes=aceStatuses/>
       </#if>

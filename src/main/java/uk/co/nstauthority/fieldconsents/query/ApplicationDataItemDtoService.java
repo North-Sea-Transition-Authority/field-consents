@@ -265,6 +265,7 @@ public class ApplicationDataItemDtoService {
     var withdrawalOpen = Boolean.TRUE.equals(dataItemDto.getWithdrawalOpen());
     var applicationUpdateOpen = Boolean.TRUE.equals(dataItemDto.getApplicationUpdateOpen());
     var furtherInformationOpen = FurtherInformationStatus.OPEN.equals(dataItemDto.getConsultationFurtherInformationStatus());
+    var approvedForIssue = Boolean.TRUE.equals(dataItemDto.getApprovedForIssue());
 
     var userAction = getApplicationDataItemUserActionFromUser(user);
 
@@ -291,7 +292,8 @@ public class ApplicationDataItemDtoService {
         .withConsultationOpen(dataItemDto.getConsultationOpen())
         .withConsultationDeadline(getConsultationDeadline(dataItemDto))
         .withConsultationFurtherInformationOpen(furtherInformationOpen)
-        .withLicences(getLicences(dataItemDto));
+        .withLicences(getLicences(dataItemDto))
+        .withApprovedForIssue(approvedForIssue);
 
     removeTagsForTeamType(teamType, builder);
 
@@ -303,6 +305,7 @@ public class ApplicationDataItemDtoService {
       removeTechnicalReviewTag(builder);
       removeConsultationTag(builder);
       removeFurtherInformationTag(builder);
+      removeApprovedForIssueTag(builder);
       return;
     }
 
@@ -310,6 +313,7 @@ public class ApplicationDataItemDtoService {
       removeTechnicalReviewTag(builder);
       removeApplicationUpdateTag(builder);
       removeWithdrawalTag(builder);
+      removeApprovedForIssueTag(builder);
     }
   }
 
@@ -331,6 +335,10 @@ public class ApplicationDataItemDtoService {
 
   private void removeConsultationTag(ApplicationDataItem.Builder builder) {
     builder.withConsultationOpen(null).withConsultationDeadline(null);
+  }
+
+  private void removeApprovedForIssueTag(ApplicationDataItem.Builder builder) {
+    builder.withApprovedForIssue(null);
   }
 
   public List<ApplicationDataItemDto> runGetDataItemDtoQuery(List<Condition> conditions) {

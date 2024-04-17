@@ -473,7 +473,8 @@ class ApplicationDataItemDtoServiceTest {
         null,
         null,
         null,
-        "P1, P2, P3"
+        "P1, P2, P3",
+        null
     );
 
     assertThat(applicationDataItemDtoService.getApplicationDataItem(
@@ -698,6 +699,7 @@ class ApplicationDataItemDtoServiceTest {
     verify(builder).withConsultationOpen(null);
     verify(builder).withConsultationDeadline(null);
     verify(builder).withConsultationFurtherInformationOpen(null);
+    verify(builder).withApprovedForIssue(null);
 
     verifyNoMoreInteractions(builder);
   }
@@ -711,6 +713,7 @@ class ApplicationDataItemDtoServiceTest {
     verify(builder).withWithdrawalOpen(null);
     verifyTechnicalReviewDeadlineTagRemoved(builder);
     verifyApplicationUpdateTagRemoved(builder);
+    verify(builder).withApprovedForIssue(null);
 
     verifyNoMoreInteractions(builder);
   }

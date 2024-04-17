@@ -26,6 +26,7 @@ public class SearchSession implements Serializable {
     searchFilterForm.setFieldAssetKey(null);
     searchFilterForm.setTerminalAssetKey(null);
     searchFilterForm.setConsentStartYear(null);
+    searchFilterForm.setApprovedForIssue(null);
     searchInvoked = false;
   }
 

@@ -7,6 +7,7 @@ import static org.jooq.impl.DSL.year;
 import static uk.co.nstauthority.fieldconsents.assets.AssetType.FIELD;
 import static uk.co.nstauthority.fieldconsents.assets.AssetType.TERMINAL;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationAssets.APPLICATION_ASSETS;
+import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationConsentIssuingApprovals.APPLICATION_CONSENT_ISSUING_APPROVALS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationFlags.APPLICATION_FLAGS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.Applications.APPLICATIONS;
@@ -160,6 +161,10 @@ public class ApplicationDataFilterService {
             .and(APPLICATION_FLAGS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID))
             .and(APPLICATION_FLAGS.FLAG_VALUE.in(aceFlagIsAceApplicationValues)))
     );
+  }
+
+  public Condition getApprovedForIssueCondition() {
+    return APPLICATION_CONSENT_ISSUING_APPROVALS.ID.isNotNull();
   }
 
   public Condition getAssetTypesQueryCondition(Collection<AssetTypeWithShore> assetTypes) {

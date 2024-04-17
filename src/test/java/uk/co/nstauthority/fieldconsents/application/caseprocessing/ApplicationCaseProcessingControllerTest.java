@@ -49,6 +49,8 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.Ca
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseHistoryTabContentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentTabConsentSummaryView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentTabService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval.ConsentIssuingApprovalService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval.ConsentIssuingApprovalSummaryView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformation;
@@ -83,6 +85,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   private static final String CASE_HISTORY_ATTRIBUTE = "caseHistoryEvents";
   private static final String PAYMENTS_TAB_PAYMENT_SUMMARY_VIEWS_ATTRIBUTE = "paymentsTabPaymentSummaryViews";
   private static final String CONSENT_TAB_CONSENT_SUMMARY_VIEW_ATTRIBUTE = "consentTabConsentSummaryView";
+  private static final String CONSENT_ISSUING_APPROVAL_SUMMARY_VIEW_ATTRIBUTE = "consentIssuingApprovalSummaryView";
 
   @MockBean
   private ApplicationService applicationService;
@@ -120,6 +123,9 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   @MockBean
   private ConsentTabService consentTabService;
 
+  @MockBean
+  private ConsentIssuingApprovalService consentIssuingApprovalService;
+
   private ApplicationVersion applicationVersion;
   private Application application;
 
@@ -144,6 +150,8 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   private List<PaymentsTabPaymentSummaryView> paymentsTabPaymentSummaryViews;
 
   private ConsentTabConsentSummaryView consentTabConsentSummaryView;
+
+  private ConsentIssuingApprovalSummaryView consentIssuingApprovalSummaryView;
 
   @BeforeEach
   void setUp() {
@@ -172,6 +180,11 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
         mock(CaseProcessingActionView.class),
         mock(CaseProcessingActionView.class),
         mock(CaseProcessingActionView.class)
+    );
+
+    consentIssuingApprovalSummaryView = new ConsentIssuingApprovalSummaryView(
+        "Test user (test@SecurityTest.com)",
+        "" + "6 Mar 2024 11:18"
     );
 
     summarySections = Collections.emptyList();
@@ -311,6 +324,31 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
             .with(user(user)))
         .andExpectAll(commonAttributesForTab(caseProcessingTab, applicationVersion))
         .andExpect(model().attributeDoesNotExist(FURTHER_INFORMATION_ATTRIBUTE));
+  }
+
+  @ParameterizedTest
+  @EnumSource(CaseProcessingTab.class)
+  void caseProcessing_whenCaseIsReadyToGrantAndIssue_thenConsentIssuingApprovalSummaryViewExists(CaseProcessingTab caseProcessingTab) throws Exception {
+    stubBaseServiceCalls();
+    stubTaskListServiceCall();
+    stubSummaryServiceCall();
+    stubCaseHistoryServiceCall();
+    stubPaymentsServiceCall();
+    stubConsentServiceCall();
+
+    when(regulatorTeamService.isCaseOfficer(WebUserAccountId.from(user.wuaId()))).thenReturn(true);
+    when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication())).thenReturn(Optional.empty());
+    when(furtherInformationService.findLatestOpenFurtherInformation(consultation)).thenReturn(Optional.empty());
+
+    when(consentIssuingApprovalService.getConsentIssuingApprovalSummaryView(application))
+        .thenReturn(Optional.of(consentIssuingApprovalSummaryView));
+
+    var tabParam = "?tab=%s".formatted(caseProcessingTab.getAnchor());
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .caseProcessing(APPLICATION_ID, null, null)) + tabParam)
+            .with(user(user)))
+        .andExpectAll(commonAttributesForTab(caseProcessingTab, applicationVersion))
+        .andExpect(model().attribute(CONSENT_ISSUING_APPROVAL_SUMMARY_VIEW_ATTRIBUTE, consentIssuingApprovalSummaryView));
   }
 
   @Test

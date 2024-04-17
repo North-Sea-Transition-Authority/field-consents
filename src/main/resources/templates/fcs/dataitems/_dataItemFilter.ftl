@@ -104,3 +104,9 @@
     />
   </@fdsSearch.searchFilterItem>
 </#macro>
+
+<#macro approvedForIssueFilter form expanded path="form.approvedForIssue">
+  <@fdsSearch.searchFilterItem itemName="Issuing status" expanded=expanded>
+    <@fdsCheckbox.checkbox path=path labelText="Ready to grant and issue" smallCheckboxes=true/>
+  </@fdsSearch.searchFilterItem>
+</#macro>

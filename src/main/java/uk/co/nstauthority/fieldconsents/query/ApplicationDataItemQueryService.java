@@ -5,6 +5,7 @@ import static org.jooq.impl.DSL.max;
 import static uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType.IS_ACE_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_ASSETS;
+import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_CONSENT_ISSUING_APPROVALS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_CONSULTATIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_CONSULTATION_FURTHER_INFORMATION;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_FLAGS;
@@ -107,7 +108,8 @@ public class ApplicationDataItemQueryService {
             APPLICATION_CONSULTATIONS.CONSULTATION_TEAM_ID.isNotNull(),
             APPLICATION_CONSULTATIONS.REQUEST_DEADLINE,
             APPLICATION_CONSULTATION_FURTHER_INFORMATION.STATUS,
-            fieldLicencesQuery.field("fieldLicences", String.class)
+            fieldLicencesQuery.field("fieldLicences", String.class),
+            APPLICATION_CONSENT_ISSUING_APPROVALS.ID.isNotNull()
         )
         .from(APPLICATIONS)
         .join(APPLICATION_VERSIONS).onKey(APPLICATION_VERSIONS.APPLICATION_ID)
@@ -137,6 +139,9 @@ public class ApplicationDataItemQueryService {
             .eq(APPLICATION_ASSETS.ID)
             .and(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name()))
             .and(APPLICATION_ASSETS.ASSET_ID.isNotNull()))
+        .leftJoin(APPLICATION_CONSENT_ISSUING_APPROVALS)
+            .onKey(APPLICATION_CONSENT_ISSUING_APPROVALS.APPLICATION_ID)
+            .and(APPLICATION_VERSIONS.STATUS.eq(ApplicationVersionStatus.SUBMITTED.name()))
         .where(APPLICATION_VERSIONS.ID.in(detailsSubQuery));
     return applicationDataItemsSelectStatement.getQuery();
   }

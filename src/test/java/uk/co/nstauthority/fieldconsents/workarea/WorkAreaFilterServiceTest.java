@@ -12,6 +12,7 @@ import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.FIELD
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.TERMINAL_ID_1;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_CONSULTATIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationAssets.APPLICATION_ASSETS;
+import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationConsentIssuingApprovals.APPLICATION_CONSENT_ISSUING_APPROVALS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationTechnicalReviews.APPLICATION_TECHNICAL_REVIEWS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
 
@@ -432,6 +433,33 @@ class WorkAreaFilterServiceTest {
         SUBMITTED_APPLICATION_CONDITION,
         APPLICATION_TECHNICAL_REVIEWS.TECHNICAL_REVIEWER_WUA_ID.eq(123)
     );
+  }
+
+  @Test
+  void getConditions_whenRegulatorWithApprovedForIssueConditionIsTrue_thenApprovedForIssueConditionIsAdded() {
+    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
+    when(applicationDataFilterService.getApprovedForIssueCondition()).thenReturn(APPLICATION_CONSENT_ISSUING_APPROVALS.ID.isNotNull());
+
+    filter.setApprovedForIssue(true);
+
+    var conditions = workAreaFilterService.getConditions(filter, user, null);
+
+    assertThat(conditions).containsExactly(
+        SUBMITTED_APPLICATION_CONDITION,
+        APPLICATION_CONSENT_ISSUING_APPROVALS.ID.isNotNull());
+  }
+
+  @Test
+  void getConditions_whenRegulatorWithApprovedForIssueConditionIsFalse_thenApprovedForIssueConditionIsNotAdded() {
+    when(teamService.isRegulatorUser(user)).thenReturn(true);
+    when(applicationDataFilterService.getSubmittedApplicationStatusCondition()).thenReturn(SUBMITTED_APPLICATION_CONDITION);
+
+    filter.setApprovedForIssue(false);
+
+    var conditions = workAreaFilterService.getConditions(filter, user, null);
+
+    assertThat(conditions).containsExactly(SUBMITTED_APPLICATION_CONDITION);
   }
 
   private void assertNonDefaultFilter(WorkAreaFilter workAreaFilter) {

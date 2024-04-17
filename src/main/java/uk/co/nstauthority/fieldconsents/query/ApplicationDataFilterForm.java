@@ -8,6 +8,9 @@ import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.assets.fields.GeographicArea;
 
 public class ApplicationDataFilterForm {
+
+  public static final String APPROVED_FOR_ISSUE_FILTER_OPTION = "APPROVED_FOR_ISSUE";
+
   String referenceNumber;
   List<ApplicationVersionStatus> statuses;
   List<ApplicationType> applicationTypes;
@@ -17,6 +20,7 @@ public class ApplicationDataFilterForm {
   List<AssetTypeWithShore> assetTypesWithShore;
   String submittedYear;
   String licenceReference;
+  Boolean approvedForIssue;
 
   public String getReferenceNumber() {
     return referenceNumber;
@@ -91,6 +95,14 @@ public class ApplicationDataFilterForm {
     this.licenceReference = licenceReference;
   }
 
+  public Boolean getApprovedForIssue() {
+    return approvedForIssue;
+  }
+
+  public void setApprovedForIssue(Boolean approvedForIssue) {
+    this.approvedForIssue = approvedForIssue;
+  }
+
   public void clearFilter() {
     setReferenceNumber(null);
     setStatuses(null);
@@ -101,6 +113,7 @@ public class ApplicationDataFilterForm {
     setAssetTypesWithShore(null);
     setSubmittedYear(null);
     setLicenceReference(null);
+    setApprovedForIssue(null);
   }
 
   public void update(ApplicationDataFilterForm form) {
@@ -113,5 +126,6 @@ public class ApplicationDataFilterForm {
     setAssetTypesWithShore(form.getAssetTypesWithShore());
     setSubmittedYear(form.getSubmittedYear());
     setLicenceReference(form.getLicenceReference());
+    setApprovedForIssue(form.getApprovedForIssue());
   }
 }

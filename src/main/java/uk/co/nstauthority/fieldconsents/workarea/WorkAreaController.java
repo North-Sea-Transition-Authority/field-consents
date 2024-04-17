@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.workarea;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterForm.APPROVED_FOR_ISSUE_FILTER_OPTION;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.ALL_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.ALL_CONSULTATIONS;
 import static uk.co.nstauthority.fieldconsents.workarea.WorkAreaTab.ALL_TECHNICAL_REVIEWS;
@@ -258,7 +259,9 @@ public class WorkAreaController {
         .addObject(WORK_AREA_ITEMS, workAreaService.getRegulatorWorkAreaItems(filter, user, workAreaTab))
         .addObject(IS_WORK_AREA_WITH_TABS, true)
         .addObject("caseOfficersAssigned", caseOfficersById)
-        .addObject("technicalReviewersAssigned", technicalReviewersById);
+        .addObject("technicalReviewersAssigned", technicalReviewersById)
+        .addObject("approvedForIssue",
+            Map.of(APPROVED_FOR_ISSUE_FILTER_OPTION, Boolean.TRUE.equals(filter.getApprovedForIssue())));
   }
 
   private ModelAndView renderConsulteeWorkAreaOnTab(WorkAreaFilter filter,

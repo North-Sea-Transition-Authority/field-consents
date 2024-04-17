@@ -17,6 +17,7 @@ import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2JsonWithOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1Json;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationAssets.APPLICATION_ASSETS;
+import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationConsentIssuingApprovals.APPLICATION_CONSENT_ISSUING_APPROVALS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationFlags.APPLICATION_FLAGS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.Applications.APPLICATIONS;
@@ -382,6 +383,11 @@ class ApplicationDataFilterServiceTest {
             .and(APPLICATION_FLAGS.FLAG_VALUE.in(Collections.singletonList(isAceApplication)))));
 
     assertThat(applicationDataFilterService.getAceStatusCondition(List.of(aceFlagStatus))).isEqualTo(expectedCondition);
+  }
+
+  @Test
+  void getApprovedForIssueCondition() {
+    assertThat(applicationDataFilterService.getApprovedForIssueCondition()).isEqualTo(APPLICATION_CONSENT_ISSUING_APPROVALS.ID.isNotNull());
   }
 
 }

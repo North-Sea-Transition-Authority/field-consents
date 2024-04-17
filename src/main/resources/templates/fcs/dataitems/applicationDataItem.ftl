@@ -22,6 +22,10 @@
       <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Consultation due by ${dataItem.consultationDeadline()}"/>
       <br/>
     </#if>
+    <#if dataItem.approvedForIssue()!false>
+      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Ready to grant and issue"/>
+      <br/>
+    </#if>
   </#assign>
   <@fdsResultList.resultListItem
     linkHeadingText=dataItem.reference()

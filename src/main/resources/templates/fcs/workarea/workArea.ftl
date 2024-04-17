@@ -19,6 +19,9 @@
         <@assetFilter form=form prefilledAsset=prefilledAsset assetSearchRestUrl=assetSearchRestUrl/>
         <@dataItemFilter.operatorFilter form=form prefilledOperator=prefilledOperator operatorSearchRestUrl=operatorSearchRestUrl/>
         <@dataItemFilter.submittedYearFilter form=form/>
+        <#if approvedForIssue?has_content>
+          <@dataItemFilter.approvedForIssueFilter form=form expanded=form.approvedForIssue?has_content/>
+        </#if>
         <@dataItemFilter.geographicAreaFilter form=form geographicAreaCheckboxes=geographicAreas expanded=form.geographicAreas?has_content/>
         <@dataItemFilter.assetTypeWithShoreFilter form=form assetTypeWithShoreCheckboxes=assetTypesWithShore expanded=form.assetTypesWithShore?has_content/>
         <#if caseOfficersAssigned?has_content>

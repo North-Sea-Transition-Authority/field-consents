@@ -1,9 +1,11 @@
 package uk.co.nstauthority.fieldconsents.search;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterForm.APPROVED_FOR_ISSUE_FILTER_OPTION;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -68,7 +70,8 @@ public class SearchController {
     var prefilledTerminal = applicationDataFilterFormService.getPrefilledAsset(searchFilterForm.getTerminalAssetKey());
     var prefilledOperator = applicationDataFilterFormService.getPrefilledOrganisation(searchFilterForm.getOperatorId());
     var assetTypesWithShore = AssetTypeWithShore.getDisplayableOptions();
-    var isRegulatorOrConsultee = teamService.isRegulatorUser(user) || teamService.isConsulteeUser(user);
+    var isRegulator = teamService.isRegulatorUser(user);
+    var isRegulatorOrConsultee = isRegulator || teamService.isConsulteeUser(user);
     var modelAndView = new ModelAndView("fcs/search/search")
         .addObject("clearFiltersUrl",
             ReverseRouter.route(on(SearchController.class).clearSearchFilter(null, null)))
@@ -88,6 +91,11 @@ public class SearchController {
         .addObject("form", searchFilterForm)
         .addObject("pageTitle", SEARCH_TITLE)
         .addObject("searchInvoked", searchSession.hasSearchBeenInvoked());
+
+    if (isRegulator) {
+      modelAndView.addObject("approvedForIssue",
+          Map.of(APPROVED_FOR_ISSUE_FILTER_OPTION, Boolean.TRUE.equals(searchFilterForm.getApprovedForIssue())));
+    }
 
     if (isRegulatorOrConsultee) {
       modelAndView.addObject("aceStatuses", AceFlagStatus.getDisplayableOptions());

@@ -151,6 +151,9 @@ public class WorkAreaFilterService {
         .map(this::getTechnicalReviewerAssignedCondition)
         .ifPresent(conditions::add);
 
+    if (Boolean.TRUE.equals(filter.getApprovedForIssue())) {
+      conditions.add(applicationDataFilterService.getApprovedForIssueCondition());
+    }
     return conditions;
   }
 

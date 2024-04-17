@@ -9,6 +9,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.FIELD1_ASSET_KEY;
 import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.TERMINAL1_ASSET_KEY;
+import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationConsentIssuingApprovals.APPLICATION_CONSENT_ISSUING_APPROVALS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationConsultations.APPLICATION_CONSULTATIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.Applications.APPLICATIONS;
@@ -159,5 +160,33 @@ class SearchFilterServiceTest {
     assertThat(searchFilterService.getConditions(form, teamType)).contains(
         falseCondition()
     );
+  }
+
+  @Test
+  void getConditions_whenRegulatorWithApprovedForIssueConditionIsTrue_thenApprovedForIssueConditionIsAdded() {
+    when(applicationDataFilterService.getApprovedForIssueCondition()).thenReturn(APPLICATION_CONSENT_ISSUING_APPROVALS.ID.isNotNull());
+
+    form.setApprovedForIssue(true);
+
+    assertThat(searchFilterService.getConditions(form, TeamType.REGULATOR)).containsExactly(
+        APPLICATION_CONSENT_ISSUING_APPROVALS.ID.isNotNull());
+  }
+
+  @Test
+  void getConditions_whenRegulatorWithApprovedForIssueConditionIsFalse_thenApprovedForIssueConditionIsNotAdded() {
+    form.setApprovedForIssue(false);
+
+    assertThat(searchFilterService.getConditions(form, TeamType.REGULATOR)).isEmpty();
+  }
+
+  @Test
+  void getConditions_whenIndustry_thenApprovedForIssueConditionIsNotAdded() {
+    assertThat(searchFilterService.getConditions(form, TeamType.INDUSTRY)).isEmpty();
+  }
+
+  @Test
+  void getConditions_whenConsultee_thenApprovedForIssueConditionIsNotAdded() {
+    assertThat(searchFilterService.getConditions(form, TeamType.OPRED)).doesNotContain(
+        APPLICATION_CONSENT_ISSUING_APPROVALS.ID.isNotNull());
   }
 }

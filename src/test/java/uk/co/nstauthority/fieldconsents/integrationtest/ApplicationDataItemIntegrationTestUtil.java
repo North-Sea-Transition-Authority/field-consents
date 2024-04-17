@@ -176,6 +176,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withConsultationDeadline("")
         .withConsultationFurtherInformationOpen(false)
         .withLicences("P1, P2, P3")
+        .withApprovedForIssue(false)
         .build();
   }
 
@@ -208,6 +209,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withConsultationDeadline("")
         .withConsultationFurtherInformationOpen(false)
         .withLicences(fieldWithOperatorAndLicencesJson.getLicencesAsString())
+        .withApprovedForIssue(false)
         .build();
   }
 
@@ -240,6 +242,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withConsultationDeadline("")
         .withConsultationFurtherInformationOpen(false)
         .withLicences("")
+        .withApprovedForIssue(false)
         .build();
   }
 
@@ -270,6 +273,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withConsultationDeadline("")
         .withConsultationFurtherInformationOpen(false)
         .withLicences("P1, P2, P3")
+        .withApprovedForIssue(false)
         .build();
   }
 
@@ -330,6 +334,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withConsultationDeadline("")
         .withConsultationFurtherInformationOpen(false)
         .withLicences("P1, P2, P3")
+        .withApprovedForIssue(false)
         .build();
   }
 
@@ -360,6 +365,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withConsultationDeadline("")
         .withConsultationFurtherInformationOpen(false)
         .withLicences("P1, P2, P3")
+        .withApprovedForIssue(false)
         .build();
   }
 
@@ -391,6 +397,7 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withConsultationDeadline("")
         .withConsultationFurtherInformationOpen(false)
         .withLicences("P1, P2, P3")
+        .withApprovedForIssue(false)
         .build();
   }
 

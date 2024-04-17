@@ -9,6 +9,7 @@
 <#import '../application/consultation/further-information/furtherInformation.ftl' as furtherInformation/>
 <#import './caseprocessing/tab/_paymentsTab.ftl' as paymentsTab>
 <#import './caseprocessing/tab/_consentTab.ftl' as consentTab>
+<#import 'consent/_approvedForIssue.ftl' as approvedForIssue/>
 
 <#-- @ftlvariable name="technicalReviewSummaryView" type="uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewSummaryView" -->
 <#-- @ftlvariable name="taskListSections" type="java.util.List<uk.co.nstauthority.fieldconsents.tasklist.TaskListSection>" -->
@@ -17,6 +18,9 @@
   htmlTitle=pageTitle
   pageHeading=pageTitle
   pageSize=getPageSize.getPageSize(wideSummaryDisplay)>
+  <#if consentIssuingApprovalSummaryView?has_content>
+    <@approvedForIssue.notificationBanner consentIssuingApprovalSummaryView=consentIssuingApprovalSummaryView/>
+  </#if>
   <#if technicalReviewSummaryView?has_content>
     <@technicalReviewDetails.notificationBanner technicalReviewSummaryView=technicalReviewSummaryView/>
   </#if>

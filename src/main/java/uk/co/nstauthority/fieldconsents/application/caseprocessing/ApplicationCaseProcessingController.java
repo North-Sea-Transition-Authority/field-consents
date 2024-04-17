@@ -18,6 +18,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseHistoryTabContentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentTabService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval.ConsentIssuingApprovalService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.payment.PaymentsTabService;
@@ -64,6 +65,7 @@ public class ApplicationCaseProcessingController {
   private final FurtherInformationService furtherInformationService;
   private final PaymentsTabService paymentsTabService;
   private final ConsentTabService consentTabService;
+  private final ConsentIssuingApprovalService consentIssuingApprovalService;
 
   @Autowired
   ApplicationCaseProcessingController(
@@ -80,7 +82,8 @@ public class ApplicationCaseProcessingController {
       ConsultationService consultationService,
       FurtherInformationService furtherInformationService,
       PaymentsTabService paymentsTabService,
-      ConsentTabService consentTabService
+      ConsentTabService consentTabService,
+      ConsentIssuingApprovalService consentIssuingApprovalService
   ) {
     this.applicationService = applicationService;
     this.applicationContextService = applicationContextService;
@@ -96,6 +99,7 @@ public class ApplicationCaseProcessingController {
     this.furtherInformationService = furtherInformationService;
     this.paymentsTabService = paymentsTabService;
     this.consentTabService = consentTabService;
+    this.consentIssuingApprovalService = consentIssuingApprovalService;
   }
 
   @GetMapping("case-processing")
@@ -111,6 +115,8 @@ public class ApplicationCaseProcessingController {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var application = applicationVersion.getApplication();
     var applicationType = application.getType();
+    var consentIssuingApprovalSummaryView = consentIssuingApprovalService.getConsentIssuingApprovalSummaryView(application)
+        .orElse(null);
 
     var modelAndView = new ModelAndView("fcs/application/applicationCaseProcessing")
         .addObject("selectedTab", tab)
@@ -119,7 +125,8 @@ public class ApplicationCaseProcessingController {
         .addObject("applicationContext", applicationContextService.getApplicationContext(applicationVersion))
         .addObject("caseProcessingTabs", caseProcessingTabService.getTabsAvailableToUser(user, applicationVersion))
         .addObject("wideSummaryDisplay", WIDE_SUMMARY_DISPLAY.allowed(applicationType))
-        .addObject("pageTitle", applicationService.generateApplicationReference(applicationVersion));
+        .addObject("pageTitle", applicationService.generateApplicationReference(applicationVersion))
+        .addObject("consentIssuingApprovalSummaryView", consentIssuingApprovalSummaryView);
 
     switch (tab) {
       case CONSENT -> consentTabService.addConsentTabContentToModelAndView(application, modelAndView);
