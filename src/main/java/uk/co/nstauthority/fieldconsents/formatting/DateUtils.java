@@ -136,4 +136,12 @@ public class DateUtils {
   public static LocalDateTime atEndOfDay(LocalDate date) {
     return LocalDateTime.of(date, LocalTime.MAX);
   }
+
+  public static boolean isBeforeOrEqualTo(LocalDate a, LocalDate b) {
+    return a.isBefore(b) || a.isEqual(b);
+  }
+
+  public static boolean isAfterOrEqualTo(LocalDate a, LocalDate b) {
+    return a.isAfter(b) || a.isEqual(b);
+  }
 }

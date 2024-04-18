@@ -28,6 +28,9 @@
     <@furtherInformation.requestNotificationBanner furtherInformationView=furtherInformationView/>
   </#if>
   <@applicationContextInfo.applicationContextInfo applicationContext=applicationContext/>
+  <#if warning?has_content>
+    <@fdsWarning.warning>${warning}</@fdsWarning.warning>
+  </#if>
   <@caseProcessingActions.caseActions actions=actionList/>
   <@caseProcessingTabsWithContent
     tabs=caseProcessingTabs

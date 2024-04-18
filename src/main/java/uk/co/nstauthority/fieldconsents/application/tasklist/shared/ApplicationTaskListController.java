@@ -9,8 +9,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.ApplicationContextService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
+import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestViewService;
 import uk.co.nstauthority.fieldconsents.application.delete.DeleteApplicationController;
@@ -31,6 +33,7 @@ public class ApplicationTaskListController {
   private final ApplicationContextService applicationContextService;
   private final ApplicationUpdateService applicationUpdateService;
   private final ApplicationUpdateRequestViewService applicationUpdateRequestViewService;
+  private final ConsentService consentService;
 
   ApplicationTaskListController(
       ApplicationService applicationService,
@@ -38,7 +41,8 @@ public class ApplicationTaskListController {
       ApplicationTaskListService applicationTaskListService,
       ApplicationContextService applicationContextService,
       ApplicationUpdateService applicationUpdateService,
-      ApplicationUpdateRequestViewService applicationUpdateRequestViewService
+      ApplicationUpdateRequestViewService applicationUpdateRequestViewService,
+      ConsentService consentService
   ) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
@@ -46,6 +50,7 @@ public class ApplicationTaskListController {
     this.applicationContextService = applicationContextService;
     this.applicationUpdateService = applicationUpdateService;
     this.applicationUpdateRequestViewService = applicationUpdateRequestViewService;
+    this.consentService = consentService;
   }
 
   @GetMapping
@@ -63,6 +68,15 @@ public class ApplicationTaskListController {
         .addObject("applicationReference", applicationReference)
         .addObject("deleteApplicationUrl", ReverseRouter.route(on(DeleteApplicationController.class)
             .getDeleteApplication(applicationId)));
+
+    if (applicationVersion.getApplication().getType() != ApplicationType.PRODUCTION) {
+      var productionConsentCheckResult = consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion);
+      switch (productionConsentCheckResult) {
+        case DOES_NOT_EXIST, EXPIRES_PART_WAY -> modelAndView.addObject("warning", productionConsentCheckResult.getWarning());
+        default -> {
+        }
+      }
+    }
 
     if (applicationUpdateService.openApplicationUpdateExists(applicationVersion)) {
       modelAndView.addObject("applicationUpdateRequestView",

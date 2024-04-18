@@ -1,7 +1,13 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.consent;
 
 import java.time.Clock;
+import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -15,12 +21,18 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationFileUsage;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
+import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentData;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.fieldequitypartner.ConsentFieldEquityPartnerService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.ConsentEmailService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.PdfRenderingOptions;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
+import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
+import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 
 @Service
 public class ConsentService {
@@ -28,35 +40,41 @@ public class ConsentService {
   private static final Logger LOGGER = LoggerFactory.getLogger(ConsentService.class);
 
   private final ApplicationService applicationService;
+  private final ApplicationAssetService applicationAssetService;
   private final ApplicationDocumentInstanceService applicationDocumentInstanceService;
   private final ConsentRepository consentRepository;
+  private final ConsentDataService consentDataService;
+  private final ConsentLengthService consentLengthService;
   private final FieldConsentsFileService fieldConsentsFileService;
   private final FileService fileService;
   private final Clock clock;
   private final ConsentEmailService consentEmailService;
   private final ConsentFieldEquityPartnerService consentFieldEquityPartnerService;
-  private final ApplicationAssetService applicationAssetService;
 
   ConsentService(
       ApplicationService applicationService,
+      ApplicationAssetService applicationAssetService,
       ApplicationDocumentInstanceService applicationDocumentInstanceService,
       ConsentRepository consentRepository,
+      ConsentDataService consentDataService,
+      ConsentLengthService consentLengthService,
       FieldConsentsFileService fieldConsentsFileService,
       FileService fileService,
       Clock clock,
       ConsentEmailService consentEmailService,
-      ConsentFieldEquityPartnerService consentFieldEquityPartnerService,
-      ApplicationAssetService applicationAssetService
+      ConsentFieldEquityPartnerService consentFieldEquityPartnerService
   ) {
     this.applicationService = applicationService;
+    this.applicationAssetService = applicationAssetService;
     this.applicationDocumentInstanceService = applicationDocumentInstanceService;
     this.consentRepository = consentRepository;
+    this.consentDataService = consentDataService;
+    this.consentLengthService = consentLengthService;
     this.fieldConsentsFileService = fieldConsentsFileService;
     this.fileService = fileService;
     this.clock = clock;
     this.consentEmailService = consentEmailService;
     this.consentFieldEquityPartnerService = consentFieldEquityPartnerService;
-    this.applicationAssetService = applicationAssetService;
   }
 
   @Transactional
@@ -110,6 +128,61 @@ public class ConsentService {
               """,
           user.wuaId(), applicationVersion.getId(), exception);
     }
+  }
+
+  public ProductionConsentCheckResult checkProductionConsentExistsForInProgressApplication(
+      ApplicationVersion applicationVersion
+  ) {
+    var consentLengthDetailsOptional = consentLengthService.findConsentLengthDetails(applicationVersion);
+    if (consentLengthDetailsOptional.isEmpty()) {
+      return ProductionConsentCheckResult.CONSENT_DETAILS_DO_NOT_EXIST;
+    }
+
+    var fieldApplicationAssets = applicationAssetService
+        .findAssetsByApplicationVersionAndAssetTypeAndAssetRoles(
+            applicationVersion,
+            AssetType.FIELD,
+            Set.of(AssetRole.PRIMARY, AssetRole.SECONDARY)
+        );
+
+    var consentLengthDetails = consentLengthDetailsOptional.get();
+    var proposedConsentStartDate = consentLengthService.getProposedConsentStartDate(consentLengthDetails);
+    var proposedConsentEndDate = consentLengthService.getProposedConsentEndDate(consentLengthDetails);
+
+    var consentDataList = consentDataService
+        .getConsentDataListForCompletedApplicationsWithAssets(fieldApplicationAssets)
+        .stream()
+        .filter(consentData -> DateUtils.isAfterOrEqualTo(consentData.getConsentEndDate(), proposedConsentStartDate))
+        .filter(consentData -> DateUtils.isBeforeOrEqualTo(consentData.getConsentStartDate(), proposedConsentEndDate))
+        .toList();
+
+    if (consentDataList.isEmpty()) {
+      return ProductionConsentCheckResult.DOES_NOT_EXIST;
+    }
+
+    if (!getDaysNotCoveredByConsents(consentDataList, proposedConsentStartDate, proposedConsentEndDate).isEmpty()) {
+      return ProductionConsentCheckResult.EXPIRES_PART_WAY;
+    }
+
+    return ProductionConsentCheckResult.EXISTS;
+  }
+
+  Set<LocalDate> getDaysNotCoveredByConsents(List<ConsentData> consentDataList, LocalDate from, LocalDate to) {
+    var requestedDays = generateRange(from, to);
+    var consentedDays = consentDataList
+        .stream()
+        .flatMap(consentData -> generateRange(consentData.getConsentStartDate(), consentData.getConsentEndDate()).stream())
+        .filter(consentDate -> DateUtils.isAfterOrEqualTo(consentDate, from))
+        .filter(consentDate -> DateUtils.isBeforeOrEqualTo(consentDate, to))
+        .collect(Collectors.toSet());
+
+    return new HashSet<>(CollectionUtils.disjunction(requestedDays, consentedDays));
+  }
+
+  Set<LocalDate> generateRange(LocalDate from, LocalDate to) {
+    var range = from.datesUntil(to).collect(Collectors.toCollection(HashSet::new));
+    range.add(to);
+    return range;
   }
 
   void generateDocumentInstancesAndSaveToConsent(ApplicationVersion applicationVersion, Consent consent) {

@@ -53,7 +53,7 @@ dependencies {
   implementation 'org.springframework.session:spring-session-core'
   implementation 'org.flywaydb:flyway-core'
   implementation 'org.apache.commons:commons-lang3:3.12.0'
-  implementation 'commons-collections:commons-collections:3.2.2'
+  implementation 'org.apache.commons:commons-collections4:4.4'
 
   implementation 'uk.co.fivium.energyportalapi:client:v8.1.0'
   implementation 'uk.co.fivium.digital.energyportalteamaccesslibrary:energy-portal-team-access-libray:develop-SNAPSHOT'

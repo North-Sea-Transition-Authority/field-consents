@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
@@ -27,6 +28,8 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ProductionConsentCheckResult;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestViewService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil;
@@ -53,6 +56,9 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
   @MockBean
   private ApplicationService applicationService;
 
+  @MockBean
+  private ConsentService consentService;
+
   private List<TaskListSection> flareTaskListSections;
 
   private ApplicationContext applicationContext;
@@ -76,57 +82,51 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
 
   @Test
   void getTaskList_withFlareApplication() throws Exception {
-    ApplicationVersion applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
+    var productionConsentCheckResult = ProductionConsentCheckResult.EXISTS;
+
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(applicationContext);
+    when(consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion))
+        .thenReturn(productionConsentCheckResult);
 
-    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ApplicationTaskListController.class)
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationTaskListController.class)
             .getTaskList(APPLICATION_ID)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/application/applicationTaskList"))
-        .andReturn().getModelAndView();
-
-    assert modelAndView != null;
-    var model = modelAndView.getModel();
-
-    assertThat(model)
-        .contains(
-            entry("pageTitle", "Flare application"),
-            entry("applicationContext", applicationContext)
-        )
-        .containsKey("taskListSections");
+        .andExpect(model().attribute("pageTitle", "Flare application"))
+        .andExpect(model().attribute("applicationContext", applicationContext))
+        .andExpect(model().attributeDoesNotExist("warning"))
+        .andExpect(model().attributeExists("taskListSections"));
   }
 
   @Test
   void getTaskList_withVentApplication() throws Exception {
-    ApplicationVersion applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
+    var productionConsentCheckResult = ProductionConsentCheckResult.DOES_NOT_EXIST;
+
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(applicationTaskListService.getAllSections(applicationVersion)).thenReturn(flareTaskListSections);
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(applicationContext);
+    when(consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion))
+        .thenReturn(productionConsentCheckResult);
 
-    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ApplicationTaskListController.class)
+    mockMvc.perform(get(ReverseRouter.route(on(ApplicationTaskListController.class)
             .getTaskList(APPLICATION_ID)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/application/applicationTaskList"))
-        .andReturn().getModelAndView();
-
-    assert modelAndView != null;
-    var model = modelAndView.getModel();
-
-    assertThat(model)
-        .contains(
-            entry("pageTitle", "Vent application"),
-            entry("applicationContext", applicationContext)
-        )
-        .containsKey("taskListSections");
+        .andExpect(model().attribute("pageTitle", "Vent application"))
+        .andExpect(model().attribute("applicationContext", applicationContext))
+        .andExpect(model().attribute("warning", productionConsentCheckResult.getWarning()))
+        .andExpect(model().attributeExists("taskListSections"));
   }
 
   @Test

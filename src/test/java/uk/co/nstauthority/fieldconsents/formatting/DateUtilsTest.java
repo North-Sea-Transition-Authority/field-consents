@@ -321,4 +321,41 @@ class DateUtilsTest {
         .hasSecond(59)
         .hasNano(999_999_999);
   }
+
+  @Test
+  void isBeforeOrEqualTo_isBefore() {
+    var now = LocalDate.now();
+    assertThat(DateUtils.isBeforeOrEqualTo(now.minusDays(1), now)).isTrue();
+  }
+
+  @Test
+  void isBeforeOrEqualTo_isEqual() {
+    var now = LocalDate.now();
+    assertThat(DateUtils.isBeforeOrEqualTo(now, now)).isTrue();
+  }
+
+  @Test
+  void isBeforeOrEqualTo_isAfter() {
+    var now = LocalDate.now();
+    assertThat(DateUtils.isBeforeOrEqualTo(now.plusDays(1), now)).isFalse();
+  }
+
+  @Test
+  void isAfterOrEqualTo_isAfter() {
+    var now = LocalDate.now();
+    assertThat(DateUtils.isAfterOrEqualTo(now.plusDays(1), now)).isTrue();
+  }
+
+  @Test
+  void isAfterOrEqualTo_isEqual() {
+    var now = LocalDate.now();
+    assertThat(DateUtils.isAfterOrEqualTo(now, now)).isTrue();
+  }
+
+  @Test
+  void isAfterOrEqualTo_isBefore() {
+    var now = LocalDate.now();
+    assertThat(DateUtils.isAfterOrEqualTo(now.minusDays(1), now)).isFalse();
+  }
+
 }

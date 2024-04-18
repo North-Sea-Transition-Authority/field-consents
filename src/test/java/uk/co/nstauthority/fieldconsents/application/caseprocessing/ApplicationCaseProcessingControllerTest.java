@@ -47,8 +47,10 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseHistoryTabContentService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentTabConsentSummaryView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentTabService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ProductionConsentCheckResult;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval.ConsentIssuingApprovalService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval.ConsentIssuingApprovalSummaryView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
@@ -125,6 +127,9 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
 
   @MockBean
   private ConsentIssuingApprovalService consentIssuingApprovalService;
+
+  @MockBean
+  private ConsentService consentService;
 
   private ApplicationVersion applicationVersion;
   private Application application;
@@ -240,6 +245,71 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
             .caseProcessing(APPLICATION_ID, null, null)) + tabParam)
             .with(user(user)))
         .andExpectAll(commonAttributesForTab(expectedTab, applicationVersion));
+  }
+
+  @ParameterizedTest
+  @EnumSource(
+      value = ApplicationType.class,
+      names = {"PRODUCTION"},
+      mode = EnumSource.Mode.EXCLUDE
+  )
+  void caseProcessing_checkProductionConsentWarning(ApplicationType applicationType) throws Exception {
+    application.setType(applicationType);
+
+    stubBaseServiceCalls();
+    stubTaskListServiceCall();
+    stubSummaryServiceCall();
+    stubCaseHistoryServiceCall();
+    stubPaymentsServiceCall();
+    stubConsentServiceCall();
+
+    var checkResult = ProductionConsentCheckResult.DOES_NOT_EXIST;
+    when(consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion)).thenReturn(checkResult);
+
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+        .caseProcessing(APPLICATION_ID, null, null)))
+        .with(user(user)))
+        .andExpect(model().attribute("warning", checkResult.getWarning()));
+  }
+
+  @ParameterizedTest
+  @EnumSource(
+      value = ProductionConsentCheckResult.class,
+      mode = EnumSource.Mode.EXCLUDE,
+      names = {"DOES_NOT_EXIST", "EXPIRES_PART_WAY"}
+  )
+  void caseProcessing_checkProductionConsentWarning_ignoredResults(ProductionConsentCheckResult checkResult) throws Exception {
+    stubBaseServiceCalls();
+    stubTaskListServiceCall();
+    stubSummaryServiceCall();
+    stubCaseHistoryServiceCall();
+    stubPaymentsServiceCall();
+    stubConsentServiceCall();
+
+    when(consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion)).thenReturn(checkResult);
+
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .caseProcessing(APPLICATION_ID, null, null)))
+            .with(user(user)))
+        .andExpect(model().attributeDoesNotExist("warning"));
+  }
+
+  @Test
+  void caseProcessing_checkProductionConsentWarning_activeConsentExists() throws Exception {
+    stubBaseServiceCalls();
+    stubTaskListServiceCall();
+    stubSummaryServiceCall();
+    stubCaseHistoryServiceCall();
+    stubPaymentsServiceCall();
+    stubConsentServiceCall();
+
+    when(consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion))
+        .thenReturn(ProductionConsentCheckResult.EXISTS);
+
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .caseProcessing(APPLICATION_ID, null, null)))
+            .with(user(user)))
+        .andExpect(model().attributeDoesNotExist("warning"));
   }
 
   @ParameterizedTest

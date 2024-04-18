@@ -12,11 +12,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.ApplicationContextService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
+import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseHistoryTabContentService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentTabService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval.ConsentIssuingApprovalService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
@@ -66,6 +68,7 @@ public class ApplicationCaseProcessingController {
   private final PaymentsTabService paymentsTabService;
   private final ConsentTabService consentTabService;
   private final ConsentIssuingApprovalService consentIssuingApprovalService;
+  private final ConsentService consentService;
 
   @Autowired
   ApplicationCaseProcessingController(
@@ -83,7 +86,8 @@ public class ApplicationCaseProcessingController {
       FurtherInformationService furtherInformationService,
       PaymentsTabService paymentsTabService,
       ConsentTabService consentTabService,
-      ConsentIssuingApprovalService consentIssuingApprovalService
+      ConsentIssuingApprovalService consentIssuingApprovalService,
+      ConsentService consentService
   ) {
     this.applicationService = applicationService;
     this.applicationContextService = applicationContextService;
@@ -100,6 +104,7 @@ public class ApplicationCaseProcessingController {
     this.paymentsTabService = paymentsTabService;
     this.consentTabService = consentTabService;
     this.consentIssuingApprovalService = consentIssuingApprovalService;
+    this.consentService = consentService;
   }
 
   @GetMapping("case-processing")
@@ -147,6 +152,15 @@ public class ApplicationCaseProcessingController {
           .flatMap(furtherInformationService::findLatestOpenFurtherInformation)
           .map(furtherInformationService::getFurtherInformationView)
           .ifPresent(view -> modelAndView.addObject("furtherInformationView", view));
+    }
+
+    if (applicationType != ApplicationType.PRODUCTION) {
+      var productionConsentCheckResult = consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion);
+      switch (productionConsentCheckResult) {
+        case DOES_NOT_EXIST, EXPIRES_PART_WAY -> modelAndView.addObject("warning", productionConsentCheckResult.getWarning());
+        default -> {
+        }
+      }
     }
 
     return modelAndView;

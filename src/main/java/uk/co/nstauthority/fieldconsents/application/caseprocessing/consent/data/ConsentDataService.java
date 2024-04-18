@@ -1,6 +1,8 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data;
 
 import jakarta.transaction.Transactional;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.event.TransactionPhase;
@@ -9,6 +11,7 @@ import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentDataLongTermProductionFiguresService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentEmissionFigureService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionFiguresService;
@@ -51,6 +54,12 @@ public class ConsentDataService {
     return findConsentData(application).orElseThrow(() ->
         new IllegalStateException("Unable to find consent data for application: %s".formatted(application.getId()))
     );
+  }
+
+  public List<ConsentData> getConsentDataListForCompletedApplicationsWithAssets(
+      Collection<ApplicationAsset> applicationAssets
+  ) {
+    return repository.getConsentDataListForCompletedApplicationsWithAssets(applicationAssets);
   }
 
   /**

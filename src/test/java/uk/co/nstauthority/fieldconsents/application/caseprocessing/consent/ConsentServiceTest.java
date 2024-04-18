@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -16,14 +17,20 @@ import static org.mockito.Mockito.when;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -42,11 +49,17 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil;
+import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentData;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataTestUtil;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.fieldequitypartner.ConsentFieldEquityPartnerService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.ConsentEmailService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.DocumentInstanceDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.PdfRenderingOptions;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
@@ -59,10 +72,19 @@ class ConsentServiceTest {
   private ApplicationService applicationService;
 
   @Mock
+  private ApplicationAssetService applicationAssetService;
+
+  @Mock
   private ApplicationDocumentInstanceService applicationDocumentInstanceService;
 
   @Mock
   private ConsentRepository consentRepository;
+
+  @Mock
+  private ConsentDataService consentDataService;
+
+  @Mock
+  private ConsentLengthService consentLengthService;
 
   @Mock
   private FieldConsentsFileService fieldConsentsFileService;
@@ -75,9 +97,6 @@ class ConsentServiceTest {
 
   @Mock
   private ConsentFieldEquityPartnerService consentFieldEquityPartnerService;
-
-  @Mock
-  private ApplicationAssetService applicationAssetService;
 
   private final Clock clock = Clock.fixed(Instant.now(), ZoneId.systemDefault());
 
@@ -93,14 +112,16 @@ class ConsentServiceTest {
   void beforeEach() {
     consentService = spy(new ConsentService(
         applicationService,
+        applicationAssetService,
         applicationDocumentInstanceService,
         consentRepository,
+        consentDataService,
+        consentLengthService,
         fieldConsentsFileService,
         fileService,
         clock,
         consentEmailService,
-        consentFieldEquityPartnerService,
-        applicationAssetService
+        consentFieldEquityPartnerService
     ));
 
     applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
@@ -289,6 +310,187 @@ class ConsentServiceTest {
     verify(applicationService).completeApplication(applicationVersion);
     verify(consentEmailService).sendConsentIssuedEmailToFieldEquityPartners(applicationVersion, consent);
     verify(consentFieldEquityPartnerService).saveFieldEquityPartners(consent, applicationVersion);
+  }
+
+  @Test
+  void checkProductionConsent_noConsentExistsForInProgressApplicationLengthPresent() {
+    var applicationVersion = new ApplicationVersion();
+    var application = new Application();
+    application.setType(ApplicationType.FLARE);
+    applicationVersion.setApplication(application);
+
+    when(consentLengthService.findConsentLengthDetails(applicationVersion)).thenReturn(Optional.empty());
+
+    assertThat(consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion))
+        .isEqualTo(ProductionConsentCheckResult.CONSENT_DETAILS_DO_NOT_EXIST);
+  }
+
+  @ParameterizedTest
+  @MethodSource("checkProductionConsent_ExistsForInProgressApplication_arguments")
+  void checkProductionConsentExistsForInProgressApplication(
+      LocalDate proposedConsentStartDate,
+      LocalDate proposedConsentEndDate,
+      List<ConsentData> consentDataList,
+      ProductionConsentCheckResult productionConsentCheckResult
+  ) {
+    var applicationVersion = new ApplicationVersion();
+    var application = new Application();
+    application.setType(ApplicationType.FLARE);
+    applicationVersion.setApplication(application);
+
+    var fieldIds = Set.of(1, 2, 3);
+    var fieldApplicationAssets = fieldIds.stream().map(fieldId -> ApplicationAssetTestUtil.newBuilder().withAssetId(fieldId).build()).toList();
+    var consentLengthDetails = new ConsentLengthDetails();
+
+    when(consentLengthService.findConsentLengthDetails(applicationVersion))
+        .thenReturn(Optional.of(consentLengthDetails));
+
+    when(applicationAssetService.findAssetsByApplicationVersionAndAssetTypeAndAssetRoles(applicationVersion, AssetType.FIELD, Set.of(AssetRole.PRIMARY, AssetRole.SECONDARY)))
+        .thenReturn(fieldApplicationAssets);
+
+    when(consentLengthService.getProposedConsentStartDate(consentLengthDetails))
+        .thenReturn(proposedConsentStartDate);
+
+    when(consentLengthService.getProposedConsentEndDate(consentLengthDetails))
+        .thenReturn(proposedConsentEndDate);
+
+    when(consentDataService.getConsentDataListForCompletedApplicationsWithAssets(fieldApplicationAssets))
+        .thenReturn(consentDataList);
+
+    assertThat(consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion))
+        .isEqualTo(productionConsentCheckResult);
+  }
+
+  private static Stream<Arguments> checkProductionConsent_ExistsForInProgressApplication_arguments() {
+    return Stream.of(
+        arguments(
+            // no consents exist
+            LocalDate.of(2020, 1, 1),
+            LocalDate.of(2020, 12, 31),
+            List.of(),
+            ProductionConsentCheckResult.DOES_NOT_EXIST
+        ),
+        arguments(
+            // no consents exist
+            LocalDate.of(2020, 1, 1),
+            LocalDate.of(2020, 1, 1),
+            List.of(
+                ConsentDataTestUtil.newBuilder()
+                    .withConsentStartDate(LocalDate.of(2020, 1, 1))
+                    .withConsentEndDate(LocalDate.of(2020, 1, 1))
+                    .build()
+            ),
+            ProductionConsentCheckResult.EXISTS
+        ),
+        arguments(
+            // active consents fall either side of the proposed consent
+            LocalDate.of(2020, 1, 1),
+            LocalDate.of(2020, 12, 31),
+            List.of(
+                ConsentDataTestUtil.newBuilder()
+                    .withConsentStartDate(LocalDate.of(2019, 1, 1))
+                    .withConsentEndDate(LocalDate.of(2019, 12, 31))
+                    .build(),
+                ConsentDataTestUtil.newBuilder()
+                    .withConsentStartDate(LocalDate.of(2021, 1, 1))
+                    .withConsentEndDate(LocalDate.of(2021, 12, 31))
+                    .build()
+            ),
+            ProductionConsentCheckResult.DOES_NOT_EXIST
+        ),
+        arguments(
+            // the second half of the proposed consent has no active consent
+            LocalDate.of(2020, 1, 1),
+            LocalDate.of(2020, 12, 31),
+            List.of(
+                ConsentDataTestUtil.newBuilder()
+                    .withConsentStartDate(LocalDate.of(2019, 6, 1))
+                    .withConsentEndDate(LocalDate.of(2020, 6, 1))
+                    .build()
+            ),
+            ProductionConsentCheckResult.EXPIRES_PART_WAY
+        ),
+        arguments(
+            // the first half of the proposed consent has no active consent
+            LocalDate.of(2020, 1, 1),
+            LocalDate.of(2020, 12, 31),
+            List.of(
+                ConsentDataTestUtil.newBuilder()
+                    .withConsentStartDate(LocalDate.of(2020, 6, 1))
+                    .withConsentEndDate(LocalDate.of(2021, 6, 30))
+                    .build()
+            ),
+            ProductionConsentCheckResult.EXPIRES_PART_WAY
+        ),
+        arguments(
+            // the first and last proposed months have no active consent
+            LocalDate.of(2020, 1, 1),
+            LocalDate.of(2020, 12, 31),
+            List.of(
+                ConsentDataTestUtil.newBuilder()
+                    .withConsentStartDate(LocalDate.of(2020, 2, 1))
+                    .withConsentEndDate(LocalDate.of(2020, 11, 30))
+                    .build()
+            ),
+            ProductionConsentCheckResult.EXPIRES_PART_WAY
+        ),
+        arguments(
+            // the proposed consent is fully within an active consent
+            LocalDate.of(2020, 1, 1),
+            LocalDate.of(2020, 12, 31),
+            List.of(
+                ConsentDataTestUtil.newBuilder()
+                    .withConsentStartDate(LocalDate.of(2019, 1, 1))
+                    .withConsentEndDate(LocalDate.of(2021, 12, 31))
+                    .build()
+            ),
+            ProductionConsentCheckResult.EXISTS
+        ),
+        arguments(
+            // two overlapping consents exist and cover the proposed consent
+            LocalDate.of(2020, 1, 1),
+            LocalDate.of(2020, 12, 31),
+            List.of(
+                ConsentDataTestUtil.newBuilder()
+                    .withConsentStartDate(LocalDate.of(2019, 6, 1))
+                    .withConsentEndDate(LocalDate.of(2020, 6, 1))
+                    .build(),
+                ConsentDataTestUtil.newBuilder()
+                    .withConsentStartDate(LocalDate.of(2020, 6, 1))
+                    .withConsentEndDate(LocalDate.of(2021, 6, 1))
+                    .build()
+            ),
+            ProductionConsentCheckResult.EXISTS
+        ),
+        arguments(
+            // two overlapping active consents exist, but the second on ends before the first, still covers the proposed consent
+            LocalDate.of(2020, 1, 1),
+            LocalDate.of(2020, 12, 31),
+            List.of(
+                ConsentDataTestUtil.newBuilder()
+                    .withConsentStartDate(LocalDate.of(2019, 6, 1))
+                    .withConsentEndDate(LocalDate.of(2020, 12, 31))
+                    .build(),
+                ConsentDataTestUtil.newBuilder()
+                    .withConsentStartDate(LocalDate.of(2020, 6, 1))
+                    .withConsentEndDate(LocalDate.of(2020, 6, 30))
+                    .build()
+            ),
+            ProductionConsentCheckResult.EXISTS
+        ),
+        arguments(
+            // active consent starts and ends on the same day as the proposed consent
+            LocalDate.of(2020, 1, 1),
+            LocalDate.of(2020, 12, 31),
+            List.of(
+                ConsentDataTestUtil.newBuilder()
+                    .withConsentStartDate(LocalDate.of(2020, 1, 1))
+                    .withConsentEndDate(LocalDate.of(2020, 12, 31))
+                    .build()
+            ),
+            ProductionConsentCheckResult.EXISTS
+        )
+    );
   }
 
   @Test

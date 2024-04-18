@@ -23,6 +23,9 @@
   caption=applicationReference!""
   notificationBannerContentOverride=deleteBanner>
   <@applicationContextInfo.applicationContextInfo applicationContext=applicationContext/>
+  <#if warning?has_content>
+    <@fdsWarning.warning>${warning}</@fdsWarning.warning>
+  </#if>
   <@applicationUpdateRequestHiddenSummary.applicationUpdateRequestHiddenSummary applicationUpdateRequestView=applicationUpdateRequestView!""/>
   <@fdsAction.link
     linkText="Delete application"
