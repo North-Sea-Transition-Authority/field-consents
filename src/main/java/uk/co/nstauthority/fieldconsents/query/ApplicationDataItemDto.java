@@ -44,6 +44,9 @@ public class ApplicationDataItemDto {
   private final FurtherInformationStatus consultationFurtherInformationStatus;
   private final String licences;
   private final Boolean approvedForIssue;
+  private final Boolean consentIssuedAndNotYetActive;
+  private final Boolean consentIssuedAndActive;
+  private final Boolean consentIssuedAndExpired;
 
   public ApplicationDataItemDto(Integer applicationId, Integer applicationVersionId, ApplicationType type,
                                 Integer variationNo, Integer applicationNo, Integer versionNo, Integer operatorId,
@@ -56,7 +59,8 @@ public class ApplicationDataItemDto {
                                 Long technicalReviewerWuaId, Boolean technicalReviewOpen, Instant technicalReviewDeadline,
                                 Boolean applicationUpdateOpen, Instant applicationUpdateDeadline, Boolean consultationOpen,
                                 Instant consultationDeadline, FurtherInformationStatus consultationFurtherInformationStatus,
-                                String licences, Boolean approvedForIssue) {
+                                String licences, Boolean approvedForIssue, Boolean consentIssuedAndNotYetActive,
+                                Boolean consentIssuedAndActive, Boolean consentIssuedAndExpired) {
     this.applicationId = applicationId;
     this.applicationVersionId = applicationVersionId;
     this.type = type;
@@ -91,6 +95,9 @@ public class ApplicationDataItemDto {
     this.consultationFurtherInformationStatus = consultationFurtherInformationStatus;
     this.licences = licences;
     this.approvedForIssue = approvedForIssue;
+    this.consentIssuedAndNotYetActive = consentIssuedAndNotYetActive;
+    this.consentIssuedAndActive = consentIssuedAndActive;
+    this.consentIssuedAndExpired = consentIssuedAndExpired;
   }
 
   public Integer getApplicationId() {
@@ -227,5 +234,17 @@ public class ApplicationDataItemDto {
 
   public Boolean getApprovedForIssue() {
     return approvedForIssue;
+  }
+
+  public Boolean getConsentIssuedAndNotYetActive() {
+    return consentIssuedAndNotYetActive;
+  }
+
+  public Boolean getConsentIssuedAndActive() {
+    return consentIssuedAndActive;
+  }
+
+  public Boolean getConsentIssuedAndExpired() {
+    return consentIssuedAndExpired;
   }
 }

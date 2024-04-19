@@ -29,7 +29,10 @@ public record ApplicationDataItem(
     String consultationDeadline,
     Boolean consultationFurtherInformationOpen,
     String licenses,
-    Boolean approvedForIssue
+    Boolean approvedForIssue,
+    Boolean consentIssuedAndNotYetActive,
+    Boolean consentIssuedAndActive,
+    Boolean consentIssuedAndExpired
 ) {
 
   public static Builder newBuilder() {
@@ -62,6 +65,9 @@ public record ApplicationDataItem(
     private Boolean consultationFurtherInformationOpen;
     private String licenses;
     private Boolean approvedForIssue;
+    private Boolean consentIssuedAndNotYetActive;
+    private Boolean consentIssuedAndActive;
+    private Boolean consentIssuedAndExpired;
 
     public Builder withApplicationId(Integer applicationId) {
       this.applicationId = applicationId;
@@ -183,6 +189,21 @@ public record ApplicationDataItem(
       return this;
     }
 
+    public Builder withConsentIssuedAndNotYetActive(Boolean consentIssuedAndNotYetActive) {
+      this.consentIssuedAndNotYetActive = consentIssuedAndNotYetActive;
+      return this;
+    }
+
+    public Builder withConsentIssuedAndActive(Boolean consentIssuedAndActive) {
+      this.consentIssuedAndActive = consentIssuedAndActive;
+      return this;
+    }
+
+    public Builder withConsentIssuedAndExpired(Boolean consentIssuedAndExpired) {
+      this.consentIssuedAndExpired = consentIssuedAndExpired;
+      return this;
+    }
+
     public ApplicationDataItem build() {
       return new ApplicationDataItem(
           applicationId,
@@ -208,7 +229,10 @@ public record ApplicationDataItem(
           consultationDeadline,
           consultationFurtherInformationOpen,
           licenses,
-          approvedForIssue
+          approvedForIssue,
+          consentIssuedAndNotYetActive,
+          consentIssuedAndActive,
+          consentIssuedAndExpired
       );
     }
   }

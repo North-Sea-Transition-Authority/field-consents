@@ -1,10 +1,13 @@
 package uk.co.nstauthority.fieldconsents.query;
 
+import static org.jooq.impl.DSL.currentLocalDate;
 import static org.jooq.impl.DSL.listAggDistinct;
 import static org.jooq.impl.DSL.max;
 import static uk.co.nstauthority.fieldconsents.application.flags.ApplicationFlagType.IS_ACE_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_ASSETS;
+import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_CONSENTS;
+import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_CONSENT_DATA;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_CONSENT_ISSUING_APPROVALS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_CONSULTATIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_CONSULTATION_FURTHER_INFORMATION;
@@ -109,7 +112,17 @@ public class ApplicationDataItemQueryService {
             APPLICATION_CONSULTATIONS.REQUEST_DEADLINE,
             APPLICATION_CONSULTATION_FURTHER_INFORMATION.STATUS,
             fieldLicencesQuery.field("fieldLicences", String.class),
-            APPLICATION_CONSENT_ISSUING_APPROVALS.ID.isNotNull()
+            APPLICATION_CONSENT_ISSUING_APPROVALS.ID.isNotNull(),
+            APPLICATION_CONSENTS.ID.isNotNull()
+                .and(APPLICATION_CONSENT_DATA.ID.isNotNull())
+                .and(APPLICATION_CONSENT_DATA.CONSENT_START_DATE.gt(currentLocalDate())),
+            APPLICATION_CONSENTS.ID.isNotNull()
+                .and(APPLICATION_CONSENT_DATA.ID.isNotNull())
+                .and(currentLocalDate()
+                    .between(APPLICATION_CONSENT_DATA.CONSENT_START_DATE, APPLICATION_CONSENT_DATA.CONSENT_END_DATE)),
+            APPLICATION_CONSENTS.ID.isNotNull()
+                .and(APPLICATION_CONSENT_DATA.ID.isNotNull())
+                .and(APPLICATION_CONSENT_DATA.CONSENT_END_DATE.lt(currentLocalDate()))
         )
         .from(APPLICATIONS)
         .join(APPLICATION_VERSIONS).onKey(APPLICATION_VERSIONS.APPLICATION_ID)
@@ -142,6 +155,10 @@ public class ApplicationDataItemQueryService {
         .leftJoin(APPLICATION_CONSENT_ISSUING_APPROVALS)
             .onKey(APPLICATION_CONSENT_ISSUING_APPROVALS.APPLICATION_ID)
             .and(APPLICATION_VERSIONS.STATUS.eq(ApplicationVersionStatus.SUBMITTED.name()))
+        .leftJoin(APPLICATION_CONSENTS)
+          .onKey(APPLICATION_CONSENTS.APPLICATION_ID)
+        .leftJoin(APPLICATION_CONSENT_DATA)
+          .onKey(APPLICATION_CONSENT_DATA.APPLICATION_ID)
         .where(APPLICATION_VERSIONS.ID.in(detailsSubQuery));
     return applicationDataItemsSelectStatement.getQuery();
   }

@@ -293,7 +293,10 @@ public class ApplicationDataItemDtoService {
         .withConsultationDeadline(getConsultationDeadline(dataItemDto))
         .withConsultationFurtherInformationOpen(furtherInformationOpen)
         .withLicences(getLicences(dataItemDto))
-        .withApprovedForIssue(approvedForIssue);
+        .withApprovedForIssue(approvedForIssue)
+        .withConsentIssuedAndNotYetActive(dataItemDto.getConsentIssuedAndNotYetActive())
+        .withConsentIssuedAndActive(dataItemDto.getConsentIssuedAndActive())
+        .withConsentIssuedAndExpired(dataItemDto.getConsentIssuedAndExpired());
 
     removeTagsForTeamType(teamType, builder);
 

@@ -474,7 +474,10 @@ class ApplicationDataItemDtoServiceTest {
         null,
         null,
         "P1, P2, P3",
-        null
+        null,
+        false,
+        false,
+        false
     );
 
     assertThat(applicationDataItemDtoService.getApplicationDataItem(

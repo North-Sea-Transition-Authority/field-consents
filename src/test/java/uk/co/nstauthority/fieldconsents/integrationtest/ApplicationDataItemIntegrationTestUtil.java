@@ -177,6 +177,9 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withConsultationFurtherInformationOpen(false)
         .withLicences("P1, P2, P3")
         .withApprovedForIssue(false)
+        .withConsentIssuedAndNotYetActive(false)
+        .withConsentIssuedAndActive(false)
+        .withConsentIssuedAndExpired(false)
         .build();
   }
 
@@ -210,6 +213,9 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withConsultationFurtherInformationOpen(false)
         .withLicences(fieldWithOperatorAndLicencesJson.getLicencesAsString())
         .withApprovedForIssue(false)
+        .withConsentIssuedAndNotYetActive(false)
+        .withConsentIssuedAndActive(false)
+        .withConsentIssuedAndExpired(false)
         .build();
   }
 
@@ -243,6 +249,9 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withConsultationFurtherInformationOpen(false)
         .withLicences("")
         .withApprovedForIssue(false)
+        .withConsentIssuedAndNotYetActive(false)
+        .withConsentIssuedAndActive(false)
+        .withConsentIssuedAndExpired(false)
         .build();
   }
 
@@ -274,6 +283,9 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withConsultationFurtherInformationOpen(false)
         .withLicences("P1, P2, P3")
         .withApprovedForIssue(false)
+        .withConsentIssuedAndNotYetActive(false)
+        .withConsentIssuedAndActive(false)
+        .withConsentIssuedAndExpired(false)
         .build();
   }
 
@@ -304,6 +316,9 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withConsultationDeadline(null)
         .withConsultationFurtherInformationOpen(null)
         .withLicences("P1, P2, P3")
+        .withConsentIssuedAndNotYetActive(false)
+        .withConsentIssuedAndActive(false)
+        .withConsentIssuedAndExpired(false)
         .build();
   }
 
@@ -335,6 +350,9 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withConsultationFurtherInformationOpen(false)
         .withLicences("P1, P2, P3")
         .withApprovedForIssue(false)
+        .withConsentIssuedAndNotYetActive(false)
+        .withConsentIssuedAndActive(false)
+        .withConsentIssuedAndExpired(false)
         .build();
   }
 
@@ -366,6 +384,9 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withConsultationFurtherInformationOpen(false)
         .withLicences("P1, P2, P3")
         .withApprovedForIssue(false)
+        .withConsentIssuedAndNotYetActive(false)
+        .withConsentIssuedAndActive(false)
+        .withConsentIssuedAndExpired(false)
         .build();
   }
 
@@ -398,6 +419,9 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withConsultationFurtherInformationOpen(false)
         .withLicences("P1, P2, P3")
         .withApprovedForIssue(false)
+        .withConsentIssuedAndNotYetActive(false)
+        .withConsentIssuedAndActive(false)
+        .withConsentIssuedAndExpired(false)
         .build();
   }
 
@@ -429,6 +453,9 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withConsultationDeadline(DateUtils.format(consultationDeadline, DateUtils.DATE_TIME))
         .withConsultationFurtherInformationOpen(false)
         .withLicences("P1, P2, P3")
+        .withConsentIssuedAndNotYetActive(false)
+        .withConsentIssuedAndActive(false)
+        .withConsentIssuedAndExpired(false)
         .build();
   }
 
@@ -461,6 +488,9 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withConsultationDeadline(null)
         .withConsultationFurtherInformationOpen(null)
         .withLicences(fieldWithOperatorAndLicencesJson.getLicencesAsString())
+        .withConsentIssuedAndNotYetActive(false)
+        .withConsentIssuedAndActive(false)
+        .withConsentIssuedAndExpired(false)
         .build();
   }
 
@@ -493,6 +523,9 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withConsultationDeadline(null)
         .withConsultationFurtherInformationOpen(null)
         .withLicences("")
+        .withConsentIssuedAndNotYetActive(false)
+        .withConsentIssuedAndActive(false)
+        .withConsentIssuedAndExpired(false)
         .build();
   }
 
@@ -524,6 +557,9 @@ public class ApplicationDataItemIntegrationTestUtil {
         .withConsultationDeadline(null)
         .withConsultationFurtherInformationOpen(null)
         .withLicences("P1, P2, P3")
+        .withConsentIssuedAndNotYetActive(false)
+        .withConsentIssuedAndActive(false)
+        .withConsentIssuedAndExpired(false)
         .build();
   }
 
