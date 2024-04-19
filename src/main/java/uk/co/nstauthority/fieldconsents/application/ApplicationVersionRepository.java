@@ -42,4 +42,6 @@ public interface ApplicationVersionRepository extends CrudRepository<Application
       """
   )
   List<Long> findAllCaseOfficerWuaIdsByApplicationVersionStatus(ApplicationVersionStatus status);
+
+  boolean existsByApplicationAndMigratedTrue(Application application);
 }

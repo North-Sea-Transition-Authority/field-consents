@@ -131,7 +131,8 @@ public class ApplicationCaseProcessingController {
         .addObject("caseProcessingTabs", caseProcessingTabService.getTabsAvailableToUser(user, applicationVersion))
         .addObject("wideSummaryDisplay", WIDE_SUMMARY_DISPLAY.allowed(applicationType))
         .addObject("pageTitle", applicationService.generateApplicationReference(applicationVersion))
-        .addObject("consentIssuingApprovalSummaryView", consentIssuingApprovalSummaryView);
+        .addObject("consentIssuingApprovalSummaryView", consentIssuingApprovalSummaryView)
+        .addObject("isMigratedApplication", applicationService.isMigratedApplication(application));
 
     switch (tab) {
       case CONSENT -> consentTabService.addConsentTabContentToModelAndView(application, modelAndView);

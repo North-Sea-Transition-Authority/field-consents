@@ -224,6 +224,10 @@ public class ApplicationService {
         .orElse(Integer.valueOf(applicationConfigurationProperties.applicationNoStartValue()));
   }
 
+  public boolean isMigratedApplication(Application application) {
+    return applicationVersionRepository.existsByApplicationAndMigratedTrue(application);
+  }
+
   @NotNull
   private Application createNewApplicationMasterRecord(ApplicationType applicationType,
                                                        ServiceUserDetail user) {

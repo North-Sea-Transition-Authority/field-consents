@@ -1,10 +1,18 @@
 <#include '../../../layout/layout.ftl'>
 <#import '../../../../fds/components/summaryList/summaryList.ftl' as fdsSummaryList>
 
-<#macro tab paymentsTabPaymentSummaryViews>
+<#-- @ftlvariable name="serviceBrandingConfigurationProperties" type="uk.co.nstauthority.fieldconsents.branding.ServiceBrandingConfigurationProperties" -->
+
+<#macro tab paymentsTabPaymentSummaryViews isMigratedApplication>
+  <#local serviceName = serviceBrandingConfigurationProperties.name() />
+
   <#if !paymentsTabPaymentSummaryViews?has_content>
     <@fdsInsetText.insetText>
-      No payments have been completed yet for this application.
+      <#if isMigratedApplication>
+        Payment completed outside of the new ${serviceName} service.
+      <#else>
+        No payments have been completed yet for this application.
+      </#if>
     </@fdsInsetText.insetText>
   <#else>
     <#list paymentsTabPaymentSummaryViews as paymentsTabPaymentSummaryView>

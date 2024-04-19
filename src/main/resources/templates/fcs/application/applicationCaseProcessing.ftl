@@ -46,7 +46,7 @@
       <@caseHistoryTab.tab caseHistoryEvents=caseHistoryEvents/>
     </#if>
     <#if selectedTab == "PAYMENTS">
-      <@paymentsTab.tab paymentsTabPaymentSummaryViews=paymentsTabPaymentSummaryViews/>
+      <@paymentsTab.tab paymentsTabPaymentSummaryViews=paymentsTabPaymentSummaryViews isMigratedApplication=isMigratedApplication/>
     </#if>
     <#if selectedTab == "CONSENT">
       <@consentTab.tab showIssuedByUser=true consentTabConsentSummaryView=consentTabConsentSummaryView/>

@@ -107,7 +107,8 @@ public class IndustryCaseProcessingController {
         .addObject("applicationContext", applicationContextService.getApplicationContext(applicationVersion))
         .addObject("caseProcessingTabs", caseProcessingTabService.getTabsAvailableToUser(user, applicationVersion))
         .addObject("wideSummaryDisplay", WIDE_SUMMARY_DISPLAY.allowed(application.getType()))
-        .addObject("pageTitle", applicationService.generateApplicationReference(applicationVersion));
+        .addObject("pageTitle", applicationService.generateApplicationReference(applicationVersion))
+        .addObject("isMigratedApplication", applicationService.isMigratedApplication(application));
 
     switch (tab) {
       case CONSENT -> consentTabService.addConsentTabContentToModelAndView(application, modelAndView);

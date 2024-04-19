@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -428,5 +429,14 @@ public class ApplicationServiceTest {
     when(applicationRepository.findLatestNonMigratedApplicationNumber()).thenReturn(Optional.empty());
 
     assertThat(applicationService.getNextApplicationNumber()).isEqualTo(Integer.parseInt(APPLICATION_NUMBER_START_VALUE));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void isMigratedApplication(boolean isMigrated) {
+    when(applicationVersionRepository.existsByApplicationAndMigratedTrue(newApplication))
+        .thenReturn(isMigrated);
+
+    assertThat(applicationService.isMigratedApplication(newApplication)).isEqualTo(isMigrated);
   }
 }

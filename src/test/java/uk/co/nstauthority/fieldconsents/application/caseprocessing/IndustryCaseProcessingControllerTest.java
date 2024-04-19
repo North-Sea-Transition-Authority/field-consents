@@ -332,6 +332,7 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
         .withApplicationVersionStatus(applicationVersion.getStatus())
         .withPrimaryOperator("Primary operator")
         .build());
+    when(applicationService.isMigratedApplication(applicationVersion.getApplication())).thenReturn(true);
   }
 
   private void stubSummaryServiceCall(ApplicationVersion applicationVersion) {
@@ -378,7 +379,8 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
         model().attribute("selectedTab", tab),
         model().attribute("actionList", caseProcessingActionViews),
         model().attribute("caseProcessingTabs", caseProcessingTabs),
-        model().attribute("wideSummaryDisplay", WIDE_SUMMARY_DISPLAY.allowed(applicationType))
+        model().attribute("wideSummaryDisplay", WIDE_SUMMARY_DISPLAY.allowed(applicationType)),
+        model().attribute("isMigratedApplication", true),
     };
   }
 

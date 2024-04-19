@@ -88,6 +88,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   private static final String PAYMENTS_TAB_PAYMENT_SUMMARY_VIEWS_ATTRIBUTE = "paymentsTabPaymentSummaryViews";
   private static final String CONSENT_TAB_CONSENT_SUMMARY_VIEW_ATTRIBUTE = "consentTabConsentSummaryView";
   private static final String CONSENT_ISSUING_APPROVAL_SUMMARY_VIEW_ATTRIBUTE = "consentIssuingApprovalSummaryView";
+  private static final String IS_MIGRATED_APPLICATION_ATTRIBUTE = "isMigratedApplication";
 
   @MockBean
   private ApplicationService applicationService;
@@ -522,6 +523,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
         .withPrimaryOperator("Primary operator")
         .build());
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(APPLICATION_REFERENCE);
+    when(applicationService.isMigratedApplication(application)).thenReturn(false);
   }
 
   private void stubTaskListServiceCall() {
@@ -576,7 +578,8 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
         model().attribute("selectedTab", tab),
         model().attribute("actionList", caseProcessingActionViews),
         model().attribute("caseProcessingTabs", caseProcessingTabs),
-        model().attribute("wideSummaryDisplay", WIDE_SUMMARY_DISPLAY.allowed(applicationType))
+        model().attribute("wideSummaryDisplay", WIDE_SUMMARY_DISPLAY.allowed(applicationType)),
+        model().attribute(IS_MIGRATED_APPLICATION_ATTRIBUTE, false)
     };
   }
 }
