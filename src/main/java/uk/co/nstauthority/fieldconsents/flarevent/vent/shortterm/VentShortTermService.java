@@ -18,6 +18,7 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ShortTermUtil;
 import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionConsentSummaryService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
+import uk.co.nstauthority.fieldconsents.util.ApplicationFigureComparators;
 
 @Service
 public class VentShortTermService {
@@ -42,7 +43,10 @@ public class VentShortTermService {
   }
 
   public List<VentShortTermMonth> getVentShortTermMonths(ApplicationVersion applicationVersion) {
-    return ventShortTermMonthRepository.findAllByApplicationVersion(applicationVersion);
+    return ventShortTermMonthRepository.findAllByApplicationVersion(applicationVersion)
+        .stream()
+        .sorted(ApplicationFigureComparators.flareVentRow())
+        .toList();
   }
 
   public boolean ventShortTermMonthsExist(ApplicationVersion applicationVersion) {

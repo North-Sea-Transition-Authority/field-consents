@@ -1,11 +1,10 @@
 package uk.co.nstauthority.fieldconsents.flarevent.category123.vent.ventreport;
 
-import static uk.co.nstauthority.fieldconsents.flarevent.category123.vent.summary.Vent123SummaryUtil.YEAR_MONTH_COMPARATOR;
-
 import java.time.YearMonth;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.util.ApplicationFigureComparators;
 
 @Service
 public class VentReport123Service {
@@ -19,14 +18,14 @@ public class VentReport123Service {
   public List<VentReport123Month> getVentReport123Months(ApplicationVersion applicationVersion) {
     return ventReport123MonthRepository.findAllByApplicationVersion(applicationVersion)
         .stream()
-        .sorted(YEAR_MONTH_COMPARATOR)
+        .sorted(ApplicationFigureComparators.vent123Row())
         .toList();
   }
 
   public YearMonth getStartYearMonth(ApplicationVersion applicationVersion) {
     return ventReport123MonthRepository.findAllByApplicationVersion(applicationVersion)
         .stream()
-        .min(YEAR_MONTH_COMPARATOR)
+        .min(ApplicationFigureComparators.vent123Row())
         .map(ventReport123Month -> YearMonth.of(ventReport123Month.getYear(), ventReport123Month.getMonth()))
         .orElseThrow();
   }
@@ -34,7 +33,7 @@ public class VentReport123Service {
   public YearMonth getEndYearMonth(ApplicationVersion applicationVersion) {
     return ventReport123MonthRepository.findAllByApplicationVersion(applicationVersion)
         .stream()
-        .max(YEAR_MONTH_COMPARATOR)
+        .max(ApplicationFigureComparators.vent123Row())
         .map(ventReport123Month -> YearMonth.of(ventReport123Month.getYear(), ventReport123Month.getMonth()))
         .orElseThrow();
   }

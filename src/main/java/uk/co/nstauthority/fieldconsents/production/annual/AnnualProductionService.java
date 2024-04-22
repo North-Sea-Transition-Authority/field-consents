@@ -17,6 +17,7 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.AnnualUtil;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
+import uk.co.nstauthority.fieldconsents.util.ApplicationFigureComparators;
 
 @Service
 public class AnnualProductionService {
@@ -37,7 +38,10 @@ public class AnnualProductionService {
   }
 
   public List<AnnualProductionMonth> getAnnualProductionMonths(ApplicationVersion applicationVersion) {
-    return annualProductionMonthRepository.findAllByApplicationVersion(applicationVersion);
+    return annualProductionMonthRepository.findAllByApplicationVersion(applicationVersion)
+        .stream()
+        .sorted(ApplicationFigureComparators.annualProductionMonth())
+        .toList();
   }
 
   public boolean annualProductionMonthsExist(ApplicationVersion applicationVersion) {

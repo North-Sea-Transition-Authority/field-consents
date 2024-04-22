@@ -13,8 +13,6 @@ public interface LongTermProductionYearRepository extends CrudRepository<LongTer
   @DuplicateThisOnUpdate
   List<LongTermProductionYear> findAllByApplicationVersion(ApplicationVersion applicationVersion);
 
-  List<LongTermProductionYear> findAllByApplicationVersionOrderByYearAsc(ApplicationVersion applicationVersion);
-
   boolean existsByApplicationVersion(ApplicationVersion applicationVersion);
 
   void deleteAllByApplicationVersion(ApplicationVersion applicationVersion);

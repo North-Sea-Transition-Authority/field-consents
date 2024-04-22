@@ -2,19 +2,13 @@ package uk.co.nstauthority.fieldconsents.flarevent.category123.flare.summary;
 
 import static uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionSummaryUtil.CATEGORY_HEADING;
 
-import java.util.Comparator;
 import java.util.function.UnaryOperator;
-import uk.co.nstauthority.fieldconsents.flarevent.category123.flare.Flare123Row;
 
 public class Flare123SummaryUtil {
 
   private Flare123SummaryUtil() {
     throw new IllegalStateException("Utility class");
   }
-
-  public static final Comparator<Flare123Row> YEAR_MONTH_COMPARATOR =
-      Comparator.comparing(Flare123Row::getYear)
-          .thenComparing(Flare123Row::getMonth);
 
   // report and consent table headings and row prompts
   public static final String CATEGORY_1_HEADING = "Base Load Flare " + CATEGORY_HEADING + " 1";

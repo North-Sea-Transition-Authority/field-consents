@@ -1,11 +1,10 @@
 package uk.co.nstauthority.fieldconsents.flarevent.category123.flare.flarereport;
 
-import static uk.co.nstauthority.fieldconsents.flarevent.category123.flare.summary.Flare123SummaryUtil.YEAR_MONTH_COMPARATOR;
-
 import java.time.YearMonth;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.util.ApplicationFigureComparators;
 
 @Service
 public class FlareReport123Service {
@@ -19,14 +18,14 @@ public class FlareReport123Service {
   public List<FlareReport123Month> getFlareReport123Months(ApplicationVersion applicationVersion) {
     return flareReport123MonthRepository.findAllByApplicationVersion(applicationVersion)
         .stream()
-        .sorted(YEAR_MONTH_COMPARATOR)
+        .sorted(ApplicationFigureComparators.flare123Row())
         .toList();
   }
 
   public YearMonth getStartYearMonth(ApplicationVersion applicationVersion) {
     return flareReport123MonthRepository.findAllByApplicationVersion(applicationVersion)
         .stream()
-        .min(YEAR_MONTH_COMPARATOR)
+        .min(ApplicationFigureComparators.flare123Row())
         .map(flareReport123Month -> YearMonth.of(flareReport123Month.getYear(), flareReport123Month.getMonth()))
         .orElseThrow();
   }
@@ -34,7 +33,7 @@ public class FlareReport123Service {
   public YearMonth getEndYearMonth(ApplicationVersion applicationVersion) {
     return flareReport123MonthRepository.findAllByApplicationVersion(applicationVersion)
         .stream()
-        .max(YEAR_MONTH_COMPARATOR)
+        .max(ApplicationFigureComparators.flare123Row())
         .map(flareReport123Month -> YearMonth.of(flareReport123Month.getYear(), flareReport123Month.getMonth()))
         .orElseThrow();
   }

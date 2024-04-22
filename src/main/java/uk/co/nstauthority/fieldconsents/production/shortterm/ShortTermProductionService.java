@@ -21,6 +21,7 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthS
 import uk.co.nstauthority.fieldconsents.application.consentlength.ShortTermUtil;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
+import uk.co.nstauthority.fieldconsents.util.ApplicationFigureComparators;
 
 @Service
 public class ShortTermProductionService {
@@ -41,7 +42,10 @@ public class ShortTermProductionService {
   }
 
   public List<ShortTermProductionMonth> getShortTermProductionMonths(ApplicationVersion applicationVersion) {
-    return shortTermProductionMonthRepository.findAllByApplicationVersion(applicationVersion);
+    return shortTermProductionMonthRepository.findAllByApplicationVersion(applicationVersion)
+        .stream()
+        .sorted(ApplicationFigureComparators.shortTermProductionMonth())
+        .toList();
   }
 
   public boolean shortTermProductionMonthsExist(ApplicationVersion applicationVersion) {

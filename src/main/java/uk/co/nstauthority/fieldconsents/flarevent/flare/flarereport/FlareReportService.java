@@ -16,6 +16,7 @@ import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.flarevent.ReportUtil;
 import uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionReportSummaryService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
+import uk.co.nstauthority.fieldconsents.util.ApplicationFigureComparators;
 
 @Service
 public class FlareReportService {
@@ -40,7 +41,10 @@ public class FlareReportService {
   }
 
   public List<FlareReportMonth> getFlareReportMonths(ApplicationVersion applicationVersion) {
-    return flareReportMonthRepository.findAllByApplicationVersion(applicationVersion);
+    return flareReportMonthRepository.findAllByApplicationVersion(applicationVersion)
+        .stream()
+        .sorted(ApplicationFigureComparators.flareVentRow())
+        .toList();
   }
 
   public boolean flareReportMonthsComplete(ApplicationVersion applicationVersion) {

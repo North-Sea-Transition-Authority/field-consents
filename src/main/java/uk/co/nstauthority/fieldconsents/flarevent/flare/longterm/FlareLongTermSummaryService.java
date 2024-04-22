@@ -1,14 +1,13 @@
 package uk.co.nstauthority.fieldconsents.flarevent.flare.longterm;
 
-import java.util.Comparator;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
-import uk.co.nstauthority.fieldconsents.flarevent.EmissionLongTermYear;
 import uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionConsentSummaryService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
+import uk.co.nstauthority.fieldconsents.util.ApplicationFigureComparators;
 
 @Service
 public class FlareLongTermSummaryService {
@@ -31,7 +30,7 @@ public class FlareLongTermSummaryService {
   private List<FlareLongTermYear> getFlareLongTermYears(ApplicationVersion applicationVersion) {
     return flareLongTermYearRepository.findAllByApplicationVersion(applicationVersion)
         .stream()
-        .sorted(Comparator.comparing(EmissionLongTermYear::getYear))
+        .sorted(ApplicationFigureComparators.emissionLongTermYear())
         .toList();
   }
 

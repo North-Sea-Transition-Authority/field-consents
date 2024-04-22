@@ -93,7 +93,7 @@ public class ProductionRowCleanupService implements ApplicationListener<ConsentL
     Integer newEndYear = consentLengthDetails.getLongTermEndYear();
 
     List<LongTermProductionYear> existingLongTermProductionYears = longTermProductionYearRepository
-        .findAllByApplicationVersionOrderByYearAsc(applicationVersion);
+        .findAllByApplicationVersion(applicationVersion);
 
     if (!existingLongTermProductionYears.isEmpty()) {
       for (LongTermProductionYear eltpy : existingLongTermProductionYears) {

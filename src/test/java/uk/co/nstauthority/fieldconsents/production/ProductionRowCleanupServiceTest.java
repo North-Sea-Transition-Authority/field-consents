@@ -199,7 +199,7 @@ class ProductionRowCleanupServiceTest {
   void onApplicationEvent_whenLongTerm_noPreviousData() {
     ConsentLengthDetails consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForLongTerm(applicationVersion);
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
-    when(longTermProductionYearRepository.findAllByApplicationVersionOrderByYearAsc(applicationVersion)).thenReturn(
+    when(longTermProductionYearRepository.findAllByApplicationVersion(applicationVersion)).thenReturn(
         Collections.emptyList()
     );
 
@@ -207,7 +207,7 @@ class ProductionRowCleanupServiceTest {
 
     verify(annualProductionMonthRepository, times(1)).deleteAllByApplicationVersion(applicationVersion);
     verify(shortTermProductionMonthRepository, times(1)).deleteAllByApplicationVersion(applicationVersion);
-    verify(longTermProductionYearRepository, times(1)).findAllByApplicationVersionOrderByYearAsc(applicationVersion);
+    verify(longTermProductionYearRepository, times(1)).findAllByApplicationVersion(applicationVersion);
     verifyNoMoreInteractions(longTermProductionYearRepository);
   }
 
@@ -216,7 +216,7 @@ class ProductionRowCleanupServiceTest {
     ConsentLengthDetails consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForLongTerm(applicationVersion);
     consentLengthDetails.setLongTermStartYear(ANNUAL_CONSENT_YEAR + 1);
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
-    when(longTermProductionYearRepository.findAllByApplicationVersionOrderByYearAsc(applicationVersion)).thenReturn(
+    when(longTermProductionYearRepository.findAllByApplicationVersion(applicationVersion)).thenReturn(
         ProductionTestUtils.getLongTermProductionYearsData(applicationVersion)
     );
 
@@ -233,7 +233,7 @@ class ProductionRowCleanupServiceTest {
     ConsentLengthDetails consentLengthDetails = ConsentLengthTestUtil.getConsentLengthDetailsForLongTerm(applicationVersion);
     consentLengthDetails.setLongTermEndYear(ANNUAL_CONSENT_YEAR + 1);
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
-    when(longTermProductionYearRepository.findAllByApplicationVersionOrderByYearAsc(applicationVersion)).thenReturn(
+    when(longTermProductionYearRepository.findAllByApplicationVersion(applicationVersion)).thenReturn(
         ProductionTestUtils.getLongTermProductionYearsData(applicationVersion)
     );
 

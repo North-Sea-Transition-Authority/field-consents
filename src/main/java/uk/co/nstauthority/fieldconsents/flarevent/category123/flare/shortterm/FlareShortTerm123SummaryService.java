@@ -3,7 +3,6 @@ package uk.co.nstauthority.fieldconsents.flarevent.category123.flare.shortterm;
 import static uk.co.nstauthority.fieldconsents.flarevent.category123.flare.summary.Flare123SummaryUtil.CATEGORY_1_HEADING_WITH_UNIT;
 import static uk.co.nstauthority.fieldconsents.flarevent.category123.flare.summary.Flare123SummaryUtil.CATEGORY_2_HEADING_WITH_UNIT;
 import static uk.co.nstauthority.fieldconsents.flarevent.category123.flare.summary.Flare123SummaryUtil.CATEGORY_3_HEADING_WITH_UNIT;
-import static uk.co.nstauthority.fieldconsents.flarevent.category123.flare.summary.Flare123SummaryUtil.YEAR_MONTH_COMPARATOR;
 import static uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionSummaryUtil.AVERAGE_PROMPT_WITH_UNIT;
 import static uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionSummaryUtil.CATEGORY_TOTAL_HEADING_WITH_UNIT;
 import static uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionSummaryUtil.COMMENTS_HEADING;
@@ -19,6 +18,7 @@ import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryTableView;
+import uk.co.nstauthority.fieldconsents.util.ApplicationFigureComparators;
 import uk.co.nstauthority.fieldconsents.util.BigDecimalUtil;
 
 @Service
@@ -37,7 +37,7 @@ public class FlareShortTerm123SummaryService {
   private List<FlareShortTerm123Month> getFlareShortTerm123Months(ApplicationVersion applicationVersion) {
     return flareShortTerm123MonthRepository.findAllByApplicationVersion(applicationVersion)
         .stream()
-        .sorted(YEAR_MONTH_COMPARATOR)
+        .sorted(ApplicationFigureComparators.flare123Row())
         .toList();
   }
 

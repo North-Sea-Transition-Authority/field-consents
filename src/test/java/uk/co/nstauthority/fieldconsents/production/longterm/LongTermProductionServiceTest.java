@@ -74,7 +74,7 @@ class LongTermProductionServiceTest {
 
   @Test
   void longTermProductionYearsComplete_falseNoneExist() {
-    when(longTermProductionYearRepository.findAllByApplicationVersionOrderByYearAsc(applicationVersion))
+    when(longTermProductionYearRepository.findAllByApplicationVersion(applicationVersion))
         .thenReturn(new ArrayList<>());
     // 2022 to 2026
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
@@ -84,7 +84,7 @@ class LongTermProductionServiceTest {
 
   @Test
   void longTermProductionYearsComplete_falseProdRowsExistWrongYears() {
-    when(longTermProductionYearRepository.findAllByApplicationVersionOrderByYearAsc(applicationVersion))
+    when(longTermProductionYearRepository.findAllByApplicationVersion(applicationVersion))
         .thenReturn(ProductionTestUtils.getLongTermProductionYearsData(applicationVersion)); // 2022 to 2026
     when(consentLengthService.getConsentLengthDetails(applicationVersion))
         .thenReturn(ConsentLengthTestUtil.getConsentLengthDetailsForLongTerm(applicationVersion, 2021, 2024));
@@ -94,7 +94,7 @@ class LongTermProductionServiceTest {
 
   @Test
   void longTermProductionYearsComplete_falseProdRowsExistWrongYearsNotOverlapping() {
-    when(longTermProductionYearRepository.findAllByApplicationVersionOrderByYearAsc(applicationVersion))
+    when(longTermProductionYearRepository.findAllByApplicationVersion(applicationVersion))
         .thenReturn(ProductionTestUtils.getLongTermProductionYearsData(applicationVersion));
     when(consentLengthService.getConsentLengthDetails(applicationVersion))
         .thenReturn(ConsentLengthTestUtil.getConsentLengthDetailsForLongTerm(applicationVersion, 2020, 2021));
@@ -104,7 +104,7 @@ class LongTermProductionServiceTest {
 
   @Test
   void longTermProductionYearsComplete_true() {
-    when(longTermProductionYearRepository.findAllByApplicationVersionOrderByYearAsc(applicationVersion))
+    when(longTermProductionYearRepository.findAllByApplicationVersion(applicationVersion))
         .thenReturn(ProductionTestUtils.getLongTermProductionYearsData(applicationVersion));
     when(consentLengthService.getConsentLengthDetails(applicationVersion))
         .thenReturn(consentLengthDetails);
@@ -114,7 +114,7 @@ class LongTermProductionServiceTest {
 
   @Test
   void getLongTermProductionForm_initialStubForm() {
-    when(longTermProductionYearRepository.findAllByApplicationVersionOrderByYearAsc(applicationVersion))
+    when(longTermProductionYearRepository.findAllByApplicationVersion(applicationVersion))
         .thenReturn(new ArrayList<>());
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
 
@@ -181,7 +181,7 @@ class LongTermProductionServiceTest {
   void getLongTermProductionForm_completeForm() {
     List<LongTermProductionYear> longTermProductionYears =
         ProductionTestUtils.getLongTermProductionYearsData(applicationVersion);
-    when(longTermProductionYearRepository.findAllByApplicationVersionOrderByYearAsc(applicationVersion))
+    when(longTermProductionYearRepository.findAllByApplicationVersion(applicationVersion))
         .thenReturn(longTermProductionYears);
     doCallRealMethod().when(productionRowService).populateFormWithPreviousProductionRow(any(ProductionRow.class),
         any(ProductionRowForm.class));

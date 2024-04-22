@@ -14,6 +14,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.production.ProductionRowService;
+import uk.co.nstauthority.fieldconsents.util.ApplicationFigureComparators;
 
 @Service
 public class LongTermProductionService {
@@ -34,7 +35,10 @@ public class LongTermProductionService {
   }
 
   public List<LongTermProductionYear> getLongTermProductionYears(ApplicationVersion applicationVersion) {
-    return longTermProductionYearRepository.findAllByApplicationVersionOrderByYearAsc(applicationVersion);
+    return longTermProductionYearRepository.findAllByApplicationVersion(applicationVersion)
+        .stream()
+        .sorted(ApplicationFigureComparators.longTermProductionYear())
+        .toList();
   }
 
   public boolean longTermProductionYearsExist(ApplicationVersion applicationVersion) {

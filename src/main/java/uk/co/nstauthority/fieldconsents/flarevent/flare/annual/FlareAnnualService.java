@@ -17,6 +17,7 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthS
 import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.flarevent.summary.EmissionConsentSummaryService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
+import uk.co.nstauthority.fieldconsents.util.ApplicationFigureComparators;
 
 @Service
 public class FlareAnnualService {
@@ -41,7 +42,10 @@ public class FlareAnnualService {
   }
 
   public List<FlareAnnualMonth> getFlareAnnualMonths(ApplicationVersion applicationVersion) {
-    return flareAnnualMonthRepository.findAllByApplicationVersion(applicationVersion);
+    return flareAnnualMonthRepository.findAllByApplicationVersion(applicationVersion)
+        .stream()
+        .sorted(ApplicationFigureComparators.flareVentRow())
+        .toList();
   }
 
   public boolean flareAnnualMonthsExist(ApplicationVersion applicationVersion) {
