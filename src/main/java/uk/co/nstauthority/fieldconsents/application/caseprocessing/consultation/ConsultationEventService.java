@@ -43,6 +43,9 @@ class ConsultationEventService implements CaseEventService<Application> {
 
     var auditsByConsultationId = auditService.getAuditsFor(Consultation.class, Consultation::getId, consultationsById.values())
         .stream()
+        .filter(consultationFieldConsentsAudit ->
+            consultationFieldConsentsAudit.revisionType().equals(ADD)
+            || consultationFieldConsentsAudit.revisionType().equals(MOD))
         .collect(Collectors.groupingBy(
             audit -> audit.entity().getId(),
             LinkedHashMap::new,

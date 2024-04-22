@@ -27,7 +27,9 @@ public enum CaseEventType {
   FURTHER_INFORMATION_REQUEST_CLOSED("Further information responded", "Responded by", "Responded at", "Response text"),
   CAM_ASSIGNED("CAM assigned", "Assigned by", "Assigned on", null, "CAM"),
   CASE_OFFICER_REASSIGNED("Case officer reassigned", "Assigned by", "Assigned on", null, "Case officer"),
-  CAM_REASSIGNED("CAM reassigned", "Assigned by", "Assigned on", null, "CAM")
+  CAM_REASSIGNED("CAM reassigned", "Assigned by", "Assigned on", null, "CAM"),
+  APPROVED_FOR_ISSUE("Marked as ready to grant and issue", "Marked by", "Marked on", null, null),
+  UNAPPROVED_FOR_ISSUE("Unmarked as ready to grant and issue", "Unmarked by", "Unmarked on", null, null)
   ;
 
   private final String caseEventHeader;

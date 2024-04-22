@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -22,7 +23,6 @@ import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.query.AuditQuery;
 import org.hibernate.envers.query.AuditQueryCreator;
 import org.hibernate.envers.query.criteria.AuditCriterion;
-import org.hibernate.envers.query.order.AuditOrder;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -39,6 +39,7 @@ import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casenotes.CaseNote;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval.ConsentIssuingApproval;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
 
 @ExtendWith(MockitoExtension.class)
@@ -56,7 +57,10 @@ class FieldConsentsAuditServiceTest {
   private AuditReader auditReader;
 
   @Mock
-  private AuditQuery auditQuery;
+  private AuditQuery nonDeletedAuditQuery;
+
+  @Mock
+  private AuditQuery deletedAuditQuery;
 
   @Mock
   private AuditQueryCreator auditQueryCreator;
@@ -65,10 +69,10 @@ class FieldConsentsAuditServiceTest {
   private FieldConsentsAuditService fieldConsentsAuditService;
 
   @Captor
-  private ArgumentCaptor<AuditCriterion> auditCriterionArgumentCaptor;
+  private ArgumentCaptor<AuditCriterion> nonDeletedAuditCriterionArgumentCaptor;
 
   @Captor
-  private ArgumentCaptor<AuditOrder> auditOrderArgumentCaptor;
+  private ArgumentCaptor<AuditCriterion> deletedAuditCriterionArgumentCaptor;
 
   @AfterAll
   public static void tearDown() {
@@ -84,8 +88,6 @@ class FieldConsentsAuditServiceTest {
   @ParameterizedTest
   @MethodSource("getAuditsFor_arguments")
   <T> void getAuditsFor(Class<T> entityClass, Function<T, Object> idFunction) {
-    setUpEnversMocks();
-
     var id = 1;
     var entity = mock(entityClass);
     when(idFunction.apply(entity)).thenReturn(id);
@@ -94,24 +96,44 @@ class FieldConsentsAuditServiceTest {
     var audit = new FieldConsentsAudit<>(entity, mock(AuditRevision.class), RevisionType.ADD);
     var rawAuditProjection = new Object[]{audit.entity(), audit.auditRevision(), audit.revisionType()};
 
-    when(auditQuery.getResultList()).thenReturn(Collections.singletonList(rawAuditProjection));
+    when(AuditReaderFactory.get(entityManager)).thenReturn(auditReader);
+    when(auditReader.createQuery()).thenReturn(auditQueryCreator);
+    when(nonDeletedAuditQuery.getResultList()).thenReturn(Collections.singletonList(rawAuditProjection));
+    when(auditQueryCreator.forRevisionsOfEntity(any(Class.class), eq(false), eq(true))).thenReturn(deletedAuditQuery);
+    when(auditQueryCreator.forRevisionsOfEntity(any(Class.class), eq(false), eq(false))).thenReturn(nonDeletedAuditQuery);
+    when(deletedAuditQuery.getResultList()).thenReturn(Collections.emptyList());
+    when(deletedAuditQuery.add(any())).thenReturn(deletedAuditQuery);
+    when(nonDeletedAuditQuery.add(any())).thenReturn(nonDeletedAuditQuery);
+
+    var transactionStatus = mock(TransactionStatus.class);
+    doAnswer(invocation -> invocation.getArgument(0, TransactionCallback.class).doInTransaction(transactionStatus))
+        .when(transactionTemplate)
+        .execute(any());
 
     assertThat(fieldConsentsAuditService.getAuditsFor(entityClass, idFunction, entities)).containsExactly(audit);
-    verifyAuditQueryCreation(Collections.singletonList(1));
+    verifyAuditQueryCreation(Collections.singletonList(id));
+    verifyAuditQueryDeletion(Collections.singletonList(id));
   }
 
   @ParameterizedTest
   @MethodSource("getAuditsFor_arguments")
   <T> void getAuditsFor_nullResultList(Class<T> entityClass, Function<T, Object> idFunction) {
-    setUpEnversMocks();
-
     var id = 1;
     var entity = mock(entityClass);
     when(idFunction.apply(entity)).thenReturn(id);
 
     var entities = Collections.singletonList(entity);
 
-    when(auditQuery.getResultList()).thenReturn(null);
+    when(nonDeletedAuditQuery.getResultList()).thenReturn(null);
+    when(AuditReaderFactory.get(entityManager)).thenReturn(auditReader);
+    when(auditReader.createQuery()).thenReturn(auditQueryCreator);
+    when(auditQueryCreator.forRevisionsOfEntity(any(Class.class), eq(false), eq(false))).thenReturn(nonDeletedAuditQuery);
+    when(nonDeletedAuditQuery.add(any())).thenReturn(nonDeletedAuditQuery);
+
+    var transactionStatus = mock(TransactionStatus.class);
+    doAnswer(invocation -> invocation.getArgument(0, TransactionCallback.class).doInTransaction(transactionStatus))
+        .when(transactionTemplate)
+        .execute(any());
 
     assertThat(fieldConsentsAuditService.getAuditsFor(entityClass, idFunction, entities)).isEmpty();
     verifyAuditQueryCreation(Collections.singletonList(1));
@@ -120,15 +142,22 @@ class FieldConsentsAuditServiceTest {
   @ParameterizedTest
   @MethodSource("getAuditsFor_arguments")
   <T> void getAuditsFor_emptyList(Class<T> entityClass, Function<T, Object> idFunction) {
-    setUpEnversMocks();
-
     var id = 1;
     var entity = mock(entityClass);
     when(idFunction.apply(entity)).thenReturn(id);
 
     var entities = Collections.singletonList(entity);
 
-    when(auditQuery.getResultList()).thenReturn(Collections.emptyList());
+    when(nonDeletedAuditQuery.getResultList()).thenReturn(Collections.emptyList());
+    when(AuditReaderFactory.get(entityManager)).thenReturn(auditReader);
+    when(auditReader.createQuery()).thenReturn(auditQueryCreator);
+    when(auditQueryCreator.forRevisionsOfEntity(any(Class.class), eq(false), eq(false))).thenReturn(nonDeletedAuditQuery);
+    when(nonDeletedAuditQuery.add(any())).thenReturn(nonDeletedAuditQuery);
+
+    var transactionStatus = mock(TransactionStatus.class);
+    doAnswer(invocation -> invocation.getArgument(0, TransactionCallback.class).doInTransaction(transactionStatus))
+        .when(transactionTemplate)
+        .execute(any());
 
     assertThat(fieldConsentsAuditService.getAuditsFor(entityClass, idFunction, entities)).isEmpty();
     verifyAuditQueryCreation(Collections.singletonList(1));
@@ -147,34 +176,31 @@ class FieldConsentsAuditServiceTest {
         arguments(
             CaseNote.class,
             (Function<CaseNote, Object>) CaseNote::getId
+        ),
+        arguments(
+            ConsentIssuingApproval.class,
+            (Function<ConsentIssuingApproval, Object>) ConsentIssuingApproval::getId
         )
     );
   }
 
   private void verifyAuditQueryCreation(List<Object> ids) {
-    verify(auditQuery).add(auditCriterionArgumentCaptor.capture());
-    verify(auditQuery).addOrder(auditOrderArgumentCaptor.capture());
+    verify(nonDeletedAuditQuery).add(nonDeletedAuditCriterionArgumentCaptor.capture());
 
-    assertThat(auditCriterionArgumentCaptor.getValue())
+    assertThat(nonDeletedAuditCriterionArgumentCaptor.getValue())
+        .usingRecursiveComparison()
+        .isEqualTo(AuditEntity.property("id").in(ids));
+  }
+
+  private void verifyAuditQueryDeletion(List<Object> ids) {
+    verify(deletedAuditQuery, times(2)).add(deletedAuditCriterionArgumentCaptor.capture());
+
+    assertThat(deletedAuditCriterionArgumentCaptor.getAllValues().get(0))
         .usingRecursiveComparison()
         .isEqualTo(AuditEntity.id().in(ids));
 
-    assertThat(auditOrderArgumentCaptor.getValue())
+    assertThat(deletedAuditCriterionArgumentCaptor.getAllValues().get(1))
         .usingRecursiveComparison()
-        .isEqualTo(AuditEntity.revisionProperty("createdDateTime").asc());
+        .isEqualTo(AuditEntity.revisionType().eq(RevisionType.DEL));
   }
-
-  private void setUpEnversMocks() {
-    when(AuditReaderFactory.get(entityManager)).thenReturn(auditReader);
-    when(auditReader.createQuery()).thenReturn(auditQueryCreator);
-    when(auditQueryCreator.forRevisionsOfEntity(any(Class.class), eq(false), eq(false))).thenReturn(auditQuery);
-    when(auditQuery.add(any())).thenReturn(auditQuery);
-    when(auditQuery.addOrder(any())).thenReturn(auditQuery);
-
-    var transactionStatus = mock(TransactionStatus.class);
-    doAnswer(invocation -> invocation.getArgument(0, TransactionCallback.class).doInTransaction(transactionStatus))
-        .when(transactionTemplate)
-        .execute(any());
-  }
-
 }

@@ -4,10 +4,11 @@ import jakarta.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.query.AuditEntity;
@@ -18,7 +19,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class FieldConsentsAuditService {
 
   private static final boolean SELECT_ENTITIES_ONLY = false;
-  private static final boolean SELECT_DELETED_ENTITIES = false;
 
   private final EntityManager entityManager;
   private final TransactionTemplate transactionTemplate;
@@ -33,12 +33,26 @@ public class FieldConsentsAuditService {
       Function<T, Object> entityIdFunction,
       Collection<T> entities
   ) {
-    if (entities.isEmpty()) {
+    var lookupPropertyValues = entities
+        .stream()
+        .map(entityIdFunction)
+        .toList();
+
+    return getAuditsFor(entityClass, entityIdFunction, lookupPropertyValues, "id");
+  }
+
+  public <T> List<FieldConsentsAudit<T>> getAuditsFor(
+      Class<T> entityClass,
+      Function<T, Object> entityIdFunction,
+      Collection<?> lookupPropertyValues,
+      String lookupProperty
+  ) {
+    if (lookupPropertyValues.isEmpty()) {
       return Collections.emptyList();
     }
 
-    var ids = entities.stream().map(entityIdFunction).collect(Collectors.toSet());
-    var resultList = transactionTemplate.execute(status -> getAuditData(entityClass, ids));
+    var resultList = transactionTemplate.execute(status ->
+        getAuditData(entityClass, entityIdFunction, lookupPropertyValues, lookupProperty));
 
     if (Objects.isNull(resultList) || resultList.isEmpty()) {
       return Collections.emptyList();
@@ -52,12 +66,31 @@ public class FieldConsentsAuditService {
   }
 
   @SuppressWarnings("unchecked")
-  private List<Object[]> getAuditData(Class<?> entityClass, Collection<Object> ids) {
-    return AuditReaderFactory.get(entityManager).createQuery()
-        .forRevisionsOfEntity(entityClass, SELECT_ENTITIES_ONLY, SELECT_DELETED_ENTITIES)
-        .add(AuditEntity.id().in(ids))
-        .addOrder(AuditEntity.revisionProperty("createdDateTime").asc())
+  private <T> List<Object[]> getAuditData(Class<T> entityClass,
+                                          Function<T, Object> entityIdFunction,
+                                          Collection<?> lookupPropertyValues,
+                                          String lookupProperty) {
+    List<Object[]> results = AuditReaderFactory.get(entityManager).createQuery()
+        .forRevisionsOfEntity(entityClass, SELECT_ENTITIES_ONLY, false)
+        .add(AuditEntity.property(lookupProperty).in(lookupPropertyValues))
         .getResultList();
+
+    if (Objects.isNull(results) || results.isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    var resultIds = results.stream()
+        .map(result -> entityIdFunction.apply((T) result[0])).toList();
+
+    List<Object[]> deletedResults = AuditReaderFactory.get(entityManager).createQuery()
+        .forRevisionsOfEntity(entityClass, SELECT_ENTITIES_ONLY, true)
+        .add(AuditEntity.id().in(resultIds))
+        .add(AuditEntity.revisionType().eq(RevisionType.DEL))
+        .getResultList();
+
+    return Stream.concat(results.stream(), deletedResults.stream())
+        .sorted(Comparator.comparing(result -> ((AuditRevision) result[1]).getCreatedDateTime()))
+        .toList();
   }
 
   @SuppressWarnings("unchecked")

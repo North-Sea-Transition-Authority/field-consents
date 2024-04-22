@@ -90,7 +90,7 @@ class ConsultationEventServiceTest {
   }
 
   @Test
-  void getCaseEvents() {
+  void getCaseEvents_whenAddAndModifyCaseEvents_theseAreAllShownInCaseHistory() {
     var application = requestApplicationVersion.getApplication();
 
     var consultation = new Consultation();
@@ -101,14 +101,14 @@ class ConsultationEventServiceTest {
     when(consultationService.getConsultationsByApplication(application)).thenReturn(
         Collections.singletonList(consultation));
 
-    var audit1 = mockConsultationAudit(consultation);
-    var audit2 = mockConsultationAudit(consultation);
-    var audit3 = mockConsultationAudit(consultation);
+    var consultationRequestedAuditEvent = mockConsultationAuditOfTypeAdd(consultation);
+    var consultationAssignedAuditEvent = mockConsultationAuditOfTypeModify(consultation);
+    var consultationReassignedAuditEvent = mockConsultationAuditOfTypeModify(consultation);
     when(fieldConsentsAuditService.getAuditsFor(
         eq(Consultation.class),
         consultationIdFunctionCaptor.capture(),
         consultationCollectionCaptor.capture()
-    )).thenReturn(List.of(audit1, audit2, audit3));
+    )).thenReturn(List.of(consultationRequestedAuditEvent, consultationAssignedAuditEvent, consultationReassignedAuditEvent));
 
     var caseEvent = mock(CaseEvent.class);
     doReturn(Collections.singletonList(caseEvent))
@@ -116,13 +116,48 @@ class ConsultationEventServiceTest {
         .getConsultationCaseEvents(eq(requestApplicationVersion), eq(responseApplicationVersion), any(), any());
 
     assertThat(consultationEventService.getCaseEvents(application)).hasSize(3).allMatch(caseEvent::equals);
-
     assertThat(consultationCollectionCaptor.getValue()).extracting(Consultation::getId).containsExactly(CONSULTATION_ID);
     assertThat(consultationIdFunctionCaptor.getValue().apply(consultation)).isEqualTo(CONSULTATION_ID);
 
-    verify(consultationEventService).getConsultationCaseEvents(requestApplicationVersion, responseApplicationVersion, null, audit1);
-    verify(consultationEventService).getConsultationCaseEvents(requestApplicationVersion, responseApplicationVersion, audit1, audit2);
-    verify(consultationEventService).getConsultationCaseEvents(requestApplicationVersion, responseApplicationVersion, audit2, audit3);
+    verify(consultationEventService).getConsultationCaseEvents(requestApplicationVersion, responseApplicationVersion, null, consultationRequestedAuditEvent);
+    verify(consultationEventService).getConsultationCaseEvents(requestApplicationVersion, responseApplicationVersion, consultationRequestedAuditEvent, consultationAssignedAuditEvent);
+    verify(consultationEventService).getConsultationCaseEvents(requestApplicationVersion, responseApplicationVersion, consultationAssignedAuditEvent, consultationReassignedAuditEvent);
+  }
+
+  @Test
+  void getCaseEvents_withAddModifyAndDeleteCaseEvents_onlyAddAndModifyAreShownInCaseHistory() {
+    var application = requestApplicationVersion.getApplication();
+
+    var consultation = new Consultation();
+    consultation.setId(CONSULTATION_ID);
+    consultation.setRequestApplicationVersion(requestApplicationVersion);
+    consultation.setResponseApplicationVersion(responseApplicationVersion);
+
+    when(consultationService.getConsultationsByApplication(application)).thenReturn(
+        Collections.singletonList(consultation));
+
+    var consultationRequestedAuditEvent = mockConsultationAuditOfTypeAdd(consultation);
+    var consultationAssignedAuditEvent = mockConsultationAuditOfTypeModify(consultation);
+    var consultationReassignedAuditEvent = mockConsultationAuditOfTypeModify(consultation);
+    var deleteAuditEvent = mockConsultationAuditOfTypeDelete();
+    when(fieldConsentsAuditService.getAuditsFor(
+        eq(Consultation.class),
+        consultationIdFunctionCaptor.capture(),
+        consultationCollectionCaptor.capture()
+    )).thenReturn(List.of(consultationRequestedAuditEvent, consultationAssignedAuditEvent, consultationReassignedAuditEvent, deleteAuditEvent));
+
+    var caseEvent = mock(CaseEvent.class);
+    doReturn(Collections.singletonList(caseEvent))
+        .when(consultationEventService)
+        .getConsultationCaseEvents(eq(requestApplicationVersion), eq(responseApplicationVersion), any(), any());
+
+    assertThat(consultationEventService.getCaseEvents(application)).hasSize(3).allMatch(caseEvent::equals);
+    assertThat(consultationCollectionCaptor.getValue()).extracting(Consultation::getId).containsExactly(CONSULTATION_ID);
+    assertThat(consultationIdFunctionCaptor.getValue().apply(consultation)).isEqualTo(CONSULTATION_ID);
+
+    verify(consultationEventService).getConsultationCaseEvents(requestApplicationVersion, responseApplicationVersion, null, consultationRequestedAuditEvent);
+    verify(consultationEventService).getConsultationCaseEvents(requestApplicationVersion, responseApplicationVersion, consultationRequestedAuditEvent, consultationAssignedAuditEvent);
+    verify(consultationEventService).getConsultationCaseEvents(requestApplicationVersion, responseApplicationVersion, consultationAssignedAuditEvent, consultationReassignedAuditEvent);
   }
 
   @Test
@@ -143,7 +178,6 @@ class ConsultationEventServiceTest {
     )).thenReturn(Collections.emptyList());
 
     assertThat(consultationEventService.getCaseEvents(application)).isEmpty();
-
     assertThat(consultationCollectionCaptor.getValue()).extracting(Consultation::getId).containsExactly(CONSULTATION_ID);
     assertThat(consultationIdFunctionCaptor.getValue().apply(consultation)).isEqualTo(CONSULTATION_ID);
   }
@@ -424,10 +458,23 @@ class ConsultationEventServiceTest {
     return consultation;
   }
 
-  private FieldConsentsAudit<Consultation> mockConsultationAudit(Consultation consultation) {
+  private FieldConsentsAudit<Consultation> mockConsultationAuditOfTypeAdd(Consultation consultation) {
     var audit = mock(FieldConsentsAudit.class);
     when(audit.entity()).thenReturn(consultation);
+    when(audit.revisionType()).thenReturn(RevisionType.ADD);
     return audit;
   }
 
+  private FieldConsentsAudit<Consultation> mockConsultationAuditOfTypeModify(Consultation consultation) {
+    var audit = mock(FieldConsentsAudit.class);
+    when(audit.entity()).thenReturn(consultation);
+    when(audit.revisionType()).thenReturn(RevisionType.MOD);
+    return audit;
+  }
+
+  private FieldConsentsAudit<Consultation> mockConsultationAuditOfTypeDelete() {
+    var audit = mock(FieldConsentsAudit.class);
+    when(audit.revisionType()).thenReturn(RevisionType.DEL);
+    return audit;
+  }
 }
