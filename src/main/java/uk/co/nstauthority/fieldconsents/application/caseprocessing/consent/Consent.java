@@ -9,8 +9,11 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.RelationTargetAuditMode;
 import uk.co.nstauthority.fieldconsents.application.Application;
 
+@Audited
 @Entity
 @Table(name = "application_consents")
 public class Consent {
@@ -21,6 +24,7 @@ public class Consent {
 
   @OneToOne
   @JoinColumn(name = "application_id")
+  @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
   private Application application;
 
   private long issuedByWuaId;

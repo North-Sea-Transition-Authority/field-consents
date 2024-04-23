@@ -13,9 +13,9 @@ import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
 import uk.co.nstauthority.fieldconsents.application.Application;
 
+@Audited
 @Entity
 @Table(name = "application_consent_issuing_approvals")
-@Audited
 public class ConsentIssuingApproval {
 
   @Id

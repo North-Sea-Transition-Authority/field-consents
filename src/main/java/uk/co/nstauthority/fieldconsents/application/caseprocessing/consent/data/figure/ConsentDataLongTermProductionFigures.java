@@ -8,8 +8,11 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.RelationTargetAuditMode;
 import uk.co.nstauthority.fieldconsents.application.Application;
 
+@Audited
 @Entity
 @Table(name = "application_consent_data_long_term_production_figures")
 public class ConsentDataLongTermProductionFigures {
@@ -20,6 +23,7 @@ public class ConsentDataLongTermProductionFigures {
 
   @OneToOne
   @JoinColumn(name = "application_id")
+  @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
   private Application application;
 
   private Integer year;

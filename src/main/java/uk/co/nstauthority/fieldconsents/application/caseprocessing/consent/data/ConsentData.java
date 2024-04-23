@@ -9,8 +9,11 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.RelationTargetAuditMode;
 import uk.co.nstauthority.fieldconsents.application.Application;
 
+@Audited
 @Entity
 @Table(name = "application_consent_data")
 public class ConsentData {
@@ -21,6 +24,7 @@ public class ConsentData {
 
   @OneToOne
   @JoinColumn(name = "application_id")
+  @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
   private Application application;
 
   private LocalDate consentStartDate;

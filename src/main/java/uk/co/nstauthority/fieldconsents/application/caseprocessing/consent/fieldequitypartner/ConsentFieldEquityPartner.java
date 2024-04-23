@@ -7,8 +7,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import org.hibernate.envers.Audited;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.Consent;
 
+@Audited
 @Entity
 @Table(name = "application_consent_field_equity_partners")
 public class ConsentFieldEquityPartner {
