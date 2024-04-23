@@ -4,7 +4,6 @@ import jakarta.persistence.EntityNotFoundException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.field.FieldApi;
@@ -13,7 +12,7 @@ import uk.co.fivium.energyportalapi.generated.client.FieldsProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.types.FieldStatus;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
-import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
@@ -24,10 +23,8 @@ public class FieldService {
   public static final String FIELD_NOT_FOUND = "Field not found for field id %s";
 
   private final FieldApi fieldApi;
-
   private final TeamService teamService;
-
-  private final OrganisationUnitService organisationUnitService;
+  private final OrganisationUnitPermissionService organisationUnitPermissionService;
 
   // this status list has been taken from the DEVUK fields search
   // screen, we need to understand what these mean
@@ -73,13 +70,14 @@ public class FieldService {
       fieldsWithOperatorsProjectionRoot
           .licences().id().licenceRef().root();
 
-  @Autowired
-  public FieldService(FieldApi fieldApi,
-                      TeamService teamService,
-                      OrganisationUnitService organisationUnitService) {
+  FieldService(
+      FieldApi fieldApi,
+      TeamService teamService,
+      OrganisationUnitPermissionService organisationUnitPermissionService
+  ) {
     this.fieldApi = fieldApi;
     this.teamService = teamService;
-    this.organisationUnitService = organisationUnitService;
+    this.organisationUnitPermissionService = organisationUnitPermissionService;
   }
 
   public List<FieldJson> searchFields(String fieldName, String requestPurpose) {
@@ -132,7 +130,7 @@ public class FieldService {
     }
 
     var organisationUnitIdsUserHasPermissionFor =
-        organisationUnitService.getOperatorsUserHasPermissionsFor(user, RolePermission.VIEW_PERMISSIONS)
+        organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(user, RolePermission.VIEW_PERMISSIONS)
             .stream()
             .map(OrganisationUnitJson::organisationUnitId)
             .toList();

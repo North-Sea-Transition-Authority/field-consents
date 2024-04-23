@@ -5,7 +5,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ALLOCATE_CONSULTATION;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS;
-import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_APPLICATIONS;
 
 import java.util.Collection;
@@ -73,91 +72,29 @@ class ApplicationAccessServiceTest {
   }
 
   @Test
-  void hasApplicationPermission_withSet_whenDoesntHasPermission_thenFalse() {
+  void hasApplicationPermission_withSet_userDoesNotHaveRequiredPermission() {
     var requiredPermissions = Set.of(PAY_AND_SUBMIT_FCS_APPLICATIONS);
 
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, requiredPermissions))
-        .thenReturn(Collections.emptyList());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, requiredPermissions))
-        .thenReturn(Collections.emptyList());
+    var applicationPermissionsForUser = Set.of(PAY_AND_SUBMIT_FCS_APPLICATIONS, VIEW_FCS_APPLICATIONS);
 
-    when(organisationUnitPermissionService
-        .hasOperatorPermission(
-            USER,
-            applicationVersion.getPrimaryOperatorOuId(),
-            requiredPermissions))
-        .thenReturn(false);
+    doReturn(applicationPermissionsForUser)
+        .when(applicationAccessService)
+        .getApplicationPermissionsForUser(applicationVersion, USER);
 
-    assertThat(
-        applicationAccessService
-            .hasApplicationPermission(USER, applicationVersion, requiredPermissions)
-    ).isFalse();
+    assertThat(applicationAccessService.hasApplicationPermission(USER, applicationVersion, requiredPermissions)).isTrue();
   }
 
   @Test
-  void hasApplicationPermission_withSet_whenPermissionForTeam_thenTrue() {
+  void hasApplicationPermission_withSet_userHasRequiredPermission() {
     var requiredPermissions = Set.of(PAY_AND_SUBMIT_FCS_APPLICATIONS);
 
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, requiredPermissions))
-        .thenReturn(Collections.emptyList());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, requiredPermissions))
-        .thenReturn(Collections.emptyList());
+    var applicationPermissionsForUser = Set.of(VIEW_FCS_APPLICATIONS);
 
-    when(organisationUnitPermissionService
-        .hasOperatorPermission(
-            USER,
-            applicationVersion.getPrimaryOperatorOuId(),
-            requiredPermissions))
-        .thenReturn(true);
+    doReturn(applicationPermissionsForUser)
+        .when(applicationAccessService)
+        .getApplicationPermissionsForUser(applicationVersion, USER);
 
-    assertThat(
-        applicationAccessService
-            .hasApplicationPermission(USER, applicationVersion, requiredPermissions)
-    ).isTrue();
-  }
-
-  @Test
-  void hasApplicationPermission_withSet_whenUserHasPermissionForRegulatorTeam_thenTrue() {
-    var requiredPermissions = Set.of(PROCESS_FCS_APPLICATIONS);
-
-    var regulatorTeam = TeamTestUtil.Builder().withTeamType(TeamType.REGULATOR).build();
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, requiredPermissions))
-        .thenReturn(List.of(regulatorTeam));
-
-    assertThat(applicationAccessService.hasApplicationPermission(USER, applicationVersion, requiredPermissions))
-        .isTrue();
-  }
-
-  @Test
-  void hasApplicationPermission_withSet_whenUserHasPermissionForConsulteeTeam_thenTrue() {
-    var requiredPermissions = Set.of(ALLOCATE_CONSULTATION);
-
-    var consulteeTeam = TeamTestUtil.Builder().withTeamType(TeamType.OPRED).build();
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, requiredPermissions))
-        .thenReturn(Collections.emptyList());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, requiredPermissions))
-        .thenReturn(List.of(consulteeTeam));
-    when(consultationService.getConsultationsByApplication(applicationVersion.getApplication()))
-        .thenReturn(List.of(new Consultation()));
-
-    assertThat(applicationAccessService.hasApplicationPermission(USER, applicationVersion, requiredPermissions))
-        .isTrue();
-  }
-
-  @Test
-  void hasApplicationPermission_withSet_whenUserHasPermissionForConsulteeTeamButNotForApplication_thenFalse() {
-    var requiredPermissions = Set.of(ALLOCATE_CONSULTATION);
-
-    var consulteeTeam = TeamTestUtil.Builder().withTeamType(TeamType.OPRED).build();
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.REGULATOR, requiredPermissions))
-        .thenReturn(Collections.emptyList());
-    when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, requiredPermissions))
-        .thenReturn(List.of(consulteeTeam));
-    when(consultationService.getConsultationsByApplication(applicationVersion.getApplication()))
-        .thenReturn(Collections.emptyList());
-
-    assertThat(applicationAccessService.hasApplicationPermission(USER, applicationVersion, requiredPermissions))
-        .isFalse();
+    assertThat(applicationAccessService.hasApplicationPermission(USER, applicationVersion, requiredPermissions)).isFalse();
   }
 
   @Test

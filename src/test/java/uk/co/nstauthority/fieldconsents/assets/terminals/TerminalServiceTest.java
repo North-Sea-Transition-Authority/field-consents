@@ -43,7 +43,7 @@ import uk.co.fivium.energyportalapi.generated.client.TerminalProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.client.TerminalsProjectionRoot;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
-import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
 import uk.co.nstauthority.fieldconsents.teams.Team;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 import uk.co.nstauthority.fieldconsents.teams.TeamTestUtil;
@@ -62,7 +62,7 @@ public class TerminalServiceTest {
   private TeamService teamService;
 
   @Mock
-  private OrganisationUnitService organisationUnitService;
+  private OrganisationUnitPermissionService organisationUnitPermissionService;
 
   @InjectMocks
   private TerminalService terminalService;
@@ -174,7 +174,7 @@ public class TerminalServiceTest {
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(Collections.emptyList());
 
-    when(organisationUnitService.getOperatorsUserHasPermissionsFor(USER, RolePermission.VIEW_PERMISSIONS))
+    when(organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(USER, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(List.of(orgUnit1Json, orgUnit2Json));
 
     assertThat(terminalService.searchTerminalsWithOperatorForUser("T", REQUEST_PURPOSE, USER))
@@ -193,7 +193,7 @@ public class TerminalServiceTest {
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(Collections.emptyList());
 
-    when(organisationUnitService.getOperatorsUserHasPermissionsFor(USER, RolePermission.VIEW_PERMISSIONS))
+    when(organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(USER, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(List.of(orgUnit2Json));
 
     assertThat(terminalService.searchTerminalsWithOperatorForUser("T3", REQUEST_PURPOSE, USER))
@@ -212,7 +212,7 @@ public class TerminalServiceTest {
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(Collections.emptyList());
 
-    when(organisationUnitService.getOperatorsUserHasPermissionsFor(USER, RolePermission.VIEW_PERMISSIONS))
+    when(organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(USER, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(List.of(orgUnit2Json));
 
     assertThat(terminalService.searchTerminalsWithOperatorForUser("T3", REQUEST_PURPOSE, USER))
@@ -231,7 +231,7 @@ public class TerminalServiceTest {
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(USER, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(Collections.emptyList());
 
-    when(organisationUnitService.getOperatorsUserHasPermissionsFor(USER, RolePermission.VIEW_PERMISSIONS))
+    when(organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(USER, RolePermission.VIEW_PERMISSIONS))
         .thenReturn(List.of(orgUnit1Json));
 
     assertThat(terminalService.searchTerminalsWithOperatorForUser("T3", REQUEST_PURPOSE, USER))

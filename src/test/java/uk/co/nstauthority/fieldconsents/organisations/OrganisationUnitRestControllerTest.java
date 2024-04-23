@@ -16,6 +16,7 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
@@ -23,6 +24,9 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @ContextConfiguration(classes = OrganisationUnitRestController.class)
 class OrganisationUnitRestControllerTest extends AbstractControllerTest {
+
+  @MockBean
+  private OrganisationUnitSearchService organisationUnitSearchService;
 
   @SecurityTest
   void getOrganisationUnitsForCreator_whenNotAuthenticated_thenRedirectedToLogin() throws Exception {
@@ -34,7 +38,7 @@ class OrganisationUnitRestControllerTest extends AbstractControllerTest {
   @Test
   void getOrganisationUnitsForCreator_assertHttpOk() throws Exception {
     var searchTerm = "1";
-    when(organisationUnitService.searchOrganisationUnitsForUser(searchTerm,
+    when(organisationUnitSearchService.searchOrganisationUnitsForUser(searchTerm,
         OrganisationUnitRestController.ORG_UNIT_SEARCH_PURPOSE, user, CREATE_FCS_APPLICATIONS))
         .thenReturn(List.of(orgUnit1Json));
 
@@ -50,7 +54,7 @@ class OrganisationUnitRestControllerTest extends AbstractControllerTest {
   @Test
   void getOrganisationUnitsForCreator_assertHttpOk_manyOrgUnits() throws Exception {
     var searchTerm = "OrG UnIt";
-    when(organisationUnitService.searchOrganisationUnitsForUser(searchTerm,
+    when(organisationUnitSearchService.searchOrganisationUnitsForUser(searchTerm,
         OrganisationUnitRestController.ORG_UNIT_SEARCH_PURPOSE, user, CREATE_FCS_APPLICATIONS))
         .thenReturn(List.of(orgUnit1Json, orgUnit2Json, orgUnit3Json));
 
@@ -73,7 +77,7 @@ class OrganisationUnitRestControllerTest extends AbstractControllerTest {
   @Test
   void getOrganisationUnitsForViewer_assertHttpOk() throws Exception {
     var searchTerm = "1";
-    when(organisationUnitService.searchOrganisationUnitsForUser(searchTerm,
+    when(organisationUnitSearchService.searchOrganisationUnitsForUser(searchTerm,
         OrganisationUnitRestController.ORG_UNIT_WORK_AREA_PURPOSE, user, VIEW_FCS_APPLICATIONS, VIEW_FCS_CONSENTS))
         .thenReturn(List.of(orgUnit1Json));
 
@@ -89,7 +93,7 @@ class OrganisationUnitRestControllerTest extends AbstractControllerTest {
   @Test
   void getOrganisationUnitsForViewer_assertHttpOk_manyOrgUnits() throws Exception {
     var searchTerm = "OrG UnIt";
-    when(organisationUnitService.searchOrganisationUnitsForUser(searchTerm,
+    when(organisationUnitSearchService.searchOrganisationUnitsForUser(searchTerm,
         OrganisationUnitRestController.ORG_UNIT_WORK_AREA_PURPOSE, user, VIEW_FCS_APPLICATIONS, VIEW_FCS_CONSENTS))
         .thenReturn(List.of(orgUnit1Json, orgUnit2Json, orgUnit3Json));
 

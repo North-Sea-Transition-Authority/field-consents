@@ -6,14 +6,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import org.jooq.Condition;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupQueryService;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
-import uk.co.nstauthority.fieldconsents.teams.Team;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
@@ -22,16 +20,16 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
 public class ApplicationDataItemService {
 
   private final ApplicationDataItemDtoService applicationDataItemDtoService;
-  private final OrganisationGroupQueryService organisationGroupQueryService;
+  private final OrganisationUnitPermissionService organisationUnitPermissionService;
   private final TeamService teamService;
 
   ApplicationDataItemService(
       ApplicationDataItemDtoService applicationDataItemDtoService,
-      OrganisationGroupQueryService organisationGroupQueryService,
+      OrganisationUnitPermissionService organisationUnitPermissionService,
       TeamService teamService
   ) {
     this.applicationDataItemDtoService = applicationDataItemDtoService;
-    this.organisationGroupQueryService = organisationGroupQueryService;
+    this.organisationUnitPermissionService = organisationUnitPermissionService;
     this.teamService = teamService;
   }
 
@@ -86,34 +84,18 @@ public class ApplicationDataItemService {
   }
 
   public List<ApplicationDataItem> getIndustryApplicationDataItems(List<Condition> conditions, ServiceUserDetail user) {
-    var industryTeams = teamService.getTeamsOfTypeThatUserHasPermissionFor(
-        user,
-        TeamType.INDUSTRY,
-        RolePermission.VIEW_PERMISSIONS
-    );
-
-    if (industryTeams.isEmpty()) {
-      return Collections.emptyList();
-    }
-
-    var organisationGroupIds = industryTeams.stream()
-        .map(Team::getOrganisationGroupId)
-        .filter(Objects::nonNull)
-        .toList();
-
-    if (organisationGroupIds.isEmpty()) {
-      return Collections.emptyList();
-    }
-
-    var organisationUnitJsons = organisationGroupQueryService.getOrganisationUnitsByOrganisationGroupIds(organisationGroupIds);
-    var organisationUnitIds = organisationUnitJsons
-        .stream()
-        .map(OrganisationUnitJson::organisationUnitId)
-        .toList();
+    var organisationUnitIds =
+        organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(user, RolePermission.VIEW_PERMISSIONS)
+            .stream()
+            .map(OrganisationUnitJson::organisationUnitId)
+            .toList();
 
     var lookupConditions = new ArrayList<>(conditions);
     lookupConditions.add(APPLICATION_VERSIONS.PRIMARY_OPERATOR_OU_ID.in(organisationUnitIds));
     var applicationDataItemDtos = applicationDataItemDtoService.runGetDataItemDtoQuery(lookupConditions);
+
+    var organisationUnitJsons = applicationDataItemDtoService
+        .getOrganisationUnitJsonsFromApplicationDataItemDtos(applicationDataItemDtos);
 
     return getItemsFromDtoList(applicationDataItemDtos, organisationUnitJsons, TeamType.INDUSTRY, user);
   }

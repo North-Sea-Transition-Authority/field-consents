@@ -4,7 +4,6 @@ import jakarta.persistence.EntityNotFoundException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.terminal.TerminalApi;
@@ -12,19 +11,13 @@ import uk.co.fivium.energyportalapi.generated.client.TerminalProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.client.TerminalsProjectionRoot;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
-import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Service
 public class TerminalService {
-
-  private final TerminalApi terminalApi;
-
-  private final TeamService teamService;
-
-  private final OrganisationUnitService organisationUnitService;
 
   static final TerminalsProjectionRoot terminalsProjectionRoot =
       new TerminalsProjectionRoot()
@@ -45,13 +38,18 @@ public class TerminalService {
       terminalProjectionRoot
           .terminalOperator().organisationUnitId().name().root();
 
-  @Autowired
-  public TerminalService(TerminalApi terminalApi,
-                         TeamService teamService,
-                         OrganisationUnitService organisationUnitService) {
+  private final TerminalApi terminalApi;
+  private final TeamService teamService;
+  private final OrganisationUnitPermissionService organisationUnitPermissionService;
+
+  TerminalService(
+      TerminalApi terminalApi,
+      TeamService teamService,
+      OrganisationUnitPermissionService organisationUnitPermissionService
+  ) {
     this.terminalApi = terminalApi;
     this.teamService = teamService;
-    this.organisationUnitService = organisationUnitService;
+    this.organisationUnitPermissionService = organisationUnitPermissionService;
   }
 
   public List<TerminalJson> searchTerminals(String terminalName, String requestPurpose) {
@@ -94,7 +92,7 @@ public class TerminalService {
     }
 
     var organisationUnitIdsUserHasPermissionFor =
-        organisationUnitService.getOperatorsUserHasPermissionsFor(user, RolePermission.VIEW_PERMISSIONS)
+        organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(user, RolePermission.VIEW_PERMISSIONS)
             .stream()
             .map(OrganisationUnitJson::organisationUnitId)
             .toList();

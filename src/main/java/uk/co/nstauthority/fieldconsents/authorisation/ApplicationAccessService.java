@@ -3,6 +3,7 @@ package uk.co.nstauthority.fieldconsents.authorisation;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
@@ -44,24 +45,7 @@ public class ApplicationAccessService {
       ApplicationVersion applicationVersion,
       Set<RolePermission> requiredPermissions
   ) {
-    var userRegulatorTeamsWithPermission =
-        teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, requiredPermissions);
-
-    // user has permission as a regulator so has access to all applications
-    if (!userRegulatorTeamsWithPermission.isEmpty()) {
-      return true;
-    }
-
-    var userConsulteeTeamsWithPermission =
-        teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.OPRED, requiredPermissions);
-
-    // user has permission as a consultee and there's a consultation for the application
-    if (!userConsulteeTeamsWithPermission.isEmpty()) {
-      return !consultationService.getConsultationsByApplication(applicationVersion.getApplication()).isEmpty();
-    }
-
-    return organisationUnitPermissionService
-        .hasOperatorPermission(user, applicationVersion.getPrimaryOperatorOuId(), requiredPermissions);
+    return CollectionUtils.containsAny(getApplicationPermissionsForUser(applicationVersion, user), requiredPermissions);
   }
 
   public Set<RolePermission> getApplicationPermissionsForUser(ApplicationVersion applicationVersion,
