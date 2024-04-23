@@ -82,7 +82,7 @@ public class IndustryCaseProcessingController {
   })
   public ModelAndView getIndustryCaseProcessing(
       @PathVariable Integer applicationId,
-      @RequestParam(defaultValue = "view-application") CaseProcessingTab tab,
+      @RequestParam(required = false) CaseProcessingTab tab,
       ServiceUserDetail user
   ) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
@@ -96,6 +96,12 @@ public class IndustryCaseProcessingController {
       ServiceUserDetail user
   ) {
     var application = applicationVersion.getApplication();
+
+    var caseProcessingTabs = caseProcessingTabService.getIndustryTabsAvailableToUser(user, applicationVersion);
+    if (tab == null && !caseProcessingTabs.isEmpty()) {
+      tab = caseProcessingTabs.get(0);
+    }
+
     var modelAndView = new ModelAndView("fcs/application/industryCaseProcessing")
         .addObject("selectedTab", tab)
         .addObject(
@@ -105,15 +111,19 @@ public class IndustryCaseProcessingController {
         )
         .addObject("actionList", caseProcessingActionService.getUserActionViews(applicationVersion, user))
         .addObject("applicationContext", applicationContextService.getApplicationContext(applicationVersion))
-        .addObject("caseProcessingTabs", caseProcessingTabService.getTabsAvailableToUser(user, applicationVersion))
+        .addObject("caseProcessingTabs", caseProcessingTabs)
         .addObject("wideSummaryDisplay", WIDE_SUMMARY_DISPLAY.allowed(application.getType()))
         .addObject("pageTitle", applicationService.generateApplicationReference(applicationVersion))
         .addObject("isMigratedApplication", applicationService.isMigratedApplication(application));
 
-    switch (tab) {
-      case CONSENT -> consentTabService.addConsentTabContentToModelAndView(application, modelAndView);
-      case PAYMENTS -> paymentsTabService.addPaymentsTabContentToModelAndView(applicationVersion, modelAndView);
-      default -> applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView);
+    if (tab != null && caseProcessingTabs.contains(tab)) {
+      switch (tab) {
+        case CONSENT -> consentTabService.addConsentTabContentToModelAndView(application, modelAndView);
+        case PAYMENTS -> paymentsTabService.addPaymentsTabContentToModelAndView(applicationVersion, modelAndView);
+        case VIEW_APPLICATION -> applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView);
+        default -> {
+        }
+      }
     }
 
     if (applicationUpdateService.openApplicationUpdateExists(applicationVersion)) {

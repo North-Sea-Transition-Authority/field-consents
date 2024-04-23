@@ -61,6 +61,11 @@ public enum CaseProcessingTab {
       EnumSet.of(VIEW_FCS_CONSENTS)
   );
 
+  static final EnumSet<CaseProcessingTab> REGULATOR_TABS =
+      EnumSet.of(TASKS, VIEW_APPLICATION, CASE_HISTORY, PAYMENTS, CONSENT);
+  static final EnumSet<CaseProcessingTab> CONSULTEE_TABS = EnumSet.of(VIEW_APPLICATION, FURTHER_INFORMATION);
+  static final EnumSet<CaseProcessingTab> INDUSTRY_TABS = EnumSet.of(VIEW_APPLICATION, PAYMENTS, CONSENT);
+
   private final String label;
   private final String value;
   private final String anchor;

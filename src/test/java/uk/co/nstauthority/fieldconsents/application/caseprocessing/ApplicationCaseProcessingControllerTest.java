@@ -24,7 +24,6 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 
 import java.time.Instant;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -194,7 +193,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     );
 
     summarySections = Collections.emptyList();
-    caseProcessingTabs = EnumSet.allOf(CaseProcessingTab.class).stream().toList();
+    caseProcessingTabs = CaseProcessingTab.REGULATOR_TABS.stream().toList();
     caseEventViews = Collections.emptyList();
     taskListSections = Collections.emptyList();
 
@@ -423,6 +422,21 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   }
 
   @Test
+  void caseProcessing_noTabSelected() throws Exception {
+    stubBaseServiceCalls();
+    stubTaskListServiceCall();
+
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .caseProcessing(APPLICATION_ID, null, null)))
+            .with(user(user)))
+        .andExpectAll(commonAttributesForTab(TASKS, applicationVersion))
+        .andExpect(model().attribute(TASK_LIST_ATTRIBUTE, taskListSections))
+        .andExpect(model().attributeDoesNotExist(CASE_HISTORY_ATTRIBUTE))
+        .andExpect(model().attributeDoesNotExist(PAYMENTS_TAB_PAYMENT_SUMMARY_VIEWS_ATTRIBUTE))
+        .andExpect(model().attributeDoesNotExist(SUMMARY_SECTIONS_ATTRIBUTE));
+  }
+
+  @Test
   void caseProcessing_tasks() throws Exception {
     stubBaseServiceCalls();
     stubTaskListServiceCall();
@@ -515,7 +529,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
 
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
-    when(caseProcessingTabService.getTabsAvailableToUser(user, applicationVersion)).thenReturn(caseProcessingTabs);
+    when(caseProcessingTabService.getRegulatorTabsAvailableToUser(user, applicationVersion)).thenReturn(caseProcessingTabs);
     when(caseProcessingActionService.getUserActionViews(applicationVersion, user)).thenReturn(caseProcessingActionViews);
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(ApplicationContext.newBuilder()
         .withPrimaryAsset(field1Json)

@@ -23,7 +23,6 @@ import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.u
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -107,7 +106,7 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
     );
 
     summarySections = Collections.emptyList();
-    caseProcessingTabs = EnumSet.allOf(CaseProcessingTab.class).stream().toList();
+    caseProcessingTabs = CaseProcessingTab.INDUSTRY_TABS.stream().toList();
 
     paymentsTabPaymentSummaryViews = List.of(new PaymentsTabPaymentSummaryView(
         "testStatus",
@@ -213,6 +212,22 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
             .getIndustryCaseProcessing(APPLICATION_ID, null, null)))
             .with(user(user)))
         .andExpect(status().isForbidden());
+  }
+
+  @ParameterizedTest
+  @MethodSource("getInProgressAndSubmittedApplicationVersions")
+  void getIndustryCaseProcessing_noTabSelected(ApplicationVersion applicationVersion) throws Exception {
+    stubBaseServiceCalls(applicationVersion);
+    stubSummaryServiceCall(applicationVersion);
+
+    mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
+            .getIndustryCaseProcessing(APPLICATION_ID, null, null)))
+            .with(user(user)))
+        .andExpectAll(commonAttributesForTab(VIEW_APPLICATION, applicationVersion));
+
+    verify(applicationSummaryService).addSummarySectionsToModelAndView(eq(applicationVersion), any());
+
+    verifyNoInteractions(applicationUpdateRequestViewService);
   }
 
   @ParameterizedTest
@@ -324,7 +339,7 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
 
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
-    when(caseProcessingTabService.getTabsAvailableToUser(user, applicationVersion)).thenReturn(caseProcessingTabs);
+    when(caseProcessingTabService.getIndustryTabsAvailableToUser(user, applicationVersion)).thenReturn(caseProcessingTabs);
     when(caseProcessingActionService.getUserActionViews(applicationVersion, user)).thenReturn(caseProcessingActionViews);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(DUMMY_APP_REF);
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(ApplicationContext.newBuilder()

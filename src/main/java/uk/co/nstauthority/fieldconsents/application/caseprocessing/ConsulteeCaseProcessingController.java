@@ -2,7 +2,6 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature.WIDE_SUMMARY_DISPLAY;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseProcessingTab.FURTHER_INFORMATION;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ALLOCATE_CONSULTATION;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.RESPOND_TO_CONSULTATION;
 
@@ -70,7 +69,7 @@ public class ConsulteeCaseProcessingController {
   @GetMapping
   public ModelAndView caseProcessing(
       @PathVariable Integer applicationId,
-      @RequestParam(defaultValue = "view-application") CaseProcessingTab tab,
+      @RequestParam(required = false) CaseProcessingTab tab,
       ServiceUserDetail user
   ) {
     return getModelAndView(applicationId, tab, user);
@@ -80,19 +79,27 @@ public class ConsulteeCaseProcessingController {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var applicationType = applicationVersion.getApplication().getType();
 
+    var caseProcessingTabs = caseProcessingTabService.getConsulteeTabsAvailableToUser(user, applicationVersion);
+    if (tab == null && !caseProcessingTabs.isEmpty()) {
+      tab = caseProcessingTabs.get(0);
+    }
+
     var modelAndView = new ModelAndView("fcs/application/consultation/caseProcessing")
         .addObject("selectedTab", tab)
         .addObject("controllerUrl", ReverseRouter.route(on(this.getClass()).caseProcessing(applicationId, null, null)))
         .addObject("actionList", caseProcessingActionService.getUserActionViews(applicationVersion, user))
         .addObject("applicationContext", applicationContextService.getApplicationContext(applicationVersion))
-        .addObject("caseProcessingTabs", caseProcessingTabService.getTabsAvailableToUser(user, applicationVersion))
+        .addObject("caseProcessingTabs", caseProcessingTabs)
         .addObject("wideSummaryDisplay", WIDE_SUMMARY_DISPLAY.allowed(applicationType))
         .addObject("pageTitle", applicationService.generateApplicationReference(applicationVersion));
 
-    if (FURTHER_INFORMATION.equals(tab)) {
-      addFurtherInformationAttributes(modelAndView, applicationVersion);
-    } else {
-      applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView);
+    if (tab != null && caseProcessingTabs.contains(tab)) {
+      switch (tab) {
+        case FURTHER_INFORMATION -> addFurtherInformationAttributes(modelAndView, applicationVersion);
+        case VIEW_APPLICATION -> applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView);
+        default -> {
+        }
+      }
     }
 
     consultationService.findLatestOpenConsultation(applicationVersion.getApplication())

@@ -5,7 +5,6 @@ import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-import java.util.EnumSet;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -32,16 +31,44 @@ class CaseProcessingTabServiceTest {
   private CaseProcessingTabService caseProcessingTabService;
 
   @Test
-  void getTabsAvailableToUser_andAllTabsAllowed() {
+  void getRegulatorTabsAvailableToUser_andAllRegulatorTabsAllowed() {
     when(applicationAccessService.hasApplicationPermission(eq(USER), eq(APPLICATION_VERSION), anySet())).thenReturn(true);
 
-    var tabs = EnumSet.allOf(CaseProcessingTab.class).stream().toList();
-    assertThat(caseProcessingTabService.getTabsAvailableToUser(USER, APPLICATION_VERSION)).isEqualTo(tabs);
+    var tabs = CaseProcessingTab.REGULATOR_TABS.stream().toList();
+    assertThat(caseProcessingTabService.getRegulatorTabsAvailableToUser(USER, APPLICATION_VERSION)).isEqualTo(tabs);
   }
 
   @Test
-  void getTabsAvailableToUser_andNoTabsAllowed() {
+  void getRegulatorTabsAvailableToUser_andNoRegulatorTabsAllowed() {
     when(applicationAccessService.hasApplicationPermission(eq(USER), eq(APPLICATION_VERSION), anySet())).thenReturn(false);
-    assertThat(caseProcessingTabService.getTabsAvailableToUser(USER, APPLICATION_VERSION)).isEmpty();
+    assertThat(caseProcessingTabService.getRegulatorTabsAvailableToUser(USER, APPLICATION_VERSION)).isEmpty();
+  }
+
+  @Test
+  void getConsulteeTabsAvailableToUser_andAllConsulteeTabsAllowed() {
+    when(applicationAccessService.hasApplicationPermission(eq(USER), eq(APPLICATION_VERSION), anySet())).thenReturn(true);
+
+    var tabs = CaseProcessingTab.CONSULTEE_TABS.stream().toList();
+    assertThat(caseProcessingTabService.getConsulteeTabsAvailableToUser(USER, APPLICATION_VERSION)).isEqualTo(tabs);
+  }
+
+  @Test
+  void getConsulteeTabsAvailableToUser_andNoConsulteeTabsAllowed() {
+    when(applicationAccessService.hasApplicationPermission(eq(USER), eq(APPLICATION_VERSION), anySet())).thenReturn(false);
+    assertThat(caseProcessingTabService.getConsulteeTabsAvailableToUser(USER, APPLICATION_VERSION)).isEmpty();
+  }
+
+  @Test
+  void getIndustryTabsAvailableToUser_andAllIndustryTabsAllowed() {
+    when(applicationAccessService.hasApplicationPermission(eq(USER), eq(APPLICATION_VERSION), anySet())).thenReturn(true);
+
+    var tabs = CaseProcessingTab.INDUSTRY_TABS.stream().toList();
+    assertThat(caseProcessingTabService.getIndustryTabsAvailableToUser(USER, APPLICATION_VERSION)).isEqualTo(tabs);
+  }
+
+  @Test
+  void getIndustryTabsAvailableToUser_andNoIndustryTabsAllowed() {
+    when(applicationAccessService.hasApplicationPermission(eq(USER), eq(APPLICATION_VERSION), anySet())).thenReturn(false);
+    assertThat(caseProcessingTabService.getIndustryTabsAvailableToUser(USER, APPLICATION_VERSION)).isEmpty();
   }
 }

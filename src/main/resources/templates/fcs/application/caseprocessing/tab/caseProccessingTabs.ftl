@@ -1,26 +1,34 @@
 <#include '../../../layout/layout.ftl'>
 
-<#macro caseProcessingTabsWithContent controllerUrl tabs selectedTab>
+<#macro caseProcessingTabsWithContent controllerUrl tabs selectedTab="">
   <@fdsBackendTabs.tabs tabsHeading="case processing tabs">
     <@fdsBackendTabs.tabList>
       <#list tabs as tab>
+        <#if selectedTab?has_content>
+          <#assign currentTab = selectedTab.value/>
+        <#else>
+          <#assign currentTab = " "/>
+        </#if>
         <@fdsBackendTabs.tab
           tabLabel=tab.label
           tabUrl="${controllerUrl}?tab=${tab.anchor}"
           tabAnchor=tab.anchor
           tabValue=tab.value
-          currentTab=selectedTab.value/>
+          currentTab=currentTab
+        />
       </#list>
     </@fdsBackendTabs.tabList>
-    <#list tabs as tab>
-      <#if tab == selectedTab>
-        <@fdsBackendTabs.tabContent
-          tabAnchor=tab.anchor
-          currentTab=selectedTab.value
-          tabValue=tab.value>
-          <#nested>
-        </@fdsBackendTabs.tabContent>
-      </#if>
-    </#list>
+    <#if selectedTab?has_content>
+      <#list tabs as tab>
+        <#if tab == selectedTab>
+          <@fdsBackendTabs.tabContent
+            tabAnchor=tab.anchor
+            currentTab=selectedTab.value
+            tabValue=tab.value>
+            <#nested>
+          </@fdsBackendTabs.tabContent>
+        </#if>
+      </#list>
+    </#if>
   </@fdsBackendTabs.tabs>
 </#macro>

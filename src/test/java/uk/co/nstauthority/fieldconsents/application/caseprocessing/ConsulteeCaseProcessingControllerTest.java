@@ -20,7 +20,6 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 
 import java.time.Instant;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -95,7 +94,7 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
         mock(CaseProcessingActionView.class)
     );
     summarySections = Collections.emptyList();
-    caseProcessingTabs = EnumSet.allOf(CaseProcessingTab.class).stream().toList();
+    caseProcessingTabs = CaseProcessingTab.CONSULTEE_TABS.stream().toList();
 
     furtherInformationList = Collections.emptyList();
     furtherInformationViews = Collections.emptyList();
@@ -111,11 +110,43 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
   }
 
   @Test
-  void caseProcessing_viewApplication_withoutConsultation() throws Exception {
+  void caseProcessing_noTabSelected_withoutConsultation() throws Exception {
     setUpMocksWithConsultation(null);
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-        .caseProcessing(APPLICATION_ID, null, null)))
+            .caseProcessing(APPLICATION_ID, null, null)))
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpectAll(commonAttributesForTab(VIEW_APPLICATION))
+        .andExpect(model().attribute("summarySections", summarySections))
+        .andExpect(model().attribute("accordionId", applicationVersion.getId()));
+  }
+
+  @Test
+  void caseProcessing_noTabSelected_withConsultation() throws Exception {
+    var consultation = new Consultation();
+    consultation.setRequestDeadline(Instant.now());
+
+    setUpMocksWithConsultation(consultation);
+
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .caseProcessing(APPLICATION_ID, null, null)))
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpectAll(commonAttributesForTab(VIEW_APPLICATION))
+        .andExpect(model().attribute("summarySections", summarySections))
+        .andExpect(model().attribute("accordionId", applicationVersion.getId()))
+        .andExpect(model().attribute("consultationRequestView", ConsultationRequestView.from(consultation)));
+  }
+
+  @Test
+  void caseProcessing_viewApplication_withoutConsultation() throws Exception {
+    setUpMocksWithConsultation(null);
+
+    var tabParam = "?tab=%s".formatted(VIEW_APPLICATION.getAnchor());
+
+    mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .caseProcessing(APPLICATION_ID, null, null)) + tabParam)
         .with(user(user)))
         .andExpect(status().isOk())
         .andExpectAll(commonAttributesForTab(VIEW_APPLICATION))
@@ -130,8 +161,10 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
 
     setUpMocksWithConsultation(consultation);
 
+    var tabParam = "?tab=%s".formatted(VIEW_APPLICATION.getAnchor());
+
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
-            .caseProcessing(APPLICATION_ID, null, null)))
+            .caseProcessing(APPLICATION_ID, null, null)) + tabParam)
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpectAll(commonAttributesForTab(VIEW_APPLICATION))
@@ -204,7 +237,7 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
         .build());
     when(caseProcessingActionService.getUserActionViews(applicationVersion, user)).thenReturn(caseProcessingActionViews);
     when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication())).thenReturn(Optional.ofNullable(consultation));
-    when(caseProcessingTabService.getTabsAvailableToUser(user, applicationVersion)).thenReturn(caseProcessingTabs);
+    when(caseProcessingTabService.getConsulteeTabsAvailableToUser(user, applicationVersion)).thenReturn(caseProcessingTabs);
 
     var applicationType = applicationVersion.getApplication().getType();
 

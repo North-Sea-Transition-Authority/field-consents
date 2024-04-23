@@ -110,7 +110,7 @@ public class ApplicationCaseProcessingController {
   @GetMapping("case-processing")
   public ModelAndView caseProcessing(
       @PathVariable Integer applicationId,
-      @RequestParam(defaultValue = "tasks") CaseProcessingTab tab,
+      @RequestParam(required = false) CaseProcessingTab tab,
       ServiceUserDetail user
   ) {
     return renderCaseProcessingOnTab(applicationId, tab, user);
@@ -120,6 +120,12 @@ public class ApplicationCaseProcessingController {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var application = applicationVersion.getApplication();
     var applicationType = application.getType();
+
+    var caseProcessingTabs = caseProcessingTabService.getRegulatorTabsAvailableToUser(user, applicationVersion);
+    if (tab == null && !caseProcessingTabs.isEmpty()) {
+      tab = caseProcessingTabs.get(0);
+    }
+
     var consentIssuingApprovalSummaryView = consentIssuingApprovalService.getConsentIssuingApprovalSummaryView(application)
         .orElse(null);
 
@@ -128,18 +134,22 @@ public class ApplicationCaseProcessingController {
         .addObject("controllerUrl", ReverseRouter.route(on(this.getClass()).caseProcessing(applicationId, null, null)))
         .addObject("actionList", caseProcessingActionService.getUserActionViews(applicationVersion, user))
         .addObject("applicationContext", applicationContextService.getApplicationContext(applicationVersion))
-        .addObject("caseProcessingTabs", caseProcessingTabService.getTabsAvailableToUser(user, applicationVersion))
+        .addObject("caseProcessingTabs", caseProcessingTabs)
         .addObject("wideSummaryDisplay", WIDE_SUMMARY_DISPLAY.allowed(applicationType))
         .addObject("pageTitle", applicationService.generateApplicationReference(applicationVersion))
         .addObject("consentIssuingApprovalSummaryView", consentIssuingApprovalSummaryView)
         .addObject("isMigratedApplication", applicationService.isMigratedApplication(application));
 
-    switch (tab) {
-      case CONSENT -> consentTabService.addConsentTabContentToModelAndView(application, modelAndView);
-      case PAYMENTS -> paymentsTabService.addPaymentsTabContentToModelAndView(applicationVersion, modelAndView);
-      case CASE_HISTORY -> addCaseHistoryTab(modelAndView, applicationVersion);
-      case TASKS -> addTasksTab(modelAndView, applicationVersion, user);
-      default -> applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView);
+    if (tab != null && caseProcessingTabs.contains(tab)) {
+      switch (tab) {
+        case CONSENT -> consentTabService.addConsentTabContentToModelAndView(application, modelAndView);
+        case PAYMENTS -> paymentsTabService.addPaymentsTabContentToModelAndView(applicationVersion, modelAndView);
+        case CASE_HISTORY -> addCaseHistoryTab(modelAndView, applicationVersion);
+        case TASKS -> addTasksTab(modelAndView, applicationVersion, user);
+        case VIEW_APPLICATION -> applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView);
+        default -> {
+        }
+      }
     }
 
     if (regulatorTeamService.isTechnicalReviewer(WebUserAccountId.from(user))) {
