@@ -10,21 +10,11 @@ import uk.co.fivium.energyportalapi.client.field.FieldApi;
 import uk.co.fivium.energyportalapi.generated.client.FieldProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.client.FieldsProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.types.FieldStatus;
-import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
-import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
-import uk.co.nstauthority.fieldconsents.teams.TeamService;
-import uk.co.nstauthority.fieldconsents.teams.TeamType;
-import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Service
 public class FieldService {
 
   public static final String FIELD_NOT_FOUND = "Field not found for field id %s";
-
-  private final FieldApi fieldApi;
-  private final TeamService teamService;
-  private final OrganisationUnitPermissionService organisationUnitPermissionService;
 
   // this status list has been taken from the DEVUK fields search
   // screen, we need to understand what these mean
@@ -70,24 +60,10 @@ public class FieldService {
       fieldsWithOperatorsProjectionRoot
           .licences().id().licenceRef().root();
 
-  FieldService(
-      FieldApi fieldApi,
-      TeamService teamService,
-      OrganisationUnitPermissionService organisationUnitPermissionService
-  ) {
-    this.fieldApi = fieldApi;
-    this.teamService = teamService;
-    this.organisationUnitPermissionService = organisationUnitPermissionService;
-  }
+  private final FieldApi fieldApi;
 
-  public List<FieldJson> searchFields(String fieldName, String requestPurpose) {
-    return fieldApi.searchFields(fieldName,
-            fieldStatusesAllowed,
-            fieldsProjectionRoot,
-            new RequestPurpose(requestPurpose))
-        .stream()
-        .map(FieldJson::from)
-        .toList();
+  FieldService(FieldApi fieldApi) {
+    this.fieldApi = fieldApi;
   }
 
   public Optional<FieldJson> findField(Integer fieldId, String requestPurpose) {
@@ -98,49 +74,6 @@ public class FieldService {
   public FieldJson getField(Integer fieldId, String requestPurpose) {
     return findField(fieldId, requestPurpose)
         .orElseThrow(() -> new EntityNotFoundException(FIELD_NOT_FOUND.formatted(fieldId)));
-  }
-
-  public List<FieldWithOperatorJson> searchFieldsWithOperatorForUser(String fieldName,
-                                                                     String requestPurpose,
-                                                                     ServiceUserDetail user) {
-    var fieldWithOperatorJsons = fieldApi.searchFields(
-            fieldName,
-            fieldStatusesAllowed,
-            fieldsWithOperatorsProjectionRoot,
-            new RequestPurpose(requestPurpose)
-        )
-        .stream()
-        .map(FieldWithOperatorJson::from)
-        .toList();
-
-    var userRegulatorTeamsWithPermission =
-        teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, RolePermission.VIEW_PERMISSIONS);
-
-    // short circuit and return all found fields if the user is a regulator with view permissions
-    if (!userRegulatorTeamsWithPermission.isEmpty()) {
-      return fieldWithOperatorJsons;
-    }
-
-    var userConsulteeTeamsWithPermission =
-        teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.OPRED, RolePermission.VIEW_PERMISSIONS);
-
-    // short circuit and return all found fields if the user is a consultee with view permissions
-    if (!userConsulteeTeamsWithPermission.isEmpty()) {
-      return fieldWithOperatorJsons;
-    }
-
-    var organisationUnitIdsUserHasPermissionFor =
-        organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(user, RolePermission.VIEW_PERMISSIONS)
-            .stream()
-            .map(OrganisationUnitJson::organisationUnitId)
-            .toList();
-
-    return fieldWithOperatorJsons
-        .stream()
-        .filter(field ->
-            field.operatorExists()
-            && organisationUnitIdsUserHasPermissionFor.contains(field.getOperatorJson().organisationUnitId()))
-        .toList();
   }
 
   public List<FieldJson> findFieldsByIds(List<Integer> fieldIds, String requestPurpose) {

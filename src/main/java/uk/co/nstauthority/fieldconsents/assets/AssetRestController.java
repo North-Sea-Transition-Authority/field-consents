@@ -1,6 +1,5 @@
 package uk.co.nstauthority.fieldconsents.assets;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,14 +12,11 @@ import uk.co.nstauthority.fieldconsents.fds.searchselector.SearchSelectorService
 @AccessibleByServiceUsers
 public class AssetRestController {
 
-  private final AssetService assetService;
-
+  private final AssetSearchService assetSearchService;
   private final SearchSelectorService searchSelectorService;
 
-  @Autowired
-  public AssetRestController(AssetService assetService,
-                             SearchSelectorService searchSelectorService) {
-    this.assetService = assetService;
+  AssetRestController(AssetSearchService assetSearchService, SearchSelectorService searchSelectorService) {
+    this.assetSearchService = assetSearchService;
     this.searchSelectorService = searchSelectorService;
   }
 
@@ -29,23 +25,23 @@ public class AssetRestController {
                                               ServiceUserDetail user) {
     return searchSelectorService.search(
         assetName,
-        searchAssetName -> assetService.searchAssetsForUser(searchAssetName, user)
+        searchAssetName -> assetSearchService.searchAssetsForUser(searchAssetName, user)
     );
   }
 
   @GetMapping("/data-sources/all-assets")
   public RestSearchResult searchAllAssets(@RequestParam(value = "term", required = false) String assetName) {
-    return searchSelectorService.search(assetName, assetService::searchAssets);
+    return searchSelectorService.search(assetName, assetSearchService::searchAssets);
   }
 
   @GetMapping("/data-sources/terminal-assets")
   public RestSearchResult searchTerminalAssets(@RequestParam(value = "term", required = false) String terminalName) {
-    return searchSelectorService.search(terminalName, assetService::searchTerminals);
+    return searchSelectorService.search(terminalName, assetSearchService::searchTerminals);
   }
 
   @GetMapping("/data-sources/field-assets")
   public RestSearchResult searchFieldAssets(@RequestParam(value = "term", required = false) String fieldName) {
-    return searchSelectorService.search(fieldName, assetService::searchFields);
+    return searchSelectorService.search(fieldName, assetSearchService::searchFields);
   }
 
   @GetMapping("/data-sources/user-terminal-assets")
@@ -54,7 +50,7 @@ public class AssetRestController {
     return searchSelectorService.search(
         terminalName,
         searchTerminalName ->
-            assetService.searchTerminalsForUser(searchTerminalName, user));
+            assetSearchService.searchTerminalsForUser(searchTerminalName, user));
   }
 
   @GetMapping("/data-sources/user-field-assets")
@@ -63,6 +59,6 @@ public class AssetRestController {
     return searchSelectorService.search(
         fieldName,
         searchFieldName ->
-            assetService.searchFieldsForUser(searchFieldName, user));
+            assetSearchService.searchFieldsForUser(searchFieldName, user));
   }
 }

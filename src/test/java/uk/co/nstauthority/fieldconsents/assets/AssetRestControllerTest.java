@@ -39,7 +39,7 @@ public class AssetRestControllerTest extends AbstractControllerTest {
       OrganisationUnitTestUtil.orgUnit1Json);
 
   @MockBean
-  AssetService assetService;
+  private AssetSearchService assetSearchService;
 
   @SecurityTest
   void searchAssetsForUser_whenNotAuthenticated_thenRedirectedToLogin() throws Exception {
@@ -50,7 +50,7 @@ public class AssetRestControllerTest extends AbstractControllerTest {
 
   @Test
   void searchAssetsForUser_assertHttpOk() throws Exception {
-    when(assetService.searchAssetsForUser("brent", user)).thenReturn(List.of(brentAssetJson));
+    when(assetSearchService.searchAssetsForUser("brent", user)).thenReturn(List.of(brentAssetJson));
 
     mockMvc.perform(get(ReverseRouter.route(on(AssetRestController.class).searchAssetsForUser("brent", user)))
             .with(user(user)))
@@ -63,7 +63,7 @@ public class AssetRestControllerTest extends AbstractControllerTest {
 
   @Test
   void searchAssetsForUser_fieldsAndTerminals() throws Exception {
-    when(assetService.searchAssetsForUser("br", user)).thenReturn(List.of(brentAssetJson, braeAssetJson));
+    when(assetSearchService.searchAssetsForUser("br", user)).thenReturn(List.of(brentAssetJson, braeAssetJson));
 
     mockMvc.perform(get(ReverseRouter.route(on(AssetRestController.class).searchAssetsForUser("br", user)))
             .with(user(user)))
@@ -82,7 +82,7 @@ public class AssetRestControllerTest extends AbstractControllerTest {
 
   @Test
   void searchAllAssets_fieldsAndTerminals() throws Exception {
-    when(assetService.searchAssets("br"))
+    when(assetSearchService.searchAssets("br"))
         .thenReturn(List.of(brentAssetJson, braeAssetJson));
 
     mockMvc.perform(get(ReverseRouter.route(on(AssetRestController.class)
@@ -103,7 +103,7 @@ public class AssetRestControllerTest extends AbstractControllerTest {
 
   @Test
   void searchTerminalAssets_fieldsAndTerminals() throws Exception {
-    when(assetService.searchTerminals("br"))
+    when(assetSearchService.searchTerminals("br"))
         .thenReturn(List.of(braeAssetJson));
 
     mockMvc.perform(get(ReverseRouter.route(on(AssetRestController.class)
@@ -124,7 +124,7 @@ public class AssetRestControllerTest extends AbstractControllerTest {
 
   @Test
   void searchFields_assertHttpOk() throws Exception {
-    when(assetService.searchFields("brent"))
+    when(assetSearchService.searchFields("brent"))
         .thenReturn(List.of(brentAssetJson));
 
     mockMvc.perform(get(ReverseRouter.route(on(AssetRestController.class).searchFieldAssets("brent")))
@@ -144,7 +144,7 @@ public class AssetRestControllerTest extends AbstractControllerTest {
 
   @Test
   void searchTerminalAssetsForUser_assertHttpOk() throws Exception {
-    when(assetService.searchTerminalsForUser("bacton", user)).thenReturn(List.of(bactonAssetJson));
+    when(assetSearchService.searchTerminalsForUser("bacton", user)).thenReturn(List.of(bactonAssetJson));
 
     mockMvc.perform(get(ReverseRouter.route(on(AssetRestController.class).searchTerminalAssetsForUser("bacton", user)))
             .with(user(user)))
@@ -163,7 +163,7 @@ public class AssetRestControllerTest extends AbstractControllerTest {
 
   @Test
   void searchFieldAssetsForUser_assertHttpOk() throws Exception {
-    when(assetService.searchFieldsForUser("alba", user)).thenReturn(List.of(albaAssetJson));
+    when(assetSearchService.searchFieldsForUser("alba", user)).thenReturn(List.of(albaAssetJson));
 
     mockMvc.perform(get(ReverseRouter.route(on(AssetRestController.class).searchFieldAssetsForUser("alba", user)))
             .with(user(user)))
