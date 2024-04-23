@@ -33,6 +33,25 @@ FROM fcs_migration.application_versions av
 JOIN fcs_migration.field_consent_supporting_docs sd ON sd.fcd_id = av.id
 WHERE sd.calculated_file_size > 0;
 /
+INSERT INTO promotemgr.s3_file_migration ( 
+  fox_file_id
+, application
+, reference
+, directory
+, filename
+, content
+)
+SELECT
+  cd.dummy_fox_file_id
+, 'FCS' application
+, cd.fci_id reference
+, 'migrated' directory
+, cd.dummy_fox_file_id filename -- this isn't displayed to the user but has to be unique in the S3 bucket
+, cd.file_blob_content content
+FROM fcs_migration.application_versions av -- this ensures that any consent docs have a migrated app version (they all do but this is a belt and braces)
+JOIN fcs_migration.field_consent_consent_docs cd ON cd.fcd_id = av.id
+WHERE cd.calculated_file_size > 0;
+/
 COMMIT;
 /
 
@@ -82,6 +101,38 @@ FROM fcs_migration.application_versions av
 JOIN fcs_migration.field_consent_supporting_docs sd ON sd.fcd_id = av.id
 JOIN promotemgr.s3_file_migration fm ON fm.fox_file_id = sd.fox_file_id
 WHERE fm.migrated_timestamp IS NOT NULL;
+/
+INSERT INTO fcs_migration.file_upload_library_uploaded_files (
+  id
+, bucket
+, key
+, name
+, content_type
+, content_length
+, uploaded_at
+, usage_id
+, usage_type
+, document_type
+, description
+, uploaded_by
+)
+SELECT
+  fcs_migration.random_uuid()
+, fm.s3_bucket bucket
+, fm.s3_path key
+, cd.filename name
+, cd.content_type
+, cd.calculated_file_size content_length
+, cd.upload_date_time uploaded_at
+, cd.fci_id usage_id
+, 'ApplicationConsent' usage_type
+, 'generated-consent-document' document_type
+, cd.file_description description
+, cd.uploaded_by_wua_id uploaded_by
+FROM fcs_migration.application_versions av
+JOIN fcs_migration.field_consent_consent_docs cd ON cd.fcd_id = av.id
+JOIN promotemgr.s3_file_migration fm ON fm.fox_file_id = cd.dummy_fox_file_id
+WHERE fm.migrated_timestamp IS NOT NULL
 /
 COMMIT;
 /

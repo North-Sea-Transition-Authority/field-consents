@@ -2,6 +2,7 @@
 -- Run script with F5 in Toad
 --
 
+--DROP TABLE fcs_migration.application_consents;
 --DROP TABLE fcs_migration.split_clob_legacy_data;
 --DROP SEQUENCE fcs_migration.split_clob_legacy_data_id_seq;
 --DROP TABLE fcs_migration.application_other_legacy_data;
@@ -856,4 +857,18 @@ CREATE TABLE fcs_migration.split_clob_legacy_data (
 , source_column_name              VARCHAR2(100) NOT NULL
 , text_part                       VARCHAR2(4000) NOT NULL
 , text_part_index                 INTEGER NOT NULL
+);
+
+
+--
+-- application_consents
+--
+CREATE TABLE fcs_migration.application_consents (
+  id               INTEGER PRIMARY KEY
+, application_id   INTEGER NOT NULL
+                   UNIQUE
+                   CONSTRAINT application_consents_application_id_fk
+                   REFERENCES fcs_migration.applications
+, issued_by_wua_id INTEGER NOT NULL
+, issued_timestamp DATE NOT NULL
 );

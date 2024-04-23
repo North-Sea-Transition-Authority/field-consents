@@ -1404,7 +1404,60 @@ BEGIN
   FOR rec IN (
     SELECT *
     FROM fcs_migration.file_upload_library_uploaded_files f
+    WHERE usage_type = 'ApplicationVersion'
     ORDER BY to_number(usage_id), uploaded_at
+  ) LOOP
+  
+    INSERT INTO "fcs"."file_upload_library_uploaded_files"@fcs_postgres_db (
+      "id"
+    , "bucket"
+    , "key"
+    , "name"
+    , "content_type"
+    , "content_length"
+    , "uploaded_at"
+    , "usage_id"
+    , "usage_type"
+    , "document_type"
+    , "description"
+    , "uploaded_by"
+    ) VALUES (
+      rec.id
+    , rec.bucket
+    , rec.key
+    , rec.name
+    , rec.content_type
+    , rec.content_length
+    , rec.uploaded_at
+    , rec.usage_id
+    , rec.usage_type
+    , rec.document_type
+    , rec.description
+    , rec.uploaded_by
+    );
+  
+  END LOOP;
+
+END;
+/
+
+BEGIN
+
+  FOR rec IN (
+    SELECT f.*
+    FROM fcs_migration.file_upload_library_uploaded_files f
+    JOIN promotemgr.s3_file_migration fm ON fm.s3_path = f.key
+    JOIN fcs_migration.field_consent_consent_docs cd ON cd.dummy_fox_file_id = fm.fox_file_id
+    WHERE f.usage_type = 'ApplicationConsent'
+    -- add order here so that the consent documents show in a sensible order
+    -- TODO FCS-738 - this will likely be updated later to add a specific order
+    -- to the files on the Consents tab (likely a file upload library change)
+    ORDER BY cd.fci_id
+    , CASE cd.document_type
+      WHEN 'FC_COVER_LETTER' THEN 2 -- cover letters after the consent documents
+      ELSE 1 -- the consent documents come first
+      END
+    , cd.filename
   ) LOOP
   
     INSERT INTO "fcs"."file_upload_library_uploaded_files"@fcs_postgres_db (
@@ -1508,6 +1561,29 @@ BEGIN
 END;
 /
 
+--
+-- application_consents
+--
+BEGIN
+
+  FOR rec IN (SELECT * FROM fcs_migration.application_consents WHERE id > 0 ORDER BY id) LOOP
+
+    INSERT INTO "fcs"."application_consents"@fcs_postgres_db (
+      "id"
+    , "application_id"
+    , "issued_by_wua_id"
+    , "issued_timestamp"
+    ) VALUES (
+      rec.id
+    , rec.application_id
+    , rec.issued_by_wua_id
+    , rec.issued_timestamp
+    );
+  
+  END LOOP;
+
+END;
+/
 
 -- work around DB link timeout issues from sqlnet.ora param SQLNET.INBOUND_CONNECT_TIMEOUT
 BEGIN

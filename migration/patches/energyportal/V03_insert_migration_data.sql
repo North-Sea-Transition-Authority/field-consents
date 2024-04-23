@@ -6,6 +6,8 @@
 -- LIVE 8 mins 29 secs (22/03/2024 - CLOB investigation run)
 --
 
+--DELETE FROM fcs_migration.application_consents;
+--DELETE FROM fcs_migration.split_clob_legacy_data;
 --DELETE FROM fcs_migration.application_other_legacy_data;
 --DELETE FROM fcs_migration.vent_long_term_years;
 --DELETE FROM fcs_migration.flare_long_term_years;
@@ -2158,6 +2160,24 @@ BEGIN
   END LOOP;
  
 END;
+/
+
+--
+-- application_consents
+--
+INSERT INTO fcs_migration.application_consents (
+  id
+, application_id
+, issued_by_wua_id
+, issued_timestamp
+)
+SELECT
+  fci.id
+, av.application_id
+, fci.issue_wua_id
+, fci.issue_date
+FROM fcs_migration.application_versions av
+JOIN envmgr.field_consents_issued fci ON fci.fcd_id = av.id
 /
 
 COMMIT;

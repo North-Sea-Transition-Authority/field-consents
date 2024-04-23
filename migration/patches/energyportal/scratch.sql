@@ -2868,3 +2868,171 @@ SELECT
 FROM fcs_migration.application_other_legacy_data ld
 ORDER BY id
 /
+
+
+-- these files visible to primary auth recipient
+-- Consent doc (FC_PROD_CONSENT, FC_FLARE_CONSENT, FC_VENT_CONSENT, FC_VENT_CONSENT_SNS_IS)
+
+-- these files visible to FEPs
+-- Cover letter (FC_COVER_LETTER)
+-- Consent doc (as above)
+
+-- these files visible to Regulators only
+--Audit Report (DTI_AUDIT_REPORT) - this seems almost useless anyway - don't migrate
+--Application Copy (FC_APPLICATION) - this contains contact info for applicant team so don't migrate as the Consent docs pack is visible to the primary operators and FEPs (the FEPs can't see the apps in the new system)
+--Supporting Document's - already migrated into the application form
+
+
+SELECT
+--  xdd.dd_id, xdd.*, xds.*
+--, XMLCAST(XMLQUERY('/*/CONSTRUCTOR_LIST/INCLUDE[1]/NAME/text()' PASSING di.metadata_xml RETURNING CONTENT) AS VARCHAR2(4000)) doc_type
+DISTINCT XMLCAST(XMLQUERY('/*/CONSTRUCTOR_LIST/INCLUDE[1]/NAME/text()' PASSING di.metadata_xml RETURNING CONTENT) AS VARCHAR2(4000)) doc_type
+FROM decmgr.xview_document_sets xds
+JOIN decmgr.xview_document_packs xdp ON xdp.ds_id = xds.ds_id
+JOIN decmgr.document_instances di ON di.dp_id = xdp.dp_id
+JOIN appenv.xview_document_data xdd on xdd.di_id = di.id
+WHERE xds.primary_data_uref LIKE '%FC'
+--AND XMLCAST(XMLQUERY('/*/CONSTRUCTOR_LIST/INCLUDE[1]/NAME/text()' PASSING di.metadata_xml RETURNING CONTENT) AS VARCHAR2(4000)) IS NULL -- IN (
+--'FC_FLARE_CONSENT', 'FC_PROD_CONSENT', 'FC_VENT_CONSENT', 'FC_VENT_CONSENT_SNS_IS'
+-- )
+--AND di.copy_of_di_id IS NULL
+--AND xdd.content_description = 'PDF'
+--AND xds.activity_data_uref IS NOT NULL
+--ORDER BY xdd.dd_id DESC
+/
+
+SELECT
+--  fcd.fcd_id
+--, fv.id fv_id
+--, fv.fox_file_id
+--, aud.filename
+--, aud.content_type
+--, aud.file_size
+--, fv.create_by_wua_id uploaded_by_wua_id
+--, to_date(aud.upload_date_time, 'YYYY-MM-DD"T"HH24:MI:SS') upload_date_time
+--, clean_text(coalesce(aud.description1, aud.description2, aud.filename)) file_description
+--, fv.secure_lob_ref
+--, fv.secure_lob_ref.get_blob() file_blob_content
+--, fv.secure_lob_ref.get_size() calculated_file_size
+  fci.id fci_id
+, fci.fcd_id
+, dim.document_type
+, xdd.content_description
+, 'document_data_id_'||xdd.dd_id dummy_fox_file_id
+, CASE dim.document_type
+  WHEN 'FC_COVER_LETTER' THEN
+    CASE
+    WHEN ou.name IS NOT NULL THEN
+      'Field Equity Partner Cover Letter ('||ou.name||')'
+    ELSE 'Field Equity Partner Cover Letter(s)'
+    END
+  ELSE xdd.title
+  END||'.pdf' filename
+, xdd.content_type
+, dd.secure_lob_ref.get_size() file_size
+, di.create_wua_id uploaded_by_wua_id
+, dd.signed_datetime upload_date_time
+, CASE dim.document_type
+  WHEN 'FC_COVER_LETTER' THEN
+    CASE
+    WHEN ou.name IS NOT NULL THEN
+      'Field Equity Partner Cover Letter ('||ou.name||')'
+    ELSE 'Field Equity Partner Cover Letter(s)'
+    END
+  ELSE xdd.title
+  END file_description
+, dd.secure_lob_ref
+, dd.secure_lob_ref.get_blob() file_blob_content
+, dd.secure_lob_ref.get_datatype() file_datatype
+, dd.secure_lob_ref.get_xmltype() file_xml_content
+--, xdp.ou_id
+--, ou.name
+--, fci.ns_id
+--, fci.fc_id
+--, fci.application_type
+--, fci.variation_no
+--, fci.version_no
+--, fci.notification_date
+--, xds.*
+--, xdp.*
+--, dim.*
+, xdd.*
+--, ns.*
+--, dd.status
+--, dd.created_by
+--, dd.created_datetime
+
+--, dd.signed_by
+
+--, cwua.primary_email_address
+--, cwua.forename||' '||cwua.surname||' ('||cwua.login_id||')' dummy_signed_by
+--, fci.issue_wua_id
+--, fci.issue_date
+--, iwua.primary_email_address
+
+--, xdd.title
+--, xdd.content_description
+--, xdd.system_document
+--, xdd.ou_id
+--, xdd.organ_name
+--, xdd.registered_number
+
+FROM envmgr.field_consents_issued fci
+JOIN decmgr.xview_document_sets xds ON xds.primary_data_uref = fci.fcd_id||'FC' AND upper(xds.title) = 'FIELD CONSENTS' --AND xds.activity_data_uref IS NOT NULL
+JOIN decmgr.xview_document_packs xdp ON xdp.ds_id = xds.ds_id -- this is one package per audience, i.e. applicant (just the consent doc), FEPs (consent doc and cover letter), regulator (audit report, application copy and all supporting docs)
+LEFT JOIN decmgr.organisation_units ou ON ou.id = xdp.ou_id
+JOIN decmgr.document_instances di ON di.dp_id = xdp.dp_id AND di.copy_of_di_id IS NULL
+CROSS JOIN XMLTABLE(
+  '/*'
+  PASSING
+    di.metadata_xml
+  COLUMNS
+    document_type VARCHAR2(4000) PATH './CONSTRUCTOR_LIST/INCLUDE[1]/NAME/text()'
+) dim
+JOIN decmgr.document_data dd ON dd.di_id = di.id
+JOIN decmgr.xview_document_data xdd on xdd.dd_id = dd.id
+--JOIN decmgr.xview_notification_sets ns ON ns.ns_id = fci.ns_id
+--LEFT JOIN securemgr.web_user_accounts iwua ON iwua.id = fci.issue_wua_id
+--LEFT JOIN securemgr.web_user_accounts cwua ON cwua.id = di.create_wua_id
+WHERE dim.document_type IN ('FC_APPLICATION', 'FC_COVER_LETTER', 'FC_PROD_CONSENT', 'FC_FLARE_CONSENT', 'FC_VENT_CONSENT', 'FC_VENT_CONSENT_SNS_IS')
+AND xdd.system_document = 'N'
+--AND dd.secure_lob_ref.get_datatype() = 'BLOB'
+--AND dd.signed_by not like cwua.forename||' '||cwua.surname||' (%)'
+ORDER BY fci.id DESC
+
+--WHERE fci.fcd_id IS NULL
+--JOIN decmgr.file_folders ff ON ff.id = fcd.folder_id
+--JOIN decmgr.file_folder_targets fft ON fft.ff_id = ff.id AND fft.status = 'RECEIVED' -- not EMPTY or DELETED
+--JOIN decmgr.file_versions fv ON fv.fft_id = fft.id AND fv.status = 'RECEIVED' AND fv.status_control = 'C' -- the tip file version
+--CROSS JOIN XMLTABLE(
+--  '/file-metadata'
+--  PASSING
+--    fv.metadata_xml
+--  COLUMNS
+--    filename VARCHAR2(4000) PATH './filename/text()'
+--  , content_type VARCHAR2(4000) PATH './content-type/text()'
+--  , file_size INTEGER PATH './size/text()'
+--  , upload_date_time VARCHAR2(4000) PATH './upload-date-time/text()'
+--  , description1 VARCHAR2(4000) PATH './description/text()'
+--  , description2 VARCHAR2(4000) PATH './captured-fields/description/text()'
+--) aud;
+/
+
+SELECT
+  fci.id
+, av.application_id
+, fci.issue_wua_id
+, fci.issue_date
+FROM fcs_migration.application_versions av
+JOIN envmgr.field_consents_issued fci ON fci.fcd_id = av.id
+ORDER BY fci.id
+/
+
+SELECT count(*)
+FROM envmgr.field_consents_issued fci
+/
+SELECT *
+FROM application_consents ac
+JOIN file_upload_library_uploaded_files f ON f.usage_id = ac.id AND f.usage_type = 'ApplicationConsent'
+JOIN applications a ON a.id = ac.application_id
+ORDER BY a.application_no, f.uploaded_at
