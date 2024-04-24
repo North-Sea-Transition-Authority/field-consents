@@ -196,7 +196,7 @@ SELECT
 FROM envmgr.field_consent_details fcd
 JOIN fcs_migration.applications ap ON ap.fc_id = fcd.fc_id AND ap.variation_no = fcd.variation_no  
 JOIN envmgr.xview_field_consent_details xfcd ON xfcd.fcd_id = fcd.id
-JOIN decmgr.xview_organisation_units ou ON ou.organ_id = xfcd.operator_ou_id
+JOIN decmgr.xview_organisation_names ou ON ou.organ_id = xfcd.operator_ou_id AND fcd.created_date BETWEEN ou.start_date AND coalesce(ou.end_date, sysdate) -- get the ou name on the created date
 LEFT JOIN securemgr.pay_transaction_details ptd ON ptd.transaction_uref = fcd.id||'FC' AND ptd.status = 'COMPLETE' AND ptd.record_status = 'CURRENT'
 WHERE (fcd.status, fcd.version_status) NOT IN (
   ('INPROGRESS', 'PENDING') -- an unsubmitted application update (for any version/variation) (don't migrate)
@@ -338,7 +338,7 @@ WITH field_counts AS (
     , field_id INTEGER PATH './FIELD_INFO/FIELD_ID/text()'
     , field_operator_ou_id INTEGER PATH 'FIELD_OPERATOR_OU_ID/text()' 
   ) xfcf
-  JOIN decmgr.xview_organisation_units ou ON ou.organ_id = coalesce(xfcf.field_operator_ou_id, xfcd.operator_ou_id)
+  JOIN decmgr.xview_organisation_names ou ON ou.organ_id = coalesce(xfcf.field_operator_ou_id, xfcd.operator_ou_id) AND av.created_date_time BETWEEN ou.start_date AND coalesce(ou.end_date, sysdate) -- get the ou name on the created date
   JOIN devukmgr.fields f ON f.field_identifier = xfcf.field_id
   JOIN field_counts c ON c.fcd_id = xfcd.fcd_id
   LEFT JOIN field_locations fl ON fl.fcd_id = xfcd.fcd_id
@@ -380,7 +380,7 @@ SELECT
 , fcd.id application_version_id
 , 'LOCATION' asset_role
 , fov.operator_id asset_operator_ou_id
-, fov.operator_name cached_asset_operator_name
+, ou.name cached_asset_operator_name
 , 'FIELD' asset_type
 , ff.facilities_location_field_id asset_id
 , f.name cached_asset_name
@@ -395,6 +395,7 @@ CROSS JOIN XMLTABLE(
 ) ff
 JOIN devukmgr.fields f ON f.field_identifier = ff.facilities_location_field_id
 JOIN devukmgr.field_operator_view fov ON f.field_identifier = fov.field_id -- TODO what about the fields that have no operator?
+JOIN decmgr.xview_organisation_names ou ON ou.organ_id = fov.operator_id AND av.created_date_time BETWEEN ou.start_date AND coalesce(ou.end_date, sysdate) -- get the ou name on the created date
 WHERE ff.facilities_location_field_id IS NOT NULL;
 /
 

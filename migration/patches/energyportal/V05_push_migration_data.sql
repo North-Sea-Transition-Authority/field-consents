@@ -16,30 +16,43 @@
 --
 
 ---- audit tables (not migrating to but need clearing)
+--DELETE FROM "fcs"."application_consent_data_aud"@fcs_postgres_db;
+--DELETE FROM "fcs"."application_consent_data_long_term_production_figures_aud"@fcs_postgres_db;
+--DELETE FROM "fcs"."application_consent_field_equity_partners_aud"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_consent_issuing_approvals_aud"@fcs_postgres_db;
+--DELETE FROM "fcs"."application_consents_aud"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_consultations_aud"@fcs_postgres_db;
---DELETE FROM "fcs"."file_upload_library_uploaded_files_aud"@fcs_postgres_db;
+--DELETE FROM "fcs"."application_flags_aud"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_technical_reviews_aud"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_updates_aud"@fcs_postgres_db;
---DELETE FROM "fcs"."application_flags_aud"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_versions_aud"@fcs_postgres_db;
---DELETE FROM "fcs"."payments_library_payments_aud"@fcs_postgres_db;
+--DELETE FROM "fcs"."document_library_document_instance_sections_aud"@fcs_postgres_db;
+--DELETE FROM "fcs"."document_library_document_instances_aud"@fcs_postgres_db;
+--DELETE FROM "fcs"."document_library_document_template_sections_aud"@fcs_postgres_db;
+--DELETE FROM "fcs"."document_library_document_templates_aud"@fcs_postgres_db;
+--DELETE FROM "fcs"."file_upload_library_uploaded_files_aud"@fcs_postgres_db;
 --DELETE FROM "fcs"."notification_library_notifications_aud"@fcs_postgres_db;
+--DELETE FROM "fcs"."payments_library_payments_aud"@fcs_postgres_db;
 --
 ---- we aren't migrating to these table but the data still needs deleting
---DELETE FROM "fcs"."application_consent_data_long_term_production_figures"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_consent_data"@fcs_postgres_db;
+--DELETE FROM "fcs"."application_consent_data_long_term_production_figures"@fcs_postgres_db;
+--DELETE FROM "fcs"."application_consent_field_equity_partners"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_consent_issuing_approvals"@fcs_postgres_db;
---DELETE FROM "fcs"."application_consents"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_work_area_priorities"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_rationale"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_withdrawals"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_consultation_further_information"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_consultations"@fcs_postgres_db;
---DELETE FROM "fcs"."payments_library_payments"@fcs_postgres_db;
+--DELETE FROM "fcs"."document_library_document_instance_sections"@fcs_postgres_db;
+--DELETE FROM "fcs"."document_library_document_instances"@fcs_postgres_db;
+--DELETE FROM "fcs"."document_library_document_template_sections"@fcs_postgres_db;
+--DELETE FROM "fcs"."document_library_document_templates"@fcs_postgres_db;
 --DELETE FROM "fcs"."notification_library_notifications"@fcs_postgres_db;
+--DELETE FROM "fcs"."payments_library_payments"@fcs_postgres_db;
 --
 ---- delete data from tables we are migrating too
+--DELETE FROM "fcs"."application_consents"@fcs_postgres_db;
 --DELETE FROM "fcs"."split_clob_legacy_data"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_other_legacy_data"@fcs_postgres_db;
 --DELETE FROM "fcs"."vent_long_term_years"@fcs_postgres_db;

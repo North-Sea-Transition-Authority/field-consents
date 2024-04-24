@@ -32,7 +32,7 @@ SELECT
 FROM envmgr.field_consents_issued fci
 JOIN decmgr.xview_document_sets xds ON xds.primary_data_uref = fci.fcd_id||'FC' AND upper(xds.title) = 'FIELD CONSENTS' -- the doc sets without this title are application preview PDFs
 JOIN decmgr.xview_document_packs xdp ON xdp.ds_id = xds.ds_id -- this is one package per audience, i.e. applicant (just the consent doc), FEPs (consent doc and cover letter), regulator (audit report, application copy and all supporting docs)
-LEFT JOIN decmgr.organisation_units ou ON ou.id = xdp.ou_id
+LEFT JOIN decmgr.xview_organisation_names ou ON ou.organ_id = xdp.ou_id AND fci.issue_date BETWEEN ou.start_date AND coalesce(ou.end_date, sysdate) -- get the ou name on the issue date
 JOIN decmgr.document_instances di ON di.dp_id = xdp.dp_id AND di.copy_of_di_id IS NULL
 CROSS JOIN XMLTABLE(
   '/*'
