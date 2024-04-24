@@ -3,6 +3,8 @@ package uk.co.nstauthority.fieldconsents.query;
 import static org.jooq.impl.DSL.greatest;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
 
+import java.time.Clock;
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
@@ -50,6 +52,7 @@ public class ApplicationDataItemDtoService {
   private final ApplicationVersionService applicationVersionService;
   private final PermissionService permissionService;
   private final ApplicationDataItemQueryService applicationDataItemQueryService;
+  private final Clock clock;
 
   ApplicationDataItemDtoService(
       FieldService fieldService,
@@ -58,7 +61,8 @@ public class ApplicationDataItemDtoService {
       ApplicationService applicationService,
       ApplicationVersionService applicationVersionService,
       PermissionService permissionService,
-      ApplicationDataItemQueryService applicationDataItemQueryService
+      ApplicationDataItemQueryService applicationDataItemQueryService,
+      Clock clock
   ) {
     this.fieldService = fieldService;
     this.energyPortalUserService = energyPortalUserService;
@@ -67,6 +71,7 @@ public class ApplicationDataItemDtoService {
     this.applicationVersionService = applicationVersionService;
     this.permissionService = permissionService;
     this.applicationDataItemQueryService = applicationDataItemQueryService;
+    this.clock = clock;
   }
 
   public List<OrganisationUnitJson> getOrganisationUnitJsonsFromApplicationDataItemDtos(
@@ -79,7 +84,7 @@ public class ApplicationDataItemDtoService {
         ALL_ORG_UNITS_DATA_ITEM_PURPOSE);
   }
 
-  public Map<Integer, FieldJson> getFieldJsonMapFromApplicationDataItemDtos(
+  Map<Integer, FieldJson> getFieldJsonMapFromApplicationDataItemDtos(
       Collection<? extends ApplicationDataItemDto> applicationDataItemDtos
   ) {
     var fieldJsons = fieldService.findFieldsByIds(applicationDataItemDtos
@@ -97,7 +102,7 @@ public class ApplicationDataItemDtoService {
         );
   }
 
-  public Map<WebUserAccountId, EnergyPortalUserDto> getEnergyPortalUserDtoMapFromApplicationDataItemDtos(
+  Map<WebUserAccountId, EnergyPortalUserDto> getEnergyPortalUserDtoMapFromApplicationDataItemDtos(
       Collection<? extends ApplicationDataItemDto> applicationDataItemDtos
   ) {
 
@@ -117,7 +122,7 @@ public class ApplicationDataItemDtoService {
     return energyPortalUserService.getEnergyPortalUserMap(wuaIds);
   }
 
-  public String getDisplayReference(ApplicationDataItemDto dataItemDto, ApplicationDataItemUserAction userAction) {
+  String getDisplayReference(ApplicationDataItemDto dataItemDto, ApplicationDataItemUserAction userAction) {
     var applicationVersion = applicationVersionService.getApplicationVersionById(dataItemDto.getApplicationVersionId());
 
     if (dataItemDto.getStatus() == ApplicationVersionStatus.IN_PROGRESS) {
@@ -139,13 +144,23 @@ public class ApplicationDataItemDtoService {
         : ApplicationDataItemUserAction.VIEW_APPLICATION;
   }
 
-  public String getDisplayConsentDuration(ApplicationDataItemDto dataItemDto) {
+  String getDisplayConsentDuration(ApplicationDataItemDto dataItemDto) {
     var consentDuration = dataItemDto.getDuration();
 
     if (Objects.isNull(consentDuration)) {
       return "";
     }
 
+    // if application is consented use the consent data start/end date
+    if (Boolean.TRUE.equals(dataItemDto.getConsentIssued())) {
+      return "%s %s - %s".formatted(
+          consentDuration.getShortDisplayName(),
+          DateUtils.format(dataItemDto.getConsentStartDate(), DateUtils.SHORT_DATE),
+          DateUtils.format(dataItemDto.getConsentEndDate(), DateUtils.SHORT_DATE)
+      );
+    }
+
+    // otherwise use the application form data
     return switch (consentDuration) {
       case ANNUAL -> "%s %d".formatted(consentDuration.getShortDisplayName(), dataItemDto.getConsentYear());
       case LONG_TERM -> "%s %d - %d".formatted(
@@ -161,7 +176,7 @@ public class ApplicationDataItemDtoService {
     };
   }
 
-  public String getDisplayAssetLocation(ApplicationDataItemDto dataItemDto, Map<Integer, FieldJson> fieldJsonsMap) {
+  String getDisplayAssetLocation(ApplicationDataItemDto dataItemDto, Map<Integer, FieldJson> fieldJsonsMap) {
     if (dataItemDto.getAssetType() != AssetType.FIELD) {
       return "";
     }
@@ -172,21 +187,21 @@ public class ApplicationDataItemDtoService {
         : "Unknown area";
   }
 
-  public String getDisplayAceFlag(ApplicationDataItemDto dataItemDto) {
+  String getDisplayAceFlag(ApplicationDataItemDto dataItemDto) {
     if (Objects.isNull(dataItemDto.getAceFlag())) {
       return "";
     }
     return "ACE: %s".formatted(BooleanUtil.yesNoFromBoolean(dataItemDto.getAceFlag()));
   }
 
-  public String getDisplayCaseOfficer(ApplicationDataItemDto dataItemDto,
+  String getDisplayCaseOfficer(ApplicationDataItemDto dataItemDto,
                                       Map<WebUserAccountId, EnergyPortalUserDto> portalUserDtosMap) {
     return Objects.nonNull(dataItemDto.getCaseOfficerWuaId())
         ? portalUserDtosMap.get(WebUserAccountId.from(dataItemDto.getCaseOfficerWuaId())).displayName()
         : "";
   }
 
-  public String getDisplayCamUser(ApplicationDataItemDto dataItemDto,
+  String getDisplayCamUser(ApplicationDataItemDto dataItemDto,
                                   Map<WebUserAccountId, EnergyPortalUserDto> portalUserDtosMap,
                                   TeamType teamType) {
     return TeamType.REGULATOR.equals(teamType) && Objects.nonNull(dataItemDto.getCamWuaId())
@@ -194,7 +209,7 @@ public class ApplicationDataItemDtoService {
         : "";
   }
 
-  public String getDisplayTechnicalReviewer(ApplicationDataItemDto dataItemDto,
+  String getDisplayTechnicalReviewer(ApplicationDataItemDto dataItemDto,
                                             Map<WebUserAccountId, EnergyPortalUserDto> portalUserDtosMap,
                                             TeamType teamType) {
     return TeamType.REGULATOR.equals(teamType) && Objects.nonNull(dataItemDto.getTechnicalReviewerWuaId())
@@ -202,13 +217,13 @@ public class ApplicationDataItemDtoService {
         : "";
   }
 
-  public String getSubmittedDateTime(ApplicationDataItemDto dataItemDto) {
+  String getSubmittedDateTime(ApplicationDataItemDto dataItemDto) {
     return ApplicationVersionStatus.SUBMITTED.equals(dataItemDto.getStatus())
         ? DateUtils.format(dataItemDto.getSubmittedDateTime(), DateUtils.DATE_TIME)
         : "";
   }
 
-  public String getSubmittedByName(
+  String getSubmittedByName(
       ApplicationDataItemDto dataItemDto,
       Map<WebUserAccountId, EnergyPortalUserDto> portalUserDtoByWuaId
   ) {
@@ -220,7 +235,7 @@ public class ApplicationDataItemDtoService {
     return matchingPortalUserDto.displayName();
   }
 
-  public String getConsultationDeadline(ApplicationDataItemDto dataItemDto) {
+  String getConsultationDeadline(ApplicationDataItemDto dataItemDto) {
     if (!Boolean.TRUE.equals(dataItemDto.getConsultationOpen())) {
       return "";
     }
@@ -228,7 +243,7 @@ public class ApplicationDataItemDtoService {
     return DateUtils.format(dataItemDto.getConsultationDeadline(), DateUtils.DATE_TIME);
   }
 
-  public String getApplicationUpdateDeadline(ApplicationDataItemDto dataItemDto) {
+  String getApplicationUpdateDeadline(ApplicationDataItemDto dataItemDto) {
     if (!Boolean.TRUE.equals(dataItemDto.getApplicationUpdateOpen())) {
       return "";
     }
@@ -236,7 +251,7 @@ public class ApplicationDataItemDtoService {
     return DateUtils.format(dataItemDto.getApplicationUpdateDeadline(), DateUtils.DATE_TIME);
   }
 
-  public String getTechnicalReviewDeadline(ApplicationDataItemDto dataItemDto) {
+  String getTechnicalReviewDeadline(ApplicationDataItemDto dataItemDto) {
     if (!Boolean.TRUE.equals(dataItemDto.getTechnicalReviewOpen())) {
       return "";
     }
@@ -244,14 +259,34 @@ public class ApplicationDataItemDtoService {
     return DateUtils.format(dataItemDto.getTechnicalReviewDeadline(), DateUtils.DATE_TIME);
   }
 
-  public String getOperator(ApplicationDataItemDto dataItemDto, Map<Integer, String> organisationUnitNameById) {
+  String getOperator(ApplicationDataItemDto dataItemDto, Map<Integer, String> organisationUnitNameById) {
     return organisationUnitNameById.getOrDefault(dataItemDto.getOperatorId(), "MISSING OPERATOR");
   }
 
-  public String getLicences(ApplicationDataItemDto dataItemDto) {
+  String getLicences(ApplicationDataItemDto dataItemDto) {
     return AssetType.FIELD.equals(dataItemDto.getAssetType())
         ? dataItemDto.getLicences()
         : "";
+  }
+
+  Boolean getConsentIssuedAndNotYetActive(ApplicationDataItemDto dataItemDto) {
+    return dataItemDto.getConsentIssued()
+        && dataItemDto.getConsentStartDate().isAfter(LocalDate.now(clock));
+  }
+
+  Boolean getConsentIssuedAndActive(ApplicationDataItemDto dataItemDto) {
+    var today = LocalDate.now(clock);
+    var consentStartDate = dataItemDto.getConsentStartDate();
+    var consentEndDate = dataItemDto.getConsentEndDate();
+
+    return dataItemDto.getConsentIssued()
+        && DateUtils.isAfterOrEqualTo(today, consentStartDate)
+        && DateUtils.isBeforeOrEqualTo(today, consentEndDate);
+  }
+
+  Boolean getConsentIssuedAndExpired(ApplicationDataItemDto dataItemDto) {
+    return dataItemDto.getConsentIssued()
+        && dataItemDto.getConsentEndDate().isBefore(LocalDate.now(clock));
   }
 
   public ApplicationDataItem getApplicationDataItem(
@@ -294,9 +329,9 @@ public class ApplicationDataItemDtoService {
         .withConsultationFurtherInformationOpen(furtherInformationOpen)
         .withLicences(getLicences(dataItemDto))
         .withApprovedForIssue(approvedForIssue)
-        .withConsentIssuedAndNotYetActive(dataItemDto.getConsentIssuedAndNotYetActive())
-        .withConsentIssuedAndActive(dataItemDto.getConsentIssuedAndActive())
-        .withConsentIssuedAndExpired(dataItemDto.getConsentIssuedAndExpired());
+        .withConsentIssuedAndNotYetActive(getConsentIssuedAndNotYetActive(dataItemDto))
+        .withConsentIssuedAndActive(getConsentIssuedAndActive(dataItemDto))
+        .withConsentIssuedAndExpired(getConsentIssuedAndExpired(dataItemDto));
 
     removeTagsForTeamType(teamType, builder);
 

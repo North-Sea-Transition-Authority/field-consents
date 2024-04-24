@@ -6,6 +6,7 @@ import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.A
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_VERSION_ID;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_VERSION_NUMBER;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.CACHED_PRIMARY_OPERATOR_NAME_1;
+import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.CAM_USER_WUA_ID;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.CASE_OFFICER_WUA_ID;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.CASE_USER_WUA_ID;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.PRIMARY_OPERATOR_OU_ID_1;
@@ -22,6 +23,7 @@ import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.TERMINAL_NAME_1;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Map;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
@@ -30,6 +32,7 @@ import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDtoTestUtil;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 public class ApplicationDataItemUtil {
 
@@ -98,10 +101,9 @@ public class ApplicationDataItemUtil {
         null,
         "P1, P2, P3",
         false,
-        false,
-        false,
-        false
-    );
+        null,
+        null,
+        false);
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForProductionInProgressForFieldNoDuration() {
@@ -140,10 +142,9 @@ public class ApplicationDataItemUtil {
         null,
         "P1, P2, P3",
         false,
-        false,
-        false,
-        false
-    );
+        null,
+        null,
+        false);
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForShortVentSubmittedForTerminal() {
@@ -182,10 +183,9 @@ public class ApplicationDataItemUtil {
         null,
         "",
         false,
-        false,
-        false,
-        false
-    );
+        null,
+        null,
+        false);
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForShortVentVersion2InProgressForTerminal() {
@@ -224,10 +224,9 @@ public class ApplicationDataItemUtil {
         null,
         "",
         false,
-        false,
-        false,
-        false
-    );
+        null,
+        null,
+        false);
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForShortVentAssignedToCaseOfficerForTerminal() {
@@ -266,10 +265,9 @@ public class ApplicationDataItemUtil {
         null,
         "",
         false,
-        false,
-        false,
-        false
-    );
+        null,
+        null,
+        false);
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForShortVentAssignedToCamForTerminal() {
@@ -308,10 +306,9 @@ public class ApplicationDataItemUtil {
         null,
         "",
         false,
-        false,
-        false,
-        false
-    );
+        null,
+        null,
+        false);
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForLongFlareSubmittedForTerminal() {
@@ -350,10 +347,9 @@ public class ApplicationDataItemUtil {
         null,
         "",
         false,
-        false,
-        false,
-        false
-    );
+        null,
+        null,
+        false);
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForLongFlareSubmittedForField() {
@@ -392,10 +388,50 @@ public class ApplicationDataItemUtil {
         null,
         "P1, P2, P3",
         false,
+        null,
+        null,
+        false);
+  }
+
+  public static ApplicationDataItemDto getApplicationDataItemDtoForLongFlareConsentedForField() {
+    return new ApplicationDataItemDto(
+        APPLICATION_ID,
+        APPLICATION_VERSION_ID,
+        ApplicationType.FLARE,
+        0,
+        APPLICATION_NO,
+        APPLICATION_VERSION_NUMBER,
+        PRIMARY_OPERATOR_OU_ID_1,
+        ApplicationVersionStatus.COMPLETED,
+        AssetType.FIELD,
+        FIELD_ID_1,
+        FIELD_NAME_1,
+        ConsentLengthType.LONG_TERM,
+        null,
+        null,
+        null,
+        LONG_TERM_START_YEAR,
+        LONG_TERM_END_YEAR,
+        Instant.now(),
+        USER_WUA_ID,
+        true,
+        CASE_OFFICER_WUA_ID,
+        CAM_USER_WUA_ID,
+        RegulatorTeamRole.CONSENTS_AND_AUTHORISATIONS_MANAGER,
         false,
+        TECHNICAL_REVIEWER_WUA_ID,
         false,
-        false
-    );
+        null,
+        false,
+        null,
+        false,
+        null,
+        null,
+        "P1, P2, P3",
+        false,
+        LocalDate.now().plusMonths(1),
+        LocalDate.now().plusYears(2),
+        true);
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForAnnualFlareSubmittedForFieldConsultationOpen() {
@@ -434,10 +470,9 @@ public class ApplicationDataItemUtil {
         null,
         "P1, P2, P3",
         false,
-        false,
-        false,
-        false
-    );
+        null,
+        null,
+        false);
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForLongFlareSubmittedForTerminalWithOpenWithdrawalRequest() {
@@ -476,8 +511,8 @@ public class ApplicationDataItemUtil {
         null,
         "",
         false,
-        false,
-        false,
+        null,
+        null,
         false
     );
   }

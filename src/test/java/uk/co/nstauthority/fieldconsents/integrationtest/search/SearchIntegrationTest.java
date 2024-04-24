@@ -19,6 +19,7 @@ import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataIt
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.getApplicationDataItemForTerminalInProgressOfTypeForRegulator;
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.getApplicationDataItemInProgressOfTypeAndLengthForRegulator;
 import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.getApplicationDataItemProductionSubmittedOfConsentLengthForRegulator;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.getApplicationDataItemProductionSubmittedOfConsentLengthWithConsentNotApproved;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.FIELD1_ASSET_KEY;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.FIELD2_ASSET_KEY;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.TERMINAL1_ASSET_KEY;
@@ -49,6 +50,8 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.assets.AdditionalAssetsService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentData;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataRepository;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.WithdrawalStatus;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthForm;
@@ -119,6 +122,9 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
 
   @Autowired
   private AdditionalAssetsService additionalAssetsService;
+
+  @Autowired
+  private ConsentDataRepository consentDataRepository;
 
   @Autowired
   private Clock clock;
@@ -500,77 +506,72 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
     assertThat(getSearchResultItems(searchForm)).isEmpty();
   }
 
-  /*********************************** CONSENT START YEAR ***********************************/
+
+  /*********************************** CONSENT START/END YEAR ***********************************/
   @Test
-  void searchByConsentStartYear_whenFoundWithAnnual() {
-    searchForm.setConsentStartYear(String.valueOf(zonedDateTime.getYear()));
-
-    var consentLengthForm = ConsentLengthTestUtil.getAnnualConsentLengthFormForYear(ANNUAL_CONSENT_YEAR);
-    var applicationVersion = createNewApplicationVersionForField(ApplicationType.PRODUCTION, consentLengthForm);
-    var applicationId = applicationVersion.getApplication().getId();
-
-    var searchResults = getSearchResultItems(searchForm);
-    assertThat(searchResults).containsExactly(
-        getApplicationDataItemInProgressOfTypeAndLengthForRegulator(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.ANNUAL)
-    );
-  }
-
-  @Test
-  void searchByConsentStartYear_whenFoundWithShortTerm() {
+  void searchByConsentStartYear_whenFound() {
     searchForm.setConsentStartYear(String.valueOf(zonedDateTime.getYear()));
 
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
-    var applicationVersion = createNewApplicationVersionForField(ApplicationType.PRODUCTION, consentLengthForm);
+    var consentData = new ConsentData(1);
+    consentData.setConsentStartDate(zonedDateTime.toLocalDate());
+    consentData.setConsentEndDate(zonedDateTime.toLocalDate().plusYears(1).minusDays(30));
+
+    var applicationVersion = createSubmittedApplicationVersionWithConsentData(ApplicationType.PRODUCTION, consentLengthForm, consentData);
     var applicationId = applicationVersion.getApplication().getId();
 
     var searchResults = getSearchResultItems(searchForm);
     assertThat(searchResults).containsExactly(
-        getApplicationDataItemInProgressOfTypeAndLengthForRegulator(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.SHORT_TERM)
+        getApplicationDataItemProductionSubmittedOfConsentLengthWithConsentNotApproved(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
     );
   }
 
   @Test
-  void searchByConsentStartYear_whenFoundWithLongTerm() {
-    searchForm.setConsentStartYear(String.valueOf(zonedDateTime.getYear()));
-
-    var consentLengthForm = ConsentLengthTestUtil.getLongTermConsentLengthForm();
-    var applicationVersion = createNewApplicationVersionForField(ApplicationType.PRODUCTION, consentLengthForm);
-    var applicationId = applicationVersion.getApplication().getId();
-
-    var searchResults = getSearchResultItems(searchForm);
-    assertThat(searchResults).containsExactly(
-        getApplicationDataItemInProgressOfTypeAndLengthForRegulator(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.LONG_TERM)
-    );
-  }
-
-  @Test
-  void searchByConsentStartYear_whenNotFoundWithAnnual() {
-    searchForm.setConsentStartYear(String.valueOf(zonedDateTime.getYear() - 1));
-
-    var consentLengthForm = ConsentLengthTestUtil.getAnnualConsentLengthFormForYear(ANNUAL_CONSENT_YEAR);
-    createNewApplicationVersionForField(ApplicationType.PRODUCTION, consentLengthForm);
-
-    assertThat(getSearchResultItems(searchForm)).isEmpty();
-  }
-
-  @Test
-  void searchByConsentStartYear_whenNotFoundWithShortTerm() {
+  void searchByConsentStartYear_whenNotFound() {
     searchForm.setConsentStartYear(String.valueOf(zonedDateTime.getYear() - 1));
 
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
-    createNewApplicationVersionForField(ApplicationType.PRODUCTION, consentLengthForm);
+    var consentData = new ConsentData(1);
+    consentData.setConsentStartDate(zonedDateTime.toLocalDate());
+    consentData.setConsentEndDate(zonedDateTime.toLocalDate().plusYears(1).minusDays(30));
 
-    assertThat(getSearchResultItems(searchForm)).isEmpty();
+    createSubmittedApplicationVersionWithConsentData(ApplicationType.PRODUCTION, consentLengthForm, consentData);
+
+    var searchResults = getSearchResultItems(searchForm);
+    assertThat(searchResults).isEmpty();
   }
 
   @Test
-  void searchByConsentStartYear_whenNotFoundWithLongTerm() {
-    searchForm.setConsentStartYear(String.valueOf(zonedDateTime.getYear() - 1));
+  void searchByConsentEndYear_whenFound() {
+    searchForm.setConsentEndYear(String.valueOf(zonedDateTime.getYear()));
 
-    var consentLengthForm = ConsentLengthTestUtil.getLongTermConsentLengthForm();
-    createNewApplicationVersionForField(ApplicationType.PRODUCTION, consentLengthForm);
+    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
+    var consentData = new ConsentData(1);
+    consentData.setConsentStartDate(zonedDateTime.toLocalDate());
+    consentData.setConsentEndDate(zonedDateTime.toLocalDate().minusDays(30));
 
-    assertThat(getSearchResultItems(searchForm)).isEmpty();
+    var applicationVersion = createSubmittedApplicationVersionWithConsentData(ApplicationType.PRODUCTION, consentLengthForm, consentData);
+    var applicationId = applicationVersion.getApplication().getId();
+
+    var searchResults = getSearchResultItems(searchForm);
+    assertThat(searchResults).containsExactly(
+        getApplicationDataItemProductionSubmittedOfConsentLengthWithConsentNotApproved(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
+    );
+  }
+
+  @Test
+  void searchByConsentEndYear_whenNotFound() {
+    searchForm.setConsentEndYear(String.valueOf(zonedDateTime.getYear()));
+
+    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
+    var consentData = new ConsentData(1);
+    consentData.setConsentStartDate(zonedDateTime.toLocalDate());
+    consentData.setConsentEndDate(zonedDateTime.toLocalDate().plusYears(1).minusDays(30));
+
+    createSubmittedApplicationVersionWithConsentData(ApplicationType.PRODUCTION, consentLengthForm, consentData);
+
+    var searchResults = getSearchResultItems(searchForm);
+    assertThat(searchResults).isEmpty();
   }
 
   @ParameterizedTest
@@ -991,6 +992,16 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
   private ApplicationVersion createSubmittedApplicationVersion(ApplicationType applicationType, ConsentLengthForm consentLengthForm) {
     var applicationVersion = createAwaitingForPaymentApplicationVersion(applicationType, consentLengthForm);
     applicationSubmissionService.submitApplication(applicationVersion, USER_DETAIL);
+
+    return applicationVersion;
+  }
+
+  private ApplicationVersion createSubmittedApplicationVersionWithConsentData(ApplicationType applicationType,
+                                                                              ConsentLengthForm consentLengthForm,
+                                                                              ConsentData consentData) {
+    var applicationVersion = createSubmittedApplicationVersion(applicationType, consentLengthForm);
+    consentData.setApplication(applicationVersion.getApplication());
+    consentDataRepository.save(consentData);
 
     return applicationVersion;
   }

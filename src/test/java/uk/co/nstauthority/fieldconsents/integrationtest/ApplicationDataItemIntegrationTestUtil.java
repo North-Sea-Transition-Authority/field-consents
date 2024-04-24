@@ -322,6 +322,40 @@ public class ApplicationDataItemIntegrationTestUtil {
         .build();
   }
 
+  public static ApplicationDataItem getApplicationDataItemProductionSubmittedOfConsentLengthWithConsentNotApproved(int applicationId,
+                                                                                                                   Instant submittedTimestamp,
+                                                                                                                   ConsentLengthType consentLengthType) {
+    return ApplicationDataItem.newBuilder()
+        .withApplicationId(applicationId)
+        .withType(ApplicationType.PRODUCTION.getDisplayName())
+        .withDuration(getConsentDurationString(consentLengthType))
+        .withReference(APPLICATION_REFERENCE)
+        .withOperator(ApplicationTestUtil.CACHED_PRIMARY_OPERATOR_NAME_1)
+        .withAsset(FieldTestUtil.FIELD_NAME_1)
+        .withGeographicArea(FieldTestUtil.FIELD_1_GEOGRAPHIC_AREA.getDisplayName())
+        .withStatus("Submitted")
+        .withSubmittedDateTime(DateUtils.format(submittedTimestamp, DateUtils.DATE_TIME))
+        .withSubmittedBy("%s %s".formatted(USER_DETAIL.forename(), USER_DETAIL.surname()))
+        .withAceFlag("ACE: No")
+        .withCaseOfficer("")
+        .withCamUser("")
+        .withWithdrawalOpen(false)
+        .withTechnicalReviewer("")
+        .withTechnicalReviewOpen(false)
+        .withTechnicalReviewDeadline("")
+        .withApplicationUpdateOpen(false)
+        .withApplicationUpdateDeadline("")
+        .withConsultationOpen(false)
+        .withConsultationDeadline("")
+        .withConsultationFurtherInformationOpen(false)
+        .withLicences("P1, P2, P3")
+        .withApprovedForIssue(false)
+        .withConsentIssuedAndNotYetActive(false)
+        .withConsentIssuedAndActive(false)
+        .withConsentIssuedAndExpired(false)
+        .build();
+  }
+
   public static ApplicationDataItem getApplicationDataItemProductionAssignedToCaseOfficerOfConsentLength(int applicationId,
                                                                                                          Instant submittedTimestamp,
                                                                                                          ConsentLengthType consentLengthType) {

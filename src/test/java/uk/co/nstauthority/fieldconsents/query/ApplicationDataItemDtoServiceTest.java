@@ -3,6 +3,7 @@ package uk.co.nstauthority.fieldconsents.query;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -31,20 +32,22 @@ import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.sub
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.technicalReviewer;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil.viewer;
 
+import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.EnumSource.Mode;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
@@ -90,9 +93,23 @@ class ApplicationDataItemDtoServiceTest {
   @Mock
   private ApplicationDataItemQueryService applicationDataItemQueryService;
 
-  @Spy
-  @InjectMocks
+  private final Clock clock = Clock.fixed(Instant.now(), ZoneId.systemDefault());
+
   private ApplicationDataItemDtoService applicationDataItemDtoService;
+
+  @BeforeEach
+  void setUp() {
+    applicationDataItemDtoService = spy(new ApplicationDataItemDtoService(
+        fieldService,
+        energyPortalUserService,
+        organisationUnitService,
+        applicationService,
+        applicationVersionService,
+        permissionService,
+        applicationDataItemQueryService,
+        clock
+    ));
+  }
 
   @Test
   void getOrganisationUnitJsonsFromApplicationDataItemDtos_emptyList() {
@@ -255,7 +272,7 @@ class ApplicationDataItemDtoServiceTest {
   }
 
   @Test
-  void getDisplayConsentDuration_whenNotYetSpecified() {
+  void getDisplayConsentDuration_whenInProgressAndDurationNotYetSpecified() {
     var applicationDataItemDto = ApplicationDataItemUtil.getApplicationDataItemDtoForProductionInProgressForFieldNoDuration();
 
     assertThat(applicationDataItemDtoService.getDisplayConsentDuration(applicationDataItemDto))
@@ -263,7 +280,21 @@ class ApplicationDataItemDtoServiceTest {
   }
 
   @Test
-  void getDisplayConsentDuration_shortTerm() {
+  void getDisplayConsentDuration_whenConsented() {
+    var applicationDataItemDto = ApplicationDataItemUtil.getApplicationDataItemDtoForLongFlareConsentedForField();
+    var consentDurationString = applicationDataItemDto.getDuration().getShortDisplayName();
+
+    assertThat(applicationDataItemDtoService.getDisplayConsentDuration(applicationDataItemDto))
+        .isEqualTo(
+            "%s %s - %s".formatted(consentDurationString,
+                DateUtils.format(applicationDataItemDto.getConsentStartDate(), DateUtils.SHORT_DATE),
+                DateUtils.format(applicationDataItemDto.getConsentEndDate(), DateUtils.SHORT_DATE)
+            )
+        );
+  }
+
+  @Test
+  void getDisplayConsentDuration_whenNotConsented_shortTerm() {
     var applicationDataItemDto = getApplicationDataItemDtoForShortVentAssignedToCaseOfficerForTerminal();
     var consentDurationString = applicationDataItemDto.getDuration().getShortDisplayName();
 
@@ -277,7 +308,7 @@ class ApplicationDataItemDtoServiceTest {
   }
 
   @Test
-  void getDisplayConsentDuration_Annual() {
+  void getDisplayConsentDuration_whenNotConsented_Annual() {
     var applicationDataItemDto = getApplicationDataItemDtoForAnnualProductionInProgressForField();
     var consentDurationString = applicationDataItemDto.getDuration().getShortDisplayName();
 
@@ -286,7 +317,7 @@ class ApplicationDataItemDtoServiceTest {
   }
 
   @Test
-  void getDisplayConsentDuration_LongTerm() {
+  void getDisplayConsentDuration_whenNotConsented_LongTerm() {
     var applicationDataItemDto = getApplicationDataItemDtoForLongFlareSubmittedForTerminal();
     var consentDurationString = applicationDataItemDto.getDuration().getShortDisplayName();
 
@@ -690,6 +721,116 @@ class ApplicationDataItemDtoServiceTest {
 
     assertThat(applicationDataItemDtoService.getOperator(dataItemDto, Collections.emptyMap())).isEqualTo(
         "MISSING OPERATOR");
+  }
+
+  @Test
+  void getConsentIssuedAndNotYetActive_whenConsentNotIssued_thenFalse() {
+    var dataItemDto = mock(ApplicationDataItemDto.class);
+    when(dataItemDto.getConsentIssued()).thenReturn(false);
+
+    assertThat(applicationDataItemDtoService.getConsentIssuedAndNotYetActive(dataItemDto)).isFalse();
+  }
+
+  @Test
+  void getConsentIssuedAndNotYetActive_whenConsentStartDateAfterToday_thenTrue() {
+    var dataItemDto = mock(ApplicationDataItemDto.class);
+    when(dataItemDto.getConsentIssued()).thenReturn(true);
+    when(dataItemDto.getConsentStartDate()).thenReturn(LocalDate.now().plusMonths(1));
+
+    assertThat(applicationDataItemDtoService.getConsentIssuedAndNotYetActive(dataItemDto)).isTrue();
+  }
+
+  @Test
+  void getConsentIssuedAndNotYetActive_whenConsentStartDateBeforeToday_thenFalse() {
+    var dataItemDto = mock(ApplicationDataItemDto.class);
+    when(dataItemDto.getConsentIssued()).thenReturn(true);
+    when(dataItemDto.getConsentStartDate()).thenReturn(LocalDate.now().minusMonths(1));
+
+    assertThat(applicationDataItemDtoService.getConsentIssuedAndNotYetActive(dataItemDto)).isFalse();
+  }
+
+  @Test
+  void getConsentIssuedAndActive_whenConsentNotIssued_thenFalse() {
+    var dataItemDto = mock(ApplicationDataItemDto.class);
+    when(dataItemDto.getConsentIssued()).thenReturn(false);
+
+    assertThat(applicationDataItemDtoService.getConsentIssuedAndActive(dataItemDto)).isFalse();
+  }
+
+  @Test
+  void getConsentIssuedAndActive_whenTodayBetweenConsentStartDateAndConsentEndDate_thenTrue() {
+    var dataItemDto = mock(ApplicationDataItemDto.class);
+    when(dataItemDto.getConsentIssued()).thenReturn(true);
+    when(dataItemDto.getConsentStartDate()).thenReturn(LocalDate.now().minusMonths(1));
+    when(dataItemDto.getConsentEndDate()).thenReturn(LocalDate.now().plusYears(1));
+
+    assertThat(applicationDataItemDtoService.getConsentIssuedAndActive(dataItemDto)).isTrue();
+  }
+
+  @Test
+  void getConsentIssuedAndActive_whenConsentStartDateAfterToday_thenFalse() {
+    var dataItemDto = mock(ApplicationDataItemDto.class);
+    when(dataItemDto.getConsentIssued()).thenReturn(true);
+    when(dataItemDto.getConsentStartDate()).thenReturn(LocalDate.now().plusMonths(1));
+    when(dataItemDto.getConsentEndDate()).thenReturn(LocalDate.now().plusYears(1));
+
+    assertThat(applicationDataItemDtoService.getConsentIssuedAndActive(dataItemDto)).isFalse();
+  }
+
+  @Test
+  void getConsentIssuedAndActive_whenConsentEndDateBeforeToday_thenFalse() {
+    var dataItemDto = mock(ApplicationDataItemDto.class);
+    when(dataItemDto.getConsentIssued()).thenReturn(true);
+    when(dataItemDto.getConsentStartDate()).thenReturn(LocalDate.now().minusYears(2));
+    when(dataItemDto.getConsentEndDate()).thenReturn(LocalDate.now().minusMonths(1));
+
+    assertThat(applicationDataItemDtoService.getConsentIssuedAndActive(dataItemDto)).isFalse();
+  }
+
+  @Test
+  void getConsentIssuedAndActive_whenConsentStartDateIsToday_thenTrue() {
+    var dataItemDto = mock(ApplicationDataItemDto.class);
+    when(dataItemDto.getConsentIssued()).thenReturn(true);
+    when(dataItemDto.getConsentStartDate()).thenReturn(LocalDate.now());
+    when(dataItemDto.getConsentEndDate()).thenReturn(LocalDate.now().plusYears(1));
+
+    assertThat(applicationDataItemDtoService.getConsentIssuedAndActive(dataItemDto)).isTrue();
+  }
+
+  @Test
+  void getConsentIssuedAndActive_whenConsentEndDateIsToday_thenTrue() {
+    var dataItemDto = mock(ApplicationDataItemDto.class);
+    when(dataItemDto.getConsentIssued()).thenReturn(true);
+    when(dataItemDto.getConsentStartDate()).thenReturn(LocalDate.now().minusMonths(1));
+    when(dataItemDto.getConsentEndDate()).thenReturn(LocalDate.now());
+
+    assertThat(applicationDataItemDtoService.getConsentIssuedAndActive(dataItemDto)).isTrue();
+  }
+
+  @Test
+  void getConsentIssuedAndExpired_whenConsentNotIssued_thenFalse() {
+    var dataItemDto = mock(ApplicationDataItemDto.class);
+    when(dataItemDto.getConsentIssued()).thenReturn(false);
+
+    assertThat(applicationDataItemDtoService.getConsentIssuedAndExpired(dataItemDto)).isFalse();
+  }
+
+  @Test
+  void getConsentIssuedAndExpired_whenConsentEndDateBeforeToday_thenTrue() {
+    var dataItemDto = mock(ApplicationDataItemDto.class);
+    when(dataItemDto.getConsentIssued()).thenReturn(true);
+    when(dataItemDto.getConsentEndDate()).thenReturn(LocalDate.now().minusDays(1));
+
+    assertThat(applicationDataItemDtoService.getConsentIssuedAndExpired(dataItemDto)).isTrue();
+  }
+
+  @Test
+  void getConsentIssuedAndExpired_whenConsentEndDateAfterToday_thenFalse() {
+    var dataItemDto = mock(ApplicationDataItemDto.class);
+    when(dataItemDto.getConsentIssued()).thenReturn(true);
+    when(dataItemDto.getConsentEndDate()).thenReturn(LocalDate.now().plusDays(1));
+
+    assertThat(applicationDataItemDtoService.getConsentIssuedAndExpired(dataItemDto)).isFalse();
   }
 
   @Test

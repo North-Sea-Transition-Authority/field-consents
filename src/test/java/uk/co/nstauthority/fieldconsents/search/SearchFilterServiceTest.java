@@ -1,7 +1,6 @@
 package uk.co.nstauthority.fieldconsents.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.jooq.impl.DSL.coalesce;
 import static org.jooq.impl.DSL.exists;
 import static org.jooq.impl.DSL.falseCondition;
 import static org.jooq.impl.DSL.year;
@@ -9,6 +8,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.FIELD1_ASSET_KEY;
 import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.TERMINAL1_ASSET_KEY;
+import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_CONSENT_DATA;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationConsentIssuingApprovals.APPLICATION_CONSENT_ISSUING_APPROVALS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationConsultations.APPLICATION_CONSULTATIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
@@ -144,11 +144,7 @@ class SearchFilterServiceTest {
     form.setConsentStartYear("2023");
 
     assertThat(searchFilterService.getConditions(form, teamType)).contains(
-        coalesce(
-            year(CONSENT_LENGTHS.SHORT_TERM_START_DATE),
-            CONSENT_LENGTHS.LONG_TERM_START_YEAR,
-            CONSENT_LENGTHS.ANNUAL_CONSENT_YEAR
-        ).eq(2023)
+        year(APPLICATION_CONSENT_DATA.CONSENT_START_DATE).eq(2023)
     );
   }
 
@@ -156,6 +152,26 @@ class SearchFilterServiceTest {
   @EnumSource(value = TeamType.class)
   void getConditions_withConsentStartYearNonNumeric(TeamType teamType) {
     form.setConsentStartYear("abc");
+
+    assertThat(searchFilterService.getConditions(form, teamType)).contains(
+        falseCondition()
+    );
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = TeamType.class)
+  void getConditions_withValidConsentEndYear(TeamType teamType) {
+    form.setConsentEndYear("2024");
+
+    assertThat(searchFilterService.getConditions(form, teamType)).contains(
+        year(APPLICATION_CONSENT_DATA.CONSENT_END_DATE).eq(2024)
+    );
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = TeamType.class)
+  void getConditions_withConsentEndYearNonNumeric(TeamType teamType) {
+    form.setConsentEndYear("abc");
 
     assertThat(searchFilterService.getConditions(form, teamType)).contains(
         falseCondition()

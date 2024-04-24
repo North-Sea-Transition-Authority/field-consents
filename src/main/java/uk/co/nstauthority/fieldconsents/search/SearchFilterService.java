@@ -1,18 +1,16 @@
 package uk.co.nstauthority.fieldconsents.search;
 
 import static org.apache.commons.lang3.StringUtils.isNumeric;
-import static org.jooq.impl.DSL.coalesce;
 import static org.jooq.impl.DSL.exists;
 import static org.jooq.impl.DSL.falseCondition;
 import static org.jooq.impl.DSL.year;
+import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION_CONSENT_DATA;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationConsultations.APPLICATION_CONSULTATIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.Applications.APPLICATIONS;
-import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ConsentLengths.CONSENT_LENGTHS;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
@@ -60,9 +58,18 @@ public class SearchFilterService {
         .ifPresent(searchFilterConditions::add);
 
     var consentStartYear = form.getConsentStartYear();
-    if (Objects.nonNull(consentStartYear)) {
+    if (consentStartYear != null) {
       if (isNumeric(consentStartYear)) {
         searchFilterConditions.add(this.getConsentStartYearQueryCondition(Integer.parseInt(consentStartYear)));
+      } else {
+        searchFilterConditions.add(falseCondition());
+      }
+    }
+
+    var consentEndYear = form.getConsentEndYear();
+    if (consentEndYear != null) {
+      if (isNumeric(consentEndYear)) {
+        searchFilterConditions.add(this.getConsentEndYearQueryCondition(Integer.parseInt(consentEndYear)));
       } else {
         searchFilterConditions.add(falseCondition());
       }
@@ -84,11 +91,10 @@ public class SearchFilterService {
   }
 
   private Condition getConsentStartYearQueryCondition(Integer consentStartYear) {
-    return
-        coalesce(
-            year(CONSENT_LENGTHS.SHORT_TERM_START_DATE),
-            CONSENT_LENGTHS.LONG_TERM_START_YEAR,
-            CONSENT_LENGTHS.ANNUAL_CONSENT_YEAR
-        ).eq(consentStartYear);
+    return year(APPLICATION_CONSENT_DATA.CONSENT_START_DATE).eq(consentStartYear);
+  }
+
+  private Condition getConsentEndYearQueryCondition(Integer consentEndYear) {
+    return year(APPLICATION_CONSENT_DATA.CONSENT_END_DATE).eq(consentEndYear);
   }
 }

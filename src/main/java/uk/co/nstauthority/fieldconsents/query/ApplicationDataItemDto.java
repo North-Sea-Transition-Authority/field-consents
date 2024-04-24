@@ -44,9 +44,9 @@ public class ApplicationDataItemDto {
   private final FurtherInformationStatus consultationFurtherInformationStatus;
   private final String licences;
   private final Boolean approvedForIssue;
-  private final Boolean consentIssuedAndNotYetActive;
-  private final Boolean consentIssuedAndActive;
-  private final Boolean consentIssuedAndExpired;
+  private final LocalDate consentStartDate;
+  private final LocalDate consentEndDate;
+  private final Boolean consentIssued;
 
   public ApplicationDataItemDto(Integer applicationId, Integer applicationVersionId, ApplicationType type,
                                 Integer variationNo, Integer applicationNo, Integer versionNo, Integer operatorId,
@@ -59,8 +59,8 @@ public class ApplicationDataItemDto {
                                 Long technicalReviewerWuaId, Boolean technicalReviewOpen, Instant technicalReviewDeadline,
                                 Boolean applicationUpdateOpen, Instant applicationUpdateDeadline, Boolean consultationOpen,
                                 Instant consultationDeadline, FurtherInformationStatus consultationFurtherInformationStatus,
-                                String licences, Boolean approvedForIssue, Boolean consentIssuedAndNotYetActive,
-                                Boolean consentIssuedAndActive, Boolean consentIssuedAndExpired) {
+                                String licences, Boolean approvedForIssue, LocalDate consentStartDate, LocalDate consentEndDate,
+                                Boolean consentIssued) {
     this.applicationId = applicationId;
     this.applicationVersionId = applicationVersionId;
     this.type = type;
@@ -95,9 +95,9 @@ public class ApplicationDataItemDto {
     this.consultationFurtherInformationStatus = consultationFurtherInformationStatus;
     this.licences = licences;
     this.approvedForIssue = approvedForIssue;
-    this.consentIssuedAndNotYetActive = consentIssuedAndNotYetActive;
-    this.consentIssuedAndActive = consentIssuedAndActive;
-    this.consentIssuedAndExpired = consentIssuedAndExpired;
+    this.consentStartDate = consentStartDate;
+    this.consentEndDate = consentEndDate;
+    this.consentIssued = consentIssued;
   }
 
   public Integer getApplicationId() {
@@ -236,15 +236,15 @@ public class ApplicationDataItemDto {
     return approvedForIssue;
   }
 
-  public Boolean getConsentIssuedAndNotYetActive() {
-    return consentIssuedAndNotYetActive;
+  public LocalDate getConsentStartDate() {
+    return consentStartDate;
   }
 
-  public Boolean getConsentIssuedAndActive() {
-    return consentIssuedAndActive;
+  public LocalDate getConsentEndDate() {
+    return consentEndDate;
   }
 
-  public Boolean getConsentIssuedAndExpired() {
-    return consentIssuedAndExpired;
+  public Boolean getConsentIssued() {
+    return consentIssued;
   }
 }

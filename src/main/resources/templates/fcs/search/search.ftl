@@ -20,6 +20,7 @@
       <@dataItemFilter.operatorFilter form=form prefilledOperator=prefilledOperator operatorSearchRestUrl=operatorSearchRestUrl/>
       <@dataItemFilter.submittedYearFilter form=form/>
       <@consentStartYearFilter form=form/>
+      <@consentEndYearFilter form=form/>
       <#if approvedForIssue?has_content>
         <@dataItemFilter.approvedForIssueFilter form=form expanded=form.approvedForIssue?has_content/>
       </#if>
@@ -58,6 +59,16 @@
       path="form.consentStartYear"
       labelText=""
       suffixScreenReaderPrompt="Consent start year"
+    />
+  </@fdsSearch.searchFilterItem>
+</#macro>
+
+<#macro consentEndYearFilter form>
+  <@fdsSearch.searchFilterItem itemName="Consent end year" expanded=form.consentEndYear?has_content>
+    <@fdsSearch.searchTextInput
+      path="form.consentEndYear"
+      labelText=""
+      suffixScreenReaderPrompt="Consent end year"
     />
   </@fdsSearch.searchFilterItem>
 </#macro>
