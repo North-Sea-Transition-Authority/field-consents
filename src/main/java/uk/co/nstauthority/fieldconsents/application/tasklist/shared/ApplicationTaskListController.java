@@ -9,10 +9,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.ApplicationContextService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
-import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ProductionConsentCheckResult;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestViewService;
 import uk.co.nstauthority.fieldconsents.application.delete.DeleteApplicationController;
@@ -57,24 +57,22 @@ public class ApplicationTaskListController {
   public ModelAndView getTaskList(@PathVariable Integer applicationId) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var sections = applicationTaskListService.getAllSections(applicationVersion);
-    var applicationType = applicationVersion.getApplication().getType().getDisplayName();
+    var applicationType = applicationVersion.getApplication().getType();
     var applicationContext = applicationContextService.getApplicationContext(applicationVersion);
     var applicationReference = applicationService.getApplicationReference(applicationVersion);
 
     var modelAndView = new ModelAndView("fcs/application/applicationTaskList")
-        .addObject("pageTitle", applicationType + " application")
+        .addObject("pageTitle", applicationType.getDisplayName() + " application")
         .addObject("taskListSections", sections)
         .addObject("applicationContext", applicationContext)
         .addObject("applicationReference", applicationReference)
         .addObject("deleteApplicationUrl", ReverseRouter.route(on(DeleteApplicationController.class)
             .getDeleteApplication(applicationId)));
 
-    if (applicationVersion.getApplication().getType() != ApplicationType.PRODUCTION) {
+    if (consentService.shouldCheckProductionConsentExists(applicationVersion)) {
       var productionConsentCheckResult = consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion);
-      switch (productionConsentCheckResult) {
-        case DOES_NOT_EXIST, EXPIRES_PART_WAY -> modelAndView.addObject("warning", productionConsentCheckResult.getWarning());
-        default -> {
-        }
+      if (productionConsentCheckResult == ProductionConsentCheckResult.NOT_WITHIN_ACTIVE_CONSENT) {
+        modelAndView.addObject("warning", productionConsentCheckResult.getWarning());
       }
     }
 

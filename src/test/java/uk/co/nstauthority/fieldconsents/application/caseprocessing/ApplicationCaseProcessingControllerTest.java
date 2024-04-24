@@ -247,15 +247,8 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
         .andExpectAll(commonAttributesForTab(expectedTab, applicationVersion));
   }
 
-  @ParameterizedTest
-  @EnumSource(
-      value = ApplicationType.class,
-      names = {"PRODUCTION"},
-      mode = EnumSource.Mode.EXCLUDE
-  )
-  void caseProcessing_checkProductionConsentWarning(ApplicationType applicationType) throws Exception {
-    application.setType(applicationType);
-
+  @Test
+  void caseProcessing_checkProductionConsentWarning() throws Exception {
     stubBaseServiceCalls();
     stubTaskListServiceCall();
     stubSummaryServiceCall();
@@ -263,7 +256,8 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     stubPaymentsServiceCall();
     stubConsentServiceCall();
 
-    var checkResult = ProductionConsentCheckResult.DOES_NOT_EXIST;
+    var checkResult = ProductionConsentCheckResult.NOT_WITHIN_ACTIVE_CONSENT;
+    when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(true);
     when(consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion)).thenReturn(checkResult);
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
@@ -276,7 +270,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   @EnumSource(
       value = ProductionConsentCheckResult.class,
       mode = EnumSource.Mode.EXCLUDE,
-      names = {"DOES_NOT_EXIST", "EXPIRES_PART_WAY"}
+      names = "NOT_WITHIN_ACTIVE_CONSENT"
   )
   void caseProcessing_checkProductionConsentWarning_ignoredResults(ProductionConsentCheckResult checkResult) throws Exception {
     stubBaseServiceCalls();
@@ -286,6 +280,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     stubPaymentsServiceCall();
     stubConsentServiceCall();
 
+    when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(true);
     when(consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion)).thenReturn(checkResult);
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
@@ -303,8 +298,9 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     stubPaymentsServiceCall();
     stubConsentServiceCall();
 
+    when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(true);
     when(consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion))
-        .thenReturn(ProductionConsentCheckResult.EXISTS);
+        .thenReturn(ProductionConsentCheckResult.WITHIN_ACTIVE_CONSENT);
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
             .caseProcessing(APPLICATION_ID, null, null)))
@@ -324,6 +320,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
 
     when(regulatorTeamService.isTechnicalReviewer(WebUserAccountId.from(user.wuaId()))).thenReturn(true);
     when(technicalReviewService.findOpenTechnicalReview(applicationVersion)).thenReturn(Optional.of(technicalReview));
+    when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(false);
 
     var tabParam = "?tab=%s".formatted(caseProcessingTab.getAnchor());
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
@@ -344,6 +341,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     stubConsentServiceCall();
 
     when(regulatorTeamService.isTechnicalReviewer(WebUserAccountId.from(user.wuaId()))).thenReturn(false);
+    when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(false);
 
     var tabParam = "?tab=%s".formatted(caseProcessingTab.getAnchor());
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
@@ -367,6 +365,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication())).thenReturn(Optional.of(consultation));
     when(furtherInformationService.findLatestOpenFurtherInformation(consultation)).thenReturn(Optional.of(furtherInformation));
     when(furtherInformationService.getFurtherInformationView(furtherInformation)).thenReturn(furtherInformationView);
+    when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(false);
 
     var tabParam = "?tab=%s".formatted(caseProcessingTab.getAnchor());
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
@@ -387,6 +386,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     stubConsentServiceCall();
 
     when(regulatorTeamService.isCaseOfficer(WebUserAccountId.from(user.wuaId()))).thenReturn(false);
+    when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(false);
 
     var tabParam = "?tab=%s".formatted(caseProcessingTab.getAnchor());
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
@@ -410,6 +410,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
     when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication())).thenReturn(Optional.empty());
     when(furtherInformationService.findLatestOpenFurtherInformation(consultation)).thenReturn(Optional.empty());
 
+    when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(true);
     when(consentIssuingApprovalService.getConsentIssuingApprovalSummaryView(application))
         .thenReturn(Optional.of(consentIssuingApprovalSummaryView));
 

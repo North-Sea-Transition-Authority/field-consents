@@ -18,6 +18,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -101,6 +102,32 @@ class ConsentDataServiceTest {
     doReturn(Optional.of(consentData)).when(consentDataService).findConsentData(application);
 
     assertThat(consentDataService.getConsentData(application)).isEqualTo(consentData);
+  }
+
+  @Test
+  void getConsentDataListInRangeForCompletedProductionApplicationsByFieldId() {
+    var start = LocalDate.now();
+    var end = start.plusDays(1);
+    var fieldIds = Set.of(1, 2, 3);
+
+    var field1ConsentData1 = ConsentDataTestUtil.newBuilder().build();
+    var field1ConsentData2 = ConsentDataTestUtil.newBuilder().build();
+    var field2ConsentData1 = ConsentDataTestUtil.newBuilder().build();
+    // field 3 doesn't have any consent data therefore it's not included here
+
+    when(repository.getConsentDataListInRangeForCompletedProductionApplicationsForFieldIds(start, end, fieldIds))
+        .thenReturn(List.of(
+            new ConsentDataByFieldIdTestImpl(1, field1ConsentData1),
+            new ConsentDataByFieldIdTestImpl(1, field1ConsentData2),
+            new ConsentDataByFieldIdTestImpl(2, field2ConsentData1)
+        ));
+
+    assertThat(
+        consentDataService.getConsentDataListInRangeForCompletedProductionApplicationsByFieldId(start, end, fieldIds))
+        .containsExactlyInAnyOrderEntriesOf(Map.of(
+            1, List.of(field1ConsentData1, field1ConsentData2),
+            2, List.of(field2ConsentData1)
+        ));
   }
 
   @Test

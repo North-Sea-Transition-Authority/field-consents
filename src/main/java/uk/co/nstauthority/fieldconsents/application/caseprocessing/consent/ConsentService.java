@@ -2,7 +2,6 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.consent;
 
 import java.time.Clock;
 import java.time.LocalDate;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -19,7 +18,9 @@ import uk.co.fivium.fileuploadlibrary.core.FileSource;
 import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationFileUsage;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
+import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentData;
@@ -130,6 +131,17 @@ public class ConsentService {
     }
   }
 
+  public boolean shouldCheckProductionConsentExists(ApplicationVersion applicationVersion) {
+    if (ApplicationType.PRODUCTION == applicationVersion.getApplication().getType()) {
+      return false;
+    }
+
+    return switch (applicationVersion.getStatus()) {
+      case IN_PROGRESS, AWAITING_PAYMENT, SUBMITTED -> true;
+      default -> false;
+    };
+  }
+
   public ProductionConsentCheckResult checkProductionConsentExistsForInProgressApplication(
       ApplicationVersion applicationVersion
   ) {
@@ -138,51 +150,62 @@ public class ConsentService {
       return ProductionConsentCheckResult.CONSENT_DETAILS_DO_NOT_EXIST;
     }
 
-    var fieldApplicationAssets = applicationAssetService
+    // find consent data for the primary and secondary fields on this application
+    var fieldIds = applicationAssetService
         .findAssetsByApplicationVersionAndAssetTypeAndAssetRoles(
             applicationVersion,
             AssetType.FIELD,
             Set.of(AssetRole.PRIMARY, AssetRole.SECONDARY)
-        );
+        )
+        .stream()
+        .map(ApplicationAsset::getAssetId)
+        .collect(Collectors.toSet());
 
     var consentLengthDetails = consentLengthDetailsOptional.get();
     var proposedConsentStartDate = consentLengthService.getProposedConsentStartDate(consentLengthDetails);
     var proposedConsentEndDate = consentLengthService.getProposedConsentEndDate(consentLengthDetails);
 
-    var consentDataList = consentDataService
-        .getConsentDataListForCompletedApplicationsWithAssets(fieldApplicationAssets)
-        .stream()
-        .filter(consentData -> DateUtils.isAfterOrEqualTo(consentData.getConsentEndDate(), proposedConsentStartDate))
-        .filter(consentData -> DateUtils.isBeforeOrEqualTo(consentData.getConsentStartDate(), proposedConsentEndDate))
-        .toList();
+    var consentDataListByFieldId = consentDataService.getConsentDataListInRangeForCompletedProductionApplicationsByFieldId(
+        proposedConsentStartDate,
+        proposedConsentEndDate,
+        fieldIds
+    );
 
-    if (consentDataList.isEmpty()) {
-      return ProductionConsentCheckResult.DOES_NOT_EXIST;
+    // if there is no production consent data, this application cannot be within a production period
+    if (consentDataListByFieldId.isEmpty()) {
+      return ProductionConsentCheckResult.NOT_WITHIN_ACTIVE_CONSENT;
     }
 
-    if (!getDaysNotCoveredByConsents(consentDataList, proposedConsentStartDate, proposedConsentEndDate).isEmpty()) {
-      return ProductionConsentCheckResult.EXPIRES_PART_WAY;
+    for (var fieldId : fieldIds) {
+      var consentDataList = consentDataListByFieldId.get(fieldId);
+
+      // if there is no consent data for this field, the application is not within a production period
+      if (consentDataList == null || consentDataList.isEmpty()) {
+        return ProductionConsentCheckResult.NOT_WITHIN_ACTIVE_CONSENT;
+      }
+
+      if (!allDaysCoveredByProductionConsents(consentDataList, proposedConsentStartDate, proposedConsentEndDate)) {
+        return ProductionConsentCheckResult.NOT_WITHIN_ACTIVE_CONSENT;
+      }
     }
 
-    return ProductionConsentCheckResult.EXISTS;
+    return ProductionConsentCheckResult.WITHIN_ACTIVE_CONSENT;
   }
 
-  Set<LocalDate> getDaysNotCoveredByConsents(List<ConsentData> consentDataList, LocalDate from, LocalDate to) {
-    var requestedDays = generateRange(from, to);
+  boolean allDaysCoveredByProductionConsents(List<ConsentData> consentDataList, LocalDate start, LocalDate end) {
+    var requestedDays = generateRange(start, end);
     var consentedDays = consentDataList
         .stream()
         .flatMap(consentData -> generateRange(consentData.getConsentStartDate(), consentData.getConsentEndDate()).stream())
-        .filter(consentDate -> DateUtils.isAfterOrEqualTo(consentDate, from))
-        .filter(consentDate -> DateUtils.isBeforeOrEqualTo(consentDate, to))
+        .filter(consentDate -> DateUtils.isAfterOrEqualTo(consentDate, start))
+        .filter(consentDate -> DateUtils.isBeforeOrEqualTo(consentDate, end))
         .collect(Collectors.toSet());
 
-    return new HashSet<>(CollectionUtils.disjunction(requestedDays, consentedDays));
+    return CollectionUtils.disjunction(requestedDays, consentedDays).isEmpty();
   }
 
-  Set<LocalDate> generateRange(LocalDate from, LocalDate to) {
-    var range = from.datesUntil(to).collect(Collectors.toCollection(HashSet::new));
-    range.add(to);
-    return range;
+  List<LocalDate> generateRange(LocalDate start, LocalDate end) {
+    return start.datesUntil(end.plusDays(1)).toList(); // add 1 day to make the range inclusive of the end date
   }
 
   void generateDocumentInstancesAndSaveToConsent(ApplicationVersion applicationVersion, Consent consent) {

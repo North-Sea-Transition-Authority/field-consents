@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -44,8 +45,10 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionView;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentTabConsentSummaryView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentTabService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ProductionConsentCheckResult;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.payment.PaymentsTabPaymentSummaryView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.payment.PaymentsTabService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
@@ -86,6 +89,9 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
 
   @MockBean
   private ConsentTabService consentTabService;
+
+  @MockBean
+  private ConsentService consentService;
 
   private List<CaseProcessingActionView> caseProcessingActionViews;
 
@@ -334,6 +340,26 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
     verifyNoInteractions(applicationUpdateRequestViewService);
   }
 
+  @Test
+  void getIndustryCaseProcessing_notWithinProductionPeriodWarning() throws Exception {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
+    var application = applicationVersion.getApplication();
+    var tabParam = "?tab=%s".formatted(VIEW_APPLICATION.getAnchor());
+
+    stubBaseServiceCalls(applicationVersion);
+    stubConsentServiceCall(application);
+    stubSummaryServiceCall(applicationVersion);
+
+    when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(true);
+    when(consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion))
+        .thenReturn(ProductionConsentCheckResult.NOT_WITHIN_ACTIVE_CONSENT);
+
+    mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
+            .getIndustryCaseProcessing(APPLICATION_ID, null, null)) + tabParam)
+            .with(user(user)))
+        .andExpect(model().attribute("warning", ProductionConsentCheckResult.NOT_WITHIN_ACTIVE_CONSENT.getWarning()));
+  }
+
   private void stubBaseServiceCalls(ApplicationVersion applicationVersion) {
     // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
@@ -348,6 +374,7 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
         .withPrimaryOperator("Primary operator")
         .build());
     when(applicationService.isMigratedApplication(applicationVersion.getApplication())).thenReturn(true);
+    when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(false);
   }
 
   private void stubSummaryServiceCall(ApplicationVersion applicationVersion) {

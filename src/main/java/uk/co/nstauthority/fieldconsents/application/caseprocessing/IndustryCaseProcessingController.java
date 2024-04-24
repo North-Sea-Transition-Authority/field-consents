@@ -16,7 +16,9 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentTabService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ProductionConsentCheckResult;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.payment.PaymentsTabService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestViewService;
@@ -41,6 +43,7 @@ public class IndustryCaseProcessingController {
   private final ApplicationUpdateRequestViewService applicationUpdateRequestViewService;
   private final PaymentsTabService paymentsTabService;
   private final ConsentTabService consentTabService;
+  private final ConsentService consentService;
 
   @Autowired
   IndustryCaseProcessingController(
@@ -53,7 +56,8 @@ public class IndustryCaseProcessingController {
       ApplicationUpdateService applicationUpdateService,
       ApplicationUpdateRequestViewService applicationUpdateRequestViewService,
       PaymentsTabService paymentsTabService,
-      ConsentTabService consentTabService
+      ConsentTabService consentTabService,
+      ConsentService consentService
   ) {
     this.applicationService = applicationService;
     this.applicationContextService = applicationContextService;
@@ -65,6 +69,7 @@ public class IndustryCaseProcessingController {
     this.applicationUpdateRequestViewService = applicationUpdateRequestViewService;
     this.paymentsTabService = paymentsTabService;
     this.consentTabService = consentTabService;
+    this.consentService = consentService;
   }
 
   @GetMapping("industry-case-processing")
@@ -130,6 +135,13 @@ public class IndustryCaseProcessingController {
       modelAndView.addObject("applicationUpdateRequestView",
           applicationUpdateRequestViewService.getOpenApplicationUpdateRequestView(applicationVersion)
       );
+    }
+
+    if (consentService.shouldCheckProductionConsentExists(applicationVersion)) {
+      var productionConsentCheckResult = consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion);
+      if (productionConsentCheckResult == ProductionConsentCheckResult.NOT_WITHIN_ACTIVE_CONSENT) {
+        modelAndView.addObject("warning", productionConsentCheckResult.getWarning());
+      }
     }
 
     return modelAndView;

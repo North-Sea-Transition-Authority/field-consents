@@ -83,12 +83,13 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
   @Test
   void getTaskList_withFlareApplication() throws Exception {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
-    var productionConsentCheckResult = ProductionConsentCheckResult.EXISTS;
+    var productionConsentCheckResult = ProductionConsentCheckResult.WITHIN_ACTIVE_CONSENT;
 
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(applicationContext);
+    when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(true);
     when(consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion))
         .thenReturn(productionConsentCheckResult);
 
@@ -107,13 +108,14 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
   @Test
   void getTaskList_withVentApplication() throws Exception {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
-    var productionConsentCheckResult = ProductionConsentCheckResult.DOES_NOT_EXIST;
+    var productionConsentCheckResult = ProductionConsentCheckResult.NOT_WITHIN_ACTIVE_CONSENT;
 
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(applicationTaskListService.getAllSections(applicationVersion)).thenReturn(flareTaskListSections);
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(applicationContext);
+    when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(true);
     when(consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion))
         .thenReturn(productionConsentCheckResult);
 
@@ -137,6 +139,7 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(applicationTaskListService.getAllSections(applicationVersion)).thenReturn(flareTaskListSections);
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(applicationContext);
+    when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(false);
 
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ApplicationTaskListController.class)
             .getTaskList(APPLICATION_ID)))

@@ -1,9 +1,12 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data;
 
 import jakarta.transaction.Transactional;
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -11,7 +14,6 @@ import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
-import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentDataLongTermProductionFiguresService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentEmissionFigureService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionFiguresService;
@@ -56,10 +58,17 @@ public class ConsentDataService {
     );
   }
 
-  public List<ConsentData> getConsentDataListForCompletedApplicationsWithAssets(
-      Collection<ApplicationAsset> applicationAssets
+  public Map<Integer, List<ConsentData>> getConsentDataListInRangeForCompletedProductionApplicationsByFieldId(
+      LocalDate start,
+      LocalDate end,
+      Collection<Integer> fieldIds
   ) {
-    return repository.getConsentDataListForCompletedApplicationsWithAssets(applicationAssets);
+    return repository.getConsentDataListInRangeForCompletedProductionApplicationsForFieldIds(start, end, fieldIds)
+        .stream()
+        .collect(Collectors.groupingBy(
+            ConsentDataForFieldId::getFieldId,
+            Collectors.mapping(ConsentDataForFieldId::getConsentData, Collectors.toList())
+        ));
   }
 
   /**
