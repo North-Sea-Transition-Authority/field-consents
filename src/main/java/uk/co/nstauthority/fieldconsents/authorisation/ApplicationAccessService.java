@@ -18,18 +18,21 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
 public class ApplicationAccessService {
 
   private final OrganisationUnitPermissionService organisationUnitPermissionService;
-
   private final TeamService teamService;
-
   private final ConsultationService consultationService;
+  private final FieldEquityPartnerPermissionService fieldEquityPartnerPermissionService;
 
   @Autowired
-  ApplicationAccessService(OrganisationUnitPermissionService organisationUnitPermissionService,
-                           TeamService teamService,
-                           ConsultationService consultationService) {
+  ApplicationAccessService(
+      OrganisationUnitPermissionService organisationUnitPermissionService,
+      TeamService teamService,
+      ConsultationService consultationService,
+      FieldEquityPartnerPermissionService fieldEquityPartnerPermissionService
+  ) {
     this.organisationUnitPermissionService = organisationUnitPermissionService;
     this.teamService = teamService;
     this.consultationService = consultationService;
+    this.fieldEquityPartnerPermissionService = fieldEquityPartnerPermissionService;
   }
 
   public boolean hasApplicationPermission(
@@ -73,6 +76,12 @@ public class ApplicationAccessService {
 
     userRolePermissions.addAll(organisationUnitPermissionService
         .getUserPermissionsForOperator(user, applicationVersion.getPrimaryOperatorOuId()));
+
+    if (!userRolePermissions.contains(RolePermission.VIEW_FCS_CONSENTS)
+        && fieldEquityPartnerPermissionService
+        .userHasPermissionForFieldInFieldEquityPartnerTeam(user, applicationVersion, Set.of(RolePermission.VIEW_FCS_CONSENTS))) {
+      userRolePermissions.add(RolePermission.VIEW_FCS_CONSENTS);
+    }
 
     return userRolePermissions;
   }

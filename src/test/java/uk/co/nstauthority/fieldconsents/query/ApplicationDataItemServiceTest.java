@@ -16,6 +16,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.jooq.Condition;
+import org.jooq.SQLDialect;
+import org.jooq.impl.DefaultDSLContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,6 +31,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.fieldconsents.authorisation.FieldEquityPartnerPermissionService;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
@@ -49,6 +52,9 @@ class ApplicationDataItemServiceTest {
 
   @Mock
   private TeamService teamService;
+
+  @Mock
+  private FieldEquityPartnerPermissionService fieldEquityPartnerPermissionService;
 
   @InjectMocks
   private ApplicationDataItemService applicationDataItemService;
@@ -84,6 +90,14 @@ class ApplicationDataItemServiceTest {
         .build();
 
     fieldJsonById = Map.of(field1Json.getId(), field1Json);
+
+    applicationDataItemService = new ApplicationDataItemService(
+        applicationDataItemDtoService,
+        organisationUnitPermissionService,
+        teamService,
+        fieldEquityPartnerPermissionService,
+        new DefaultDSLContext(SQLDialect.DEFAULT)
+    );
   }
 
   @Test

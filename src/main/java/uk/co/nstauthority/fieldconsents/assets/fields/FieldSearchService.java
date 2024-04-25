@@ -5,10 +5,12 @@ import static uk.co.nstauthority.fieldconsents.assets.fields.FieldService.fields
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldService.fieldsWithOperatorsProjectionRoot;
 
 import java.util.List;
+import java.util.Set;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.field.FieldApi;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.authorisation.FieldEquityPartnerPermissionService;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
@@ -21,15 +23,18 @@ public class FieldSearchService {
   private final FieldApi fieldApi;
   private final TeamService teamService;
   private final OrganisationUnitPermissionService organisationUnitPermissionService;
+  private final FieldEquityPartnerPermissionService fieldEquityPartnerPermissionService;
 
   FieldSearchService(
       FieldApi fieldApi,
       TeamService teamService,
-      OrganisationUnitPermissionService organisationUnitPermissionService
+      OrganisationUnitPermissionService organisationUnitPermissionService,
+      FieldEquityPartnerPermissionService fieldEquityPartnerPermissionService
   ) {
     this.fieldApi = fieldApi;
     this.teamService = teamService;
     this.organisationUnitPermissionService = organisationUnitPermissionService;
+    this.fieldEquityPartnerPermissionService = fieldEquityPartnerPermissionService;
   }
 
   public List<FieldJson> searchFields(String fieldName, String requestPurpose) {
@@ -79,11 +84,20 @@ public class FieldSearchService {
             .map(OrganisationUnitJson::organisationUnitId)
             .toList();
 
+    var fieldIds = fieldWithOperatorJsons.stream()
+        .map(FieldWithOperatorJson::getId)
+        .toList();
+
+    var fieldIdsUserHasViewFcsPermissionForInFieldEquityPartnerTeam = fieldEquityPartnerPermissionService
+        .getFieldIdsUserHasPermissionForInFieldEquityPartnerTeam(user, fieldIds, Set.of(RolePermission.VIEW_FCS_CONSENTS));
+
     return fieldWithOperatorJsons
         .stream()
         .filter(field ->
-            field.operatorExists()
+            (field.operatorExists()
                 && organisationUnitIdsUserHasPermissionFor.contains(field.getOperatorJson().organisationUnitId()))
+            || fieldIdsUserHasViewFcsPermissionForInFieldEquityPartnerTeam.contains(field.getId())
+        )
         .toList();
   }
 }

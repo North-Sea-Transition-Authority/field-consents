@@ -20,6 +20,7 @@ import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePe
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.RESPOND_TO_CONSULTATION;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_CONSENTS;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.Collections;
@@ -59,7 +60,8 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
   };
 
   private static final RolePermission[] INDUSTRY_CASE_PROCESSING_RULES = new RolePermission[] {
-      EDIT_FCS_APPLICATIONS
+      EDIT_FCS_APPLICATIONS,
+      VIEW_FCS_CONSENTS
   };
 
   @MockBean

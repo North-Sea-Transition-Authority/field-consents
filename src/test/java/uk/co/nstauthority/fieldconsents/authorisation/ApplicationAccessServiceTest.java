@@ -1,11 +1,15 @@
 package uk.co.nstauthority.fieldconsents.authorisation;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.ALLOCATE_CONSULTATION;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_CONSENTS;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -48,6 +52,9 @@ class ApplicationAccessServiceTest {
 
   @Mock
   private ConsultationService consultationService;
+
+  @Mock
+  private FieldEquityPartnerPermissionService fieldEquityPartnerPermissionService;
 
   @InjectMocks
   @Spy
@@ -98,7 +105,7 @@ class ApplicationAccessServiceTest {
   }
 
   @Test
-  void getApplicationPermissionsForUser_whenNotRegulatorAndNoOperatorPermissions_thenEmpty() {
+  void getApplicationPermissionsForUser_whenIndustryAndNoOperatorPermissions_thenEmpty() {
     when(teamService.isRegulatorUser(USER)).thenReturn(false);
     when(teamService.isConsulteeUser(USER)).thenReturn(false);
     when(organisationUnitPermissionService
@@ -107,6 +114,56 @@ class ApplicationAccessServiceTest {
 
     assertThat(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .isEmpty();
+  }
+
+  @Test
+  void getApplicationPermissionsForUser_whenIndustryAndOperatorPermissionsContainsViewFcsConsents() {
+    when(teamService.isRegulatorUser(USER)).thenReturn(false);
+    when(teamService.isConsulteeUser(USER)).thenReturn(false);
+
+    when(organisationUnitPermissionService
+        .getUserPermissionsForOperator(USER, applicationVersion.getPrimaryOperatorOuId()))
+        .thenReturn(Set.of(VIEW_FCS_CONSENTS));
+
+    assertThat(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
+        .containsExactly(VIEW_FCS_CONSENTS);
+
+    verify(fieldEquityPartnerPermissionService, never())
+        .userHasPermissionForFieldInFieldEquityPartnerTeam(any(), any(ApplicationVersion.class), any());
+  }
+
+  @Test
+  void getApplicationPermissionsForUser_whenIndustryAndOperatorPermissionsDoesNotContainViewFcsConsentsAndUserDoesNotHaveViewFcsConsentsPermissionForFieldInFieldEquityPartnerTeam() {
+    when(teamService.isRegulatorUser(USER)).thenReturn(false);
+    when(teamService.isConsulteeUser(USER)).thenReturn(false);
+
+    when(organisationUnitPermissionService
+        .getUserPermissionsForOperator(USER, applicationVersion.getPrimaryOperatorOuId()))
+        .thenReturn(Set.of());
+
+    when(fieldEquityPartnerPermissionService
+        .userHasPermissionForFieldInFieldEquityPartnerTeam(USER, applicationVersion, Set.of(VIEW_FCS_CONSENTS)))
+        .thenReturn(false);
+
+    assertThat(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
+        .isEmpty();
+  }
+
+  @Test
+  void getApplicationPermissionsForUser_whenIndustryAndOperatorPermissionsDoesNotContainViewFcsConsentsAndUserHasViewFcsConsentsPermissionForFieldInFieldEquityPartnerTeam() {
+    when(teamService.isRegulatorUser(USER)).thenReturn(false);
+    when(teamService.isConsulteeUser(USER)).thenReturn(false);
+
+    when(organisationUnitPermissionService
+        .getUserPermissionsForOperator(USER, applicationVersion.getPrimaryOperatorOuId()))
+        .thenReturn(Set.of());
+
+    when(fieldEquityPartnerPermissionService
+        .userHasPermissionForFieldInFieldEquityPartnerTeam(USER, applicationVersion, Set.of(VIEW_FCS_CONSENTS)))
+        .thenReturn(true);
+
+    assertThat(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
+        .containsExactly(VIEW_FCS_CONSENTS);
   }
 
   @Test

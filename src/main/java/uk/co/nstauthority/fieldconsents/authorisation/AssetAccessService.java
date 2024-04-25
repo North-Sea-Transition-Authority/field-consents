@@ -3,6 +3,7 @@ package uk.co.nstauthority.fieldconsents.authorisation;
 import java.util.Set;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.assets.AssetWithOperatorJson;
+import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
@@ -14,11 +15,16 @@ public class AssetAccessService {
 
   private final TeamService teamService;
   private final OrganisationUnitPermissionService organisationUnitPermissionService;
+  private final FieldEquityPartnerPermissionService fieldEquityPartnerPermissionService;
 
-
-  public AssetAccessService(TeamService teamService, OrganisationUnitPermissionService organisationUnitPermissionService) {
+  AssetAccessService(
+      TeamService teamService,
+      OrganisationUnitPermissionService organisationUnitPermissionService,
+      FieldEquityPartnerPermissionService fieldEquityPartnerPermissionService
+  ) {
     this.teamService = teamService;
     this.organisationUnitPermissionService = organisationUnitPermissionService;
+    this.fieldEquityPartnerPermissionService = fieldEquityPartnerPermissionService;
   }
 
   public boolean hasAssetPermission(ServiceUserDetail user,
@@ -41,9 +47,17 @@ public class AssetAccessService {
       return true;
     }
 
-    if (assetWithOperatorJson.operatorExists()) {
-      return organisationUnitPermissionService
-          .hasOperatorPermission(user, assetWithOperatorJson.getOperatorJson().organisationUnitId(), requiredPermissions);
+    if (assetWithOperatorJson.operatorExists() && organisationUnitPermissionService
+        .hasOperatorPermission(user, assetWithOperatorJson.getOperatorJson().organisationUnitId(), requiredPermissions)) {
+      return true;
+    }
+
+    if (assetWithOperatorJson instanceof FieldJson && requiredPermissionsSet.contains(RolePermission.VIEW_FCS_CONSENTS)) {
+      return fieldEquityPartnerPermissionService.userHasPermissionForFieldInFieldEquityPartnerTeam(
+          user,
+          assetWithOperatorJson.getId(),
+          Set.of(RolePermission.VIEW_FCS_CONSENTS)
+      );
     }
 
     return false;

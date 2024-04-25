@@ -224,5 +224,6 @@ public class FieldTestUtil {
   );
 
   public static List<Field> fieldList = List.of(field1, field2, field3);
+  public static List<Integer> fieldIdList = List.of(field1.getFieldId(), field2.getFieldId(), field3.getFieldId());
   public static List<Field> fieldsWithOperatorList = List.of(field1WithOperator, field2WithOperator, field3WithOperator);
 }

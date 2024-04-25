@@ -2,10 +2,12 @@ package uk.co.nstauthority.fieldconsents.application.fieldequitypartner;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.field.FieldApi;
+import uk.co.fivium.energyportalapi.generated.client.FieldProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.client.FieldsProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.types.Field;
 import uk.co.fivium.energyportalapi.generated.types.OrganisationGroup;
@@ -72,8 +74,13 @@ public class FieldEquityPartnerService {
         .distinct()
         .toList();
 
+    return getFieldsWithFieldEquityPartners(fieldIds);
+  }
+
+  public List<Field> getFieldsWithFieldEquityPartners(List<Integer> fieldIds) {
     // @formatter:off
     var query = new FieldsProjectionRoot()
+        .fieldId()
         .fieldEquityPartners()
           .organisationUnit()
             .organisationUnitId()
@@ -86,6 +93,24 @@ public class FieldEquityPartnerService {
     // @formatter:on
 
     return fieldApi.getFieldsByIds(fieldIds, query, FIELD_EQUITY_PARTNER_LOOKUP_REQUEST_PURPOSE);
+  }
+
+  public Optional<Field> getFieldWithFieldEquityPartners(Integer fieldId) {
+    // @formatter:off
+    var query = new FieldProjectionRoot()
+        .fieldId()
+        .fieldEquityPartners()
+          .organisationUnit()
+            .organisationUnitId()
+            .name()
+            .registeredNumber()
+            .organisationGroups()
+              .organisationGroupId()
+              .name()
+        .root();
+    // @formatter:on
+
+    return fieldApi.findFieldById(fieldId, query, FIELD_EQUITY_PARTNER_LOOKUP_REQUEST_PURPOSE);
   }
 
   List<FormattedFieldEquityPartner> getFormattedFieldEquityPartners(List<Field> fields) {

@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,6 +21,7 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.field.FieldApi;
+import uk.co.fivium.energyportalapi.generated.client.FieldProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.client.FieldsProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.types.Field;
 import uk.co.fivium.energyportalapi.generated.types.FieldEquityPartner;
@@ -151,7 +153,7 @@ class FieldEquityPartnerServiceTest {
   }
 
   @Test
-  void getFieldsWithFieldEquityPartners() {
+  void getFieldsWithFieldEquityPartners_withApplicationVersion() {
     var fields = List.of(
         getFieldWithFieldEquityPartner("a"),
         getFieldWithFieldEquityPartner("b"),
@@ -164,9 +166,44 @@ class FieldEquityPartnerServiceTest {
         EnumSet.of(AssetRole.PRIMARY, AssetRole.SECONDARY)
     )).thenReturn(applicationAssets);
 
-    when(fieldApi.getFieldsByIds(eq(fieldIds), any(FieldsProjectionRoot.class), any(RequestPurpose.class))).thenReturn(fields);
+    doReturn(fields).when(fieldEquityPartnerService).getFieldsWithFieldEquityPartners(fieldIds);
 
     assertThat(fieldEquityPartnerService.getFieldsWithFieldEquityPartners(applicationVersion)).isEqualTo(fields);
+  }
+
+  @Test
+  void getFieldsWithFieldEquityPartners_withFieldIds() {
+    var fields = List.of(
+        getFieldWithFieldEquityPartner("a"),
+        getFieldWithFieldEquityPartner("b"),
+        getFieldWithFieldEquityPartner("c")
+    );
+
+    when(fieldApi.getFieldsByIds(eq(fieldIds), any(FieldsProjectionRoot.class), any(RequestPurpose.class))).thenReturn(fields);
+
+    assertThat(fieldEquityPartnerService.getFieldsWithFieldEquityPartners(fieldIds)).isEqualTo(fields);
+  }
+
+  @Test
+  void getFieldWithFieldEquityPartners_fieldDoesNotExist() {
+    var fieldId = 1;
+
+    when(fieldApi.findFieldById(eq(fieldId), any(FieldProjectionRoot.class), any(RequestPurpose.class)))
+        .thenReturn(Optional.empty());
+
+    assertThat(fieldEquityPartnerService.getFieldWithFieldEquityPartners(fieldId)).isEmpty();
+  }
+
+  @Test
+  void getFieldWithFieldEquityPartners_fieldExists() {
+    var fieldId = 1;
+
+    var field = getFieldWithFieldEquityPartner("a");
+
+    when(fieldApi.findFieldById(eq(fieldId), any(FieldProjectionRoot.class), any(RequestPurpose.class)))
+        .thenReturn(Optional.of(field));
+
+    assertThat(fieldEquityPartnerService.getFieldWithFieldEquityPartners(fieldId)).contains(field);
   }
 
   @Test

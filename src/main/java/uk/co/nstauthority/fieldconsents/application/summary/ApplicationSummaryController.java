@@ -9,6 +9,7 @@ import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePe
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.PROCESS_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.RESPOND_TO_CONSULTATION;
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.VIEW_FCS_CONSENTS;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -53,7 +54,7 @@ public class ApplicationSummaryController {
   }
 
   @GetMapping("summary")
-  @HasApplicationPermission(permissions = RolePermission.VIEW_FCS_APPLICATIONS)
+  @HasApplicationPermission(permissions = { RolePermission.VIEW_FCS_APPLICATIONS, VIEW_FCS_CONSENTS })
   public ModelAndView getApplicationSummary(@PathVariable Integer applicationId, ServiceUserDetail user) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
 
@@ -163,7 +164,12 @@ public class ApplicationSummaryController {
   }
 
   private boolean isIndustryCaseProcessingUser(ServiceUserDetail userDetail, ApplicationVersion applicationVersion) {
-    return applicationAccessService.hasApplicationPermission(userDetail, applicationVersion, EDIT_FCS_APPLICATIONS);
+    return applicationAccessService.hasApplicationPermission(
+        userDetail,
+        applicationVersion,
+        EDIT_FCS_APPLICATIONS,
+        VIEW_FCS_CONSENTS
+    );
   }
 
 }
