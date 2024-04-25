@@ -58,12 +58,12 @@ public class ConsentDataService {
     );
   }
 
-  public Map<Integer, List<ConsentData>> getConsentDataListInRangeForCompletedProductionApplicationsByFieldId(
+  public Map<Integer, List<ConsentData>> getConsentDataListInRangeForConsentedProductionApplicationsByFieldId(
       LocalDate start,
       LocalDate end,
       Collection<Integer> fieldIds
   ) {
-    return repository.getConsentDataListInRangeForCompletedProductionApplicationsForFieldIds(start, end, fieldIds)
+    return repository.getConsentDataListInRangeForConsentedProductionApplicationsForFieldIds(start, end, fieldIds)
         .stream()
         .collect(Collectors.groupingBy(
             ConsentDataForFieldId::getFieldId,

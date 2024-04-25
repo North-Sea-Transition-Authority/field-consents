@@ -161,7 +161,7 @@ class ConsentServiceTest {
 
     verify(consentService).generateDocumentInstancesAndSaveToConsent(applicationVersion, consent);
     verify(consentService).copySupportingDocumentsToConsent(application, consent);
-    verify(applicationService).completeApplication(applicationVersion);
+    verify(applicationService).consentApplication(applicationVersion);
     verify(consentEmailService).sendConsentIssuedEmailToOperator(applicationVersion);
     verify(consentEmailService).sendConsentIssuedEmailToCaseOfficer(applicationVersion);
     verify(consentEmailService).sendConsentIssuedEmailToFieldEquityPartners(applicationVersion, consent);
@@ -221,7 +221,7 @@ class ConsentServiceTest {
     verify(consentService).generateDocumentInstancesAndSaveToConsent(applicationVersion, consent);
     verify(consentService).copySupportingDocumentsToConsent(application, consent);
 
-    verify(applicationService).completeApplication(applicationVersion);
+    verify(applicationService).consentApplication(applicationVersion);
     verify(consentEmailService).sendConsentIssuedEmailToOperator(applicationVersion);
     verify(consentFieldEquityPartnerService).saveFieldEquityPartners(consent, applicationVersion);
   }
@@ -265,7 +265,7 @@ class ConsentServiceTest {
     verify(consentService).generateDocumentInstancesAndSaveToConsent(applicationVersion, consent);
     verify(consentService).copySupportingDocumentsToConsent(application, consent);
 
-    verify(applicationService).completeApplication(applicationVersion);
+    verify(applicationService).consentApplication(applicationVersion);
     verify(consentEmailService).sendConsentIssuedEmailToCaseOfficer(applicationVersion);
     verify(consentFieldEquityPartnerService).saveFieldEquityPartners(consent, applicationVersion);
   }
@@ -309,7 +309,7 @@ class ConsentServiceTest {
     verify(consentService).generateDocumentInstancesAndSaveToConsent(applicationVersion, consent);
     verify(consentService).copySupportingDocumentsToConsent(application, consent);
 
-    verify(applicationService).completeApplication(applicationVersion);
+    verify(applicationService).consentApplication(applicationVersion);
     verify(consentEmailService).sendConsentIssuedEmailToFieldEquityPartners(applicationVersion, consent);
     verify(consentFieldEquityPartnerService).saveFieldEquityPartners(consent, applicationVersion);
   }
@@ -398,7 +398,7 @@ class ConsentServiceTest {
     when(applicationAssetService.findAssetsByApplicationVersionAndAssetTypeAndAssetRoles(applicationVersion, AssetType.FIELD, Set.of(AssetRole.PRIMARY, AssetRole.SECONDARY))).thenReturn(fieldApplicationAssets);
     when(consentLengthService.getProposedConsentStartDate(consentLengthDetails)).thenReturn(proposedStartDate);
     when(consentLengthService.getProposedConsentEndDate(consentLengthDetails)).thenReturn(proposedEndDate);
-    when(consentDataService.getConsentDataListInRangeForCompletedProductionApplicationsByFieldId(proposedStartDate, proposedEndDate, fieldIds)).thenReturn(consentDataListByFieldId);
+    when(consentDataService.getConsentDataListInRangeForConsentedProductionApplicationsByFieldId(proposedStartDate, proposedEndDate, fieldIds)).thenReturn(consentDataListByFieldId);
 
     assertThat(consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion))
         .isEqualTo(expectedResult);

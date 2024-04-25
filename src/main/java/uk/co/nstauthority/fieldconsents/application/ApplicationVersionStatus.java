@@ -9,7 +9,7 @@ public enum ApplicationVersionStatus implements Displayable {
   IN_PROGRESS("In progress", 10),
   AWAITING_PAYMENT("Awaiting payment", 20),
   SUBMITTED("Submitted", 30),
-  COMPLETED("Completed", 40),
+  CONSENTED("Consented", 40),
   DELETED("Deleted", 50),
   WITHDRAWN("Withdrawn", 60);
 
@@ -37,7 +37,7 @@ public enum ApplicationVersionStatus implements Displayable {
             IN_PROGRESS,
             AWAITING_PAYMENT,
             SUBMITTED,
-            COMPLETED,
+            CONSENTED,
             WITHDRAWN
         )
     );

@@ -468,7 +468,7 @@ class ApplicationDocumentInstanceServiceTest {
     var fieldId = 1;
     primaryAsset.setAssetId(fieldId);
 
-    when(applicationAssetService.completedProductionApplicationExistsWithPrimaryField(fieldId))
+    when(applicationAssetService.consentedProductionApplicationExistsWithPrimaryField(fieldId))
         .thenReturn(completedApplicationExists);
 
     assertThat(applicationDocumentInstanceService.isFlareCommissioningLetterApplicableForProductionApplication(primaryAsset))

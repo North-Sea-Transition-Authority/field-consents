@@ -238,14 +238,14 @@ public class ApplicationAssetService {
         .toList();
   }
 
-  public boolean completedProductionApplicationExistsWithPrimaryField(Integer fieldId) {
+  public boolean consentedProductionApplicationExistsWithPrimaryField(Integer fieldId) {
     return applicationAssetRepository
         .existsByAssetTypeAndAssetIdAndAssetRoleAndApplicationVersion_Application_TypeAndApplicationVersion_Status(
             FIELD,
             fieldId,
             AssetRole.PRIMARY,
             ApplicationType.PRODUCTION,
-            ApplicationVersionStatus.COMPLETED
+            ApplicationVersionStatus.CONSENTED
         );
   }
 

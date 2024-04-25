@@ -274,8 +274,8 @@ class SearchIntegrationTest extends AbstractIntegrationTest {
 
   @Test
   @Disabled(value = "result not found - FCS-520")
-  void searchByStatus_foundWhenCompleted() {
-    searchForm.setStatuses(List.of(ApplicationVersionStatus.COMPLETED));
+  void searchByStatus_foundWhenConsented() {
+    searchForm.setStatuses(List.of(ApplicationVersionStatus.CONSENTED));
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
 
     var applicationVersion = createSubmittedApplicationVersion(ApplicationType.PRODUCTION, consentLengthForm);

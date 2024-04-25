@@ -105,7 +105,7 @@ class ConsentDataServiceTest {
   }
 
   @Test
-  void getConsentDataListInRangeForCompletedProductionApplicationsByFieldId() {
+  void getConsentDataListInRangeForConsentedProductionApplicationsByFieldId() {
     var start = LocalDate.now();
     var end = start.plusDays(1);
     var fieldIds = Set.of(1, 2, 3);
@@ -115,7 +115,7 @@ class ConsentDataServiceTest {
     var field2ConsentData1 = ConsentDataTestUtil.newBuilder().build();
     // field 3 doesn't have any consent data therefore it's not included here
 
-    when(repository.getConsentDataListInRangeForCompletedProductionApplicationsForFieldIds(start, end, fieldIds))
+    when(repository.getConsentDataListInRangeForConsentedProductionApplicationsForFieldIds(start, end, fieldIds))
         .thenReturn(List.of(
             new ConsentDataByFieldIdTestImpl(1, field1ConsentData1),
             new ConsentDataByFieldIdTestImpl(1, field1ConsentData2),
@@ -123,7 +123,7 @@ class ConsentDataServiceTest {
         ));
 
     assertThat(
-        consentDataService.getConsentDataListInRangeForCompletedProductionApplicationsByFieldId(start, end, fieldIds))
+        consentDataService.getConsentDataListInRangeForConsentedProductionApplicationsByFieldId(start, end, fieldIds))
         .containsExactlyInAnyOrderEntriesOf(Map.of(
             1, List.of(field1ConsentData1, field1ConsentData2),
             2, List.of(field2ConsentData1)

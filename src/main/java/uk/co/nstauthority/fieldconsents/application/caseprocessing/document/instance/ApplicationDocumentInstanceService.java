@@ -163,7 +163,7 @@ public class ApplicationDocumentInstanceService {
       return false;
     }
 
-    return !applicationAssetService.completedProductionApplicationExistsWithPrimaryField(primaryAsset.getAssetId());
+    return !applicationAssetService.consentedProductionApplicationExistsWithPrimaryField(primaryAsset.getAssetId());
   }
 
   String getItemReference(Application application) {

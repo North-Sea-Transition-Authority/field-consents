@@ -186,7 +186,7 @@ class CaseProcessingActionServiceTest {
   @ParameterizedTest
   @MethodSource("getUserActionItems_arguments")
   void getUserActionItems_completed(Set<RolePermission> rolePermissions, Set<CaseStatusFlag> caseStatusFlags, ExpectedActions expectedActions) {
-    var applicationVersion = ApplicationTestUtil.getCompletedApplicationVersionWithType(PRODUCTION);
+    var applicationVersion = ApplicationTestUtil.getConsentedApplicationVersionWithType(PRODUCTION);
     getUserActionItems(applicationVersion, rolePermissions, caseStatusFlags, expectedActions.completedActions());
   }
 

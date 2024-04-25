@@ -543,7 +543,7 @@ class ApplicationAssetServiceTest {
 
   @ParameterizedTest
   @ValueSource(booleans = { true, false })
-  void completedProductionApplicationExistsWithPrimaryField(boolean exists) {
+  void consentedProductionApplicationExistsWithPrimaryField(boolean exists) {
     var fieldId = 1;
 
     when(
@@ -553,11 +553,11 @@ class ApplicationAssetServiceTest {
                 fieldId,
                 AssetRole.PRIMARY,
                 ApplicationType.PRODUCTION,
-                ApplicationVersionStatus.COMPLETED
+                ApplicationVersionStatus.CONSENTED
             )
     ).thenReturn(exists);
 
-    assertThat(applicationAssetService.completedProductionApplicationExistsWithPrimaryField(fieldId)).isEqualTo(exists);
+    assertThat(applicationAssetService.consentedProductionApplicationExistsWithPrimaryField(fieldId)).isEqualTo(exists);
   }
 
   @ParameterizedTest

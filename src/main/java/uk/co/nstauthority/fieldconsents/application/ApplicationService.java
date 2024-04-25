@@ -186,19 +186,19 @@ public class ApplicationService {
   }
 
   @Transactional
-  public void completeApplication(ApplicationVersion applicationVersion) {
+  public void consentApplication(ApplicationVersion applicationVersion) {
     var applicationVersionStatus = applicationVersion.getStatus();
     if (!ApplicationVersionStatus.SUBMITTED.equals(applicationVersionStatus)) {
       throw new IllegalStateException(
           String.format(
-              "Application %d cannot be completed as application version has status %s",
+              "Application %d cannot be consented as application version has status %s",
               applicationVersion.getApplication().getId(),
               applicationVersionStatus
           )
       );
     }
 
-    applicationVersion.setStatus(ApplicationVersionStatus.COMPLETED);
+    applicationVersion.setStatus(ApplicationVersionStatus.CONSENTED);
 
     applicationVersionRepository.save(applicationVersion);
   }

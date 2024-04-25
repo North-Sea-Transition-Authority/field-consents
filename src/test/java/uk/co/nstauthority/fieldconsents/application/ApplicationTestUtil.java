@@ -155,9 +155,9 @@ public class ApplicationTestUtil {
     return withdrawnApplicationVersion;
   }
 
-  public static ApplicationVersion getCompletedApplicationVersionWithType(ApplicationType applicationType) {
+  public static ApplicationVersion getConsentedApplicationVersionWithType(ApplicationType applicationType) {
     var submittedApplication = getSubmittedApplicationWithType(applicationType);
-    var completedApplicationVersion = new ApplicationVersion(
+    var consentedApplicationVersion = new ApplicationVersion(
         APPLICATION_VERSION_ID,
         submittedApplication,
         APPLICATION_VERSION_NUMBER,
@@ -167,12 +167,12 @@ public class ApplicationTestUtil {
         USER_WUA_ID,
         Instant.now(),
         USER_WUA_ID,
-        ApplicationVersionStatus.COMPLETED,
+        ApplicationVersionStatus.CONSENTED,
         CASE_OFFICER_WUA_ID,
         false);
 
-    completedApplicationVersion.setSubmittedDateTime(Instant.now().plus(3, ChronoUnit.DAYS));
-    completedApplicationVersion.setSubmittedByWuaId(USER_WUA_ID);
-    return completedApplicationVersion;
+    consentedApplicationVersion.setSubmittedDateTime(Instant.now().plus(3, ChronoUnit.DAYS));
+    consentedApplicationVersion.setSubmittedByWuaId(USER_WUA_ID);
+    return consentedApplicationVersion;
   }
 }

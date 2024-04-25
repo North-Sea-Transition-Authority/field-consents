@@ -138,9 +138,9 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
   }
 
   @SecurityTest
-  void getIndustryCaseProcessing_checkEndPointSecurityOnly_whenCompletedStatus_thenForbidden() throws Exception {
+  void getIndustryCaseProcessing_checkEndPointSecurityOnly_whenConsentedStatus_thenForbidden() throws Exception {
     var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
-    applicationVersion.setStatus(ApplicationVersionStatus.COMPLETED);
+    applicationVersion.setStatus(ApplicationVersionStatus.CONSENTED);
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))

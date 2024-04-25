@@ -355,16 +355,16 @@ public class ApplicationServiceTest {
 
   @ParameterizedTest
   @EnumSource(value = ApplicationVersionStatus.class, names = "SUBMITTED", mode = EnumSource.Mode.EXCLUDE)
-  void completeApplication_statusNotSubmitted(ApplicationVersionStatus applicationVersionStatus) {
+  void consentApplication_statusNotSubmitted(ApplicationVersionStatus applicationVersionStatus) {
     var applicationVersion
         = ApplicationTestUtil.getNewApplicationVersionWithTypeAndStatus(ApplicationType.PRODUCTION, applicationVersionStatus);
     applicationVersion.setStatus(applicationVersionStatus);
 
-    assertThatThrownBy(() -> applicationService.completeApplication(applicationVersion))
+    assertThatThrownBy(() -> applicationService.consentApplication(applicationVersion))
         .isInstanceOf(IllegalStateException.class)
         .hasMessage(
             String.format(
-                "Application %d cannot be completed as application version has status %s",
+                "Application %d cannot be consented as application version has status %s",
                 applicationVersion.getApplication().getId(),
                 applicationVersionStatus
             )
@@ -372,12 +372,12 @@ public class ApplicationServiceTest {
   }
 
   @Test
-  void completeApplication() {
+  void consentApplication() {
     var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
 
-    applicationService.completeApplication(applicationVersion);
+    applicationService.consentApplication(applicationVersion);
 
-    assertThat(applicationVersion.getStatus()).isEqualTo(ApplicationVersionStatus.COMPLETED);
+    assertThat(applicationVersion.getStatus()).isEqualTo(ApplicationVersionStatus.CONSENTED);
 
     verify(applicationVersionRepository).save(applicationVersion);
   }

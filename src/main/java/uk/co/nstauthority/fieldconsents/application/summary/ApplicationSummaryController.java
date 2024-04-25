@@ -61,7 +61,7 @@ public class ApplicationSummaryController {
     return switch (applicationVersion.getStatus()) {
       case IN_PROGRESS -> getInProgressModelAndView(applicationVersion, user);
       case AWAITING_PAYMENT -> getAwaitingPaymentModelAndView(applicationVersion, user);
-      case SUBMITTED, COMPLETED, WITHDRAWN -> getCaseProcessingModelAndView(applicationVersion, user);
+      case SUBMITTED, CONSENTED, WITHDRAWN -> getCaseProcessingModelAndView(applicationVersion, user);
       default -> throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST,
           "Unsupported application status %s for summary".formatted(applicationVersion.getStatus())

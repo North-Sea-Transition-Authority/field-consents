@@ -169,7 +169,7 @@ SELECT
   -- RECEIVEDBYBERR CURRENT - the tip submitted version
   WHEN fcd.status = 'RECEIVEDBYBERR' THEN 'SUBMITTED'
   -- COMPLETED CURRENT - the tip version row - consented
-  WHEN fcd.status = 'COMPLETED' THEN 'COMPLETED'
+  WHEN fcd.status = 'COMPLETED' THEN 'CONSENTED'
   END status
 , fcd.created_date created_date_time
 , fcd.created_by created_by_wua_id
@@ -208,8 +208,8 @@ AND fcd.fc_id IS NOT NULL; -- implies never submitted (don't migrate)
 UPDATE fcs_migration.application_versions
 SET current_case_owner =
   CASE
-  -- only set as CONSENTS_AND_AUTHORISATIONS_MANAGER for COMPLETED case
-  WHEN cam_wua_id IS NOT NULL AND status = 'COMPLETED' THEN 'CONSENTS_AND_AUTHORISATIONS_MANAGER' -- assigned after the case officer
+  -- only set as CONSENTS_AND_AUTHORISATIONS_MANAGER for CONSENTED case
+  WHEN cam_wua_id IS NOT NULL AND status = 'CONSENTED' THEN 'CONSENTS_AND_AUTHORISATIONS_MANAGER' -- assigned after the case officer
   WHEN case_officer_wua_id IS NOT NULL THEN 'CASE_OFFICER'
   END;
 /

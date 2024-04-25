@@ -346,7 +346,7 @@ SELECT
   -- RECEIVEDBYBERR CURRENT - the tip submitted version
   WHEN fcd.status = 'RECEIVEDBYBERR' THEN 'SUBMITTED'
   -- COMPLETED CURRENT - the tip version row - consented
-  WHEN fcd.status = 'COMPLETED' THEN 'COMPLETED'
+  WHEN fcd.status = 'COMPLETED' THEN 'CONSENTED'
   END status
 , fcd.created_date created_date_time
 , fcd.created_by created_by_wua_id

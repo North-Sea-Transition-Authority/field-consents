@@ -41,7 +41,7 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.Reg
 @HasApplicationStatus(statuses = {
     ApplicationVersionStatus.IN_PROGRESS,
     ApplicationVersionStatus.SUBMITTED,
-    ApplicationVersionStatus.COMPLETED,
+    ApplicationVersionStatus.CONSENTED,
     ApplicationVersionStatus.WITHDRAWN
 })
 @HasApplicationPermission(permissions = {

@@ -165,7 +165,7 @@ public class CaseProcessingActionService {
               ISSUE_CONSENT,
               UNAPPROVE_FOR_ISSUING
           ),
-          ApplicationVersionStatus.COMPLETED,
+          ApplicationVersionStatus.CONSENTED,
           EnumSet.of(
               TECHNICAL_REVIEWS,
               CONSULTATIONS,

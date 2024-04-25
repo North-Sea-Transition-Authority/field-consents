@@ -402,7 +402,7 @@ public class ApplicationDataItemUtil {
         APPLICATION_NO,
         APPLICATION_VERSION_NUMBER,
         PRIMARY_OPERATOR_OU_ID_1,
-        ApplicationVersionStatus.COMPLETED,
+        ApplicationVersionStatus.CONSENTED,
         AssetType.FIELD,
         FIELD_ID_1,
         FIELD_NAME_1,

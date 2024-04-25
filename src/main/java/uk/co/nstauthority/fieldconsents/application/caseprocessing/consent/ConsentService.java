@@ -97,7 +97,7 @@ public class ConsentService {
     generateDocumentInstancesAndSaveToConsent(applicationVersion, consent);
     copySupportingDocumentsToConsent(application, consent);
 
-    applicationService.completeApplication(applicationVersion);
+    applicationService.consentApplication(applicationVersion);
 
     try {
       consentEmailService.sendConsentIssuedEmailToOperator(applicationVersion);
@@ -165,7 +165,7 @@ public class ConsentService {
     var proposedConsentStartDate = consentLengthService.getProposedConsentStartDate(consentLengthDetails);
     var proposedConsentEndDate = consentLengthService.getProposedConsentEndDate(consentLengthDetails);
 
-    var consentDataListByFieldId = consentDataService.getConsentDataListInRangeForCompletedProductionApplicationsByFieldId(
+    var consentDataListByFieldId = consentDataService.getConsentDataListInRangeForConsentedProductionApplicationsByFieldId(
         proposedConsentStartDate,
         proposedConsentEndDate,
         fieldIds
