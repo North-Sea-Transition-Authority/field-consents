@@ -198,6 +198,56 @@ class ConsultationServiceTest {
   }
 
   @Test
+  void getConsultationsByApplicationForUser_whenNoConsultationTeamFound() {
+    when(teamService.getTeamsOfTypeThatUserBelongsTo(REQUESTER_USER, CONSULTATION_TEAM_TYPE))
+        .thenReturn(Collections.emptyList());
+
+    assertThat(consultationService.getConsultationsByApplicationForUser(application, REQUESTER_USER))
+        .isEmpty();
+  }
+
+  @Test
+  void getConsultationsByApplicationForUser_whenNoConsultationFoundForTeam() {
+    when(teamService.getTeamsOfTypeThatUserBelongsTo(REQUESTER_USER, CONSULTATION_TEAM_TYPE))
+        .thenReturn(List.of(CONSULTATION_TEAM));
+    when(repository.findAllByRequestApplicationVersion_ApplicationAndConsultationTeamOrderById(application, CONSULTATION_TEAM))
+        .thenReturn(Collections.emptyList());
+
+    assertThat(consultationService.getConsultationsByApplicationForUser(application, REQUESTER_USER))
+        .isEmpty();
+  }
+
+  @Test
+  void getConsultationsByApplicationForUser_whenOneConsultationFoundFromUserTeam() {
+    when(teamService.getTeamsOfTypeThatUserBelongsTo(REQUESTER_USER, CONSULTATION_TEAM_TYPE))
+        .thenReturn(List.of(CONSULTATION_TEAM));
+    when(repository.findAllByRequestApplicationVersion_ApplicationAndConsultationTeamOrderById(application, CONSULTATION_TEAM))
+        .thenReturn(List.of(consultation));
+
+    assertThat(consultationService.getConsultationsByApplicationForUser(application, REQUESTER_USER))
+        .containsExactly(consultation);
+  }
+
+  @Test
+  void getConsultationsByApplicationForUser_whenTwoConsultationFoundFromDifferentTeams_thenOnlyReturnConsultationFromUserTeam() {
+   var anotherConsultationTeam = new TeamTestUtil.TeamBuilder()
+        .withId(1)
+        .withTeamType(TeamType.OPRED)
+        .build();
+
+    var consultation2 = new Consultation();
+    consultation2.setConsultationTeam(anotherConsultationTeam);
+
+    when(teamService.getTeamsOfTypeThatUserBelongsTo(REQUESTER_USER, CONSULTATION_TEAM_TYPE))
+        .thenReturn(List.of(CONSULTATION_TEAM, anotherConsultationTeam));
+    when(repository.findAllByRequestApplicationVersion_ApplicationAndConsultationTeamOrderById(application, CONSULTATION_TEAM))
+        .thenReturn(List.of(consultation2));
+
+    assertThat(consultationService.getConsultationsByApplicationForUser(application, REQUESTER_USER))
+        .containsExactly(consultation2);
+  }
+
+  @Test
   void requestConsultation() {
     when(teamService.getTeamsByType(CONSULTATION_TEAM_TYPE)).thenReturn(Collections.singletonList(CONSULTATION_TEAM));
 

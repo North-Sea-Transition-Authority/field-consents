@@ -45,6 +45,8 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.response.ConsultationResponseFileController;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
@@ -72,6 +74,7 @@ class ConsultationSummaryServiceTest {
   private static final WebUserAccountId REQUESTER_WUA_ID = WebUserAccountId.from(2L);
   private static final WebUserAccountId RESPONDER_WUA_ID = WebUserAccountId.from(3L);
   private static final WebUserAccountId RESPONDER2_WUA_ID = WebUserAccountId.from(4L);
+  private static final ServiceUserDetail RESPONDER_USER = ServiceUserDetailTestUtil.Builder().withWuaId(RESPONDER_WUA_ID.id()).build();
   private static final String HABITATS_RESPONSE_DESCRIPTION = "habitats response description";
   private static final String EIA_RESPONSE_DESCRIPTION = "EIA response description";
 
@@ -105,9 +108,13 @@ class ConsultationSummaryServiceTest {
 
   private Application application;
 
-  private Consultation consultation;
+  private Consultation consultation, consultation2;
 
-  private FurtherInformation furtherInformation;
+  private FurtherInformation furtherInformation, furtherInformation2;
+
+  private EnergyPortalUserDto user = mock(EnergyPortalUserDto.class);
+
+  private Map<WebUserAccountId, EnergyPortalUserDto> energyPortalUserByWebUserAccountId;
 
   private UploadedFile uploadedFile;
 
@@ -121,13 +128,37 @@ class ConsultationSummaryServiceTest {
         .withRequestApplicationVersion(applicationVersion)
         .build();
 
+    consultation2 = Consultation.newBuilder()
+        .withId(CONSULTATION_ID + 1)
+        .withRequestedBy(REQUESTER_WUA_ID)
+        .withResponder(RESPONDER_WUA_ID)
+        .withRespondedBy(RESPONDER2_WUA_ID)
+        .withRequestedAt(Instant.now())
+        .build();
+
     furtherInformation = new FurtherInformation();
     furtherInformation.setConsultation(consultation);
+
+    furtherInformation2 = new FurtherInformation();
+    furtherInformation2.setConsultation(consultation2);
+    furtherInformation2.setRequestedAtDatetime(Instant.now());
 
     uploadedFile = new UploadedFile();
     uploadedFile.setId(FILE_ID);
     uploadedFile.setName("example.pdf");
     uploadedFile.setDescription("description");
+
+    energyPortalUserByWebUserAccountId = Map.of(
+        REQUESTER_WUA_ID, user,
+        RESPONDER_WUA_ID, user,
+        RESPONDER2_WUA_ID, user
+    );
+  }
+
+  @Test
+  void getConsultationSummaryItems_noConsultationsExist() {
+    when(consultationService.getConsultationsByApplication(application)).thenReturn(Collections.emptyList());
+    assertThat(consultationSummaryService.getConsultationSummaryItems(application)).isEmpty();
   }
 
   @Test
@@ -137,28 +168,56 @@ class ConsultationSummaryServiceTest {
     consultation.setRespondedByWuaId(RESPONDER2_WUA_ID.id());
     consultation.setRequestedAtDatetime(Instant.now().plus(1, ChronoUnit.DAYS));
 
-    var consultation2 = Consultation.newBuilder()
-        .withId(CONSULTATION_ID + 1)
-        .withRequestedBy(REQUESTER_WUA_ID)
-        .withResponder(RESPONDER_WUA_ID)
-        .withRespondedBy(RESPONDER2_WUA_ID)
-        .withRequestedAt(Instant.now())
-        .build();
+    when(energyPortalUserService.getEnergyPortalUserMap(Set.of(REQUESTER_WUA_ID, RESPONDER_WUA_ID, RESPONDER2_WUA_ID))).thenReturn(energyPortalUserByWebUserAccountId);
+
+    var summaryItem = mock(SummaryItem.class);
+    doReturn(summaryItem)
+        .when(consultationSummaryService)
+        .getConsultationSummaryItem(integerCaptor.capture(), consultationCaptor.capture(), eq(Collections.emptyList()), energyPortalUserByWuaIdCaptor.capture());
+
+    var consultations = List.of(consultation2, consultation);
+    when(consultationService.getConsultationsByApplication(application)).thenReturn(consultations);
+
+    assertThat(consultationSummaryService.getConsultationSummaryItems(application))
+        .containsExactly(summaryItem, summaryItem);
+  }
+
+  @Test
+  void getConsultationSummaryItemsForUser_noConsultationsExist() {
+    when(consultationService.getConsultationsByApplicationForUser(application, RESPONDER_USER)).thenReturn(Collections.emptySet());
+    assertThat(consultationSummaryService.getConsultationSummaryItemsForUser(application, RESPONDER_USER)).isEmpty();
+  }
+
+  @Test
+  void getConsultationSummaryItemsForUser() {
+    consultation.setRequestedByWuaId(REQUESTER_WUA_ID.id());
+    consultation.setResponderWuaId(RESPONDER_WUA_ID.id());
+    consultation.setRespondedByWuaId(RESPONDER2_WUA_ID.id());
+    consultation.setRequestedAtDatetime(Instant.now().plus(1, ChronoUnit.DAYS));
+
+    when(energyPortalUserService.getEnergyPortalUserMap(Set.of(REQUESTER_WUA_ID, RESPONDER_WUA_ID, RESPONDER2_WUA_ID))).thenReturn(energyPortalUserByWebUserAccountId);
+
+    var summaryItem = mock(SummaryItem.class);
+    doReturn(summaryItem)
+        .when(consultationSummaryService)
+        .getConsultationSummaryItem(integerCaptor.capture(), consultationCaptor.capture(), eq(Collections.emptyList()), energyPortalUserByWuaIdCaptor.capture());
+
+    var consultations = Set.of(consultation2, consultation);
+    when(consultationService.getConsultationsByApplicationForUser(application, RESPONDER_USER)).thenReturn(consultations);
+
+    assertThat(consultationSummaryService.getConsultationSummaryItemsForUser(application, RESPONDER_USER))
+        .containsExactly(summaryItem, summaryItem);
+  }
+
+  @Test
+  void getSummaryItems() {
+    consultation.setRequestedByWuaId(REQUESTER_WUA_ID.id());
+    consultation.setResponderWuaId(RESPONDER_WUA_ID.id());
+    consultation.setRespondedByWuaId(RESPONDER2_WUA_ID.id());
+    consultation.setRequestedAtDatetime(Instant.now().plus(1, ChronoUnit.DAYS));
 
     furtherInformation.setRequestedAtDatetime(Instant.now().plus(1, ChronoUnit.DAYS));
 
-    var furtherInformation2 = new FurtherInformation();
-    furtherInformation2.setConsultation(consultation2);
-    furtherInformation2.setRequestedAtDatetime(Instant.now());
-
-    var user = mock(EnergyPortalUserDto.class);
-    var energyPortalUserByWebUserAccountId = Map.of(
-        REQUESTER_WUA_ID, user,
-        RESPONDER_WUA_ID, user,
-        RESPONDER2_WUA_ID, user
-    );
-
-    when(consultationService.getConsultationsByApplication(application)).thenReturn(List.of(consultation2, consultation));
     when(furtherInformationService.getAllFurtherInformation(List.of(consultation, consultation2))).thenReturn(List.of(furtherInformation2, furtherInformation));
     when(energyPortalUserService.getEnergyPortalUserMap(Set.of(REQUESTER_WUA_ID, RESPONDER_WUA_ID, RESPONDER2_WUA_ID))).thenReturn(energyPortalUserByWebUserAccountId);
 
@@ -171,7 +230,7 @@ class ConsultationSummaryServiceTest {
         .when(consultationSummaryService)
         .getConsultationSummaryItem(integerCaptor.capture(), consultationCaptor.capture(), eq(furtherInformationViews), energyPortalUserByWuaIdCaptor.capture());
 
-    assertThat(consultationSummaryService.getConsultationSummaryItems(application)).containsExactly(summaryItem, summaryItem);
+    assertThat(consultationSummaryService.getSummaryItems(List.of(consultation, consultation2))).containsExactly(summaryItem, summaryItem);
     assertThat(furtherInformationCaptor.getAllValues()).containsExactly(
         Collections.singletonList(furtherInformation),
         Collections.singletonList(furtherInformation2)
@@ -193,13 +252,7 @@ class ConsultationSummaryServiceTest {
   }
 
   @Test
-  void getConsultationSummaryItems_noConsultationsExist() {
-    when(consultationService.getConsultationsByApplication(application)).thenReturn(Collections.emptyList());
-    assertThat(consultationSummaryService.getConsultationSummaryItems(application)).isEmpty();
-  }
-
-  @Test
-  void getConsultationSummaryItems_someUsersNotReturned() {
+  void getSummaryItems_someUsersNotReturned() {
     consultation.setRequestedByWuaId(REQUESTER_WUA_ID.id());
     consultation.setResponderWuaId(RESPONDER_WUA_ID.id());
     consultation.setRespondedByWuaId(RESPONDER2_WUA_ID.id());
@@ -215,11 +268,10 @@ class ConsultationSummaryServiceTest {
     var consultations = List.of(consultation);
     var furtherInformationList = List.of(furtherInformation);
 
-    when(consultationService.getConsultationsByApplication(application)).thenReturn(consultations);
     when(furtherInformationService.getAllFurtherInformation(consultations)).thenReturn(furtherInformationList);
     when(energyPortalUserService.getEnergyPortalUserMap(Set.of(REQUESTER_WUA_ID, RESPONDER_WUA_ID, RESPONDER2_WUA_ID))).thenReturn(energyPortalUserByWebUserAccountId);
 
-    assertThatThrownBy(() -> consultationSummaryService.getConsultationSummaryItems(application))
+    assertThatThrownBy(() -> consultationSummaryService.getSummaryItems(consultations))
         .isInstanceOf(IllegalStateException.class)
         .hasMessage("Fetched 2 energy portal users but needed 3 to complete successfully");
   }

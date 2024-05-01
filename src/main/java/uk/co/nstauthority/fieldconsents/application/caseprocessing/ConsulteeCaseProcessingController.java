@@ -19,7 +19,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationRequestView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.summary.ConsultationSummaryService;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
@@ -44,7 +44,7 @@ public class ConsulteeCaseProcessingController {
   private final CaseProcessingActionService caseProcessingActionService;
   private final ConsultationService consultationService;
   private final CaseProcessingTabService caseProcessingTabService;
-  private final FurtherInformationService furtherInformationService;
+  private final ConsultationSummaryService consultationSummaryService;
 
   ConsulteeCaseProcessingController(
       ApplicationService applicationService,
@@ -54,7 +54,7 @@ public class ConsulteeCaseProcessingController {
       CaseProcessingActionService caseProcessingActionService,
       ConsultationService consultationService,
       CaseProcessingTabService caseProcessingTabService,
-      FurtherInformationService furtherInformationService
+      ConsultationSummaryService consultationSummaryService
   ) {
     this.applicationService = applicationService;
     this.applicationContextService = applicationContextService;
@@ -63,7 +63,7 @@ public class ConsulteeCaseProcessingController {
     this.caseProcessingActionService = caseProcessingActionService;
     this.consultationService = consultationService;
     this.caseProcessingTabService = caseProcessingTabService;
-    this.furtherInformationService = furtherInformationService;
+    this.consultationSummaryService = consultationSummaryService;
   }
 
   @GetMapping
@@ -95,7 +95,7 @@ public class ConsulteeCaseProcessingController {
 
     if (tab != null && caseProcessingTabs.contains(tab)) {
       switch (tab) {
-        case FURTHER_INFORMATION -> addFurtherInformationAttributes(modelAndView, applicationVersion);
+        case CONSULTATIONS -> addConsultationSummaryItems(modelAndView, applicationVersion, user);
         case VIEW_APPLICATION -> applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView);
         default -> {
         }
@@ -109,12 +109,11 @@ public class ConsulteeCaseProcessingController {
     return modelAndView;
   }
 
-  private void addFurtherInformationAttributes(ModelAndView modelAndView, ApplicationVersion applicationVersion) {
-    var consultations = consultationService.getConsultationsByApplication(applicationVersion.getApplication());
-    var furtherInformation = furtherInformationService.getAllFurtherInformation(consultations);
-    var furtherInformationViews = furtherInformationService.getFurtherInformationViews(furtherInformation);
-
-    modelAndView.addObject("furtherInformationViews", furtherInformationViews);
+  private void addConsultationSummaryItems(ModelAndView modelAndView,
+                                           ApplicationVersion applicationVersion,
+                                           ServiceUserDetail user) {
+    modelAndView.addObject("consultationSummaryItems", consultationSummaryService
+        .getConsultationSummaryItemsForUser(applicationVersion.getApplication(), user));
   }
 
 }

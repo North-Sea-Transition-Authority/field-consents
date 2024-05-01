@@ -12,7 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature.WIDE_SUMMARY_DISPLAY;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseProcessingTab.FURTHER_INFORMATION;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseProcessingTab.CONSULTATIONS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseProcessingTab.VIEW_APPLICATION;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
@@ -40,9 +40,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CasePr
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationRequestView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformation;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationService;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationView;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.summary.ConsultationSummaryService;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -71,7 +69,7 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
   private CaseProcessingTabService caseProcessingTabService;
 
   @MockBean
-  private FurtherInformationService furtherInformationService;
+  private ConsultationSummaryService consultationSummaryService;
 
   private ApplicationVersion applicationVersion;
 
@@ -80,10 +78,6 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
   private List<SummarySection> summarySections;
 
   private List<CaseProcessingTab> caseProcessingTabs;
-
-  private List<FurtherInformation> furtherInformationList;
-
-  private List<FurtherInformationView> furtherInformationViews;
 
   @BeforeEach
   void setUp() {
@@ -95,9 +89,6 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
     );
     summarySections = Collections.emptyList();
     caseProcessingTabs = CaseProcessingTab.CONSULTEE_TABS.stream().toList();
-
-    furtherInformationList = Collections.emptyList();
-    furtherInformationViews = Collections.emptyList();
 
     // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
@@ -178,17 +169,14 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
     setUpMocksWithConsultation(null);
 
     when(consultationService.getConsultationsByApplication(applicationVersion.getApplication())).thenReturn(Collections.emptyList());
-    when(furtherInformationService.getAllFurtherInformation(Collections.emptyList())).thenReturn(Collections.emptyList());
-    when(furtherInformationService.getFurtherInformationViews(Collections.emptyList())).thenReturn(furtherInformationViews);
 
-    var tabParam = "?tab=%s".formatted(FURTHER_INFORMATION.getAnchor());
+    var tabParam = "?tab=%s".formatted(CONSULTATIONS.getAnchor());
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
             .caseProcessing(APPLICATION_ID, null, null)) + tabParam)
             .with(user(user)))
         .andExpect(status().isOk())
-        .andExpectAll(commonAttributesForTab(FURTHER_INFORMATION))
-        .andExpect(model().attribute("furtherInformationViews", furtherInformationViews));
+        .andExpectAll(commonAttributesForTab(CONSULTATIONS));
   }
 
   @Test
@@ -200,18 +188,15 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
 
     var consultations = List.of(consultation);
     when(consultationService.getConsultationsByApplication(applicationVersion.getApplication())).thenReturn(consultations);
-    when(furtherInformationService.getAllFurtherInformation(consultations)).thenReturn(furtherInformationList);
-    when(furtherInformationService.getFurtherInformationViews(furtherInformationList)).thenReturn(furtherInformationViews);
 
-    var tabParam = "?tab=%s".formatted(FURTHER_INFORMATION.getAnchor());
+    var tabParam = "?tab=%s".formatted(CONSULTATIONS.getAnchor());
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
             .caseProcessing(APPLICATION_ID, null, null)) + tabParam)
             .with(user(user)))
         .andExpect(status().isOk())
-        .andExpectAll(commonAttributesForTab(FURTHER_INFORMATION))
-        .andExpect(model().attribute("consultationRequestView", ConsultationRequestView.from(consultation)))
-        .andExpect(model().attribute("furtherInformationViews", furtherInformationViews));
+        .andExpectAll(commonAttributesForTab(CONSULTATIONS))
+        .andExpect(model().attribute("consultationRequestView", ConsultationRequestView.from(consultation)));
   }
 
   private ResultMatcher[] commonAttributesForTab(CaseProcessingTab tab) {

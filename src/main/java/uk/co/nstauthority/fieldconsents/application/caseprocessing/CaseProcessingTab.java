@@ -48,10 +48,10 @@ public enum CaseProcessingTab {
           PAY_AND_SUBMIT_FCS_APPLICATIONS
       )
   ),
-  FURTHER_INFORMATION(
-      "Further information requests",
-      "furtherInformationRequests",
-      "further-information-requests",
+  CONSULTATIONS(
+      "Consultations",
+      "consultations",
+      "consultations",
       EnumSet.of(ALLOCATE_CONSULTATION, RESPOND_TO_CONSULTATION)
   ),
   CONSENT(
@@ -63,7 +63,7 @@ public enum CaseProcessingTab {
 
   static final EnumSet<CaseProcessingTab> REGULATOR_TABS =
       EnumSet.of(TASKS, VIEW_APPLICATION, CASE_HISTORY, PAYMENTS, CONSENT);
-  static final EnumSet<CaseProcessingTab> CONSULTEE_TABS = EnumSet.of(VIEW_APPLICATION, FURTHER_INFORMATION);
+  static final EnumSet<CaseProcessingTab> CONSULTEE_TABS = EnumSet.of(VIEW_APPLICATION, CONSULTATIONS);
   static final EnumSet<CaseProcessingTab> INDUSTRY_TABS = EnumSet.of(VIEW_APPLICATION, PAYMENTS, CONSENT);
 
   private final String label;

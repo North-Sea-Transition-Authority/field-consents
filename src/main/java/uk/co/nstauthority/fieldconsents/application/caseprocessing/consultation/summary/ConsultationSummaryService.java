@@ -22,6 +22,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.response.ConsultationResponseFileController;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
@@ -40,6 +41,8 @@ public class ConsultationSummaryService {
   private final FurtherInformationService furtherInformationService;
   private final EnergyPortalUserService energyPortalUserService;
   private final FieldConsentsFileService fieldConsentsFileService;
+  private static final Comparator<Consultation> CONSULTATION_COMPARATOR =
+      Comparator.comparing(Consultation::getRequestedAtDatetime).reversed();
 
   ConsultationSummaryService(
       ConsultationService consultationService,
@@ -56,13 +59,30 @@ public class ConsultationSummaryService {
   public List<SummaryItem> getConsultationSummaryItems(Application application) {
     var consultations = consultationService.getConsultationsByApplication(application)
         .stream()
-        .sorted(Comparator.comparing(Consultation::getRequestedAtDatetime).reversed())
+        .sorted(CONSULTATION_COMPARATOR)
         .toList();
 
     if (consultations.isEmpty()) {
       return Collections.emptyList();
     }
 
+    return getSummaryItems(consultations);
+  }
+
+  public List<SummaryItem> getConsultationSummaryItemsForUser(Application application, ServiceUserDetail user) {
+    var consultations = consultationService.getConsultationsByApplicationForUser(application, user)
+        .stream()
+        .sorted(CONSULTATION_COMPARATOR)
+        .toList();
+
+    if (consultations.isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    return getSummaryItems(consultations);
+  }
+
+  List<SummaryItem> getSummaryItems(List<Consultation> consultations) {
     var furtherInformationByConsultationId = furtherInformationService.getAllFurtherInformation(consultations)
         .stream()
         .collect(Collectors.groupingBy(furtherInformation -> furtherInformation.getConsultation().getId()));

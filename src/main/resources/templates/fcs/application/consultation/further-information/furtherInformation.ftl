@@ -38,19 +38,6 @@
   </@fdsNotificationBanner.notificationBannerInfo>
 </#macro>
 
-<#macro furtherInformationList furtherInformationViews>
-  <#if furtherInformationViews?has_content>
-    <#list furtherInformationViews as furtherInformationView>
-      <#assign index = furtherInformationViews?size - furtherInformationView?index >
-      <@detailsCard furtherInformationView=furtherInformationView index=index/>
-    </#list>
-  <#else>
-    <@fdsInsetText.insetText>
-      No further information requests have been made for this case.
-    </@fdsInsetText.insetText>
-  </#if>
-</#macro>
-
 <#macro _requestDetails furtherInformationView>
   <@fdsSummaryList.summaryListRowNoAction keyText="Requested by">
     ${furtherInformationView.requestedByUser()!""}

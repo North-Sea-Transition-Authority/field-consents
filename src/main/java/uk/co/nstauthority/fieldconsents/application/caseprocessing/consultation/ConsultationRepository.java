@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.springframework.data.repository.CrudRepository;
 import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.duplication.NotDuplicationSource;
+import uk.co.nstauthority.fieldconsents.teams.Team;
 
 @NotDuplicationSource
 interface ConsultationRepository extends CrudRepository<Consultation, Integer> {
@@ -15,6 +16,9 @@ interface ConsultationRepository extends CrudRepository<Consultation, Integer> {
   );
 
   List<Consultation> findAllByRequestApplicationVersion_ApplicationOrderById(Application application);
+
+  List<Consultation> findAllByRequestApplicationVersion_ApplicationAndConsultationTeamOrderById(
+      Application application, Team team);
 
   Optional<Consultation> findByIdAndRequestApplicationVersion_Application(Integer id, Application application);
 

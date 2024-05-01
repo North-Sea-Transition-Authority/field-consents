@@ -4,15 +4,14 @@
 <#import '../../summary/_applicationSummary.ftl' as applicationSummary>
 <#import '../_caseProcessingActions.ftl' as caseProcessingActions>
 <#import '../_applicationContext.ftl' as applicationContextInfo>
-<#import './consultation.ftl' as consulation>
-<#import './further-information/furtherInformation.ftl' as furtherInformation>
+<#import './consultation.ftl' as consultation>
 
 <@defaultPage
   htmlTitle=pageTitle
   pageHeading=pageTitle
   pageSize=getPageSize.getPageSize(wideSummaryDisplay)>
   <#if consultationRequestView?has_content>
-    <@consulation.notificationBanner consultationRequestView=consultationRequestView />
+    <@consultation.notificationBanner consultationRequestView=consultationRequestView/>
   </#if>
   <@applicationContextInfo.applicationContextInfo applicationContext=applicationContext/>
   <@caseProcessingActions.caseActions actions=actionList/>
@@ -23,8 +22,8 @@
     <#if selectedTab == "VIEW_APPLICATION">
       <@applicationSummary.applicationSummary accordionId=accordionId/>
     </#if>
-    <#if selectedTab == "FURTHER_INFORMATION">
-      <@furtherInformation.furtherInformationList furtherInformationViews=furtherInformationViews/>
+    <#if selectedTab == "CONSULTATIONS">
+      <@consultation.consultationList consultationSummaryItems=consultationSummaryItems/>
     </#if>
   </@caseProcessingTabsWithContent>
 </@defaultPage>
