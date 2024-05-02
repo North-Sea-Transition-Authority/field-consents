@@ -1,4 +1,5 @@
 <#include '../../layout/layout.ftl'>
+<#include 'emission-and-oil-gas-maximum-details.ftl'>
 
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
 
@@ -17,6 +18,9 @@ backLinkUrl=springUrl(cancelUrl)
       fieldsetHeadingClass="govuk-fieldset__legend--m"
       hintText="An increase is where the maximum figure you are applying for is higher than that on this year’s consent. A decrease is where the minimum figure you are applying for is less than that on this year’s consent."
       hiddenContent=true>
+      <#if oilAndGasMaximums?has_content>
+        <@oilAndGasMaximumsSection oilAndGasMaximums/>
+      </#if>
       <@fdsRadio.radioItem path="form.rationaleType" itemMap={increaseRadio: increaseRadio.displayName}/>
       <@fdsRadio.radioItem path="form.rationaleType" itemMap={decreaseRadio: decreaseRadio.displayName}/>
       <@fdsRadio.radioItem path="form.rationaleType" itemMap={extensionRadio: extensionRadio.displayName}>

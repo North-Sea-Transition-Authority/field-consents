@@ -23,6 +23,8 @@ import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.u
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -55,6 +57,7 @@ import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 
 @ContextConfiguration(classes = ApplicationRationaleProductionController.class)
 class ApplicationRationaleProductionControllerTest extends AbstractApplicationControllerTest {
@@ -66,13 +69,13 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
   private ApplicationRationaleProductionService applicationRationaleProductionService;
 
   @MockBean
-  private ApplicationRationaleService applicationRationaleService;
-
-  @MockBean
   private ApplicationAssetService applicationAssetService;
 
   @MockBean
   private ApplicationRationaleProductionFormValidator applicationRationaleProductionFormValidator;
+
+  @MockBean
+  private ApplicationRationaleService applicationRationaleService;
 
   @MockBean
   private AssetService assetService;
@@ -87,6 +90,8 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
 
   private ApplicationAsset primaryApplicationAsset;
 
+  private OilAndGasMaximums oilAndGasMaximums;
+
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
@@ -98,6 +103,14 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
     hostLocation = terminal1Json;
 
     primaryApplicationAsset = new ApplicationAsset();
+
+    oilAndGasMaximums = new OilAndGasMaximums(
+        LocalDate.now().getYear(),
+        BigDecimal.valueOf(10),
+        ProductionUnit.KSCM_PER_DAY,
+        BigDecimal.valueOf(20),
+        ProductionUnit.KSCM_PER_DAY
+    );
 
     when(applicationVersionService.findLatestApplicationVersion(ApplicationTestUtil.APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion));
@@ -129,6 +142,7 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
     when(applicationRationaleService.findByApplicationVersion(applicationVersion)).thenReturn(Optional.empty());
     when(applicationRationaleService.getLocations(applicationVersion)).thenReturn(productionLocations);
     when(applicationRationaleService.getHostLocation(applicationVersion)).thenReturn(Optional.of(hostLocation));
+    when(applicationRationaleProductionService.findOilAndGasMaximums(applicationVersion)).thenReturn(Optional.of(oilAndGasMaximums));
 
     primaryApplicationAsset.setAssetId(1);
     primaryApplicationAsset.setAssetType(AssetType.FIELD);
@@ -154,7 +168,8 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
         .containsEntry("hostLocation", RestSearchItem.from(hostLocation))
         .containsEntry("productionLocationSearchUrl", assetSearchRestUrl)
         .containsEntry("hostLocationSearchUrl", assetSearchRestUrl)
-        .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID)));
+        .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID)))
+        .containsEntry("oilAndGasMaximums", oilAndGasMaximums);
 
     assertThat(model)
         .containsKey("form")

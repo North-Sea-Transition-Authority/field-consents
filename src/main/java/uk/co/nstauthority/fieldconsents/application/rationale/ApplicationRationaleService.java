@@ -37,4 +37,5 @@ public class ApplicationRationaleService {
   public Optional<AssetJson> getHostLocation(ApplicationVersion applicationVersion) {
     return applicationAssetService.getAssetJsonListFor(applicationVersion, AssetRole.HOST).stream().findFirst();
   }
+
 }

@@ -20,6 +20,7 @@ import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetServi
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetView;
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationaleService;
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationaleType;
+import uk.co.nstauthority.fieldconsents.application.rationale.emission.ApplicationRationaleEmissionService;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
 import uk.co.nstauthority.fieldconsents.assets.AssetRestController;
@@ -42,6 +43,7 @@ public class ApplicationRationaleFlareController {
   private final ApplicationRationaleFlareFormValidator validator;
   private final ApplicationRationaleService applicationRationaleService;
   private final AssetService assetService;
+  private final ApplicationRationaleEmissionService applicationRationaleEmissionService;
 
   ApplicationRationaleFlareController(
       ApplicationRationaleFlareService applicationRationaleFlareService,
@@ -49,7 +51,8 @@ public class ApplicationRationaleFlareController {
       ApplicationVersionService applicationVersionService,
       ApplicationRationaleFlareFormValidator validator,
       ApplicationRationaleService applicationRationaleService,
-      AssetService assetService
+      AssetService assetService,
+      ApplicationRationaleEmissionService applicationRationaleEmissionService
   ) {
     this.applicationRationaleFlareService = applicationRationaleFlareService;
     this.applicationAssetService = applicationAssetService;
@@ -57,6 +60,7 @@ public class ApplicationRationaleFlareController {
     this.validator = validator;
     this.applicationRationaleService = applicationRationaleService;
     this.assetService = assetService;
+    this.applicationRationaleEmissionService = applicationRationaleEmissionService;
   }
 
   @GetMapping
@@ -110,7 +114,7 @@ public class ApplicationRationaleFlareController {
     var isTerminal = applicationAssetService.getPrimaryAsset(applicationVersion).isTerminal();
     var assetSearchRestUrl = getAssetSearchUrl(isTerminal);
 
-    return new ModelAndView("fcs/application/application-rationale/flare-form")
+    var modelAndView = new ModelAndView("fcs/application/application-rationale/flare-form")
         .addObject("form", form)
         .addObject("increaseRadio", ApplicationRationaleType.INCREASE)
         .addObject("decreaseRadio", ApplicationRationaleType.DECREASE)
@@ -121,6 +125,12 @@ public class ApplicationRationaleFlareController {
         .addObject("hostLocationSearchUrl", assetSearchRestUrl)
         .addObject("cancelUrl",
             ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId)));
+
+    applicationRationaleEmissionService.findEmissionDailyAverage(applicationVersion).ifPresent(emissionDailyAverage ->
+        modelAndView.addObject("emissionDailyAverage", emissionDailyAverage)
+    );
+
+    return modelAndView;
   }
 
   private String getAssetSearchUrl(boolean isTerminal) {

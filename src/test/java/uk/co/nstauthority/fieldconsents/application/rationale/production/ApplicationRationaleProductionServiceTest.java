@@ -1,11 +1,14 @@
 package uk.co.nstauthority.fieldconsents.application.rationale.production;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.assertj.core.api.InstanceOfAssertFactories.list;
 import static org.assertj.core.api.InstanceOfAssertFactories.type;
 import static org.junit.jupiter.params.provider.EnumSource.Mode.EXCLUDE;
 import static org.junit.jupiter.params.provider.EnumSource.Mode.INCLUDE;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
@@ -13,6 +16,11 @@ import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1Json;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal2Json;
 
+import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -26,25 +34,38 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetView;
 import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataTestUtil;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentDataLongTermProductionFigures;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentDataLongTermProductionFiguresService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentFigureUnitService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentFigureUnitView;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationale;
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationaleRepository;
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationaleService;
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationaleType;
+import uk.co.nstauthority.fieldconsents.flarevent.FlareVentUnit;
+import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 import uk.co.nstauthority.fieldconsents.summary.SummaryKeyValue;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationRationaleProductionServiceTest {
+
+  private final Clock clock = Clock.fixed(Instant.now(), ZoneId.systemDefault());
 
   @Mock
   private ApplicationRationaleRepository repository;
@@ -55,11 +76,25 @@ class ApplicationRationaleProductionServiceTest {
   @Mock
   private ApplicationRationaleService applicationRationaleService;
 
-  @InjectMocks
+  @Mock
+  private ApplicationVersionService applicationVersionService;
+
+  @Mock
+  private ConsentDataService consentDataService;
+
+  @Mock
+  private ConsentLengthService consentLengthService;
+
+  @Mock
+  private ConsentFigureUnitService consentFigureUnitService;
+
+  @Mock
+  private ConsentDataLongTermProductionFiguresService consentDataLongTermProductionFiguresService;
+
   private ApplicationRationaleProductionService applicationRationaleProductionService;
 
   @Captor
-  private ArgumentCaptor<ApplicationRationale> applicationRationaletCaptor;
+  private ArgumentCaptor<ApplicationRationale> applicationRationaleCaptor;
 
   private ApplicationVersion applicationVersion;
 
@@ -67,9 +102,21 @@ class ApplicationRationaleProductionServiceTest {
 
   @BeforeEach
   void setUp() {
-    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
+    applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
     applicationRationale = new ApplicationRationale();
     applicationRationale.setApplicationVersion(applicationVersion);
+
+    applicationRationaleProductionService = spy(new ApplicationRationaleProductionService(
+        repository,
+        applicationAssetService,
+        applicationRationaleService,
+        applicationVersionService,
+        clock,
+        consentDataService,
+        consentLengthService,
+        consentFigureUnitService,
+        consentDataLongTermProductionFiguresService
+    ));
   }
 
   @ParameterizedTest
@@ -87,8 +134,8 @@ class ApplicationRationaleProductionServiceTest {
         hostLocationAssetKey
     );
 
-    verify(repository).save(applicationRationaletCaptor.capture());
-    assertThat(applicationRationaletCaptor.getValue())
+    verify(repository).save(applicationRationaleCaptor.capture());
+    assertThat(applicationRationaleCaptor.getValue())
         .extracting(
             ApplicationRationale::getApplicationVersion,
             ApplicationRationale::getRationaleType,
@@ -116,8 +163,8 @@ class ApplicationRationaleProductionServiceTest {
         hostLocationAssetKey
     );
 
-    verify(repository).save(applicationRationaletCaptor.capture());
-    assertThat(applicationRationaletCaptor.getValue())
+    verify(repository).save(applicationRationaleCaptor.capture());
+    assertThat(applicationRationaleCaptor.getValue())
         .extracting(
             ApplicationRationale::getApplicationVersion,
             ApplicationRationale::getRationaleType,
@@ -164,8 +211,8 @@ class ApplicationRationaleProductionServiceTest {
         hostLocationAssetKey
     );
 
-    verify(repository).save(applicationRationaletCaptor.capture());
-    assertThat(applicationRationaletCaptor.getValue())
+    verify(repository).save(applicationRationaleCaptor.capture());
+    assertThat(applicationRationaleCaptor.getValue())
         .extracting(
             ApplicationRationale::getApplicationVersion,
             ApplicationRationale::getRationaleType,
@@ -337,6 +384,162 @@ class ApplicationRationaleProductionServiceTest {
         .isEqualTo(SummaryCard.emptySummaryCard());
   }
 
+  @Test
+  void findOilAndGasMaximums() {
+    var today = LocalDate.now(clock);
+    var yesterday = today.minusDays(1);
+    var lastWeek = today.minusWeeks(1);
+
+    var currentYear = today.getYear();
+
+    // this is the applicable one because it's starts last
+    var applicableConsentData = ConsentDataTestUtil.newBuilder().withId(3).withConsentStartDate(today).build();
+
+    var consentDataList = List.of(
+        ConsentDataTestUtil.newBuilder().withId(2).withConsentStartDate(yesterday).build(),
+        applicableConsentData,
+        ConsentDataTestUtil.newBuilder().withId(1).withConsentStartDate(lastWeek).build()
+    );
+
+    var oilAndGasMaximums = new OilAndGasMaximums(
+        currentYear,
+        BigDecimal.valueOf(10),
+        ProductionUnit.KSCM_PER_DAY,
+        BigDecimal.valueOf(15),
+        ProductionUnit.KSCM_PER_DAY
+    );
+
+    when(consentDataService.getConsentDataForYearAndApplicationVersionPrimaryAssetAndApplicationType(
+        currentYear,
+        applicationVersion
+    )).thenReturn(consentDataList);
+
+    doReturn(oilAndGasMaximums)
+        .when(applicationRationaleProductionService)
+        .getOilAndGasMaximumsForCurrentYear(currentYear, applicableConsentData);
+
+    assertThat(applicationRationaleProductionService.findOilAndGasMaximums(applicationVersion)).contains(oilAndGasMaximums);
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = ConsentLengthType.class, names = {"SHORT_TERM", "ANNUAL"}, mode = INCLUDE)
+  void getOilAndGasMaximumsForCurrentYear_production_shortTerm_annual(ConsentLengthType consentLengthType) {
+    var application = applicationVersion.getApplication();
+    application.setType(ApplicationType.PRODUCTION);
+
+    var today = LocalDate.now(clock);
+    var currentYear = today.getYear();
+
+    var consentData = ConsentDataTestUtil.newBuilder()
+        .withApplication(application)
+        .withShortTermOrAnnualProductionMaxOil(BigDecimal.ONE)
+        .withShortTermOrAnnualProductionMaxGas(BigDecimal.TEN)
+        .build();
+
+    var consentLengthDetails = new ConsentLengthDetails();
+    consentLengthDetails.setConsentLength(consentLengthType);
+
+    var consentFigureUnitView = new ConsentFigureUnitView(
+        ProductionUnit.KSCM_PER_DAY,
+        ProductionUnit.KSCM_PER_MONTH,
+        FlareVentUnit.TONNES_PER_MONTH
+    );
+
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(application.getId()))
+        .thenReturn(applicationVersion);
+
+    when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
+
+    when(consentFigureUnitService.getConsentFigureUnitView(applicationVersion, consentLengthDetails.getConsentLength()))
+        .thenReturn(consentFigureUnitView);
+
+    assertThat(applicationRationaleProductionService.getOilAndGasMaximumsForCurrentYear(currentYear, consentData))
+        .isEqualTo(new OilAndGasMaximums(
+            currentYear,
+            consentData.getShortTermOrAnnualProductionMaxOil(),
+            consentFigureUnitView.productionOilUnit(),
+            consentData.getShortTermOrAnnualProductionMaxGas(),
+            consentFigureUnitView.productionGasUnit()
+        ));
+  }
+
+  @Test
+  void getOilAndGasMaximumsForCurrentYear_production_longTerm() {
+    var application = applicationVersion.getApplication();
+    application.setType(ApplicationType.PRODUCTION);
+
+    var today = LocalDate.now(clock);
+    var currentYear = today.getYear();
+
+    var consentData = ConsentDataTestUtil.newBuilder()
+        .withApplication(application)
+        .withShortTermOrAnnualProductionMaxOil(BigDecimal.ONE)
+        .withShortTermOrAnnualProductionMaxGas(BigDecimal.TEN)
+        .build();
+
+    var consentLengthDetails = new ConsentLengthDetails();
+    consentLengthDetails.setConsentLength(ConsentLengthType.LONG_TERM);
+
+    var consentFigureUnitView = new ConsentFigureUnitView(
+        ProductionUnit.KSCM_PER_DAY,
+        ProductionUnit.KSCM_PER_MONTH,
+        FlareVentUnit.TONNES_PER_MONTH
+    );
+
+    var consentDataLongTermProductionFiguresPrevious = new ConsentDataLongTermProductionFigures();
+    consentDataLongTermProductionFiguresPrevious.setYear(currentYear - 1);
+
+    var consentDataLongTermProductionFiguresCurrent = new ConsentDataLongTermProductionFigures();
+    consentDataLongTermProductionFiguresCurrent.setYear(currentYear);
+    consentDataLongTermProductionFiguresCurrent.setMaxOil(BigDecimal.ONE);
+    consentDataLongTermProductionFiguresCurrent.setMaxGas(BigDecimal.TEN);
+
+    var consentDataLongTermProductionFiguresNext = new ConsentDataLongTermProductionFigures();
+    consentDataLongTermProductionFiguresNext.setYear(currentYear + 1);
+
+    var consentDataLongTermProductionFigures = List.of(
+        consentDataLongTermProductionFiguresPrevious,
+        consentDataLongTermProductionFiguresCurrent,
+        consentDataLongTermProductionFiguresNext
+    );
+
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(application.getId()))
+        .thenReturn(applicationVersion);
+
+    when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
+
+    when(consentFigureUnitService.getConsentFigureUnitView(applicationVersion, consentLengthDetails.getConsentLength()))
+        .thenReturn(consentFigureUnitView);
+
+    when(consentDataLongTermProductionFiguresService.getConsentDataLongTermProductionFiguresList(application))
+        .thenReturn(consentDataLongTermProductionFigures);
+
+    assertThat(applicationRationaleProductionService.getOilAndGasMaximumsForCurrentYear(currentYear, consentData))
+        .isEqualTo(new OilAndGasMaximums(
+            currentYear,
+            consentDataLongTermProductionFiguresCurrent.getMaxOil(),
+            consentFigureUnitView.productionOilUnit(),
+            consentDataLongTermProductionFiguresCurrent.getMaxGas(),
+            consentFigureUnitView.productionGasUnit()
+        ));
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = ApplicationType.class, names = "PRODUCTION", mode = EXCLUDE)
+  void getOilAndGasMaximumsForCurrentYear_nonProductionApplicationOnConsentData(ApplicationType applicationType) {
+    var application = applicationVersion.getApplication();
+    application.setType(applicationType);
+
+    var today = LocalDate.now(clock);
+    var currentYear = today.getYear();
+    var consentData = ConsentDataTestUtil.newBuilder().withApplication(application).build();
+
+    assertThatThrownBy(() -> applicationRationaleProductionService.getOilAndGasMaximumsForCurrentYear(currentYear, consentData))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("Consent data [%s] is not for a production application. The application [%s] is of type %s"
+            .formatted(consentData.getId(), application.getId(), applicationType));
+  }
+
   private ListAssert<SummaryKeyValue> getSummaryKeyValuesFrom(SummaryCard summaryCard) {
     return assertThat(summaryCard)
         .extracting(SummaryCard::summaryData)
@@ -344,4 +547,5 @@ class ApplicationRationaleProductionServiceTest {
         .extracting(SummaryDataView::keyValues)
         .asInstanceOf(list(SummaryKeyValue.class));
   }
+
 }

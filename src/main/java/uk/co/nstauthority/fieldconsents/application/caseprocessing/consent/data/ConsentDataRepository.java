@@ -8,7 +8,9 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.ListCrudRepository;
 import uk.co.nstauthority.fieldconsents.application.Application;
+import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.duplication.NotDuplicationSource;
+import uk.co.nstauthority.fieldconsents.assets.AssetType;
 
 @NotDuplicationSource
 public interface ConsentDataRepository extends ListCrudRepository<ConsentData, UUID> {
@@ -18,20 +20,41 @@ public interface ConsentDataRepository extends ListCrudRepository<ConsentData, U
   void deleteByApplication(Application application);
 
   @Query("""
-SELECT
-  aa.assetId AS fieldId,
-  cd AS consentData
-FROM Application a
-JOIN ConsentData cd ON cd.application = a AND cd.consentStartDate <= :end AND cd.consentEndDate >= :start
-JOIN ApplicationVersion av ON av.application = a AND av.status = 'CONSENTED'
-JOIN ApplicationAsset aa ON aa.applicationVersion = av AND aa.assetType = 'FIELD' AND aa.assetId IN :fieldIds
-WHERE a.type = 'PRODUCTION'
-AND (aa.assetRole = 'PRIMARY' OR aa.assetRole = 'SECONDARY')
+      SELECT
+        aa.assetId AS fieldId,
+        cd AS consentData
+      FROM Application a
+      JOIN ConsentData cd ON cd.application = a AND cd.consentStartDate <= :end AND cd.consentEndDate >= :start
+      JOIN ApplicationVersion av ON av.application = a AND av.status = 'CONSENTED'
+      JOIN ApplicationAsset aa ON aa.applicationVersion = av AND aa.assetType = 'FIELD' AND aa.assetId IN :fieldIds
+      WHERE a.type = 'PRODUCTION'
+      AND (aa.assetRole = 'PRIMARY' OR aa.assetRole = 'SECONDARY')
       """)
   List<ConsentDataForFieldId> getConsentDataListInRangeForConsentedProductionApplicationsForFieldIds(
       LocalDate start,
       LocalDate end,
       Collection<Integer> fieldIds
+  );
+
+  // TODO FCS-771 - additional join when consents can be superseded
+  @Query("""
+      SELECT cd
+      FROM Application a
+      JOIN ConsentData cd ON cd.application = a
+      JOIN ApplicationVersion av ON av.application = a
+      JOIN ApplicationAsset aa ON aa.applicationVersion = av
+      WHERE a.type = :applicationType
+      AND (year(cd.consentStartDate) = :consentYear OR year(cd.consentEndDate) = :consentYear)
+      AND av.status = 'CONSENTED'
+      AND aa.assetRole = 'PRIMARY'
+      AND aa.assetType = :assetType
+      AND aa.assetId = :assetId
+      """)
+  List<ConsentData> getAssetConsentDataForApplicationTypeAndConsentYear(
+      ApplicationType applicationType,
+      AssetType assetType,
+      Integer assetId,
+      Integer consentYear
   );
 
 }

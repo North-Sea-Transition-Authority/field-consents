@@ -1,4 +1,5 @@
 <#include '../../layout/layout.ftl'>
+<#include 'emission-and-oil-gas-maximum-details.ftl'>
 
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
 
@@ -17,6 +18,9 @@ backLinkUrl=springUrl(cancelUrl)
       fieldsetHeadingClass="govuk-fieldset__legend--m"
       hintText="An increase is where the figure you are applying for is higher than your current consent. A decrease is where the figure you are applying for is less than your current consent."
       hiddenContent=true>
+      <#if emissionDailyAverage?has_content>
+        <@emissionDailyAverageSection emissionDailyAverage/>
+      </#if>
       <@fdsRadio.radioItem path="form.rationaleType" itemMap={increaseRadio: increaseRadio.displayName}>
         <@fdsTextarea.textarea
           hintText="Explain why you are requesting an increase. This could be that additional Wells are being drilled."

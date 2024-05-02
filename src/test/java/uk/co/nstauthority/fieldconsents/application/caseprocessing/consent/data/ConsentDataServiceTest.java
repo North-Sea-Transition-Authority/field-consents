@@ -34,6 +34,8 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentDataLongTermProductionFiguresService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentDataLongTermProductionFiguresTestUtil;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentEmissionFigureService;
@@ -45,10 +47,14 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthC
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
+import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 
 @ExtendWith(MockitoExtension.class)
 class ConsentDataServiceTest {
+
+  @Mock
+  private ApplicationAssetService applicationAssetService;
 
   @Mock
   private ConsentDataRepository repository;
@@ -128,6 +134,39 @@ class ConsentDataServiceTest {
             1, List.of(field1ConsentData1, field1ConsentData2),
             2, List.of(field2ConsentData1)
         ));
+  }
+
+  @Test
+  void getConsentDataForYearAndApplicationVersionPrimaryAssetAndApplicationType() {
+    var applicationVersion = new ApplicationVersion();
+    var application = new Application();
+
+    application.setType(ApplicationType.FLARE);
+    applicationVersion.setApplication(application);
+
+    var applicationAsset = new ApplicationAsset();
+    applicationAsset.setAssetId(1);
+    applicationAsset.setAssetType(AssetType.FIELD);
+
+    var year = LocalDate.now().getYear();
+
+    var consentDataList = List.of(
+        ConsentDataTestUtil.newBuilder().withId(1).build(),
+        ConsentDataTestUtil.newBuilder().withId(2).build(),
+        ConsentDataTestUtil.newBuilder().withId(3).build()
+    );
+
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(applicationAsset);
+
+    when(repository.getAssetConsentDataForApplicationTypeAndConsentYear(
+        application.getType(),
+        applicationAsset.getAssetType(),
+        applicationAsset.getAssetId(),
+        year
+    )).thenReturn(consentDataList);
+
+    assertThat(consentDataService.getConsentDataForYearAndApplicationVersionPrimaryAssetAndApplicationType(year, applicationVersion))
+        .isEqualTo(consentDataList);
   }
 
   @Test

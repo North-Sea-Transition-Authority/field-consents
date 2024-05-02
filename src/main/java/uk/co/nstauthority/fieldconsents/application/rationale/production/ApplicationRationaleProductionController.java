@@ -110,7 +110,7 @@ public class ApplicationRationaleProductionController {
     var isTerminal = applicationAssetService.getPrimaryAsset(applicationVersion).isTerminal();
     var assetSearchRestUrl = getAssetSearchUrl(isTerminal);
 
-    return new ModelAndView("fcs/application/application-rationale/production-form")
+    var modelAndView = new ModelAndView("fcs/application/application-rationale/production-form")
         .addObject("form", form)
         .addObject("increaseRadio", ApplicationRationaleType.INCREASE)
         .addObject("decreaseRadio", ApplicationRationaleType.DECREASE)
@@ -122,6 +122,12 @@ public class ApplicationRationaleProductionController {
         .addObject("hostLocationSearchUrl", assetSearchRestUrl)
         .addObject("cancelUrl",
             ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId)));
+
+    applicationRationaleProductionService.findOilAndGasMaximums(applicationVersion).ifPresent(oilAndGasMaximums ->
+        modelAndView.addObject("oilAndGasMaximums", oilAndGasMaximums)
+    );
+
+    return modelAndView;
   }
 
   private String getAssetSearchUrl(boolean isTerminal) {

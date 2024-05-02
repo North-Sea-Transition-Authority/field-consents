@@ -23,6 +23,8 @@ import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.u
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.EDIT_FCS_APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -42,6 +44,8 @@ import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetView;
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationale;
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationaleService;
 import uk.co.nstauthority.fieldconsents.application.rationale.ApplicationRationaleType;
+import uk.co.nstauthority.fieldconsents.application.rationale.emission.ApplicationRationaleEmissionService;
+import uk.co.nstauthority.fieldconsents.application.rationale.emission.EmissionDailyAverage;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListController;
 import uk.co.nstauthority.fieldconsents.assets.AssetJson;
 import uk.co.nstauthority.fieldconsents.assets.AssetKey;
@@ -50,6 +54,7 @@ import uk.co.nstauthority.fieldconsents.assets.AssetService;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
+import uk.co.nstauthority.fieldconsents.flarevent.FlareVentUnit;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
 @ContextConfiguration(classes = ApplicationRationaleFlareController.class)
@@ -62,16 +67,19 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
   private ApplicationRationaleFlareService applicationRationaleFlareService;
 
   @MockBean
-  private ApplicationRationaleService applicationRationaleService;
-
-  @MockBean
   private ApplicationAssetService applicationAssetService;
 
   @MockBean
   private ApplicationRationaleFlareFormValidator applicationRationaleFlareFormValidator;
 
   @MockBean
+  private ApplicationRationaleService applicationRationaleService;
+
+  @MockBean
   private AssetService assetService;
+
+  @MockBean
+  private ApplicationRationaleEmissionService applicationRationaleEmissionService;
 
   private ApplicationVersion applicationVersion;
 
@@ -82,6 +90,8 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
   private AssetJson hostLocation;
 
   private ApplicationAsset primaryApplicationAsset;
+
+  private EmissionDailyAverage emissionDailyAverage;
 
   @BeforeEach
   void setUp() {
@@ -94,6 +104,13 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
     hostLocation = terminal1Json;
 
     primaryApplicationAsset = new ApplicationAsset();
+
+    emissionDailyAverage = new EmissionDailyAverage(
+        applicationVersion.getApplication().getType(),
+        LocalDate.now().getYear(),
+        BigDecimal.valueOf(12.0),
+        FlareVentUnit.TONNES_PER_MONTH
+    );
 
     when(applicationVersionService.findLatestApplicationVersion(ApplicationTestUtil.APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion));
@@ -125,6 +142,7 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
     when(applicationRationaleService.findByApplicationVersion(applicationVersion)).thenReturn(Optional.empty());
     when(applicationRationaleService.getLocations(applicationVersion)).thenReturn(flaringLocations);
     when(applicationRationaleService.getHostLocation(applicationVersion)).thenReturn(Optional.of(hostLocation));
+    when(applicationRationaleEmissionService.findEmissionDailyAverage(applicationVersion)).thenReturn(Optional.of(emissionDailyAverage));
 
     primaryApplicationAsset.setAssetId(1);
     primaryApplicationAsset.setAssetType(AssetType.FIELD);
@@ -150,7 +168,8 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
         .containsEntry("hostLocation", RestSearchItem.from(hostLocation))
         .containsEntry("flaringLocationSearchUrl", assetSearchRestUrl)
         .containsEntry("hostLocationSearchUrl", assetSearchRestUrl)
-        .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID)));
+        .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID)))
+        .containsEntry("emissionDailyAverage", emissionDailyAverage);
 
     assertThat(model)
         .containsKey("form")
@@ -165,6 +184,7 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
     when(applicationRationaleService.findByApplicationVersion(applicationVersion)).thenReturn(Optional.empty());
     when(applicationRationaleService.getLocations(applicationVersion)).thenReturn(flaringLocations);
     when(applicationRationaleService.getHostLocation(applicationVersion)).thenReturn(Optional.of(hostLocation));
+    when(applicationRationaleEmissionService.findEmissionDailyAverage(applicationVersion)).thenReturn(Optional.of(emissionDailyAverage));
 
     primaryApplicationAsset.setAssetId(1);
     primaryApplicationAsset.setAssetType(AssetType.TERMINAL);
@@ -190,7 +210,8 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
         .containsEntry("hostLocation", RestSearchItem.from(hostLocation))
         .containsEntry("flaringLocationSearchUrl", assetSearchRestUrl)
         .containsEntry("hostLocationSearchUrl", assetSearchRestUrl)
-        .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID)));
+        .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID)))
+        .containsEntry("emissionDailyAverage", emissionDailyAverage);
 
     assertThat(model)
         .containsKey("form")
@@ -213,6 +234,7 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
     when(applicationRationaleService.findByApplicationVersion(applicationVersion)).thenReturn(Optional.of(applicationRationale));
     when(applicationRationaleService.getLocations(applicationVersion)).thenReturn(flaringLocations);
     when(applicationRationaleService.getHostLocation(applicationVersion)).thenReturn(Optional.of(hostLocation));
+    when(applicationRationaleEmissionService.findEmissionDailyAverage(applicationVersion)).thenReturn(Optional.empty());
 
     primaryApplicationAsset.setAssetId(1);
     primaryApplicationAsset.setAssetType(AssetType.TERMINAL);

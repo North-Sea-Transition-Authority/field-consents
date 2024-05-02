@@ -14,6 +14,7 @@ import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentDataLongTermProductionFiguresService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentEmissionFigureService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionFiguresService;
@@ -25,6 +26,7 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthT
 @Service
 public class ConsentDataService {
 
+  private final ApplicationAssetService applicationAssetService;
   private final ConsentDataRepository repository;
   private final ConsentLengthService consentLengthService;
   private final ConsentProductionFiguresService consentProductionFiguresService;
@@ -33,6 +35,7 @@ public class ConsentDataService {
   private final ApplicationVersionService applicationVersionService;
 
   ConsentDataService(
+      ApplicationAssetService applicationAssetService,
       ConsentDataRepository repository,
       ConsentLengthService consentLengthService,
       ConsentProductionFiguresService consentProductionFiguresService,
@@ -40,6 +43,7 @@ public class ConsentDataService {
       ConsentDataLongTermProductionFiguresService consentDataLongTermProductionFiguresService,
       ApplicationVersionService applicationVersionService
   ) {
+    this.applicationAssetService = applicationAssetService;
     this.repository = repository;
     this.consentLengthService = consentLengthService;
     this.consentProductionFiguresService = consentProductionFiguresService;
@@ -69,6 +73,19 @@ public class ConsentDataService {
             ConsentDataForFieldId::getFieldId,
             Collectors.mapping(ConsentDataForFieldId::getConsentData, Collectors.toList())
         ));
+  }
+
+  public List<ConsentData> getConsentDataForYearAndApplicationVersionPrimaryAssetAndApplicationType(
+      Integer year,
+      ApplicationVersion applicationVersion
+  ) {
+    var primaryApplicationAsset = applicationAssetService.getPrimaryAsset(applicationVersion);
+    return repository.getAssetConsentDataForApplicationTypeAndConsentYear(
+        applicationVersion.getApplication().getType(),
+        primaryApplicationAsset.getAssetType(),
+        primaryApplicationAsset.getAssetId(),
+        year
+    );
   }
 
   /**
