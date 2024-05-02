@@ -1,4 +1,4 @@
-FROM eclipse-temurin:17-alpine
+FROM eclipse-temurin:21-alpine
 COPY ./build/libs/field-consents.jar app.jar
 
 RUN apk update && apk upgrade && apk add curl && rm -rf /var/cache/apk/*
