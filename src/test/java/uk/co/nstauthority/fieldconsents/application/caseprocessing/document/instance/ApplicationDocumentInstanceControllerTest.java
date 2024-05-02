@@ -18,6 +18,7 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +31,7 @@ import org.springframework.test.context.ContextConfiguration;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionSummaryView;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionsSummaryView;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceService;
+import uk.co.fivium.digitaldocumentlibrary.document.PdfRenderResult;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
@@ -104,6 +106,7 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
             "Test content 1",
             false,
             Collections.emptyList(),
+            Map.of(),
             DocumentInstanceSectionUrlsTestUtil.newBuilderWithUrlSuffix("-1").build(),
             List.of()
         ),
@@ -113,6 +116,7 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
             "Test content 2",
             false,
             Collections.emptyList(),
+            Map.of(),
             DocumentInstanceSectionUrlsTestUtil.newBuilderWithUrlSuffix("-2").build(),
             List.of()
         )
@@ -120,7 +124,8 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
 
     var documentInstanceSectionsSummaryView = new DocumentInstanceSectionsSummaryView(
         documentInstanceSectionSummaryViews,
-        Collections.emptyList()
+        Collections.emptyList(),
+        Map.of()
     );
 
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
@@ -170,7 +175,10 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
   @EnumSource(value = CaseProcessingActionItem.class, names = { "CONSENT_PREPARATION", "CONSENT_ISSUING" })
   void getPreviewDocumentInstance_downloadFalse(CaseProcessingActionItem caseProcessingActionItem) throws Exception {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
-    var byteArrayResource = new ByteArrayResource(new byte[] {1, 2, 3});
+    var pdfRenderResultWithGenerationData = new PdfRenderResultWithGenerationData(
+        new PdfRenderResult(new ByteArrayResource(new byte[] {1, 2, 3}), "<html/>"),
+        Map.of()
+    );
 
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(caseProcessingActionItem));
@@ -181,7 +189,7 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
         applicationVersion,
         documentInstanceDto,
         PdfRenderingOptions.newBuilder().withPreviewWatermark(true).build())
-    ).thenReturn(byteArrayResource);
+    ).thenReturn(pdfRenderResultWithGenerationData);
 
     var fileName = "PREVIEW %s.pdf".formatted(documentInstanceDto.title());
 
@@ -190,7 +198,7 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_PDF))
-        .andExpect(content().bytes(byteArrayResource.getByteArray()))
+        .andExpect(content().bytes(pdfRenderResultWithGenerationData.pdfRenderResult().pdfContent().getContentAsByteArray()))
         .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, "filename=\"%s\"".formatted(fileName)));
   }
 
@@ -198,7 +206,10 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
   @EnumSource(value = CaseProcessingActionItem.class, names = { "CONSENT_PREPARATION", "CONSENT_ISSUING" })
   void getPreviewDocumentInstance_downloadTrue(CaseProcessingActionItem caseProcessingActionItem) throws Exception {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
-    var byteArrayResource = new ByteArrayResource(new byte[] {1, 2, 3});
+    var pdfRenderResultWithGenerationData = new PdfRenderResultWithGenerationData(
+        new PdfRenderResult(new ByteArrayResource(new byte[] {1, 2, 3}), "<html/>"),
+        Map.of()
+    );
 
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(caseProcessingActionItem));
@@ -209,7 +220,7 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
         applicationVersion,
         documentInstanceDto,
         PdfRenderingOptions.newBuilder().withPreviewWatermark(true).build())
-    ).thenReturn(byteArrayResource);
+    ).thenReturn(pdfRenderResultWithGenerationData);
 
     var fileName = "PREVIEW %s.pdf".formatted(documentInstanceDto.title());
 
@@ -218,7 +229,7 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_PDF))
-        .andExpect(content().bytes(byteArrayResource.getByteArray()))
+        .andExpect(content().bytes(pdfRenderResultWithGenerationData.pdfRenderResult().pdfContent().getByteArray()))
         .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"%s\"".formatted(fileName)));
   }
 

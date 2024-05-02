@@ -89,19 +89,20 @@ public class ApplicationDocumentInstanceController {
         documentInstanceId
     );
 
-    var byteArrayResource = applicationDocumentInstanceService.renderPdf(
+    var renderResult = applicationDocumentInstanceService.renderPdf(
         applicationVersion,
         documentInstanceDto,
         PdfRenderingOptions.newBuilder().withPreviewWatermark(true).build()
     );
     var filename = "PREVIEW %s.pdf".formatted(documentInstanceDto.title());
     var contentDisposition = getContentDisposition(download, filename);
+    var pdfContent = renderResult.pdfRenderResult().pdfContent();
 
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_PDF)
-        .contentLength(byteArrayResource.contentLength())
+        .contentLength(pdfContent.contentLength())
         .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
-        .body(byteArrayResource);
+        .body(pdfContent);
   }
 
   private String getContentDisposition(boolean download, String filename) {

@@ -27,8 +27,8 @@
   </@defaultPageWithSubNavigationSubNav>
 
   <@defaultPageWithSubNavigationContent pageHeading=pageTitle>
-    <#if documentInstanceSectionsSummaryView.errorMessages()?has_content>
-      <@errorSummary errors=documentInstanceSectionsSummaryView.errorMessages()/>
+    <#if documentInstanceSectionsSummaryView.allErrorMessages()?has_content>
+      <@errorSummary errors=documentInstanceSectionsSummaryView.allErrorMessages()/>
     </#if>
 
     <@fdsAction.link

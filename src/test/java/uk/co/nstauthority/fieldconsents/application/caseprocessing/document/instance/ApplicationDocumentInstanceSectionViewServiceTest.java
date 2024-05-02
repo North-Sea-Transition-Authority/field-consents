@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,7 +45,7 @@ class ApplicationDocumentInstanceSectionViewServiceTest {
     var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
 
-    var documentInstanceSectionsSummaryView = new DocumentInstanceSectionsSummaryView(List.of(), List.of());
+    var documentInstanceSectionsSummaryView = new DocumentInstanceSectionsSummaryView(List.of(), List.of(), Map.of());
 
     when(
         documentInstanceSectionViewService.getDocumentInstanceSectionsSummaryView(
@@ -90,7 +91,7 @@ class ApplicationDocumentInstanceSectionViewServiceTest {
     var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
 
-    var documentInstanceSectionsSummaryView = new DocumentInstanceSectionsSummaryView(List.of(), List.of());
+    var documentInstanceSectionsSummaryView = new DocumentInstanceSectionsSummaryView(List.of(), List.of(), Map.of());
 
     when(
         documentInstanceSectionViewService.getDocumentInstanceSectionsSummaryView(

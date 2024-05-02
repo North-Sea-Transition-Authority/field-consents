@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceDto;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceService;
@@ -98,7 +97,7 @@ public class ApplicationDocumentInstanceService {
     return documentInstanceService.getDocumentInstanceDtosByItemReference(getItemReference(application));
   }
 
-  public ByteArrayResource renderPdf(
+  public PdfRenderResultWithGenerationData renderPdf(
       ApplicationVersion applicationVersion,
       DocumentInstanceDto documentInstanceDto,
       PdfRenderingOptions pdfRenderingOptions
@@ -117,7 +116,10 @@ public class ApplicationDocumentInstanceService {
         "customerBrandingConfigurationProperties", customerBrandingConfigurationProperties
     );
 
-    return documentInstanceService.renderPdf(documentInstanceDto, templateModel);
+    return new PdfRenderResultWithGenerationData(
+        documentInstanceService.renderPdf(documentInstanceDto, templateModel),
+        documentInstanceSectionsSummaryView.allMailMergeResolvedValuesByMnemonic()
+    );
   }
 
   public boolean mailMergeErrorPresent(Application application) {
@@ -130,7 +132,7 @@ public class ApplicationDocumentInstanceService {
                 false
             )
         )
-        .anyMatch(view -> view.errorMessages() != null && !view.errorMessages().isEmpty());
+        .anyMatch(view -> view.allErrorMessages() != null && !view.allErrorMessages().isEmpty());
   }
 
   List<DocumentTemplateType> getApplicableDocumentTemplateTypes(Application application) {

@@ -38,6 +38,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
+import uk.co.fivium.digitaldocumentlibrary.document.PdfRenderResult;
 import uk.co.fivium.fileuploadlibrary.core.FileService;
 import uk.co.fivium.fileuploadlibrary.core.FileSource;
 import uk.co.fivium.fileuploadlibrary.core.FileUploadRequest;
@@ -56,10 +57,12 @@ import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentData;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataTestUtil;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.document.ConsentDocumentGenerationDataService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.fieldequitypartner.ConsentFieldEquityPartnerService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.ConsentEmailService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.DocumentInstanceDtoTestUtil;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.PdfRenderResultWithGenerationData;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.PdfRenderingOptions;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
@@ -100,6 +103,9 @@ class ConsentServiceTest {
   @Mock
   private ConsentFieldEquityPartnerService consentFieldEquityPartnerService;
 
+  @Mock
+  private ConsentDocumentGenerationDataService consentDocumentGenerationDataService;
+
   private final Clock clock = Clock.fixed(Instant.now(), ZoneId.systemDefault());
 
   private ConsentService consentService;
@@ -123,7 +129,8 @@ class ConsentServiceTest {
         fileService,
         clock,
         consentEmailService,
-        consentFieldEquityPartnerService
+        consentFieldEquityPartnerService,
+        consentDocumentGenerationDataService
     ));
 
     applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
@@ -635,15 +642,22 @@ class ConsentServiceTest {
     var documentInstanceDto1 = DocumentInstanceDtoTestUtil.builder().build();
     var documentInstanceDto2 = DocumentInstanceDtoTestUtil.builder().build();
 
-    var byteArrayResource1 = mock(ByteArrayResource.class);
-    var byteArrayResource2 = mock(ByteArrayResource.class);
+    var renderResultWithGenerationData1 = new PdfRenderResultWithGenerationData(
+        new PdfRenderResult(mock(ByteArrayResource.class), "html1"),
+        Map.of("FOO", "BAR")
+    );
+
+    var renderResultWithGenerationData2 = new PdfRenderResultWithGenerationData(
+        new PdfRenderResult(mock(ByteArrayResource.class), "html2"),
+        Map.of("FOO", "BAR")
+    );
 
     when(applicationDocumentInstanceService.getDocumentInstanceDtos(applicationVersion.getApplication()))
         .thenReturn(List.of(documentInstanceDto1, documentInstanceDto2));
     when(applicationDocumentInstanceService.renderPdf(applicationVersion, documentInstanceDto1, PdfRenderingOptions.newBuilder().build()))
-        .thenReturn(byteArrayResource1);
+        .thenReturn(renderResultWithGenerationData1);
     when(applicationDocumentInstanceService.renderPdf(applicationVersion, documentInstanceDto2, PdfRenderingOptions.newBuilder().build()))
-        .thenReturn(byteArrayResource2);
+        .thenReturn(renderResultWithGenerationData2);
 
     ArgumentCaptor<Function<FileUploadRequest.Builder, FileUploadRequest>> fileUploadRequestBuilderFunctionCaptor =
         ArgumentCaptor.forClass(Function.class);
@@ -668,10 +682,10 @@ class ConsentServiceTest {
         .containsExactly(
             tuple(
                 FileSource.fromInputStreamSource(
-                    byteArrayResource1,
+                    renderResultWithGenerationData1.pdfRenderResult().pdfContent(),
                     "%s.%s".formatted(documentInstanceDto1.title(), MediaType.APPLICATION_PDF.getSubtype()),
                     MediaType.APPLICATION_PDF_VALUE,
-                    byteArrayResource1.contentLength()
+                    renderResultWithGenerationData1.pdfRenderResult().pdfContent().contentLength()
                 ),
                 consentFileUsage.usageId(),
                 consentFileUsage.usageType(),
@@ -681,10 +695,10 @@ class ConsentServiceTest {
             ),
             tuple(
                 FileSource.fromInputStreamSource(
-                    byteArrayResource2,
+                    renderResultWithGenerationData2.pdfRenderResult().pdfContent(),
                     "%s.%s".formatted(documentInstanceDto2.title(), MediaType.APPLICATION_PDF.getSubtype()),
                     MediaType.APPLICATION_PDF_VALUE,
-                    byteArrayResource2.contentLength()
+                    renderResultWithGenerationData2.pdfRenderResult().pdfContent().contentLength()
                 ),
                 consentFileUsage.usageId(),
                 consentFileUsage.usageType(),
@@ -693,6 +707,9 @@ class ConsentServiceTest {
                 false
             )
         );
+
+    verify(consentDocumentGenerationDataService).createDocumentGenerationData(consent, documentInstanceDto1, renderResultWithGenerationData1);
+    verify(consentDocumentGenerationDataService).createDocumentGenerationData(consent, documentInstanceDto2, renderResultWithGenerationData2);
   }
 
   @Test

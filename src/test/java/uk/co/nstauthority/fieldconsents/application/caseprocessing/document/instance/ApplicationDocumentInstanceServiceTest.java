@@ -25,6 +25,7 @@ import org.springframework.core.io.ByteArrayResource;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionsSummaryView;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceService;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateService;
+import uk.co.fivium.digitaldocumentlibrary.document.PdfRenderResult;
 import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
@@ -248,7 +249,7 @@ class ApplicationDocumentInstanceServiceTest {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
     var pdfRenderingOptions = PdfRenderingOptions.newBuilder().build();
     var documentInstanceSectionsSummaryView = mock(DocumentInstanceSectionsSummaryView.class);
-    var byteArrayResource = new ByteArrayResource(new byte[] {1, 2, 3});
+    var pdfRenderResult = new PdfRenderResult(new ByteArrayResource(new byte[]{1, 2,3}), "<html/>");
     var applicationReference = "Application reference";
 
     var expectedTemplateModel = Map.of(
@@ -267,10 +268,13 @@ class ApplicationDocumentInstanceServiceTest {
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
 
     when(documentInstanceService.renderPdf(documentInstanceDto, expectedTemplateModel))
-        .thenReturn(byteArrayResource);
+        .thenReturn(pdfRenderResult);
 
     assertThat(applicationDocumentInstanceService.renderPdf(applicationVersion, documentInstanceDto, pdfRenderingOptions))
-        .isEqualTo(byteArrayResource);
+        .isEqualTo(new PdfRenderResultWithGenerationData(
+            pdfRenderResult,
+            documentInstanceSectionsSummaryView.allMailMergeResolvedValuesByMnemonic()
+        ));
   }
 
   @Test
@@ -289,7 +293,7 @@ class ApplicationDocumentInstanceServiceTest {
         eq(application),
         argThat(documentInstanceDtos::contains),
         eq(false)
-    )).thenReturn(new DocumentInstanceSectionsSummaryView(List.of(), List.of()));
+    )).thenReturn(new DocumentInstanceSectionsSummaryView(List.of(), List.of(), Map.of()));
 
     assertThat(applicationDocumentInstanceService.mailMergeErrorPresent(application)).isFalse();
   }
@@ -307,10 +311,10 @@ class ApplicationDocumentInstanceServiceTest {
     doReturn(documentInstanceDtos).when(applicationDocumentInstanceService).getDocumentInstanceDtos(application);
 
     when(applicationDocumentInstanceSectionViewService.getDocumentInstanceSectionsSummaryView(application, documentInstanceDtos.get(0), false))
-        .thenReturn(new DocumentInstanceSectionsSummaryView(List.of(), List.of()));
+        .thenReturn(new DocumentInstanceSectionsSummaryView(List.of(), List.of(), Map.of()));
 
     when(applicationDocumentInstanceSectionViewService.getDocumentInstanceSectionsSummaryView(application, documentInstanceDtos.get(1), false))
-        .thenReturn(new DocumentInstanceSectionsSummaryView(List.of(), List.of("error")));
+        .thenReturn(new DocumentInstanceSectionsSummaryView(List.of(), List.of("error"), Map.of()));
 
     assertThat(applicationDocumentInstanceService.mailMergeErrorPresent(application)).isTrue();
   }

@@ -25,6 +25,7 @@ import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetServi
 import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentData;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.document.ConsentDocumentGenerationDataService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.fieldequitypartner.ConsentFieldEquityPartnerService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.ConsentEmailService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceService;
@@ -51,6 +52,7 @@ public class ConsentService {
   private final Clock clock;
   private final ConsentEmailService consentEmailService;
   private final ConsentFieldEquityPartnerService consentFieldEquityPartnerService;
+  private final ConsentDocumentGenerationDataService consentDocumentGenerationDataService;
 
   ConsentService(
       ApplicationService applicationService,
@@ -63,7 +65,8 @@ public class ConsentService {
       FileService fileService,
       Clock clock,
       ConsentEmailService consentEmailService,
-      ConsentFieldEquityPartnerService consentFieldEquityPartnerService
+      ConsentFieldEquityPartnerService consentFieldEquityPartnerService,
+      ConsentDocumentGenerationDataService consentDocumentGenerationDataService
   ) {
     this.applicationService = applicationService;
     this.applicationAssetService = applicationAssetService;
@@ -76,6 +79,7 @@ public class ConsentService {
     this.clock = clock;
     this.consentEmailService = consentEmailService;
     this.consentFieldEquityPartnerService = consentFieldEquityPartnerService;
+    this.consentDocumentGenerationDataService = consentDocumentGenerationDataService;
   }
 
   @Transactional
@@ -210,6 +214,7 @@ public class ConsentService {
 
   void generateDocumentInstancesAndSaveToConsent(ApplicationVersion applicationVersion, Consent consent) {
     var documentInstanceDtos = applicationDocumentInstanceService.getDocumentInstanceDtos(applicationVersion.getApplication());
+
     for (var documentInstanceDto : documentInstanceDtos) {
       generateDocumentInstanceAndSaveToConsent(applicationVersion, documentInstanceDto, consent);
     }
@@ -220,17 +225,19 @@ public class ConsentService {
       DocumentInstanceDto documentInstanceDto,
       Consent consent
   ) {
-    var byteArrayResource = applicationDocumentInstanceService.renderPdf(
+    var renderResultWithGenerationData = applicationDocumentInstanceService.renderPdf(
         applicationVersion,
         documentInstanceDto,
         PdfRenderingOptions.newBuilder().build()
     );
 
+    var pdfContent = renderResultWithGenerationData.pdfRenderResult().pdfContent();
+
     var fileSource = FileSource.fromInputStreamSource(
-        byteArrayResource,
+        pdfContent,
         "%s.%s".formatted(documentInstanceDto.title(), MediaType.APPLICATION_PDF.getSubtype()),
         MediaType.APPLICATION_PDF_VALUE,
-        byteArrayResource.contentLength()
+        pdfContent.contentLength()
     );
 
     var consentFileUsage = ConsentFileUsage.generatedConsentDocumentFrom(consent);
@@ -245,6 +252,12 @@ public class ConsentService {
     if (error != null) {
       throw new IllegalStateException("Failed to upload file: %s".formatted(error));
     }
+
+    consentDocumentGenerationDataService.createDocumentGenerationData(
+        consent,
+        documentInstanceDto,
+        renderResultWithGenerationData
+    );
   }
 
   void copySupportingDocumentsToConsent(Application application, Consent consent) {
