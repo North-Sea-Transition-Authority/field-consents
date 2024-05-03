@@ -126,9 +126,6 @@ public class ApplicationCaseProcessingController {
       tab = caseProcessingTabs.get(0);
     }
 
-    var consentIssuingApprovalSummaryView = consentIssuingApprovalService.getConsentIssuingApprovalSummaryView(application)
-        .orElse(null);
-
     var modelAndView = new ModelAndView("fcs/application/applicationCaseProcessing")
         .addObject("selectedTab", tab)
         .addObject("controllerUrl", ReverseRouter.route(on(this.getClass()).caseProcessing(applicationId, null, null)))
@@ -137,8 +134,12 @@ public class ApplicationCaseProcessingController {
         .addObject("caseProcessingTabs", caseProcessingTabs)
         .addObject("wideSummaryDisplay", WIDE_SUMMARY_DISPLAY.allowed(applicationType))
         .addObject("pageTitle", applicationService.generateApplicationReference(applicationVersion))
-        .addObject("consentIssuingApprovalSummaryView", consentIssuingApprovalSummaryView)
         .addObject("isMigratedApplication", applicationService.isMigratedApplication(application));
+
+    if (ApplicationVersionStatus.SUBMITTED.equals(applicationVersion.getStatus())) {
+      modelAndView.addObject("consentIssuingApprovalSummaryView",
+          consentIssuingApprovalService.getConsentIssuingApprovalSummaryView(application).orElse(null));
+    }
 
     if (tab != null && caseProcessingTabs.contains(tab)) {
       switch (tab) {

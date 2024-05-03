@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
@@ -420,6 +421,38 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
             .with(user(user)))
         .andExpectAll(commonAttributesForTab(caseProcessingTab, applicationVersion))
         .andExpect(model().attribute(CONSENT_ISSUING_APPROVAL_SUMMARY_VIEW_ATTRIBUTE, consentIssuingApprovalSummaryView));
+  }
+
+  @ParameterizedTest
+  @EnumSource(CaseProcessingTab.class)
+  void caseProcessing_whenCaseIsConsented_thenConsentIssuingApprovalSummaryViewDoesNotExist(CaseProcessingTab caseProcessingTab) throws Exception {
+    applicationVersion = ApplicationTestUtil.getConsentedApplicationVersionWithType(ApplicationType.PRODUCTION);
+    stubBaseServiceCalls();
+    stubTaskListServiceCall();
+    stubSummaryServiceCall();
+    stubCaseHistoryServiceCall();
+    stubPaymentsServiceCall();
+    stubConsentServiceCall();
+
+    when(regulatorTeamService.isCaseOfficer(WebUserAccountId.from(user.wuaId()))).thenReturn(true);
+    when(consultationService.findLatestOpenConsultation(applicationVersion.getApplication())).thenReturn(Optional.empty());
+    when(furtherInformationService.findLatestOpenFurtherInformation(consultation)).thenReturn(Optional.empty());
+
+    when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(true);
+    when(consentIssuingApprovalService.getConsentIssuingApprovalSummaryView(application))
+        .thenReturn(Optional.of(consentIssuingApprovalSummaryView));
+
+    var tabParam = "?tab=%s".formatted(caseProcessingTab.getAnchor());
+    var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
+            .caseProcessing(APPLICATION_ID, null, null)) + tabParam)
+            .with(user(user)))
+        .andExpectAll(commonAttributesForTab(caseProcessingTab, applicationVersion))
+        .andReturn().getModelAndView();
+
+    assert modelAndView != null;
+
+    assertThat(modelAndView.getModel())
+        .doesNotContainKey(CONSENT_ISSUING_APPROVAL_SUMMARY_VIEW_ATTRIBUTE);
   }
 
   @Test
