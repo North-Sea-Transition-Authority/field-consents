@@ -35,10 +35,6 @@
 --DELETE FROM "fcs"."payments_library_payments_aud"@fcs_postgres_db;
 --
 ---- we aren't migrating to these table but the data still needs deleting
---DELETE FROM "fcs"."application_consent_data"@fcs_postgres_db;
---DELETE FROM "fcs"."application_consent_data_long_term_production_figures"@fcs_postgres_db;
---DELETE FROM "fcs"."application_consent_field_equity_partners"@fcs_postgres_db;
---DELETE FROM "fcs"."application_consent_issuing_approvals"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_work_area_priorities"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_rationale"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_withdrawals"@fcs_postgres_db;
@@ -52,7 +48,11 @@
 --DELETE FROM "fcs"."payments_library_payments"@fcs_postgres_db;
 --
 ---- delete data from tables we are migrating too
+--DELETE FROM "fcs"."application_consent_field_equity_partners"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_consents"@fcs_postgres_db;
+--DELETE FROM "fcs"."application_consent_data"@fcs_postgres_db;
+--DELETE FROM "fcs"."application_consent_data_long_term_production_figures"@fcs_postgres_db;
+--DELETE FROM "fcs"."application_consent_issuing_approvals"@fcs_postgres_db;
 --DELETE FROM "fcs"."split_clob_legacy_data"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_other_legacy_data"@fcs_postgres_db;
 --DELETE FROM "fcs"."vent_long_term_years"@fcs_postgres_db;
@@ -126,8 +126,11 @@ BEGIN
   
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
+
 
 --
 -- application_versions
@@ -170,9 +173,10 @@ BEGIN
  
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
-
 
 --
 -- consent_lengths
@@ -203,6 +207,8 @@ BEGIN
   
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -238,6 +244,8 @@ BEGIN
   
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -264,6 +272,8 @@ BEGIN
   
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -302,6 +312,8 @@ BEGIN
   
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -326,6 +338,8 @@ BEGIN
   
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -348,6 +362,8 @@ BEGIN
   
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -385,16 +401,11 @@ BEGIN
   
   END LOOP;
 
-END;
-/
-
-
--- work around DB link timeout issues from sqlnet.ora param SQLNET.INBOUND_CONNECT_TIMEOUT
-BEGIN
   COMMIT;
   DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
+
 
 --
 -- long_term_production_years
@@ -423,6 +434,8 @@ BEGIN
   
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -455,6 +468,9 @@ BEGIN
   
   END LOOP;
 
+
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -491,15 +507,11 @@ BEGIN
   
   END LOOP;
 
-END;
-/
-
--- work around DB link timeout issues from sqlnet.ora param SQLNET.INBOUND_CONNECT_TIMEOUT
-BEGIN
   COMMIT;
   DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
+
 
 --
 -- flare_annual_months
@@ -539,6 +551,8 @@ BEGIN
   
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -580,6 +594,8 @@ BEGIN
 
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -616,6 +632,8 @@ BEGIN
   
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -652,6 +670,8 @@ BEGIN
   
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -676,6 +696,8 @@ BEGIN
   
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -718,6 +740,8 @@ BEGIN
   
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -756,6 +780,8 @@ BEGIN
   
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -781,6 +807,8 @@ BEGIN
   
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -824,6 +852,8 @@ BEGIN
   
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -858,6 +888,8 @@ BEGIN
   
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -889,15 +921,11 @@ BEGIN
   
   END LOOP;
 
-END;
-/
-
--- work around DB link timeout issues from sqlnet.ora param SQLNET.INBOUND_CONNECT_TIMEOUT
-BEGIN
   COMMIT;
   DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
+
 
 --
 -- vent_annual_months
@@ -937,6 +965,8 @@ BEGIN
   
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -974,6 +1004,8 @@ BEGIN
   
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -1011,6 +1043,8 @@ BEGIN
   
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -1043,6 +1077,8 @@ BEGIN
   
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -1067,6 +1103,8 @@ BEGIN
   
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -1109,6 +1147,8 @@ BEGIN
   
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -1135,6 +1175,8 @@ BEGIN
   
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -1159,6 +1201,8 @@ BEGIN
   
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -1202,6 +1246,8 @@ BEGIN
   
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -1232,6 +1278,8 @@ BEGIN
   
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -1262,15 +1310,11 @@ BEGIN
   
   END LOOP;
 
-END;
-/
-
--- work around DB link timeout issues from sqlnet.ora param SQLNET.INBOUND_CONNECT_TIMEOUT
-BEGIN
   COMMIT;
   DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
+
 
 --
 -- application_case_notes
@@ -1304,6 +1348,8 @@ BEGIN
   
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -1353,6 +1399,8 @@ BEGIN
   
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -1405,6 +1453,8 @@ BEGIN
   
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -1451,6 +1501,8 @@ BEGIN
   
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -1503,6 +1555,8 @@ BEGIN
   
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -1542,6 +1596,8 @@ BEGIN
   
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -1571,6 +1627,104 @@ BEGIN
   
   END LOOP;
 
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
+END;
+/
+
+--
+-- application_consent_issuing_approvals
+--
+BEGIN
+
+  FOR rec IN (SELECT * FROM fcs_migration.application_consent_issuing_approvals WHERE id > 0 ORDER BY id) LOOP
+
+    INSERT INTO "fcs"."application_consent_issuing_approvals"@fcs_postgres_db (
+      "id"
+    , "application_id"
+    , "approved_by_wua_id"
+    , "approved_timestamp"
+    ) VALUES (
+      rec.id
+    , rec.application_id
+    , rec.approved_by_wua_id
+    , rec.approved_timestamp
+    );
+  
+  END LOOP;
+
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
+END;
+/
+
+--
+-- application_consent_data
+--
+BEGIN
+
+  FOR rec IN (SELECT * FROM fcs_migration.application_consent_data WHERE id > 0 ORDER BY id) LOOP
+
+    INSERT INTO "fcs"."application_consent_data"@fcs_postgres_db (
+      "id"
+    , "application_id"
+    , "consent_start_date"
+    , "consent_end_date"
+    , "short_term_or_annual_production_min_oil"
+    , "short_term_or_annual_production_max_oil"
+    , "short_term_or_annual_production_min_gas"
+    , "short_term_or_annual_production_max_gas"
+    , "emission_daily_average"
+    , "long_term_production_consent_production_from_date"
+    ) VALUES (
+      rec.id
+    , rec.application_id
+    , rec.consent_start_date
+    , rec.consent_end_date
+    , rec.short_term_or_annual_production_min_oil
+    , rec.short_term_or_annual_production_max_oil
+    , rec.short_term_or_annual_production_min_gas
+    , rec.short_term_or_annual_production_max_gas
+    , rec.emission_daily_average
+    , rec.long_term_production_consent_production_from_date
+    );
+  
+  END LOOP;
+
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
+END;
+/
+
+--
+-- application_consent_data_long_term_production_figures
+--
+BEGIN
+
+  FOR rec IN (SELECT * FROM fcs_migration.application_consent_data_long_term_production_figures WHERE id > 0 ORDER BY id) LOOP
+
+    INSERT INTO "fcs"."application_consent_data_long_term_production_figures"@fcs_postgres_db (
+      "id"
+    , "application_id"
+    , "year"
+    , "min_oil"
+    , "max_oil"
+    , "min_gas"
+    , "max_gas"
+    ) VALUES (
+      rec.id
+    , rec.application_id
+    , rec.year
+    , rec.min_oil
+    , rec.max_oil
+    , rec.min_gas
+    , rec.max_gas
+    );
+  
+  END LOOP;
+
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
 
@@ -1595,12 +1749,36 @@ BEGIN
   
   END LOOP;
 
-END;
-/
-
--- work around DB link timeout issues from sqlnet.ora param SQLNET.INBOUND_CONNECT_TIMEOUT
-BEGIN
   COMMIT;
   DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
+
+--
+-- application_consent_field_equity_partners
+--
+BEGIN
+
+  FOR rec IN (SELECT * FROM fcs_migration.application_consent_field_equity_partners WHERE id > 0 ORDER BY id) LOOP
+
+    INSERT INTO "fcs"."application_consent_field_equity_partners"@fcs_postgres_db (
+      "id"
+    , "application_consent_id"
+    , "organisation_unit_id"
+    , "organisation_name"
+    , "registered_number"
+    ) VALUES (
+      rec.id
+    , rec.application_consent_id
+    , rec.organisation_unit_id
+    , rec.organisation_name
+    , rec.registered_number
+    );
+  
+  END LOOP;
+
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
+END;
+/
+

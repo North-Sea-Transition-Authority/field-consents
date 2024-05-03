@@ -2,7 +2,15 @@
 -- Run script with F5 in Toad
 --
 
+--DROP TABLE fcs_migration.application_consent_field_equity_partners;
+--DROP SEQUENCE fcs_migration.application_consent_field_equity_partners_id_seq;
 --DROP TABLE fcs_migration.application_consents;
+--DROP TABLE fcs_migration.application_consent_data_long_term_production_figures;
+--DROP SEQUENCE fcs_migration.application_consent_data_long_term_production_figures_id_seq;
+--DROP TABLE fcs_migration.application_consent_data;
+--DROP SEQUENCE fcs_migration.application_consent_data_id_seq;
+--DROP TABLE fcs_migration.application_consent_issuing_approvals;
+--DROP SEQUENCE fcs_migration.application_consent_issuing_approvals_id_seq;
 --DROP TABLE fcs_migration.split_clob_legacy_data;
 --DROP SEQUENCE fcs_migration.split_clob_legacy_data_id_seq;
 --DROP TABLE fcs_migration.application_other_legacy_data;
@@ -861,6 +869,65 @@ CREATE TABLE fcs_migration.split_clob_legacy_data (
 
 
 --
+-- application_consent_issuing_approvals
+--
+CREATE SEQUENCE fcs_migration.application_consent_issuing_approvals_id_seq;
+
+CREATE TABLE fcs_migration.application_consent_issuing_approvals (
+  id                 INTEGER PRIMARY KEY
+, application_id     INTEGER NOT NULL
+                     CONSTRAINT application_consent_issuing_approvals_application_id_unq
+                     UNIQUE
+                     CONSTRAINT application_consent_issuing_approvals_application_id_fk
+                     REFERENCES applications
+, approved_by_wua_id INTEGER NOT NULL
+, approved_timestamp DATE NOT NULL
+);
+
+--
+-- application_consent_data
+--
+CREATE SEQUENCE fcs_migration.application_consent_data_id_seq;
+
+CREATE TABLE fcs_migration.application_consent_data (
+  id                                                INTEGER PRIMARY KEY
+, application_id                                    INTEGER NOT NULL
+                                                    CONSTRAINT application_consent_data_application_id_unq
+                                                    UNIQUE
+                                                    CONSTRAINT application_consent_data_fk
+                                                    REFERENCES applications
+, consent_start_date                                DATE NOT NULL
+, consent_end_date                                  DATE NOT NULL
+, short_term_or_annual_production_min_oil           NUMBER
+, short_term_or_annual_production_max_oil           NUMBER
+, short_term_or_annual_production_min_gas           NUMBER
+, short_term_or_annual_production_max_gas           NUMBER
+, emission_daily_average                            NUMBER
+, long_term_production_consent_production_from_date DATE
+);
+
+
+--
+-- application_consent_data_long_term_production_figures
+--
+CREATE SEQUENCE fcs_migration.application_consent_data_long_term_production_figures_id_seq;
+
+CREATE TABLE fcs_migration.application_consent_data_long_term_production_figures (
+  id             INTEGER PRIMARY KEY
+, application_id INTEGER NOT NULL
+                 CONSTRAINT application_consent_prod_long_term_figures_app_id_fk
+                 REFERENCES applications
+, year           INTEGER NOT NULL
+, min_oil        NUMBER NOT NULL
+, max_oil        NUMBER NOT NULL
+, min_gas        NUMBER NOT NULL
+, max_gas        NUMBER NOT NULL
+, CONSTRAINT application_consent_prod_long_term_figures_app_id_year_unq
+  UNIQUE (application_id, year)
+  DEFERRABLE INITIALLY DEFERRED
+);
+
+--
 -- application_consents
 --
 CREATE TABLE fcs_migration.application_consents (
@@ -871,4 +938,21 @@ CREATE TABLE fcs_migration.application_consents (
                    REFERENCES fcs_migration.applications
 , issued_by_wua_id INTEGER NOT NULL
 , issued_timestamp DATE NOT NULL
+);
+
+--
+-- application_consent_field_equity_partners
+--
+CREATE SEQUENCE fcs_migration.application_consent_field_equity_partners_id_seq;
+
+CREATE TABLE fcs_migration.application_consent_field_equity_partners (
+  id                     INTEGER PRIMARY KEY
+, application_consent_id INTEGER NOT NULL
+                         CONSTRAINT application_cfep_consent_id_fk
+                         REFERENCES application_consents
+, organisation_unit_id   INTEGER NOT NULL
+, organisation_name      VARCHAR2(4000) NOT NULL
+, registered_number      VARCHAR2(4000)
+, CONSTRAINT application_cfep_consent_id_org_unit_id_unq
+  UNIQUE (application_consent_id, organisation_unit_id)
 );

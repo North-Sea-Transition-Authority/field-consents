@@ -10,9 +10,6 @@ END;
 $$;
 
 CALL fcs.post_migration_sync_table_sequence('applications');
-CALL fcs.post_migration_sync_table_sequence('application_consents');
-CALL fcs.post_migration_sync_table_sequence('application_consent_data');
-CALL fcs.post_migration_sync_table_sequence('application_consent_data_long_term_production_figures');
 CALL fcs.post_migration_sync_table_sequence('application_versions');
 CALL fcs.post_migration_sync_table_sequence('consent_lengths');
 CALL fcs.post_migration_sync_table_sequence('application_assets');
@@ -56,13 +53,15 @@ CALL fcs.post_migration_sync_table_sequence('application_rationale');
 CALL fcs.post_migration_sync_table_sequence('application_work_area_priorities');
 CALL fcs.post_migration_sync_table_sequence('application_other_legacy_data');
 CALL fcs.post_migration_sync_table_sequence('split_clob_legacy_data');
+CALL fcs.post_migration_sync_table_sequence('application_consent_issuing_approvals');
+CALL fcs.post_migration_sync_table_sequence('application_consent_data');
+CALL fcs.post_migration_sync_table_sequence('application_consent_data_long_term_production_figures');
+CALL fcs.post_migration_sync_table_sequence('application_consents');
+CALL fcs.post_migration_sync_table_sequence('application_consent_field_equity_partners');
 
 DROP PROCEDURE fcs.post_migration_sync_table_sequence(TEXT);
 
 -- SELECT * FROM fcs.applications_id_seq;
--- SELECT * FROM fcs.application_consents_id_seq;
--- SELECT * FROM fcs.application_consent_data_id_seq;
--- SELECT * FROM fcs.application_consent_data_long_term_production_figures_id_seq;
 -- SELECT * FROM fcs.application_versions_id_seq;
 -- SELECT * FROM fcs.consent_lengths_id_seq;
 -- SELECT * FROM fcs.application_assets_id_seq;
@@ -106,3 +105,8 @@ DROP PROCEDURE fcs.post_migration_sync_table_sequence(TEXT);
 -- SELECT * FROM fcs.application_work_area_priorities_id_seq;
 -- SELECT * FROM fcs.application_other_legacy_data_id_seq;
 -- SELECT * FROM fcs.split_clob_legacy_data_id_seq;
+-- SELECT * FROM fcs.application_consent_issuing_approvals_id_seq;
+-- SELECT * FROM fcs.application_consent_data_id_seq;
+-- SELECT * FROM fcs.application_consent_data_long_term_production_figures_id_seq;
+-- SELECT * FROM fcs.application_consents_id_seq;
+-- SELECT * FROM fcs.application_consent_field_equity_partners_id_seq;

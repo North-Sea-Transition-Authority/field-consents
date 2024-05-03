@@ -2164,6 +2164,127 @@ END;
 /
 
 --
+-- application_consent_issuing_approvals
+--
+INSERT INTO fcs_migration.application_consent_issuing_approvals (
+  id
+, application_id
+, approved_by_wua_id
+, approved_timestamp
+)
+WITH base AS (
+  SELECT
+    av.application_id
+  , cd.uploaded_by_wua_id approved_by_wua_id
+  , cd.upload_date_time approved_timestamp
+  FROM fcs_migration.application_versions av
+  JOIN fcs_migration.field_consent_consent_docs cd ON cd.fcd_id = av.id
+  WHERE cd.document_type IN ('FC_PROD_CONSENT', 'FC_FLARE_CONSENT', 'FC_VENT_CONSENT', 'FC_VENT_CONSENT_SNS_IS')
+  ORDER BY cd.upload_date_time
+)
+SELECT
+  application_consent_issuing_approvals_id_seq.nextval
+, b.application_id
+, b.approved_by_wua_id
+, b.approved_timestamp
+FROM base b;
+/
+
+--
+-- application_consent_data
+--
+INSERT INTO fcs_migration.application_consent_data (
+  id
+, application_id
+, consent_start_date
+, consent_end_date
+, short_term_or_annual_production_min_oil
+, short_term_or_annual_production_max_oil
+, short_term_or_annual_production_min_gas
+, short_term_or_annual_production_max_gas
+, long_term_production_consent_production_from_date
+)
+SELECT
+  fcs_migration.application_consent_data_id_seq.nextval
+, av.application_id
+, cd.valid_from_date
+, cd.valid_to_date
+, CASE
+  WHEN cd.app_length != 'LONG_TERM' THEN coalesce(cd.production_oil_min_average, 0)
+  END
+, CASE
+  WHEN cd.app_length != 'LONG_TERM' THEN coalesce(cd.production_oil_max_average, 0)
+  END
+, CASE
+  WHEN cd.app_length != 'LONG_TERM' THEN coalesce(cd.production_gas_min_average, 0)
+  END
+, CASE
+  WHEN cd.app_length != 'LONG_TERM' THEN coalesce(cd.production_gas_max_average, 0)
+  END
+, CASE cd.app_length
+  WHEN 'LONG_TERM' THEN coalesce(cd.schedule_valid_from_date, cd.valid_from_date)
+  END
+FROM fcs_migration.application_versions av
+JOIN fcs_migration.field_consent_application_consent_data cd ON cd.fcd_id = av.id
+WHERE cd.application_type = 'PCON';
+/
+INSERT INTO fcs_migration.application_consent_data (
+  id
+, application_id
+, consent_start_date
+, consent_end_date
+, emission_daily_average
+)
+SELECT
+  fcs_migration.application_consent_data_id_seq.nextval
+, av.application_id
+, cd.valid_from_date
+, cd.valid_to_date
+, CASE
+  WHEN cd.application_type = 'FCON' AND cd.app_length != 'LONG_TERM' THEN coalesce(cd.flare_average, 0)
+  WHEN cd.application_type = 'VCON' AND cd.app_length != 'LONG_TERM' THEN coalesce(cd.vent_average, 0)
+  END
+FROM fcs_migration.application_versions av
+JOIN fcs_migration.field_consent_application_consent_data cd ON cd.fcd_id = av.id
+WHERE cd.application_type IN ('FCON', 'VCON');
+/
+
+--
+-- application_consent_data_long_term_production_figures
+--
+INSERT INTO fcs_migration.application_consent_data_long_term_production_figures (
+  id
+, application_id
+, year
+, min_oil
+, max_oil
+, min_gas
+, max_gas
+)
+WITH base AS (
+  SELECT
+    av.application_id
+  , lt.year
+  , lt.min_oil
+  , lt.max_oil
+  , lt.min_gas
+  , lt.max_gas
+  FROM fcs_migration.application_versions av
+  JOIN fcs_migration.field_consent_consent_data_long_term_production_figures lt ON lt.fcd_id = av.id
+  ORDER BY av.application_id, lt.year -- order here so that the ids allocated are grouped/ordered logically within each application_id data set
+)
+SELECT
+  application_consent_data_long_term_production_figures_id_seq.nextval
+, b.application_id
+, b.year
+, b.min_oil
+, b.max_oil
+, b.min_gas
+, b.max_gas
+FROM base b;
+/
+
+--
 -- application_consents
 --
 INSERT INTO fcs_migration.application_consents (
@@ -2180,6 +2301,31 @@ SELECT
 FROM fcs_migration.application_versions av
 JOIN envmgr.field_consents_issued fci ON fci.fcd_id = av.id
 /
+
+--
+-- application_consent_field_equity_partners
+--
+INSERT INTO fcs_migration.application_consent_field_equity_partners(
+  id
+, application_consent_id
+, organisation_unit_id
+, organisation_name
+, registered_number
+)
+WITH base AS (
+  SELECT fep.*
+  FROM fcs_migration.field_consent_field_equity_partners fep
+  ORDER BY fep.fci_id, fep.fep_rownum
+)
+SELECT
+  fcs_migration.application_consent_field_equity_partners_id_seq.nextval
+, b.fci_id
+, b.organisation_unit_id
+, b.organisation_name
+, b.registered_number
+FROM base b;
+/
+
 
 COMMIT;
 /
