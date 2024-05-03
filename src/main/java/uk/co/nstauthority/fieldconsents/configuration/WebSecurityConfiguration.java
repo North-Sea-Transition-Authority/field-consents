@@ -55,7 +55,7 @@ public class WebSecurityConfiguration {
 
     return httpSecurity
         .authorizeHttpRequests(http -> http
-            .requestMatchers("/error", "/assets/**").permitAll()
+            .requestMatchers("/error", "/assets/**", "/actuator/health").permitAll()
             .anyRequest().hasAuthority(IDP_ACCESS_GRANTED_AUTHORITY_NAME))
         .saml2Login(saml2 -> saml2.authenticationManager(new ProviderManager(authenticationProvider)))
         .logout(logout -> logout.logoutSuccessHandler(serviceLogoutSuccessHandler))
