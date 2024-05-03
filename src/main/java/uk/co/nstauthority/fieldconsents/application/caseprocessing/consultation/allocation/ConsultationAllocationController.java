@@ -34,7 +34,7 @@ import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 @ActionEndPoint(CONSULTATION_MANAGE_RESPONDER)
 public class ConsultationAllocationController {
 
-  private static final String PAGE_TITLE = "Assign or re-assign consultation responder";
+  private static final String PAGE_TITLE = "Assign or reassign consultation responder";
 
   private final ApplicationService applicationService;
   private final ApplicationVersionService applicationVersionService;

@@ -5,6 +5,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -153,7 +154,7 @@ class CaseHistoryEventServiceTest {
 
     technicalReviewRequestedEvent = CaseHistoryEventTestUtil.getCaseEventForTechnicalReviewRequested(technicalReview);
     when(technicalReviewCaseEventService.getCaseEvents(applicationVersion.getApplication()))
-        .thenReturn(Collections.singletonList(technicalReviewRequestedEvent));
+        .thenReturn(Collections.singleton(technicalReviewRequestedEvent));
 
     var caseHistoryEvents = caseHistoryEventService.getCaseHistoryEvents(applicationVersion.getApplication());
 
@@ -171,7 +172,7 @@ class CaseHistoryEventServiceTest {
     technicalReviewRequestedEvent = CaseHistoryEventTestUtil.getCaseEventForTechnicalReviewRequested(technicalReview);
     technicalReviewRespondedEvent = CaseHistoryEventTestUtil.getCaseEventForTechnicalReviewResponded(technicalReview);
     when(technicalReviewCaseEventService.getCaseEvents(applicationVersion.getApplication())).thenReturn(
-        List.of(
+        Set.of(
             technicalReviewRequestedEvent,
             technicalReviewRespondedEvent
         )

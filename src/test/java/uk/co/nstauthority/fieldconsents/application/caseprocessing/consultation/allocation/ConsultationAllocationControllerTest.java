@@ -50,7 +50,7 @@ class ConsultationAllocationControllerTest extends AbstractApplicationController
 
   private static final Class<ConsultationAllocationController> CONTROLLER_CLASS = ConsultationAllocationController.class;
   private static final String VIEW_NAME = "fcs/application/consultation/manageConsulteeResponder";
-  private static final String PAGE_TITLE = "Assign or re-assign consultation responder";
+  private static final String PAGE_TITLE = "Assign or reassign consultation responder";
   private static final String APPLICATION_REFERENCE = "Application reference";
   private static final EnergyPortalUserDto ENERGY_PORTAL_USER_DTO = new EnergyPortalUserDto(
       1L,

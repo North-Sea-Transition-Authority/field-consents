@@ -1,9 +1,9 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents;
 
-import java.util.List;
+import java.util.Collection;
 
 public interface CaseEventService<T> {
 
-  List<CaseEvent> getCaseEvents(T source);
+  Collection<CaseEvent> getCaseEvents(T source);
 
 }

@@ -20,6 +20,7 @@ import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.u
 import static uk.co.nstauthority.fieldconsents.fileupload.FileUploadTestUtil.FILE_UPLOAD_COMPONENT_ATTRIBUTES;
 import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.notificationBanner;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.TECHNICAL_REVIEW_ID_1;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -60,8 +61,6 @@ class TechnicalReviewResponseControllerTest extends AbstractApplicationControlle
 
   private static final String VIEW_NAME = "fcs/application/review/technicalReviewResponse";
   private static final Class<TechnicalReviewResponseController> CONTROLLER_CLASS = TechnicalReviewResponseController.class;
-
-  private static final int TECHNICAL_REVIEW_ID = 1;
   private static final Instant TECHNICAL_REVIEW_DEADLINE = NOW.plus(1, ChronoUnit.DAYS);
   private static final String TECHNICAL_REVIEW_REQUEST_TEXT = "Request text";
   private static final String APPLICATION_REFERENCE = "application reference";
@@ -93,7 +92,7 @@ class TechnicalReviewResponseControllerTest extends AbstractApplicationControlle
     applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
 
     technicalReview = new TechnicalReview();
-    technicalReview.setId(TECHNICAL_REVIEW_ID);
+    technicalReview.setId(TECHNICAL_REVIEW_ID_1);
     technicalReview.setDeadlineDateTime(TECHNICAL_REVIEW_DEADLINE);
     technicalReview.setRequestText(TECHNICAL_REVIEW_REQUEST_TEXT);
 

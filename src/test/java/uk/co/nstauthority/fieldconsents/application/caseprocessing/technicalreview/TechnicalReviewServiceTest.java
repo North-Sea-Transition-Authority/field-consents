@@ -18,6 +18,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.techni
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.CURRENT_INSTANT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.DEADLINE_AHEAD_HOURS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.TECHNICAL_REVIEW_REQUEST_TEXT;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.TECHNICAL_REVIEW_ID_1;
 
 import jakarta.persistence.EntityNotFoundException;
 import java.time.Clock;
@@ -45,8 +46,6 @@ import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
 
 @ExtendWith(MockitoExtension.class)
 class TechnicalReviewServiceTest {
-
-  private static final int TECHNICAL_REVIEW_ID = 1;
 
   @Mock
   private Clock clock;
@@ -104,10 +103,10 @@ class TechnicalReviewServiceTest {
   void getTechnicalReviewByApplicationAndId_whenFound() {
     var application = applicationVersion.getApplication();
     when(technicalReviewRepository.findByRequestApplicationVersion_ApplicationAndId(
-        application, TECHNICAL_REVIEW_ID))
+        application, TECHNICAL_REVIEW_ID_1))
         .thenReturn(Optional.of(technicalReview));
 
-    assertThat(technicalReviewService.getTechnicalReviewByApplicationAndId(application, TECHNICAL_REVIEW_ID))
+    assertThat(technicalReviewService.getTechnicalReviewByApplicationAndId(application, TECHNICAL_REVIEW_ID_1))
         .isEqualTo(technicalReview);
   }
 
@@ -115,12 +114,13 @@ class TechnicalReviewServiceTest {
   void getTechnicalReviewByApplicationAndId_whenNotFound() {
     var application = applicationVersion.getApplication();
     when(technicalReviewRepository.findByRequestApplicationVersion_ApplicationAndId(
-        application, TECHNICAL_REVIEW_ID))
+        application, TECHNICAL_REVIEW_ID_1))
         .thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> technicalReviewService.getTechnicalReviewByApplicationAndId(application, TECHNICAL_REVIEW_ID))
+    assertThatThrownBy(() -> technicalReviewService.getTechnicalReviewByApplicationAndId(application,
+        TECHNICAL_REVIEW_ID_1))
         .isInstanceOf(EntityNotFoundException.class)
-        .hasMessage(TECHNICAL_REVIEW_NOT_FOUND.formatted(TECHNICAL_REVIEW_ID, application.getId()));
+        .hasMessage(TECHNICAL_REVIEW_NOT_FOUND.formatted(TECHNICAL_REVIEW_ID_1, application.getId()));
   }
 
   @Test
@@ -262,7 +262,7 @@ class TechnicalReviewServiceTest {
     var rejectionReason = "rejection reason";
     var uploadedFileForms = Collections.singletonList(new UploadedFileForm());
 
-    technicalReview.setId(TECHNICAL_REVIEW_ID);
+    technicalReview.setId(TECHNICAL_REVIEW_ID_1);
     technicalReviewService.saveTechnicalReviewResponse(
         applicationVersion,
         technicalReview,
@@ -299,7 +299,7 @@ class TechnicalReviewServiceTest {
     var rejectionReason = "rejection reason";
     var uploadedFileForms = Collections.singletonList(new UploadedFileForm());
 
-    technicalReview.setId(TECHNICAL_REVIEW_ID);
+    technicalReview.setId(TECHNICAL_REVIEW_ID_1);
 
     // WHEN the email service call throws an exception
     doThrow(new RuntimeException("Failed to send email"))

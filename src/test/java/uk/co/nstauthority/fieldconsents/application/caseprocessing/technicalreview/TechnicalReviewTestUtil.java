@@ -15,6 +15,9 @@ import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 
 public class TechnicalReviewTestUtil {
 
+  public static final Integer TECHNICAL_REVIEW_ID_1 = 1;
+  public static final Integer TECHNICAL_REVIEW_ID_2 = 2;
+
   public static final ServiceUserDetail CASE_OFFICER_USER =
       AssignmentTestUtil.SERVICE_USER_DETAIL_USER_1;
 
@@ -47,7 +50,7 @@ public class TechnicalReviewTestUtil {
 
   public static TechnicalReview getOpenTechnicalReview(ApplicationVersion applicationVersion) {
     var technicalReview = new TechnicalReview();
-    technicalReview.setId(1);
+    technicalReview.setId(TECHNICAL_REVIEW_ID_1);
     technicalReview.setRequestApplicationVersion(applicationVersion);
     technicalReview.setTechnicalReviewStatus(OPEN);
     technicalReview.setTechnicalReviewerWuaId(TECHNICAL_REVIEWER_USER_1.wuaId());
