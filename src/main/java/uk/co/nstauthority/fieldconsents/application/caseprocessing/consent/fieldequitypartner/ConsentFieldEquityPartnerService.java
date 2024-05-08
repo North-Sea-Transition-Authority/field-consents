@@ -10,6 +10,7 @@ import uk.co.fivium.energyportalapi.generated.types.OrganisationUnit;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.Consent;
 import uk.co.nstauthority.fieldconsents.application.fieldequitypartner.FieldEquityPartnerService;
+import uk.co.nstauthority.fieldconsents.application.fieldequitypartner.FormattedFieldEquityPartner;
 
 @Service
 public class ConsentFieldEquityPartnerService {
@@ -58,5 +59,20 @@ public class ConsentFieldEquityPartnerService {
 
   public List<ConsentFieldEquityPartner> getConsentFieldEquityPartnersByConsent(Consent consent) {
     return consentFieldEquityPartnerRepository.findAllByConsent(consent);
+  }
+
+  public ConsentFieldEquityPartnersView getConsentFieldEquityPartnersView(Consent consent) {
+    var formattedFieldEquityPartners = getConsentFieldEquityPartnersByConsent(consent)
+        .stream()
+        .map(consentFieldEquityPartner ->
+            new FormattedFieldEquityPartner(
+                consentFieldEquityPartner.getOrganisationName(),
+                consentFieldEquityPartner.getRegisteredNumber()
+            )
+        )
+        .sorted()
+        .toList();
+
+    return new ConsentFieldEquityPartnersView(formattedFieldEquityPartners);
   }
 }

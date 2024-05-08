@@ -25,6 +25,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.Consent;
 import uk.co.nstauthority.fieldconsents.application.fieldequitypartner.FieldEquityPartnerService;
+import uk.co.nstauthority.fieldconsents.application.fieldequitypartner.FormattedFieldEquityPartner;
 
 @ExtendWith(MockitoExtension.class)
 class ConsentFieldEquityPartnerServiceTest {
@@ -82,11 +83,11 @@ class ConsentFieldEquityPartnerServiceTest {
     verify(consentFieldEquityPartnerRepository).saveAll(consentFieldEquityPartnersArgumentCaptor.capture());
 
     // verify fields with field equity partners
-    var firstFieldEquityPartner = fields.get(0).getFieldEquityPartners().get(0).getOrganisationUnit();
-    var secondFieldEquityPartner = fields.get(1).getFieldEquityPartners().get(0).getOrganisationUnit();
-    var thirdFieldEquityPartner = fields.get(2).getFieldEquityPartners().get(0).getOrganisationUnit();
+    var firstFieldEquityPartner = fields.get(0).getFieldEquityPartners().getFirst().getOrganisationUnit();
+    var secondFieldEquityPartner = fields.get(1).getFieldEquityPartners().getFirst().getOrganisationUnit();
+    var thirdFieldEquityPartner = fields.get(2).getFieldEquityPartners().getFirst().getOrganisationUnit();
 
-    assertThat(consentFieldEquityPartnersArgumentCaptor.getAllValues().get(0))
+    assertThat(consentFieldEquityPartnersArgumentCaptor.getAllValues().getFirst())
         .extracting(
             ConsentFieldEquityPartner::getConsent,
             ConsentFieldEquityPartner::getOrganisationUnitId,
@@ -136,19 +137,54 @@ class ConsentFieldEquityPartnerServiceTest {
 
   @Test
   void getConsentFieldEquityPartnersByConsent_whenNonEmpty() {
-    var consentFieldEquityPartner1 = new ConsentFieldEquityPartner(consent, 1, "org A", "reg A");
-    var consentFieldEquityPartner2 = new ConsentFieldEquityPartner(consent, 2, "org B", "reg B");
-    var consentFieldEquityPartner3 = new ConsentFieldEquityPartner(consent, 3, "org C", "reg C");
+    var consentFieldEquityPartners = getConsentFieldEquityPartners(consent);
 
-    var consentFieldEquityPartners = List.of(consentFieldEquityPartner1, consentFieldEquityPartner2, consentFieldEquityPartner3);
+    when(consentFieldEquityPartnerRepository.findAllByConsent(consent))
+        .thenReturn(consentFieldEquityPartners);
 
-    when(consentFieldEquityPartnerRepository.findAllByConsent(consent)).thenReturn(consentFieldEquityPartners);
+    assertThat(consentFieldEquityPartnerService.getConsentFieldEquityPartnersByConsent(consent))
+        .isEqualTo(consentFieldEquityPartners);
+  }
 
-    var actualFieldEquityPartners = consentFieldEquityPartnerService.getConsentFieldEquityPartnersByConsent(consent);
+  @Test
+  void getConsentFieldEquityPartnersView_whenNoConsent() {
+    when(consentFieldEquityPartnerRepository.findAllByConsent(consent)).thenReturn(Collections.emptyList());
+    assertThat(consentFieldEquityPartnerService.getConsentFieldEquityPartnersView(consent))
+        .isEqualTo(new ConsentFieldEquityPartnersView(Collections.emptyList()));
+  }
 
-    assertThat(actualFieldEquityPartners).hasSize(3);
-    assertThat(actualFieldEquityPartners.get(0)).usingRecursiveComparison().isEqualTo(consentFieldEquityPartner1);
-    assertThat(actualFieldEquityPartners.get(1)).usingRecursiveComparison().isEqualTo(consentFieldEquityPartner2);
-    assertThat(actualFieldEquityPartners.get(2)).usingRecursiveComparison().isEqualTo(consentFieldEquityPartner3);
+  @Test
+  void getConsentFieldEquityPartnersView_whenConsentExists() {
+    var consentFieldEquityPartners = getConsentFieldEquityPartners(consent);
+
+    when(consentFieldEquityPartnerRepository.findAllByConsent(consent))
+        .thenReturn(consentFieldEquityPartners);
+
+    var formattedFieldEquityPartners =
+        List.of(
+            new FormattedFieldEquityPartner(
+                consentFieldEquityPartners.get(2).getOrganisationName(),
+                consentFieldEquityPartners.get(2).getRegisteredNumber()
+            ),
+            new FormattedFieldEquityPartner(
+                consentFieldEquityPartners.getFirst().getOrganisationName(),
+                consentFieldEquityPartners.getFirst().getRegisteredNumber()
+            ),
+            new FormattedFieldEquityPartner(
+                consentFieldEquityPartners.get(1).getOrganisationName(),
+                consentFieldEquityPartners.get(1).getRegisteredNumber()
+            )
+        );
+
+    assertThat(consentFieldEquityPartnerService.getConsentFieldEquityPartnersView(consent))
+        .isEqualTo(new ConsentFieldEquityPartnersView(formattedFieldEquityPartners));
+  }
+
+  private List<ConsentFieldEquityPartner> getConsentFieldEquityPartners(Consent consent) {
+    var consentFieldEquityPartner1 = new ConsentFieldEquityPartner(consent, 1, "org B", "2");
+    var consentFieldEquityPartner2 = new ConsentFieldEquityPartner(consent, 2, "org C", "3");
+    var consentFieldEquityPartner3 = new ConsentFieldEquityPartner(consent, 3, "org A", "1");
+
+    return List.of(consentFieldEquityPartner1, consentFieldEquityPartner2, consentFieldEquityPartner3);
   }
 }

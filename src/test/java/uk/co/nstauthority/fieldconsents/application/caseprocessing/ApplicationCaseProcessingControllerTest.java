@@ -51,6 +51,10 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.Conse
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentTabConsentSummaryView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentTabService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ProductionConsentCheckResult;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataTestUtil;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataView;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentFigureUnitView;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.fieldequitypartner.ConsentFieldEquityPartnersView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval.ConsentIssuingApprovalService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval.ConsentIssuingApprovalSummaryView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
@@ -64,10 +68,13 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.tasklist.Case
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReview;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewSummaryView;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
+import uk.co.nstauthority.fieldconsents.application.fieldequitypartner.FormattedFieldEquityPartner;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryService;
 import uk.co.nstauthority.fieldconsents.authorisation.ParameterizedSecurityTest;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 import uk.co.nstauthority.fieldconsents.summary.SummaryFileView;
 import uk.co.nstauthority.fieldconsents.summary.SummarySection;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListSection;
@@ -190,7 +197,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
 
     consentIssuingApprovalSummaryView = new ConsentIssuingApprovalSummaryView(
         "Test user (test@SecurityTest.com)",
-        "" + "6 Mar 2024 11:18"
+        "6 Mar 2024 11:18"
     );
 
     summarySections = Collections.emptyList();
@@ -207,9 +214,25 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
         "testGovUkPayReference"
     ));
 
+    var consentData = ConsentDataTestUtil.newBuilder().build();
+    var consentDataView = ConsentDataView.fromShortTermOrAnnualProductionApplication(consentData);
+    var consentFigureUnitView = ConsentFigureUnitView.fromShortTermOrAnnualProductionApplication(
+        ProductionUnit.KSCM_PER_DAY);
+    var consentFieldEquityPartnersView = new ConsentFieldEquityPartnersView(
+        List.of(new FormattedFieldEquityPartner("ORG1", "12345678")
+        , new FormattedFieldEquityPartner("ORG2", "87654321")
+        , new FormattedFieldEquityPartner("ORG3", null)
+        )
+    );
+
     consentTabConsentSummaryView = new ConsentTabConsentSummaryView(
+        ApplicationType.PRODUCTION,
+        ConsentLengthType.ANNUAL,
         "Test issued by user",
         "04/04/2024",
+        consentDataView,
+        consentFigureUnitView,
+        consentFieldEquityPartnersView,
         List.of(new SummaryFileView("Test file name", "Test description", "http://test.url"))
     );
   }
@@ -613,7 +636,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
       return null;
     })
         .when(consentTabService)
-        .addConsentTabContentToModelAndView(eq(application), any(ModelAndView.class));
+        .addConsentTabContentToModelAndView(eq(applicationVersion), any(ModelAndView.class));
   }
 
   private ResultMatcher[] commonAttributesForTab(CaseProcessingTab tab, ApplicationVersion applicationVersion) {

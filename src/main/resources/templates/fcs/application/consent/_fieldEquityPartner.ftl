@@ -1,8 +1,10 @@
+<#include '../../layout/layout.ftl'>
 <#import '../../../fds/components/details/details.ftl' as fdsDetails>
 <#import '../../../fds/components/notificationBanner/notificationBanner.ftl' as fdsNotificationBanner>
 <#import '../../../fds/components/warning/warning.ftl' as fdsWarning>
 
 <#-- @ftlvariable name="fieldEquityPartnersView" type="uk.co.nstauthority.fieldconsents.application.fieldequitypartner.FieldEquityPartnersView" -->
+<#-- @ftlvariable name="consentFieldEquityPartnersView" type="uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.fieldequitypartner.ConsentFieldEquityPartnersView" -->
 
 <#macro notificationBanner fieldEquityPartnersView regulatorIndustryAccessManagerRole industryAccessManagerRole consentRecipientRole>
   <#assign regulatorIndustryAccessManager = regulatorIndustryAccessManagerRole.getDisplayName()?lower_case />
@@ -29,12 +31,22 @@
   </@fdsNotificationBanner.notificationBannerInfo>
 </#macro>
 
-<#macro summaryList fieldEquityPartnersView>
-  <@fdsDetails.summaryDetails summaryTitle="Field Equity Partners">
-    <ul class="govuk-list govuk-list--bullet">
-      <#list fieldEquityPartnersView.formattedFieldEquityPartners() as formattedFieldEquityPartner>
-        <li class="govuk-list__item">${formattedFieldEquityPartner.getFormattedValue()}</li>
-      </#list>
-    </ul>
+<#macro summaryDetails fieldEquityPartnersView>
+  <@fdsDetails.summaryDetails summaryTitle="Field equity partners">
+    <@fieldEquityPartnerList formattedFieldEquityPartners=fieldEquityPartnersView.formattedFieldEquityPartners()/>
   </@fdsDetails.summaryDetails>
+</#macro>
+
+<#macro consentFepsSummaryCardContent consentFieldEquityPartnersView>
+  <@fdsSummaryList.summaryListRowNoAction keyText="Field equity partners">
+    <@fieldEquityPartnerList formattedFieldEquityPartners=consentFieldEquityPartnersView.formattedFieldEquityPartners()/>
+  </@fdsSummaryList.summaryListRowNoAction>
+</#macro>
+
+<#macro fieldEquityPartnerList formattedFieldEquityPartners>
+  <ul class="govuk-list govuk-list--bullet">
+    <#list formattedFieldEquityPartners as formattedFieldEquityPartner>
+      <li class="govuk-list__item">${formattedFieldEquityPartner.getFormattedValue()}</li>
+    </#list>
+  </ul>
 </#macro>

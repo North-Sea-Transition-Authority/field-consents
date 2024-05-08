@@ -123,7 +123,7 @@ public class ApplicationCaseProcessingController {
 
     var caseProcessingTabs = caseProcessingTabService.getRegulatorTabsAvailableToUser(user, applicationVersion);
     if (tab == null && !caseProcessingTabs.isEmpty()) {
-      tab = caseProcessingTabs.get(0);
+      tab = caseProcessingTabs.getFirst();
     }
 
     var modelAndView = new ModelAndView("fcs/application/applicationCaseProcessing")
@@ -143,7 +143,7 @@ public class ApplicationCaseProcessingController {
 
     if (tab != null && caseProcessingTabs.contains(tab)) {
       switch (tab) {
-        case CONSENT -> consentTabService.addConsentTabContentToModelAndView(application, modelAndView);
+        case CONSENT -> consentTabService.addConsentTabContentToModelAndView(applicationVersion, modelAndView);
         case PAYMENTS -> paymentsTabService.addPaymentsTabContentToModelAndView(applicationVersion, modelAndView);
         case CASE_HISTORY -> addCaseHistoryTab(modelAndView, applicationVersion);
         case TASKS -> addTasksTab(modelAndView, applicationVersion, user);

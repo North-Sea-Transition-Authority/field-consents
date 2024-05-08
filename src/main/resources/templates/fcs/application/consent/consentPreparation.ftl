@@ -23,7 +23,7 @@
           consentRecipientRole
         />
       </#if>
-      <@fieldEquityPartner.summaryList fieldEquityPartnersView/>
+      <@fieldEquityPartner.summaryDetails fieldEquityPartnersView/>
     </#if>
     <@consentDataSummary.summaryCard
       applicationType=applicationType
