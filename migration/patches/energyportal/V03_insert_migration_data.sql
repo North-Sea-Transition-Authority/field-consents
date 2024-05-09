@@ -2313,9 +2313,19 @@ INSERT INTO fcs_migration.application_consent_field_equity_partners(
 , registered_number
 )
 WITH base AS (
-  SELECT fep.*
+  SELECT
+    fep.fci_id
+  , fep.organisation_unit_id
+  , fep.organisation_name
+  , fep.registered_number
+  , min(fep.fep_rownum) fep_rownum
   FROM fcs_migration.field_consent_field_equity_partners fep
-  ORDER BY fep.fci_id, fep.fep_rownum
+  GROUP BY -- the group by caters for any duplicate FEPs
+    fep.fci_id
+  , fep.organisation_unit_id
+  , fep.organisation_name
+  , fep.registered_number
+  ORDER BY fep.fci_id, min(fep.fep_rownum)
 )
 SELECT
   fcs_migration.application_consent_field_equity_partners_id_seq.nextval
