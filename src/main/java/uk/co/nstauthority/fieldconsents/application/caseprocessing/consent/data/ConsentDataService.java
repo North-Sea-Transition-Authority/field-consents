@@ -262,7 +262,10 @@ public class ConsentDataService {
             getConsentDataViewForShortTermOrAnnualProductionApplication(consentData);
         case LONG_TERM -> getConsentDataViewForLongTermProductionApplication(application, consentData);
       };
-      case FLARE, VENT -> getConsentDataViewForEmissionApplication(consentData);
+      case FLARE, VENT -> switch (consentLengthType) {
+        case SHORT_TERM, ANNUAL -> getConsentDataViewForEmissionApplication(consentData);
+        case LONG_TERM -> getConsentDataViewForMigratedLongTermEmissionApplication(consentData);
+      };
     };
   }
 
@@ -279,5 +282,9 @@ public class ConsentDataService {
 
   ConsentDataView getConsentDataViewForEmissionApplication(ConsentData consentData) {
     return ConsentDataView.fromEmissionApplication(consentData);
+  }
+
+  ConsentDataView getConsentDataViewForMigratedLongTermEmissionApplication(ConsentData consentData) {
+    return ConsentDataView.fromMigratedLongTermEmissionApplication(consentData);
   }
 }

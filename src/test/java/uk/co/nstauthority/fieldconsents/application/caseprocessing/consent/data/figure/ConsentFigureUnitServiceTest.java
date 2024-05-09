@@ -2,14 +2,18 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -63,8 +67,11 @@ class ConsentFigureUnitServiceTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = ApplicationType.class, names = { "FLARE", "VENT" }, mode = EnumSource.Mode.INCLUDE)
-  void getConsentFigureUnitView_applicationTypeIsFlareOrVent(ApplicationType applicationType) {
+  @MethodSource("getEmissionShortTermOrAnnual_arguments")
+  void getConsentFigureUnitView_applicationTypeIsFlareOrVentAndShortTermOrAnnual(
+      ApplicationType applicationType,
+      ConsentLengthType consentLengthType
+  ) {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
 
     var consentFigureUnitView = mock(ConsentFigureUnitView.class);
@@ -73,8 +80,26 @@ class ConsentFigureUnitServiceTest {
         .when(consentFigureUnitService)
         .getConsentFigureUnitViewForEmissionApplication(applicationVersion);
 
-    assertThat(consentFigureUnitService.getConsentFigureUnitView(applicationVersion, ConsentLengthType.SHORT_TERM))
+    assertThat(consentFigureUnitService.getConsentFigureUnitView(applicationVersion, consentLengthType))
         .isEqualTo(consentFigureUnitView);
+  }
+
+  private static Stream<Arguments> getEmissionShortTermOrAnnual_arguments() {
+    return Stream.of(
+        arguments(ApplicationType.FLARE, ConsentLengthType.SHORT_TERM),
+        arguments(ApplicationType.FLARE, ConsentLengthType.ANNUAL),
+        arguments(ApplicationType.VENT, ConsentLengthType.SHORT_TERM),
+        arguments(ApplicationType.VENT, ConsentLengthType.ANNUAL)
+    );
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = ApplicationType.class, names = { "FLARE", "VENT" }, mode = EnumSource.Mode.INCLUDE)
+  void getConsentFigureUnitView_applicationTypeIsFlareOrVentLongTerm(ApplicationType applicationType) {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
+
+    assertThat(consentFigureUnitService.getConsentFigureUnitView(applicationVersion, ConsentLengthType.LONG_TERM))
+        .isEqualTo(ConsentFigureUnitView.empty());
   }
 
   @Test

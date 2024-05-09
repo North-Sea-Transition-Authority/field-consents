@@ -65,7 +65,8 @@
         </tbody>
       </table>
     </@fdsSummaryList.summaryListRowNoAction>
-  <#elseif applicationType.name() == "FLARE" || applicationType.name() == "VENT">
+  <#elseif (applicationType.name() == "FLARE" || applicationType.name() == "VENT")
+           && (consentLengthType.name() == "SHORT_TERM" || consentLengthType.name() == "ANNUAL")>
     <@fdsSummaryList.summaryListRowNoAction keyText="Daily average (${consentFigureUnitView.emissionAverageUnit().getDisplayName()})">
       ${consentDataView.emissionDailyAverage()}
     </@fdsSummaryList.summaryListRowNoAction>

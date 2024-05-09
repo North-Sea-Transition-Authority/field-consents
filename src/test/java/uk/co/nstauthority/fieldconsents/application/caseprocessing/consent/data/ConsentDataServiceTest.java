@@ -3,6 +3,7 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -19,10 +20,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
@@ -1003,17 +1007,44 @@ class ConsentDataServiceTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = ApplicationType.class, names = { "FLARE", "VENT" }, mode = EnumSource.Mode.INCLUDE)
-  void getConsentDataView_applicationTypeIsFlareOrVent(ApplicationType applicationType) {
+  @MethodSource("getEmissionShortTermOrAnnual_arguments")
+  void getConsentDataView_applicationTypeIsFlareOrVentAndShortTermOrAnnual(
+      ApplicationType applicationType,
+      ConsentLengthType consentLengthType
+  ) {
     var application = ApplicationTestUtil.getNewApplicationWithType(applicationType);
     var consentData = ConsentDataTestUtil.newBuilder().build();
-    var consentLengthType = ConsentLengthType.SHORT_TERM;
 
     var consentDataView = mock(ConsentDataView.class);
 
     doReturn(consentDataView)
         .when(consentDataService)
         .getConsentDataViewForEmissionApplication(consentData);
+
+    assertThat(consentDataService.getConsentDataView(application, consentData, consentLengthType)).isEqualTo(consentDataView);
+  }
+
+  private static Stream<Arguments> getEmissionShortTermOrAnnual_arguments() {
+    return Stream.of(
+        arguments(ApplicationType.FLARE, ConsentLengthType.SHORT_TERM),
+        arguments(ApplicationType.FLARE, ConsentLengthType.ANNUAL),
+        arguments(ApplicationType.VENT, ConsentLengthType.SHORT_TERM),
+        arguments(ApplicationType.VENT, ConsentLengthType.ANNUAL)
+    );
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = ApplicationType.class, names = { "FLARE", "VENT" }, mode = EnumSource.Mode.INCLUDE)
+  void getConsentDataView_applicationTypeIsFlareOrVentAndLongTerm(ApplicationType applicationType) {
+    var application = ApplicationTestUtil.getNewApplicationWithType(applicationType);
+    var consentData = ConsentDataTestUtil.newBuilder().build();
+    var consentLengthType = ConsentLengthType.LONG_TERM;
+
+    var consentDataView = mock(ConsentDataView.class);
+
+    doReturn(consentDataView)
+        .when(consentDataService)
+        .getConsentDataViewForMigratedLongTermEmissionApplication(consentData);
 
     assertThat(consentDataService.getConsentDataView(application, consentData, consentLengthType)).isEqualTo(consentDataView);
   }
@@ -1056,5 +1087,13 @@ class ConsentDataServiceTest {
 
     assertThat(consentDataService.getConsentDataViewForEmissionApplication(consentData))
         .isEqualTo(ConsentDataView.fromEmissionApplication(consentData));
+  }
+
+  @Test
+  void getConsentDataViewForMigratedLongTermEmissionApplication() {
+    var consentData = ConsentDataTestUtil.newBuilder().build();
+
+    assertThat(consentDataService.getConsentDataViewForMigratedLongTermEmissionApplication(consentData))
+        .isEqualTo(ConsentDataView.fromMigratedLongTermEmissionApplication(consentData));
   }
 }

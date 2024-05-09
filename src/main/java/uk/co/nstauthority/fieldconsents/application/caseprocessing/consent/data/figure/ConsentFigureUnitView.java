@@ -9,6 +9,12 @@ public record ConsentFigureUnitView(
     FlareVentUnit emissionAverageUnit
 ) {
 
+  // TODO FCS-789 we haven't migrated any long term consent data figures for flare/vent cases yet
+  //  (we can remove this method when this is done)
+  public static ConsentFigureUnitView empty() {
+    return new ConsentFigureUnitView(null, null, null);
+  }
+
   public static ConsentFigureUnitView fromShortTermOrAnnualProductionApplication(ProductionUnit productionAverageUnit) {
     return new ConsentFigureUnitView(productionAverageUnit, productionAverageUnit, null);
   }

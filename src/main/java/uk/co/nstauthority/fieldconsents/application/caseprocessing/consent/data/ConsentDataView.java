@@ -51,4 +51,16 @@ public record ConsentDataView(
         bigDecimalToFormattedString(consentData.getEmissionDailyAverage())
     );
   }
+
+  // TODO FCS-789 we haven't migrated any long term consent data figures for flare/vent cases yet
+  public static ConsentDataView fromMigratedLongTermEmissionApplication(ConsentData consentData) {
+    return new ConsentDataView(
+        format(consentData.getConsentStartDate(), DateUtils.LONG_DATE),
+        format(consentData.getConsentEndDate(), DateUtils.LONG_DATE),
+        null,
+        null,
+        null,
+        null
+    );
+  }
 }

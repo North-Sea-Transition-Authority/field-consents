@@ -23,7 +23,11 @@ public class ConsentFigureUnitService {
         case SHORT_TERM, ANNUAL -> getConsentFigureUnitViewForShortTermOrAnnualProductionApplication(applicationVersion);
         case LONG_TERM -> getConsentFigureUnitViewForLongTermProductionApplication(applicationVersion);
       };
-      case FLARE, VENT -> getConsentFigureUnitViewForEmissionApplication(applicationVersion);
+      case FLARE, VENT -> switch (consentLengthType) {
+        case SHORT_TERM, ANNUAL -> getConsentFigureUnitViewForEmissionApplication(applicationVersion);
+        // TODO FCS-789 we haven't migrated any long term consent data figures for flare/vent cases yet
+        case LONG_TERM -> ConsentFigureUnitView.empty();
+      };
     };
   }
 

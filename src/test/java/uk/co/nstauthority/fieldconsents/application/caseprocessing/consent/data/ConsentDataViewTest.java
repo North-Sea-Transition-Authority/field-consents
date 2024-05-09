@@ -80,4 +80,20 @@ class ConsentDataViewTest {
         )
     );
   }
+
+  @Test
+  void fromMigratedLongTermEmissionApplication() {
+    var consentData = ConsentDataTestUtil.newBuilder().build();
+
+    assertThat(ConsentDataView.fromMigratedLongTermEmissionApplication(consentData)).isEqualTo(
+        new ConsentDataView(
+            format(consentData.getConsentStartDate(), DateUtils.LONG_DATE),
+            format(consentData.getConsentEndDate(), DateUtils.LONG_DATE),
+            null,
+            null,
+            null,
+            null
+        )
+    );
+  }
 }

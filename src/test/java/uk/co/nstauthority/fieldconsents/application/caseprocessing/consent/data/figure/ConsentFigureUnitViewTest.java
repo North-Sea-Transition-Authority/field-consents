@@ -9,6 +9,12 @@ import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 class ConsentFigureUnitViewTest {
 
   @Test
+  void empty() {
+    assertThat(ConsentFigureUnitView.empty())
+        .isEqualTo(new ConsentFigureUnitView(null, null, null));
+  }
+
+  @Test
   void fromShortTermOrAnnualProductionApplication() {
     var productionAverageUnit = ProductionUnit.KSCM_PER_DAY;
 
