@@ -1,5 +1,5 @@
 plugins {
-  id("org.springframework.boot") version "3.1.10"
+  id("org.springframework.boot") version "3.2.5"
   id("io.spring.dependency-management") version "1.1.4"
   id 'java'
   id "org.sonarqube" version "5.0.0.4638"
@@ -10,6 +10,7 @@ plugins {
   id 'com.avast.gradle.docker-compose' version "0.16.11"
   //Flyway added manually here, as it's used for the Jooq codegen
   id "org.flywaydb.flyway" version "9.16.0"
+  id "org.jetbrains.gradle.plugin.idea-ext" version "0.7" // Can be removed once https://youtrack.jetbrains.com/issue/IDEA-154038 is fixed
 }
 
 group = 'uk.co.nstauthority'
@@ -59,14 +60,16 @@ dependencies {
   implementation 'org.flywaydb:flyway-core'
   implementation 'org.apache.commons:commons-lang3:3.12.0'
   implementation 'org.apache.commons:commons-collections4:4.4'
+  implementation 'org.apache.commons:commons-text:1.12.0'
 
   implementation 'uk.co.fivium.energyportalapi:client:v8.1.0'
   implementation 'uk.co.fivium.digital.energyportalteamaccesslibrary:energy-portal-team-access-libray:develop-SNAPSHOT'
-  implementation 'uk.co.fivium.digitalformlibrary:digital-form-library:develop-SNAPSHOT'
+  implementation 'uk.co.fivium.digitalformlibrary:digital-form-library:spring-boot-3.2-support-SNAPSHOT'
   implementation "uk.co.fivium:file-upload-spring-boot-starter:${fileUploadLibraryVersion}"
   implementation 'uk.co.fivium:digital-payments-library-spring-boot-starter:v1.0.1'
   implementation 'uk.co.fivium:digital-notification-library-spring-boot-starter:v1.0.0'
   implementation 'uk.co.fivium:digital-document-library-spring-boot-starter:fcs-734-materialise-consent-data-at-point-of-issue-SNAPSHOT'
+  implementation 'uk.co.fivium:ftss-client-spring-boot-starter:develop-SNAPSHOT'
 
   implementation 'org.springframework.boot:spring-boot-starter-jooq'
   implementation 'org.jooq:jooq-codegen'
@@ -115,6 +118,19 @@ flyway {
       'datawarehouse-user-password' : 'dev1',
       'application-schema' : 'fcs'
   ]
+}
+
+tasks.withType(JavaCompile).configureEach {
+  options.compilerArgs.add("-parameters")
+}
+
+// Force IJ to include compiler params. Can be removed once https://youtrack.jetbrains.com/issue/IDEA-154038 is fixed
+idea.project.settings {
+  compiler {
+    javac {
+      javacAdditionalOptions "-parameters"
+    }
+  }
 }
 
 //Set the url before the build to dynamically set the port
