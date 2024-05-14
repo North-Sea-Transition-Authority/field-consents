@@ -209,11 +209,11 @@ class ConsentTabServiceTest {
 
     var supportingConsentDocumentConsentFileUsage = ConsentFileUsage.supportingConsentDocumentFrom(consent);
 
-    var uploadedFile1 = UploadedFileTestUtil.newBuilder().build();
-    var uploadedFile2 = UploadedFileTestUtil.newBuilder().build();
+    var uploadedFile1 = UploadedFileTestUtil.newBuilder().withName("a").build();
+    var uploadedFile2 = UploadedFileTestUtil.newBuilder().withName("B").build();
 
     when(fieldConsentsFileService.getUploadedFiles(supportingConsentDocumentConsentFileUsage))
-        .thenReturn(List.of(uploadedFile1, uploadedFile2));
+        .thenReturn(List.of(uploadedFile2, uploadedFile1));
 
     assertThat(consentTabService.getSupportingConsentDocumentSummaryFileViews(application, consent)).containsExactly(
         SummaryFileView.from(

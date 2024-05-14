@@ -26,6 +26,7 @@ import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetServi
 import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentData;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.document.ConsentDocumentComparators;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.document.ConsentDocumentGenerationDataService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.fieldequitypartner.ConsentFieldEquityPartnerService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.ConsentEmailService;
@@ -224,7 +225,11 @@ public class ConsentService {
   }
 
   void generateDocumentInstancesAndSaveToConsent(ApplicationVersion applicationVersion, Consent consent) {
-    var documentInstanceDtos = applicationDocumentInstanceService.getDocumentInstanceDtos(applicationVersion.getApplication());
+    var documentInstanceDtos = applicationDocumentInstanceService
+        .getDocumentInstanceDtos(applicationVersion.getApplication())
+        .stream()
+        .sorted(ConsentDocumentComparators.documentInstanceDto())
+        .toList();
 
     for (var documentInstanceDto : documentInstanceDtos) {
       generateDocumentInstanceAndSaveToConsent(applicationVersion, documentInstanceDto, consent);
@@ -289,4 +294,5 @@ public class ConsentService {
     return findConsent(application)
         .orElseThrow(() -> new IllegalStateException("Unable to find consent for application %d".formatted(application.getId())));
   }
+
 }

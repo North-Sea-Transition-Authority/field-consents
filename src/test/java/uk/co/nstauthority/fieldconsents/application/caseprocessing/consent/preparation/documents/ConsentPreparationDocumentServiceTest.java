@@ -66,7 +66,10 @@ class ConsentPreparationDocumentServiceTest {
   @Test
   void getConsentDocumentsSummaryCard() {
     var documentInstanceSummaryView = DocumentInstanceSummaryViewTestUtil.newBuilder().build();
-    var supportingConsentUploadedFile = UploadedFileTestUtil.newBuilder().build();
+
+    var supportingConsentUploadedFile1 = UploadedFileTestUtil.newBuilder().withName("a").build();
+    var supportingConsentUploadedFile2 = UploadedFileTestUtil.newBuilder().withName("B").build();
+
     var summaryFileViews = List.of(
         new SummaryFileView(
             documentInstanceSummaryView.title(),
@@ -74,15 +77,19 @@ class ConsentPreparationDocumentServiceTest {
             ReverseRouter.route(on(ApplicationDocumentInstanceController.class)
                 .getPreviewDocumentInstance(APPLICATION_ID, documentInstanceSummaryView.documentInstanceId(), true))),
         new SummaryFileView(
-            supportingConsentUploadedFile.getName(),
-            supportingConsentUploadedFile.getDescription(),
-            ReverseRouter.route(on(ConsentPreparationFileController.class).download(APPLICATION_ID, supportingConsentUploadedFile.getId(), null))
+            supportingConsentUploadedFile1.getName(),
+            supportingConsentUploadedFile1.getDescription(),
+            ReverseRouter.route(on(ConsentPreparationFileController.class).download(APPLICATION_ID, supportingConsentUploadedFile1.getId(), null))
+        ),
+        new SummaryFileView(
+            supportingConsentUploadedFile2.getName(),
+            supportingConsentUploadedFile2.getDescription(),
+            ReverseRouter.route(on(ConsentPreparationFileController.class).download(APPLICATION_ID, supportingConsentUploadedFile2.getId(), null))
         )
     );
 
-    when(applicationDocumentInstanceViewService.getDocumentInstanceSummaryViews(application))
-        .thenReturn(List.of(documentInstanceSummaryView));
-    when(fieldConsentsFileService.getUploadedFiles(fileUsage)).thenReturn(List.of(supportingConsentUploadedFile));
+    when(applicationDocumentInstanceViewService.getDocumentInstanceSummaryViews(application)).thenReturn(List.of(documentInstanceSummaryView));
+    when(fieldConsentsFileService.getUploadedFiles(fileUsage)).thenReturn(List.of(supportingConsentUploadedFile2, supportingConsentUploadedFile1));
 
     var summaryCard = consentDocumentService.getConsentDocumentsSummaryCard(application);
 

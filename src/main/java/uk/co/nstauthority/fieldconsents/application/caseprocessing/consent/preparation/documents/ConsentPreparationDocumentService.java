@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationFileUsage;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.document.ConsentDocumentComparators;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceViewService;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileUsage;
@@ -41,6 +42,7 @@ public class ConsentPreparationDocumentService {
         .forEach(filesSummary::add);
 
     fieldConsentsFileService.getUploadedFiles(getFileUsage(application)).stream()
+        .sorted(ConsentDocumentComparators.supportingUploadedFile())
         .map(uploadedFile -> SummaryFileView.from(
             uploadedFile,
             ReverseRouter.route(on(ConsentPreparationFileController.class)

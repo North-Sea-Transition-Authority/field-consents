@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -68,6 +69,7 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthD
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
 
 @ExtendWith(MockitoExtension.class)
@@ -686,8 +688,17 @@ class ConsentServiceTest {
   void generateDocumentInstancesAndSaveToConsent() {
     var consent = ConsentTestUtil.newBuilder().build();
 
-    var documentInstanceDto1 = DocumentInstanceDtoTestUtil.builder().build();
-    var documentInstanceDto2 = DocumentInstanceDtoTestUtil.builder().build();
+    var documentInstanceDto1 = DocumentInstanceDtoTestUtil.builder()
+        .withDocumentTemplate(DocumentTemplateDtoTestUtil.builder().withDisplayOrder(1).build())
+        .build();
+
+    var documentInstanceDto2 = DocumentInstanceDtoTestUtil.builder()
+        .withDocumentTemplate(DocumentTemplateDtoTestUtil.builder().withDisplayOrder(2).build())
+        .build();
+
+    var documentInstanceDto3 = DocumentInstanceDtoTestUtil.builder()
+        .withDocumentTemplate(DocumentTemplateDtoTestUtil.builder().withDisplayOrder(3).build())
+        .build();
 
     var renderResultWithGenerationData1 = new PdfRenderResultWithGenerationData(
         new PdfRenderResult(mock(ByteArrayResource.class), "html1"),
@@ -699,12 +710,19 @@ class ConsentServiceTest {
         Map.of("FOO", "BAR")
     );
 
+    var renderResultWithGenerationData3 = new PdfRenderResultWithGenerationData(
+        new PdfRenderResult(mock(ByteArrayResource.class), "html3"),
+        Map.of("FOO", "BAR")
+    );
+
     when(applicationDocumentInstanceService.getDocumentInstanceDtos(applicationVersion.getApplication()))
-        .thenReturn(List.of(documentInstanceDto1, documentInstanceDto2));
+        .thenReturn(List.of(documentInstanceDto2, documentInstanceDto1, documentInstanceDto3));
     when(applicationDocumentInstanceService.renderPdf(applicationVersion, documentInstanceDto1, PdfRenderingOptions.newBuilder().build()))
         .thenReturn(renderResultWithGenerationData1);
     when(applicationDocumentInstanceService.renderPdf(applicationVersion, documentInstanceDto2, PdfRenderingOptions.newBuilder().build()))
         .thenReturn(renderResultWithGenerationData2);
+    when(applicationDocumentInstanceService.renderPdf(applicationVersion, documentInstanceDto3, PdfRenderingOptions.newBuilder().build()))
+        .thenReturn(renderResultWithGenerationData3);
 
     ArgumentCaptor<Function<FileUploadRequest.Builder, FileUploadRequest>> fileUploadRequestBuilderFunctionCaptor =
         ArgumentCaptor.forClass(Function.class);
@@ -752,11 +770,26 @@ class ConsentServiceTest {
                 consentFileUsage.documentType(),
                 documentInstanceDto2.description(),
                 false
+            ),
+            tuple(
+                FileSource.fromInputStreamSource(
+                    renderResultWithGenerationData3.pdfRenderResult().pdfContent(),
+                    "%s.%s".formatted(documentInstanceDto3.title(), MediaType.APPLICATION_PDF.getSubtype()),
+                    MediaType.APPLICATION_PDF_VALUE,
+                    renderResultWithGenerationData3.pdfRenderResult().pdfContent().contentLength()
+                ),
+                consentFileUsage.usageId(),
+                consentFileUsage.usageType(),
+                consentFileUsage.documentType(),
+                documentInstanceDto2.description(),
+                false
             )
         );
 
-    verify(consentDocumentGenerationDataService).createDocumentGenerationData(consent, documentInstanceDto1, renderResultWithGenerationData1);
-    verify(consentDocumentGenerationDataService).createDocumentGenerationData(consent, documentInstanceDto2, renderResultWithGenerationData2);
+    var inOrder = inOrder(consentDocumentGenerationDataService);
+    inOrder.verify(consentDocumentGenerationDataService).createDocumentGenerationData(consent, documentInstanceDto1, renderResultWithGenerationData1);
+    inOrder.verify(consentDocumentGenerationDataService).createDocumentGenerationData(consent, documentInstanceDto2, renderResultWithGenerationData2);
+    inOrder.verify(consentDocumentGenerationDataService).createDocumentGenerationData(consent, documentInstanceDto3, renderResultWithGenerationData3);
   }
 
   @Test

@@ -10,6 +10,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentFigureUnitService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.document.ConsentDocumentComparators;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.fieldequitypartner.ConsentFieldEquityPartnerService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.fieldequitypartner.ConsentFieldEquityPartnersView;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
@@ -110,6 +111,7 @@ public class ConsentTabService {
 
     return fieldConsentsFileService.getUploadedFiles(supportingConsentDocumentConsentFileUsage)
         .stream()
+        .sorted(ConsentDocumentComparators.supportingUploadedFile())
         .map(uploadedFile ->
             SummaryFileView.from(
                 uploadedFile,
