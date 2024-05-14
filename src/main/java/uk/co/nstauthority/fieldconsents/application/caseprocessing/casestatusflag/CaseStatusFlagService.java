@@ -1,9 +1,11 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag;
 
 import org.springframework.stereotype.Service;
+import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval.ConsentIssuingApprovalService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
@@ -16,6 +18,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.Ap
 @Service
 public class CaseStatusFlagService {
 
+  private final ApplicationService applicationService;
   private final CaseAssignmentService caseAssignmentService;
   private final ApplicationWithdrawalService applicationWithdrawalService;
   private final TechnicalReviewService technicalReviewService;
@@ -23,10 +26,12 @@ public class CaseStatusFlagService {
   private final ConsultationService consultationService;
   private final ConsentDataService consentDataService;
   private final ConsentIssuingApprovalService consentIssuingApprovalService;
+  private final ConsentService consentService;
   private final FurtherInformationService furtherInformationService;
   private final ApplicationDocumentInstanceService applicationDocumentInstanceService;
 
   CaseStatusFlagService(
+      ApplicationService applicationService,
       CaseAssignmentService caseAssignmentService,
       ApplicationWithdrawalService applicationWithdrawalService,
       TechnicalReviewService technicalReviewService,
@@ -34,9 +39,11 @@ public class CaseStatusFlagService {
       ConsultationService consultationService,
       ConsentDataService consentDataService,
       ConsentIssuingApprovalService consentIssuingApprovalService,
+      ConsentService consentService,
       FurtherInformationService furtherInformationService,
       ApplicationDocumentInstanceService applicationDocumentInstanceService
   ) {
+    this.applicationService = applicationService;
     this.caseAssignmentService = caseAssignmentService;
     this.applicationWithdrawalService = applicationWithdrawalService;
     this.technicalReviewService = technicalReviewService;
@@ -44,6 +51,7 @@ public class CaseStatusFlagService {
     this.consultationService = consultationService;
     this.consentDataService = consentDataService;
     this.consentIssuingApprovalService = consentIssuingApprovalService;
+    this.consentService = consentService;
     this.furtherInformationService = furtherInformationService;
     this.applicationDocumentInstanceService = applicationDocumentInstanceService;
   }
@@ -71,6 +79,9 @@ public class CaseStatusFlagService {
       case CONSENT_DATA_EXISTS -> consentDataService.findConsentData(application).isPresent();
       case CONSENT_APPROVED_FOR_ISSUE -> consentIssuingApprovalService.isApplicationApprovedForConsentIssuing(application);
       case CONSENT_NOT_APPROVED_FOR_ISSUE -> !consentIssuingApprovalService.isApplicationApprovedForConsentIssuing(application);
+      case NON_EXPIRED_CONSENT_EXISTS -> consentService.nonExpiredConsentExists(applicationVersion);
+      case NON_WITHDRAWN_OR_DELETED_REVISION_APPLICATION_DOES_NOT_EXIST ->
+          !applicationService.nonWithdrawnOrDeletedRevisionApplicationExists(application);
 
       // Consultation
       case CONSULTATION_OPEN -> consultationService.findLatestOpenConsultation(application).isPresent();

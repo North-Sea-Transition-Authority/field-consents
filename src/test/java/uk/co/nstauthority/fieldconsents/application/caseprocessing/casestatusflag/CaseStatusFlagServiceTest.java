@@ -14,9 +14,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.Application;
+import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.CaseAssignmentService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentData;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval.ConsentIssuingApprovalService;
@@ -30,6 +32,9 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.Ap
 
 @ExtendWith(MockitoExtension.class)
 class CaseStatusFlagServiceTest {
+
+  @Mock
+  private ApplicationService applicationService;
 
   @Mock
   private CaseAssignmentService caseAssignmentService;
@@ -51,6 +56,9 @@ class CaseStatusFlagServiceTest {
 
   @Mock
   private ConsentIssuingApprovalService consentIssuingApprovalService;
+
+  @Mock
+  private ConsentService consentService;
 
   @Mock
   private FurtherInformationService furtherInformationService;
@@ -189,6 +197,25 @@ class CaseStatusFlagServiceTest {
 
     assertThat(caseStatusFlagService.isCaseStatusFlagApplicable(applicationVersion, CaseStatusFlag.CONSENT_NOT_APPROVED_FOR_ISSUE))
         .isEqualTo(!consentApprovedForIssue);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void isCaseStatusFlagApplicable_NON_EXPIRED_CONSENT_EXISTS(boolean nonExpiredConsentExists) {
+    when(consentService.nonExpiredConsentExists(applicationVersion)).thenReturn(nonExpiredConsentExists);
+
+    assertThat(caseStatusFlagService.isCaseStatusFlagApplicable(applicationVersion, CaseStatusFlag.NON_EXPIRED_CONSENT_EXISTS))
+        .isEqualTo(nonExpiredConsentExists);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void isCaseStatusFlagApplicable_NON_WITHDRAWN_OR_DELETED_REVISION_APPLICATION_DOES_NOT_EXIST(boolean nonWithdrawnOrDeletedRevisionApplicationExists) {
+    when(applicationService.nonWithdrawnOrDeletedRevisionApplicationExists(application))
+        .thenReturn(nonWithdrawnOrDeletedRevisionApplicationExists);
+
+    assertThat(caseStatusFlagService.isCaseStatusFlagApplicable(applicationVersion, CaseStatusFlag.NON_WITHDRAWN_OR_DELETED_REVISION_APPLICATION_DOES_NOT_EXIST))
+        .isEqualTo(!nonWithdrawnOrDeletedRevisionApplicationExists);
   }
 
   @Test

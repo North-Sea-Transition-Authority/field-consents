@@ -228,6 +228,10 @@ public class ApplicationService {
     return applicationVersionRepository.existsByApplicationAndMigratedTrue(application);
   }
 
+  public boolean nonWithdrawnOrDeletedRevisionApplicationExists(Application application) {
+    return applicationRepository.nonWithdrawnOrDeletedRevisionApplicationExists(application);
+  }
+
   @NotNull
   private Application createNewApplicationMasterRecord(ApplicationType applicationType,
                                                        ServiceUserDetail user) {

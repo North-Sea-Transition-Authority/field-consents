@@ -30,6 +30,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_WITHDRAWAL_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.REGULATOR_ADD_CASE_NOTE;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.RETURN_TO_CASE_OFFICER;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.REVISE_CONSENT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWER_SUBMIT_REVIEW;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWS;
@@ -50,6 +51,8 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casest
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_NOT_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.MAIL_MERGE_ERROR_NOT_PRESENT;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NON_EXPIRED_CONSENT_EXISTS;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NON_WITHDRAWN_OR_DELETED_REVISION_APPLICATION_DOES_NOT_EXIST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.TECHNICAL_REVIEW_NOT_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.TECHNICAL_REVIEW_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.WITHDRAWAL_NOT_OPEN;
@@ -125,7 +128,7 @@ public class CaseProcessingActionService {
               APPLICATION_UPDATES,
               OPERATOR_UPDATE_APPLICATION,
               REGULATOR_ADD_CASE_NOTE
-              ),
+          ),
           ApplicationVersionStatus.AWAITING_PAYMENT,
           EnumSet.of(
               OPERATOR_PAY_AND_SUBMIT_APPLICATION,
@@ -170,7 +173,8 @@ public class CaseProcessingActionService {
               TECHNICAL_REVIEWS,
               CONSULTATIONS,
               APPLICATION_UPDATES,
-              REGULATOR_ADD_CASE_NOTE
+              REGULATOR_ADD_CASE_NOTE,
+              REVISE_CONSENT
           ),
           ApplicationVersionStatus.WITHDRAWN,
           EnumSet.of(
@@ -208,6 +212,7 @@ public class CaseProcessingActionService {
               EDIT_FCS_APPLICATIONS)),
           entry(OPERATOR_WITHDRAWAL_REQUEST, EnumSet.of(EDIT_FCS_APPLICATIONS)),
           entry(OPERATOR_UPDATE_APPLICATION, EnumSet.of(EDIT_FCS_APPLICATIONS)),
+          entry(REVISE_CONSENT, EnumSet.of(EDIT_FCS_APPLICATIONS, PROCESS_FCS_APPLICATIONS)),
           entry(CONSULTATION_FURTHER_INFORMATION_REQUEST, EnumSet.of(RESPOND_TO_CONSULTATION)),
           entry(CONSULTATION_FURTHER_INFORMATION_RESPOND, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
           entry(CAM_ASSIGN_OWNERSHIP, EnumSet.of(PROCESS_FCS_APPLICATIONS)),
@@ -242,6 +247,10 @@ public class CaseProcessingActionService {
               APPLICATION_UPDATE_NOT_OPEN)),
           entry(OPERATOR_WITHDRAWAL_REQUEST, EnumSet.of(WITHDRAWAL_NOT_OPEN, APPLICATION_UPDATE_NOT_OPEN)),
           entry(OPERATOR_UPDATE_APPLICATION, EnumSet.of(APPLICATION_UPDATE_OPEN)),
+          entry(
+              REVISE_CONSENT,
+              EnumSet.of(NON_EXPIRED_CONSENT_EXISTS, NON_WITHDRAWN_OR_DELETED_REVISION_APPLICATION_DOES_NOT_EXIST)
+          ),
           entry(CONSULTATION_FURTHER_INFORMATION_REQUEST, EnumSet.of(CONSULTATION_FURTHER_INFORMATION_NOT_OPEN)),
           entry(CONSULTATION_FURTHER_INFORMATION_RESPOND,
               EnumSet.of(CONSULTATION_FURTHER_INFORMATION_OPEN, APPLICATION_UPDATE_NOT_OPEN)),

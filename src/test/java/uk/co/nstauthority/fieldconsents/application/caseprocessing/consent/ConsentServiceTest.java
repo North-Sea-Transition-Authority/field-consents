@@ -635,6 +635,53 @@ class ConsentServiceTest {
     assertThat(consentService.generateRange(yesterday, tomorrow)).containsExactlyInAnyOrder(yesterday, today, tomorrow);
   }
 
+  @ParameterizedTest
+  @EnumSource(value = ApplicationVersionStatus.class, names = "CONSENTED", mode = EnumSource.Mode.EXCLUDE)
+  void nonExpiredConsentExists_applicationVersionStatusIsNotConsented(ApplicationVersionStatus status) {
+    applicationVersion.setStatus(status);
+
+    assertThat(consentService.nonExpiredConsentExists(applicationVersion)).isFalse();
+  }
+
+  @Test
+  void nonExpiredConsentExists_applicationVersionStatusIsConsentedAndConsentEndDateIsInPast() {
+    applicationVersion.setStatus(ApplicationVersionStatus.CONSENTED);
+
+    var consentData = ConsentDataTestUtil.newBuilder()
+        .withConsentEndDate(LocalDate.now(clock).minusDays(1))
+        .build();
+
+    when(consentDataService.getConsentData(application)).thenReturn(consentData);
+
+    assertThat(consentService.nonExpiredConsentExists(applicationVersion)).isFalse();
+  }
+
+  @Test
+  void nonExpiredConsentExists_applicationVersionStatusIsConsentedAndConsentEndDateIsToday() {
+    applicationVersion.setStatus(ApplicationVersionStatus.CONSENTED);
+
+    var consentData = ConsentDataTestUtil.newBuilder()
+        .withConsentEndDate(LocalDate.now(clock))
+        .build();
+
+    when(consentDataService.getConsentData(application)).thenReturn(consentData);
+
+    assertThat(consentService.nonExpiredConsentExists(applicationVersion)).isTrue();
+  }
+
+  @Test
+  void nonExpiredConsentExists_applicationVersionStatusIsConsentedAndConsentEndDateIsInFuture() {
+    applicationVersion.setStatus(ApplicationVersionStatus.CONSENTED);
+
+    var consentData = ConsentDataTestUtil.newBuilder()
+        .withConsentEndDate(LocalDate.now(clock).plusDays(1))
+        .build();
+
+    when(consentDataService.getConsentData(application)).thenReturn(consentData);
+
+    assertThat(consentService.nonExpiredConsentExists(applicationVersion)).isTrue();
+  }
+
   @Test
   void generateDocumentInstancesAndSaveToConsent() {
     var consent = ConsentTestUtil.newBuilder().build();

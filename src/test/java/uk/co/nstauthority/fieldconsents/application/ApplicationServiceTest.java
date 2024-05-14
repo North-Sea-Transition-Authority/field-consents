@@ -439,4 +439,14 @@ public class ApplicationServiceTest {
 
     assertThat(applicationService.isMigratedApplication(newApplication)).isEqualTo(isMigrated);
   }
+
+  @ParameterizedTest
+  @ValueSource(booleans = { true, false })
+  void nonWithdrawnOrDeletedRevisionApplicationExists(boolean nonWithdrawnOrDeletedRevisionApplicationExists) {
+    when(applicationRepository.nonWithdrawnOrDeletedRevisionApplicationExists(newApplication))
+        .thenReturn(nonWithdrawnOrDeletedRevisionApplicationExists);
+
+    assertThat(applicationService.nonWithdrawnOrDeletedRevisionApplicationExists(newApplication))
+        .isEqualTo(nonWithdrawnOrDeletedRevisionApplicationExists);
+  }
 }

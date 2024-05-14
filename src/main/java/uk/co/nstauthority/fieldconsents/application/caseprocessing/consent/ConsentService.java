@@ -20,6 +20,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationFileUsage;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
@@ -210,6 +211,16 @@ public class ConsentService {
 
   List<LocalDate> generateRange(LocalDate start, LocalDate end) {
     return start.datesUntil(end.plusDays(1)).toList(); // add 1 day to make the range inclusive of the end date
+  }
+
+  public boolean nonExpiredConsentExists(ApplicationVersion applicationVersion) {
+    if (applicationVersion.getStatus() != ApplicationVersionStatus.CONSENTED) {
+      return false;
+    }
+
+    var consentEndDate = consentDataService.getConsentData(applicationVersion.getApplication()).getConsentEndDate();
+
+    return DateUtils.isBeforeOrEqualTo(LocalDate.now(clock), consentEndDate);
   }
 
   void generateDocumentInstancesAndSaveToConsent(ApplicationVersion applicationVersion, Consent consent) {

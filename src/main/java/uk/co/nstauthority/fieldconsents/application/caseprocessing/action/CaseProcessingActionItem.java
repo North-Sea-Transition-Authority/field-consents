@@ -17,6 +17,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.response.FurtherInformationResponseController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.request.ConsultationRequestController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.response.ConsultationResponseController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.revision.ApplicationRevisionController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewAssignmentController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.response.TechnicalReviewResponseController;
@@ -101,6 +102,8 @@ public enum CaseProcessingActionItem implements Displayable {
   OPERATOR_UPDATE_APPLICATION("Update application", 1, false, true, null,
       applicationId -> ReverseRouter.route(on(ApplicationStartUpdateController.class)
           .updateApplicationEntryPoint(applicationId))),
+  REVISE_CONSENT("Revise consent", 1, false, false, null,
+      applicationId -> ReverseRouter.route(on(ApplicationRevisionController.class).getStartRevision(applicationId))),
   // Consultation actions
   CONSULTATION_REQUEST("Request consultation", 99, true, false, null,
       applicationId -> ReverseRouter.route(on(ConsultationRequestController.class).getConsultationRequestForm(applicationId))),

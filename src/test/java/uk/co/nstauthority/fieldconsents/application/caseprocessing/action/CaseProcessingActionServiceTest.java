@@ -39,6 +39,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.OPERATOR_WITHDRAWAL_REQUEST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.REGULATOR_ADD_CASE_NOTE;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.RETURN_TO_CASE_OFFICER;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.REVISE_CONSENT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWER_SUBMIT_REVIEW;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.TECHNICAL_REVIEWS;
@@ -59,6 +60,8 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casest
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_NOT_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.MAIL_MERGE_ERROR_NOT_PRESENT;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NON_EXPIRED_CONSENT_EXISTS;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NON_WITHDRAWN_OR_DELETED_REVISION_APPLICATION_DOES_NOT_EXIST;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.TECHNICAL_REVIEW_NOT_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.WITHDRAWAL_NOT_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.WITHDRAWAL_OPEN;
@@ -384,6 +387,21 @@ class CaseProcessingActionServiceTest {
                 .build()
         ),
         arguments(
+            Set.of(EDIT_FCS_APPLICATIONS),
+            Set.of(NON_EXPIRED_CONSENT_EXISTS, NON_WITHDRAWN_OR_DELETED_REVISION_APPLICATION_DOES_NOT_EXIST),
+            ExpectedActions.newBuilder()
+                .completedActions(REVISE_CONSENT)
+                .build()
+        ),
+        arguments(
+            Set.of(PROCESS_FCS_APPLICATIONS),
+            Set.of(NON_EXPIRED_CONSENT_EXISTS, NON_WITHDRAWN_OR_DELETED_REVISION_APPLICATION_DOES_NOT_EXIST),
+            ExpectedActions.newBuilder()
+                .submittedActions(CONSENT_PREPARATION)
+                .completedActions(REVISE_CONSENT)
+                .build()
+        ),
+        arguments(
             Set.of(ALLOCATE_CONSULTATION),
             Set.of(CONSULTATION_OPEN),
             ExpectedActions.newBuilder()
@@ -639,6 +657,7 @@ class CaseProcessingActionServiceTest {
         arguments(OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT, emptyMap(), true),
         arguments(OPERATOR_WITHDRAWAL_REQUEST, emptyMap(), true),
         arguments(OPERATOR_UPDATE_APPLICATION, emptyMap(), true),
+        arguments(REVISE_CONSENT, emptyMap(), true),
         arguments(CONSULTATION_MANAGE_RESPONDER, emptyMap(), true)
     );
   }
@@ -739,6 +758,7 @@ class CaseProcessingActionServiceTest {
         arguments(ventApplication, OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT, true),
         arguments(ventApplication, OPERATOR_WITHDRAWAL_REQUEST, true),
         arguments(ventApplication, OPERATOR_UPDATE_APPLICATION, true),
+        arguments(ventApplication, REVISE_CONSENT, true),
         arguments(ventApplication, CONSULTATION_RESPONSE, true),
         arguments(ventApplication, CONSULTATION_MANAGE_RESPONDER, true),
         arguments(ventApplication, CONSULTATION_FURTHER_INFORMATION_REQUEST, true),
