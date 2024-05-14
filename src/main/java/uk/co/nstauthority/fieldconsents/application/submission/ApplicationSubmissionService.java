@@ -6,6 +6,7 @@ import static uk.co.nstauthority.fieldconsents.application.workareapriority.Appl
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.APPLICATION_SUBMITTED;
 import static uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason.UPDATE_SUBMITTED;
 
+import io.micrometer.observation.annotation.Observed;
 import java.time.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,6 +62,7 @@ public class ApplicationSubmissionService {
   }
 
   @Transactional
+  @Observed(name = "fcs.application.submitted", contextualName = "application submitted")
   public void submitApplication(ApplicationVersion applicationVersion, ServiceUserDetail user) {
     var applicationVersionStatus = applicationVersion.getStatus();
     if (!ApplicationVersionStatus.IN_PROGRESS.equals(applicationVersionStatus)
@@ -105,6 +107,7 @@ public class ApplicationSubmissionService {
   }
 
   @Transactional
+  @Observed(name = "fcs.application.update-submitted", contextualName = "application update submitted")
   public void submitApplicationUpdate(ApplicationVersion applicationVersion, ServiceUserDetail user) {
     var applicationVersionStatus = applicationVersion.getStatus();
     if (!ApplicationVersionStatus.IN_PROGRESS.equals(applicationVersionStatus)) {

@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance;
 
+import io.micrometer.observation.annotation.Observed;
 import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -97,6 +98,7 @@ public class ApplicationDocumentInstanceService {
     return documentInstanceService.getDocumentInstanceDtosByItemReference(getItemReference(application));
   }
 
+  @Observed(name = "fcs.pdf.rendering", contextualName = "rendering pdf document")
   public PdfRenderResultWithGenerationData renderPdf(
       ApplicationVersion applicationVersion,
       DocumentInstanceDto documentInstanceDto,

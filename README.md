@@ -140,3 +140,17 @@ The application will be running [here](http://localhost:8080/fcs)
 6. Check the "Active" box next to the new profile
 
 Note that Checkstyle rules are checked during the build process and any broken rules will fail the build
+
+### Metrics
+When running the application with the development profile, you can start a local stack to allow Spring to export metrics
+data to statsd and then view the data on Grafana. To set this up, you can do the following:
+
+```bash
+docker compose -f devtools/metrics up -d
+```
+
+Login at http://localhost:3000 using `admin:admin`
+
+You will need to add a new Prometheus data source. Use the URL `http://prometheus:9090`
+
+To view metrics data, you can use the explore section. Select the Prometheus data source, then find the metric that you care about

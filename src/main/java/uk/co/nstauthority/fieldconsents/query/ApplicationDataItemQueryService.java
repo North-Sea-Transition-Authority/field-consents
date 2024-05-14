@@ -18,6 +18,7 @@ import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.CONSENT_LENGTHS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationAssetLicences.APPLICATION_ASSET_LICENCES;
 
+import io.micrometer.observation.annotation.Observed;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -161,6 +162,7 @@ public class ApplicationDataItemQueryService {
     return runQueryWithCustom(conditions, selectQueryConsumer, ApplicationDataItemDto.class);
   }
 
+  @Observed(name = "fcs.database.jooq-query", contextualName = "jooq query executed")
   public <X extends ApplicationDataItemDto> List<X> runQueryWithCustom(List<Condition> conditions,
                                                                        Consumer<SelectQuery<Record>> selectQueryConsumer,
                                                                        Class<X> fetchIntoClass) {

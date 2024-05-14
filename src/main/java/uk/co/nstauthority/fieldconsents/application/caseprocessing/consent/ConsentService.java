@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.consent;
 
+import io.micrometer.observation.annotation.Observed;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
@@ -85,6 +86,7 @@ public class ConsentService {
   }
 
   @Transactional
+  @Observed(name = "fcs.consent.issued", contextualName = "consent issued")
   public void issueConsent(ApplicationVersion applicationVersion, ServiceUserDetail user) {
     var application = applicationVersion.getApplication();
 

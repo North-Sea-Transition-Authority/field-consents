@@ -7,6 +7,7 @@ import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATION
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationWorkAreaPriorities.APPLICATION_WORK_AREA_PRIORITIES;
 
+import io.micrometer.observation.annotation.Observed;
 import java.util.List;
 import org.jooq.Condition;
 import org.jooq.JoinType;
@@ -24,6 +25,7 @@ public class WorkAreaItemDtoService {
     this.applicationDataItemQueryService = applicationDataItemQueryService;
   }
 
+  @Observed(name = "fcs.database.work-area-query", contextualName = "work area query executed")
   List<ApplicationDataItemDto> runWorkAreaQuery(List<Condition> conditions,
                                                 ApplicationWorkAreaPriorityGroup applicationWorkAreaPriorityGroup) {
 

@@ -4,6 +4,7 @@ import static org.jooq.impl.DSL.greatest;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.Tables.APPLICATIONS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
 
+import io.micrometer.observation.annotation.Observed;
 import java.util.Collections;
 import java.util.List;
 import org.jooq.Condition;
@@ -45,6 +46,7 @@ public class BulkCaseActionService {
     return getApplicationDataItems(user, Collections.emptyList());
   }
 
+  @Observed(name = "fcs.database.bulk-case-actions-query", contextualName = "bulk case actions query executed")
   public List<ApplicationDataItem> getApplicationDataItems(ServiceUserDetail user, List<Condition> conditions) {
     var dtos = applicationDataItemQueryService.runQueryWithCustom(
         conditions,
