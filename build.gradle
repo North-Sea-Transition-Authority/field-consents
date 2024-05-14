@@ -27,25 +27,13 @@ def fileUploadLibraryVersion = 'v2.5.0'
 repositories {
   mavenCentral()
   mavenLocal()
-  maven {
-    // Required for opensaml deps
-    url "https://build.shibboleth.net/nexus/content/repositories/releases/"
-  }
+  maven { url "https://build.shibboleth.net/nexus/content/repositories/releases/" } // Required for opensaml deps
   maven { url "https://nexus.fivium.co.uk/repository/maven-releases/" }
   maven { url "https://nexus.fivium.co.uk/repository/maven-snapshots/" }
 }
 
 dependencies {
-
   developmentOnly("org.springframework.boot:spring-boot-devtools")
-
-  // OpenSAML 4.1+ is required for most SAML functionality
-  // See the Spring samples e.g. https://github.com/spring-projects/spring-security-samples/blob/main/servlet/spring-boot/java/saml2/login/build.gradle
-  constraints {
-    implementation "org.opensaml:opensaml-core:4.2.0"
-    implementation "org.opensaml:opensaml-saml-api:4.2.0"
-    implementation "org.opensaml:opensaml-saml-impl:4.2.0"
-  }
 
   implementation 'org.springframework.boot:spring-boot-starter-freemarker'
   implementation 'org.springframework.boot:spring-boot-starter-web'
