@@ -40,7 +40,7 @@ import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
 import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.integrationtest.AbstractIntegrationTest;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItem;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
 import uk.co.nstauthority.fieldconsents.teams.Team;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
@@ -102,12 +102,12 @@ class WorkAreaApplicationUpdateDeadlineTest extends AbstractIntegrationTest {
     requestApplicationUpdate(applicationVersion, applicationUpdateDeadline);
 
     // check the values on the work area
-    var dtos = getApplicationDataItemFromWorkArea();
+    var dtos = getApplicationDataItemViewFromWorkArea();
 
     assertThat(dtos)
         .hasSize(1)
         .first()
-        .extracting(ApplicationDataItem::applicationUpdateDeadline)
+        .extracting(ApplicationDataItemView::applicationUpdateDeadline)
         .isEqualTo(expectedDeadline);
   }
 
@@ -195,10 +195,10 @@ class WorkAreaApplicationUpdateDeadlineTest extends AbstractIntegrationTest {
   }
 
   @SuppressWarnings("unchecked")
-  private List<ApplicationDataItem> getApplicationDataItemFromWorkArea() {
+  private List<ApplicationDataItemView> getApplicationDataItemViewFromWorkArea() {
     var modelAndView = workAreaController.getWorkArea(new WorkAreaFilter(), SERVICE_USER_DETAIL);
     assertThat(modelAndView.getModel()).containsKey("workAreaItems");
 
-    return (List<ApplicationDataItem>) modelAndView.getModel().get("workAreaItems");
+    return (List<ApplicationDataItemView>) modelAndView.getModel().get("workAreaItems");
   }
 }

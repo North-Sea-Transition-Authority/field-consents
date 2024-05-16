@@ -31,24 +31,24 @@ import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.assigncaseof
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItem;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDto;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDtoService;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemQueryService;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemService;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemViewQueryService;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemViewService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @ExtendWith(MockitoExtension.class)
 class BulkCaseActionServiceTest {
 
   @Mock
-  private ApplicationDataItemService applicationDataItemService;
+  private ApplicationDataItemViewService applicationDataItemService;
 
   @Mock
   private ApplicationDataItemDtoService applicationDataItemDtoService;
 
   @Mock
-  private ApplicationDataItemQueryService applicationDataItemQueryService;
+  private ApplicationDataItemViewQueryService applicationDataItemQueryService;
 
   @Spy
   @InjectMocks
@@ -68,43 +68,43 @@ class BulkCaseActionServiceTest {
   }
 
   @Test
-  void getSelectedApplicationDataItems() {
+  void getSelectedApplicationDataItemViews() {
     var selectedIds = Set.of(1, 2, 3);
     var form = new BulkCaseActionSelectedApplicationsForm(Set.of("1", "2", "3"));
 
-    var applicationDataItems = List.of(ApplicationDataItem.newBuilder().build());
-    doReturn(applicationDataItems).when(bulkCaseActionService).getApplicationDataItems(any(ServiceUserDetail.class), anyList());
+    var applicationDataItemViews = List.of(ApplicationDataItemView.newBuilder().build());
+    doReturn(applicationDataItemViews).when(bulkCaseActionService).getApplicationDataItemViews(any(ServiceUserDetail.class), anyList());
 
-    assertThat(bulkCaseActionService.getSelectedApplicationDataItems(form, user)).containsExactlyElementsOf(applicationDataItems);
+    assertThat(bulkCaseActionService.getSelectedApplicationDataItemViews(form, user)).containsExactlyElementsOf(applicationDataItemViews);
 
-    verify(bulkCaseActionService).getApplicationDataItems(user, List.of(APPLICATIONS.ID.in(selectedIds)));
+    verify(bulkCaseActionService).getApplicationDataItemViews(user, List.of(APPLICATIONS.ID.in(selectedIds)));
   }
 
   @Test
-  void getApplicationDataItems_withoutConditions() {
-    var applicationDataItems = List.of(ApplicationDataItem.newBuilder().build());
+  void getApplicationDataItemViews_withoutConditions() {
+    var applicationDataItemViews = List.of(ApplicationDataItemView.newBuilder().build());
 
-    doReturn(applicationDataItems).when(bulkCaseActionService).getApplicationDataItems(any(ServiceUserDetail.class), anyList());
+    doReturn(applicationDataItemViews).when(bulkCaseActionService).getApplicationDataItemViews(any(ServiceUserDetail.class), anyList());
 
-    assertThat(bulkCaseActionService.getApplicationDataItems(user)).containsExactlyElementsOf(applicationDataItems);
+    assertThat(bulkCaseActionService.getApplicationDataItemViews(user)).containsExactlyElementsOf(applicationDataItemViews);
 
-    verify(bulkCaseActionService).getApplicationDataItems(user, Collections.emptyList());
+    verify(bulkCaseActionService).getApplicationDataItemViews(user, Collections.emptyList());
   }
 
   @Test
-  void getApplicationDataItems_withConditions() {
+  void getApplicationDataItemViews_withConditions() {
     var dtos = List.of(mock(ApplicationDataItemDto.class));
     when(applicationDataItemQueryService.runQueryWithCustom(conditionsCaptor.capture(), selectQueryCaptor.capture())).thenReturn(dtos);
 
     var organisationUnitJson = List.of(mock(OrganisationUnitJson.class));
     when(applicationDataItemDtoService.getOrganisationUnitJsonsFromApplicationDataItemDtos(dtos)).thenReturn(organisationUnitJson);
 
-    var applicationDataItems = List.of(mock(ApplicationDataItem.class));
-    when(applicationDataItemService.getItemsFromDtos(dtos, organisationUnitJson, TeamType.REGULATOR, user))
-        .thenReturn(applicationDataItems);
+    var applicationDataItemViews = List.of(mock(ApplicationDataItemView.class));
+    when(applicationDataItemService.getItemViewsFromDtos(dtos, organisationUnitJson, TeamType.REGULATOR, user))
+        .thenReturn(applicationDataItemViews);
 
     var conditions = List.of(APPLICATIONS.ID.in(1, 2, 3));
-    assertThat(bulkCaseActionService.getApplicationDataItems(user, conditions)).isEqualTo(applicationDataItems);
+    assertThat(bulkCaseActionService.getApplicationDataItemViews(user, conditions)).isEqualTo(applicationDataItemViews);
 
     var selectQuery = mock(SelectQuery.class);
     selectQueryCaptor.getValue().accept(selectQuery);

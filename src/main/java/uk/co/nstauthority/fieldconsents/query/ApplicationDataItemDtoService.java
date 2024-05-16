@@ -51,7 +51,7 @@ public class ApplicationDataItemDtoService {
   private final ApplicationService applicationService;
   private final ApplicationVersionService applicationVersionService;
   private final PermissionService permissionService;
-  private final ApplicationDataItemQueryService applicationDataItemQueryService;
+  private final ApplicationDataItemViewQueryService applicationDataItemViewQueryService;
   private final Clock clock;
 
   ApplicationDataItemDtoService(
@@ -61,7 +61,7 @@ public class ApplicationDataItemDtoService {
       ApplicationService applicationService,
       ApplicationVersionService applicationVersionService,
       PermissionService permissionService,
-      ApplicationDataItemQueryService applicationDataItemQueryService,
+      ApplicationDataItemViewQueryService applicationDataItemViewQueryService,
       Clock clock
   ) {
     this.fieldService = fieldService;
@@ -70,7 +70,7 @@ public class ApplicationDataItemDtoService {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.permissionService = permissionService;
-    this.applicationDataItemQueryService = applicationDataItemQueryService;
+    this.applicationDataItemViewQueryService = applicationDataItemViewQueryService;
     this.clock = clock;
   }
 
@@ -79,7 +79,7 @@ public class ApplicationDataItemDtoService {
     return organisationUnitService.getOrganisationUnitsByIds(
         applicationDataItemDtos
             .stream()
-            .map(ApplicationDataItemDto::getOperatorId)
+            .map(ApplicationDataItemDto::operatorId)
             .toList(),
         ALL_ORG_UNITS_DATA_ITEM_PURPOSE);
   }
@@ -89,8 +89,8 @@ public class ApplicationDataItemDtoService {
   ) {
     var fieldJsons = fieldService.findFieldsByIds(applicationDataItemDtos
         .stream()
-        .filter(dto -> dto.getAssetType() == AssetType.FIELD)
-        .map(ApplicationDataItemDto::getAssetId)
+        .filter(dto -> dto.assetType() == AssetType.FIELD)
+        .map(ApplicationDataItemDto::assetId)
         .distinct()
         .toList(), FIELD_LOOKUP_PURPOSE);
 
@@ -109,11 +109,11 @@ public class ApplicationDataItemDtoService {
     var wuaIds = applicationDataItemDtos
         .stream()
         .flatMap(dataItem -> Stream.of(
-                dataItem.getSubmittedByWuaId(),
-                dataItem.getCaseOfficerWuaId(),
-                dataItem.getTechnicalReviewerWuaId(),
-                dataItem.getCamWuaId()
-            ))
+            dataItem.submittedByWuaId(),
+            dataItem.caseOfficerWuaId(),
+            dataItem.technicalReviewerWuaId(),
+            dataItem.camWuaId()
+        ))
         .filter(Objects::nonNull)
         .map(WebUserAccountId::new)
         .distinct()
@@ -123,10 +123,10 @@ public class ApplicationDataItemDtoService {
   }
 
   String getDisplayReference(ApplicationDataItemDto dataItemDto, ApplicationDataItemUserAction userAction) {
-    var applicationVersion = applicationVersionService.getApplicationVersionById(dataItemDto.getApplicationVersionId());
+    var applicationVersion = applicationVersionService.getApplicationVersionById(dataItemDto.applicationVersionId());
 
-    if (dataItemDto.getStatus() == ApplicationVersionStatus.IN_PROGRESS) {
-      if (dataItemDto.getApplicationNo() == null) {
+    if (dataItemDto.status() == ApplicationVersionStatus.IN_PROGRESS) {
+      if (dataItemDto.applicationNo() == null) {
         return "%s application".formatted(userAction.getDisplayName());
       }
       return "%s %s".formatted(
@@ -145,81 +145,81 @@ public class ApplicationDataItemDtoService {
   }
 
   String getDisplayConsentDuration(ApplicationDataItemDto dataItemDto) {
-    var consentDuration = dataItemDto.getDuration();
+    var consentDuration = dataItemDto.duration();
 
     if (Objects.isNull(consentDuration)) {
       return "";
     }
 
     // if application is consented use the consent data start/end date
-    if (Boolean.TRUE.equals(dataItemDto.getConsentIssued())) {
+    if (Boolean.TRUE.equals(dataItemDto.consentIssued())) {
       return "%s %s - %s".formatted(
           consentDuration.getShortDisplayName(),
-          DateUtils.format(dataItemDto.getConsentStartDate(), DateUtils.SHORT_DATE),
-          DateUtils.format(dataItemDto.getConsentEndDate(), DateUtils.SHORT_DATE)
+          DateUtils.format(dataItemDto.consentStartDate(), DateUtils.SHORT_DATE),
+          DateUtils.format(dataItemDto.consentEndDate(), DateUtils.SHORT_DATE)
       );
     }
 
     // otherwise use the application form data
     return switch (consentDuration) {
-      case ANNUAL -> "%s %d".formatted(consentDuration.getShortDisplayName(), dataItemDto.getConsentYear());
+      case ANNUAL -> "%s %d".formatted(consentDuration.getShortDisplayName(), dataItemDto.consentYear());
       case LONG_TERM -> "%s %d - %d".formatted(
           consentDuration.getShortDisplayName(),
-          dataItemDto.getLongTermStartYear(),
-          dataItemDto.getLongTermEndYear()
+          dataItemDto.longTermStartYear(),
+          dataItemDto.longTermEndYear()
       );
       case SHORT_TERM -> "%s %s - %s".formatted(
           consentDuration.getShortDisplayName(),
-          DateUtils.format(dataItemDto.getShortTermStartDate(), DateUtils.SHORT_DATE),
-          DateUtils.format(dataItemDto.getShortTermEndDate(), DateUtils.SHORT_DATE)
+          DateUtils.format(dataItemDto.shortTermStartDate(), DateUtils.SHORT_DATE),
+          DateUtils.format(dataItemDto.shortTermEndDate(), DateUtils.SHORT_DATE)
       );
     };
   }
 
   String getDisplayAssetLocation(ApplicationDataItemDto dataItemDto, Map<Integer, FieldJson> fieldJsonsMap) {
-    if (dataItemDto.getAssetType() != AssetType.FIELD) {
+    if (dataItemDto.assetType() != AssetType.FIELD) {
       return "";
     }
 
-    var matchingFieldJson = fieldJsonsMap.get(dataItemDto.getAssetId());
+    var matchingFieldJson = fieldJsonsMap.get(dataItemDto.assetId());
     return matchingFieldJson != null
         ? matchingFieldJson.getGeographicArea().getDisplayName()
         : "Unknown area";
   }
 
   String getDisplayAceFlag(ApplicationDataItemDto dataItemDto) {
-    if (Objects.isNull(dataItemDto.getAceFlag())) {
+    if (Objects.isNull(dataItemDto.aceFlag())) {
       return "";
     }
-    return "ACE: %s".formatted(BooleanUtil.yesNoFromBoolean(dataItemDto.getAceFlag()));
+    return "ACE: %s".formatted(BooleanUtil.yesNoFromBoolean(dataItemDto.aceFlag()));
   }
 
   String getDisplayCaseOfficer(ApplicationDataItemDto dataItemDto,
-                                      Map<WebUserAccountId, EnergyPortalUserDto> portalUserDtosMap) {
-    return Objects.nonNull(dataItemDto.getCaseOfficerWuaId())
-        ? portalUserDtosMap.get(WebUserAccountId.from(dataItemDto.getCaseOfficerWuaId())).displayName()
+                               Map<WebUserAccountId, EnergyPortalUserDto> portalUserDtosMap) {
+    return Objects.nonNull(dataItemDto.caseOfficerWuaId())
+        ? portalUserDtosMap.get(WebUserAccountId.from(dataItemDto.caseOfficerWuaId())).displayName()
         : "";
   }
 
   String getDisplayCamUser(ApplicationDataItemDto dataItemDto,
-                                  Map<WebUserAccountId, EnergyPortalUserDto> portalUserDtosMap,
-                                  TeamType teamType) {
-    return TeamType.REGULATOR.equals(teamType) && Objects.nonNull(dataItemDto.getCamWuaId())
-        ? portalUserDtosMap.get(WebUserAccountId.from(dataItemDto.getCamWuaId())).displayName()
+                           Map<WebUserAccountId, EnergyPortalUserDto> portalUserDtosMap,
+                           TeamType teamType) {
+    return TeamType.REGULATOR.equals(teamType) && Objects.nonNull(dataItemDto.camWuaId())
+        ? portalUserDtosMap.get(WebUserAccountId.from(dataItemDto.camWuaId())).displayName()
         : "";
   }
 
   String getDisplayTechnicalReviewer(ApplicationDataItemDto dataItemDto,
-                                            Map<WebUserAccountId, EnergyPortalUserDto> portalUserDtosMap,
-                                            TeamType teamType) {
-    return TeamType.REGULATOR.equals(teamType) && Objects.nonNull(dataItemDto.getTechnicalReviewerWuaId())
-        ? portalUserDtosMap.get(WebUserAccountId.from(dataItemDto.getTechnicalReviewerWuaId())).displayName()
+                                     Map<WebUserAccountId, EnergyPortalUserDto> portalUserDtosMap,
+                                     TeamType teamType) {
+    return TeamType.REGULATOR.equals(teamType) && Objects.nonNull(dataItemDto.technicalReviewerWuaId())
+        ? portalUserDtosMap.get(WebUserAccountId.from(dataItemDto.technicalReviewerWuaId())).displayName()
         : "";
   }
 
   String getSubmittedDateTime(ApplicationDataItemDto dataItemDto) {
-    return ApplicationVersionStatus.SUBMITTED.equals(dataItemDto.getStatus())
-        ? DateUtils.format(dataItemDto.getSubmittedDateTime(), DateUtils.DATE_TIME)
+    return dataItemDto.submittedDateTime() != null
+        ? DateUtils.format(dataItemDto.submittedDateTime(), DateUtils.DATE_TIME)
         : "";
   }
 
@@ -227,69 +227,69 @@ public class ApplicationDataItemDtoService {
       ApplicationDataItemDto dataItemDto,
       Map<WebUserAccountId, EnergyPortalUserDto> portalUserDtoByWuaId
   ) {
-    if (!ApplicationVersionStatus.SUBMITTED.equals(dataItemDto.getStatus())) {
+    if (dataItemDto.submittedByWuaId() == null) {
       return "";
     }
 
-    var matchingPortalUserDto = portalUserDtoByWuaId.get(WebUserAccountId.from(dataItemDto.getSubmittedByWuaId()));
+    var matchingPortalUserDto = portalUserDtoByWuaId.get(WebUserAccountId.from(dataItemDto.submittedByWuaId()));
     return matchingPortalUserDto.displayName();
   }
 
   String getConsultationDeadline(ApplicationDataItemDto dataItemDto) {
-    if (!Boolean.TRUE.equals(dataItemDto.getConsultationOpen())) {
+    if (!Boolean.TRUE.equals(dataItemDto.consultationOpen())) {
       return "";
     }
 
-    return DateUtils.format(dataItemDto.getConsultationDeadline(), DateUtils.DATE_TIME);
+    return DateUtils.format(dataItemDto.consultationDeadline(), DateUtils.DATE_TIME);
   }
 
   String getApplicationUpdateDeadline(ApplicationDataItemDto dataItemDto) {
-    if (!Boolean.TRUE.equals(dataItemDto.getApplicationUpdateOpen())) {
+    if (!Boolean.TRUE.equals(dataItemDto.applicationUpdateOpen())) {
       return "";
     }
 
-    return DateUtils.format(dataItemDto.getApplicationUpdateDeadline(), DateUtils.DATE_TIME);
+    return DateUtils.format(dataItemDto.applicationUpdateDeadline(), DateUtils.DATE_TIME);
   }
 
   String getTechnicalReviewDeadline(ApplicationDataItemDto dataItemDto) {
-    if (!Boolean.TRUE.equals(dataItemDto.getTechnicalReviewOpen())) {
+    if (!Boolean.TRUE.equals(dataItemDto.technicalReviewOpen())) {
       return "";
     }
 
-    return DateUtils.format(dataItemDto.getTechnicalReviewDeadline(), DateUtils.DATE_TIME);
+    return DateUtils.format(dataItemDto.technicalReviewDeadline(), DateUtils.DATE_TIME);
   }
 
   String getOperator(ApplicationDataItemDto dataItemDto, Map<Integer, String> organisationUnitNameById) {
-    return organisationUnitNameById.getOrDefault(dataItemDto.getOperatorId(), "MISSING OPERATOR");
+    return organisationUnitNameById.getOrDefault(dataItemDto.operatorId(), "MISSING OPERATOR");
   }
 
   String getLicences(ApplicationDataItemDto dataItemDto) {
-    return AssetType.FIELD.equals(dataItemDto.getAssetType())
-        ? dataItemDto.getLicences()
+    return AssetType.FIELD.equals(dataItemDto.assetType())
+        ? dataItemDto.licences()
         : "";
   }
 
   Boolean getConsentIssuedAndNotYetActive(ApplicationDataItemDto dataItemDto) {
-    return dataItemDto.getConsentIssued()
-        && dataItemDto.getConsentStartDate().isAfter(LocalDate.now(clock));
+    return dataItemDto.consentIssued()
+        && dataItemDto.consentStartDate().isAfter(LocalDate.now(clock));
   }
 
   Boolean getConsentIssuedAndActive(ApplicationDataItemDto dataItemDto) {
     var today = LocalDate.now(clock);
-    var consentStartDate = dataItemDto.getConsentStartDate();
-    var consentEndDate = dataItemDto.getConsentEndDate();
+    var consentStartDate = dataItemDto.consentStartDate();
+    var consentEndDate = dataItemDto.consentEndDate();
 
-    return dataItemDto.getConsentIssued()
+    return dataItemDto.consentIssued()
         && DateUtils.isAfterOrEqualTo(today, consentStartDate)
         && DateUtils.isBeforeOrEqualTo(today, consentEndDate);
   }
 
   Boolean getConsentIssuedAndExpired(ApplicationDataItemDto dataItemDto) {
-    return dataItemDto.getConsentIssued()
-        && dataItemDto.getConsentEndDate().isBefore(LocalDate.now(clock));
+    return dataItemDto.consentIssued()
+        && dataItemDto.consentEndDate().isBefore(LocalDate.now(clock));
   }
 
-  public ApplicationDataItem getApplicationDataItem(
+  public ApplicationDataItemView getApplicationDataItemView(
       ApplicationDataItemDto dataItemDto,
       ServiceUserDetail user,
       TeamType teamType,
@@ -297,22 +297,22 @@ public class ApplicationDataItemDtoService {
       Map<Integer, FieldJson> fieldJsonById,
       Map<WebUserAccountId, EnergyPortalUserDto> portalUserDtoByWuaId
   ) {
-    var withdrawalOpen = Boolean.TRUE.equals(dataItemDto.getWithdrawalOpen());
-    var applicationUpdateOpen = Boolean.TRUE.equals(dataItemDto.getApplicationUpdateOpen());
-    var furtherInformationOpen = FurtherInformationStatus.OPEN.equals(dataItemDto.getConsultationFurtherInformationStatus());
-    var approvedForIssue = Boolean.TRUE.equals(dataItemDto.getApprovedForIssue());
+    var withdrawalOpen = Boolean.TRUE.equals(dataItemDto.withdrawalOpen());
+    var applicationUpdateOpen = Boolean.TRUE.equals(dataItemDto.applicationUpdateOpen());
+    var furtherInformationOpen = FurtherInformationStatus.OPEN.equals(dataItemDto.consultationFurtherInformationStatus());
+    var approvedForIssue = Boolean.TRUE.equals(dataItemDto.approvedForIssue());
 
     var userAction = getApplicationDataItemUserActionFromUser(user);
 
-    var builder = ApplicationDataItem.newBuilder()
-        .withApplicationId(dataItemDto.getApplicationId())
-        .withType(dataItemDto.getType().getDisplayName())
+    var builder = ApplicationDataItemView.newBuilder()
+        .withApplicationId(dataItemDto.applicationId())
+        .withType(dataItemDto.type().getDisplayName())
         .withDuration(getDisplayConsentDuration(dataItemDto))
         .withReference(getDisplayReference(dataItemDto, userAction))
         .withOperator(getOperator(dataItemDto, organisationUnitNameById))
-        .withAsset(dataItemDto.getAssetName())
+        .withAsset(dataItemDto.assetName())
         .withGeographicArea(getDisplayAssetLocation(dataItemDto, fieldJsonById))
-        .withStatus(dataItemDto.getStatus().getDisplayName())
+        .withStatus(dataItemDto.status().getDisplayName())
         .withSubmittedDateTime(getSubmittedDateTime(dataItemDto))
         .withSubmittedBy(getSubmittedByName(dataItemDto, portalUserDtoByWuaId))
         .withAceFlag(getDisplayAceFlag(dataItemDto))
@@ -320,11 +320,11 @@ public class ApplicationDataItemDtoService {
         .withCamUser(getDisplayCamUser(dataItemDto, portalUserDtoByWuaId, teamType))
         .withWithdrawalOpen(withdrawalOpen)
         .withTechnicalReviewer(getDisplayTechnicalReviewer(dataItemDto, portalUserDtoByWuaId, teamType))
-        .withTechnicalReviewOpen(dataItemDto.getTechnicalReviewOpen())
+        .withTechnicalReviewOpen(dataItemDto.technicalReviewOpen())
         .withTechnicalReviewDeadline(getTechnicalReviewDeadline(dataItemDto))
         .withApplicationUpdateOpen(applicationUpdateOpen)
         .withApplicationUpdateDeadline(getApplicationUpdateDeadline(dataItemDto))
-        .withConsultationOpen(dataItemDto.getConsultationOpen())
+        .withConsultationOpen(dataItemDto.consultationOpen())
         .withConsultationDeadline(getConsultationDeadline(dataItemDto))
         .withConsultationFurtherInformationOpen(furtherInformationOpen)
         .withLicences(getLicences(dataItemDto))
@@ -338,7 +338,7 @@ public class ApplicationDataItemDtoService {
     return builder.build();
   }
 
-  void removeTagsForTeamType(TeamType teamType, ApplicationDataItem.Builder builder) {
+  void removeTagsForTeamType(TeamType teamType, ApplicationDataItemView.Builder builder) {
     if (TeamType.INDUSTRY.equals(teamType)) {
       removeTechnicalReviewTag(builder);
       removeConsultationTag(builder);
@@ -355,32 +355,32 @@ public class ApplicationDataItemDtoService {
     }
   }
 
-  private void removeWithdrawalTag(ApplicationDataItem.Builder builder) {
+  private void removeWithdrawalTag(ApplicationDataItemView.Builder builder) {
     builder.withWithdrawalOpen(null);
   }
 
-  private void removeApplicationUpdateTag(ApplicationDataItem.Builder builder) {
+  private void removeApplicationUpdateTag(ApplicationDataItemView.Builder builder) {
     builder.withApplicationUpdateOpen(null).withApplicationUpdateDeadline(null);
   }
 
-  private void removeFurtherInformationTag(ApplicationDataItem.Builder builder) {
+  private void removeFurtherInformationTag(ApplicationDataItemView.Builder builder) {
     builder.withConsultationFurtherInformationOpen(null);
   }
 
-  private void removeTechnicalReviewTag(ApplicationDataItem.Builder builder) {
+  private void removeTechnicalReviewTag(ApplicationDataItemView.Builder builder) {
     builder.withTechnicalReviewOpen(null).withTechnicalReviewDeadline(null);
   }
 
-  private void removeConsultationTag(ApplicationDataItem.Builder builder) {
+  private void removeConsultationTag(ApplicationDataItemView.Builder builder) {
     builder.withConsultationOpen(null).withConsultationDeadline(null);
   }
 
-  private void removeApprovedForIssueTag(ApplicationDataItem.Builder builder) {
+  private void removeApprovedForIssueTag(ApplicationDataItemView.Builder builder) {
     builder.withApprovedForIssue(null);
   }
 
   public List<ApplicationDataItemDto> runGetDataItemDtoQuery(List<Condition> conditions) {
-    return applicationDataItemQueryService.runQueryWithCustom(conditions, selectQuery ->
+    return applicationDataItemViewQueryService.runQueryWithCustom(conditions, selectQuery ->
             selectQuery.addOrderBy(greatest(
                 APPLICATION_VERSIONS.SUBMITTED_DATE_TIME,
                 APPLICATION_VERSIONS.CREATED_DATE_TIME).desc()),

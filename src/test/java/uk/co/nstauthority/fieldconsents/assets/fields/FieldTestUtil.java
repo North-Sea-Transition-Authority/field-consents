@@ -45,6 +45,7 @@ public class FieldTestUtil {
       .shore(FieldShore.valueOf(FIELD_1_SHORE.name()))
       .shoreDisplayName(FIELD_1_SHORE.getDisplayName())
       .build();
+
   public static Field field1WithOperator = Field.newBuilder().fieldId(FIELD_ID_1).fieldName(FIELD_NAME_1)
       .status(FIELD_1_STATUS.status())
       .statusDisplayName(FIELD_1_STATUS.statusDisplayName())

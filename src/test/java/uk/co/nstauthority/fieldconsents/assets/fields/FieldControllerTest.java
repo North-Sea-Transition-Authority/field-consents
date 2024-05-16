@@ -32,7 +32,7 @@ import uk.co.nstauthority.fieldconsents.assets.ManageAssetService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItem;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil;
 import uk.co.nstauthority.fieldconsents.startapplication.StartApplicationFromFieldController;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
@@ -74,7 +74,7 @@ public class FieldControllerTest extends AbstractControllerTest {
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
   void manageField_fieldWithOperatorAndLicences(boolean userHasCreatePermission) throws Exception {
-    var applicationDataItems = List.of(ApplicationDataItemUtil.getApplicationDataItem());
+    var applicationDataItemViews = List.of(ApplicationDataItemUtil.getApplicationDataItemView());
 
     when(fieldService.getFieldWithOperatorAndLicences(eq(field1JsonWithOperatorAndLicences.getId()), anyString()))
         .thenReturn(field1JsonWithOperatorAndLicences);
@@ -82,8 +82,8 @@ public class FieldControllerTest extends AbstractControllerTest {
     when(organisationUnitPermissionService.hasOperatorPermission(any(), any(), any(RolePermission[].class)))
         .thenReturn(userHasCreatePermission);
 
-    when(manageAssetService.getApplicationDataItems(AssetKey.from(field1JsonWithOperatorAndLicences), user))
-        .thenReturn(applicationDataItems);
+    when(manageAssetService.getApplicationDataItemViews(AssetKey.from(field1JsonWithOperatorAndLicences), user))
+        .thenReturn(applicationDataItemViews);
 
     var modelAndView =
         mockMvc.perform(get(ReverseRouter.route(on(FieldController.class)
@@ -93,13 +93,13 @@ public class FieldControllerTest extends AbstractControllerTest {
         .andExpect(view().name("fcs/assets/fields"))
         .andReturn().getModelAndView();
 
-    checkModelAsserts(modelAndView, field1JsonWithOperatorAndLicences, userHasCreatePermission, applicationDataItems);
+    checkModelAsserts(modelAndView, field1JsonWithOperatorAndLicences, userHasCreatePermission, applicationDataItemViews);
   }
 
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
   void manageField_fieldWithNoOperatorButLicencesExist(boolean userHasCreatePermission) throws Exception {
-    var applicationDataItems = List.of(ApplicationDataItemUtil.getApplicationDataItem());
+    var applicationDataItemViews = List.of(ApplicationDataItemUtil.getApplicationDataItemView());
 
     when(fieldService.getFieldWithOperatorAndLicences(eq(field1JsonWithNoOperatorButLicences.getId()), anyString()))
         .thenReturn(field1JsonWithNoOperatorButLicences);
@@ -107,8 +107,8 @@ public class FieldControllerTest extends AbstractControllerTest {
     when(organisationUnitPermissionService.hasOperatorPermission(any(), any(), any(RolePermission[].class)))
         .thenReturn(userHasCreatePermission);
 
-    when(manageAssetService.getApplicationDataItems(AssetKey.from(field1JsonWithNoOperatorButLicences), user))
-        .thenReturn(applicationDataItems);
+    when(manageAssetService.getApplicationDataItemViews(AssetKey.from(field1JsonWithNoOperatorButLicences), user))
+        .thenReturn(applicationDataItemViews);
 
     var modelAndView =
         mockMvc.perform(get(ReverseRouter.route(on(FieldController.class)
@@ -118,14 +118,14 @@ public class FieldControllerTest extends AbstractControllerTest {
             .andExpect(view().name("fcs/assets/fields"))
             .andReturn().getModelAndView();
 
-    checkModelAsserts(modelAndView, field1JsonWithNoOperatorButLicences, userHasCreatePermission, applicationDataItems);
+    checkModelAsserts(modelAndView, field1JsonWithNoOperatorButLicences, userHasCreatePermission, applicationDataItemViews);
   }
 
 
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
   void manageField_fieldWithOperatorButEmptyLicences(boolean userHasCreatePermission) throws Exception {
-    var applicationDataItems = List.of(ApplicationDataItemUtil.getApplicationDataItem());
+    var applicationDataItemViews = List.of(ApplicationDataItemUtil.getApplicationDataItemView());
 
     when(fieldService.getFieldWithOperatorAndLicences(eq(field1JsonWithOperatorButEmptyLicences.getId()), anyString()))
         .thenReturn(field1JsonWithOperatorButEmptyLicences);
@@ -133,8 +133,8 @@ public class FieldControllerTest extends AbstractControllerTest {
     when(organisationUnitPermissionService.hasOperatorPermission(any(), any(), any(RolePermission[].class)))
         .thenReturn(userHasCreatePermission);
 
-    when(manageAssetService.getApplicationDataItems(AssetKey.from(field1JsonWithOperatorButEmptyLicences), user))
-        .thenReturn(applicationDataItems);
+    when(manageAssetService.getApplicationDataItemViews(AssetKey.from(field1JsonWithOperatorButEmptyLicences), user))
+        .thenReturn(applicationDataItemViews);
 
     var modelAndView =
         mockMvc.perform(get(ReverseRouter.route(on(FieldController.class)
@@ -144,14 +144,14 @@ public class FieldControllerTest extends AbstractControllerTest {
             .andExpect(view().name("fcs/assets/fields"))
             .andReturn().getModelAndView();
 
-    checkModelAsserts(modelAndView, field1JsonWithOperatorButEmptyLicences, userHasCreatePermission, applicationDataItems);
+    checkModelAsserts(modelAndView, field1JsonWithOperatorButEmptyLicences, userHasCreatePermission, applicationDataItemViews);
   }
 
 
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
   void manageField_fieldWithNoOperatorOrLicences(boolean userHasCreatePermission) throws Exception {
-    var applicationDataItems = List.of(ApplicationDataItemUtil.getApplicationDataItem());
+    var applicationDataItemViews = List.of(ApplicationDataItemUtil.getApplicationDataItemView());
 
     when(fieldService.getFieldWithOperatorAndLicences(eq(field1JsonWithNullOperatorAndLicences.getId()), anyString()))
         .thenReturn(field1JsonWithNullOperatorAndLicences);
@@ -159,8 +159,8 @@ public class FieldControllerTest extends AbstractControllerTest {
     when(organisationUnitPermissionService.hasOperatorPermission(any(), any(), any(RolePermission[].class)))
         .thenReturn(userHasCreatePermission);
 
-    when(manageAssetService.getApplicationDataItems(AssetKey.from(field1JsonWithNullOperatorAndLicences), user))
-        .thenReturn(applicationDataItems);
+    when(manageAssetService.getApplicationDataItemViews(AssetKey.from(field1JsonWithNullOperatorAndLicences), user))
+        .thenReturn(applicationDataItemViews);
 
     var modelAndView =
         mockMvc.perform(get(ReverseRouter.route(on(FieldController.class)
@@ -170,14 +170,14 @@ public class FieldControllerTest extends AbstractControllerTest {
             .andExpect(view().name("fcs/assets/fields"))
             .andReturn().getModelAndView();
 
-    checkModelAsserts(modelAndView, field1JsonWithNullOperatorAndLicences, userHasCreatePermission, applicationDataItems);
+    checkModelAsserts(modelAndView, field1JsonWithNullOperatorAndLicences, userHasCreatePermission, applicationDataItemViews);
   }
 
   private void checkModelAsserts(
       ModelAndView modelAndView,
       FieldWithOperatorAndLicencesJson fieldJson,
       boolean userHasCreatePermission,
-      List<ApplicationDataItem> applicationDataItems
+      List<ApplicationDataItemView> applicationDataItemViews
   ) {
     assertThat(modelAndView).isNotNull();
     var model = modelAndView.getModel();
@@ -191,6 +191,6 @@ public class FieldControllerTest extends AbstractControllerTest {
         .containsEntry("licences", fieldJson.getLicencesAsString())
         .containsEntry("startApplicationUrl", ReverseRouter.route(on(StartApplicationFromFieldController.class)
             .getStartApplicationForm(fieldJson.getId())))
-        .containsEntry("applicationDataItems", applicationDataItems);
+        .containsEntry("applicationDataItemViews", applicationDataItemViews);
   }
 }

@@ -9,242 +9,43 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthT
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
-public class ApplicationDataItemDto {
-  private final Integer applicationId;
-  private final Integer applicationVersionId;
-  private final ApplicationType type;
-  private final Integer variationNo;
-  private final Integer applicationNo;
-  private final Integer versionNo;
-  private final Integer operatorId;
-  private final ApplicationVersionStatus status;
-  private final AssetType assetType;
-  private final Integer assetId;
-  private final String assetName;
-  private final ConsentLengthType duration;
-  private final Integer consentYear;
-  private final LocalDate shortTermStartDate;
-  private final LocalDate shortTermEndDate;
-  private final Integer longTermStartYear;
-  private final Integer longTermEndYear;
-  private final Instant submittedDateTime;
-  private final Long submittedByWuaId;
-  private final Boolean aceFlag;
-  private final Long caseOfficerWuaId;
-  private final Long camWuaId;
-  private final RegulatorTeamRole currentCaseOwner;
-  private final Boolean withdrawalOpen;
-  private final Long technicalReviewerWuaId;
-  private final Boolean technicalReviewOpen;
-  private final Instant technicalReviewDeadline;
-  private final Boolean applicationUpdateOpen;
-  private final Instant applicationUpdateDeadline;
-  private final Boolean consultationOpen;
-  private final Instant consultationDeadline;
-  private final FurtherInformationStatus consultationFurtherInformationStatus;
-  private final String licences;
-  private final Boolean approvedForIssue;
-  private final LocalDate consentStartDate;
-  private final LocalDate consentEndDate;
-  private final Boolean consentIssued;
-
-  public ApplicationDataItemDto(Integer applicationId, Integer applicationVersionId, ApplicationType type,
-                                Integer variationNo, Integer applicationNo, Integer versionNo, Integer operatorId,
-                                ApplicationVersionStatus status, AssetType assetType, Integer assetId, String assetName,
-                                ConsentLengthType duration, Integer consentYear,
-                                LocalDate shortTermStartDate, LocalDate shortTermEndDate, Integer longTermStartYear,
-                                Integer longTermEndYear, Instant submittedDateTime, Long submittedByWuaId,
-                                Boolean aceFlag, Long caseOfficerWuaId, Long camWuaId,
-                                RegulatorTeamRole currentCaseOwner, Boolean withdrawalOpen,
-                                Long technicalReviewerWuaId, Boolean technicalReviewOpen, Instant technicalReviewDeadline,
-                                Boolean applicationUpdateOpen, Instant applicationUpdateDeadline, Boolean consultationOpen,
-                                Instant consultationDeadline, FurtherInformationStatus consultationFurtherInformationStatus,
-                                String licences, Boolean approvedForIssue, LocalDate consentStartDate, LocalDate consentEndDate,
-                                Boolean consentIssued) {
-    this.applicationId = applicationId;
-    this.applicationVersionId = applicationVersionId;
-    this.type = type;
-    this.variationNo = variationNo;
-    this.applicationNo = applicationNo;
-    this.versionNo = versionNo;
-    this.operatorId = operatorId;
-    this.status = status;
-    this.assetType = assetType;
-    this.assetId = assetId;
-    this.assetName = assetName;
-    this.duration = duration;
-    this.consentYear = consentYear;
-    this.shortTermStartDate = shortTermStartDate;
-    this.shortTermEndDate = shortTermEndDate;
-    this.longTermStartYear = longTermStartYear;
-    this.longTermEndYear = longTermEndYear;
-    this.submittedDateTime = submittedDateTime;
-    this.submittedByWuaId = submittedByWuaId;
-    this.aceFlag = aceFlag;
-    this.caseOfficerWuaId = caseOfficerWuaId;
-    this.camWuaId = camWuaId;
-    this.currentCaseOwner = currentCaseOwner;
-    this.withdrawalOpen = withdrawalOpen;
-    this.technicalReviewerWuaId = technicalReviewerWuaId;
-    this.technicalReviewOpen = technicalReviewOpen;
-    this.technicalReviewDeadline = technicalReviewDeadline;
-    this.applicationUpdateOpen = applicationUpdateOpen;
-    this.applicationUpdateDeadline = applicationUpdateDeadline;
-    this.consultationOpen = consultationOpen;
-    this.consultationDeadline = consultationDeadline;
-    this.consultationFurtherInformationStatus = consultationFurtherInformationStatus;
-    this.licences = licences;
-    this.approvedForIssue = approvedForIssue;
-    this.consentStartDate = consentStartDate;
-    this.consentEndDate = consentEndDate;
-    this.consentIssued = consentIssued;
-  }
-
-  public Integer getApplicationId() {
-    return applicationId;
-  }
-
-  public Integer getApplicationVersionId() {
-    return applicationVersionId;
-  }
-
-  public ApplicationType getType() {
-    return type;
-  }
-
-  public Integer getVariationNo() {
-    return variationNo;
-  }
-
-  public Integer getApplicationNo() {
-    return applicationNo;
-  }
-
-  public Integer getVersionNo() {
-    return versionNo;
-  }
-
-  public Integer getOperatorId() {
-    return operatorId;
-  }
-
-  public ApplicationVersionStatus getStatus() {
-    return status;
-  }
-
-  public AssetType getAssetType() {
-    return assetType;
-  }
-
-  public Integer getAssetId() {
-    return assetId;
-  }
-
-  public String getAssetName() {
-    return assetName;
-  }
-
-  public ConsentLengthType getDuration() {
-    return duration;
-  }
-
-  public Integer getConsentYear() {
-    return consentYear;
-  }
-
-  public LocalDate getShortTermStartDate() {
-    return shortTermStartDate;
-  }
-
-  public LocalDate getShortTermEndDate() {
-    return shortTermEndDate;
-  }
-
-  public Integer getLongTermStartYear() {
-    return longTermStartYear;
-  }
-
-  public Integer getLongTermEndYear() {
-    return longTermEndYear;
-  }
-
-  public Instant getSubmittedDateTime() {
-    return submittedDateTime;
-  }
-
-  public Long getSubmittedByWuaId() {
-    return submittedByWuaId;
-  }
-
-  public Boolean getAceFlag() {
-    return aceFlag;
-  }
-
-  public Long getCaseOfficerWuaId() {
-    return caseOfficerWuaId;
-  }
-
-  public Long getCamWuaId() {
-    return camWuaId;
-  }
-
-  public RegulatorTeamRole getCurrentCaseOwner() {
-    return currentCaseOwner;
-  }
-
-  public Boolean getWithdrawalOpen() {
-    return withdrawalOpen;
-  }
-
-  public Long getTechnicalReviewerWuaId() {
-    return technicalReviewerWuaId;
-  }
-
-  public Boolean getTechnicalReviewOpen() {
-    return technicalReviewOpen;
-  }
-
-  public Instant getTechnicalReviewDeadline() {
-    return technicalReviewDeadline;
-  }
-
-  public Boolean getApplicationUpdateOpen() {
-    return applicationUpdateOpen;
-  }
-
-  public Instant getApplicationUpdateDeadline() {
-    return applicationUpdateDeadline;
-  }
-
-  public Boolean getConsultationOpen() {
-    return consultationOpen;
-  }
-
-  public Instant getConsultationDeadline() {
-    return consultationDeadline;
-  }
-
-  public FurtherInformationStatus getConsultationFurtherInformationStatus() {
-    return consultationFurtherInformationStatus;
-  }
-
-  public String getLicences() {
-    return licences;
-  }
-
-  public Boolean getApprovedForIssue() {
-    return approvedForIssue;
-  }
-
-  public LocalDate getConsentStartDate() {
-    return consentStartDate;
-  }
-
-  public LocalDate getConsentEndDate() {
-    return consentEndDate;
-  }
-
-  public Boolean getConsentIssued() {
-    return consentIssued;
-  }
+public record ApplicationDataItemDto(
+    Integer applicationId,
+    Integer applicationVersionId,
+    ApplicationType type,
+    Integer variationNo,
+    Integer applicationNo,
+    Integer versionNo,
+    Integer operatorId,
+    ApplicationVersionStatus status,
+    AssetType assetType,
+    Integer assetId,
+    String assetName,
+    ConsentLengthType duration,
+    Integer consentYear,
+    LocalDate shortTermStartDate,
+    LocalDate shortTermEndDate,
+    Integer longTermStartYear,
+    Integer longTermEndYear,
+    Instant submittedDateTime,
+    Long submittedByWuaId,
+    Boolean aceFlag,
+    Long caseOfficerWuaId,
+    Long camWuaId,
+    RegulatorTeamRole currentCaseOwner,
+    Boolean withdrawalOpen,
+    Long technicalReviewerWuaId,
+    Boolean technicalReviewOpen,
+    Instant technicalReviewDeadline,
+    Boolean applicationUpdateOpen,
+    Instant applicationUpdateDeadline,
+    Boolean consultationOpen,
+    Instant consultationDeadline,
+    FurtherInformationStatus consultationFurtherInformationStatus,
+    String licences,
+    Boolean approvedForIssue,
+    LocalDate consentStartDate,
+    LocalDate consentEndDate,
+    Boolean consentIssued
+) {
 }

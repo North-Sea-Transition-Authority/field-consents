@@ -38,15 +38,15 @@ import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions;
 
 @Service
-public class ApplicationDataItemQueryService {
+public class ApplicationDataItemViewQueryService {
 
   private final DSLContext context;
 
-  public ApplicationDataItemQueryService(DSLContext context) {
+  public ApplicationDataItemViewQueryService(DSLContext context) {
     this.context = context;
   }
 
-  public SelectQuery<Record> getApplicationDataItemsQuery(List<Condition> conditions) {
+  public SelectQuery<Record> getApplicationDataItemViewsQuery(List<Condition> conditions) {
     var allAppVersionsForAppSubQuery = context.select(APPLICATION_VERSIONS.ID)
         .from(APPLICATION_VERSIONS)
         .where(APPLICATION_VERSIONS.APPLICATION_ID.eq(APPLICATIONS.ID));
@@ -78,7 +78,7 @@ public class ApplicationDataItemQueryService {
         .and(APPLICATION_ASSETS.ASSET_ID.isNotNull())
         .groupBy(APPLICATION_ASSET_LICENCES.APPLICATION_ASSET_ID);
 
-    var applicationDataItemsSelectStatement = context.select(
+    var applicationDataItemViewsSelectStatement = context.select(
             APPLICATIONS.ID,
             APPLICATION_VERSIONS.ID,
             APPLICATIONS.TYPE,
@@ -154,7 +154,7 @@ public class ApplicationDataItemQueryService {
         .leftJoin(APPLICATION_CONSENT_DATA)
             .onKey(APPLICATION_CONSENT_DATA.APPLICATION_ID)
         .where(APPLICATION_VERSIONS.ID.in(detailsSubQuery));
-    return applicationDataItemsSelectStatement.getQuery();
+    return applicationDataItemViewsSelectStatement.getQuery();
   }
 
   public List<ApplicationDataItemDto> runQueryWithCustom(List<Condition> conditions,
@@ -166,7 +166,7 @@ public class ApplicationDataItemQueryService {
   public <X extends ApplicationDataItemDto> List<X> runQueryWithCustom(List<Condition> conditions,
                                                                        Consumer<SelectQuery<Record>> selectQueryConsumer,
                                                                        Class<X> fetchIntoClass) {
-    var selectQuery = getApplicationDataItemsQuery(conditions);
+    var selectQuery = getApplicationDataItemViewsQuery(conditions);
     selectQueryConsumer.accept(selectQuery);
 
     return selectQuery.fetchInto(fetchIntoClass);

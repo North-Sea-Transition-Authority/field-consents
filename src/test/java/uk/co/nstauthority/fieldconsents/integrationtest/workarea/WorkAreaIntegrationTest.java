@@ -13,32 +13,26 @@ import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field3JsonWithOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal2JsonWithOperator;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.ANNUAL_CONSENT_YEAR;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.CAM_USER_DETAIL;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.CASE_MANAGER_DETAIL;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.CASE_OFFICER_DETAIL;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.CASE_OFFICER_ENERGY_PORTAL_USER_DTO;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.CONSULTATION_TEAM;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.CONSULTEE_ALLOCATOR_DETAIL;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.CONSULTEE_ALLOCATOR_ENERGY_PORTAL_USER_DTO;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.CONSULTEE_RESPONDER_DETAIL;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.CONSULTEE_RESPONDER_ENERGY_PORTAL_USER_DTO;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.ENERGY_PORTAL_USER_DTO;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.INDUSTRY_TEAM;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.PORTAL_USERS_DTO_MAP;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.REGULATOR_TEAM;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.SHORT_TERM_END_DATE;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.SHORT_TERM_START_DATE;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.TECHNICAL_REVIEWER_DETAIL;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.USER_DETAIL;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.getApplicationDataItemForFieldInProgressOfType;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.getApplicationDataItemForTerminalInProgressOfType;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.getApplicationDataItemInProgressOfTypeAndLength;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.getApplicationDataItemProductionAssignedToCamUserOfConsentLength;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.getApplicationDataItemProductionAssignedToCaseOfficerOfConsentLength;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.getApplicationDataItemProductionSubmittedOfConsentLength;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.getApplicationDataItemProductionWithConsultationConsentLength;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemIntegrationTestUtil.getApplicationDataItemProductionWithReviewOpenOfConsentLength;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.ANNUAL_CONSENT_YEAR;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.APPLICATION_REFERENCE;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.CAM_USER_DETAIL;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.CASE_MANAGER_DETAIL;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.CASE_OFFICER_DETAIL;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.CASE_OFFICER_ENERGY_PORTAL_USER_DTO;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.CONSULTATION_TEAM;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.CONSULTEE_ALLOCATOR_DETAIL;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.CONSULTEE_ALLOCATOR_ENERGY_PORTAL_USER_DTO;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.CONSULTEE_RESPONDER_DETAIL;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.ENERGY_PORTAL_USER_DTO;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.INDUSTRY_TEAM;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.PORTAL_USERS_DTO_MAP;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.REGULATOR_TEAM;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.SHORT_TERM_END_DATE;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.SHORT_TERM_START_DATE;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.TECHNICAL_REVIEWER_DETAIL;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.USER_DETAIL;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.getCompleteApplicationDataItemForWorkAreaIndustryBuilder;
+import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.getConsentDurationString;
 import static uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil.orgUnit1Json;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.FIELD1_ASSET_KEY;
 import static uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil.FIELD2_ASSET_KEY;
@@ -57,7 +51,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -95,12 +88,13 @@ import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupQueryService;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
+import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.integrationtest.AbstractIntegrationTest;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItem;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
@@ -264,7 +258,14 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, USER_DETAIL);
     assertThat(workAreaItems).containsExactly(
-        getApplicationDataItemProductionSubmittedOfConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
+        getCompleteApplicationDataItemForWorkAreaIndustryBuilder()
+            .withApplicationId(applicationId)
+            .withReference(APPLICATION_REFERENCE)
+            .withStatus(ApplicationVersionStatus.SUBMITTED.getDisplayName())
+            .withSubmittedDateTime(DateUtils.format(clock.instant(), DateUtils.DATE_TIME))
+            .withSubmittedBy("%s %s".formatted(USER_DETAIL.forename(), USER_DETAIL.surname()))
+            .withAceFlag("ACE: No")
+            .build()
     );
   }
 
@@ -286,8 +287,15 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
     var applicationId = createNewApplicationVersionForField(ApplicationType.FLARE, consentLengthForm).getApplication().getId();
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, USER_DETAIL);
-    assertThat(workAreaItems)
-        .containsExactly(getApplicationDataItemForFieldInProgressOfType(applicationId, ApplicationType.FLARE, field1JsonWithOperatorAndLicences));
+    assertThat(workAreaItems).containsExactly(
+        getCompleteApplicationDataItemForWorkAreaIndustryBuilder()
+            .withApplicationId(applicationId)
+            .withType(ApplicationType.FLARE.getDisplayName())
+            .withAsset(field1JsonWithOperatorAndLicences.getName())
+            .withGeographicArea(field1JsonWithOperatorAndLicences.getGeographicArea().getDisplayName())
+            .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .build()
+    );
   }
 
   @Test
@@ -309,8 +317,16 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
     var applicationId = applicationVersion.getApplication().getId();
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, USER_DETAIL);
-    assertThat(workAreaItems)
-        .containsExactly(getApplicationDataItemProductionSubmittedOfConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM));
+    assertThat(workAreaItems).containsExactly(
+            getCompleteApplicationDataItemForWorkAreaIndustryBuilder()
+                .withApplicationId(applicationId)
+                .withReference(APPLICATION_REFERENCE)
+                .withStatus(ApplicationVersionStatus.SUBMITTED.getDisplayName())
+                .withSubmittedDateTime(DateUtils.format(clock.instant(), DateUtils.DATE_TIME))
+                .withSubmittedBy("%s %s".formatted(USER_DETAIL.forename(), USER_DETAIL.surname()))
+                .withAceFlag("ACE: No")
+                .build()
+        );
   }
 
   /*********************************** APPLICATION TYPE ***********************************/
@@ -326,10 +342,16 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, USER_DETAIL);
     assertThat(workAreaItems).containsExactly(
-        getApplicationDataItemForFieldInProgressOfType(applicationId, applicationType, field1JsonWithOperatorAndLicences)
+        getCompleteApplicationDataItemForWorkAreaIndustryBuilder()
+            .withApplicationId(applicationId)
+            .withType(applicationType.getDisplayName())
+            .withAsset(field1JsonWithOperatorAndLicences.getName())
+            .withGeographicArea(field1JsonWithOperatorAndLicences.getGeographicArea().getDisplayName())
+            .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .build()
     );
   }
-  
+
   @ParameterizedTest
   @EnumSource(ApplicationType.class)
   void getWorkAreaItemsForIndustryByApplicationType_whenFoundWithMultipleTypes(ApplicationType applicationType) {
@@ -342,10 +364,16 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, USER_DETAIL);
     assertThat(workAreaItems).containsExactly(
-        getApplicationDataItemForFieldInProgressOfType(applicationId, applicationType, field1JsonWithOperatorAndLicences)
+        getCompleteApplicationDataItemForWorkAreaIndustryBuilder()
+            .withApplicationId(applicationId)
+            .withType(applicationType.getDisplayName())
+            .withAsset(field1JsonWithOperatorAndLicences.getName())
+            .withGeographicArea(field1JsonWithOperatorAndLicences.getGeographicArea().getDisplayName())
+            .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .build()
     );
   }
-  
+
   @ParameterizedTest
   @EnumSource(value = ApplicationType.class, names = "VENT", mode = EnumSource.Mode.EXCLUDE)
   void getWorkAreaItemsForIndustryByApplicationType_whenNotFound(ApplicationType applicationType) {
@@ -369,7 +397,13 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, USER_DETAIL);
     assertThat(workAreaItems).containsExactly(
-        getApplicationDataItemInProgressOfTypeAndLength(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.ANNUAL)
+        getCompleteApplicationDataItemForWorkAreaIndustryBuilder()
+            .withApplicationId(applicationId)
+            .withDuration(getConsentDurationString(ConsentLengthType.ANNUAL))
+            .withAsset(field1JsonWithOperatorAndLicences.getName())
+            .withGeographicArea(field1JsonWithOperatorAndLicences.getGeographicArea().getDisplayName())
+            .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .build()
     );
   }
 
@@ -383,7 +417,11 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, USER_DETAIL);
     assertThat(workAreaItems).containsExactly(
-        getApplicationDataItemInProgressOfTypeAndLength(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.SHORT_TERM)
+        getCompleteApplicationDataItemForWorkAreaIndustryBuilder()
+            .withApplicationId(applicationId)
+            .withDuration(getConsentDurationString(ConsentLengthType.SHORT_TERM))
+            .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .build()
     );
   }
 
@@ -397,7 +435,11 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, USER_DETAIL);
     assertThat(workAreaItems).containsExactly(
-        getApplicationDataItemInProgressOfTypeAndLength(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.LONG_TERM)
+        getCompleteApplicationDataItemForWorkAreaIndustryBuilder()
+            .withApplicationId(applicationId)
+            .withDuration(getConsentDurationString(ConsentLengthType.LONG_TERM))
+            .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .build()
     );
   }
 
@@ -411,7 +453,11 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, USER_DETAIL);
     assertThat(workAreaItems).containsExactly(
-        getApplicationDataItemInProgressOfTypeAndLength(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.ANNUAL)
+        getCompleteApplicationDataItemForWorkAreaIndustryBuilder()
+            .withApplicationId(applicationId)
+            .withDuration(getConsentDurationString(ConsentLengthType.ANNUAL))
+            .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .build()
     );
   }
 
@@ -425,7 +471,11 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, USER_DETAIL);
     assertThat(workAreaItems).containsExactly(
-        getApplicationDataItemInProgressOfTypeAndLength(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.SHORT_TERM)
+        getCompleteApplicationDataItemForWorkAreaIndustryBuilder()
+            .withApplicationId(applicationId)
+            .withDuration(getConsentDurationString(ConsentLengthType.SHORT_TERM))
+            .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .build()
     );
   }
 
@@ -439,7 +489,11 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, USER_DETAIL);
     assertThat(workAreaItems).containsExactly(
-        getApplicationDataItemInProgressOfTypeAndLength(applicationId, ApplicationType.PRODUCTION, ConsentLengthType.LONG_TERM)
+        getCompleteApplicationDataItemForWorkAreaIndustryBuilder()
+            .withApplicationId(applicationId)
+            .withDuration(getConsentDurationString(ConsentLengthType.LONG_TERM))
+            .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .build()
     );
   }
 
@@ -487,7 +541,12 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, USER_DETAIL);
     assertThat(workAreaItems).containsExactly(
-        getApplicationDataItemForFieldInProgressOfType(applicationId, ApplicationType.PRODUCTION, field1JsonWithOperatorAndLicences)
+        getCompleteApplicationDataItemForWorkAreaIndustryBuilder()
+            .withApplicationId(applicationId)
+            .withAsset(field1JsonWithOperatorAndLicences.getName())
+            .withGeographicArea(field1JsonWithOperatorAndLicences.getGeographicArea().getDisplayName())
+            .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .build()
     );
   }
 
@@ -518,7 +577,13 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, USER_DETAIL);
     assertThat(workAreaItems).containsExactly(
-        getApplicationDataItemForTerminalInProgressOfType(applicationId, ApplicationType.PRODUCTION, terminal1JsonWithOperator)
+        getCompleteApplicationDataItemForWorkAreaIndustryBuilder()
+            .withApplicationId(applicationId)
+            .withAsset(terminal1JsonWithOperator.getName())
+            .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .withGeographicArea("")
+            .withLicences("")
+            .build()
     );
   }
 
@@ -551,7 +616,12 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, USER_DETAIL);
     assertThat(workAreaItems).containsExactly(
-        getApplicationDataItemForFieldInProgressOfType(applicationId, ApplicationType.PRODUCTION, field1JsonWithOperatorAndLicences)
+        getCompleteApplicationDataItemForWorkAreaIndustryBuilder()
+            .withApplicationId(applicationId)
+            .withAsset(field1JsonWithOperatorAndLicences.getName())
+            .withGeographicArea(field1JsonWithOperatorAndLicences.getGeographicArea().getDisplayName())
+            .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .build()
     );
   }
 
@@ -579,7 +649,14 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, USER_DETAIL);
     assertThat(workAreaItems).containsExactly(
-        getApplicationDataItemProductionSubmittedOfConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
+        getCompleteApplicationDataItemForWorkAreaIndustryBuilder()
+            .withApplicationId(applicationId)
+            .withReference(APPLICATION_REFERENCE)
+            .withStatus(ApplicationVersionStatus.SUBMITTED.getDisplayName())
+            .withSubmittedDateTime(DateUtils.format(clock.instant(), DateUtils.DATE_TIME))
+            .withSubmittedBy("%s %s".formatted(USER_DETAIL.forename(), USER_DETAIL.surname()))
+            .withAceFlag("ACE: No")
+            .build()
     );
   }
 
@@ -611,7 +688,13 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, USER_DETAIL);
     assertThat(workAreaItems).containsExactly(
-        getApplicationDataItemForFieldInProgressOfType(applicationId, ApplicationType.PRODUCTION, fieldWithOperatorAndLicencesJson)
+        getCompleteApplicationDataItemForWorkAreaIndustryBuilder()
+            .withApplicationId(applicationId)
+            .withAsset(fieldWithOperatorAndLicencesJson.getName())
+            .withGeographicArea(fieldWithOperatorAndLicencesJson.getGeographicArea().getDisplayName())
+            .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .withLicences(fieldWithOperatorAndLicencesJson.getLicencesAsString())
+            .build()
     );
   }
 
@@ -662,7 +745,13 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, USER_DETAIL);
     assertThat(workAreaItems).containsExactly(
-        getApplicationDataItemForFieldInProgressOfType(applicationId, ApplicationType.PRODUCTION, fieldWithOperatorAndLicencesJson)
+        getCompleteApplicationDataItemForWorkAreaIndustryBuilder()
+            .withApplicationId(applicationId)
+            .withAsset(fieldWithOperatorAndLicencesJson.getName())
+            .withGeographicArea(fieldWithOperatorAndLicencesJson.getGeographicArea().getDisplayName())
+            .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .withLicences(fieldWithOperatorAndLicencesJson.getLicencesAsString())
+            .build()
     );
   }
 
@@ -683,7 +772,13 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, USER_DETAIL);
     assertThat(workAreaItems).containsExactly(
-        getApplicationDataItemForFieldInProgressOfType(applicationId, ApplicationType.PRODUCTION, primaryFieldWithOperatorAndLicencesJson)
+        getCompleteApplicationDataItemForWorkAreaIndustryBuilder()
+            .withApplicationId(applicationId)
+            .withAsset(primaryFieldWithOperatorAndLicencesJson.getName())
+            .withGeographicArea(primaryFieldWithOperatorAndLicencesJson.getGeographicArea().getDisplayName())
+            .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .withLicences(primaryFieldWithOperatorAndLicencesJson.getLicencesAsString())
+            .build()
     );
   }
 
@@ -701,7 +796,13 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, USER_DETAIL);
     assertThat(workAreaItems).containsExactly(
-        getApplicationDataItemForFieldInProgressOfType(applicationId, ApplicationType.PRODUCTION, fieldWithOperatorAndLicencesJson)
+        getCompleteApplicationDataItemForWorkAreaIndustryBuilder()
+            .withApplicationId(applicationId)
+            .withAsset(fieldWithOperatorAndLicencesJson.getName())
+            .withGeographicArea(fieldWithOperatorAndLicencesJson.getGeographicArea().getDisplayName())
+            .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .withLicences(fieldWithOperatorAndLicencesJson.getLicencesAsString())
+            .build()
     );
   }
 
@@ -730,7 +831,13 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, USER_DETAIL);
     assertThat(workAreaItems).containsExactly(
-        getApplicationDataItemForTerminalInProgressOfType(applicationId, ApplicationType.PRODUCTION, terminal1JsonWithOperator)
+        getCompleteApplicationDataItemForWorkAreaIndustryBuilder()
+            .withApplicationId(applicationId)
+            .withAsset(terminal1JsonWithOperator.getName())
+            .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .withGeographicArea("")
+            .withLicences("")
+            .build()
     );
   }
 
@@ -759,7 +866,13 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, USER_DETAIL);
     assertThat(workAreaItems).containsExactly(
-        getApplicationDataItemForTerminalInProgressOfType(applicationId, ApplicationType.PRODUCTION, terminal1JsonWithOperator)
+        getCompleteApplicationDataItemForWorkAreaIndustryBuilder()
+            .withApplicationId(applicationId)
+            .withAsset(terminal1JsonWithOperator.getName())
+            .withStatus(ApplicationVersionStatus.IN_PROGRESS.getDisplayName())
+            .withGeographicArea("")
+            .withLicences("")
+            .build()
     );
   }
 
@@ -813,7 +926,21 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, CASE_MANAGER_DETAIL);
     assertThat(workAreaItems).containsExactly(
-        getApplicationDataItemProductionAssignedToCaseOfficerOfConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
+        getCompleteApplicationDataItemForWorkAreaIndustryBuilder()
+            .withApplicationId(applicationId)
+            .withReference(APPLICATION_REFERENCE)
+            .withStatus(ApplicationVersionStatus.SUBMITTED.getDisplayName())
+            .withSubmittedDateTime(DateUtils.format(clock.instant(), DateUtils.DATE_TIME))
+            .withSubmittedBy("%s %s".formatted(USER_DETAIL.forename(), USER_DETAIL.surname()))
+            .withAceFlag("ACE: No")
+            .withCaseOfficer("%s %s".formatted(CASE_OFFICER_DETAIL.forename(), CASE_OFFICER_DETAIL.surname()))
+            .withTechnicalReviewOpen(false)
+            .withTechnicalReviewDeadline("")
+            .withConsultationOpen(false)
+            .withConsultationDeadline("")
+            .withConsultationFurtherInformationOpen(false)
+            .withApprovedForIssue(false)
+            .build()
     );
   }
 
@@ -842,12 +969,28 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
     workAreaFilterForm.setTechnicalReviewerWuaId(TECHNICAL_REVIEWER_DETAIL.wuaId());
 
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
-    var applicationVersion = createApplicationVersionWithAssignedReviewer(ApplicationType.PRODUCTION, consentLengthForm, CASE_OFFICER_DETAIL, TECHNICAL_REVIEWER_DETAIL, zonedDateTime.plusDays(2).toInstant());
+    var technicalReviewDeadline = zonedDateTime.plusDays(2).toInstant();
+    var applicationVersion = createApplicationVersionWithAssignedReviewer(ApplicationType.PRODUCTION, consentLengthForm, CASE_OFFICER_DETAIL, TECHNICAL_REVIEWER_DETAIL, technicalReviewDeadline);
     var applicationId = applicationVersion.getApplication().getId();
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, CASE_OFFICER_DETAIL);
     assertThat(workAreaItems).containsExactly(
-        getApplicationDataItemProductionWithReviewOpenOfConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM, zonedDateTime.plusDays(2).toInstant())
+        getCompleteApplicationDataItemForWorkAreaIndustryBuilder()
+            .withApplicationId(applicationId)
+            .withReference(APPLICATION_REFERENCE)
+            .withStatus(ApplicationVersionStatus.SUBMITTED.getDisplayName())
+            .withSubmittedDateTime(DateUtils.format(clock.instant(), DateUtils.DATE_TIME))
+            .withSubmittedBy("%s %s".formatted(USER_DETAIL.forename(), USER_DETAIL.surname()))
+            .withAceFlag("ACE: No")
+            .withCaseOfficer("%s %s".formatted(CASE_OFFICER_DETAIL.forename(), CASE_OFFICER_DETAIL.surname()))
+            .withTechnicalReviewer("%s %s".formatted(TECHNICAL_REVIEWER_DETAIL.forename(), TECHNICAL_REVIEWER_DETAIL.surname()))
+            .withTechnicalReviewOpen(true)
+            .withTechnicalReviewDeadline(DateUtils.format(technicalReviewDeadline, DateUtils.DATE_TIME))
+            .withConsultationOpen(false)
+            .withConsultationDeadline("")
+            .withConsultationFurtherInformationOpen(false)
+            .withApprovedForIssue(false)
+            .build()
     );
   }
 
@@ -867,12 +1010,27 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
   @Test
   void getWorkAreaItemsForConsulteeAllocator_whenConsultationOpen() {
     var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
-    var applicationVersion = createApplicationVersionWithOpenConsultation(ApplicationType.PRODUCTION, consentLengthForm, CASE_OFFICER_DETAIL, zonedDateTime.plusDays(7).toInstant());
+    var consultationDeadline = zonedDateTime.plusDays(7).toInstant();
+    var applicationVersion = createApplicationVersionWithOpenConsultation(ApplicationType.PRODUCTION, consentLengthForm, CASE_OFFICER_DETAIL, consultationDeadline);
     var applicationId = applicationVersion.getApplication().getId();
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, CONSULTEE_ALLOCATOR_DETAIL);
     assertThat(workAreaItems).containsExactly(
-        getApplicationDataItemProductionWithConsultationConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM, zonedDateTime.plusDays(7).toInstant())
+        getCompleteApplicationDataItemForWorkAreaIndustryBuilder()
+            .withApplicationId(applicationId)
+            .withReference(APPLICATION_REFERENCE)
+            .withStatus(ApplicationVersionStatus.SUBMITTED.getDisplayName())
+            .withSubmittedDateTime(DateUtils.format(clock.instant(), DateUtils.DATE_TIME))
+            .withSubmittedBy("%s %s".formatted(USER_DETAIL.forename(), USER_DETAIL.surname()))
+            .withAceFlag("ACE: No")
+            .withCaseOfficer("%s %s".formatted(CASE_OFFICER_DETAIL.forename(), CASE_OFFICER_DETAIL.surname()))
+            .withWithdrawalOpen(null)
+            .withApplicationUpdateOpen(null)
+            .withApplicationUpdateDeadline(null)
+            .withConsultationOpen(true)
+            .withConsultationDeadline(DateUtils.format(consultationDeadline, DateUtils.DATE_TIME))
+            .withConsultationFurtherInformationOpen(false)
+            .build()
     );
   }
 
@@ -882,27 +1040,6 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
     createApplicationVersionAssignedToCaseOfficer(ApplicationType.PRODUCTION, consentLengthForm, CASE_OFFICER_DETAIL);
 
     assertThat(getWorkAreaItems(workAreaFilterForm, CONSULTEE_ALLOCATOR_DETAIL)).isEmpty();
-  }
-
-  @Test
-  @Disabled(value = "application not found - FCS-520")
-  void getWorkAreaItemsForConsulteeResponder_whenConsultationOpen() {
-    when(teamService.getWuaIdsOfTeamMembersWithRoles(
-        TeamType.OPRED,
-        Set.of(OpredTeamRole.RESPONDER)
-    )).thenReturn(List.of(WebUserAccountId.from(CONSULTEE_RESPONDER_DETAIL)));
-    when(energyPortalUserService.findByWuaIds(List.of(WebUserAccountId.from(CONSULTEE_RESPONDER_DETAIL))))
-        .thenReturn(List.of(CONSULTEE_RESPONDER_ENERGY_PORTAL_USER_DTO));
-    when(opredTeamService.isResponder(CONSULTATION_TEAM.toTeamId(), CONSULTEE_RESPONDER_DETAIL)).thenReturn(true);
-
-    var consentLengthForm = ConsentLengthTestUtil.getShortTermConsentLengthFormForDates(SHORT_TERM_START_DATE, SHORT_TERM_END_DATE);
-    var applicationVersion = createApplicationVersionWithConsultationResponder(ApplicationType.PRODUCTION, consentLengthForm, CASE_OFFICER_DETAIL);
-    var applicationId = applicationVersion.getApplication().getId();
-
-    var workAreaItems = getWorkAreaItems(workAreaFilterForm, CONSULTEE_RESPONDER_DETAIL);
-    assertThat(workAreaItems).containsExactly(
-        getApplicationDataItemProductionWithConsultationConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM, zonedDateTime.plusDays(7).toInstant())
-    );
   }
 
   @Test
@@ -930,7 +1067,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
     var flareAppVersion = createNewApplicationVersionForField(ApplicationType.FLARE, consentLengthForm);
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, USER_DETAIL);
-    var applicationVersionIds = workAreaItems.stream().map(ApplicationDataItem::applicationId).toList();
+    var applicationVersionIds = workAreaItems.stream().map(ApplicationDataItemView::applicationId).toList();
 
     assertThat(applicationVersionIds).containsExactly(
         flareAppVersion.getId(),
@@ -946,7 +1083,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
     var flareAppVersion = createNewApplicationVersionForField(ApplicationType.FLARE, consentLengthForm);
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, USER_DETAIL);
-    var applicationVersionIds = workAreaItems.stream().map(ApplicationDataItem::applicationId).toList();
+    var applicationVersionIds = workAreaItems.stream().map(ApplicationDataItemView::applicationId).toList();
 
     assertThat(applicationVersionIds).containsExactly(
         updateAppVersion.getId(),
@@ -963,7 +1100,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
     var ventAppVersion = createNewApplicationVersionForField(ApplicationType.VENT, consentLengthForm);
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, USER_DETAIL);
-    var applicationVersionIds = workAreaItems.stream().map(ApplicationDataItem::applicationId).toList();
+    var applicationVersionIds = workAreaItems.stream().map(ApplicationDataItemView::applicationId).toList();
 
     assertThat(applicationVersionIds).containsExactly(
         update2AppVersion.getId(),
@@ -981,7 +1118,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
     var flareAppVersion = createApplicationVersionAssignedToCaseOfficer(ApplicationType.FLARE, consentLengthForm, CASE_OFFICER_DETAIL);
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, CASE_OFFICER_DETAIL);
-    var applicationVersionIds = workAreaItems.stream().map(ApplicationDataItem::applicationId).toList();
+    var applicationVersionIds = workAreaItems.stream().map(ApplicationDataItemView::applicationId).toList();
 
     assertThat(applicationVersionIds).containsExactly(
         flareAppVersion.getId(),
@@ -997,7 +1134,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
     var flareAppVersion = createSubmittedApplicationVersion(ApplicationType.FLARE, consentLengthForm);
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, CASE_MANAGER_DETAIL);
-    var applicationVersionIds = workAreaItems.stream().map(ApplicationDataItem::applicationId).toList();
+    var applicationVersionIds = workAreaItems.stream().map(ApplicationDataItemView::applicationId).toList();
 
     assertThat(applicationVersionIds).containsExactly(
         flareAppVersion.getId(),
@@ -1013,7 +1150,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
     var flareAppVersion = createApplicationVersionWithAssignedReviewer(ApplicationType.PRODUCTION, consentLengthForm, CASE_OFFICER_DETAIL, TECHNICAL_REVIEWER_DETAIL, zonedDateTime.plusDays(2).toInstant());
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, TECHNICAL_REVIEWER_DETAIL);
-    var applicationVersionIds = workAreaItems.stream().map(ApplicationDataItem::applicationId).toList();
+    var applicationVersionIds = workAreaItems.stream().map(ApplicationDataItemView::applicationId).toList();
 
     assertThat(applicationVersionIds).containsExactly(
         flareAppVersion.getId(),
@@ -1030,7 +1167,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
     var flareAppVersion = createApplicationVersionWithOpenConsultation(ApplicationType.FLARE, consentLengthForm, CASE_OFFICER_DETAIL, zonedDateTime.plusDays(2).toInstant());
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, CONSULTEE_ALLOCATOR_DETAIL);
-    var applicationVersionIds = workAreaItems.stream().map(ApplicationDataItem::applicationId).toList();
+    var applicationVersionIds = workAreaItems.stream().map(ApplicationDataItemView::applicationId).toList();
 
     assertThat(applicationVersionIds).containsExactly(
         flareAppVersion.getId(),
@@ -1047,7 +1184,22 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
 
     var workAreaItems = getWorkAreaItems(workAreaFilterForm, CAM_USER_DETAIL);
     assertThat(workAreaItems).containsExactly(
-        getApplicationDataItemProductionAssignedToCamUserOfConsentLength(applicationId, clock.instant(), ConsentLengthType.SHORT_TERM)
+        getCompleteApplicationDataItemForWorkAreaIndustryBuilder()
+            .withApplicationId(applicationId)
+            .withReference(APPLICATION_REFERENCE)
+            .withStatus(ApplicationVersionStatus.SUBMITTED.getDisplayName())
+            .withSubmittedDateTime(DateUtils.format(clock.instant(), DateUtils.DATE_TIME))
+            .withSubmittedBy("%s %s".formatted(USER_DETAIL.forename(), USER_DETAIL.surname()))
+            .withAceFlag("ACE: No")
+            .withCaseOfficer("%s %s".formatted(CASE_OFFICER_DETAIL.forename(), CASE_OFFICER_DETAIL.surname()))
+            .withCamUser("%s %s".formatted(CAM_USER_DETAIL.forename(), CAM_USER_DETAIL.surname()))
+            .withTechnicalReviewOpen(false)
+            .withTechnicalReviewDeadline("")
+            .withConsultationOpen(false)
+            .withConsultationDeadline("")
+            .withConsultationFurtherInformationOpen(false)
+            .withApprovedForIssue(false)
+            .build()
     );
   }
 
@@ -1152,23 +1304,7 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
 
     when(teamService.getTeamsByType(CONSULTATION_TEAM_TYPE)).thenReturn(Collections.singletonList(CONSULTATION_TEAM));
 
-    consultationService.requestConsultation(applicationVersion, deadlineInstant, CONSULTEE_ALLOCATOR_DETAIL);
-
-    return applicationVersion;
-  }
-
-  private ApplicationVersion createApplicationVersionWithConsultationResponder(ApplicationType applicationType,
-                                                                               ConsentLengthForm consentLengthForm,
-                                                                               ServiceUserDetail caseOfficer) {
-    var applicationVersion = createApplicationVersionAssignedToCaseOfficer(applicationType, consentLengthForm, caseOfficer);
-    applicationVersion.setCaseOfficerWuaId(caseOfficer.wuaId());
-
-    when(teamService.getTeamsByType(CONSULTATION_TEAM_TYPE)).thenReturn(Collections.singletonList(CONSULTATION_TEAM));
-
-    consultationService.requestConsultation(applicationVersion, zonedDateTime.plusDays(7).toInstant(), CONSULTEE_ALLOCATOR_DETAIL);
-
-    var consultation = consultationService.getLatestOpenConsultation(applicationVersion.getApplication());
-    consultationService.assignResponderToConsultation(consultation, CONSULTEE_ALLOCATOR_DETAIL, CONSULTEE_RESPONDER_DETAIL);
+    consultationService.requestConsultation(applicationVersion, deadlineInstant, caseOfficer);
 
     return applicationVersion;
   }
@@ -1225,12 +1361,12 @@ class WorkAreaIntegrationTest extends AbstractIntegrationTest {
   }
   
   @SuppressWarnings("unchecked")
-  private List<ApplicationDataItem> getWorkAreaItems(WorkAreaFilterForm workAreaForm, ServiceUserDetail userDetail) {
+  private List<ApplicationDataItemView> getWorkAreaItems(WorkAreaFilterForm workAreaForm, ServiceUserDetail userDetail) {
     var workAreaFilter = new WorkAreaFilter();
     workAreaFilter.update(workAreaForm);
     var modelAndView = workAreaController.getWorkArea(workAreaFilter, userDetail);
     assertThat(modelAndView.getModel()).containsKey(WorkAreaController.WORK_AREA_ITEMS);
 
-    return (List<ApplicationDataItem>) modelAndView.getModel().get(WorkAreaController.WORK_AREA_ITEMS);
+    return (List<ApplicationDataItemView>) modelAndView.getModel().get(WorkAreaController.WORK_AREA_ITEMS);
   }
 }

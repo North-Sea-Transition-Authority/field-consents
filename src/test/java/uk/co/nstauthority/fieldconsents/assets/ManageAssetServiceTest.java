@@ -15,7 +15,7 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterService;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemService;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemViewService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 
@@ -23,7 +23,7 @@ import uk.co.nstauthority.fieldconsents.teams.TeamService;
 class ManageAssetServiceTest {
 
   @Mock
-  private ApplicationDataItemService applicationDataItemService;
+  private ApplicationDataItemViewService applicationDataItemViewService;
 
   @Mock
   private ApplicationDataFilterService applicationDataFilterService;
@@ -36,47 +36,47 @@ class ManageAssetServiceTest {
   private ManageAssetService manageAssetService;
 
   @Test
-  void getApplicationDataItems_userIsRegulatorUser() {
+  void getApplicationDataItemViews_userIsRegulatorUser() {
     var user = ServiceUserDetailTestUtil.Builder().build();
     var assetKey = new AssetKey(1, AssetType.FIELD);
 
     var conditions = List.of(mock(Condition.class), mock(Condition.class));
 
-    var applicationDataItems = List.of(ApplicationDataItemUtil.getApplicationDataItem());
+    var applicationDataItemViews = List.of(ApplicationDataItemUtil.getApplicationDataItemView());
 
     when(teamService.isRegulatorUser(user)).thenReturn(true);
     doReturn(conditions).when(manageAssetService).getConditions(assetKey);
-    when(applicationDataItemService.getRegulatorApplicationDataItems(conditions, user)).thenReturn(applicationDataItems);
+    when(applicationDataItemViewService.getRegulatorApplicationDataItems(conditions, user)).thenReturn(applicationDataItemViews);
 
-    assertThat(manageAssetService.getApplicationDataItems(assetKey, user)).isEqualTo(applicationDataItems);
+    assertThat(manageAssetService.getApplicationDataItemViews(assetKey, user)).isEqualTo(applicationDataItemViews);
   }
 
   @Test
-  void getApplicationDataItems_userIsIndustryUser() {
+  void getApplicationDataItemViews_userIsIndustryUser() {
     var user = ServiceUserDetailTestUtil.Builder().build();
     var assetKey = new AssetKey(1, AssetType.FIELD);
 
     var conditions = List.of(mock(Condition.class), mock(Condition.class));
 
-    var applicationDataItems = List.of(ApplicationDataItemUtil.getApplicationDataItem());
+    var applicationDataItemViews = List.of(ApplicationDataItemUtil.getApplicationDataItemView());
 
     when(teamService.isRegulatorUser(user)).thenReturn(false);
     when(teamService.isIndustryUser(user)).thenReturn(true);
     doReturn(conditions).when(manageAssetService).getConditions(assetKey);
-    when(applicationDataItemService.getIndustryApplicationDataItems(conditions, user)).thenReturn(applicationDataItems);
+    when(applicationDataItemViewService.getIndustryApplicationDataItems(conditions, user)).thenReturn(applicationDataItemViews);
 
-    assertThat(manageAssetService.getApplicationDataItems(assetKey, user)).isEqualTo(applicationDataItems);
+    assertThat(manageAssetService.getApplicationDataItemViews(assetKey, user)).isEqualTo(applicationDataItemViews);
   }
 
   @Test
-  void getApplicationDataItems_userIsNotRegulatorOrIndustryUser() {
+  void getApplicationDataItemViews_userIsNotRegulatorOrIndustryUser() {
     var user = ServiceUserDetailTestUtil.Builder().build();
     var assetKey = new AssetKey(1, AssetType.FIELD);
 
     when(teamService.isRegulatorUser(user)).thenReturn(false);
     when(teamService.isIndustryUser(user)).thenReturn(false);
 
-    assertThat(manageAssetService.getApplicationDataItems(assetKey, user)).isEmpty();
+    assertThat(manageAssetService.getApplicationDataItemViews(assetKey, user)).isEmpty();
   }
 
   @Test

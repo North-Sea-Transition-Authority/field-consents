@@ -22,7 +22,7 @@ CVE-2024-22259
 CVE-2024-21634
 # org.springframework:spring-web (app.jar)
 CVE-2024-22262
-#org.bouncycastle:bcprov-jdk18on (app.jar)
+# org.bouncycastle:bcprov-jdk18on (app.jar)
 CVE-2024-29857
 CVE-2024-30171
 CVE-2024-30172

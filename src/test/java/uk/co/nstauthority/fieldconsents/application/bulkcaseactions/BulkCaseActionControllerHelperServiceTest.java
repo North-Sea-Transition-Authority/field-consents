@@ -12,7 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockHttpSession;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItem;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
 
 @ExtendWith(MockitoExtension.class)
 class BulkCaseActionControllerHelperServiceTest {
@@ -42,12 +42,12 @@ class BulkCaseActionControllerHelperServiceTest {
   }
 
   @Test
-  void getSelectedApplicationsForm_withApplicationDataItems() {
+  void getSelectedApplicationsForm_withApplicationDataItemViews() {
     var selectedApplicationIds = Set.of("1", "2", "3");
     var form = new BulkCaseActionSelectedApplicationsForm(selectedApplicationIds);
     session.setAttribute(BulkCaseActionControllerHelperService.SELECTED_APPLICATIONS_FORM_SESSION_ATTRIBUTE, form);
 
-    var applicationDataItems = List.of(
+    var applicationDataItemViews = List.of(
         applicationDataItemBuilderWithDefaults(1).build(),
         applicationDataItemBuilderWithDefaults(2).build(),
         applicationDataItemBuilderWithDefaults(3).build(),
@@ -55,7 +55,7 @@ class BulkCaseActionControllerHelperServiceTest {
         applicationDataItemBuilderWithDefaults(5).build()
     );
 
-    assertThat(controllerHelperService.getSelectedApplicationsForm(session, applicationDataItems))
+    assertThat(controllerHelperService.getSelectedApplicationsForm(session, applicationDataItemViews))
         .isEqualTo(new BulkCaseActionSelectedApplicationsForm(selectedApplicationIds));
   }
 
@@ -65,7 +65,7 @@ class BulkCaseActionControllerHelperServiceTest {
     var form = new BulkCaseActionSelectedApplicationsForm(selectedApplicationIds);
     session.setAttribute(BulkCaseActionControllerHelperService.SELECTED_APPLICATIONS_FORM_SESSION_ATTRIBUTE, form);
 
-    var applicationDataItems = List.of(
+    var applicationDataItemViews = List.of(
         applicationDataItemBuilderWithDefaults(1).build(),
         applicationDataItemBuilderWithDefaults(2).build(),
         applicationDataItemBuilderWithDefaults(3).build(),
@@ -73,20 +73,20 @@ class BulkCaseActionControllerHelperServiceTest {
         applicationDataItemBuilderWithDefaults(5).build()
     );
 
-    assertThat(controllerHelperService.getSelectedApplicationsForm(session, applicationDataItems))
+    assertThat(controllerHelperService.getSelectedApplicationsForm(session, applicationDataItemViews))
         .isEqualTo(BulkCaseActionSelectedApplicationsForm.empty());
   }
 
   @Test
-  void getSelectedApplicationsForm_withApplicationDataItems_ensureAdditionalItemsNotIncluded() {
+  void getSelectedApplicationsForm_withApplicationDataItemViews_ensureAdditionalItemsNotIncluded() {
     var selectedApplicationIds = Set.of("1", "2", "3");
     var form = new BulkCaseActionSelectedApplicationsForm(selectedApplicationIds);
     session.setAttribute(BulkCaseActionControllerHelperService.SELECTED_APPLICATIONS_FORM_SESSION_ATTRIBUTE, form);
 
     // only one is available, so it should 'unselect' 2 and 3
-    var applicationDataItems = Collections.singletonList(applicationDataItemBuilderWithDefaults(1).build());
+    var applicationDataItemViews = Collections.singletonList(applicationDataItemBuilderWithDefaults(1).build());
 
-    assertThat(controllerHelperService.getSelectedApplicationsForm(session, applicationDataItems))
+    assertThat(controllerHelperService.getSelectedApplicationsForm(session, applicationDataItemViews))
         .isEqualTo(new BulkCaseActionSelectedApplicationsForm(Collections.singleton("1")));
   }
 
@@ -134,8 +134,8 @@ class BulkCaseActionControllerHelperServiceTest {
     assertThat(session.getAttribute(BulkCaseActionControllerHelperService.SELECTED_APPLICATIONS_FORM_SESSION_ATTRIBUTE)).isEqualTo(form);
   }
 
-  private ApplicationDataItem.Builder applicationDataItemBuilderWithDefaults(Integer applicationId) {
-    return ApplicationDataItem.newBuilder()
+  private ApplicationDataItemView.Builder applicationDataItemBuilderWithDefaults(Integer applicationId) {
+    return ApplicationDataItemView.newBuilder()
         .withApplicationId(applicationId)
         .withType("")
         .withReference("")

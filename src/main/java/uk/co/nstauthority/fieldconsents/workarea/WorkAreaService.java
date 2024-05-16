@@ -18,9 +18,9 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupQueryService;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItem;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDtoService;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemService;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemViewService;
 import uk.co.nstauthority.fieldconsents.teams.Team;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
@@ -41,7 +41,7 @@ public class WorkAreaService {
 
   private final ApplicationDataItemDtoService applicationDataItemDtoService;
 
-  private final ApplicationDataItemService applicationDataItemService;
+  private final ApplicationDataItemViewService applicationDataItemViewService;
 
   public WorkAreaService(TeamService teamService,
                          WorkAreaFilterService workAreaFilterService,
@@ -49,17 +49,17 @@ public class WorkAreaService {
                          OrganisationGroupQueryService organisationGroupQueryService,
                          PermissionService permissionService,
                          ApplicationDataItemDtoService applicationDataItemDtoService,
-                         ApplicationDataItemService applicationDataItemService) {
+                         ApplicationDataItemViewService applicationDataItemViewService) {
     this.teamService = teamService;
     this.workAreaFilterService = workAreaFilterService;
     this.workAreaItemDtoService = workAreaItemDtoService;
     this.organisationGroupQueryService = organisationGroupQueryService;
     this.permissionService = permissionService;
     this.applicationDataItemDtoService = applicationDataItemDtoService;
-    this.applicationDataItemService = applicationDataItemService;
+    this.applicationDataItemViewService = applicationDataItemViewService;
   }
 
-  public List<ApplicationDataItem> getIndustryWorkAreaItems(WorkAreaFilter filter, ServiceUserDetail user) {
+  public List<ApplicationDataItemView> getIndustryWorkAreaItems(WorkAreaFilter filter, ServiceUserDetail user) {
     var industryTeams = teamService.getTeamsOfTypeThatUserHasPermissionFor(
         user,
         TeamType.INDUSTRY,
@@ -91,7 +91,7 @@ public class WorkAreaService {
     conditions.add(APPLICATION_VERSIONS.PRIMARY_OPERATOR_OU_ID.in(organisationUnitJsonById.keySet()));
     var workAreaItemDtoList = workAreaItemDtoService.runWorkAreaQuery(conditions, INDUSTRY);
 
-    return applicationDataItemService.getItemsFromDtos(
+    return applicationDataItemViewService.getItemViewsFromDtos(
         workAreaItemDtoList,
         organisationUnitJsonById.values(),
         TeamType.INDUSTRY,
@@ -99,8 +99,8 @@ public class WorkAreaService {
     );
   }
 
-  public List<ApplicationDataItem> getRegulatorWorkAreaItems(WorkAreaFilter filter, ServiceUserDetail user,
-                                                             WorkAreaTab workAreaTab) {
+  public List<ApplicationDataItemView> getRegulatorWorkAreaItems(WorkAreaFilter filter, ServiceUserDetail user,
+                                                                 WorkAreaTab workAreaTab) {
     var regulatorTeams = teamService.getTeamsOfTypeThatUserHasPermissionFor(
         user,
         TeamType.REGULATOR,
@@ -118,11 +118,12 @@ public class WorkAreaService {
     var organisationUnitJsons = applicationDataItemDtoService
         .getOrganisationUnitJsonsFromApplicationDataItemDtos(applicationDataItemDtos);
 
-    return applicationDataItemService.getItemsFromDtos(applicationDataItemDtos, organisationUnitJsons, TeamType.REGULATOR, user);
+    return applicationDataItemViewService
+        .getItemViewsFromDtos(applicationDataItemDtos, organisationUnitJsons, TeamType.REGULATOR, user);
   }
 
-  public List<ApplicationDataItem> getConsulteeWorkAreaItems(WorkAreaFilter filter, ServiceUserDetail user,
-                                                             WorkAreaTab workAreaTab) {
+  public List<ApplicationDataItemView> getConsulteeWorkAreaItems(WorkAreaFilter filter, ServiceUserDetail user,
+                                                                 WorkAreaTab workAreaTab) {
     var consulteeTeams = teamService.getTeamsOfTypeThatUserHasPermissionFor(
         user,
         TeamType.OPRED,
@@ -140,7 +141,8 @@ public class WorkAreaService {
     var organisationUnitJsons = applicationDataItemDtoService
         .getOrganisationUnitJsonsFromApplicationDataItemDtos(applicationDataItemDtos);
 
-    return applicationDataItemService.getItemsFromDtos(applicationDataItemDtos, organisationUnitJsons, TeamType.OPRED, user);
+    return applicationDataItemViewService
+        .getItemViewsFromDtos(applicationDataItemDtos, organisationUnitJsons, TeamType.OPRED, user);
   }
 
   public List<WorkAreaTab> getTabsAvailableToUser(ServiceUserDetail user) {

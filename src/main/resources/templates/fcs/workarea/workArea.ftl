@@ -2,7 +2,7 @@
 <#import '../dataitems/applicationDataItem.ftl' as applicationDataItem>
 <#import '../dataitems/_dataItemFilter.ftl' as dataItemFilter>
 
-<#-- @ftlvariable name="applicationDataItem" type="uk.co.nstauthority.fieldconsents.query.ApplicationDataItem" -->
+<#-- @ftlvariable name="applicationDataItem" type="uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView" -->
 
 <@defaultPage
   htmlTitle=pageTitle

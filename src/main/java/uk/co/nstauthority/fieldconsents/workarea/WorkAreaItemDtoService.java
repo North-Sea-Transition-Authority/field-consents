@@ -14,14 +14,14 @@ import org.jooq.JoinType;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDto;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemQueryService;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemViewQueryService;
 
 @Service
 public class WorkAreaItemDtoService {
 
-  private final ApplicationDataItemQueryService applicationDataItemQueryService;
+  private final ApplicationDataItemViewQueryService applicationDataItemQueryService;
 
-  WorkAreaItemDtoService(ApplicationDataItemQueryService applicationDataItemQueryService) {
+  WorkAreaItemDtoService(ApplicationDataItemViewQueryService applicationDataItemQueryService) {
     this.applicationDataItemQueryService = applicationDataItemQueryService;
   }
 

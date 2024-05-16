@@ -28,7 +28,7 @@ import uk.co.nstauthority.fieldconsents.assets.ManageAssetService;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItem;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil;
 import uk.co.nstauthority.fieldconsents.startapplication.StartApplicationFromTerminalController;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
@@ -70,7 +70,7 @@ public class TerminalControllerTest extends AbstractControllerTest {
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
   void manageTerminal_terminalNoOperator(boolean userHasCreatePermission) throws Exception {
-    var applicationDataItems = List.of(ApplicationDataItemUtil.getApplicationDataItem());
+    var applicationDataItemViews = List.of(ApplicationDataItemUtil.getApplicationDataItemView());
 
     when(assetAccessService.hasAssetPermission(user, terminal1JsonWithNullOperator, VIEW_FCS_APPLICATIONS, VIEW_FCS_CONSENTS))
         .thenReturn(true);
@@ -80,8 +80,8 @@ public class TerminalControllerTest extends AbstractControllerTest {
     when(organisationUnitPermissionService.hasOperatorPermission(any(), any(), any(RolePermission[].class)))
         .thenReturn(userHasCreatePermission);
 
-    when(manageAssetService.getApplicationDataItems(AssetKey.from(terminal1JsonWithNullOperator), user))
-        .thenReturn(applicationDataItems);
+    when(manageAssetService.getApplicationDataItemViews(AssetKey.from(terminal1JsonWithNullOperator), user))
+        .thenReturn(applicationDataItemViews);
 
     var modelAndView = mockMvc
         .perform(get(ReverseRouter.route(on(TerminalController.class)
@@ -91,13 +91,13 @@ public class TerminalControllerTest extends AbstractControllerTest {
         .andExpect(view().name("fcs/assets/terminals"))
         .andReturn().getModelAndView();
 
-    checkModelAsserts(modelAndView, terminal1JsonWithNullOperator, userHasCreatePermission, applicationDataItems);
+    checkModelAsserts(modelAndView, terminal1JsonWithNullOperator, userHasCreatePermission, applicationDataItemViews);
   }
 
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
   void manageTerminal_terminalWithOperator(boolean userHasCreatePermission) throws Exception {
-    var applicationDataItems = List.of(ApplicationDataItemUtil.getApplicationDataItem());
+    var applicationDataItemViews = List.of(ApplicationDataItemUtil.getApplicationDataItemView());
 
     when(terminalService.getTerminalWithOperator(eq(terminal1JsonWithOperator.getId()), any()))
         .thenReturn(terminal1JsonWithOperator);
@@ -105,8 +105,8 @@ public class TerminalControllerTest extends AbstractControllerTest {
     when(organisationUnitPermissionService.hasOperatorPermission(any(), any(), any(RolePermission[].class)))
         .thenReturn(userHasCreatePermission);
 
-    when(manageAssetService.getApplicationDataItems(AssetKey.from(terminal1JsonWithOperator), user))
-        .thenReturn(applicationDataItems);
+    when(manageAssetService.getApplicationDataItemViews(AssetKey.from(terminal1JsonWithOperator), user))
+        .thenReturn(applicationDataItemViews);
 
     var modelAndView = mockMvc
         .perform(get(ReverseRouter.route(on(TerminalController.class)
@@ -116,14 +116,14 @@ public class TerminalControllerTest extends AbstractControllerTest {
         .andExpect(view().name("fcs/assets/terminals"))
         .andReturn().getModelAndView();
 
-    checkModelAsserts(modelAndView, terminal1JsonWithOperator, userHasCreatePermission, applicationDataItems);
+    checkModelAsserts(modelAndView, terminal1JsonWithOperator, userHasCreatePermission, applicationDataItemViews);
   }
 
   private void checkModelAsserts(
       ModelAndView modelAndView,
       TerminalWithOperatorJson terminalJson,
       boolean userHasCreatePermission,
-      List<ApplicationDataItem> applicationDataItems
+      List<ApplicationDataItemView> applicationDataItemViews
   ) {
     assertThat(modelAndView).isNotNull();
     var model = modelAndView.getModel();
@@ -135,6 +135,6 @@ public class TerminalControllerTest extends AbstractControllerTest {
         .containsEntry("operatorName", terminalJson.getOperatorName())
         .containsEntry("startApplicationUrl", ReverseRouter.route(on(StartApplicationFromTerminalController.class)
             .getStartApplicationForm(terminalJson.getId())))
-        .containsEntry("applicationDataItems", applicationDataItems);
+        .containsEntry("applicationDataItemViews", applicationDataItemViews);
   }
 }

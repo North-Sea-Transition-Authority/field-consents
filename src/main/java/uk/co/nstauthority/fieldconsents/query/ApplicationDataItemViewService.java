@@ -24,7 +24,7 @@ import uk.co.nstauthority.fieldconsents.teams.TeamType;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Service
-public class ApplicationDataItemService {
+public class ApplicationDataItemViewService {
 
   private final ApplicationDataItemDtoService applicationDataItemDtoService;
   private final OrganisationUnitPermissionService organisationUnitPermissionService;
@@ -32,7 +32,7 @@ public class ApplicationDataItemService {
   private final FieldEquityPartnerPermissionService fieldEquityPartnerPermissionService;
   private final DSLContext dslContext;
 
-  ApplicationDataItemService(
+  ApplicationDataItemViewService(
       ApplicationDataItemDtoService applicationDataItemDtoService,
       OrganisationUnitPermissionService organisationUnitPermissionService,
       TeamService teamService,
@@ -46,7 +46,7 @@ public class ApplicationDataItemService {
     this.dslContext = dslContext;
   }
 
-  public List<ApplicationDataItem> getItemsFromDtos(
+  public List<ApplicationDataItemView> getItemViewsFromDtos(
       Collection<ApplicationDataItemDto> applicationDataItemDtos,
       Collection<OrganisationUnitJson> organisationUnitJsons,
       TeamType teamType,
@@ -66,7 +66,7 @@ public class ApplicationDataItemService {
         .getEnergyPortalUserDtoMapFromApplicationDataItemDtos(applicationDataItemDtos);
 
     return applicationDataItemDtos.stream()
-        .map(dataItemDto -> applicationDataItemDtoService.getApplicationDataItem(
+        .map(dataItemDto -> applicationDataItemDtoService.getApplicationDataItemView(
             dataItemDto,
             user,
             teamType,
@@ -77,7 +77,7 @@ public class ApplicationDataItemService {
         .toList();
   }
 
-  public List<ApplicationDataItem> getRegulatorApplicationDataItems(List<Condition> conditions, ServiceUserDetail user) {
+  public List<ApplicationDataItemView> getRegulatorApplicationDataItems(List<Condition> conditions, ServiceUserDetail user) {
     var regulatorTeams = teamService.getTeamsOfTypeThatUserHasPermissionFor(
         user,
         TeamType.REGULATOR,
@@ -96,7 +96,7 @@ public class ApplicationDataItemService {
     return getItemsFromDtoList(applicationDataItemDtos, organisationUnitJsons, TeamType.REGULATOR, user);
   }
 
-  public List<ApplicationDataItem> getIndustryApplicationDataItems(List<Condition> conditions, ServiceUserDetail user) {
+  public List<ApplicationDataItemView> getIndustryApplicationDataItems(List<Condition> conditions, ServiceUserDetail user) {
     var organisationUnitIds =
         organisationUnitPermissionService.getOperatorsUserHasPermissionsFor(user, RolePermission.VIEW_PERMISSIONS)
             .stream()
@@ -130,7 +130,7 @@ public class ApplicationDataItemService {
     return getItemsFromDtoList(applicationDataItemDtos, organisationUnitJsons, TeamType.INDUSTRY, user);
   }
 
-  public List<ApplicationDataItem> getConsulteeApplicationDataItems(List<Condition> conditions, ServiceUserDetail user) {
+  public List<ApplicationDataItemView> getConsulteeApplicationDataItemViews(List<Condition> conditions, ServiceUserDetail user) {
     var consulteeTeams = teamService.getTeamsOfTypeThatUserHasPermissionFor(
         user,
         TeamType.OPRED,
@@ -149,7 +149,7 @@ public class ApplicationDataItemService {
     return getItemsFromDtoList(applicationDataItemDtos, organisationUnitJsons, TeamType.OPRED, user);
   }
 
-  private List<ApplicationDataItem> getItemsFromDtoList(
+  private List<ApplicationDataItemView> getItemsFromDtoList(
       List<ApplicationDataItemDto> applicationDataItemDtos,
       List<OrganisationUnitJson> organisationUnitJsons,
       TeamType teamType,
@@ -169,7 +169,7 @@ public class ApplicationDataItemService {
         .getEnergyPortalUserDtoMapFromApplicationDataItemDtos(applicationDataItemDtos);
 
     return applicationDataItemDtos.stream()
-        .map(dataItemDto -> applicationDataItemDtoService.getApplicationDataItem(
+        .map(dataItemDto -> applicationDataItemDtoService.getApplicationDataItemView(
             dataItemDto,
             user,
             teamType,

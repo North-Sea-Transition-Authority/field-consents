@@ -37,7 +37,7 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItem;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil;
 
 @ContextConfiguration(classes = SearchController.class)
@@ -56,7 +56,7 @@ class SearchControllerTest extends AbstractControllerTest {
 
   private SearchSession searchSession;
 
-  private List<ApplicationDataItem> applicationDataItems;
+  private List<ApplicationDataItemView> applicationDataItemViews;
 
   private RestSearchItem orgUnitRestSearchItem;
 
@@ -70,7 +70,7 @@ class SearchControllerTest extends AbstractControllerTest {
     form.setFieldAssetKey(FIELD1_ASSET_KEY);
     form.setTerminalAssetKey(TERMINAL1_ASSET_KEY);
     searchSession = new SearchSession(form);
-    applicationDataItems = List.of(ApplicationDataItemUtil.getApplicationDataItem());
+    applicationDataItemViews = List.of(ApplicationDataItemUtil.getApplicationDataItemView());
     orgUnitRestSearchItem = ApplicationDataFilterFormTestUtil.ORGANISATION_REST_SEARCH_ITEM;
     when(applicationDataFilterFormService.getPrefilledOrganisation(any())).thenReturn(orgUnitRestSearchItem);
     assetFieldRestSearchItem = ApplicationDataFilterFormTestUtil.FIELD1_REST_SEARCH_ITEM;
@@ -116,8 +116,8 @@ class SearchControllerTest extends AbstractControllerTest {
   void getSearch_IndustryUser() throws Exception {
     when(teamService.isRegulatorUser(user)).thenReturn(false);
     when(teamService.isIndustryUser(user)).thenReturn(true);
-    when(searchService.getIndustryApplicationDataItems(any(SearchFilterForm.class), any(ServiceUserDetail.class)))
-        .thenReturn(applicationDataItems);
+    when(searchService.getIndustryApplicationDataItemViews(any(SearchFilterForm.class), any(ServiceUserDetail.class)))
+        .thenReturn(applicationDataItemViews);
     searchSession.update(form);
 
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(SearchController.class).getSearch(searchSession, null)))
@@ -131,15 +131,15 @@ class SearchControllerTest extends AbstractControllerTest {
     assert modelAndView != null;
     var model = modelAndView.getModel();
     assertThat(model)
-        .containsEntry(SEARCH_RESULT_ITEMS, applicationDataItems);
+        .containsEntry(SEARCH_RESULT_ITEMS, applicationDataItemViews);
     assertSearchModel(model);
   }
 
   @Test
   void getSearch_RegulatorUser() throws Exception {
     when(teamService.isRegulatorUser(user)).thenReturn(true);
-    when(searchService.getRegulatorApplicationDataItems(any(SearchFilterForm.class), any(ServiceUserDetail.class)))
-        .thenReturn(applicationDataItems);
+    when(searchService.getRegulatorApplicationDataItemViews(any(SearchFilterForm.class), any(ServiceUserDetail.class)))
+        .thenReturn(applicationDataItemViews);
     searchSession.update(form);
 
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(SearchController.class).getSearch(searchSession, null)))
@@ -153,7 +153,7 @@ class SearchControllerTest extends AbstractControllerTest {
     assert modelAndView != null;
     var model = modelAndView.getModel();
     assertThat(model)
-        .containsEntry(SEARCH_RESULT_ITEMS, applicationDataItems)
+        .containsEntry(SEARCH_RESULT_ITEMS, applicationDataItemViews)
         .containsEntry("aceStatuses", AceFlagStatus.getDisplayableOptions());
     assertSearchModel(model);
   }
@@ -163,8 +163,8 @@ class SearchControllerTest extends AbstractControllerTest {
     when(teamService.isRegulatorUser(user)).thenReturn(false);
     when(teamService.isIndustryUser(user)).thenReturn(false);
     when(teamService.isConsulteeUser(user)).thenReturn(true);
-    when(searchService.getConsulteeApplicationDataItems(any(SearchFilterForm.class), any(ServiceUserDetail.class)))
-        .thenReturn(applicationDataItems);
+    when(searchService.getConsulteeApplicationDataItemViews(any(SearchFilterForm.class), any(ServiceUserDetail.class)))
+        .thenReturn(applicationDataItemViews);
     searchSession.update(form);
 
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(SearchController.class).getSearch(searchSession, null)))
@@ -178,7 +178,7 @@ class SearchControllerTest extends AbstractControllerTest {
     assert modelAndView != null;
     var model = modelAndView.getModel();
     assertThat(model)
-        .containsEntry(SEARCH_RESULT_ITEMS, applicationDataItems)
+        .containsEntry(SEARCH_RESULT_ITEMS, applicationDataItemViews)
         .containsEntry("aceStatuses", AceFlagStatus.getDisplayableOptions());
     assertSearchModel(model);
   }
@@ -188,7 +188,7 @@ class SearchControllerTest extends AbstractControllerTest {
     when(teamService.isRegulatorUser(user)).thenReturn(false);
     when(teamService.isIndustryUser(user)).thenReturn(false);
     when(teamService.isConsulteeUser(user)).thenReturn(false);
-    applicationDataItems = Collections.emptyList();
+    applicationDataItemViews = Collections.emptyList();
     searchSession.update(form);
 
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(SearchController.class).getSearch(searchSession, null)))
@@ -202,7 +202,7 @@ class SearchControllerTest extends AbstractControllerTest {
     assert modelAndView != null;
     var model = modelAndView.getModel();
     assertThat(model)
-        .containsEntry(SEARCH_RESULT_ITEMS, applicationDataItems);
+        .containsEntry(SEARCH_RESULT_ITEMS, applicationDataItemViews);
     assertSearchModel(model);
   }
 
@@ -225,7 +225,7 @@ class SearchControllerTest extends AbstractControllerTest {
     assert modelAndView != null;
     var model = modelAndView.getModel();
     assertThat(model)
-        .doesNotContainEntry(SEARCH_RESULT_ITEMS, applicationDataItems);
+        .doesNotContainEntry(SEARCH_RESULT_ITEMS, applicationDataItemViews);
     assertSearchModel(model);
   }
 

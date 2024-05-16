@@ -5,7 +5,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
-public record ApplicationDataItem(
+public record ApplicationDataItemView(
     Integer applicationId,
     String type,
     String duration,
@@ -36,7 +36,7 @@ public record ApplicationDataItem(
 ) {
 
   public static Builder newBuilder() {
-    return new ApplicationDataItem.Builder();
+    return new ApplicationDataItemView.Builder();
   }
 
   public static class Builder {
@@ -68,6 +68,9 @@ public record ApplicationDataItem(
     private Boolean consentIssuedAndNotYetActive;
     private Boolean consentIssuedAndActive;
     private Boolean consentIssuedAndExpired;
+
+    private Builder() {
+    }
 
     public Builder withApplicationId(Integer applicationId) {
       this.applicationId = applicationId;
@@ -204,8 +207,8 @@ public record ApplicationDataItem(
       return this;
     }
 
-    public ApplicationDataItem build() {
-      return new ApplicationDataItem(
+    public ApplicationDataItemView build() {
+      return new ApplicationDataItemView(
           applicationId,
           type,
           duration,

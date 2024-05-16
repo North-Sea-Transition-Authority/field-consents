@@ -5,19 +5,19 @@ import org.jooq.Condition;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterService;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItem;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemService;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemViewService;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 
 @Service
 public class ManageAssetService {
 
-  private final ApplicationDataItemService applicationDataItemService;
+  private final ApplicationDataItemViewService applicationDataItemService;
   private final ApplicationDataFilterService applicationDataFilterService;
   private final TeamService teamService;
 
   ManageAssetService(
-      ApplicationDataItemService applicationDataItemService,
+      ApplicationDataItemViewService applicationDataItemService,
       ApplicationDataFilterService applicationDataFilterService,
       TeamService teamService
   ) {
@@ -26,7 +26,7 @@ public class ManageAssetService {
     this.teamService = teamService;
   }
 
-  public List<ApplicationDataItem> getApplicationDataItems(AssetKey assetKey, ServiceUserDetail user) {
+  public List<ApplicationDataItemView> getApplicationDataItemViews(AssetKey assetKey, ServiceUserDetail user) {
     if (teamService.isRegulatorUser(user)) {
       return applicationDataItemService.getRegulatorApplicationDataItems(getConditions(assetKey), user);
     }

@@ -24,7 +24,7 @@ import uk.co.nstauthority.fieldconsents.authorisation.AccessibleByServiceUsers;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormService;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItem;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 
 @Controller
@@ -56,7 +56,7 @@ public class SearchController {
                                 ServiceUserDetail user) {
     if (searchSession.hasSearchBeenInvoked()) {
       return getSearchModelAndView(searchSession, user)
-          .addObject(SEARCH_RESULT_ITEMS, getApplicationDataItems(searchSession, user));
+          .addObject(SEARCH_RESULT_ITEMS, getApplicationDataItemViews(searchSession, user));
     }
     return getSearchModelAndView(searchSession, user);
   }
@@ -111,17 +111,17 @@ public class SearchController {
     return ReverseRouter.redirect(on(SearchController.class).getSearch(null, null));
   }
 
-  private List<ApplicationDataItem> getApplicationDataItems(SearchSession searchSession, ServiceUserDetail user) {
+  private List<ApplicationDataItemView> getApplicationDataItemViews(SearchSession searchSession, ServiceUserDetail user) {
     if (teamService.isRegulatorUser(user)) {
-      return searchService.getRegulatorApplicationDataItems(searchSession.getSearchFilterForm(), user);
+      return searchService.getRegulatorApplicationDataItemViews(searchSession.getSearchFilterForm(), user);
     }
 
     if (teamService.isIndustryUser(user)) {
-      return searchService.getIndustryApplicationDataItems(searchSession.getSearchFilterForm(), user);
+      return searchService.getIndustryApplicationDataItemViews(searchSession.getSearchFilterForm(), user);
     }
 
     if (teamService.isConsulteeUser(user)) {
-      return searchService.getConsulteeApplicationDataItems(searchSession.getSearchFilterForm(), user);
+      return searchService.getConsulteeApplicationDataItemViews(searchSession.getSearchFilterForm(), user);
     }
 
     return Collections.emptyList();

@@ -7,8 +7,8 @@
   backLinkUrl=springUrl(backLinkUrl)
   errorItems=errorList>
   <@fdsForm.htmlForm>
-    <#list applicationDataItems as applicationDataItem>
-      <input type="hidden" name="selectedApplicationIds" value="${applicationDataItem.applicationId()}">
+    <#list applicationDataItemViews as applicationDataItemView>
+      <input type="hidden" name="selectedApplicationIds" value="${applicationDataItemView.applicationId()}">
     </#list>
     <@fdsSearchSelector.searchSelectorEnhanced
       path="form.caseOfficerWuaId"
@@ -18,7 +18,7 @@
     <@fdsAction.button buttonText="Assign case officer"/>
   </@fdsForm.htmlForm>
   <@selectedApplicationsFtl.summaryList
-    applicationDataItems=applicationDataItems
+  applicationDataItemViews=applicationDataItemViews
     captionHeadingFunction=captionHeadingFunction
     />
 </@defaultPage>

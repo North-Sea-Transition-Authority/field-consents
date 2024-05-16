@@ -61,6 +61,6 @@ public class FieldController {
         .addObject("startApplicationUrl",
             ReverseRouter.route(on(StartApplicationFromFieldController.class).getStartApplicationForm(fieldId))
         )
-        .addObject("applicationDataItems", manageAssetService.getApplicationDataItems(AssetKey.from(fieldJson), user));
+        .addObject("applicationDataItemViews", manageAssetService.getApplicationDataItemViews(AssetKey.from(fieldJson), user));
   }
 }

@@ -45,9 +45,9 @@
   <#if startApplicationEnabled>
     <@fdsAction.link start=true linkText="Start application" linkUrl=springUrl(startApplicationUrl)/>
   </#if>
-  <@fdsResultList.resultList resultCount=applicationDataItems?size resultCountSuffix="application">
-    <#list applicationDataItems as dataItem>
-      <@applicationDataItem.applicationResultListItem dataItem=dataItem/>
+  <@fdsResultList.resultList resultCount=applicationDataItemViews?size resultCountSuffix="application">
+    <#list applicationDataItemViews as dataItemView>
+      <@applicationDataItem.applicationResultListItem dataItem=dataItemView/>
     </#list>
   </@fdsResultList.resultList>
 </@defaultPage>

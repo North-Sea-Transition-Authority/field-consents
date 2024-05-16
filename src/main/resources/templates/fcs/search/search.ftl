@@ -3,7 +3,7 @@
 <#import '../dataitems/_dataItemFilter.ftl' as dataItemFilter>
 <#import './_noResultsFound.ftl' as noResultsFound>
 
-<#-- @ftlvariable name="searchResultItem" type="uk.co.nstauthority.fieldconsents.query.ApplicationDataItem" -->
+<#-- @ftlvariable name="searchResultItem" type="uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView" -->
 
 <@defaultPage
   htmlTitle=pageTitle

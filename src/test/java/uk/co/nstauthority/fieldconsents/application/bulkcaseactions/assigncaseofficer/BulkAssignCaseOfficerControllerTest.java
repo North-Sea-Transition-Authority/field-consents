@@ -46,7 +46,7 @@ import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserServic
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItem;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 
@@ -105,17 +105,17 @@ class BulkAssignCaseOfficerControllerTest extends AbstractControllerTest {
     var applicationDataItemWithoutCaseOfficer = applicationDataItemBuilderWithDefaults(1).build();
     var applicationDataItemWithCaseOfficer = applicationDataItemBuilderWithDefaults(2).withCaseOfficer("unit test").build();
 
-    var applicationDataItems = List.of(applicationDataItemWithoutCaseOfficer, applicationDataItemWithCaseOfficer);
-    when(bulkCaseActionService.getSelectedApplicationDataItems(form, user)).thenReturn(applicationDataItems);
+    var applicationDataItemViews = List.of(applicationDataItemWithoutCaseOfficer, applicationDataItemWithCaseOfficer);
+    when(bulkCaseActionService.getSelectedApplicationDataItemViews(form, user)).thenReturn(applicationDataItemViews);
 
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS).assignCaseOfficer(null, null)))
         .session(session)
         .with(user(user)))
-        .andExpectAll(modelAndViewResultMatchers(applicationDataItems, availableCaseOfficers))
+        .andExpectAll(modelAndViewResultMatchers(applicationDataItemViews, availableCaseOfficers))
         .andReturn()
         .getModelAndView();
 
-    var captionHeadingFunction = (Function<ApplicationDataItem, String>) modelAndView.getModel().get("captionHeadingFunction");
+    var captionHeadingFunction = (Function<ApplicationDataItemView, String>) modelAndView.getModel().get("captionHeadingFunction");
     assertThat(captionHeadingFunction.apply(applicationDataItemWithoutCaseOfficer)).isEqualTo("No case officer currently assigned");
     assertThat(captionHeadingFunction.apply(applicationDataItemWithCaseOfficer)).isEqualTo("Current case officer: unit test");
   }
@@ -167,8 +167,8 @@ class BulkAssignCaseOfficerControllerTest extends AbstractControllerTest {
     var applicationDataItemWithoutCaseOfficer = applicationDataItemBuilderWithDefaults(1).build();
     var applicationDataItemWithCaseOfficer = applicationDataItemBuilderWithDefaults(2).withCaseOfficer("unit test").build();
 
-    var applicationDataItems = List.of(applicationDataItemWithoutCaseOfficer, applicationDataItemWithCaseOfficer);
-    when(bulkCaseActionService.getSelectedApplicationDataItems(form, user)).thenReturn(applicationDataItems);
+    var applicationDataItemViews = List.of(applicationDataItemWithoutCaseOfficer, applicationDataItemWithCaseOfficer);
+    when(bulkCaseActionService.getSelectedApplicationDataItemViews(form, user)).thenReturn(applicationDataItemViews);
 
     doAnswer(invocation -> {
       var bindingResult = invocation.getArgument(1, BindingResult.class);
@@ -182,14 +182,14 @@ class BulkAssignCaseOfficerControllerTest extends AbstractControllerTest {
             .session(session)
             .with(user(user))
             .with(csrf()))
-        .andExpectAll(modelAndViewResultMatchers(applicationDataItems, availableCaseOfficers));
+        .andExpectAll(modelAndViewResultMatchers(applicationDataItemViews, availableCaseOfficers));
 
     verify(bulkAssignCaseOfficerService, never()).assignCaseOfficer(any(), any(), any());
     verify(controllerHelperService, never()).clearSelectedApplicationsForm(any());
   }
 
   private ResultMatcher[] modelAndViewResultMatchers(
-      Collection<ApplicationDataItem> applicationDataItems,
+      Collection<ApplicationDataItemView> applicationDataItemViews,
       Collection<EnergyPortalUserDto> availableCaseOfficers
   ) {
     var caseOfficerOptions = availableCaseOfficers
@@ -204,14 +204,14 @@ class BulkAssignCaseOfficerControllerTest extends AbstractControllerTest {
         view().name("fcs/application/bulk-case-actions/assignCaseOfficer"),
         model().attribute("pageTitle", "Assign case officer"),
         model().attribute("backLinkUrl", ReverseRouter.route(on(BulkCaseActionSearchController.class).getSearchResults(null, null))),
-        model().attribute("applicationDataItems", applicationDataItems),
+        model().attribute("applicationDataItemViews", applicationDataItemViews),
         model().attributeExists("captionHeadingFunction"),
         model().attribute("caseOfficerOptions", caseOfficerOptions)
     };
   }
 
-  private ApplicationDataItem.Builder applicationDataItemBuilderWithDefaults(Integer applicationId) {
-    return ApplicationDataItem.newBuilder()
+  private ApplicationDataItemView.Builder applicationDataItemBuilderWithDefaults(Integer applicationId) {
+    return ApplicationDataItemView.newBuilder()
         .withApplicationId(applicationId)
         .withType("")
         .withReference("")

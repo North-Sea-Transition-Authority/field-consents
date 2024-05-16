@@ -38,7 +38,7 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItem;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
@@ -69,7 +69,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   private WorkAreaFilterForm form;
 
-  private List<ApplicationDataItem> workAreaItems;
+  private List<ApplicationDataItemView> workAreaItemViews;
 
   private RestSearchItem orgUnitRestSearchItem;
 
@@ -88,7 +88,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
     form = ApplicationDataFilterFormTestUtil.getWorkAreaFormForDefaultFilter();
     when(workAreaFilterService.getDefaultFilter(user)).thenReturn(filter);
     when(workAreaFormService.getFromFilter(any(WorkAreaFilter.class))).thenReturn(form);
-    workAreaItems = List.of(ApplicationDataItemUtil.getApplicationDataItem());
+    workAreaItemViews = List.of(ApplicationDataItemUtil.getApplicationDataItemView());
     orgUnitRestSearchItem = ApplicationDataFilterFormTestUtil.ORGANISATION_REST_SEARCH_ITEM;
     when(applicationDataFilterFormService.getPrefilledOrganisation(any())).thenReturn(orgUnitRestSearchItem);
     assetRestSearchItem = ApplicationDataFilterFormTestUtil.FIELD1_REST_SEARCH_ITEM;
@@ -98,7 +98,8 @@ class WorkAreaControllerTest extends AbstractControllerTest {
   @Test
   void getWorkArea_IndustryUser() throws Exception {
     filter.setStatuses(List.of(ApplicationVersionStatus.IN_PROGRESS, ApplicationVersionStatus.SUBMITTED));
-    when(workAreaService.getIndustryWorkAreaItems(any(WorkAreaFilter.class), any(ServiceUserDetail.class))).thenReturn(workAreaItems);
+    when(workAreaService.getIndustryWorkAreaItems(any(WorkAreaFilter.class), any(ServiceUserDetail.class))).thenReturn(
+        workAreaItemViews);
     var modelAndView = mockMvc.perform(
         get(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)))
             .with(user(user)))
@@ -608,7 +609,8 @@ class WorkAreaControllerTest extends AbstractControllerTest {
   void getWorkArea_RegulatorUser_CaseOfficer() throws Exception {
     when(teamService.isRegulatorUser(user)).thenReturn(true);
     when(permissionService.hasPermission(user, EnumSet.of(RolePermission.PROCESS_FCS_APPLICATIONS))).thenReturn(true);
-    when(workAreaService.getRegulatorWorkAreaItems(any(WorkAreaFilter.class), any(ServiceUserDetail.class), any(WorkAreaTab.class))).thenReturn(workAreaItems);
+    when(workAreaService.getRegulatorWorkAreaItems(any(WorkAreaFilter.class), any(ServiceUserDetail.class), any(WorkAreaTab.class))).thenReturn(
+        workAreaItemViews);
     var caseOfficerTabs = List.of(WorkAreaTab.MY_APPLICATIONS, WorkAreaTab.UNASSIGNED_APPLICATIONS);
     when(workAreaService.getTabsAvailableToUser(user)).thenReturn(caseOfficerTabs);
 
@@ -636,7 +638,8 @@ class WorkAreaControllerTest extends AbstractControllerTest {
   void getWorkArea_RegulatorUser_CaseManager() throws Exception {
     when(teamService.isRegulatorUser(user)).thenReturn(true);
     when(permissionService.hasPermission(user, EnumSet.of(RolePermission.ASSIGN_FCS_APPLICATIONS))).thenReturn(true);
-    when(workAreaService.getRegulatorWorkAreaItems(any(WorkAreaFilter.class), any(ServiceUserDetail.class), any(WorkAreaTab.class))).thenReturn(workAreaItems);
+    when(workAreaService.getRegulatorWorkAreaItems(any(WorkAreaFilter.class), any(ServiceUserDetail.class), any(WorkAreaTab.class))).thenReturn(
+        workAreaItemViews);
     var caseManagerTabs = List.of(WorkAreaTab.ALL_APPLICATIONS, WorkAreaTab.UNASSIGNED_APPLICATIONS);
     when(workAreaService.getTabsAvailableToUser(user)).thenReturn(caseManagerTabs);
 
@@ -666,7 +669,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
     when(permissionService.hasPermission(user, EnumSet.of(RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS)))
         .thenReturn(true);
     when(workAreaService.getRegulatorWorkAreaItems(any(WorkAreaFilter.class), any(ServiceUserDetail.class), any(WorkAreaTab.class)))
-        .thenReturn(workAreaItems);
+        .thenReturn(workAreaItemViews);
     var technicalReviewerTabs = List.of(WorkAreaTab.MY_TECHNICAL_REVIEWS, WorkAreaTab.ALL_TECHNICAL_REVIEWS);
     when(workAreaService.getTabsAvailableToUser(user)).thenReturn(technicalReviewerTabs);
 
@@ -694,7 +697,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
     when(permissionService.hasPermission(user, EnumSet.of(RolePermission.ALLOCATE_CONSULTATION)))
         .thenReturn(true);
     when(workAreaService.getConsulteeWorkAreaItems(any(WorkAreaFilter.class), any(ServiceUserDetail.class), any(WorkAreaTab.class)))
-        .thenReturn(workAreaItems);
+        .thenReturn(workAreaItemViews);
     var consulteeAllocatorTabs = List.of(WorkAreaTab.ALL_CONSULTATIONS, WorkAreaTab.UNASSIGNED_CONSULTATIONS);
     when(workAreaService.getTabsAvailableToUser(user)).thenReturn(consulteeAllocatorTabs);
 
@@ -730,7 +733,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
         .thenReturn(false);
 
     when(workAreaService.getIndustryWorkAreaItems(any(WorkAreaFilter.class), any(ServiceUserDetail.class)))
-        .thenReturn(workAreaItems);
+        .thenReturn(workAreaItemViews);
 
     var modelAndView = mockMvc.perform(
         get(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)))
@@ -752,7 +755,8 @@ class WorkAreaControllerTest extends AbstractControllerTest {
   void getWorkArea_RegulatorUser_CamUser() throws Exception {
     when(teamService.isRegulatorUser(user)).thenReturn(true);
     when(permissionService.hasPermission(user, EnumSet.of(RolePermission.AUTHORISE_FCS_CONSENTS))).thenReturn(true);
-    when(workAreaService.getRegulatorWorkAreaItems(any(WorkAreaFilter.class), any(ServiceUserDetail.class), any(WorkAreaTab.class))).thenReturn(workAreaItems);
+    when(workAreaService.getRegulatorWorkAreaItems(any(WorkAreaFilter.class), any(ServiceUserDetail.class), any(WorkAreaTab.class))).thenReturn(
+        workAreaItemViews);
     var camTabs = List.of(WorkAreaTab.MY_CAM_APPLICATIONS, WorkAreaTab.ALL_APPLICATIONS);
     when(workAreaService.getTabsAvailableToUser(user)).thenReturn(camTabs);
 
@@ -778,7 +782,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   private void assertWorkAreaModel(Map<String, Object> model) {
     assertThat(model)
-        .containsEntry("workAreaItems", workAreaItems)
+        .containsEntry("workAreaItems", workAreaItemViews)
         .containsEntry("clearFiltersUrl", ReverseRouter.route(on(WorkAreaController.class).clearWorkAreaFilter(null, null)))
         .containsEntry("appStatuses", ApplicationVersionStatus.getWorkAreaOptions())
         .containsEntry("appTypes", ApplicationType.getDisplayableOptions())

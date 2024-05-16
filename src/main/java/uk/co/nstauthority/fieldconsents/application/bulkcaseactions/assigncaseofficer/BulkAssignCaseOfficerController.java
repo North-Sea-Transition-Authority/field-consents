@@ -24,7 +24,7 @@ import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItem;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.fieldconsents.util.StreamUtils;
 
@@ -96,7 +96,7 @@ public class BulkAssignCaseOfficerController {
       BulkAssignCaseOfficerForm form
   ) {
     var selectedApplicationsForm = controllerHelperService.getSelectedApplicationsForm(session);
-    var applicationDataItems = bulkCaseActionService.getSelectedApplicationDataItems(selectedApplicationsForm, user);
+    var applicationDataItemViews = bulkCaseActionService.getSelectedApplicationDataItemViews(selectedApplicationsForm, user);
 
     var caseOfficerOptions = bulkAssignCaseOfficerService.getAvailableCaseOfficers()
         .stream()
@@ -109,12 +109,12 @@ public class BulkAssignCaseOfficerController {
         .addObject("form", form)
         .addObject("pageTitle", ASSIGN_CASE_OFFICER)
         .addObject("backLinkUrl", ReverseRouter.route(on(BulkCaseActionSearchController.class).getSearchResults(null, null)))
-        .addObject("applicationDataItems", applicationDataItems)
-        .addObject("captionHeadingFunction", (Function<ApplicationDataItem, String>) this::captionHeadingFunction)
+        .addObject("applicationDataItemViews", applicationDataItemViews)
+        .addObject("captionHeadingFunction", (Function<ApplicationDataItemView, String>) this::captionHeadingFunction)
         .addObject("caseOfficerOptions", caseOfficerOptions);
   }
 
-  private String captionHeadingFunction(ApplicationDataItem applicationDataItem) {
+  private String captionHeadingFunction(ApplicationDataItemView applicationDataItem) {
     if (applicationDataItem.caseOfficer().isEmpty()) {
       return "No case officer currently assigned";
     }

@@ -57,7 +57,7 @@ class ApplicationDataItemServiceTest {
   private FieldEquityPartnerPermissionService fieldEquityPartnerPermissionService;
 
   @InjectMocks
-  private ApplicationDataItemService applicationDataItemService;
+  private ApplicationDataItemViewService applicationDataItemService;
 
   private ServiceUserDetail user;
   private List<Condition> conditions;
@@ -91,7 +91,7 @@ class ApplicationDataItemServiceTest {
 
     fieldJsonById = Map.of(field1Json.getId(), field1Json);
 
-    applicationDataItemService = new ApplicationDataItemService(
+    applicationDataItemService = new ApplicationDataItemViewService(
         applicationDataItemDtoService,
         organisationUnitPermissionService,
         teamService,
@@ -114,8 +114,8 @@ class ApplicationDataItemServiceTest {
     var teamType = TeamType.REGULATOR;
     var orgUnit = orgUnit1Json;
 
-    var applicationDataItem = mock(ApplicationDataItem.class);
-    when(applicationDataItemDtoService.getApplicationDataItem(
+    var applicationDataItem = mock(ApplicationDataItemView.class);
+    when(applicationDataItemDtoService.getApplicationDataItemView(
         dto,
         user,
         teamType,
@@ -124,7 +124,7 @@ class ApplicationDataItemServiceTest {
         energyPortalUserByWebUserAccountId
     )).thenReturn(applicationDataItem);
 
-    assertThat(applicationDataItemService.getItemsFromDtos(
+    assertThat(applicationDataItemService.getItemViewsFromDtos(
         applicationDataItemDtos,
         List.of(orgUnit),
         teamType,
@@ -135,7 +135,7 @@ class ApplicationDataItemServiceTest {
   @ParameterizedTest
   @EnumSource(TeamType.class)
   void getItemsFromDtos_emptyDtoCollection(TeamType teamType) {
-    assertThat(applicationDataItemService.getItemsFromDtos(Collections.emptyList(), List.of(orgUnit1Json), teamType, user)).isEmpty();
+    assertThat(applicationDataItemService.getItemViewsFromDtos(Collections.emptyList(), List.of(orgUnit1Json), teamType, user)).isEmpty();
   }
 
   @Test
@@ -171,7 +171,7 @@ class ApplicationDataItemServiceTest {
     var portalUserDtoByWuaId = Map.of(WebUserAccountId.from(user.wuaId()), ENERGY_PORTAL_USER_1);
     when(applicationDataItemDtoService.getEnergyPortalUserDtoMapFromApplicationDataItemDtos(List.of(applicationDataItemDto))).thenReturn(portalUserDtoByWuaId);
 
-    when(applicationDataItemDtoService.getApplicationDataItem(
+    when(applicationDataItemDtoService.getApplicationDataItemView(
         eq(applicationDataItemDto),
         eq(user),
         eq(TeamType.REGULATOR),
@@ -179,10 +179,10 @@ class ApplicationDataItemServiceTest {
         fieldJsonByIdCaptor.capture(),
         portalUserDtoByWuaIdCaptor.capture()
     ))
-        .thenReturn(ApplicationDataItemUtil.getApplicationDataItem());
+        .thenReturn(ApplicationDataItemUtil.getApplicationDataItemView());
 
     assertThat(applicationDataItemService.getRegulatorApplicationDataItems(conditions, user))
-        .containsExactly(ApplicationDataItemUtil.getApplicationDataItem());
+        .containsExactly(ApplicationDataItemUtil.getApplicationDataItemView());
 
     assertThat(organisationUnitNamesByIdCaptor.getValue())
         .hasSize(1)
@@ -211,7 +211,7 @@ class ApplicationDataItemServiceTest {
     var portalUserDtoByWuaId = Map.of(WebUserAccountId.from(user.wuaId()), ENERGY_PORTAL_USER_1);
     when(applicationDataItemDtoService.getEnergyPortalUserDtoMapFromApplicationDataItemDtos(List.of(applicationDataItemDto))).thenReturn(portalUserDtoByWuaId);
 
-    when(applicationDataItemDtoService.getApplicationDataItem(
+    when(applicationDataItemDtoService.getApplicationDataItemView(
         eq(applicationDataItemDto),
         eq(user),
         eq(TeamType.REGULATOR),
@@ -219,10 +219,10 @@ class ApplicationDataItemServiceTest {
         fieldJsonByIdCaptor.capture(),
         portalUserDtoByWuaIdCaptor.capture()
     ))
-        .thenReturn(ApplicationDataItemUtil.getApplicationDataItem());
+        .thenReturn(ApplicationDataItemUtil.getApplicationDataItemView());
 
     assertThat(applicationDataItemService.getRegulatorApplicationDataItems(conditions, user))
-        .containsExactly(ApplicationDataItemUtil.getApplicationDataItem());
+        .containsExactly(ApplicationDataItemUtil.getApplicationDataItemView());
 
     assertThat(organisationUnitNamesByIdCaptor.getValue())
         .hasSize(1)
@@ -280,7 +280,7 @@ class ApplicationDataItemServiceTest {
     var portalUserDtoByWuaId = Map.of(WebUserAccountId.from(user.wuaId()), ENERGY_PORTAL_USER_1);
     when(applicationDataItemDtoService.getEnergyPortalUserDtoMapFromApplicationDataItemDtos(List.of(applicationDataItemDto))).thenReturn(portalUserDtoByWuaId);
 
-    when(applicationDataItemDtoService.getApplicationDataItem(
+    when(applicationDataItemDtoService.getApplicationDataItemView(
         eq(applicationDataItemDto),
         eq(user),
         eq(TeamType.INDUSTRY),
@@ -288,10 +288,10 @@ class ApplicationDataItemServiceTest {
         fieldJsonByIdCaptor.capture(),
         portalUserDtoByWuaIdCaptor.capture()
     ))
-        .thenReturn(ApplicationDataItemUtil.getApplicationDataItem());
+        .thenReturn(ApplicationDataItemUtil.getApplicationDataItemView());
 
     assertThat(applicationDataItemService.getIndustryApplicationDataItems(conditions, user))
-        .containsExactly(ApplicationDataItemUtil.getApplicationDataItem());
+        .containsExactly(ApplicationDataItemUtil.getApplicationDataItemView());
 
     assertThat(organisationUnitNamesByIdCaptor.getValue())
         .hasSize(1)
@@ -319,7 +319,7 @@ class ApplicationDataItemServiceTest {
     var portalUserDtoByWuaId = Map.of(WebUserAccountId.from(user.wuaId()), ENERGY_PORTAL_USER_1);
     when(applicationDataItemDtoService.getEnergyPortalUserDtoMapFromApplicationDataItemDtos(List.of(applicationDataItemDto))).thenReturn(portalUserDtoByWuaId);
 
-    when(applicationDataItemDtoService.getApplicationDataItem(
+    when(applicationDataItemDtoService.getApplicationDataItemView(
         eq(applicationDataItemDto),
         eq(user),
         eq(TeamType.INDUSTRY),
@@ -327,10 +327,10 @@ class ApplicationDataItemServiceTest {
         fieldJsonByIdCaptor.capture(),
         portalUserDtoByWuaIdCaptor.capture()
     ))
-        .thenReturn(ApplicationDataItemUtil.getApplicationDataItem());
+        .thenReturn(ApplicationDataItemUtil.getApplicationDataItemView());
 
     assertThat(applicationDataItemService.getIndustryApplicationDataItems(conditions, user))
-        .containsExactly(ApplicationDataItemUtil.getApplicationDataItem());
+        .containsExactly(ApplicationDataItemUtil.getApplicationDataItemView());
 
     assertThat(organisationUnitNamesByIdCaptor.getValue())
         .hasSize(1)
@@ -348,7 +348,7 @@ class ApplicationDataItemServiceTest {
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.OPRED, VIEW_PERMISSIONS))
         .thenReturn(Collections.emptyList());
 
-    assertThat(applicationDataItemService.getConsulteeApplicationDataItems(conditions, user)).isEmpty();
+    assertThat(applicationDataItemService.getConsulteeApplicationDataItemViews(conditions, user)).isEmpty();
   }
 
   @Test
@@ -357,6 +357,6 @@ class ApplicationDataItemServiceTest {
         .thenReturn(List.of(regulatorTeam));
     when(applicationDataItemDtoService.runGetDataItemDtoQuery(any())).thenReturn(Collections.emptyList());
 
-    assertThat(applicationDataItemService.getConsulteeApplicationDataItems(conditions, user)).isEmpty();
+    assertThat(applicationDataItemService.getConsulteeApplicationDataItemViews(conditions, user)).isEmpty();
   }
 }

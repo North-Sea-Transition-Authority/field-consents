@@ -11,43 +11,43 @@ import org.jooq.Condition;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.bulkcaseactions.assigncaseofficer.BulkAssignCaseOfficerController;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItem;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDtoService;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemQueryService;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemService;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemViewQueryService;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemViewService;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @Service
 public class BulkCaseActionService {
 
-  private final ApplicationDataItemService applicationDataItemService;
+  private final ApplicationDataItemViewService applicationDataItemService;
   private final ApplicationDataItemDtoService applicationDataItemDtoService;
-  private final ApplicationDataItemQueryService applicationDataItemQueryService;
+  private final ApplicationDataItemViewQueryService applicationDataItemQueryService;
 
   BulkCaseActionService(
-      ApplicationDataItemService applicationDataItemService,
+      ApplicationDataItemViewService applicationDataItemService,
       ApplicationDataItemDtoService applicationDataItemDtoService,
-      ApplicationDataItemQueryService applicationDataItemQueryService
+      ApplicationDataItemViewQueryService applicationDataItemQueryService
   ) {
     this.applicationDataItemService = applicationDataItemService;
     this.applicationDataItemDtoService = applicationDataItemDtoService;
     this.applicationDataItemQueryService = applicationDataItemQueryService;
   }
 
-  public List<ApplicationDataItem> getSelectedApplicationDataItems(
+  public List<ApplicationDataItemView> getSelectedApplicationDataItemViews(
       BulkCaseActionSelectedApplicationsForm form,
       ServiceUserDetail user
   ) {
     var selectedApplicationIds = form.selectedApplicationIds();
-    return getApplicationDataItems(user, List.of(APPLICATIONS.ID.in(selectedApplicationIds)));
+    return getApplicationDataItemViews(user, List.of(APPLICATIONS.ID.in(selectedApplicationIds)));
   }
 
-  public List<ApplicationDataItem> getApplicationDataItems(ServiceUserDetail user) {
-    return getApplicationDataItems(user, Collections.emptyList());
+  public List<ApplicationDataItemView> getApplicationDataItemViews(ServiceUserDetail user) {
+    return getApplicationDataItemViews(user, Collections.emptyList());
   }
 
   @Observed(name = "fcs.database.bulk-case-actions-query", contextualName = "bulk case actions query executed")
-  public List<ApplicationDataItem> getApplicationDataItems(ServiceUserDetail user, List<Condition> conditions) {
+  public List<ApplicationDataItemView> getApplicationDataItemViews(ServiceUserDetail user, List<Condition> conditions) {
     var dtos = applicationDataItemQueryService.runQueryWithCustom(
         conditions,
         selectQuery -> selectQuery.addOrderBy(
@@ -56,7 +56,7 @@ public class BulkCaseActionService {
 
     var organisationUnitJsons = applicationDataItemDtoService.getOrganisationUnitJsonsFromApplicationDataItemDtos(dtos);
 
-    return applicationDataItemService.getItemsFromDtos(dtos, organisationUnitJsons, TeamType.REGULATOR, user);
+    return applicationDataItemService.getItemViewsFromDtos(dtos, organisationUnitJsons, TeamType.REGULATOR, user);
   }
 
   List<String> getBulkActions() {

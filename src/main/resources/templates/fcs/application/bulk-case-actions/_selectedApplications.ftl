@@ -2,13 +2,13 @@
 <#import '../../../fds/utilities/utilities.ftl' as fdsUtil>
 <#import '../../dataitems/applicationDataItem.ftl' as applicationDataItemFtl>
 
-<#macro summaryList applicationDataItems captionHeadingFunction>
-  <@fdsResultList.resultList resultCount=applicationDataItems?size resultCountSuffix="selected application">
-    <#list applicationDataItems as applicationDataItem>
+<#macro summaryList applicationDataItemViews captionHeadingFunction>
+  <@fdsResultList.resultList resultCount=applicationDataItemViews?size resultCountSuffix="selected application">
+    <#list applicationDataItemViews as applicationDataItemView>
       <@fdsResultList.resultListItem
-        linkHeadingText=applicationDataItem.reference()
-        linkHeadingUrl=springUrl(applicationDataItem.url())
-        captionHeadingText=captionHeadingFunction.apply(applicationDataItem)
+        linkHeadingText=applicationDataItemView.reference()
+        linkHeadingUrl=springUrl(applicationDataItemView.url())
+        captionHeadingText=captionHeadingFunction.apply(applicationDataItemView)
         />
     </#list>
   </@fdsResultList.resultList>

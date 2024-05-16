@@ -44,8 +44,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
-import org.junit.jupiter.params.provider.EnumSource.Mode;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -91,7 +89,7 @@ class ApplicationDataItemDtoServiceTest {
   private PermissionService permissionService;
 
   @Mock
-  private ApplicationDataItemQueryService applicationDataItemQueryService;
+  private ApplicationDataItemViewQueryService applicationDataItemQueryService;
 
   private final Clock clock = Clock.fixed(Instant.now(), ZoneId.systemDefault());
 
@@ -160,9 +158,9 @@ class ApplicationDataItemDtoServiceTest {
   void getEnergyPortalUserDtoMapFromApplicationDataItemDtos() {
     var applicationDataItemDto = getApplicationDataItemDtoForShortVentAssignedToCaseOfficerForTerminal();
     var portalUserWuaIdList = List.of(
-        WebUserAccountId.from(applicationDataItemDto.getSubmittedByWuaId()),
-        WebUserAccountId.from(applicationDataItemDto.getCaseOfficerWuaId()),
-        WebUserAccountId.from(applicationDataItemDto.getTechnicalReviewerWuaId())
+        WebUserAccountId.from(applicationDataItemDto.submittedByWuaId()),
+        WebUserAccountId.from(applicationDataItemDto.caseOfficerWuaId()),
+        WebUserAccountId.from(applicationDataItemDto.technicalReviewerWuaId())
     );
 
     when(energyPortalUserService.getEnergyPortalUserMap(portalUserWuaIdList))
@@ -282,13 +280,13 @@ class ApplicationDataItemDtoServiceTest {
   @Test
   void getDisplayConsentDuration_whenConsented() {
     var applicationDataItemDto = ApplicationDataItemUtil.getApplicationDataItemDtoForLongFlareConsentedForField();
-    var consentDurationString = applicationDataItemDto.getDuration().getShortDisplayName();
+    var consentDurationString = applicationDataItemDto.duration().getShortDisplayName();
 
     assertThat(applicationDataItemDtoService.getDisplayConsentDuration(applicationDataItemDto))
         .isEqualTo(
             "%s %s - %s".formatted(consentDurationString,
-                DateUtils.format(applicationDataItemDto.getConsentStartDate(), DateUtils.SHORT_DATE),
-                DateUtils.format(applicationDataItemDto.getConsentEndDate(), DateUtils.SHORT_DATE)
+                DateUtils.format(applicationDataItemDto.consentStartDate(), DateUtils.SHORT_DATE),
+                DateUtils.format(applicationDataItemDto.consentEndDate(), DateUtils.SHORT_DATE)
             )
         );
   }
@@ -296,13 +294,13 @@ class ApplicationDataItemDtoServiceTest {
   @Test
   void getDisplayConsentDuration_whenNotConsented_shortTerm() {
     var applicationDataItemDto = getApplicationDataItemDtoForShortVentAssignedToCaseOfficerForTerminal();
-    var consentDurationString = applicationDataItemDto.getDuration().getShortDisplayName();
+    var consentDurationString = applicationDataItemDto.duration().getShortDisplayName();
 
     assertThat(applicationDataItemDtoService.getDisplayConsentDuration(applicationDataItemDto))
         .isEqualTo(
             "%s %s - %s".formatted(consentDurationString,
-                DateUtils.format(applicationDataItemDto.getShortTermStartDate(), DateUtils.SHORT_DATE),
-                DateUtils.format(applicationDataItemDto.getShortTermEndDate(), DateUtils.SHORT_DATE)
+                DateUtils.format(applicationDataItemDto.shortTermStartDate(), DateUtils.SHORT_DATE),
+                DateUtils.format(applicationDataItemDto.shortTermEndDate(), DateUtils.SHORT_DATE)
             )
         );
   }
@@ -310,21 +308,21 @@ class ApplicationDataItemDtoServiceTest {
   @Test
   void getDisplayConsentDuration_whenNotConsented_Annual() {
     var applicationDataItemDto = getApplicationDataItemDtoForAnnualProductionInProgressForField();
-    var consentDurationString = applicationDataItemDto.getDuration().getShortDisplayName();
+    var consentDurationString = applicationDataItemDto.duration().getShortDisplayName();
 
     assertThat(applicationDataItemDtoService.getDisplayConsentDuration(applicationDataItemDto))
-        .isEqualTo("%s %s".formatted(consentDurationString, applicationDataItemDto.getConsentYear()));
+        .isEqualTo("%s %s".formatted(consentDurationString, applicationDataItemDto.consentYear()));
   }
 
   @Test
   void getDisplayConsentDuration_whenNotConsented_LongTerm() {
     var applicationDataItemDto = getApplicationDataItemDtoForLongFlareSubmittedForTerminal();
-    var consentDurationString = applicationDataItemDto.getDuration().getShortDisplayName();
+    var consentDurationString = applicationDataItemDto.duration().getShortDisplayName();
 
     assertThat(applicationDataItemDtoService.getDisplayConsentDuration(applicationDataItemDto))
         .isEqualTo(
-            "%s %d - %d".formatted(consentDurationString, applicationDataItemDto.getLongTermStartYear(),
-                applicationDataItemDto.getLongTermEndYear())
+            "%s %d - %d".formatted(consentDurationString, applicationDataItemDto.longTermStartYear(),
+                applicationDataItemDto.longTermEndYear())
         );
   }
 
@@ -473,24 +471,24 @@ class ApplicationDataItemDtoServiceTest {
     var fieldJsonById = Map.of(FIELD_ID_1, field1Json);
     var portalUserDtoByWuaId = Map.of(WebUserAccountId.from(serviceUserDetail), energyPortalUserDto);
 
-    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(applicationDataItemDto.getType());
-    when(applicationVersionService.getApplicationVersionById(applicationDataItemDto.getApplicationVersionId())).thenReturn(applicationVersion);
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(applicationDataItemDto.type());
+    when(applicationVersionService.getApplicationVersionById(applicationDataItemDto.applicationVersionId())).thenReturn(applicationVersion);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(APPLICATION_REFERENCE);
 
-    var expectedApplicationDataItem = new ApplicationDataItem(
-        applicationDataItemDto.getApplicationId(),
-        applicationDataItemDto.getType().getDisplayName(),
+    var expectedApplicationDataItem = new ApplicationDataItemView(
+        applicationDataItemDto.applicationId(),
+        applicationDataItemDto.type().getDisplayName(),
         "%s %d - %d".formatted(
             ConsentLengthType.LONG_TERM.getShortDisplayName(),
-            applicationDataItemDto.getLongTermStartYear(),
-            applicationDataItemDto.getLongTermEndYear()
+            applicationDataItemDto.longTermStartYear(),
+            applicationDataItemDto.longTermEndYear()
         ),
         APPLICATION_REFERENCE,
         "org",
-        applicationDataItemDto.getAssetName(),
+        applicationDataItemDto.assetName(),
         "Central North Sea",
-        applicationDataItemDto.getStatus().getDisplayName(),
-        DateUtils.format(applicationDataItemDto.getSubmittedDateTime(), DateUtils.DATE_TIME),
+        applicationDataItemDto.status().getDisplayName(),
+        DateUtils.format(applicationDataItemDto.submittedDateTime(), DateUtils.DATE_TIME),
         energyPortalUserDto.displayName(),
         "ACE: Yes",
         "",
@@ -511,7 +509,7 @@ class ApplicationDataItemDtoServiceTest {
         false
     );
 
-    assertThat(applicationDataItemDtoService.getApplicationDataItem(
+    assertThat(applicationDataItemDtoService.getApplicationDataItemView(
         applicationDataItemDto,
         serviceUserDetail,
         TeamType.INDUSTRY,
@@ -525,18 +523,18 @@ class ApplicationDataItemDtoServiceTest {
   @ValueSource(booleans = {true, false})
   void getApplicationDataItem_submitted_industry_doesNotSeeConsultationsTag(boolean consultationOpen) {
     var dto = mock(ApplicationDataItemDto.class);
-    when(dto.getType()).thenReturn(ApplicationType.PRODUCTION);
-    when(dto.getStatus()).thenReturn(ApplicationVersionStatus.SUBMITTED);
-    when(dto.getWithdrawalOpen()).thenReturn(false);
-    when(dto.getApplicationUpdateOpen()).thenReturn(false);
-    when(dto.getConsultationOpen()).thenReturn(consultationOpen);
+    when(dto.type()).thenReturn(ApplicationType.PRODUCTION);
+    when(dto.status()).thenReturn(ApplicationVersionStatus.SUBMITTED);
+    when(dto.withdrawalOpen()).thenReturn(false);
+    when(dto.applicationUpdateOpen()).thenReturn(false);
+    when(dto.consultationOpen()).thenReturn(consultationOpen);
 
     var user = mock(ServiceUserDetail.class);
 
     var teamType = TeamType.INDUSTRY;
     mockGetDisplayMethodCalls(dto, user, VIEW_APPLICATION, teamType);
 
-    assertThat(applicationDataItemDtoService.getApplicationDataItem(
+    assertThat(applicationDataItemDtoService.getApplicationDataItemView(
         dto,
         user,
         teamType,
@@ -544,7 +542,7 @@ class ApplicationDataItemDtoServiceTest {
         Collections.emptyMap(),
         Collections.emptyMap()
     ))
-        .extracting(ApplicationDataItem::consultationOpen, ApplicationDataItem::consultationDeadline)
+        .extracting(ApplicationDataItemView::consultationOpen, ApplicationDataItemView::consultationDeadline)
         .containsOnlyNulls();
   }
 
@@ -552,18 +550,18 @@ class ApplicationDataItemDtoServiceTest {
   @ValueSource(booleans = {true, false})
   void getApplicationDataItem_submitted_opred_doesNotSeeApplicationUpdateTag(boolean applicationUpdateOpen) {
     var dto = mock(ApplicationDataItemDto.class);
-    when(dto.getType()).thenReturn(ApplicationType.PRODUCTION);
-    when(dto.getStatus()).thenReturn(ApplicationVersionStatus.SUBMITTED);
-    when(dto.getWithdrawalOpen()).thenReturn(false);
-    when(dto.getApplicationUpdateOpen()).thenReturn(applicationUpdateOpen);
-    when(dto.getConsultationOpen()).thenReturn(false);
+    when(dto.type()).thenReturn(ApplicationType.PRODUCTION);
+    when(dto.status()).thenReturn(ApplicationVersionStatus.SUBMITTED);
+    when(dto.withdrawalOpen()).thenReturn(false);
+    when(dto.applicationUpdateOpen()).thenReturn(applicationUpdateOpen);
+    when(dto.consultationOpen()).thenReturn(false);
 
     var user = mock(ServiceUserDetail.class);
 
     var teamType = TeamType.OPRED;
     mockGetDisplayMethodCalls(dto, user, VIEW_APPLICATION, teamType);
 
-    assertThat(applicationDataItemDtoService.getApplicationDataItem(
+    assertThat(applicationDataItemDtoService.getApplicationDataItemView(
         dto,
         user,
         teamType,
@@ -571,7 +569,7 @@ class ApplicationDataItemDtoServiceTest {
         Collections.emptyMap(),
         Collections.emptyMap()
     ))
-        .extracting(ApplicationDataItem::applicationUpdateOpen, ApplicationDataItem::applicationUpdateDeadline)
+        .extracting(ApplicationDataItemView::applicationUpdateOpen, ApplicationDataItemView::applicationUpdateDeadline)
         .containsOnlyNulls();
   }
 
@@ -579,18 +577,18 @@ class ApplicationDataItemDtoServiceTest {
   @ValueSource(booleans = {true, false})
   void getApplicationDataItem_submitted_opred_doesNotSeeWithdrawalTag(boolean applicationWithdrawalOpen) {
     var dto = mock(ApplicationDataItemDto.class);
-    when(dto.getType()).thenReturn(ApplicationType.PRODUCTION);
-    when(dto.getStatus()).thenReturn(ApplicationVersionStatus.SUBMITTED);
-    when(dto.getWithdrawalOpen()).thenReturn(applicationWithdrawalOpen);
-    when(dto.getApplicationUpdateOpen()).thenReturn(false);
-    when(dto.getConsultationOpen()).thenReturn(false);
+    when(dto.type()).thenReturn(ApplicationType.PRODUCTION);
+    when(dto.status()).thenReturn(ApplicationVersionStatus.SUBMITTED);
+    when(dto.withdrawalOpen()).thenReturn(applicationWithdrawalOpen);
+    when(dto.applicationUpdateOpen()).thenReturn(false);
+    when(dto.consultationOpen()).thenReturn(false);
 
     var user = mock(ServiceUserDetail.class);
 
     var teamType = TeamType.OPRED;
     mockGetDisplayMethodCalls(dto, user, VIEW_APPLICATION, teamType);
 
-    assertThat(applicationDataItemDtoService.getApplicationDataItem(
+    assertThat(applicationDataItemDtoService.getApplicationDataItemView(
         dto,
         user,
         teamType,
@@ -598,7 +596,7 @@ class ApplicationDataItemDtoServiceTest {
         Collections.emptyMap(),
         Collections.emptyMap()
     ))
-        .extracting(ApplicationDataItem::withdrawalOpen)
+        .extracting(ApplicationDataItemView::withdrawalOpen)
         .isNull();
   }
 
@@ -626,29 +624,26 @@ class ApplicationDataItemDtoServiceTest {
   }
 
   @Test
-  void getSubmittedDateTime_submitted() {
+  void getSubmittedDateTime_whenSubmittedDateTimeExists() {
     var dataItemDto = mock(ApplicationDataItemDto.class);
-    when(dataItemDto.getSubmittedDateTime()).thenReturn(Instant.now());
-    when(dataItemDto.getStatus()).thenReturn(ApplicationVersionStatus.SUBMITTED);
+    when(dataItemDto.submittedDateTime()).thenReturn(Instant.now());
 
     assertThat(applicationDataItemDtoService.getSubmittedDateTime(dataItemDto))
-        .isEqualTo(DateUtils.format(dataItemDto.getSubmittedDateTime(), DateUtils.DATE_TIME));
+        .isEqualTo(DateUtils.format(dataItemDto.submittedDateTime(), DateUtils.DATE_TIME));
   }
 
-  @ParameterizedTest
-  @EnumSource(value = ApplicationVersionStatus.class, names = "SUBMITTED", mode = Mode.EXCLUDE)
-  void getSubmittedDateTime_notSubmitted(ApplicationVersionStatus status) {
+  @Test
+  void getSubmittedDateTime_whenSubmittedDateTimeDoesNotExist() {
     var dataItemDto = mock(ApplicationDataItemDto.class);
-    when(dataItemDto.getStatus()).thenReturn(status);
+    when(dataItemDto.submittedDateTime()).thenReturn(null);
 
     assertThat(applicationDataItemDtoService.getSubmittedDateTime(dataItemDto)).isEmpty();
   }
 
   @Test
-  void getSubmittedByName_submitted() {
+  void getSubmittedByName_whenSubmitterExists() {
     var dataItemDto = mock(ApplicationDataItemDto.class);
-    when(dataItemDto.getStatus()).thenReturn(ApplicationVersionStatus.SUBMITTED);
-    when(dataItemDto.getSubmittedByWuaId()).thenReturn(1L);
+    when(dataItemDto.submittedByWuaId()).thenReturn(1L);
 
     var energyPortalUserDto = mock(EnergyPortalUserDto.class);
     when(energyPortalUserDto.displayName()).thenReturn("energyPortalUser");
@@ -659,11 +654,10 @@ class ApplicationDataItemDtoServiceTest {
         .isEqualTo("energyPortalUser");
   }
 
-  @ParameterizedTest
-  @EnumSource(value = ApplicationVersionStatus.class, names = "SUBMITTED", mode = Mode.EXCLUDE)
-  void getSubmittedByName_notSubmitted(ApplicationVersionStatus status) {
+  @Test
+  void getSubmittedByName_whenSubmitterDoesNotExist() {
     var dataItemDto = mock(ApplicationDataItemDto.class);
-    when(dataItemDto.getStatus()).thenReturn(status);
+    when(dataItemDto.submittedByWuaId()).thenReturn(null);
 
     assertThat(applicationDataItemDtoService.getSubmittedByName(dataItemDto, Collections.emptyMap())).isEmpty();
   }
@@ -671,17 +665,17 @@ class ApplicationDataItemDtoServiceTest {
   @Test
   void getTechnicalReviewDeadline_reviewOpen() {
     var dataItemDto = mock(ApplicationDataItemDto.class);
-    when(dataItemDto.getTechnicalReviewOpen()).thenReturn(true);
-    when(dataItemDto.getTechnicalReviewDeadline()).thenReturn(Instant.now());
+    when(dataItemDto.technicalReviewOpen()).thenReturn(true);
+    when(dataItemDto.technicalReviewDeadline()).thenReturn(Instant.now());
 
     assertThat(applicationDataItemDtoService.getTechnicalReviewDeadline(dataItemDto))
-        .isEqualTo(DateUtils.format(dataItemDto.getTechnicalReviewDeadline(), DateUtils.DATE_TIME));
+        .isEqualTo(DateUtils.format(dataItemDto.technicalReviewDeadline(), DateUtils.DATE_TIME));
   }
 
   @Test
   void getTechnicalReviewDeadline_reviewNotOpen() {
     var dataItemDto = mock(ApplicationDataItemDto.class);
-    when(dataItemDto.getTechnicalReviewOpen()).thenReturn(false);
+    when(dataItemDto.technicalReviewOpen()).thenReturn(false);
 
     assertThat(applicationDataItemDtoService.getTechnicalReviewDeadline(dataItemDto)).isEmpty();
   }
@@ -689,17 +683,17 @@ class ApplicationDataItemDtoServiceTest {
   @Test
   void getConsultationDeadline_consultationOpen() {
     var dataItemDto = mock(ApplicationDataItemDto.class);
-    when(dataItemDto.getConsultationOpen()).thenReturn(true);
-    when(dataItemDto.getConsultationDeadline()).thenReturn(Instant.now());
+    when(dataItemDto.consultationOpen()).thenReturn(true);
+    when(dataItemDto.consultationDeadline()).thenReturn(Instant.now());
 
     assertThat(applicationDataItemDtoService.getConsultationDeadline(dataItemDto))
-        .isEqualTo(DateUtils.format(dataItemDto.getConsultationDeadline(), DateUtils.DATE_TIME));
+        .isEqualTo(DateUtils.format(dataItemDto.consultationDeadline(), DateUtils.DATE_TIME));
   }
 
   @Test
   void getConsultationDeadline_consultationNotOpen() {
     var dataItemDto = mock(ApplicationDataItemDto.class);
-    when(dataItemDto.getConsultationOpen()).thenReturn(false);
+    when(dataItemDto.consultationOpen()).thenReturn(false);
 
     assertThat(applicationDataItemDtoService.getConsultationDeadline(dataItemDto)).isEmpty();
   }
@@ -709,7 +703,7 @@ class ApplicationDataItemDtoServiceTest {
     var organisationUnitNameById = Map.of(1, "org name");
 
     var dataItemDto = mock(ApplicationDataItemDto.class);
-    when(dataItemDto.getOperatorId()).thenReturn(1);
+    when(dataItemDto.operatorId()).thenReturn(1);
 
     assertThat(applicationDataItemDtoService.getOperator(dataItemDto, organisationUnitNameById)).isEqualTo("org name");
   }
@@ -717,7 +711,7 @@ class ApplicationDataItemDtoServiceTest {
   @Test
   void getOperator_operatorDoesNotExist() {
     var dataItemDto = mock(ApplicationDataItemDto.class);
-    when(dataItemDto.getOperatorId()).thenReturn(1);
+    when(dataItemDto.operatorId()).thenReturn(1);
 
     assertThat(applicationDataItemDtoService.getOperator(dataItemDto, Collections.emptyMap())).isEqualTo(
         "MISSING OPERATOR");
@@ -726,7 +720,7 @@ class ApplicationDataItemDtoServiceTest {
   @Test
   void getConsentIssuedAndNotYetActive_whenConsentNotIssued_thenFalse() {
     var dataItemDto = mock(ApplicationDataItemDto.class);
-    when(dataItemDto.getConsentIssued()).thenReturn(false);
+    when(dataItemDto.consentIssued()).thenReturn(false);
 
     assertThat(applicationDataItemDtoService.getConsentIssuedAndNotYetActive(dataItemDto)).isFalse();
   }
@@ -734,17 +728,17 @@ class ApplicationDataItemDtoServiceTest {
   @Test
   void getConsentIssuedAndNotYetActive_whenConsentStartDateAfterToday_thenTrue() {
     var dataItemDto = mock(ApplicationDataItemDto.class);
-    when(dataItemDto.getConsentIssued()).thenReturn(true);
-    when(dataItemDto.getConsentStartDate()).thenReturn(LocalDate.now().plusMonths(1));
+    when(dataItemDto.consentIssued()).thenReturn(true);
+    when(dataItemDto.consentStartDate()).thenReturn(LocalDate.now().plusMonths(1));
 
     assertThat(applicationDataItemDtoService.getConsentIssuedAndNotYetActive(dataItemDto)).isTrue();
   }
 
   @Test
-  void getConsentIssuedAndNotYetActive_whenConsentStartDateBeforeToday_thenFalse() {
+  void consentIssuedAndNotYetActive_whenConsentStartDateBeforeToday_thenFalse() {
     var dataItemDto = mock(ApplicationDataItemDto.class);
-    when(dataItemDto.getConsentIssued()).thenReturn(true);
-    when(dataItemDto.getConsentStartDate()).thenReturn(LocalDate.now().minusMonths(1));
+    when(dataItemDto.consentIssued()).thenReturn(true);
+    when(dataItemDto.consentStartDate()).thenReturn(LocalDate.now().minusMonths(1));
 
     assertThat(applicationDataItemDtoService.getConsentIssuedAndNotYetActive(dataItemDto)).isFalse();
   }
@@ -752,17 +746,17 @@ class ApplicationDataItemDtoServiceTest {
   @Test
   void getConsentIssuedAndActive_whenConsentNotIssued_thenFalse() {
     var dataItemDto = mock(ApplicationDataItemDto.class);
-    when(dataItemDto.getConsentIssued()).thenReturn(false);
+    when(dataItemDto.consentIssued()).thenReturn(false);
 
     assertThat(applicationDataItemDtoService.getConsentIssuedAndActive(dataItemDto)).isFalse();
   }
 
   @Test
-  void getConsentIssuedAndActive_whenTodayBetweenConsentStartDateAndConsentEndDate_thenTrue() {
+  void consentIssuedAndActive_whenTodayBetweenConsentStartDateAndConsentEndDate_thenTrue() {
     var dataItemDto = mock(ApplicationDataItemDto.class);
-    when(dataItemDto.getConsentIssued()).thenReturn(true);
-    when(dataItemDto.getConsentStartDate()).thenReturn(LocalDate.now().minusMonths(1));
-    when(dataItemDto.getConsentEndDate()).thenReturn(LocalDate.now().plusYears(1));
+    when(dataItemDto.consentIssued()).thenReturn(true);
+    when(dataItemDto.consentStartDate()).thenReturn(LocalDate.now().minusMonths(1));
+    when(dataItemDto.consentEndDate()).thenReturn(LocalDate.now().plusYears(1));
 
     assertThat(applicationDataItemDtoService.getConsentIssuedAndActive(dataItemDto)).isTrue();
   }
@@ -770,9 +764,9 @@ class ApplicationDataItemDtoServiceTest {
   @Test
   void getConsentIssuedAndActive_whenConsentStartDateAfterToday_thenFalse() {
     var dataItemDto = mock(ApplicationDataItemDto.class);
-    when(dataItemDto.getConsentIssued()).thenReturn(true);
-    when(dataItemDto.getConsentStartDate()).thenReturn(LocalDate.now().plusMonths(1));
-    when(dataItemDto.getConsentEndDate()).thenReturn(LocalDate.now().plusYears(1));
+    when(dataItemDto.consentIssued()).thenReturn(true);
+    when(dataItemDto.consentStartDate()).thenReturn(LocalDate.now().plusMonths(1));
+    when(dataItemDto.consentEndDate()).thenReturn(LocalDate.now().plusYears(1));
 
     assertThat(applicationDataItemDtoService.getConsentIssuedAndActive(dataItemDto)).isFalse();
   }
@@ -780,9 +774,9 @@ class ApplicationDataItemDtoServiceTest {
   @Test
   void getConsentIssuedAndActive_whenConsentEndDateBeforeToday_thenFalse() {
     var dataItemDto = mock(ApplicationDataItemDto.class);
-    when(dataItemDto.getConsentIssued()).thenReturn(true);
-    when(dataItemDto.getConsentStartDate()).thenReturn(LocalDate.now().minusYears(2));
-    when(dataItemDto.getConsentEndDate()).thenReturn(LocalDate.now().minusMonths(1));
+    when(dataItemDto.consentIssued()).thenReturn(true);
+    when(dataItemDto.consentStartDate()).thenReturn(LocalDate.now().minusYears(2));
+    when(dataItemDto.consentEndDate()).thenReturn(LocalDate.now().minusMonths(1));
 
     assertThat(applicationDataItemDtoService.getConsentIssuedAndActive(dataItemDto)).isFalse();
   }
@@ -790,9 +784,9 @@ class ApplicationDataItemDtoServiceTest {
   @Test
   void getConsentIssuedAndActive_whenConsentStartDateIsToday_thenTrue() {
     var dataItemDto = mock(ApplicationDataItemDto.class);
-    when(dataItemDto.getConsentIssued()).thenReturn(true);
-    when(dataItemDto.getConsentStartDate()).thenReturn(LocalDate.now());
-    when(dataItemDto.getConsentEndDate()).thenReturn(LocalDate.now().plusYears(1));
+    when(dataItemDto.consentIssued()).thenReturn(true);
+    when(dataItemDto.consentStartDate()).thenReturn(LocalDate.now());
+    when(dataItemDto.consentEndDate()).thenReturn(LocalDate.now().plusYears(1));
 
     assertThat(applicationDataItemDtoService.getConsentIssuedAndActive(dataItemDto)).isTrue();
   }
@@ -800,9 +794,9 @@ class ApplicationDataItemDtoServiceTest {
   @Test
   void getConsentIssuedAndActive_whenConsentEndDateIsToday_thenTrue() {
     var dataItemDto = mock(ApplicationDataItemDto.class);
-    when(dataItemDto.getConsentIssued()).thenReturn(true);
-    when(dataItemDto.getConsentStartDate()).thenReturn(LocalDate.now().minusMonths(1));
-    when(dataItemDto.getConsentEndDate()).thenReturn(LocalDate.now());
+    when(dataItemDto.consentIssued()).thenReturn(true);
+    when(dataItemDto.consentStartDate()).thenReturn(LocalDate.now().minusMonths(1));
+    when(dataItemDto.consentEndDate()).thenReturn(LocalDate.now());
 
     assertThat(applicationDataItemDtoService.getConsentIssuedAndActive(dataItemDto)).isTrue();
   }
@@ -810,7 +804,7 @@ class ApplicationDataItemDtoServiceTest {
   @Test
   void getConsentIssuedAndExpired_whenConsentNotIssued_thenFalse() {
     var dataItemDto = mock(ApplicationDataItemDto.class);
-    when(dataItemDto.getConsentIssued()).thenReturn(false);
+    when(dataItemDto.consentIssued()).thenReturn(false);
 
     assertThat(applicationDataItemDtoService.getConsentIssuedAndExpired(dataItemDto)).isFalse();
   }
@@ -818,8 +812,8 @@ class ApplicationDataItemDtoServiceTest {
   @Test
   void getConsentIssuedAndExpired_whenConsentEndDateBeforeToday_thenTrue() {
     var dataItemDto = mock(ApplicationDataItemDto.class);
-    when(dataItemDto.getConsentIssued()).thenReturn(true);
-    when(dataItemDto.getConsentEndDate()).thenReturn(LocalDate.now().minusDays(1));
+    when(dataItemDto.consentIssued()).thenReturn(true);
+    when(dataItemDto.consentEndDate()).thenReturn(LocalDate.now().minusDays(1));
 
     assertThat(applicationDataItemDtoService.getConsentIssuedAndExpired(dataItemDto)).isTrue();
   }
@@ -827,15 +821,15 @@ class ApplicationDataItemDtoServiceTest {
   @Test
   void getConsentIssuedAndExpired_whenConsentEndDateAfterToday_thenFalse() {
     var dataItemDto = mock(ApplicationDataItemDto.class);
-    when(dataItemDto.getConsentIssued()).thenReturn(true);
-    when(dataItemDto.getConsentEndDate()).thenReturn(LocalDate.now().plusDays(1));
+    when(dataItemDto.consentIssued()).thenReturn(true);
+    when(dataItemDto.consentEndDate()).thenReturn(LocalDate.now().plusDays(1));
 
     assertThat(applicationDataItemDtoService.getConsentIssuedAndExpired(dataItemDto)).isFalse();
   }
 
   @Test
   void removeTagsForTeamType_industry() {
-    var builder = mock(ApplicationDataItem.Builder.class, new SelfReturningAnswer());
+    var builder = mock(ApplicationDataItemView.Builder.class, new SelfReturningAnswer());
 
     applicationDataItemDtoService.removeTagsForTeamType(TeamType.INDUSTRY, builder);
 
@@ -850,7 +844,7 @@ class ApplicationDataItemDtoServiceTest {
 
   @Test
   void removeTagsForTeamType_opred() {
-    var builder = mock(ApplicationDataItem.Builder.class, new SelfReturningAnswer());
+    var builder = mock(ApplicationDataItemView.Builder.class, new SelfReturningAnswer());
 
     applicationDataItemDtoService.removeTagsForTeamType(TeamType.OPRED, builder);
 
@@ -862,12 +856,12 @@ class ApplicationDataItemDtoServiceTest {
     verifyNoMoreInteractions(builder);
   }
 
-  private void verifyTechnicalReviewDeadlineTagRemoved(ApplicationDataItem.Builder builder) {
+  private void verifyTechnicalReviewDeadlineTagRemoved(ApplicationDataItemView.Builder builder) {
     verify(builder).withTechnicalReviewOpen(null);
     verify(builder).withTechnicalReviewDeadline(null);
   }
 
-  private void verifyApplicationUpdateTagRemoved(ApplicationDataItem.Builder builder) {
+  private void verifyApplicationUpdateTagRemoved(ApplicationDataItemView.Builder builder) {
     verify(builder).withApplicationUpdateOpen(null);
     verify(builder).withApplicationUpdateDeadline(null);
   }

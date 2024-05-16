@@ -103,7 +103,8 @@ public class ApplicationDataItemUtil {
         false,
         null,
         null,
-        false);
+        false
+    );
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForProductionInProgressForFieldNoDuration() {
@@ -517,8 +518,8 @@ public class ApplicationDataItemUtil {
     );
   }
 
-  public static ApplicationDataItem getApplicationDataItem() {
-    return new ApplicationDataItem(
+  public static ApplicationDataItemView getApplicationDataItemView() {
+    return new ApplicationDataItemView(
         APPLICATION_ID,
         ApplicationType.FLARE.getDisplayName(),
         ConsentLengthType.ANNUAL.getDisplayName(),

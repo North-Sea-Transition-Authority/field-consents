@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItem;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
 
 @Service
 public class BulkCaseActionControllerHelperService {
@@ -15,7 +15,7 @@ public class BulkCaseActionControllerHelperService {
 
   public BulkCaseActionSelectedApplicationsForm getSelectedApplicationsForm(
       HttpSession session,
-      List<ApplicationDataItem> applicationDataItems
+      List<ApplicationDataItemView> applicationDataItemViews
   ) {
     var selectedApplicationIds = getSelectedApplicationsForm(session).selectedApplicationIds()
         .stream()
@@ -26,8 +26,8 @@ public class BulkCaseActionControllerHelperService {
       return BulkCaseActionSelectedApplicationsForm.empty();
     }
 
-    var availableApplicationIds = applicationDataItems.stream()
-        .map(ApplicationDataItem::applicationId)
+    var availableApplicationIds = applicationDataItemViews.stream()
+        .map(ApplicationDataItemView::applicationId)
         .filter(selectedApplicationIds::contains)
         .map(String::valueOf)
         .collect(Collectors.toSet());

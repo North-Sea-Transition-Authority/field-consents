@@ -67,10 +67,10 @@
             <a href="#" class="govuk-body govuk-link govuk-link--no-visited-state selectAllResults">Select all</a>
             <a href="#" class="govuk-body govuk-link govuk-!-margin-left-2 govuk-link--no-visited-state deSelectAllResults">Select none</a>
           </div>
-          <#if applicationDataItems?has_content>
-            <@fdsResultList.resultList resultCount=applicationDataItems?size>
-              <#list applicationDataItems as dataItem>
-                <@_selectableApplicationDataItem dataItem=dataItem path="form.selectedApplicationIds"/>
+          <#if applicationDataItemViews?has_content>
+            <@fdsResultList.resultList resultCount=applicationDataItemViews?size>
+              <#list applicationDataItemViews as dataItemView>
+                <@_selectableApplicationDataItem dataItem=dataItemView path="form.selectedApplicationIds"/>
               </#list>
             </@fdsResultList.resultList>
           <#else>

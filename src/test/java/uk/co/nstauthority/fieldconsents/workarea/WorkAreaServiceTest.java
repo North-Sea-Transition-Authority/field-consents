@@ -34,7 +34,7 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil
 import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupQueryService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemDtoService;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemService;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemViewService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil;
 import uk.co.nstauthority.fieldconsents.teams.Team;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
@@ -67,7 +67,7 @@ class WorkAreaServiceTest {
   private ApplicationDataItemDtoService applicationDataItemDtoService;
 
   @Mock
-  private ApplicationDataItemService applicationDataItemService;
+  private ApplicationDataItemViewService applicationDataItemViewService;
 
   @InjectMocks
   private WorkAreaService workAreaService;
@@ -103,18 +103,18 @@ class WorkAreaServiceTest {
   }
 
   @Test
-  void getIndustryWorkAreaItems_withNoOrganisationGroup() {
+  void getIndustryWorkAreaItemViews_withNoOrganisationGroup() {
     shell1IndustryTeam.setOrganisationGroupId(null);
     assertThat(workAreaService.getIndustryWorkAreaItems(filter, user)).isEmpty();
   }
 
   @Test
-  void getIndustryWorkAreaItems_withEmptyResults() {
+  void getIndustryWorkAreaItemViews_withEmptyResults() {
     assertThat(workAreaService.getIndustryWorkAreaItems(filter, user)).isEmpty();
   }
 
   @Test
-  void getIndustryWorkAreaItems_withNoEditPermissionOrPayAndSubmitPermission() {
+  void getIndustryWorkAreaItemViews_withNoEditPermissionOrPayAndSubmitPermission() {
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(
         user,
         TeamType.INDUSTRY,
@@ -124,7 +124,7 @@ class WorkAreaServiceTest {
   }
 
   @Test
-  void getIndustryWorkAreaItems_withWorkAreaItemsToDisplay() {
+  void getIndustryWorkAreaItemViews_withWorkAreaItemsToDisplay() {
     when(workAreaFilterService.getConditions(filter, user, null)).thenReturn(new ArrayList<>());
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(
         user,
@@ -137,7 +137,7 @@ class WorkAreaServiceTest {
   }
 
   @Test
-  void getRegulatorWorkAreaItems_withNoPermission() {
+  void getRegulatorWorkAreaItemViews_withNoPermission() {
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(
         user,
         TeamType.REGULATOR, REGULATOR_PERMISSIONS
@@ -148,7 +148,7 @@ class WorkAreaServiceTest {
   }
 
   @Test
-  void getRegulatorWorkAreaItems_withNoWorkAreaItemsToDisplay() {
+  void getRegulatorWorkAreaItemViews_withNoWorkAreaItemsToDisplay() {
     when(workAreaFilterService.getConditions(filter, user, WorkAreaTab.MY_APPLICATIONS)).thenReturn(new ArrayList<>());
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.REGULATOR, REGULATOR_PERMISSIONS))
         .thenReturn(List.of(regulatorTeam));
@@ -158,7 +158,7 @@ class WorkAreaServiceTest {
   }
 
   @Test
-  void getRegulatorWorkAreaItems_withFlareSubmitted_forTerminal() {
+  void getRegulatorWorkAreaItemViews_withFlareSubmitted_forTerminal() {
     when(workAreaFilterService.getConditions(filter, user, WorkAreaTab.MY_APPLICATIONS)).thenReturn(Collections.emptyList());
     var workAreaItemDto = ApplicationDataItemUtil.getApplicationDataItemDtoForShortVentSubmittedForTerminal();
     var workAreaItemDtos = List.of(workAreaItemDto);
@@ -170,21 +170,21 @@ class WorkAreaServiceTest {
     when(applicationDataItemDtoService.getOrganisationUnitJsonsFromApplicationDataItemDtos(workAreaItemDtos))
         .thenReturn(organisationUnitJson);
 
-    var applicationDataItem = ApplicationDataItemUtil.getApplicationDataItem();
-    when(applicationDataItemService.getItemsFromDtos(
+    var applicationDataItemView = ApplicationDataItemUtil.getApplicationDataItemView();
+    when(applicationDataItemViewService.getItemViewsFromDtos(
         workAreaItemDtos,
         organisationUnitJson,
         TeamType.REGULATOR,
         user
     ))
-        .thenReturn(Collections.singletonList(applicationDataItem));
+        .thenReturn(Collections.singletonList(applicationDataItemView));
 
     assertThat(workAreaService.getRegulatorWorkAreaItems(filter, user, WorkAreaTab.MY_APPLICATIONS))
-        .containsExactly(applicationDataItem);
+        .containsExactly(applicationDataItemView);
   }
 
   @Test
-  void getIndustryWorkAreaItems_withProductionInProgress_forField() {
+  void getIndustryWorkAreaItemViews_withProductionInProgress_forField() {
     when(workAreaFilterService.getConditions(filter, user, null)).thenReturn(Collections.emptyList());
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(
         user,
@@ -201,8 +201,8 @@ class WorkAreaServiceTest {
     when(workAreaItemDtoService.runWorkAreaQuery(any(), any())).thenReturn(workAreaItemDtos);
 
     var collectionCaptor = ArgumentCaptor.forClass(Collection.class);
-    var applicationDataItem = ApplicationDataItemUtil.getApplicationDataItem();
-    when(applicationDataItemService.getItemsFromDtos(
+    var applicationDataItem = ApplicationDataItemUtil.getApplicationDataItemView();
+    when(applicationDataItemViewService.getItemViewsFromDtos(
         eq(workAreaItemDtos),
         collectionCaptor.capture(),
         eq(TeamType.INDUSTRY),
@@ -218,7 +218,7 @@ class WorkAreaServiceTest {
   }
 
   @Test
-  void getConsulteeWorkAreaItems_withNoPermission() {
+  void getConsulteeWorkAreaItemViews_withNoPermission() {
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(
         user,
         TeamType.OPRED,
@@ -230,7 +230,7 @@ class WorkAreaServiceTest {
   }
 
   @Test
-  void getConsulteeWorkAreaItems_withNoWorkAreaItemsToDisplay() {
+  void getConsulteeWorkAreaItemViews_withNoWorkAreaItemsToDisplay() {
     when(workAreaFilterService.getConditions(filter, user, WorkAreaTab.ALL_CONSULTATIONS)).thenReturn(new ArrayList<>());
     when(teamService.getTeamsOfTypeThatUserHasPermissionFor(user, TeamType.OPRED,
         CONSULTEE_ALLOCATE_RESPOND_PERMISSIONS))
@@ -241,7 +241,7 @@ class WorkAreaServiceTest {
   }
 
   @Test
-  void getConsulteeWorkAreaItems_withFlareAnnualSubmittedConsultationOpen() {
+  void getConsulteeWorkAreaItemViews_withFlareAnnualSubmittedConsultationOpen() {
     when(workAreaFilterService.getConditions(filter, user, WorkAreaTab.ALL_CONSULTATIONS))
         .thenReturn(Collections.emptyList());
 
@@ -257,16 +257,16 @@ class WorkAreaServiceTest {
     when(applicationDataItemDtoService.getOrganisationUnitJsonsFromApplicationDataItemDtos(List.of(workAreaItemDto)))
         .thenReturn(organisationUnitJsons);
 
-    var applicationDataItem = ApplicationDataItemUtil.getApplicationDataItem();
-    when(applicationDataItemService.getItemsFromDtos(
+    var applicationDataItemView = ApplicationDataItemUtil.getApplicationDataItemView();
+    when(applicationDataItemViewService.getItemViewsFromDtos(
         workAreaItemDtos,
         organisationUnitJsons,
         TeamType.OPRED,
         user
-    )).thenReturn(Collections.singletonList(applicationDataItem));
+    )).thenReturn(Collections.singletonList(applicationDataItemView));
 
     assertThat(workAreaService.getConsulteeWorkAreaItems(filter, user, WorkAreaTab.ALL_CONSULTATIONS))
-        .containsExactly(applicationDataItem);
+        .containsExactly(applicationDataItemView);
   }
 
   @Test

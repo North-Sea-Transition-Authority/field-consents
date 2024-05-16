@@ -57,6 +57,6 @@ public class TerminalController {
         .addObject("startApplicationUrl",
             ReverseRouter.route(on(StartApplicationFromTerminalController.class).getStartApplicationForm(terminalId))
         )
-        .addObject("applicationDataItems", manageAssetService.getApplicationDataItems(AssetKey.from(terminalJson), user));
+        .addObject("applicationDataItemViews", manageAssetService.getApplicationDataItemViews(AssetKey.from(terminalJson), user));
   }
 }

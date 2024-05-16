@@ -36,7 +36,7 @@ import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItem;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil;
 import uk.co.nstauthority.fieldconsents.search.AceFlagStatus;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
@@ -128,11 +128,11 @@ class BulkCaseActionSearchControllerTest extends AbstractControllerTest {
     var jooqConditions = List.<Condition>of();
     when(searchFilterService.getConditions(filtersForm, user)).thenReturn(jooqConditions);
 
-    var applicationDataItems = List.of(ApplicationDataItemUtil.getApplicationDataItem());
-    when(bulkCaseActionService.getApplicationDataItems(user, jooqConditions)).thenReturn(applicationDataItems);
+    var applicationDataItemViews = List.of(ApplicationDataItemUtil.getApplicationDataItemView());
+    when(bulkCaseActionService.getApplicationDataItemViews(user, jooqConditions)).thenReturn(applicationDataItemViews);
 
     var searchForm = BulkCaseActionSelectedApplicationsForm.empty();
-    when(controllerHelperService.getSelectedApplicationsForm(session, applicationDataItems)).thenReturn(searchForm);
+    when(controllerHelperService.getSelectedApplicationsForm(session, applicationDataItemViews)).thenReturn(searchForm);
 
     when(bulkCaseActionService.getBulkActions()).thenReturn(bulkActions);
 
@@ -145,7 +145,7 @@ class BulkCaseActionSearchControllerTest extends AbstractControllerTest {
         .andExpect(view().name("fcs/application/bulk-case-actions/search"))
         .andExpect(model().attribute("pageTitle", BulkCaseActionSearchController.PAGE_TITLE))
         .andExpect(model().attribute("actions", List.of(BulkAssignCaseOfficerController.ASSIGN_CASE_OFFICER)))
-        .andExpect(model().attribute("applicationDataItems", applicationDataItems))
+        .andExpect(model().attribute("applicationDataItemViews", applicationDataItemViews))
         .andExpect(model().attribute("form", searchForm));
   }
 
@@ -163,11 +163,11 @@ class BulkCaseActionSearchControllerTest extends AbstractControllerTest {
     var jooqConditions = List.<Condition>of();
     when(searchFilterService.getConditions(filtersForm, user)).thenReturn(jooqConditions);
 
-    var applicationDataItems = List.of(applicationDataItem1, applicationDataItem2, applicationDataItem3);
-    when(bulkCaseActionService.getApplicationDataItems(user, jooqConditions)).thenReturn(applicationDataItems);
+    var applicationDataItemViews = List.of(applicationDataItem1, applicationDataItem2, applicationDataItem3);
+    when(bulkCaseActionService.getApplicationDataItemViews(user, jooqConditions)).thenReturn(applicationDataItemViews);
 
     var searchForm = new BulkCaseActionSelectedApplicationsForm(Set.of("1", "2", "3"));
-    when(controllerHelperService.getSelectedApplicationsForm(session, applicationDataItems)).thenReturn(searchForm);
+    when(controllerHelperService.getSelectedApplicationsForm(session, applicationDataItemViews)).thenReturn(searchForm);
 
     when(bulkCaseActionService.getBulkActions()).thenReturn(bulkActions);
 
@@ -180,7 +180,7 @@ class BulkCaseActionSearchControllerTest extends AbstractControllerTest {
         .andExpect(view().name(VIEW_NAME))
         .andExpect(model().attribute("pageTitle", BulkCaseActionSearchController.PAGE_TITLE))
         .andExpect(model().attribute("actions", List.of(BulkAssignCaseOfficerController.ASSIGN_CASE_OFFICER)))
-        .andExpect(model().attribute("applicationDataItems", applicationDataItems))
+        .andExpect(model().attribute("applicationDataItemViews", applicationDataItemViews))
         .andExpect(model().attribute("form", searchForm))
         .andExpectAll(containsSearchFilterData(filtersForm));
   }
@@ -273,8 +273,8 @@ class BulkCaseActionSearchControllerTest extends AbstractControllerTest {
     var jooqConditions = List.<Condition>of();
     when(searchFilterService.getConditions(filtersForm, user)).thenReturn(jooqConditions);
 
-    var applicationDataItems = List.of(ApplicationDataItemUtil.getApplicationDataItem());
-    when(bulkCaseActionService.getApplicationDataItems(user, jooqConditions)).thenReturn(applicationDataItems);
+    var applicationDataItemViews = List.of(ApplicationDataItemUtil.getApplicationDataItemView());
+    when(bulkCaseActionService.getApplicationDataItemViews(user, jooqConditions)).thenReturn(applicationDataItemViews);
 
     mockServiceCallsForSearchFilters(filtersForm);
 
@@ -320,8 +320,8 @@ class BulkCaseActionSearchControllerTest extends AbstractControllerTest {
     };
   }
 
-  private ApplicationDataItem.Builder applicationDataItemBuilderWithDefaults(Integer applicationId) {
-    return ApplicationDataItem.newBuilder()
+  private ApplicationDataItemView.Builder applicationDataItemBuilderWithDefaults(Integer applicationId) {
+    return ApplicationDataItemView.newBuilder()
         .withApplicationId(applicationId)
         .withType("")
         .withReference("")

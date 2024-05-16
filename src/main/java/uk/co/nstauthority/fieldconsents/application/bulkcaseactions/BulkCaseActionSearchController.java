@@ -21,7 +21,7 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.HasPermission;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItem;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
 import uk.co.nstauthority.fieldconsents.search.AceFlagStatus;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
@@ -50,23 +50,23 @@ public class BulkCaseActionSearchController {
   public ModelAndView getSearchResults(HttpSession session, ServiceUserDetail user) {
     var filtersForm = controllerHelperService.getSearchFiltersForm(session);
     var searchConditions = searchFilterService.getConditions(filtersForm, user);
-    var applicationDataItems = bulkCaseActionService.getApplicationDataItems(user, searchConditions);
-    var form = controllerHelperService.getSelectedApplicationsForm(session, applicationDataItems);
+    var applicationDataItemViews = bulkCaseActionService.getApplicationDataItemViews(user, searchConditions);
+    var form = controllerHelperService.getSelectedApplicationsForm(session, applicationDataItemViews);
 
-    var modelAndView = searchResultsModelAndView(applicationDataItems, form);
+    var modelAndView = searchResultsModelAndView(applicationDataItemViews, form);
     addSearchFiltersToModelAndView(modelAndView, filtersForm);
 
     return modelAndView;
   }
 
   private ModelAndView searchResultsModelAndView(
-      List<ApplicationDataItem> applicationDataItems,
+      List<ApplicationDataItemView> applicationDataItemViews,
       BulkCaseActionSelectedApplicationsForm form
   ) {
     return new ModelAndView("fcs/application/bulk-case-actions/search")
         .addObject("pageTitle", PAGE_TITLE)
         .addObject("actions", bulkCaseActionService.getBulkActions())
-        .addObject("applicationDataItems", applicationDataItems)
+        .addObject("applicationDataItemViews", applicationDataItemViews)
         .addObject("form", form);
   }
 
@@ -119,9 +119,9 @@ public class BulkCaseActionSearchController {
     if (bindingResult.hasErrors()) {
       var filtersForm = controllerHelperService.getSearchFiltersForm(session);
       var searchConditions = searchFilterService.getConditions(filtersForm, user);
-      var applicationDataItems = bulkCaseActionService.getApplicationDataItems(user, searchConditions);
+      var applicationDataItemViews = bulkCaseActionService.getApplicationDataItemViews(user, searchConditions);
 
-      var modelAndView = searchResultsModelAndView(applicationDataItems, form);
+      var modelAndView = searchResultsModelAndView(applicationDataItemViews, form);
       addSearchFiltersToModelAndView(modelAndView, filtersForm);
 
       return modelAndView;
