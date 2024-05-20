@@ -20,7 +20,7 @@
   </@fdsDetails.summaryDetails>
 
   <table class="govuk-table">
-    <caption class="govuk-table__caption govuk-table__caption-m">${paymentDescription}</caption>
+    <caption class="govuk-table__caption govuk-table__caption-m">Payment summary</caption>
     <thead class="govuk-table__head">
       <tr class="govuk-table__row">
         <th scope="col" class="govuk-table__header">Item</th>
@@ -29,7 +29,7 @@
     </thead>
     <tbody class="govuk-table__body">
       <tr class="govuk-table__row">
-        <td class="govuk-table__cell">Charge for submitting an initial application</td>
+        <td class="govuk-table__cell">${paymentDescription}</td>
         <td class="govuk-table__cell govuk-table__cell--numeric">${formattedPaymentAmount}</td>
       </tr>
       <tr class="govuk-table__row">

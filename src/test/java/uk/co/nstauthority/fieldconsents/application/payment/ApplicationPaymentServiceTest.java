@@ -38,10 +38,10 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.revision.ApplicationRevisionType;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
-import uk.co.nstauthority.fieldconsents.application.consentrevision.ConsentRevisionType;
 import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionService;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
@@ -104,7 +104,7 @@ class ApplicationPaymentServiceTest {
         primaryAsset.getAssetType(),
         application.getType(),
         consentLength,
-        ConsentRevisionType.from(application)
+        ApplicationRevisionType.from(application)
     );
 
     var currentCostPence = 93000;
@@ -171,7 +171,7 @@ class ApplicationPaymentServiceTest {
   }
 
   @Test
-  void getPaymentDescription_primaryAssetIsField() {
+  void getPaymentDescription_primaryAssetIsField_revisionTypeIsNewConsent() {
     var applicationVersion
         = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
 
@@ -195,7 +195,7 @@ class ApplicationPaymentServiceTest {
   }
 
   @Test
-  void getPaymentDescription_primaryAssetIsTerminal() {
+  void getPaymentDescription_primaryAssetIsTerminal_revisionTypeIsNewConsent() {
     var applicationVersion
         = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
 
@@ -216,6 +216,58 @@ class ApplicationPaymentServiceTest {
 
     assertThat(paymentDescription)
         .isEqualTo("New facility short term consent application testApplicationReference submission");
+  }
+
+  @Test
+  void getPaymentDescription_primaryAssetIsField_revisionTypeIsRevision() {
+    var applicationVersion
+        = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
+
+    applicationVersion.getApplication().setVariationNo(1);
+
+    var primaryAsset = new ApplicationAsset();
+    primaryAsset.setAssetType(AssetType.FIELD);
+
+    var consentLengthDetails = new ConsentLengthDetails();
+    consentLengthDetails.setConsentLength(ConsentLengthType.SHORT_TERM);
+
+    var applicationReference = "testApplicationReference";
+
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryAsset);
+
+    when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
+    when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
+
+    var paymentDescription = applicationPaymentService.getPaymentDescription(applicationVersion);
+
+    assertThat(paymentDescription)
+        .isEqualTo("Revised field short term consent application testApplicationReference submission");
+  }
+
+  @Test
+  void getPaymentDescription_primaryAssetIsTerminal_revisionTypeIsRevision() {
+    var applicationVersion
+        = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
+
+    applicationVersion.getApplication().setVariationNo(1);
+
+    var primaryAsset = new ApplicationAsset();
+    primaryAsset.setAssetType(AssetType.TERMINAL);
+
+    var consentLengthDetails = new ConsentLengthDetails();
+    consentLengthDetails.setConsentLength(ConsentLengthType.SHORT_TERM);
+
+    var applicationReference = "testApplicationReference";
+
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryAsset);
+
+    when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
+    when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
+
+    var paymentDescription = applicationPaymentService.getPaymentDescription(applicationVersion);
+
+    assertThat(paymentDescription)
+        .isEqualTo("Revised facility short term consent application testApplicationReference submission");
   }
 
   @Test

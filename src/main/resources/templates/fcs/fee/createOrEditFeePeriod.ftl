@@ -37,13 +37,13 @@
             <td class="govuk-table__cell">${feeLineView.mnemonic().assetType().getDisplayName()}</td>
             <td class="govuk-table__cell">${feeLineView.mnemonic().applicationType().getDisplayName()}</td>
             <td class="govuk-table__cell">${feeLineView.mnemonic().consentLengthType().getShortDisplayName()}</td>
-            <td class="govuk-table__cell">${feeLineView.mnemonic().consentRevisionType().getDisplayName()}</td>
+            <td class="govuk-table__cell">${feeLineView.mnemonic().applicationRevisionType().getDisplayName()}</td>
             <td class="govuk-table__cell">
               <@fdsTextInput.textInput
                 path="form.feeLineAmountsByMnemonic[${feeLineView.mnemonic().mnemonic()}]"
                 inputClass="govuk-input--width-7"
                 formGroupClass="govuk-!-margin-bottom-0"
-                labelText="Cost for ${feeLineView.mnemonic().assetType().getDisplayName()} ${feeLineView.mnemonic().applicationType().getDisplayName()} ${feeLineView.mnemonic().consentLengthType().getDisplayName()} ${feeLineView.mnemonic().consentRevisionType().getDisplayName()}"
+                labelText="Cost for ${feeLineView.mnemonic().assetType().getDisplayName()} ${feeLineView.mnemonic().applicationType().getDisplayName()} ${feeLineView.mnemonic().consentLengthType().getDisplayName()} ${feeLineView.mnemonic().applicationRevisionType().getDisplayName()}"
                 labelClass="govuk-visually-hidden"
                 prefix="£"
               />

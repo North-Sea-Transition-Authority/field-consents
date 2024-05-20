@@ -8,8 +8,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.revision.ApplicationRevisionType;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
-import uk.co.nstauthority.fieldconsents.application.consentrevision.ConsentRevisionType;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 
 class FeeLineMnemonicTest {
@@ -20,9 +20,9 @@ class FeeLineMnemonicTest {
       AssetType assetType,
       ApplicationType applicationType,
       ConsentLengthType consentLengthType,
-      ConsentRevisionType consentRevisionType
+      ApplicationRevisionType applicationRevisionType
   ) {
-    var mnemonic = "%s/%s/%s/%s".formatted(assetType, applicationType, consentLengthType, consentRevisionType);
+    var mnemonic = "%s/%s/%s/%s".formatted(assetType, applicationType, consentLengthType, applicationRevisionType);
 
     assertThat(FeeLineMnemonic.from(mnemonic)).isEqualTo(
         new FeeLineMnemonic(
@@ -30,28 +30,28 @@ class FeeLineMnemonicTest {
             assetType,
             applicationType,
             consentLengthType,
-            consentRevisionType
+            applicationRevisionType
         )
     );
   }
 
   @ParameterizedTest
   @MethodSource("getFromArguments")
-  void from_withAssetTypeAndApplicationTypeAndConsentLengthTypeAndConsentRevisionType(
+  void from_withAssetTypeAndApplicationTypeAndConsentLengthTypeAndApplicationRevisionType(
       AssetType assetType,
       ApplicationType applicationType,
       ConsentLengthType consentLengthType,
-      ConsentRevisionType consentRevisionType
+      ApplicationRevisionType applicationRevisionType
   ) {
-    var mnemonic = FeeLineMnemonic.from(assetType, applicationType, consentLengthType, consentRevisionType);
+    var mnemonic = FeeLineMnemonic.from(assetType, applicationType, consentLengthType, applicationRevisionType);
 
     assertThat(mnemonic).isEqualTo(
         new FeeLineMnemonic(
-            "%s/%s/%s/%s".formatted(assetType, applicationType, consentLengthType, consentRevisionType),
+            "%s/%s/%s/%s".formatted(assetType, applicationType, consentLengthType, applicationRevisionType),
             assetType,
             applicationType,
             consentLengthType,
-            consentRevisionType
+            applicationRevisionType
         )
     );
   }
@@ -62,8 +62,8 @@ class FeeLineMnemonicTest {
     for (var assetType : AssetType.values()) {
       for (var applicationType : ApplicationType.values()) {
         for (var consentLengthType : ConsentLengthType.values()) {
-          for (var consentRevisionType : ConsentRevisionType.values()) {
-            arguments.add(Arguments.of(assetType, applicationType, consentLengthType, consentRevisionType));
+          for (var applicationRevisionType : ApplicationRevisionType.values()) {
+            arguments.add(Arguments.of(assetType, applicationType, consentLengthType, applicationRevisionType));
           }
         }
       }

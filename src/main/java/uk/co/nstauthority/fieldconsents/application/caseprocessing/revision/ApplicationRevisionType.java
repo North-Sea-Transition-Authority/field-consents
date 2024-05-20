@@ -1,16 +1,16 @@
-package uk.co.nstauthority.fieldconsents.application.consentrevision;
+package uk.co.nstauthority.fieldconsents.application.caseprocessing.revision;
 
 import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.util.enumutil.Displayable;
 
-public enum ConsentRevisionType implements Displayable {
+public enum ApplicationRevisionType implements Displayable {
 
   NEW_CONSENT("New consent"),
   REVISION("Revision");
 
   private final String displayName;
 
-  ConsentRevisionType(String displayName) {
+  ApplicationRevisionType(String displayName) {
     this.displayName = displayName;
   }
 
@@ -19,7 +19,7 @@ public enum ConsentRevisionType implements Displayable {
     return displayName;
   }
 
-  public static ConsentRevisionType from(Application application) {
+  public static ApplicationRevisionType from(Application application) {
     return application.getVariationNo() == 0 ? NEW_CONSENT : REVISION;
   }
 }

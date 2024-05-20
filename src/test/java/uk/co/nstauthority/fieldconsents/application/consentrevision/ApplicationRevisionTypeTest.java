@@ -4,15 +4,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 import uk.co.nstauthority.fieldconsents.application.Application;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.revision.ApplicationRevisionType;
 
-class ConsentRevisionTypeTest {
+class ApplicationRevisionTypeTest {
 
   @Test
   void from_variationNoZero() {
     var application = new Application();
     application.setVariationNo(0);
 
-    assertThat(ConsentRevisionType.from(application)).isEqualTo(ConsentRevisionType.NEW_CONSENT);
+    assertThat(ApplicationRevisionType.from(application)).isEqualTo(ApplicationRevisionType.NEW_CONSENT);
   }
 
   @Test
@@ -20,6 +21,6 @@ class ConsentRevisionTypeTest {
     var application = new Application();
     application.setVariationNo(1);
 
-    assertThat(ConsentRevisionType.from(application)).isEqualTo(ConsentRevisionType.REVISION);
+    assertThat(ApplicationRevisionType.from(application)).isEqualTo(ApplicationRevisionType.REVISION);
   }
 }

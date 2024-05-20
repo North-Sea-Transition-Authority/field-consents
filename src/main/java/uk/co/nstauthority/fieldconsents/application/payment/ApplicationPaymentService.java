@@ -22,8 +22,8 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.revision.ApplicationRevisionType;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
-import uk.co.nstauthority.fieldconsents.application.consentrevision.ConsentRevisionType;
 import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
@@ -34,6 +34,9 @@ import uk.co.nstauthority.fieldconsents.fee.FeeLineMnemonic;
 public class ApplicationPaymentService {
 
   static final String APPLICATION_VERSION_PAYMENT_ITEM_TYPE = "APPLICATION_VERSION";
+
+  static final String NEW_CONSENT_APPLICATION_PAYMENT_DESCRIPTION = "New %s %s application %s submission";
+  static final String REVISION_APPLICATION_PAYMENT_DESCRIPTION = "Revised %s %s application %s submission";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationPaymentService.class);
 
@@ -79,7 +82,7 @@ public class ApplicationPaymentService {
         primaryAsset.getAssetType(),
         application.getType(),
         consentLength,
-        ConsentRevisionType.from(application)
+        ApplicationRevisionType.from(application)
     );
 
     return feePeriodService.getCurrentCost(mnemonic.mnemonic());
@@ -120,8 +123,14 @@ public class ApplicationPaymentService {
 
     var applicationReference = applicationService.generateApplicationReference(applicationVersion);
 
-    return "New %s %s application %s submission"
-        .formatted(primaryAssetType.getDisplayName().toLowerCase(), duration, applicationReference);
+    var revisionType = ApplicationRevisionType.from(applicationVersion.getApplication());
+
+    return switch (revisionType) {
+      case NEW_CONSENT -> NEW_CONSENT_APPLICATION_PAYMENT_DESCRIPTION
+          .formatted(primaryAssetType.getDisplayName().toLowerCase(), duration, applicationReference);
+      case REVISION -> REVISION_APPLICATION_PAYMENT_DESCRIPTION
+          .formatted(primaryAssetType.getDisplayName().toLowerCase(), duration, applicationReference);
+    };
   }
 
   Map<String, Object> getPaymentMetadata(ApplicationVersion applicationVersion) {
