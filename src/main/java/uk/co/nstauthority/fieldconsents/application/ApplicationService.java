@@ -6,7 +6,6 @@ import static uk.co.nstauthority.fieldconsents.application.workareapriority.Appl
 import jakarta.persistence.EntityNotFoundException;
 import java.time.Clock;
 import java.util.Objects;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAssetLicenceService;
@@ -27,29 +26,24 @@ public class ApplicationService {
       "Cannot start update for application version id %s and status %s (status must be %s)";
 
   private final ApplicationRepository applicationRepository;
-
   private final ApplicationVersionRepository applicationVersionRepository;
-
   private final ApplicationAssetService applicationAssetService;
-
   private final ApplicationAssetLicenceService applicationAssetLicenceService;
-
   private final ApplicationConfigurationProperties applicationConfigurationProperties;
-
   private final ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
-
   private final Clock clock;
-
   private final ApplicationVersionService applicationVersionService;
 
-  public ApplicationService(ApplicationRepository applicationRepository,
-                            ApplicationVersionRepository applicationVersionRepository,
-                            ApplicationAssetService applicationAssetService,
-                            ApplicationAssetLicenceService applicationAssetLicenceService,
-                            ApplicationConfigurationProperties applicationConfigurationProperties,
-                            ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService,
-                            Clock clock,
-                            ApplicationVersionService applicationVersionService) {
+  ApplicationService(
+      ApplicationRepository applicationRepository,
+      ApplicationVersionRepository applicationVersionRepository,
+      ApplicationAssetService applicationAssetService,
+      ApplicationAssetLicenceService applicationAssetLicenceService,
+      ApplicationConfigurationProperties applicationConfigurationProperties,
+      ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService,
+      Clock clock,
+      ApplicationVersionService applicationVersionService
+  ) {
     this.applicationRepository = applicationRepository;
     this.applicationVersionRepository = applicationVersionRepository;
     this.applicationAssetService = applicationAssetService;
@@ -60,19 +54,14 @@ public class ApplicationService {
     this.applicationVersionService = applicationVersionService;
   }
 
-  private ApplicationVersion createNewApplication(ApplicationType applicationType,
-                                                  OrganisationUnitJson operatorOuJson,
-                                                  ServiceUserDetail user) {
-    Application application = createNewApplicationMasterRecord(applicationType, user);
-    return createNewApplicationVersionRecord(application, operatorOuJson, user);
-  }
-
   @Transactional
-  public ApplicationVersion createNewApplicationForField(ApplicationType type,
-                                                         FieldWithOperatorAndLicencesJson field,
-                                                         OrganisationUnitJson operatorOuJson,
-                                                         ServiceUserDetail user) {
-    ApplicationVersion applicationVersion = createNewApplication(type, operatorOuJson, user);
+  public ApplicationVersion createNewApplicationForField(
+      ApplicationType type,
+      FieldWithOperatorAndLicencesJson field,
+      OrganisationUnitJson operatorOuJson,
+      ServiceUserDetail user
+  ) {
+    var applicationVersion = createNewApplication(type, operatorOuJson, user);
     var applicationAsset = applicationAssetService.createPrimaryAsset(applicationVersion, field);
     applicationAssetLicenceService.createAssetLicences(applicationAsset, field);
     applicationWorkAreaPriorityService
@@ -81,30 +70,30 @@ public class ApplicationService {
   }
 
   @Transactional
-  public ApplicationVersion createNewApplicationForTerminal(ApplicationType type,
-                                                            TerminalWithOperatorJson terminalWithOperatorJson,
-                                                            OrganisationUnitJson operatorOuJson,
-                                                            ServiceUserDetail user) {
-    ApplicationVersion applicationVersion = createNewApplication(type, operatorOuJson, user);
+  public ApplicationVersion createNewApplicationForTerminal(
+      ApplicationType type,
+      TerminalWithOperatorJson terminalWithOperatorJson,
+      OrganisationUnitJson operatorOuJson,
+      ServiceUserDetail user
+  ) {
+    var applicationVersion = createNewApplication(type, operatorOuJson, user);
     applicationAssetService.createPrimaryAsset(applicationVersion, terminalWithOperatorJson);
     applicationWorkAreaPriorityService
         .prioritiseApplicationInWorkArea(applicationVersion, user, APPLICATION_CREATED, INDUSTRY);
     return applicationVersion;
   }
 
-  private ApplicationVersion createNewApplicationVersionRecord(Application application,
-                                                               OrganisationUnitJson operatorOuJson,
-                                                               ServiceUserDetail user) {
-    ApplicationVersion applicationVersion = new ApplicationVersion();
-    applicationVersion.setApplication(application);
-    applicationVersion.setVersion(1);
-    applicationVersion.setCreatedDateTime(clock.instant());
-    applicationVersion.setCreatedByWuaId(user.wuaId());
-    applicationVersion.setStatus(ApplicationVersionStatus.IN_PROGRESS);
-    applicationVersion.setPrimaryOperatorOuId(operatorOuJson.organisationUnitId());
-    applicationVersion.setCachedPrimaryOperatorName(operatorOuJson.name());
-    applicationVersion.setMigrated(false);
-    return applicationVersionRepository.save(applicationVersion);
+  private ApplicationVersion createNewApplication(ApplicationType applicationType,
+                                                  OrganisationUnitJson operatorOuJson,
+                                                  ServiceUserDetail user) {
+    var application = newApplication(applicationType, user, 0);
+    applicationRepository.save(application);
+
+    var applicationVersion =
+        newApplicationVersion(application, 1, user, operatorOuJson.organisationUnitId(), operatorOuJson.name());
+    applicationVersionRepository.save(applicationVersion);
+
+    return applicationVersion;
   }
 
   @Transactional
@@ -170,19 +159,43 @@ public class ApplicationService {
           ApplicationVersionStatus.SUBMITTED.name()));
     }
 
-    var newApplicationVersion = new ApplicationVersion();
-    newApplicationVersion.setApplication(applicationVersion.getApplication());
-    newApplicationVersion.setVersion(applicationVersion.getVersion() + 1);
-    newApplicationVersion.setCreatedDateTime(clock.instant());
-    newApplicationVersion.setCreatedByWuaId(user.wuaId());
-    newApplicationVersion.setStatus(ApplicationVersionStatus.IN_PROGRESS);
-    newApplicationVersion.setPrimaryOperatorOuId(applicationVersion.getPrimaryOperatorOuId());
-    newApplicationVersion.setCachedPrimaryOperatorName(applicationVersion.getCachedPrimaryOperatorName());
+    var newApplicationVersion = newApplicationVersion(
+        applicationVersion.getApplication(),
+        applicationVersion.getVersion() + 1,
+        user,
+        applicationVersion.getPrimaryOperatorOuId(),
+        applicationVersion.getCachedPrimaryOperatorName()
+    );
+
     newApplicationVersion.setCaseOfficerWuaId(applicationVersion.getCaseOfficerWuaId());
     newApplicationVersion.setCamWuaId(applicationVersion.getCamWuaId());
     newApplicationVersion.setCurrentCaseOwner(applicationVersion.getCurrentCaseOwner());
-    newApplicationVersion.setMigrated(false);
-    return applicationVersionRepository.save(newApplicationVersion);
+
+    applicationVersionRepository.save(newApplicationVersion);
+
+    return newApplicationVersion;
+  }
+
+  @Transactional
+  public ApplicationVersion startApplicationRevision(ApplicationVersion applicationVersion, ServiceUserDetail user) {
+    var application = applicationVersion.getApplication();
+
+    // If a revision was previously started and then withdrawn, the user will be able to start a revision from the
+    // previously consented application again, however we do not want to reuse the variation no from the withdrawn application.
+    var newVariationNo = applicationRepository.getTipNonDeletedVariationNo(application) + 1;
+    var newApplication = newApplication(application.getType(), user, newVariationNo);
+    newApplication.setApplicationNo(application.getApplicationNo());
+    applicationRepository.save(newApplication);
+
+    var newApplicationVersion = newApplicationVersion(
+        newApplication,
+        1,
+        user,
+        applicationVersion.getPrimaryOperatorOuId(),
+        applicationVersion.getCachedPrimaryOperatorName()
+    );
+    applicationVersionRepository.save(newApplicationVersion);
+    return newApplicationVersion;
   }
 
   @Transactional
@@ -232,15 +245,36 @@ public class ApplicationService {
     return applicationRepository.nonWithdrawnOrDeletedRevisionApplicationExists(application);
   }
 
-  @NotNull
-  private Application createNewApplicationMasterRecord(ApplicationType applicationType,
-                                                       ServiceUserDetail user) {
+  private Application newApplication(
+      ApplicationType applicationType,
+      ServiceUserDetail user,
+      int variationNo
+  ) {
     Application application = new Application();
     application.setType(applicationType);
     application.setCreatedDate(clock.instant());
-    application.setVariationNo(0);
     application.setCreatedByWuaId(user.wuaId());
-    return applicationRepository.save(application);
+    application.setVariationNo(variationNo);
+    return application;
+  }
+
+  private ApplicationVersion newApplicationVersion(
+      Application application,
+      int version,
+      ServiceUserDetail user,
+      int primaryOperatorOuId,
+      String cachedPrimaryOperatorName
+  ) {
+    ApplicationVersion applicationVersion = new ApplicationVersion();
+    applicationVersion.setApplication(application);
+    applicationVersion.setVersion(version);
+    applicationVersion.setCreatedDateTime(clock.instant());
+    applicationVersion.setCreatedByWuaId(user.wuaId());
+    applicationVersion.setStatus(ApplicationVersionStatus.IN_PROGRESS);
+    applicationVersion.setPrimaryOperatorOuId(primaryOperatorOuId);
+    applicationVersion.setCachedPrimaryOperatorName(cachedPrimaryOperatorName);
+    applicationVersion.setMigrated(false);
+    return applicationVersion;
   }
 
   public Application getApplicationById(int applicationId) {

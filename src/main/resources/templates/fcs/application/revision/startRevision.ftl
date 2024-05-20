@@ -9,7 +9,7 @@
   backLinkUrl=springUrl(backLinkUrl)
 >
   <@fdsStartPage.startPage
-    startActionUrl=""
+    startActionUrl=startRevisionUrl
     startActionText="Start revision"
   >
     <p class="govuk-body">

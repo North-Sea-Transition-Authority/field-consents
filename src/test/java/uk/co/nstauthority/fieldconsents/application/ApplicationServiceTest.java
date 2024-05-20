@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -18,6 +19,7 @@ import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil
 import jakarta.persistence.EntityNotFoundException;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Objects;
 import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
@@ -31,25 +33,19 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.assetlicences.ApplicationAssetLicenceService;
-import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
-import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitJson;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil;
 
 @ExtendWith(MockitoExtension.class)
 public class ApplicationServiceTest {
 
-  private static final Instant CURRENT_INSTANT = Instant.now();
-
   public static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
 
   private static final String APPLICATION_NUMBER_START_VALUE = "50";
-
-  private Application newApplication;
 
   @Mock
   private ApplicationRepository applicationRepository;
@@ -67,15 +63,14 @@ public class ApplicationServiceTest {
   private ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
 
   @Mock
-  private Clock clock;
-
-  @Mock
   private ApplicationVersionService applicationVersionService;
+
+  private final Clock clock = Clock.fixed(Instant.now(), ZoneId.systemDefault());
 
   private ApplicationService applicationService;
 
   @BeforeEach
-  void setup() {
+  void setUp() {
     ApplicationConfigurationProperties applicationConfigurationProperties = new ApplicationConfigurationProperties(
         APPLICATION_NUMBER_START_VALUE);
 
@@ -89,30 +84,30 @@ public class ApplicationServiceTest {
         clock,
         applicationVersionService
     );
-
-    newApplication = new Application(1, ApplicationType.PRODUCTION, Instant.now(), USER_WUA_ID, 0, null);
   }
 
   @Test
   void createNewApplicationForField() {
-    OrganisationUnitJson organisationUnitJson = OrganisationUnitTestUtil.orgUnit1Json;
-    when(applicationRepository.save(any(Application.class))).thenReturn(newApplication);
+    var organisationUnitJson = OrganisationUnitTestUtil.orgUnit1Json;
 
-    ApplicationVersion newApplicationVersion = new ApplicationVersion(1, newApplication, 1, organisationUnitJson.organisationUnitId(),
-        organisationUnitJson.name(), Instant.now(), USER_WUA_ID, null, null, ApplicationVersionStatus.IN_PROGRESS, null,
-        false);
-    when(applicationVersionRepository.save(any(ApplicationVersion.class))).thenReturn(newApplicationVersion);
-
-    ApplicationAsset applicationAsset = ApplicationAssetTestUtil.fieldAsset1;
-    when(applicationAssetService.createPrimaryAsset(newApplicationVersion, field1JsonWithOperatorAndLicences))
+    var applicationAsset = ApplicationAssetTestUtil.fieldAsset1;
+    when(applicationAssetService.createPrimaryAsset(any(), eq(field1JsonWithOperatorAndLicences)))
         .thenReturn(applicationAsset);
 
-    ApplicationVersion expectedApplicationVersion = applicationService.createNewApplicationForField(
+    var newApplicationVersion = applicationService.createNewApplicationForField(
         ApplicationType.PRODUCTION,
         field1JsonWithOperatorAndLicences,
         organisationUnitJson,
         USER
     );
+
+    verify(applicationRepository).save(newApplicationVersion.getApplication());
+    verify(applicationVersionRepository).save(newApplicationVersion);
+
+    var expectedApplication = new Application(1, ApplicationType.PRODUCTION, clock.instant(), USER_WUA_ID, 0, null);
+    var expectedApplicationVersion = new ApplicationVersion(1, expectedApplication, 1, OrganisationUnitTestUtil.orgUnit1Json.organisationUnitId(),
+        OrganisationUnitTestUtil.orgUnit1Json.name(), clock.instant(), USER_WUA_ID, null, null, ApplicationVersionStatus.IN_PROGRESS, null,
+        false);
 
     assertApplicationVersion(newApplicationVersion, expectedApplicationVersion);
 
@@ -125,25 +120,27 @@ public class ApplicationServiceTest {
         .createAssetLicences(applicationAsset, field1JsonWithOperatorAndLicences);
 
     verify(applicationWorkAreaPriorityService)
-        .prioritiseApplicationInWorkArea(expectedApplicationVersion, USER, APPLICATION_CREATED, INDUSTRY);
+        .prioritiseApplicationInWorkArea(newApplicationVersion, USER, APPLICATION_CREATED, INDUSTRY);
   }
 
   @Test
   void createNewApplicationForTerminal() {
-    OrganisationUnitJson organisationUnitJson = OrganisationUnitTestUtil.orgUnit1Json;
-    when(applicationRepository.save(any(Application.class))).thenReturn(newApplication);
+    var organisationUnitJson = OrganisationUnitTestUtil.orgUnit1Json;
 
-    ApplicationVersion newApplicationVersion = new ApplicationVersion(1, newApplication, 1, organisationUnitJson.organisationUnitId(),
-        organisationUnitJson.name(), Instant.now(), USER_WUA_ID, null, null, ApplicationVersionStatus.IN_PROGRESS, null,
-        false);
-    when(applicationVersionRepository.save(any(ApplicationVersion.class))).thenReturn(newApplicationVersion);
-
-    ApplicationVersion expectedApplicationVersion = applicationService.createNewApplicationForTerminal(
+    var newApplicationVersion = applicationService.createNewApplicationForTerminal(
         ApplicationType.PRODUCTION,
         terminal1JsonWithOperator,
         organisationUnitJson,
         USER
     );
+
+    verify(applicationRepository).save(newApplicationVersion.getApplication());
+    verify(applicationVersionRepository).save(newApplicationVersion);
+
+    var expectedApplication = new Application(1, ApplicationType.PRODUCTION, clock.instant(), USER_WUA_ID, 0, null);
+    var expectedApplicationVersion = new ApplicationVersion(1, expectedApplication, 1, OrganisationUnitTestUtil.orgUnit1Json.organisationUnitId(),
+        OrganisationUnitTestUtil.orgUnit1Json.name(), clock.instant(), USER_WUA_ID, null, null, ApplicationVersionStatus.IN_PROGRESS, null,
+        false);
 
     assertApplicationVersion(newApplicationVersion, expectedApplicationVersion);
 
@@ -153,11 +150,10 @@ public class ApplicationServiceTest {
     );
 
     verify(applicationWorkAreaPriorityService)
-        .prioritiseApplicationInWorkArea(expectedApplicationVersion, USER, APPLICATION_CREATED, INDUSTRY);
+        .prioritiseApplicationInWorkArea(newApplicationVersion, USER, APPLICATION_CREATED, INDUSTRY);
   }
 
   private void assertApplicationVersion(ApplicationVersion newApplicationVersion, ApplicationVersion expectedApplicationVersion) {
-    assertThat(expectedApplicationVersion.getId()).isEqualTo(newApplicationVersion.getId());
     assertThat(expectedApplicationVersion.getVersion()).isEqualTo(newApplicationVersion.getVersion());
     assertThat(expectedApplicationVersion.getPrimaryOperatorOuId())
         .isEqualTo(newApplicationVersion.getPrimaryOperatorOuId());
@@ -183,20 +179,24 @@ public class ApplicationServiceTest {
 
     var expectedApplication = expectedApplicationVersion.getApplication();
     var newApplication = newApplicationVersion.getApplication();
+
     assertThat(expectedApplication.getType()).isEqualTo(newApplication.getType());
-    assertThat(expectedApplication.getCreatedByWuaId()).isEqualTo(newApplication.getCreatedByWuaId());
     assertThat(expectedApplication.getCreatedDate()).isEqualTo(newApplication.getCreatedDate());
+    assertThat(expectedApplication.getCreatedByWuaId()).isEqualTo(newApplication.getCreatedByWuaId());
+    assertThat(expectedApplication.getVariationNo()).isEqualTo(newApplication.getVariationNo());
   }
 
   @Test
   void getApplicationById_whenApplicationExists() {
-    when(applicationRepository.findById(anyInt())).thenReturn(Optional.of(newApplication));
+    var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
+
+    when(applicationRepository.findById(anyInt())).thenReturn(Optional.of(application));
     Application expectedApplication = applicationService.getApplicationById(1);
 
-    assertThat(expectedApplication.getId()).isEqualTo(newApplication.getId());
-    assertThat(expectedApplication.getType()).isEqualTo(newApplication.getType());
-    assertThat(expectedApplication.getCreatedDate()).isEqualTo(newApplication.getCreatedDate());
-    assertThat(expectedApplication.getCreatedByWuaId()).isEqualTo(newApplication.getCreatedByWuaId());
+    assertThat(expectedApplication.getId()).isEqualTo(application.getId());
+    assertThat(expectedApplication.getType()).isEqualTo(application.getType());
+    assertThat(expectedApplication.getCreatedDate()).isEqualTo(application.getCreatedDate());
+    assertThat(expectedApplication.getCreatedByWuaId()).isEqualTo(application.getCreatedByWuaId());
   }
 
   @Test
@@ -329,10 +329,14 @@ public class ApplicationServiceTest {
 
   @Test
   void startApplicationUpdate() {
-    when(clock.instant()).thenReturn(CURRENT_INSTANT);
     var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(applicationVersion.getId()))
         .thenReturn(applicationVersion);
+
+    var newApplicationVersion = applicationService.startApplicationUpdate(applicationVersion, USER);
+
+    verify(applicationVersionRepository).save(newApplicationVersion);
+
     var expectedApplicationVersion = new ApplicationVersion();
     expectedApplicationVersion.setApplication(applicationVersion.getApplication());
     expectedApplicationVersion.setVersion(applicationVersion.getVersion() + 1);
@@ -342,13 +346,39 @@ public class ApplicationServiceTest {
     expectedApplicationVersion.setPrimaryOperatorOuId(applicationVersion.getPrimaryOperatorOuId());
     expectedApplicationVersion.setCachedPrimaryOperatorName(applicationVersion.getCachedPrimaryOperatorName());
     expectedApplicationVersion.setCaseOfficerWuaId(applicationVersion.getCaseOfficerWuaId());
-    when(applicationVersionRepository.save(any())).thenReturn(expectedApplicationVersion);
 
-    ArgumentCaptor<ApplicationVersion> applicationVersionArgumentCaptor =
-        ArgumentCaptor.forClass(ApplicationVersion.class);
+    assertApplicationVersion(newApplicationVersion, expectedApplicationVersion);
+  }
 
-    var newApplicationVersion = applicationService.startApplicationUpdate(applicationVersion, USER);
-    verify(applicationVersionRepository).save(applicationVersionArgumentCaptor.capture());
+  @Test
+  void startApplicationRevision() {
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var application = applicationVersion.getApplication();
+
+    var tipNonDeletedVariationNo = 2;
+
+    when(applicationRepository.getTipNonDeletedVariationNo(application)).thenReturn(tipNonDeletedVariationNo);
+
+    var newApplicationVersion = applicationService.startApplicationRevision(applicationVersion, USER);
+
+    verify(applicationRepository).save(newApplicationVersion.getApplication());
+    verify(applicationVersionRepository).save(newApplicationVersion);
+
+    var expectedApplication = new Application();
+    expectedApplication.setType(application.getType());
+    expectedApplication.setCreatedDate(clock.instant());
+    expectedApplication.setVariationNo(tipNonDeletedVariationNo + 1);
+    expectedApplication.setCreatedByWuaId(USER.wuaId());
+    expectedApplication.setApplicationNo(application.getApplicationNo());
+
+    var expectedApplicationVersion = new ApplicationVersion();
+    expectedApplicationVersion.setApplication(expectedApplication);
+    expectedApplicationVersion.setVersion(1);
+    expectedApplicationVersion.setCreatedDateTime(clock.instant());
+    expectedApplicationVersion.setCreatedByWuaId(USER.wuaId());
+    expectedApplicationVersion.setStatus(ApplicationVersionStatus.IN_PROGRESS);
+    expectedApplicationVersion.setPrimaryOperatorOuId(applicationVersion.getPrimaryOperatorOuId());
+    expectedApplicationVersion.setCachedPrimaryOperatorName(applicationVersion.getCachedPrimaryOperatorName());
 
     assertApplicationVersion(newApplicationVersion, expectedApplicationVersion);
   }
@@ -434,19 +464,23 @@ public class ApplicationServiceTest {
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
   void isMigratedApplication(boolean isMigrated) {
-    when(applicationVersionRepository.existsByApplicationAndMigratedTrue(newApplication))
+    var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
+
+    when(applicationVersionRepository.existsByApplicationAndMigratedTrue(application))
         .thenReturn(isMigrated);
 
-    assertThat(applicationService.isMigratedApplication(newApplication)).isEqualTo(isMigrated);
+    assertThat(applicationService.isMigratedApplication(application)).isEqualTo(isMigrated);
   }
 
   @ParameterizedTest
   @ValueSource(booleans = { true, false })
   void nonWithdrawnOrDeletedRevisionApplicationExists(boolean nonWithdrawnOrDeletedRevisionApplicationExists) {
-    when(applicationRepository.nonWithdrawnOrDeletedRevisionApplicationExists(newApplication))
+    var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
+
+    when(applicationRepository.nonWithdrawnOrDeletedRevisionApplicationExists(application))
         .thenReturn(nonWithdrawnOrDeletedRevisionApplicationExists);
 
-    assertThat(applicationService.nonWithdrawnOrDeletedRevisionApplicationExists(newApplication))
+    assertThat(applicationService.nonWithdrawnOrDeletedRevisionApplicationExists(application))
         .isEqualTo(nonWithdrawnOrDeletedRevisionApplicationExists);
   }
 }

@@ -1,0 +1,1 @@
+ALTER TABLE applications DROP CONSTRAINT variation_no_application_no_unique;

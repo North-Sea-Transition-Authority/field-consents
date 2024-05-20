@@ -37,14 +37,16 @@ public class ApplicationSubmissionService {
   private final ApplicationSubmissionEmailService applicationSubmissionEmailService;
   private final ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
 
-  public ApplicationSubmissionService(Clock clock,
-                                      AceFlagService aceFlagService,
-                                      ApplicationService applicationService,
-                                      ApplicationRepository applicationRepository,
-                                      ApplicationTaskListService applicationTaskListService,
-                                      ApplicationVersionRepository applicationVersionRepository,
-                                      ApplicationSubmissionEmailService applicationSubmissionEmailService,
-                                      ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService) {
+  ApplicationSubmissionService(
+      Clock clock,
+      AceFlagService aceFlagService,
+      ApplicationService applicationService,
+      ApplicationRepository applicationRepository,
+      ApplicationTaskListService applicationTaskListService,
+      ApplicationVersionRepository applicationVersionRepository,
+      ApplicationSubmissionEmailService applicationSubmissionEmailService,
+      ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService
+  ) {
     this.clock = clock;
     this.aceFlagService = aceFlagService;
     this.applicationService = applicationService;
@@ -82,15 +84,10 @@ public class ApplicationSubmissionService {
     // so assign one.
     if (application.getApplicationNo() == null) {
       application.setApplicationNo(applicationService.getNextApplicationNumber());
+      applicationRepository.save(application);
     }
 
     submitApplicationVersion(applicationVersion, user);
-    applicationRepository.save(application);
-    aceFlagService.autoSetAceFlag(applicationVersion);
-    applicationWorkAreaPriorityService
-        .prioritiseApplicationInWorkArea(applicationVersion, user, APPLICATION_SUBMITTED, INDUSTRY);
-    applicationWorkAreaPriorityService
-        .prioritiseApplicationInWorkArea(applicationVersion, user, APPLICATION_SUBMITTED, REGULATOR);
 
     if (!aceFlagService.isAceApplication(applicationVersion)) {
       try {
@@ -107,6 +104,31 @@ public class ApplicationSubmissionService {
   }
 
   @Transactional
+  public void regulatorAutoSubmitApplication(ApplicationVersion applicationVersion, ServiceUserDetail user) {
+    var applicationVersionStatus = applicationVersion.getStatus();
+    if (!ApplicationVersionStatus.IN_PROGRESS.equals(applicationVersionStatus)) {
+      throw new IllegalStateException(
+          String.format(
+              "Application %d cannot be submitted as application version has status %s",
+              applicationVersion.getApplication().getId(),
+              applicationVersionStatus
+          )
+      );
+    }
+
+    submitApplicationVersion(applicationVersion, user);
+  }
+
+  private void submitApplicationVersion(ApplicationVersion applicationVersion, ServiceUserDetail user) {
+    setApplicationVersionAsSubmitted(applicationVersion, user);
+    aceFlagService.autoSetAceFlag(applicationVersion);
+    applicationWorkAreaPriorityService
+        .prioritiseApplicationInWorkArea(applicationVersion, user, APPLICATION_SUBMITTED, INDUSTRY);
+    applicationWorkAreaPriorityService
+        .prioritiseApplicationInWorkArea(applicationVersion, user, APPLICATION_SUBMITTED, REGULATOR);
+  }
+
+  @Transactional
   @Observed(name = "fcs.application.update-submitted", contextualName = "application update submitted")
   public void submitApplicationUpdate(ApplicationVersion applicationVersion, ServiceUserDetail user) {
     var applicationVersionStatus = applicationVersion.getStatus();
@@ -120,7 +142,7 @@ public class ApplicationSubmissionService {
       );
     }
 
-    submitApplicationVersion(applicationVersion, user);
+    setApplicationVersionAsSubmitted(applicationVersion, user);
 
     applicationWorkAreaPriorityService
         .prioritiseApplicationInWorkArea(applicationVersion, user, UPDATE_SUBMITTED, INDUSTRY);
@@ -130,8 +152,7 @@ public class ApplicationSubmissionService {
         .prioritiseApplicationInWorkArea(applicationVersion, user, UPDATE_SUBMITTED, REGULATOR_TECHNICAL_REVIEWER);
   }
 
-  protected void submitApplicationVersion(ApplicationVersion applicationVersion,
-                                          ServiceUserDetail user) {
+  private void setApplicationVersionAsSubmitted(ApplicationVersion applicationVersion, ServiceUserDetail user) {
     applicationVersion.setStatus(ApplicationVersionStatus.SUBMITTED);
     applicationVersion.setSubmittedDateTime(clock.instant());
     applicationVersion.setSubmittedByWuaId(user.wuaId());

@@ -1,8 +1,11 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.revision;
 
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
@@ -21,6 +24,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
+import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryController;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
@@ -31,6 +35,9 @@ class ApplicationRevisionControllerTest extends AbstractApplicationControllerTes
 
   @MockBean
   private ApplicationService applicationService;
+
+  @MockBean
+  private ApplicationRevisionService applicationRevisionService;
 
   private ApplicationVersion applicationVersion;
 
@@ -73,6 +80,41 @@ class ApplicationRevisionControllerTest extends AbstractApplicationControllerTes
         .andExpect(view().name("fcs/application/revision/startRevision"))
         .andExpect(model().attribute("applicationReference", applicationReference))
         .andExpect(model().attribute("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-            .caseProcessing(APPLICATION_ID, null, null))));
+            .caseProcessing(APPLICATION_ID, null, null))))
+        .andExpect(model().attribute("startRevisionUrl", ReverseRouter.route(on(ApplicationRevisionController.class)
+            .startRevision(APPLICATION_ID, null))));
+  }
+
+  @SecurityTest
+  void startRevision_noUser() throws Exception {
+    mockMvc.perform(post(ReverseRouter.route(on(ApplicationRevisionController.class).startRevision(APPLICATION_ID, null)))
+            .with(csrf()))
+        .andExpect(redirectionToLoginUrl());
+  }
+
+  @SecurityTest
+  void startRevision_userDoesNotHaveReviseConsentCaseProcessingActionItem() throws Exception {
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
+
+    mockMvc.perform(post(ReverseRouter.route(on(ApplicationRevisionController.class).startRevision(APPLICATION_ID, null)))
+            .with(csrf())
+            .with(user(user)))
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void startRevision() throws Exception {
+    var newApplication = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
+
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CaseProcessingActionItem.REVISE_CONSENT));
+    when(applicationRevisionService.startApplicationRevision(applicationVersion, user)).thenReturn(newApplication);
+
+    mockMvc.perform(post(ReverseRouter.route(on(ApplicationRevisionController.class).startRevision(APPLICATION_ID, null)))
+            .with(csrf())
+            .with(user(user)))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationSummaryController.class)
+            .getApplicationSummary(newApplication.getId(), null))));
   }
 }

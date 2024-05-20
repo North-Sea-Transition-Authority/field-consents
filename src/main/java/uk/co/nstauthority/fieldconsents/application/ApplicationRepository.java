@@ -45,4 +45,23 @@ public interface ApplicationRepository extends CrudRepository<Application, Integ
       """
   )
   boolean nonWithdrawnOrDeletedRevisionApplicationExists(Application application);
+
+  @Query(
+      """
+      SELECT MAX(ra.variationNo)
+      FROM Application a
+      JOIN Application ra ON ra.applicationNo = a.applicationNo
+      JOIN ApplicationVersion trav
+        ON trav.application = ra
+        AND trav.version = (
+          SELECT MAX(av.version)
+          FROM ApplicationVersion av
+          WHERE av.application = trav.application
+          AND av.status != 'DELETED'
+        )
+      WHERE a = :application
+      AND trav.status != 'DELETED'
+      """
+  )
+  int getTipNonDeletedVariationNo(Application application);
 }
