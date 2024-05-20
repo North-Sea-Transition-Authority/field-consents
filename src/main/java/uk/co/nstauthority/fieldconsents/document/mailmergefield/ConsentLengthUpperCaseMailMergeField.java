@@ -33,7 +33,7 @@ class ConsentLengthUpperCaseMailMergeField implements DocumentMailMergeField {
 
   @Override
   public String getDescription() {
-    return "The length of the Consent in upper case";
+    return "The length of the consent in upper case";
   }
 
   @Override

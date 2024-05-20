@@ -53,7 +53,7 @@ class ConsentStartDateMailMergeFieldTest {
 
   @Test
   void getDescription() {
-    assertThat(consentStartDateMailMergeField.getDescription()).isEqualTo("The Consent start date for this application");
+    assertThat(consentStartDateMailMergeField.getDescription()).isEqualTo("The consent start date");
   }
 
   @ParameterizedTest

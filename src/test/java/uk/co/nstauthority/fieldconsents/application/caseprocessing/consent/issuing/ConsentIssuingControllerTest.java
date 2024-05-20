@@ -33,7 +33,6 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CasePr
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlagService;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval.ConsentIssuingApprovalService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval.ConsentIssuingApprovalSummaryView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.documents.ConsentPreparationDocumentService;
@@ -65,7 +64,7 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
   private ConsentIssuingApprovalService consentIssuingApprovalService;
 
   @MockBean
-  private ConsentService consentService;
+  private ConsentIssuingService consentIssuingService;
 
   @MockBean
   private CaseStatusFlagService caseStatusFlagService;
@@ -357,6 +356,6 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
         .andExpect(redirectedUrl(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null))))
         .andExpect(notificationBanner(expectedNotificationBanner));
 
-    verify(consentService).issueConsent(applicationVersion, user);
+    verify(consentIssuingService).issueConsent(applicationVersion, user);
   }
 }

@@ -70,7 +70,7 @@ class ScheduleMailMergeFieldTest {
 
   @Test
   void getDescription() {
-    assertThat(scheduleMailMergeField.getDescription()).isEqualTo("The schedule for the Consent");
+    assertThat(scheduleMailMergeField.getDescription()).isEqualTo("The schedule for the consent");
   }
 
   @ParameterizedTest

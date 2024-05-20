@@ -60,7 +60,7 @@ class ScheduleMailMergeField implements DocumentMailMergeField {
 
   @Override
   public String getDescription() {
-    return "The schedule for the Consent";
+    return "The schedule for the consent";
   }
 
   @Override

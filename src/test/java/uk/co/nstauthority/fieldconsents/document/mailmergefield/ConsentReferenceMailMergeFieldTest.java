@@ -11,36 +11,34 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldResolveResult;
+import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceLinkingService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.DocumentInstanceDtoTestUtil;
-import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
-import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
-import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateType;
+
 @ExtendWith(MockitoExtension.class)
-class ConsentLengthUpperCaseMailMergeFieldTest {
+class ConsentReferenceMailMergeFieldTest {
 
   @Mock
   private ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService;
 
   @Mock
-  private ConsentLengthService consentLengthService;
+  private ApplicationService applicationService;
 
   @InjectMocks
-  private ConsentLengthUpperCaseMailMergeField consentLengthUpperCaseMailMergeField;
+  private ConsentReferenceMailMergeField consentReferenceMailMergeField;
 
   @Test
   void getMnemonic() {
-    assertThat(consentLengthUpperCaseMailMergeField.getMnemonic()).isEqualTo("CONSENT_LENGTH_UPPER_CASE");
+    assertThat(consentReferenceMailMergeField.getMnemonic()).isEqualTo("CONSENT_REFERENCE");
   }
 
   @Test
   void getDescription() {
-    assertThat(consentLengthUpperCaseMailMergeField.getDescription())
-        .isEqualTo("The length of the consent in upper case");
+    assertThat(consentReferenceMailMergeField.getDescription()).isEqualTo("The consent reference");
   }
 
   @ParameterizedTest
@@ -50,24 +48,21 @@ class ConsentLengthUpperCaseMailMergeFieldTest {
         .withMnemonic(documentTemplateType.getMnemonic())
         .build();
 
-    assertThat(consentLengthUpperCaseMailMergeField.isApplicable(documentTemplateDto)).isTrue();
+    assertThat(consentReferenceMailMergeField.isApplicable(documentTemplateDto)).isTrue();
   }
 
-  @ParameterizedTest
-  @EnumSource
-  void resolve(ConsentLengthType consentLengthType) {
+  @Test
+  void resolve() {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
 
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
-
-    var consentLengthDetails = new ConsentLengthDetails();
-    consentLengthDetails.setConsentLength(consentLengthType);
+    var applicationReference = "Test/application/reference";
 
     when(applicationDocumentInstanceLinkingService.getLatestApplicationVersionFromDocumentInstanceDto(documentInstanceDto))
         .thenReturn(applicationVersion);
-    when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
+    when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
 
-    assertThat(consentLengthUpperCaseMailMergeField.resolve(documentInstanceDto))
-        .isEqualTo(DocumentMailMergeFieldResolveResult.success(consentLengthType.getShortDisplayName().toUpperCase()));
+    assertThat(consentReferenceMailMergeField.resolve(documentInstanceDto))
+        .isEqualTo(DocumentMailMergeFieldResolveResult.success(applicationReference));
   }
 }

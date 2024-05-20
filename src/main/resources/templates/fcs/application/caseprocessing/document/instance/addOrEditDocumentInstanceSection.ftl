@@ -3,29 +3,33 @@
 
 <#import '../../../../document/_mailMergeFieldSummaryDetails.ftl' as _mailMergeFieldSummaryDetails>
 
-<@defaultPage htmlTitle=pageTitle pageHeading=pageTitle errorItems=errorList>
+<@defaultPage htmlTitle=pageTitle pageHeading=pageTitle pageSize=PageSize.FULL_WIDTH errorItems=errorList>
   <@fdsForm.htmlForm>
-    <@fdsTextInput.textInput
-      path="form.title"
-      labelText="Section title"
-      hintText="This will be shown in the document sidebar"
-    />
+    <@grid.gridRow>
+      <@grid.twoThirdsColumn>
+        <@fdsTextInput.textInput
+          path="form.title"
+          labelText="Section title"
+          hintText="This will be shown in the document sidebar"
+        />
 
-    <@richTextEditor path="form.content" labelText="Section content"/>
+        <@richTextEditor path="form.content" labelText="Section content"/>
 
-    <@fdsRadio.radioGroup path="form.numbered" labelText="Should this section be numbered?">
-      <@fdsRadio.radioYes path="form.numbered" />
-      <@fdsRadio.radioNo path="form.numbered" />
-    </@fdsRadio.radioGroup>
+        <@fdsRadio.radioGroup path="form.numbered" labelText="Should this section be numbered?">
+          <@fdsRadio.radioYes path="form.numbered" />
+          <@fdsRadio.radioNo path="form.numbered" />
+        </@fdsRadio.radioGroup>
 
-    <@fdsRadio.radioGroup path="form.hasPageBreakBefore" labelText="Should this section start on a new page?">
-      <@fdsRadio.radioYes path="form.hasPageBreakBefore" />
-      <@fdsRadio.radioNo path="form.hasPageBreakBefore" />
-    </@fdsRadio.radioGroup>
+        <@fdsRadio.radioGroup path="form.hasPageBreakBefore" labelText="Should this section start on a new page?">
+          <@fdsRadio.radioYes path="form.hasPageBreakBefore" />
+          <@fdsRadio.radioNo path="form.hasPageBreakBefore" />
+        </@fdsRadio.radioGroup>
 
-    <#if mailMergeFieldViews?has_content>
-      <@_mailMergeFieldSummaryDetails.mailMergeFieldSummaryDetails mailMergeFieldViews />
-    </#if>
+        <#if mailMergeFieldViews?has_content>
+          <@_mailMergeFieldSummaryDetails.mailMergeFieldSummaryDetails mailMergeFieldViews />
+        </#if>
+      </@grid.twoThirdsColumn>
+    </@grid.gridRow>
 
     <@fdsAction.submitButtons
       primaryButtonText="${submitButtonText}"

@@ -206,14 +206,14 @@ class DocumentTemplateBootstrapService {
     documentTemplateSectionService.createDocumentTemplateSection(
         fieldProductionConsentDocumentTemplateDto,
         null,
-        "TODO FCS-610: This consent supersedes",
+        "This consent supersedes",
         """
         <p style="text-align: justify;">\
-        [This consent supersedes the consent [CONSENT REFERENCE] granted by the ((REGULATOR_LEGAL_NAME)) \
-        dated [DATE].]\
+        This consent supersedes the consent ((SUPERSEDED_CONSENT_REFERENCE)) granted by the ((REGULATOR_LEGAL_NAME)) dated \
+        ((SUPERSEDED_CONSENT_ISSUE_DATE)).\
         </p>\
         """,
-        null,
+        "APPLICATION_IS_REVISION",
         true,
         false,
         6
@@ -367,14 +367,14 @@ class DocumentTemplateBootstrapService {
     documentTemplateSectionService.createDocumentTemplateSection(
         fieldFlareConsentDocumentTemplateDto,
         null,
-        "TODO FCS-610: This consent supersedes",
+        "This consent supersedes",
         """
         <p style="text-align: justify;">\
-        [This consent supersedes the consent [CONSENT REFERENCE] granted by the ((REGULATOR_LEGAL_NAME)) \
-        dated [DATE].]\
+        This consent supersedes the consent ((SUPERSEDED_CONSENT_REFERENCE)) granted by the ((REGULATOR_LEGAL_NAME)) dated \
+        ((SUPERSEDED_CONSENT_ISSUE_DATE)).\
         </p>\
         """,
-        null,
+        "APPLICATION_IS_REVISION",
         true,
         false,
         6
@@ -492,14 +492,14 @@ class DocumentTemplateBootstrapService {
     documentTemplateSectionService.createDocumentTemplateSection(
         terminalFlareConsentDocumentTemplateDto,
         null,
-        "TODO FCS-610: This consent supersedes",
+        "This consent supersedes",
         """
         <p style="text-align: justify;">\
-        [This consent supersedes the consent [CONSENT REFERENCE] granted by the ((REGULATOR_LEGAL_NAME)) \
-        dated [DATE].]\
+        This consent supersedes the consent ((SUPERSEDED_CONSENT_REFERENCE)) granted by the ((REGULATOR_LEGAL_NAME)) dated \
+        ((SUPERSEDED_CONSENT_ISSUE_DATE)).\
         </p>\
         """,
-        null,
+        "APPLICATION_IS_REVISION",
         true,
         false,
         5
@@ -599,13 +599,14 @@ class DocumentTemplateBootstrapService {
     documentTemplateSectionService.createDocumentTemplateSection(
         fieldVentConsentDocumentTemplateDto,
         null,
-        "TODO FCS-610: This consent supersedes",
+        "This consent supersedes",
         """
         <p style="text-align: justify;">\
-        [This consent supersedes the consent [CONSENT REFERENCE] granted by the ((REGULATOR_LEGAL_NAME)) dated [DATE].]\
+        This consent supersedes the consent ((SUPERSEDED_CONSENT_REFERENCE)) granted by the ((REGULATOR_LEGAL_NAME)) dated \
+        ((SUPERSEDED_CONSENT_ISSUE_DATE)).\
         </p>\
         """,
-        null,
+        "APPLICATION_IS_REVISION",
         true,
         false,
         5
@@ -723,14 +724,14 @@ class DocumentTemplateBootstrapService {
     documentTemplateSectionService.createDocumentTemplateSection(
         terminalVentConsentDocumentTemplateDto,
         null,
-        "TODO FCS-610: This consent supersedes",
+        "This consent supersedes",
         """
         <p style="text-align: justify;">\
-        [This consent supersedes the consent [CONSENT REFERENCE] granted by the ((REGULATOR_LEGAL_NAME)) \
-        dated [DATE].]\
-        </p>
+        This consent supersedes the consent ((SUPERSEDED_CONSENT_REFERENCE)) granted by the ((REGULATOR_LEGAL_NAME)) dated \
+        ((SUPERSEDED_CONSENT_ISSUE_DATE)).\
+        </p>\
         """,
-        null,
+        "APPLICATION_IS_REVISION",
         true,
         false,
         5

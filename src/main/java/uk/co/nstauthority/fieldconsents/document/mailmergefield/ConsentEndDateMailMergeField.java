@@ -16,7 +16,7 @@ import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 public class ConsentEndDateMailMergeField implements DocumentMailMergeField {
 
   private static final String MNEMONIC = "CONSENT_END_DATE";
-  private static final String DESCRIPTION = "The Consent end date for this application";
+  private static final String DESCRIPTION = "The consent end date";
 
   private final ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService;
   private final ConsentDataRepository repository;

@@ -10,15 +10,15 @@ import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateDto;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceLinkingService;
 
-@Order(DocumentMailMergeFieldDisplayOrders.APPLICATION_REFERENCE)
+@Order(DocumentMailMergeFieldDisplayOrders.CONSENT_REFERENCE)
 @Component
-class ApplicationReferenceMailMergeField implements DocumentMailMergeField {
+class ConsentReferenceMailMergeField implements DocumentMailMergeField {
 
   private final ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService;
   private final ApplicationService applicationService;
 
   @Autowired
-  ApplicationReferenceMailMergeField(
+  ConsentReferenceMailMergeField(
       ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService,
       ApplicationService applicationService
   ) {
@@ -28,12 +28,12 @@ class ApplicationReferenceMailMergeField implements DocumentMailMergeField {
 
   @Override
   public String getMnemonic() {
-    return "APPLICATION_REFERENCE";
+    return "CONSENT_REFERENCE";
   }
 
   @Override
   public String getDescription() {
-    return "The reference assigned to the application";
+    return "The consent reference";
   }
 
   @Override

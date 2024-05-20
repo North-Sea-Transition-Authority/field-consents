@@ -18,7 +18,6 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CasePr
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlagService;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval.ConsentIssuingApprovalService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.documents.ConsentPreparationDocumentService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
@@ -37,7 +36,7 @@ public class ConsentIssuingController {
   private final CaseProcessingActionService caseProcessingActionService;
   private final ConsentPreparationDocumentService consentPreparationDocumentService;
   private final ConsentIssuingApprovalService consentIssuingApprovalService;
-  private final ConsentService consentService;
+  private final ConsentIssuingService consentIssuingService;
   private final CaseStatusFlagService caseStatusFlagService;
 
   ConsentIssuingController(
@@ -47,7 +46,7 @@ public class ConsentIssuingController {
       CaseProcessingActionService caseProcessingActionService,
       ConsentPreparationDocumentService consentPreparationDocumentService,
       ConsentIssuingApprovalService consentIssuingApprovalService,
-      ConsentService consentService,
+      ConsentIssuingService consentIssuingService,
       CaseStatusFlagService caseStatusFlagService
   ) {
     this.applicationService = applicationService;
@@ -56,7 +55,7 @@ public class ConsentIssuingController {
     this.caseProcessingActionService = caseProcessingActionService;
     this.consentPreparationDocumentService = consentPreparationDocumentService;
     this.consentIssuingApprovalService = consentIssuingApprovalService;
-    this.consentService = consentService;
+    this.consentIssuingService = consentIssuingService;
     this.caseStatusFlagService = caseStatusFlagService;
   }
 
@@ -163,7 +162,7 @@ public class ConsentIssuingController {
   ) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
 
-    consentService.issueConsent(applicationVersion, user);
+    consentIssuingService.issueConsent(applicationVersion, user);
 
     var applicationReference = applicationService.generateApplicationReference(applicationVersion);
 

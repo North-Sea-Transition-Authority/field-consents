@@ -5,13 +5,13 @@ import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 
-class ConsentTestUtil {
+public class ConsentTestUtil {
 
-  static Builder newBuilder() {
+  public static Builder newBuilder() {
     return new Builder();
   }
 
-  static class Builder {
+  public static class Builder {
 
     private Integer id = 1;
     private Application application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
@@ -21,27 +21,27 @@ class ConsentTestUtil {
     private Builder() {
     }
 
-    Builder withId(Integer id) {
+    public Builder withId(Integer id) {
       this.id = id;
       return this;
     }
 
-    Builder withApplication(Application application) {
+    public Builder withApplication(Application application) {
       this.application = application;
       return this;
     }
 
-    Builder withIssuedByWuaId(Long issuedByWuaId) {
+    public Builder withIssuedByWuaId(Long issuedByWuaId) {
       this.issuedByWuaId = issuedByWuaId;
       return this;
     }
 
-    Builder withIssuedInstant(Instant issuedInstant) {
+    public Builder withIssuedInstant(Instant issuedInstant) {
       this.issuedInstant = issuedInstant;
       return this;
     }
 
-    Consent build() {
+    public Consent build() {
       var consent = new Consent(id);
 
       consent.setApplication(application);
