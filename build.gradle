@@ -57,7 +57,7 @@ dependencies {
   implementation "uk.co.fivium:file-upload-spring-boot-starter:${fileUploadLibraryVersion}"
   implementation 'uk.co.fivium:digital-payments-library-spring-boot-starter:v1.0.1'
   implementation 'uk.co.fivium:digital-notification-library-spring-boot-starter:v1.0.0'
-  implementation 'uk.co.fivium:digital-document-library-spring-boot-starter:fcs-734-materialise-consent-data-at-point-of-issue-SNAPSHOT'
+  implementation 'uk.co.fivium:digital-document-library-spring-boot-starter:develop-SNAPSHOT'
   implementation 'uk.co.fivium:ftss-client-spring-boot-starter:develop-SNAPSHOT'
 
   implementation 'org.springframework.boot:spring-boot-starter-jooq'
