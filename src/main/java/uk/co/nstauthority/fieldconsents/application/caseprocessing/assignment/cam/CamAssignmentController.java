@@ -16,7 +16,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.ConsentPreparationController;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
@@ -77,8 +77,7 @@ public class CamAssignmentController {
         .addObject("applicationReference", applicationReference)
         .addObject("camUserAssignmentCandidates", camUserAssignmentCandidatesMap)
         .addObject("backLinkUrl",
-            ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-                .caseProcessing(applicationId, null, null)));
+            ReverseRouter.route(on(ConsentPreparationController.class).viewConsentPreparationPage(applicationId, null)));
   }
 
   @PostMapping("assign-to-cam")

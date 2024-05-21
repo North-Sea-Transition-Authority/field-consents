@@ -37,7 +37,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.ApplicationCaseProcessingController;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.ConsentPreparationController;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
@@ -135,8 +135,7 @@ class CamAssignmentControllerTest extends AbstractApplicationControllerTest {
         .andExpect(model().attribute("applicationReference", DUMMY_APP_REF))
         .andExpect(model().attribute("camUserAssignmentCandidates", CAM_USER_ASSIGNMENT_CANDIDATES_MAP))
         .andExpect(model().attribute("backLinkUrl",
-            ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-                .caseProcessing(APPLICATION_ID, null, null))));
+            ReverseRouter.route(on(ConsentPreparationController.class).viewConsentPreparationPage(APPLICATION_ID, null))));
   }
 
   @SecurityTest
@@ -211,8 +210,7 @@ class CamAssignmentControllerTest extends AbstractApplicationControllerTest {
         .andExpect(model().attribute("applicationReference", DUMMY_APP_REF))
         .andExpect(model().attribute("camUserAssignmentCandidates", CAM_USER_ASSIGNMENT_CANDIDATES_MAP))
         .andExpect(model().attribute("backLinkUrl",
-            ReverseRouter.route(on(ApplicationCaseProcessingController.class)
-                .caseProcessing(APPLICATION_ID, null, null))));
+            ReverseRouter.route(on(ConsentPreparationController.class).viewConsentPreparationPage(APPLICATION_ID, null))));
   }
 
   private static Stream<Arguments> getSubmittedApplicationVersions() {
