@@ -2,7 +2,7 @@
 -- Run script with F5 in Toad
 --
 -- Full execution run times:
--- UAT 5 mins 7 secs
+-- UAT 9 mins 38 secs
 -- LIVE 8 mins 29 secs (22/03/2024 - CLOB investigation run)
 --
 

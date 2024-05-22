@@ -9,12 +9,10 @@
 --
 
 
--- Execution run times for insert into promotemgr.s3_file_migration :
--- UAT 4 mins 17 secs (for 5172 files)
---
-
+-- Execution run time for insert into promotemgr.s3_file_migration :
+-- UAT 4 mins 37 secs (for 5171 files)
 -- queue the files to be migrated
-INSERT INTO promotemgr.s3_file_migration ( 
+INSERT INTO promotemgr.s3_file_migration (
   fox_file_id
 , application
 , reference
@@ -33,6 +31,10 @@ FROM fcs_migration.application_versions av
 JOIN fcs_migration.field_consent_supporting_docs sd ON sd.fcd_id = av.id
 WHERE sd.calculated_file_size > 0;
 /
+COMMIT;
+/
+-- Execution run time for insert into promotemgr.s3_file_migration :
+-- UAT 2 mins 55 secs (for 21257 files)
 INSERT INTO promotemgr.s3_file_migration ( 
   fox_file_id
 , application
@@ -67,7 +69,7 @@ COMMIT;
 -- java -DdbUrl="db-ogacl1.oga.sb1.prod:1521/ogacl1" -DdbUser="promotemgr" -DdbPassword="?" -DaccessKey="?" -DsecretKey="?" -Dbucket="fcs.preprod.nstauthority.co.uk" -Dregion="eu-west-2" -DendpointUrl="s3.eu-west-2.amazonaws.com" -jar ./s3-file-migrator.jar MIGRATE
 --
 -- Execution run times for uploading the files to S3 using the s3_file_migrator
--- UAT 11 mins 15 secs (for 5172 files - 8.93GB)
+-- UAT 11 mins 15 secs (for 26428 files - 10.03GB)
 
 -- queue the FUSS data for each migrated file
 INSERT INTO fcs_migration.file_upload_library_uploaded_files (
@@ -101,6 +103,8 @@ FROM fcs_migration.application_versions av
 JOIN fcs_migration.field_consent_supporting_docs sd ON sd.fcd_id = av.id
 JOIN promotemgr.s3_file_migration fm ON fm.fox_file_id = sd.fox_file_id
 WHERE fm.migrated_timestamp IS NOT NULL;
+/
+COMMIT;
 /
 INSERT INTO fcs_migration.file_upload_library_uploaded_files (
   id

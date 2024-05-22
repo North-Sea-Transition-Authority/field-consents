@@ -34,7 +34,8 @@
 --DELETE FROM "fcs"."notification_library_notifications_aud"@fcs_postgres_db;
 --DELETE FROM "fcs"."payments_library_payments_aud"@fcs_postgres_db;
 --
----- we aren't migrating to these table but the data still needs deleting
+---- we aren't migrating to these tables but the data still needs deleting
+--DELETE FROM "fcs"."application_consent_document_generation_data"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_work_area_priorities"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_rationale"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_withdrawals"@fcs_postgres_db;
