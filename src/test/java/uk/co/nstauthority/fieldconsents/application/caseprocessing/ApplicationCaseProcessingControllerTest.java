@@ -235,6 +235,9 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
         consentFieldEquityPartnersView,
         List.of(new SummaryFileView("Test file name", "Test description", "http://test.url"))
     );
+
+    // this is called in the IsMemberOfTeamTypeInterceptor
+    when(teamService.isRegulatorUser(user)).thenReturn(true);
   }
 
   @ParameterizedSecurityTest

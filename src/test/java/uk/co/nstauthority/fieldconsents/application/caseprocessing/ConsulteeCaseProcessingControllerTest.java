@@ -92,6 +92,9 @@ class ConsulteeCaseProcessingControllerTest extends AbstractApplicationControlle
 
     // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID)).thenReturn(Optional.of(applicationVersion));
+
+    // this is called in the IsMemberOfTeamTypeInterceptor
+    when(teamService.isConsulteeUser(user)).thenReturn(true);
   }
 
   @SecurityTest

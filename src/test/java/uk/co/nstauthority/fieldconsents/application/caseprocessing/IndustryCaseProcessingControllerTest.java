@@ -142,6 +142,9 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
         null,
         List.of(new SummaryFileView("Test file name", "Test description", "http://test.url"))
     );
+
+    // this is called in the IsMemberOfTeamTypeInterceptor
+    when(teamService.isIndustryUser(user)).thenReturn(true);
   }
 
   @SecurityTest
@@ -364,6 +367,8 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
     when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(true);
     when(consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion))
         .thenReturn(ProductionConsentCheckResult.NOT_WITHIN_ACTIVE_CONSENT);
+    // this is called in the IsMemberOfTeamTypeInterceptor
+    when(teamService.isIndustryUser(user)).thenReturn(true);
 
     mockMvc.perform(get(ReverseRouter.route(on(IndustryCaseProcessingController.class)
             .getIndustryCaseProcessing(APPLICATION_ID, null, null)) + tabParam)

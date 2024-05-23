@@ -26,7 +26,9 @@ import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummarySe
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
+import uk.co.nstauthority.fieldconsents.authorisation.IsMemberOfTeamType;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Controller
@@ -85,6 +87,7 @@ public class IndustryCaseProcessingController {
       RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS,
       RolePermission.VIEW_FCS_CONSENTS
   })
+  @IsMemberOfTeamType(teamType = TeamType.INDUSTRY)
   public ModelAndView getIndustryCaseProcessing(
       @PathVariable Integer applicationId,
       @RequestParam(required = false) CaseProcessingTab tab,

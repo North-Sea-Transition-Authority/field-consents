@@ -31,8 +31,10 @@ import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummarySe
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
+import uk.co.nstauthority.fieldconsents.authorisation.IsMemberOfTeamType;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamService;
 
@@ -51,6 +53,7 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.Reg
     RolePermission.VIEW_FCS_CONSENTS,
     RolePermission.AUTHORISE_FCS_CONSENTS,
 })
+@IsMemberOfTeamType(teamType = TeamType.REGULATOR)
 public class ApplicationCaseProcessingController {
 
   private final ApplicationService applicationService;

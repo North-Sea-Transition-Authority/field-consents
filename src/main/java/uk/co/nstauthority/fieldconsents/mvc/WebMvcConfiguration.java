@@ -17,6 +17,7 @@ import uk.co.nstauthority.fieldconsents.authorisation.ApplicationHandlerIntercep
 import uk.co.nstauthority.fieldconsents.authorisation.HasAssetPermissionInterceptor;
 import uk.co.nstauthority.fieldconsents.authorisation.HasPermissionInterceptor;
 import uk.co.nstauthority.fieldconsents.authorisation.HasTeamPermissionInterceptor;
+import uk.co.nstauthority.fieldconsents.authorisation.IsMemberOfTeamTypeInterceptor;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.PermissionManagementHandlerInterceptor;
 
 @Configuration
@@ -40,6 +41,8 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
 
   private final HasAssetPermissionInterceptor hasAssetPermissionInterceptor;
 
+  private final IsMemberOfTeamTypeInterceptor isMemberOfTeamTypeInterceptor;
+
   @Autowired
   WebMvcConfiguration(ErrorListHandlerInterceptor errorListHandlerInterceptor,
                       ResponseBufferSizeHandlerInterceptor responseBufferSizeHandlerInterceptor,
@@ -48,7 +51,8 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
                       HasTeamPermissionInterceptor hasTeamPermissionInterceptor,
                       ApplicationHandlerInterceptor applicationHandlerInterceptor,
                       ServiceUserDetailArgumentResolver serviceUserDetailArgumentResolver,
-                      HasAssetPermissionInterceptor hasAssetPermissionInterceptor) {
+                      HasAssetPermissionInterceptor hasAssetPermissionInterceptor,
+                      IsMemberOfTeamTypeInterceptor isMemberOfTeamTypeInterceptor) {
     this.errorListHandlerInterceptor = errorListHandlerInterceptor;
     this.responseBufferSizeHandlerInterceptor = responseBufferSizeHandlerInterceptor;
     this.permissionManagementHandlerInterceptor = permissionManagementHandlerInterceptor;
@@ -57,6 +61,7 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
     this.applicationHandlerInterceptor = applicationHandlerInterceptor;
     this.serviceUserDetailArgumentResolver = serviceUserDetailArgumentResolver;
     this.hasAssetPermissionInterceptor = hasAssetPermissionInterceptor;
+    this.isMemberOfTeamTypeInterceptor = isMemberOfTeamTypeInterceptor;
   }
 
   @Override
@@ -78,6 +83,8 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
         .addPathPatterns("/permission-management/**");
     registry.addInterceptor(hasTeamPermissionInterceptor)
         .addPathPatterns("/permission-management/**");
+    registry.addInterceptor(isMemberOfTeamTypeInterceptor)
+        .addPathPatterns("/applications/**");
     registry.addInterceptor(applicationHandlerInterceptor)
         .addPathPatterns("/applications/**");
     registry.addInterceptor(hasPermissionInterceptor)

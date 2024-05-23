@@ -24,7 +24,9 @@ import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummarySe
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
+import uk.co.nstauthority.fieldconsents.authorisation.IsMemberOfTeamType;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.teams.TeamType;
 
 @Controller
 @RequestMapping("applications/{applicationId}/consultation-case-processing")
@@ -35,6 +37,7 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
     ApplicationVersionStatus.WITHDRAWN
 })
 @HasApplicationPermission(permissions = {ALLOCATE_CONSULTATION, RESPOND_TO_CONSULTATION})
+@IsMemberOfTeamType(teamType = TeamType.OPRED)
 public class ConsulteeCaseProcessingController {
 
   private final ApplicationService applicationService;

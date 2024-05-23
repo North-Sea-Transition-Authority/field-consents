@@ -26,6 +26,7 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil
 import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
 import uk.co.nstauthority.fieldconsents.authorisation.ApplicationHandlerInterceptor;
 import uk.co.nstauthority.fieldconsents.authorisation.AssetAccessService;
+import uk.co.nstauthority.fieldconsents.authorisation.IsMemberOfTeamTypeInterceptor;
 import uk.co.nstauthority.fieldconsents.authorisation.HasAssetPermissionInterceptor;
 import uk.co.nstauthority.fieldconsents.authorisation.HasPermissionInterceptor;
 import uk.co.nstauthority.fieldconsents.authorisation.HasTeamPermissionInterceptor;
@@ -78,7 +79,8 @@ import uk.co.nstauthority.fieldconsents.validation.ValidationErrorOrderingServic
     WebSecurityConfiguration.class,
     ServiceUserDetailArgumentResolver.class,
     RequestLogFilter.class,
-    PostAuthenticationRequestMdcFilter.class
+    PostAuthenticationRequestMdcFilter.class,
+    IsMemberOfTeamTypeInterceptor.class
 })
 @EnableConfigurationProperties({
     SamlProperties.class,
