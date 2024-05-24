@@ -16,6 +16,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.ConsentIssuingController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.ConsentPreparationController;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
@@ -30,23 +31,20 @@ import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 public class CamAssignmentController {
 
   private final ApplicationService applicationService;
-
   private final ApplicationVersionService applicationVersionService;
-
   private final CamAssignmentService camAssignmentService;
-
   private final CamAssignmentFormValidator camAssignmentFormValidator;
-
   private final EnergyPortalUserService energyPortalUserService;
-
   private final TeamMemberViewService teamMemberViewService;
 
-  public CamAssignmentController(ApplicationService applicationService,
-                                 ApplicationVersionService applicationVersionService,
-                                 CamAssignmentService camAssignmentService,
-                                 CamAssignmentFormValidator camAssignmentFormValidator,
-                                 EnergyPortalUserService energyPortalUserService,
-                                 TeamMemberViewService teamMemberViewService) {
+  CamAssignmentController(
+      ApplicationService applicationService,
+      ApplicationVersionService applicationVersionService,
+      CamAssignmentService camAssignmentService,
+      CamAssignmentFormValidator camAssignmentFormValidator,
+      EnergyPortalUserService energyPortalUserService,
+      TeamMemberViewService teamMemberViewService
+  ) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
     this.camAssignmentService = camAssignmentService;
@@ -56,19 +54,67 @@ public class CamAssignmentController {
   }
 
   @GetMapping("assign-to-cam")
-  @ActionEndPoint({CAM_ASSIGN_OWNERSHIP, CAM_REASSIGN_OWNERSHIP})
-  public ModelAndView getCamAssignment(@PathVariable Integer applicationId,
-                                       ServiceUserDetail user) {
+  @ActionEndPoint({CAM_ASSIGN_OWNERSHIP})
+  public ModelAndView getCamAssignment(
+      @PathVariable Integer applicationId,
+      ServiceUserDetail user
+  ) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
 
-    return getCamAssignmentModelAndView(applicationVersion, user)
+    var backLinkUrl = ReverseRouter.route(on(ConsentPreparationController.class).viewConsentPreparationPage(applicationId, null));
+
+    return getCamAssignmentModelAndView(applicationVersion, user, backLinkUrl)
         .addObject("form", new CamAssignmentForm());
   }
 
-  private ModelAndView getCamAssignmentModelAndView(ApplicationVersion applicationVersion,
-                                                    ServiceUserDetail user) {
+  @PostMapping("assign-to-cam")
+  @ActionEndPoint({CAM_ASSIGN_OWNERSHIP})
+  public ModelAndView assignCamUser(
+      @PathVariable Integer applicationId,
+      @ModelAttribute("form") CamAssignmentForm form,
+      ServiceUserDetail user,
+      BindingResult bindingResult,
+      RedirectAttributes redirectAttributes
+  ) {
+    var backLinkUrl = ReverseRouter.route(on(ConsentPreparationController.class).viewConsentPreparationPage(applicationId, null));
+
+    return assignCam(applicationId, form, user, bindingResult, redirectAttributes, backLinkUrl);
+  }
+
+  @GetMapping("reassign-cam")
+  @ActionEndPoint({CAM_REASSIGN_OWNERSHIP})
+  public ModelAndView getCamReassignment(
+      @PathVariable Integer applicationId,
+      ServiceUserDetail user
+  ) {
+    var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
+
+    var backLinkUrl = ReverseRouter.route(on(ConsentIssuingController.class).getConsentIssuing(applicationId, null));
+
+    return getCamAssignmentModelAndView(applicationVersion, user, backLinkUrl)
+        .addObject("form", new CamAssignmentForm());
+  }
+
+  @PostMapping("reassign-cam")
+  @ActionEndPoint({CAM_REASSIGN_OWNERSHIP})
+  public ModelAndView reassignCamUser(
+      @PathVariable Integer applicationId,
+      @ModelAttribute("form") CamAssignmentForm form,
+      ServiceUserDetail user,
+      BindingResult bindingResult,
+      RedirectAttributes redirectAttributes
+  ) {
+    var backLinkUrl = ReverseRouter.route(on(ConsentIssuingController.class).getConsentIssuing(applicationId, null));
+
+    return assignCam(applicationId, form, user, bindingResult, redirectAttributes, backLinkUrl);
+  }
+
+  private ModelAndView getCamAssignmentModelAndView(
+      ApplicationVersion applicationVersion,
+      ServiceUserDetail user,
+      String backLinkUrl
+  ) {
     var applicationReference = applicationService.generateApplicationReference(applicationVersion);
-    var applicationId = applicationVersion.getApplication().getId();
 
     var camUserAssignmentCandidatesMap = teamMemberViewService
         .getUsersMap(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion, user));
@@ -76,23 +122,23 @@ public class CamAssignmentController {
     return new ModelAndView("fcs/application/camAssignment")
         .addObject("applicationReference", applicationReference)
         .addObject("camUserAssignmentCandidates", camUserAssignmentCandidatesMap)
-        .addObject("backLinkUrl",
-            ReverseRouter.route(on(ConsentPreparationController.class).viewConsentPreparationPage(applicationId, null)));
+        .addObject("backLinkUrl", backLinkUrl);
   }
 
-  @PostMapping("assign-to-cam")
-  @ActionEndPoint({CAM_ASSIGN_OWNERSHIP, CAM_REASSIGN_OWNERSHIP})
-  public ModelAndView assignCamUser(@PathVariable Integer applicationId,
-                                    @ModelAttribute("form") CamAssignmentForm form,
-                                    ServiceUserDetail user,
-                                    BindingResult bindingResult,
-                                    RedirectAttributes redirectAttributes) {
+  private ModelAndView assignCam(
+      Integer applicationId,
+      CamAssignmentForm form,
+      ServiceUserDetail user,
+      BindingResult bindingResult,
+      RedirectAttributes redirectAttributes,
+      String backLinkUrl
+  ) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
 
     camAssignmentFormValidator.validate(form, bindingResult);
 
     if (bindingResult.hasErrors()) {
-      return getCamAssignmentModelAndView(applicationVersion, user);
+      return getCamAssignmentModelAndView(applicationVersion, user, backLinkUrl);
     }
 
     var camUser = ServiceUserDetail.from(energyPortalUserService.getByWuaId(form.getCamWuaId()));

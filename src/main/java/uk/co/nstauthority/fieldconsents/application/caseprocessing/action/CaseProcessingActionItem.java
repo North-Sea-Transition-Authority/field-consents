@@ -55,7 +55,7 @@ public enum CaseProcessingActionItem implements Displayable {
           .getCamAssignment(applicationId, null))),
   CAM_REASSIGN_OWNERSHIP("Reassign CAM", 7, false, false, null,
       applicationId -> ReverseRouter.route(on(CamAssignmentController.class)
-          .getCamAssignment(applicationId, null))),
+          .getCamReassignment(applicationId, null))),
   // Case manager actions
   CASE_OFFICER_ASSIGN_OWNERSHIP("Assign ownership", 1, false, true, null,
       applicationId -> ReverseRouter.route(on(CaseAssignmentController.class)

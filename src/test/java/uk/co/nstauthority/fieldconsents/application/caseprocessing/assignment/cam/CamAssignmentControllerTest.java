@@ -19,6 +19,7 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.Assign
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.ENERGY_PORTAL_USER_1;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.SERVICE_USER_DETAIL_USER_1;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CAM_ASSIGN_OWNERSHIP;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CAM_REASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.notificationBanner;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
@@ -37,6 +38,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.ConsentIssuingController;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.ConsentPreparationController;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
@@ -139,7 +141,7 @@ class CamAssignmentControllerTest extends AbstractApplicationControllerTest {
   }
 
   @SecurityTest
-  void assignCam_noUser() throws Exception {
+  void assignCamUser_noUser() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(CamAssignmentController.class)
             .assignCamUser(APPLICATION_ID, null, null, null, null)))
             .with(csrf()))
@@ -148,7 +150,7 @@ class CamAssignmentControllerTest extends AbstractApplicationControllerTest {
 
   @ParameterizedTest
   @MethodSource("getSubmittedApplicationVersions")
-  void assignCam_valid(ApplicationVersion applicationVersion) throws Exception {
+  void assignCamUser_valid(ApplicationVersion applicationVersion) throws Exception {
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
@@ -184,7 +186,7 @@ class CamAssignmentControllerTest extends AbstractApplicationControllerTest {
 
   @ParameterizedTest
   @MethodSource("getSubmittedApplicationVersions")
-  void assignCam_invalid(ApplicationVersion applicationVersion) throws Exception {
+  void assignCamUser_invalid(ApplicationVersion applicationVersion) throws Exception {
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
@@ -211,6 +213,152 @@ class CamAssignmentControllerTest extends AbstractApplicationControllerTest {
         .andExpect(model().attribute("camUserAssignmentCandidates", CAM_USER_ASSIGNMENT_CANDIDATES_MAP))
         .andExpect(model().attribute("backLinkUrl",
             ReverseRouter.route(on(ConsentPreparationController.class).viewConsentPreparationPage(APPLICATION_ID, null))));
+  }
+
+  @SecurityTest
+  void getCamReassignment_noUser() throws Exception {
+    mockMvc.perform(get(ReverseRouter.route(on(CamAssignmentController.class)
+            .getCamReassignment(APPLICATION_ID, null))))
+        .andExpect(redirectionToLoginUrl());
+  }
+
+  @SecurityTest
+  void getCamReassignment_checkEndPointSecurityOnly_forbidden() throws Exception {
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(Collections.emptyList());
+
+    mockMvc.perform(get(ReverseRouter.route(on(CamAssignmentController.class)
+            .getCamReassignment(APPLICATION_ID, null)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void getCamReassignment_checkEndPointSecurityOnly_allowed() throws Exception {
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
+    when(applicationService.generateApplicationReference(applicationVersion))
+        .thenReturn(DUMMY_APP_REF);
+    when(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion, user))
+        .thenReturn(CAM_USER_ASSIGNMENT_CANDIDATES);
+
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CAM_REASSIGN_OWNERSHIP));
+
+    mockMvc.perform(get(ReverseRouter.route(on(CamAssignmentController.class)
+            .getCamReassignment(APPLICATION_ID, null)))
+            .with(user(user))
+            .with(csrf()))
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/camAssignment"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("getSubmittedApplicationVersions")
+  void getCamReassignment(ApplicationVersion applicationVersion) throws Exception {
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
+    when(applicationService.generateApplicationReference(applicationVersion))
+        .thenReturn(DUMMY_APP_REF);
+    when(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion, user))
+        .thenReturn(CAM_USER_ASSIGNMENT_CANDIDATES);
+    when(teamMemberViewService.getUsersMap(CAM_USER_ASSIGNMENT_CANDIDATES))
+        .thenReturn(CAM_USER_ASSIGNMENT_CANDIDATES_MAP);
+
+    mockMvc.perform(get(ReverseRouter.route(on(CamAssignmentController.class)
+            .getCamReassignment(APPLICATION_ID, null)))
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/camAssignment"))
+        .andExpect(model().attribute("applicationReference", DUMMY_APP_REF))
+        .andExpect(model().attribute("camUserAssignmentCandidates", CAM_USER_ASSIGNMENT_CANDIDATES_MAP))
+        .andExpect(model().attribute("backLinkUrl",
+            ReverseRouter.route(on(ConsentIssuingController.class).getConsentIssuing(APPLICATION_ID, null))));
+  }
+
+  @SecurityTest
+  void reassignCamUser_noUser() throws Exception {
+    mockMvc.perform(post(ReverseRouter.route(on(CamAssignmentController.class)
+            .reassignCamUser(APPLICATION_ID, null, null, null, null)))
+            .with(csrf()))
+        .andExpect(redirectionToLoginUrl());
+  }
+
+  @ParameterizedTest
+  @MethodSource("getSubmittedApplicationVersions")
+  void reassignCamUser_valid(ApplicationVersion applicationVersion) throws Exception {
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
+    when(applicationService.generateApplicationReference(applicationVersion))
+        .thenReturn(DUMMY_APP_REF);
+
+    doCallRealMethod().when(camAssignmentFormValidator).validate(any(), any());
+
+    when(energyPortalUserService.getByWuaId(new WebUserAccountId(ENERGY_PORTAL_USER_1.webUserAccountId())))
+        .thenReturn(ENERGY_PORTAL_USER_1);
+
+    var expectedNotificationBanner = NotificationBanner.builder()
+        .withBannerType(NotificationBannerType.SUCCESS)
+        .withHeadingContent("You have assigned %s to %s".formatted(DUMMY_APP_REF, ENERGY_PORTAL_USER_1.displayName()))
+        .build();
+
+    mockMvc.perform(
+            post(ReverseRouter.route(on(CamAssignmentController.class)
+                .reassignCamUser(APPLICATION_ID, null, null, null, null)))
+                .with(csrf())
+                .with(user(user))
+                .param("camWuaId", String.valueOf(ENERGY_PORTAL_USER_1.webUserAccountId()))
+        )
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(ReverseRouter.route(on(WorkAreaController.class)
+            .getWorkArea(null, null))))
+        .andExpect(notificationBanner(expectedNotificationBanner));
+
+    verify(camAssignmentService, times(1))
+        .assignCamUser(applicationVersion, SERVICE_USER_DETAIL_USER_1, user);
+  }
+
+  @ParameterizedTest
+  @MethodSource("getSubmittedApplicationVersions")
+  void reassignCamUser_invalid(ApplicationVersion applicationVersion) throws Exception {
+    when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
+        .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
+        .thenReturn(applicationVersion);
+
+    doCallRealMethod().when(camAssignmentFormValidator).validate(any(), any());
+
+    when(applicationService.generateApplicationReference(applicationVersion))
+        .thenReturn(DUMMY_APP_REF);
+    when(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion, user))
+        .thenReturn(CAM_USER_ASSIGNMENT_CANDIDATES);
+    when(teamMemberViewService.getUsersMap(CAM_USER_ASSIGNMENT_CANDIDATES))
+        .thenReturn(CAM_USER_ASSIGNMENT_CANDIDATES_MAP);
+
+    mockMvc.perform(
+            post(ReverseRouter.route(on(CamAssignmentController.class)
+                .reassignCamUser(APPLICATION_ID, null, null, null, null)))
+                .with(csrf())
+                .with(user(user))
+        )
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/camAssignment"))
+        .andExpect(model().attribute("applicationReference", DUMMY_APP_REF))
+        .andExpect(model().attribute("camUserAssignmentCandidates", CAM_USER_ASSIGNMENT_CANDIDATES_MAP))
+        .andExpect(model().attribute("backLinkUrl",
+            ReverseRouter.route(on(ConsentIssuingController.class).getConsentIssuing(APPLICATION_ID, null))));
   }
 
   private static Stream<Arguments> getSubmittedApplicationVersions() {
