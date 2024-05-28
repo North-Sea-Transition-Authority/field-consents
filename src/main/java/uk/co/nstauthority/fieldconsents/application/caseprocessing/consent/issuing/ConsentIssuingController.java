@@ -18,6 +18,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CasePr
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlagService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval.ConsentIssuingApprovalService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.documents.ConsentPreparationDocumentService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
@@ -37,6 +38,7 @@ public class ConsentIssuingController {
   private final ConsentPreparationDocumentService consentPreparationDocumentService;
   private final ConsentIssuingApprovalService consentIssuingApprovalService;
   private final ConsentIssuingService consentIssuingService;
+  private final ConsentService consentService;
   private final CaseStatusFlagService caseStatusFlagService;
 
   ConsentIssuingController(
@@ -47,6 +49,7 @@ public class ConsentIssuingController {
       ConsentPreparationDocumentService consentPreparationDocumentService,
       ConsentIssuingApprovalService consentIssuingApprovalService,
       ConsentIssuingService consentIssuingService,
+      ConsentService consentService,
       CaseStatusFlagService caseStatusFlagService
   ) {
     this.applicationService = applicationService;
@@ -56,6 +59,7 @@ public class ConsentIssuingController {
     this.consentPreparationDocumentService = consentPreparationDocumentService;
     this.consentIssuingApprovalService = consentIssuingApprovalService;
     this.consentIssuingService = consentIssuingService;
+    this.consentService = consentService;
     this.caseStatusFlagService = caseStatusFlagService;
   }
 
@@ -127,12 +131,22 @@ public class ConsentIssuingController {
   @ActionEndPoint(CaseProcessingActionItem.ISSUE_CONSENT)
   public ModelAndView getIssueConsent(@PathVariable Integer applicationId) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
+    var application = applicationVersion.getApplication();
 
-    return new ModelAndView("fcs/application/consent/issueConsent")
+    var modelAndView = new ModelAndView("fcs/application/consent/issueConsent")
         .addObject("pageTitle", applicationService.generateApplicationReference(applicationVersion))
         .addObject("applicationContext", applicationContextService.getApplicationContext(applicationVersion))
         .addObject("cancelUrl", ReverseRouter.route(on(ConsentIssuingController.class)
             .getConsentIssuing(applicationId, null)));
+
+    if (application.isRevision()) {
+      var previousConsent = consentService.getPreviousConsent(application);
+      var previousConsentApplicationReference = consentService.generateConsentApplicationReference(previousConsent);
+
+      modelAndView.addObject("previousConsentApplicationReference", previousConsentApplicationReference);
+    }
+
+    return modelAndView;
   }
 
   @PostMapping("/unmark-for-issuing")

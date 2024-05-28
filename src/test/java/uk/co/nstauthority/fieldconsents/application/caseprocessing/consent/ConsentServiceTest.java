@@ -27,9 +27,11 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.Application;
+import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil;
@@ -44,6 +46,12 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil
 
 @ExtendWith(MockitoExtension.class)
 class ConsentServiceTest {
+
+  @Mock
+  private ApplicationService applicationService;
+
+  @Mock
+  private ApplicationVersionService applicationVersionService;
 
   @Mock
   private ApplicationAssetService applicationAssetService;
@@ -68,6 +76,8 @@ class ConsentServiceTest {
   @BeforeEach
   void beforeEach() {
     consentService = spy(new ConsentService(
+        applicationService,
+        applicationVersionService,
         applicationAssetService,
         consentRepository,
         consentDataService,
@@ -548,5 +558,20 @@ class ConsentServiceTest {
     when(consentRepository.findPreviousConsentByApplication(application)).thenReturn(Optional.of(previousConsent));
 
     assertThat(consentService.getPreviousConsent(application)).isEqualTo(previousConsent);
+  }
+
+  @Test
+  void generateConsentApplicationReference() {
+    var consent = ConsentTestUtil.newBuilder().build();
+
+    var latestApplicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+
+    var applicationReference = "Test/application/reference";
+
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(consent.getApplication().getId()))
+        .thenReturn(latestApplicationVersion);
+    when(applicationService.generateApplicationReference(latestApplicationVersion)).thenReturn(applicationReference);
+
+    assertThat(consentService.generateConsentApplicationReference(consent)).isEqualTo(applicationReference);
   }
 }

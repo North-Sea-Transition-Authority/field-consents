@@ -33,6 +33,8 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CasePr
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlagService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentTestUtil;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval.ConsentIssuingApprovalService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval.ConsentIssuingApprovalSummaryView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.documents.ConsentPreparationDocumentService;
@@ -65,6 +67,9 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
 
   @MockBean
   private ConsentIssuingService consentIssuingService;
+
+  @MockBean
+  private ConsentService consentService;
 
   @MockBean
   private CaseStatusFlagService caseStatusFlagService;
@@ -256,7 +261,9 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
   }
 
   @SecurityTest
-  void getIssueConsent() throws Exception {
+  void getIssueConsent_applicationIsNotRevision() throws Exception {
+    application.setVariationNo(0);
+
     var applicationReference = "Test/application/reference";
     var applicationContext = ApplicationContext.newBuilder()
         .withPrimaryAsset(FieldTestUtil.field1Json)
@@ -276,7 +283,40 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
         .andExpect(model().attribute("pageTitle", applicationReference))
         .andExpect(model().attribute("applicationContext", applicationContext))
         .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(ConsentIssuingController.class)
-            .getConsentIssuing(APPLICATION_ID, null))));
+            .getConsentIssuing(APPLICATION_ID, null))))
+        .andExpect(model().attributeDoesNotExist("previousConsentApplicationReference"));
+  }
+
+  @SecurityTest
+  void getIssueConsent_applicationIsRevision() throws Exception {
+    application.setVariationNo(1);
+
+    var applicationReference = "Test/application/reference";
+    var applicationContext = ApplicationContext.newBuilder()
+        .withPrimaryAsset(FieldTestUtil.field1Json)
+        .withPrimaryOperator("Primary operator")
+        .withApplicationVersionStatus(applicationVersion.getStatus())
+        .build();
+
+    var previousConsent = ConsentTestUtil.newBuilder().build();
+    var previousConsentApplicationReference = "Test/application/reference/2";
+
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
+        .thenReturn(List.of(CaseProcessingActionItem.ISSUE_CONSENT));
+    when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
+    when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(applicationContext);
+    when(consentService.getPreviousConsent(application)).thenReturn(previousConsent);
+    when(consentService.generateConsentApplicationReference(previousConsent)).thenReturn(previousConsentApplicationReference);
+
+    mockMvc.perform(get(ReverseRouter.route(on(ConsentIssuingController.class).getIssueConsent(APPLICATION_ID)))
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(view().name("fcs/application/consent/issueConsent"))
+        .andExpect(model().attribute("pageTitle", applicationReference))
+        .andExpect(model().attribute("applicationContext", applicationContext))
+        .andExpect(model().attribute("cancelUrl", ReverseRouter.route(on(ConsentIssuingController.class)
+            .getConsentIssuing(APPLICATION_ID, null))))
+        .andExpect(model().attribute("previousConsentApplicationReference", previousConsentApplicationReference));
   }
 
   @SecurityTest

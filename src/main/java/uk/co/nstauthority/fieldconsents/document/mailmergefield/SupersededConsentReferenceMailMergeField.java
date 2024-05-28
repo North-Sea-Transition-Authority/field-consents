@@ -6,8 +6,6 @@ import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceDto;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeField;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldResolveResult;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateDto;
-import uk.co.nstauthority.fieldconsents.application.ApplicationService;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceLinkingService;
 import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateType;
@@ -20,19 +18,13 @@ class SupersededConsentReferenceMailMergeField implements DocumentMailMergeField
   private static final String DESCRIPTION = "The superseded consent's reference (revisions only)";
 
   private final ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService;
-  private final ApplicationService applicationService;
-  private final ApplicationVersionService applicationVersionService;
   private final ConsentService consentService;
 
   SupersededConsentReferenceMailMergeField(
       ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService,
-      ApplicationService applicationService,
-      ApplicationVersionService applicationVersionService,
       ConsentService consentService
   ) {
     this.applicationDocumentInstanceLinkingService = applicationDocumentInstanceLinkingService;
-    this.applicationService = applicationService;
-    this.applicationVersionService = applicationVersionService;
     this.consentService = consentService;
   }
 
@@ -61,10 +53,7 @@ class SupersededConsentReferenceMailMergeField implements DocumentMailMergeField
     }
 
     var previousConsent = consentService.getPreviousConsent(application);
-    var previousConsentLatestApplicationVersion =
-        applicationVersionService.getLatestApplicationVersionByApplicationId(previousConsent.getApplication().getId());
-    var previousConsentApplicationReference =
-        applicationService.generateApplicationReference(previousConsentLatestApplicationVersion);
+    var previousConsentApplicationReference = consentService.generateConsentApplicationReference(previousConsent);
 
     return DocumentMailMergeFieldResolveResult.success(previousConsentApplicationReference);
   }

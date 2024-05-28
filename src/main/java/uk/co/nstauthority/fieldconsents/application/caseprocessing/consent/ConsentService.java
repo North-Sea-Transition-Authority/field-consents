@@ -10,8 +10,10 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.Application;
+import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
@@ -26,6 +28,8 @@ import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 @Service
 public class ConsentService {
 
+  private final ApplicationService applicationService;
+  private final ApplicationVersionService applicationVersionService;
   private final ApplicationAssetService applicationAssetService;
   private final ConsentRepository consentRepository;
   private final ConsentDataService consentDataService;
@@ -33,12 +37,16 @@ public class ConsentService {
   private final Clock clock;
 
   ConsentService(
+      ApplicationService applicationService,
+      ApplicationVersionService applicationVersionService,
       ApplicationAssetService applicationAssetService,
       ConsentRepository consentRepository,
       ConsentDataService consentDataService,
       ConsentLengthService consentLengthService,
       Clock clock
   ) {
+    this.applicationService = applicationService;
+    this.applicationVersionService = applicationVersionService;
     this.applicationAssetService = applicationAssetService;
     this.consentRepository = consentRepository;
     this.consentDataService = consentDataService;
@@ -177,5 +185,12 @@ public class ConsentService {
     return consentRepository.findPreviousConsentByApplication(application)
         .orElseThrow(() -> new IllegalStateException("Unable to find previous consent for application %d"
             .formatted(applicationId)));
+  }
+
+  public String generateConsentApplicationReference(Consent consent) {
+    var latestApplicationVersion =
+        applicationVersionService.getLatestApplicationVersionByApplicationId(consent.getApplication().getId());
+
+    return applicationService.generateApplicationReference(latestApplicationVersion);
   }
 }

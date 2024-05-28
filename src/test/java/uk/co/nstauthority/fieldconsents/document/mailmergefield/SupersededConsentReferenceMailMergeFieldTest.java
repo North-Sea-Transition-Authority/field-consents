@@ -11,10 +11,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentMailMergeFieldResolveResult;
-import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentTestUtil;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceLinkingService;
@@ -27,12 +25,6 @@ class SupersededConsentReferenceMailMergeFieldTest {
 
   @Mock
   private ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService;
-
-  @Mock
-  private ApplicationService applicationService;
-
-  @Mock
-  private ApplicationVersionService applicationVersionService;
 
   @Mock
   private ConsentService consentService;
@@ -86,16 +78,12 @@ class SupersededConsentReferenceMailMergeFieldTest {
     application.setVariationNo(1);
 
     var previousConsent = ConsentTestUtil.newBuilder().build();
-    var previousConsentLatestApplicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
     var previousConsentApplicationReference = "Test/application/reference";
 
     when(applicationDocumentInstanceLinkingService.getApplicationFromDocumentInstanceDto(documentInstanceDto))
         .thenReturn(application);
     when(consentService.getPreviousConsent(application)).thenReturn(previousConsent);
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(previousConsent.getApplication().getId()))
-        .thenReturn(previousConsentLatestApplicationVersion);
-    when(applicationService.generateApplicationReference(previousConsentLatestApplicationVersion))
-        .thenReturn(previousConsentApplicationReference);
+    when(consentService.generateConsentApplicationReference(previousConsent)).thenReturn(previousConsentApplicationReference);
 
     assertThat(supersededConsentReferenceMailMergeField.resolve(documentInstanceDto))
         .isEqualTo(DocumentMailMergeFieldResolveResult.success(previousConsentApplicationReference));

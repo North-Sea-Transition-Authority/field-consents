@@ -28,11 +28,19 @@ public class ApplicationTestUtil {
   public static final String APPLICATION_REFERENCE = "PCON/500/0";
 
   public static Application getNewApplicationWithType(ApplicationType applicationType) {
-    return new Application(APPLICATION_ID, applicationType, Instant.now(), USER_WUA_ID, 0, null);
+    return getNewApplicationWithIdAndType(APPLICATION_ID, applicationType);
+  }
+
+  public static Application getNewApplicationWithIdAndType(int id, ApplicationType applicationType) {
+    return new Application(id, applicationType, Instant.now(), USER_WUA_ID, 0, null);
   }
 
   public static ApplicationVersion getNewApplicationVersionWithType(ApplicationType applicationType) {
     return getNewApplicationVersionWithTypeIdAndVersionNumber(applicationType, APPLICATION_VERSION_ID, APPLICATION_VERSION_NUMBER);
+  }
+
+  public static ApplicationVersion getNewApplicationVersionWithIdAndType(int id, ApplicationType applicationType) {
+    return getNewApplicationVersionWithTypeIdAndVersionNumber(applicationType, id, APPLICATION_VERSION_NUMBER);
   }
 
   public static ApplicationVersion getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType applicationType,

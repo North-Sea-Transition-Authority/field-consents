@@ -20,10 +20,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.fivum.fileuploadlibrary.core.UploadedFileTestUtil;
-import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataService;
@@ -48,12 +46,6 @@ import uk.co.nstauthority.fieldconsents.summary.SummaryFileView;
 
 @ExtendWith(MockitoExtension.class)
 class ConsentTabServiceTest {
-
-  @Mock
-  private ApplicationService applicationService;
-
-  @Mock
-  private ApplicationVersionService applicationVersionService;
 
   @Mock
   private ApplicationAssetService applicationAssetService;
@@ -86,8 +78,6 @@ class ConsentTabServiceTest {
   @BeforeEach
   void beforeEach() {
     consentTabService = spy(new ConsentTabService(
-        applicationService,
-        applicationVersionService,
         applicationAssetService,
         consentService,
         consentDataService,
@@ -203,7 +193,6 @@ class ConsentTabServiceTest {
     var consentSupersededByConsent = ConsentTestUtil.newBuilder()
         .withId(2)
         .build();
-    var consentSupersededByConsentLatestApplicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
     var consentSupersededByApplicationReference = "Test/application/reference";
 
     var consent = ConsentTestUtil.newBuilder()
@@ -237,9 +226,7 @@ class ConsentTabServiceTest {
         .thenReturn(energyPortalUserDto);
     when(consentDataService.getConsentData(application))
         .thenReturn(consentData);
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(consentSupersededByConsent.getApplication().getId()))
-        .thenReturn(consentSupersededByConsentLatestApplicationVersion);
-    when(applicationService.generateApplicationReference(consentSupersededByConsentLatestApplicationVersion))
+    when(consentService.generateConsentApplicationReference(consentSupersededByConsent))
         .thenReturn(consentSupersededByApplicationReference);
     when(consentDataService.getConsentDataView(application, consentData, consentLengthType))
         .thenReturn(consentDataView);

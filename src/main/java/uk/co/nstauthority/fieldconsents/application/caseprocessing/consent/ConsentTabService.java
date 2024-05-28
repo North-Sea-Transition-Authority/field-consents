@@ -7,9 +7,7 @@ import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.Application;
-import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentFigureUnitService;
@@ -27,8 +25,6 @@ import uk.co.nstauthority.fieldconsents.summary.SummaryFileView;
 @Service
 public class ConsentTabService {
 
-  private final ApplicationService applicationService;
-  private final ApplicationVersionService applicationVersionService;
   private final ApplicationAssetService applicationAssetService;
   private final ConsentService consentService;
   private final ConsentDataService consentDataService;
@@ -40,8 +36,6 @@ public class ConsentTabService {
   private final Clock clock;
 
   ConsentTabService(
-      ApplicationService applicationService,
-      ApplicationVersionService applicationVersionService,
       ApplicationAssetService applicationAssetService,
       ConsentService consentService,
       ConsentDataService consentDataService,
@@ -52,8 +46,6 @@ public class ConsentTabService {
       EnergyPortalUserService energyPortalUserService,
       Clock clock
   ) {
-    this.applicationService = applicationService;
-    this.applicationVersionService = applicationVersionService;
     this.applicationAssetService = applicationAssetService;
     this.consentService = consentService;
     this.consentDataService = consentDataService;
@@ -82,12 +74,8 @@ public class ConsentTabService {
 
       String consentSupersededByApplicationReference = null;
       if (consent.isSuperseded()) {
-        var consentSupersededByConsentApplication = consent.getSupersededByConsent().getApplication();
-        var consentSupersededByConsentLatestApplicationVersion =
-            applicationVersionService.getLatestApplicationVersionByApplicationId(consentSupersededByConsentApplication.getId());
-
         consentSupersededByApplicationReference =
-            applicationService.generateApplicationReference(consentSupersededByConsentLatestApplicationVersion);
+            consentService.generateConsentApplicationReference(consent.getSupersededByConsent());
       }
 
       var consentDataView = consentDataService.getConsentDataView(application, consentData, consentLengthType);
