@@ -71,15 +71,8 @@ public class ApplicationAssetService {
 
     applicationAsset.setAssetRole(assetRole);
 
-    // TODO We should cater for this exception earlier on when creating an application - FCS-274
-    if (asset.getOperatorJson() != null) {
-      applicationAsset.setAssetOperatorOuId(asset.getOperatorJson().organisationUnitId());
-      applicationAsset.setCachedAssetOperatorName(asset.getOperatorJson().name());
-    } else {
-      throw new RuntimeException("No operator was found for asset %s with id %s."
-          .formatted(asset.getName(), asset.getId())
-      );
-    }
+    applicationAsset.setAssetOperatorOuId(asset.getOperatorJson().organisationUnitId());
+    applicationAsset.setCachedAssetOperatorName(asset.getOperatorJson().name());
 
     return applicationAsset;
   }

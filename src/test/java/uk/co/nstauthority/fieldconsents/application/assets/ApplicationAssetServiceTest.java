@@ -15,7 +15,6 @@ import static uk.co.nstauthority.fieldconsents.application.assets.ApplicationAss
 import static uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil.terminalAsset1;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
-import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithNullOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperator;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2Json;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1;
@@ -114,15 +113,6 @@ class ApplicationAssetServiceTest {
             field1JsonWithOperator.getOperatorJson().organisationUnitId(),
             field1JsonWithOperator.getOperatorJson().name()
         );
-  }
-
-  @Test
-  void createPrimaryAsset_fieldWillNoOperator() {
-    assertThatThrownBy(() -> applicationAssetService.createPrimaryAsset(applicationVersion, field1JsonWithNullOperatorAndLicences))
-        .isInstanceOf(RuntimeException.class)
-        .hasMessage("No operator was found for asset %s with id %s."
-            .formatted(field1JsonWithNullOperatorAndLicences.getName(),
-                field1JsonWithNullOperatorAndLicences.getId()));
   }
 
   @Test

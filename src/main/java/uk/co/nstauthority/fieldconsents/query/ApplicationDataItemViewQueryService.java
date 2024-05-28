@@ -75,7 +75,6 @@ public class ApplicationDataItemViewQueryService {
         .from(APPLICATION_ASSETS)
         .join(APPLICATION_ASSET_LICENCES).onKey(APPLICATION_ASSET_LICENCES.APPLICATION_ASSET_ID)
         .where(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name()))
-        .and(APPLICATION_ASSETS.ASSET_ID.isNotNull())
         .groupBy(APPLICATION_ASSET_LICENCES.APPLICATION_ASSET_ID);
 
     var applicationDataItemViewsSelectStatement = context.select(
@@ -145,8 +144,7 @@ public class ApplicationDataItemViewQueryService {
         .leftJoin(fieldLicencesQuery)
             .on(Objects.requireNonNull(fieldLicencesQuery.field(APPLICATION_ASSET_LICENCES.APPLICATION_ASSET_ID))
             .eq(APPLICATION_ASSETS.ID)
-            .and(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name()))
-            .and(APPLICATION_ASSETS.ASSET_ID.isNotNull()))
+            .and(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name())))
         .leftJoin(APPLICATION_CONSENT_ISSUING_APPROVALS)
             .onKey(APPLICATION_CONSENT_ISSUING_APPROVALS.APPLICATION_ID)
             .and(APPLICATION_VERSIONS.STATUS.eq(ApplicationVersionStatus.SUBMITTED.name()))

@@ -116,7 +116,6 @@ public class ApplicationDataItemViewService {
                 .where(APPLICATION_ASSETS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID))
                 .and(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name()))
                 .and(APPLICATION_ASSETS.ASSET_ROLE.in(AssetRole.PRIMARY.name(), AssetRole.SECONDARY.name()))
-                .and(APPLICATION_ASSETS.ASSET_ID.isNotNull())
                 .and(APPLICATION_ASSETS.ASSET_ID.in(fieldIdsUserHasViewFcsPermissionForInFieldEquityPartnerTeam))
         ));
 
