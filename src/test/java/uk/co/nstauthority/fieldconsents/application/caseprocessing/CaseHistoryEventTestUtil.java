@@ -92,6 +92,16 @@ public class CaseHistoryEventTestUtil {
         .build();
   }
 
+  public static CaseEvent getCaseEventForApplicationAutomaticallySubmitted(ApplicationVersion applicationVersion) {
+    return CaseEvent
+        .builder(applicationVersion)
+        .withEventType(CaseEventType.APPLICATION_AUTOMATICALLY_SUBMITTED)
+        .withMainEventUserWuaId(applicationVersion.getAutoSubmittedByWuaId())
+        .withOtherEventUserWuaId(applicationVersion.getSubmittedByWuaId())
+        .withEventDateTime(applicationVersion.getSubmittedDateTime())
+        .build();
+  }
+
   public static CaseEvent getCaseEventForApplicationUpdateStarted(ApplicationVersion applicationVersion) {
     return CaseEvent
         .builder(applicationVersion)

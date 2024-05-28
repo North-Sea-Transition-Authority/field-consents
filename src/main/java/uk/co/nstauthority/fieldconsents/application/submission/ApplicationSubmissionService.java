@@ -21,6 +21,8 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.aceflag.AceFl
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListService;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
+import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListSection;
 
 @Service
@@ -36,6 +38,7 @@ public class ApplicationSubmissionService {
   private final ApplicationVersionRepository applicationVersionRepository;
   private final ApplicationSubmissionEmailService applicationSubmissionEmailService;
   private final ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
+  private final EnergyPortalUserService energyPortalUserService;
 
   ApplicationSubmissionService(
       Clock clock,
@@ -45,7 +48,8 @@ public class ApplicationSubmissionService {
       ApplicationTaskListService applicationTaskListService,
       ApplicationVersionRepository applicationVersionRepository,
       ApplicationSubmissionEmailService applicationSubmissionEmailService,
-      ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService
+      ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService,
+      EnergyPortalUserService energyPortalUserService
   ) {
     this.clock = clock;
     this.aceFlagService = aceFlagService;
@@ -55,6 +59,7 @@ public class ApplicationSubmissionService {
     this.applicationVersionRepository = applicationVersionRepository;
     this.applicationSubmissionEmailService = applicationSubmissionEmailService;
     this.applicationWorkAreaPriorityService = applicationWorkAreaPriorityService;
+    this.energyPortalUserService = energyPortalUserService;
   }
 
   public boolean isSubmittable(ApplicationVersion applicationVersion) {
@@ -104,7 +109,11 @@ public class ApplicationSubmissionService {
   }
 
   @Transactional
-  public void regulatorAutoSubmitApplication(ApplicationVersion applicationVersion, ServiceUserDetail user) {
+  public void regulatorAutoSubmitApplication(
+      ApplicationVersion applicationVersion,
+      ApplicationVersion previousApplicationVersion,
+      ServiceUserDetail user
+  ) {
     var applicationVersionStatus = applicationVersion.getStatus();
     if (!ApplicationVersionStatus.IN_PROGRESS.equals(applicationVersionStatus)) {
       throw new IllegalStateException(
@@ -116,7 +125,13 @@ public class ApplicationSubmissionService {
       );
     }
 
-    submitApplicationVersion(applicationVersion, user);
+    applicationVersion.setAutoSubmittedByWuaId(user.wuaId());
+
+    var previousSubmittedByUserEnergyPortalUserDto =
+        energyPortalUserService.getByWuaId(WebUserAccountId.from(previousApplicationVersion.getSubmittedByWuaId()));
+    var previousSubmittedByUser = ServiceUserDetail.from(previousSubmittedByUserEnergyPortalUserDto);
+
+    submitApplicationVersion(applicationVersion, previousSubmittedByUser);
   }
 
   private void submitApplicationVersion(ApplicationVersion applicationVersion, ServiceUserDetail user) {

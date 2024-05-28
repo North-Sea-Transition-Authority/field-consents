@@ -40,6 +40,8 @@ class ApplicationCaseEventServiceTest {
 
   private ApplicationVersion applicationVersion;
 
+  private ApplicationVersion applicationVersionAutoSubmitted;
+
   private ApplicationVersion applicationVersionUpdate;
 
   private PaymentDto paymentDto;
@@ -50,11 +52,18 @@ class ApplicationCaseEventServiceTest {
 
   private CaseEvent applicationSubmittedEvent;
 
+  private CaseEvent applicationAutomaticallySubmittedEvent;
+
   private CaseEvent applicationUpdateStartedEvent;
 
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.FLARE);
+
+    applicationVersionAutoSubmitted = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.FLARE);
+    applicationVersionAutoSubmitted.setCreatedDateTime(applicationVersion.getCreatedDateTime());
+    applicationVersionAutoSubmitted.setAutoSubmittedByWuaId(7L);
+
     applicationVersionUpdate = ApplicationTestUtil.getSubmittedApplicationVersionWithTypeIdAndVersionNumber(
         ApplicationType.FLARE, 2, 2
     );
@@ -67,8 +76,9 @@ class ApplicationCaseEventServiceTest {
     applicationCreatedEvent = CaseHistoryEventTestUtil.getCaseEventForApplicationCreated(applicationVersion);
     paymentCompletedEvent = CaseHistoryEventTestUtil.getCaseEventForPaymentCompleted(applicationVersion, paymentDto);
     applicationSubmittedEvent = CaseHistoryEventTestUtil.getCaseEventForApplicationSubmitted(applicationVersion);
-    applicationUpdateStartedEvent = CaseHistoryEventTestUtil.getCaseEventForApplicationUpdateStarted(
-        applicationVersionUpdate);
+    applicationAutomaticallySubmittedEvent =
+        CaseHistoryEventTestUtil.getCaseEventForApplicationAutomaticallySubmitted(applicationVersionAutoSubmitted);
+    applicationUpdateStartedEvent = CaseHistoryEventTestUtil.getCaseEventForApplicationUpdateStarted(applicationVersionUpdate);
 
     when(applicationVersionAuditService.getApplicationVersionAudits(anyList())).thenReturn(Collections.emptyList());
   }
@@ -104,6 +114,20 @@ class ApplicationCaseEventServiceTest {
             applicationCreatedEvent,
             paymentCompletedEvent,
             applicationSubmittedEvent
+        );
+  }
+
+  @Test
+  void getCaseEvents_whenFirstApplicationRegulatorAutoSubmitted() {
+    when(applicationVersionService.getAllApplicationVersionsByApplicationId(applicationVersionAutoSubmitted.getApplication().getId()))
+        .thenReturn(Collections.singletonList(applicationVersionAutoSubmitted));
+
+    var caseEvents = applicationCaseEventService.getCaseEvents(applicationVersionAutoSubmitted.getApplication());
+
+    assertThat(caseEvents)
+        .containsExactly(
+            applicationCreatedEvent,
+            applicationAutomaticallySubmittedEvent
         );
   }
 

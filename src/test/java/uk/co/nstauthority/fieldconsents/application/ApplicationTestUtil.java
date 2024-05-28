@@ -57,9 +57,11 @@ public class ApplicationTestUtil {
         USER_WUA_ID,
         null,
         null,
+        null,
         ApplicationVersionStatus.IN_PROGRESS,
         null,
-        false);
+        false
+    );
   }
 
   public static ApplicationVersion getNewApplicationVersionWithTypeAndStatus(
@@ -77,9 +79,11 @@ public class ApplicationTestUtil {
         USER_WUA_ID,
         null,
         null,
+        null,
         applicationVersionStatus,
         null,
-        false);
+        false
+    );
   }
 
   public static ApplicationVersion getAwaitingPaymentApplicationVersionWithType(ApplicationType applicationType) {
@@ -106,9 +110,11 @@ public class ApplicationTestUtil {
         USER_WUA_ID,
         null,
         null,
+        null,
         ApplicationVersionStatus.AWAITING_PAYMENT,
         null,
-        false);
+        false
+    );
   }
 
   public static Application getSubmittedApplicationWithType(ApplicationType applicationType) {
@@ -133,9 +139,11 @@ public class ApplicationTestUtil {
         USER_WUA_ID,
         Instant.now(),
         USER_WUA_ID,
+        null,
         ApplicationVersionStatus.SUBMITTED,
         null,
-        false);
+        false
+    );
 
     submittedApplicationVersion.setSubmittedDateTime(Instant.now().plus(3, ChronoUnit.DAYS));
     submittedApplicationVersion.setSubmittedByWuaId(USER_WUA_ID);
@@ -154,9 +162,11 @@ public class ApplicationTestUtil {
         USER_WUA_ID,
         Instant.now(),
         USER_WUA_ID,
+        null,
         ApplicationVersionStatus.WITHDRAWN,
         CASE_OFFICER_WUA_ID,
-        false);
+        false
+    );
 
     withdrawnApplicationVersion.setSubmittedDateTime(Instant.now().plus(3, ChronoUnit.DAYS));
     withdrawnApplicationVersion.setSubmittedByWuaId(USER_WUA_ID);
@@ -175,9 +185,11 @@ public class ApplicationTestUtil {
         USER_WUA_ID,
         Instant.now(),
         USER_WUA_ID,
+        null,
         ApplicationVersionStatus.CONSENTED,
         CASE_OFFICER_WUA_ID,
-        false);
+        false
+    );
 
     consentedApplicationVersion.setSubmittedDateTime(Instant.now().plus(3, ChronoUnit.DAYS));
     consentedApplicationVersion.setSubmittedByWuaId(USER_WUA_ID);

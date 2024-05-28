@@ -38,6 +38,10 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.aceflag.AceFlagService;
 import uk.co.nstauthority.fieldconsents.application.tasklist.shared.ApplicationTaskListService;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
+import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDtoTestUtil;
+import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListLabel;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListSection;
 
@@ -65,6 +69,9 @@ class ApplicationSubmissionServiceTest {
   @Mock
   private ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
 
+  @Mock
+  private EnergyPortalUserService energyPortalUserService;
+
   private final Clock clock = Clock.fixed(Instant.now(), ZoneId.systemDefault());
 
   private ApplicationSubmissionService applicationSubmissionService;
@@ -81,7 +88,9 @@ class ApplicationSubmissionServiceTest {
         applicationTaskListService,
         applicationVersionRepository,
         applicationSubmissionEmailService,
-        applicationWorkAreaPriorityService);
+        applicationWorkAreaPriorityService,
+        energyPortalUserService
+    );
 
     taskListSections = new ArrayList<>();
   }
@@ -249,10 +258,13 @@ class ApplicationSubmissionServiceTest {
   )
   void regulatorAutoSubmitApplication_statusNotInProgressOrAwaitingPayment(ApplicationVersionStatus applicationVersionStatus) {
     var applicationVersion
-        = ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.PRODUCTION, 1, 1);
+        = ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.PRODUCTION, 1, 2);
     applicationVersion.setStatus(applicationVersionStatus);
 
-    assertThatThrownBy(() -> applicationSubmissionService.regulatorAutoSubmitApplication(applicationVersion, USER))
+    var previousApplicationVersion =
+        ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.PRODUCTION, 2, 1);
+
+    assertThatThrownBy(() -> applicationSubmissionService.regulatorAutoSubmitApplication(applicationVersion, previousApplicationVersion, USER))
         .isInstanceOf(IllegalStateException.class)
         .hasMessage(
             String.format(
@@ -265,20 +277,33 @@ class ApplicationSubmissionServiceTest {
 
   @Test
   void regulatorAutoSubmitApplication_statusInProgress() {
-    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var applicationVersion
+        = ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.PRODUCTION, 1, 2);
 
-    applicationSubmissionService.regulatorAutoSubmitApplication(applicationVersion, USER);
+    var previousApplicationVersion =
+        ApplicationTestUtil.getSubmittedApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.FLARE, 2, 1);
 
+    var previousSubmittedByUserEnergyPortalUserDto = EnergyPortalUserDtoTestUtil.Builder()
+        .withWebUserAccountId(10L)
+        .build();
+    var previousSubmittedByUser = ServiceUserDetail.from(previousSubmittedByUserEnergyPortalUserDto);
+
+    when(energyPortalUserService.getByWuaId(WebUserAccountId.from(previousApplicationVersion.getSubmittedByWuaId())))
+        .thenReturn(previousSubmittedByUserEnergyPortalUserDto);
+
+    applicationSubmissionService.regulatorAutoSubmitApplication(applicationVersion, previousApplicationVersion, USER);
+
+    assertThat(applicationVersion.getAutoSubmittedByWuaId()).isEqualTo(USER.wuaId());
     assertThat(applicationVersion.getStatus()).isEqualTo(ApplicationVersionStatus.SUBMITTED);
     assertThat(applicationVersion.getSubmittedDateTime()).isEqualTo(clock.instant());
-    assertThat(applicationVersion.getSubmittedByWuaId()).isEqualTo(USER.wuaId());
+    assertThat(applicationVersion.getSubmittedByWuaId()).isEqualTo(previousSubmittedByUser.wuaId());
     verify(applicationVersionRepository).save(applicationVersion);
 
     verify(aceFlagService).autoSetAceFlag(applicationVersion);
     verify(applicationWorkAreaPriorityService)
-        .prioritiseApplicationInWorkArea(applicationVersion, USER, APPLICATION_SUBMITTED, INDUSTRY);
+        .prioritiseApplicationInWorkArea(applicationVersion, previousSubmittedByUser, APPLICATION_SUBMITTED, INDUSTRY);
     verify(applicationWorkAreaPriorityService)
-        .prioritiseApplicationInWorkArea(applicationVersion, USER, APPLICATION_SUBMITTED, REGULATOR);
+        .prioritiseApplicationInWorkArea(applicationVersion, previousSubmittedByUser, APPLICATION_SUBMITTED, REGULATOR);
   }
 
   @ParameterizedTest

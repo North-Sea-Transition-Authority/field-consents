@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application;
 
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventType.APPLICATION_AUTOMATICALLY_SUBMITTED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventType.APPLICATION_CREATED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventType.APPLICATION_DELETED;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventType.APPLICATION_SUBMITTED;
@@ -86,13 +87,26 @@ public class ApplicationCaseEventService implements CaseEventService<Application
       if (Objects.nonNull(applicationVersion.getSubmittedByWuaId())
           && Objects.nonNull(applicationVersion.getSubmittedDateTime())
           && applicationVersion.isFirstVersion()) {
-        caseEvents.add(
-            CaseEvent.builder(applicationVersion)
-                .withEventType(APPLICATION_SUBMITTED)
-                .withMainEventUserWuaId(applicationVersion.getSubmittedByWuaId())
-                .withEventDateTime(applicationVersion.getSubmittedDateTime())
-                .build()
-        );
+
+        var autoSubmittedByWuaId = applicationVersion.getAutoSubmittedByWuaId();
+        if (autoSubmittedByWuaId != null) {
+          caseEvents.add(
+              CaseEvent.builder(applicationVersion)
+                  .withEventType(APPLICATION_AUTOMATICALLY_SUBMITTED)
+                  .withMainEventUserWuaId(autoSubmittedByWuaId)
+                  .withOtherEventUserWuaId(applicationVersion.getSubmittedByWuaId())
+                  .withEventDateTime(applicationVersion.getSubmittedDateTime())
+                  .build()
+          );
+        } else {
+          caseEvents.add(
+              CaseEvent.builder(applicationVersion)
+                  .withEventType(APPLICATION_SUBMITTED)
+                  .withMainEventUserWuaId(applicationVersion.getSubmittedByWuaId())
+                  .withEventDateTime(applicationVersion.getSubmittedDateTime())
+                  .build()
+          );
+        }
       }
 
       if (ApplicationVersionStatus.DELETED.equals(applicationVersion.getStatus())) {

@@ -15,11 +15,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.duplication.ApplicationDuplicationService;
 import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionService;
-import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
-import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
-import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDtoTestUtil;
-import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 
 @ExtendWith(MockitoExtension.class)
@@ -36,9 +32,6 @@ class ApplicationRevisionServiceTest {
 
   @Mock
   private TeamService teamService;
-
-  @Mock
-  private EnergyPortalUserService energyPortalUserService;
 
   @InjectMocks
   private ApplicationRevisionService applicationRevisionService;
@@ -57,7 +50,7 @@ class ApplicationRevisionServiceTest {
     applicationRevisionService.startApplicationRevision(applicationVersion, user);
 
     verify(applicationDuplicationService).duplicateApplicationSections(applicationVersion, newApplicationVersion);
-    verify(applicationSubmissionService, never()).regulatorAutoSubmitApplication(any(), any());
+    verify(applicationSubmissionService, never()).regulatorAutoSubmitApplication(any(), any(), any());
   }
 
   @Test
@@ -68,17 +61,12 @@ class ApplicationRevisionServiceTest {
     var newApplicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);;
     newApplicationVersion.setId(2);
 
-    var previousSubmittedByUserEnergyPortalUserDto = EnergyPortalUserDtoTestUtil.Builder().build();
-    var previousSubmittedByUser = ServiceUserDetail.from(previousSubmittedByUserEnergyPortalUserDto);
-
     when(applicationService.startApplicationRevision(applicationVersion, user)).thenReturn(newApplicationVersion);
     when(teamService.isIndustryUser(user)).thenReturn(false);
-    when(energyPortalUserService.getByWuaId(WebUserAccountId.from(applicationVersion.getSubmittedByWuaId())))
-        .thenReturn(previousSubmittedByUserEnergyPortalUserDto);
 
     applicationRevisionService.startApplicationRevision(applicationVersion, user);
 
     verify(applicationDuplicationService).duplicateApplicationSections(applicationVersion, newApplicationVersion);
-    verify(applicationSubmissionService).regulatorAutoSubmitApplication(newApplicationVersion, previousSubmittedByUser);
+    verify(applicationSubmissionService).regulatorAutoSubmitApplication(newApplicationVersion, applicationVersion, user);
   }
 }

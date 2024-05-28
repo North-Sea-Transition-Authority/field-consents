@@ -47,6 +47,8 @@ public class ApplicationVersion implements DomainReference {
 
   private Long submittedByWuaId;
 
+  private Long autoSubmittedByWuaId;
+
   @Enumerated(EnumType.STRING)
   private ApplicationVersionStatus status;
 
@@ -65,8 +67,8 @@ public class ApplicationVersion implements DomainReference {
   @VisibleForTesting
   public ApplicationVersion(Integer id, Application application, Integer version, Integer primaryOperatorOuId,
                             String cachedPrimaryOperatorName, Instant createdDateTime, Long createdByWuaId,
-                            Instant submittedDateTime, Long submittedByWuaId, ApplicationVersionStatus status,
-                            Long caseOfficerWuaId, Boolean migrated) {
+                            Instant submittedDateTime, Long submittedByWuaId, Long autoSubmittedByWuaId,
+                            ApplicationVersionStatus status, Long caseOfficerWuaId, Boolean migrated) {
     this.id = id;
     this.application = application;
     this.version = version;
@@ -76,6 +78,7 @@ public class ApplicationVersion implements DomainReference {
     this.createdByWuaId = createdByWuaId;
     this.submittedDateTime = submittedDateTime;
     this.submittedByWuaId = submittedByWuaId;
+    this.autoSubmittedByWuaId = autoSubmittedByWuaId;
     this.status = status;
     this.caseOfficerWuaId = caseOfficerWuaId;
     this.migrated = migrated;
@@ -160,6 +163,14 @@ public class ApplicationVersion implements DomainReference {
 
   public void setSubmittedByWuaId(Long submittedByWuaId) {
     this.submittedByWuaId = submittedByWuaId;
+  }
+
+  public Long getAutoSubmittedByWuaId() {
+    return autoSubmittedByWuaId;
+  }
+
+  public void setAutoSubmittedByWuaId(Long autoSubmittedByWuaId) {
+    this.autoSubmittedByWuaId = autoSubmittedByWuaId;
   }
 
   public ApplicationVersionStatus getStatus() {

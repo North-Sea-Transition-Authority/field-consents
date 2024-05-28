@@ -106,7 +106,7 @@ public class ApplicationServiceTest {
 
     var expectedApplication = new Application(1, ApplicationType.PRODUCTION, clock.instant(), USER_WUA_ID, 0, null);
     var expectedApplicationVersion = new ApplicationVersion(1, expectedApplication, 1, OrganisationUnitTestUtil.orgUnit1Json.organisationUnitId(),
-        OrganisationUnitTestUtil.orgUnit1Json.name(), clock.instant(), USER_WUA_ID, null, null, ApplicationVersionStatus.IN_PROGRESS, null,
+        OrganisationUnitTestUtil.orgUnit1Json.name(), clock.instant(), USER_WUA_ID, null, null, null, ApplicationVersionStatus.IN_PROGRESS, null,
         false);
 
     assertApplicationVersion(newApplicationVersion, expectedApplicationVersion);
@@ -139,7 +139,7 @@ public class ApplicationServiceTest {
 
     var expectedApplication = new Application(1, ApplicationType.PRODUCTION, clock.instant(), USER_WUA_ID, 0, null);
     var expectedApplicationVersion = new ApplicationVersion(1, expectedApplication, 1, OrganisationUnitTestUtil.orgUnit1Json.organisationUnitId(),
-        OrganisationUnitTestUtil.orgUnit1Json.name(), clock.instant(), USER_WUA_ID, null, null, ApplicationVersionStatus.IN_PROGRESS, null,
+        OrganisationUnitTestUtil.orgUnit1Json.name(), clock.instant(), USER_WUA_ID, null, null, null, ApplicationVersionStatus.IN_PROGRESS, null,
         false);
 
     assertApplicationVersion(newApplicationVersion, expectedApplicationVersion);
