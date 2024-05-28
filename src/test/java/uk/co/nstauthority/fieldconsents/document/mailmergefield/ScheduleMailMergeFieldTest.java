@@ -137,7 +137,7 @@ class ScheduleMailMergeFieldTest {
     ).thenReturn(html);
 
     assertThat(scheduleMailMergeField.resolve(documentInstanceDto))
-        .isEqualTo(DocumentMailMergeFieldResolveResult.success(html));
+        .isEqualTo(DocumentMailMergeFieldResolveResult.successNoEsc(html));
   }
 
   @Test
@@ -200,7 +200,7 @@ class ScheduleMailMergeFieldTest {
     ).thenReturn(html);
 
     assertThat(scheduleMailMergeField.resolve(documentInstanceDto))
-        .isEqualTo(DocumentMailMergeFieldResolveResult.success(html));
+        .isEqualTo(DocumentMailMergeFieldResolveResult.successNoEsc(html));
   }
 
   @ParameterizedTest
@@ -253,6 +253,6 @@ class ScheduleMailMergeFieldTest {
     ).thenReturn(html);
 
     assertThat(scheduleMailMergeField.resolve(documentInstanceDto))
-        .isEqualTo(DocumentMailMergeFieldResolveResult.success(html));
+        .isEqualTo(DocumentMailMergeFieldResolveResult.successNoEsc(html));
   }
 }

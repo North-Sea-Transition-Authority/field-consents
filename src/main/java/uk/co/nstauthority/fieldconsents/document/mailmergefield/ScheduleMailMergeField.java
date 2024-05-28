@@ -71,7 +71,7 @@ class ScheduleMailMergeField implements DocumentMailMergeField {
   @Override
   public DocumentMailMergeFieldResolveResult resolve(DocumentInstanceDto documentInstanceDto) {
     var scheduleContent = getScheduleContent(documentInstanceDto);
-    return DocumentMailMergeFieldResolveResult.success(scheduleContent);
+    return DocumentMailMergeFieldResolveResult.successNoEsc(scheduleContent);
   }
 
   private String getScheduleContent(DocumentInstanceDto documentInstanceDto) {

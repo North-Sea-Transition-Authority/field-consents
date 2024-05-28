@@ -47,7 +47,7 @@ dependencies {
   implementation 'org.springframework.security:spring-security-saml2-service-provider'
   implementation 'org.springframework.session:spring-session-core'
   implementation 'org.flywaydb:flyway-core'
-  implementation 'org.apache.commons:commons-lang3:3.12.0'
+  implementation 'org.apache.commons:commons-lang3:3.14.0'
   implementation 'org.apache.commons:commons-collections4:4.4'
   implementation 'org.apache.commons:commons-text:1.12.0'
 
@@ -57,7 +57,7 @@ dependencies {
   implementation "uk.co.fivium:file-upload-spring-boot-starter:${fileUploadLibraryVersion}"
   implementation 'uk.co.fivium:digital-payments-library-spring-boot-starter:v1.0.1'
   implementation 'uk.co.fivium:digital-notification-library-spring-boot-starter:v1.0.0'
-  implementation 'uk.co.fivium:digital-document-library-spring-boot-starter:develop-SNAPSHOT'
+  implementation 'uk.co.fivium:digital-document-library-spring-boot-starter:FCS-765-escape-resolved-document-mail-merge-values-SNAPSHOT'
   implementation 'uk.co.fivium:ftss-client-spring-boot-starter:develop-SNAPSHOT'
 
   implementation 'org.springframework.boot:spring-boot-starter-jooq'
