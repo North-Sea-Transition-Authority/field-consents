@@ -46,16 +46,15 @@ class SupersededConsentIssueDateMailMergeField implements DocumentMailMergeField
 
   @Override
   public DocumentMailMergeFieldResolveResult resolve(DocumentInstanceDto documentInstanceDto) {
-    var applicationId = applicationDocumentInstanceLinkingService
-        .getApplicationIdFromDocumentInstanceDtoOrThrowIfInvalidItemType(documentInstanceDto);
+    var application = applicationDocumentInstanceLinkingService.getApplicationFromDocumentInstanceDto(documentInstanceDto);
 
-    return consentService.findPreviousConsentByApplicationId(applicationId)
-        .map(previousConsent -> {
-          var previousConsentIssuedInstant = previousConsent.getIssuedInstant();
+    if (!application.isRevision()) {
+      return DocumentMailMergeFieldResolveResult.error("Mail merge field %s is not valid. Application is not a revision"
+          .formatted(MNEMONIC));
+    }
 
-          return DocumentMailMergeFieldResolveResult.success(DateUtils.format(previousConsentIssuedInstant, DateUtils.LONG_DATE));
-        })
-        .orElse(DocumentMailMergeFieldResolveResult.error("Mail merge field %s is not valid. Application is not a revision"
-            .formatted(MNEMONIC)));
+    var previousConsent = consentService.getPreviousConsent(application);
+
+    return DocumentMailMergeFieldResolveResult.success(DateUtils.format(previousConsent.getIssuedInstant(), DateUtils.LONG_DATE));
   }
 }

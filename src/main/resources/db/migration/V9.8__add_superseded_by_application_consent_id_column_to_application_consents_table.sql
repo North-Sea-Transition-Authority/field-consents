@@ -1,0 +1,9 @@
+ALTER TABLE application_consents
+  ADD COLUMN superseded_by_application_consent_id INTEGER
+, ADD CONSTRAINT application_consents_superseded_by_application_consent_id_fk FOREIGN KEY (superseded_by_application_consent_id) REFERENCES application_consents (id)
+, ADD CONSTRAINT application_consents_superseded_by_application_consent_id_unq UNIQUE (superseded_by_application_consent_id);
+
+CREATE INDEX application_consents_superseded_by_application_consent_id_idx ON application_consents (superseded_by_application_consent_id);
+
+ALTER TABLE application_consents_aud
+  ADD COLUMN superseded_by_application_consent_id INTEGER;

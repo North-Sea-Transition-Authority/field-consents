@@ -4,7 +4,6 @@ import static org.jooq.impl.DSL.greatest;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationVersions.APPLICATION_VERSIONS;
 
 import java.time.Clock;
-import java.time.LocalDate;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
@@ -18,6 +17,7 @@ import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationStatus;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldJson;
@@ -269,24 +269,17 @@ public class ApplicationDataItemDtoService {
         : "";
   }
 
-  Boolean getConsentIssuedAndNotYetActive(ApplicationDataItemDto dataItemDto) {
-    return dataItemDto.consentIssued()
-        && dataItemDto.consentStartDate().isAfter(LocalDate.now(clock));
-  }
+  ConsentStatus getConsentStatus(ApplicationDataItemDto dataItemDto) {
+    if (!Boolean.TRUE.equals(dataItemDto.consentIssued())) {
+      return null;
+    }
 
-  Boolean getConsentIssuedAndActive(ApplicationDataItemDto dataItemDto) {
-    var today = LocalDate.now(clock);
-    var consentStartDate = dataItemDto.consentStartDate();
-    var consentEndDate = dataItemDto.consentEndDate();
-
-    return dataItemDto.consentIssued()
-        && DateUtils.isAfterOrEqualTo(today, consentStartDate)
-        && DateUtils.isBeforeOrEqualTo(today, consentEndDate);
-  }
-
-  Boolean getConsentIssuedAndExpired(ApplicationDataItemDto dataItemDto) {
-    return dataItemDto.consentIssued()
-        && dataItemDto.consentEndDate().isBefore(LocalDate.now(clock));
+    return ConsentStatus.from(
+        dataItemDto.consentStartDate(),
+        dataItemDto.consentEndDate(),
+        dataItemDto.consentSuperseded(),
+        clock
+    );
   }
 
   public ApplicationDataItemView getApplicationDataItemView(
@@ -329,9 +322,7 @@ public class ApplicationDataItemDtoService {
         .withConsultationFurtherInformationOpen(furtherInformationOpen)
         .withLicences(getLicences(dataItemDto))
         .withApprovedForIssue(approvedForIssue)
-        .withConsentIssuedAndNotYetActive(getConsentIssuedAndNotYetActive(dataItemDto))
-        .withConsentIssuedAndActive(getConsentIssuedAndActive(dataItemDto))
-        .withConsentIssuedAndExpired(getConsentIssuedAndExpired(dataItemDto));
+        .withConsentStatus(getConsentStatus(dataItemDto));
 
     removeTagsForTeamType(teamType, builder);
 

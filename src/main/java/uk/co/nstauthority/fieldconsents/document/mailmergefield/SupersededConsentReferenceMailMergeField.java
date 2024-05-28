@@ -53,20 +53,19 @@ class SupersededConsentReferenceMailMergeField implements DocumentMailMergeField
 
   @Override
   public DocumentMailMergeFieldResolveResult resolve(DocumentInstanceDto documentInstanceDto) {
-    var applicationId = applicationDocumentInstanceLinkingService
-        .getApplicationIdFromDocumentInstanceDtoOrThrowIfInvalidItemType(documentInstanceDto);
+    var application = applicationDocumentInstanceLinkingService.getApplicationFromDocumentInstanceDto(documentInstanceDto);
 
-    return consentService.findPreviousConsentByApplicationId(applicationId)
-        .map(previousConsent -> {
-          var previousConsentApplication = previousConsent.getApplication();
-          var previousConsentLatestApplicationVersion =
-              applicationVersionService.getLatestApplicationVersionByApplicationId(previousConsentApplication.getId());
-          var previousConsentApplicationReference =
-              applicationService.generateApplicationReference(previousConsentLatestApplicationVersion);
+    if (!application.isRevision()) {
+      return DocumentMailMergeFieldResolveResult.error("Mail merge field %s is not valid. Application is not a revision"
+          .formatted(MNEMONIC));
+    }
 
-          return DocumentMailMergeFieldResolveResult.success(previousConsentApplicationReference);
-        })
-        .orElse(DocumentMailMergeFieldResolveResult.error("Mail merge field %s is not valid. Application is not a revision"
-            .formatted(MNEMONIC)));
+    var previousConsent = consentService.getPreviousConsent(application);
+    var previousConsentLatestApplicationVersion =
+        applicationVersionService.getLatestApplicationVersionByApplicationId(previousConsent.getApplication().getId());
+    var previousConsentApplicationReference =
+        applicationService.generateApplicationReference(previousConsentLatestApplicationVersion);
+
+    return DocumentMailMergeFieldResolveResult.success(previousConsentApplicationReference);
   }
 }

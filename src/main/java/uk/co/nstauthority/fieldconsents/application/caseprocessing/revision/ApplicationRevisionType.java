@@ -20,6 +20,6 @@ public enum ApplicationRevisionType implements Displayable {
   }
 
   public static ApplicationRevisionType from(Application application) {
-    return application.getVariationNo() == 0 ? NEW_CONSENT : REVISION;
+    return application.isRevision() ? REVISION : NEW_CONSENT;
   }
 }

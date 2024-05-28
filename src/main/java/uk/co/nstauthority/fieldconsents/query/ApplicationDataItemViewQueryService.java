@@ -116,7 +116,8 @@ public class ApplicationDataItemViewQueryService {
             APPLICATION_CONSENT_DATA.CONSENT_START_DATE,
             APPLICATION_CONSENT_DATA.CONSENT_END_DATE,
             APPLICATION_CONSENT_DATA.ID.isNotNull()
-              .and(APPLICATION_CONSENTS.ID.isNotNull()).as("consentIssued")
+              .and(APPLICATION_CONSENTS.ID.isNotNull()).as("consentIssued"),
+            APPLICATION_CONSENTS.SUPERSEDED_BY_APPLICATION_CONSENT_ID.isNotNull()
         )
         .from(APPLICATIONS)
         .join(APPLICATION_VERSIONS).onKey(APPLICATION_VERSIONS.APPLICATION_ID)

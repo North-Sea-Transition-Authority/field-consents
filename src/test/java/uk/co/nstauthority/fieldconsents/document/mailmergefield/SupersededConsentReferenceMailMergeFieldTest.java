@@ -3,7 +3,6 @@ package uk.co.nstauthority.fieldconsents.document.mailmergefield;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -64,37 +63,41 @@ class SupersededConsentReferenceMailMergeFieldTest {
   }
 
   @Test
-  void resolve_previousConsentExists() {
+  void resolve_applicationIsNotRevision() {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
 
-    var applicationId = 7;
+    var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
+
+    application.setVariationNo(0);
+
+    when(applicationDocumentInstanceLinkingService.getApplicationFromDocumentInstanceDto(documentInstanceDto))
+        .thenReturn(application);
+
+    assertThat(supersededConsentReferenceMailMergeField.resolve(documentInstanceDto))
+        .isEqualTo(DocumentMailMergeFieldResolveResult.error("Mail merge field SUPERSEDED_CONSENT_REFERENCE is not valid. Application is not a revision"));
+  }
+
+  @Test
+  void resolve_applicationIsRevision() {
+    var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
+
+    var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
+
+    application.setVariationNo(1);
+
     var previousConsent = ConsentTestUtil.newBuilder().build();
     var previousConsentLatestApplicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
     var previousConsentApplicationReference = "Test/application/reference";
 
-    when(applicationDocumentInstanceLinkingService.getApplicationIdFromDocumentInstanceDtoOrThrowIfInvalidItemType(documentInstanceDto))
-        .thenReturn(applicationId);
-    when(consentService.findPreviousConsentByApplicationId(applicationId)).thenReturn(Optional.of(previousConsent));
+    when(applicationDocumentInstanceLinkingService.getApplicationFromDocumentInstanceDto(documentInstanceDto))
+        .thenReturn(application);
+    when(consentService.getPreviousConsent(application)).thenReturn(previousConsent);
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(previousConsent.getApplication().getId()))
         .thenReturn(previousConsentLatestApplicationVersion);
-    when(applicationService.generateApplicationReference(previousConsentLatestApplicationVersion)).thenReturn(previousConsentApplicationReference);
+    when(applicationService.generateApplicationReference(previousConsentLatestApplicationVersion))
+        .thenReturn(previousConsentApplicationReference);
 
     assertThat(supersededConsentReferenceMailMergeField.resolve(documentInstanceDto))
         .isEqualTo(DocumentMailMergeFieldResolveResult.success(previousConsentApplicationReference));
-  }
-
-
-  @Test
-  void resolve_previousConsentDoesNotExist() {
-    var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
-
-    var applicationId = 7;
-
-    when(applicationDocumentInstanceLinkingService.getApplicationIdFromDocumentInstanceDtoOrThrowIfInvalidItemType(documentInstanceDto))
-        .thenReturn(applicationId);
-    when(consentService.findPreviousConsentByApplicationId(applicationId)).thenReturn(Optional.empty());
-
-    assertThat(supersededConsentReferenceMailMergeField.resolve(documentInstanceDto))
-        .isEqualTo(DocumentMailMergeFieldResolveResult.error("Mail merge field SUPERSEDED_CONSENT_REFERENCE is not valid. Application is not a revision"));
   }
 }

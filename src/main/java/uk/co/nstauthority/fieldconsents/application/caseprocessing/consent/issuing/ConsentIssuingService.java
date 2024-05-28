@@ -69,6 +69,12 @@ public class ConsentIssuingService {
 
     var consent = consentService.createConsent(application, user);
 
+    if (application.isRevision()) {
+      var previousConsent = consentService.getPreviousConsent(application);
+
+      consentService.setConsentSupersededByConsent(previousConsent, consent);
+    }
+
     if (applicationAssetService.getPrimaryAsset(applicationVersion).isField()) {
       consentFieldEquityPartnerService.saveFieldEquityPartners(consent, applicationVersion);
     }

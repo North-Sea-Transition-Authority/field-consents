@@ -26,16 +26,8 @@
       <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Ready to grant and issue"/>
       <br/>
     </#if>
-    <#if dataItem.consentIssuedAndNotYetActive()!false>
-      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Consent issued"/>
-      <br/>
-    </#if>
-    <#if dataItem.consentIssuedAndActive()!false>
-      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Consent active"/>
-      <br/>
-    </#if>
-    <#if dataItem.consentIssuedAndExpired()!false>
-      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="Consent expired"/>
+    <#if dataItem.consentStatus()?has_content>
+      <@fdsResultList.resultListTag tagClass="govuk-tag--blue" tagText="${dataItem.consentStatus().getDisplayName()}"/>
       <br/>
     </#if>
   </#assign>

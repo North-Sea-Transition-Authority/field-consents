@@ -101,6 +101,30 @@ class ConsentServiceTest {
   }
 
   @Test
+  void setConsentSupersededByConsent_existingSupersededByConsentNotNull() {
+    var consent = ConsentTestUtil.newBuilder().withId(1).build();
+    var supersededByConsent = ConsentTestUtil.newBuilder().withId(3).build();
+
+    consent.setSupersededByConsent(ConsentTestUtil.newBuilder().withId(2).build());
+
+    assertThatThrownBy(() -> consentService.setConsentSupersededByConsent(consent, supersededByConsent))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Consent 1 already superseded by consent 2");
+  }
+
+  @Test
+  void setConsentSupersededByConsent_existingSupersededByConsentNull() {
+    var consent = ConsentTestUtil.newBuilder().withId(1).build();
+    var supersededByConsent = ConsentTestUtil.newBuilder().withId(2).build();
+
+    consentService.setConsentSupersededByConsent(consent, supersededByConsent);
+
+    assertThat(consent.getSupersededByConsent()).isEqualTo(supersededByConsent);
+
+    verify(consentRepository).save(consent);
+  }
+
+  @Test
   void shouldCheckProductionConsentExists_production() {
     var applicationVersion = new ApplicationVersion();
 
@@ -496,18 +520,33 @@ class ConsentServiceTest {
   }
 
   @Test
-  void findPreviousConsentByApplicationId_previousConsentDoesNotExist() {
-    when(consentRepository.findPreviousConsentByApplicationId(application.getId())).thenReturn(Optional.empty());
+  void getPreviousConsent_applicationIsNotRevision() {
+    application.setVariationNo(0);
 
-    assertThat(consentService.findPreviousConsentByApplicationId(application.getId())).isEmpty();
+    assertThatThrownBy(() -> consentService.getPreviousConsent(application))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Application 1 is not a revision");
   }
 
   @Test
-  void findPreviousConsentByApplicationId_previousConsentExists() {
+  void getPreviousConsent_applicationIsRevision_previousConsentDoesNotExist() {
+    application.setVariationNo(1);
+
+    when(consentRepository.findPreviousConsentByApplication(application)).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> consentService.getPreviousConsent(application))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Unable to find previous consent for application 1");
+  }
+
+  @Test
+  void getPreviousConsent_applicationIsRevision_previousConsentExists() {
+    application.setVariationNo(1);
+
     var previousConsent = ConsentTestUtil.newBuilder().build();
 
-    when(consentRepository.findPreviousConsentByApplicationId(application.getId())).thenReturn(Optional.of(previousConsent));
+    when(consentRepository.findPreviousConsentByApplication(application)).thenReturn(Optional.of(previousConsent));
 
-    assertThat(consentService.findPreviousConsentByApplicationId(application.getId())).contains(previousConsent);
+    assertThat(consentService.getPreviousConsent(application)).isEqualTo(previousConsent);
   }
 }

@@ -2,11 +2,14 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.consent;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import java.time.Clock;
 import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.application.Application;
+import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentFigureUnitService;
@@ -24,33 +27,42 @@ import uk.co.nstauthority.fieldconsents.summary.SummaryFileView;
 @Service
 public class ConsentTabService {
 
+  private final ApplicationService applicationService;
+  private final ApplicationVersionService applicationVersionService;
+  private final ApplicationAssetService applicationAssetService;
   private final ConsentService consentService;
-  private final FieldConsentsFileService fieldConsentsFileService;
-  private final EnergyPortalUserService energyPortalUserService;
   private final ConsentDataService consentDataService;
   private final ConsentFigureUnitService consentFigureUnitService;
   private final ConsentLengthService consentLengthService;
-  private final ApplicationAssetService applicationAssetService;
   private final ConsentFieldEquityPartnerService consentFieldEquityPartnerService;
+  private final FieldConsentsFileService fieldConsentsFileService;
+  private final EnergyPortalUserService energyPortalUserService;
+  private final Clock clock;
 
   ConsentTabService(
+      ApplicationService applicationService,
+      ApplicationVersionService applicationVersionService,
+      ApplicationAssetService applicationAssetService,
       ConsentService consentService,
-      FieldConsentsFileService fieldConsentsFileService,
-      EnergyPortalUserService energyPortalUserService,
       ConsentDataService consentDataService,
       ConsentFigureUnitService consentFigureUnitService,
       ConsentLengthService consentLengthService,
-      ApplicationAssetService applicationAssetService,
-      ConsentFieldEquityPartnerService consentFieldEquityPartnerService
+      ConsentFieldEquityPartnerService consentFieldEquityPartnerService,
+      FieldConsentsFileService fieldConsentsFileService,
+      EnergyPortalUserService energyPortalUserService,
+      Clock clock
   ) {
+    this.applicationService = applicationService;
+    this.applicationVersionService = applicationVersionService;
+    this.applicationAssetService = applicationAssetService;
     this.consentService = consentService;
-    this.fieldConsentsFileService = fieldConsentsFileService;
-    this.energyPortalUserService = energyPortalUserService;
     this.consentDataService = consentDataService;
     this.consentFigureUnitService = consentFigureUnitService;
     this.consentLengthService = consentLengthService;
-    this.applicationAssetService = applicationAssetService;
     this.consentFieldEquityPartnerService = consentFieldEquityPartnerService;
+    this.fieldConsentsFileService = fieldConsentsFileService;
+    this.energyPortalUserService = energyPortalUserService;
+    this.clock = clock;
   }
 
   public void addConsentTabContentToModelAndView(
@@ -64,6 +76,20 @@ public class ConsentTabService {
           ServiceUserDetail.from(energyPortalUserService.getByWuaId(WebUserAccountId.from(consent.getIssuedByWuaId())));
 
       var consentData = consentDataService.getConsentData(application);
+
+      var consentStatus =
+          ConsentStatus.from(consentData.getConsentStartDate(), consentData.getConsentEndDate(), consent.isSuperseded(), clock);
+
+      String consentSupersededByApplicationReference = null;
+      if (consent.isSuperseded()) {
+        var consentSupersededByConsentApplication = consent.getSupersededByConsent().getApplication();
+        var consentSupersededByConsentLatestApplicationVersion =
+            applicationVersionService.getLatestApplicationVersionByApplicationId(consentSupersededByConsentApplication.getId());
+
+        consentSupersededByApplicationReference =
+            applicationService.generateApplicationReference(consentSupersededByConsentLatestApplicationVersion);
+      }
+
       var consentDataView = consentDataService.getConsentDataView(application, consentData, consentLengthType);
       var consentFigureUnitView = consentFigureUnitService.getConsentFigureUnitView(applicationVersion, consentLengthType);
 
@@ -82,6 +108,8 @@ public class ConsentTabService {
           consentLengthType,
           issuedByUser,
           consent.getIssuedInstant(),
+          consentStatus,
+          consentSupersededByApplicationReference,
           consentDataView,
           consentFigureUnitView,
           consentFieldEquityPartnersView,

@@ -14,13 +14,24 @@
   <#else>
     <@fdsSummaryList.summaryListCard headingText="Consent information" summaryListId="consent-card">
       <#if showIssuedByUser>
-        <@fdsSummaryList.summaryListRowNoAction keyText="Issued by">
+        <@fdsSummaryList.summaryListRowNoAction keyText="Consent issued by">
           ${consentTabConsentSummaryView.issuedByUser()}
         </@fdsSummaryList.summaryListRowNoAction>
       </#if>
-      <@fdsSummaryList.summaryListRowNoAction keyText="Issued on">
+      <@fdsSummaryList.summaryListRowNoAction keyText="Consent issued on">
         ${consentTabConsentSummaryView.formattedIssuedDate()}
       </@fdsSummaryList.summaryListRowNoAction>
+      <@fdsSummaryList.summaryListRowNoAction keyText="Consent status">
+        <strong class="govuk-tag govuk-tag--blue">
+          ${consentTabConsentSummaryView.consentStatus().getDisplayName()}
+        </strong>
+      </@fdsSummaryList.summaryListRowNoAction>
+      <#if consentTabConsentSummaryView.consentSupersededByApplicationReference()?has_content>
+        <@fdsSummaryList.summaryListRowNoAction keyText="Consent superseded by">
+          ${consentTabConsentSummaryView.consentSupersededByApplicationReference()}
+        </@fdsSummaryList.summaryListRowNoAction>
+      </#if>
+
       <@consentDataSummary.summaryCardContent
         applicationType=consentTabConsentSummaryView.applicationType()
         consentLengthType=consentTabConsentSummaryView.consentLengthType()

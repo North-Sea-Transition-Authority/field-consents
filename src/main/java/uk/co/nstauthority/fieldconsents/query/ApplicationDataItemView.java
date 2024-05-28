@@ -2,6 +2,7 @@ package uk.co.nstauthority.fieldconsents.query;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentStatus;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
@@ -30,9 +31,7 @@ public record ApplicationDataItemView(
     Boolean consultationFurtherInformationOpen,
     String licenses,
     Boolean approvedForIssue,
-    Boolean consentIssuedAndNotYetActive,
-    Boolean consentIssuedAndActive,
-    Boolean consentIssuedAndExpired
+    ConsentStatus consentStatus
 ) {
 
   public static Builder newBuilder() {
@@ -65,9 +64,7 @@ public record ApplicationDataItemView(
     private Boolean consultationFurtherInformationOpen;
     private String licenses;
     private Boolean approvedForIssue;
-    private Boolean consentIssuedAndNotYetActive;
-    private Boolean consentIssuedAndActive;
-    private Boolean consentIssuedAndExpired;
+    private ConsentStatus consentStatus;
 
     private Builder() {
     }
@@ -192,18 +189,8 @@ public record ApplicationDataItemView(
       return this;
     }
 
-    public Builder withConsentIssuedAndNotYetActive(Boolean consentIssuedAndNotYetActive) {
-      this.consentIssuedAndNotYetActive = consentIssuedAndNotYetActive;
-      return this;
-    }
-
-    public Builder withConsentIssuedAndActive(Boolean consentIssuedAndActive) {
-      this.consentIssuedAndActive = consentIssuedAndActive;
-      return this;
-    }
-
-    public Builder withConsentIssuedAndExpired(Boolean consentIssuedAndExpired) {
-      this.consentIssuedAndExpired = consentIssuedAndExpired;
+    public Builder withConsentStatus(ConsentStatus consentStatus) {
+      this.consentStatus = consentStatus;
       return this;
     }
 
@@ -233,9 +220,7 @@ public record ApplicationDataItemView(
           consultationFurtherInformationOpen,
           licenses,
           approvedForIssue,
-          consentIssuedAndNotYetActive,
-          consentIssuedAndActive,
-          consentIssuedAndExpired
+          consentStatus
       );
     }
   }

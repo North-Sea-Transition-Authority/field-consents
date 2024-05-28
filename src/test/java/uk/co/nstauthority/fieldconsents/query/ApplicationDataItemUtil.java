@@ -103,6 +103,7 @@ public class ApplicationDataItemUtil {
         false,
         null,
         null,
+        false,
         false
     );
   }
@@ -145,7 +146,9 @@ public class ApplicationDataItemUtil {
         false,
         null,
         null,
-        false);
+        false,
+        false
+    );
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForShortVentSubmittedForTerminal() {
@@ -186,7 +189,9 @@ public class ApplicationDataItemUtil {
         false,
         null,
         null,
-        false);
+        false,
+        false
+    );
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForShortVentVersion2InProgressForTerminal() {
@@ -227,7 +232,9 @@ public class ApplicationDataItemUtil {
         false,
         null,
         null,
-        false);
+        false,
+        false
+    );
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForShortVentAssignedToCaseOfficerForTerminal() {
@@ -268,7 +275,9 @@ public class ApplicationDataItemUtil {
         false,
         null,
         null,
-        false);
+        false,
+        false
+    );
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForShortVentAssignedToCamForTerminal() {
@@ -309,7 +318,9 @@ public class ApplicationDataItemUtil {
         false,
         null,
         null,
-        false);
+        false,
+        false
+    );
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForLongFlareSubmittedForTerminal() {
@@ -350,7 +361,9 @@ public class ApplicationDataItemUtil {
         false,
         null,
         null,
-        false);
+        false,
+        false
+    );
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForLongFlareSubmittedForField() {
@@ -391,7 +404,9 @@ public class ApplicationDataItemUtil {
         false,
         null,
         null,
-        false);
+        false,
+        false
+    );
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForLongFlareConsentedForField() {
@@ -432,7 +447,9 @@ public class ApplicationDataItemUtil {
         false,
         LocalDate.now().plusMonths(1),
         LocalDate.now().plusYears(2),
-        true);
+        true,
+        false
+    );
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForAnnualFlareSubmittedForFieldConsultationOpen() {
@@ -473,7 +490,9 @@ public class ApplicationDataItemUtil {
         false,
         null,
         null,
-        false);
+        false,
+        false
+    );
   }
 
   public static ApplicationDataItemDto getApplicationDataItemDtoForLongFlareSubmittedForTerminalWithOpenWithdrawalRequest() {
@@ -514,6 +533,7 @@ public class ApplicationDataItemUtil {
         false,
         null,
         null,
+        false,
         false
     );
   }
@@ -544,9 +564,7 @@ public class ApplicationDataItemUtil {
         false,
         "P1, P2, P3",
         false,
-        false,
-        false,
-        false
+        null
     );
   }
 }

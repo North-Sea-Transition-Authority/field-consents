@@ -102,7 +102,9 @@ class ConsentIssuingServiceTest {
   }
 
   @Test
-  void issueConsent() {
+  void issueConsent_applicationIsNotRevision() {
+    application.setVariationNo(0);
+
     var user = ServiceUserDetailTestUtil.Builder().build();
 
     var consent = ConsentTestUtil.newBuilder().build();
@@ -114,6 +116,35 @@ class ConsentIssuingServiceTest {
 
     consentIssuingService.issueConsent(applicationVersion, user);
 
+    verify(consentService, never()).setConsentSupersededByConsent(any(), any());
+    verify(consentIssuingService).generateDocumentInstancesAndSaveToConsent(applicationVersion, consent);
+    verify(consentIssuingService).copySupportingDocumentsToConsent(application, consent);
+    verify(applicationService).consentApplication(applicationVersion);
+    verify(consentEmailService).sendConsentIssuedEmailToOperator(applicationVersion);
+    verify(consentEmailService).sendConsentIssuedEmailToCaseOfficer(applicationVersion);
+    verify(consentEmailService).sendConsentIssuedEmailToFieldEquityPartners(applicationVersion, consent);
+    verify(consentFieldEquityPartnerService).saveFieldEquityPartners(consent, applicationVersion);
+  }
+
+  @Test
+  void issueConsent_applicationIsRevision() {
+    application.setVariationNo(1);
+
+    var user = ServiceUserDetailTestUtil.Builder().build();
+
+    var consent = ConsentTestUtil.newBuilder().build();
+
+    var previousConsent = ConsentTestUtil.newBuilder().withId(consent.getId() - 1).build();
+
+    when(consentService.createConsent(application, user)).thenReturn(consent);
+    when(consentService.getPreviousConsent(application)).thenReturn(previousConsent);
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
+    doNothing().when(consentIssuingService).generateDocumentInstancesAndSaveToConsent(any(), any());
+    doNothing().when(consentIssuingService).copySupportingDocumentsToConsent(any(), any());
+
+    consentIssuingService.issueConsent(applicationVersion, user);
+
+    verify(consentService).setConsentSupersededByConsent(previousConsent, consent);
     verify(consentIssuingService).generateDocumentInstancesAndSaveToConsent(applicationVersion, consent);
     verify(consentIssuingService).copySupportingDocumentsToConsent(application, consent);
     verify(applicationService).consentApplication(applicationVersion);

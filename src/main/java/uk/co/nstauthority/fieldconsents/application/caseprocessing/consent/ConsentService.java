@@ -59,6 +59,18 @@ public class ConsentService {
     return consent;
   }
 
+  @Transactional
+  public void setConsentSupersededByConsent(Consent consent, Consent supersededByConsent) {
+    if (consent.getSupersededByConsent() != null) {
+      throw new IllegalStateException("Consent %d already superseded by consent %d"
+          .formatted(consent.getId(), consent.getSupersededByConsent().getId()));
+    }
+
+    consent.setSupersededByConsent(supersededByConsent);
+
+    consentRepository.save(consent);
+  }
+
   public boolean shouldCheckProductionConsentExists(ApplicationVersion applicationVersion) {
     if (ApplicationType.PRODUCTION == applicationVersion.getApplication().getType()) {
       return false;
@@ -155,7 +167,15 @@ public class ConsentService {
         .orElseThrow(() -> new IllegalStateException("Unable to find consent for application %d".formatted(application.getId())));
   }
 
-  public Optional<Consent> findPreviousConsentByApplicationId(int applicationId) {
-    return consentRepository.findPreviousConsentByApplicationId(applicationId);
+  public Consent getPreviousConsent(Application application) {
+    var applicationId = application.getId();
+
+    if (!application.isRevision()) {
+      throw new IllegalStateException("Application %d is not a revision".formatted(applicationId));
+    }
+
+    return consentRepository.findPreviousConsentByApplication(application)
+        .orElseThrow(() -> new IllegalStateException("Unable to find previous consent for application %d"
+            .formatted(applicationId)));
   }
 }

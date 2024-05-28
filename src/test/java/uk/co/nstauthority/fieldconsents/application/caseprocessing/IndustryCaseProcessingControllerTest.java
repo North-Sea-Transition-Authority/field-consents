@@ -45,6 +45,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentTabConsentSummaryView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentTabService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ProductionConsentCheckResult;
@@ -137,6 +138,8 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
         ConsentLengthType.ANNUAL,
         "Test issued by user",
         "04/04/2024",
+        ConsentStatus.ISSUED,
+        null,
         consentDataView,
         consentFigureUnitView,
         null,

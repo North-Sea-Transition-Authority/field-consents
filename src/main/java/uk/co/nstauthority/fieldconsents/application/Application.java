@@ -90,6 +90,10 @@ public class Application {
     this.variationNo = variationNumber;
   }
 
+  public boolean isRevision() {
+    return variationNo > 0;
+  }
+
   public Integer getApplicationNo() {
     return applicationNo;
   }

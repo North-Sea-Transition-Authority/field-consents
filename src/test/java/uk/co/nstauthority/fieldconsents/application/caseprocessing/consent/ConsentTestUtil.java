@@ -17,6 +17,7 @@ public class ConsentTestUtil {
     private Application application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
     private Long issuedByWuaId = 2L;
     private Instant issuedInstant = Instant.now();
+    private Consent supersededByConsent;
 
     private Builder() {
     }
@@ -41,12 +42,18 @@ public class ConsentTestUtil {
       return this;
     }
 
+    public Builder withSupersededByConsent(Consent supersededByConsent) {
+      this.supersededByConsent = supersededByConsent;
+      return this;
+    }
+
     public Consent build() {
       var consent = new Consent(id);
 
       consent.setApplication(application);
       consent.setIssuedByWuaId(issuedByWuaId);
       consent.setIssuedInstant(issuedInstant);
+      consent.setSupersededByConsent(supersededByConsent);
 
       return consent;
     }

@@ -32,6 +32,10 @@ public class Consent {
   @Column(name = "issued_timestamp")
   private Instant issuedInstant;
 
+  @OneToOne
+  @JoinColumn(name = "superseded_by_application_consent_id")
+  private Consent supersededByConsent;
+
   public Consent() {
   }
 
@@ -65,5 +69,17 @@ public class Consent {
 
   public void setIssuedInstant(Instant issuedInstant) {
     this.issuedInstant = issuedInstant;
+  }
+
+  public Consent getSupersededByConsent() {
+    return supersededByConsent;
+  }
+
+  public boolean isSuperseded() {
+    return supersededByConsent != null;
+  }
+
+  public void setSupersededByConsent(Consent supersededByConsent) {
+    this.supersededByConsent = supersededByConsent;
   }
 }
