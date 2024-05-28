@@ -3,7 +3,7 @@
 
 <#-- @ftlvariable name="consentDataView" type="uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataView" -->
 
-<#macro summaryCard applicationType consentLengthType consentDataView consentFigureUnitView caseProcessingActionViewList>
+<#macro summaryCard applicationType consentLengthType consentDataView consentFigureUnitView caseProcessingActionViewList=[]>
   <#assign summaryCardActions>
     <@caseProcessingActions.summaryCardActions actionViews=caseProcessingActionViewList />
   </#assign>

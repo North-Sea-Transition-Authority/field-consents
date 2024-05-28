@@ -1,5 +1,6 @@
 <#include '../../layout/layout.ftl'>
 <#import '../_caseProcessingActions.ftl' as caseProcessingActions>
+<#import 'data/_consentDataSummary.ftl' as consentDataSummary>
 <#import 'documents/_consentFilesSummary.ftl' as consentFilesSummary>
 <#import '_approvedForIssue.ftl' as approvedForIssue/>
 
@@ -18,9 +19,15 @@
 
   <@caseProcessingActions.caseActions actions=consentIssuingGroupActionViewList />
 
+  <@consentDataSummary.summaryCard
+    applicationType=applicationType
+    consentLengthType=consentLengthType
+    consentDataView=consentDataView
+    consentFigureUnitView=consentFigureUnitView
+  />
+
   <@consentFilesSummary.summary
     heading=consentDocumentsSummaryCard.displayName()
     fileViews=consentDocumentsSummaryCard.summaryData()
-    caseProcessingActionViewList=consentPreparationConsentDocumentsCardGroupActionViewList
   />
 </@defaultPage>

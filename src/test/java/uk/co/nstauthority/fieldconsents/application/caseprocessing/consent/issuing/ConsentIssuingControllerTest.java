@@ -35,15 +35,24 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusfla
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlagService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentTestUtil;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataTestUtil;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataView;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentFigureUnitService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentFigureUnitView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval.ConsentIssuingApprovalService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval.ConsentIssuingApprovalSummaryView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.documents.ConsentPreparationDocumentService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.DocumentInstanceSummaryViewTestUtil;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
+import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryFileView;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
@@ -58,6 +67,15 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
 
   @MockBean
   private ApplicationContextService applicationContextService;
+
+  @MockBean
+  private ConsentLengthService consentLengthService;
+
+  @MockBean
+  private ConsentDataService consentDataService;
+
+  @MockBean
+  private ConsentFigureUnitService consentFigureUnitService;
 
   @MockBean
   private ConsentPreparationDocumentService consentPreparationDocumentService;
@@ -106,8 +124,14 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
   @SecurityTest
   void getConsentIssuing_consentIssuingApprovalSummaryViewIsNull() throws Exception {
     var consentIssuingGroupActionViewList = List.of(CaseProcessingActionView.from(CaseProcessingActionItem.APPROVE_FOR_ISSUING, applicationVersion));
-    var consentPreparationConsentDocumentsCardGroupActionViewList =
-        List.of(CaseProcessingActionView.from(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS, applicationVersion));
+
+    var consentLengthType = ConsentLengthType.SHORT_TERM;
+    var consentLengthDetails = new ConsentLengthDetails();
+    consentLengthDetails.setConsentLength(consentLengthType);
+
+    var consentData = ConsentDataTestUtil.newBuilder().build();
+    var consentDataView = ConsentDataView.fromShortTermOrAnnualProductionApplication(consentData);
+    var consentFigureUnitView = ConsentFigureUnitView.fromShortTermOrAnnualProductionApplication(ProductionUnit.KSCM_PER_DAY);
 
     var documentsInstanceSummaryView = DocumentInstanceSummaryViewTestUtil.newBuilder().build();
     var consentDocumentsSummaryCard = SummaryCard.filesSummaryCardWithHeading(
@@ -117,6 +141,7 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
 
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(CaseProcessingActionItem.CONSENT_ISSUING));
+    when(consentIssuingApprovalService.getConsentIssuingApprovalSummaryView(application)).thenReturn(Optional.empty());
     when(
         caseProcessingActionService.getUserActionViewsForGroup(
             applicationVersion,
@@ -124,15 +149,14 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
             CaseProcessingActionGroup.CONSENT_ISSUING
         )
     ).thenReturn(consentIssuingGroupActionViewList);
-    when(
-        caseProcessingActionService.getUserActionViewsForGroup(
-            applicationVersion,
-            user,
-            CaseProcessingActionGroup.CONSENT_PREPARATION_CONSENT_DOCUMENTS_CARD
-        )
-    ).thenReturn(consentPreparationConsentDocumentsCardGroupActionViewList);
     when(consentPreparationDocumentService.getConsentDocumentsSummaryCard(application)).thenReturn(consentDocumentsSummaryCard);
-    when(consentIssuingApprovalService.getConsentIssuingApprovalSummaryView(application)).thenReturn(Optional.empty());
+
+    when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
+    when(consentDataService.getConsentData(application)).thenReturn(consentData);
+    when(consentDataService.getConsentDataView(application, consentData, consentLengthType)).thenReturn(consentDataView);
+    when(consentFigureUnitService.getConsentFigureUnitView(applicationVersion, consentLengthType))
+        .thenReturn(consentFigureUnitView);
+
     when(caseStatusFlagService.isCaseStatusFlagApplicable(applicationVersion, CaseStatusFlag.MAIL_MERGE_ERROR_PRESENT))
         .thenReturn(true);
 
@@ -142,24 +166,30 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
         .andExpect(view().name("fcs/application/consent/consentIssuing"))
         .andExpect(model().attribute("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class)
             .caseProcessing(APPLICATION_ID, null, null))))
+        .andExpect(model().attributeDoesNotExist("consentIssuingApprovalSummaryView"))
         .andExpect(model().attribute("consentIssuingGroupActionViewList", consentIssuingGroupActionViewList))
-        .andExpect(
-            model().attribute(
-                "consentPreparationConsentDocumentsCardGroupActionViewList",
-                consentPreparationConsentDocumentsCardGroupActionViewList
-            )
-        )
+        .andExpect(model().attribute("applicationType", application.getType()))
+        .andExpect(model().attribute("consentLengthType", consentLengthType))
+        .andExpect(model().attribute("consentDataView", consentDataView))
+        .andExpect(model().attribute("consentFigureUnitView", consentFigureUnitView))
         .andExpect(model().attribute("consentDocumentsSummaryCard", consentDocumentsSummaryCard))
-        .andExpect(model().attribute("singleErrorMessage", "Document mail merge errors are preventing this consent from being issuable"))
-        .andExpect(model().attributeDoesNotExist("consentIssuingApprovalSummaryView"));
+        .andExpect(model().attribute("singleErrorMessage", "Document mail merge errors are preventing this consent from being issuable"));
   }
 
   @SecurityTest
   void getConsentIssuing_consentIssuingApprovalSummaryViewIsNotNull() throws Exception {
-    var consentIssuingGroupActionViewList =
-        List.of(CaseProcessingActionView.from(CaseProcessingActionItem.APPROVE_FOR_ISSUING, applicationVersion));
-    var consentPreparationConsentDocumentsCardGroupActionViewList =
-        List.of(CaseProcessingActionView.from(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS, applicationVersion));
+    var consentIssuingApprovalSummaryView =
+        new ConsentIssuingApprovalSummaryView("Test user (test@SecurityTest.com)", "6 Mar 2024 11:18");
+
+    var consentIssuingGroupActionViewList = List.of(CaseProcessingActionView.from(CaseProcessingActionItem.APPROVE_FOR_ISSUING, applicationVersion));
+
+    var consentLengthType = ConsentLengthType.SHORT_TERM;
+    var consentLengthDetails = new ConsentLengthDetails();
+    consentLengthDetails.setConsentLength(consentLengthType);
+
+    var consentData = ConsentDataTestUtil.newBuilder().build();
+    var consentDataView = ConsentDataView.fromShortTermOrAnnualProductionApplication(consentData);
+    var consentFigureUnitView = ConsentFigureUnitView.fromShortTermOrAnnualProductionApplication(ProductionUnit.KSCM_PER_DAY);
 
     var documentsInstanceSummaryView = DocumentInstanceSummaryViewTestUtil.newBuilder().build();
     var consentDocumentsSummaryCard = SummaryCard.filesSummaryCardWithHeading(
@@ -167,11 +197,10 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
         List.of(SummaryFileView.previewSummaryFrom(application, documentsInstanceSummaryView, true))
     );
 
-    var consentIssuingApprovalSummaryView =
-        new ConsentIssuingApprovalSummaryView("Test user (test@SecurityTest.com)", "6 Mar 2024 11:18");
-
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(CaseProcessingActionItem.CONSENT_ISSUING));
+    when(consentIssuingApprovalService.getConsentIssuingApprovalSummaryView(application))
+        .thenReturn(Optional.of(consentIssuingApprovalSummaryView));
     when(
         caseProcessingActionService.getUserActionViewsForGroup(
             applicationVersion,
@@ -179,16 +208,16 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
             CaseProcessingActionGroup.CONSENT_ISSUING
         )
     ).thenReturn(consentIssuingGroupActionViewList);
-    when(
-        caseProcessingActionService.getUserActionViewsForGroup(
-            applicationVersion,
-            user,
-            CaseProcessingActionGroup.CONSENT_PREPARATION_CONSENT_DOCUMENTS_CARD
-        )
-    ).thenReturn(consentPreparationConsentDocumentsCardGroupActionViewList);
     when(consentPreparationDocumentService.getConsentDocumentsSummaryCard(application)).thenReturn(consentDocumentsSummaryCard);
-    when(consentIssuingApprovalService.getConsentIssuingApprovalSummaryView(application))
-        .thenReturn(Optional.of(consentIssuingApprovalSummaryView));
+
+    when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
+    when(consentDataService.getConsentData(application)).thenReturn(consentData);
+    when(consentDataService.getConsentDataView(application, consentData, consentLengthType)).thenReturn(consentDataView);
+    when(consentFigureUnitService.getConsentFigureUnitView(applicationVersion, consentLengthType))
+        .thenReturn(consentFigureUnitView);
+
+    when(caseStatusFlagService.isCaseStatusFlagApplicable(applicationVersion, CaseStatusFlag.MAIL_MERGE_ERROR_PRESENT))
+        .thenReturn(true);
 
     mockMvc.perform(get(ReverseRouter.route(on(ConsentIssuingController.class).getConsentIssuing(APPLICATION_ID, null)))
             .with(user(user)))
@@ -196,15 +225,14 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
         .andExpect(view().name("fcs/application/consent/consentIssuing"))
         .andExpect(model().attribute("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class)
             .caseProcessing(APPLICATION_ID, null, null))))
+        .andExpect(model().attribute("consentIssuingApprovalSummaryView", consentIssuingApprovalSummaryView))
         .andExpect(model().attribute("consentIssuingGroupActionViewList", consentIssuingGroupActionViewList))
-        .andExpect(
-            model().attribute(
-                "consentPreparationConsentDocumentsCardGroupActionViewList",
-                consentPreparationConsentDocumentsCardGroupActionViewList
-            )
-        )
+        .andExpect(model().attribute("applicationType", application.getType()))
+        .andExpect(model().attribute("consentLengthType", consentLengthType))
+        .andExpect(model().attribute("consentDataView", consentDataView))
+        .andExpect(model().attribute("consentFigureUnitView", consentFigureUnitView))
         .andExpect(model().attribute("consentDocumentsSummaryCard", consentDocumentsSummaryCard))
-        .andExpect(model().attribute("consentIssuingApprovalSummaryView", consentIssuingApprovalSummaryView));
+        .andExpect(model().attribute("singleErrorMessage", "Document mail merge errors are preventing this consent from being issuable"));
   }
 
   @SecurityTest

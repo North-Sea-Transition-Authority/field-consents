@@ -19,8 +19,11 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CasePr
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlagService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.ConsentService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentFigureUnitService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing.approval.ConsentIssuingApprovalService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.documents.ConsentPreparationDocumentService;
+import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
@@ -35,6 +38,9 @@ public class ConsentIssuingController {
   private final ApplicationVersionService applicationVersionService;
   private final ApplicationContextService applicationContextService;
   private final CaseProcessingActionService caseProcessingActionService;
+  private final ConsentLengthService consentLengthService;
+  private final ConsentDataService consentDataService;
+  private final ConsentFigureUnitService consentFigureUnitService;
   private final ConsentPreparationDocumentService consentPreparationDocumentService;
   private final ConsentIssuingApprovalService consentIssuingApprovalService;
   private final ConsentIssuingService consentIssuingService;
@@ -46,6 +52,9 @@ public class ConsentIssuingController {
       ApplicationVersionService applicationVersionService,
       ApplicationContextService applicationContextService,
       CaseProcessingActionService caseProcessingActionService,
+      ConsentLengthService consentLengthService,
+      ConsentDataService consentDataService,
+      ConsentFigureUnitService consentFigureUnitService,
       ConsentPreparationDocumentService consentPreparationDocumentService,
       ConsentIssuingApprovalService consentIssuingApprovalService,
       ConsentIssuingService consentIssuingService,
@@ -56,6 +65,9 @@ public class ConsentIssuingController {
     this.applicationVersionService = applicationVersionService;
     this.applicationContextService = applicationContextService;
     this.caseProcessingActionService = caseProcessingActionService;
+    this.consentLengthService = consentLengthService;
+    this.consentDataService = consentDataService;
+    this.consentFigureUnitService = consentFigureUnitService;
     this.consentPreparationDocumentService = consentPreparationDocumentService;
     this.consentIssuingApprovalService = consentIssuingApprovalService;
     this.consentIssuingService = consentIssuingService;
@@ -69,33 +81,32 @@ public class ConsentIssuingController {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var application = applicationVersion.getApplication();
 
+    var consentIssuingApprovalSummaryView = consentIssuingApprovalService.getConsentIssuingApprovalSummaryView(application)
+        .orElse(null);
+
     var consentIssuingGroupActionViewList = caseProcessingActionService.getUserActionViewsForGroup(
         applicationVersion,
         user,
         CaseProcessingActionGroup.CONSENT_ISSUING
     );
 
-    var consentPreparationConsentDocumentsCardGroupActionViewList = caseProcessingActionService.getUserActionViewsForGroup(
-        applicationVersion,
-        user,
-        CaseProcessingActionGroup.CONSENT_PREPARATION_CONSENT_DOCUMENTS_CARD
-    );
+    var consentLengthType = consentLengthService.getConsentLengthDetails(applicationVersion).getConsentLength();
+    var consentData = consentDataService.getConsentData(application);
+    var consentDataView = consentDataService.getConsentDataView(application, consentData, consentLengthType);
+    var consentFigureUnitView = consentFigureUnitService.getConsentFigureUnitView(applicationVersion, consentLengthType);
 
     var consentDocumentsSummaryCard = consentPreparationDocumentService.getConsentDocumentsSummaryCard(application);
-
-    var consentIssuingApprovalSummaryView = consentIssuingApprovalService.getConsentIssuingApprovalSummaryView(application)
-        .orElse(null);
 
     var modelAndView = new ModelAndView("fcs/application/consent/consentIssuing")
         .addObject("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class)
             .caseProcessing(applicationId, null, null)))
+        .addObject("consentIssuingApprovalSummaryView", consentIssuingApprovalSummaryView)
         .addObject("consentIssuingGroupActionViewList", consentIssuingGroupActionViewList)
-        .addObject(
-            "consentPreparationConsentDocumentsCardGroupActionViewList",
-            consentPreparationConsentDocumentsCardGroupActionViewList
-        )
-        .addObject("consentDocumentsSummaryCard", consentDocumentsSummaryCard)
-        .addObject("consentIssuingApprovalSummaryView", consentIssuingApprovalSummaryView);
+        .addObject("applicationType", application.getType())
+        .addObject("consentLengthType", consentLengthType)
+        .addObject("consentDataView", consentDataView)
+        .addObject("consentFigureUnitView", consentFigureUnitView)
+        .addObject("consentDocumentsSummaryCard", consentDocumentsSummaryCard);
 
     if (caseStatusFlagService.isCaseStatusFlagApplicable(applicationVersion, CaseStatusFlag.MAIL_MERGE_ERROR_PRESENT)) {
       modelAndView.addObject(
