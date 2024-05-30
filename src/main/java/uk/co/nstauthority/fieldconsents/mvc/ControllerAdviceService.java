@@ -11,6 +11,7 @@ import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
 import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.branding.ServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.configuration.ServiceConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.feedback.FeedbackController;
 import uk.co.nstauthority.fieldconsents.topnavigation.TopNavigationService;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 
@@ -44,7 +45,7 @@ public class ControllerAdviceService {
     userOptional.ifPresent(user -> attributeConsumer.accept("loggedInUser", user));
     var topNavigationItems = topNavigationService.getTopNavigationItems(userOptional.orElse(null));
     attributeConsumer.accept("navigationItems", topNavigationItems);
-
+    attributeConsumer.accept("feedbackUrl", ReverseRouter.route(on(FeedbackController.class).getFeedback(null)));
     attributeConsumer.accept("serviceBrandingConfigurationProperties", serviceBrandingConfigurationProperties);
     attributeConsumer.accept("serviceConfigurationProperties", serviceConfigurationProperties);
     attributeConsumer.accept("customerBrandingConfigurationProperties", customerBrandingConfigurationProperties);

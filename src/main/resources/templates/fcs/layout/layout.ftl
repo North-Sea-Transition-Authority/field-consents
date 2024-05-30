@@ -15,6 +15,7 @@
 <#assign SERVICE_NAME = serviceBrandingConfigurationProperties.name() />
 <#assign CUSTOMER_MNEMONIC = customerBrandingConfigurationProperties.mnemonic() />
 <#assign SERVICE_HOME_URL = springUrl(serviceHomeUrl) />
+<#assign FEEDBACK_URL = springUrl(feedbackUrl)/>
 
 <#macro defaultPage
   htmlTitle
@@ -102,6 +103,7 @@
     headerContent=serviceHeader
     logoProductText=customerMnemonic
     phaseBanner=phaseBanner
+    phaseBannerLink=FEEDBACK_URL
     serviceUrl=serviceHomeUrl
     homePageUrl=serviceHomeUrl
     wrapperWidth=fullPageWidth

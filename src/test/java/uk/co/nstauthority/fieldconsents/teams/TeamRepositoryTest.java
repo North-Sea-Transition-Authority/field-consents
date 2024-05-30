@@ -229,7 +229,7 @@ class TeamRepositoryTest extends AbstractIntegrationTest {
 
     teamRepository.save(regulatorTeam);
 
-    var viewNominationRole = TeamMemberRoleTestUtil.Builder()
+    var viewIndustryAccessManagerRole = TeamMemberRoleTestUtil.Builder()
         .withTeam(regulatorTeam)
         .withRole(RegulatorTeamRole.INDUSTRY_ACCESS_MANAGER.name())
         .withWebUserAccountId(user.wuaId())
@@ -240,7 +240,7 @@ class TeamRepositoryTest extends AbstractIntegrationTest {
         .withWebUserAccountId(user.wuaId())
         .build();
 
-    teamMemberRoleRepository.saveAll(List.of(viewNominationRole, accessManagerRole));
+    teamMemberRoleRepository.saveAll(List.of(viewIndustryAccessManagerRole, accessManagerRole));
 
     var result = teamRepository.findAllTeamsThatUserIsMemberOf(user.wuaId());
     assertThat(result).containsExactly(regulatorTeam);

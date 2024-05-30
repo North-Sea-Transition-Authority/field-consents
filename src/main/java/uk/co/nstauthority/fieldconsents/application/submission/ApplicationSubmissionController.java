@@ -28,6 +28,8 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ApplicationAccessService;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
+import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.feedback.FeedbackController;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
@@ -50,6 +52,7 @@ public class ApplicationSubmissionController {
   private final ApplicationUpdateRequestViewService applicationUpdateRequestViewService;
   private final ApplicationPaymentService applicationPaymentService;
   private final ApplicationUpdateResponseFormValidator applicationUpdateResponseFormValidator;
+  private final CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties;
 
   @Autowired
   ApplicationSubmissionController(
@@ -61,7 +64,8 @@ public class ApplicationSubmissionController {
       ApplicationUpdateService applicationUpdateService,
       ApplicationUpdateRequestViewService applicationUpdateRequestViewService,
       ApplicationPaymentService applicationPaymentService,
-      ApplicationUpdateResponseFormValidator applicationUpdateResponseFormValidator
+      ApplicationUpdateResponseFormValidator applicationUpdateResponseFormValidator,
+      CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties
   ) {
     this.applicationService = applicationService;
     this.applicationVersionService = applicationVersionService;
@@ -72,6 +76,7 @@ public class ApplicationSubmissionController {
     this.applicationUpdateRequestViewService = applicationUpdateRequestViewService;
     this.applicationPaymentService = applicationPaymentService;
     this.applicationUpdateResponseFormValidator = applicationUpdateResponseFormValidator;
+    this.customerBrandingConfigurationProperties = customerBrandingConfigurationProperties;
   }
 
   @GetMapping("/review-and-submit")
@@ -201,6 +206,9 @@ public class ApplicationSubmissionController {
     return new ModelAndView("fcs/application/submissionConfirmation")
         .addObject("pageTitle", pageTitle)
         .addObject("applicationReference", applicationService.generateApplicationReference(applicationVersion))
-        .addObject("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)));
+        .addObject("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)))
+        .addObject("feedbackUrl", ReverseRouter.route(on(FeedbackController.class)
+            .getApplicationFeedback(applicationVersion.getApplication().getId(), null)))
+        .addObject("customerBranding", customerBrandingConfigurationProperties);
   }
 }
