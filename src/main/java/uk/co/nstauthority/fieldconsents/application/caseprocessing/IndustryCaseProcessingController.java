@@ -127,7 +127,7 @@ public class IndustryCaseProcessingController {
     if (tab != null && caseProcessingTabs.contains(tab)) {
       switch (tab) {
         case CONSENT -> consentTabService.addConsentTabContentToModelAndView(applicationVersion, modelAndView);
-        case PAYMENTS -> paymentsTabService.addPaymentsTabContentToModelAndView(applicationVersion, modelAndView);
+        case PAYMENTS -> paymentsTabService.addPaymentsTabContentToModelAndView(application, modelAndView);
         case VIEW_APPLICATION -> applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView);
         default -> {
         }

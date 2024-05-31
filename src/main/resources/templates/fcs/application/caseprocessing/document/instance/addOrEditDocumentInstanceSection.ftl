@@ -24,12 +24,12 @@
           <@fdsRadio.radioYes path="form.hasPageBreakBefore" />
           <@fdsRadio.radioNo path="form.hasPageBreakBefore" />
         </@fdsRadio.radioGroup>
-
-        <#if mailMergeFieldViews?has_content>
-          <@_mailMergeFieldSummaryDetails.mailMergeFieldSummaryDetails mailMergeFieldViews />
-        </#if>
       </@grid.twoThirdsColumn>
     </@grid.gridRow>
+
+    <#if mailMergeFieldViews?has_content>
+      <@_mailMergeFieldSummaryDetails.mailMergeFieldSummaryDetails mailMergeFieldViews />
+    </#if>
 
     <@fdsAction.submitButtons
       primaryButtonText="${submitButtonText}"

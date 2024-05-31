@@ -158,19 +158,6 @@ class ApplicationPaymentServiceTest {
   }
 
   @Test
-  void getApplicationVersionFromPaymentItemReference() {
-    var itemReference = "1";
-
-    var applicationVersion = new ApplicationVersion();
-
-    when(applicationVersionService.getApplicationVersionById(Integer.parseInt(itemReference)))
-        .thenReturn(applicationVersion);
-
-    assertThat(applicationPaymentService.getApplicationVersionFromPaymentItemReference(itemReference))
-        .isEqualTo(applicationVersion);
-  }
-
-  @Test
   void getPaymentDescription_primaryAssetIsField_revisionTypeIsNewConsent() {
     var applicationVersion
         = ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
@@ -434,19 +421,29 @@ class ApplicationPaymentServiceTest {
   }
 
   @Test
-  void getPaymentDtos() {
-    var applicationVersion = new ApplicationVersion();
+  void getPaymentDtos_withApplicationVersions() {
+    var applicationVersion1 = ApplicationTestUtil.getNewApplicationVersionWithIdAndType(1, ApplicationType.PRODUCTION);
+    var applicationVersion2 = ApplicationTestUtil.getNewApplicationVersionWithIdAndType(2, ApplicationType.PRODUCTION);
 
-    var paymentItemReference = "testPaymentItemReference";
+    var applicationVersions = List.of(
+        applicationVersion1,
+        applicationVersion2
+    );
+
+    var paymentItemReference1 = "testPaymentItemReference1";
+    var paymentItemReference2 = "testPaymentItemReference2";
+
+    var paymentItemReferences = List.of(paymentItemReference1, paymentItemReference2);
 
     var paymentDtos = List.of(mock(PaymentDto.class), mock(PaymentDto.class));
 
-    doReturn(paymentItemReference).when(applicationPaymentService).getPaymentItemReference(applicationVersion);
+    doReturn(paymentItemReference1).when(applicationPaymentService).getPaymentItemReference(applicationVersion1);
+    doReturn(paymentItemReference2).when(applicationPaymentService).getPaymentItemReference(applicationVersion2);
 
-    when(paymentService.getPaymentDtos(paymentItemReference, ApplicationPaymentService.APPLICATION_VERSION_PAYMENT_ITEM_TYPE))
+    when(paymentService.getPaymentDtos(paymentItemReferences, ApplicationPaymentService.APPLICATION_VERSION_PAYMENT_ITEM_TYPE))
         .thenReturn(paymentDtos);
 
-    assertThat(applicationPaymentService.getPaymentDtos(applicationVersion)).isEqualTo(paymentDtos);
+    assertThat(applicationPaymentService.getPaymentDtos(applicationVersions)).isEqualTo(paymentDtos);
   }
 
   @Test
@@ -480,6 +477,35 @@ class ApplicationPaymentServiceTest {
   }
 
   @Test
+  void getApplicationVersionIdFromPaymentDto() {
+    var paymentDto = mock(PaymentDto.class);
+
+    var itemReference = "1";
+
+    when(paymentDto.itemReference()).thenReturn(itemReference);
+
+    assertThat(applicationPaymentService.getApplicationVersionIdFromPaymentDto(paymentDto))
+        .isEqualTo(1);
+  }
+
+  @Test
+  void getApplicationVersionFromPaymentDto() {
+    var paymentDto = mock(PaymentDto.class);
+
+    var applicationVersionId = 1;
+
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+
+    doReturn(applicationVersionId).when(applicationPaymentService).getApplicationVersionIdFromPaymentDto(paymentDto);
+
+    when(applicationVersionService.getApplicationVersionById(applicationVersionId))
+        .thenReturn(applicationVersion);
+
+    assertThat(applicationPaymentService.getApplicationVersionFromPaymentDto(paymentDto))
+        .isEqualTo(applicationVersion);
+  }
+
+  @Test
   void onPaymentReconcileSuccessEvent_itemTypeNotApplicationVersionPaymentItemType() {
     var paymentDto = mock(PaymentDto.class);
 
@@ -495,16 +521,12 @@ class ApplicationPaymentServiceTest {
   void onPaymentReconcileSuccessEvent_applicationStatusNotAwaitingPayment() {
     var paymentDto = mock(PaymentDto.class);
 
-    var itemReference = "testItemReference";
     var applicationVersion =
         ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
 
     when(paymentDto.itemType()).thenReturn(ApplicationPaymentService.APPLICATION_VERSION_PAYMENT_ITEM_TYPE);
-    when(paymentDto.itemReference()).thenReturn(itemReference);
 
-    doReturn(applicationVersion)
-        .when(applicationPaymentService)
-        .getApplicationVersionFromPaymentItemReference(itemReference);
+    doReturn(applicationVersion).when(applicationPaymentService).getApplicationVersionFromPaymentDto(paymentDto);
 
     assertThatThrownBy(() -> applicationPaymentService.onPaymentReconcileSuccessEvent(paymentDto))
         .isInstanceOf(IllegalStateException.class);
@@ -516,7 +538,6 @@ class ApplicationPaymentServiceTest {
   void onPaymentReconcileSuccessEvent() {
     var paymentDto = mock(PaymentDto.class);
 
-    var itemReference = "testItemReference";
     var createdByUserId = "1";
     var applicationVersion =
         ApplicationTestUtil.getAwaitingPaymentApplicationVersionWithType(ApplicationType.PRODUCTION);
@@ -524,12 +545,9 @@ class ApplicationPaymentServiceTest {
     var energyPortalUserDto = mock(EnergyPortalUserDto.class);
 
     when(paymentDto.itemType()).thenReturn(ApplicationPaymentService.APPLICATION_VERSION_PAYMENT_ITEM_TYPE);
-    when(paymentDto.itemReference()).thenReturn(itemReference);
     when(paymentDto.createdByUserId()).thenReturn(createdByUserId);
 
-    doReturn(applicationVersion)
-        .when(applicationPaymentService)
-        .getApplicationVersionFromPaymentItemReference(itemReference);
+    doReturn(applicationVersion).when(applicationPaymentService).getApplicationVersionFromPaymentDto(paymentDto);
     when(energyPortalUserService.getByWuaId(WebUserAccountId.valueOf(createdByUserId))).thenReturn(energyPortalUserDto);
     when(energyPortalUserDto.webUserAccountId()).thenReturn(Long.valueOf(createdByUserId));
 

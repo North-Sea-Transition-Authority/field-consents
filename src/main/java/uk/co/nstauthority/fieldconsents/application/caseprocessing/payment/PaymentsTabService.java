@@ -10,7 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.fivium.digitalpaymentslibrary.payment.PaymentDto;
 import uk.co.fivium.digitalpaymentslibrary.payment.PaymentStatus;
-import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.Application;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.payment.ApplicationPaymentService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
@@ -19,24 +20,29 @@ import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserServic
 @Service
 public class PaymentsTabService {
 
+  private final ApplicationVersionService applicationVersionService;
   private final ApplicationPaymentService applicationPaymentService;
   private final EnergyPortalUserService energyPortalUserService;
 
   @Autowired
   PaymentsTabService(
+      ApplicationVersionService applicationVersionService,
       ApplicationPaymentService applicationPaymentService,
       EnergyPortalUserService energyPortalUserService
   ) {
+    this.applicationVersionService = applicationVersionService;
     this.applicationPaymentService = applicationPaymentService;
     this.energyPortalUserService = energyPortalUserService;
   }
 
-  public void addPaymentsTabContentToModelAndView(ApplicationVersion applicationVersion, ModelAndView modelAndView) {
-    modelAndView.addObject("paymentsTabPaymentSummaryViews", getPaymentsTabPaymentSummaryViews(applicationVersion));
+  public void addPaymentsTabContentToModelAndView(Application application, ModelAndView modelAndView) {
+    modelAndView.addObject("paymentsTabPaymentSummaryViews", getPaymentsTabPaymentSummaryViews(application));
   }
 
-  List<PaymentsTabPaymentSummaryView> getPaymentsTabPaymentSummaryViews(ApplicationVersion applicationVersion) {
-    var paymentDtos = applicationPaymentService.getPaymentDtos(applicationVersion).stream()
+  List<PaymentsTabPaymentSummaryView> getPaymentsTabPaymentSummaryViews(Application application) {
+    var applicationVersions = applicationVersionService.getAllApplicationVersionsByApplicationId(application.getId());
+
+    var paymentDtos = applicationPaymentService.getPaymentDtos(applicationVersions).stream()
         .filter(paymentDto -> paymentDto.status() == PaymentStatus.SUCCESS)
         .toList();
 

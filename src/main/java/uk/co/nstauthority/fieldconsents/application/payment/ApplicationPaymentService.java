@@ -108,10 +108,6 @@ public class ApplicationPaymentService {
     return applicationVersion.getId().toString();
   }
 
-  ApplicationVersion getApplicationVersionFromPaymentItemReference(String itemReference) {
-    return applicationVersionService.getApplicationVersionById(Integer.parseInt(itemReference));
-  }
-
   String getPaymentDescription(ApplicationVersion applicationVersion) {
     var primaryAsset = applicationAssetService.getPrimaryAsset(applicationVersion);
     var primaryAssetType = primaryAsset.getAssetType();
@@ -165,9 +161,14 @@ public class ApplicationPaymentService {
     return paymentService.processPaymentCallback(paymentId);
   }
 
-  public List<PaymentDto> getPaymentDtos(ApplicationVersion applicationVersion) {
+  public List<PaymentDto> getPaymentDtos(List<ApplicationVersion> applicationVersions) {
+    var itemReferences = applicationVersions
+        .stream()
+        .map(this::getPaymentItemReference)
+        .toList();
+
     return paymentService.getPaymentDtos(
-        getPaymentItemReference(applicationVersion),
+        itemReferences,
         APPLICATION_VERSION_PAYMENT_ITEM_TYPE
     );
   }
@@ -185,6 +186,14 @@ public class ApplicationPaymentService {
         .forEach(paymentService::cancelPayment);
   }
 
+  public int getApplicationVersionIdFromPaymentDto(PaymentDto paymentDto) {
+    return Integer.parseInt(paymentDto.itemReference());
+  }
+
+  ApplicationVersion getApplicationVersionFromPaymentDto(PaymentDto paymentDto) {
+    return applicationVersionService.getApplicationVersionById(getApplicationVersionIdFromPaymentDto(paymentDto));
+  }
+
   @EventListener(PaymentReconcileSuccessEvent.class)
   void onPaymentReconcileSuccessEvent(PaymentDto paymentDto) {
     var itemType = paymentDto.itemType();
@@ -195,7 +204,7 @@ public class ApplicationPaymentService {
       );
     }
 
-    var applicationVersion = getApplicationVersionFromPaymentItemReference(paymentDto.itemReference());
+    var applicationVersion = getApplicationVersionFromPaymentDto(paymentDto);
 
     LOGGER.info(
         "Payment {} status changed to success, submitting linked application {}",

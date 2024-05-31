@@ -2,7 +2,6 @@ package uk.co.nstauthority.fieldconsents.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
@@ -22,6 +21,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseHistoryEv
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEvent;
 import uk.co.nstauthority.fieldconsents.application.payment.ApplicationPaymentService;
+import uk.co.nstauthority.fieldconsents.application.payment.PaymentDtoTestUtil;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationCaseEventServiceTest {
@@ -44,11 +44,10 @@ class ApplicationCaseEventServiceTest {
 
   private ApplicationVersion applicationVersionUpdate;
 
-  private PaymentDto paymentDto;
+  private PaymentDto successfulPaymentDto1;
+  private PaymentDto successfulPaymentDto2;
 
   private CaseEvent applicationCreatedEvent;
-
-  private CaseEvent paymentCompletedEvent;
 
   private CaseEvent applicationSubmittedEvent;
 
@@ -68,13 +67,20 @@ class ApplicationCaseEventServiceTest {
         ApplicationType.FLARE, 2, 2
     );
 
-    paymentDto = mock(PaymentDto.class);
-    when(paymentDto.createdByUserId()).thenReturn("1");
-    when(paymentDto.govUkPayCaptureSubmitInstant()).thenReturn(Instant.now());
-    when(paymentDto.amountPence()).thenReturn(118000);
+    successfulPaymentDto1 = PaymentDtoTestUtil.builder()
+        .withCreatedByUserId("1")
+        .withGovUkPayCaptureSubmitInstant(Instant.now())
+        .withAmountPence(118000)
+        .withStatus(PaymentStatus.SUCCESS)
+        .build();
+    successfulPaymentDto2 = PaymentDtoTestUtil.builder()
+        .withCreatedByUserId("2")
+        .withGovUkPayCaptureSubmitInstant(Instant.now())
+        .withAmountPence(93000)
+        .withStatus(PaymentStatus.SUCCESS)
+        .build();
 
     applicationCreatedEvent = CaseHistoryEventTestUtil.getCaseEventForApplicationCreated(applicationVersion);
-    paymentCompletedEvent = CaseHistoryEventTestUtil.getCaseEventForPaymentCompleted(applicationVersion, paymentDto);
     applicationSubmittedEvent = CaseHistoryEventTestUtil.getCaseEventForApplicationSubmitted(applicationVersion);
     applicationAutomaticallySubmittedEvent =
         CaseHistoryEventTestUtil.getCaseEventForApplicationAutomaticallySubmitted(applicationVersionAutoSubmitted);
@@ -86,10 +92,18 @@ class ApplicationCaseEventServiceTest {
   @ParameterizedTest
   @EnumSource(value = PaymentStatus.class, names = "SUCCESS", mode = EnumSource.Mode.EXCLUDE)
   void getCaseEvents_whenPaymentHasStatusOtherThanSuccess(PaymentStatus otherPaymentStatus) {
+    var applicationVersions = Collections.singletonList(applicationVersion);
+
+    var paymentDto = PaymentDtoTestUtil.builder()
+        .withCreatedByUserId("1")
+        .withGovUkPayCaptureSubmitInstant(Instant.now())
+        .withAmountPence(118000)
+        .withStatus(otherPaymentStatus)
+        .build();
+
     when(applicationVersionService.getAllApplicationVersionsByApplicationId(applicationVersion.getApplication().getId()))
-        .thenReturn(Collections.singletonList(applicationVersion));
-    when(applicationPaymentService.getPaymentDtos(applicationVersion)).thenReturn(List.of(paymentDto));
-    when(paymentDto.status()).thenReturn(otherPaymentStatus);
+        .thenReturn(applicationVersions);
+    when(applicationPaymentService.getPaymentDtos(applicationVersions)).thenReturn(List.of(paymentDto));
 
     var caseEvents = applicationCaseEventService.getCaseEvents(applicationVersion.getApplication());
 
@@ -102,17 +116,41 @@ class ApplicationCaseEventServiceTest {
 
   @Test
   void getCaseEvents_whenFirstApplicationSubmitted() {
+    var applicationVersions = Collections.singletonList(applicationVersion);
+
     when(applicationVersionService.getAllApplicationVersionsByApplicationId(applicationVersion.getApplication().getId()))
-        .thenReturn(Collections.singletonList(applicationVersion));
-    when(applicationPaymentService.getPaymentDtos(applicationVersion)).thenReturn(List.of(paymentDto));
-    when(paymentDto.status()).thenReturn(PaymentStatus.SUCCESS);
+        .thenReturn(applicationVersions);
+    when(applicationPaymentService.getPaymentDtos(applicationVersions)).thenReturn(List.of(successfulPaymentDto1));
+    when(applicationPaymentService.getApplicationVersionIdFromPaymentDto(successfulPaymentDto1)).thenReturn(applicationVersion.getId());
 
     var caseEvents = applicationCaseEventService.getCaseEvents(applicationVersion.getApplication());
 
     assertThat(caseEvents)
         .containsExactly(
             applicationCreatedEvent,
-            paymentCompletedEvent,
+            CaseHistoryEventTestUtil.getCaseEventForPaymentCompleted(applicationVersion, successfulPaymentDto1),
+            applicationSubmittedEvent
+        );
+  }
+
+  @Test
+  void getCaseEvents_whenFirstApplicationSubmittedAndMultipleSuccessfulPayments() {
+    var applicationVersions = Collections.singletonList(applicationVersion);
+
+    when(applicationVersionService.getAllApplicationVersionsByApplicationId(applicationVersion.getApplication().getId()))
+        .thenReturn(applicationVersions);
+    when(applicationPaymentService.getPaymentDtos(applicationVersions)).thenReturn(List.of(successfulPaymentDto1,
+        successfulPaymentDto2));
+    when(applicationPaymentService.getApplicationVersionIdFromPaymentDto(successfulPaymentDto1)).thenReturn(applicationVersion.getId());
+    when(applicationPaymentService.getApplicationVersionIdFromPaymentDto(successfulPaymentDto2)).thenReturn(applicationVersion.getId());
+
+    var caseEvents = applicationCaseEventService.getCaseEvents(applicationVersion.getApplication());
+
+    assertThat(caseEvents)
+        .containsExactly(
+            applicationCreatedEvent,
+            CaseHistoryEventTestUtil.getCaseEventForPaymentCompleted(applicationVersion, successfulPaymentDto1),
+            CaseHistoryEventTestUtil.getCaseEventForPaymentCompleted(applicationVersion, successfulPaymentDto2),
             applicationSubmittedEvent
         );
   }
@@ -133,24 +171,44 @@ class ApplicationCaseEventServiceTest {
 
   @Test
   void getCaseEvents_withApplicationUpdateStarted() {
-    when(
-        applicationVersionService.getAllApplicationVersionsByApplicationId(applicationVersion.getApplication().getId()))
-        .thenReturn(List.of(
-                applicationVersion,
-                applicationVersionUpdate
-            )
-        );
-    when(applicationPaymentService.getPaymentDtos(applicationVersion)).thenReturn(List.of(paymentDto));
-    when(paymentDto.status()).thenReturn(PaymentStatus.SUCCESS);
+    var applicationVersions = List.of(applicationVersion, applicationVersionUpdate);
+
+    when(applicationVersionService.getAllApplicationVersionsByApplicationId(applicationVersion.getApplication().getId()))
+        .thenReturn(applicationVersions);
+    when(applicationPaymentService.getPaymentDtos(applicationVersions)).thenReturn(List.of(successfulPaymentDto1));
+    when(applicationPaymentService.getApplicationVersionIdFromPaymentDto(successfulPaymentDto1)).thenReturn(applicationVersion.getId());
 
     var caseEvents = applicationCaseEventService.getCaseEvents(applicationVersion.getApplication());
 
     assertThat(caseEvents)
         .containsExactly(
             applicationCreatedEvent,
-            paymentCompletedEvent,
+            CaseHistoryEventTestUtil.getCaseEventForPaymentCompleted(applicationVersion, successfulPaymentDto1),
             applicationSubmittedEvent,
             applicationUpdateStartedEvent
+        );
+  }
+
+  @Test
+  void getCaseEvents_withApplicationUpdateStartedAndPaidFor() {
+    var applicationVersions = List.of(applicationVersion, applicationVersionUpdate);
+
+    when(applicationVersionService.getAllApplicationVersionsByApplicationId(applicationVersion.getApplication().getId()))
+        .thenReturn(applicationVersions);
+    when(applicationPaymentService.getPaymentDtos(applicationVersions)).thenReturn(List.of(successfulPaymentDto1,
+        successfulPaymentDto2));
+    when(applicationPaymentService.getApplicationVersionIdFromPaymentDto(successfulPaymentDto1)).thenReturn(applicationVersion.getId());
+    when(applicationPaymentService.getApplicationVersionIdFromPaymentDto(successfulPaymentDto2)).thenReturn(applicationVersionUpdate.getId());
+
+    var caseEvents = applicationCaseEventService.getCaseEvents(applicationVersion.getApplication());
+
+    assertThat(caseEvents)
+        .containsExactly(
+            applicationCreatedEvent,
+            CaseHistoryEventTestUtil.getCaseEventForPaymentCompleted(applicationVersion, successfulPaymentDto1),
+            applicationSubmittedEvent,
+            applicationUpdateStartedEvent,
+            CaseHistoryEventTestUtil.getCaseEventForPaymentCompleted(applicationVersionUpdate, successfulPaymentDto2)
         );
   }
 
@@ -179,17 +237,15 @@ class ApplicationCaseEventServiceTest {
   @Test
   void getCaseEvents_withApplicationUpdateDeleted() {
     applicationVersionUpdate.setStatus(ApplicationVersionStatus.DELETED);
+
+    var applicationVersions = List.of(applicationVersion, applicationVersionUpdate);
+
     when(applicationVersionService.getAllApplicationVersionsByApplicationId(applicationVersionUpdate.getApplication().getId()))
         .thenReturn(Collections.singletonList(applicationVersionUpdate));
-    when(
-        applicationVersionService.getAllApplicationVersionsByApplicationId(applicationVersion.getApplication().getId()))
-        .thenReturn(List.of(
-                applicationVersion,
-                applicationVersionUpdate
-            )
-        );
-    when(applicationPaymentService.getPaymentDtos(applicationVersion)).thenReturn(List.of(paymentDto));
-    when(paymentDto.status()).thenReturn(PaymentStatus.SUCCESS);
+    when(applicationVersionService.getAllApplicationVersionsByApplicationId(applicationVersion.getApplication().getId()))
+        .thenReturn(applicationVersions);
+    when(applicationPaymentService.getPaymentDtos(applicationVersions)).thenReturn(List.of(successfulPaymentDto1));
+    when(applicationPaymentService.getApplicationVersionIdFromPaymentDto(successfulPaymentDto1)).thenReturn(applicationVersion.getId());
 
     var applicationDeletedAudit = ApplicationVersionAuditTestUtil.getApplicationVersionAuditApplicationDeleted(applicationVersionUpdate);
     when(applicationVersionAuditService.getApplicationVersionAudits(anyList())).thenReturn(List.of(applicationDeletedAudit));
@@ -200,7 +256,7 @@ class ApplicationCaseEventServiceTest {
     assertThat(caseEvents)
         .containsExactly(
             applicationCreatedEvent,
-            paymentCompletedEvent,
+            CaseHistoryEventTestUtil.getCaseEventForPaymentCompleted(applicationVersion, successfulPaymentDto1),
             applicationSubmittedEvent,
             applicationUpdateStartedEvent,
             applicationDeletedEvent

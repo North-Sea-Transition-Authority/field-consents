@@ -36,6 +36,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
+import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationContext;
 import uk.co.nstauthority.fieldconsents.application.ApplicationContextService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
@@ -301,8 +302,10 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
   @ParameterizedTest
   @MethodSource("getInProgressAndSubmittedApplicationVersions")
   void getIndustryCaseProcessing_payments(ApplicationVersion applicationVersion) throws Exception {
+    var application = applicationVersion.getApplication();
+
     stubBaseServiceCalls(applicationVersion);
-    stubPaymentsServiceCall(applicationVersion);
+    stubPaymentsServiceCall(application);
 
     var tabParam = "?tab=%s".formatted(PAYMENTS.getAnchor());
 
@@ -311,7 +314,7 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
             .with(user(user)))
         .andExpectAll(commonAttributesForTab(PAYMENTS, applicationVersion));
 
-    verify(paymentsTabService).addPaymentsTabContentToModelAndView(eq(applicationVersion), any());
+    verify(paymentsTabService).addPaymentsTabContentToModelAndView(eq(application), any());
 
     verifyNoInteractions(applicationUpdateRequestViewService);
   }
@@ -319,8 +322,10 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
   @ParameterizedTest
   @MethodSource("getInProgressAndSubmittedApplicationVersions")
   void getIndustryCaseProcessing_payments_withApplicationUpdateStarted(ApplicationVersion applicationVersion) throws Exception {
+    var application = applicationVersion.getApplication();
+
     stubBaseServiceCalls(applicationVersion);
-    stubPaymentsServiceCall(applicationVersion);
+    stubPaymentsServiceCall(application);
 
     when(applicationUpdateService.openApplicationUpdateExists(applicationVersion))
         .thenReturn(true);
@@ -335,7 +340,7 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
         .andExpectAll(commonAttributesForTab(PAYMENTS, applicationVersion))
         .andExpect(model().attribute("applicationUpdateRequestView", applicationUpdateRequestView));
 
-    verify(paymentsTabService).addPaymentsTabContentToModelAndView(eq(applicationVersion), any());
+    verify(paymentsTabService).addPaymentsTabContentToModelAndView(eq(application), any());
 
     verify(applicationUpdateRequestViewService).getOpenApplicationUpdateRequestView(applicationVersion);
   }
@@ -409,14 +414,14 @@ class IndustryCaseProcessingControllerTest extends AbstractApplicationController
         .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class));
   }
 
-  private void stubPaymentsServiceCall(ApplicationVersion applicationVersion) {
+  private void stubPaymentsServiceCall(Application application) {
     doAnswer(invocation -> {
       invocation.getArgument(1, ModelAndView.class)
           .addObject("paymentsTabPaymentSummaryViews", paymentsTabPaymentSummaryViews);
       return null;
     })
         .when(paymentsTabService)
-        .addPaymentsTabContentToModelAndView(eq(applicationVersion), any(ModelAndView.class));
+        .addPaymentsTabContentToModelAndView(eq(application), any(ModelAndView.class));
   }
 
   private void stubConsentServiceCall(ApplicationVersion applicationVersion) {

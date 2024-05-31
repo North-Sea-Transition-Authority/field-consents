@@ -456,6 +456,8 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
   @EnumSource(CaseProcessingTab.class)
   void caseProcessing_whenCaseIsConsented_thenConsentIssuingApprovalSummaryViewDoesNotExist(CaseProcessingTab caseProcessingTab) throws Exception {
     applicationVersion = ApplicationTestUtil.getConsentedApplicationVersionWithType(ApplicationType.PRODUCTION);
+    application = applicationVersion.getApplication();
+
     stubBaseServiceCalls();
     stubTaskListServiceCall();
     stubSummaryServiceCall();
@@ -632,7 +634,7 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
       return null;
     })
         .when(paymentsTabService)
-        .addPaymentsTabContentToModelAndView(eq(applicationVersion), any(ModelAndView.class));
+        .addPaymentsTabContentToModelAndView(eq(application), any(ModelAndView.class));
   }
 
   private void stubConsentServiceCall() {

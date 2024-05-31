@@ -147,7 +147,7 @@ public class ApplicationCaseProcessingController {
     if (tab != null && caseProcessingTabs.contains(tab)) {
       switch (tab) {
         case CONSENT -> consentTabService.addConsentTabContentToModelAndView(applicationVersion, modelAndView);
-        case PAYMENTS -> paymentsTabService.addPaymentsTabContentToModelAndView(applicationVersion, modelAndView);
+        case PAYMENTS -> paymentsTabService.addPaymentsTabContentToModelAndView(application, modelAndView);
         case CASE_HISTORY -> addCaseHistoryTab(modelAndView, applicationVersion);
         case TASKS -> addTasksTab(modelAndView, applicationVersion, user);
         case VIEW_APPLICATION -> applicationSummaryService.addSummarySectionsToModelAndView(applicationVersion, modelAndView);

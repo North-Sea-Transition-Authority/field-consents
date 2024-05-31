@@ -58,6 +58,11 @@ public class ApplicationCaseEventService implements CaseEventService<Application
             Function.identity()
         ));
 
+    var successfulPaymentDtosByApplicationVersionId = applicationPaymentService.getPaymentDtos(allApplicationVersions)
+        .stream()
+        .filter(paymentDto -> paymentDto.status() == PaymentStatus.SUCCESS)
+        .collect(Collectors.groupingBy(applicationPaymentService::getApplicationVersionIdFromPaymentDto));
+
     for (ApplicationVersion applicationVersion : allApplicationVersions) {
       caseEvents.add(
           CaseEvent.builder(applicationVersion)
@@ -67,11 +72,7 @@ public class ApplicationCaseEventService implements CaseEventService<Application
               .build()
       );
 
-      var paymentDtos = applicationPaymentService.getPaymentDtos(applicationVersion).stream()
-          .filter(paymentDto -> paymentDto.status() == PaymentStatus.SUCCESS)
-          .toList();
-
-      for (var paymentDto : paymentDtos) {
+      for (var paymentDto : successfulPaymentDtosByApplicationVersionId.getOrDefault(applicationVersion.getId(), List.of())) {
         caseEvents.add(
             CaseEvent.builder(applicationVersion)
                 .withEventType(PAYMENT_COMPLETED)
