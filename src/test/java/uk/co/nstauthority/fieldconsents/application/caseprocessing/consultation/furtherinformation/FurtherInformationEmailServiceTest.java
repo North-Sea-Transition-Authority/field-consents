@@ -85,7 +85,7 @@ class FurtherInformationEmailServiceTest {
 
   @Test
   void sendFurtherInformationRequestEmail() {
-    when(emailService.getTemplate(GovukNotifyTemplate.FURTHER_INFORMATION_REQUEST, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.FURTHER_INFORMATION_REQUEST, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
     when(energyPortalUserService.getByWuaId(any())).thenReturn(CASE_OFFICER_ENERGY_PORTAL_USER_DTO);
 
@@ -116,7 +116,7 @@ class FurtherInformationEmailServiceTest {
 
   @Test
   void sendFurtherInformationResponseEmail() {
-    when(emailService.getTemplate(GovukNotifyTemplate.FURTHER_INFORMATION_RESPONSE, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.FURTHER_INFORMATION_RESPONSE, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
     when(energyPortalUserService.getByWuaId(any())).thenReturn(ENERGY_PORTAL_USER_DTO);
 

@@ -56,7 +56,7 @@ public class ConsentEmailService {
     var emailRecipients = getConsentIssuedEmailRecipientsForOperator(applicationVersion, primaryOperator);
 
     var emailMergedTemplate = emailService
-        .getTemplate(GovukNotifyTemplate.CONSENT_ISSUED_TO_OPERATOR, applicationVersion)
+        .getTemplateForApplication(GovukNotifyTemplate.CONSENT_ISSUED_TO_OPERATOR, applicationVersion)
         .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, primaryOperator.name())
         .merge();
 
@@ -103,7 +103,7 @@ public class ConsentEmailService {
     );
 
     MergedTemplate mergedTemplate = emailService
-        .getTemplate(GovukNotifyTemplate.CONSENT_ISSUED_TO_CASE_OFFICER, applicationVersion)
+        .getTemplateForApplication(GovukNotifyTemplate.CONSENT_ISSUED_TO_CASE_OFFICER, applicationVersion)
         .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, caseOfficer.displayName())
         .merge();
 
@@ -138,7 +138,7 @@ public class ConsentEmailService {
         .collect(Collectors.toSet());
 
     var emailMergedTemplate = emailService
-        .getTemplate(GovukNotifyTemplate.CONSENT_ISSUED_TO_FIELD_EQUITY_PARTNER, applicationVersion)
+        .getTemplateForApplication(GovukNotifyTemplate.CONSENT_ISSUED_TO_FIELD_EQUITY_PARTNER, applicationVersion)
         .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, consentFieldEquityPartner.getOrganisationName())
         .merge();
 

@@ -56,25 +56,31 @@ public class EmailService {
     this.absoluteUrlService = absoluteUrlService;
   }
 
-  public MergedTemplate.MergedTemplateBuilder getTemplate(GovukNotifyTemplate notifyTemplate,
-                                                          ApplicationVersion applicationVersion) {
+  public MergedTemplate.MergedTemplateBuilder getTemplateForApplication(GovukNotifyTemplate notifyTemplate,
+                                                                        ApplicationVersion applicationVersion) {
 
-    var subjectPrefix = notificationLibraryClient.isRunningTestMode() ? TEST_PREFIX : "";
+    var mergedTemplateBuilder = getTemplate(notifyTemplate);
     var applicationReference = applicationService.getApplicationReference(applicationVersion);
     var primaryAsset = applicationAssetService.getPrimaryAsset(applicationVersion);
     var primaryAssetName = applicationAssetService.getAssetJsonForApplicationAsset(primaryAsset).getName();
     var applicationUrl = absoluteUrlService.getAbsoluteUrl(ReverseRouter.route(on(ApplicationSummaryController.class)
         .getApplicationSummary(applicationVersion.getApplication().getId(), null)));
 
-    return notificationLibraryClient.getTemplate(notifyTemplate.getTemplateId())
-        .withMailMergeField("SUBJECT_PREFIX", subjectPrefix)
-        .withMailMergeField("SERVICE_FULL_NAME", serviceBrandingConfigurationProperties.name())
-        .withMailMergeField("REGULATOR_MNEMONIC", customerBrandingConfigurationProperties.mnemonic())
+    return mergedTemplateBuilder
         .withMailMergeField("APPLICATION_REFERENCE", applicationReference)
         .withMailMergeField("PRIMARY_ASSET", primaryAssetName)
         .withMailMergeField("APPLICATION_DURATION",
             consentLengthService.getConsentLengthDetails(applicationVersion).getConsentLength().getShortDisplayName())
-        .withMailMergeField("APPLICATION_URL", applicationUrl)
+        .withMailMergeField("APPLICATION_URL", applicationUrl);
+  }
+
+  public MergedTemplate.MergedTemplateBuilder getTemplate(GovukNotifyTemplate notifyTemplate) {
+    var subjectPrefix = notificationLibraryClient.isRunningTestMode() ? TEST_PREFIX : "";
+
+    return notificationLibraryClient.getTemplate(notifyTemplate.getTemplateId())
+        .withMailMergeField("SUBJECT_PREFIX", subjectPrefix)
+        .withMailMergeField("SERVICE_FULL_NAME", serviceBrandingConfigurationProperties.name())
+        .withMailMergeField("REGULATOR_MNEMONIC", customerBrandingConfigurationProperties.mnemonic())
         .withMailMergeField("SALUTATION", SALUTATION)
         .withMailMergeField("VALEDICTION", VALEDICTION)
         .withMailMergeField("CONSENTS_TEAM_NAME", customerBrandingConfigurationProperties.teamName());

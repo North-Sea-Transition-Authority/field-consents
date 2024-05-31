@@ -8,10 +8,11 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import uk.co.fivium.digitalnotificationlibrary.core.notification.DomainReference;
 
 @Entity
 @Table(name = "teams")
-public class Team {
+public class Team implements DomainReference {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -71,5 +72,15 @@ public class Team {
         ", teamType=" + teamType +
         ", displayName='" + displayName + '\'' +
         '}';
+  }
+
+  @Override
+  public String getDomainId() {
+    return String.valueOf(id);
+  }
+
+  @Override
+  public String getDomainType() {
+    return "TEAM";
   }
 }

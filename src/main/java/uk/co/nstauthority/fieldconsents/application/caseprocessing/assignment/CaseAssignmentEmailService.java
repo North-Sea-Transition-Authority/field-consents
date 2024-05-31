@@ -39,7 +39,7 @@ public class CaseAssignmentEmailService {
                                       FieldConsentsEmailRecipient assigneeEmailRecipient,
                                       ServiceUserDetail actionUser) {
     MergedTemplate mergedTemplate = emailService
-        .getTemplate(caseAssignmentEmailTemplate, applicationVersion)
+        .getTemplateForApplication(caseAssignmentEmailTemplate, applicationVersion)
         .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, assigneeEmailRecipient.displayName())
         .withMailMergeField(SENDER_IDENTIFIER_MERGE_FIELD_NAME, actionUser.displayName())
         .merge();
@@ -53,7 +53,7 @@ public class CaseAssignmentEmailService {
 
   void sendCaseOwnershipReleasedEmail(ApplicationVersion applicationVersion, ServiceUserDetail caseOfficerUser) {
     var mergedTemplateBuilder = emailService
-        .getTemplate(GovukNotifyTemplate.CASE_RELEASED_BY_CASE_OFFICER, applicationVersion)
+        .getTemplateForApplication(GovukNotifyTemplate.CASE_RELEASED_BY_CASE_OFFICER, applicationVersion)
         .withMailMergeField(SENDER_IDENTIFIER_MERGE_FIELD_NAME, caseOfficerUser.displayName());
 
     var caseManagerEmailRecipients = teamMemberViewService
@@ -80,7 +80,7 @@ public class CaseAssignmentEmailService {
     var caseOfficerUser = energyPortalUserService.getByWuaId(WebUserAccountId.from(applicationVersion.getCaseOfficerWuaId()));
 
     var mergedTemplate = emailService
-        .getTemplate(GovukNotifyTemplate.CASE_RETURNED_TO_CASE_OFFICER_BY_CAM_USER, applicationVersion)
+        .getTemplateForApplication(GovukNotifyTemplate.CASE_RETURNED_TO_CASE_OFFICER_BY_CAM_USER, applicationVersion)
         .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, caseOfficerUser.displayName())
         .withMailMergeField(SENDER_IDENTIFIER_MERGE_FIELD_NAME, camUser.displayName())
         .merge();

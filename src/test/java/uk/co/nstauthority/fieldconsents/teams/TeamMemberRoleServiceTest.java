@@ -2,9 +2,10 @@ package uk.co.nstauthority.fieldconsents.teams;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -28,6 +29,7 @@ import uk.co.fivium.digital.energyportalteamaccesslibrary.team.ResourceType;
 import uk.co.fivium.digital.energyportalteamaccesslibrary.team.TargetWebUserAccountId;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
+import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipient;
 import uk.co.nstauthority.fieldconsents.energyportal.user.EnergyPortalUserDtoTestUtil;
 
 @ExtendWith(MockitoExtension.class)
@@ -41,6 +43,9 @@ class TeamMemberRoleServiceTest {
 
   @Mock
   private UserDetailService userDetailService;
+
+  @Mock
+  private TeamMemberRoleEmailService teamMemberRoleEmailService;
 
   @Captor
   private ArgumentCaptor<List<TeamMemberRole>> teamMemberRoleCaptor;
@@ -82,6 +87,7 @@ class TeamMemberRoleServiceTest {
         targetWebUserAccountIdCaptor.capture(),
         instigatingWebUserAccountIdCaptor.capture()
     );
+    verify(teamMemberRoleEmailService).sendUserAddedToTeamEmail(FieldConsentsEmailRecipient.from(userToAdd), team);
 
     assertThat(targetWebUserAccountIdCaptor.getValue().getId())
         .isEqualTo(userToAdd.webUserAccountId());
@@ -92,7 +98,7 @@ class TeamMemberRoleServiceTest {
 
   @ParameterizedTest
   @EnumSource
-  void addUserTeamRoles_whenAddingUser_andUserExists_thenVerifyCalls(TeamType teamType) {
+  void addUserTeamRoles_whenAddingUser_andUserIsNew_sendEmailThrowsException(TeamType teamType) {
     var team = TeamTestUtil.Builder().withTeamType(teamType).build();
 
     var userToAdd = EnergyPortalUserDtoTestUtil.Builder()
@@ -101,8 +107,64 @@ class TeamMemberRoleServiceTest {
 
     var role = "ROLE_NAME";
 
+    var instigatingUser = ServiceUserDetailTestUtil.Builder()
+        .withWuaId(200L)
+        .build();
+
+    when(userDetailService.getUserDetail()).thenReturn(instigatingUser);
+
+    // WHEN the email service call throws an exception
+    doThrow(new RuntimeException("Failed to send email"))
+        .when(teamMemberRoleEmailService)
+        .sendUserAddedToTeamEmail(FieldConsentsEmailRecipient.from(userToAdd), team);
+
+    // THEN it will be caught by the caller and not re-thrown
+    assertDoesNotThrow(
+        () ->  teamMemberRoleService.addUserTeamRoles(team, userToAdd, Set.of(role)));
+
+    verify(teamMemberRoleRepository, times(1)).deleteAllByTeamAndWuaId(team, userToAdd.webUserAccountId());
+    verify(teamMemberRoleRepository, times(1)).saveAll(teamMemberRoleCaptor.capture());
+
+    assertThat(teamMemberRoleCaptor.getValue())
+        .extracting(TeamMemberRole::getTeam, TeamMemberRole::getWuaId, TeamMemberRole::getRole)
+        .containsExactly(tuple(team, userToAdd.webUserAccountId(), role));
+
+    var targetWebUserAccountIdCaptor = ArgumentCaptor.forClass(TargetWebUserAccountId.class);
+    var instigatingWebUserAccountIdCaptor = ArgumentCaptor.forClass(InstigatingWebUserAccountId.class);
+
+    verify(energyPortalAccessService).addUserToAccessTeam(
+        eq(new ResourceType(TeamMemberRoleService.RESOURCE_TYPE_NAME)),
+        targetWebUserAccountIdCaptor.capture(),
+        instigatingWebUserAccountIdCaptor.capture()
+    );
+    verify(teamMemberRoleEmailService).sendUserAddedToTeamEmail(FieldConsentsEmailRecipient.from(userToAdd), team);
+
+    assertThat(targetWebUserAccountIdCaptor.getValue().getId())
+        .isEqualTo(userToAdd.webUserAccountId());
+
+    assertThat(instigatingWebUserAccountIdCaptor.getValue().getId())
+        .isEqualTo(instigatingUser.wuaId());
+  }
+
+  @ParameterizedTest
+  @EnumSource
+  void addUserTeamRoles_whenAddingUser_andUserExistsButNewInTeam_thenVerifyCalls(TeamType teamType) {
+    var team = TeamTestUtil.Builder().withTeamType(teamType).build();
+    var userToAddWuaId = 100L;
+    var userToAdd = EnergyPortalUserDtoTestUtil.Builder()
+        .withWebUserAccountId(userToAddWuaId)
+        .build();
+
+    var role = "ROLE_NAME";
+    var teamMemberRole = TeamMemberRoleTestUtil.Builder()
+        .withWebUserAccountId(userToAddWuaId)
+        .withTeam(team)
+        .build();
+
     when(teamMemberRoleRepository.findAllByWuaId(userToAdd.webUserAccountId()))
-        .thenReturn(List.of(new TeamMemberRole(anyInt())));
+        .thenReturn(List.of(teamMemberRole));
+    when(teamMemberRoleRepository
+        .existsByWuaIdAndTeam_Id(teamMemberRole.getWuaId(), team.getId())).thenReturn(false);
 
     teamMemberRoleService.addUserTeamRoles(team, userToAdd, Set.of(role));
 
@@ -114,6 +176,40 @@ class TeamMemberRoleServiceTest {
         .containsExactly(tuple(team, userToAdd.webUserAccountId(), role));
 
     verify(energyPortalAccessService, never()).addUserToAccessTeam(any(), any(), any());
+    verify(teamMemberRoleEmailService).sendUserAddedToTeamEmail(FieldConsentsEmailRecipient.from(userToAdd), team);
+  }
+
+  @ParameterizedTest
+  @EnumSource
+  void addUserTeamRoles_whenAddingUser_andUserExistsInTeam_thenVerifyCalls(TeamType teamType) {
+    var team = TeamTestUtil.Builder().withTeamType(teamType).build();
+    var userToAddWuaId = 100L;
+    var userToAdd = EnergyPortalUserDtoTestUtil.Builder()
+        .withWebUserAccountId(userToAddWuaId)
+        .build();
+
+    var role = "ROLE_NAME";
+    var teamMemberRole = TeamMemberRoleTestUtil.Builder()
+        .withWebUserAccountId(userToAddWuaId)
+        .withTeam(team)
+        .build();
+
+    when(teamMemberRoleRepository.findAllByWuaId(userToAdd.webUserAccountId()))
+        .thenReturn(List.of(teamMemberRole));
+    when(teamMemberRoleRepository
+        .existsByWuaIdAndTeam_Id(teamMemberRole.getWuaId(), team.getId())).thenReturn(true);
+
+    teamMemberRoleService.addUserTeamRoles(team, userToAdd, Set.of(role));
+
+    verify(teamMemberRoleRepository, times(1)).deleteAllByTeamAndWuaId(team, userToAdd.webUserAccountId());
+    verify(teamMemberRoleRepository, times(1)).saveAll(teamMemberRoleCaptor.capture());
+
+    assertThat(teamMemberRoleCaptor.getValue())
+        .extracting(TeamMemberRole::getTeam, TeamMemberRole::getWuaId, TeamMemberRole::getRole)
+        .containsExactly(tuple(team, userToAdd.webUserAccountId(), role));
+
+    verify(energyPortalAccessService, never()).addUserToAccessTeam(any(), any(), any());
+    verify(teamMemberRoleEmailService, never()).sendUserAddedToTeamEmail(FieldConsentsEmailRecipient.from(userToAdd), team);
   }
 
   @Test

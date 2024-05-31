@@ -44,7 +44,7 @@ public class ApplicationWithdrawalEmailService {
         applicationVersion.getCachedPrimaryOperatorName());
 
     var mergedTemplateBuilder = emailService
-        .getTemplate(GovukNotifyTemplate.APPLICATION_WITHDRAWAL_REQUEST, applicationVersion)
+        .getTemplateForApplication(GovukNotifyTemplate.APPLICATION_WITHDRAWAL_REQUEST, applicationVersion)
         .withMailMergeField("PRIMARY_OPERATOR_NAME", primaryOperator.name());
 
     // email the case officer if available
@@ -92,7 +92,7 @@ public class ApplicationWithdrawalEmailService {
     );
 
     var mergedTemplate = emailService
-        .getTemplate(GovukNotifyTemplate.APPLICATION_WITHDRAWAL_RESPONSE, applicationVersion)
+        .getTemplateForApplication(GovukNotifyTemplate.APPLICATION_WITHDRAWAL_RESPONSE, applicationVersion)
         .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, withdrawalRequesterEmailRecipient.displayName())
         .merge();
 

@@ -38,7 +38,7 @@ public class TechnicalReviewEmailService {
           .getByWuaId(WebUserAccountId.from(technicalReview.getTechnicalReviewerWuaId()));
 
       var mergedTemplate = emailService
-          .getTemplate(GovukNotifyTemplate.TECHNICAL_REVIEW_REQUEST, applicationVersion)
+          .getTemplateForApplication(GovukNotifyTemplate.TECHNICAL_REVIEW_REQUEST, applicationVersion)
           .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, technicalReviewer.displayName())
           .withMailMergeField(REQUESTER_USER_MERGE_FIELD_NAME, requesterUser.displayName())
           .withMailMergeField(REQUEST_DEADLINE_MERGE_FIELD_NAME,
@@ -75,7 +75,7 @@ public class TechnicalReviewEmailService {
     var technicalReviewerDto = energyPortalUserDtos.get(technicalReviewerWuaId);
     var caseOfficerDto = energyPortalUserDtos.get(caseOfficerWuaId);
     var mergedCaseOfficerTemplate = emailService
-        .getTemplate(GovukNotifyTemplate.TECHNICAL_REVIEW_REQUEST_CASE_OFFICER, applicationVersion)
+        .getTemplateForApplication(GovukNotifyTemplate.TECHNICAL_REVIEW_REQUEST_CASE_OFFICER, applicationVersion)
         .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, caseOfficerDto.displayName())
         .withMailMergeField(REQUEST_DEADLINE_MERGE_FIELD_NAME,
             DateUtils.format(technicalReview.getDeadlineDateTime(), DATE_TIME))
@@ -98,7 +98,7 @@ public class TechnicalReviewEmailService {
         .getByWuaId(WebUserAccountId.from(technicalReview.getRequestedByWuaId()));
 
     var mergedTemplate = emailService
-        .getTemplate(GovukNotifyTemplate.TECHNICAL_REVIEW_RESPONSE, applicationVersion)
+        .getTemplateForApplication(GovukNotifyTemplate.TECHNICAL_REVIEW_RESPONSE, applicationVersion)
         .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, requesterUser.displayName())
         .withMailMergeField("RESPONDER_USER", technicalReviewer.displayName())
         .merge();

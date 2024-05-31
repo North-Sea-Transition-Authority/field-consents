@@ -154,7 +154,7 @@ class ConsultationEmailServiceTest {
 
   @Test
   void sendConsultationRequestEmail_withNoConsulteeAllocatorsToNotify() {
-    when(emailService.getTemplate(GovukNotifyTemplate.CONSULTATION_REQUEST, productionApplicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.CONSULTATION_REQUEST, productionApplicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
     when(teamMemberViewService
         .getTeamMemberViewsWithRolesForTeam(productionConsultation.getConsultationTeam(), Set.of(OpredTeamRole.ALLOCATOR)))
@@ -167,7 +167,7 @@ class ConsultationEmailServiceTest {
 
   @Test
   void sendConsultationRequestEmail_withOneConsulteeAllocatorToNotify() {
-    when(emailService.getTemplate(GovukNotifyTemplate.CONSULTATION_REQUEST, productionApplicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.CONSULTATION_REQUEST, productionApplicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
     when(teamMemberViewService
         .getTeamMemberViewsWithRolesForTeam(productionConsultation.getConsultationTeam(), Set.of(OpredTeamRole.ALLOCATOR)))
@@ -200,7 +200,7 @@ class ConsultationEmailServiceTest {
 
   @Test
   void sendConsultationRequestEmail_withMultipleConsulteeAllocatorsToNotify() {
-    when(emailService.getTemplate(GovukNotifyTemplate.CONSULTATION_REQUEST, productionApplicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.CONSULTATION_REQUEST, productionApplicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
     when(teamMemberViewService
         .getTeamMemberViewsWithRolesForTeam(productionConsultation.getConsultationTeam(), Set.of(OpredTeamRole.ALLOCATOR)))
@@ -257,7 +257,7 @@ class ConsultationEmailServiceTest {
   
   @Test
   void sendConsultationAssignmentEmail() {
-    when(emailService.getTemplate(GovukNotifyTemplate.CONSULTATION_ASSIGNMENT, productionApplicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.CONSULTATION_ASSIGNMENT, productionApplicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
     when(energyPortalUserService.getByWuaId(any())).thenReturn(ENERGY_PORTAL_USER_DTO);
@@ -292,7 +292,7 @@ class ConsultationEmailServiceTest {
   void sendConsultationResponseEmail_whenCaseOfficerIsCurrentOwner() {
     productionApplicationVersion.setCaseOfficerWuaId(CASE_OFFICER.wuaId());
 
-    when(emailService.getTemplate(GovukNotifyTemplate.CONSULTATION_RESPONSE, productionApplicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.CONSULTATION_RESPONSE, productionApplicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
     when(energyPortalUserService.getByWuaId(any())).thenReturn(CASE_OFFICER_EPU);
 
@@ -324,7 +324,7 @@ class ConsultationEmailServiceTest {
 
   @Test
   void sendConsultationResponseEmail_whenCaseOfficerIsNotAssigned_withNoCaseManagersToNotify() {
-    when(emailService.getTemplate(GovukNotifyTemplate.CONSULTATION_RESPONSE, productionApplicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.CONSULTATION_RESPONSE, productionApplicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
     when(teamMemberViewService
@@ -339,7 +339,7 @@ class ConsultationEmailServiceTest {
   @Test
   void sendConsultationResponseEmail_whenCaseOfficerIsNotAssigned_withOneCaseManagerToNotify() {
 
-    when(emailService.getTemplate(GovukNotifyTemplate.CONSULTATION_RESPONSE, productionApplicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.CONSULTATION_RESPONSE, productionApplicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
     when(teamMemberViewService
@@ -375,7 +375,7 @@ class ConsultationEmailServiceTest {
   @Test
   void sendConsultationResponseEmail_whenCaseOfficerIsNotAssigned_withMultipleCaseManagersToNotify() {
 
-    when(emailService.getTemplate(GovukNotifyTemplate.CONSULTATION_RESPONSE, productionApplicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.CONSULTATION_RESPONSE, productionApplicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
     when(teamMemberViewService

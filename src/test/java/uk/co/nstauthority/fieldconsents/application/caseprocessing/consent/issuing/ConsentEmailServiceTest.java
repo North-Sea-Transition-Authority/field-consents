@@ -168,7 +168,7 @@ class ConsentEmailServiceTest {
     when(industryTeamService.getTeamByOrganisationGroupId(ORG_GROUP_1.getOrganisationGroupId()))
         .thenReturn(Optional.empty());
 
-    when(emailService.getTemplate(GovukNotifyTemplate.CONSENT_ISSUED_TO_OPERATOR, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.CONSENT_ISSUED_TO_OPERATOR, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
     consentEmailService.sendConsentIssuedEmailToOperator(applicationVersion);
@@ -210,7 +210,7 @@ class ConsentEmailServiceTest {
     when(industryTeamService.getTeamByOrganisationGroupId(ORG_GROUP_1.getOrganisationGroupId()))
         .thenReturn(Optional.of(INDUSTRY_TEAM_1));
 
-    when(emailService.getTemplate(GovukNotifyTemplate.CONSENT_ISSUED_TO_OPERATOR, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.CONSENT_ISSUED_TO_OPERATOR, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
     when(teamMemberViewService
@@ -256,7 +256,7 @@ class ConsentEmailServiceTest {
     when(industryTeamService.getTeamByOrganisationGroupId(ORG_GROUP_1.getOrganisationGroupId()))
         .thenReturn(Optional.of(INDUSTRY_TEAM_1));
 
-    when(emailService.getTemplate(GovukNotifyTemplate.CONSENT_ISSUED_TO_OPERATOR, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.CONSENT_ISSUED_TO_OPERATOR, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
     when(teamMemberViewService
@@ -325,7 +325,7 @@ class ConsentEmailServiceTest {
 
   @Test
   void sendConsentIssuedEmailToCaseOfficer() {
-    when(emailService.getTemplate(GovukNotifyTemplate.CONSENT_ISSUED_TO_CASE_OFFICER, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.CONSENT_ISSUED_TO_CASE_OFFICER, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
     applicationVersion.setCaseOfficerWuaId(CASE_OFFICER.wuaId());
@@ -379,7 +379,7 @@ class ConsentEmailServiceTest {
     when(industryTeamService.getTeamByOrganisationGroupId(ORG_GROUP_1.getOrganisationGroupId()))
         .thenReturn(Optional.of(INDUSTRY_TEAM_1));
 
-    when(emailService.getTemplate(GovukNotifyTemplate.CONSENT_ISSUED_TO_FIELD_EQUITY_PARTNER, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.CONSENT_ISSUED_TO_FIELD_EQUITY_PARTNER, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
     when(teamMemberViewService
@@ -404,7 +404,7 @@ class ConsentEmailServiceTest {
     when(industryTeamService.getTeamByOrganisationGroupId(ORG_GROUP_1.getOrganisationGroupId()))
         .thenReturn(Optional.of(INDUSTRY_TEAM_1));
 
-    when(emailService.getTemplate(GovukNotifyTemplate.CONSENT_ISSUED_TO_FIELD_EQUITY_PARTNER, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.CONSENT_ISSUED_TO_FIELD_EQUITY_PARTNER, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
     when(teamMemberViewService
@@ -451,7 +451,7 @@ class ConsentEmailServiceTest {
     when(industryTeamService.getTeamByOrganisationGroupId(ORG_GROUP_2.getOrganisationGroupId()))
         .thenReturn(Optional.of(INDUSTRY_TEAM_2));
 
-    when(emailService.getTemplate(GovukNotifyTemplate.CONSENT_ISSUED_TO_FIELD_EQUITY_PARTNER, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.CONSENT_ISSUED_TO_FIELD_EQUITY_PARTNER, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
     when(teamMemberViewService
@@ -499,7 +499,7 @@ class ConsentEmailServiceTest {
     when(industryTeamService.getTeamByOrganisationGroupId(ORG_GROUP_1.getOrganisationGroupId()))
         .thenReturn(Optional.of(INDUSTRY_TEAM_1));
 
-    when(emailService.getTemplate(GovukNotifyTemplate.CONSENT_ISSUED_TO_FIELD_EQUITY_PARTNER, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.CONSENT_ISSUED_TO_FIELD_EQUITY_PARTNER, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
     when(teamMemberViewService

@@ -44,7 +44,7 @@ class ConsultationEmailService {
     var applicationVersion = consultation.getRequestApplicationVersion();
 
     var mergedTemplate = emailService
-        .getTemplate(GovukNotifyTemplate.CONSULTATION_REQUEST, applicationVersion)
+        .getTemplateForApplication(GovukNotifyTemplate.CONSULTATION_REQUEST, applicationVersion)
         .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, consultation.getConsultationTeam().getDisplayName())
         .withMailMergeField(REQUEST_DEADLINE_MERGE_FIELD_NAME, DateUtils.format(consultation.getRequestDeadline(), DATE_TIME))
         .merge();
@@ -71,7 +71,7 @@ class ConsultationEmailService {
         .getByWuaId(WebUserAccountId.from(consultation.getResponderWuaId()));
 
     var mergedTemplate = emailService
-        .getTemplate(GovukNotifyTemplate.CONSULTATION_ASSIGNMENT, applicationVersion)
+        .getTemplateForApplication(GovukNotifyTemplate.CONSULTATION_ASSIGNMENT, applicationVersion)
         .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, consulteeResponder.displayName())
         .withMailMergeField(REQUESTER_USER_MERGE_FIELD_NAME, consulteeAllocator.displayName())
         .withMailMergeField(REQUEST_DEADLINE_MERGE_FIELD_NAME, DateUtils.format(consultation.getRequestDeadline(), DATE_TIME))
@@ -89,7 +89,7 @@ class ConsultationEmailService {
 
     var consultationDecision = getConsultationDecision(consultation);
     var mergedTemplateBuilder = emailService
-        .getTemplate(GovukNotifyTemplate.CONSULTATION_RESPONSE, applicationVersion)
+        .getTemplateForApplication(GovukNotifyTemplate.CONSULTATION_RESPONSE, applicationVersion)
         .withMailMergeField("CONSULTEE_NAME", consultation.getConsultationTeam().getDisplayName())
         .withMailMergeField("CONSULTATION_DECISION", consultationDecision);
 

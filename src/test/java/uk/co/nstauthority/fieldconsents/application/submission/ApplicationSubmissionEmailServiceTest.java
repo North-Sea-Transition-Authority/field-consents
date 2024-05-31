@@ -92,7 +92,7 @@ class ApplicationSubmissionEmailServiceTest {
         eq(applicationVersion.getCachedPrimaryOperatorName()))
     ).thenReturn(primaryOperator);
 
-    when(emailService.getTemplate(GovukNotifyTemplate.NON_ACE_APPLICATION_SUBMISSION, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.NON_ACE_APPLICATION_SUBMISSION, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
     when(teamMemberViewService
@@ -112,7 +112,7 @@ class ApplicationSubmissionEmailServiceTest {
         eq(applicationVersion.getCachedPrimaryOperatorName()))
     ).thenReturn(primaryOperator);
 
-    when(emailService.getTemplate(GovukNotifyTemplate.NON_ACE_APPLICATION_SUBMISSION, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.NON_ACE_APPLICATION_SUBMISSION, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
     when(teamMemberViewService

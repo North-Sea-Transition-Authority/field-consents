@@ -50,7 +50,7 @@ public class ApplicationUpdateEmailService {
     );
 
     var mergedOperatorTemplate = emailService
-        .getTemplate(GovukNotifyTemplate.APPLICATION_UPDATE_REQUEST_OPERATOR, applicationVersion)
+        .getTemplateForApplication(GovukNotifyTemplate.APPLICATION_UPDATE_REQUEST_OPERATOR, applicationVersion)
         .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, applicationSubmitter.displayName())
         .withMailMergeField(REQUEST_DEADLINE_MERGE_FIELD_NAME,
             DateUtils.format(applicationUpdate.getDeadlineDateTime(), DATE_TIME))
@@ -83,7 +83,7 @@ public class ApplicationUpdateEmailService {
     var caseOfficerDto = applicationUpdatePortalUserDtos.get(caseOfficerWuaId);
     var updateRequestedByDto = applicationUpdatePortalUserDtos.get(updateRequestedByWuaId);
     var mergedCaseOfficerTemplate = emailService
-        .getTemplate(GovukNotifyTemplate.APPLICATION_UPDATE_REQUEST_CASE_OFFICER, applicationVersion)
+        .getTemplateForApplication(GovukNotifyTemplate.APPLICATION_UPDATE_REQUEST_CASE_OFFICER, applicationVersion)
         .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, caseOfficerDto.displayName())
         .withMailMergeField(REQUEST_DEADLINE_MERGE_FIELD_NAME,
             DateUtils.format(applicationUpdate.getDeadlineDateTime(), DATE_TIME))
@@ -104,7 +104,7 @@ public class ApplicationUpdateEmailService {
     var primaryOperator = getApplicationPrimaryOperator(applicationVersion);
 
     var mergedTemplateBuilder = emailService
-        .getTemplate(GovukNotifyTemplate.APPLICATION_UPDATE_RESPONSE, applicationVersion)
+        .getTemplateForApplication(GovukNotifyTemplate.APPLICATION_UPDATE_RESPONSE, applicationVersion)
         .withMailMergeField("PRIMARY_OPERATOR_NAME", primaryOperator.name());
 
     var emailRecipients = getApplicationUpdateResponseEmailRecipients(applicationUpdate);

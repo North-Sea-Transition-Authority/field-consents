@@ -93,7 +93,7 @@ class EmailServiceTest {
 
   @DisplayName("GIVEN I want to get a template")
   @Nested
-  class GetTemplate {
+  class GetTemplateForApplication {
 
     @BeforeAll
     static void setup() {
@@ -124,7 +124,7 @@ class EmailServiceTest {
       void whenInTestMode() {
 
         var resultingTemplate = emailService
-            .getTemplate(GOVUK_NOTIFY_TEMPLATE, applicationVersion)
+            .getTemplateForApplication(GOVUK_NOTIFY_TEMPLATE, applicationVersion)
             .merge();
 
         assertThat(resultingTemplate.getMailMergeFields())
@@ -158,7 +158,7 @@ class EmailServiceTest {
       void whenInProductionMode() {
 
         var resultingTemplate = emailService
-            .getTemplate(GOVUK_NOTIFY_TEMPLATE, applicationVersion)
+            .getTemplateForApplication(GOVUK_NOTIFY_TEMPLATE, applicationVersion)
             .merge();
 
         assertThat(resultingTemplate.getMailMergeFields())

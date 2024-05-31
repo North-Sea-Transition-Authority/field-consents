@@ -81,7 +81,7 @@ class CaseAssignmentEmailServiceTest {
 
   @Test
   void sendCaseAssignmentEmail_whenAssignedToCaseOfficer() {
-    when(emailService.getTemplate(GovukNotifyTemplate.CASE_ASSIGNED_TO_CASE_OFFICER, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.CASE_ASSIGNED_TO_CASE_OFFICER, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
     caseAssignmentEmailService.sendCaseAssignmentEmail(
@@ -115,7 +115,7 @@ class CaseAssignmentEmailServiceTest {
 
   @Test
   void sendCaseAssignmentEmail_whenAssignedToCamUser() {
-    when(emailService.getTemplate(GovukNotifyTemplate.CASE_ASSIGNED_TO_CAM_USER, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.CASE_ASSIGNED_TO_CAM_USER, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
     caseAssignmentEmailService.sendCaseAssignmentEmail(
@@ -149,7 +149,7 @@ class CaseAssignmentEmailServiceTest {
 
   @Test
   void sendCaseOwnershipReleasedEmail_withNoCaseManagersToNotify() {
-    when(emailService.getTemplate(GovukNotifyTemplate.CASE_RELEASED_BY_CASE_OFFICER, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.CASE_RELEASED_BY_CASE_OFFICER, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
     when(teamMemberViewService
         .getTeamMemberViewsWithRolesForTeamType(TeamType.REGULATOR, Set.of(RegulatorTeamRole.CASE_MANAGER)))
@@ -162,7 +162,7 @@ class CaseAssignmentEmailServiceTest {
 
   @Test
   void sendCaseOwnershipReleasedEmail_withOneCaseManagerToNotify() {
-    when(emailService.getTemplate(GovukNotifyTemplate.CASE_RELEASED_BY_CASE_OFFICER, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.CASE_RELEASED_BY_CASE_OFFICER, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
     when(teamMemberViewService
         .getTeamMemberViewsWithRolesForTeamType(TeamType.REGULATOR, Set.of(RegulatorTeamRole.CASE_MANAGER)))
@@ -195,7 +195,7 @@ class CaseAssignmentEmailServiceTest {
 
   @Test
   void sendCaseOwnershipReleasedEmail_withMultipleCaseManagersToNotify() {
-    when(emailService.getTemplate(GovukNotifyTemplate.CASE_RELEASED_BY_CASE_OFFICER, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.CASE_RELEASED_BY_CASE_OFFICER, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
     when(teamMemberViewService
         .getTeamMemberViewsWithRolesForTeamType(TeamType.REGULATOR, Set.of(RegulatorTeamRole.CASE_MANAGER)))
@@ -252,7 +252,7 @@ class CaseAssignmentEmailServiceTest {
 
   @Test
   void sendCaseReturnedToCaseOfficerByCamEmail() {
-    when(emailService.getTemplate(GovukNotifyTemplate.CASE_RETURNED_TO_CASE_OFFICER_BY_CAM_USER, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.CASE_RETURNED_TO_CASE_OFFICER_BY_CAM_USER, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
     applicationVersion.setCaseOfficerWuaId(CASE_OFFICER.wuaId());

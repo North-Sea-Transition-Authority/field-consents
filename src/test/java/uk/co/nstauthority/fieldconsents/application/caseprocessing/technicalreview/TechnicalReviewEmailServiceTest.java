@@ -85,7 +85,7 @@ class TechnicalReviewEmailServiceTest {
   @Test
   void sendTechnicalReviewRequestEmail_whenCaseOfficerAssignsTechnicalReviewer_thenEmailAssignedTechnicalReviewerOnly() {
     when(energyPortalUserService.getByWuaId(any())).thenReturn(TECHNICAL_REVIEWER_EPU_1);
-    when(emailService.getTemplate(GovukNotifyTemplate.TECHNICAL_REVIEW_REQUEST, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.TECHNICAL_REVIEW_REQUEST, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
     technicalReviewEmailService.sendTechnicalReviewRequestEmail(technicalReview, CASE_OFFICER_USER);
@@ -119,9 +119,9 @@ class TechnicalReviewEmailServiceTest {
     technicalReview.setTechnicalReviewerWuaId(TECHNICAL_REVIEWER_USER_2.wuaId());
 
     when(energyPortalUserService.getByWuaId(any())).thenReturn(TECHNICAL_REVIEWER_EPU_2);
-    when(emailService.getTemplate(GovukNotifyTemplate.TECHNICAL_REVIEW_REQUEST, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.TECHNICAL_REVIEW_REQUEST, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
-    when(emailService.getTemplate(GovukNotifyTemplate.TECHNICAL_REVIEW_REQUEST_CASE_OFFICER, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.TECHNICAL_REVIEW_REQUEST_CASE_OFFICER, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
     when(energyPortalUserService.getEnergyPortalUserMap(
@@ -194,7 +194,7 @@ class TechnicalReviewEmailServiceTest {
     applicationVersion.setCaseOfficerWuaId(null);
 
     when(energyPortalUserService.getByWuaId(any())).thenReturn(TECHNICAL_REVIEWER_EPU_2);
-    when(emailService.getTemplate(GovukNotifyTemplate.TECHNICAL_REVIEW_REQUEST, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.TECHNICAL_REVIEW_REQUEST, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
     technicalReviewEmailService.sendTechnicalReviewRequestEmail(technicalReview, TECHNICAL_REVIEWER_USER_1);
@@ -225,7 +225,7 @@ class TechnicalReviewEmailServiceTest {
 
   @Test
   void sendTechnicalReviewRequestEmail_whenTechnicalReviewerReassignsToThemselvesAndCaseOfficerStillAssigned_thenEmailCaseOfficerOnly() {
-    when(emailService.getTemplate(GovukNotifyTemplate.TECHNICAL_REVIEW_REQUEST_CASE_OFFICER, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.TECHNICAL_REVIEW_REQUEST_CASE_OFFICER, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
     when(energyPortalUserService.getEnergyPortalUserMap(
@@ -277,7 +277,7 @@ class TechnicalReviewEmailServiceTest {
   @Test
   void sendTechnicalReviewResponseEmail() {
     when(energyPortalUserService.getByWuaId(any())).thenReturn(CASE_OFFICER_EPU);
-    when(emailService.getTemplate(GovukNotifyTemplate.TECHNICAL_REVIEW_RESPONSE, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.TECHNICAL_REVIEW_RESPONSE, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
     technicalReviewEmailService.sendTechnicalReviewResponseEmail(technicalReview, TECHNICAL_REVIEWER_USER_1);

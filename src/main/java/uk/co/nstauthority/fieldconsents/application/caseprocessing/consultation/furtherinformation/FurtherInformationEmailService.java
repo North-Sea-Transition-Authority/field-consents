@@ -27,7 +27,7 @@ public class FurtherInformationEmailService {
         .getByWuaId(WebUserAccountId.from(applicationVersion.getCaseOfficerWuaId()));
 
     var mergedTemplate = emailService
-        .getTemplate(GovukNotifyTemplate.FURTHER_INFORMATION_REQUEST, applicationVersion)
+        .getTemplateForApplication(GovukNotifyTemplate.FURTHER_INFORMATION_REQUEST, applicationVersion)
         .withMailMergeField("CONSULTEE_NAME", consultationTeam.getDisplayName())
         .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, caseOfficer.displayName())
         .merge();
@@ -45,7 +45,7 @@ public class FurtherInformationEmailService {
         WebUserAccountId.from(furtherInformation.getRequestedByWuaId()));
 
     var mergedTemplate = emailService
-        .getTemplate(GovukNotifyTemplate.FURTHER_INFORMATION_RESPONSE, applicationVersion)
+        .getTemplateForApplication(GovukNotifyTemplate.FURTHER_INFORMATION_RESPONSE, applicationVersion)
         .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, furtherInformationRequester.displayName())
         .merge();
 

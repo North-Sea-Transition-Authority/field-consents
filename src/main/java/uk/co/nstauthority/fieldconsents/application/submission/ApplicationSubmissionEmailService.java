@@ -35,7 +35,7 @@ public class ApplicationSubmissionEmailService {
         applicationVersion.getCachedPrimaryOperatorName());
 
     var emailMergedTemplate = emailService
-        .getTemplate(GovukNotifyTemplate.NON_ACE_APPLICATION_SUBMISSION, applicationVersion)
+        .getTemplateForApplication(GovukNotifyTemplate.NON_ACE_APPLICATION_SUBMISSION, applicationVersion)
         .withMailMergeField("PRIMARY_OPERATOR_NAME", primaryOperator.name())
         .merge();
 

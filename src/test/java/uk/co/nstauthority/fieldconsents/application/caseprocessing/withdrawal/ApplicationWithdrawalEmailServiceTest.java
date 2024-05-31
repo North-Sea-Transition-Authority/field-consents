@@ -105,7 +105,7 @@ class ApplicationWithdrawalEmailServiceTest {
         eq(applicationVersion.getCachedPrimaryOperatorName()))
     ).thenReturn(primaryOperator);
 
-    when(emailService.getTemplate(GovukNotifyTemplate.APPLICATION_WITHDRAWAL_REQUEST, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.APPLICATION_WITHDRAWAL_REQUEST, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
     when(energyPortalUserService.getByWuaId(any())).thenReturn(CASE_OFFICER_EPU);
 
@@ -142,7 +142,7 @@ class ApplicationWithdrawalEmailServiceTest {
         eq(applicationVersion.getCachedPrimaryOperatorName()))
     ).thenReturn(primaryOperator);
 
-    when(emailService.getTemplate(GovukNotifyTemplate.APPLICATION_WITHDRAWAL_REQUEST, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.APPLICATION_WITHDRAWAL_REQUEST, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
     when(teamMemberViewService
@@ -162,7 +162,7 @@ class ApplicationWithdrawalEmailServiceTest {
         eq(applicationVersion.getCachedPrimaryOperatorName()))
     ).thenReturn(primaryOperator);
 
-    when(emailService.getTemplate(GovukNotifyTemplate.APPLICATION_WITHDRAWAL_REQUEST, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.APPLICATION_WITHDRAWAL_REQUEST, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
     when(teamMemberViewService
@@ -202,7 +202,7 @@ class ApplicationWithdrawalEmailServiceTest {
         eq(applicationVersion.getCachedPrimaryOperatorName()))
     ).thenReturn(primaryOperator);
 
-    when(emailService.getTemplate(GovukNotifyTemplate.APPLICATION_WITHDRAWAL_REQUEST, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.APPLICATION_WITHDRAWAL_REQUEST, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
     when(teamMemberViewService
@@ -260,7 +260,7 @@ class ApplicationWithdrawalEmailServiceTest {
 
   @Test
   void sendApplicationWithdrawalResponseEmail() {
-    when(emailService.getTemplate(GovukNotifyTemplate.APPLICATION_WITHDRAWAL_RESPONSE, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.APPLICATION_WITHDRAWAL_RESPONSE, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
     when(energyPortalUserService.getByWuaId(any())).thenReturn(ENERGY_PORTAL_USER_1);
 

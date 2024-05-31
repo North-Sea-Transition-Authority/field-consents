@@ -112,7 +112,7 @@ class ApplicationUpdateEmailServiceTest {
   void sendApplicationUpdateRequestEmail_whenCaseOfficerRequestsAnUpdate_thenAnEmailIsSentToTheOperatorOnly() {
     var serviceDetailSubmitter = ServiceUserDetail.from(ENERGY_PORTAL_USER_DTO);
 
-    when(emailService.getTemplate(GovukNotifyTemplate.APPLICATION_UPDATE_REQUEST_OPERATOR, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.APPLICATION_UPDATE_REQUEST_OPERATOR, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
     when(energyPortalUserService.getByWuaId(any())).thenReturn(ENERGY_PORTAL_USER_DTO);
 
@@ -157,9 +157,9 @@ class ApplicationUpdateEmailServiceTest {
         anyString(),
         eq(applicationVersion.getCachedPrimaryOperatorName()))
     ).thenReturn(primaryOperator);
-    when(emailService.getTemplate(GovukNotifyTemplate.APPLICATION_UPDATE_REQUEST_OPERATOR, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.APPLICATION_UPDATE_REQUEST_OPERATOR, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
-    when(emailService.getTemplate(GovukNotifyTemplate.APPLICATION_UPDATE_REQUEST_CASE_OFFICER, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.APPLICATION_UPDATE_REQUEST_CASE_OFFICER, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
     when(energyPortalUserService.getByWuaId(any())).thenReturn(ENERGY_PORTAL_USER_DTO);
 
@@ -235,7 +235,7 @@ class ApplicationUpdateEmailServiceTest {
     applicationVersion.setCaseOfficerWuaId(null);
     applicationUpdate.setRequestedByWuaId(TECHNICAL_REVIEWER_WUA_ID);
 
-    when(emailService.getTemplate(GovukNotifyTemplate.APPLICATION_UPDATE_REQUEST_OPERATOR, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.APPLICATION_UPDATE_REQUEST_OPERATOR, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
     when(energyPortalUserService.getByWuaId(any())).thenReturn(ENERGY_PORTAL_USER_DTO);
 
@@ -275,7 +275,7 @@ class ApplicationUpdateEmailServiceTest {
         anyString(),
         eq(applicationVersion.getCachedPrimaryOperatorName()))
     ).thenReturn(primaryOperator);
-    when(emailService.getTemplate(GovukNotifyTemplate.APPLICATION_UPDATE_RESPONSE, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.APPLICATION_UPDATE_RESPONSE, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
     when(technicalReviewService.findOpenTechnicalReview(applicationVersion)).thenReturn(Optional.empty());
     when(energyPortalUserService.findByWuaIds(anyList())).thenReturn(Collections.emptyList());
@@ -292,7 +292,7 @@ class ApplicationUpdateEmailServiceTest {
         anyString(),
         eq(applicationVersion.getCachedPrimaryOperatorName()))
     ).thenReturn(primaryOperator);
-    when(emailService.getTemplate(GovukNotifyTemplate.APPLICATION_UPDATE_RESPONSE, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.APPLICATION_UPDATE_RESPONSE, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
     when(technicalReviewService.findOpenTechnicalReview(applicationVersion)).thenReturn(Optional.empty());
     when(energyPortalUserService.findByWuaIds(List.of(WebUserAccountId.from(UPDATE_REQUESTER_USER_WUA_ID))))
@@ -337,7 +337,7 @@ class ApplicationUpdateEmailServiceTest {
         anyString(),
         eq(applicationVersion.getCachedPrimaryOperatorName()))
     ).thenReturn(primaryOperator);
-    when(emailService.getTemplate(GovukNotifyTemplate.APPLICATION_UPDATE_RESPONSE, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.APPLICATION_UPDATE_RESPONSE, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
     when(technicalReviewService.findOpenTechnicalReview(applicationVersion)).thenReturn(Optional.of(technicalReview));
     when(energyPortalUserService.findByWuaIds(
@@ -409,7 +409,7 @@ class ApplicationUpdateEmailServiceTest {
         anyString(),
         eq(applicationVersion.getCachedPrimaryOperatorName()))
     ).thenReturn(primaryOperator);
-    when(emailService.getTemplate(GovukNotifyTemplate.APPLICATION_UPDATE_RESPONSE, applicationVersion))
+    when(emailService.getTemplateForApplication(GovukNotifyTemplate.APPLICATION_UPDATE_RESPONSE, applicationVersion))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
     when(technicalReviewService.findOpenTechnicalReview(applicationVersion)).thenReturn(Optional.of(technicalReview));
     when(energyPortalUserService.findByWuaIds(List.of(WebUserAccountId.from(TECHNICAL_REVIEWER_WUA_ID))))
