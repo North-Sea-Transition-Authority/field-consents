@@ -24,9 +24,8 @@ public class ConsentFigureUnitService {
         case LONG_TERM -> getConsentFigureUnitViewForLongTermProductionApplication(applicationVersion);
       };
       case FLARE, VENT -> switch (consentLengthType) {
-        case SHORT_TERM, ANNUAL -> getConsentFigureUnitViewForEmissionApplication(applicationVersion);
-        // TODO FCS-789 we haven't migrated any long term consent data figures for flare/vent cases yet
-        case LONG_TERM -> ConsentFigureUnitView.empty();
+        case SHORT_TERM, ANNUAL -> getConsentFigureUnitViewForShortTermOrAnnualEmissionApplication(applicationVersion);
+        case LONG_TERM -> getConsentFigureUnitViewForLongTermEmissionApplication(applicationVersion);
       };
     };
   }
@@ -44,7 +43,7 @@ public class ConsentFigureUnitService {
     return ConsentFigureUnitView.fromLongTermProductionApplication(productionOilUnit, productionGasUnit);
   }
 
-  ConsentFigureUnitView getConsentFigureUnitViewForEmissionApplication(ApplicationVersion applicationVersion) {
+  ConsentFigureUnitView getConsentFigureUnitViewForShortTermOrAnnualEmissionApplication(ApplicationVersion applicationVersion) {
     var applicationType = applicationVersion.getApplication().getType();
 
     var emissionAverageUnit = switch (applicationType) {
@@ -54,5 +53,17 @@ public class ConsentFigureUnitService {
     };
 
     return ConsentFigureUnitView.fromEmissionApplication(emissionAverageUnit);
+  }
+
+  ConsentFigureUnitView getConsentFigureUnitViewForLongTermEmissionApplication(ApplicationVersion applicationVersion) {
+    var applicationType = applicationVersion.getApplication().getType();
+
+    var emissionUnit = switch (applicationType) {
+      case FLARE -> applicationUnitService.getFlareCategoryUnit(applicationVersion);
+      case VENT -> applicationUnitService.getVentCategoryUnit(applicationVersion);
+      default -> throw new IllegalStateException("Unexpected ApplicationType: %s".formatted(applicationType));
+    };
+
+    return ConsentFigureUnitView.fromEmissionApplication(emissionUnit);
   }
 }

@@ -15,6 +15,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentDataLongTermEmissionFiguresService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentDataLongTermProductionFiguresService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentEmissionFigureService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentProductionFiguresService;
@@ -33,6 +34,7 @@ public class ConsentDataService {
   private final ConsentEmissionFigureService consentEmissionFigureService;
   private final ConsentDataLongTermProductionFiguresService consentDataLongTermProductionFiguresService;
   private final ApplicationVersionService applicationVersionService;
+  private final ConsentDataLongTermEmissionFiguresService consentDataLongTermEmissionFiguresService;
 
   ConsentDataService(
       ApplicationAssetService applicationAssetService,
@@ -41,7 +43,8 @@ public class ConsentDataService {
       ConsentProductionFiguresService consentProductionFiguresService,
       ConsentEmissionFigureService consentEmissionFigureService,
       ConsentDataLongTermProductionFiguresService consentDataLongTermProductionFiguresService,
-      ApplicationVersionService applicationVersionService
+      ApplicationVersionService applicationVersionService,
+      ConsentDataLongTermEmissionFiguresService consentDataLongTermEmissionFiguresService
   ) {
     this.applicationAssetService = applicationAssetService;
     this.repository = repository;
@@ -50,6 +53,7 @@ public class ConsentDataService {
     this.consentEmissionFigureService = consentEmissionFigureService;
     this.consentDataLongTermProductionFiguresService = consentDataLongTermProductionFiguresService;
     this.applicationVersionService = applicationVersionService;
+    this.consentDataLongTermEmissionFiguresService = consentDataLongTermEmissionFiguresService;
   }
 
   public Optional<ConsentData> findConsentData(Application application) {
@@ -263,8 +267,8 @@ public class ConsentDataService {
         case LONG_TERM -> getConsentDataViewForLongTermProductionApplication(application, consentData);
       };
       case FLARE, VENT -> switch (consentLengthType) {
-        case SHORT_TERM, ANNUAL -> getConsentDataViewForEmissionApplication(consentData);
-        case LONG_TERM -> getConsentDataViewForMigratedLongTermEmissionApplication(consentData);
+        case SHORT_TERM, ANNUAL -> getConsentDataViewForShortTermOrAnnualEmissionApplication(consentData);
+        case LONG_TERM -> getConsentDataViewForLongTermEmissionApplication(application, consentData);
       };
     };
   }
@@ -280,11 +284,14 @@ public class ConsentDataService {
     return ConsentDataView.fromLongTermProductionApplication(consentData, consentDataLongTermProductionFiguresViews);
   }
 
-  ConsentDataView getConsentDataViewForEmissionApplication(ConsentData consentData) {
-    return ConsentDataView.fromEmissionApplication(consentData);
+  ConsentDataView getConsentDataViewForShortTermOrAnnualEmissionApplication(ConsentData consentData) {
+    return ConsentDataView.fromShortTermOrAnnualEmissionApplication(consentData);
   }
 
-  ConsentDataView getConsentDataViewForMigratedLongTermEmissionApplication(ConsentData consentData) {
-    return ConsentDataView.fromMigratedLongTermEmissionApplication(consentData);
+  ConsentDataView getConsentDataViewForLongTermEmissionApplication(Application application, ConsentData consentData) {
+    var consentDataLongTermEmissionFiguresViews =
+        consentDataLongTermEmissionFiguresService.getConsentDataLongTermEmissionFiguresViews(application);
+
+    return ConsentDataView.fromLongTermEmissionApplication(consentData, consentDataLongTermEmissionFiguresViews);
   }
 }

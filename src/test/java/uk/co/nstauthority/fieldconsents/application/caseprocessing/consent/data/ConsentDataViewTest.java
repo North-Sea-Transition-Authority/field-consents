@@ -31,6 +31,7 @@ class ConsentDataViewTest {
                 null,
                 ConsentProductionFiguresView.fromShortTermOrAnnualConsentProductionFigures(consentData),
                 null,
+                null,
                 null
             )
         );
@@ -56,44 +57,53 @@ class ConsentDataViewTest {
             format(longTermProductionConsentProductionFromDate, DateUtils.LONG_DATE),
             null,
             consentDataLongTermProductionFiguresViews,
+            null,
             null
         )
     );
   }
 
   @Test
-  void fromEmissionApplication() {
+  void fromShortTermOrAnnualEmissionApplication() {
     var emissionDailyAverage = BigDecimal.valueOf(235.79);
 
     var consentData = ConsentDataTestUtil.newBuilder()
         .withEmissionDailyAverage(emissionDailyAverage)
         .build();
 
-    assertThat(ConsentDataView.fromEmissionApplication(consentData)).isEqualTo(
+    assertThat(ConsentDataView.fromShortTermOrAnnualEmissionApplication(consentData)).isEqualTo(
         new ConsentDataView(
             format(consentData.getConsentStartDate(), DateUtils.LONG_DATE),
             format(consentData.getConsentEndDate(), DateUtils.LONG_DATE),
             null,
             null,
             null,
-            bigDecimalToFormattedString(emissionDailyAverage)
+            bigDecimalToFormattedString(emissionDailyAverage),
+            null
         )
     );
   }
 
   @Test
-  void fromMigratedLongTermEmissionApplication() {
+  void fromLongTermEmissionApplication() {
     var consentData = ConsentDataTestUtil.newBuilder().build();
 
-    assertThat(ConsentDataView.fromMigratedLongTermEmissionApplication(consentData)).isEqualTo(
-        new ConsentDataView(
-            format(consentData.getConsentStartDate(), DateUtils.LONG_DATE),
-            format(consentData.getConsentEndDate(), DateUtils.LONG_DATE),
-            null,
-            null,
-            null,
-            null
-        )
+    var consentDataLongTermEmissionFiguresViews = Map.of(
+        "2024", "1.123456",
+        "2025", "987.129"
     );
+
+    assertThat(ConsentDataView.fromLongTermEmissionApplication(consentData, consentDataLongTermEmissionFiguresViews))
+        .isEqualTo(
+            new ConsentDataView(
+                format(consentData.getConsentStartDate(), DateUtils.LONG_DATE),
+                format(consentData.getConsentEndDate(), DateUtils.LONG_DATE),
+                null,
+                null,
+                null,
+                null,
+                consentDataLongTermEmissionFiguresViews
+            )
+        );
   }
 }

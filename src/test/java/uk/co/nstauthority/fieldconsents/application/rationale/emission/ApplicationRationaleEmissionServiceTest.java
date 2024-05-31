@@ -132,7 +132,7 @@ class ApplicationRationaleEmissionServiceTest {
             consentData.getApplication().getType(),
             currentYear,
             consentData.getEmissionDailyAverage(),
-            consentFigureUnitView.emissionAverageUnit()
+            consentFigureUnitView.emissionUnit()
         ));
   }
 

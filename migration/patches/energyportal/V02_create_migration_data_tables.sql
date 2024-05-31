@@ -5,6 +5,8 @@
 --DROP TABLE fcs_migration.application_consent_field_equity_partners;
 --DROP SEQUENCE fcs_migration.application_consent_field_equity_partners_id_seq;
 --DROP TABLE fcs_migration.application_consents;
+--DROP TABLE fcs_migration.application_consent_data_long_term_emission_figures;
+--DROP SEQUENCE fcs_migration.application_consent_data_long_term_emission_figures_id_seq;
 --DROP TABLE fcs_migration.application_consent_data_long_term_production_figures;
 --DROP SEQUENCE fcs_migration.application_consent_data_long_term_production_figures_id_seq;
 --DROP TABLE fcs_migration.application_consent_data;
@@ -169,10 +171,10 @@ CREATE TABLE fcs_migration.application_assets (
 , asset_role                 VARCHAR2(4000) NOT NULL
 , asset_no                   INTEGER
 , asset_operator_ou_id       INTEGER NOT NULL
-, cached_asset_operator_name VARCHAR2(4000)
-, asset_type                 VARCHAR2(4000)
-, asset_id                   INTEGER
-, cached_asset_name          VARCHAR2(4000)
+, cached_asset_operator_name VARCHAR2(4000) NOT NULL
+, asset_type                 VARCHAR2(4000) NOT NULL
+, asset_id                   INTEGER NOT NULL
+, cached_asset_name          VARCHAR2(4000) NOT NULL
 );
 
 
@@ -925,6 +927,24 @@ CREATE TABLE fcs_migration.application_consent_data_long_term_production_figures
 , CONSTRAINT application_consent_prod_long_term_figures_app_id_year_unq
   UNIQUE (application_id, year)
   DEFERRABLE INITIALLY DEFERRED
+);
+
+--
+-- application_consent_data_long_term_emission_figures
+--
+CREATE SEQUENCE fcs_migration.application_consent_data_long_term_emission_figures_id_seq;
+
+CREATE TABLE fcs_migration.application_consent_data_long_term_emission_figures (
+  id             INTEGER
+                 CONSTRAINT application_consent_data_lt_emission_figures_id_pk
+                 PRIMARY KEY
+, application_id INTEGER NOT NULL
+                 CONSTRAINT application_consent_data_lt_emission_figures_app_id_fk
+                 REFERENCES applications
+, year           INTEGER NOT NULL
+, daily_average  NUMBER NOT NULL
+, CONSTRAINT application_consent_data_lt_emission_figures_app_id_year_unq
+  UNIQUE (application_id, year)
 );
 
 --

@@ -18,8 +18,7 @@ public record EmissionDailyAverage(
         consentData.getApplication().getType(),
         year,
         consentData.getEmissionDailyAverage(),
-        consentFigureUnitView.emissionAverageUnit()
+        consentFigureUnitView.emissionUnit()
     );
   }
-
 }

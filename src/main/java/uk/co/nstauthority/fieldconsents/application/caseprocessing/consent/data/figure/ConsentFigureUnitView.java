@@ -6,17 +6,11 @@ import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 public record ConsentFigureUnitView(
     ProductionUnit productionOilUnit,
     ProductionUnit productionGasUnit,
-    FlareVentUnit emissionAverageUnit
+    FlareVentUnit emissionUnit
 ) {
 
-  // TODO FCS-789 we haven't migrated any long term consent data figures for flare/vent cases yet
-  //  (we can remove this method when this is done)
-  public static ConsentFigureUnitView empty() {
-    return new ConsentFigureUnitView(null, null, null);
-  }
-
-  public static ConsentFigureUnitView fromShortTermOrAnnualProductionApplication(ProductionUnit productionAverageUnit) {
-    return new ConsentFigureUnitView(productionAverageUnit, productionAverageUnit, null);
+  public static ConsentFigureUnitView fromShortTermOrAnnualProductionApplication(ProductionUnit productionUnit) {
+    return new ConsentFigureUnitView(productionUnit, productionUnit, null);
   }
 
   public static ConsentFigureUnitView fromLongTermProductionApplication(
@@ -26,7 +20,7 @@ public record ConsentFigureUnitView(
     return new ConsentFigureUnitView(productionOilUnit, productionGasUnit, null);
   }
 
-  public static ConsentFigureUnitView fromEmissionApplication(FlareVentUnit emissionAverageUnit) {
-    return new ConsentFigureUnitView(null, null, emissionAverageUnit);
+  public static ConsentFigureUnitView fromEmissionApplication(FlareVentUnit emissionUnit) {
+    return new ConsentFigureUnitView(null, null, emissionUnit);
   }
 }

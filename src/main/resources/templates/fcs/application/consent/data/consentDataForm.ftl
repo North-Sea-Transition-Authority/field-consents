@@ -71,7 +71,7 @@
     <#elseif applicationType.name() == "FLARE" || applicationType.name() == "VENT">
       <@fdsTextInput.textInput
         path="form.emissionDailyAverageInput.inputValue"
-        labelText="Daily average (${consentFigureUnitView.emissionAverageUnit().getDisplayName()})"
+        labelText="Daily average (${consentFigureUnitView.emissionUnit().getDisplayName()})"
         inputClass="govuk-input--width-4"
       />
     </#if>

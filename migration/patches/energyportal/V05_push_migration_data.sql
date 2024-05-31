@@ -16,6 +16,7 @@
 --
 
 ---- audit tables (not migrating to but need clearing)
+--DELETE FROM "fcs"."application_consent_data_long_term_emission_figures_aud"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_consent_data_aud"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_consent_data_long_term_production_figures_aud"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_consent_field_equity_partners_aud"@fcs_postgres_db;
@@ -49,6 +50,7 @@
 --DELETE FROM "fcs"."payments_library_payments"@fcs_postgres_db;
 --
 ---- delete data from tables we are migrating too
+--DELETE FROM "fcs"."application_consent_data_long_term_emission_figures"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_consent_field_equity_partners"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_consents"@fcs_postgres_db;
 --DELETE FROM "fcs"."application_consent_data"@fcs_postgres_db;
@@ -1730,6 +1732,32 @@ END;
 /
 
 --
+-- application_consent_data_long_term_emission_figures
+--
+BEGIN
+
+  FOR rec IN (SELECT * FROM fcs_migration.application_consent_data_long_term_emission_figures WHERE id > 0 ORDER BY id) LOOP
+
+    INSERT INTO "fcs"."application_consent_data_long_term_emission_figures"@fcs_postgres_db (
+      "id"
+    , "application_id"
+    , "year"
+    , "daily_average"
+    ) VALUES (
+      rec.id
+    , rec.application_id
+    , rec.year
+    , rec.daily_average
+    );
+  
+  END LOOP;
+
+  COMMIT;
+  DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
+END;
+/
+
+--
 -- application_consents
 --
 BEGIN
@@ -1782,4 +1810,3 @@ BEGIN
   DBMS_SESSION.CLOSE_DATABASE_LINK('FCS_POSTGRES_DB');
 END;
 /
-

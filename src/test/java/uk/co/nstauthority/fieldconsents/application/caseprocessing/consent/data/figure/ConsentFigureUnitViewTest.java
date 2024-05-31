@@ -9,12 +9,6 @@ import uk.co.nstauthority.fieldconsents.production.ProductionUnit;
 class ConsentFigureUnitViewTest {
 
   @Test
-  void empty() {
-    assertThat(ConsentFigureUnitView.empty())
-        .isEqualTo(new ConsentFigureUnitView(null, null, null));
-  }
-
-  @Test
   void fromShortTermOrAnnualProductionApplication() {
     var productionAverageUnit = ProductionUnit.KSCM_PER_DAY;
 
@@ -33,9 +27,9 @@ class ConsentFigureUnitViewTest {
 
   @Test
   void fromEmissionApplication() {
-    var emissionAverageUnit = FlareVentUnit.TONNES_PER_DAY;
+    var emissionUnit = FlareVentUnit.TONNES_PER_DAY;
 
-    assertThat(ConsentFigureUnitView.fromEmissionApplication(emissionAverageUnit))
-        .isEqualTo(new ConsentFigureUnitView(null, null, emissionAverageUnit));
+    assertThat(ConsentFigureUnitView.fromEmissionApplication(emissionUnit))
+        .isEqualTo(new ConsentFigureUnitView(null, null, emissionUnit));
   }
 }

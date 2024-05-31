@@ -40,6 +40,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentDataLongTermEmissionFiguresService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentDataLongTermProductionFiguresService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentDataLongTermProductionFiguresTestUtil;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentEmissionFigureService;
@@ -74,6 +75,9 @@ class ConsentDataServiceTest {
 
   @Mock
   private ConsentDataLongTermProductionFiguresService consentDataLongTermProductionFiguresService;
+
+  @Mock
+  private ConsentDataLongTermEmissionFiguresService consentDataLongTermEmissionFiguresService;
 
   @InjectMocks
   @Spy
@@ -1019,7 +1023,7 @@ class ConsentDataServiceTest {
 
     doReturn(consentDataView)
         .when(consentDataService)
-        .getConsentDataViewForEmissionApplication(consentData);
+        .getConsentDataViewForShortTermOrAnnualEmissionApplication(consentData);
 
     assertThat(consentDataService.getConsentDataView(application, consentData, consentLengthType)).isEqualTo(consentDataView);
   }
@@ -1044,7 +1048,7 @@ class ConsentDataServiceTest {
 
     doReturn(consentDataView)
         .when(consentDataService)
-        .getConsentDataViewForMigratedLongTermEmissionApplication(consentData);
+        .getConsentDataViewForLongTermEmissionApplication(application, consentData);
 
     assertThat(consentDataService.getConsentDataView(application, consentData, consentLengthType)).isEqualTo(consentDataView);
   }
@@ -1080,20 +1084,29 @@ class ConsentDataServiceTest {
   }
 
   @Test
-  void getConsentDataViewForEmissionApplication() {
+  void getConsentDataViewForShortTermOrAnnualEmissionApplication() {
     var consentData = ConsentDataTestUtil.newBuilder()
         .withEmissionDailyAverage(BigDecimal.valueOf(235.79))
         .build();
 
-    assertThat(consentDataService.getConsentDataViewForEmissionApplication(consentData))
-        .isEqualTo(ConsentDataView.fromEmissionApplication(consentData));
+    assertThat(consentDataService.getConsentDataViewForShortTermOrAnnualEmissionApplication(consentData))
+        .isEqualTo(ConsentDataView.fromShortTermOrAnnualEmissionApplication(consentData));
   }
 
   @Test
-  void getConsentDataViewForMigratedLongTermEmissionApplication() {
+  void getConsentDataViewForLongTermEmissionApplication() {
+    var application = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.FLARE);
     var consentData = ConsentDataTestUtil.newBuilder().build();
 
-    assertThat(consentDataService.getConsentDataViewForMigratedLongTermEmissionApplication(consentData))
-        .isEqualTo(ConsentDataView.fromMigratedLongTermEmissionApplication(consentData));
+    var consentDataLongTermEmissionFiguresViews = Map.of(
+        "2024", "1.123456",
+        "2025", "987.129"
+    );
+
+    when(consentDataLongTermEmissionFiguresService.getConsentDataLongTermEmissionFiguresViews(application))
+        .thenReturn(consentDataLongTermEmissionFiguresViews);
+
+    assertThat(consentDataService.getConsentDataViewForLongTermEmissionApplication(application, consentData))
+        .isEqualTo(ConsentDataView.fromLongTermEmissionApplication(consentData, consentDataLongTermEmissionFiguresViews));
   }
 }

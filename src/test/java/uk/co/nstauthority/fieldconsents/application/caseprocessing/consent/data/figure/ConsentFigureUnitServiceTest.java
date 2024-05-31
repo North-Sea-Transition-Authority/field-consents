@@ -78,7 +78,7 @@ class ConsentFigureUnitServiceTest {
 
     doReturn(consentFigureUnitView)
         .when(consentFigureUnitService)
-        .getConsentFigureUnitViewForEmissionApplication(applicationVersion);
+        .getConsentFigureUnitViewForShortTermOrAnnualEmissionApplication(applicationVersion);
 
     assertThat(consentFigureUnitService.getConsentFigureUnitView(applicationVersion, consentLengthType))
         .isEqualTo(consentFigureUnitView);
@@ -98,8 +98,14 @@ class ConsentFigureUnitServiceTest {
   void getConsentFigureUnitView_applicationTypeIsFlareOrVentLongTerm(ApplicationType applicationType) {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
 
+    var consentFigureUnitView = mock(ConsentFigureUnitView.class);
+
+    doReturn(consentFigureUnitView)
+        .when(consentFigureUnitService)
+        .getConsentFigureUnitViewForLongTermEmissionApplication(applicationVersion);
+
     assertThat(consentFigureUnitService.getConsentFigureUnitView(applicationVersion, ConsentLengthType.LONG_TERM))
-        .isEqualTo(ConsentFigureUnitView.empty());
+        .isEqualTo(consentFigureUnitView);
   }
 
   @Test
@@ -129,35 +135,69 @@ class ConsentFigureUnitServiceTest {
   }
 
   @Test
-  void getConsentFigureUnitViewForEmissionApplication_applicationTypeIsFlare() {
+  void getConsentFigureUnitViewForShortTermOrAnnualEmissionApplication_applicationTypeIsFlare() {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
 
     var flareAverageUnit = FlareVentUnit.TONNES_PER_DAY;
 
     when(applicationUnitService.getFlareAverageUnit(applicationVersion)).thenReturn(flareAverageUnit);
 
-    assertThat(consentFigureUnitService.getConsentFigureUnitViewForEmissionApplication(applicationVersion))
+    assertThat(consentFigureUnitService.getConsentFigureUnitViewForShortTermOrAnnualEmissionApplication(applicationVersion))
         .isEqualTo(ConsentFigureUnitView.fromEmissionApplication(flareAverageUnit));
   }
 
   @Test
-  void getConsentFigureUnitViewForEmissionApplication_applicationTypeIsVent() {
+  void getConsentFigureUnitViewForShortTermOrAnnualEmissionApplication_applicationTypeIsVent() {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
 
     var ventAverageUnit = FlareVentUnit.TONNES_PER_DAY;
 
     when(applicationUnitService.getVentAverageUnit(applicationVersion)).thenReturn(ventAverageUnit);
 
-    assertThat(consentFigureUnitService.getConsentFigureUnitViewForEmissionApplication(applicationVersion))
+    assertThat(consentFigureUnitService.getConsentFigureUnitViewForShortTermOrAnnualEmissionApplication(applicationVersion))
         .isEqualTo(ConsentFigureUnitView.fromEmissionApplication(ventAverageUnit));
   }
 
   @ParameterizedTest
   @EnumSource(value = ApplicationType.class, names = { "FLARE", "VENT" }, mode = EnumSource.Mode.EXCLUDE)
-  void getConsentFigureUnitViewForEmissionApplication_applicationTypeIsNotEmission(ApplicationType applicationType) {
+  void getConsentFigureUnitViewForShortTermOrAnnualEmissionApplication_applicationTypeIsNotShortTermOrAnnualEmission(ApplicationType applicationType) {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
 
-    assertThatThrownBy(() -> consentFigureUnitService.getConsentFigureUnitViewForEmissionApplication(applicationVersion))
+    assertThatThrownBy(() -> consentFigureUnitService.getConsentFigureUnitViewForShortTermOrAnnualEmissionApplication(applicationVersion))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Unexpected ApplicationType: %s".formatted(applicationType));
+  }
+
+  @Test
+  void getConsentFigureUnitViewForLongTermEmissionApplication_applicationTypeIsFlare() {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
+
+    var flareUnit = FlareVentUnit.TONNES_PER_DAY;
+
+    when(applicationUnitService.getFlareCategoryUnit(applicationVersion)).thenReturn(flareUnit);
+
+    assertThat(consentFigureUnitService.getConsentFigureUnitViewForLongTermEmissionApplication(applicationVersion))
+        .isEqualTo(ConsentFigureUnitView.fromEmissionApplication(flareUnit));
+  }
+
+  @Test
+  void getConsentFigureUnitViewForLongTermEmissionApplication_applicationTypeIsVent() {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
+
+    var ventUnit = FlareVentUnit.TONNES_PER_DAY;
+
+    when(applicationUnitService.getVentCategoryUnit(applicationVersion)).thenReturn(ventUnit);
+
+    assertThat(consentFigureUnitService.getConsentFigureUnitViewForLongTermEmissionApplication(applicationVersion))
+        .isEqualTo(ConsentFigureUnitView.fromEmissionApplication(ventUnit));
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = ApplicationType.class, names = { "FLARE", "VENT" }, mode = EnumSource.Mode.EXCLUDE)
+  void getConsentFigureUnitViewForLongTermEmissionApplication_applicationTypeIsNotShortTermOrAnnualEmission(ApplicationType applicationType) {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
+
+    assertThatThrownBy(() -> consentFigureUnitService.getConsentFigureUnitViewForLongTermEmissionApplication(applicationVersion))
         .isInstanceOf(IllegalStateException.class)
         .hasMessage("Unexpected ApplicationType: %s".formatted(applicationType));
   }

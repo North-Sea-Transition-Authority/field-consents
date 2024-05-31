@@ -65,14 +65,33 @@
         </tbody>
       </table>
     </@fdsSummaryList.summaryListRowNoAction>
-  <#elseif (applicationType.name() == "FLARE" || applicationType.name() == "VENT")
-           && (consentLengthType.name() == "SHORT_TERM" || consentLengthType.name() == "ANNUAL")>
-    <@fdsSummaryList.summaryListRowNoAction keyText="Daily average (${consentFigureUnitView.emissionAverageUnit().getDisplayName()})">
-      ${consentDataView.emissionDailyAverage()}
-    </@fdsSummaryList.summaryListRowNoAction>
+  <#elseif (applicationType.name() == "FLARE" || applicationType.name() == "VENT")>
+    <#if consentLengthType.name() == "LONG_TERM">
+      <@fdsSummaryList.summaryListRowNoAction keyText="Consent figures">
+        <table class="govuk-table">
+          <thead class="govuk-table__head">
+            <tr class="govuk-table__row">
+              <th class="govuk-table__header">Year</th>
+              <th class="govuk-table__header">Daily average (${consentFigureUnitView.emissionUnit().getDisplayName()})</th>
+            </tr>
+          </thead>
+          <tbody class="govuk-table__body">
+            <#list consentDataView.longTermConsentEmissionFiguresViews() as year, dailyAverage>
+              <tr class="govuk-table__row">
+                <td class="govuk-table__cell">${year}</td>
+                <td class="govuk-table__cell">${dailyAverage}</td>
+              </tr>
+            </#list>
+          </tbody>
+        </table>
+      </@fdsSummaryList.summaryListRowNoAction>
+    <#elseif (consentLengthType.name() == "SHORT_TERM" || consentLengthType.name() == "ANNUAL")>
+      <@fdsSummaryList.summaryListRowNoAction keyText="Daily average (${consentFigureUnitView.emissionUnit().getDisplayName()})">
+        ${consentDataView.emissionDailyAverage()}
+      </@fdsSummaryList.summaryListRowNoAction>
+    </#if>
   </#if>
 </#macro>
-
 
 <#macro consentProductionFiguresCells consentProductionFiguresView>
   <td class="govuk-table__cell">${consentProductionFiguresView.minOil()}</td>

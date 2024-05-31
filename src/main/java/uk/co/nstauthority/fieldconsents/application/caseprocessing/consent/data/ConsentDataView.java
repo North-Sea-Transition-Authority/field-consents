@@ -13,7 +13,8 @@ public record ConsentDataView(
     String longTermProductionConsentProductionFromDate,
     ConsentProductionFiguresView shortTermOrAnnualConsentProductionFiguresView,
     Map<String, ConsentProductionFiguresView> longTermConsentProductionFiguresViews,
-    String emissionDailyAverage
+    String emissionDailyAverage,
+    Map<String, String> longTermConsentEmissionFiguresViews
 ) {
 
   public static ConsentDataView fromShortTermOrAnnualProductionApplication(ConsentData consentData) {
@@ -22,6 +23,7 @@ public record ConsentDataView(
         format(consentData.getConsentEndDate(), DateUtils.LONG_DATE),
         null,
         ConsentProductionFiguresView.fromShortTermOrAnnualConsentProductionFigures(consentData),
+        null,
         null,
         null
     );
@@ -37,30 +39,35 @@ public record ConsentDataView(
         format(consentData.getLongTermProductionConsentProductionFromDate(), DateUtils.LONG_DATE),
         null,
         consentDataLongTermProductionFiguresViews,
+        null,
         null
     );
   }
 
-  public static ConsentDataView fromEmissionApplication(ConsentData consentData) {
+  public static ConsentDataView fromShortTermOrAnnualEmissionApplication(ConsentData consentData) {
     return new ConsentDataView(
         format(consentData.getConsentStartDate(), DateUtils.LONG_DATE),
         format(consentData.getConsentEndDate(), DateUtils.LONG_DATE),
         null,
         null,
         null,
-        bigDecimalToFormattedString(consentData.getEmissionDailyAverage())
+        bigDecimalToFormattedString(consentData.getEmissionDailyAverage()),
+        null
     );
   }
 
-  // TODO FCS-789 we haven't migrated any long term consent data figures for flare/vent cases yet
-  public static ConsentDataView fromMigratedLongTermEmissionApplication(ConsentData consentData) {
+  public static ConsentDataView fromLongTermEmissionApplication(
+      ConsentData consentData,
+      Map<String, String> consentDataLongTermEmissionFiguresViews
+  ) {
     return new ConsentDataView(
         format(consentData.getConsentStartDate(), DateUtils.LONG_DATE),
         format(consentData.getConsentEndDate(), DateUtils.LONG_DATE),
         null,
         null,
         null,
-        null
+        null,
+        consentDataLongTermEmissionFiguresViews
     );
   }
 }

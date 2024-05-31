@@ -59,6 +59,7 @@ CALL fcs.post_migration_sync_table_sequence('application_consent_data_long_term_
 CALL fcs.post_migration_sync_table_sequence('application_consents');
 CALL fcs.post_migration_sync_table_sequence('application_consent_field_equity_partners');
 CALL fcs.post_migration_sync_table_sequence('application_consent_document_generation_data');
+CALL fcs.post_migration_sync_table_sequence('application_consent_data_long_term_emission_figures');
 
 DROP PROCEDURE fcs.post_migration_sync_table_sequence(TEXT);
 
@@ -111,5 +112,6 @@ DROP PROCEDURE fcs.post_migration_sync_table_sequence(TEXT);
 -- SELECT * FROM fcs.application_consent_data_long_term_production_figures_id_seq;
 -- SELECT * FROM fcs.application_consents_id_seq;
 -- SELECT * FROM fcs.application_consent_field_equity_partners_id_seq;
--- SELECT * FROM fcs.application_consent_document_generation_data;
+-- SELECT * FROM fcs.application_consent_document_generation_data_id_seq;
+-- SELECT * FROM fcs.application_consent_data_long_term_emission_figures_id_seq;
 

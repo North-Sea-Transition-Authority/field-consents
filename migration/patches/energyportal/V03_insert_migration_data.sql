@@ -6,6 +6,7 @@
 -- LIVE 8 mins 29 secs (22/03/2024 - CLOB investigation run)
 --
 
+--DELETE FROM fcs_migration.field_consent_consent_data_long_term_emission_figures
 --DELETE FROM fcs_migration.application_consents;
 --DELETE FROM fcs_migration.split_clob_legacy_data;
 --DELETE FROM fcs_migration.application_other_legacy_data;
@@ -2281,6 +2282,32 @@ SELECT
 , b.max_oil
 , b.min_gas
 , b.max_gas
+FROM base b;
+/
+
+--
+-- application_consent_data_long_term_emission_figures
+--
+INSERT INTO fcs_migration.application_consent_data_long_term_emission_figures (
+  id
+, application_id
+, year
+, daily_average
+)
+WITH base AS (
+  SELECT
+    av.application_id
+  , lt.year
+  , lt.daily_average
+  FROM fcs_migration.application_versions av
+  JOIN fcs_migration.field_consent_consent_data_long_term_emission_figures lt ON lt.fcd_id = av.id
+  ORDER BY av.application_id, lt.year -- order here so that the ids allocated are grouped/ordered logically within each application_id data set
+)
+SELECT
+  fcs_migration.application_consent_data_long_term_emission_figures_id_seq.nextval
+, b.application_id
+, b.year
+, b.daily_average
 FROM base b;
 /
 
