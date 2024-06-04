@@ -72,7 +72,7 @@ public class VentAnnualController {
         .addObject("submitUrl", ReverseRouter.route(on(VentAnnualController.class)
             .saveVentAnnualForm(applicationId, null, ReverseRouter.emptyBindingResult())))
         .addObject("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class)
-            .getTaskList(applicationId)));
+            .getTaskList(applicationId, null)));
     return modelAndView;
   }
 
@@ -90,7 +90,7 @@ public class VentAnnualController {
     ventAnnualService.saveVentAnnual(
         applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId), form);
 
-    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId, null));
   }
 
 }

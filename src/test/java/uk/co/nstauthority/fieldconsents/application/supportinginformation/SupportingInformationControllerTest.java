@@ -109,7 +109,7 @@ class SupportingInformationControllerTest extends AbstractApplicationControllerT
         .containsEntry("form", form)
         .containsEntry("applicationType", applicationTypeString)
         .containsEntry("erapInformationAllowed", erapInformationAllowed)
-        .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID)));
+        .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null)));
   }
 
   private static Stream<Arguments> getSupportingInformationForm_withValidUserAndApplication_arguments() {
@@ -139,7 +139,7 @@ class SupportingInformationControllerTest extends AbstractApplicationControllerT
             .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(view().name("redirect:" + ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID))));
+        .andExpect(view().name("redirect:" + ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null))));
 
     verify(supportingInformationService, times(1))
         .saveSupportingInformation(applicationVersionArgumentCaptor.capture(), supportingInformationFormArgumentCaptor.capture());

@@ -137,7 +137,7 @@ public class ApplicationSummaryController {
         return ReverseRouter.redirect(on(IndustryCaseProcessingController.class)
             .getIndustryCaseProcessing(applicationId, null, null));
       }
-      return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+      return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId, null));
     }
 
     return getSummaryModelAndView(applicationVersion);

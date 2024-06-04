@@ -93,7 +93,7 @@ public class AdditionalAssetsController {
   private ModelAndView getAdditionalAssetsRequiredModelAndView(Integer applicationId) {
     return new ModelAndView("fcs/assets/additionalAssetsRequired")
         .addObject(CANCEL_URL_ATTR_NAME,
-            ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId)));
+            ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId, null)));
   }
 
   @PostMapping("/required")
@@ -115,7 +115,7 @@ public class AdditionalAssetsController {
       return ReverseRouter.redirect(on(AdditionalAssetsController.class).addAdditionalAsset(applicationId));
     }
 
-    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId, null));
   }
 
   @GetMapping("/new")
@@ -174,7 +174,7 @@ public class AdditionalAssetsController {
 
     // if there are no assets already on the application form then go to the task list
     if (!applicationAssetService.secondaryAssetsExist(applicationVersion)) {
-      return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+      return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId, null));
     }
 
     ModelAndView modelAndView = getAdditionalAssetsSummaryModelAndView(applicationId);
@@ -211,7 +211,7 @@ public class AdditionalAssetsController {
     }
 
     // no other assets to add so go to the task list
-    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId, null));
   }
 
   @GetMapping("/{assetNo}/delete")

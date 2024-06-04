@@ -118,7 +118,7 @@ class HaveSubmittedControllerTest extends AbstractApplicationControllerTest {
     assertThat(model).contains(
         entry("form", new HaveSubmittedForm(true, SAT_ID)),
         entry("backLinkUrl", ReverseRouter.route(on(ProjectPurposeController.class).getForm(applicationId))),
-        entry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId))),
+        entry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId, null))),
         entry("petsSearchRestUrl", PETS_URL),
         entry("prefilledEiaDirectionRef", RestSearchItem.EMPTY_REST_SEARCH_ITEM)
     );
@@ -159,7 +159,7 @@ class HaveSubmittedControllerTest extends AbstractApplicationControllerTest {
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(
-            redirectedUrl(ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId))));
+            redirectedUrl(ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId, null))));
 
     verify(validator).validate(
         eq(new HaveSubmittedForm(true, SAT_ID)),

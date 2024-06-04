@@ -161,7 +161,7 @@ public class StartApplicationFromFieldController {
           fieldWithOperatorAndLicencesJson,
           operatorOuJson,
           user).getApplication();
-      return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(application.getId()));
+      return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(application.getId(), null));
     }
   }
 }

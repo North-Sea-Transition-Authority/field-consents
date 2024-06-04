@@ -93,7 +93,7 @@ public class FlareController {
 
     // if there are no flares already on the application form then go to the flare task list
     if (!flareService.flaresExistForApplicationVersion(applicationVersion)) {
-      return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+      return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId, null));
     }
 
     ModelAndView modelAndView = getViewFlaresSummaryModelAndView(applicationId);
@@ -130,7 +130,7 @@ public class FlareController {
     }
 
     // no other flares to add so go to the task list
-    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId, null));
   }
 
   @GetMapping("{flareNo}")
@@ -199,7 +199,7 @@ public class FlareController {
     if (flareService.flaresExistForApplicationVersion(applicationVersion)) {
       return ReverseRouter.redirect(on(FlareController.class).viewFlaresSummary(applicationId));
     }
-    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId, null));
   }
 
 }

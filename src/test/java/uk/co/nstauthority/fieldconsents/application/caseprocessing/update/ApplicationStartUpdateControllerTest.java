@@ -113,7 +113,7 @@ class ApplicationStartUpdateControllerTest extends AbstractApplicationController
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationTaskListController.class)
-            .getTaskList(APPLICATION_ID))));
+            .getTaskList(APPLICATION_ID, null))));
   }
 
   @ParameterizedTest
@@ -272,7 +272,7 @@ class ApplicationStartUpdateControllerTest extends AbstractApplicationController
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationTaskListController.class)
-            .getTaskList(APPLICATION_ID))));
+            .getTaskList(APPLICATION_ID, null))));
 
     verify(applicationUpdateService, times(1)).startApplicationUpdate(applicationVersion, user);
   }

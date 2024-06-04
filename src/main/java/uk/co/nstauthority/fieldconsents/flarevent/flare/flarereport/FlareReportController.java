@@ -87,7 +87,7 @@ public class FlareReportController {
         .addObject("submitUrl", ReverseRouter.route(on(FlareReportController.class)
             .saveFlareReportForm(applicationId, null, ReverseRouter.emptyBindingResult())))
         .addObject("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class)
-            .getTaskList(applicationId)));
+            .getTaskList(applicationId, null)));
     return modelAndView;
   }
 
@@ -105,6 +105,6 @@ public class FlareReportController {
     flareReportService.saveFlareReport(
         applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId), form);
 
-    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId, null));
   }
 }

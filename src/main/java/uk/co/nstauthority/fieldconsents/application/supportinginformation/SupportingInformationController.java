@@ -75,7 +75,7 @@ public class SupportingInformationController {
 
     supportingInformationService.saveSupportingInformation(applicationVersion, form);
 
-    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId, null));
   }
 
   private ModelAndView getSupportingInformationModelAndView(ApplicationVersion applicationVersion,
@@ -97,7 +97,7 @@ public class SupportingInformationController {
     return new ModelAndView("fcs/application/supportingInformationForm")
         .addObject("form", form)
         .addObject("erapInformationAllowed", ERAP_SUPPORTING_INFORMATION.allowed(applicationType))
-        .addObject("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId)))
+        .addObject("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId, null)))
         .addObject("fileUploadAttributes", fileUploadAttributes)
         .addObject("applicationType", applicationTypeString);
   }

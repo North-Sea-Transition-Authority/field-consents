@@ -68,7 +68,7 @@ public class ShortTermProductionController {
         .addObject("submitUrl", ReverseRouter.route(on(ShortTermProductionController.class)
             .saveShortTermProductionDetails(applicationId, null, ReverseRouter.emptyBindingResult())))
         .addObject("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class)
-            .getTaskList(applicationId)));
+            .getTaskList(applicationId, null)));
     return modelAndView;
   }
 
@@ -83,7 +83,7 @@ public class ShortTermProductionController {
     } else {
       ApplicationVersion currentVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
       shortTermProductionService.saveShortTermProductionDetails(currentVersion, form);
-      return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+      return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId, null));
     }
   }
 }

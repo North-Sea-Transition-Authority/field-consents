@@ -88,7 +88,7 @@ public class HaveSubmittedController {
       return ReverseRouter.redirect(on(NeedsSubmittingController.class).getForm(applicationId));
     }
 
-    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId, null));
   }
 
   private ModelAndView getModelAndView(Integer applicationId, HaveSubmittedForm form, PetsApplicationJson petsApplication) {
@@ -99,7 +99,7 @@ public class HaveSubmittedController {
     return new ModelAndView("fcs/application/eia-screening/have-submitted-form")
         .addObject("form", form)
         .addObject("backLinkUrl", ReverseRouter.route(on(ProjectPurposeController.class).getForm(applicationId)))
-        .addObject("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId)))
+        .addObject("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId, null)))
         .addObject("petsSearchRestUrl", eiaDirectionService.getEiaDirectionRestUrl())
         .addObject("prefilledEiaDirectionRef", prefilledEiaDirectionRef);
   }

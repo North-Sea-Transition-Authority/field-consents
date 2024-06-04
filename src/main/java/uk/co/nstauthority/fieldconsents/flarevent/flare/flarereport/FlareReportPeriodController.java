@@ -75,7 +75,7 @@ public class FlareReportPeriodController {
         .addObject("submitUrl", ReverseRouter.route(on(FlareReportPeriodController.class)
             .saveFlareReportPeriodForm(applicationId, null, ReverseRouter.emptyBindingResult())))
         .addObject("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class)
-            .getTaskList(applicationId)));
+            .getTaskList(applicationId, null)));
 
     return modelAndView;
   }

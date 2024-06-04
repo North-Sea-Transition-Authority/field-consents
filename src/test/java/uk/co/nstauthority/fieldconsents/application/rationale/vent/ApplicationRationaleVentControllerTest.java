@@ -168,7 +168,7 @@ class ApplicationRationaleVentControllerTest extends AbstractApplicationControll
         .containsEntry("hostLocation", RestSearchItem.from(hostLocation))
         .containsEntry("ventingLocationSearchUrl", assetSearchRestUrl)
         .containsEntry("hostLocationSearchUrl", assetSearchRestUrl)
-        .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID)))
+        .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null)))
         .containsEntry("emissionDailyAverage", emissionDailyAverage);
 
     assertThat(model)
@@ -209,7 +209,7 @@ class ApplicationRationaleVentControllerTest extends AbstractApplicationControll
         .containsEntry("hostLocation", RestSearchItem.from(hostLocation))
         .containsEntry("ventingLocationSearchUrl", assetSearchRestUrl)
         .containsEntry("hostLocationSearchUrl", assetSearchRestUrl)
-        .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID)));
+        .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null)));
 
     assertThat(model)
         .containsKey("form")
@@ -257,7 +257,7 @@ class ApplicationRationaleVentControllerTest extends AbstractApplicationControll
         .containsEntry("hostLocation", RestSearchItem.from(hostLocation))
         .containsEntry("ventingLocationSearchUrl", assetSearchRestUrl)
         .containsEntry("hostLocationSearchUrl", assetSearchRestUrl)
-        .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID)));
+        .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null)));
 
     var expectedForm = new ApplicationRationaleVentForm(rationaleType, null, null, null, null);
     expectedForm.increaseComment().setInputValue(comment);
@@ -306,7 +306,7 @@ class ApplicationRationaleVentControllerTest extends AbstractApplicationControll
             .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID))));
+        .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null))));
 
     var expectedForm = new ApplicationRationaleVentForm(
         rationaleType,

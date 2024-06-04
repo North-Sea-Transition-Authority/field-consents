@@ -53,7 +53,7 @@ public class ApplicationStartUpdateController {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
 
     if (caseStatusFlagService.isCaseStatusFlagApplicable(applicationVersion, APPLICATION_UPDATE_STARTED)) {
-      return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+      return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId, null));
     } else if (ApplicationVersionStatus.SUBMITTED.equals(applicationVersion.getStatus())) {
       return ReverseRouter.redirect(on(ApplicationStartUpdateController.class).renderStartUpdate(applicationId));
     } else {
@@ -94,6 +94,6 @@ public class ApplicationStartUpdateController {
                                   ServiceUserDetail user) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     applicationUpdateService.startApplicationUpdate(applicationVersion, user);
-    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId, null));
   }
 }

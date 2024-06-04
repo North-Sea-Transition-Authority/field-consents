@@ -27,9 +27,12 @@
     <@fdsWarning.warning>${warning}</@fdsWarning.warning>
   </#if>
   <@applicationUpdateRequestHiddenSummary.applicationUpdateRequestHiddenSummary applicationUpdateRequestView=applicationUpdateRequestView!""/>
-  <@fdsAction.link
-    linkText="Delete application"
-    linkUrl=springUrl(deleteApplicationUrl)
-    linkClass="govuk-button govuk-button--secondary"/>
+  <#if hasPermissionToDeleteApplication>
+    <@fdsAction.link
+      linkText="Delete application"
+      linkUrl=springUrl(deleteApplicationUrl)
+      linkClass="govuk-button govuk-button--secondary"
+    />
+  </#if>
   <@taskList.standardTaskList taskListSections=taskListSections/>
 </@defaultPage>

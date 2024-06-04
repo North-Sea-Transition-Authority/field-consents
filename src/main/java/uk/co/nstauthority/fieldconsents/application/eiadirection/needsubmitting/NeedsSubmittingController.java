@@ -72,13 +72,13 @@ public class NeedsSubmittingController {
 
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     eiaDirectionService.updateEiaDirection(applicationVersion, form);
-    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId, null));
   }
 
   private ModelAndView getModelAndView(Integer applicationId, NeedsSubmittingForm form) {
     return new ModelAndView("fcs/application/eia-screening/needs-submitting-form")
         .addObject("form", form)
-        .addObject("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId)))
+        .addObject("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId, null)))
         .addObject("backLinkUrl", ReverseRouter.route(on(HaveSubmittedController.class).getForm(applicationId)));
   }
 

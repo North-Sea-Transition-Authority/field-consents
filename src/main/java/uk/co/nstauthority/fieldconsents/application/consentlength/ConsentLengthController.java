@@ -70,7 +70,7 @@ public class ConsentLengthController {
     );
     modelAndView.addObject(
         "cancelUrl",
-        ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(application.getId()))
+        ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(application.getId(), null))
     );
     return modelAndView;
   }
@@ -86,7 +86,7 @@ public class ConsentLengthController {
     } else {
       ApplicationVersion currentVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
       consentLengthService.saveConsentLengthDetails(currentVersion, form);
-      return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+      return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId, null));
     }
   }
 }

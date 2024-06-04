@@ -168,7 +168,7 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
         .containsEntry("hostLocation", RestSearchItem.from(hostLocation))
         .containsEntry("productionLocationSearchUrl", assetSearchRestUrl)
         .containsEntry("hostLocationSearchUrl", assetSearchRestUrl)
-        .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID)))
+        .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null)))
         .containsEntry("oilAndGasMaximums", oilAndGasMaximums);
 
     assertThat(model)
@@ -210,7 +210,7 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
         .containsEntry("hostLocation", RestSearchItem.from(hostLocation))
         .containsEntry("productionLocationSearchUrl", assetSearchRestUrl)
         .containsEntry("hostLocationSearchUrl", assetSearchRestUrl)
-        .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID)));
+        .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null)));
 
     assertThat(model)
         .containsKey("form")
@@ -266,7 +266,7 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
         .containsEntry("hostLocation", RestSearchItem.from(hostLocation))
         .containsEntry("productionLocationSearchUrl", assetSearchRestUrl)
         .containsEntry("hostLocationSearchUrl", assetSearchRestUrl)
-        .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID)));
+        .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null)));
 
     assertThat(model)
         .containsKey("form")
@@ -317,7 +317,7 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
             .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID))));
+        .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null))));
 
     var expectedForm = new ApplicationRationaleProductionForm(
         rationaleType,
@@ -365,7 +365,7 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
             .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID))));
+        .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null))));
 
     var expectedForm = new ApplicationRationaleProductionForm(
         rationaleType,
@@ -415,7 +415,7 @@ class ApplicationRationaleProductionControllerTest extends AbstractApplicationCo
             .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID))));
+        .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null))));
 
     var expectedForm = new ApplicationRationaleProductionForm(
         rationaleType,

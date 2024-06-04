@@ -70,7 +70,7 @@ public class FlareShortTermController {
         .addObject("submitUrl", ReverseRouter.route(on(FlareShortTermController.class)
             .saveFlareShortTermForm(applicationId, null, ReverseRouter.emptyBindingResult())))
         .addObject("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class)
-            .getTaskList(applicationId)));
+            .getTaskList(applicationId, null)));
     return modelAndView;
   }
 
@@ -88,7 +88,7 @@ public class FlareShortTermController {
     flareShortTermService.saveFlareShortTerm(
         applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId), form);
 
-    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId, null));
   }
 
 }

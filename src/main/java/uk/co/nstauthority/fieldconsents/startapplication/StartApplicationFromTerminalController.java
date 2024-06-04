@@ -160,7 +160,7 @@ public class StartApplicationFromTerminalController {
       Application application = applicationService.createNewApplicationForTerminal(
           type, terminalWithOperatorJson, operatorOuJson, user
       ).getApplication();
-      return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(application.getId()));
+      return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(application.getId(), null));
     }
   }
 }

@@ -37,6 +37,7 @@ import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListSection;
 import uk.co.nstauthority.fieldconsents.tasklist.TaskListTestUtil;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @ContextConfiguration(classes = ApplicationTaskListController.class)
 class ApplicationTaskListControllerTest extends AbstractApplicationControllerTest {
@@ -76,7 +77,7 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
   @SecurityTest
   void getTaskList_withUnauthorizedUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationTaskListController.class)
-            .getTaskList(APPLICATION_ID))))
+            .getTaskList(APPLICATION_ID, null))))
         .andExpect(redirectionToLoginUrl());
   }
 
@@ -89,18 +90,21 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(applicationContext);
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, RolePermission.CREATE_FCS_APPLICATIONS))
+        .thenReturn(true);
     when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(true);
     when(consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion))
         .thenReturn(productionConsentCheckResult);
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationTaskListController.class)
-            .getTaskList(APPLICATION_ID)))
+            .getTaskList(APPLICATION_ID, null)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/application/applicationTaskList"))
         .andExpect(model().attribute("pageTitle", "Flare application"))
         .andExpect(model().attribute("applicationContext", applicationContext))
+        .andExpect(model().attribute("hasPermissionToDeleteApplication", true))
         .andExpect(model().attributeDoesNotExist("warning"))
         .andExpect(model().attributeExists("taskListSections"));
   }
@@ -115,18 +119,21 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(applicationTaskListService.getAllSections(applicationVersion)).thenReturn(flareTaskListSections);
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(applicationContext);
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, RolePermission.CREATE_FCS_APPLICATIONS))
+        .thenReturn(false);
     when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(true);
     when(consentService.checkProductionConsentExistsForInProgressApplication(applicationVersion))
         .thenReturn(productionConsentCheckResult);
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationTaskListController.class)
-            .getTaskList(APPLICATION_ID)))
+            .getTaskList(APPLICATION_ID, null)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/application/applicationTaskList"))
         .andExpect(model().attribute("pageTitle", "Vent application"))
         .andExpect(model().attribute("applicationContext", applicationContext))
+        .andExpect(model().attribute("hasPermissionToDeleteApplication", false))
         .andExpect(model().attribute("warning", productionConsentCheckResult.getWarning()))
         .andExpect(model().attributeExists("taskListSections"));
   }
@@ -139,10 +146,12 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(applicationTaskListService.getAllSections(applicationVersion)).thenReturn(flareTaskListSections);
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(applicationContext);
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, RolePermission.CREATE_FCS_APPLICATIONS))
+        .thenReturn(false);
     when(consentService.shouldCheckProductionConsentExists(applicationVersion)).thenReturn(false);
 
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ApplicationTaskListController.class)
-            .getTaskList(APPLICATION_ID)))
+            .getTaskList(APPLICATION_ID, null)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
@@ -155,7 +164,8 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
     assertThat(model)
         .contains(
             entry("pageTitle", "Production application"),
-            entry("applicationContext", applicationContext)
+            entry("applicationContext", applicationContext),
+            entry("hasPermissionToDeleteApplication", false)
         )
         .containsKey("taskListSections");
   }
@@ -168,13 +178,15 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(applicationTaskListService.getAllSections(applicationVersion)).thenReturn(flareTaskListSections);
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(applicationContext);
+    when(applicationAccessService.hasApplicationPermission(user, applicationVersion, RolePermission.CREATE_FCS_APPLICATIONS))
+        .thenReturn(false);
     when(applicationUpdateService.openApplicationUpdateExists(applicationVersion))
         .thenReturn(true);
     when(applicationUpdateRequestViewService.getOpenApplicationUpdateRequestView(applicationVersion))
         .thenReturn(applicationUpdateRequestView);
 
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(ApplicationTaskListController.class)
-            .getTaskList(APPLICATION_ID)))
+            .getTaskList(APPLICATION_ID, null)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isOk())
@@ -187,7 +199,8 @@ class ApplicationTaskListControllerTest extends AbstractApplicationControllerTes
     assertThat(model)
         .contains(
             entry("pageTitle", "Production application"),
-            entry("applicationContext", applicationContext)
+            entry("applicationContext", applicationContext),
+            entry("hasPermissionToDeleteApplication", false)
         )
         .containsEntry("applicationUpdateRequestView", applicationUpdateRequestView)
         .containsKey("taskListSections");

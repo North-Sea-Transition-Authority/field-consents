@@ -70,7 +70,7 @@ public class VentShortTermController {
         .addObject("submitUrl", ReverseRouter.route(on(VentShortTermController.class)
             .saveVentShortTermForm(applicationId, null, ReverseRouter.emptyBindingResult())))
         .addObject("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class)
-            .getTaskList(applicationId)));
+            .getTaskList(applicationId, null)));
     return modelAndView;
   }
 
@@ -88,7 +88,7 @@ public class VentShortTermController {
     ventShortTermService.saveVentShortTerm(
         applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId), form);
 
-    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId, null));
   }
 
 }

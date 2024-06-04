@@ -97,7 +97,7 @@ public class ApplicationRationaleProductionController {
         form.hostLocationAssetKey()
     );
 
-    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId, null));
   }
 
   private ModelAndView getModelAndView(
@@ -121,7 +121,7 @@ public class ApplicationRationaleProductionController {
         .addObject("productionLocationSearchUrl", assetSearchRestUrl)
         .addObject("hostLocationSearchUrl", assetSearchRestUrl)
         .addObject("cancelUrl",
-            ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId)));
+            ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId, null)));
 
     applicationRationaleProductionService.findOilAndGasMaximums(applicationVersion).ifPresent(oilAndGasMaximums ->
         modelAndView.addObject("oilAndGasMaximums", oilAndGasMaximums)

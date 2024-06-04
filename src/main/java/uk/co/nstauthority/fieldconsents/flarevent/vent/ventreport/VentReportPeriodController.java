@@ -75,7 +75,7 @@ public class VentReportPeriodController {
         .addObject("submitUrl", ReverseRouter.route(on(VentReportPeriodController.class)
             .saveVentReportPeriodForm(applicationId, null, ReverseRouter.emptyBindingResult())))
         .addObject("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class)
-            .getTaskList(applicationId)));
+            .getTaskList(applicationId, null)));
 
     return modelAndView;
   }

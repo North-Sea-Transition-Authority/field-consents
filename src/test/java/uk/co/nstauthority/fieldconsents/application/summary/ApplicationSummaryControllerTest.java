@@ -121,7 +121,7 @@ class ApplicationSummaryControllerTest extends AbstractApplicationControllerTest
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationTaskListController.class)
-            .getTaskList(APPLICATION_ID))));
+            .getTaskList(APPLICATION_ID, null))));
   }
 
   @ParameterizedTest

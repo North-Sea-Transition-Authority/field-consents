@@ -168,7 +168,7 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
         .containsEntry("hostLocation", RestSearchItem.from(hostLocation))
         .containsEntry("flaringLocationSearchUrl", assetSearchRestUrl)
         .containsEntry("hostLocationSearchUrl", assetSearchRestUrl)
-        .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID)))
+        .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null)))
         .containsEntry("emissionDailyAverage", emissionDailyAverage);
 
     assertThat(model)
@@ -210,7 +210,7 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
         .containsEntry("hostLocation", RestSearchItem.from(hostLocation))
         .containsEntry("flaringLocationSearchUrl", assetSearchRestUrl)
         .containsEntry("hostLocationSearchUrl", assetSearchRestUrl)
-        .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID)))
+        .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null)))
         .containsEntry("emissionDailyAverage", emissionDailyAverage);
 
     assertThat(model)
@@ -260,7 +260,7 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
         .containsEntry("hostLocation", RestSearchItem.from(hostLocation))
         .containsEntry("flaringLocationSearchUrl", assetSearchRestUrl)
         .containsEntry("hostLocationSearchUrl", assetSearchRestUrl)
-        .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID)));
+        .containsEntry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null)));
 
     var expectedForm = new ApplicationRationaleFlareForm(rationaleType, null, null, null, null);
     expectedForm.increaseComment().setInputValue(comment);
@@ -309,7 +309,7 @@ class ApplicationRationaleFlareControllerTest extends AbstractApplicationControl
             .with(user(user))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID))));
+        .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null))));
 
     var expectedForm = new ApplicationRationaleFlareForm(
         rationaleType,

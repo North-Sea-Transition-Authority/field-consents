@@ -112,7 +112,7 @@ class NeedsSubmittingControllerTest extends AbstractApplicationControllerTest {
 
     assertThat(model).contains(
         entry("backLinkUrl", ReverseRouter.route(on(HaveSubmittedController.class).getForm(applicationId))),
-        entry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId)))
+        entry("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId, null)))
     );
 
     assertThat(model.get("form"))
@@ -165,7 +165,7 @@ class NeedsSubmittingControllerTest extends AbstractApplicationControllerTest {
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(
-            redirectedUrl(ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId))));
+            redirectedUrl(ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId, null))));
 
     verify(validator).validate(any(NeedsSubmittingForm.class), any(BindingResult.class));
     verify(eiaDirectionService).updateEiaDirection(eq(applicationVersion), any(NeedsSubmittingForm.class));

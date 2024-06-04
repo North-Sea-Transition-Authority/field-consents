@@ -16,6 +16,8 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.Produ
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.request.ApplicationUpdateRequestViewService;
 import uk.co.nstauthority.fieldconsents.application.delete.DeleteApplicationController;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.authorisation.ApplicationAccessService;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -33,6 +35,7 @@ public class ApplicationTaskListController {
   private final ApplicationContextService applicationContextService;
   private final ApplicationUpdateService applicationUpdateService;
   private final ApplicationUpdateRequestViewService applicationUpdateRequestViewService;
+  private final ApplicationAccessService applicationAccessService;
   private final ConsentService consentService;
 
   ApplicationTaskListController(
@@ -42,6 +45,7 @@ public class ApplicationTaskListController {
       ApplicationContextService applicationContextService,
       ApplicationUpdateService applicationUpdateService,
       ApplicationUpdateRequestViewService applicationUpdateRequestViewService,
+      ApplicationAccessService applicationAccessService,
       ConsentService consentService
   ) {
     this.applicationService = applicationService;
@@ -50,22 +54,26 @@ public class ApplicationTaskListController {
     this.applicationContextService = applicationContextService;
     this.applicationUpdateService = applicationUpdateService;
     this.applicationUpdateRequestViewService = applicationUpdateRequestViewService;
+    this.applicationAccessService = applicationAccessService;
     this.consentService = consentService;
   }
 
   @GetMapping
-  public ModelAndView getTaskList(@PathVariable Integer applicationId) {
+  public ModelAndView getTaskList(@PathVariable Integer applicationId, ServiceUserDetail user) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var sections = applicationTaskListService.getAllSections(applicationVersion);
     var applicationType = applicationVersion.getApplication().getType();
     var applicationContext = applicationContextService.getApplicationContext(applicationVersion);
     var applicationReference = applicationService.getApplicationReference(applicationVersion);
+    var hasPermissionToDeleteApplication =
+        applicationAccessService.hasApplicationPermission(user, applicationVersion, RolePermission.CREATE_FCS_APPLICATIONS);
 
     var modelAndView = new ModelAndView("fcs/application/applicationTaskList")
         .addObject("pageTitle", applicationType.getDisplayName() + " application")
         .addObject("taskListSections", sections)
         .addObject("applicationContext", applicationContext)
         .addObject("applicationReference", applicationReference)
+        .addObject("hasPermissionToDeleteApplication", hasPermissionToDeleteApplication)
         .addObject("deleteApplicationUrl", ReverseRouter.route(on(DeleteApplicationController.class)
             .getDeleteApplication(applicationId)));
 

@@ -106,7 +106,7 @@ class ProjectPurposeControllerTest extends AbstractApplicationControllerTest {
         .getModelAndView()
         .getModel();
 
-    var taskListUrl = ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID));
+    var taskListUrl = ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null));
 
     assertThat(model).contains(
         entry("form", new ProjectPurposeForm(forPurposeOfEiaRegs)),
@@ -180,7 +180,7 @@ class ProjectPurposeControllerTest extends AbstractApplicationControllerTest {
         ),
         Arguments.of(
             false,
-            ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID))
+            ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(APPLICATION_ID, null))
         )
     );
   }

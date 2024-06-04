@@ -188,7 +188,7 @@ public class ApplicationPaymentController {
 
     applicationService.returnApplicationToInProgressFromAwaitingPayment(applicationVersion);
 
-    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId, null));
   }
 
   @GetMapping("/payment-processed/{paymentId}")

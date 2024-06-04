@@ -101,7 +101,7 @@ public class ApplicationRationaleFlareController {
         form.hostLocationAssetKey()
     );
 
-    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId, null));
   }
 
   private ModelAndView getModelAndView(
@@ -124,7 +124,7 @@ public class ApplicationRationaleFlareController {
         .addObject("flaringLocationSearchUrl", assetSearchRestUrl)
         .addObject("hostLocationSearchUrl", assetSearchRestUrl)
         .addObject("cancelUrl",
-            ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId)));
+            ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId, null)));
 
     applicationRationaleEmissionService.findEmissionDailyAverage(applicationVersion).ifPresent(emissionDailyAverage ->
         modelAndView.addObject("emissionDailyAverage", emissionDailyAverage)

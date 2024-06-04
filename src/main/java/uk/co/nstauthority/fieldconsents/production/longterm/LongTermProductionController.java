@@ -69,7 +69,7 @@ public class LongTermProductionController {
         .addObject("submitUrl", ReverseRouter.route(on(LongTermProductionController.class)
             .saveLongTermProductionDetails(applicationId, null, null)))
         .addObject("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class)
-            .getTaskList(applicationId)));
+            .getTaskList(applicationId, null)));
 
     return modelAndView;
   }
@@ -88,7 +88,7 @@ public class LongTermProductionController {
     longTermProductionService.saveLongTermProductionDetails(
         applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId), form);
 
-    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId, null));
   }
 
 }

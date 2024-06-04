@@ -87,7 +87,7 @@ public class VentReportGasDataController {
         .addObject("submitUrl", ReverseRouter.route(on(VentReportGasDataController.class)
             .saveVentReportGasDataForm(applicationId, null, ReverseRouter.emptyBindingResult())))
         .addObject("cancelUrl", ReverseRouter.route(on(ApplicationTaskListController.class)
-            .getTaskList(applicationId)));
+            .getTaskList(applicationId, null)));
 
     return modelAndView;
   }
@@ -106,6 +106,6 @@ public class VentReportGasDataController {
     ventReportGasDataService.saveVentReportGasData(
         applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId), form);
 
-    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId, null));
   }
 }

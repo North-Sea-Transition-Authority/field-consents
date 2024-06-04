@@ -63,7 +63,7 @@ class DeleteApplicationControllerTest extends AbstractApplicationControllerTest 
         .containsEntry("accordionId", applicationVersion.getId())
         .containsEntry("wideSummaryDisplay", true)
         .containsEntry("backLinkUrl", ReverseRouter.route(on(ApplicationTaskListController.class)
-            .getTaskList(APPLICATION_ID)));
+            .getTaskList(APPLICATION_ID, null)));
   }
 
   @SecurityTest

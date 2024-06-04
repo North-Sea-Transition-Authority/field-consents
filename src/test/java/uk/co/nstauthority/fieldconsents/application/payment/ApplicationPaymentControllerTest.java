@@ -373,7 +373,7 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
             .with(user(user)))
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicationTaskListController.class)
-            .getTaskList(APPLICATION_ID))));
+            .getTaskList(APPLICATION_ID, null))));
 
     verify(applicationSubmissionService, never()).submitApplication(any(), any());
     verify(applicationPaymentService).cancelInProgressPayments(paymentDtos);

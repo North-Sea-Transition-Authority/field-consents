@@ -65,11 +65,11 @@ public class ProjectPurposeController {
       return ReverseRouter.redirect(on(HaveSubmittedController.class).getForm(applicationId));
     }
 
-    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId, null));
   }
 
   private ModelAndView getModelAndView(Integer applicationId, ProjectPurposeForm form) {
-    var taskListUrl = ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId));
+    var taskListUrl = ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId, null));
 
     return new ModelAndView("fcs/application/eia-screening/project-purpose-form")
         .addObject("form", form)

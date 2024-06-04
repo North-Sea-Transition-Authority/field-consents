@@ -105,7 +105,7 @@ public class ApplicationSubmissionController {
         .addObject("submitUrl", ReverseRouter.route(on(ApplicationSubmissionController.class)
             .submitApplication(applicationId, null, null, null)))
         .addObject("backLinkUrl",
-            ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId)))
+            ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId, null)))
         .addObject("isSubmittable", submittable)
         .addObject("userHasPayAndSubmitPermission", userHasPayAndSubmitPermission)
         .addObject("applicationReference",

@@ -54,7 +54,7 @@ public class GasInjectionController {
   private ModelAndView getGasInjectionModelAndView(Integer applicationId) {
     return new ModelAndView("fcs/production/gasInjectionForm")
         .addObject("cancelUrl",
-            ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId)));
+            ReverseRouter.route(on(ApplicationTaskListController.class).getTaskList(applicationId, null)));
   }
 
   @PostMapping
@@ -70,6 +70,6 @@ public class GasInjectionController {
         applicationVersion, ApplicationFlagType.WILL_GAS_BE_INJECTED, form.getWillGasBeInjected()
     );
 
-    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId, null));
   }
 }

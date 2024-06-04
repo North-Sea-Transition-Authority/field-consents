@@ -52,7 +52,7 @@ public class DeleteApplicationController {
         .addObject("deleteUrl", ReverseRouter.route(on(DeleteApplicationController.class)
             .deleteApplication(applicationId, null)))
         .addObject("backLinkUrl", ReverseRouter.route(on(ApplicationTaskListController.class)
-            .getTaskList(applicationId)));
+            .getTaskList(applicationId, null)));
   }
 
   @PostMapping

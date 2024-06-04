@@ -93,7 +93,7 @@ public class VentController {
 
     // if there are no vents already on the application form then go to the task list
     if (!ventService.ventsExistForApplicationVersion(applicationVersion)) {
-      return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+      return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId, null));
     }
 
     ModelAndView modelAndView = getViewVentsSummaryModelAndView(applicationId);
@@ -130,7 +130,7 @@ public class VentController {
     }
 
     // no other vents to add so go to the task list
-    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId, null));
   }
 
   @GetMapping("{ventNo}")
@@ -199,6 +199,6 @@ public class VentController {
     if (ventService.ventsExistForApplicationVersion(applicationVersion)) {
       return ReverseRouter.redirect(on(VentController.class).viewVentsSummary(applicationId));
     }
-    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId));
+    return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId, null));
   }
 }
