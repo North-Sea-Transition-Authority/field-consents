@@ -1,4 +1,5 @@
 <#include '../layout/layout.ftl'>
+<#include '../flarevent/hintText.ftl'>
 <#import '_ventSummary.ftl' as ventSummary>
 
 <#-- @ftlvariable name="successfulDeleteBanner" type="String" -->
@@ -28,8 +29,10 @@
   <@fdsForm.htmlForm actionUrl=springUrl(submitUrl)>
     <#assign hasAddedAllVentsFormBind = "form.hasOtherVentsToAdd"/>
     <@fdsRadio.radioGroup
-    path=hasAddedAllVentsFormBind
-    labelText="Do you need to add another vent system?">
+      path=hasAddedAllVentsFormBind
+      hintText=ADD_VENT_HINT_TEXT
+      labelText="Do you need to add another vent system?"
+      fieldsetHeadingClass="govuk-fieldset__legend--m">
       <@fdsRadio.radioYes path=hasAddedAllVentsFormBind/>
       <@fdsRadio.radioNo path=hasAddedAllVentsFormBind/>
     </@fdsRadio.radioGroup>

@@ -1,5 +1,5 @@
 <#include '../layout/layout.ftl'>
-<#import './_flareCategoryInfo.ftl' as flareCategoryInfo>
+<#import '_flareInfo.ftl' as flareInfo>
 <#import '../hints/copyPasteTableHint.ftl' as copyPasteTableHint>
 
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
@@ -14,7 +14,7 @@
           <br/>
           You can <@fdsAction.link linkText="adjust the reporting period" linkUrl=springUrl(periodUrl)/> if needed.
         </p>
-        <@flareCategoryInfo.flareCategoryInfo/>
+        <@flareInfo.flareCategoryInfo/>
         <@copyPasteTableHint.hint/>
       </@grid.twoThirdsColumn>
     </@grid.gridRow>

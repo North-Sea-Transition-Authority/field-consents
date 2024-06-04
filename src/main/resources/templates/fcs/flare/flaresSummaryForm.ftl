@@ -1,4 +1,5 @@
 <#include '../layout/layout.ftl'>
+<#include '../flarevent/hintText.ftl'>
 <#import './_flareSummary.ftl' as flareSummary>
 
 <#-- @ftlvariable name="successfulDeleteBanner" type="String" -->
@@ -28,8 +29,10 @@
   <@fdsForm.htmlForm actionUrl=springUrl(submitUrl)>
     <#assign hasAddedAllFlaresFormBind = "form.hasOtherFlaresToAdd"/>
     <@fdsRadio.radioGroup
-    path=hasAddedAllFlaresFormBind
-    labelText="Do you need to add another flare system?">
+      path=hasAddedAllFlaresFormBind
+      hintText=ADD_FLARE_HINT_TEXT
+      labelText="Do you need to add another flare system?"
+      fieldsetHeadingClass="govuk-fieldset__legend--m">
       <@fdsRadio.radioYes path=hasAddedAllFlaresFormBind/>
       <@fdsRadio.radioNo path=hasAddedAllFlaresFormBind/>
     </@fdsRadio.radioGroup>

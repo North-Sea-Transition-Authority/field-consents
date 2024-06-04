@@ -1,8 +1,12 @@
 <#include '../layout/layout.ftl'>
+<#include '../flarevent/hintText.ftl'>
 
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
 
 <@defaultPage htmlTitle=pageTitle pageHeading=pageTitle errorItems=errorList>
+  <p class="govuk-body-lead">
+    ${ADD_FLARE_HINT_TEXT}
+  </p>
   <@fdsForm.htmlForm>
     <@fdsRadio.radio
     labelText="Flare system type"
@@ -29,7 +33,7 @@
         path="form.commentsMeteredNo.inputValue"
         nestingPath="form.meteredFlag"
         labelText="Comments"
-        hintText="Explain if there are issues with the meter. For example, the meters are offline"
+        hintText="Explain if there are issues with the meter. For example, the meters are offline."
         rows="2"
         />
       </@fdsRadio.radioNo>

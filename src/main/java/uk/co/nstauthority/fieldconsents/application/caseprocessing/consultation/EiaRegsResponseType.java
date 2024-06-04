@@ -38,7 +38,7 @@ public enum EiaRegsResponseType implements ConsultationResponseType {
           (Environmental Impact Assessment) Regulations 2020, the Offshore Petroleum Regulator for
           Environment and Decommissioning, acting on behalf of the Secretary of State for Energy Security and Net Zero,
           does not consider that the Secretary of State’s agreement to the grant of consent by
-          the NSTA for the activities described in application reference %s is required
+          the NSTA for the activities described in application reference %s is required.
           """,
       "form.eiaRegsDoesNotApplyDescription.inputValue",
       false,

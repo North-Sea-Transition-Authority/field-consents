@@ -33,7 +33,9 @@ backLinkUrl=springUrl(cancelUrl)
     <@fdsFieldset.fieldset
       legendHeadingSize="h2"
       legendHeading="Where does the flaring take place?"
-      legendHeadingClass="govuk-fieldset__legend--m">
+      legendHeadingClass="govuk-fieldset__legend--m"
+      hintText="List all the physical location(s) of all flaring activities associated with this consent.
+                Note that this should be the location of the flare(s), not the source of the gas.">
       <@fdsAddToList.addToList
         pathForList="form.flaringLocationAssetKeys"
         pathForSelector="form.flaringLocationAssetKeysSelector"
@@ -44,7 +46,9 @@ backLinkUrl=springUrl(cancelUrl)
     <@fdsFieldset.fieldset
       legendHeadingSize="h2"
       legendHeading="What is the host?"
-      legendHeadingClass="govuk-fieldset__legend--m">
+      legendHeadingClass="govuk-fieldset__legend--m"
+      hintText="The primary processing facility associated with this consent.
+                For single entities this may be the same as the Flare Location.">
       <@fdsSearchSelector.searchSelectorRest
         path="form.hostLocationAssetKey"
         restUrl=springUrl(hostLocationSearchUrl)

@@ -13,7 +13,7 @@
       pageHeading=true
       labelHeadingClass="govuk-label--xl"
       preselectedItems={prefilledOperator.id(): prefilledOperator.text()}
-      hintText="The field or facility operator has been preselected here"
+      hintText="The field or facility operator has been preselected here."
     />
     <@fdsAction.submitButtons
       linkSecondaryAction=true

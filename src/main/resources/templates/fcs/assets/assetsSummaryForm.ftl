@@ -28,8 +28,10 @@ notificationBannerContentOverride=deleteBanner
   <@fdsForm.htmlForm actionUrl=springUrl(submitUrl)>
     <#assign hasAddedAllAssetsFormBind = "form.hasOtherAssetsToAdd"/>
     <@fdsRadio.radioGroup
-    path=hasAddedAllAssetsFormBind
-    labelText="Do you need to add another field?">
+      path=hasAddedAllAssetsFormBind
+      labelText="Do you need to add another field?"
+      fieldsetHeadingClass="govuk-fieldset__legend--m"
+      hintText="Add all fields that will be sources of products that you wish to be covered by this consent.">
       <@fdsRadio.radioYes path=hasAddedAllAssetsFormBind/>
       <@fdsRadio.radioNo path=hasAddedAllAssetsFormBind/>
     </@fdsRadio.radioGroup>

@@ -39,7 +39,10 @@ backLinkUrl=springUrl(cancelUrl)
     <@fdsFieldset.fieldset
       legendHeadingSize="h2"
       legendHeading="At which location are the production activities?"
-      legendHeadingClass="govuk-fieldset__legend--m">
+      legendHeadingClass="govuk-fieldset__legend--m"
+      hintText="List all the physical location(s) of all production activities associated with this consent
+                (e.g. wellhead platform location and host processing facility location).
+                Note that this should be the location of the production equipment, not the source of the production.">
       <@fdsAddToList.addToList
         pathForList="form.productionLocationAssetKeys"
         pathForSelector="form.productionLocationAssetKeysSelector"
@@ -50,7 +53,9 @@ backLinkUrl=springUrl(cancelUrl)
     <@fdsFieldset.fieldset
       legendHeadingSize="h2"
       legendHeading="What is the host?"
-      legendHeadingClass="govuk-fieldset__legend--m">
+      legendHeadingClass="govuk-fieldset__legend--m"
+      hintText="The primary processing facility associated with this consent.
+                For single entities this may be the same as the Production Location.">
       <@fdsSearchSelector.searchSelectorRest
         path="form.hostLocationAssetKey"
         restUrl=springUrl(hostLocationSearchUrl)

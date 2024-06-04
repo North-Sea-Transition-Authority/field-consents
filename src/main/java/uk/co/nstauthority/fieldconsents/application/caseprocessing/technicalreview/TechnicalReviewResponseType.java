@@ -9,13 +9,13 @@ public enum TechnicalReviewResponseType implements Displayable {
       "Approve",
       1,
       "Consent conditions",
-      "Provide consent conditions if they apply"
+      "Provide consent conditions if they apply."
   ),
   REJECT(
       "Reject",
       2,
       "Reject reason",
-      "Why are you rejecting this application"
+      "Why are you rejecting this application."
   );
 
   private final String displayName;

@@ -22,7 +22,7 @@
     <@fdsFieldset.fieldset
       legendHeading="Supporting consent documents"
       legendHeadingClass="govuk-fieldset__legend--s"
-      hintText="Upload documents which are appropriate to support the consent"
+      hintText="Upload documents which are appropriate to support the consent."
       optionalLabel=true>
       <@fdsFileUpload.fileUpload
         path=fileUploadAttributes.path()

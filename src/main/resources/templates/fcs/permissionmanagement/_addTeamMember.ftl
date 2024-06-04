@@ -6,7 +6,7 @@
     <@fdsTextInput.textInput
       path=usernameFormPath
       labelText="What is the UK Energy Portal username of the user?"
-      hintText="A UK Energy Portal username is usually the user's email address"
+      hintText="A UK Energy Portal username is usually the user's email address."
       pageHeading=true
     />
 

@@ -1,5 +1,5 @@
 <#include '../layout/layout.ftl'>
-<#import './_ventCategoryInfo.ftl' as ventCategoryInfo>
+<#import '_ventInfo.ftl' as ventInfo>
 <#import '../hints/copyPasteTableHint.ftl' as copyPasteTableHint>
 
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
@@ -12,7 +12,7 @@
       <p class="govuk-body-l">
         Enter the amount of venting expected for each month for the requested consent days only. For example, if the consent is due to end halfway through the month, only provide vent volumes for half the month.
       </p>
-      <@ventCategoryInfo.ventCategoryInfo/>
+      <@ventInfo.ventCategoryInfo/>
       <@copyPasteTableHint.hint/>
     </@grid.twoThirdsColumn>
   </@grid.gridRow>

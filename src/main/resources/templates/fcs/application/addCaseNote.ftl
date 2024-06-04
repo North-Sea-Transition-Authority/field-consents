@@ -17,7 +17,7 @@
     <@fdsFieldset.fieldset
       legendHeading="Case note documents"
       legendHeadingClass="govuk-heading-m"
-      hintText="Upload documents for this case note"
+      hintText="Upload documents for this case note."
       optionalLabel=true>
       <@fdsFileUpload.fileUpload
         path=fileUploadAttributes.path()

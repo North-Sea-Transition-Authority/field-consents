@@ -1,5 +1,5 @@
 <#include '../layout/layout.ftl'>
-<#import './_flareCategoryInfo.ftl' as flareCategoryInfo>
+<#import '_flareInfo.ftl' as flareInfo>
 <#import '../hints/copyPasteTableHint.ftl' as copyPasteTableHint>
 
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
@@ -12,7 +12,7 @@
       <p class="govuk-body-l">
         Enter the amount of flaring expected for each month for the requested consent days only. For example, if the consent is due to end halfway through the month, only provide flare volumes for half the month.
       </p>
-      <@flareCategoryInfo.flareCategoryInfo/>
+      <@flareInfo.flareCategoryInfo/>
       <@copyPasteTableHint.hint/>
     </@grid.twoThirdsColumn>
   </@grid.gridRow>

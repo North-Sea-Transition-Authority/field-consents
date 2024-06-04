@@ -30,7 +30,7 @@
         <@fdsTextarea.textarea
           path="form.requestText.inputValue"
           labelText="Application update request details"
-          hintText="Explain the changes you would like to the application"/>
+          hintText="Explain the changes you would like to the application."/>
         <@fdsDatePicker.datePicker
           path="form.deadlineDate"
           labelText="Deadline date"/>

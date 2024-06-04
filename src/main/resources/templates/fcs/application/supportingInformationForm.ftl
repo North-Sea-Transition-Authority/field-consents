@@ -24,7 +24,7 @@ pageSize=PageSize.TWO_THIRDS_COLUMN>
     <@fdsFieldset.fieldset
       legendHeading="Supporting documents"
       legendHeadingClass="govuk-heading-m"
-      hintText="Upload documents which are appropriate to support your application"
+      hintText="Upload documents which are appropriate to support your application."
       optionalLabel=true>
       <@fdsFileUpload.fileUpload
         path=fileUploadAttributes.path()

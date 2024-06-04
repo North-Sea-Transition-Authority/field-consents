@@ -1,13 +1,13 @@
 <#include '../layout/layout.ftl'>
-<#import './_flareCategoryInfo.ftl' as flareCategoryInfo>
-<#import '../flarevent/_reportGasDataRow.ftl' as reportGasDataRow>
+<#import '_flareInfo.ftl' as flareInfo>
+<#import '../flarevent/_reportGasData.ftl' as reportGasData>
 <#import '../hints/copyPasteTableHint.ftl' as copyPasteTableHint>
 
 <#assign pageTitle = "Flare report gas properties"/>
 
 <@defaultPage htmlTitle=pageTitle pageHeading=pageTitle errorItems=errorList pageSize=PageSize.TWO_THIRDS_COLUMN>
 
-    <@flareCategoryInfo.flareCategoryInfo/>
+    <@flareInfo.flareCategoryDensityAndContentInfo/>
     <@copyPasteTableHint.hint/>
 
     <@fdsForm.htmlForm actionUrl=springUrl(submitUrl)>
@@ -20,21 +20,21 @@
         <th class="govuk-table__header">Category B</th>
         <th class="govuk-table__header">Category C</th>
 
-        <@reportGasDataRow.reportGasDataRow
+        <@reportGasData.reportGasDataRow
         rowDescription="Standard density (${standardDensityUnit})"
         categoryAData="form.categoryADensity"
         categoryBData="form.categoryBDensity"
         categoryCData="form.categoryCDensity"
         />
 
-        <@reportGasDataRow.reportGasDataRow
+        <@reportGasData.reportGasDataRow
         rowDescription="Inert gas content (${gasContentUnit})"
         categoryAData="form.categoryAInertGasPercentage"
         categoryBData="form.categoryBInertGasPercentage"
         categoryCData="form.categoryCInertGasPercentage"
         />
 
-        <@reportGasDataRow.reportGasDataRow
+        <@reportGasData.reportGasDataRow
         rowDescription="Hydrocarbon content (${gasContentUnit})"
         categoryAData="form.categoryAHydrocarbonPercentage"
         categoryBData="form.categoryBHydrocarbonPercentage"

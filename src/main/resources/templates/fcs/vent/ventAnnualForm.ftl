@@ -1,5 +1,5 @@
 <#include '../layout/layout.ftl'>
-<#import './_ventCategoryInfo.ftl' as ventCategoryInfo>
+<#import '_ventInfo.ftl' as ventInfo>
 <#import '../hints/copyPasteTableHint.ftl' as copyPasteTableHint>
 
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
@@ -7,7 +7,7 @@
 <@defaultPage htmlTitle=pageTitle pageHeading=pageTitle errorItems=errorList pageSize=PageSize.FULL_WIDTH>
     <@grid.gridRow>
       <@grid.twoThirdsColumn>
-        <@ventCategoryInfo.ventCategoryInfo/>
+        <@ventInfo.ventCategoryInfo/>
         <@copyPasteTableHint.hint/>
       </@grid.twoThirdsColumn>
     </@grid.gridRow>
