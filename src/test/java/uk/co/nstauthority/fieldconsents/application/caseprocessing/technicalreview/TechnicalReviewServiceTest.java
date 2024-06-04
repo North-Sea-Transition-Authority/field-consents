@@ -17,8 +17,8 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.techni
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.CASE_OFFICER_USER;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.CURRENT_INSTANT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.DEADLINE_AHEAD_HOURS;
-import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.TECHNICAL_REVIEW_REQUEST_TEXT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.TECHNICAL_REVIEW_ID_1;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewTestUtil.TECHNICAL_REVIEW_REQUEST_TEXT;
 
 import jakarta.persistence.EntityNotFoundException;
 import java.time.Clock;
@@ -41,6 +41,9 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.response.TechnicalReviewFileUsage;
+import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup;
+import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason;
+import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
 
@@ -61,6 +64,9 @@ class TechnicalReviewServiceTest {
 
   @Mock
   private TechnicalReviewEmailService technicalReviewEmailService;
+
+  @Mock
+  private ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
 
   @InjectMocks
   private TechnicalReviewService technicalReviewService;
@@ -290,6 +296,13 @@ class TechnicalReviewServiceTest {
         );
 
     verify(technicalReviewEmailService).sendTechnicalReviewResponseEmail(technicalReview, SERVICE_USER_DETAIL_USER_5);
+
+    verify(applicationWorkAreaPriorityService).prioritiseApplicationInWorkArea(
+        applicationVersion,
+        SERVICE_USER_DETAIL_USER_5,
+        ApplicationWorkAreaPriorityReason.TECHNICAL_REVIEW_RESPONSE,
+        ApplicationWorkAreaPriorityGroup.REGULATOR
+    );
   }
 
   @ParameterizedTest
@@ -336,5 +349,12 @@ class TechnicalReviewServiceTest {
         );
 
     verify(technicalReviewEmailService).sendTechnicalReviewResponseEmail(technicalReview, SERVICE_USER_DETAIL_USER_5);
+
+    verify(applicationWorkAreaPriorityService).prioritiseApplicationInWorkArea(
+        applicationVersion,
+        SERVICE_USER_DETAIL_USER_5,
+        ApplicationWorkAreaPriorityReason.TECHNICAL_REVIEW_RESPONSE,
+        ApplicationWorkAreaPriorityGroup.REGULATOR
+    );
   }
 }

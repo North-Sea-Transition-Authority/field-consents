@@ -16,6 +16,9 @@ import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.response.TechnicalReviewFileUsage;
+import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityGroup;
+import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityReason;
+import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
@@ -34,25 +37,26 @@ public class TechnicalReviewService {
   static final String TECHNICAL_REVIEW_NOT_FOUND = "Technical review with id %s not found for application id %s";
 
   private final Clock clock;
-
   private final TechnicalReviewRepository technicalReviewRepository;
-
   private final TechnicalReviewAssignmentService technicalReviewAssignmentService;
-
   private final FieldConsentsFileService fieldConsentsFileService;
-
   private final TechnicalReviewEmailService technicalReviewEmailService;
+  private final ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
 
-  public TechnicalReviewService(Clock clock,
-                                TechnicalReviewRepository technicalReviewRepository,
-                                TechnicalReviewAssignmentService technicalReviewAssignmentService,
-                                FieldConsentsFileService fieldConsentsFileService,
-                                TechnicalReviewEmailService technicalReviewEmailService) {
+  TechnicalReviewService(
+      Clock clock,
+      TechnicalReviewRepository technicalReviewRepository,
+      TechnicalReviewAssignmentService technicalReviewAssignmentService,
+      FieldConsentsFileService fieldConsentsFileService,
+      TechnicalReviewEmailService technicalReviewEmailService,
+      ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService
+  ) {
     this.clock = clock;
     this.technicalReviewRepository = technicalReviewRepository;
     this.technicalReviewAssignmentService = technicalReviewAssignmentService;
     this.fieldConsentsFileService = fieldConsentsFileService;
     this.technicalReviewEmailService = technicalReviewEmailService;
+    this.applicationWorkAreaPriorityService = applicationWorkAreaPriorityService;
   }
 
   public boolean openTechnicalReviewExists(ApplicationVersion applicationVersion) {
@@ -148,6 +152,12 @@ public class TechnicalReviewService {
               """,
           serviceUserDetail.wuaId(), responseForApplicationVersion.getId(), exception);
     }
-  }
 
+    applicationWorkAreaPriorityService.prioritiseApplicationInWorkArea(
+        responseForApplicationVersion,
+        serviceUserDetail,
+        ApplicationWorkAreaPriorityReason.TECHNICAL_REVIEW_RESPONSE,
+        ApplicationWorkAreaPriorityGroup.REGULATOR
+    );
+  }
 }
