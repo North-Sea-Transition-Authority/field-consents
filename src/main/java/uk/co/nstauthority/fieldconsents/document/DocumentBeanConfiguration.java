@@ -10,7 +10,7 @@ public class DocumentBeanConfiguration {
   @Bean
   Safelist fieldConsentsDocumentSafelist() {
     return Safelist.basic()
-        .addAttributes("p", "style");
+        .addAttributes("p", "style")
+        .addTags("s");
   }
-
 }
