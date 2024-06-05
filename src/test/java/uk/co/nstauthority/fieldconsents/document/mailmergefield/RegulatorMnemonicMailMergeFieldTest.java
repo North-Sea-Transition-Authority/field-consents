@@ -32,7 +32,7 @@ class RegulatorMnemonicMailMergeFieldTest {
 
   @Test
   void getDescription() {
-    assertThat(regulatorMnemonicMailMergeField.getDescription()).isEqualTo("The regulator's mnemonic");
+    assertThat(regulatorMnemonicMailMergeField.getDescription()).isEqualTo(RegulatorMnemonicMailMergeField.DESCRIPTION);
   }
 
   @ParameterizedTest

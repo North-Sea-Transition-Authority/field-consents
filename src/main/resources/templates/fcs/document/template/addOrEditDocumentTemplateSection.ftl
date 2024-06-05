@@ -10,7 +10,7 @@
         <@fdsTextInput.textInput
           path="form.title"
           labelText="Section title"
-          hintText="This will be shown in the document sidebar"
+          hintText="This will be shown in the document sidebar."
         />
 
         <#if conditionsFdsSelectMap?has_content>
@@ -18,7 +18,7 @@
             path="form.conditionMnemonic"
             options=conditionsFdsSelectMap
             labelText="Select a condition"
-            hintText="This section will only be included in a document if the condition is met"
+            hintText="This section will only be included in a document if the condition is met."
             optionalInputDefault="Select one..."
             optionalLabel=true
           />

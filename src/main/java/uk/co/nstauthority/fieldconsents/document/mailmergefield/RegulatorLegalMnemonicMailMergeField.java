@@ -12,6 +12,8 @@ import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationPr
 @Component
 class RegulatorLegalMnemonicMailMergeField implements DocumentMailMergeField {
 
+  static final String DESCRIPTION = "The regulator's legal mnemonic.";
+
   private final CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties;
 
   RegulatorLegalMnemonicMailMergeField(CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties) {
@@ -25,7 +27,7 @@ class RegulatorLegalMnemonicMailMergeField implements DocumentMailMergeField {
 
   @Override
   public String getDescription() {
-    return "The regulator's legal mnemonic";
+    return DESCRIPTION;
   }
 
   @Override

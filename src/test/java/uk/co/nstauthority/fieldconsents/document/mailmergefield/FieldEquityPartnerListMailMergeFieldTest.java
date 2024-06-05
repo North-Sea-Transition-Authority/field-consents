@@ -27,7 +27,6 @@ import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateType;
 class FieldEquityPartnerListMailMergeFieldTest {
 
   private static final String MNEMONIC = "FIELD_EQUITY_PARTNER_LIST";
-  private static final String DESCRIPTION = "A list of field equity partners associated to the fields on this application. Includes the organisation name and registered number";
 
   @Mock
   private ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService;
@@ -52,7 +51,8 @@ class FieldEquityPartnerListMailMergeFieldTest {
 
   @Test
   void getDescription() {
-    assertThat(fieldEquityPartnerListMailMergeField.getDescription()).isEqualTo(DESCRIPTION);
+    assertThat(fieldEquityPartnerListMailMergeField.getDescription())
+        .isEqualTo(FieldEquityPartnerListMailMergeField.DESCRIPTION);
   }
 
   @ParameterizedTest

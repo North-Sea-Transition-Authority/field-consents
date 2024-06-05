@@ -14,6 +14,8 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthS
 @Component
 class ConsentLengthUpperCaseMailMergeField implements DocumentMailMergeField {
 
+  static final String DESCRIPTION = "The length of the consent in upper case.";
+
   private final ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService;
   private final ConsentLengthService consentLengthService;
 
@@ -33,7 +35,7 @@ class ConsentLengthUpperCaseMailMergeField implements DocumentMailMergeField {
 
   @Override
   public String getDescription() {
-    return "The length of the consent in upper case";
+    return DESCRIPTION;
   }
 
   @Override

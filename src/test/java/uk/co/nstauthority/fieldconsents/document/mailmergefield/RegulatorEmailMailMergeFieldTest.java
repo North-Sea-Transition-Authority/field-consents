@@ -32,7 +32,7 @@ class RegulatorEmailMailMergeFieldTest {
 
   @Test
   void getDescription() {
-    assertThat(regulatorEmailMailMergeField.getDescription()).isEqualTo("The regulator's email address");
+    assertThat(regulatorEmailMailMergeField.getDescription()).isEqualTo(RegulatorEmailMailMergeField.DESCRIPTION);
   }
 
   @ParameterizedTest

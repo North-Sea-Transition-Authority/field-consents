@@ -12,6 +12,8 @@ import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationPr
 @Component
 class RegulatorEmailMailMergeField implements DocumentMailMergeField {
 
+  static final String DESCRIPTION = "The regulator's email address.";
+
   private final CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties;
 
   RegulatorEmailMailMergeField(CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties) {
@@ -25,7 +27,7 @@ class RegulatorEmailMailMergeField implements DocumentMailMergeField {
 
   @Override
   public String getDescription() {
-    return "The regulator's email address";
+    return DESCRIPTION;
   }
 
   @Override

@@ -32,7 +32,7 @@ class ConsentsTeamNameMailMergeFieldTest {
 
   @Test
   void getDescription() {
-    assertThat(consentsTeamNameMailMergeField.getDescription()).isEqualTo("The name of the consents team");
+    assertThat(consentsTeamNameMailMergeField.getDescription()).isEqualTo(ConsentsTeamNameMailMergeField.DESCRIPTION);
   }
 
   @ParameterizedTest

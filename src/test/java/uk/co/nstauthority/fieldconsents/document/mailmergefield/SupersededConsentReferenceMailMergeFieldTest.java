@@ -41,7 +41,7 @@ class SupersededConsentReferenceMailMergeFieldTest {
   @Test
   void getDescription() {
     assertThat(supersededConsentReferenceMailMergeField.getDescription())
-        .isEqualTo("The superseded consent's reference (revisions only)");
+        .isEqualTo(SupersededConsentReferenceMailMergeField.DESCRIPTION);
   }
 
   @ParameterizedTest

@@ -40,7 +40,7 @@ class PrimaryOperatorNameMailMergeFieldTest {
   @Test
   void getDescription() {
     assertThat(primaryOperatorNameMailMergeField.getDescription())
-        .isEqualTo("The name of the primary operator on the application");
+        .isEqualTo(PrimaryOperatorNameMailMergeField.DESCRIPTION);
   }
 
   @ParameterizedTest

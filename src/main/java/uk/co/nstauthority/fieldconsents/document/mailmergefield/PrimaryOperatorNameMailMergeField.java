@@ -12,6 +12,7 @@ import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitService;
 @Order(DocumentMailMergeFieldDisplayOrders.PRIMARY_OPERATOR_NAME)
 @Component
 class PrimaryOperatorNameMailMergeField implements DocumentMailMergeField {
+  static final String DESCRIPTION = "The name of the primary operator on the application.";
 
   private final ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService;
   private final OrganisationUnitService organisationUnitService;
@@ -31,7 +32,7 @@ class PrimaryOperatorNameMailMergeField implements DocumentMailMergeField {
 
   @Override
   public String getDescription() {
-    return "The name of the primary operator on the application";
+    return DESCRIPTION;
   }
 
   @Override

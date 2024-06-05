@@ -24,6 +24,8 @@ import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 @Component
 class ScheduleMailMergeField implements DocumentMailMergeField {
 
+  static final String DESCRIPTION = "The schedule for the consent.";
+
   private final ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService;
   private final ConsentDataService consentDataService;
   private final ConsentDataLongTermProductionFiguresService consentDataLongTermProductionFiguresService;
@@ -60,7 +62,7 @@ class ScheduleMailMergeField implements DocumentMailMergeField {
 
   @Override
   public String getDescription() {
-    return "The schedule for the consent";
+    return DESCRIPTION;
   }
 
   @Override

@@ -32,7 +32,7 @@ class RegulatorLegalNameMailMergeFieldTest {
 
   @Test
   void getDescription() {
-    assertThat(regulatorLegalNameMailMergeField.getDescription()).isEqualTo("The regulator's legal name");
+    assertThat(regulatorLegalNameMailMergeField.getDescription()).isEqualTo(RegulatorLegalNameMailMergeField.DESCRIPTION);
   }
 
   @ParameterizedTest

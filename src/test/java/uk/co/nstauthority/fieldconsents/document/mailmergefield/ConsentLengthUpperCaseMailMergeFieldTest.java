@@ -40,7 +40,7 @@ class ConsentLengthUpperCaseMailMergeFieldTest {
   @Test
   void getDescription() {
     assertThat(consentLengthUpperCaseMailMergeField.getDescription())
-        .isEqualTo("The length of the consent in upper case");
+        .isEqualTo(ConsentLengthUpperCaseMailMergeField.DESCRIPTION);
   }
 
   @ParameterizedTest

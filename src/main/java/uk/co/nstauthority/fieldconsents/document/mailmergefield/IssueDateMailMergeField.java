@@ -14,7 +14,7 @@ import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 class IssueDateMailMergeField implements DocumentMailMergeField {
 
   static final String MNEMONIC = "ISSUE_DATE";
-  static final String DESCRIPTION = "The date the consent was issued";
+  static final String DESCRIPTION = "The date the consent was issued.";
 
   private final Clock clock;
 

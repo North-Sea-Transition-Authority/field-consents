@@ -96,4 +96,10 @@ class FacilityNameMailMergeFieldTest {
     assertThat(facilityNameMailMergeField.resolve(documentInstanceDto))
         .isEqualTo(DocumentMailMergeFieldResolveResult.success(terminalName));
   }
+
+  @Test
+  void getDescription() {
+    assertThat(facilityNameMailMergeField.getDescription())
+        .isEqualTo(FacilityNameMailMergeField.DESCRIPTION);
+  }
 }

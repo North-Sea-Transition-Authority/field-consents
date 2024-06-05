@@ -15,7 +15,7 @@ import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateType;
 class SupersededConsentReferenceMailMergeField implements DocumentMailMergeField {
 
   private static final String MNEMONIC = "SUPERSEDED_CONSENT_REFERENCE";
-  private static final String DESCRIPTION = "The superseded consent's reference (revisions only)";
+  static final String DESCRIPTION = "The superseded consent's reference (revisions only).";
 
   private final ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService;
   private final ConsentService consentService;

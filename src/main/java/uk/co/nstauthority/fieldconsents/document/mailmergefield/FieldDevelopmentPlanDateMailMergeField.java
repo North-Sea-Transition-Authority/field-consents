@@ -19,7 +19,7 @@ import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateType;
 public class FieldDevelopmentPlanDateMailMergeField implements DocumentMailMergeField {
 
   static final String MNEMONIC = "FIELD_DEVELOPMENT_PLAN_DATE";
-  static final String DESCRIPTION = "The Field Development Plan date";
+  static final String DESCRIPTION = "The Field Development Plan date.";
   static final FieldProjectionRoot QUERY = new FieldProjectionRoot().fieldName().fieldDevelopmentPlan().date().root();
   static final RequestPurpose REQUEST_PURPOSE = new RequestPurpose("Mail merging field development plan date");
 

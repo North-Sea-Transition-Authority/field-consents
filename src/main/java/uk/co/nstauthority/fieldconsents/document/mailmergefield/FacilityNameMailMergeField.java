@@ -16,6 +16,8 @@ import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateType;
 @Component
 class FacilityNameMailMergeField implements DocumentMailMergeField {
 
+  static final String DESCRIPTION = "The name of the facility on the application.";
+
   private final ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService;
   private final ApplicationAssetService applicationAssetService;
   private final TerminalService terminalService;
@@ -38,7 +40,7 @@ class FacilityNameMailMergeField implements DocumentMailMergeField {
 
   @Override
   public String getDescription() {
-    return "The name of the facility on the application";
+    return DESCRIPTION;
   }
 
   @Override

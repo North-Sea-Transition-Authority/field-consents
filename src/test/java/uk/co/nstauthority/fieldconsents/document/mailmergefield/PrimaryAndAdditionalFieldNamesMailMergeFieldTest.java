@@ -55,7 +55,7 @@ class PrimaryAndAdditionalFieldNamesMailMergeFieldTest {
   @Test
   void getDescription() {
     assertThat(primaryAndAdditionalFieldNamesMailMergeField.getDescription())
-        .isEqualTo("The names of the primary and additional fields on the application");
+        .isEqualTo(PrimaryAndAdditionalFieldNamesMailMergeField.DESCRIPTION);
   }
 
   @ParameterizedTest

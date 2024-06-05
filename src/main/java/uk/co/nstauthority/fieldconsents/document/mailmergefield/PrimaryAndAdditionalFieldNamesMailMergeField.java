@@ -27,6 +27,8 @@ import uk.co.nstauthority.fieldconsents.util.StringUtil;
 @Component
 class PrimaryAndAdditionalFieldNamesMailMergeField implements DocumentMailMergeField {
 
+  static final String DESCRIPTION = "The names of the primary and additional fields on the application.";
+
   private final ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService;
   private final ApplicationAssetService applicationAssetService;
   private final FieldService fieldService;
@@ -49,7 +51,7 @@ class PrimaryAndAdditionalFieldNamesMailMergeField implements DocumentMailMergeF
 
   @Override
   public String getDescription() {
-    return "The names of the primary and additional fields on the application";
+    return DESCRIPTION;
   }
 
   @Override

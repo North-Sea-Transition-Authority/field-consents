@@ -38,7 +38,7 @@ class ConsentReferenceMailMergeFieldTest {
 
   @Test
   void getDescription() {
-    assertThat(consentReferenceMailMergeField.getDescription()).isEqualTo("The consent reference");
+    assertThat(consentReferenceMailMergeField.getDescription()).isEqualTo(ConsentReferenceMailMergeField.DESCRIPTION);
   }
 
   @ParameterizedTest

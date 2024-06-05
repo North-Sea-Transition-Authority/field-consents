@@ -15,7 +15,7 @@
     <@fdsTextarea.textarea
       path="form.feedback.inputValue"
       labelText="How could we improve this service?"
-      hintText="Do not include any personal or financial information, for example your National Insurance or credit card numbers"
+      hintText="Do not include any personal or financial information, for example your National Insurance or credit card numbers."
       optionalLabel=true
       maxCharacterLength=maxCharacterLength
       characterCount=true

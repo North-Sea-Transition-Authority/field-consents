@@ -42,7 +42,7 @@ class SupersededConsentIssueDateMailMergeFieldTest {
   @Test
   void getDescription() {
     assertThat(supersededConsentIssueDateMailMergeField.getDescription())
-        .isEqualTo("The date the superseded consent was issued (revisions only)");
+        .isEqualTo(SupersededConsentIssueDateMailMergeField.DESCRIPTION);
   }
 
   @ParameterizedTest

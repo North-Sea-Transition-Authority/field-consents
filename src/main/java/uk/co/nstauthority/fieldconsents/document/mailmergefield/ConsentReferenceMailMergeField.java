@@ -14,6 +14,8 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.inst
 @Component
 class ConsentReferenceMailMergeField implements DocumentMailMergeField {
 
+  static final String DESCRIPTION = "The consent reference.";
+
   private final ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService;
   private final ApplicationService applicationService;
 
@@ -33,7 +35,7 @@ class ConsentReferenceMailMergeField implements DocumentMailMergeField {
 
   @Override
   public String getDescription() {
-    return "The consent reference";
+    return DESCRIPTION;
   }
 
   @Override

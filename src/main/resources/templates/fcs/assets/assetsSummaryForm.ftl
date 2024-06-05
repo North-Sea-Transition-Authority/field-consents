@@ -1,4 +1,5 @@
 <#include '../layout/layout.ftl'>
+<#include '../flarevent/hintText.ftl'>
 <#import '_assetSummary.ftl' as assetSummary>
 
 <#-- @ftlvariable name="successfulDeleteBanner" type="String" -->
@@ -31,7 +32,7 @@ notificationBannerContentOverride=deleteBanner
       path=hasAddedAllAssetsFormBind
       labelText="Do you need to add another field?"
       fieldsetHeadingClass="govuk-fieldset__legend--m"
-      hintText="Add all fields that will be sources of products that you wish to be covered by this consent.">
+      hintText=ADDITIONAL_ASSET_HINT_TEXT>
       <@fdsRadio.radioYes path=hasAddedAllAssetsFormBind/>
       <@fdsRadio.radioNo path=hasAddedAllAssetsFormBind/>
     </@fdsRadio.radioGroup>

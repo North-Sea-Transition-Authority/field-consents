@@ -17,9 +17,9 @@ import uk.co.nstauthority.fieldconsents.util.StringUtil;
 public class FieldEquityPartnerListMailMergeField implements DocumentMailMergeField {
 
   private static final String MNEMONIC = "FIELD_EQUITY_PARTNER_LIST";
-  private static final String DESCRIPTION = """
+  static final String DESCRIPTION = """
       A list of field equity partners associated to the fields on this application. \
-      Includes the organisation name and registered number\
+      Includes the organisation name and registered number.\
       """;
 
   private final ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService;

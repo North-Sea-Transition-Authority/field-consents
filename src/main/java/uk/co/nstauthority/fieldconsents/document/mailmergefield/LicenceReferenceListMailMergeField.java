@@ -17,6 +17,8 @@ import uk.co.nstauthority.fieldconsents.util.StringUtil;
 @Component
 class LicenceReferenceListMailMergeField implements DocumentMailMergeField {
 
+  static final String DESCRIPTION = "A list of the licence references associated with the application.";
+
   private final ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService;
   private final ApplicationAssetLicenceService applicationAssetLicenceService;
 
@@ -36,7 +38,7 @@ class LicenceReferenceListMailMergeField implements DocumentMailMergeField {
 
   @Override
   public String getDescription() {
-    return "A list of the licence references associated with the application";
+    return DESCRIPTION;
   }
 
   @Override

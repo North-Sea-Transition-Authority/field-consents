@@ -41,7 +41,7 @@ class LicenceReferenceListMailMergeFieldTest {
   @Test
   void getDescription() {
     assertThat(licenceReferenceListMailMergeField.getDescription())
-        .isEqualTo("A list of the licence references associated with the application");
+        .isEqualTo(LicenceReferenceListMailMergeField.DESCRIPTION);
   }
 
   @ParameterizedTest

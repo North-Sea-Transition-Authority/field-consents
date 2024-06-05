@@ -1,4 +1,5 @@
 <#include '../layout/layout.ftl'>
+<#include '../flarevent/hintText.ftl'>
 
 <#assign pageTitle = "Add field" />
 
@@ -11,7 +12,7 @@
       restUrl=springUrl("/data-sources/field-assets")
       labelText="Add another field"
       pageHeading=true
-      hintText="Add all fields that will be sources of products that you wish to be covered by this consent."
+      hintText=ADDITIONAL_ASSET_HINT_TEXT
       labelHeadingClass="govuk-label--xl"/>
     <@fdsAction.submitButtons
       primaryButtonText="Save and continue"

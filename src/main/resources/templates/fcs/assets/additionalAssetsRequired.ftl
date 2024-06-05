@@ -1,4 +1,5 @@
 <#include '../layout/layout.ftl'>
+<#include '../flarevent/hintText.ftl'>
 
 <#-- @ftlvariable name="successfulDeleteBanner" type="String" -->
 
@@ -22,6 +23,7 @@
     <@fdsRadio.radioGroup
       path="form.otherAssetsRequired"
       labelText="Do you have any additional fields to add?"
+      hintText=ADDITIONAL_ASSET_HINT_TEXT
       fieldsetHeadingSize="h1"
       fieldsetHeadingClass="govuk-fieldset__legend--xl">
       <@fdsRadio.radioYes path="form.otherAssetsRequired"/>

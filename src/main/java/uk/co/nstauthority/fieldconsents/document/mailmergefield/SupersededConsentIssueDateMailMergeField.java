@@ -16,7 +16,7 @@ import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 class SupersededConsentIssueDateMailMergeField implements DocumentMailMergeField {
 
   private static final String MNEMONIC = "SUPERSEDED_CONSENT_ISSUE_DATE";
-  private static final String DESCRIPTION = "The date the superseded consent was issued (revisions only)";
+  static final String DESCRIPTION = "The date the superseded consent was issued (revisions only).";
 
   private final ApplicationDocumentInstanceLinkingService applicationDocumentInstanceLinkingService;
   private final ConsentService consentService;

@@ -10,7 +10,7 @@
         <@fdsTextInput.textInput
           path="form.title"
           labelText="Section title"
-          hintText="This will be shown in the document sidebar"
+          hintText="This will be shown in the document sidebar."
         />
 
         <@richTextEditor path="form.content" labelText="Section content"/>

@@ -47,7 +47,7 @@ class PrimaryFieldNameMailMergeFieldTest {
   @Test
   void getDescription() {
     assertThat(primaryFieldNameMailMergeField.getDescription())
-        .isEqualTo("The name of the primary field on the application");
+        .isEqualTo(PrimaryFieldNameMailMergeField.DESCRIPTION);
   }
 
   @ParameterizedTest

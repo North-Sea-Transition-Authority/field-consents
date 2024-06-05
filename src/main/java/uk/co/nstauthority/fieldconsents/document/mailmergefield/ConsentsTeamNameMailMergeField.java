@@ -13,6 +13,7 @@ import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationPr
 class ConsentsTeamNameMailMergeField implements DocumentMailMergeField {
 
   private final CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties;
+  static final String DESCRIPTION = "The name of the consents team.";
 
   ConsentsTeamNameMailMergeField(CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties) {
     this.customerBrandingConfigurationProperties = customerBrandingConfigurationProperties;
@@ -25,7 +26,7 @@ class ConsentsTeamNameMailMergeField implements DocumentMailMergeField {
 
   @Override
   public String getDescription() {
-    return "The name of the consents team";
+    return DESCRIPTION;
   }
 
   @Override
