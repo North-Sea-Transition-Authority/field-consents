@@ -7,6 +7,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
@@ -21,18 +22,21 @@ public class ApplicationAccessService {
   private final TeamService teamService;
   private final ConsultationService consultationService;
   private final FieldEquityPartnerPermissionService fieldEquityPartnerPermissionService;
+  private final ApplicationAssetService applicationAssetService;
 
   @Autowired
   ApplicationAccessService(
       OrganisationUnitPermissionService organisationUnitPermissionService,
       TeamService teamService,
       ConsultationService consultationService,
-      FieldEquityPartnerPermissionService fieldEquityPartnerPermissionService
+      FieldEquityPartnerPermissionService fieldEquityPartnerPermissionService,
+      ApplicationAssetService applicationAssetService
   ) {
     this.organisationUnitPermissionService = organisationUnitPermissionService;
     this.teamService = teamService;
     this.consultationService = consultationService;
     this.fieldEquityPartnerPermissionService = fieldEquityPartnerPermissionService;
+    this.applicationAssetService = applicationAssetService;
   }
 
   public boolean hasApplicationPermission(
@@ -78,6 +82,7 @@ public class ApplicationAccessService {
         .getUserPermissionsForOperator(user, applicationVersion.getPrimaryOperatorOuId()));
 
     if (!userRolePermissions.contains(RolePermission.VIEW_FCS_CONSENTS)
+        && applicationAssetService.getPrimaryAsset(applicationVersion).isField()
         && fieldEquityPartnerPermissionService
         .userHasPermissionForFieldInFieldEquityPartnerTeam(user, applicationVersion, Set.of(RolePermission.VIEW_FCS_CONSENTS))) {
       userRolePermissions.add(RolePermission.VIEW_FCS_CONSENTS);

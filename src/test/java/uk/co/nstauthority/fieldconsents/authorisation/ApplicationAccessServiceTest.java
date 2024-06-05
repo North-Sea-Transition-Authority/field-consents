@@ -29,6 +29,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
+import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
@@ -55,6 +57,9 @@ class ApplicationAccessServiceTest {
 
   @Mock
   private FieldEquityPartnerPermissionService fieldEquityPartnerPermissionService;
+
+  @Mock
+  private ApplicationAssetService applicationAssetService;
 
   @InjectMocks
   @Spy
@@ -111,6 +116,7 @@ class ApplicationAccessServiceTest {
     when(organisationUnitPermissionService
         .getUserPermissionsForOperator(USER, applicationVersion.getPrimaryOperatorOuId()))
         .thenReturn(Collections.emptySet());
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.terminalAsset1);
 
     assertThat(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .isEmpty();
@@ -133,13 +139,33 @@ class ApplicationAccessServiceTest {
   }
 
   @Test
-  void getApplicationPermissionsForUser_whenIndustryAndOperatorPermissionsDoesNotContainViewFcsConsentsAndUserDoesNotHaveViewFcsConsentsPermissionForFieldInFieldEquityPartnerTeam() {
+  void getApplicationPermissionsForUser_whenIndustryAndOperatorPermissionsDoesNotContainViewFcsConsentsAndPrimaryAssetIsTerminal() {
     when(teamService.isRegulatorUser(USER)).thenReturn(false);
     when(teamService.isConsulteeUser(USER)).thenReturn(false);
 
     when(organisationUnitPermissionService
         .getUserPermissionsForOperator(USER, applicationVersion.getPrimaryOperatorOuId()))
         .thenReturn(Set.of());
+
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.terminalAsset1);
+
+    assertThat(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
+        .isEmpty();
+
+    verify(fieldEquityPartnerPermissionService, never())
+        .userHasPermissionForFieldInFieldEquityPartnerTeam(any(), any(ApplicationVersion.class), any());
+  }
+
+  @Test
+  void getApplicationPermissionsForUser_whenIndustryAndOperatorPermissionsDoesNotContainViewFcsConsentsAndPrimaryAssetIsFieldAndUserDoesNotHaveViewFcsConsentsPermissionForFieldInFieldEquityPartnerTeam() {
+    when(teamService.isRegulatorUser(USER)).thenReturn(false);
+    when(teamService.isConsulteeUser(USER)).thenReturn(false);
+
+    when(organisationUnitPermissionService
+        .getUserPermissionsForOperator(USER, applicationVersion.getPrimaryOperatorOuId()))
+        .thenReturn(Set.of());
+
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.fieldAsset1);
 
     when(fieldEquityPartnerPermissionService
         .userHasPermissionForFieldInFieldEquityPartnerTeam(USER, applicationVersion, Set.of(VIEW_FCS_CONSENTS)))
@@ -150,13 +176,15 @@ class ApplicationAccessServiceTest {
   }
 
   @Test
-  void getApplicationPermissionsForUser_whenIndustryAndOperatorPermissionsDoesNotContainViewFcsConsentsAndUserHasViewFcsConsentsPermissionForFieldInFieldEquityPartnerTeam() {
+  void getApplicationPermissionsForUser_whenIndustryAndOperatorPermissionsDoesNotContainViewFcsConsentsAndPrimaryAssetIsFieldAndUserHasViewFcsConsentsPermissionForFieldInFieldEquityPartnerTeam() {
     when(teamService.isRegulatorUser(USER)).thenReturn(false);
     when(teamService.isConsulteeUser(USER)).thenReturn(false);
 
     when(organisationUnitPermissionService
         .getUserPermissionsForOperator(USER, applicationVersion.getPrimaryOperatorOuId()))
         .thenReturn(Set.of());
+
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.fieldAsset1);
 
     when(fieldEquityPartnerPermissionService
         .userHasPermissionForFieldInFieldEquityPartnerTeam(USER, applicationVersion, Set.of(VIEW_FCS_CONSENTS)))
@@ -178,6 +206,7 @@ class ApplicationAccessServiceTest {
     when(organisationUnitPermissionService
         .getUserPermissionsForOperator(USER, applicationVersion.getPrimaryOperatorOuId()))
         .thenReturn(Collections.emptySet());
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.terminalAsset1);
 
     assertThat(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .isEmpty();
@@ -196,6 +225,7 @@ class ApplicationAccessServiceTest {
     when(organisationUnitPermissionService
         .getUserPermissionsForOperator(USER, applicationVersion.getPrimaryOperatorOuId()))
         .thenReturn(Collections.emptySet());
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.terminalAsset1);
 
     assertThat(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .containsAll(regulatorPermissions);
@@ -214,6 +244,7 @@ class ApplicationAccessServiceTest {
     when(organisationUnitPermissionService
         .getUserPermissionsForOperator(USER, applicationVersion.getPrimaryOperatorOuId()))
         .thenReturn(operatorPermissions);
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.terminalAsset1);
 
     assertThat(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .containsAll(operatorPermissions);
@@ -236,6 +267,7 @@ class ApplicationAccessServiceTest {
     when(organisationUnitPermissionService
         .getUserPermissionsForOperator(USER, applicationVersion.getPrimaryOperatorOuId()))
         .thenReturn(operatorPermissions);
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.terminalAsset1);
 
     assertThat(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .containsAll(allPermissions);
@@ -256,6 +288,7 @@ class ApplicationAccessServiceTest {
         .thenReturn(Collections.emptySet());
     when(consultationService.getConsultationsByApplication(applicationVersion.getApplication()))
         .thenReturn(List.of(new Consultation()));
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.terminalAsset1);
 
     assertThat(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .containsAll(consulteePermissions);
@@ -270,6 +303,7 @@ class ApplicationAccessServiceTest {
         .thenReturn(Collections.emptySet());
     when(consultationService.getConsultationsByApplication(applicationVersion.getApplication()))
         .thenReturn(Collections.emptyList());
+    when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(ApplicationAssetTestUtil.terminalAsset1);
 
     assertThat(applicationAccessService.getApplicationPermissionsForUser(applicationVersion, USER))
         .isEmpty();
