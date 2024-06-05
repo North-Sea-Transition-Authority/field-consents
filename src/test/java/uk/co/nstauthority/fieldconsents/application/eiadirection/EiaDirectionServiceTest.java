@@ -28,6 +28,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.eiadirection.needsubmitting.NeedsSubmittingForm;
 import uk.co.nstauthority.fieldconsents.application.eiadirection.projectpurpose.ProjectPurposeForm;
 import uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationJson;
+import uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 
@@ -38,10 +39,13 @@ class EiaDirectionServiceTest {
   private static final boolean FOR_PURPOSE_OF_EIA_REGS = true;
   private static final boolean HAVE_SUBMITTED_EIA = false;
   private static final int SAT_ID = 2;
-  private static final String CACHED_SAT_ID = "ref-2";
+  private static final String CACHED_SAT_REF = "ref-2";
 
   @Mock
   private EiaDirectionRepository eiaDirectionRepository;
+
+  @Mock
+  private PetsApplicationService petsApplicationService;
 
   @InjectMocks
   private EiaDirectionService eiaDirectionService;
@@ -68,7 +72,7 @@ class EiaDirectionServiceTest {
         .withForPurposeOfEiaRegs(FOR_PURPOSE_OF_EIA_REGS)
         .withHaveSubmittedEiaDirection(HAVE_SUBMITTED_EIA)
         .withSatId(SAT_ID)
-        .withCachedSatRef(CACHED_SAT_ID)
+        .withCachedSatRef(CACHED_SAT_REF)
         .withHaveEiaDirectionToSubmit(true)
         .withLatestDateToBeSubmitted(LocalDate.now())
         .withWhyNoEiaDirection("reason")
@@ -81,38 +85,59 @@ class EiaDirectionServiceTest {
   }
 
   @Test
-  void isEiaScreeningStarted() {
+  void isEiaDirectionStarted() {
     when(eiaDirectionRepository.findByApplicationVersion(applicationVersion))
         .thenReturn(Optional.of(EiaDirectionBuilder.newBuilder().build()));
     assertThat(eiaDirectionService.isEiaDirectionStarted(applicationVersion)).isTrue();
   }
 
   @Test
-  void isEiaScreeningStarted_notStarted() {
+  void isEiaDirectionStarted_notStarted() {
     when(eiaDirectionRepository.findByApplicationVersion(applicationVersion)).thenReturn(Optional.empty());
     assertThat(eiaDirectionService.isEiaDirectionStarted(applicationVersion)).isFalse();
   }
 
   @ParameterizedTest
-  @MethodSource("isEiaScreeningCompletedParams")
-  void isEiaScreeningCompleted(boolean isCompleted, EiaDirection eiaDirection) {
+  @MethodSource("isEiaDirectionCompletedParams")
+  void isEiaDirectionCompleted(boolean isCompleted, EiaDirection eiaDirection) {
     when(eiaDirectionRepository.findByApplicationVersion(applicationVersion)).thenReturn(Optional.ofNullable(eiaDirection));
     assertThat(eiaDirectionService.isEiaDirectionCompleted(applicationVersion)).isEqualTo(isCompleted);
   }
 
-  private static Stream<Arguments> isEiaScreeningCompletedParams() {
+  @Test
+  void isEiaDirectionCompleted_withPurposeOfEiaRegsAndSatIdNonNullAndSatIdValid() {
+    var eiaDirection = EiaDirectionBuilder.newBuilder().withForPurposeOfEiaRegs(true).withSatId(123).build();
+
+    when(eiaDirectionRepository.findByApplicationVersion(applicationVersion)).thenReturn(Optional.ofNullable(eiaDirection));
+    when(petsApplicationService.findEiaDirectionById(123, EiaDirectionService.EIA_DIRECTION_LOOKUP_REQUEST_PURPOSE))
+        .thenReturn(Optional.of(new PetsApplicationJson(null, null, null, null, null)));
+
+    assertThat(eiaDirectionService.isEiaDirectionCompleted(applicationVersion)).isTrue();
+  }
+
+  @Test
+  void isEiaDirectionCompleted_withPurposeOfEiaRegsAndSatIdNonNullAndSatIdInvalid() {
+    var eiaDirection = EiaDirectionBuilder.newBuilder().withForPurposeOfEiaRegs(true).withSatId(123).build();
+
+    when(eiaDirectionRepository.findByApplicationVersion(applicationVersion)).thenReturn(Optional.ofNullable(eiaDirection));
+    when(petsApplicationService.findEiaDirectionById(123, EiaDirectionService.EIA_DIRECTION_LOOKUP_REQUEST_PURPOSE))
+        .thenReturn(Optional.empty());
+
+    assertThat(eiaDirectionService.isEiaDirectionCompleted(applicationVersion)).isFalse();
+  }
+
+  private static Stream<Arguments> isEiaDirectionCompletedParams() {
     return Stream.of(
         Arguments.of(false, null),
         Arguments.of(false, EiaDirectionBuilder.newBuilder().withForPurposeOfEiaRegs(true).build()),
         Arguments.of(true, EiaDirectionBuilder.newBuilder().withForPurposeOfEiaRegs(false).build()),
-        Arguments.of(true, EiaDirectionBuilder.newBuilder().withForPurposeOfEiaRegs(true).withSatId(123).build()),
         Arguments.of(true, EiaDirectionBuilder.newBuilder().withForPurposeOfEiaRegs(true).withHaveEiaDirectionToSubmit(false).build()),
         Arguments.of(true, EiaDirectionBuilder.newBuilder().withForPurposeOfEiaRegs(true).withHaveEiaDirectionToSubmit(true).build())
     );
   }
 
   @Test
-  void isEiaScreeningCompleted_noEiaDirection() {
+  void isEiaDirectionCompleted_noEiaDirection() {
     when(eiaDirectionRepository.findByApplicationVersion(applicationVersion)).thenReturn(Optional.empty());
 
     assertThat(eiaDirectionService.isEiaDirectionCompleted(applicationVersion)).isFalse();
@@ -201,7 +226,7 @@ class EiaDirectionServiceTest {
     filledInEiaDirection.setHaveSubmittedEiaDirection(null);
     filledInEiaDirection.setSatId(null);
 
-    var petsApplication = PetsApplicationJson.fromCachedInformation(SAT_ID, CACHED_SAT_ID);
+    var petsApplication = PetsApplicationJson.fromCachedInformation(SAT_ID, CACHED_SAT_REF);
     eiaDirectionService.updateEiaDirection(applicationVersion, true, petsApplication);
 
     verify(eiaDirectionRepository).save(eiaDirectionCaptor.capture());
@@ -222,7 +247,7 @@ class EiaDirectionServiceTest {
             FOR_PURPOSE_OF_EIA_REGS,
             true,
             SAT_ID,
-            CACHED_SAT_ID,
+            CACHED_SAT_REF,
             null,
             null,
             null
@@ -303,7 +328,7 @@ class EiaDirectionServiceTest {
             FOR_PURPOSE_OF_EIA_REGS,
             HAVE_SUBMITTED_EIA,
             SAT_ID,
-            CACHED_SAT_ID,
+            CACHED_SAT_REF,
             form.haveEiaDirectionToSubmit(),
             form.latestDateToBeSubmitted().getAsLocalDate().orElseThrow(),
             form.whyNoEiaDirection().getInputValue()
@@ -341,7 +366,7 @@ class EiaDirectionServiceTest {
             FOR_PURPOSE_OF_EIA_REGS,
             HAVE_SUBMITTED_EIA,
             SAT_ID,
-            CACHED_SAT_ID,
+            CACHED_SAT_REF,
             form.haveEiaDirectionToSubmit(),
             null,
             form.whyNoEiaDirection().getInputValue()
@@ -376,10 +401,46 @@ class EiaDirectionServiceTest {
     assertThat(eiaDirectionService.getEiaDirectionSummaryCard(applicationVersion)).isEqualTo(summaryCard);
   }
 
-  private static Stream<Arguments> getEiaDirectionSummaryCardParams() {
+  @Test
+  void getEiaDirectionSummaryCard_haveSubmittedEiaDirection() {
+    var satRef = "test/sat/ref";
+
+    var eiaDirection = EiaDirectionBuilder.newBuilder()
+        .withSatId(SAT_ID)
+        .withForPurposeOfEiaRegs(true)
+        .withHaveSubmittedEiaDirection(true)
+        .withCachedSatRef(CACHED_SAT_REF)
+        .build();
+
+    var petsApplicationJson = new PetsApplicationJson(null, satRef, null, null, null);
+
     var projectPurposeQuestion = "Is this a \"project\" for the purposes of EIA Regulations 2020?";
     var haveSubmittedQuestion = "Have you submitted an EIA screening direction to the Secretary of State or OPRED?";
     var satIdQuestion = "EIA screening direction reference";
+
+    when(eiaDirectionRepository.findByApplicationVersion(applicationVersion))
+        .thenReturn(Optional.ofNullable(eiaDirection));
+    when(
+        petsApplicationService.getEiaDirectionByIdOrFallback(
+            SAT_ID,
+            EiaDirectionService.EIA_DIRECTION_LOOKUP_REQUEST_PURPOSE,
+            CACHED_SAT_REF
+        )
+    ).thenReturn(petsApplicationJson);
+
+    assertThat(eiaDirectionService.getEiaDirectionSummaryCard(applicationVersion)).isEqualTo(
+        SummaryCard.simpleSummaryCard(
+            SummaryDataView
+                .newWithKeyValue(projectPurposeQuestion, true)
+                .addKeyValue(haveSubmittedQuestion, true)
+                .addKeyValue(satIdQuestion, satRef)
+        )
+    );
+  }
+
+  private static Stream<Arguments> getEiaDirectionSummaryCardParams() {
+    var projectPurposeQuestion = "Is this a \"project\" for the purposes of EIA Regulations 2020?";
+    var haveSubmittedQuestion = "Have you submitted an EIA screening direction to the Secretary of State or OPRED?";
     var needsSubmittingQuestion = "Do you have an EIA screening direction that still needs to be submitted?";
     var latestSubmissionQuestion = "What is the latest date this will be submitted?";
     var whyNoSubmissionQuestion = "Explain why you don’t intend to submit an EIA screening direction";
@@ -416,31 +477,6 @@ class EiaDirectionServiceTest {
                     .newWithKeyValue(projectPurposeQuestion, true)
                     .addKeyValue(haveSubmittedQuestion, false)
                     .addKeyValue(needsSubmittingQuestion, null)
-            )
-        ),
-        Arguments.of(
-            EiaDirectionBuilder.newBuilder()
-                .withForPurposeOfEiaRegs(true)
-                .withHaveSubmittedEiaDirection(true)
-                .build(),
-            SummaryCard.simpleSummaryCard(
-                SummaryDataView
-                    .newWithKeyValue(projectPurposeQuestion, true)
-                    .addKeyValue(haveSubmittedQuestion, true)
-                    .addKeyValue(satIdQuestion, null)
-            )
-        ),
-        Arguments.of(
-            EiaDirectionBuilder.newBuilder()
-                .withForPurposeOfEiaRegs(true)
-                .withHaveSubmittedEiaDirection(true)
-                .withCachedSatRef(CACHED_SAT_ID)
-                .build(),
-            SummaryCard.simpleSummaryCard(
-                SummaryDataView
-                    .newWithKeyValue(projectPurposeQuestion, true)
-                    .addKeyValue(haveSubmittedQuestion, true)
-                    .addKeyValue(satIdQuestion, CACHED_SAT_ID)
             )
         ),
         Arguments.of(

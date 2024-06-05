@@ -147,8 +147,8 @@ class HaveSubmittedControllerTest extends AbstractApplicationControllerTest {
   @Test
   void saveForm() throws Exception {
     var petsApplication = PetsApplicationJson.fromCachedInformation(SAT_ID, "ref");
-    when(petsApplicationService.findPetsApplicationById(eq(SAT_ID), anyString()))
-        .thenReturn(Optional.of(petsApplication));
+    when(petsApplicationService.getEiaDirectionById(eq(SAT_ID), anyString()))
+        .thenReturn(petsApplication);
 
     mockMvc.perform(post(ReverseRouter.route(on(HaveSubmittedController.class)
             .saveForm(applicationId, null, null)))
@@ -171,8 +171,8 @@ class HaveSubmittedControllerTest extends AbstractApplicationControllerTest {
   @Test
   void saveForm_withValidationError() throws Exception {
     var petsApplication = PetsApplicationJson.fromCachedInformation(SAT_ID, "ref");
-    when(petsApplicationService.findPetsApplicationById(eq(SAT_ID), anyString()))
-        .thenReturn(Optional.of(petsApplication));
+    when(petsApplicationService.getEiaDirectionById(eq(SAT_ID), anyString()))
+        .thenReturn(petsApplication);
 
     doAnswer(invocation -> {
       var bindingResult = invocation.getArgument(1, BindingResult.class);

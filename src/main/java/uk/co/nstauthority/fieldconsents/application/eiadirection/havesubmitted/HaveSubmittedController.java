@@ -2,7 +2,6 @@ package uk.co.nstauthority.fieldconsents.application.eiadirection.havesubmitted;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
-import java.util.Optional;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,7 +20,6 @@ import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationPermission;
 import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.RestSearchItem;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
-import uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationJson;
 import uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationService;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
@@ -64,9 +62,8 @@ public class HaveSubmittedController {
     }
 
     var form = HaveSubmittedForm.from(eiaDirection);
-    var petsApplication = getPetsApplication(form.satId());
 
-    return getModelAndView(applicationId, form, petsApplication);
+    return getModelAndView(applicationId, form);
   }
 
   @PostMapping
@@ -75,14 +72,18 @@ public class HaveSubmittedController {
                         BindingResult bindingResult) {
     validator.validate(form, bindingResult);
 
-    var petsApplication = getPetsApplication(form.satId());
-
     if (bindingResult.hasErrors()) {
-      return getModelAndView(applicationId, form, petsApplication);
+      return getModelAndView(applicationId, form);
     }
 
+    var petsApplicationJson = petsApplicationService.getEiaDirectionById(form.satId(), PREFILL_FORM_PETS_REQUEST_PURPOSE);
+
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
-    eiaDirectionService.updateEiaDirection(applicationVersion, form.haveSubmittedEiaDirection(), petsApplication);
+    eiaDirectionService.updateEiaDirection(
+        applicationVersion,
+        form.haveSubmittedEiaDirection(),
+        petsApplicationJson
+    );
 
     if (Boolean.FALSE.equals(form.haveSubmittedEiaDirection())) {
       return ReverseRouter.redirect(on(NeedsSubmittingController.class).getForm(applicationId));
@@ -91,8 +92,8 @@ public class HaveSubmittedController {
     return ReverseRouter.redirect(on(ApplicationTaskListController.class).getTaskList(applicationId, null));
   }
 
-  private ModelAndView getModelAndView(Integer applicationId, HaveSubmittedForm form, PetsApplicationJson petsApplication) {
-    var prefilledEiaDirectionRef = Optional.ofNullable(petsApplication)
+  private ModelAndView getModelAndView(Integer applicationId, HaveSubmittedForm form) {
+    var prefilledEiaDirectionRef = petsApplicationService.findEiaDirectionById(form.satId(), PREFILL_FORM_PETS_REQUEST_PURPOSE)
         .map(petsApp -> new RestSearchItem(petsApp.getSelectionId(), petsApp.getSelectionText()))
         .orElse(RestSearchItem.EMPTY_REST_SEARCH_ITEM);
 
@@ -103,11 +104,4 @@ public class HaveSubmittedController {
         .addObject("petsSearchRestUrl", eiaDirectionService.getEiaDirectionRestUrl())
         .addObject("prefilledEiaDirectionRef", prefilledEiaDirectionRef);
   }
-
-  private PetsApplicationJson getPetsApplication(Integer satId) {
-    return Optional.ofNullable(satId)
-        .flatMap(id -> petsApplicationService.findPetsApplicationById(id, PREFILL_FORM_PETS_REQUEST_PURPOSE))
-        .orElse(null);
-  }
-
 }

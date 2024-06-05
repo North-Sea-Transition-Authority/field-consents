@@ -15,17 +15,22 @@ import uk.co.nstauthority.fieldconsents.application.eiadirection.projectpurpose.
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationJson;
 import uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationRestController;
+import uk.co.nstauthority.fieldconsents.petsapplications.PetsApplicationService;
 import uk.co.nstauthority.fieldconsents.summary.SummaryCard;
 import uk.co.nstauthority.fieldconsents.summary.SummaryDataView;
 
 @Service
 public class EiaDirectionService {
 
+  static final String EIA_DIRECTION_LOOKUP_REQUEST_PURPOSE = "EIA direction lookup for application summary";
+
   private final EiaDirectionRepository eiaDirectionRepository;
+  private final PetsApplicationService petsApplicationService;
 
   @Autowired
-  EiaDirectionService(EiaDirectionRepository eiaDirectionRepository) {
+  EiaDirectionService(EiaDirectionRepository eiaDirectionRepository, PetsApplicationService petsApplicationService) {
     this.eiaDirectionRepository = eiaDirectionRepository;
+    this.petsApplicationService = petsApplicationService;
   }
 
   public String getEiaDirectionRestUrl() {
@@ -50,8 +55,9 @@ public class EiaDirectionService {
       return true;
     }
 
-    if (Objects.nonNull(eiaDirection.getSatId())) {
-      return true;
+    var satId = eiaDirection.getSatId();
+    if (satId != null) {
+      return petsApplicationService.findEiaDirectionById(satId, EIA_DIRECTION_LOOKUP_REQUEST_PURPOSE).isPresent();
     }
 
     return Objects.nonNull(eiaDirection.getHaveEiaDirectionToSubmit());
@@ -153,7 +159,13 @@ public class EiaDirectionService {
     }
 
     if (Boolean.TRUE.equals(haveSubmittedEiaDirection)) {
-      summaryDataView.addKeyValue("EIA screening direction reference", eiaDirection.getCachedSatRef());
+      var eiaDirectionPetsApplicationJson = petsApplicationService.getEiaDirectionByIdOrFallback(
+          eiaDirection.getSatId(),
+          EIA_DIRECTION_LOOKUP_REQUEST_PURPOSE,
+          eiaDirection.getCachedSatRef()
+      );
+
+      summaryDataView.addKeyValue("EIA screening direction reference", eiaDirectionPetsApplicationJson.satRef());
       return SummaryCard.simpleSummaryCard(summaryDataView);
     }
 

@@ -45,7 +45,7 @@ class HaveSubmittedFormValidator implements Validator {
       return;
     }
 
-    var petsApplicationOptional = petsApplicationService.findPetsApplicationById(
+    var petsApplicationOptional = petsApplicationService.findEiaDirectionById(
         form.satId(),
         "EIA direction form validation"
     );

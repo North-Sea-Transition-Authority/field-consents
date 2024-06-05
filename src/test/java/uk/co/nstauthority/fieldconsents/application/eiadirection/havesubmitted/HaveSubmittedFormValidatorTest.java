@@ -76,7 +76,7 @@ class HaveSubmittedFormValidatorTest {
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     var petsApplication = PetsApplicationJson.fromCachedInformation(SAT_ID, CACHED_SAT_REF);
-    when(petsApplicationService.findPetsApplicationById(SAT_ID, SAT_LOOKUP_PURPOSE))
+    when(petsApplicationService.findEiaDirectionById(SAT_ID, SAT_LOOKUP_PURPOSE))
         .thenReturn(Optional.of(petsApplication));
 
     validator.validate(form, bindingResult);
@@ -89,7 +89,7 @@ class HaveSubmittedFormValidatorTest {
     var form = new HaveSubmittedForm(true, SAT_ID);
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
-    when(petsApplicationService.findPetsApplicationById(SAT_ID, SAT_LOOKUP_PURPOSE)).thenReturn(Optional.empty());
+    when(petsApplicationService.findEiaDirectionById(SAT_ID, SAT_LOOKUP_PURPOSE)).thenReturn(Optional.empty());
 
     validator.validate(form, bindingResult);
 

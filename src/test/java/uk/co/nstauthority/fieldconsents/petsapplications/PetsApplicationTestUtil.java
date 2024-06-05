@@ -22,6 +22,7 @@ public class PetsApplicationTestUtil {
           .satType(SatType.EIA_DIRECTION)
           .status(SatStatus.COMPLETED)
           .decision(SatDecision.APPROVE)
+          .isLatestApprovedVariation(true)
           .build();
 
   public static PetsApplicationJson petsApplication1Json =
@@ -40,6 +41,7 @@ public class PetsApplicationTestUtil {
           .satType(SatType.EIA_DIRECTION_2020)
           .status(SatStatus.DECISION)
           .decision(SatDecision.UNKNOWN)
+          .isLatestApprovedVariation(true)
           .build();
 
   public static PetsApplicationJson petsApplication2Json =
@@ -58,6 +60,7 @@ public class PetsApplicationTestUtil {
           .satType(SatType.EIA_DIRECTION)
           .status(SatStatus.COMPLETED)
           .decision(SatDecision.REJECT)
+          .isLatestApprovedVariation(true)
           .build();
 
   public static PetsApplicationJson petsApplication3Json =
