@@ -7,11 +7,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -26,7 +26,6 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
-import uk.co.fivium.digitaldocumentlibrary.document.PdfRenderResult;
 import uk.co.fivium.fileuploadlibrary.core.FileService;
 import uk.co.fivium.fileuploadlibrary.core.FileSource;
 import uk.co.fivium.fileuploadlibrary.core.FileUploadRequest;
@@ -47,8 +46,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.docum
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.fieldequitypartner.ConsentFieldEquityPartnerService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.DocumentInstanceDtoTestUtil;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.PdfRenderResultWithGenerationData;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.PdfRenderingOptions;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.FieldConsentsPdfRenderResult;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateDtoTestUtil;
@@ -111,13 +109,13 @@ class ConsentIssuingServiceTest {
 
     when(consentService.createConsent(application, user)).thenReturn(consent);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
-    doNothing().when(consentIssuingService).generateDocumentInstancesAndSaveToConsent(any(), any());
+    doNothing().when(consentIssuingService).generateDocumentInstancesAndSaveToConsent(any(), any(), any());
     doNothing().when(consentIssuingService).copySupportingDocumentsToConsent(any(), any());
 
     consentIssuingService.issueConsent(applicationVersion, user);
 
     verify(consentService, never()).setConsentSupersededByConsent(any(), any());
-    verify(consentIssuingService).generateDocumentInstancesAndSaveToConsent(applicationVersion, consent);
+    verify(consentIssuingService).generateDocumentInstancesAndSaveToConsent(applicationVersion, consent, user);
     verify(consentIssuingService).copySupportingDocumentsToConsent(application, consent);
     verify(applicationService).consentApplication(applicationVersion);
     verify(consentEmailService).sendConsentIssuedEmailToOperator(applicationVersion);
@@ -139,13 +137,13 @@ class ConsentIssuingServiceTest {
     when(consentService.createConsent(application, user)).thenReturn(consent);
     when(consentService.getPreviousConsent(application)).thenReturn(previousConsent);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
-    doNothing().when(consentIssuingService).generateDocumentInstancesAndSaveToConsent(any(), any());
+    doNothing().when(consentIssuingService).generateDocumentInstancesAndSaveToConsent(any(), any(), any());
     doNothing().when(consentIssuingService).copySupportingDocumentsToConsent(any(), any());
 
     consentIssuingService.issueConsent(applicationVersion, user);
 
     verify(consentService).setConsentSupersededByConsent(previousConsent, consent);
-    verify(consentIssuingService).generateDocumentInstancesAndSaveToConsent(applicationVersion, consent);
+    verify(consentIssuingService).generateDocumentInstancesAndSaveToConsent(applicationVersion, consent, user);
     verify(consentIssuingService).copySupportingDocumentsToConsent(application, consent);
     verify(applicationService).consentApplication(applicationVersion);
     verify(consentEmailService).sendConsentIssuedEmailToOperator(applicationVersion);
@@ -160,7 +158,7 @@ class ConsentIssuingServiceTest {
     var user = ServiceUserDetailTestUtil.Builder().build();
 
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
-    doNothing().when(consentIssuingService).generateDocumentInstancesAndSaveToConsent(any(), any());
+    doNothing().when(consentIssuingService).generateDocumentInstancesAndSaveToConsent(any(), any(), any());
     doNothing().when(consentIssuingService).copySupportingDocumentsToConsent(any(), any());
 
     consentIssuingService.issueConsent(applicationVersion, user);
@@ -176,7 +174,7 @@ class ConsentIssuingServiceTest {
 
     when(consentService.createConsent(application, user)).thenReturn(consent);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
-    doNothing().when(consentIssuingService).generateDocumentInstancesAndSaveToConsent(any(), any());
+    doNothing().when(consentIssuingService).generateDocumentInstancesAndSaveToConsent(any(), any(), any());
     doNothing().when(consentIssuingService).copySupportingDocumentsToConsent(any(), any());
 
     // WHEN the email service call throws an exception
@@ -189,7 +187,7 @@ class ConsentIssuingServiceTest {
         () -> consentIssuingService.issueConsent(applicationVersion, user)
     );
 
-    verify(consentIssuingService).generateDocumentInstancesAndSaveToConsent(applicationVersion, consent);
+    verify(consentIssuingService).generateDocumentInstancesAndSaveToConsent(applicationVersion, consent, user);
     verify(consentIssuingService).copySupportingDocumentsToConsent(application, consent);
 
     verify(applicationService).consentApplication(applicationVersion);
@@ -205,7 +203,7 @@ class ConsentIssuingServiceTest {
 
     when(consentService.createConsent(application, user)).thenReturn(consent);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
-    doNothing().when(consentIssuingService).generateDocumentInstancesAndSaveToConsent(any(), any());
+    doNothing().when(consentIssuingService).generateDocumentInstancesAndSaveToConsent(any(), any(), any());
     doNothing().when(consentIssuingService).copySupportingDocumentsToConsent(any(), any());
 
     // WHEN the email service call throws an exception
@@ -218,7 +216,7 @@ class ConsentIssuingServiceTest {
         () -> consentIssuingService.issueConsent(applicationVersion, user)
     );
 
-    verify(consentIssuingService).generateDocumentInstancesAndSaveToConsent(applicationVersion, consent);
+    verify(consentIssuingService).generateDocumentInstancesAndSaveToConsent(applicationVersion, consent, user);
     verify(consentIssuingService).copySupportingDocumentsToConsent(application, consent);
 
     verify(applicationService).consentApplication(applicationVersion);
@@ -234,7 +232,7 @@ class ConsentIssuingServiceTest {
 
     when(consentService.createConsent(application, user)).thenReturn(consent);
     when(applicationAssetService.getPrimaryAsset(applicationVersion)).thenReturn(primaryApplicationAsset);
-    doNothing().when(consentIssuingService).generateDocumentInstancesAndSaveToConsent(any(), any());
+    doNothing().when(consentIssuingService).generateDocumentInstancesAndSaveToConsent(any(), any(), any());
     doNothing().when(consentIssuingService).copySupportingDocumentsToConsent(any(), any());
 
     // WHEN the email service call throws an exception
@@ -247,7 +245,7 @@ class ConsentIssuingServiceTest {
         () -> consentIssuingService.issueConsent(applicationVersion, user)
     );
 
-    verify(consentIssuingService).generateDocumentInstancesAndSaveToConsent(applicationVersion, consent);
+    verify(consentIssuingService).generateDocumentInstancesAndSaveToConsent(applicationVersion, consent, user);
     verify(consentIssuingService).copySupportingDocumentsToConsent(application, consent);
 
     verify(applicationService).consentApplication(applicationVersion);
@@ -257,6 +255,7 @@ class ConsentIssuingServiceTest {
 
   @Test
   void generateDocumentInstancesAndSaveToConsent() {
+    var user = ServiceUserDetailTestUtil.Builder().build();
     var consent = ConsentTestUtil.newBuilder().build();
 
     var documentInstanceDto1 = DocumentInstanceDtoTestUtil.builder()
@@ -271,28 +270,25 @@ class ConsentIssuingServiceTest {
         .withDocumentTemplate(DocumentTemplateDtoTestUtil.builder().withDisplayOrder(3).build())
         .build();
 
-    var renderResultWithGenerationData1 = new PdfRenderResultWithGenerationData(
-        new PdfRenderResult(mock(ByteArrayResource.class), "html1"),
-        Map.of("FOO", "BAR")
+    var renderResultWithGenerationData1 = new FieldConsentsPdfRenderResult(
+      new ByteArrayResource(new byte[]{1}), "html1", Map.of("FOO1", "BAR1")
     );
 
-    var renderResultWithGenerationData2 = new PdfRenderResultWithGenerationData(
-        new PdfRenderResult(mock(ByteArrayResource.class), "html2"),
-        Map.of("FOO", "BAR")
+    var renderResultWithGenerationData2 = new FieldConsentsPdfRenderResult(
+      new ByteArrayResource(new byte[]{1, 2}), "html2", Map.of("FOO2", "BAR2")
     );
 
-    var renderResultWithGenerationData3 = new PdfRenderResultWithGenerationData(
-        new PdfRenderResult(mock(ByteArrayResource.class), "html3"),
-        Map.of("FOO", "BAR")
+    var renderResultWithGenerationData3 = new FieldConsentsPdfRenderResult(
+      new ByteArrayResource(new byte[]{1, 2, 3}), "html3", Map.of("FOO3", "BAR3")
     );
 
     when(applicationDocumentInstanceService.getDocumentInstanceDtos(applicationVersion.getApplication()))
         .thenReturn(List.of(documentInstanceDto2, documentInstanceDto1, documentInstanceDto3));
-    when(applicationDocumentInstanceService.renderPdf(applicationVersion, documentInstanceDto1, PdfRenderingOptions.newBuilder().build()))
+    when(applicationDocumentInstanceService.renderAndSignPdf(applicationVersion, documentInstanceDto1, user, false))
         .thenReturn(renderResultWithGenerationData1);
-    when(applicationDocumentInstanceService.renderPdf(applicationVersion, documentInstanceDto2, PdfRenderingOptions.newBuilder().build()))
+    when(applicationDocumentInstanceService.renderAndSignPdf(applicationVersion, documentInstanceDto2, user, false))
         .thenReturn(renderResultWithGenerationData2);
-    when(applicationDocumentInstanceService.renderPdf(applicationVersion, documentInstanceDto3, PdfRenderingOptions.newBuilder().build()))
+    when(applicationDocumentInstanceService.renderAndSignPdf(applicationVersion, documentInstanceDto3, user, false))
         .thenReturn(renderResultWithGenerationData3);
 
     ArgumentCaptor<Function<FileUploadRequest.Builder, FileUploadRequest>> fileUploadRequestBuilderFunctionCaptor =
@@ -301,14 +297,23 @@ class ConsentIssuingServiceTest {
     when(fileService.upload(fileUploadRequestBuilderFunctionCaptor.capture()))
         .thenReturn(FileUploadResponse.success(UUID.randomUUID(), FileSource.fromInputStreamSource(null, "test", "test/test", 1)));
 
-    consentIssuingService.generateDocumentInstancesAndSaveToConsent(applicationVersion, consent);
+    consentIssuingService.generateDocumentInstancesAndSaveToConsent(applicationVersion, consent, user);
 
     var consentFileUsage = ConsentFileUsage.generatedConsentDocumentFrom(consent);
 
     assertThat(fileUploadRequestBuilderFunctionCaptor.getAllValues())
         .extracting(function -> function.apply(FileUploadRequest.newBuilder().withBucket("bucket")))
         .extracting(
-            FileUploadRequest::fileSource,
+            request -> {
+              try {
+                return request.fileSource().getInputStream().readAllBytes();
+              } catch (IOException e) {
+                throw new RuntimeException(e);
+              }
+            },
+            request -> request.fileSource().getFileName(),
+            request -> request.fileSource().getContentType(),
+            request -> request.fileSource().getSize(),
             FileUploadRequest::usageId,
             FileUploadRequest::usageType,
             FileUploadRequest::documentType,
@@ -317,12 +322,10 @@ class ConsentIssuingServiceTest {
         )
         .containsExactly(
             tuple(
-                FileSource.fromInputStreamSource(
-                    renderResultWithGenerationData1.pdfRenderResult().pdfContent(),
-                    "%s.%s".formatted(documentInstanceDto1.title(), MediaType.APPLICATION_PDF.getSubtype()),
-                    MediaType.APPLICATION_PDF_VALUE,
-                    renderResultWithGenerationData1.pdfRenderResult().pdfContent().contentLength()
-                ),
+                renderResultWithGenerationData1.pdfContent().getByteArray(),
+                "%s.%s".formatted(documentInstanceDto1.title(), MediaType.APPLICATION_PDF.getSubtype()),
+                MediaType.APPLICATION_PDF_VALUE,
+                renderResultWithGenerationData1.pdfContent().contentLength(),
                 consentFileUsage.usageId(),
                 consentFileUsage.usageType(),
                 consentFileUsage.documentType(),
@@ -330,12 +333,10 @@ class ConsentIssuingServiceTest {
                 false
             ),
             tuple(
-                FileSource.fromInputStreamSource(
-                    renderResultWithGenerationData2.pdfRenderResult().pdfContent(),
-                    "%s.%s".formatted(documentInstanceDto2.title(), MediaType.APPLICATION_PDF.getSubtype()),
-                    MediaType.APPLICATION_PDF_VALUE,
-                    renderResultWithGenerationData2.pdfRenderResult().pdfContent().contentLength()
-                ),
+                renderResultWithGenerationData2.pdfContent().getByteArray(),
+                "%s.%s".formatted(documentInstanceDto2.title(), MediaType.APPLICATION_PDF.getSubtype()),
+                MediaType.APPLICATION_PDF_VALUE,
+                renderResultWithGenerationData2.pdfContent().contentLength(),
                 consentFileUsage.usageId(),
                 consentFileUsage.usageType(),
                 consentFileUsage.documentType(),
@@ -343,12 +344,10 @@ class ConsentIssuingServiceTest {
                 false
             ),
             tuple(
-                FileSource.fromInputStreamSource(
-                    renderResultWithGenerationData3.pdfRenderResult().pdfContent(),
-                    "%s.%s".formatted(documentInstanceDto3.title(), MediaType.APPLICATION_PDF.getSubtype()),
-                    MediaType.APPLICATION_PDF_VALUE,
-                    renderResultWithGenerationData3.pdfRenderResult().pdfContent().contentLength()
-                ),
+                renderResultWithGenerationData3.pdfContent().getByteArray(),
+                "%s.%s".formatted(documentInstanceDto3.title(), MediaType.APPLICATION_PDF.getSubtype()),
+                MediaType.APPLICATION_PDF_VALUE,
+                renderResultWithGenerationData3.pdfContent().contentLength(),
                 consentFileUsage.usageId(),
                 consentFileUsage.usageType(),
                 consentFileUsage.documentType(),

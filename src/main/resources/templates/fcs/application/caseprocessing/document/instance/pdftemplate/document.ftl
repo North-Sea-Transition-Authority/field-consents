@@ -1,4 +1,4 @@
-<#-- @ftlvariable name="previewWatermark" type="boolean" -->
+<#-- @ftlvariable name="isPreview" type="boolean" -->
 <#-- @ftlvariable name="applicationReference" type="java.lang.String" -->
 <#-- @ftlvariable name="documentInstanceSectionsSummaryView" type="uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionsSummaryView" -->
 <#-- @ftlvariable name="customerBrandingConfigurationProperties" type="uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties" -->
@@ -18,7 +18,7 @@
       </tr>
     </tbody>
   </table>
-  <#if previewWatermark>
+  <#if isPreview>
     <div class="watermark">
       PREVIEW DOCUMENT
     </div>
@@ -28,7 +28,7 @@
       <tr>
         <td class="page-number"></td>
         <td>
-          ${customerBrandingConfigurationProperties.name()} is a business name of the ${customerBrandingConfigurationProperties.legalName()}.
+          ${customerBrandingConfigurationProperties.name()} is the business name of the ${customerBrandingConfigurationProperties.legalName()}.
           ${customerBrandingConfigurationProperties.legalName()} is a limited company registered in England and Wales with
           registered number ${customerBrandingConfigurationProperties.registeredNumber()} and VAT registered number
           ${customerBrandingConfigurationProperties.vatNumber()}. Our registered office is at ${customerBrandingConfigurationProperties.address()}.

@@ -1,54 +1,84 @@
 package uk.co.nstauthority.fieldconsents.document.signing;
 
-import java.io.InputStream;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.ftss.client.FtssClient;
-import uk.co.fivium.ftss.client.FtssSignerProperties;
 import uk.co.fivium.ftss.client.FtssVisualSignatureProperties;
-
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 
 @Service
 public class DocumentSigningService {
 
   private final FtssClient ftssClient;
-  private final FtssSignerProperties signerProperties;
-  private final FtssVisualSignatureProperties visualSignatureProperties;
+  private final DigitalSignatureProperties digitalSignatureProperties;
 
-  DocumentSigningService(FtssClient ftssClient) {
+  DocumentSigningService(
+      FtssClient ftssClient,
+      DigitalSignatureProperties digitalSignatureProperties
+  ) {
     this.ftssClient = ftssClient;
-
-    // TODO FTSS-89 organisation props can be updated once OGA identity is created with GlobalSign
-    signerProperties = new FtssSignerProperties(
-      "Oil and Gas Authority",
-      "Fivium Ltd",
-      "tech@fivium.co.uk",
-      "London",
-      "GB",
-      "London",
-      "On behalf of the Secretary of State",
-      "North Sea Transition Authority");
-
-    // TODO FCS-773 cover page design
-    visualSignatureProperties = new FtssVisualSignatureProperties(
-        new ClassPathResource("document-assets/nsta-logo-landscape-black.png"),
-        new FtssVisualSignatureProperties.SignatureCoordinates(
-            new FtssVisualSignatureProperties.Coordinate(0, 70, 211),
-            new FtssVisualSignatureProperties.Coordinate(0, 221, 211),
-            new FtssVisualSignatureProperties.Coordinate(0, 70, 147),
-            new FtssVisualSignatureProperties.Coordinate(0, 221, 147)
-        ),
-      "Digitally signed by Oil and Gas Authority",
-      null,
-      null
-    );
+    this.digitalSignatureProperties = digitalSignatureProperties;
   }
 
-  public InputStream applyDigitalSignature(InputStream document) {
+  public ByteArrayResource previewPdfSignature(ByteArrayResource pdfResource) {
+    var visualSignatureProperties = getVisualSignatureProperties(
+        pdfResource,
+        digitalSignatureProperties.line1(),
+        "((CAM_USER))",
+        digitalSignatureProperties.line3()
+    );
+    var ftssSignerProperties = digitalSignatureProperties.asFtssSignerProperties();
+
     try {
-      return ftssClient.signPdf(document, signerProperties, visualSignatureProperties);
+      return new ByteArrayResource(
+        ftssClient.previewPdf(pdfResource.getInputStream(), ftssSignerProperties, visualSignatureProperties).readAllBytes()
+      );
     } catch (Exception e) {
-      throw new RuntimeException("Failed to sign document", e);
+      throw new RuntimeException("Failed to preview signature", e);
+    }
+  }
+
+  public ByteArrayResource signPdf(ByteArrayResource pdfResource, ServiceUserDetail signingUser) {
+    var visualSignatureProperties = getVisualSignatureProperties(
+        pdfResource,
+        digitalSignatureProperties.line1(),
+        signingUser.displayName(),
+        digitalSignatureProperties.line3()
+    );
+    var ftssSignerProperties = digitalSignatureProperties.asFtssSignerProperties();
+
+    try {
+      return new ByteArrayResource(
+        ftssClient.signPdf(pdfResource.getInputStream(), ftssSignerProperties, visualSignatureProperties).readAllBytes()
+      );
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to sign PDF", e);
+    }
+
+  }
+
+  private FtssVisualSignatureProperties getVisualSignatureProperties(
+      ByteArrayResource pdfResource,
+      String line1,
+      String line2,
+      String line3
+  ) {
+    try {
+      var pdf = PDDocument.load(pdfResource.getByteArray());
+      var signatureCoordinates = new SignaturePlaceholderLocator().getSignaturePlaceholderLocation(pdf);
+
+      return new FtssVisualSignatureProperties(
+          // Workaround for current FTSS signature image requirements TODO FTSS-90
+          new ClassPathResource("document-assets/blank-1px.png"),
+          signatureCoordinates,
+          line1,
+          line2,
+          line3
+      );
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to calculate FTSS visual signature properties", e);
     }
   }
 

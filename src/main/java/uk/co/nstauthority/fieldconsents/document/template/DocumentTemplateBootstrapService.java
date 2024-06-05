@@ -8,6 +8,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionService;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateService;
+import uk.co.nstauthority.fieldconsents.document.mailmergefield.DigitalSignatureMailMergeField;
 
 @Service
 class DocumentTemplateBootstrapService {
@@ -240,12 +241,23 @@ class DocumentTemplateBootstrapService {
     documentTemplateSectionService.createDocumentTemplateSection(
         fieldProductionConsentDocumentTemplateDto,
         null,
+        "Digital signature",
+        DigitalSignatureMailMergeField.SIGNATURE_PLACEHOLDER_TEXT,
+        null,
+        false,
+        false,
+        8
+    );
+
+    documentTemplateSectionService.createDocumentTemplateSection(
+        fieldProductionConsentDocumentTemplateDto,
+        null,
         "Schedule 1",
         "((SCHEDULE))",
         null,
         false,
         true,
-        8
+        9
     );
 
     documentTemplateSectionService.createDocumentTemplateSection(
@@ -264,7 +276,7 @@ class DocumentTemplateBootstrapService {
         null,
         false,
         true,
-        9
+        10
     );
   }
 
@@ -383,12 +395,23 @@ class DocumentTemplateBootstrapService {
     documentTemplateSectionService.createDocumentTemplateSection(
         fieldFlareConsentDocumentTemplateDto,
         null,
+        "Digital signature",
+        DigitalSignatureMailMergeField.SIGNATURE_PLACEHOLDER_TEXT,
+        null,
+        false,
+        false,
+        7
+    );
+
+    documentTemplateSectionService.createDocumentTemplateSection(
+        fieldFlareConsentDocumentTemplateDto,
+        null,
         "Schedule 1",
         "((SCHEDULE))",
         null,
         false,
         true,
-        7
+        8
     );
 
     documentTemplateSectionService.createDocumentTemplateSection(
@@ -407,7 +430,7 @@ class DocumentTemplateBootstrapService {
         null,
         false,
         true,
-        8
+        9
     );
   }
 
@@ -508,12 +531,23 @@ class DocumentTemplateBootstrapService {
     documentTemplateSectionService.createDocumentTemplateSection(
         terminalFlareConsentDocumentTemplateDto,
         null,
+        "Digital signature",
+        DigitalSignatureMailMergeField.SIGNATURE_PLACEHOLDER_TEXT,
+        null,
+        false,
+        false,
+        6
+    );
+
+    documentTemplateSectionService.createDocumentTemplateSection(
+        terminalFlareConsentDocumentTemplateDto,
+        null,
         "Schedule",
         "((SCHEDULE))",
         null,
         false,
         true,
-        6
+        7
     );
   }
 
@@ -615,12 +649,23 @@ class DocumentTemplateBootstrapService {
     documentTemplateSectionService.createDocumentTemplateSection(
         fieldVentConsentDocumentTemplateDto,
         null,
+        "Digital signature",
+        DigitalSignatureMailMergeField.SIGNATURE_PLACEHOLDER_TEXT,
+        null,
+        false,
+        false,
+        6
+    );
+
+    documentTemplateSectionService.createDocumentTemplateSection(
+        fieldVentConsentDocumentTemplateDto,
+        null,
         "Schedule 1",
         "((SCHEDULE))",
         null,
         false,
         true,
-        6
+        7
     );
 
     documentTemplateSectionService.createDocumentTemplateSection(
@@ -639,7 +684,7 @@ class DocumentTemplateBootstrapService {
         null,
         false,
         true,
-        7
+        8
     );
   }
 
@@ -740,12 +785,23 @@ class DocumentTemplateBootstrapService {
     documentTemplateSectionService.createDocumentTemplateSection(
         terminalVentConsentDocumentTemplateDto,
         null,
+        "Digital signature",
+        DigitalSignatureMailMergeField.SIGNATURE_PLACEHOLDER_TEXT,
+        null,
+        false,
+        false,
+        6
+    );
+
+    documentTemplateSectionService.createDocumentTemplateSection(
+        terminalVentConsentDocumentTemplateDto,
+        null,
         "Schedule",
         "((SCHEDULE))",
         null,
         false,
         true,
-        6
+        7
     );
   }
 

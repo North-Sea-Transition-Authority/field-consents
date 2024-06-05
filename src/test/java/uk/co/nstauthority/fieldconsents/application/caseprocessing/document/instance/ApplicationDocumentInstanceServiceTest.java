@@ -2,8 +2,7 @@ package uk.co.nstauthority.fieldconsents.application.caseprocessing.document.ins
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -35,7 +34,9 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.branding.BrandingTestUtil;
+import uk.co.nstauthority.fieldconsents.document.signing.DocumentSigningService;
 import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateDtoTestUtil;
 import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateType;
 
@@ -62,6 +63,9 @@ class ApplicationDocumentInstanceServiceTest {
   @Mock
   private ApplicationAssetService applicationAssetService;
 
+  @Mock
+  private DocumentSigningService documentSigningService;
+
   private ApplicationDocumentInstanceService applicationDocumentInstanceService;
 
   @BeforeEach
@@ -73,7 +77,8 @@ class ApplicationDocumentInstanceServiceTest {
         applicationService,
         applicationVersionService,
         applicationAssetService,
-        BrandingTestUtil.CUSTOMER_BRANDING_CONFIGURATION_PROPERTIES
+        BrandingTestUtil.CUSTOMER_BRANDING_CONFIGURATION_PROPERTIES,
+        documentSigningService
     ));
   }
 
@@ -244,17 +249,18 @@ class ApplicationDocumentInstanceServiceTest {
   }
 
   @Test
-  void renderPdf() {
+  void renderAndSignPdf_sign() {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
-    var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
-    var pdfRenderingOptions = PdfRenderingOptions.newBuilder().build();
+    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().withMnemonic(DocumentTemplateType.FIELD_PRODUCTION_CONSENT.name()).build();
+    var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().withDocumentTemplate(documentTemplateDto).build();
     var documentInstanceSectionsSummaryView = mock(DocumentInstanceSectionsSummaryView.class);
     var pdfRenderResult = new PdfRenderResult(new ByteArrayResource(new byte[]{1, 2,3}), "<html/>");
     var applicationReference = "Application reference";
+    var user = ServiceUserDetailTestUtil.Builder().build();
 
     var expectedTemplateModel = Map.of(
         "documentInstanceSectionsSummaryView", documentInstanceSectionsSummaryView,
-        "previewWatermark", pdfRenderingOptions.previewWatermark(),
+        "isPreview", false,
         "applicationReference", applicationReference,
         "customerBrandingConfigurationProperties", BrandingTestUtil.CUSTOMER_BRANDING_CONFIGURATION_PROPERTIES
     );
@@ -270,11 +276,92 @@ class ApplicationDocumentInstanceServiceTest {
     when(documentInstanceService.renderPdf(documentInstanceDto, expectedTemplateModel))
         .thenReturn(pdfRenderResult);
 
-    assertThat(applicationDocumentInstanceService.renderPdf(applicationVersion, documentInstanceDto, pdfRenderingOptions))
-        .isEqualTo(new PdfRenderResultWithGenerationData(
-            pdfRenderResult,
-            documentInstanceSectionsSummaryView.allMailMergeResolvedValuesByMnemonic()
-        ));
+    when(documentSigningService.signPdf(pdfRenderResult.pdfContent(), user))
+      .thenReturn(new ByteArrayResource(new byte[]{4, 5, 6}));
+
+    var signedPdf = applicationDocumentInstanceService.renderAndSignPdf(applicationVersion, documentInstanceDto, user, false);
+
+    assertThat(signedPdf.pdfContent().getByteArray()).isEqualTo(new byte[]{4, 5, 6});
+    assertThat(signedPdf.pdfContent().contentLength()).isEqualTo(3);
+    assertThat(signedPdf.pdfHtml()).isEqualTo(pdfRenderResult.pdfHtml());
+    assertThat(signedPdf.mailMergeResolvedValuesByMnemonic()).isEqualTo(documentInstanceSectionsSummaryView.allMailMergeResolvedValuesByMnemonic());
+  }
+
+  @Test
+  void renderAndSignPdf_preview() {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().withMnemonic(DocumentTemplateType.FIELD_PRODUCTION_CONSENT.name()).build();
+    var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().withDocumentTemplate(documentTemplateDto).build();
+    var documentInstanceSectionsSummaryView = mock(DocumentInstanceSectionsSummaryView.class);
+    var pdfRenderResult = new PdfRenderResult(new ByteArrayResource(new byte[]{1, 2,3}), "<html/>");
+    var applicationReference = "Application reference";
+    var user = ServiceUserDetailTestUtil.Builder().build();
+
+    var expectedTemplateModel = Map.of(
+        "documentInstanceSectionsSummaryView", documentInstanceSectionsSummaryView,
+        "isPreview", true,
+        "applicationReference", applicationReference,
+        "customerBrandingConfigurationProperties", BrandingTestUtil.CUSTOMER_BRANDING_CONFIGURATION_PROPERTIES
+    );
+
+    when(applicationDocumentInstanceSectionViewService.getDocumentInstanceSectionsSummaryView(
+        applicationVersion.getApplication(),
+        documentInstanceDto,
+        false
+    )).thenReturn(documentInstanceSectionsSummaryView);
+
+    when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
+
+    when(documentInstanceService.renderPdf(documentInstanceDto, expectedTemplateModel))
+        .thenReturn(pdfRenderResult);
+
+    when(documentSigningService.previewPdfSignature(pdfRenderResult.pdfContent()))
+        .thenReturn(new ByteArrayResource(new byte[]{4, 5, 6}));
+
+    var signedPdf = applicationDocumentInstanceService.renderAndSignPdf(applicationVersion, documentInstanceDto, user, true);
+
+    assertThat(signedPdf.pdfContent().getByteArray()).isEqualTo(new byte[]{4, 5, 6});
+    assertThat(signedPdf.pdfContent().contentLength()).isEqualTo(3);
+    assertThat(signedPdf.pdfHtml()).isEqualTo(pdfRenderResult.pdfHtml());
+    assertThat(signedPdf.mailMergeResolvedValuesByMnemonic()).isEqualTo(documentInstanceSectionsSummaryView.allMailMergeResolvedValuesByMnemonic());
+  }
+
+  @Test
+  void renderAndSignPdf_non_consent() {
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+    var documentTemplateDto = DocumentTemplateDtoTestUtil.builder().withMnemonic(DocumentTemplateType.FLARE_AND_COMMISSIONING_LETTER.name()).build();
+    var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().withDocumentTemplate(documentTemplateDto).build();
+    var documentInstanceSectionsSummaryView = mock(DocumentInstanceSectionsSummaryView.class);
+    var pdfRenderResult = new PdfRenderResult(new ByteArrayResource(new byte[]{1, 2,3}), "<html/>");
+    var applicationReference = "Application reference";
+    var user = ServiceUserDetailTestUtil.Builder().build();
+
+    var expectedTemplateModel = Map.of(
+        "documentInstanceSectionsSummaryView", documentInstanceSectionsSummaryView,
+        "isPreview", false,
+        "applicationReference", applicationReference,
+        "customerBrandingConfigurationProperties", BrandingTestUtil.CUSTOMER_BRANDING_CONFIGURATION_PROPERTIES
+    );
+
+    when(applicationDocumentInstanceSectionViewService.getDocumentInstanceSectionsSummaryView(
+        applicationVersion.getApplication(),
+        documentInstanceDto,
+        false
+    )).thenReturn(documentInstanceSectionsSummaryView);
+
+    when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
+
+    when(documentInstanceService.renderPdf(documentInstanceDto, expectedTemplateModel))
+        .thenReturn(pdfRenderResult);
+
+    var unsignedPdf = applicationDocumentInstanceService.renderAndSignPdf(applicationVersion, documentInstanceDto, user, false);
+
+    assertThat(unsignedPdf.pdfContent().getByteArray()).isEqualTo(new byte[]{1, 2, 3});
+    assertThat(unsignedPdf.pdfContent().contentLength()).isEqualTo(3);
+    assertThat(unsignedPdf.pdfHtml()).isEqualTo(pdfRenderResult.pdfHtml());
+    assertThat(unsignedPdf.mailMergeResolvedValuesByMnemonic()).isEqualTo(documentInstanceSectionsSummaryView.allMailMergeResolvedValuesByMnemonic());
+
+    verify(documentSigningService, never()).signPdf(any(), any());
   }
 
   @Test

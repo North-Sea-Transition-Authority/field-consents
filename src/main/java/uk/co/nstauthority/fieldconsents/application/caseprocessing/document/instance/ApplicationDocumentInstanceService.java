@@ -5,18 +5,22 @@ import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceDto;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceService;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateDto;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateService;
+import uk.co.fivium.digitaldocumentlibrary.document.PdfRenderResult;
 import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.document.signing.DocumentSigningService;
 import uk.co.nstauthority.fieldconsents.document.template.DocumentTemplateType;
 
 @Service
@@ -32,13 +36,15 @@ public class ApplicationDocumentInstanceService {
   private final ApplicationVersionService applicationVersionService;
   private final ApplicationAssetService applicationAssetService;
   private final CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties;
+  private final DocumentSigningService documentSigningService;
 
   ApplicationDocumentInstanceService(
       ApplicationDocumentInstanceSectionViewService applicationDocumentInstanceSectionViewService,
       DocumentTemplateService documentTemplateService, DocumentInstanceService documentInstanceService,
       ApplicationService applicationService, ApplicationVersionService applicationVersionService,
       ApplicationAssetService applicationAssetService,
-      CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties
+      CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties,
+      DocumentSigningService documentSigningService
   ) {
     this.applicationDocumentInstanceSectionViewService = applicationDocumentInstanceSectionViewService;
     this.documentTemplateService = documentTemplateService;
@@ -47,6 +53,7 @@ public class ApplicationDocumentInstanceService {
     this.applicationVersionService = applicationVersionService;
     this.applicationAssetService = applicationAssetService;
     this.customerBrandingConfigurationProperties = customerBrandingConfigurationProperties;
+    this.documentSigningService = documentSigningService;
   }
 
   public void createDocumentInstancesForApplication(Application application) {
@@ -99,10 +106,11 @@ public class ApplicationDocumentInstanceService {
   }
 
   @Observed(name = "fcs.pdf.rendering", contextualName = "rendering pdf document")
-  public PdfRenderResultWithGenerationData renderPdf(
+  public FieldConsentsPdfRenderResult renderAndSignPdf(
       ApplicationVersion applicationVersion,
       DocumentInstanceDto documentInstanceDto,
-      PdfRenderingOptions pdfRenderingOptions
+      ServiceUserDetail invokingUser,
+      boolean isPreview
   ) {
     var documentInstanceSectionsSummaryView =
         applicationDocumentInstanceSectionViewService.getDocumentInstanceSectionsSummaryView(
@@ -113,14 +121,34 @@ public class ApplicationDocumentInstanceService {
 
     Map<String, Object> templateModel = Map.of(
         "documentInstanceSectionsSummaryView", documentInstanceSectionsSummaryView,
-        "previewWatermark", pdfRenderingOptions.previewWatermark(),
+        "isPreview", isPreview,
         "applicationReference", applicationService.generateApplicationReference(applicationVersion),
         "customerBrandingConfigurationProperties", customerBrandingConfigurationProperties
     );
 
-    return new PdfRenderResultWithGenerationData(
-        documentInstanceService.renderPdf(documentInstanceDto, templateModel),
-        documentInstanceSectionsSummaryView.allMailMergeResolvedValuesByMnemonic()
+    PdfRenderResult unsignedPdf = documentInstanceService.renderPdf(documentInstanceDto, templateModel);
+    var documentTemplateType = DocumentTemplateType.getByMnemonic(documentInstanceDto.documentTemplateDto().mnemonic());
+
+    ByteArrayResource resultResource = unsignedPdf.pdfContent();
+
+    if (documentTemplateType.isConsent()) { // Only consents should be signed
+      if (isPreview) {
+        resultResource = documentSigningService.previewPdfSignature(unsignedPdf.pdfContent());
+      } else {
+        resultResource = documentSigningService.signPdf(unsignedPdf.pdfContent(), invokingUser);
+        LOGGER.info(
+            "Digitally signed {} document for applicationVersionId {} on behalf of user {}",
+            documentTemplateType,
+            applicationVersion.getId(),
+            invokingUser.wuaId()
+        );
+      }
+    }
+
+    return new FieldConsentsPdfRenderResult(
+      resultResource,
+      unsignedPdf.pdfHtml(),
+      documentInstanceSectionsSummaryView.allMailMergeResolvedValuesByMnemonic()
     );
   }
 
@@ -145,12 +173,14 @@ public class ApplicationDocumentInstanceService {
       case PRODUCTION -> {
         if (!primaryAsset.isField()) {
           throw new IllegalStateException(
-              "Primary asset %d is not field [asset type: %s]".formatted(primaryAsset.getId(), primaryAsset.getAssetType())
+              "Primary asset %d is not field [asset type: %s]".formatted(primaryAsset.getId(),
+                  primaryAsset.getAssetType())
           );
         }
 
         yield isFlareCommissioningLetterApplicableForProductionApplication(primaryAsset)
-            ? List.of(DocumentTemplateType.FIELD_PRODUCTION_CONSENT, DocumentTemplateType.FLARE_AND_COMMISSIONING_LETTER)
+            ? List.of(DocumentTemplateType.FIELD_PRODUCTION_CONSENT,
+            DocumentTemplateType.FLARE_AND_COMMISSIONING_LETTER)
             : List.of(DocumentTemplateType.FIELD_PRODUCTION_CONSENT);
       }
       case FLARE -> primaryAsset.isField()

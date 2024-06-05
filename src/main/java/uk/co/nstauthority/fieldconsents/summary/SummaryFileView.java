@@ -30,8 +30,8 @@ public record SummaryFileView(
     return new SummaryFileView(
         documentInstanceSummaryView.title(),
         documentInstanceSummaryView.description(),
-        ReverseRouter.route(on(ApplicationDocumentInstanceController.class)
-            .getPreviewDocumentInstance(application.getId(), documentInstanceSummaryView.documentInstanceId(), downloadDocument))
+        ReverseRouter.route(on(ApplicationDocumentInstanceController.class).getPreviewDocumentInstance(
+            application.getId(), documentInstanceSummaryView.documentInstanceId(), downloadDocument, null))
     );
   }
 }

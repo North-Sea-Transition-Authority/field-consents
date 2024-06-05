@@ -17,6 +17,7 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateSectionService;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentTemplateService;
+import uk.co.nstauthority.fieldconsents.document.mailmergefield.DigitalSignatureMailMergeField;
 
 @ExtendWith(MockitoExtension.class)
 class DocumentTemplateBootstrapServiceTest {
@@ -280,12 +281,23 @@ class DocumentTemplateBootstrapServiceTest {
     verify(documentTemplateSectionService).createDocumentTemplateSection(
         fieldProductionConsentDocumentTemplateDto,
         null,
+        "Digital signature",
+        DigitalSignatureMailMergeField.SIGNATURE_PLACEHOLDER_TEXT,
+        null,
+        false,
+        false,
+        8
+    );
+
+    verify(documentTemplateSectionService).createDocumentTemplateSection(
+        fieldProductionConsentDocumentTemplateDto,
+        null,
         "Schedule 1",
         "((SCHEDULE))",
         null,
         false,
         true,
-        8
+        9
     );
 
     verify(documentTemplateSectionService).createDocumentTemplateSection(
@@ -304,7 +316,7 @@ class DocumentTemplateBootstrapServiceTest {
         null,
         false,
         true,
-        9
+        10
     );
 
     verifyNoMoreInteractions(documentTemplateSectionService);
@@ -432,12 +444,23 @@ class DocumentTemplateBootstrapServiceTest {
     verify(documentTemplateSectionService).createDocumentTemplateSection(
         fieldFlareConsentDocumentTemplateDto,
         null,
+        "Digital signature",
+        DigitalSignatureMailMergeField.SIGNATURE_PLACEHOLDER_TEXT,
+        null,
+        false,
+        false,
+        7
+    );
+
+    verify(documentTemplateSectionService).createDocumentTemplateSection(
+        fieldFlareConsentDocumentTemplateDto,
+        null,
         "Schedule 1",
         "((SCHEDULE))",
         null,
         false,
         true,
-        7
+        8
     );
 
     verify(documentTemplateSectionService).createDocumentTemplateSection(
@@ -456,7 +479,7 @@ class DocumentTemplateBootstrapServiceTest {
         null,
         false,
         true,
-        8
+        9
     );
 
     verifyNoMoreInteractions(documentTemplateSectionService);
@@ -566,12 +589,23 @@ class DocumentTemplateBootstrapServiceTest {
     verify(documentTemplateSectionService).createDocumentTemplateSection(
         terminalFlareConsentDocumentTemplateDto,
         null,
+        "Digital signature",
+        DigitalSignatureMailMergeField.SIGNATURE_PLACEHOLDER_TEXT,
+        null,
+        false,
+        false,
+        6
+    );
+
+    verify(documentTemplateSectionService).createDocumentTemplateSection(
+        terminalFlareConsentDocumentTemplateDto,
+        null,
         "Schedule",
         "((SCHEDULE))",
         null,
         false,
         true,
-        6
+        7
     );
 
     verifyNoMoreInteractions(documentTemplateSectionService);
@@ -682,12 +716,23 @@ class DocumentTemplateBootstrapServiceTest {
     verify(documentTemplateSectionService).createDocumentTemplateSection(
         fieldVentConsentDocumentTemplateDto,
         null,
+        "Digital signature",
+        DigitalSignatureMailMergeField.SIGNATURE_PLACEHOLDER_TEXT,
+        null,
+        false,
+        false,
+        6
+    );
+
+    verify(documentTemplateSectionService).createDocumentTemplateSection(
+        fieldVentConsentDocumentTemplateDto,
+        null,
         "Schedule 1",
         "((SCHEDULE))",
         null,
         false,
         true,
-        6
+        7
     );
 
     verify(documentTemplateSectionService).createDocumentTemplateSection(
@@ -706,7 +751,7 @@ class DocumentTemplateBootstrapServiceTest {
         null,
         false,
         true,
-        7
+        8
     );
 
     verifyNoMoreInteractions(documentTemplateSectionService);
@@ -816,12 +861,23 @@ class DocumentTemplateBootstrapServiceTest {
     verify(documentTemplateSectionService).createDocumentTemplateSection(
         terminalVentConsentDocumentTemplateDto,
         null,
+        "Digital signature",
+        DigitalSignatureMailMergeField.SIGNATURE_PLACEHOLDER_TEXT,
+        null,
+        false,
+        false,
+        6
+    );
+
+    verify(documentTemplateSectionService).createDocumentTemplateSection(
+        terminalVentConsentDocumentTemplateDto,
+        null,
         "Schedule",
         "((SCHEDULE))",
         null,
         false,
         true,
-        6
+        7
     );
 
     verifyNoMoreInteractions(documentTemplateSectionService);

@@ -24,4 +24,6 @@ public class DocumentMailMergeFieldDisplayOrders {
   public static final int REGULATOR_LEGAL_MNEMONIC = 19;
   public static final int CONSENTS_TEAM_NAME = 20;
   public static final int SCHEDULE = 21;
+  public static final int DIGITAL_SIGNATURE = 22;
+
 }

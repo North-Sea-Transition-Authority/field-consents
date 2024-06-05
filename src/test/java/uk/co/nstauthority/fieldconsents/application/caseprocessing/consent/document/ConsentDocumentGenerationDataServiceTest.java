@@ -12,10 +12,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ByteArrayResource;
-import uk.co.fivium.digitaldocumentlibrary.document.PdfRenderResult;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.Consent;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.DocumentInstanceDtoTestUtil;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.PdfRenderResultWithGenerationData;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.FieldConsentsPdfRenderResult;
 
 @ExtendWith(MockitoExtension.class)
 class ConsentDocumentGenerationDataServiceTest {
@@ -33,11 +32,9 @@ class ConsentDocumentGenerationDataServiceTest {
   void createDocumentGenerationData() {
     var consent = new Consent();
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
-    var pdfRenderResultWithGenerationData = new PdfRenderResultWithGenerationData(
-        new PdfRenderResult(
+    var pdfRenderResultWithGenerationData = new FieldConsentsPdfRenderResult(
             new ByteArrayResource(new byte[]{1, 2, 3}),
-            "<html/>"
-        ),
+            "<html/>",
         Map.of("KEY", "VALUE")
     );
 
@@ -57,7 +54,7 @@ class ConsentDocumentGenerationDataServiceTest {
             consent,
             documentInstanceDto.documentTemplateDto().mnemonic(),
             documentInstanceDto.title(),
-            pdfRenderResultWithGenerationData.pdfRenderResult().pdfHtml(),
+            pdfRenderResultWithGenerationData.pdfHtml(),
             pdfRenderResultWithGenerationData.mailMergeResolvedValuesByMnemonic()
         );
   }

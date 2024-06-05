@@ -4,6 +4,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 
 import com.google.common.net.HttpHeaders;
 import java.util.UUID;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -18,6 +19,7 @@ import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authorisation.ActionEndPoint;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
@@ -67,7 +69,7 @@ public class ApplicationDocumentInstanceController {
         .addObject(
             "previewUrl",
             ReverseRouter.route(on(ApplicationDocumentInstanceController.class)
-                .getPreviewDocumentInstance(applicationId, documentInstanceId, false))
+                .getPreviewDocumentInstance(applicationId, documentInstanceId, false, null))
         )
         .addObject(
             "reloadUrl",
@@ -77,11 +79,12 @@ public class ApplicationDocumentInstanceController {
   }
 
   @GetMapping("/preview")
-  @ActionEndPoint({ CaseProcessingActionItem.CONSENT_PREPARATION, CaseProcessingActionItem.CONSENT_ISSUING })
+  @ActionEndPoint({CaseProcessingActionItem.CONSENT_PREPARATION, CaseProcessingActionItem.CONSENT_ISSUING})
   public ResponseEntity<?> getPreviewDocumentInstance(
       @PathVariable Integer applicationId,
       @PathVariable UUID documentInstanceId,
-      @RequestParam(name = "download", required = false) boolean download
+      @RequestParam(name = "download", required = false) boolean download,
+      ServiceUserDetail user
   ) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var documentInstanceDto = applicationDocumentInstanceControllerHelperService.getDocumentInstanceDtoForApplicationOrThrow(
@@ -89,14 +92,16 @@ public class ApplicationDocumentInstanceController {
         documentInstanceId
     );
 
-    var renderResult = applicationDocumentInstanceService.renderPdf(
+    var renderResult = applicationDocumentInstanceService.renderAndSignPdf(
         applicationVersion,
         documentInstanceDto,
-        PdfRenderingOptions.newBuilder().withPreviewWatermark(true).build()
+        user,
+        true
     );
     var filename = "PREVIEW %s.pdf".formatted(documentInstanceDto.title());
     var contentDisposition = getContentDisposition(download, filename);
-    var pdfContent = renderResult.pdfRenderResult().pdfContent();
+
+    ByteArrayResource pdfContent = renderResult.pdfContent();
 
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_PDF)

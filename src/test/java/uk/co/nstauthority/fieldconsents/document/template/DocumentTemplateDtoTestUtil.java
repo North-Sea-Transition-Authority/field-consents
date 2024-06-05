@@ -12,7 +12,7 @@ public class DocumentTemplateDtoTestUtil {
   public static class Builder {
 
     private UUID id = UUID.randomUUID();
-    private String mnemonic = "TEST_MNEMONIC";
+    private String mnemonic = "FIELD_PRODUCTION_CONSENT";
     private String title = "Test title";
     private String description = "Test description";
     private String templatePath = "test/template/path";

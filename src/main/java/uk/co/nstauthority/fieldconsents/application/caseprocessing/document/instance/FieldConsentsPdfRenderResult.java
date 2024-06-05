@@ -1,10 +1,11 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance;
 
 import java.util.Map;
-import uk.co.fivium.digitaldocumentlibrary.document.PdfRenderResult;
+import org.springframework.core.io.ByteArrayResource;
 
-public record PdfRenderResultWithGenerationData(
-    PdfRenderResult pdfRenderResult,
+public record FieldConsentsPdfRenderResult(
+    ByteArrayResource pdfContent,
+    String pdfHtml,
     Map<String, String> mailMergeResolvedValuesByMnemonic
 ) {
 

@@ -31,7 +31,6 @@ import org.springframework.test.context.ContextConfiguration;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionSummaryView;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceSectionsSummaryView;
 import uk.co.fivium.digitaldocumentlibrary.document.DocumentInstanceService;
-import uk.co.fivium.digitaldocumentlibrary.document.PdfRenderResult;
 import uk.co.nstauthority.fieldconsents.AbstractApplicationControllerTest;
 import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
@@ -149,7 +148,7 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
         .andExpect(model().attribute("pageTitle", documentInstanceDto.documentTemplateDto().title()))
         .andExpect(model().attribute("documentInstanceSectionsSummaryView", documentInstanceSectionsSummaryView))
         .andExpect(model().attribute("previewUrl", ReverseRouter.route(on(ApplicationDocumentInstanceController.class)
-            .getPreviewDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID, false))))
+            .getPreviewDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID, false, null))))
         .andExpect(model().attribute("reloadUrl", ReverseRouter.route(on(ApplicationDocumentInstanceController.class)
             .getReloadDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID))));
   }
@@ -157,7 +156,7 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
   @SecurityTest
   void getPreviewDocumentInstance_noUser() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationDocumentInstanceController.class)
-            .getPreviewDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID, true))))
+            .getPreviewDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID, true, null))))
         .andExpect(redirectionToLoginUrl());
   }
 
@@ -166,7 +165,7 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationDocumentInstanceController.class)
-            .getPreviewDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID, true)))
+            .getPreviewDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID, true, null)))
             .with(user(user)))
         .andExpect(status().isForbidden());
   }
@@ -175,9 +174,9 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
   @EnumSource(value = CaseProcessingActionItem.class, names = { "CONSENT_PREPARATION", "CONSENT_ISSUING" })
   void getPreviewDocumentInstance_downloadFalse(CaseProcessingActionItem caseProcessingActionItem) throws Exception {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
-    var pdfRenderResultWithGenerationData = new PdfRenderResultWithGenerationData(
-        new PdfRenderResult(new ByteArrayResource(new byte[] {1, 2, 3}), "<html/>"),
-        Map.of()
+    var pdfBytes = new byte[] {1, 2, 3};
+    var pdfRenderResultWithGenerationData = new FieldConsentsPdfRenderResult(
+        new ByteArrayResource(pdfBytes), "<html/>", Map.of()
     );
 
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
@@ -185,20 +184,21 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(applicationDocumentInstanceControllerHelperService.getDocumentInstanceDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_ID))
         .thenReturn(documentInstanceDto);
-    when(applicationDocumentInstanceService.renderPdf(
+    when(applicationDocumentInstanceService.renderAndSignPdf(
         applicationVersion,
         documentInstanceDto,
-        PdfRenderingOptions.newBuilder().withPreviewWatermark(true).build())
+        user,
+        true)
     ).thenReturn(pdfRenderResultWithGenerationData);
 
     var fileName = "PREVIEW %s.pdf".formatted(documentInstanceDto.title());
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationDocumentInstanceController.class)
-            .getPreviewDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID, false)))
+            .getPreviewDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID, false, null)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_PDF))
-        .andExpect(content().bytes(pdfRenderResultWithGenerationData.pdfRenderResult().pdfContent().getContentAsByteArray()))
+        .andExpect(content().bytes(pdfBytes))
         .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, "filename=\"%s\"".formatted(fileName)));
   }
 
@@ -206,9 +206,9 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
   @EnumSource(value = CaseProcessingActionItem.class, names = { "CONSENT_PREPARATION", "CONSENT_ISSUING" })
   void getPreviewDocumentInstance_downloadTrue(CaseProcessingActionItem caseProcessingActionItem) throws Exception {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
-    var pdfRenderResultWithGenerationData = new PdfRenderResultWithGenerationData(
-        new PdfRenderResult(new ByteArrayResource(new byte[] {1, 2, 3}), "<html/>"),
-        Map.of()
+    var pdfBytes = new byte[] {1, 2, 3};
+    var pdfRenderResultWithGenerationData = new FieldConsentsPdfRenderResult(
+      new ByteArrayResource(pdfBytes), "<html/>", Map.of()
     );
 
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
@@ -216,20 +216,21 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(applicationDocumentInstanceControllerHelperService.getDocumentInstanceDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_ID))
         .thenReturn(documentInstanceDto);
-    when(applicationDocumentInstanceService.renderPdf(
+    when(applicationDocumentInstanceService.renderAndSignPdf(
         applicationVersion,
         documentInstanceDto,
-        PdfRenderingOptions.newBuilder().withPreviewWatermark(true).build())
+        user,
+        true)
     ).thenReturn(pdfRenderResultWithGenerationData);
 
     var fileName = "PREVIEW %s.pdf".formatted(documentInstanceDto.title());
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationDocumentInstanceController.class)
-            .getPreviewDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID, true)))
+            .getPreviewDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID, true, null)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_PDF))
-        .andExpect(content().bytes(pdfRenderResultWithGenerationData.pdfRenderResult().pdfContent().getByteArray()))
+        .andExpect(content().bytes(pdfBytes))
         .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"%s\"".formatted(fileName)));
   }
 

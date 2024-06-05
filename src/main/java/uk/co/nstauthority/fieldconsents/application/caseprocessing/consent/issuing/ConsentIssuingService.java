@@ -1,8 +1,10 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issuing;
 
 import io.micrometer.observation.annotation.Observed;
+import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +23,6 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.docum
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.document.ConsentDocumentGenerationDataService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.fieldequitypartner.ConsentFieldEquityPartnerService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceService;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.PdfRenderingOptions;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileService;
 
@@ -79,7 +80,7 @@ public class ConsentIssuingService {
       consentFieldEquityPartnerService.saveFieldEquityPartners(consent, applicationVersion);
     }
 
-    generateDocumentInstancesAndSaveToConsent(applicationVersion, consent);
+    generateDocumentInstancesAndSaveToConsent(applicationVersion, consent, user);
     copySupportingDocumentsToConsent(application, consent);
 
     applicationService.consentApplication(applicationVersion);
@@ -116,7 +117,11 @@ public class ConsentIssuingService {
     }
   }
 
-  void generateDocumentInstancesAndSaveToConsent(ApplicationVersion applicationVersion, Consent consent) {
+  void generateDocumentInstancesAndSaveToConsent(
+      ApplicationVersion applicationVersion,
+      Consent consent,
+      ServiceUserDetail user
+  ) {
     var documentInstanceDtos = applicationDocumentInstanceService
         .getDocumentInstanceDtos(applicationVersion.getApplication())
         .stream()
@@ -124,29 +129,34 @@ public class ConsentIssuingService {
         .toList();
 
     for (var documentInstanceDto : documentInstanceDtos) {
-      generateDocumentInstanceAndSaveToConsent(applicationVersion, documentInstanceDto, consent);
+      generateDocumentInstanceAndSaveToConsent(
+          applicationVersion,
+          documentInstanceDto,
+          consent,
+          user
+      );
     }
   }
 
   private void generateDocumentInstanceAndSaveToConsent(
       ApplicationVersion applicationVersion,
       DocumentInstanceDto documentInstanceDto,
-      Consent consent
+      Consent consent,
+      ServiceUserDetail serviceUserDetail
   ) {
-    var renderResultWithGenerationData = applicationDocumentInstanceService.renderPdf(
+    var pdfRenderResult = applicationDocumentInstanceService.renderAndSignPdf(
         applicationVersion,
         documentInstanceDto,
-        PdfRenderingOptions.newBuilder().build()
+        serviceUserDetail,
+        false
     );
+    ByteArrayResource pdfContent = pdfRenderResult.pdfContent();
 
-    var pdfContent = renderResultWithGenerationData.pdfRenderResult().pdfContent();
-
-    var fileSource = FileSource.fromInputStreamSource(
+    FileSource fileSource = FileSource.fromInputStreamSource(
         pdfContent,
         "%s.%s".formatted(documentInstanceDto.title(), MediaType.APPLICATION_PDF.getSubtype()),
         MediaType.APPLICATION_PDF_VALUE,
-        pdfContent.contentLength()
-    );
+        pdfContent.contentLength());
 
     var consentFileUsage = ConsentFileUsage.generatedConsentDocumentFrom(consent);
 
@@ -164,7 +174,7 @@ public class ConsentIssuingService {
     consentDocumentGenerationDataService.createDocumentGenerationData(
         consent,
         documentInstanceDto,
-        renderResultWithGenerationData
+        pdfRenderResult
     );
   }
 

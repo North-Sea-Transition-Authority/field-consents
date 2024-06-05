@@ -1,0 +1,9 @@
+form:has(> input[name="digital-signature-placeholder"]) {
+  display: none;
+}
+
+#digital-signature-placeholder {
+  height: 20mm;
+  width: 60mm;
+  padding: 5mm 0;
+}
