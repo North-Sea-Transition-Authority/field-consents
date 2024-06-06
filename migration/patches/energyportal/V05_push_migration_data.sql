@@ -1762,18 +1762,20 @@ END;
 --
 BEGIN
 
-  FOR rec IN (SELECT * FROM fcs_migration.application_consents WHERE id > 0 ORDER BY id) LOOP
+  FOR rec IN (SELECT * FROM fcs_migration.application_consents ORDER BY id DESC) LOOP -- DESC so that the latest consents are pushed prior to the ones they superseded
 
     INSERT INTO "fcs"."application_consents"@fcs_postgres_db (
       "id"
     , "application_id"
     , "issued_by_wua_id"
     , "issued_timestamp"
+    , "superseded_by_application_consent_id"
     ) VALUES (
       rec.id
     , rec.application_id
     , rec.issued_by_wua_id
     , rec.issued_timestamp
+    , rec.superseded_by_application_consent_id
     );
   
   END LOOP;

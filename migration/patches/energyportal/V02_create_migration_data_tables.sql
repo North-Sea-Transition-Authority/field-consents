@@ -951,13 +951,17 @@ CREATE TABLE fcs_migration.application_consent_data_long_term_emission_figures (
 -- application_consents
 --
 CREATE TABLE fcs_migration.application_consents (
-  id               INTEGER PRIMARY KEY
-, application_id   INTEGER NOT NULL
-                   UNIQUE
-                   CONSTRAINT application_consents_application_id_fk
-                   REFERENCES fcs_migration.applications
-, issued_by_wua_id INTEGER NOT NULL
-, issued_timestamp DATE NOT NULL
+  id                                   INTEGER PRIMARY KEY
+, application_id                       INTEGER NOT NULL
+                                       UNIQUE
+                                       CONSTRAINT application_consents_application_id_fk
+                                       REFERENCES fcs_migration.applications
+, issued_by_wua_id                     INTEGER NOT NULL
+, issued_timestamp                     DATE NOT NULL
+, superseded_by_application_consent_id INTEGER
+                                       UNIQUE
+                                       CONSTRAINT application_consents_superseded_by_application_consent_id_fk
+                                       REFERENCES application_consents
 );
 
 --

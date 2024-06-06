@@ -2319,12 +2319,22 @@ INSERT INTO fcs_migration.application_consents (
 , application_id
 , issued_by_wua_id
 , issued_timestamp
+, superseded_by_application_consent_id
 )
 SELECT
   fci.id
 , av.application_id
 , fci.issue_wua_id
 , fci.issue_date
+, (
+    SELECT fcis.id
+    FROM fcs_migration.application_versions avs
+    JOIN envmgr.field_consents_issued fcis ON fcis.fcd_id = avs.id
+    WHERE fcis.fc_id = fci.fc_id -- this is equivalent to the application_no on the applications table
+    AND fcis.variation_no > fci.variation_no
+    ORDER BY fcis.variation_no
+    FETCH FIRST 1 ROW ONLY
+  ) superseded_by_application_consent_id
 FROM fcs_migration.application_versions av
 JOIN envmgr.field_consents_issued fci ON fci.fcd_id = av.id
 /
