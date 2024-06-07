@@ -199,6 +199,12 @@ class FieldEquityPartnerPermissionServiceTest {
     var fieldAsset2 = ApplicationAssetTestUtil.newBuilder()
         .withAssetId(2)
         .build();
+    var fieldAsset1a = ApplicationAssetTestUtil.newBuilder()
+        .withAssetId(1)
+        .build();
+    var fieldAsset2a = ApplicationAssetTestUtil.newBuilder()
+        .withAssetId(2)
+        .build();
 
     var field1 = Field.newBuilder()
         .fieldId(1)
@@ -211,9 +217,11 @@ class FieldEquityPartnerPermissionServiceTest {
         .when(fieldEquityPartnerPermissionService)
         .getOrganisationGroupIdsUserHasPermissionFor(user, requiredPermissions);
 
-    when(applicationAssetService.getAllPrimaryAndSecondaryFieldAssets()).thenReturn(List.of(fieldAsset1, fieldAsset2));
+    when(applicationAssetService.getAllPrimaryAndSecondaryFieldAssets())
+        .thenReturn(List.of(fieldAsset1, fieldAsset2, fieldAsset1a, fieldAsset2a));
 
-    when(fieldEquityPartnerService.getFieldsWithFieldEquityPartners(List.of(field1.getFieldId(), field2.getFieldId())))
+    when(fieldEquityPartnerService.getFieldsWithFieldEquityPartners(
+        List.of(field1.getFieldId(), field2.getFieldId())))
         .thenReturn(List.of(field1, field2));
 
     doReturn(false)

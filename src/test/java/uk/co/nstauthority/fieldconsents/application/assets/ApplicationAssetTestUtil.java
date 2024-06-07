@@ -40,6 +40,10 @@ public class ApplicationAssetTestUtil {
       .withCachedAssetOperatorName(CACHED_PRIMARY_OPERATOR_NAME_1)
       .build();
 
+  public static final ApplicationAsset fieldAsset1a = newBuilder()
+      .withAssetId(FIELD_ID_1)
+      .build();
+
   public static final ApplicationAssetLicence fieldAsset1Licence1 =
       new ApplicationAssetLicence(
           fieldAsset1.getApplicationVersion(),
@@ -69,6 +73,10 @@ public class ApplicationAssetTestUtil {
       .withAssetNo(2)
       .withAssetOperatorOuId(PRIMARY_OPERATOR_OU_ID_2)
       .withCachedAssetOperatorName(CACHED_PRIMARY_OPERATOR_NAME_2)
+      .build();
+
+  public static final ApplicationAsset fieldAsset2a = newBuilder()
+      .withAssetId(FIELD_ID_2)
       .build();
 
   public static final ApplicationAssetLicence fieldAsset2Licence1 =

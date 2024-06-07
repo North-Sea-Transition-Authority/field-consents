@@ -205,6 +205,7 @@ public class ApplicationAssetService {
     var primaryAndSecondaryFieldIds = getAllPrimaryAndSecondaryFieldAssets()
         .stream()
         .map(ApplicationAsset::getAssetId)
+        .distinct()
         .toList();
 
     return fieldService.findFieldsByIds(primaryAndSecondaryFieldIds, requestPurpose)
@@ -220,7 +221,6 @@ public class ApplicationAssetService {
             Collections.singleton(FIELD)
         )
         .stream()
-        .distinct()
         .toList();
   }
 

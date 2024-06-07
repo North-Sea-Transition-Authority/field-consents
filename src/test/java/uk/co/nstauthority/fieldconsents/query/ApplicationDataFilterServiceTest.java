@@ -10,7 +10,9 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil.fieldAsset1;
+import static uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil.fieldAsset1a;
 import static uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil.fieldAsset2;
+import static uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil.fieldAsset2a;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2Json;
@@ -268,7 +270,8 @@ class ApplicationDataFilterServiceTest {
     dataFilterForm.setLicenceReference("P123");
     var fieldsWithOperatorAndLicences = List.of(field1JsonWithOperatorAndLicences, field2JsonWithOperatorAndLicences);
 
-    when(applicationAssetService.getAllPrimaryAndSecondaryFieldAssets()).thenReturn(List.of(fieldAsset1, fieldAsset2));
+    when(applicationAssetService.getAllPrimaryAndSecondaryFieldAssets())
+        .thenReturn(List.of(fieldAsset1, fieldAsset2, fieldAsset1a, fieldAsset2a));
     when(fieldService
         .findFieldsWithOperatorAndLicences(List.of(fieldAsset1.getAssetId(), fieldAsset2.getAssetId()), FIELD_LOOKUP_PURPOSE)).thenReturn(fieldsWithOperatorAndLicences);
 
@@ -284,7 +287,8 @@ class ApplicationDataFilterServiceTest {
     dataFilterForm.setLicenceReference("P1");
     var fieldsWithOperatorAndLicences = List.of(field1JsonWithOperatorAndLicences, field2JsonWithOperatorAndLicences);
 
-    when(applicationAssetService.getAllPrimaryAndSecondaryFieldAssets()).thenReturn(List.of(fieldAsset1, fieldAsset2));
+    when(applicationAssetService.getAllPrimaryAndSecondaryFieldAssets())
+        .thenReturn(List.of(fieldAsset1, fieldAsset2, fieldAsset1a, fieldAsset2a));
     when(fieldService
         .findFieldsWithOperatorAndLicences(List.of(fieldAsset1.getAssetId(), fieldAsset2.getAssetId()), FIELD_LOOKUP_PURPOSE)).thenReturn(fieldsWithOperatorAndLicences);
 

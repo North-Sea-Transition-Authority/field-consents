@@ -192,7 +192,7 @@ public class ApplicationDataFilterService {
     }
 
     if (conditions.size() == 1) {
-      return conditions.get(0);
+      return conditions.getFirst();
     }
 
     return conditions.get(0).or(conditions.get(1));
@@ -275,6 +275,7 @@ public class ApplicationDataFilterService {
     var primaryAndSecondaryFieldIds = applicationAssetService.getAllPrimaryAndSecondaryFieldAssets()
         .stream()
         .map(ApplicationAsset::getAssetId)
+        .distinct()
         .toList();
 
     if (primaryAndSecondaryFieldIds.isEmpty()) {
