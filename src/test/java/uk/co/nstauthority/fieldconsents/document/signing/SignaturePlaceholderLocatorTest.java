@@ -25,9 +25,9 @@ class SignaturePlaceholderLocatorTest {
 
     var expectedCoordinates = new FtssVisualSignatureProperties.SignatureCoordinates(
         new FtssVisualSignatureProperties.Coordinate(0, 67, 730),
-        new FtssVisualSignatureProperties.Coordinate(0, 252, 730),
+        new FtssVisualSignatureProperties.Coordinate(0, 290, 730),
         new FtssVisualSignatureProperties.Coordinate(0,67,700),
-        new FtssVisualSignatureProperties.Coordinate(0, 252, 700)
+        new FtssVisualSignatureProperties.Coordinate(0, 290, 700)
     );
 
     var actualCoordinates = locator.getSignaturePlaceholderLocation(testDoc);
@@ -41,9 +41,9 @@ class SignaturePlaceholderLocatorTest {
 
     var expectedCoordinates = new FtssVisualSignatureProperties.SignatureCoordinates(
         new FtssVisualSignatureProperties.Coordinate(0, 67, 212),
-        new FtssVisualSignatureProperties.Coordinate(0, 252, 212),
+        new FtssVisualSignatureProperties.Coordinate(0, 290, 212),
         new FtssVisualSignatureProperties.Coordinate(0,67,182),
-        new FtssVisualSignatureProperties.Coordinate(0, 252, 182)
+        new FtssVisualSignatureProperties.Coordinate(0, 290, 182)
     );
 
     var actualCoordinates = locator.getSignaturePlaceholderLocation(testDoc);
@@ -58,9 +58,9 @@ class SignaturePlaceholderLocatorTest {
 
     var expectedCoordinates = new FtssVisualSignatureProperties.SignatureCoordinates(
         new FtssVisualSignatureProperties.Coordinate(1, 67, 707),
-        new FtssVisualSignatureProperties.Coordinate(1, 252, 707),
+        new FtssVisualSignatureProperties.Coordinate(1, 290, 707),
         new FtssVisualSignatureProperties.Coordinate(1,67,677),
-        new FtssVisualSignatureProperties.Coordinate(1, 252, 677)
+        new FtssVisualSignatureProperties.Coordinate(1, 290, 677)
     );
 
     var actualCoordinates = locator.getSignaturePlaceholderLocation(testDoc);

@@ -14,7 +14,7 @@ import uk.co.nstauthority.fieldconsents.document.mailmergefield.DigitalSignature
   The placeholder text must be on its own line with no other text before or after.
  */
 public class SignaturePlaceholderLocator extends PDFTextStripper {
-  private static final int SIGNATURE_WIDTH = 180;
+  private static final int SIGNATURE_WIDTH = 218;
   private static final int SIGNATURE_HEIGHT = 30;
   private static final int SIGNATURE_PADDING_LEFT = 5;
 

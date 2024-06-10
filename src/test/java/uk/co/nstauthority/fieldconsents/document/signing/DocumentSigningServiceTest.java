@@ -78,9 +78,9 @@ class DocumentSigningServiceTest {
         new ClassPathResource("document-assets/blank-1px.png"),
         new FtssVisualSignatureProperties.SignatureCoordinates(
             new FtssVisualSignatureProperties.Coordinate(0, 67, 730),
-            new FtssVisualSignatureProperties.Coordinate(0, 252, 730),
+            new FtssVisualSignatureProperties.Coordinate(0, 290, 730),
             new FtssVisualSignatureProperties.Coordinate(0,67,700),
-            new FtssVisualSignatureProperties.Coordinate(0, 252, 700)
+            new FtssVisualSignatureProperties.Coordinate(0, 290, 700)
         ),
         "test line 1",
         "((CAM_USER))",
@@ -112,9 +112,9 @@ class DocumentSigningServiceTest {
         new ClassPathResource("document-assets/blank-1px.png"),
         new FtssVisualSignatureProperties.SignatureCoordinates(
             new FtssVisualSignatureProperties.Coordinate(0, 67, 730),
-            new FtssVisualSignatureProperties.Coordinate(0, 252, 730),
+            new FtssVisualSignatureProperties.Coordinate(0, 290, 730),
             new FtssVisualSignatureProperties.Coordinate(0,67,700),
-            new FtssVisualSignatureProperties.Coordinate(0, 252, 700)
+            new FtssVisualSignatureProperties.Coordinate(0, 290, 700)
         ),
         "test line 1",
         "Test User",
