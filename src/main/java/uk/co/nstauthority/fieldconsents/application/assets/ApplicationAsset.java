@@ -11,10 +11,12 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.util.Objects;
+import org.hibernate.envers.Audited;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 
 @Entity
+@Audited
 @Table(name = "application_assets")
 public class ApplicationAsset {
 

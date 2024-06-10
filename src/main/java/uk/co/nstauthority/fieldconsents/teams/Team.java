@@ -8,9 +8,11 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.envers.Audited;
 import uk.co.fivium.digitalnotificationlibrary.core.notification.DomainReference;
 
 @Entity
+@Audited
 @Table(name = "teams")
 public class Team implements DomainReference {
 

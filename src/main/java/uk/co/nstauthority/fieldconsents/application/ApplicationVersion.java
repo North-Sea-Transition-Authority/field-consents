@@ -1,7 +1,5 @@
 package uk.co.nstauthority.fieldconsents.application;
 
-import static org.hibernate.envers.RelationTargetAuditMode.NOT_AUDITED;
-
 import com.google.common.annotations.VisibleForTesting;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -27,7 +25,6 @@ public class ApplicationVersion implements DomainReference {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Integer id;
 
-  @Audited(targetAuditMode = NOT_AUDITED)
   @ManyToOne
   @JoinColumn(name = "application_id")
   private Application application;

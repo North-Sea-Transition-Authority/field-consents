@@ -3,10 +3,12 @@ package uk.co.nstauthority.fieldconsents.flarevent.vent.shortterm;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
+import org.hibernate.envers.Audited;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentRow;
 
 @Entity
+@Audited
 @Table(name = "vent_short_term_months")
 public class VentShortTermMonth extends FlareVentRow {
 

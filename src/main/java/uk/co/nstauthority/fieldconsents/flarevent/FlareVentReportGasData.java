@@ -9,8 +9,10 @@ import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OneToOne;
 import java.math.BigDecimal;
 import java.util.NoSuchElementException;
+import org.hibernate.envers.Audited;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 
+@Audited
 @MappedSuperclass
 public class FlareVentReportGasData {
   @GeneratedValue(strategy = GenerationType.IDENTITY)

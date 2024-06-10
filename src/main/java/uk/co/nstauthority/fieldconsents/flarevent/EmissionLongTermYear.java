@@ -9,11 +9,13 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MappedSuperclass;
 import java.math.BigDecimal;
+import org.hibernate.envers.Audited;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 
 /**
  * This class represents all entities with an id and other migrated long term flare and vent data.
  */
+@Audited
 @MappedSuperclass
 public class EmissionLongTermYear {
 

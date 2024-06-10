@@ -13,11 +13,13 @@ import jakarta.persistence.MappedSuperclass;
 import java.math.BigDecimal;
 import java.time.Month;
 import java.util.NoSuchElementException;
+import org.hibernate.envers.Audited;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 
 /**
  * This class represents all entities with an id and other category details related to flare and vent forms.
  */
+@Audited
 @MappedSuperclass
 public class FlareVentRow {
 

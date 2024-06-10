@@ -11,9 +11,11 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import org.hibernate.envers.Audited;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.Consultation;
 
 @Entity
+@Audited
 @Table(name = "application_consultation_further_information")
 public class FurtherInformation {
 

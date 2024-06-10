@@ -95,7 +95,7 @@ docker-compose -f ./devtools/local-dev-compose.yml up -d
 | `FCS_GOV_NOTIFY_API_KEY`                     | API Key for GOV.UK Notify                                                                                                                 |
 |                                              |                                                                                                                                           |
 | **Feedback Management Service**              |                                                                                                                                           |
-| `FCS_FMS_BASE_URL`                           | The URL for the FMS instance on your environment                                                                                          |
+| `FCS_FMS_URL_BASE`                           | The URL for the FMS instance on your environment                                                                                          |
 | `FCS_FMS_TIMEOUT_SECONDS`                    | Connection timeout in seconds. Defaults to `20`                                                                                           |
 | `FCS_FMS_SUBMIT_ENDPOINT`                    | The FMS endpoint where feedback will be sent here. Defaults to `/api/v1/save-feedback`                                                    |
 | `FCS_FMS_API_KEY`                            | This is the pre-shared key used when making requests                                                                                      |

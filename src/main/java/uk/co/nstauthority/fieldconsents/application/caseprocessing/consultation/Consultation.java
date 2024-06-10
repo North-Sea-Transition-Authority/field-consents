@@ -13,7 +13,6 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import org.hibernate.envers.Audited;
-import org.hibernate.envers.NotAudited;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.teams.Team;
@@ -37,7 +36,6 @@ public class Consultation {
 
   @ManyToOne
   @JoinColumn(name = "consultation_team_id")
-  @NotAudited
   private Team consultationTeam;
 
   @Enumerated(EnumType.STRING)

@@ -3,9 +3,11 @@ package uk.co.nstauthority.fieldconsents.flarevent.category123.flare.shortterm;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
+import org.hibernate.envers.Audited;
 import uk.co.nstauthority.fieldconsents.flarevent.category123.flare.Flare123Row;
 
 @Entity
+@Audited
 @Table(name = "flare_short_term_123_months")
 public class FlareShortTerm123Month extends Flare123Row {
 

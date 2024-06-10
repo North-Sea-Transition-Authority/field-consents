@@ -11,8 +11,10 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import org.hibernate.envers.Audited;
 
 @Entity
+@Audited
 @Table(name = "applications")
 public class Application {
 

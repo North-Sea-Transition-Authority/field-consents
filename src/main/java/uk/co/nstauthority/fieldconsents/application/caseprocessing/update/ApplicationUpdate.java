@@ -14,8 +14,8 @@ import org.hibernate.envers.Audited;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.response.ApplicationUpdateResponseType;
 
-@Audited
 @Entity
+@Audited
 @Table(name = "application_updates")
 public class ApplicationUpdate {
 

@@ -2,11 +2,13 @@ package uk.co.nstauthority.fieldconsents.flarevent.vent.ventreportgas;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import org.hibernate.envers.Audited;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportGasData;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportGasDataForm;
 
 @Entity
+@Audited
 @Table(name = "vent_report_gas_data")
 public class VentReportGasData extends FlareVentReportGasData {
 

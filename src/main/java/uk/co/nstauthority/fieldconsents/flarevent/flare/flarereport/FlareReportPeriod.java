@@ -5,11 +5,13 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import java.time.Month;
 import java.util.NoSuchElementException;
+import org.hibernate.envers.Audited;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportPeriod;
 import uk.co.nstauthority.fieldconsents.flarevent.FlareVentReportPeriodForm;
 
 @Entity
+@Audited
 @Table(name = "flare_report_periods")
 public class FlareReportPeriod extends FlareVentReportPeriod {
 

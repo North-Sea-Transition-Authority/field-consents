@@ -10,10 +10,12 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.util.Map;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.envers.Audited;
 import org.hibernate.type.SqlTypes;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.Consent;
 
 @Entity
+@Audited
 @Table(name = "application_consent_document_generation_data")
 public class ConsentDocumentGenerationData {
 

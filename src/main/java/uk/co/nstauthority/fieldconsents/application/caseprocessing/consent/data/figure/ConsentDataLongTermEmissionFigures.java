@@ -9,7 +9,6 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import org.hibernate.envers.Audited;
-import org.hibernate.envers.RelationTargetAuditMode;
 import uk.co.nstauthority.fieldconsents.application.Application;
 
 @Audited
@@ -23,7 +22,6 @@ public class ConsentDataLongTermEmissionFigures {
 
   @OneToOne
   @JoinColumn(name = "application_id")
-  @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
   private Application application;
 
   private Integer year;

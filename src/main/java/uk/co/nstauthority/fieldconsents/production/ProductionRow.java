@@ -7,12 +7,14 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MappedSuperclass;
 import java.math.BigDecimal;
+import org.hibernate.envers.Audited;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.formatting.DecimalFormatUtils;
 
 /**
  * This class represents all entities with an id and other details related to oil and gas entered on a production form.
  */
+@Audited
 @MappedSuperclass
 public class ProductionRow {
 

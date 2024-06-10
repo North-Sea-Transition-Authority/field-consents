@@ -10,8 +10,10 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MappedSuperclass;
 import java.time.Month;
 import java.time.YearMonth;
+import org.hibernate.envers.Audited;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 
+@Audited
 @MappedSuperclass
 public class FlareVentReportPeriod {
 

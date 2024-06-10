@@ -6,9 +6,11 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.time.Month;
+import org.hibernate.envers.Audited;
 import uk.co.nstauthority.fieldconsents.production.ProductionRow;
 
 @Entity
+@Audited
 @Table(name = "short_term_production_months")
 public class ShortTermProductionMonth extends ProductionRow {
 
