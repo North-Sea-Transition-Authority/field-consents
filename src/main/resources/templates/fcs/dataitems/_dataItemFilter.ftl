@@ -2,7 +2,10 @@
 
 <#macro referenceNumberFilter form path="form.referenceNumber">
   <@fdsSearch.searchFilterItem itemName="Reference number" expanded=form.referenceSearchTerm?has_content>
-    <@fdsSearch.searchTextInput path=path labelText="" suffixScreenReaderPrompt="Application reference number"/>
+    <@fdsSearch.searchTextInput
+      path=path labelText=""
+      hintText="Use the number part of the reference only."
+      suffixScreenReaderPrompt="Application reference number"/>
   </@fdsSearch.searchFilterItem>
 </#macro>
 
