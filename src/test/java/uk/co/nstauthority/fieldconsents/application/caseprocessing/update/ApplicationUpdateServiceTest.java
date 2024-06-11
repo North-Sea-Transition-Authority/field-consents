@@ -41,6 +41,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.reques
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.response.ApplicationUpdateResponseType;
 import uk.co.nstauthority.fieldconsents.application.duplication.ApplicationDuplicationService;
 import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionService;
+import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
@@ -70,6 +71,9 @@ class ApplicationUpdateServiceTest {
 
   @Mock
   private ApplicationUpdateEmailService applicationUpdateEmailService;
+
+  @Mock
+  private ApplicationUnitService applicationUnitService;
 
   @InjectMocks
   private ApplicationUpdateService applicationUpdateService;
@@ -357,5 +361,25 @@ class ApplicationUpdateServiceTest {
 
     verify(applicationSubmissionService, times(1))
         .submitApplicationUpdate(applicationVersionUpdate, USER);
+  }
+
+  @Test
+  void isUpdatable_true() {
+    var applicationVersion = new ApplicationVersion();
+    when(applicationUnitService.hasLegacyEmissionCategoryType(applicationVersion))
+        .thenReturn(false);
+
+    assertThat(applicationUpdateService.isUpdatable(applicationVersion))
+        .isEqualTo(true);
+  }
+
+  @Test
+  void isUpdatable_false() {
+    var applicationVersion = new ApplicationVersion();
+    when(applicationUnitService.hasLegacyEmissionCategoryType(applicationVersion))
+        .thenReturn(true);
+
+    assertThat(applicationUpdateService.isUpdatable(applicationVersion))
+        .isEqualTo(false);
   }
 }

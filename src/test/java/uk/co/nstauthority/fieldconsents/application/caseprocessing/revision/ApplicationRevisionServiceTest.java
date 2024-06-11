@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.revision;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -13,8 +14,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
+import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.duplication.ApplicationDuplicationService;
 import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionService;
+import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 
@@ -32,6 +35,9 @@ class ApplicationRevisionServiceTest {
 
   @Mock
   private TeamService teamService;
+
+  @Mock
+  private ApplicationUnitService applicationUnitService;
 
   @InjectMocks
   private ApplicationRevisionService applicationRevisionService;
@@ -58,7 +64,7 @@ class ApplicationRevisionServiceTest {
     var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
     var user = ServiceUserDetailTestUtil.Builder().build();
 
-    var newApplicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);;
+    var newApplicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
     newApplicationVersion.setId(2);
 
     when(applicationService.startApplicationRevision(applicationVersion, user)).thenReturn(newApplicationVersion);
@@ -68,5 +74,25 @@ class ApplicationRevisionServiceTest {
 
     verify(applicationDuplicationService).duplicateApplicationSections(applicationVersion, newApplicationVersion);
     verify(applicationSubmissionService).regulatorAutoSubmitApplication(newApplicationVersion, applicationVersion, user);
+  }
+
+  @Test
+  void isRevisable_true() {
+    var applicationVersion = new ApplicationVersion();
+    when(applicationUnitService.hasLegacyEmissionCategoryType(applicationVersion))
+        .thenReturn(false);
+
+    assertThat(applicationRevisionService.isRevisable(applicationVersion))
+        .isEqualTo(true);
+  }
+
+  @Test
+  void isRevisable_false() {
+    var applicationVersion = new ApplicationVersion();
+    when(applicationUnitService.hasLegacyEmissionCategoryType(applicationVersion))
+        .thenReturn(true);
+
+    assertThat(applicationRevisionService.isRevisable(applicationVersion))
+        .isEqualTo(false);
   }
 }

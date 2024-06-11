@@ -804,4 +804,40 @@ class ApplicationUnitServiceTest {
     verify(applicationUnitRepository, times(1)).save(any(ApplicationUnit.class));
     verifyNoMoreInteractions(applicationUnitRepository);
   }
+
+  @ParameterizedTest
+  @EnumSource(value = EmissionCategoryType.class, names = {"LEGACY_LONG_TERM", "CATEGORY_123"})
+  void hasLegacyEmissionCategoryType_true(EmissionCategoryType emissionCategoryType) {
+    var applicationUnit = new ApplicationUnit();
+    applicationUnit.setEmissionCategoryType(emissionCategoryType);
+
+     when(applicationUnitRepository.findByApplicationVersion(any()))
+         .thenReturn(Optional.of(applicationUnit));
+
+    assertThat(applicationUnitService.hasLegacyEmissionCategoryType(any()))
+        .isTrue();
+  }
+
+  @Test
+  void hasLegacyEmissionCategoryType_false() {
+    var applicationUnit = new ApplicationUnit();
+    applicationUnit.setEmissionCategoryType(EmissionCategoryType.CATEGORY_ABC);
+
+    when(applicationUnitRepository.findByApplicationVersion(any()))
+        .thenReturn(Optional.of(applicationUnit));
+
+    assertThat(applicationUnitService.hasLegacyEmissionCategoryType(any()))
+        .isFalse();
+  }
+
+  @Test
+  void hasLegacyEmissionCategoryType_whenEmissionCategoryTypeNull_thenExpectFalse() {
+    var applicationUnit = new ApplicationUnit();
+
+    when(applicationUnitRepository.findByApplicationVersion(any()))
+        .thenReturn(Optional.of(applicationUnit));
+
+    assertThat(applicationUnitService.hasLegacyEmissionCategoryType(any()))
+        .isFalse();
+  }
 }

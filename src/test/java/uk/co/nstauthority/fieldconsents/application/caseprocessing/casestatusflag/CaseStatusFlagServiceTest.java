@@ -26,6 +26,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.revision.ApplicationRevisionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalService;
@@ -65,6 +66,9 @@ class CaseStatusFlagServiceTest {
 
   @Mock
   private ApplicationDocumentInstanceService applicationDocumentInstanceService;
+
+  @Mock
+  private ApplicationRevisionService applicationRevisionService;
 
   @InjectMocks
   private CaseStatusFlagService caseStatusFlagService;
@@ -216,6 +220,26 @@ class CaseStatusFlagServiceTest {
 
     assertThat(caseStatusFlagService.isCaseStatusFlagApplicable(applicationVersion, CaseStatusFlag.NON_WITHDRAWN_OR_DELETED_REVISION_APPLICATION_DOES_NOT_EXIST))
         .isEqualTo(!nonWithdrawnOrDeletedRevisionApplicationExists);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void isCaseStatusFlagApplicable_IS_UPDATABLE(boolean updatable) {
+    when(applicationUpdateService.isUpdatable(applicationVersion))
+        .thenReturn(updatable);
+
+    assertThat(caseStatusFlagService.isCaseStatusFlagApplicable(applicationVersion, CaseStatusFlag.IS_UPDATABLE))
+        .isEqualTo(updatable);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void isCaseStatusFlagApplicable_IS_REVISABLE(boolean revisable) {
+    when(applicationRevisionService.isRevisable(applicationVersion))
+        .thenReturn(revisable);
+
+    assertThat(caseStatusFlagService.isCaseStatusFlagApplicable(applicationVersion, CaseStatusFlag.IS_REVISABLE))
+        .isEqualTo(revisable);
   }
 
   @Test

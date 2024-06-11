@@ -1,5 +1,8 @@
 package uk.co.nstauthority.fieldconsents.application.unit;
 
+import static uk.co.nstauthority.fieldconsents.flarevent.EmissionCategoryType.CATEGORY_123;
+import static uk.co.nstauthority.fieldconsents.flarevent.EmissionCategoryType.LEGACY_LONG_TERM;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -193,5 +196,11 @@ public class ApplicationUnitService implements ApplicationListener<ConsentLength
           consentLength.getDisplayName(),
           applicationVersion.getId());
     }
+  }
+
+  public boolean hasLegacyEmissionCategoryType(ApplicationVersion applicationVersion) {
+    var emissionCategoryType = getOrCreateApplicationUnit(applicationVersion).getEmissionCategoryType();
+
+    return LEGACY_LONG_TERM.equals(emissionCategoryType) || CATEGORY_123.equals(emissionCategoryType);
   }
 }

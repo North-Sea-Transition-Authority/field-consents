@@ -59,6 +59,8 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casest
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_FURTHER_INFORMATION_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_NOT_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.IS_REVISABLE;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.IS_UPDATABLE;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.MAIL_MERGE_ERROR_NOT_PRESENT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NON_EXPIRED_CONSENT_EXISTS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NON_WITHDRAWN_OR_DELETED_REVISION_APPLICATION_DOES_NOT_EXIST;
@@ -242,7 +244,7 @@ class CaseProcessingActionServiceTest {
         ),
         arguments(
             Set.of(PROCESS_FCS_APPLICATIONS),
-            Set.of(CASE_OFFICER_ASSIGNED, TECHNICAL_REVIEW_NOT_OPEN, APPLICATION_UPDATE_NOT_OPEN),
+            Set.of(CASE_OFFICER_ASSIGNED, TECHNICAL_REVIEW_NOT_OPEN, APPLICATION_UPDATE_NOT_OPEN, IS_UPDATABLE),
             ExpectedActions.newBuilder()
                 .inProgressActions(CHANGE_ACE_STATUS, CASE_OFFICER_RELEASE_OWNERSHIP)
                 .submittedActions(CHANGE_ACE_STATUS, CASE_OFFICER_RELEASE_OWNERSHIP, TECHNICAL_REVIEW_REQUEST, CONSENT_PREPARATION, APPLICATION_UPDATE_REQUEST)
@@ -257,7 +259,7 @@ class CaseProcessingActionServiceTest {
         ),
         arguments(
             Set.of(PROCESS_FCS_APPLICATIONS, TECHNICAL_REVIEW_FCS_APPLICATIONS),
-            Set.of(APPLICATION_UPDATE_NOT_OPEN),
+            Set.of(APPLICATION_UPDATE_NOT_OPEN, IS_UPDATABLE),
             ExpectedActions.newBuilder()
                 .submittedActions(CONSENT_PREPARATION, APPLICATION_UPDATE_REQUEST)
                 .build()
@@ -286,7 +288,7 @@ class CaseProcessingActionServiceTest {
         ),
         arguments(
             Set.of(PROCESS_FCS_APPLICATIONS),
-            Set.of(CONSULTATION_FURTHER_INFORMATION_OPEN, APPLICATION_UPDATE_NOT_OPEN),
+            Set.of(CONSULTATION_FURTHER_INFORMATION_OPEN, APPLICATION_UPDATE_NOT_OPEN, IS_UPDATABLE),
             ExpectedActions.newBuilder()
                 .submittedActions(CONSENT_PREPARATION, APPLICATION_UPDATE_REQUEST, CONSULTATION_FURTHER_INFORMATION_RESPOND)
                 .build()
@@ -388,14 +390,14 @@ class CaseProcessingActionServiceTest {
         ),
         arguments(
             Set.of(EDIT_FCS_APPLICATIONS),
-            Set.of(NON_EXPIRED_CONSENT_EXISTS, NON_WITHDRAWN_OR_DELETED_REVISION_APPLICATION_DOES_NOT_EXIST),
+            Set.of(NON_EXPIRED_CONSENT_EXISTS, NON_WITHDRAWN_OR_DELETED_REVISION_APPLICATION_DOES_NOT_EXIST, IS_REVISABLE),
             ExpectedActions.newBuilder()
                 .completedActions(REVISE_CONSENT)
                 .build()
         ),
         arguments(
             Set.of(PROCESS_FCS_APPLICATIONS),
-            Set.of(NON_EXPIRED_CONSENT_EXISTS, NON_WITHDRAWN_OR_DELETED_REVISION_APPLICATION_DOES_NOT_EXIST),
+            Set.of(NON_EXPIRED_CONSENT_EXISTS, NON_WITHDRAWN_OR_DELETED_REVISION_APPLICATION_DOES_NOT_EXIST, IS_REVISABLE),
             ExpectedActions.newBuilder()
                 .submittedActions(CONSENT_PREPARATION)
                 .completedActions(REVISE_CONSENT)

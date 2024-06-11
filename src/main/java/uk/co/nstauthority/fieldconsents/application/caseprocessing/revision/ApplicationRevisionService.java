@@ -7,27 +7,31 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.duplication.ApplicationDuplicationService;
 import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionService;
+import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.teams.TeamService;
 
 @Service
-class ApplicationRevisionService {
+public class ApplicationRevisionService {
 
   private final ApplicationService applicationService;
   private final ApplicationSubmissionService applicationSubmissionService;
   private final ApplicationDuplicationService applicationDuplicationService;
   private final TeamService teamService;
+  private final ApplicationUnitService applicationUnitService;
 
   ApplicationRevisionService(
       ApplicationService applicationService,
       ApplicationSubmissionService applicationSubmissionService,
       ApplicationDuplicationService applicationDuplicationService,
-      TeamService teamService
+      TeamService teamService,
+      ApplicationUnitService applicationUnitService
   ) {
     this.applicationService = applicationService;
     this.applicationSubmissionService = applicationSubmissionService;
     this.applicationDuplicationService = applicationDuplicationService;
     this.teamService = teamService;
+    this.applicationUnitService = applicationUnitService;
   }
 
   @Transactional
@@ -41,5 +45,10 @@ class ApplicationRevisionService {
     }
 
     return newApplicationVersion.getApplication();
+  }
+
+  public boolean isRevisable(ApplicationVersion applicationVersion) {
+    // Belt and braces to stop certain legacy cases from being revisable
+    return !applicationUnitService.hasLegacyEmissionCategoryType(applicationVersion);
   }
 }

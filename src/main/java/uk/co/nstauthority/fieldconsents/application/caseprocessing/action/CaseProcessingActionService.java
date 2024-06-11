@@ -50,6 +50,8 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casest
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_FURTHER_INFORMATION_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_NOT_OPEN;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.CONSULTATION_OPEN;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.IS_REVISABLE;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.IS_UPDATABLE;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.MAIL_MERGE_ERROR_NOT_PRESENT;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NON_EXPIRED_CONSENT_EXISTS;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.casestatusflag.CaseStatusFlag.NON_WITHDRAWN_OR_DELETED_REVISION_APPLICATION_DOES_NOT_EXIST;
@@ -241,16 +243,17 @@ public class CaseProcessingActionService {
           entry(REGULATOR_ADD_CASE_NOTE, EnumSet.of(CASE_NOTES_ALLOWED)),
           entry(TECHNICAL_REVIEWER_SUBMIT_REVIEW, EnumSet.of(TECHNICAL_REVIEW_OPEN)),
           entry(TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP, EnumSet.of(TECHNICAL_REVIEW_OPEN)),
-          entry(APPLICATION_UPDATE_REQUEST, EnumSet.of(APPLICATION_UPDATE_NOT_OPEN)),
+          entry(APPLICATION_UPDATE_REQUEST, EnumSet.of(APPLICATION_UPDATE_NOT_OPEN, IS_UPDATABLE)),
           entry(OPERATOR_PAY_AND_SUBMIT_APPLICATION, EnumSet.of(APPLICATION_UPDATE_NOT_OPEN)),
           entry(OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT, EnumSet.of(
               APPLICATION_UPDATE_NOT_OPEN)),
           entry(OPERATOR_WITHDRAWAL_REQUEST, EnumSet.of(WITHDRAWAL_NOT_OPEN, APPLICATION_UPDATE_NOT_OPEN)),
           entry(OPERATOR_UPDATE_APPLICATION, EnumSet.of(APPLICATION_UPDATE_OPEN)),
-          entry(
-              REVISE_CONSENT,
-              EnumSet.of(NON_EXPIRED_CONSENT_EXISTS, NON_WITHDRAWN_OR_DELETED_REVISION_APPLICATION_DOES_NOT_EXIST)
-          ),
+          entry(REVISE_CONSENT, EnumSet.of(
+              NON_EXPIRED_CONSENT_EXISTS,
+              NON_WITHDRAWN_OR_DELETED_REVISION_APPLICATION_DOES_NOT_EXIST,
+              IS_REVISABLE
+          )),
           entry(CONSULTATION_FURTHER_INFORMATION_REQUEST, EnumSet.of(CONSULTATION_FURTHER_INFORMATION_NOT_OPEN)),
           entry(CONSULTATION_FURTHER_INFORMATION_RESPOND,
               EnumSet.of(CONSULTATION_FURTHER_INFORMATION_OPEN, APPLICATION_UPDATE_NOT_OPEN)),

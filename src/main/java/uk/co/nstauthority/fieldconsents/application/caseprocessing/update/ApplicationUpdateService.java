@@ -23,6 +23,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.reques
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.response.ApplicationUpdateResponseType;
 import uk.co.nstauthority.fieldconsents.application.duplication.ApplicationDuplicationService;
 import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmissionService;
+import uk.co.nstauthority.fieldconsents.application.unit.ApplicationUnitService;
 import uk.co.nstauthority.fieldconsents.application.workareapriority.ApplicationWorkAreaPriorityService;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 
@@ -38,18 +39,13 @@ public class ApplicationUpdateService {
   private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationUpdateService.class);
 
   private final ApplicationService applicationService;
-
   private final ApplicationDuplicationService applicationDuplicationService;
-
   private final ApplicationUpdateRepository applicationUpdateRepository;
-
   private final Clock clock;
-
   private final ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
-
   private final ApplicationUpdateEmailService applicationUpdateEmailService;
-
   private final ApplicationSubmissionService applicationSubmissionService;
+  private final ApplicationUnitService applicationUnitService;
 
   @Autowired
   ApplicationUpdateService(ApplicationService applicationService,
@@ -58,7 +54,8 @@ public class ApplicationUpdateService {
                            Clock clock,
                            ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService,
                            ApplicationUpdateEmailService applicationUpdateEmailService,
-                           ApplicationSubmissionService applicationSubmissionService) {
+                           ApplicationSubmissionService applicationSubmissionService,
+                           ApplicationUnitService applicationUnitService) {
     this.applicationService = applicationService;
     this.applicationDuplicationService = applicationDuplicationService;
     this.applicationUpdateRepository = applicationUpdateRepository;
@@ -66,6 +63,7 @@ public class ApplicationUpdateService {
     this.applicationWorkAreaPriorityService = applicationWorkAreaPriorityService;
     this.applicationUpdateEmailService = applicationUpdateEmailService;
     this.applicationSubmissionService = applicationSubmissionService;
+    this.applicationUnitService = applicationUnitService;
   }
 
   public boolean openApplicationUpdateExists(ApplicationVersion applicationVersion) {
@@ -176,5 +174,10 @@ public class ApplicationUpdateService {
               """,
           user.wuaId(), applicationVersion.getId(), exception);
     }
+  }
+
+  public boolean isUpdatable(ApplicationVersion applicationVersion) {
+    // Belt and braces to stop certain legacy cases from being updatable
+    return !applicationUnitService.hasLegacyEmissionCategoryType(applicationVersion);
   }
 }

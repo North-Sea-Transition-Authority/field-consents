@@ -11,6 +11,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.issui
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.ConsultationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation.furtherinformation.FurtherInformationService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.document.instance.ApplicationDocumentInstanceService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.revision.ApplicationRevisionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.technicalreview.TechnicalReviewService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.update.ApplicationUpdateService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.withdrawal.ApplicationWithdrawalService;
@@ -29,6 +30,7 @@ public class CaseStatusFlagService {
   private final ConsentService consentService;
   private final FurtherInformationService furtherInformationService;
   private final ApplicationDocumentInstanceService applicationDocumentInstanceService;
+  private final ApplicationRevisionService applicationRevisionService;
 
   CaseStatusFlagService(
       ApplicationService applicationService,
@@ -41,7 +43,8 @@ public class CaseStatusFlagService {
       ConsentIssuingApprovalService consentIssuingApprovalService,
       ConsentService consentService,
       FurtherInformationService furtherInformationService,
-      ApplicationDocumentInstanceService applicationDocumentInstanceService
+      ApplicationDocumentInstanceService applicationDocumentInstanceService,
+      ApplicationRevisionService applicationRevisionService
   ) {
     this.applicationService = applicationService;
     this.caseAssignmentService = caseAssignmentService;
@@ -54,6 +57,7 @@ public class CaseStatusFlagService {
     this.consentService = consentService;
     this.furtherInformationService = furtherInformationService;
     this.applicationDocumentInstanceService = applicationDocumentInstanceService;
+    this.applicationRevisionService = applicationRevisionService;
   }
 
   public boolean isCaseStatusFlagApplicable(ApplicationVersion applicationVersion, CaseStatusFlag caseStatusFlag) {
@@ -65,6 +69,7 @@ public class CaseStatusFlagService {
       case APPLICATION_UPDATE_NOT_OPEN -> !applicationUpdateService.openApplicationUpdateExists(applicationVersion);
       case APPLICATION_UPDATE_STARTED -> applicationUpdateService.openApplicationUpdateExists(applicationVersion)
           && ApplicationVersionStatus.IN_PROGRESS.equals(applicationVersion.getStatus());
+      case IS_UPDATABLE -> applicationUpdateService.isUpdatable(applicationVersion);
 
       // Assignment
       case CAM_ASSIGNED -> caseAssignmentService.isCamAssigned(applicationVersion);
@@ -82,6 +87,9 @@ public class CaseStatusFlagService {
       case NON_EXPIRED_CONSENT_EXISTS -> consentService.nonExpiredConsentExists(applicationVersion);
       case NON_WITHDRAWN_OR_DELETED_REVISION_APPLICATION_DOES_NOT_EXIST ->
           !applicationService.nonWithdrawnOrDeletedRevisionApplicationExists(application);
+
+      // Revisions
+      case IS_REVISABLE -> applicationRevisionService.isRevisable(applicationVersion);
 
       // Consultation
       case CONSULTATION_OPEN -> consultationService.findLatestOpenConsultation(application).isPresent();
