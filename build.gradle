@@ -5,6 +5,7 @@ plugins {
   id "org.sonarqube" version "5.0.0.4638"
   id 'checkstyle'
   id 'jacoco'
+  id 'maven-publish'
   id 'nu.studer.jooq' version '8.1'
   //docker-compose needed to startup a postgres container for Jooq codegen
   id 'com.avast.gradle.docker-compose' version "0.16.11"
@@ -23,6 +24,10 @@ java {
 }
 
 def fileUploadLibraryVersion = 'v2.5.0'
+
+sourceSets {
+  epmqMessagesJarIntegrationTest {}
+}
 
 repositories {
   mavenCentral()
@@ -60,6 +65,7 @@ dependencies {
   implementation 'uk.co.fivium:digital-document-library-spring-boot-starter:v1.0.0'
   implementation 'uk.co.fivium:ftss-client-spring-boot-starter:v1.0.0'
   implementation 'uk.co.fivium.feedbackmanagementservice:client:v2.3.0'
+  implementation 'uk.co.fivium.energyportalmessagequeue:spring-boot-starter:v2.0.0'
 
   implementation 'org.springframework.boot:spring-boot-starter-jooq'
   implementation 'org.jooq:jooq-codegen'
@@ -83,6 +89,10 @@ dependencies {
   testImplementation 'org.testcontainers:postgresql'
   testImplementation 'org.testcontainers:junit-jupiter'
   testImplementation 'org.springframework.security:spring-security-test'
+
+  epmqMessagesJarIntegrationTestImplementation 'org.springframework.boot:spring-boot-starter-test'
+  epmqMessagesJarIntegrationTestImplementation 'uk.co.nstauthority.fieldconsents:epmq-messages:integration-test'
+  epmqMessagesJarIntegrationTestImplementation 'uk.co.fivium.energyportalmessagequeue:spring-boot-starter:v2.0.0'
 }
 
 tasks {
@@ -210,4 +220,66 @@ jacocoTestReport {
   reports {
     xml.required = true
   }
+}
+
+tasks.register('epmqMessagesJar', Jar) {
+  from sourceSets.main.output
+  include 'uk/co/nstauthority/fieldconsents/epmqmessage/**'
+  archiveBaseName = 'field-consents-epmq-messages'
+}
+
+publishing {
+  publications {
+    epmqMessages(MavenPublication) {
+      groupId = 'uk.co.nstauthority.fieldconsents'
+      artifactId = 'epmq-messages'
+      version = System.getenv("EPMQ_MESSAGES_JAR_VERSION") ?: version
+
+      artifact(epmqMessagesJar)
+    }
+    epmqMessagesIntegrationTest(MavenPublication) {
+      groupId = 'uk.co.nstauthority.fieldconsents'
+      artifactId = 'epmq-messages'
+      version = 'integration-test'
+
+      artifact(epmqMessagesJar)
+    }
+  }
+  repositories {
+    maven {
+      name = 'snapshots'
+      url = 'https://nexus.fivium.co.uk/repository/maven-snapshots'
+      credentials {
+        username = System.getenv("NEXUS_USERNAME")
+        password = System.getenv("NEXUS_PASSWORD")
+      }
+    }
+
+    maven {
+      name = 'releases'
+      url = 'https://nexus.fivium.co.uk/repository/maven-releases'
+      credentials {
+        username = System.getenv("NEXUS_USERNAME")
+        password = System.getenv("NEXUS_PASSWORD")
+      }
+    }
+  }
+}
+
+tasks.register('epmqMessagesJarIntegrationTest', Test) {
+  useJUnitPlatform()
+  group 'verification'
+  //Need to explicitly override the default classesDirs and classpath for a test task
+  testClassesDirs = sourceSets.epmqMessagesJarIntegrationTest.output.classesDirs
+  classpath = sourceSets.epmqMessagesJarIntegrationTest.runtimeClasspath
+
+  mustRunAfter(publishEpmqMessagesIntegrationTestPublicationToMavenLocal)
+}
+
+tasks.register('epmqMessagesJarIntegrationTestReport', TestReport) {
+  destinationDir = file("$buildDir/reports/epmqMessagesJarIntegrationTests")
+  //Specify test result directory rather than task names so this task runs even if the tests fail
+  testResultDirs = [epmqMessagesJarIntegrationTest.binResultsDir]
+
+  mustRunAfter(epmqMessagesJarIntegrationTest)
 }

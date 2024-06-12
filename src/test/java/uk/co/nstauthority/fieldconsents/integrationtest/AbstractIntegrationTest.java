@@ -4,16 +4,19 @@ import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.testcontainers.containers.PostgreSQLContainer;
+import uk.co.nstauthority.fieldconsents.configuration.EnergyPortalMessageQueueTestConfiguration;
 
 @SuppressWarnings("rawtypes")
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles({"development", "integration-test"})
 @AutoConfigureFileUploadLibrary
+@Import(EnergyPortalMessageQueueTestConfiguration.class)
 public abstract class AbstractIntegrationTest {
 
   @Autowired

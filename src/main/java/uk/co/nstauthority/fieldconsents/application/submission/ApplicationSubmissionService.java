@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.ApplicationRepository;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
+import uk.co.nstauthority.fieldconsents.application.ApplicationSnsService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionRepository;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
@@ -36,6 +37,7 @@ public class ApplicationSubmissionService {
   private final ApplicationRepository applicationRepository;
   private final ApplicationTaskListService applicationTaskListService;
   private final ApplicationVersionRepository applicationVersionRepository;
+  private final ApplicationSnsService applicationSnsService;
   private final ApplicationSubmissionEmailService applicationSubmissionEmailService;
   private final ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
   private final EnergyPortalUserService energyPortalUserService;
@@ -47,6 +49,7 @@ public class ApplicationSubmissionService {
       ApplicationRepository applicationRepository,
       ApplicationTaskListService applicationTaskListService,
       ApplicationVersionRepository applicationVersionRepository,
+      ApplicationSnsService applicationSnsService,
       ApplicationSubmissionEmailService applicationSubmissionEmailService,
       ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService,
       EnergyPortalUserService energyPortalUserService
@@ -57,6 +60,7 @@ public class ApplicationSubmissionService {
     this.applicationRepository = applicationRepository;
     this.applicationTaskListService = applicationTaskListService;
     this.applicationVersionRepository = applicationVersionRepository;
+    this.applicationSnsService = applicationSnsService;
     this.applicationSubmissionEmailService = applicationSubmissionEmailService;
     this.applicationWorkAreaPriorityService = applicationWorkAreaPriorityService;
     this.energyPortalUserService = energyPortalUserService;
@@ -92,7 +96,7 @@ public class ApplicationSubmissionService {
       applicationRepository.save(application);
     }
 
-    submitApplicationVersion(applicationVersion, user);
+    submitFirstApplicationVersion(applicationVersion, user);
 
     if (!aceFlagService.isAceApplication(applicationVersion)) {
       try {
@@ -131,11 +135,11 @@ public class ApplicationSubmissionService {
         energyPortalUserService.getByWuaId(WebUserAccountId.from(previousApplicationVersion.getSubmittedByWuaId()));
     var previousSubmittedByUser = ServiceUserDetail.from(previousSubmittedByUserEnergyPortalUserDto);
 
-    submitApplicationVersion(applicationVersion, previousSubmittedByUser);
+    submitFirstApplicationVersion(applicationVersion, previousSubmittedByUser);
   }
 
-  private void submitApplicationVersion(ApplicationVersion applicationVersion, ServiceUserDetail user) {
-    setApplicationVersionAsSubmitted(applicationVersion, user);
+  private void submitFirstApplicationVersion(ApplicationVersion applicationVersion, ServiceUserDetail user) {
+    submitApplicationVersion(applicationVersion, user);
     aceFlagService.autoSetAceFlag(applicationVersion);
     applicationWorkAreaPriorityService
         .prioritiseApplicationInWorkArea(applicationVersion, user, APPLICATION_SUBMITTED, INDUSTRY);
@@ -157,7 +161,7 @@ public class ApplicationSubmissionService {
       );
     }
 
-    setApplicationVersionAsSubmitted(applicationVersion, user);
+    submitApplicationVersion(applicationVersion, user);
 
     applicationWorkAreaPriorityService
         .prioritiseApplicationInWorkArea(applicationVersion, user, UPDATE_SUBMITTED, INDUSTRY);
@@ -167,10 +171,12 @@ public class ApplicationSubmissionService {
         .prioritiseApplicationInWorkArea(applicationVersion, user, UPDATE_SUBMITTED, REGULATOR_TECHNICAL_REVIEWER);
   }
 
-  private void setApplicationVersionAsSubmitted(ApplicationVersion applicationVersion, ServiceUserDetail user) {
+  private void submitApplicationVersion(ApplicationVersion applicationVersion, ServiceUserDetail user) {
     applicationVersion.setStatus(ApplicationVersionStatus.SUBMITTED);
     applicationVersion.setSubmittedDateTime(clock.instant());
     applicationVersion.setSubmittedByWuaId(user.wuaId());
     applicationVersionRepository.save(applicationVersion);
+
+    applicationSnsService.publishApplicationSubmittedSnsMessage(applicationVersion);
   }
 }

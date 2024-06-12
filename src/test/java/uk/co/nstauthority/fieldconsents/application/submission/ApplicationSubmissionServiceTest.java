@@ -31,6 +31,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.fieldconsents.application.ApplicationRepository;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
+import uk.co.nstauthority.fieldconsents.application.ApplicationSnsService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionRepository;
@@ -49,19 +50,22 @@ import uk.co.nstauthority.fieldconsents.tasklist.TaskListSection;
 class ApplicationSubmissionServiceTest {
 
   @Mock
-  private ApplicationTaskListService applicationTaskListService;
+  private AceFlagService aceFlagService;
+
+  @Mock
+  private ApplicationService applicationService;
 
   @Mock
   private ApplicationRepository applicationRepository;
 
   @Mock
+  private ApplicationTaskListService applicationTaskListService;
+
+  @Mock
   private ApplicationVersionRepository applicationVersionRepository;
 
   @Mock
-  private AceFlagService aceFlagService;
-
-  @Mock
-  private ApplicationService applicationService;
+  private ApplicationSnsService applicationSnsService;
 
   @Mock
   private ApplicationSubmissionEmailService applicationSubmissionEmailService;
@@ -87,6 +91,7 @@ class ApplicationSubmissionServiceTest {
         applicationRepository,
         applicationTaskListService,
         applicationVersionRepository,
+        applicationSnsService,
         applicationSubmissionEmailService,
         applicationWorkAreaPriorityService,
         energyPortalUserService
@@ -171,6 +176,7 @@ class ApplicationSubmissionServiceTest {
     assertThat(applicationVersion.getSubmittedByWuaId()).isEqualTo(USER.wuaId());
     verify(applicationVersionRepository).save(applicationVersion);
 
+    verify(applicationSnsService).publishApplicationSubmittedSnsMessage(applicationVersion);
     verify(aceFlagService).autoSetAceFlag(applicationVersion);
     verify(applicationWorkAreaPriorityService)
         .prioritiseApplicationInWorkArea(applicationVersion, USER, APPLICATION_SUBMITTED, INDUSTRY);
@@ -205,6 +211,7 @@ class ApplicationSubmissionServiceTest {
     assertThat(applicationVersion.getSubmittedByWuaId()).isEqualTo(USER.wuaId());
     verify(applicationVersionRepository).save(applicationVersion);
 
+    verify(applicationSnsService).publishApplicationSubmittedSnsMessage(applicationVersion);
     verify(aceFlagService).autoSetAceFlag(applicationVersion);
     verify(applicationWorkAreaPriorityService)
         .prioritiseApplicationInWorkArea(applicationVersion, USER, APPLICATION_SUBMITTED, INDUSTRY);
@@ -253,10 +260,10 @@ class ApplicationSubmissionServiceTest {
   @ParameterizedTest
   @EnumSource(
       value = ApplicationVersionStatus.class,
-      names = { "IN_PROGRESS", "AWAITING_PAYMENT" },
+      names = { "IN_PROGRESS" },
       mode = EnumSource.Mode.EXCLUDE
   )
-  void regulatorAutoSubmitApplication_statusNotInProgressOrAwaitingPayment(ApplicationVersionStatus applicationVersionStatus) {
+  void regulatorAutoSubmitApplication_statusNotInProgress(ApplicationVersionStatus applicationVersionStatus) {
     var applicationVersion
         = ApplicationTestUtil.getNewApplicationVersionWithTypeIdAndVersionNumber(ApplicationType.PRODUCTION, 1, 2);
     applicationVersion.setStatus(applicationVersionStatus);
@@ -299,6 +306,7 @@ class ApplicationSubmissionServiceTest {
     assertThat(applicationVersion.getSubmittedByWuaId()).isEqualTo(previousSubmittedByUser.wuaId());
     verify(applicationVersionRepository).save(applicationVersion);
 
+    verify(applicationSnsService).publishApplicationSubmittedSnsMessage(applicationVersion);
     verify(aceFlagService).autoSetAceFlag(applicationVersion);
     verify(applicationWorkAreaPriorityService)
         .prioritiseApplicationInWorkArea(applicationVersion, previousSubmittedByUser, APPLICATION_SUBMITTED, INDUSTRY);
@@ -335,6 +343,7 @@ class ApplicationSubmissionServiceTest {
     assertThat(applicationVersion.getSubmittedByWuaId()).isEqualTo(USER.wuaId());
     verify(applicationVersionRepository).save(applicationVersion);
 
+    verify(applicationSnsService).publishApplicationSubmittedSnsMessage(applicationVersion);
     verify(applicationWorkAreaPriorityService)
         .prioritiseApplicationInWorkArea(applicationVersion, USER, UPDATE_SUBMITTED, INDUSTRY);
     verify(applicationWorkAreaPriorityService)
