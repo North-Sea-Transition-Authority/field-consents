@@ -10,9 +10,9 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentData;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataService;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentDataLongTermEmissionFiguresService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentFigureUnitService;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthService;
-import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
 
 @Service
 public class ApplicationRationaleEmissionService {
@@ -22,19 +22,22 @@ public class ApplicationRationaleEmissionService {
   private final ConsentDataService consentDataService;
   private final ConsentLengthService consentLengthService;
   private final ConsentFigureUnitService consentFigureUnitService;
+  private final ConsentDataLongTermEmissionFiguresService consentDataLongTermEmissionFiguresService;
 
   ApplicationRationaleEmissionService(
       Clock clock,
       ApplicationVersionService applicationVersionService,
       ConsentDataService consentDataService,
       ConsentLengthService consentLengthService,
-      ConsentFigureUnitService consentFigureUnitService
+      ConsentFigureUnitService consentFigureUnitService,
+      ConsentDataLongTermEmissionFiguresService consentDataLongTermEmissionFiguresService
   ) {
     this.clock = clock;
     this.applicationVersionService = applicationVersionService;
     this.consentDataService = consentDataService;
     this.consentLengthService = consentLengthService;
     this.consentFigureUnitService = consentFigureUnitService;
+    this.consentDataLongTermEmissionFiguresService = consentDataLongTermEmissionFiguresService;
   }
 
   public Optional<EmissionDailyAverage> findEmissionDailyAverage(ApplicationVersion applicationVersion) {
@@ -59,17 +62,17 @@ public class ApplicationRationaleEmissionService {
     }
 
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(application.getId());
-
     var consentLengthType = consentLengthService.getConsentLengthDetails(applicationVersion).getConsentLength();
-    if (ConsentLengthType.LONG_TERM == consentLengthType) {
-      throw new IllegalArgumentException(
-          "Emissions daily average not applicable to long term application %s"
-              .formatted(application.getId()));
-    }
-
     var consentFigureUnitView = consentFigureUnitService.getConsentFigureUnitView(applicationVersion, consentLengthType);
 
-    return EmissionDailyAverage.from(currentYear, consentData, consentFigureUnitView);
+    return switch (consentLengthType) {
+      case SHORT_TERM, ANNUAL -> EmissionDailyAverage.from(currentYear, consentData, consentFigureUnitView);
+      case LONG_TERM -> consentDataLongTermEmissionFiguresService.getConsentDataLongTermEmissionFiguresList(application)
+          .stream()
+          .filter(figures -> figures.getYear().equals(currentYear))
+          .findFirst()
+          .map(figures -> EmissionDailyAverage.from(figures, consentFigureUnitView))
+          .orElse(null);
+    };
   }
-
 }

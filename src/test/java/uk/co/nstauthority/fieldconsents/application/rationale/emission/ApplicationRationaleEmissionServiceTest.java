@@ -27,6 +27,8 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.ConsentDataTestUtil;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentDataLongTermEmissionFigures;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentDataLongTermEmissionFiguresService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentFigureUnitService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentFigureUnitView;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthDetails;
@@ -52,6 +54,9 @@ class ApplicationRationaleEmissionServiceTest {
   @Mock
   private ConsentFigureUnitService consentFigureUnitService;
 
+  @Mock
+  private ConsentDataLongTermEmissionFiguresService consentDataLongTermEmissionFiguresService;
+
   private ApplicationRationaleEmissionService applicationRationaleEmissionService;
 
   @BeforeEach
@@ -61,7 +66,8 @@ class ApplicationRationaleEmissionServiceTest {
         applicationVersionService,
         consentDataService,
         consentLengthService,
-        consentFigureUnitService
+        consentFigureUnitService,
+        consentDataLongTermEmissionFiguresService
     ));
   }
 
@@ -128,12 +134,7 @@ class ApplicationRationaleEmissionServiceTest {
     when(consentFigureUnitService.getConsentFigureUnitView(applicationVersion, consentLengthType)).thenReturn(consentFigureUnitView);
 
     assertThat(applicationRationaleEmissionService.getEmissionDailyAverage(currentYear, consentData))
-        .isEqualTo(new EmissionDailyAverage(
-            consentData.getApplication().getType(),
-            currentYear,
-            consentData.getEmissionDailyAverage(),
-            consentFigureUnitView.emissionUnit()
-        ));
+        .isEqualTo(EmissionDailyAverage.from(currentYear, consentData, consentFigureUnitView));
   }
 
   @ParameterizedTest
@@ -171,19 +172,47 @@ class ApplicationRationaleEmissionServiceTest {
     var currentYear = today.getYear();
 
     var consentData = ConsentDataTestUtil.newBuilder()
-        .withEmissionDailyAverage(BigDecimal.ONE)
         .withApplication(application)
         .build();
 
     var consentLengthDetails = new ConsentLengthDetails();
     consentLengthDetails.setConsentLength(ConsentLengthType.LONG_TERM);
 
-    when(applicationVersionService.getLatestApplicationVersionByApplicationId(application.getId())).thenReturn(applicationVersion);
+    var consentFigureUnitView = new ConsentFigureUnitView(
+        ProductionUnit.KSCM_PER_DAY,
+        ProductionUnit.KSCM_PER_MONTH,
+        FlareVentUnit.TONNES_PER_MONTH
+    );
+
+    var consentDataLongTermEmissionFiguresPrevious = new ConsentDataLongTermEmissionFigures();
+    consentDataLongTermEmissionFiguresPrevious.setYear(currentYear - 1);
+
+    var consentDataLongTermEmissionFiguresCurrent = new ConsentDataLongTermEmissionFigures();
+    consentDataLongTermEmissionFiguresCurrent.setApplication(application);
+    consentDataLongTermEmissionFiguresCurrent.setYear(currentYear);
+    consentDataLongTermEmissionFiguresCurrent.setDailyAverage(BigDecimal.ONE);
+
+    var consentDataLongTermEmissionFiguresNext = new ConsentDataLongTermEmissionFigures();
+    consentDataLongTermEmissionFiguresNext.setYear(currentYear + 1);
+
+    var consentDataLongTermEmissionFigures = List.of(
+        consentDataLongTermEmissionFiguresPrevious,
+        consentDataLongTermEmissionFiguresCurrent,
+        consentDataLongTermEmissionFiguresNext
+    );
+
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(application.getId()))
+        .thenReturn(applicationVersion);
+
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
 
-    assertThatThrownBy(() -> applicationRationaleEmissionService.getEmissionDailyAverage(currentYear, consentData))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("Emissions daily average not applicable to long term application %s"
-            .formatted(application.getId()));
+    when(consentFigureUnitService.getConsentFigureUnitView(applicationVersion, consentLengthDetails.getConsentLength()))
+        .thenReturn(consentFigureUnitView);
+
+    when(consentDataLongTermEmissionFiguresService.getConsentDataLongTermEmissionFiguresList(application))
+        .thenReturn(consentDataLongTermEmissionFigures);
+
+    assertThat(applicationRationaleEmissionService.getEmissionDailyAverage(currentYear, consentData))
+        .isEqualTo(EmissionDailyAverage.from(consentDataLongTermEmissionFiguresCurrent, consentFigureUnitView));
   }
 }

@@ -20,7 +20,7 @@ public class ConsentDataLongTermEmissionFiguresService {
     this.consentDataLongTermEmissionFiguresRepository = consentDataLongTermEmissionFiguresRepository;
   }
 
-  List<ConsentDataLongTermEmissionFigures> getConsentDataLongTermEmissionFiguresList(Application application) {
+  public List<ConsentDataLongTermEmissionFigures> getConsentDataLongTermEmissionFiguresList(Application application) {
     return consentDataLongTermEmissionFiguresRepository.findAllByApplication(application);
   }
 
