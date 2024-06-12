@@ -42,6 +42,7 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.Reg
 @RequestMapping("applications/{applicationId}")
 @HasApplicationStatus(statuses = {
     ApplicationVersionStatus.IN_PROGRESS,
+    ApplicationVersionStatus.AWAITING_PAYMENT,
     ApplicationVersionStatus.SUBMITTED,
     ApplicationVersionStatus.CONSENTED,
     ApplicationVersionStatus.WITHDRAWN
@@ -50,11 +51,20 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.Reg
     RolePermission.PROCESS_FCS_APPLICATIONS,
     RolePermission.ASSIGN_FCS_APPLICATIONS,
     RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS,
-    RolePermission.VIEW_FCS_CONSENTS,
     RolePermission.AUTHORISE_FCS_CONSENTS,
+    RolePermission.VIEW_FCS_CONSENTS,
 })
 @IsMemberOfTeamType(teamType = TeamType.REGULATOR)
 public class ApplicationCaseProcessingController {
+
+  // The list of permissions here must match the permissions used in @HasApplicationPermission above
+  public static final RolePermission[] REGULATOR_PROCESSING_REQUIRED_PERMISSIONS = {
+      RolePermission.PROCESS_FCS_APPLICATIONS,
+      RolePermission.ASSIGN_FCS_APPLICATIONS,
+      RolePermission.TECHNICAL_REVIEW_FCS_APPLICATIONS,
+      RolePermission.AUTHORISE_FCS_CONSENTS,
+      RolePermission.VIEW_FCS_CONSENTS
+  };
 
   private final ApplicationService applicationService;
   private final ApplicationContextService applicationContextService;
@@ -129,6 +139,9 @@ public class ApplicationCaseProcessingController {
       tab = caseProcessingTabs.getFirst();
     }
 
+    var pageTitle = applicationService
+        .getApplicationReference(applicationVersion, applicationType.getDisplayName() + " application");
+
     var modelAndView = new ModelAndView("fcs/application/applicationCaseProcessing")
         .addObject("selectedTab", tab)
         .addObject("controllerUrl", ReverseRouter.route(on(this.getClass()).caseProcessing(applicationId, null, null)))
@@ -136,7 +149,7 @@ public class ApplicationCaseProcessingController {
         .addObject("applicationContext", applicationContextService.getApplicationContext(applicationVersion))
         .addObject("caseProcessingTabs", caseProcessingTabs)
         .addObject("wideSummaryDisplay", WIDE_SUMMARY_DISPLAY.allowed(applicationType))
-        .addObject("pageTitle", applicationService.generateApplicationReference(applicationVersion))
+        .addObject("pageTitle", pageTitle)
         .addObject("isMigratedApplication", applicationService.isMigratedApplication(application));
 
     if (ApplicationVersionStatus.SUBMITTED.equals(applicationVersion.getStatus())) {

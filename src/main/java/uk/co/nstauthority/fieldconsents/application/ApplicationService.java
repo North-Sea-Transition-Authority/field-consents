@@ -225,10 +225,14 @@ public class ApplicationService {
         applicationVersion.getVersion());
   }
 
-  public String getApplicationReference(ApplicationVersion applicationVersion) {
+  public String getApplicationReference(ApplicationVersion applicationVersion, String ifNotSetPlaceholderText) {
     return Objects.nonNull(applicationVersion.getApplication().getApplicationNo())
         ? generateApplicationReference(applicationVersion)
-        : "";
+        : ifNotSetPlaceholderText;
+  }
+
+  public String getApplicationReference(ApplicationVersion applicationVersion) {
+    return getApplicationReference(applicationVersion, "");
   }
 
   public int getNextApplicationNumber() {

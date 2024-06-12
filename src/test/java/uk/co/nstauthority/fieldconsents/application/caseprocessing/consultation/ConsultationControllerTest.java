@@ -1,5 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.consultation;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
@@ -83,7 +84,7 @@ class ConsultationControllerTest extends AbstractApplicationControllerTest {
   void getConsultations() throws Exception {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(caseProcessingActionService.getUserActionViewsForGroup(applicationVersion, user, CaseProcessingActionGroup.CONSULTATIONS)).thenReturn(actionList);
-    when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(APPLICATION_REFERENCE);
+    when(applicationService.getApplicationReference(any(ApplicationVersion.class), any(String.class))).thenReturn(APPLICATION_REFERENCE);
     when(consultationSummaryService.getConsultationSummaryItems(application)).thenReturn(consultationSummaryItems);
 
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
@@ -92,7 +93,7 @@ class ConsultationControllerTest extends AbstractApplicationControllerTest {
         .andExpect(status().isOk())
         .andExpect(view().name(VIEW_NAME))
         .andExpect(model().attribute("consultationSummaryItems", consultationSummaryItems))
-        .andExpect(model().attribute("applicationReference", APPLICATION_REFERENCE))
+        .andExpect(model().attribute("captionTitle", APPLICATION_REFERENCE))
         .andExpect(model().attribute("actionList", actionList))
         .andExpect(model().attribute("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class).caseProcessing(APPLICATION_ID, null, null))));
   }

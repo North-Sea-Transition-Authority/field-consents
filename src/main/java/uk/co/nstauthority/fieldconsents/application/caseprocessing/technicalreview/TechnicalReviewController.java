@@ -77,14 +77,17 @@ public class TechnicalReviewController {
   public ModelAndView getTechnicalReviews(@PathVariable Integer applicationId,
                                           ServiceUserDetail user) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
-    var applicationReference = applicationService.generateApplicationReference(applicationVersion);
+    var captionTitle = applicationService.getApplicationReference(
+        applicationVersion,
+        applicationVersion.getApplication().getType().getDisplayName() + " application"
+    );
     var technicalReviewSummaryItems =
         technicalReviewSummaryService.getTechnicalReviewSummaryItems(applicationVersion.getApplication());
     var caseProcessingActions = caseProcessingActionService.getUserActionViewsForGroup(
         applicationVersion, user, CaseProcessingActionGroup.TECHNICAL_REVIEWS);
 
     return new ModelAndView("fcs/application/review/technicalReviews")
-        .addObject("applicationReference", applicationReference)
+        .addObject("captionTitle", captionTitle)
         .addObject("technicalReviewSummaryItems", technicalReviewSummaryItems)
         .addObject("technicalReviewActions", caseProcessingActions)
         .addObject("backLinkUrl",

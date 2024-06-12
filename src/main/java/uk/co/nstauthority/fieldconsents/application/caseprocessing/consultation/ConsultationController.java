@@ -45,9 +45,13 @@ public class ConsultationController {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
     var application = applicationVersion.getApplication();
     var actionList = caseProcessingActionService.getUserActionViewsForGroup(applicationVersion, user, CONSULTATIONS);
+    var captionTitle = applicationService.getApplicationReference(
+        applicationVersion,
+        applicationVersion.getApplication().getType().getDisplayName() + " application"
+    );
 
     return new ModelAndView("fcs/application/consultation/consultations")
-        .addObject("applicationReference", applicationService.generateApplicationReference(applicationVersion))
+        .addObject("captionTitle", captionTitle)
         .addObject("consultationSummaryItems", consultationSummaryService.getConsultationSummaryItems(application))
         .addObject("actionList", actionList)
         .addObject("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class)

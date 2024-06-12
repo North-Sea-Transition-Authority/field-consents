@@ -22,12 +22,15 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -445,6 +448,32 @@ public class ApplicationServiceTest {
     var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.FLARE);
 
     assertThat(applicationService.getApplicationReference(applicationVersion)).isEqualTo("FCON/500/0 (Version 1)");
+  }
+
+  @ParameterizedTest
+  @EnumSource(ApplicationType.class)
+  void getApplicationReference_withInProgressApplication(ApplicationType applicationType) {
+    var applicationPlaceholder = "application";
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(applicationType);
+
+    assertThat(applicationService.getApplicationReference(applicationVersion, applicationPlaceholder))
+        .isEqualTo(applicationPlaceholder);
+  }
+
+  @ParameterizedTest
+  @MethodSource("getApplicationTypeWithReference")
+  void getApplicationReference_withInSubmittedApplication(ApplicationType applicationType, String applicationReference) {
+    var applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(applicationType);
+
+    assertThat(applicationService.getApplicationReference(applicationVersion, ""))
+        .isEqualTo(applicationReference);
+  }
+
+  private static Stream<Arguments> getApplicationTypeWithReference() {
+    return Stream.of(
+        Arguments.of(ApplicationType.PRODUCTION, "PCON/500/0 (Version 1)"),
+        Arguments.of(ApplicationType.FLARE, "FCON/500/0 (Version 1)"),
+        Arguments.of(ApplicationType.VENT, "VCON/500/0 (Version 1)"));
   }
 
   @Test

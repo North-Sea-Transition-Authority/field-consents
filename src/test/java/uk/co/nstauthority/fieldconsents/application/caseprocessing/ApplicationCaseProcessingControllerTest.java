@@ -601,7 +601,9 @@ class ApplicationCaseProcessingControllerTest extends AbstractApplicationControl
         .withApplicationVersionStatus(applicationVersion.getStatus())
         .withPrimaryOperator("Primary operator")
         .build());
-    when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(APPLICATION_REFERENCE);
+    when(applicationService
+        .getApplicationReference(applicationVersion, applicationVersion.getApplication().getType().getDisplayName() + " application"))
+        .thenReturn(APPLICATION_REFERENCE);
     when(applicationService.isMigratedApplication(application)).thenReturn(false);
   }
 

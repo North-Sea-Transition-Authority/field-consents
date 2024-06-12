@@ -143,13 +143,15 @@ class TechnicalReviewControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(DUMMY_APP_REF);
     when(technicalReviewSummaryService.getTechnicalReviewSummaryItems(applicationVersion.getApplication()))
         .thenReturn(Collections.emptyList());
+    when(applicationService.getApplicationReference(any(ApplicationVersion.class), any(String.class)))
+        .thenReturn(DUMMY_APP_REF);
 
     mockMvc.perform(get(ReverseRouter.route(on(TechnicalReviewController.class)
             .getTechnicalReviews(APPLICATION_ID, null)))
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name(TECHNICAL_REVIEWS_VIEW_NAME))
-        .andExpect(model().attribute("applicationReference", DUMMY_APP_REF))
+        .andExpect(model().attribute("captionTitle", DUMMY_APP_REF))
         .andExpect(model().attribute("technicalReviewSummaryItems", Collections.emptyList()))
         .andExpect(model().attribute("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)

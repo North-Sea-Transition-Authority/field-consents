@@ -230,7 +230,6 @@ class CaseProcessingActionServiceTest {
             Set.of(PROCESS_FCS_APPLICATIONS),
             Set.of(CASE_OFFICER_ASSIGNED),
             ExpectedActions.newBuilder()
-                .inProgressActions(CHANGE_ACE_STATUS, CASE_OFFICER_RELEASE_OWNERSHIP)
                 .submittedActions(CHANGE_ACE_STATUS, CASE_OFFICER_RELEASE_OWNERSHIP, CONSENT_PREPARATION)
                 .build()
         ),
@@ -238,7 +237,6 @@ class CaseProcessingActionServiceTest {
             Set.of(PROCESS_FCS_APPLICATIONS),
             Set.of(CASE_OFFICER_ASSIGNED, WITHDRAWAL_OPEN),
             ExpectedActions.newBuilder()
-                .inProgressActions(CHANGE_ACE_STATUS, CASE_OFFICER_RELEASE_OWNERSHIP)
                 .submittedActions(CHANGE_ACE_STATUS, CASE_OFFICER_RELEASE_OWNERSHIP, CASE_OFFICER_WITHDRAWAL_RESPONSE, CONSENT_PREPARATION)
                 .build()
         ),
@@ -246,7 +244,6 @@ class CaseProcessingActionServiceTest {
             Set.of(PROCESS_FCS_APPLICATIONS),
             Set.of(CASE_OFFICER_ASSIGNED, TECHNICAL_REVIEW_NOT_OPEN, APPLICATION_UPDATE_NOT_OPEN, IS_UPDATABLE),
             ExpectedActions.newBuilder()
-                .inProgressActions(CHANGE_ACE_STATUS, CASE_OFFICER_RELEASE_OWNERSHIP)
                 .submittedActions(CHANGE_ACE_STATUS, CASE_OFFICER_RELEASE_OWNERSHIP, TECHNICAL_REVIEW_REQUEST, CONSENT_PREPARATION, APPLICATION_UPDATE_REQUEST)
                 .build()
         ),
@@ -268,7 +265,6 @@ class CaseProcessingActionServiceTest {
             Set.of(PROCESS_FCS_APPLICATIONS),
             Set.of(CASE_OFFICER_ASSIGNED, TECHNICAL_REVIEW_NOT_OPEN, CONSULTATION_NOT_OPEN),
             ExpectedActions.newBuilder()
-                .inProgressActions(CHANGE_ACE_STATUS, CASE_OFFICER_RELEASE_OWNERSHIP)
                 .submittedActions(CHANGE_ACE_STATUS, CASE_OFFICER_RELEASE_OWNERSHIP, CONSENT_PREPARATION, CONSULTATION_REQUEST)
                 .build()
         ),
@@ -297,7 +293,6 @@ class CaseProcessingActionServiceTest {
             Set.of(PROCESS_FCS_APPLICATIONS),
             Set.of(CASE_OFFICER_NOT_ASSIGNED, CAM_NOT_ASSIGNED),
             ExpectedActions.newBuilder()
-                .inProgressActions(CASE_OFFICER_TAKE_OWNERSHIP)
                 .submittedActions(CASE_OFFICER_TAKE_OWNERSHIP, CONSENT_PREPARATION)
                 .build()
         ),
@@ -305,7 +300,6 @@ class CaseProcessingActionServiceTest {
             Set.of(PROCESS_FCS_APPLICATIONS),
             Set.of(CASE_OFFICER_ASSIGNED, CAM_NOT_ASSIGNED, CONSENT_NOT_APPROVED_FOR_ISSUE),
             ExpectedActions.newBuilder()
-                .inProgressActions(CHANGE_ACE_STATUS, CASE_OFFICER_RELEASE_OWNERSHIP)
                 .submittedActions(
                     CHANGE_ACE_STATUS,
                     CASE_OFFICER_RELEASE_OWNERSHIP,
@@ -319,7 +313,6 @@ class CaseProcessingActionServiceTest {
             Set.of(ASSIGN_FCS_APPLICATIONS),
             Set.of(CASE_OFFICER_NOT_ASSIGNED, CAM_NOT_ASSIGNED),
             ExpectedActions.newBuilder()
-                .inProgressActions(CASE_OFFICER_ASSIGN_OWNERSHIP)
                 .submittedActions(CASE_OFFICER_ASSIGN_OWNERSHIP, CONSENT_PREPARATION)
                 .build()
         ),
@@ -327,7 +320,6 @@ class CaseProcessingActionServiceTest {
             Set.of(ASSIGN_FCS_APPLICATIONS),
             Set.of(CASE_OFFICER_ASSIGNED, CAM_NOT_ASSIGNED),
             ExpectedActions.newBuilder()
-                .inProgressActions(CASE_OFFICER_REASSIGN_OWNERSHIP)
                 .submittedActions(CASE_OFFICER_REASSIGN_OWNERSHIP, CONSENT_PREPARATION)
                 .build()
         ),
@@ -350,6 +342,7 @@ class CaseProcessingActionServiceTest {
             Set.of(),
             ExpectedActions.newBuilder()
                 .inProgressActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES)
+                .awaitingPaymentActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES)
                 .submittedActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES)
                 .withdrawnActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES)
                 .completedActions(TECHNICAL_REVIEWS, CONSULTATIONS, APPLICATION_UPDATES)
@@ -360,6 +353,7 @@ class CaseProcessingActionServiceTest {
             Set.of(CASE_NOTES_ALLOWED),
             ExpectedActions.newBuilder()
                 .inProgressActions(REGULATOR_ADD_CASE_NOTE)
+                .awaitingPaymentActions(REGULATOR_ADD_CASE_NOTE)
                 .submittedActions(REGULATOR_ADD_CASE_NOTE)
                 .withdrawnActions(REGULATOR_ADD_CASE_NOTE)
                 .completedActions(REGULATOR_ADD_CASE_NOTE)

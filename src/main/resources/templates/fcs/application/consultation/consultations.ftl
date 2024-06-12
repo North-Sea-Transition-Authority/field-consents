@@ -11,7 +11,7 @@
 <@defaultPage
   htmlTitle=pageTitle
   pageHeading=pageTitle
-  caption=applicationReference
+  caption=captionTitle
   backLinkUrl=springUrl(backLinkUrl)
   pageSize=PageSize.FULL_WIDTH
   errorItems=errorList>

@@ -11,7 +11,7 @@
     <@fdsTextarea.textarea
       path="form.caseNoteText.inputValue"
       labelText="Case note"
-      caption=applicationReference
+      caption=captionTitle
       pageHeading=true
       labelHeadingClass="govuk-label--xl"/>
     <@fdsFieldset.fieldset

@@ -62,7 +62,6 @@ public class CaseNotesController {
   }
 
   private ModelAndView getNewCaseNoteModelAndView(ApplicationVersion applicationVersion, CaseNoteForm form) {
-    var applicationReference = applicationService.generateApplicationReference(applicationVersion);
     var applicationId = applicationVersion.getApplication().getId();
 
     var fileUploadAttributes = fileControllerHelperService.fileUploadComponentAttributes(
@@ -71,11 +70,15 @@ public class CaseNotesController {
         controller -> controller.downloadFile(applicationId, null, null),
         controller -> controller.deleteFile(applicationId, null, null)
     );
+    var captionTitle = applicationService.getApplicationReference(
+        applicationVersion,
+        applicationVersion.getApplication().getType().getDisplayName() + " application"
+    );
 
     return new ModelAndView("fcs/application/addCaseNote")
         .addObject("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class)
             .caseProcessing(applicationId, null, null)))
-        .addObject("applicationReference", applicationReference)
+        .addObject("captionTitle", captionTitle)
         .addObject("fileUploadAttributes", fileUploadAttributes);
   }
 

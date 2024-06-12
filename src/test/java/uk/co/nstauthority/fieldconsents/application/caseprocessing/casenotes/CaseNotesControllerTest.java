@@ -57,7 +57,7 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 @ContextConfiguration(classes = CaseNotesController.class)
 class CaseNotesControllerTest extends AbstractApplicationControllerTest {
 
-  static final String DUMMY_APP_REF = "DUMMY_APP_REF";
+  static final String DUMMY_CAPTION_TITLE = "DUMMY_APP_REF";
 
   @MockBean
   private CaseNotesService caseNotesService;
@@ -115,7 +115,7 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
   @SecurityTest
   void getNewCaseNote_checkEndPointSecurityOnly_allowed() throws Exception {
     when(applicationService.generateApplicationReference(applicationVersion))
-        .thenReturn(DUMMY_APP_REF);
+        .thenReturn(DUMMY_CAPTION_TITLE);
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(REGULATOR_ADD_CASE_NOTE));
     when(fileControllerHelperService.fileUploadComponentAttributes(eq(EXISTING_DOCUMENTS), eq(CaseNotesController.class), any(), any()))
@@ -136,8 +136,8 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(Optional.of(applicationVersion));
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
-    when(applicationService.generateApplicationReference(applicationVersion))
-        .thenReturn(DUMMY_APP_REF);
+    when(applicationService.getApplicationReference(any(ApplicationVersion.class), any(String.class)))
+        .thenReturn(DUMMY_CAPTION_TITLE);
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
         .thenReturn(List.of(REGULATOR_ADD_CASE_NOTE));
     when(fileControllerHelperService.fileUploadComponentAttributes(eq(Collections.emptyList()), eq(CaseNotesController.class), any(), any()))
@@ -149,7 +149,7 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
             .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/application/addCaseNote"))
-        .andExpect(model().attribute("applicationReference", DUMMY_APP_REF))
+        .andExpect(model().attribute("captionTitle", DUMMY_CAPTION_TITLE))
         .andExpect(model().attribute("fileUploadAttributes", fileUploadComponentAttributes))
         .andExpect(model().attribute("backLinkUrl",
             ReverseRouter.route(on(ApplicationCaseProcessingController.class)

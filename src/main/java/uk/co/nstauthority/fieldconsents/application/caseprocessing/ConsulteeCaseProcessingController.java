@@ -27,11 +27,13 @@ import uk.co.nstauthority.fieldconsents.authorisation.HasApplicationStatus;
 import uk.co.nstauthority.fieldconsents.authorisation.IsMemberOfTeamType;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.teams.TeamType;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @Controller
 @RequestMapping("applications/{applicationId}/consultation-case-processing")
 @HasApplicationStatus(statuses = {
     ApplicationVersionStatus.IN_PROGRESS,
+    ApplicationVersionStatus.AWAITING_PAYMENT,
     ApplicationVersionStatus.SUBMITTED,
     ApplicationVersionStatus.CONSENTED,
     ApplicationVersionStatus.WITHDRAWN
@@ -39,6 +41,12 @@ import uk.co.nstauthority.fieldconsents.teams.TeamType;
 @HasApplicationPermission(permissions = {ALLOCATE_CONSULTATION, RESPOND_TO_CONSULTATION})
 @IsMemberOfTeamType(teamType = TeamType.OPRED)
 public class ConsulteeCaseProcessingController {
+
+  // The list of permissions here must match the permissions used in @HasApplicationPermission above
+  public static final RolePermission[] CONSULTEE_PROCESSING_REQUIRED_PERMISSIONS = {
+      ALLOCATE_CONSULTATION,
+      RESPOND_TO_CONSULTATION
+  };
 
   private final ApplicationService applicationService;
   private final ApplicationContextService applicationContextService;

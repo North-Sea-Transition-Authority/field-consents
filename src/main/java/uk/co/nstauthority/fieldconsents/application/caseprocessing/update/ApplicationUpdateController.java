@@ -42,13 +42,16 @@ public class ApplicationUpdateController {
   @GetMapping
   public ModelAndView getApplicationUpdates(@PathVariable Integer applicationId, ServiceUserDetail user) {
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(applicationId);
-    var applicationReference = applicationService.generateApplicationReference(applicationVersion);
     var actionList = caseProcessingActionService.getUserActionViewsForGroup(applicationVersion, user, APPLICATION_UPDATES);
     var application = applicationVersion.getApplication();
     var applicationUpdateSummaryItems = applicationUpdateSummaryService.getApplicationUpdateSummaryItems(application);
+    var captionTitle = applicationService.getApplicationReference(
+        applicationVersion,
+        applicationVersion.getApplication().getType().getDisplayName() + " application"
+    );
 
     return new ModelAndView("fcs/application/update/applicationUpdates")
-        .addObject("applicationReference", applicationReference)
+        .addObject("captionTitle", captionTitle)
         .addObject("applicationUpdateSummaryItems", applicationUpdateSummaryItems)
         .addObject("actionList", actionList)
         .addObject("backLinkUrl", ReverseRouter.route(on(ApplicationCaseProcessingController.class)

@@ -33,7 +33,27 @@ import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermissio
 
 @Controller
 @RequestMapping("applications/{applicationId}")
+@HasApplicationStatus(statuses = {
+    ApplicationVersionStatus.IN_PROGRESS,
+    ApplicationVersionStatus.AWAITING_PAYMENT,
+    ApplicationVersionStatus.SUBMITTED,
+    ApplicationVersionStatus.CONSENTED,
+    ApplicationVersionStatus.WITHDRAWN
+})
+@HasApplicationPermission(permissions = {
+    RolePermission.EDIT_FCS_APPLICATIONS,
+    RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS,
+    RolePermission.VIEW_FCS_CONSENTS
+})
+@IsMemberOfTeamType(teamType = TeamType.INDUSTRY)
 public class IndustryCaseProcessingController {
+
+  // The list of permissions here must match the permissions used in @HasApplicationPermission above
+  public static final RolePermission[] INDUSTRY_PROCESSING_REQUIRED_PERMISSIONS = {
+      RolePermission.EDIT_FCS_APPLICATIONS,
+      RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS,
+      RolePermission.VIEW_FCS_CONSENTS
+  };
 
   private final ApplicationService applicationService;
   private final ApplicationContextService applicationContextService;
@@ -75,19 +95,6 @@ public class IndustryCaseProcessingController {
   }
 
   @GetMapping("industry-case-processing")
-  @HasApplicationStatus(statuses = {
-      ApplicationVersionStatus.IN_PROGRESS,
-      ApplicationVersionStatus.AWAITING_PAYMENT,
-      ApplicationVersionStatus.SUBMITTED,
-      ApplicationVersionStatus.CONSENTED,
-      ApplicationVersionStatus.WITHDRAWN
-  })
-  @HasApplicationPermission(permissions = {
-      RolePermission.EDIT_FCS_APPLICATIONS,
-      RolePermission.PAY_AND_SUBMIT_FCS_APPLICATIONS,
-      RolePermission.VIEW_FCS_CONSENTS
-  })
-  @IsMemberOfTeamType(teamType = TeamType.INDUSTRY)
   public ModelAndView getIndustryCaseProcessing(
       @PathVariable Integer applicationId,
       @RequestParam(required = false) CaseProcessingTab tab,

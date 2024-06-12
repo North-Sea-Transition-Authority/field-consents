@@ -120,21 +120,20 @@ public class CaseProcessingActionService {
       Map.of(
           ApplicationVersionStatus.IN_PROGRESS,
           EnumSet.of(
-              CASE_OFFICER_TAKE_OWNERSHIP,
-              CASE_OFFICER_RELEASE_OWNERSHIP,
-              CASE_OFFICER_ASSIGN_OWNERSHIP,
-              CASE_OFFICER_REASSIGN_OWNERSHIP,
+              OPERATOR_UPDATE_APPLICATION,
               TECHNICAL_REVIEWS,
               CONSULTATIONS,
-              CHANGE_ACE_STATUS,
               APPLICATION_UPDATES,
-              OPERATOR_UPDATE_APPLICATION,
               REGULATOR_ADD_CASE_NOTE
           ),
           ApplicationVersionStatus.AWAITING_PAYMENT,
           EnumSet.of(
               OPERATOR_PAY_AND_SUBMIT_APPLICATION,
-              OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT
+              OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT,
+              TECHNICAL_REVIEWS,
+              CONSULTATIONS,
+              APPLICATION_UPDATES,
+              REGULATOR_ADD_CASE_NOTE
           ),
           ApplicationVersionStatus.SUBMITTED,
           EnumSet.of(
