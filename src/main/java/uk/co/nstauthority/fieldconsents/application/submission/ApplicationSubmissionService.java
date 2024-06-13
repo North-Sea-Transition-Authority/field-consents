@@ -10,11 +10,11 @@ import io.micrometer.observation.annotation.Observed;
 import java.time.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.fieldconsents.application.ApplicationRepository;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
-import uk.co.nstauthority.fieldconsents.application.ApplicationSnsService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionRepository;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
@@ -37,9 +37,9 @@ public class ApplicationSubmissionService {
   private final ApplicationRepository applicationRepository;
   private final ApplicationTaskListService applicationTaskListService;
   private final ApplicationVersionRepository applicationVersionRepository;
-  private final ApplicationSnsService applicationSnsService;
   private final ApplicationSubmissionEmailService applicationSubmissionEmailService;
   private final ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
+  private final ApplicationEventPublisher applicationEventPublisher;
   private final EnergyPortalUserService energyPortalUserService;
 
   ApplicationSubmissionService(
@@ -49,9 +49,9 @@ public class ApplicationSubmissionService {
       ApplicationRepository applicationRepository,
       ApplicationTaskListService applicationTaskListService,
       ApplicationVersionRepository applicationVersionRepository,
-      ApplicationSnsService applicationSnsService,
       ApplicationSubmissionEmailService applicationSubmissionEmailService,
       ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService,
+      ApplicationEventPublisher applicationEventPublisher,
       EnergyPortalUserService energyPortalUserService
   ) {
     this.clock = clock;
@@ -60,9 +60,9 @@ public class ApplicationSubmissionService {
     this.applicationRepository = applicationRepository;
     this.applicationTaskListService = applicationTaskListService;
     this.applicationVersionRepository = applicationVersionRepository;
-    this.applicationSnsService = applicationSnsService;
     this.applicationSubmissionEmailService = applicationSubmissionEmailService;
     this.applicationWorkAreaPriorityService = applicationWorkAreaPriorityService;
+    this.applicationEventPublisher = applicationEventPublisher;
     this.energyPortalUserService = energyPortalUserService;
   }
 
@@ -177,6 +177,6 @@ public class ApplicationSubmissionService {
     applicationVersion.setSubmittedByWuaId(user.wuaId());
     applicationVersionRepository.save(applicationVersion);
 
-    applicationSnsService.publishApplicationSubmittedSnsMessage(applicationVersion);
+    applicationEventPublisher.publishEvent(new ApplicationSubmittedEvent(this, applicationVersion.getId()));
   }
 }

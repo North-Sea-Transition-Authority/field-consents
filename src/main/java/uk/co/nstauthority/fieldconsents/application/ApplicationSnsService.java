@@ -5,11 +5,14 @@ import java.util.List;
 import java.util.Set;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsTopicArn;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAsset;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
+import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmittedEvent;
 import uk.co.nstauthority.fieldconsents.assets.AssetType;
 import uk.co.nstauthority.fieldconsents.correlationid.CorrelationIdUtil;
 import uk.co.nstauthority.fieldconsents.epmqmessage.ApplicationSubmissionType;
@@ -20,6 +23,7 @@ import uk.co.nstauthority.fieldconsents.epmqmessage.FieldConsentsEpmqTopics;
 public class ApplicationSnsService {
 
   private final ApplicationService applicationService;
+  private final ApplicationVersionService applicationVersionService;
   private final ApplicationAssetService applicationAssetService;
   private final SnsService snsService;
   private final Clock clock;
@@ -27,11 +31,13 @@ public class ApplicationSnsService {
 
   ApplicationSnsService(
       ApplicationService applicationService,
+      ApplicationVersionService applicationVersionService,
       ApplicationAssetService applicationAssetService,
       SnsService snsService,
       Clock clock
   ) {
     this.applicationService = applicationService;
+    this.applicationVersionService = applicationVersionService;
     this.applicationAssetService = applicationAssetService;
     this.snsService = snsService;
     this.clock = clock;
@@ -40,7 +46,14 @@ public class ApplicationSnsService {
   }
 
   @Async
-  public void publishApplicationSubmittedSnsMessage(ApplicationVersion applicationVersion) {
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+  public void handleApplicationSubmitted(ApplicationSubmittedEvent event) {
+    var applicationVersion = applicationVersionService.getApplicationVersionById(event.getApplicationVersionId());
+
+    publishApplicationSubmittedSnsMessage(applicationVersion);
+  }
+
+  void publishApplicationSubmittedSnsMessage(ApplicationVersion applicationVersion) {
     var primaryAndSecondaryAssets = applicationAssetService.findAssetsByApplicationVersionAndAssetRoles(
         applicationVersion,
         Set.of(AssetRole.PRIMARY, AssetRole.SECONDARY)

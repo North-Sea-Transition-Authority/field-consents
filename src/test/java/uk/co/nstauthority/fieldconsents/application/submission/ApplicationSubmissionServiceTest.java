@@ -27,11 +27,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import uk.co.nstauthority.fieldconsents.application.ApplicationRepository;
 import uk.co.nstauthority.fieldconsents.application.ApplicationService;
-import uk.co.nstauthority.fieldconsents.application.ApplicationSnsService;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionRepository;
@@ -65,13 +66,13 @@ class ApplicationSubmissionServiceTest {
   private ApplicationVersionRepository applicationVersionRepository;
 
   @Mock
-  private ApplicationSnsService applicationSnsService;
-
-  @Mock
   private ApplicationSubmissionEmailService applicationSubmissionEmailService;
 
   @Mock
   private ApplicationWorkAreaPriorityService applicationWorkAreaPriorityService;
+
+  @Mock
+  private ApplicationEventPublisher applicationEventPublisher;
 
   @Mock
   private EnergyPortalUserService energyPortalUserService;
@@ -91,9 +92,9 @@ class ApplicationSubmissionServiceTest {
         applicationRepository,
         applicationTaskListService,
         applicationVersionRepository,
-        applicationSnsService,
         applicationSubmissionEmailService,
         applicationWorkAreaPriorityService,
+        applicationEventPublisher,
         energyPortalUserService
     );
 
@@ -176,7 +177,13 @@ class ApplicationSubmissionServiceTest {
     assertThat(applicationVersion.getSubmittedByWuaId()).isEqualTo(USER.wuaId());
     verify(applicationVersionRepository).save(applicationVersion);
 
-    verify(applicationSnsService).publishApplicationSubmittedSnsMessage(applicationVersion);
+    var applicationSubmittedEventCaptor = ArgumentCaptor.forClass(ApplicationSubmittedEvent.class);
+    verify(applicationEventPublisher).publishEvent(applicationSubmittedEventCaptor.capture());
+    assertThat(applicationSubmittedEventCaptor.getValue())
+        .isNotNull()
+        .extracting(ApplicationSubmittedEvent::getApplicationVersionId)
+        .isEqualTo(applicationVersion.getId());
+
     verify(aceFlagService).autoSetAceFlag(applicationVersion);
     verify(applicationWorkAreaPriorityService)
         .prioritiseApplicationInWorkArea(applicationVersion, USER, APPLICATION_SUBMITTED, INDUSTRY);
@@ -211,7 +218,13 @@ class ApplicationSubmissionServiceTest {
     assertThat(applicationVersion.getSubmittedByWuaId()).isEqualTo(USER.wuaId());
     verify(applicationVersionRepository).save(applicationVersion);
 
-    verify(applicationSnsService).publishApplicationSubmittedSnsMessage(applicationVersion);
+    var applicationSubmittedEventCaptor = ArgumentCaptor.forClass(ApplicationSubmittedEvent.class);
+    verify(applicationEventPublisher).publishEvent(applicationSubmittedEventCaptor.capture());
+    assertThat(applicationSubmittedEventCaptor.getValue())
+        .isNotNull()
+        .extracting(ApplicationSubmittedEvent::getApplicationVersionId)
+        .isEqualTo(applicationVersion.getId());
+
     verify(aceFlagService).autoSetAceFlag(applicationVersion);
     verify(applicationWorkAreaPriorityService)
         .prioritiseApplicationInWorkArea(applicationVersion, USER, APPLICATION_SUBMITTED, INDUSTRY);
@@ -306,7 +319,13 @@ class ApplicationSubmissionServiceTest {
     assertThat(applicationVersion.getSubmittedByWuaId()).isEqualTo(previousSubmittedByUser.wuaId());
     verify(applicationVersionRepository).save(applicationVersion);
 
-    verify(applicationSnsService).publishApplicationSubmittedSnsMessage(applicationVersion);
+    var applicationSubmittedEventCaptor = ArgumentCaptor.forClass(ApplicationSubmittedEvent.class);
+    verify(applicationEventPublisher).publishEvent(applicationSubmittedEventCaptor.capture());
+    assertThat(applicationSubmittedEventCaptor.getValue())
+        .isNotNull()
+        .extracting(ApplicationSubmittedEvent::getApplicationVersionId)
+        .isEqualTo(applicationVersion.getId());
+
     verify(aceFlagService).autoSetAceFlag(applicationVersion);
     verify(applicationWorkAreaPriorityService)
         .prioritiseApplicationInWorkArea(applicationVersion, previousSubmittedByUser, APPLICATION_SUBMITTED, INDUSTRY);
@@ -343,7 +362,13 @@ class ApplicationSubmissionServiceTest {
     assertThat(applicationVersion.getSubmittedByWuaId()).isEqualTo(USER.wuaId());
     verify(applicationVersionRepository).save(applicationVersion);
 
-    verify(applicationSnsService).publishApplicationSubmittedSnsMessage(applicationVersion);
+    var applicationSubmittedEventCaptor = ArgumentCaptor.forClass(ApplicationSubmittedEvent.class);
+    verify(applicationEventPublisher).publishEvent(applicationSubmittedEventCaptor.capture());
+    assertThat(applicationSubmittedEventCaptor.getValue())
+        .isNotNull()
+        .extracting(ApplicationSubmittedEvent::getApplicationVersionId)
+        .isEqualTo(applicationVersion.getId());
+
     verify(applicationWorkAreaPriorityService)
         .prioritiseApplicationInWorkArea(applicationVersion, USER, UPDATE_SUBMITTED, INDUSTRY);
     verify(applicationWorkAreaPriorityService)

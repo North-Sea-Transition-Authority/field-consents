@@ -1,7 +1,9 @@
 package uk.co.nstauthority.fieldconsents.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -26,6 +28,7 @@ import uk.co.fivium.energyportalmessagequeue.sns.SnsTopicArn;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetService;
 import uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil;
 import uk.co.nstauthority.fieldconsents.application.assets.AssetRole;
+import uk.co.nstauthority.fieldconsents.application.submission.ApplicationSubmittedEvent;
 import uk.co.nstauthority.fieldconsents.correlationid.CorrelationIdUtil;
 import uk.co.nstauthority.fieldconsents.epmqmessage.ApplicationSubmissionType;
 import uk.co.nstauthority.fieldconsents.epmqmessage.ApplicationSubmittedFieldConsentsEpmqMessage;
@@ -36,6 +39,9 @@ class ApplicationSnsServiceTest {
 
   @Mock
   private ApplicationService applicationService;
+
+  @Mock
+  private ApplicationVersionService applicationVersionService;
 
   @Mock
   private ApplicationAssetService applicationAssetService;
@@ -56,10 +62,27 @@ class ApplicationSnsServiceTest {
 
     applicationSnsService = spy(new ApplicationSnsService(
         applicationService,
+        applicationVersionService,
         applicationAssetService,
         snsService,
         clock
     ));
+  }
+
+  @Test
+  void handleApplicationSubmitted() {
+    var applicationVersionId = 1;
+
+    var applicationSubmittedEvent = new ApplicationSubmittedEvent(this, applicationVersionId);
+
+    var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
+
+    when(applicationVersionService.getApplicationVersionById(applicationVersionId)).thenReturn(applicationVersion);
+    doNothing().when(applicationSnsService).publishApplicationSubmittedSnsMessage(any());
+
+    applicationSnsService.handleApplicationSubmitted(applicationSubmittedEvent);
+
+    verify(applicationSnsService).publishApplicationSubmittedSnsMessage(applicationVersion);
   }
 
   @Test
