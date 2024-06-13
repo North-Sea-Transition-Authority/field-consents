@@ -524,7 +524,7 @@ class ApplicationAssetServiceTest {
   void getAssetJsonListFor_terminal(AssetRole assetRole) {
     when(applicationAssetRepository.findAllByApplicationVersionAndAssetRoleInOrderByIdAsc(applicationVersion, Set.of(assetRole)))
         .thenReturn(Collections.singletonList(terminalAsset1));
-    when(terminalService.findTerminal(eq(terminalAsset1.getId()), anyString()))
+    when(terminalService.findTerminal(eq(terminalAsset1.getAssetId()), anyString()))
         .thenReturn(Optional.of(terminal1Json));
 
     assertThat(applicationAssetService.getAssetJsonListFor(applicationVersion, assetRole))

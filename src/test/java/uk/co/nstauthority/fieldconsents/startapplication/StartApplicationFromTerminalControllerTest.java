@@ -72,7 +72,7 @@ class StartApplicationFromTerminalControllerTest extends AbstractControllerTest 
 
     applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
     when(startApplicationControllerHelperService.getApplicationTypesMap(AssetType.TERMINAL)).thenReturn(applicationTypeMap);
-    when(terminalService.getTerminalWithOperator(terminal1JsonWithOperator.getId(), "Search terminal for asset permission")).thenReturn(terminal1JsonWithOperator);
+    when(terminalService.getTerminalWithOperator(TERMINAL_ID, "Search terminal for asset permission")).thenReturn(terminal1JsonWithOperator);
     when(assetAccessService.hasAssetPermission(user, terminal1JsonWithOperator, CREATE_FCS_APPLICATIONS)).thenReturn(true);
   }
 

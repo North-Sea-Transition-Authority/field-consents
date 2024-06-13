@@ -73,12 +73,12 @@ public class ApplicationSnsService {
 
     switch (primaryAssetType) {
       case FIELD -> {
-        primaryFieldId = primaryAsset.getId();
+        primaryFieldId = primaryAsset.getAssetId();
 
         secondaryFieldIds = primaryAndSecondaryAssets.stream()
             .filter(applicationAsset -> applicationAsset.getAssetType() == AssetType.FIELD)
             .filter(applicationAsset -> applicationAsset.getAssetRole() == AssetRole.SECONDARY)
-            .map(ApplicationAsset::getId)
+            .map(ApplicationAsset::getAssetId)
             .toList();
 
         // We want the secondaryFieldIds in the EPMQ message to be null if there are no secondary field ids so that the column in
@@ -87,7 +87,7 @@ public class ApplicationSnsService {
           secondaryFieldIds = null;
         }
       }
-      case TERMINAL -> primaryTerminalId = primaryAsset.getId();
+      case TERMINAL -> primaryTerminalId = primaryAsset.getAssetId();
       default -> throw new IllegalStateException("Unknown AssetType: %s".formatted(primaryAssetType));
     }
 

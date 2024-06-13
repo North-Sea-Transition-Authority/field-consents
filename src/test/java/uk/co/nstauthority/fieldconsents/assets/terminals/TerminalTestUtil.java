@@ -7,9 +7,9 @@ import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil;
 
 public class TerminalTestUtil {
 
-  public static final Integer TERMINAL_ID_1 = 1;
-  public static final Integer TERMINAL_ID_2 = 2;
-  public static final Integer TERMINAL_ID_3 = 3;
+  public static final Integer TERMINAL_ID_1 = 238;
+  public static final Integer TERMINAL_ID_2 = 328;
+  public static final Integer TERMINAL_ID_3 = 986;
 
   public static final String TERMINAL_NAME_1 = "T1";
   public static final String TERMINAL_NAME_2 = "T2";

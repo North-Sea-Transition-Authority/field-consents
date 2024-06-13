@@ -12,9 +12,9 @@ import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitTestUtil;
 
 public class FieldTestUtil {
 
-  public static final Integer FIELD_ID_1 = 1;
-  public static final Integer FIELD_ID_2 = 2;
-  public static final Integer FIELD_ID_3 = 3;
+  public static final Integer FIELD_ID_1 = 312;
+  public static final Integer FIELD_ID_2 = 178;
+  public static final Integer FIELD_ID_3 = 674;
 
   public static final String FIELD_NAME_1 = "F1";
   public static final String FIELD_NAME_2 = "F2";

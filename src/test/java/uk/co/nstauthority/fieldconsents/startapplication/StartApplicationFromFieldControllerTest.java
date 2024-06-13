@@ -73,7 +73,7 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
 
     applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.FLARE);
     when(startApplicationControllerHelperService.getApplicationTypesMap(AssetType.FIELD)).thenReturn(applicationTypeMap);
-    when(fieldService.getFieldWithOperator(field1JsonWithOperator.getId(), "Search field for asset permission")).thenReturn(field1JsonWithOperator);
+    when(fieldService.getFieldWithOperator(FIELD_ID, "Search field for asset permission")).thenReturn(field1JsonWithOperator);
     when(assetAccessService.hasAssetPermission(user, field1JsonWithOperator, CREATE_FCS_APPLICATIONS)).thenReturn(true);
   }
 
