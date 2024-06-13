@@ -46,7 +46,7 @@ public interface ConsentDataRepository extends ListCrudRepository<ConsentData, U
       JOIN ApplicationVersion av ON av.application = a
       JOIN ApplicationAsset aa ON aa.applicationVersion = av
       WHERE a.type = :applicationType
-      AND (year(cd.consentStartDate) = :consentYear OR year(cd.consentEndDate) = :consentYear)
+      AND (:consentYear BETWEEN year(cd.consentStartDate) AND year(cd.consentEndDate))
       AND c.supersededByConsent IS NULL
       AND av.status = 'CONSENTED'
       AND aa.assetRole = 'PRIMARY'
