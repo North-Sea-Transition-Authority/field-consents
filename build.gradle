@@ -91,7 +91,7 @@ dependencies {
   testImplementation 'org.springframework.security:spring-security-test'
 
   epmqMessagesJarIntegrationTestImplementation 'org.springframework.boot:spring-boot-starter-test'
-  epmqMessagesJarIntegrationTestImplementation 'uk.co.nstauthority.fieldconsents:epmq-messages:integration-test'
+  epmqMessagesJarIntegrationTestImplementation 'uk.co.nstauthority.fieldconsents:fieldconsents-epmq-messages:integration-test'
   epmqMessagesJarIntegrationTestImplementation 'uk.co.fivium.energyportalmessagequeue:spring-boot-starter:v2.0.0'
 }
 
@@ -232,14 +232,18 @@ publishing {
   publications {
     epmqMessages(MavenPublication) {
       groupId = 'uk.co.nstauthority.fieldconsents'
-      artifactId = 'epmq-messages'
+      // The artifact ID below must start with fieldconsents to make it unique, otherwise Spring's bootJar task will fail on EPMQ
+      // if there are two dependencies with the epmq-messages artifact id with the same version.
+      artifactId = 'fieldconsents-epmq-messages'
       version = System.getenv("EPMQ_MESSAGES_JAR_VERSION") ?: version
 
       artifact(epmqMessagesJar)
     }
     epmqMessagesIntegrationTest(MavenPublication) {
       groupId = 'uk.co.nstauthority.fieldconsents'
-      artifactId = 'epmq-messages'
+      // The artifact ID below must start with fieldconsents to make it unique, otherwise Spring's bootJar task will fail on EPMQ
+      // if there are two dependencies with the epmq-messages artifact id with the same version.
+      artifactId = 'fieldconsents-epmq-messages'
       version = 'integration-test'
 
       artifact(epmqMessagesJar)
