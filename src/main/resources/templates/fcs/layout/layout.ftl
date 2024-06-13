@@ -94,6 +94,11 @@
     <@fdsNstaFooter.nstaFooter wrapperWidth=fullPageWidth />
   </#assign>
 
+  <!-- TODO FCS-841 / FDS-491 the below can be tidied once FDS is updated -->
+  <#assign phaseBannerContent>
+    <@fdsPhaseBanner.phaseBanner wrapperWidth=fullPageWidth defaultBannerLink=FEEDBACK_URL topNavigation=showNavigationItems tagText="beta"/>
+  </#assign>
+
   <@fdsDefaultPageTemplate
     htmlTitle=htmlTitle
     serviceName=serviceName
@@ -104,6 +109,7 @@
     logoProductText=customerMnemonic
     phaseBanner=phaseBanner
     phaseBannerLink=FEEDBACK_URL
+    phaseBannerContent=phaseBannerContent
     serviceUrl=serviceHomeUrl
     homePageUrl=serviceHomeUrl
     wrapperWidth=fullPageWidth
