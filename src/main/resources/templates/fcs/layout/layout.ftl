@@ -4,6 +4,7 @@
 <#import '../macros/taskList.ftl' as taskList>
 <#import '_header.ftl' as pageHeader>
 <#import '../macros/_multiLineText.ftl' as multiLineText>
+<#import '../macros/mailTo.ftl' as mailTo>
 
 <#-- @ftlvariable name="serviceBrandingConfigurationProperties" type="uk.co.nstauthority.fieldconsents.branding.ServiceBrandingConfigurationProperties" -->
 <#-- @ftlvariable name="customerBrandingConfigurationProperties" type="uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties" -->
@@ -11,6 +12,9 @@
 <#-- @ftlvariable name="singleErrorMessage" type="String" -->
 <#-- @ftlvariable name="loggedInUser" type="uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail" -->
 <#-- @ftlvariable name="flash" type="uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner" -->
+<#-- @ftlvariable name="footerLinks" type="java.util.List<uk.co.nstauthority.fieldconsents.fds.footer.FooterLink>" -->
+<#-- @ftlvariable name="feedbackUrl" type="String" -->
+<#-- @ftlvariable name="cookiesStatementUrl" type="String" -->
 
 <#assign SERVICE_NAME = serviceBrandingConfigurationProperties.name() />
 <#assign CUSTOMER_MNEMONIC = customerBrandingConfigurationProperties.mnemonic() />
@@ -91,7 +95,7 @@
   </#assign>
 
   <#assign footerContent>
-    <@fdsNstaFooter.nstaFooter wrapperWidth=fullPageWidth />
+    <@_footer isFullPageWidth=fullPageWidth/>
   </#assign>
 
   <!-- TODO FCS-841 / FDS-491 the below can be tidied once FDS is updated -->
@@ -129,6 +133,7 @@
     errorItems=errorItems
     notificationBannerContent=notificationBannerContent
     footerContent=footerContent
+    cookieBannerMacro=_cookieBanner
   >
     <#nested />
   </@fdsDefaultPageTemplate>
@@ -148,7 +153,7 @@
   </#assign>
 
   <#assign footerContent>
-    <@fdsNstaFooter.nstaFooter wrapperWidth=fullPageWidth />
+    <@_footer/>
   </#assign>
 
   <@fdsLeftSubNavPageTemplate
@@ -162,6 +167,7 @@
     homePageUrl=serviceHomeUrl
     topNavigation=showNavigationItems
     footerContent=footerContent
+    cookieBannerMacro=_cookieBanner
   >
     <#nested />
   </@fdsLeftSubNavPageTemplate>
@@ -196,6 +202,24 @@
     signedInUserName=(loggedInUser?has_content)?then(loggedInUser.displayName(), "")
     signOutUrl=springUrl("/logout")
     pageSize=pageSize
+  />
+</#macro>
+
+<#macro _footer isFullPageWidth=false>
+  <#local footerMetaContent>
+    <@fdsFooter.footerMeta footerMetaHiddenHeading="Footer links">
+      <#list footerLinks as footerLink>
+        <@fdsFooter.footerMetaLink linkText=footerLink.getDisplayText() linkUrl=springUrl(footerLink.getUrl())/>
+      </#list>
+    </@fdsFooter.footerMeta>
+  </#local>
+  <@fdsNstaFooter.nstaFooter wrapperWidth=isFullPageWidth metaLinks=true footerMetaContent=footerMetaContent/>
+</#macro>
+
+<#macro _cookieBanner>
+  <@fdsCookieBanner.analyticsCookieBanner
+    serviceName=serviceBrandingConfigurationProperties.mnemonic()
+    cookieSettingsUrl=springUrl(cookiesStatementUrl)
   />
 </#macro>
 

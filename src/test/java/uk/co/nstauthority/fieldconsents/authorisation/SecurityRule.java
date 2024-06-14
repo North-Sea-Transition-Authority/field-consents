@@ -6,6 +6,7 @@ import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 import org.springframework.boot.actuate.endpoint.web.annotation.RestControllerEndpoint;
 import org.springframework.web.bind.annotation.RequestMapping;
+import uk.co.nstauthority.fieldconsents.fds.footer.FooterLinkController;
 import uk.co.nstauthority.fieldconsents.mvc.error.DefaultErrorController;
 
 public class SecurityRule {
@@ -13,6 +14,7 @@ public class SecurityRule {
   @ArchTest
   final ArchRule securityAnnotationRule = methods()
       .that().areNotDeclaredIn(DefaultErrorController.class)
+      .and().areNotDeclaredIn(FooterLinkController.class)
       .and().areDeclaredInClassesThat().areNotAnnotatedWith(RestControllerEndpoint.class)
       .and().areMetaAnnotatedWith(RequestMapping.class)
       .should()

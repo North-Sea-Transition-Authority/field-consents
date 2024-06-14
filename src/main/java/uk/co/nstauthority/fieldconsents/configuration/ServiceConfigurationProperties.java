@@ -8,13 +8,15 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 public record ServiceConfigurationProperties(
     @NotNull String baseUrl,
-    Error error,
-    SupportContact supportContact
+    @NotNull Error error,
+    @NotNull SupportContact businessSupportContact,
+    @NotNull SupportContact technicalSupportContact
 ) {
 
   public record SupportContact(
+      @NotNull String name,
       @NotNull String email,
-      @NotNull String phone
+      String phone
   ) {
   }
 

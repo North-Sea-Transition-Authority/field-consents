@@ -26,14 +26,17 @@ import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil
 import uk.co.nstauthority.fieldconsents.authentication.UserDetailService;
 import uk.co.nstauthority.fieldconsents.authorisation.ApplicationHandlerInterceptor;
 import uk.co.nstauthority.fieldconsents.authorisation.AssetAccessService;
-import uk.co.nstauthority.fieldconsents.authorisation.IsMemberOfTeamTypeInterceptor;
 import uk.co.nstauthority.fieldconsents.authorisation.HasAssetPermissionInterceptor;
 import uk.co.nstauthority.fieldconsents.authorisation.HasPermissionInterceptor;
 import uk.co.nstauthority.fieldconsents.authorisation.HasTeamPermissionInterceptor;
+import uk.co.nstauthority.fieldconsents.authorisation.IsMemberOfTeamTypeInterceptor;
 import uk.co.nstauthority.fieldconsents.authorisation.PermissionService;
 import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.branding.EnableAllBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.branding.ServiceBrandingConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.configuration.AccessibilityConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.configuration.AnalyticsConfigurationProperties;
+import uk.co.nstauthority.fieldconsents.configuration.FeedbackConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.configuration.SamlProperties;
 import uk.co.nstauthority.fieldconsents.configuration.ServiceConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.configuration.WebSecurityConfiguration;
@@ -60,7 +63,7 @@ import uk.co.nstauthority.fieldconsents.validation.FormErrorSummaryService;
 import uk.co.nstauthority.fieldconsents.validation.ValidationErrorOrderingService;
 
 @WebMvcTest
-@ActiveProfiles("test")
+@ActiveProfiles({"development", "test"})
 @EnableAllBrandingConfigurationProperties
 @IncludeEnergyPortalConfigurationProperties
 @WithDefaultPageControllerAdvice
@@ -84,7 +87,10 @@ import uk.co.nstauthority.fieldconsents.validation.ValidationErrorOrderingServic
 })
 @EnableConfigurationProperties({
     SamlProperties.class,
-    ServiceConfigurationProperties.class
+    ServiceConfigurationProperties.class,
+    AccessibilityConfigurationProperties.class,
+    AnalyticsConfigurationProperties.class,
+    FeedbackConfigurationProperties.class
 })
 public abstract class AbstractControllerTest {
 
@@ -166,6 +172,7 @@ public abstract class AbstractControllerTest {
     @Bean
     public ControllerAdviceService controllerAdviceService(
         UserDetailService userDetailService,
+        AccessibilityConfigurationProperties accessibilityConfigurationProperties,
         ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties,
         ServiceConfigurationProperties serviceConfigurationProperties,
         CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties,
@@ -173,6 +180,7 @@ public abstract class AbstractControllerTest {
     ) {
       return new ControllerAdviceService(
           userDetailService,
+          accessibilityConfigurationProperties,
           serviceBrandingConfigurationProperties,
           serviceConfigurationProperties,
           customerBrandingConfigurationProperties,

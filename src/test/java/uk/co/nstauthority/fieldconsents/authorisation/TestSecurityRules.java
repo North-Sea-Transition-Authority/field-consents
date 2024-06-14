@@ -42,5 +42,6 @@ public class TestSecurityRules {
       .and().doNotHaveSimpleName("AbstractControllerTest")
       .and().doNotHaveSimpleName("AbstractApplicationControllerTest")
       .and().doNotHaveSimpleName("AbstractActuatorControllerTest")
+      .and().doNotHaveSimpleName("FooterLinkControllerTest")
       .should(containAtLeastOneSecurityTest);
 }

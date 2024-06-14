@@ -14,14 +14,14 @@
     </#if>
 
     <@fdsSummaryList.summaryListRowNoAction keyText="Email address">
-      <#assign emailAddress = serviceConfigurationProperties.supportContact().email() />
+      <#assign emailAddress = serviceConfigurationProperties.technicalSupportContact().email() />
       <@fdsAction.link
         linkText=emailAddress
         linkUrl="mailto:${emailAddress + emailSubject?has_content?then('?subject=${serviceBrandingConfigurationProperties.mnemonic()} - ' + emailSubject, '')}"
         />
     </@fdsSummaryList.summaryListRowNoAction>
     <@fdsSummaryList.summaryListRowNoAction keyText="Phone number">
-      <p class="govuk-body">${serviceConfigurationProperties.supportContact().phone()}</p>
+      <p class="govuk-body">${serviceConfigurationProperties.technicalSupportContact().phone()}</p>
     </@fdsSummaryList.summaryListRowNoAction>
   </@fdsSummaryList.summaryListCard>
 </#macro>
