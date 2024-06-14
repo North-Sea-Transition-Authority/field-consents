@@ -218,7 +218,7 @@
 
 <#macro _cookieBanner>
   <@fdsCookieBanner.analyticsCookieBanner
-    serviceName=serviceBrandingConfigurationProperties.mnemonic()
+    serviceName=serviceBrandingConfigurationProperties.name()
     cookieSettingsUrl=springUrl(cookiesStatementUrl)
   />
 </#macro>

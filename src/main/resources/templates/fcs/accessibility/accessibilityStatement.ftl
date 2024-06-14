@@ -79,15 +79,15 @@
   <ul class="govuk-list govuk-list--bullet">
     <li>
       users are not always notified when conditionally revealed content associated with a radio button or checkbox is
-      expanded or collapsed. This fails WCAG 2.1 success criterion 4.1.3 (Status Messages).
+      expanded or collapsed - this fails WCAG 2.1 success criterion 4.1.3 (Status Messages)
     </li>
     <li>
-      breadcrumb navigation links are not identified by ARIA landmarks. This fails WCAG 2.1 success criterion
-      1.3.1 (Info and Relationships).
+      breadcrumb navigation links are not identified by ARIA landmarks - this fails WCAG 2.1 success criterion
+      1.3.1 (Info and Relationships)
     </li>
     <li>
       when uploading a file on macOS with VoiceOver enabled, the user is unable to select the ‘Choose a file’ via
-      keyboard only. This fails WCAG 2.1 success criterion 2.1.1 (Keyboard).
+      keyboard only - this fails WCAG 2.1 success criterion 2.1.1 (Keyboard)
     </li>
   </ul>
 
@@ -101,10 +101,10 @@
     by ${accessibilityConfigurationProperties.serviceLastTestedBy()}.
   </p>
   <p class="govuk-body">
-    The ${serviceBrandingConfigurationProperties.name()} service (${serviceBrandingConfigurationProperties.mnemonic()})
+    The ${serviceBrandingConfigurationProperties.name()} service
     has been developed using the Energy Portal Design System. The Design System was last
     accessibility tested on ${accessibilityConfigurationProperties.designSystemLastTestDate()}. All features
-    on ${serviceBrandingConfigurationProperties.mnemonic()} were accessibility tested using automated tools as part of
+    on ${serviceBrandingConfigurationProperties.name()} were accessibility tested using automated tools as part of
     the quality assurance process. A manual accessibility review was conducted every 3 weeks on new features developed
     over that period.
   </p>

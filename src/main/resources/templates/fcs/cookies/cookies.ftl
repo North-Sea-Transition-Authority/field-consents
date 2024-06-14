@@ -10,7 +10,7 @@
     <@fdsCookiePreferences.essentialCookieRow name="SESSION" purpose="Used to keep you signed in" expiry="When you close your browser"/>
   </#assign>
 
-  <@fdsCookiePreferences.cookiePreferences serviceName=serviceBrandingConfigurationProperties.mnemonic() essentialCookies=essentialCookies>
+  <@fdsCookiePreferences.cookiePreferences serviceName=serviceBrandingConfigurationProperties.name() essentialCookies=essentialCookies>
     <h2 class="govuk-heading-m">Analytics cookies (optional)</h2>
 
     <p class="govuk-body">
@@ -22,7 +22,7 @@
     <p class="govuk-body">Google Analytics stores anonymised information about:</p>
 
     <ul class="govuk-list govuk-list--bullet">
-      <li>how you got to the '${serviceBrandingConfigurationProperties.name()}'</li>
+      <li>how you got to the '${serviceBrandingConfigurationProperties.name()}' service</li>
       <li>the pages you visit on this service and how long you spend on them</li>
     </ul>
 

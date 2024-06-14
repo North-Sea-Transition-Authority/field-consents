@@ -17,7 +17,7 @@
       <#assign emailAddress = serviceConfigurationProperties.technicalSupportContact().email() />
       <@fdsAction.link
         linkText=emailAddress
-        linkUrl="mailto:${emailAddress + emailSubject?has_content?then('?subject=${serviceBrandingConfigurationProperties.mnemonic()} - ' + emailSubject, '')}"
+        linkUrl="mailto:${emailAddress + emailSubject?has_content?then('?subject=${serviceBrandingConfigurationProperties.name()} - ' + emailSubject, '')}"
         />
     </@fdsSummaryList.summaryListRowNoAction>
     <@fdsSummaryList.summaryListRowNoAction keyText="Phone number">
