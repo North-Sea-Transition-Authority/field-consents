@@ -22,7 +22,8 @@ public enum WorkAreaTab {
       ReverseRouter.route(on(WorkAreaController.class).getWorkAreaCaseOfficerMyApplications(null, null)),
       10,
       EnumSet.of(PROCESS_FCS_APPLICATIONS),
-      ApplicationWorkAreaPriorityGroup.REGULATOR),
+      ApplicationWorkAreaPriorityGroup.REGULATOR
+  ),
   MY_TECHNICAL_REVIEWS(
       "My technical reviews",
       "myTechnicalReviews",
@@ -30,7 +31,8 @@ public enum WorkAreaTab {
       ReverseRouter.route(on(WorkAreaController.class).getWorkAreaMyTechnicalReviews(null, null)),
       20,
       EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS),
-      ApplicationWorkAreaPriorityGroup.REGULATOR_TECHNICAL_REVIEWER),
+      ApplicationWorkAreaPriorityGroup.REGULATOR_TECHNICAL_REVIEWER
+  ),
   ALL_TECHNICAL_REVIEWS(
       "All technical reviews",
       "allTechnicalReviews",
@@ -38,7 +40,8 @@ public enum WorkAreaTab {
       ReverseRouter.route(on(WorkAreaController.class).getWorkAreaAllTechnicalReviews(null, null)),
       30,
       EnumSet.of(TECHNICAL_REVIEW_FCS_APPLICATIONS),
-      ApplicationWorkAreaPriorityGroup.REGULATOR_TECHNICAL_REVIEWER),
+      ApplicationWorkAreaPriorityGroup.REGULATOR_TECHNICAL_REVIEWER
+  ),
   MY_CAM_APPLICATIONS(
       "My applications (CAM)",
       "camMyApplications",
@@ -46,7 +49,8 @@ public enum WorkAreaTab {
       ReverseRouter.route(on(WorkAreaController.class).getWorkAreaCamMyApplications(null, null)),
       40,
       EnumSet.of(AUTHORISE_FCS_CONSENTS),
-      ApplicationWorkAreaPriorityGroup.REGULATOR),
+      ApplicationWorkAreaPriorityGroup.REGULATOR
+  ),
   ALL_APPLICATIONS(
       "All applications",
       "allApplications",
@@ -54,7 +58,8 @@ public enum WorkAreaTab {
       ReverseRouter.route(on(WorkAreaController.class).getWorkAreaRegulatorAllApplications(null, null)),
       50,
       EnumSet.of(ASSIGN_FCS_APPLICATIONS, AUTHORISE_FCS_CONSENTS),
-      ApplicationWorkAreaPriorityGroup.REGULATOR),
+      ApplicationWorkAreaPriorityGroup.REGULATOR
+  ),
   UNASSIGNED_APPLICATIONS(
       "Unassigned",
       "unassigned",
@@ -62,23 +67,26 @@ public enum WorkAreaTab {
       ReverseRouter.route(on(WorkAreaController.class).getWorkAreaCaseOfficerUnassignedApplications(null, null)),
       60,
       EnumSet.of(PROCESS_FCS_APPLICATIONS, ASSIGN_FCS_APPLICATIONS),
-      ApplicationWorkAreaPriorityGroup.REGULATOR),
-  ALL_CONSULTATIONS(
-      "All consultations",
-      "allConsultations",
-      "all-consultations",
-      ReverseRouter.route(on(WorkAreaController.class).getWorkAreaAllConsultations(null, null)),
-      70,
-      EnumSet.of(ALLOCATE_CONSULTATION),
-      ApplicationWorkAreaPriorityGroup.CONSULTEE),
+      ApplicationWorkAreaPriorityGroup.REGULATOR
+  ),
   UNASSIGNED_CONSULTATIONS(
       "Unassigned consultations",
       "unassignedConsultations",
       "unassigned-consultations",
       ReverseRouter.route(on(WorkAreaController.class).getWorkAreaUnassignedConsultations(null, null)),
+      70,
+      EnumSet.of(ALLOCATE_CONSULTATION),
+      ApplicationWorkAreaPriorityGroup.CONSULTEE
+  ),
+  ALL_CONSULTATIONS(
+      "All consultations",
+      "allConsultations",
+      "all-consultations",
+      ReverseRouter.route(on(WorkAreaController.class).getWorkAreaAllConsultations(null, null)),
       80,
       EnumSet.of(ALLOCATE_CONSULTATION),
-      ApplicationWorkAreaPriorityGroup.CONSULTEE),
+      ApplicationWorkAreaPriorityGroup.CONSULTEE
+  ),
   MY_CONSULTATIONS(
       "My consultations",
       "myConsultations",
@@ -86,7 +94,8 @@ public enum WorkAreaTab {
       ReverseRouter.route(on(WorkAreaController.class).getWorkAreaMyConsultations(null, null)),
       90,
       EnumSet.of(RESPOND_TO_CONSULTATION),
-      ApplicationWorkAreaPriorityGroup.CONSULTEE)
+      ApplicationWorkAreaPriorityGroup.CONSULTEE
+  )
   ;
 
   private final String label;

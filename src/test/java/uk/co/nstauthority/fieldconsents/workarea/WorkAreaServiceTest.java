@@ -378,8 +378,8 @@ class WorkAreaServiceTest {
 
     assertThat(workAreaService.getTabsAvailableToUser(user))
         .containsExactly(
-            WorkAreaTab.ALL_CONSULTATIONS,
-            WorkAreaTab.UNASSIGNED_CONSULTATIONS
+            WorkAreaTab.UNASSIGNED_CONSULTATIONS,
+            WorkAreaTab.ALL_CONSULTATIONS
         );
   }
 
@@ -501,8 +501,8 @@ class WorkAreaServiceTest {
             WorkAreaTab.ALL_TECHNICAL_REVIEWS,
             WorkAreaTab.ALL_APPLICATIONS,
             WorkAreaTab.UNASSIGNED_APPLICATIONS,
-            WorkAreaTab.ALL_CONSULTATIONS,
-            WorkAreaTab.UNASSIGNED_CONSULTATIONS
+            WorkAreaTab.UNASSIGNED_CONSULTATIONS,
+            WorkAreaTab.ALL_CONSULTATIONS
         );
   }
 }

@@ -108,7 +108,7 @@ public class WorkAreaController {
 
     if (teamService.isConsulteeUser(user)) {
       if (permissionService.hasPermission(user, EnumSet.of(RolePermission.ALLOCATE_CONSULTATION))) {
-        return renderConsulteeWorkAreaOnTab(filter, user, ALL_CONSULTATIONS);
+        return renderConsulteeWorkAreaOnTab(filter, user, UNASSIGNED_CONSULTATIONS);
       }
       if (permissionService.hasPermission(user, EnumSet.of(RolePermission.RESPOND_TO_CONSULTATION))) {
         return renderConsulteeWorkAreaOnTab(filter, user, MY_CONSULTATIONS);

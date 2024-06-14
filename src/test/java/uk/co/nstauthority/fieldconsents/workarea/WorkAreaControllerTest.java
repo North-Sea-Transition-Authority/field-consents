@@ -38,8 +38,8 @@ import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitRestController;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormService;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterFormTestUtil;
-import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemUtil;
+import uk.co.nstauthority.fieldconsents.query.ApplicationDataItemView;
 import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @ContextConfiguration(classes = WorkAreaController.class)
@@ -706,7 +706,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(view().name(WORK_AREA_VIEW_NAME))
-        .andExpect(model().attribute("selectedTab", WorkAreaTab.ALL_CONSULTATIONS.getValue()))
+        .andExpect(model().attribute("selectedTab", WorkAreaTab.UNASSIGNED_CONSULTATIONS.getValue()))
         .andExpect(model().attribute("isWorkAreaWithTabs", true))
         .andExpect(model().attribute("workAreaTabs", consulteeAllocatorTabs))
         .andExpect(model().attribute("form", form))
