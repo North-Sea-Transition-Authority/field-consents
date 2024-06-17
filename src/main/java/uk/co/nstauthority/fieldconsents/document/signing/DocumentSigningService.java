@@ -65,8 +65,7 @@ public class DocumentSigningService {
       String line2,
       String line3
   ) {
-    try {
-      var pdf = PDDocument.load(pdfResource.getByteArray());
+    try (var pdf = PDDocument.load(pdfResource.getByteArray())) {
       var signatureCoordinates = new SignaturePlaceholderLocator().getSignaturePlaceholderLocation(pdf);
 
       return new FtssVisualSignatureProperties(
