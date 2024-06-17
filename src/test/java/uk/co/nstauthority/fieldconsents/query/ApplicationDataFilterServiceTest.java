@@ -9,15 +9,10 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil.fieldAsset1;
-import static uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil.fieldAsset1a;
-import static uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil.fieldAsset2;
-import static uk.co.nstauthority.fieldconsents.application.assets.ApplicationAssetTestUtil.fieldAsset2a;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1Json;
-import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field1JsonWithOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2Json;
-import static uk.co.nstauthority.fieldconsents.assets.fields.FieldTestUtil.field2JsonWithOperatorAndLicences;
 import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil.terminal1Json;
+import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationAssetLicences.APPLICATION_ASSET_LICENCES;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationAssets.APPLICATION_ASSETS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationConsentIssuingApprovals.APPLICATION_CONSENT_ISSUING_APPROVALS;
 import static uk.co.nstauthority.fieldconsents.generated.jooq.tables.ApplicationFlags.APPLICATION_FLAGS;
@@ -254,53 +249,18 @@ class ApplicationDataFilterServiceTest {
   }
 
   @Test
-  void getConditions_withLicenceReference_whenNoPrimaryOrSecondaryFieldsFound() {
+  void getConditions_withLicenceReference() {
     dataFilterForm.setLicenceReference("P123");
-
-    when(applicationAssetService.getAllPrimaryAndSecondaryFieldAssets()).thenReturn(Collections.emptyList());
-
-    assertThat(applicationDataFilterService.getConditions(dataFilterForm))
-        .containsExactly(
-            falseCondition()
-        );
-  }
-
-  @Test
-  void getConditions_withLicenceReference_whenNoMatchingFieldsFound() {
-    dataFilterForm.setLicenceReference("P123");
-    var fieldsWithOperatorAndLicences = List.of(field1JsonWithOperatorAndLicences, field2JsonWithOperatorAndLicences);
-
-    when(applicationAssetService.getAllPrimaryAndSecondaryFieldAssets())
-        .thenReturn(List.of(fieldAsset1, fieldAsset2, fieldAsset1a, fieldAsset2a));
-    when(fieldService
-        .findFieldsWithOperatorAndLicences(List.of(fieldAsset1.getAssetId(), fieldAsset2.getAssetId()), FIELD_LOOKUP_PURPOSE)).thenReturn(fieldsWithOperatorAndLicences);
-
-
-    assertThat(applicationDataFilterService.getConditions(dataFilterForm))
-        .containsExactly(
-            falseCondition()
-        );
-  }
-
-  @Test
-  void getConditions_withLicenceReference_whenMatchingFieldsFound() {
-    dataFilterForm.setLicenceReference("P1");
-    var fieldsWithOperatorAndLicences = List.of(field1JsonWithOperatorAndLicences, field2JsonWithOperatorAndLicences);
-
-    when(applicationAssetService.getAllPrimaryAndSecondaryFieldAssets())
-        .thenReturn(List.of(fieldAsset1, fieldAsset2, fieldAsset1a, fieldAsset2a));
-    when(fieldService
-        .findFieldsWithOperatorAndLicences(List.of(fieldAsset1.getAssetId(), fieldAsset2.getAssetId()), FIELD_LOOKUP_PURPOSE)).thenReturn(fieldsWithOperatorAndLicences);
-
 
     assertThat(applicationDataFilterService.getConditions(dataFilterForm))
         .containsExactly(
             exists(context.select(APPLICATION_ASSETS.ASSET_ID)
                 .from(APPLICATION_ASSETS)
+                .join(APPLICATION_ASSET_LICENCES).onKey(APPLICATION_ASSET_LICENCES.APPLICATION_ASSET_ID)
                 .where(APPLICATION_ASSETS.APPLICATION_VERSION_ID.eq(APPLICATION_VERSIONS.ID)
                     .and(APPLICATION_ASSETS.ASSET_ROLE.in(AssetRole.PRIMARY.name(), AssetRole.SECONDARY.name()))
                     .and(APPLICATION_ASSETS.ASSET_TYPE.eq(AssetType.FIELD.name()))
-                    .and(APPLICATION_ASSETS.ASSET_ID.in(List.of(fieldAsset1.getAssetId(), fieldAsset2.getAssetId())))))
+                    .and(APPLICATION_ASSET_LICENCES.CACHED_LICENCE_REF.equalIgnoreCase("P123"))))
         );
   }
 
