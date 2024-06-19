@@ -66,8 +66,8 @@ SELECT
 , b.month
 , b.days
 , b.consent_days
-, greatest(b.short_term_start_date, b.month_start_date) start_date
-, least(b.short_term_end_date, b.month_end_date) end_date
+, greatest(coalesce(b.short_term_start_date, b.month_start_date), b.month_start_date) start_date
+, least(coalesce(b.short_term_end_date, b.month_end_date), b.month_end_date) end_date
 , b.category_1
 , b.category_2
 , b.category_3

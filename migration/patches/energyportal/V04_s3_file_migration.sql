@@ -11,6 +11,7 @@
 
 -- Execution run time for insert into promotemgr.s3_file_migration :
 -- UAT 4 mins 37 secs (for 5171 files)
+-- LIVE 8 mins 11 secs (for 7441 files)
 -- queue the files to be migrated
 INSERT INTO promotemgr.s3_file_migration (
   fox_file_id
@@ -35,6 +36,7 @@ COMMIT;
 /
 -- Execution run time for insert into promotemgr.s3_file_migration :
 -- UAT 2 mins 55 secs (for 21257 files)
+-- LIVE 2 mins 54 secs (for 24753 files)
 INSERT INTO promotemgr.s3_file_migration ( 
   fox_file_id
 , application
@@ -70,6 +72,7 @@ COMMIT;
 --
 -- Execution run times for uploading the files to S3 using the s3_file_migrator
 -- UAT 11 mins 15 secs (for 26428 files - 10.03GB)
+-- LIVE 33.9 mins (for 32194 files - 13.26GB)
 
 -- queue the FUSS data for each migrated file
 INSERT INTO fcs_migration.file_upload_library_uploaded_files (
