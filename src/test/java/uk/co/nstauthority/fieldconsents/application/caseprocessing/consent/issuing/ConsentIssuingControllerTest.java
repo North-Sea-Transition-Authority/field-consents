@@ -410,7 +410,7 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
 
     var expectedNotificationBanner = NotificationBanner.builder()
         .withBannerType(NotificationBannerType.SUCCESS)
-        .withHeadingContent("Consent issued for application %s".formatted(applicationReference))
+        .withHeadingContent("Consent issued for %s".formatted(applicationReference))
         .build();
 
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))

@@ -193,7 +193,7 @@ public class ConsentIssuingController {
 
     NotificationBannerUtil.addSuccessNotification(
         redirectAttributes,
-        "Consent issued for application %s".formatted(applicationReference)
+        "Consent issued for %s".formatted(applicationReference)
     );
 
     return ReverseRouter.redirect(on(WorkAreaController.class).getWorkArea(null, null));
