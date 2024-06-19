@@ -26,6 +26,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
@@ -33,32 +34,20 @@ import uk.co.fivium.energyportalapi.client.organisation.OrganisationApi;
 import uk.co.fivium.energyportalapi.generated.client.OrganisationGroupProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.client.OrganisationGroupsProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.types.OrganisationGroup;
-import uk.co.nstauthority.fieldconsents.branding.ServiceBrandingConfigurationProperties;
-import uk.co.nstauthority.fieldconsents.energyportal.api.EnergyPortalApiWrapper;
 
 @ExtendWith(MockitoExtension.class)
 class OrganisationGroupQueryServiceTest {
 
-  private static final ServiceBrandingConfigurationProperties SERVICE_BRANDING_CONFIGURATION_PROPERTIES = new ServiceBrandingConfigurationProperties(
-      "name",
-      "mnemonic"
-  );
-
   @Mock
   private OrganisationApi organisationApi;
 
+  @InjectMocks
   private OrganisationGroupQueryService organisationGroupQueryService;
-
 
   private List<OrganisationGroup> groupList;
 
   @BeforeEach
   void setup() {
-    organisationGroupQueryService = new OrganisationGroupQueryService(
-        organisationApi,
-        new EnergyPortalApiWrapper(SERVICE_BRANDING_CONFIGURATION_PROPERTIES)
-    );
-
     groupList = List.of(
         new OrganisationGroup(1, "Company 1", null, null, null, Collections.emptyList()),
         new OrganisationGroup(2, "Company 2", null, null, null, Collections.emptyList())
