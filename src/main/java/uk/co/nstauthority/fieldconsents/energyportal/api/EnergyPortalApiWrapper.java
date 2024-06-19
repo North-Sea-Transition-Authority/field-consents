@@ -8,7 +8,6 @@ import uk.co.fivium.energyportalapi.client.LogCorrelationId;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.fieldconsents.branding.ServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.correlationid.CorrelationIdUtil;
-import uk.co.nstauthority.fieldconsents.metrics.QueryCounter;
 
 @Component
 public class EnergyPortalApiWrapper {
@@ -16,19 +15,12 @@ public class EnergyPortalApiWrapper {
   private static final Logger LOGGER = LoggerFactory.getLogger(EnergyPortalApiWrapper.class);
 
   private final ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties;
-  private final QueryCounter queryCounter;
 
-  public EnergyPortalApiWrapper(
-      ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties,
-      QueryCounter queryCounter
-  ) {
+  public EnergyPortalApiWrapper(ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties) {
     this.serviceBrandingConfigurationProperties = serviceBrandingConfigurationProperties;
-    this.queryCounter = queryCounter;
   }
 
   public <T> T makeRequest(BiFunction<LogCorrelationId, RequestPurpose, T> request) {
-    queryCounter.incrementEpa();
-
     var logCorrelationId = getLogCorrelationId();
     var requestPurpose = getRequestPurpose();
 

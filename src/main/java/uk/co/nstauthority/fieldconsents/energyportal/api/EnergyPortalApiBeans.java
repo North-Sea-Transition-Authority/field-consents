@@ -10,18 +10,23 @@ import uk.co.fivium.energyportalapi.client.pets.PetsApplicationApi;
 import uk.co.fivium.energyportalapi.client.terminal.TerminalApi;
 import uk.co.fivium.energyportalapi.client.user.UserApi;
 import uk.co.nstauthority.fieldconsents.correlationid.CorrelationIdUtil;
+import uk.co.nstauthority.fieldconsents.energyportal.EnergyPortalQueryCounter;
 
 @Configuration
 public class EnergyPortalApiBeans {
 
   @Bean
-  EnergyPortal energyPortal(EnergyPortalApiConfig energyPortalApiConfig) {
+  EnergyPortal energyPortal(
+      EnergyPortalApiConfig energyPortalApiConfig,
+      EnergyPortalQueryCounter energyPortalQueryCounter
+  ) {
     return EnergyPortal.customConfiguration(
         energyPortalApiConfig.url(),
         energyPortalApiConfig.preSharedKey(),
         EnergyPortal.DEFAULT_REQUEST_TIMEOUT_SECONDS,
-        () -> new LogCorrelationId(CorrelationIdUtil.getCorrelationIdFromMdc())
-        );
+        () -> new LogCorrelationId(CorrelationIdUtil.getCorrelationIdFromMdc()),
+        energyPortalQueryCounter
+    );
   }
 
   @Bean

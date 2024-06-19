@@ -25,16 +25,12 @@ import uk.co.fivium.energyportalapi.client.user.UserApi;
 import uk.co.nstauthority.fieldconsents.branding.ServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.energyportal.WebUserAccountId;
 import uk.co.nstauthority.fieldconsents.energyportal.api.EnergyPortalApiWrapper;
-import uk.co.nstauthority.fieldconsents.metrics.QueryCounter;
 
 @ExtendWith(MockitoExtension.class)
 class EnergyPortalUserServiceTest {
 
   @Mock
   private static UserApi userApi;
-
-  @Mock
-  private QueryCounter queryCounter;
 
   @InjectMocks
   private static EnergyPortalUserService energyPortalUserService;
@@ -48,7 +44,7 @@ class EnergyPortalUserServiceTest {
   void setUp() {
     energyPortalUserService = new EnergyPortalUserService(
         userApi,
-        new EnergyPortalApiWrapper(SERVICE_BRANDING_CONFIGURATION_PROPERTIES, queryCounter)
+        new EnergyPortalApiWrapper(SERVICE_BRANDING_CONFIGURATION_PROPERTIES)
     );
   }
 

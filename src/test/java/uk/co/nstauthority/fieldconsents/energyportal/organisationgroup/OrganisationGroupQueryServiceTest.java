@@ -35,7 +35,6 @@ import uk.co.fivium.energyportalapi.generated.client.OrganisationGroupsProjectio
 import uk.co.fivium.energyportalapi.generated.types.OrganisationGroup;
 import uk.co.nstauthority.fieldconsents.branding.ServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.energyportal.api.EnergyPortalApiWrapper;
-import uk.co.nstauthority.fieldconsents.metrics.QueryCounter;
 
 @ExtendWith(MockitoExtension.class)
 class OrganisationGroupQueryServiceTest {
@@ -48,9 +47,6 @@ class OrganisationGroupQueryServiceTest {
   @Mock
   private OrganisationApi organisationApi;
 
-  @Mock
-  private QueryCounter queryCounter;
-
   private OrganisationGroupQueryService organisationGroupQueryService;
 
 
@@ -60,7 +56,7 @@ class OrganisationGroupQueryServiceTest {
   void setup() {
     organisationGroupQueryService = new OrganisationGroupQueryService(
         organisationApi,
-        new EnergyPortalApiWrapper(SERVICE_BRANDING_CONFIGURATION_PROPERTIES, queryCounter)
+        new EnergyPortalApiWrapper(SERVICE_BRANDING_CONFIGURATION_PROPERTIES)
     );
 
     groupList = List.of(

@@ -1,7 +1,6 @@
 package uk.co.nstauthority.fieldconsents.energyportal.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verify;
 
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,16 +13,12 @@ import uk.co.fivium.energyportalapi.client.LogCorrelationId;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.fieldconsents.branding.ServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.correlationid.CorrelationIdUtil;
-import uk.co.nstauthority.fieldconsents.metrics.QueryCounter;
 
 @ExtendWith(MockitoExtension.class)
 class EnergyPortalApiWrapperTest {
 
   @Mock
   private ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties;
-
-  @Mock
-  private QueryCounter queryCounter;
 
   @InjectMocks
   private EnergyPortalApiWrapper energyPortalApiWrapper;
@@ -41,8 +36,6 @@ class EnergyPortalApiWrapperTest {
     var logCorrelationId = energyPortalApiWrapper.makeRequest(this::returnLogCorrelationId);
 
     assertThat(logCorrelationId).isEqualTo(correlationId.toString());
-
-    verify(queryCounter).incrementEpa();
   }
 
   @Test
@@ -54,8 +47,6 @@ class EnergyPortalApiWrapperTest {
         this.getClass().getName(),
         "makeRequest_verifyRequestPurpose"
     ));
-
-    verify(queryCounter).incrementEpa();
   }
 
   private String returnLogCorrelationId(LogCorrelationId logCorrelationId, RequestPurpose requestPurpose) {
