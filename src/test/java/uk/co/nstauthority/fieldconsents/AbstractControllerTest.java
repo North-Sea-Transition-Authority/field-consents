@@ -41,6 +41,7 @@ import uk.co.nstauthority.fieldconsents.configuration.SamlProperties;
 import uk.co.nstauthority.fieldconsents.configuration.ServiceConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.configuration.WebSecurityConfiguration;
 import uk.co.nstauthority.fieldconsents.controllerhelper.ControllerHelperService;
+import uk.co.nstauthority.fieldconsents.energyportal.EnergyPortalConfiguration;
 import uk.co.nstauthority.fieldconsents.energyportal.IncludeEnergyPortalConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.energyportal.organisationgroup.OrganisationGroupQueryService;
 import uk.co.nstauthority.fieldconsents.fds.searchselector.SearchSelectorService;
@@ -87,6 +88,7 @@ import uk.co.nstauthority.fieldconsents.validation.ValidationErrorOrderingServic
 })
 @EnableConfigurationProperties({
     SamlProperties.class,
+    EnergyPortalConfiguration.class,
     ServiceConfigurationProperties.class,
     AccessibilityConfigurationProperties.class,
     AnalyticsConfigurationProperties.class,

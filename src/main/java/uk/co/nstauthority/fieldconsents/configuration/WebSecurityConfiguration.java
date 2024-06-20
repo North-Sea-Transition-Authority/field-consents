@@ -60,12 +60,14 @@ public class WebSecurityConfiguration {
                 "/assets/**",
                 "/accessibility-statement",
                 "/contact-us",
-                "/cookies"
+                "/cookies",
+                "/api/v1/logout/*"
             )
             .permitAll()
             .anyRequest().hasAuthority(IDP_ACCESS_GRANTED_AUTHORITY_NAME))
         .saml2Login(saml2 -> saml2.authenticationManager(new ProviderManager(authenticationProvider)))
         .logout(logout -> logout.logoutSuccessHandler(serviceLogoutSuccessHandler))
+        .csrf(csrf -> csrf.ignoringRequestMatchers("/api/v1/logout/*"))
         .addFilterBefore(requestLogFilter, SecurityContextHolderFilter.class)
         .addFilterAfter(postAuthenticationRequestMdcFilter, SecurityContextHolderFilter.class)
         .build();
