@@ -11,6 +11,8 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
@@ -24,6 +26,7 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.fieldconsents.branding.CustomerBrandingConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.email.EmailService;
 import uk.co.nstauthority.fieldconsents.email.FieldConsentsEmailRecipient;
 import uk.co.nstauthority.fieldconsents.email.GovukNotifyTemplate;
@@ -34,11 +37,18 @@ import uk.co.nstauthority.fieldconsents.workarea.WorkAreaController;
 @ExtendWith(MockitoExtension.class)
 class TeamMemberRoleEmailServiceTest {
 
+  private static final String WORK_AREA_URL = "/workarea_url";
+  private static final String TEST_TEAM_DISPLAY_NAME = "Test Team";
+  private static final String TEST_TEAM_DOMAIN_REFERENCE = "TEAM";
+
   @Mock
   private EmailService emailService;
 
   @Mock
   private AbsoluteUrlService absoluteUrlService;
+
+  @Mock
+  private CustomerBrandingConfigurationProperties customerBrandingConfigurationProperties;
 
   @Captor
   private ArgumentCaptor<MergedTemplate> templateCaptor;
@@ -57,22 +67,25 @@ class TeamMemberRoleEmailServiceTest {
   void setUp() {
     applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.PRODUCTION);
 
-    teamMemberRoleEmailService = new TeamMemberRoleEmailService(emailService, absoluteUrlService);
+    teamMemberRoleEmailService = new TeamMemberRoleEmailService(
+        emailService,
+        absoluteUrlService,
+        customerBrandingConfigurationProperties);
   }
 
-  @Test
-  void sendUserAddedToTeamEmail() {
+  @ParameterizedTest
+  @EnumSource(value = TeamType.class, names = "REGULATOR", mode = EnumSource.Mode.EXCLUDE)
+  void sendUserAddedToTeamEmail(TeamType teamType) {
     var team = new TeamTestUtil.TeamBuilder()
         .withId(1)
-        .withDisplayName("Test Team")
-        .withTeamType(TeamType.INDUSTRY)
+        .withDisplayName(TEST_TEAM_DISPLAY_NAME)
+        .withTeamType(teamType)
         .build();
 
     var newUser = ServiceUserDetailTestUtil.Builder().build();
-    var workAreaUrl = "/workarea_url";
-    var teamDomainReference = "TEAM";
+    var workAreaUrl = WORK_AREA_URL;
 
-    when(emailService.getTemplate(GovukNotifyTemplate.USER_ADDED_TO_INDUSTRY_TEAM))
+    when(emailService.getTemplate(GovukNotifyTemplate.USER_ADDED_TO_TEAM))
         .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
     when(absoluteUrlService.getAbsoluteUrl(
         ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)))).thenReturn(workAreaUrl);
@@ -100,6 +113,48 @@ class TeamMemberRoleEmailServiceTest {
         .isEqualTo(applicationVersion.getId().toString());
 
     assertThat(domainReferenceCaptor.getValue().getDomainType())
-        .isEqualTo(teamDomainReference);
+        .isEqualTo(TEST_TEAM_DOMAIN_REFERENCE);
+  }
+
+  @Test
+  void sendUserAddedToTeamEmail_whenRegulatorTeam() {
+    var team = new TeamTestUtil.TeamBuilder()
+        .withId(1)
+        .withDisplayName(TEST_TEAM_DISPLAY_NAME)
+        .withTeamType(TeamType.REGULATOR)
+        .build();
+
+    var newUser = ServiceUserDetailTestUtil.Builder().build();
+    var workAreaUrl = WORK_AREA_URL;
+
+    when(emailService.getTemplate(GovukNotifyTemplate.USER_ADDED_TO_TEAM))
+        .thenReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
+    when(absoluteUrlService.getAbsoluteUrl(
+        ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null, null)))).thenReturn(workAreaUrl);
+
+    teamMemberRoleEmailService.sendUserAddedToTeamEmail(FieldConsentsEmailRecipient.from(newUser), team);
+
+    verify(emailService).sendEmail(
+        templateCaptor.capture(),
+        emailRecipientCaptor.capture(),
+        domainReferenceCaptor.capture()
+    );
+
+    assertThat(templateCaptor.getValue().getMailMergeFields())
+        .extracting(MailMergeField::name, MailMergeField::value)
+        .containsOnly(
+            tuple("TEAM_NAME", customerBrandingConfigurationProperties.teamName()),
+            tuple("WORK_AREA_URL", workAreaUrl),
+            tuple(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, newUser.displayName())
+        );
+
+    assertThat(emailRecipientCaptor.getValue().getEmailAddress())
+        .isEqualTo(FieldConsentsEmailRecipient.from(newUser).getEmailAddress());
+
+    assertThat(domainReferenceCaptor.getValue().getDomainId())
+        .isEqualTo(applicationVersion.getId().toString());
+
+    assertThat(domainReferenceCaptor.getValue().getDomainType())
+        .isEqualTo(TEST_TEAM_DOMAIN_REFERENCE);
   }
 }
