@@ -1,5 +1,7 @@
 package uk.co.nstauthority.fieldconsents.query;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.List;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersionStatus;
@@ -7,7 +9,10 @@ import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthT
 import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
 import uk.co.nstauthority.fieldconsents.assets.fields.GeographicArea;
 
-public class ApplicationDataFilterForm {
+public class ApplicationDataFilterForm implements Serializable {
+
+  @Serial
+  private static final long serialVersionUID = 1463021385744461455L;
 
   public static final String APPROVED_FOR_ISSUE_FILTER_OPTION = "APPROVED_FOR_ISSUE";
 
@@ -42,8 +47,7 @@ public class ApplicationDataFilterForm {
     return applicationTypes;
   }
 
-  public void setApplicationTypes(
-      List<ApplicationType> applicationTypes) {
+  public void setApplicationTypes(List<ApplicationType> applicationTypes) {
     this.applicationTypes = applicationTypes;
   }
 

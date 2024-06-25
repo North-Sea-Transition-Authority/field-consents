@@ -5,11 +5,10 @@ import java.io.Serializable;
 
 public class SearchSession implements Serializable {
 
-  private SearchFilterForm searchFilterForm;
-
   @Serial
   private static final long serialVersionUID = 1464606383785439779L;
 
+  private SearchFilterForm searchFilterForm;
   private boolean searchInvoked;
 
   public SearchSession(SearchFilterForm searchFilterForm) {

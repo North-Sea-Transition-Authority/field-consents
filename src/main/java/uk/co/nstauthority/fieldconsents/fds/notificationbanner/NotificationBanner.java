@@ -1,7 +1,13 @@
 package uk.co.nstauthority.fieldconsents.fds.notificationbanner;
 
+import java.io.Serial;
+import java.io.Serializable;
+
 // TODO - Enforce that title and heading fields are provided
-public class NotificationBanner {
+public class NotificationBanner implements Serializable {
+
+  @Serial
+  private static final long serialVersionUID = 760102195423797103L;
 
   private final String title;
   private final String headingContent;

@@ -2,9 +2,7 @@ package uk.co.nstauthority.fieldconsents.workarea;
 
 import java.io.Serial;
 import java.io.Serializable;
-import org.springframework.web.bind.annotation.SessionAttributes;
 
-@SessionAttributes({"workAreaFilter"})
 public class WorkAreaFilter extends WorkAreaFilterForm implements Serializable {
 
   @Serial

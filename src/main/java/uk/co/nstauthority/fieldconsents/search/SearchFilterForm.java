@@ -1,9 +1,14 @@
 package uk.co.nstauthority.fieldconsents.search;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.List;
 import uk.co.nstauthority.fieldconsents.query.ApplicationDataFilterForm;
 
-public class SearchFilterForm extends ApplicationDataFilterForm {
+public class SearchFilterForm extends ApplicationDataFilterForm implements Serializable {
+
+  @Serial
+  private static final long serialVersionUID = 6383972498362872287L;
 
   List<AceFlagStatus> aceFlagStatuses;
   String fieldAssetKey;

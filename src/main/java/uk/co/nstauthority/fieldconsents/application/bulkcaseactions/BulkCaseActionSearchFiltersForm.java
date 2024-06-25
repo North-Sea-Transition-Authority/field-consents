@@ -1,5 +1,7 @@
 package uk.co.nstauthority.fieldconsents.application.bulkcaseactions;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.Set;
 import uk.co.nstauthority.fieldconsents.assets.AssetTypeWithShore;
@@ -14,7 +16,10 @@ public record BulkCaseActionSearchFiltersForm(
     Set<GeographicArea> geographicAreas,
     Set<AceFlagStatus> aceFlagStatuses,
     Set<AssetTypeWithShore> assetTypesWithShore
-) {
+) implements Serializable {
+
+  @Serial
+  private static final long serialVersionUID = 9121804835578033035L;
 
   public static BulkCaseActionSearchFiltersForm empty() {
     return new BulkCaseActionSearchFiltersForm(
