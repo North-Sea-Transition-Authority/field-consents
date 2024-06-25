@@ -63,7 +63,7 @@ public class FlareVentReportGasDataFormValidator implements Validator {
         && !errors.hasFieldErrors(form.getCategoryAHydrocarbonPercentage().getFieldName() + FIELD_INPUT_VALUE)) {
       validateGasPercentagePerCategory(errors, form.getCategoryAInertGasPercentage(), form.getCategoryAHydrocarbonPercentage());
     }
-    
+
     if (!errors.hasFieldErrors(form.getCategoryBInertGasPercentage().getFieldName() + FIELD_INPUT_VALUE)
         && !errors.hasFieldErrors(form.getCategoryBHydrocarbonPercentage().getFieldName() + FIELD_INPUT_VALUE)) {
       validateGasPercentagePerCategory(errors, form.getCategoryBInertGasPercentage(), form.getCategoryBHydrocarbonPercentage());
@@ -98,7 +98,7 @@ public class FlareVentReportGasDataFormValidator implements Validator {
       errors.rejectValue(
           categoryHydrocarbonDecimalInput.getFieldName() + FIELD_INPUT_VALUE,
           categoryHydrocarbonDecimalInput.getFieldName() + ".invalid",
-          ""
+          INVALID_GAS_CONTENT_PERCENTAGE
       );
     }
   }

@@ -9,7 +9,7 @@
   </#assign>
   <@fdsSummaryList.summaryListCard
     headingText="Consent data"
-    headingSize="h3"
+    headingSize="h2"
     summaryListId="summary-data-card-list"
     cardActionsContent=summaryCardActions
   >

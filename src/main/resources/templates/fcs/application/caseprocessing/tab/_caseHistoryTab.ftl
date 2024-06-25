@@ -15,6 +15,7 @@
       <@fdsTimeline.timelineTimeStamp
         nodeNumber="${caseHistoryEvents?size - item?index}"
         timeStampHeading=headingWithScreenReaderText
+        timeStampHeadingSize="h2"
         timeStampHeadingHint=item.eventDateTimeText
         timeStampClass=stampClass>
         <@fdsTimeline.timelineEvent>

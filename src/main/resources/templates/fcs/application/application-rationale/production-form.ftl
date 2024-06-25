@@ -25,15 +25,17 @@ backLinkUrl=springUrl(cancelUrl)
       <@fdsRadio.radioItem path="form.rationaleType" itemMap={decreaseRadio: decreaseRadio.displayName}/>
       <@fdsRadio.radioItem path="form.rationaleType" itemMap={extensionRadio: extensionRadio.displayName}>
         <@fdsTextarea.textarea
-          hintText="Explain why you are requesting an extension."
+          labelText="Explain why you are requesting an extension."
           path="form.extensionComment.inputValue"
-          nestingPath="form.rationaleType"/>
+          nestingPath="form.rationaleType"
+        />
       </@fdsRadio.radioItem>
       <@fdsRadio.radioItem path="form.rationaleType" itemMap={otherRadio: otherRadio.displayName}>
         <@fdsTextarea.textarea
-          hintText="Explain why you have selected 'other'. This could be for administrative reasons. For example Operator change or COP."
+          labelText="Explain why you have selected 'other'. This could be for administrative reasons. For example Operator change or COP."
           path="form.otherComment.inputValue"
-          nestingPath="form.rationaleType"/>
+          nestingPath="form.rationaleType"
+        />
       </@fdsRadio.radioItem>
     </@fdsRadio.radioGroup>
     <@fdsFieldset.fieldset

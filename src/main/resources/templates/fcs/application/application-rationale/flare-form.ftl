@@ -23,9 +23,10 @@ backLinkUrl=springUrl(cancelUrl)
       </#if>
       <@fdsRadio.radioItem path="form.rationaleType" itemMap={increaseRadio: increaseRadio.displayName}>
         <@fdsTextarea.textarea
-          hintText="Explain why you are requesting an increase. This could be that additional Wells are being drilled."
+          labelText="Explain why you are requesting an increase. This could be that additional Wells are being drilled."
           path="form.increaseComment.inputValue"
-          nestingPath="form.rationaleType"/>
+          nestingPath="form.rationaleType"
+        />
       </@fdsRadio.radioItem>
       <@fdsRadio.radioItem path="form.rationaleType" itemMap={decreaseRadio: decreaseRadio.displayName}/>
       <@fdsRadio.radioItem path="form.rationaleType" itemMap={noChangeRadio: noChangeRadio.displayName}/>

@@ -11,21 +11,21 @@
     <td class="govuk-table__cell">
         <@fdsTextInput.textInput
         path="${categoryAData}.inputValue"
-        labelText="${categoryAData}.displayName"
+        labelText="${categoryAData?eval.displayName}"
         formGroupClass="govuk-!-margin-bottom-0"
         labelClass="govuk-visually-hidden"/>
     </td>
     <td class="govuk-table__cell">
         <@fdsTextInput.textInput
         path="${categoryBData}.inputValue"
-        labelText="${categoryBData}.displayName"
+        labelText="${categoryBData?eval.displayName}"
         formGroupClass="govuk-!-margin-bottom-0"
         labelClass="govuk-visually-hidden"/>
     </td>
     <td class="govuk-table__cell">
         <@fdsTextInput.textInput
         path="${categoryCData}.inputValue"
-        labelText="${categoryCData}.displayName"
+        labelText="${categoryCData?eval.displayName}"
         formGroupClass="govuk-!-margin-bottom-0"
         labelClass="govuk-visually-hidden"/>
     </td>

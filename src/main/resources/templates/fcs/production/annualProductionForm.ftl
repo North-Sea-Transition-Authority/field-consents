@@ -24,16 +24,16 @@
               <input type="hidden" name="${spring.status.expression}" value="${spring.stringStatusValue}">
               <td class="govuk-table__cell">${monthForm.month}</td>
               <td class="govuk-table__cell">
-                  <@fdsTextInput.textInput path="form.annualProductionMonthForms[${monthForm_index}].oilMinValue.inputValue" labelText="Oil min value" labelClass="govuk-visually-hidden"/>
+                  <@fdsTextInput.textInput path="form.annualProductionMonthForms[${monthForm_index}].oilMinValue.inputValue" labelText="Oil min value ${monthForm.month}" labelClass="govuk-visually-hidden"/>
               </td>
               <td class="govuk-table__cell">
-                  <@fdsTextInput.textInput path="form.annualProductionMonthForms[${monthForm_index}].oilMaxValue.inputValue" labelText="Oil max value" labelClass="govuk-visually-hidden"/>
+                  <@fdsTextInput.textInput path="form.annualProductionMonthForms[${monthForm_index}].oilMaxValue.inputValue" labelText="Oil max value ${monthForm.month}" labelClass="govuk-visually-hidden"/>
               </td>
               <td class="govuk-table__cell">
-                  <@fdsTextInput.textInput path="form.annualProductionMonthForms[${monthForm_index}].gasMinValue.inputValue" labelText="Gas min value" labelClass="govuk-visually-hidden"/>
+                  <@fdsTextInput.textInput path="form.annualProductionMonthForms[${monthForm_index}].gasMinValue.inputValue" labelText="Gas min value ${monthForm.month}" labelClass="govuk-visually-hidden"/>
               </td>
               <td class="govuk-table__cell">
-                  <@fdsTextInput.textInput path="form.annualProductionMonthForms[${monthForm_index}].gasMaxValue.inputValue" labelText="Gas max value" labelClass="govuk-visually-hidden"/>
+                  <@fdsTextInput.textInput path="form.annualProductionMonthForms[${monthForm_index}].gasMaxValue.inputValue" labelText="Gas max value ${monthForm.month}" labelClass="govuk-visually-hidden"/>
               </td>
             </tr>
           </#list>

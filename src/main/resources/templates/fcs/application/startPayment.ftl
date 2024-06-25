@@ -34,7 +34,7 @@
       </tr>
       <tr class="govuk-table__row">
         <th scope="row" class="govuk-table__header">Total charge</th>
-        <th class="govuk-table__cell govuk-table__cell--numeric">${formattedPaymentAmount}</th>
+        <td class="govuk-table__cell govuk-table__cell--numeric">${formattedPaymentAmount}</td>
       </tr>
     </tbody>
   </table>

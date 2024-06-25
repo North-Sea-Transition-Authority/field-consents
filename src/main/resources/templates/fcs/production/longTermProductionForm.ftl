@@ -29,16 +29,16 @@
           <input type="hidden" name="${spring.status.expression}" value="${spring.stringStatusValue}">
           <td class="govuk-table__cell">${yearForm.year}</td>
           <td class="govuk-table__cell">
-            <@fdsTextInput.textInput path="${currentYearForm}.oilMinValue.inputValue" labelText="Oil min value" labelClass="govuk-visually-hidden"/>
+            <@fdsTextInput.textInput path="${currentYearForm}.oilMinValue.inputValue" labelText="Oil min value ${yearForm.year}" labelClass="govuk-visually-hidden"/>
           </td>
           <td class="govuk-table__cell">
-            <@fdsTextInput.textInput path="${currentYearForm}.oilMaxValue.inputValue" labelText="Oil max value" labelClass="govuk-visually-hidden"/>
+            <@fdsTextInput.textInput path="${currentYearForm}.oilMaxValue.inputValue" labelText="Oil max value ${yearForm.year}" labelClass="govuk-visually-hidden"/>
           </td>
           <td class="govuk-table__cell">
-            <@fdsTextInput.textInput path="${currentYearForm}.gasMinValue.inputValue" labelText="Gas min value" labelClass="govuk-visually-hidden"/>
+            <@fdsTextInput.textInput path="${currentYearForm}.gasMinValue.inputValue" labelText="Gas min value ${yearForm.year}" labelClass="govuk-visually-hidden"/>
           </td>
           <td class="govuk-table__cell">
-            <@fdsTextInput.textInput path="${currentYearForm}.gasMaxValue.inputValue" labelText="Gas max value" labelClass="govuk-visually-hidden"/>
+            <@fdsTextInput.textInput path="${currentYearForm}.gasMaxValue.inputValue" labelText="Gas max value ${yearForm.year}" labelClass="govuk-visually-hidden"/>
           </td>
         </tr>
       </#list>

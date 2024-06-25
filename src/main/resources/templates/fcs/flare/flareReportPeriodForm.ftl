@@ -5,7 +5,7 @@
 <#assign pageTitle="Flare report period"/>
 
 <@defaultPage htmlTitle=pageTitle pageHeading=pageTitle errorItems=errorList>
-  <p class="govuk-body-lead">
+  <p class="govuk-body">
     We need to collect data relating to the flaring that has occurred over the most recent 12-month period.<br/>
     <br/>
     If the field, hub or facility has started up in this period, then enter zeros for the prior months with a relevant comment.

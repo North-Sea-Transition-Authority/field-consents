@@ -9,7 +9,7 @@
   </#assign>
   <@fdsSummaryList.summaryListCard
     headingText=heading
-    headingSize="h3"
+    headingSize="h2"
     summaryListId="files-summary-card-list"
     cardActionsContent=summaryCardActions>
     <#list fileViews as fileView>
@@ -17,7 +17,7 @@
         keyText=fileView.filename()
         actionText="Download"
         actionUrl=springUrl(fileView.downloadUrl())
-        screenReaderActionText="Download ${fileView.filename()}">
+        screenReaderActionText="${fileView.filename()}">
           <p class="govuk-body">
             <@multiLineText.multiLineText contentText=fileView.description()/>
           </p>

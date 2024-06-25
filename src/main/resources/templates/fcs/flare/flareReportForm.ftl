@@ -7,7 +7,7 @@
 <@defaultPage htmlTitle=pageTitle pageHeading=pageTitle errorItems=errorList pageSize=PageSize.FULL_WIDTH>
     <@grid.gridRow>
       <@grid.twoThirdsColumn>
-        <p class="govuk-body-lead">
+        <p class="govuk-body">
           Enter data relating to the flaring that has occurred over the most recent 12-month period.<br/>
           <br/>
           If the field, hub or facility has started up in this period, then enter zeros for the prior months with a relevant comment.<br/>

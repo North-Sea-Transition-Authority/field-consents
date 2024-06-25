@@ -14,7 +14,7 @@
         <ul>
           <li>Facility operator</li>
         </ul>
-        Contact ${customerBrandingConfigurationProperties.email()} if you think the facility should have this information.
+        Contact <@mailTo.mailToLink mailToEmailAddress=customerBrandingConfigurationProperties.email() /> if you think the facility should have this information.
       </@fdsNotificationBanner.notificationBannerContent>
     </@fdsNotificationBanner.notificationBannerInfo>
   </#assign>

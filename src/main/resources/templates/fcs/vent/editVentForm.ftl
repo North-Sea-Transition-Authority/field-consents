@@ -4,7 +4,7 @@
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.fieldconsents.validation.ErrorItem>" -->
 
 <@defaultPage htmlTitle=pageTitle pageHeading=pageTitle errorItems=errorList>
-  <p class="govuk-body-lead">
+  <p class="govuk-body">
     ${ADD_VENT_HINT_TEXT}
   </p>
   <@fdsForm.htmlForm>

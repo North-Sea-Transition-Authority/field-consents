@@ -169,7 +169,7 @@ class FlareVentReportGasDataFormValidatorTest {
     errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     assertThat(errorMap).containsOnly(
         entry("categoryAInertGasPercentage.inputValue", Collections.singletonList(INVALID_GAS_CONTENT_PERCENTAGE)),
-        entry("categoryAHydrocarbonPercentage.inputValue", Collections.singletonList(""))
+        entry("categoryAHydrocarbonPercentage.inputValue", Collections.singletonList(INVALID_GAS_CONTENT_PERCENTAGE))
     );
   }
 
@@ -184,7 +184,7 @@ class FlareVentReportGasDataFormValidatorTest {
     errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     assertThat(errorMap).containsOnly(
         entry("categoryBInertGasPercentage.inputValue", Collections.singletonList(INVALID_GAS_CONTENT_PERCENTAGE)),
-        entry("categoryBHydrocarbonPercentage.inputValue", Collections.singletonList(""))
+        entry("categoryBHydrocarbonPercentage.inputValue", Collections.singletonList(INVALID_GAS_CONTENT_PERCENTAGE))
     );
   }
 
@@ -199,7 +199,7 @@ class FlareVentReportGasDataFormValidatorTest {
     errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     assertThat(errorMap).containsOnly(
         entry("categoryCInertGasPercentage.inputValue", Collections.singletonList(INVALID_GAS_CONTENT_PERCENTAGE)),
-        entry("categoryCHydrocarbonPercentage.inputValue", Collections.singletonList(""))
+        entry("categoryCHydrocarbonPercentage.inputValue", Collections.singletonList(INVALID_GAS_CONTENT_PERCENTAGE))
     );
   }
 
@@ -219,11 +219,11 @@ class FlareVentReportGasDataFormValidatorTest {
     errorMap = ValidatorTestingUtil.getErrorsFieldsAndMessages(errors);
     assertThat(errorMap).containsOnly(
         entry("categoryAInertGasPercentage.inputValue", Collections.singletonList(INVALID_GAS_CONTENT_PERCENTAGE)),
-        entry("categoryAHydrocarbonPercentage.inputValue", Collections.singletonList("")),
+        entry("categoryAHydrocarbonPercentage.inputValue", Collections.singletonList(INVALID_GAS_CONTENT_PERCENTAGE)),
         entry("categoryBInertGasPercentage.inputValue", Collections.singletonList(INVALID_GAS_CONTENT_PERCENTAGE)),
-        entry("categoryBHydrocarbonPercentage.inputValue", Collections.singletonList("")),
+        entry("categoryBHydrocarbonPercentage.inputValue", Collections.singletonList(INVALID_GAS_CONTENT_PERCENTAGE)),
         entry("categoryCInertGasPercentage.inputValue", Collections.singletonList(INVALID_GAS_CONTENT_PERCENTAGE)),
-        entry("categoryCHydrocarbonPercentage.inputValue", Collections.singletonList("")),
+        entry("categoryCHydrocarbonPercentage.inputValue", Collections.singletonList(INVALID_GAS_CONTENT_PERCENTAGE)),
         entry("evaluatedPerCategory", Collections.singletonList(EVALUATED_PER_CATEGORY_MISSING))
     );
   }

@@ -21,7 +21,7 @@
                 <li>Associated licences</li>
               </#if>
             </ul>
-            Contact ${customerBrandingConfigurationProperties.email()} if you think the field should have this information.
+            Contact <@mailTo.mailToLink mailToEmailAddress=customerBrandingConfigurationProperties.email() /> if you think the field should have this information.
           </@fdsNotificationBanner.notificationBannerContent>
         </@fdsNotificationBanner.notificationBannerInfo>
       </@grid.twoThirdsColumn>
