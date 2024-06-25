@@ -33,7 +33,7 @@ class ConsentLengthFormValidatorTest {
 
   private static final String CONSENT_LENGTH_PERIOD_EMPTY = "Select the period of the consent you are applying for";
 
-  private static final String ANNUAL_CONSENT_YEAR_EMPTY = "Enter a year";
+  private static final String ANNUAL_CONSENT_YEAR_EMPTY = "Select a year";
 
   private static final String ANNUAL_CONSENT_YEAR_INVALID = "A year must be a whole number";
 
@@ -49,7 +49,7 @@ class ConsentLengthFormValidatorTest {
 
   private static final String SHORT_TERM_END_DATE_INVALID = "End date must be a real date";
 
-  private static final String LONG_TERM_START_YEAR_EMPTY = "Enter a start year";
+  private static final String LONG_TERM_START_YEAR_EMPTY = "Select a start year";
 
   private static final String LONG_TERM_START_YEAR_INVALID = "A start year must be a whole number";
 

@@ -8,7 +8,7 @@
   <@fdsForm.htmlForm actionUrl=springUrl(submitUrl)>
     <@fdsRadio.radioGroup path="form.consentLengthType" hiddenContent=true labelText="Select the period of the consent you are applying for" fieldsetHeadingSize="h1" fieldsetHeadingClass="govuk-fieldset__legend--l">
       <@fdsInsetText.insetText>
-        The consent length will determine the data you need to provide in the following sections of the Task List
+        The consent length will determine the data you need to provide in the following sections of the application
       </@fdsInsetText.insetText>
       <#assign isFirstItem = true/>
       <#list consentTypes as option, displayText>

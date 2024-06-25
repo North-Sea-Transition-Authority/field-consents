@@ -10,7 +10,7 @@
   <#assign warningBanner>
     <@fdsNotificationBanner.notificationBannerInfo bannerTitleText="Missing information or permissions">
       <@fdsNotificationBanner.notificationBannerContent headingText="Application cannot be submitted">
-        <#assign missingInformationExplanation="Not all mandatory sections shown on the task list have been completed"/>
+        <#assign missingInformationExplanation="Not all mandatory sections in the application have been completed"/>
         <#assign missingPermissionsExplanation="Your account does not have permission to submit applications for the primary operator"/>
         <#if !isSubmittable && !userHasPayAndSubmitPermission>
           <ul>
@@ -69,12 +69,12 @@
       </#if>
       <@fdsAction.submitButtons
         primaryButtonText=submitButtonText
-        secondaryLinkText="Back to task list"
+        secondaryLinkText="Back to application"
         linkSecondaryAction=true
         linkSecondaryActionUrl="${springUrl(backLinkUrl)}"
       />
     <#else>
-      <@fdsAction.link linkText="Back to task list" linkUrl="${springUrl(backLinkUrl)}"/>
+      <@fdsAction.link linkText="Back to application" linkUrl="${springUrl(backLinkUrl)}"/>
     </#if>
   </@fdsForm.htmlForm>
 </@defaultPage>

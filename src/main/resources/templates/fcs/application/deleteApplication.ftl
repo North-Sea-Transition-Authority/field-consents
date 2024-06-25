@@ -15,7 +15,7 @@
   </@fdsDetails.summaryDetails>
   <@fdsAction.submitButtons
     primaryButtonText="Delete draft application"
-    secondaryLinkText="Back to task list"
+    secondaryLinkText="Back to application"
     linkSecondaryAction=true
     linkSecondaryActionUrl=springUrl(backLinkUrl)
     primaryButtonClass="govuk-button govuk-button--warning"/>

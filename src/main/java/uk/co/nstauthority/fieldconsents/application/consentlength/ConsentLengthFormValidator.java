@@ -59,6 +59,7 @@ public class ConsentLengthFormValidator implements Validator {
   private void validateAnnualConsentYear(@NotNull Errors errors, ConsentLengthForm form) {
     // annual must start in the following year
     IntegerInputValidator.builder()
+        .emptyInputErrorMessage("Select a year")
         .mustBeMoreThanOrEqualTo(Year.now().getValue() + 1)
         .validate(form.getAnnualConsentYear(), errors);
   }
@@ -68,6 +69,7 @@ public class ConsentLengthFormValidator implements Validator {
 
     // Long term start year
     IntegerInputValidator.builder()
+        .emptyInputErrorMessage("Select a start year")
         .mustBeMoreThanOrEqualTo(currentYear)
         .mustBeMoreThanOrEqualToErrorMessage(LONG_TERM_START_YEAR_BEFORE_CURRENT_YEAR)
         .validate(form.getLongTermStartYear(), errors);
