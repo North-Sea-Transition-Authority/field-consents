@@ -19,13 +19,13 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.Assign
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.ENERGY_PORTAL_USER_1;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.AssignmentTestUtil.SERVICE_USER_DETAIL_USER_1;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_ASSIGN_OWNERSHIP;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_REASSIGN_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.notificationBanner;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -82,7 +82,7 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
 
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(Collections.emptyList());
+        .thenReturn(Set.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(CaseAssignmentController.class)
             .getCaseAssignment(APPLICATION_ID, null)))
@@ -102,9 +102,8 @@ class CaseAssignmentControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(DUMMY_APP_REF);
     when(caseAssignmentService.getCaseOfficerAssignmentCandidates(applicationVersion, user))
         .thenReturn(CASE_OFFICER_ASSIGNMENT_CANDIDATES);
-
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CASE_OFFICER_ASSIGN_OWNERSHIP));
+    when(caseProcessingActionService.userHasAnyAction(applicationVersion, user, CASE_OFFICER_ASSIGN_OWNERSHIP, CASE_OFFICER_REASSIGN_OWNERSHIP))
+        .thenReturn(true);
 
     mockMvc.perform(get(ReverseRouter.route(on(CaseAssignmentController.class)
             .getCaseAssignment(APPLICATION_ID, null)))

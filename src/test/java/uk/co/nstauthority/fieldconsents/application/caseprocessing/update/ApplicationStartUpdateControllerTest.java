@@ -18,9 +18,8 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.update
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -69,7 +68,7 @@ class ApplicationStartUpdateControllerTest extends AbstractApplicationController
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(Collections.emptyList());
+        .thenReturn(Set.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationStartUpdateController.class)
             .updateApplicationEntryPoint(APPLICATION_ID)))
@@ -85,8 +84,11 @@ class ApplicationStartUpdateControllerTest extends AbstractApplicationController
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(OPERATOR_UPDATE_APPLICATION));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        OPERATOR_UPDATE_APPLICATION
+    )).thenReturn(true);
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationStartUpdateController.class)
             .updateApplicationEntryPoint(APPLICATION_ID)))
@@ -161,7 +163,7 @@ class ApplicationStartUpdateControllerTest extends AbstractApplicationController
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(Collections.emptyList());
+        .thenReturn(Set.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationStartUpdateController.class)
             .updateApplicationEntryPoint(APPLICATION_ID)))
@@ -177,8 +179,11 @@ class ApplicationStartUpdateControllerTest extends AbstractApplicationController
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(OPERATOR_UPDATE_APPLICATION));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        OPERATOR_UPDATE_APPLICATION
+    )).thenReturn(true);
     when(applicationUpdateRequestViewService.getOpenApplicationUpdateRequestView(applicationVersion))
         .thenReturn(applicationUpdateRequestView);
 
@@ -230,7 +235,7 @@ class ApplicationStartUpdateControllerTest extends AbstractApplicationController
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(Collections.emptyList());
+        .thenReturn(Set.of());
 
     mockMvc.perform(post(ReverseRouter.route(on(ApplicationStartUpdateController.class)
             .startUpdate(APPLICATION_ID, null)))
@@ -246,8 +251,11 @@ class ApplicationStartUpdateControllerTest extends AbstractApplicationController
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(OPERATOR_UPDATE_APPLICATION));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        OPERATOR_UPDATE_APPLICATION
+    )).thenReturn(true);
 
     mockMvc.perform(post(ReverseRouter.route(on(ApplicationStartUpdateController.class)
             .startUpdate(APPLICATION_ID, null)))

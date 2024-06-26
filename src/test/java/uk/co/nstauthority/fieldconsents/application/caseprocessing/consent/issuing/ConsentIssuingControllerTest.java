@@ -10,12 +10,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.APPROVE_FOR_ISSUING;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.ISSUE_CONSENT;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.UNAPPROVE_FOR_ISSUING;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.notificationBanner;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
@@ -114,7 +118,7 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
 
   @SecurityTest
   void getConsentIssuing_userDoesNotHaveConsentIssuingCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(ConsentIssuingController.class).getConsentIssuing(APPLICATION_ID, null)))
             .with(user(user)))
@@ -139,8 +143,7 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
         List.of(SummaryFileView.previewSummaryFrom(application, documentsInstanceSummaryView, true))
     );
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.CONSENT_ISSUING));
+    when(caseProcessingActionService.userHasAnyAction(applicationVersion, user, CaseProcessingActionItem.CONSENT_ISSUING)).thenReturn(true);
     when(consentIssuingApprovalService.getConsentIssuingApprovalSummaryView(application)).thenReturn(Optional.empty());
     when(
         caseProcessingActionService.getUserActionViewsForGroup(
@@ -197,8 +200,11 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
         List.of(SummaryFileView.previewSummaryFrom(application, documentsInstanceSummaryView, true))
     );
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.CONSENT_ISSUING));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CaseProcessingActionItem.CONSENT_ISSUING
+    )).thenReturn(true);
     when(consentIssuingApprovalService.getConsentIssuingApprovalSummaryView(application))
         .thenReturn(Optional.of(consentIssuingApprovalSummaryView));
     when(
@@ -244,7 +250,7 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
 
   @SecurityTest
   void approveForIssuing_userDoesNotHaveApproveForIssuingCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
 
     mockMvc.perform(post(ReverseRouter.route(on(ConsentIssuingController.class).approveForIssuing(APPLICATION_ID, null, null)))
             .with(csrf())
@@ -254,8 +260,7 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
 
   @SecurityTest
   void approveForIssuing() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.APPROVE_FOR_ISSUING));
+    when(caseProcessingActionService.userHasAnyAction(applicationVersion, user, APPROVE_FOR_ISSUING)).thenReturn(true);
 
     var expectedNotificationBanner = NotificationBanner.builder()
         .withBannerType(NotificationBannerType.SUCCESS)
@@ -281,7 +286,7 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
 
   @SecurityTest
   void getIssueConsent_userDoesNotHaveIssueConsentCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(ConsentIssuingController.class).getIssueConsent(APPLICATION_ID)))
             .with(user(user)))
@@ -299,8 +304,7 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
         .withApplicationVersionStatus(applicationVersion.getStatus())
         .build();
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.ISSUE_CONSENT));
+    when(caseProcessingActionService.userHasAnyAction(applicationVersion, user, ISSUE_CONSENT)).thenReturn(true);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(applicationContext);
 
@@ -329,8 +333,7 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
     var previousConsent = ConsentTestUtil.newBuilder().build();
     var previousConsentApplicationReference = "Test/application/reference/2";
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.ISSUE_CONSENT));
+    when(caseProcessingActionService.userHasAnyAction(applicationVersion, user, ISSUE_CONSENT)).thenReturn(true);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(applicationContext);
     when(consentService.getPreviousConsent(application)).thenReturn(previousConsent);
@@ -356,7 +359,7 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
 
   @SecurityTest
   void unapproveForIssuing_userDoesNotHaveUnapproveForIssuingCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
 
     mockMvc.perform(post(ReverseRouter.route(on(ConsentIssuingController.class).unapproveForIssuing(APPLICATION_ID, null)))
             .with(csrf())
@@ -366,10 +369,8 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
 
   @SecurityTest
   void unapproveForIssuing() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.UNAPPROVE_FOR_ISSUING));
-    when(applicationService.getApplicationById(APPLICATION_ID))
-        .thenReturn(application);
+    when(caseProcessingActionService.userHasAnyAction(applicationVersion, user, UNAPPROVE_FOR_ISSUING)).thenReturn(true);
+    when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
 
     var expectedNotificationBanner = NotificationBanner.builder()
         .withBannerType(NotificationBannerType.SUCCESS)
@@ -396,7 +397,7 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
 
   @SecurityTest
   void issueConsent_userDoesNotHaveIssueConsentCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
 
     mockMvc.perform(post(ReverseRouter.route(on(ConsentIssuingController.class).issueConsent(APPLICATION_ID, null, null)))
             .with(csrf())
@@ -413,8 +414,7 @@ class ConsentIssuingControllerTest extends AbstractApplicationControllerTest {
         .withHeadingContent("Consent issued for %s".formatted(applicationReference))
         .build();
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.ISSUE_CONSENT));
+    when(caseProcessingActionService.userHasAnyAction(applicationVersion, user, ISSUE_CONSENT)).thenReturn(true);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
 
     mockMvc.perform(post(ReverseRouter.route(on(ConsentIssuingController.class).issueConsent(APPLICATION_ID, null, null)))

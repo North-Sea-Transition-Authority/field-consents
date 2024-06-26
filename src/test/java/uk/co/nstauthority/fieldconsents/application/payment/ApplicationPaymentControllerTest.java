@@ -106,16 +106,13 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
 
   @SecurityTest
   void getStartPayment_userDoesNotHaveOperatorPayAndSubmitApplicationCaseProcessingAction() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of());
-
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationPaymentController.class)
             .getStartPayment(APPLICATION_ID, null)))
             .with(user(user)))
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void getStartPayment_userDoesNotHaveOperatorReturnApplicationToInProgressFromAwaitingPaymentCaseProcessingAction()
       throws Exception {
     var applicationReference = "testApplicationReference";
@@ -128,8 +125,7 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
     var paymentAmountPence = 93000;
     var absoluteGetStartPaymentUrl = "testAbsoluteGetStartPaymentUrl";
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(OPERATOR_PAY_AND_SUBMIT_APPLICATION));
+    when(caseProcessingActionService.userHasAnyAction(applicationVersion, user, OPERATOR_PAY_AND_SUBMIT_APPLICATION)).thenReturn(true);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(applicationContext);
     when(applicationPaymentService.getPaymentDescription(applicationVersion)).thenReturn(paymentDescription);
@@ -167,7 +163,7 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
         .andExpect(model().attribute("sharePaymentMailToLink", expectedSharePaymentMailToLink));
   }
 
-  @Test
+  @SecurityTest
   void getStartPayment_userDoesHaveOperatorReturnApplicationToInProgressFromAwaitingPaymentCaseProcessingAction()
       throws Exception {
     var applicationReference = "testApplicationReference";
@@ -180,8 +176,18 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
     var paymentAmountPence = 93000;
     var absoluteGetStartPaymentUrl = "testAbsoluteGetStartPaymentUrl";
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(
-        List.of(OPERATOR_PAY_AND_SUBMIT_APPLICATION, OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        OPERATOR_PAY_AND_SUBMIT_APPLICATION
+    )).thenReturn(true);
+
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT
+    )).thenReturn(true);
+
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
     when(applicationContextService.getApplicationContext(applicationVersion)).thenReturn(applicationContext);
     when(applicationPaymentService.getPaymentDescription(applicationVersion)).thenReturn(paymentDescription);
@@ -228,9 +234,6 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
 
   @SecurityTest
   void startPayment_userDoesNotHaveOperatorPayAndSubmitApplicationCaseProcessingAction() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of());
-
     mockMvc.perform(post(ReverseRouter.route(on(ApplicationPaymentController.class).startPayment(APPLICATION_ID, null)))
             .with(csrf())
             .with(user(user)))
@@ -239,8 +242,6 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
 
   @Test
   void startPayment_paymentAmountPenceZero() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(OPERATOR_PAY_AND_SUBMIT_APPLICATION));
     when(applicationPaymentService.getPaymentAmountPence(applicationVersion)).thenReturn(0);
 
     mockMvc.perform(post(ReverseRouter.route(on(ApplicationPaymentController.class).startPayment(APPLICATION_ID, null)))
@@ -260,8 +261,6 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
     var paymentId = UUID.randomUUID();
     var createCardPaymentResult = mock(CreateCardPaymentResult.class);
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(OPERATOR_PAY_AND_SUBMIT_APPLICATION));
     when(applicationPaymentService.getPaymentAmountPence(applicationVersion)).thenReturn(100);
     when(absoluteUrlService.getAbsoluteUrl(ReverseRouter.route(on(ApplicationPaymentController.class)
         .getPaymentProcessed(APPLICATION_ID, paymentId, null, null)))).thenReturn(absoluteGetPaymentProcessedUrl);
@@ -288,8 +287,6 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
     var govPayNextUrl = "testGovPayNextUrl";
     var createCardPaymentResult = mock(CreateCardPaymentResult.class);
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(OPERATOR_PAY_AND_SUBMIT_APPLICATION));
     when(applicationPaymentService.getPaymentAmountPence(applicationVersion)).thenReturn(100);
     when(absoluteUrlService.getAbsoluteUrl(ReverseRouter.route(on(ApplicationPaymentController.class)
         .getPaymentProcessed(APPLICATION_ID, paymentId, null, null)))).thenReturn(absoluteGetPaymentProcessedUrl);
@@ -320,8 +317,6 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
   @SecurityTest
   void returnToInProgress_userDoesNotHaveOperatorReturnApplicationToInProgressFromAwaitingPaymentCaseProcessingAction()
       throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of());
 
     mockMvc.perform(post(ReverseRouter.route(on(ApplicationPaymentController.class)
             .returnToInProgress(APPLICATION_ID, null)))
@@ -336,8 +331,6 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
     var paymentDto2 = mock(PaymentDto.class);
     var paymentDtos = List.of(paymentDto1, paymentDto2);
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT));
     when(applicationPaymentService.getAndRefreshPaymentDtos(applicationVersion)).thenReturn(paymentDtos);
     when(paymentDto1.status()).thenReturn(PaymentStatus.FAILED);
     when(paymentDto1.status()).thenReturn(PaymentStatus.SUCCESS);
@@ -361,8 +354,6 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
     var paymentDto2 = mock(PaymentDto.class);
     var paymentDtos = List.of(paymentDto1, paymentDto2);
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT));
     when(applicationPaymentService.getAndRefreshPaymentDtos(applicationVersion)).thenReturn(paymentDtos);
     when(paymentDto1.status()).thenReturn(PaymentStatus.FAILED);
     when(paymentDto1.status()).thenReturn(PaymentStatus.IN_PROGRESS);
@@ -389,9 +380,6 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
 
   @SecurityTest
   void getPaymentProcessed_userDoesNotHaveOperatorPayAndSubmitApplicationCaseProcessingAction() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of());
-
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationPaymentController.class)
             .getPaymentProcessed(APPLICATION_ID, PAYMENT_ID, null, null)))
             .with(user(user)))
@@ -400,8 +388,6 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
 
   @Test
   void getPaymentProcessed_paymentIsNotForApplicationVersion() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(OPERATOR_PAY_AND_SUBMIT_APPLICATION));
     when(applicationPaymentService.isPaymentForApplicationVersion(PAYMENT_ID, applicationVersion)).thenReturn(false);
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationPaymentController.class)
@@ -412,8 +398,6 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
 
   @Test
   void getPaymentProcessed_paymentStatusSuccess() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(OPERATOR_PAY_AND_SUBMIT_APPLICATION));
     when(applicationPaymentService.handlePaymentProcessed(PAYMENT_ID))
         .thenReturn(PaymentStatus.SUCCESS);
     when(applicationPaymentService.isPaymentForApplicationVersion(PAYMENT_ID, applicationVersion)).thenReturn(true);
@@ -428,8 +412,6 @@ class ApplicationPaymentControllerTest extends AbstractApplicationControllerTest
 
   @Test
   void getPaymentProcessed_paymentStatusNotSuccess() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(OPERATOR_PAY_AND_SUBMIT_APPLICATION));
     when(applicationPaymentService.handlePaymentProcessed(PAYMENT_ID))
         .thenReturn(PaymentStatus.IN_PROGRESS);
     when(applicationPaymentService.isPaymentForApplicationVersion(PAYMENT_ID, applicationVersion)).thenReturn(true);

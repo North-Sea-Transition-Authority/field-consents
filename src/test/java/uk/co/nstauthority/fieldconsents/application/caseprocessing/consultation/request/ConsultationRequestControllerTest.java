@@ -23,8 +23,8 @@ import java.sql.Date;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
 import java.util.Optional;
+import java.util.Set;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -104,7 +104,7 @@ class ConsultationRequestControllerTest extends AbstractApplicationControllerTes
   @SecurityTest
   void getConsultationRequestForm_whenUserDoesNotHavePermission_thenIsForbidden() throws Exception {
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(Collections.emptyList());
+        .thenReturn(Set.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(ConsultationRequestController.class)
             .getConsultationRequestForm(applicationId)))
@@ -144,7 +144,7 @@ class ConsultationRequestControllerTest extends AbstractApplicationControllerTes
   @SecurityTest
   void submitConsultationRequestForm_whenUserDoesNotHavePermission_thenIsForbidden() throws Exception {
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(Collections.emptyList());
+        .thenReturn(Set.of());
 
     mockMvc.perform(post(ReverseRouter.route(on(ConsultationRequestController.class)
             .submitConsultationRequestForm(applicationId, null, null, null, null)))

@@ -15,6 +15,7 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -73,7 +74,7 @@ class ConsultationControllerTest extends AbstractApplicationControllerTest {
 
   @SecurityTest
   void getConsultations_doesNotHavePermission() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Collections.emptyList());
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
     mockMvc.perform(get(ReverseRouter.route(on(CONTROLLER_CLASS)
             .getConsultations(APPLICATION_ID, null)))
             .with(user(user)))

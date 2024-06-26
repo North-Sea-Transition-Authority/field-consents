@@ -31,8 +31,8 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 
 import java.time.Clock;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -100,7 +100,7 @@ class TechnicalReviewControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
 
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(Collections.emptyList());
+        .thenReturn(Set.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(TechnicalReviewController.class)
             .getTechnicalReviews(APPLICATION_ID, null)))
@@ -121,8 +121,11 @@ class TechnicalReviewControllerTest extends AbstractApplicationControllerTest {
     when(technicalReviewSummaryService.getTechnicalReviewSummaryItems(applicationVersion.getApplication()))
         .thenReturn(Collections.emptyList());
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(TECHNICAL_REVIEWS));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        TECHNICAL_REVIEWS
+    )).thenReturn(true);;
 
     mockMvc.perform(get(ReverseRouter.route(on(TechnicalReviewController.class)
             .getTechnicalReviews(APPLICATION_ID, null)))
@@ -172,7 +175,7 @@ class TechnicalReviewControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
 
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(Collections.emptyList());
+        .thenReturn(Set.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(TechnicalReviewController.class)
             .getTechnicalReviewRequest(APPLICATION_ID, null)))
@@ -191,9 +194,11 @@ class TechnicalReviewControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(new TechnicalReviewRequestForm());
     when(applicationService.generateApplicationReference(applicationVersion))
         .thenReturn(DUMMY_APP_REF);
-
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(TECHNICAL_REVIEW_REQUEST));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        TECHNICAL_REVIEW_REQUEST
+    )).thenReturn(true);
 
     mockMvc.perform(get(ReverseRouter.route(on(TechnicalReviewController.class)
             .getTechnicalReviewRequest(APPLICATION_ID, null)))

@@ -22,6 +22,7 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -86,7 +87,7 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
 
   @SecurityTest
   void getAddDocumentInstanceSectionBefore_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationDocumentInstanceSectionController.class)
             .getAddDocumentInstanceSectionBefore(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID)))
@@ -104,8 +105,11 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
         new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
     );
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS
+    )).thenReturn(true);
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
     when(applicationDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
@@ -138,7 +142,7 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
 
   @SecurityTest
   void addDocumentInstanceSectionBefore_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
 
     mockMvc.perform(post(ReverseRouter.route(on(ApplicationDocumentInstanceSectionController.class)
             .addDocumentInstanceSectionBefore(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
@@ -157,8 +161,11 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
         new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
     );
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS
+    )).thenReturn(true);
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
     when(applicationDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
@@ -200,8 +207,11 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
   void addDocumentInstanceSectionBefore_nullParent() throws Exception {
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS
+    )).thenReturn(true);
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
     when(applicationDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
@@ -239,8 +249,11 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
         .withParentId(parentId)
         .build();
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS
+    )).thenReturn(true);
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
     when(applicationDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
@@ -280,7 +293,7 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
 
   @SecurityTest
   void getAddDocumentInstanceSectionAfter_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationDocumentInstanceSectionController.class)
             .getAddDocumentInstanceSectionAfter(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID)))
@@ -298,8 +311,11 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
         new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
     );
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS
+    )).thenReturn(true);
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
     when(applicationDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
@@ -332,7 +348,7 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
 
   @SecurityTest
   void addDocumentInstanceSectionAfter_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
 
     mockMvc.perform(post(ReverseRouter.route(on(ApplicationDocumentInstanceSectionController.class)
             .addDocumentInstanceSectionAfter(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
@@ -351,8 +367,11 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
         new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
     );
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS
+    )).thenReturn(true);
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
     when(applicationDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
@@ -394,8 +413,11 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
   void addDocumentInstanceSectionAfter_nullParent() throws Exception {
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS
+    )).thenReturn(true);
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
     when(applicationDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
@@ -433,8 +455,11 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
         .withParentId(parentId)
         .build();
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS
+    )).thenReturn(true);
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
     when(applicationDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
@@ -474,7 +499,7 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
 
   @SecurityTest
   void getAddDocumentInstanceSubsection_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationDocumentInstanceSectionController.class)
             .getAddDocumentInstanceSubsection(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID)))
@@ -492,8 +517,11 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
         new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
     );
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS
+    )).thenReturn(true);
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
     when(applicationDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
@@ -526,7 +554,7 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
 
   @SecurityTest
   void addDocumentInstanceSubsection_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
 
     mockMvc.perform(post(ReverseRouter.route(on(ApplicationDocumentInstanceSectionController.class)
             .addDocumentInstanceSubsection(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
@@ -545,8 +573,11 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
         new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
     );
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS
+    )).thenReturn(true);
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
     when(applicationDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
@@ -587,8 +618,11 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
   void addDocumentInstanceSubsection() throws Exception {
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS
+    )).thenReturn(true);
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
     when(applicationDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
@@ -626,7 +660,7 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
 
   @SecurityTest
   void getEditDocumentInstanceSection_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationDocumentInstanceSectionController.class)
             .getEditDocumentInstanceSection(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID)))
@@ -644,8 +678,11 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
         new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
     );
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS
+    )).thenReturn(true);
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
     when(applicationDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
@@ -678,7 +715,7 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
 
   @SecurityTest
   void editDocumentInstanceSection_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
 
     mockMvc.perform(post(ReverseRouter.route(on(ApplicationDocumentInstanceSectionController.class)
             .editDocumentInstanceSection(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID, null, null, null)))
@@ -697,8 +734,11 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
         new DocumentMailMergeFieldView("TEST_MNEMONIC_2", "Test description 2")
     );
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS
+    )).thenReturn(true);
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
     when(applicationDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
@@ -740,8 +780,11 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
   void editDocumentInstanceSection() throws Exception {
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS
+    )).thenReturn(true);
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
     when(applicationDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
@@ -775,7 +818,7 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
 
   @SecurityTest
   void getRemoveDocumentInstanceSection_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationDocumentInstanceSectionController.class)
             .getRemoveDocumentInstanceSection(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID)))
@@ -787,8 +830,11 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
   void getRemoveDocumentInstanceSection() throws Exception {
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS
+    )).thenReturn(true);
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
     when(applicationDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);
@@ -814,7 +860,7 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
 
   @SecurityTest
   void removeDocumentInstanceSection_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
 
     mockMvc.perform(post(ReverseRouter.route(on(ApplicationDocumentInstanceSectionController.class)
             .removeDocumentInstanceSection(APPLICATION_ID, DOCUMENT_INSTANCE_SECTION_ID, null)))
@@ -827,8 +873,11 @@ class ApplicationDocumentInstanceSectionControllerTest extends AbstractApplicati
   void removeDocumentInstanceSection() throws Exception {
     var documentInstanceSectionDto = DocumentInstanceSectionDtoTestUtil.builder().build();
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS
+    )).thenReturn(true);
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
     when(applicationDocumentInstanceSectionControllerHelperService.getDocumentInstanceSectionDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_SECTION_ID))
         .thenReturn(documentInstanceSectionDto);

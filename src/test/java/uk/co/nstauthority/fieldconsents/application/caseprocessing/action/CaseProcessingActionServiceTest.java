@@ -1,10 +1,12 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.action;
 
 import static java.util.Collections.emptyMap;
+import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
@@ -83,7 +85,6 @@ import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regula
 import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.regulator.RegulatorTeamRole.TECHNICAL_REVIEWER;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -160,6 +161,24 @@ class CaseProcessingActionServiceTest {
     application = applicationVersion.getApplication();
   }
 
+  @Test
+  void userHasAnyAction_hasAction() {
+    doReturn(Set.of(APPLICATION_UPDATES))
+        .when(caseProcessingActionService)
+        .getAvailableUserActions(applicationVersion, USER, Set.of(APPLICATION_UPDATES));
+
+    assertThat(caseProcessingActionService.userHasAnyAction(applicationVersion, USER, APPLICATION_UPDATES)).isTrue();
+  }
+
+  @Test
+  void userHasAnyAction_doesNotHaveAction() {
+    doReturn(Set.of())
+        .when(caseProcessingActionService)
+        .getAvailableUserActions(applicationVersion, USER, Set.of(APPLICATION_UPDATES));
+
+    assertThat(caseProcessingActionService.userHasAnyAction(applicationVersion, USER, APPLICATION_UPDATES)).isFalse();
+  }
+
   @ParameterizedTest
   @MethodSource("getUserActionItems_arguments")
   void getUserActionItems_inProgress(Set<RolePermission> rolePermissions, Set<CaseStatusFlag> caseStatusFlags, ExpectedActions expectedActions) {
@@ -221,7 +240,8 @@ class CaseProcessingActionServiceTest {
         .when(caseProcessingActionService)
         .isActionEnabledForUser(any(CaseProcessingActionItem.class), eq(webUserAccountIdByTeamRole), eq(USER));
 
-    assertThat(caseProcessingActionService.getUserActionItems(applicationVersion, USER)).containsExactlyElementsOf(expectedActionItems);
+    assertThat(caseProcessingActionService.getUserActionItems(applicationVersion, USER))
+        .containsExactlyInAnyOrderElementsOf(expectedActionItems);
   }
 
   private static Stream<Arguments> getUserActionItems_arguments() {
@@ -451,11 +471,6 @@ class CaseProcessingActionServiceTest {
 
   @Test
   void getUserActionViews_excludingTaskListActionItemsAndGroupedActionItems() {
-    var actionItems = EnumSet.allOf(CaseProcessingActionItem.class)
-        .stream()
-        .sorted(Comparator.comparingInt(CaseProcessingActionItem::getDisplayOrder))
-        .toList();
-
     var taskListActionItems = Set.of(
         TECHNICAL_REVIEWS,
         CONSULTATIONS,
@@ -481,15 +496,22 @@ class CaseProcessingActionServiceTest {
         UNAPPROVE_FOR_ISSUING
     );
 
-    var actionViews = actionItems.stream()
+    var applicableActions = EnumSet.allOf(CaseProcessingActionItem.class)
+        .stream()
+        .filter(action -> !taskListActionItems.contains(action)) // not task list action
+        .filter(action -> !groupedActionItems.contains(action)) // not action group (page) action
+        .collect(toSet());
+
+    var actionViews = applicableActions.stream()
         .filter(actionItem -> !taskListActionItems.contains(actionItem)) // exclude these actions
         .filter(actionItem -> !groupedActionItems.contains(actionItem)) // exclude these actions
+        .sorted(Comparator.comparingInt(CaseProcessingActionItem::getDisplayOrder))
         .map(actionItem -> CaseProcessingActionView.from(actionItem, applicationVersion))
         .toList();
 
-    doReturn(actionItems)
+    doReturn(applicableActions)
         .when(caseProcessingActionService)
-        .getUserActionItems(applicationVersion, USER);
+        .getAvailableUserActions(applicationVersion, USER, applicableActions);
 
     assertThat(caseProcessingActionService.getUserActionViews(applicationVersion, USER))
         .containsExactlyElementsOf(actionViews);
@@ -501,10 +523,10 @@ class CaseProcessingActionServiceTest {
       CaseProcessingActionGroup actionGroup,
       List<CaseProcessingActionItem> expectedActionItems
   ) {
-    // get all available actions
-    doReturn(Arrays.asList(CaseProcessingActionItem.values()))
+    // assume whatever actions are passed in are available to the user
+    doAnswer(invocation -> invocation.getArgument(2, Set.class))
         .when(caseProcessingActionService)
-        .getUserActionItems(applicationVersion, USER);
+        .getAvailableUserActions(eq(applicationVersion), eq(USER), any(Set.class));
 
     var expectedActionViews = expectedActionItems.stream()
         .map(actionItem -> CaseProcessingActionView.from(actionItem, applicationVersion))
@@ -552,8 +574,8 @@ class CaseProcessingActionServiceTest {
     // we don't care about the ordering here because it's not going directly into a view
     assertThat(caseProcessingActionService.groupActionItemsByTaskListSection(EnumSet.allOf(CaseProcessingActionItem.class)))
         .containsExactlyInAnyOrderEntriesOf(Map.of(
-            CaseProcessingTaskListSection.CASE_TASKS, List.of(TECHNICAL_REVIEWS, CONSULTATIONS, CONSENT_PREPARATION, CONSENT_ISSUING),
-            CaseProcessingTaskListSection.OPTIONAL_CASE_TASKS, List.of(CHANGE_ACE_STATUS, APPLICATION_UPDATES, REGULATOR_ADD_CASE_NOTE)
+            CaseProcessingTaskListSection.CASE_TASKS, Set.of(TECHNICAL_REVIEWS, CONSULTATIONS, CONSENT_PREPARATION, CONSENT_ISSUING),
+            CaseProcessingTaskListSection.OPTIONAL_CASE_TASKS, Set.of(CHANGE_ACE_STATUS, APPLICATION_UPDATES, REGULATOR_ADD_CASE_NOTE)
         ));
   }
 

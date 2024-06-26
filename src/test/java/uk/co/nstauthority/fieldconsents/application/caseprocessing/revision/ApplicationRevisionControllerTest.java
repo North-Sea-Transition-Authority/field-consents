@@ -12,8 +12,8 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
@@ -59,7 +59,7 @@ class ApplicationRevisionControllerTest extends AbstractApplicationControllerTes
 
   @SecurityTest
   void getStartRevision_userDoesNotHaveReviseConsentCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationRevisionController.class).getStartRevision(APPLICATION_ID)))
             .with(user(user)))
@@ -70,8 +70,11 @@ class ApplicationRevisionControllerTest extends AbstractApplicationControllerTes
   void getStartRevision() throws Exception {
     var applicationReference = "Test/application/reference";
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.REVISE_CONSENT));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CaseProcessingActionItem.REVISE_CONSENT
+    )).thenReturn(true);
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(applicationReference);
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationRevisionController.class).getStartRevision(APPLICATION_ID)))
@@ -94,7 +97,7 @@ class ApplicationRevisionControllerTest extends AbstractApplicationControllerTes
 
   @SecurityTest
   void startRevision_userDoesNotHaveReviseConsentCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
 
     mockMvc.perform(post(ReverseRouter.route(on(ApplicationRevisionController.class).startRevision(APPLICATION_ID, null)))
             .with(csrf())
@@ -106,8 +109,11 @@ class ApplicationRevisionControllerTest extends AbstractApplicationControllerTes
   void startRevision() throws Exception {
     var newApplication = ApplicationTestUtil.getNewApplicationWithType(ApplicationType.PRODUCTION);
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.REVISE_CONSENT));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CaseProcessingActionItem.REVISE_CONSENT
+    )).thenReturn(true);
     when(applicationRevisionService.startApplicationRevision(applicationVersion, user)).thenReturn(newApplication);
 
     mockMvc.perform(post(ReverseRouter.route(on(ApplicationRevisionController.class).startRevision(APPLICATION_ID, null)))

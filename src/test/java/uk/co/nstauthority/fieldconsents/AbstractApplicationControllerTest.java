@@ -3,7 +3,6 @@ package uk.co.nstauthority.fieldconsents;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-import java.util.Arrays;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,6 +62,7 @@ public abstract class AbstractApplicationControllerTest extends AbstractControll
   }
 
   void setupWhenUserCanCallAllActionEndPoints() {
-    when(caseProcessingActionService.getUserActionItems(any(), any())).thenReturn(Arrays.asList(CaseProcessingActionItem.values()));
+    when(caseProcessingActionService.userHasAnyAction(any(), any(), any(CaseProcessingActionItem[].class)))
+        .thenReturn(true);
   }
 }

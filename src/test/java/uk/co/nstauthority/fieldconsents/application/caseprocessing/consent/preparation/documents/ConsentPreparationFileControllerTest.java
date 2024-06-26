@@ -1,7 +1,6 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.documents;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -10,16 +9,16 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSENT_ISSUING;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSENT_PREPARATION;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -33,7 +32,6 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
-import uk.co.nstauthority.fieldconsents.authorisation.ParameterizedSecurityTest;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.file.FieldConsentsFileUsage;
 import uk.co.nstauthority.fieldconsents.file.FileControllerHelperService;
@@ -82,7 +80,7 @@ class ConsentPreparationFileControllerTest extends AbstractApplicationController
 
   @SecurityTest
   void download_userDoesNotHaveConsentPreparationOrConsentIssuingCaseProcessingActionItems() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Collections.emptyList());
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
     mockMvc.perform(get(downloadUrl)
             .with(user(user)))
         .andExpect(status().isForbidden());
@@ -97,17 +95,20 @@ class ConsentPreparationFileControllerTest extends AbstractApplicationController
 
   @SecurityTest
   void delete_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Collections.emptyList());
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
     mockMvc.perform(post(deleteUrl)
             .with(user(user)))
         .andExpect(status().isForbidden());
   }
 
-  @ParameterizedSecurityTest
-  @EnumSource(value = CaseProcessingActionItem.class, names = { "CONSENT_PREPARATION", "CONSENT_ISSUING" })
-  void download(CaseProcessingActionItem caseProcessingActionItem) throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(caseProcessingActionItem));
+  @SecurityTest
+  void download() throws Exception {
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CONSENT_PREPARATION,
+        CONSENT_ISSUING
+    )).thenReturn(true);
     when(applicationService.getApplicationById(application.getId())).thenReturn(application);
     when(fileControllerHelperService.download(eq(fileId), fileUsageSupplierCaptor.capture(), eq(user)))
         .thenReturn(ResponseEntity.ok().build());
@@ -121,8 +122,11 @@ class ConsentPreparationFileControllerTest extends AbstractApplicationController
 
   @SecurityTest
   void delete() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(any(), any()))
-        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS
+    )).thenReturn(true);
     when(applicationService.getApplicationById(application.getId())).thenReturn(application);
     when(fileControllerHelperService.delete(eq(fileId), fileUsageSupplierCaptor.capture(), eq(user)))
         .thenReturn(ResponseEntity.ok().build());

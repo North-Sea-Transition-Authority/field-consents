@@ -25,6 +25,7 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -91,7 +92,7 @@ class ConsentPreparationDocumentsControllerTest extends AbstractApplicationContr
 
   @SecurityTest
   void editDocuments_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
     mockMvc.perform(get(ReverseRouter.route(on(ConsentPreparationDocumentsController.class)
             .editDocuments(APPLICATION_ID)))
             .with(user(user)))
@@ -104,8 +105,11 @@ class ConsentPreparationDocumentsControllerTest extends AbstractApplicationContr
     var uploadedFileForms = List.of(new UploadedFileForm());
     var consentSupportingDocumentForm = new ConsentPreparationSupportingDocumentsForm(uploadedFileForms);
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS
+    )).thenReturn(true);
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
     when(consentDocumentService.getConsentSupportingDocumentsForm(application)).thenReturn(consentSupportingDocumentForm);
     when(fileControllerHelperService.fileUploadComponentAttributes(eq(uploadedFileForms), eq(ConsentPreparationFileController.class), any(), any())).thenReturn(FILE_UPLOAD_COMPONENT_ATTRIBUTES);
@@ -126,8 +130,11 @@ class ConsentPreparationDocumentsControllerTest extends AbstractApplicationContr
   void saveDocuments() throws Exception {
     var uploadedFile = UploadedFileTestUtil.newBuilder().build();
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS
+    )).thenReturn(true);
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
 
     mockMvc.perform(post(ReverseRouter.route(on(ConsentPreparationDocumentsController.class)
@@ -169,8 +176,11 @@ class ConsentPreparationDocumentsControllerTest extends AbstractApplicationContr
     var uploadedFile = UploadedFileTestUtil.newBuilder().withDescription(null).build();
     var consentSupportingDocumentForm = ConsentPreparationSupportingDocumentsForm.from(List.of(uploadedFile));
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS
+    )).thenReturn(true);
 
     doAnswer(invocation -> {
       var bindingResult = invocation.getArgument(1, BindingResult.class);

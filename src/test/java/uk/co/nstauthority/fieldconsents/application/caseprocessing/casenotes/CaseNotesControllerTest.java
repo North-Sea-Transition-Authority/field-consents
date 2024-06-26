@@ -25,8 +25,8 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 
 import java.time.Instant;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -103,7 +103,7 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
   @SecurityTest
   void getNewCaseNote_checkEndPointSecurityOnly_forbidden() throws Exception {
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(Collections.emptyList());
+        .thenReturn(Set.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(CaseNotesController.class)
             .getNewCaseNote(APPLICATION_ID)))
@@ -116,10 +116,10 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
   void getNewCaseNote_checkEndPointSecurityOnly_allowed() throws Exception {
     when(applicationService.generateApplicationReference(applicationVersion))
         .thenReturn(DUMMY_CAPTION_TITLE);
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(REGULATOR_ADD_CASE_NOTE));
     when(fileControllerHelperService.fileUploadComponentAttributes(eq(EXISTING_DOCUMENTS), eq(CaseNotesController.class), any(), any()))
         .thenReturn(fileUploadComponentAttributes);
+    when(caseProcessingActionService.userHasAnyAction(applicationVersion, user, REGULATOR_ADD_CASE_NOTE))
+        .thenReturn(true);
 
     mockMvc.perform(get(ReverseRouter.route(on(CaseNotesController.class)
             .getNewCaseNote(APPLICATION_ID)))
@@ -139,7 +139,7 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
     when(applicationService.getApplicationReference(any(ApplicationVersion.class), any(String.class)))
         .thenReturn(DUMMY_CAPTION_TITLE);
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(REGULATOR_ADD_CASE_NOTE));
+        .thenReturn(Set.of(REGULATOR_ADD_CASE_NOTE));
     when(fileControllerHelperService.fileUploadComponentAttributes(eq(Collections.emptyList()), eq(CaseNotesController.class), any(), any()))
         .thenReturn(fileUploadComponentAttributes);
 
@@ -173,7 +173,7 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(REGULATOR_ADD_CASE_NOTE));
+        .thenReturn(Set.of(REGULATOR_ADD_CASE_NOTE));
     when(fileControllerHelperService.fileUploadComponentAttributes(eq(Collections.emptyList()), eq(CaseNotesController.class), any(), any()))
         .thenReturn(fileUploadComponentAttributes);
 
@@ -200,7 +200,7 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(REGULATOR_ADD_CASE_NOTE));
+        .thenReturn(Set.of(REGULATOR_ADD_CASE_NOTE));
     when(fileControllerHelperService.fileUploadComponentAttributes(eq(Collections.emptyList()), eq(CaseNotesController.class), any(), any()))
         .thenReturn(fileUploadComponentAttributes);
 
@@ -229,7 +229,7 @@ class CaseNotesControllerTest extends AbstractApplicationControllerTest {
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(REGULATOR_ADD_CASE_NOTE));
+        .thenReturn(Set.of(REGULATOR_ADD_CASE_NOTE));
     when(fileControllerHelperService.fileUploadComponentAttributes(eq(Collections.emptyList()), eq(CaseNoteFileController.class), any(), any()))
         .thenReturn(fileUploadComponentAttributes);
 

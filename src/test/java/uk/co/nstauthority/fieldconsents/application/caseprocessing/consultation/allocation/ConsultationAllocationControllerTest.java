@@ -17,10 +17,10 @@ import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.A
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -108,7 +108,7 @@ class ConsultationAllocationControllerTest extends AbstractApplicationController
     when(consultationService.getAllAvailableConsultationRespondersForConsultation(consultation)).thenReturn(TEAM_MEMBER_VIEWS);
     when(teamMemberViewService.getUsersMap(TEAM_MEMBER_VIEWS)).thenReturn(TEAM_MEMBER_VIEWS_AS_MAP);
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(Collections.singletonList(CaseProcessingActionItem.CONSULTATION_MANAGE_RESPONDER));
+        .thenReturn(Set.of(CaseProcessingActionItem.CONSULTATION_MANAGE_RESPONDER));
   }
 
   @SecurityTest

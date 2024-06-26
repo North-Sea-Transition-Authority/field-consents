@@ -12,6 +12,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSENT_ISSUING;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CONSENT_PREPARATION;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.notificationBanner;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
@@ -20,9 +22,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
@@ -38,7 +40,6 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
-import uk.co.nstauthority.fieldconsents.authorisation.ParameterizedSecurityTest;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.fieldconsents.fds.notificationbanner.NotificationBannerType;
@@ -86,7 +87,7 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
 
   @SecurityTest
   void getViewDocumentInstance_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationDocumentInstanceController.class)
             .getViewDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID)))
@@ -127,8 +128,11 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
         Map.of()
     );
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS
+    )).thenReturn(true);
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
     when(applicationDocumentInstanceControllerHelperService.getDocumentInstanceDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_ID))
         .thenReturn(documentInstanceDto);
@@ -162,7 +166,7 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
 
   @SecurityTest
   void getPreviewDocumentInstance_userDoesNotHaveConsentPreparationOrConsentIssuingCaseProcessingActionItems() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationDocumentInstanceController.class)
             .getPreviewDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID, true, null)))
@@ -170,17 +174,20 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
         .andExpect(status().isForbidden());
   }
 
-  @ParameterizedSecurityTest
-  @EnumSource(value = CaseProcessingActionItem.class, names = { "CONSENT_PREPARATION", "CONSENT_ISSUING" })
-  void getPreviewDocumentInstance_downloadFalse(CaseProcessingActionItem caseProcessingActionItem) throws Exception {
+  @SecurityTest
+  void getPreviewDocumentInstance_downloadFalse() throws Exception {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
     var pdfBytes = new byte[] {1, 2, 3};
     var pdfRenderResultWithGenerationData = new FieldConsentsPdfRenderResult(
         new ByteArrayResource(pdfBytes), "<html/>", Map.of()
     );
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(caseProcessingActionItem));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CONSENT_PREPARATION,
+        CONSENT_ISSUING
+    )).thenReturn(true);
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(applicationDocumentInstanceControllerHelperService.getDocumentInstanceDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_ID))
         .thenReturn(documentInstanceDto);
@@ -202,17 +209,20 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
         .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, "filename=\"%s\"".formatted(fileName)));
   }
 
-  @ParameterizedSecurityTest
-  @EnumSource(value = CaseProcessingActionItem.class, names = { "CONSENT_PREPARATION", "CONSENT_ISSUING" })
-  void getPreviewDocumentInstance_downloadTrue(CaseProcessingActionItem caseProcessingActionItem) throws Exception {
+  @SecurityTest
+  void getPreviewDocumentInstance_downloadTrue() throws Exception {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
     var pdfBytes = new byte[] {1, 2, 3};
     var pdfRenderResultWithGenerationData = new FieldConsentsPdfRenderResult(
       new ByteArrayResource(pdfBytes), "<html/>", Map.of()
     );
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(caseProcessingActionItem));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CONSENT_PREPARATION,
+        CONSENT_ISSUING
+    )).thenReturn(true);
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(applicationDocumentInstanceControllerHelperService.getDocumentInstanceDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_ID))
         .thenReturn(documentInstanceDto);
@@ -243,7 +253,7 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
 
   @SecurityTest
   void getReloadDocumentInstance_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationDocumentInstanceController.class)
             .getReloadDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID)))
@@ -256,8 +266,11 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
     var applicationReference = "Test/application/reference";
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS
+    )).thenReturn(true);
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
     when(applicationDocumentInstanceControllerHelperService.getDocumentInstanceDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_ID))
         .thenReturn(documentInstanceDto);
@@ -285,7 +298,7 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
 
   @SecurityTest
   void reloadDocumentInstance_userDoesNotHaveEditConsentDocumentsCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(List.of());
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
 
     mockMvc.perform(post(ReverseRouter.route(on(ApplicationDocumentInstanceController.class)
             .reloadDocumentInstance(APPLICATION_ID, DOCUMENT_INSTANCE_ID, null)))
@@ -298,8 +311,11 @@ class ApplicationDocumentInstanceControllerTest extends AbstractApplicationContr
   void reloadDocumentInstance() throws Exception {
     var documentInstanceDto = DocumentInstanceDtoTestUtil.builder().build();
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CaseProcessingActionItem.EDIT_CONSENT_DOCUMENTS
+    )).thenReturn(true);
     when(applicationService.getApplicationById(APPLICATION_ID)).thenReturn(application);
     when(applicationDocumentInstanceControllerHelperService.getDocumentInstanceDtoForApplicationOrThrow(application, DOCUMENT_INSTANCE_ID))
         .thenReturn(documentInstanceDto);

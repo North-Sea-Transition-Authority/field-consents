@@ -96,8 +96,11 @@ public class ApplicationPaymentController {
             absoluteGetStartPaymentUrl
         );
 
-    var canReturnToInProgress = caseProcessingActionService.getUserActionItems(applicationVersion, user)
-        .contains(OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT);
+    var canReturnToInProgress = caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        OPERATOR_RETURN_APPLICATION_TO_IN_PROGRESS_FROM_AWAITING_PAYMENT
+    );
 
     return new ModelAndView("fcs/application/startPayment")
         .addObject("applicationReference", applicationReference)

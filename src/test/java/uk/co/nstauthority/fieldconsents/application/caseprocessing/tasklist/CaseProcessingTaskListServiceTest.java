@@ -12,7 +12,6 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.taskli
 
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,12 +47,12 @@ class CaseProcessingTaskListServiceTest {
 
   private ApplicationVersion applicationVersion;
 
-  private List<CaseProcessingActionItem> actionItems;
+  private Set<CaseProcessingActionItem> actionItems;
 
   @BeforeEach
   void setUp() {
     applicationVersion = ApplicationTestUtil.getSubmittedApplicationVersionWithType(ApplicationType.FLARE);
-    actionItems = EnumSet.allOf(CaseProcessingActionItem.class).stream().toList();
+    actionItems = EnumSet.allOf(CaseProcessingActionItem.class);
   }
 
   @ParameterizedTest

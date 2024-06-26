@@ -24,9 +24,8 @@ import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.u
 import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.notificationBanner;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -83,7 +82,7 @@ class CamAssignmentControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
 
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(Collections.emptyList());
+        .thenReturn(Set.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(CamAssignmentController.class)
             .getCamAssignment(APPLICATION_ID, null)))
@@ -103,9 +102,8 @@ class CamAssignmentControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(DUMMY_APP_REF);
     when(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion, user))
         .thenReturn(CAM_USER_ASSIGNMENT_CANDIDATES);
-
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CAM_ASSIGN_OWNERSHIP));
+    when(caseProcessingActionService.userHasAnyAction(applicationVersion, user, CAM_ASSIGN_OWNERSHIP))
+        .thenReturn(true);
 
     mockMvc.perform(get(ReverseRouter.route(on(CamAssignmentController.class)
             .getCamAssignment(APPLICATION_ID, null)))
@@ -229,7 +227,7 @@ class CamAssignmentControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
 
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(Collections.emptyList());
+        .thenReturn(Set.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(CamAssignmentController.class)
             .getCamReassignment(APPLICATION_ID, null)))
@@ -249,9 +247,8 @@ class CamAssignmentControllerTest extends AbstractApplicationControllerTest {
         .thenReturn(DUMMY_APP_REF);
     when(camAssignmentService.getCamUserAssignmentCandidates(applicationVersion, user))
         .thenReturn(CAM_USER_ASSIGNMENT_CANDIDATES);
-
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CAM_REASSIGN_OWNERSHIP));
+    when(caseProcessingActionService.userHasAnyAction(applicationVersion, user, CAM_REASSIGN_OWNERSHIP))
+        .thenReturn(true);
 
     mockMvc.perform(get(ReverseRouter.route(on(CamAssignmentController.class)
             .getCamReassignment(APPLICATION_ID, null)))

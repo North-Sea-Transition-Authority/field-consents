@@ -1,6 +1,7 @@
 package uk.co.nstauthority.fieldconsents.application.caseprocessing.action;
 
 import static java.util.Map.entry;
+import static java.util.stream.Collectors.toSet;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature.CONSULTATION;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.APPLICATION_UPDATES;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.APPLICATION_UPDATE_REQUEST;
@@ -87,7 +88,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTypeFeature;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
@@ -341,13 +341,14 @@ public class CaseProcessingActionService {
           entry(UNAPPROVE_FOR_ISSUING, EnumSet.of(CaseProcessingActionGroup.CONSENT_ISSUING))
       );
 
-  @Autowired
-  public CaseProcessingActionService(ApplicationAccessService applicationAccessService,
-                                     CaseStatusFlagService caseStatusFlagService,
-                                     TechnicalReviewService technicalReviewService,
-                                     ConsultationService consultationService,
-                                     CaseAssignmentService caseAssignmentService,
-                                     CamAssignmentService camAssignmentService) {
+  CaseProcessingActionService(
+      ApplicationAccessService applicationAccessService,
+      CaseStatusFlagService caseStatusFlagService,
+      TechnicalReviewService technicalReviewService,
+      ConsultationService consultationService,
+      CaseAssignmentService caseAssignmentService,
+      CamAssignmentService camAssignmentService
+  ) {
     this.applicationAccessService = applicationAccessService;
     this.caseStatusFlagService = caseStatusFlagService;
     this.technicalReviewService = technicalReviewService;
@@ -356,24 +357,89 @@ public class CaseProcessingActionService {
     this.camAssignmentService = camAssignmentService;
   }
 
-  public List<CaseProcessingActionItem> getUserActionItems(ApplicationVersion applicationVersion,
-                                                           ServiceUserDetail user) {
-    var actions = caseStatusToActions.get(applicationVersion.getStatus());
+  public boolean userHasAnyAction(
+      ApplicationVersion applicationVersion,
+      ServiceUserDetail user,
+      CaseProcessingActionItem... actions
+  ) {
+    return !getAvailableUserActions(applicationVersion, user, Set.of(actions)).isEmpty();
+  }
 
-    if (actions == null) {
-      throw new IllegalStateException("Cannot find any actions for application version id %s with status %s"
-          .formatted(applicationVersion.getId(), applicationVersion.getStatus().name()));
-    }
+  // TODO: FCS-863 - this method looks up all actions, which the caller may not care about.
+  //  consider passing in only the actions which are applicable
+  public Set<CaseProcessingActionItem> getUserActionItems(ApplicationVersion applicationVersion, ServiceUserDetail user) {
+    var actions = EnumSet.allOf(CaseProcessingActionItem.class);
+    return getAvailableUserActions(applicationVersion, user, actions);
+  }
 
+  public List<CaseProcessingActionView> getUserActionViews(ApplicationVersion applicationVersion, ServiceUserDetail user) {
+    var applicableActions = EnumSet.allOf(CaseProcessingActionItem.class)
+        .stream()
+        .filter(action -> !actionsToTaskListSection.containsKey(action)) // not task list action
+        .filter(action -> !actionsToCaseProcessingActionGroup.containsKey(action)) // not action group (page) action
+        .collect(toSet());
+
+    var availableActions = getAvailableUserActions(applicationVersion, user, applicableActions);
+    return getCaseProcessingActionViews(applicationVersion, availableActions);
+  }
+
+  public List<CaseProcessingActionView> getUserActionViewsForGroup(
+      ApplicationVersion applicationVersion,
+      ServiceUserDetail user,
+      CaseProcessingActionGroup actionGroup
+  ) {
+    var applicableActions = EnumSet.allOf(CaseProcessingActionItem.class)
+        .stream()
+        .filter(actionsToCaseProcessingActionGroup::containsKey) // is not part of a group
+        .filter(action -> actionsToCaseProcessingActionGroup.get(action).contains(actionGroup))
+        .collect(toSet());
+
+    var availableActions = getAvailableUserActions(applicationVersion, user, applicableActions);
+    return getCaseProcessingActionViews(applicationVersion, availableActions);
+  }
+
+  private List<CaseProcessingActionView> getCaseProcessingActionViews(
+      ApplicationVersion applicationVersion,
+      Set<CaseProcessingActionItem> applicableActions
+  ) {
+    return applicableActions
+        .stream()
+        .sorted(Comparator.comparingInt(CaseProcessingActionItem::getDisplayOrder))
+        .map(action -> CaseProcessingActionView.from(action, applicationVersion))
+        .toList();
+  }
+
+  public Map<CaseProcessingTaskListSection, Set<CaseProcessingActionItem>> groupActionItemsByTaskListSection(
+      Collection<CaseProcessingActionItem> actionItems
+  ) {
+    return actionItems
+        .stream()
+        .filter(actionsToTaskListSection::containsKey)
+        .collect(Collectors.groupingBy(actionsToTaskListSection::get, toSet()));
+  }
+
+  Set<CaseProcessingActionItem> getAvailableUserActions(
+      ApplicationVersion applicationVersion,
+      ServiceUserDetail user,
+      Set<CaseProcessingActionItem> actions
+  ) {
+    // TODO: FCS-863 - user roles are looked up repeatedly despite only the actions changing in later invocations.
+    //  either pass them in or cache them
     var userRolePermissions = applicationAccessService.getApplicationPermissionsForUser(applicationVersion, user);
+    // TODO: FCS-863 - same here about looking up roles/teams over and over
     var assigneeMap = constructAssigneeMap(applicationVersion);
     var applicableByCaseStatusFlag = new EnumMap<CaseStatusFlag, Boolean>(CaseStatusFlag.class);
 
     return actions.stream()
+        // remove the actions which aren't applicable to the current application case status
+        .filter(caseStatusToActions.get(applicationVersion.getStatus())::contains)
+        // remove actions which are not allowed for this application type
         .filter(action -> applicationTypeFeatureFlagAllowed(applicationVersion, action))
-        // filter actions that the user has permissions for
+        // remove actions that the user doesn't have permission for
         .filter(action -> CollectionUtils.containsAny(actionsToPermissions.get(action), userRolePermissions))
-        // filter actions that the application version has all the status flags for
+        // remove "assignee only" actions if the user is not the assignee on the case (for an assignee role)
+        .filter(action -> isActionEnabledForUser(action, assigneeMap, user))
+        // remove actions that are missing any of their required case status flags
         .filter(action -> actionsToStatusFlags.getOrDefault(action, Set.of())
             .stream()
             .allMatch(caseStatusFlag ->
@@ -383,42 +449,7 @@ public class CaseProcessingActionService {
                 )
             )
         )
-        .filter(action -> isActionEnabledForUser(action, assigneeMap, user))
-        .toList();
-  }
-
-  public List<CaseProcessingActionView> getUserActionViews(ApplicationVersion applicationVersion,
-                                                           ServiceUserDetail user) {
-    return getUserActionItems(applicationVersion, user)
-        .stream()
-        .filter(action -> !actionsToTaskListSection.containsKey(action)) // not task list action
-        .filter(action -> !actionsToCaseProcessingActionGroup.containsKey(action)) // not action group (page) action
-        .sorted(Comparator.comparingInt(CaseProcessingActionItem::getDisplayOrder))
-        .map(action -> CaseProcessingActionView.from(action, applicationVersion))
-        .toList();
-  }
-
-  public List<CaseProcessingActionView> getUserActionViewsForGroup(
-      ApplicationVersion applicationVersion,
-      ServiceUserDetail user,
-      CaseProcessingActionGroup actionGroup
-  ) {
-    return getUserActionItems(applicationVersion, user)
-        .stream()
-        .filter(actionsToCaseProcessingActionGroup::containsKey)
-        .filter(action -> actionsToCaseProcessingActionGroup.get(action).contains(actionGroup))
-        .sorted(Comparator.comparingInt(CaseProcessingActionItem::getDisplayOrder))
-        .map(action -> CaseProcessingActionView.from(action, applicationVersion))
-        .toList();
-  }
-
-  public Map<CaseProcessingTaskListSection, List<CaseProcessingActionItem>> groupActionItemsByTaskListSection(
-      Collection<CaseProcessingActionItem> actionItems
-  ) {
-    return actionItems
-        .stream()
-        .filter(actionsToTaskListSection::containsKey)
-        .collect(Collectors.groupingBy(actionsToTaskListSection::get));
+        .collect(toSet());
   }
 
   Map<TeamRole, WebUserAccountId> constructAssigneeMap(ApplicationVersion applicationVersion) {

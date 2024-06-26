@@ -22,6 +22,7 @@ public class CaseProcessingTaskListService {
   }
 
   public List<TaskListSection> getTaskListSections(ApplicationVersion applicationVersion, ServiceUserDetail user) {
+    // TODO: FCS-863 - avoid looking up actions which may not be applicable to the task list
     var actionItems = caseProcessingActionService.getUserActionItems(applicationVersion, user);
     return caseProcessingActionService.groupActionItemsByTaskListSection(actionItems)
         .entrySet()

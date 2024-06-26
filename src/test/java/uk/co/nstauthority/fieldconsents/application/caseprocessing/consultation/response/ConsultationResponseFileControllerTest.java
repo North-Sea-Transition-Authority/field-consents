@@ -12,8 +12,8 @@ import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.A
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
-import java.util.Collections;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.BeforeEach;
@@ -87,7 +87,7 @@ class ConsultationResponseFileControllerTest extends AbstractApplicationControll
 
   @SecurityTest
   void download_doesNotHavePermission() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Collections.emptyList());
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
     mockMvc.perform(get(downloadUrl)
             .with(user(user)))
         .andExpect(status().isForbidden());
@@ -102,7 +102,7 @@ class ConsultationResponseFileControllerTest extends AbstractApplicationControll
 
   @SecurityTest
   void delete_doesNotHavePermission() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Collections.emptyList());
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
     mockMvc.perform(post(deleteUrl)
             .with(user(user)))
         .andExpect(status().isForbidden());

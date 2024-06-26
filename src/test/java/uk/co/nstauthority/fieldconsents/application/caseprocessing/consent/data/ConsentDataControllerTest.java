@@ -15,13 +15,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.EDIT_CONSENT_DATA;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.notificationBanner;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -33,7 +33,6 @@ import uk.co.nstauthority.fieldconsents.application.Application;
 import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
-import uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentFigureUnitService;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentFigureUnitView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.preparation.ConsentPreparationController;
@@ -91,7 +90,7 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
 
   @SecurityTest
   void editConsentData_userDoesNotHaveEditConsentDataCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Collections.emptyList());
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
     mockMvc.perform(get(ReverseRouter.route(on(ConsentDataController.class)
             .editConsentData(APPLICATION_ID)))
             .with(user(user)))
@@ -108,7 +107,7 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
 
   @SecurityTest
   void submitConsentData_userDoesNotHaveEditConsentDataCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Collections.emptyList());
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
     mockMvc.perform(post(ReverseRouter.route(on(ConsentDataController.class)
             .submitConsentData(APPLICATION_ID, null, null, null)))
             .with(user(user))
@@ -126,8 +125,7 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
 
     var consentFigureUnitView = ConsentFigureUnitView.fromShortTermOrAnnualProductionApplication(ProductionUnit.KSCM_PER_DAY);
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DATA));
+    when(caseProcessingActionService.userHasAnyAction(applicationVersion, user, EDIT_CONSENT_DATA)).thenReturn(true);
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
     when(consentDataService.getPrefilledConsentDataForm(applicationVersion, consentLengthDetails)).thenReturn(form);
@@ -151,8 +149,7 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
     var consentLengthType = ConsentLengthType.SHORT_TERM;
     consentLengthDetails.setConsentLength(consentLengthType);
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DATA));
+    when(caseProcessingActionService.userHasAnyAction(applicationVersion, user, EDIT_CONSENT_DATA)).thenReturn(true);
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
     when(consentDataService.findConsentData(application)).thenReturn(Optional.empty());
@@ -186,8 +183,7 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
 
     var consentData = ConsentDataTestUtil.newBuilder().build();
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DATA));
+    when(caseProcessingActionService.userHasAnyAction(applicationVersion, user, EDIT_CONSENT_DATA)).thenReturn(true);
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
     when(consentDataService.findConsentData(application)).thenReturn(Optional.of(consentData));
@@ -221,8 +217,7 @@ class ConsentDataControllerTest extends AbstractApplicationControllerTest {
 
     var consentFigureUnitView = ConsentFigureUnitView.fromShortTermOrAnnualProductionApplication(ProductionUnit.KSCM_PER_DAY);
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.EDIT_CONSENT_DATA));
+    when(caseProcessingActionService.userHasAnyAction(applicationVersion, user, EDIT_CONSENT_DATA)).thenReturn(true);
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(consentLengthService.getConsentLengthDetails(applicationVersion)).thenReturn(consentLengthDetails);
 

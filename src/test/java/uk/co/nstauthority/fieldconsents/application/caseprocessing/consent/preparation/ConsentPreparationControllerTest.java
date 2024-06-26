@@ -11,9 +11,9 @@ import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.A
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
@@ -95,7 +95,7 @@ class ConsentPreparationControllerTest extends AbstractApplicationControllerTest
 
   @SecurityTest
   void viewConsentPreparationPage_userDoesNotHaveConsentPreparationCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Collections.emptyList());
+    when(caseProcessingActionService.getUserActionItems(applicationVersion, user)).thenReturn(Set.of());
     mockMvc.perform(get(ReverseRouter.route(on(ConsentPreparationController.class)
             .viewConsentPreparationPage(APPLICATION_ID, null)))
             .with(user(user)))
@@ -104,8 +104,9 @@ class ConsentPreparationControllerTest extends AbstractApplicationControllerTest
 
   @SecurityTest
   void viewConsentPreparationPage_consentDataDoesNotExistAndUserHasEditConsentDataCaseProcessingActionItem() throws Exception {
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.CONSENT_PREPARATION, CaseProcessingActionItem.EDIT_CONSENT_DATA));
+    when(caseProcessingActionService.userHasAnyAction(applicationVersion, user, CaseProcessingActionItem.CONSENT_PREPARATION)).thenReturn(true);
+    when(caseProcessingActionService.userHasAnyAction(applicationVersion, user, CaseProcessingActionItem.EDIT_CONSENT_DATA)).thenReturn(true);
+
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(consentDataService.findConsentData(application)).thenReturn(Optional.empty());
 
@@ -121,8 +122,11 @@ class ConsentPreparationControllerTest extends AbstractApplicationControllerTest
     var consentPreparationGroupActionViewList =
         List.of(CaseProcessingActionView.from(CaseProcessingActionItem.CAM_ASSIGN_OWNERSHIP, applicationVersion));
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.CONSENT_PREPARATION));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CaseProcessingActionItem.CONSENT_PREPARATION
+    )).thenReturn(true);
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(consentDataService.findConsentData(application)).thenReturn(Optional.empty());
 
@@ -168,8 +172,9 @@ class ConsentPreparationControllerTest extends AbstractApplicationControllerTest
     var applicationAsset = ApplicationAssetTestUtil.newBuilder().withAssetType(AssetType.FIELD).build();
     var fieldEquityPartnerView = FieldEquityPartnersViewTestUtil.newBuilder().build();
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CaseProcessingActionItem.CONSENT_PREPARATION));
+    when(caseProcessingActionService.userHasAnyAction(applicationVersion, user, CaseProcessingActionItem.CONSENT_PREPARATION))
+        .thenReturn(true);
+
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID)).thenReturn(applicationVersion);
     when(consentDataService.findConsentData(application)).thenReturn(Optional.of(consentData));
 

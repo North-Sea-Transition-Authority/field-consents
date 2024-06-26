@@ -21,9 +21,8 @@ import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.u
 import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.notificationBanner;
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -74,7 +73,7 @@ class ApplicationWithdrawalControllerTest extends AbstractApplicationControllerT
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion));
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(Collections.emptyList());
+        .thenReturn(Set.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationWithdrawalController.class)
             .getApplicationWithdrawalRequest(APPLICATION_ID)))
@@ -94,8 +93,11 @@ class ApplicationWithdrawalControllerTest extends AbstractApplicationControllerT
         .thenReturn(DUMMY_APP_REF);
     when(applicationWithdrawalService.getWithdrawalRequestForm(applicationVersion)).thenReturn(new WithdrawalRequestForm());
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(OPERATOR_WITHDRAWAL_REQUEST));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        OPERATOR_WITHDRAWAL_REQUEST
+    )).thenReturn(true);
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationWithdrawalController.class)
             .getApplicationWithdrawalRequest(APPLICATION_ID)))
@@ -117,8 +119,11 @@ class ApplicationWithdrawalControllerTest extends AbstractApplicationControllerT
         .thenReturn(DUMMY_APP_REF);
     when(applicationWithdrawalService.getWithdrawalRequestForm(applicationVersion)).thenReturn(form);
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(OPERATOR_WITHDRAWAL_REQUEST));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        OPERATOR_WITHDRAWAL_REQUEST
+    )).thenReturn(true);
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationWithdrawalController.class)
             .getApplicationWithdrawalRequest(APPLICATION_ID)))
@@ -153,8 +158,11 @@ class ApplicationWithdrawalControllerTest extends AbstractApplicationControllerT
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(OPERATOR_WITHDRAWAL_REQUEST));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        OPERATOR_WITHDRAWAL_REQUEST
+    )).thenReturn(true);
 
     doCallRealMethod().when(withdrawalRequestFormValidator).validate(any(), any());
 
@@ -179,8 +187,11 @@ class ApplicationWithdrawalControllerTest extends AbstractApplicationControllerT
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(OPERATOR_WITHDRAWAL_REQUEST));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        OPERATOR_WITHDRAWAL_REQUEST
+    )).thenReturn(true);
 
     doCallRealMethod().when(withdrawalRequestFormValidator).validate(any(), any());
 
@@ -215,7 +226,7 @@ class ApplicationWithdrawalControllerTest extends AbstractApplicationControllerT
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersion));
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(Collections.emptyList());
+        .thenReturn(Set.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationWithdrawalController.class)
             .getApplicationWithdrawalResponse(APPLICATION_ID)))
@@ -237,8 +248,11 @@ class ApplicationWithdrawalControllerTest extends AbstractApplicationControllerT
         .thenReturn(new WithdrawalResponseForm());
     when(withdrawalRequestViewService.getWithdrawalRequestView(applicationVersion))
         .thenReturn(getWithdrawalRequestView());
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CASE_OFFICER_WITHDRAWAL_RESPONSE));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CASE_OFFICER_WITHDRAWAL_RESPONSE
+    )).thenReturn(true);
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationWithdrawalController.class)
             .getApplicationWithdrawalResponse(APPLICATION_ID)))
@@ -263,8 +277,11 @@ class ApplicationWithdrawalControllerTest extends AbstractApplicationControllerT
         .thenReturn(form);
     when(withdrawalRequestViewService.getWithdrawalRequestView(applicationVersion))
         .thenReturn(withdrawalRequestView);
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CASE_OFFICER_WITHDRAWAL_RESPONSE));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CASE_OFFICER_WITHDRAWAL_RESPONSE
+    )).thenReturn(true);
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationWithdrawalController.class)
             .getApplicationWithdrawalResponse(APPLICATION_ID)))
@@ -300,8 +317,11 @@ class ApplicationWithdrawalControllerTest extends AbstractApplicationControllerT
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CASE_OFFICER_WITHDRAWAL_RESPONSE));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CASE_OFFICER_WITHDRAWAL_RESPONSE
+    )).thenReturn(true);
     when(withdrawalRequestViewService.getWithdrawalRequestView(applicationVersion))
         .thenReturn(getWithdrawalRequestView());
 
@@ -329,8 +349,11 @@ class ApplicationWithdrawalControllerTest extends AbstractApplicationControllerT
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CASE_OFFICER_WITHDRAWAL_RESPONSE));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CASE_OFFICER_WITHDRAWAL_RESPONSE
+    )).thenReturn(true);
     when(withdrawalRequestViewService.getWithdrawalRequestView(applicationVersion))
         .thenReturn(withdrawalRequestView);
 
@@ -364,8 +387,11 @@ class ApplicationWithdrawalControllerTest extends AbstractApplicationControllerT
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(APPLICATION_ID))
         .thenReturn(applicationVersion);
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(CASE_OFFICER_WITHDRAWAL_RESPONSE));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        CASE_OFFICER_WITHDRAWAL_RESPONSE
+    )).thenReturn(true);
     when(withdrawalRequestViewService.getWithdrawalRequestView(applicationVersion))
         .thenReturn(withdrawalRequestView);
 

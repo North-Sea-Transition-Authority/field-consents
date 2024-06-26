@@ -29,8 +29,8 @@ import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.
 
 import java.time.Clock;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -122,7 +122,7 @@ class ApplicationUpdateRequestControllerTest extends AbstractApplicationControll
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
 
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(Collections.emptyList());
+        .thenReturn(Set.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationUpdateRequestController.class)
             .getApplicationUpdateRequest(APPLICATION_ID)))
@@ -152,8 +152,11 @@ class ApplicationUpdateRequestControllerTest extends AbstractApplicationControll
         .when(applicationSummaryService)
         .addSummarySectionsToModelAndView(eq(applicationVersion), any(ModelAndView.class));
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(APPLICATION_UPDATE_REQUEST));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        APPLICATION_UPDATE_REQUEST
+    )).thenReturn(true);
 
     mockMvc.perform(get(ReverseRouter.route(on(ApplicationUpdateRequestController.class)
             .getApplicationUpdateRequest(APPLICATION_ID)))

@@ -75,12 +75,9 @@ public class ConsentPreparationController {
 
     var consentDataOptional = consentDataService.findConsentData(application);
 
-    if (consentDataOptional.isEmpty()) {
-      var hasEditConsentDataAction = caseProcessingActionService.getUserActionItems(applicationVersion, user)
-          .contains(EDIT_CONSENT_DATA);
-      if (hasEditConsentDataAction) {
-        return ReverseRouter.redirect(on(ConsentDataController.class).editConsentData(applicationId));
-      }
+    if (consentDataOptional.isEmpty()
+        && caseProcessingActionService.userHasAnyAction(applicationVersion, user, EDIT_CONSENT_DATA)) {
+      return ReverseRouter.redirect(on(ConsentDataController.class).editConsentData(applicationId));
     }
 
     return getModelAndViewWithConsentData(applicationVersion, consentDataOptional.orElse(null), user);

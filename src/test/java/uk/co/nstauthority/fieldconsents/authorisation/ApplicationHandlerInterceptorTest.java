@@ -13,9 +13,8 @@ import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.action.CaseProcessingActionItem.CASE_OFFICER_TAKE_OWNERSHIP;
 import static uk.co.nstauthority.fieldconsents.authentication.TestUserProvider.user;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.stereotype.Controller;
 import org.springframework.test.context.ContextConfiguration;
@@ -148,8 +147,8 @@ class ApplicationHandlerInterceptorTest extends AbstractApplicationControllerTes
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersionSubmitted));
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersionSubmitted, user))
-        .thenReturn(Collections.emptyList());
+    when(caseProcessingActionService.userHasAnyAction(applicationVersionSubmitted, user, CASE_OFFICER_RELEASE_OWNERSHIP))
+        .thenReturn(false);
 
     mockMvc.perform(
             post(ReverseRouter.route(on(ApplicationHandlerInterceptorTest.TestController.class)
@@ -164,11 +163,12 @@ class ApplicationHandlerInterceptorTest extends AbstractApplicationControllerTes
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersionSubmitted));
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersionSubmitted, user))
-        .thenReturn(List.of(
-            CASE_OFFICER_TAKE_OWNERSHIP,
-            CASE_OFFICER_RELEASE_OWNERSHIP
-        ));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersionSubmitted,
+        user,
+        CASE_OFFICER_TAKE_OWNERSHIP
+    ))
+        .thenReturn(true);
 
     mockMvc.perform(
             post(ReverseRouter.route(on(ApplicationHandlerInterceptorTest.TestController.class)
@@ -183,12 +183,12 @@ class ApplicationHandlerInterceptorTest extends AbstractApplicationControllerTes
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersionSubmitted));
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersionSubmitted, user))
-        .thenReturn(List.of(
-            CASE_OFFICER_TAKE_OWNERSHIP,
-            CASE_OFFICER_RELEASE_OWNERSHIP,
-            CASE_OFFICER_ASSIGN_OWNERSHIP
-        ));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersionSubmitted,
+        user,
+        CASE_OFFICER_ASSIGN_OWNERSHIP
+    ))
+        .thenReturn(true);
 
     mockMvc.perform(
             get(ReverseRouter.route(on(ApplicationHandlerInterceptorTest.TestController.class)
@@ -203,7 +203,7 @@ class ApplicationHandlerInterceptorTest extends AbstractApplicationControllerTes
         .thenReturn(Optional.of(applicationVersionSubmitted));
 
     when(caseProcessingActionService.getUserActionItems(applicationVersionSubmitted, user))
-        .thenReturn(List.of(CASE_OFFICER_RELEASE_OWNERSHIP));
+        .thenReturn(Set.of(CASE_OFFICER_RELEASE_OWNERSHIP));
 
     mockMvc.perform(
             get(ReverseRouter.route(on(ApplicationHandlerInterceptorTest.TestController.class)
@@ -217,12 +217,12 @@ class ApplicationHandlerInterceptorTest extends AbstractApplicationControllerTes
     when(applicationVersionService.findLatestApplicationVersion(APPLICATION_ID))
         .thenReturn(Optional.of(applicationVersionSubmitted));
 
-    when(caseProcessingActionService.getUserActionItems(applicationVersionSubmitted, user))
-        .thenReturn(List.of(
-            CASE_OFFICER_TAKE_OWNERSHIP,
-            CASE_OFFICER_RELEASE_OWNERSHIP,
-            CASE_OFFICER_ASSIGN_OWNERSHIP
-        ));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersionSubmitted,
+        user,
+        CASE_OFFICER_ASSIGN_OWNERSHIP
+    ))
+        .thenReturn(true);
 
     mockMvc.perform(
             post(ReverseRouter.route(on(ApplicationHandlerInterceptorTest.TestController.class)
@@ -238,7 +238,7 @@ class ApplicationHandlerInterceptorTest extends AbstractApplicationControllerTes
         .thenReturn(Optional.of(applicationVersionSubmitted));
 
     when(caseProcessingActionService.getUserActionItems(applicationVersionSubmitted, user))
-        .thenReturn(List.of(CASE_OFFICER_RELEASE_OWNERSHIP));
+        .thenReturn(Set.of(CASE_OFFICER_RELEASE_OWNERSHIP));
 
     mockMvc.perform(
             post(ReverseRouter.route(on(ApplicationHandlerInterceptorTest.TestController.class)

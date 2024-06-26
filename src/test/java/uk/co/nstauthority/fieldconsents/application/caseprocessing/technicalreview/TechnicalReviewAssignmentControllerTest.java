@@ -26,9 +26,8 @@ import static uk.co.nstauthority.fieldconsents.util.NotificationBannerTestUtil.n
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.time.Clock;
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -91,7 +90,7 @@ class TechnicalReviewAssignmentControllerTest extends AbstractApplicationControl
         .thenReturn(Optional.of(applicationVersion)); // this is called in ApplicationHandlerInterceptor
 
     when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(Collections.emptyList());
+        .thenReturn(Set.of());
 
     mockMvc.perform(get(ReverseRouter.route(on(TechnicalReviewAssignmentController.class)
             .getTechnicalReviewAssignment(APPLICATION_ID, null)))
@@ -117,9 +116,11 @@ class TechnicalReviewAssignmentControllerTest extends AbstractApplicationControl
         .thenReturn(technicalReview);
     when(technicalReviewAssignmentService.getTechnicalReviewerAssignmentCandidates(technicalReview, user))
         .thenReturn(TECHNICAL_REVIEWER_ASSIGNMENT_CANDIDATES);
-
-    when(caseProcessingActionService.getUserActionItems(applicationVersion, user))
-        .thenReturn(List.of(TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP));
+    when(caseProcessingActionService.userHasAnyAction(
+        applicationVersion,
+        user,
+        TECHNICAL_REVIEWER_REASSIGN_OWNERSHIP
+    )).thenReturn(true);
 
     mockMvc.perform(get(ReverseRouter.route(on(TechnicalReviewAssignmentController.class)
             .getTechnicalReviewAssignment(APPLICATION_ID, null)))
