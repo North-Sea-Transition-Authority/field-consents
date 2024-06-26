@@ -13,7 +13,10 @@ public class AuditRevisionListener implements RevisionListener {
   @Override
   public void newRevision(Object revision) {
     var auditRevision = (AuditRevision) revision;
-    getUserDetail().ifPresent(user -> auditRevision.setUserWuaId(user.wuaId()));
+    getUserDetail().ifPresent(user -> {
+      auditRevision.setUserWuaId(user.wuaId());
+      auditRevision.setProxyUserWuaId(user.proxyWuaId());
+    });
   }
 
   // We use this method and not UserDetailService#getUserDetail as that method throws an exception if there is no user

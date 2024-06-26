@@ -62,7 +62,7 @@ class FeedbackService {
     feedback.setComment(feedbackText);
     feedback.setGivenDatetime(clock.instant());
     feedback.setSubmitterEmail(userDetail.emailAddress());
-    feedback.setSubmitterName(userDetail.displayName());
+    feedback.setSubmitterName(userDetail.displayNameIncludingAnyProxyUser());
     try {
       feedbackClientService.saveFeedback(feedback);
     } catch (CannotSendFeedbackException e) {

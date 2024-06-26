@@ -3,6 +3,7 @@ package uk.co.nstauthority.fieldconsents.authentication;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.ObjectUtils;
@@ -24,8 +25,21 @@ public class SamlResponseParser {
     var forename = getNonEmptyAttribute(parsedAttributes, EnergyPortalSamlAttribute.FORENAME);
     var surname = getNonEmptyAttribute(parsedAttributes, EnergyPortalSamlAttribute.SURNAME);
     var email = getNonEmptyAttribute(parsedAttributes, EnergyPortalSamlAttribute.EMAIL_ADDRESS);
+    var proxyWuaId = parsedAttributes.get(EnergyPortalSamlAttribute.PROXY_USER_WUA_ID.getAttributeName());
+    var proxyUserName = parsedAttributes.get(EnergyPortalSamlAttribute.PROXY_USER_NAME.getAttributeName());
 
-    var userDetail = new ServiceUserDetail(Long.parseLong(wuaId), Long.parseLong(personId), forename, surname, email);
+    var userDetail = new ServiceUserDetail(
+        Long.parseLong(wuaId),
+        Long.parseLong(personId),
+        forename,
+        surname,
+        email,
+        Optional.ofNullable(proxyWuaId)
+            .filter(StringUtils::isNotBlank)
+            .map(Long::parseLong)
+            .orElse(null),
+        proxyUserName
+    );
 
     var portalPrivileges = getNonNullAttribute(parsedAttributes, EnergyPortalSamlAttribute.PORTAL_PRIVILEGES);
 
@@ -49,13 +63,13 @@ public class SamlResponseParser {
     if (assertions.size() != 1) {
       throw new SamlResponseException(String.format("SAML response contained %s assertions, expected 1", assertions.size()));
     }
-    var attributeStatements = assertions.get(0).getAttributeStatements();
+    var attributeStatements = assertions.getFirst().getAttributeStatements();
     if (attributeStatements.size() != 1) {
       throw new SamlResponseException(
           String.format("SAML response contained %s attribute statements, expected 1", attributeStatements.size())
       );
     }
-    return attributeStatements.get(0).getAttributes();
+    return attributeStatements.getFirst().getAttributes();
   }
 
   private Map<String, String> parseAttributes(List<Attribute> attributes) {

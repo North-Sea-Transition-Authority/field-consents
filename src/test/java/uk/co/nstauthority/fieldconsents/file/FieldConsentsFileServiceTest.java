@@ -35,7 +35,7 @@ import uk.co.fivium.fileuploadlibrary.core.FileService;
 import uk.co.fivium.fileuploadlibrary.core.FileUsage;
 import uk.co.fivium.fileuploadlibrary.core.UploadedFile;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
-import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 
 @ExtendWith(MockitoExtension.class)
 class FieldConsentsFileServiceTest {
@@ -174,7 +174,7 @@ class FieldConsentsFileServiceTest {
 
   @Test
   void fileBelongsToUser() {
-    var serviceUserDetail = new ServiceUserDetail(1L, 2L, "Forename", "Surname", "forename.surname@example.com");
+    var serviceUserDetail = ServiceUserDetailTestUtil.Builder().build();
     var uploadedFile = new UploadedFile();
     uploadedFile.setUploadedBy("1");
 
@@ -183,7 +183,7 @@ class FieldConsentsFileServiceTest {
 
   @Test
   void fileBelongsToUser_noUploadedByOnUploadedFile() {
-    var serviceUserDetail = new ServiceUserDetail(1L, 2L, "Forename", "Surname", "forename.surname@example.com");
+    var serviceUserDetail = ServiceUserDetailTestUtil.Builder().build();
     var uploadedFile = new UploadedFile();
 
     assertThat(fieldConsentsFileService.fileBelongsToUser(uploadedFile, serviceUserDetail)).isFalse();
@@ -191,7 +191,7 @@ class FieldConsentsFileServiceTest {
 
   @Test
   void fileBelongsToUser_wuaIdsDoNotMatch() {
-    var serviceUserDetail = new ServiceUserDetail(1L, 2L, "Forename", "Surname", "forename.surname@example.com");
+    var serviceUserDetail = ServiceUserDetailTestUtil.Builder().build();
     var uploadedFile = new UploadedFile();
     uploadedFile.setUploadedBy(String.valueOf(serviceUserDetail.wuaId() + 1));
 

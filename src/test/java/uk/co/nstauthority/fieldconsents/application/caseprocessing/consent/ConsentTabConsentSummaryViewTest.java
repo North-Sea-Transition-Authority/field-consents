@@ -12,7 +12,7 @@ import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.data.figure.ConsentFigureUnitView;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.consent.fieldequitypartner.ConsentFieldEquityPartnersView;
 import uk.co.nstauthority.fieldconsents.application.consentlength.ConsentLengthType;
-import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.formatting.DateUtils;
 import uk.co.nstauthority.fieldconsents.summary.SummaryFileView;
 
@@ -23,7 +23,7 @@ class ConsentTabConsentSummaryViewTest {
   void from(ApplicationType applicationType) {
     var consentLengthType = mock(ConsentLengthType.class);
     var issuedInstant = Instant.now();
-    var issuedByUser = new ServiceUserDetail(null, null, "testForename", "testSurname", "testEmailAddress");
+    var issuedByUser = ServiceUserDetailTestUtil.Builder().build();
     var consentStatus = ConsentStatus.ISSUED;
     var consentDataView = mock(ConsentDataView.class);
     var consentFigureUnitView = mock(ConsentFigureUnitView.class);

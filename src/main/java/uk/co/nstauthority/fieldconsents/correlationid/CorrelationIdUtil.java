@@ -41,4 +41,7 @@ public class CorrelationIdUtil {
     return MDC.get(MDC_CORRELATION_ID_ATTR);
   }
 
+  public static void removeCorrelationIdFromMdc() {
+    MDC.remove(MDC_CORRELATION_ID_ATTR);
+  }
 }

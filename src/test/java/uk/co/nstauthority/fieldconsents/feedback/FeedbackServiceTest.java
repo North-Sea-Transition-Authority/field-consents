@@ -9,14 +9,17 @@ import static org.mockito.Mockito.when;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_ID;
 import static uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil.APPLICATION_REFERENCE;
-import static uk.co.nstauthority.fieldconsents.integrationtest.ApplicationDataItemViewIntegrationTestUtil.USER_DETAIL;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
@@ -33,6 +36,8 @@ import uk.co.nstauthority.fieldconsents.application.ApplicationTestUtil;
 import uk.co.nstauthority.fieldconsents.application.ApplicationType;
 import uk.co.nstauthority.fieldconsents.application.ApplicationVersion;
 import uk.co.nstauthority.fieldconsents.application.summary.ApplicationSummaryController;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.fieldconsents.mvc.AbsoluteUrlService;
 import uk.co.nstauthority.fieldconsents.mvc.ReverseRouter;
 
@@ -42,6 +47,13 @@ class FeedbackServiceTest {
   private static final String CONTEXT_PATH = "/service-name";
   private static final Instant CURRENT_INSTANT = Instant.now();
   private static String expectedApplicationUrl;
+  private static final ServiceUserDetail USER_DETAIL_WITH_PROXY = ServiceUserDetailTestUtil.Builder()
+      .withWuaId(((long) ThreadLocalRandom.current().nextInt()))
+      .build();
+
+  private static final ServiceUserDetail USER_DETAIL_WITHOUT_PROXY = ServiceUserDetailTestUtil.Builder()
+      .withWuaId(((long) ThreadLocalRandom.current().nextInt()))
+      .buildWithoutProxy();
 
   @Mock
   private Clock clock;
@@ -87,12 +99,13 @@ class FeedbackServiceTest {
     when(clock.instant()).thenReturn(CURRENT_INSTANT);
   }
 
-  @Test
-  void saveFeedback_cannotSendFeedbackException() throws CannotSendFeedbackException {
+  @ParameterizedTest
+  @MethodSource("getFeedbackUsers")
+  void saveFeedback_cannotSendFeedbackException(ServiceUserDetail feedbackUser) throws CannotSendFeedbackException {
     when(feedbackClientService.saveFeedback(any(Feedback.class)))
         .thenThrow(new CannotSendFeedbackException("test exception"));
 
-    feedbackService.saveFeedback(form.getServiceRating(), form.getFeedback().getInputValue(), USER_DETAIL);
+    feedbackService.saveFeedback(form.getServiceRating(), form.getFeedback().getInputValue(), feedbackUser);
 
     verify(feedbackClientService).saveFeedback(feedbackArgumentCaptor.capture());
     
@@ -106,8 +119,8 @@ class FeedbackServiceTest {
         Feedback::getTransactionReference,
         Feedback::getTransactionLink
     ).containsExactly(
-        USER_DETAIL.displayName(),
-        USER_DETAIL.emailAddress(),
+        feedbackUser.displayNameIncludingAnyProxyUser(),
+        feedbackUser.emailAddress(),
         form.getServiceRating(),
         form.getFeedback().getInputValue(),
         CURRENT_INSTANT,
@@ -117,12 +130,13 @@ class FeedbackServiceTest {
     );
   }
 
-  @Test
-  void saveFeedback() throws CannotSendFeedbackException {
+  @ParameterizedTest
+  @MethodSource("getFeedbackUsers")
+  void saveFeedback(ServiceUserDetail feedbackUser) throws CannotSendFeedbackException {
     assertDoesNotThrow(() -> feedbackService.saveFeedback(
         form.getServiceRating(),
         form.getFeedback().getInputValue(),
-        USER_DETAIL)
+        feedbackUser)
     );
 
     verify(feedbackClientService).saveFeedback(feedbackArgumentCaptor.capture());
@@ -137,8 +151,8 @@ class FeedbackServiceTest {
         Feedback::getTransactionReference,
         Feedback::getTransactionLink
     ).containsExactly(
-        USER_DETAIL.displayName(),
-        USER_DETAIL.emailAddress(),
+        feedbackUser.displayNameIncludingAnyProxyUser(),
+        feedbackUser.emailAddress(),
         form.getServiceRating(),
         form.getFeedback().getInputValue(),
         CURRENT_INSTANT,
@@ -148,8 +162,9 @@ class FeedbackServiceTest {
     );
   }
 
-  @Test
-  void saveFeedback_withApplicationVersion() throws CannotSendFeedbackException {
+  @ParameterizedTest
+  @MethodSource("getFeedbackUsers")
+  void saveFeedback_withApplicationVersion(ServiceUserDetail feedbackUser) throws CannotSendFeedbackException {
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(APPLICATION_REFERENCE);
     when(absoluteUrlService.getAbsoluteUrl(anyString())).thenReturn(expectedApplicationUrl);
 
@@ -157,7 +172,7 @@ class FeedbackServiceTest {
         applicationVersion,
         form.getServiceRating(),
         form.getFeedback().getInputValue(),
-        USER_DETAIL)
+        feedbackUser)
     );
 
     verify(feedbackClientService).saveFeedback(feedbackArgumentCaptor.capture());
@@ -172,8 +187,8 @@ class FeedbackServiceTest {
         Feedback::getTransactionReference,
         Feedback::getTransactionLink
     ).containsExactly(
-        USER_DETAIL.displayName(),
-        USER_DETAIL.emailAddress(),
+        feedbackUser.displayNameIncludingAnyProxyUser(),
+        feedbackUser.emailAddress(),
         form.getServiceRating(),
         form.getFeedback().getInputValue(),
         CURRENT_INSTANT,
@@ -183,8 +198,9 @@ class FeedbackServiceTest {
     );
   }
 
-  @Test
-  void saveFeedback_withApplicationVersion_cannotSendFeedbackException() throws CannotSendFeedbackException {
+  @ParameterizedTest
+  @MethodSource("getFeedbackUsers")
+  void saveFeedback_withApplicationVersion_cannotSendFeedbackException(ServiceUserDetail feedbackUser) throws CannotSendFeedbackException {
     when(applicationService.generateApplicationReference(applicationVersion)).thenReturn(APPLICATION_REFERENCE);
     when(absoluteUrlService.getAbsoluteUrl(anyString())).thenReturn(expectedApplicationUrl);
 
@@ -195,7 +211,7 @@ class FeedbackServiceTest {
         applicationVersion,
         form.getServiceRating(),
         form.getFeedback().getInputValue(),
-        USER_DETAIL
+        feedbackUser
     );
 
     verify(feedbackClientService).saveFeedback(feedbackArgumentCaptor.capture());
@@ -210,14 +226,21 @@ class FeedbackServiceTest {
         Feedback::getTransactionReference,
         Feedback::getTransactionLink
     ).containsExactly(
-        USER_DETAIL.displayName(),
-        USER_DETAIL.emailAddress(),
+        feedbackUser.displayNameIncludingAnyProxyUser(),
+        feedbackUser.emailAddress(),
         form.getServiceRating(),
         form.getFeedback().getInputValue(),
         CURRENT_INSTANT,
         applicationVersion.getApplication().getId().toString(),
         APPLICATION_REFERENCE,
         expectedApplicationUrl
+    );
+  }
+
+  private static Stream<Arguments> getFeedbackUsers() {
+    return Stream.of(
+        Arguments.of(USER_DETAIL_WITH_PROXY),
+        Arguments.of(USER_DETAIL_WITHOUT_PROXY)
     );
   }
 }

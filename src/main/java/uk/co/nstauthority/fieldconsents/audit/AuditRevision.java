@@ -28,6 +28,8 @@ public class AuditRevision {
 
   private Long userWuaId;
 
+  private Long proxyUserWuaId;
+
   public Long getId() {
     return id;
   }
@@ -43,6 +45,14 @@ public class AuditRevision {
 
   public void setUserWuaId(long webUserAccountId) {
     this.userWuaId = webUserAccountId;
+  }
+
+  public Long getProxyUserWuaId() {
+    return proxyUserWuaId;
+  }
+
+  public void setProxyUserWuaId(Long proxyUserWuaId) {
+    this.proxyUserWuaId = proxyUserWuaId;
   }
 
   public Date getCreatedDateTime() {

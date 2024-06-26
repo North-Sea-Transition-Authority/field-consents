@@ -9,7 +9,9 @@ public record ServiceUserDetail(Long wuaId,
                                 Long personId,
                                 String forename,
                                 String surname,
-                                String emailAddress)
+                                String emailAddress,
+                                Long proxyWuaId,
+                                String proxyUsername)
     implements AuthenticatedPrincipal, Serializable {
 
   public static ServiceUserDetail from(EnergyPortalUserDto energyPortalUser) {
@@ -18,7 +20,9 @@ public record ServiceUserDetail(Long wuaId,
         energyPortalUser.personId(),
         energyPortalUser.forename(),
         energyPortalUser.surname(),
-        energyPortalUser.emailAddress()
+        energyPortalUser.emailAddress(),
+        null,
+        null
     );
   }
 
@@ -33,5 +37,10 @@ public record ServiceUserDetail(Long wuaId,
 
   public String displayNameAndEmail() {
     return UserDisplayNameUtil.getUserDisplayNameAndEmail(forename, surname, emailAddress);
+  }
+
+  public String displayNameIncludingAnyProxyUser() {
+    var userDisplayName = displayName();
+    return proxyWuaId != null ? String.format("%s/%s", proxyUsername, userDisplayName) : userDisplayName;
   }
 }

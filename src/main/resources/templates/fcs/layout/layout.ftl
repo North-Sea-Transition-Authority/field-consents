@@ -199,7 +199,7 @@
     serviceName=SERVICE_NAME
     customerMnemonic=CUSTOMER_MNEMONIC
     serviceHomeUrl=SERVICE_HOME_URL
-    signedInUserName=(loggedInUser?has_content)?then(loggedInUser.displayName(), "")
+    signedInUserName=(loggedInUser?has_content)?then(loggedInUser.displayNameIncludingAnyProxyUser(), "")
     signOutUrl=springUrl("/logout")
     pageSize=pageSize
   />
