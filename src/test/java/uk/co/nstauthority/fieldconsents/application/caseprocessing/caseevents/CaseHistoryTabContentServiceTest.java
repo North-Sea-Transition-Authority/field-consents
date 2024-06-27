@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseHistoryEventTestUtil.getPortalUsersDtosMap;
+import static uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventType.DRAFT_APPLICATION_UPDATE_DELETED;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -88,5 +89,33 @@ class CaseHistoryTabContentServiceTest {
         );
   }
 
+  // This test is to cover the scenario of deleted case events for migrated data where the main user event is not present
+  @Test
+  void getCaseHistoryTabContent_whenNoMainUserEvent() {
+    var applicationDeletedCaseEvent =
+        CaseEvent
+            .builder(applicationVersion)
+            .withEventType(DRAFT_APPLICATION_UPDATE_DELETED)
+            .withEventDateTime(Instant.now())
+            .build();
 
+    when(caseHistoryEventService.getCaseHistoryEvents(application)).thenReturn(List.of(applicationDeletedCaseEvent));
+
+    List<CaseEventView> caseEventViews = caseHistoryTabContentService.getCaseHistoryTabContent(application);
+    var actualDeletedCaseEvent = caseEventViews.getFirst();
+    assertThat(actualDeletedCaseEvent)
+        .extracting(
+            CaseEventView::getHeaderText,
+            CaseEventView::getMainUserInvolvedLabel,
+            CaseEventView::getMainUserInvolvedFullName,
+            CaseEventView::getEventDateTimeLabel,
+            CaseEventView::getEventDateTimeText
+        ).containsExactly(
+            "Draft application update deleted",
+            "Deleted by",
+            null,
+            "Deleted on",
+            DateUtils.format(applicationDeletedCaseEvent.eventDateTime(), DateUtils.DATE_TIME)
+        );
+  }
 }

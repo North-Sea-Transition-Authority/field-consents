@@ -63,7 +63,7 @@ public class ApplicationCaseEventService implements CaseEventService<Application
         .filter(paymentDto -> paymentDto.status() == PaymentStatus.SUCCESS)
         .collect(Collectors.groupingBy(applicationPaymentService::getApplicationVersionIdFromPaymentDto));
 
-    for (ApplicationVersion applicationVersion : allApplicationVersions) {
+    for (var applicationVersion : allApplicationVersions) {
       caseEvents.add(
           CaseEvent.builder(applicationVersion)
               .withEventType(applicationVersion.isUpdateVersion() ? APPLICATION_UPDATE_STARTED : APPLICATION_CREATED)
@@ -112,11 +112,25 @@ public class ApplicationCaseEventService implements CaseEventService<Application
 
       if (ApplicationVersionStatus.DELETED.equals(applicationVersion.getStatus())) {
         var applicationVersionDeleteAudit = applicationVersionDeleteAuditsMap.get(applicationVersion.getId());
+
+        // migrated cases will have no audit rows, so we fall back to the base application version data
+
+        // we don't know the user who deleted the application version for migrated cases, so we leave `null`
+        var eventUserWuaId = applicationVersionDeleteAudit == null
+            ? null
+            : applicationVersionDeleteAudit.auditUserWuaId();
+
+        // to ensure the deleted event is shown after the create event we add 1 millisecond to the created date time
+        // NOTE: this is only for migrated cases
+        var eventDateTime = applicationVersionDeleteAudit == null
+            ? applicationVersion.getCreatedDateTime().plusMillis(1)
+            : applicationVersionDeleteAudit.auditDateTime();
+
         caseEvents.add(
             CaseEvent.builder(applicationVersion)
                 .withEventType(applicationVersion.isUpdateVersion() ? DRAFT_APPLICATION_UPDATE_DELETED : APPLICATION_DELETED)
-                .withMainEventUserWuaId(applicationVersionDeleteAudit.auditUserWuaId())
-                .withEventDateTime(applicationVersionDeleteAudit.auditDateTime())
+                .withMainEventUserWuaId(eventUserWuaId)
+                .withEventDateTime(eventDateTime)
                 .build()
         );
       }

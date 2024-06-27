@@ -20,6 +20,7 @@ import uk.co.fivium.digitalpaymentslibrary.payment.PaymentStatus;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.CaseHistoryEventTestUtil;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.assignment.ApplicationVersionAuditTestUtil;
 import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEvent;
+import uk.co.nstauthority.fieldconsents.application.caseprocessing.caseevents.CaseEventType;
 import uk.co.nstauthority.fieldconsents.application.payment.ApplicationPaymentService;
 import uk.co.nstauthority.fieldconsents.application.payment.PaymentDtoTestUtil;
 
@@ -85,8 +86,6 @@ class ApplicationCaseEventServiceTest {
     applicationAutomaticallySubmittedEvent =
         CaseHistoryEventTestUtil.getCaseEventForApplicationAutomaticallySubmitted(applicationVersionAutoSubmitted);
     applicationUpdateStartedEvent = CaseHistoryEventTestUtil.getCaseEventForApplicationUpdateStarted(applicationVersionUpdate);
-
-    when(applicationVersionAuditService.getApplicationVersionAudits(anyList())).thenReturn(Collections.emptyList());
   }
 
   @ParameterizedTest
@@ -209,6 +208,31 @@ class ApplicationCaseEventServiceTest {
             applicationSubmittedEvent,
             applicationUpdateStartedEvent,
             CaseHistoryEventTestUtil.getCaseEventForPaymentCompleted(applicationVersionUpdate, successfulPaymentDto2)
+        );
+  }
+
+  @Test
+  void getCaseEvents_whenNoAuditDataForApplicationDeleted() {
+    var deletedApplicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.VENT);
+    deletedApplicationVersion.setStatus(ApplicationVersionStatus.DELETED);
+    when(applicationVersionService.getAllApplicationVersionsByApplicationId(deletedApplicationVersion.getApplication().getId()))
+        .thenReturn(Collections.singletonList(deletedApplicationVersion));
+
+    when(applicationVersionAuditService.getApplicationVersionAudits(anyList())).thenReturn(Collections.emptyList());
+
+    var applicationCreatedEvent = CaseHistoryEventTestUtil.getCaseEventForApplicationCreated(deletedApplicationVersion);
+    var applicationDeletedEvent = CaseEvent
+        .builder(deletedApplicationVersion)
+        .withEventType(CaseEventType.APPLICATION_DELETED)
+        .withEventDateTime(deletedApplicationVersion.getCreatedDateTime().plusMillis(1))
+        .build();
+
+    var caseEvents = applicationCaseEventService.getCaseEvents(deletedApplicationVersion.getApplication());
+
+    assertThat(caseEvents)
+        .containsExactly(
+            applicationCreatedEvent,
+            applicationDeletedEvent
         );
   }
 

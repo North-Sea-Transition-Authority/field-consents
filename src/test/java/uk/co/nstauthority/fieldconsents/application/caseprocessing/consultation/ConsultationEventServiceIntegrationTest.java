@@ -168,9 +168,9 @@ class ConsultationEventServiceIntegrationTest extends AbstractIntegrationTest {
             CaseEvent::otherEventUserWuaId,
             CaseEvent::eventText
         ).containsExactly(
-            CaseEventType.CONSULTATION_ASSIGNED,
-            ALLOCATOR_USER_1.wuaId(),
+            CaseEventType.CONSULTATION_RESPONDED,
             RESPONDER_USER_1.wuaId(),
+            null,
             null
         );
 
@@ -181,9 +181,9 @@ class ConsultationEventServiceIntegrationTest extends AbstractIntegrationTest {
             CaseEvent::otherEventUserWuaId,
             CaseEvent::eventText
         ).containsExactly(
-            CaseEventType.CONSULTATION_RESPONDED,
+            CaseEventType.CONSULTATION_ASSIGNED,
+            ALLOCATOR_USER_1.wuaId(),
             RESPONDER_USER_1.wuaId(),
-            null,
             null
         );
   }

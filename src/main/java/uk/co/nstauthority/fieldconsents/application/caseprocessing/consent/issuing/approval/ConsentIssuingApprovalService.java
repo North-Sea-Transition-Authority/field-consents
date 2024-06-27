@@ -43,7 +43,7 @@ public class ConsentIssuingApprovalService {
   }
 
   public Optional<ConsentIssuingApprovalSummaryView> getConsentIssuingApprovalSummaryView(Application application) {
-    return consentIssuingApprovalRepository.findByApplicationId(application.getId()).map(consentIssuingApproval -> {
+    return findConsentIssuingApproval(application).map(consentIssuingApproval -> {
       var approvedByUserEnergyPortalUserDto =
           energyPortalUserService.getByWuaId(WebUserAccountId.from(consentIssuingApproval.getApprovedByWuaId()));
       var approvedByUser = ServiceUserDetail.from(approvedByUserEnergyPortalUserDto);
@@ -54,12 +54,16 @@ public class ConsentIssuingApprovalService {
 
   @Transactional
   public void deleteConsentIssuingApproval(Application application) {
-    var optionalConsentIssuingApproval = consentIssuingApprovalRepository.findByApplicationId(application.getId());
+    var optionalConsentIssuingApproval = findConsentIssuingApproval(application);
 
     if (optionalConsentIssuingApproval.isEmpty()) {
       throw new EntityNotFoundException("Consent issuing approval not found for application with id: %s"
           .formatted(application.getId()));
     }
     consentIssuingApprovalRepository.delete(optionalConsentIssuingApproval.get());
+  }
+
+  Optional<ConsentIssuingApproval> findConsentIssuingApproval(Application application) {
+    return consentIssuingApprovalRepository.findByApplicationId(application.getId());
   }
 }

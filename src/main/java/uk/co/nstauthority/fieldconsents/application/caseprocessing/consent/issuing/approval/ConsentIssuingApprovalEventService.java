@@ -23,11 +23,14 @@ public class ConsentIssuingApprovalEventService implements CaseEventService<Appl
 
   private final FieldConsentsAuditService auditService;
   private final ApplicationVersionService applicationVersionService;
+  private final ConsentIssuingApprovalService consentIssuingApprovalService;
 
   public ConsentIssuingApprovalEventService(FieldConsentsAuditService auditService,
-                                            ApplicationVersionService applicationVersionService) {
+                                            ApplicationVersionService applicationVersionService,
+                                            ConsentIssuingApprovalService consentIssuingApprovalService) {
     this.auditService = auditService;
     this.applicationVersionService = applicationVersionService;
+    this.consentIssuingApprovalService = consentIssuingApprovalService;
   }
   
   @Override
@@ -40,23 +43,36 @@ public class ConsentIssuingApprovalEventService implements CaseEventService<Appl
         Set.of(application.getId()),
         "application_id");
 
+    // migrated cases will have no audit rows, so we fall back to the base consent issuing approval data
     if (consentIssuingApprovalAudits.isEmpty()) {
-      return Collections.emptyList();
+      var consentIssuingApprovalOptional = consentIssuingApprovalService.findConsentIssuingApproval(application);
+
+      if (consentIssuingApprovalOptional.isEmpty()) {
+        return Collections.emptyList();
+      }
+
+      caseEvents.add(
+          getConsentIssuingApprovalEvent(
+              consentIssuingApprovalOptional.get(),
+              applicationVersionService.getLatestApplicationVersionByApplicationId(application.getId()))
+      );
+      return caseEvents;
     }
 
     var applicationVersion = applicationVersionService.getLatestApplicationVersionByApplicationId(application.getId());
 
-    for (FieldConsentsAudit<ConsentIssuingApproval> consentIssuingApprovalAudit : consentIssuingApprovalAudits) {
+    // get case events for consent issuing approvals audit data
+    for (var consentIssuingApprovalAudit : consentIssuingApprovalAudits) {
 
       if (consentIssuingApprovalAudit.revisionType().equals(RevisionType.ADD)) {
         caseEvents.add(
-            getConsentIssuingApprovalEvent(consentIssuingApprovalAudit, APPROVED_FOR_ISSUE, applicationVersion)
+            getConsentIssuingApprovalEventFromAudit(consentIssuingApprovalAudit, APPROVED_FOR_ISSUE, applicationVersion)
         );
       }
 
       if (consentIssuingApprovalAudit.revisionType().equals(RevisionType.DEL)) {
         caseEvents.add(
-            getConsentIssuingApprovalEvent(consentIssuingApprovalAudit, UNAPPROVED_FOR_ISSUE, applicationVersion)
+            getConsentIssuingApprovalEventFromAudit(consentIssuingApprovalAudit, UNAPPROVED_FOR_ISSUE, applicationVersion)
         );
       }
     }
@@ -64,13 +80,22 @@ public class ConsentIssuingApprovalEventService implements CaseEventService<Appl
     return caseEvents;
   }
 
-  private CaseEvent getConsentIssuingApprovalEvent(FieldConsentsAudit<ConsentIssuingApproval> fieldConsentsAudit,
-                                                   CaseEventType eventType,
+  private CaseEvent getConsentIssuingApprovalEvent(ConsentIssuingApproval consentIssuingApproval,
                                                    ApplicationVersion applicationVersion) {
     return CaseEvent.builder(applicationVersion)
+        .withEventType(CaseEventType.APPROVED_FOR_ISSUE)
+        .withMainEventUserWuaId(consentIssuingApproval.getApprovedByWuaId())
+        .withEventDateTime(consentIssuingApproval.getApprovedInstant())
+        .build();
+  }
+
+  private CaseEvent getConsentIssuingApprovalEventFromAudit(FieldConsentsAudit<ConsentIssuingApproval> fieldConsentsAudit,
+                                                            CaseEventType eventType,
+                                                            ApplicationVersion applicationVersion) {
+    return CaseEvent.newBuilderForAuditRevision(
+        fieldConsentsAudit.auditRevision(),
+        applicationVersion)
         .withEventType(eventType)
-        .withMainEventUserWuaId(fieldConsentsAudit.auditRevision().getUserWuaId())
-        .withEventDateTime(fieldConsentsAudit.auditRevision().getCreatedDateTime().toInstant())
         .build();
   }
 }

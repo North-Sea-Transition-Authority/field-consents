@@ -28,9 +28,11 @@
                 ${item.applicationVersion}
               </@fdsSummaryList.summaryListRowNoAction>
 
-              <@fdsSummaryList.summaryListRowNoAction keyText=item.mainUserInvolvedLabel>
-                ${item.mainUserInvolvedFullName}
-              </@fdsSummaryList.summaryListRowNoAction>
+              <#if item.mainUserInvolvedFullName?has_content>
+                <@fdsSummaryList.summaryListRowNoAction keyText=item.mainUserInvolvedLabel>
+                  ${item.mainUserInvolvedFullName}
+                </@fdsSummaryList.summaryListRowNoAction>
+              </#if>
 
               <#if item.otherUserInvolvedFullName?has_content>
                 <@fdsSummaryList.summaryListRowNoAction keyText=item.otherUserInvolvedLabel>

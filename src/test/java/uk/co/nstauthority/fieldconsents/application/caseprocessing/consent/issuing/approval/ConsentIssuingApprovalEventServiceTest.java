@@ -12,6 +12,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import org.hibernate.envers.RevisionType;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,6 +50,9 @@ class ConsentIssuingApprovalEventServiceTest {
   @Mock
   private ApplicationVersionService applicationVersionService;
 
+  @Mock
+  private ConsentIssuingApprovalService consentIssuingApprovalService;
+
   @Captor
   private ArgumentCaptor<Collection<Integer>> lookupPropertyValuesCaptor;
 
@@ -62,6 +66,7 @@ class ConsentIssuingApprovalEventServiceTest {
   private ApplicationVersion applicationVersion;
   private Application application;
   private AuditRevision auditRevision;
+  private ConsentIssuingApproval consentIssuingApproval;
 
   @BeforeEach
   void setUp() {
@@ -72,10 +77,28 @@ class ConsentIssuingApprovalEventServiceTest {
     auditRevision.setId(AUDIT_REVISION_ID);
     auditRevision.setCreatedDateTime(Date.from(REVISION_TIMESTAMP));
     auditRevision.setUserWuaId(AUDIT_CREATED_BY_WUA_ID);
+
+    consentIssuingApproval = new ConsentIssuingApproval();
+    consentIssuingApproval.setApplication(application);
+    consentIssuingApproval.setApprovedByWuaId(AUDIT_CREATED_BY_WUA_ID);
+    consentIssuingApproval.setApprovedInstant(REVISION_TIMESTAMP);
   }
 
   @Test
-  void getCaseEvents_whenNoConsentIssuingApprovalEvents() {
+  void getCaseEvents_whenNoConsentIssuingApprovalAudits_andNoDataAvailable() {
+    when(fieldConsentsAuditService.getAuditsFor(
+        eq(ConsentIssuingApproval.class),
+        idFunctionCaptor.capture(),
+        lookupPropertyValuesCaptor.capture(),
+        eq("application_id")
+    )).thenReturn(Collections.emptyList());
+    when(consentIssuingApprovalService.findConsentIssuingApproval(application)).thenReturn(Optional.empty());
+
+    assertThat(consentIssuingApprovalEventService.getCaseEvents(application)).isEmpty();
+  }
+
+  @Test
+  void getCaseEvents_whenNoConsentIssuingApprovalAudits_andDataAvailable() {
     when(fieldConsentsAuditService.getAuditsFor(
         eq(ConsentIssuingApproval.class),
         idFunctionCaptor.capture(),
@@ -83,16 +106,18 @@ class ConsentIssuingApprovalEventServiceTest {
         eq("application_id")
     )).thenReturn(Collections.emptyList());
 
-    assertThat(consentIssuingApprovalEventService.getCaseEvents(application)).isEmpty();
+    when(consentIssuingApprovalService.findConsentIssuingApproval(application)).thenReturn(Optional.of(consentIssuingApproval));
+    when(applicationVersionService.getLatestApplicationVersionByApplicationId(application.getId())).thenReturn(applicationVersion);
+
+    var caseEvent = getApprovedForIssueEvent();
+
+    assertThat(consentIssuingApprovalEventService.getCaseEvents(application)).containsExactly(caseEvent);
+    assertThat(lookupPropertyValuesCaptor.getValue()).extracting(Integer::intValue).containsExactly(application.getId());
+    assertThat(idFunctionCaptor.getValue().apply(consentIssuingApproval)).isEqualTo(consentIssuingApproval.getId());
   }
 
   @Test
   void getCaseEvents_whenApprovedForIssueAudit() {
-    var consentIssuingApproval = new ConsentIssuingApproval();
-    consentIssuingApproval.setApplication(application);
-    consentIssuingApproval.setApprovedByWuaId(AUDIT_CREATED_BY_WUA_ID);
-    consentIssuingApproval.setApprovedInstant(REVISION_TIMESTAMP);
-
     var approvedForIssueAudit = new FieldConsentsAudit<>(consentIssuingApproval, auditRevision, RevisionType.ADD);
 
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(application.getId())).thenReturn(applicationVersion);
@@ -113,11 +138,6 @@ class ConsentIssuingApprovalEventServiceTest {
 
   @Test
   void getCaseEvents_whenApprovedAndUnapprovedForIssueAudit() {
-    var consentIssuingApproval = new ConsentIssuingApproval();
-    consentIssuingApproval.setApplication(application);
-    consentIssuingApproval.setApprovedByWuaId(AUDIT_CREATED_BY_WUA_ID);
-    consentIssuingApproval.setApprovedInstant(REVISION_TIMESTAMP);
-
     var approvedForIssueAudit = new FieldConsentsAudit<>(consentIssuingApproval, auditRevision, RevisionType.ADD);
     var unapprovedForIssueAudit = new FieldConsentsAudit<>(consentIssuingApproval, auditRevision, RevisionType.DEL);
 
@@ -140,11 +160,6 @@ class ConsentIssuingApprovalEventServiceTest {
 
   @Test
   void getCaseEvents_whenModifiedAuditEvent_noEventIsReported() {
-    var consentIssuingApproval = new ConsentIssuingApproval();
-    consentIssuingApproval.setApplication(application);
-    consentIssuingApproval.setApprovedByWuaId(AUDIT_CREATED_BY_WUA_ID);
-    consentIssuingApproval.setApprovedInstant(REVISION_TIMESTAMP);
-
     var modifiedAudit = new FieldConsentsAudit<>(consentIssuingApproval, auditRevision, RevisionType.MOD);
 
     when(applicationVersionService.getLatestApplicationVersionByApplicationId(application.getId())).thenReturn(applicationVersion);

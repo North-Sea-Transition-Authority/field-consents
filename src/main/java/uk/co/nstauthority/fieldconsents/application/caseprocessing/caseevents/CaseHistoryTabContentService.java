@@ -49,9 +49,12 @@ public class CaseHistoryTabContentService {
         .withApplicationVersion(caseEvent.applicationVersion())
         .withEventType(caseEvent.eventType())
         .withEventText(caseEvent.eventText())
-        .withMainUser(portalUserDtosMap.get(WebUserAccountId.from(caseEvent.mainEventUserWuaId())))
         .withEventDateTime(caseEvent.eventDateTime())
         .withFileSummaryViews(caseEvent.summaryFileViews());
+
+    if (caseEvent.mainEventUserWuaId() != null) {
+      view.withMainUser(portalUserDtosMap.get(WebUserAccountId.from(caseEvent.mainEventUserWuaId())));
+    }
 
     if (caseEvent.otherEventUserWuaId() != null) {
       view.withOtherUser(portalUserDtosMap.get(WebUserAccountId.from(caseEvent.otherEventUserWuaId())));
