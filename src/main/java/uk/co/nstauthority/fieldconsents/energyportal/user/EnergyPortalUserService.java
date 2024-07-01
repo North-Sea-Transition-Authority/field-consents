@@ -60,6 +60,10 @@ public class EnergyPortalUserService {
   }
 
   public List<EnergyPortalUserDto> findByWuaIds(Collection<WebUserAccountId> webUserAccountIds) {
+    if (webUserAccountIds.isEmpty()) {
+      return List.of();
+    }
+
     List<Integer> webUserAccountIdApiInputs = webUserAccountIds
         .stream()
         .map(WebUserAccountId::toInt)
