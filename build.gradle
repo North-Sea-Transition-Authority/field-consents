@@ -1,6 +1,6 @@
 plugins {
-  id("org.springframework.boot") version "3.2.5"
-  id("io.spring.dependency-management") version "1.1.4"
+  id("org.springframework.boot") version "3.3.1"
+  id("io.spring.dependency-management") version "1.1.5"
   id 'java'
   id "org.sonarqube" version "5.0.0.4638"
   id 'checkstyle'
@@ -23,7 +23,7 @@ java {
   }
 }
 
-def fileUploadLibraryVersion = 'v2.5.0'
+def fileUploadLibraryVersion = 'v2.6.0'
 
 sourceSets {
   epmqMessagesJarIntegrationTest {}
@@ -53,16 +53,17 @@ dependencies {
   implementation 'org.springframework.session:spring-session-core'
   implementation 'org.springframework.session:spring-session-jdbc'
   implementation 'org.flywaydb:flyway-core'
+  implementation 'org.flywaydb:flyway-database-postgresql'
   implementation 'org.apache.commons:commons-lang3:3.14.0'
   implementation 'org.apache.commons:commons-collections4:4.4'
   implementation 'org.apache.commons:commons-text:1.12.0'
 
-  implementation 'uk.co.fivium.energyportalapi:client:v10.6.0'
+  implementation 'uk.co.fivium.energyportalapi:client:v12.0.0'
   implementation 'uk.co.fivium.digital.energyportalteamaccesslibrary:energy-portal-team-access-libray:v1.0.0'
   implementation 'uk.co.fivium.digitalformlibrary:digital-form-library:spring-boot-3.2-support-SNAPSHOT'
   implementation "uk.co.fivium:file-upload-spring-boot-starter:${fileUploadLibraryVersion}"
   implementation 'uk.co.fivium:digital-payments-library-spring-boot-starter:v2.0.0'
-  implementation 'uk.co.fivium:digital-notification-library-spring-boot-starter:v1.0.0'
+  implementation 'uk.co.fivium:digital-notification-library-spring-boot-starter:v1.0.1'
   implementation 'uk.co.fivium:digital-document-library-spring-boot-starter:v1.0.0'
   implementation 'uk.co.fivium:ftss-client-spring-boot-starter:v1.0.0'
   implementation 'uk.co.fivium.feedbackmanagementservice:client:v2.3.0'
@@ -94,6 +95,16 @@ dependencies {
   epmqMessagesJarIntegrationTestImplementation 'org.springframework.boot:spring-boot-starter-test'
   epmqMessagesJarIntegrationTestImplementation 'uk.co.nstauthority.fieldconsents:fieldconsents-epmq-messages:integration-test'
   epmqMessagesJarIntegrationTestImplementation 'uk.co.fivium.energyportalmessagequeue:spring-boot-starter:v2.0.0'
+
+  constraints {
+    implementation("com.google.guava:guava:32.1.3-jre") {
+      because("opensaml core uses a version with vulnerabilities")
+    }
+
+    implementation("org.bouncycastle:bcpkix-jdk18on:1.78") {
+      because("opensaml core uses a version with vulnerabilities")
+    }
+  }
 }
 
 tasks {

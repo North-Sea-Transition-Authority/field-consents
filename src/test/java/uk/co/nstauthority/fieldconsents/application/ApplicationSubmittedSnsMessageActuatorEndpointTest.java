@@ -14,10 +14,10 @@ import uk.co.nstauthority.fieldconsents.AbstractActuatorControllerTest;
 import uk.co.nstauthority.fieldconsents.actuator.ActuatorConfigurationProperties;
 import uk.co.nstauthority.fieldconsents.authorisation.SecurityTest;
 
-class ApplicationActuatorControllerTest extends AbstractActuatorControllerTest {
+class ApplicationSubmittedSnsMessageActuatorEndpointTest extends AbstractActuatorControllerTest {
 
   private static final String PUBLISH_APPLICATION_SUBMITTED_MESSAGE_URL_FORMAT =
-      "/actuator/applications/publish-epmq-message/application-version/%s/submitted";
+      "/actuator/application-submitted-sns-message/%s";
 
   private static final int APPLICATION_VERSION_ID = 7;
 
@@ -31,7 +31,7 @@ class ApplicationActuatorControllerTest extends AbstractActuatorControllerTest {
   private ActuatorConfigurationProperties actuatorConfigurationProperties;
 
   @SecurityTest
-  void publishApplicationSubmittedSnsMessage_notAuthorised() throws Exception {
+  void publishMessage_notAuthorised() throws Exception {
     mockMvc.perform(post(PUBLISH_APPLICATION_SUBMITTED_MESSAGE_URL_FORMAT.formatted(APPLICATION_VERSION_ID))
             .with(httpBasic("admin", "invalidpassword")))
         .andExpect(status().isUnauthorized());
@@ -40,7 +40,7 @@ class ApplicationActuatorControllerTest extends AbstractActuatorControllerTest {
   }
 
   @SecurityTest
-  void publishApplicationSubmittedSnsMessage() throws Exception {
+  void publishMessage() throws Exception {
     var applicationVersion = ApplicationTestUtil.getNewApplicationVersionWithType(ApplicationType.PRODUCTION);
 
     when(applicationVersionService.getApplicationVersionById(APPLICATION_VERSION_ID)).thenReturn(applicationVersion);
