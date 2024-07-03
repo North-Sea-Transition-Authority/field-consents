@@ -1,7 +1,9 @@
 package uk.co.nstauthority.fieldconsents.assets.terminals;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
@@ -16,7 +18,10 @@ import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePe
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.List;
+import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
@@ -38,6 +43,9 @@ public class TerminalControllerTest extends AbstractControllerTest {
 
   @MockBean
   private AssetService assetService;
+
+  @Captor
+  private ArgumentCaptor<Supplier<TerminalWithOperatorJson>> terminalJsonSupplierCaptor;
 
   @SecurityTest
   void manageTerminal_whenNotAuthenticated_thenRedirectedToLogin() throws Exception {
@@ -68,15 +76,15 @@ public class TerminalControllerTest extends AbstractControllerTest {
 
     when(terminalService.getTerminalWithOperator(eq(terminalJson.getId()), any())).thenReturn(terminalJson);
 
-    var startApplicationDecision = new StartApplicationDecision(List.of("no operator for this terminal"));
-    when(assetService.getStartApplicationDecision(terminalJson)).thenReturn(startApplicationDecision);
+    var startApplicationDecision = StartApplicationDecision.notAllowed(List.of("no operator for this terminal"));
+    when(assetService.getStartApplicationDecisionForTerminal(eq(user), terminalJsonSupplierCaptor.capture())).thenReturn(startApplicationDecision);
 
     var applicationDataItemViews = List.of(ApplicationDataItemUtil.getApplicationDataItemView());
     when(manageAssetService.getApplicationDataItemViews(AssetKey.from(terminalJson), user))
         .thenReturn(applicationDataItemViews);
 
     var backLinkUrl = ReverseRouter.route(on(AssetSelectionController.class).getAssetSelection());
-    var startApplicationUrl = ReverseRouter.route(on(StartApplicationFromTerminalController.class).getStartApplicationForm(terminalJson.getId()));
+    var startApplicationUrl = ReverseRouter.route(on(StartApplicationFromTerminalController.class).getStartApplicationForm(terminalJson.getId(), null));
 
     mockMvc.perform(get(ReverseRouter.route(on(TerminalController.class)
             .manageTerminal(terminalJson.getId(), null)))
@@ -84,11 +92,13 @@ public class TerminalControllerTest extends AbstractControllerTest {
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/assets/terminals"))
         .andExpect(model().attribute("terminalJson", terminalJson))
-        .andExpect(model().attribute("operatorExists", terminalJson.operatorExists()))
         .andExpect(model().attribute("startApplicationDecision", startApplicationDecision))
         .andExpect(model().attribute("operatorName", terminalJson.getOperatorName()))
         .andExpect(model().attribute("backLinkUrl", backLinkUrl))
         .andExpect(model().attribute("startApplicationUrl", startApplicationUrl))
         .andExpect(model().attribute("applicationDataItemViews", applicationDataItemViews));
+
+    verify(assetService).getStartApplicationDecisionForTerminal(eq(user), terminalJsonSupplierCaptor.capture());
+    assertThat(terminalJsonSupplierCaptor.getValue().get()).isEqualTo(terminalJson);
   }
 }

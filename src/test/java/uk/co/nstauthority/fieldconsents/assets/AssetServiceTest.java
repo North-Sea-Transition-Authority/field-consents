@@ -4,7 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.InstanceOfAssertFactories.type;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.BAD_ASSET_KEY;
 import static uk.co.nstauthority.fieldconsents.assets.AssetTestUtil.FIELD1_ASSET_KEY;
@@ -18,8 +23,11 @@ import static uk.co.nstauthority.fieldconsents.assets.terminals.TerminalTestUtil
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -37,6 +45,11 @@ import uk.co.nstauthority.fieldconsents.assets.fields.FieldService;
 import uk.co.nstauthority.fieldconsents.assets.fields.FieldWithOperatorAndLicencesJson;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalWithOperatorJson;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
+import uk.co.nstauthority.fieldconsents.teams.TeamService;
+import uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission;
 
 @ExtendWith(MockitoExtension.class)
 public class AssetServiceTest {
@@ -46,6 +59,7 @@ public class AssetServiceTest {
   private static final int FIELD_ID = 1;
   private static final int TERMINAL_ID = 2;
   private static final int OPERATOR_OU_ID = 3;
+  private static final ServiceUserDetail SERVICE_USER_DETAIL = ServiceUserDetailTestUtil.Builder().build();
   private static final AssetKey FIELD_ASSET_KEY = new AssetKey(FIELD_ID, AssetType.FIELD);
   private static final AssetKey TERMINAL_ASSET_KEY = new AssetKey(TERMINAL_ID, AssetType.TERMINAL);
 
@@ -54,6 +68,18 @@ public class AssetServiceTest {
 
   @Mock
   private TerminalService terminalService;
+
+  @Mock
+  private OrganisationUnitPermissionService organisationUnitPermissionService;
+
+  @Mock
+  private TeamService teamService;
+
+  @Captor
+  private ArgumentCaptor<Supplier<FieldWithOperatorAndLicencesJson>> fieldJsonSupplierCaptor;
+
+  @Captor
+  private ArgumentCaptor<Supplier<TerminalWithOperatorJson>> terminalJsonSupplierCaptor;
 
   @Spy
   @InjectMocks
@@ -147,34 +173,52 @@ public class AssetServiceTest {
   void throwForbiddenStatusExceptionIfCannotStartApplicationForAsset_field() {
     when(fieldService.getFieldWithOperatorAndLicences(FIELD_ID, FIELD_LOOKUP_PURPOSE)).thenReturn(field1JsonWithOperatorAndLicences);
 
-    doReturn(new StartApplicationDecision(List.of()))
+    doReturn(StartApplicationDecision.allowed())
         .when(assetService)
-        .getStartApplicationDecision(field1JsonWithOperatorAndLicences);
+        .getStartApplicationDecisionForField(eq(SERVICE_USER_DETAIL), any());
 
     assertDoesNotThrow(() ->
-        assetService.throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(FIELD_ASSET_KEY)
+        assetService.throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(FIELD_ASSET_KEY, SERVICE_USER_DETAIL)
     );
+
+    verify(assetService).getStartApplicationDecisionForField(eq(SERVICE_USER_DETAIL), fieldJsonSupplierCaptor.capture());
+    assertThat(fieldJsonSupplierCaptor.getValue().get()).isEqualTo(field1JsonWithOperatorAndLicences);
   }
 
   @Test
   void throwForbiddenStatusExceptionIfCannotStartApplicationForAsset_field_cannotStartApplication() {
     when(fieldService.getFieldWithOperatorAndLicences(FIELD_ID, FIELD_LOOKUP_PURPOSE)).thenReturn(field1JsonWithOperatorAndLicences);
 
-    doReturn(new StartApplicationDecision(List.of("invalid field status")))
+    doReturn(StartApplicationDecision.notAllowed(List.of("invalid field status")))
         .when(assetService)
-        .getStartApplicationDecision(field1JsonWithOperatorAndLicences);
+        .getStartApplicationDecisionForField(eq(SERVICE_USER_DETAIL), any());
 
     assertThatThrownBy(() ->
-        assetService.throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(FIELD_ASSET_KEY)
+        assetService.throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(FIELD_ASSET_KEY, SERVICE_USER_DETAIL)
     )
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining("Cannot start application for field [%d]".formatted(FIELD_ID))
         .asInstanceOf(type(ResponseStatusException.class))
         .matches(e -> e.getStatusCode().equals(HttpStatus.FORBIDDEN));
+
+    verify(assetService).getStartApplicationDecisionForField(eq(SERVICE_USER_DETAIL), fieldJsonSupplierCaptor.capture());
+    assertThat(fieldJsonSupplierCaptor.getValue().get()).isEqualTo(field1JsonWithOperatorAndLicences);
   }
 
   @Test
-  void getStartApplicationDecision_field() {
+  @SuppressWarnings("unchecked")
+  void getStartApplicationDecisionForField_notIndustryUser() {
+    when(teamService.isIndustryUser(SERVICE_USER_DETAIL)).thenReturn(false);
+
+    var mockFieldJsonSupplier = mock(Supplier.class);
+    assertThat(assetService.getStartApplicationDecisionForField(SERVICE_USER_DETAIL, mockFieldJsonSupplier))
+        .isEqualTo(StartApplicationDecision.notAllowed(List.of()));
+
+    verifyNoInteractions(mockFieldJsonSupplier);
+  }
+
+  @Test
+  void getStartApplicationDecisionForField() {
     var field = Field.newBuilder()
         .fieldId(FIELD_ID)
         .fieldName("Field 1")
@@ -192,13 +236,72 @@ public class AssetServiceTest {
         .geographicArea(FieldGeographicArea.CNS)
         .build();
 
+    when(teamService.isIndustryUser(SERVICE_USER_DETAIL)).thenReturn(true);
+    when(organisationUnitPermissionService.hasOperatorPermission(SERVICE_USER_DETAIL, OPERATOR_OU_ID, RolePermission.CREATE_FCS_APPLICATIONS))
+        .thenReturn(true);
+
     var fieldJson = FieldWithOperatorAndLicencesJson.from(field);
-    assertThat(assetService.getStartApplicationDecision(fieldJson))
-        .isEqualTo(new StartApplicationDecision(List.of()));
+    assertThat(assetService.getStartApplicationDecisionForField(SERVICE_USER_DETAIL, () -> fieldJson))
+        .isEqualTo(StartApplicationDecision.allowed());
   }
 
   @Test
-  void getStartApplicationDecision_field_noLicences_null() {
+  void getStartApplicationDecisionForField_noOperator() {
+    var field = Field.newBuilder()
+        .fieldId(FIELD_ID)
+        .fieldName("Field 1")
+        .licences(List.of(
+            Licence.newBuilder()
+                .id(1)
+                .licenceRef("L1")
+                .build()
+        ))
+        .status(FieldStatus.STATUS500)
+        .shore(FieldShore.OFFSHORE)
+        .geographicArea(FieldGeographicArea.CNS)
+        .build();
+
+    when(teamService.isIndustryUser(SERVICE_USER_DETAIL)).thenReturn(true);
+
+    var fieldJson = FieldWithOperatorAndLicencesJson.from(field);
+    assertThat(assetService.getStartApplicationDecisionForField(SERVICE_USER_DETAIL, () -> fieldJson))
+        .isEqualTo(StartApplicationDecision.notAllowed(
+            List.of("An operator does not exist for this field")
+        ));
+  }
+
+  @Test
+  void getStartApplicationDecisionForField_noPermission() {
+    var field = Field.newBuilder()
+        .fieldId(FIELD_ID)
+        .fieldName("Field 1")
+        .fieldOperator(OrganisationUnit.newBuilder()
+            .organisationUnitId(OPERATOR_OU_ID)
+            .build())
+        .licences(List.of(
+            Licence.newBuilder()
+                .id(1)
+                .licenceRef("L1")
+                .build()
+        ))
+        .status(FieldStatus.STATUS500)
+        .shore(FieldShore.OFFSHORE)
+        .geographicArea(FieldGeographicArea.CNS)
+        .build();
+
+    when(teamService.isIndustryUser(SERVICE_USER_DETAIL)).thenReturn(true);
+    when(organisationUnitPermissionService.hasOperatorPermission(SERVICE_USER_DETAIL, OPERATOR_OU_ID, RolePermission.CREATE_FCS_APPLICATIONS))
+        .thenReturn(false);
+
+    var fieldJson = FieldWithOperatorAndLicencesJson.from(field);
+    assertThat(assetService.getStartApplicationDecisionForField(SERVICE_USER_DETAIL, () -> fieldJson))
+        .isEqualTo(StartApplicationDecision.notAllowed(
+            List.of("You are missing permissions to create applications for this field")
+        ));
+  }
+
+  @Test
+  void getStartApplicationDecisionForField_noLicences_null() {
     var field = Field.newBuilder()
         .fieldId(FIELD_ID)
         .fieldName("Field 1")
@@ -210,15 +313,19 @@ public class AssetServiceTest {
         .geographicArea(FieldGeographicArea.CNS)
         .build();
 
+    when(teamService.isIndustryUser(SERVICE_USER_DETAIL)).thenReturn(true);
+    when(organisationUnitPermissionService.hasOperatorPermission(SERVICE_USER_DETAIL, OPERATOR_OU_ID, RolePermission.CREATE_FCS_APPLICATIONS))
+        .thenReturn(true);
+
     var fieldJson = FieldWithOperatorAndLicencesJson.from(field);
-    assertThat(assetService.getStartApplicationDecision(fieldJson))
-        .isEqualTo(new StartApplicationDecision(List.of(
-            "There are no licences associated to this field"
-        )));
+    assertThat(assetService.getStartApplicationDecisionForField(SERVICE_USER_DETAIL, () -> fieldJson))
+        .isEqualTo(StartApplicationDecision.notAllowed(
+            List.of("There are no licences associated to this field")
+        ));
   }
 
   @Test
-  void getStartApplicationDecision_field_noLicences_empty() {
+  void getStartApplicationDecisionForField_noLicences_empty() {
     var field = Field.newBuilder()
         .fieldId(FIELD_ID)
         .fieldName("Field 1")
@@ -231,15 +338,19 @@ public class AssetServiceTest {
         .geographicArea(FieldGeographicArea.CNS)
         .build();
 
+    when(teamService.isIndustryUser(SERVICE_USER_DETAIL)).thenReturn(true);
+    when(organisationUnitPermissionService.hasOperatorPermission(SERVICE_USER_DETAIL, OPERATOR_OU_ID, RolePermission.CREATE_FCS_APPLICATIONS))
+        .thenReturn(true);
+
     var fieldJson = FieldWithOperatorAndLicencesJson.from(field);
-    assertThat(assetService.getStartApplicationDecision(fieldJson))
-        .isEqualTo(new StartApplicationDecision(List.of(
-            "There are no licences associated to this field"
-        )));
+    assertThat(assetService.getStartApplicationDecisionForField(SERVICE_USER_DETAIL, () -> fieldJson))
+        .isEqualTo(StartApplicationDecision.notAllowed(
+            List.of("There are no licences associated to this field")
+        ));
   }
 
   @Test
-  void getStartApplicationDecision_field_fieldInNonProducingStatus() {
+  void getStartApplicationDecisionForField_fieldInNonProducingStatus() {
     var field = Field.newBuilder()
         .fieldId(FIELD_ID)
         .fieldName("Field 1")
@@ -257,45 +368,67 @@ public class AssetServiceTest {
         .geographicArea(FieldGeographicArea.CNS)
         .build();
 
+    when(teamService.isIndustryUser(SERVICE_USER_DETAIL)).thenReturn(true);
+    when(organisationUnitPermissionService.hasOperatorPermission(SERVICE_USER_DETAIL, OPERATOR_OU_ID, RolePermission.CREATE_FCS_APPLICATIONS))
+        .thenReturn(true);
+
     var fieldJson = FieldWithOperatorAndLicencesJson.from(field);
-    assertThat(assetService.getStartApplicationDecision(fieldJson))
-        .isEqualTo(new StartApplicationDecision(List.of(
-            "The field is not in a valid 'producing' status"
-        )));
+    assertThat(assetService.getStartApplicationDecisionForField(SERVICE_USER_DETAIL, () -> fieldJson))
+        .isEqualTo(StartApplicationDecision.notAllowed(
+            List.of("The field is not in a valid 'producing' status")
+        ));
   }
 
   @Test
   void throwForbiddenStatusExceptionIfCannotStartApplicationForAsset_terminal() {
     when(terminalService.getTerminalWithOperator(TERMINAL_ID, TERMINAL_LOOKUP_PURPOSE)).thenReturn(terminal1JsonWithOperator);
 
-    doReturn(new StartApplicationDecision(List.of()))
+    doReturn(StartApplicationDecision.allowed())
         .when(assetService)
-        .getStartApplicationDecision(terminal1JsonWithOperator);
+        .getStartApplicationDecisionForTerminal(eq(SERVICE_USER_DETAIL), any());
 
     assertDoesNotThrow(() ->
-        assetService.throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(TERMINAL_ASSET_KEY)
+        assetService.throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(TERMINAL_ASSET_KEY, SERVICE_USER_DETAIL)
     );
+
+    verify(assetService).getStartApplicationDecisionForTerminal(eq(SERVICE_USER_DETAIL), terminalJsonSupplierCaptor.capture());
+    assertThat(terminalJsonSupplierCaptor.getValue().get()).isEqualTo(terminal1JsonWithOperator);
   }
 
   @Test
   void throwForbiddenStatusExceptionIfCannotStartApplicationForAsset_terminal_cannotStartApplication() {
     when(terminalService.getTerminalWithOperator(TERMINAL_ID, TERMINAL_LOOKUP_PURPOSE)).thenReturn(terminal1JsonWithOperator);
 
-    doReturn(new StartApplicationDecision(List.of("invalid field status")))
+    doReturn(StartApplicationDecision.notAllowed(List.of("invalid field status")))
         .when(assetService)
-        .getStartApplicationDecision(terminal1JsonWithOperator);
+        .getStartApplicationDecisionForTerminal(eq(SERVICE_USER_DETAIL), any());
 
     assertThatThrownBy(() ->
-        assetService.throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(TERMINAL_ASSET_KEY)
+        assetService.throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(TERMINAL_ASSET_KEY, SERVICE_USER_DETAIL)
     )
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining("Cannot start application for facility [%d]".formatted(TERMINAL_ID))
         .asInstanceOf(type(ResponseStatusException.class))
         .matches(e -> e.getStatusCode().equals(HttpStatus.FORBIDDEN));
+
+    verify(assetService).getStartApplicationDecisionForTerminal(eq(SERVICE_USER_DETAIL), terminalJsonSupplierCaptor.capture());
+    assertThat(terminalJsonSupplierCaptor.getValue().get()).isEqualTo(terminal1JsonWithOperator);
   }
 
   @Test
-  void getStartApplicationDecision_terminal() {
+  @SuppressWarnings("unchecked")
+  void getStartApplicationDecisionForTerminal_notIndustryUser() {
+    when(teamService.isIndustryUser(SERVICE_USER_DETAIL)).thenReturn(false);
+
+    var mockTerminalJsonSupplier = mock(Supplier.class);
+    assertThat(assetService.getStartApplicationDecisionForTerminal(SERVICE_USER_DETAIL, mockTerminalJsonSupplier))
+        .isEqualTo(StartApplicationDecision.notAllowed(List.of()));
+
+    verifyNoInteractions(mockTerminalJsonSupplier);
+  }
+
+  @Test
+  void getStartApplicationDecisionForTerminal() {
     var terminal = Terminal.newBuilder()
         .terminalId(TERMINAL_ID)
         .terminalName("Terminal 1")
@@ -305,13 +438,56 @@ public class AssetServiceTest {
         .terminalActive(true)
         .build();
 
+    when(teamService.isIndustryUser(SERVICE_USER_DETAIL)).thenReturn(true);
+    when(organisationUnitPermissionService.hasOperatorPermission(SERVICE_USER_DETAIL, OPERATOR_OU_ID, RolePermission.CREATE_FCS_APPLICATIONS))
+        .thenReturn(true);
+
     var terminalJson = TerminalWithOperatorJson.from(terminal);
-    assertThat(assetService.getStartApplicationDecision(terminalJson))
-        .isEqualTo(new StartApplicationDecision(List.of()));
+    assertThat(assetService.getStartApplicationDecisionForTerminal(SERVICE_USER_DETAIL, () -> terminalJson))
+        .isEqualTo(StartApplicationDecision.allowed());
   }
 
   @Test
-  void getStartApplicationDecision_terminal_notActive() {
+  void getStartApplicationDecisionForTerminal_noOperator() {
+    var terminal = Terminal.newBuilder()
+        .terminalId(TERMINAL_ID)
+        .terminalName("Terminal 1")
+        .terminalActive(true)
+        .build();
+
+    when(teamService.isIndustryUser(SERVICE_USER_DETAIL)).thenReturn(true);
+
+    var terminalJson = TerminalWithOperatorJson.from(terminal);
+    assertThat(assetService.getStartApplicationDecisionForTerminal(SERVICE_USER_DETAIL, () -> terminalJson))
+        .isEqualTo(StartApplicationDecision.notAllowed(
+            List.of("An operator does not exist for this facility")
+        ));
+  }
+
+  @Test
+  void getStartApplicationDecisionForTerminal_noPermission() {
+    var terminal = Terminal.newBuilder()
+        .terminalId(TERMINAL_ID)
+        .terminalName("Terminal 1")
+        .terminalOperator(OrganisationUnit.newBuilder()
+            .organisationUnitId(OPERATOR_OU_ID)
+            .build())
+        .terminalActive(true)
+        .build();
+
+    when(teamService.isIndustryUser(SERVICE_USER_DETAIL)).thenReturn(true);
+    when(organisationUnitPermissionService.hasOperatorPermission(SERVICE_USER_DETAIL, OPERATOR_OU_ID, RolePermission.CREATE_FCS_APPLICATIONS))
+        .thenReturn(false);
+
+    var terminalJson = TerminalWithOperatorJson.from(terminal);
+    assertThat(assetService.getStartApplicationDecisionForTerminal(SERVICE_USER_DETAIL, () -> terminalJson))
+        .isEqualTo(StartApplicationDecision.notAllowed(
+            List.of("You are missing permissions to create applications for this facility")
+        ));
+  }
+
+  @Test
+  void getStartApplicationDecisionForTerminal_notActive() {
     var terminal = Terminal.newBuilder()
         .terminalId(TERMINAL_ID)
         .terminalName("Terminal 1")
@@ -321,15 +497,19 @@ public class AssetServiceTest {
         .terminalActive(false)
         .build();
 
+    when(teamService.isIndustryUser(SERVICE_USER_DETAIL)).thenReturn(true);
+    when(organisationUnitPermissionService.hasOperatorPermission(SERVICE_USER_DETAIL, OPERATOR_OU_ID, RolePermission.CREATE_FCS_APPLICATIONS))
+        .thenReturn(true);
+
     var terminalJson = TerminalWithOperatorJson.from(terminal);
-    assertThat(assetService.getStartApplicationDecision(terminalJson))
-        .isEqualTo(new StartApplicationDecision(List.of(
-            "This facility is inactive"
-        )));
+    assertThat(assetService.getStartApplicationDecisionForTerminal(SERVICE_USER_DETAIL, () -> terminalJson))
+        .isEqualTo(StartApplicationDecision.notAllowed(
+            List.of("This facility is inactive")
+        ));
   }
 
   @Test
-  void getStartApplicationDecision_terminal_nullActive() {
+  void getStartApplicationDecisionForTerminal_nullActive() {
     var terminal = Terminal.newBuilder()
         .terminalId(TERMINAL_ID)
         .terminalName("Terminal 1")
@@ -338,11 +518,15 @@ public class AssetServiceTest {
             .build())
         .build();
 
+    when(teamService.isIndustryUser(SERVICE_USER_DETAIL)).thenReturn(true);
+    when(organisationUnitPermissionService.hasOperatorPermission(SERVICE_USER_DETAIL, OPERATOR_OU_ID, RolePermission.CREATE_FCS_APPLICATIONS))
+        .thenReturn(true);
+
     var terminalJson = TerminalWithOperatorJson.from(terminal);
-    assertThat(assetService.getStartApplicationDecision(terminalJson))
-        .isEqualTo(new StartApplicationDecision(List.of(
-            "This facility is inactive"
-        )));
+    assertThat(assetService.getStartApplicationDecisionForTerminal(SERVICE_USER_DETAIL, () -> terminalJson))
+        .isEqualTo(StartApplicationDecision.notAllowed(
+            List.of("This facility is inactive")
+        ));
   }
 
 }

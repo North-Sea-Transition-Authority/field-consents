@@ -88,10 +88,10 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
   @Test
   void getStartApplicationForm() throws Exception {
     String continueStartApplicationUrl = ReverseRouter.route(on(StartApplicationFromFieldController.class)
-        .continueStartApplicationOfType(FIELD_ID, null, null, null));
+        .continueStartApplicationOfType(FIELD_ID, null, null, null, null));
 
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(StartApplicationFromFieldController.class)
-                .getStartApplicationForm(FIELD_ID)))
+                .getStartApplicationForm(FIELD_ID, null)))
                 .with(user(user)))
             .andExpect(status().isOk())
             .andExpect(view().name("fcs/startapplication/startApplication"))
@@ -107,7 +107,7 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
   @SecurityTest
   void getStartApplicationForm_notAuthorized() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(StartApplicationFromFieldController.class)
-            .getStartApplicationForm(FIELD_ID))))
+            .getStartApplicationForm(FIELD_ID, null))))
         .andExpect(redirectionToLoginUrl());
   }
 
@@ -116,7 +116,7 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
     when(assetAccessService.hasAssetPermission(user, field1JsonWithOperator, CREATE_FCS_APPLICATIONS)).thenReturn(false);
 
     mockMvc.perform(get(ReverseRouter.route(on(StartApplicationFromFieldController.class)
-            .getStartApplicationForm(FIELD_ID)))
+            .getStartApplicationForm(FIELD_ID, null)))
             .with(user(user)))
         .andExpect(status().isForbidden());
   }
@@ -124,7 +124,7 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
   @Test
   void continueStartApplicationOfType() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromFieldController.class)
-        .continueStartApplicationOfType(FIELD_ID, null, null, null)))
+        .continueStartApplicationOfType(FIELD_ID, null, null, null, null)))
             .param("applicationType", ApplicationType.FLARE.name())
             .with(user(user))
             .with(csrf()))
@@ -140,7 +140,7 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
 
     var modelAndView =
         mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromFieldController.class)
-                .continueStartApplicationOfType(FIELD_ID, null, null, null)))
+                .continueStartApplicationOfType(FIELD_ID, null, null, null, null)))
                 .with(user(user))
                 .with(csrf()))
             .andExpect(status().isOk())
@@ -157,7 +157,7 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
   @SecurityTest
   void continueStartApplicationOfType_whenUnauthorized() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromFieldController.class)
-            .continueStartApplicationOfType(FIELD_ID, null, null, null)))
+            .continueStartApplicationOfType(FIELD_ID, null, null, null, null)))
             .with(csrf()))
         .andExpect(redirectionToLoginUrl());
   }
@@ -167,7 +167,7 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
     when(assetAccessService.hasAssetPermission(user, field1JsonWithOperator, CREATE_FCS_APPLICATIONS)).thenReturn(false);
 
     mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromFieldController.class)
-            .continueStartApplicationOfType(FIELD_ID, null, null, null)))
+            .continueStartApplicationOfType(FIELD_ID, null, null, null, null)))
             .with(user(user))
             .with(csrf()))
         .andExpect(status().isForbidden());
@@ -181,7 +181,7 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
 
     var modelAndView =
         mockMvc.perform(get(ReverseRouter.route(on(StartApplicationFromFieldController.class)
-                .getStartApplicationOperatorForm(FIELD_ID, null)))
+                .getStartApplicationOperatorForm(FIELD_ID, null, null)))
                 .flashAttr("applicationType", ApplicationType.FLARE)
                 .with(user(user)))
             .andExpect(status().isOk())
@@ -208,7 +208,7 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
   @SecurityTest
   void getStartApplicationOperatorForm_notAuthorized() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(StartApplicationFromFieldController.class)
-            .getStartApplicationOperatorForm(FIELD_ID, null))))
+            .getStartApplicationOperatorForm(FIELD_ID, null, null))))
         .andExpect(redirectionToLoginUrl());
   }
 
@@ -217,7 +217,7 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
     when(assetAccessService.hasAssetPermission(user, field1JsonWithOperator, CREATE_FCS_APPLICATIONS)).thenReturn(false);
 
     mockMvc.perform(get(ReverseRouter.route(on(StartApplicationFromFieldController.class)
-            .getStartApplicationOperatorForm(FIELD_ID, null)))
+            .getStartApplicationOperatorForm(FIELD_ID, null, null)))
             .with(user(user)))
         .andExpect(status().isForbidden());
   }
@@ -302,10 +302,10 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
 
     doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN))
         .when(assetService)
-        .throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(new AssetKey(FIELD_ID, AssetType.FIELD));
+        .throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(new AssetKey(FIELD_ID, AssetType.FIELD), user);
 
     mockMvc.perform(get(ReverseRouter.route(on(StartApplicationFromFieldController.class)
-            .getStartApplicationForm(FIELD_ID)))
+            .getStartApplicationForm(FIELD_ID, null)))
             .with(user(user)))
         .andExpect(status().isForbidden());
   }
@@ -318,10 +318,10 @@ class StartApplicationFromFieldControllerTest extends AbstractControllerTest {
 
     doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN))
         .when(assetService)
-        .throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(new AssetKey(FIELD_ID, AssetType.FIELD));
+        .throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(new AssetKey(FIELD_ID, AssetType.FIELD), user);
 
     mockMvc.perform(post(ReverseRouter.route(on(StartApplicationFromFieldController.class)
-            .continueStartApplicationOfType(FIELD_ID, null, null, null)))
+            .continueStartApplicationOfType(FIELD_ID, null, null, null, null)))
             .with(user(user)))
         .andExpect(status().isForbidden());
   }

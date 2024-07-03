@@ -74,8 +74,8 @@ public class StartApplicationFromTerminalController {
   }
 
   @GetMapping("/start-application")
-  public ModelAndView getStartApplicationForm(@PathVariable Integer terminalId) {
-    assetService.throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(getAssetKeyForTerminalId(terminalId));
+  public ModelAndView getStartApplicationForm(@PathVariable Integer terminalId, ServiceUserDetail user) {
+    assetService.throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(getAssetKeyForTerminalId(terminalId), user);
 
     ModelAndView modelAndView = getStartApplicationFormModelAndView(terminalId);
     modelAndView.addObject("form", new StartApplicationForm());
@@ -92,6 +92,7 @@ public class StartApplicationFromTerminalController {
                 terminalId,
                 null,
                 ReverseRouter.emptyBindingResult(),
+                null,
                 null
             )
         )
@@ -105,8 +106,9 @@ public class StartApplicationFromTerminalController {
   public ModelAndView continueStartApplicationOfType(@PathVariable Integer terminalId,
                                                      @ModelAttribute("form") StartApplicationForm form,
                                                      BindingResult bindingResult,
-                                                     RedirectAttributes redirectAttributes) {
-    assetService.throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(getAssetKeyForTerminalId(terminalId));
+                                                     RedirectAttributes redirectAttributes,
+                                                     ServiceUserDetail user) {
+    assetService.throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(getAssetKeyForTerminalId(terminalId), user);
 
     formValidator.validate(form, bindingResult);
 
@@ -116,6 +118,7 @@ public class StartApplicationFromTerminalController {
       redirectAttributes.addFlashAttribute(APPLICATION_TYPE_FLASH_ATTRIBUTE, form.getApplicationType());
       return ReverseRouter.redirect(on(StartApplicationFromTerminalController.class).getStartApplicationOperatorForm(
           terminalId,
+          null,
           null
       ));
     }
@@ -124,9 +127,10 @@ public class StartApplicationFromTerminalController {
   @GetMapping("/start-application/operator")
   public ModelAndView getStartApplicationOperatorForm(
       @PathVariable Integer terminalId,
-      @ModelAttribute(APPLICATION_TYPE_FLASH_ATTRIBUTE) ApplicationType applicationType
+      @ModelAttribute(APPLICATION_TYPE_FLASH_ATTRIBUTE) ApplicationType applicationType,
+      ServiceUserDetail user
   ) {
-    assetService.throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(getAssetKeyForTerminalId(terminalId));
+    assetService.throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(getAssetKeyForTerminalId(terminalId), user);
 
     ModelAndView modelAndView = getStartApplicationOperatorModelAndView(terminalId);
     modelAndView.addObject("form", new StartApplicationOperatorForm(applicationType));
@@ -159,7 +163,7 @@ public class StartApplicationFromTerminalController {
                                            @ModelAttribute("form") StartApplicationOperatorForm form,
                                            BindingResult bindingResult,
                                            ServiceUserDetail user) {
-    assetService.throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(getAssetKeyForTerminalId(terminalId));
+    assetService.throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(getAssetKeyForTerminalId(terminalId), user);
 
     operatorFormValidator.validate(form, bindingResult);
 

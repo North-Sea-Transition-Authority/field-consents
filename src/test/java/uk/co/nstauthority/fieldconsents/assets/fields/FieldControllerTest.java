@@ -1,5 +1,9 @@
 package uk.co.nstauthority.fieldconsents.assets.fields;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
@@ -14,7 +18,10 @@ import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePe
 import static uk.co.nstauthority.fieldconsents.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.List;
+import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.fieldconsents.AbstractControllerTest;
@@ -36,6 +43,9 @@ public class FieldControllerTest extends AbstractControllerTest {
 
   @MockBean
   private AssetService assetService;
+
+  @Captor
+  private ArgumentCaptor<Supplier<FieldWithOperatorAndLicencesJson>> fieldJsonSupplierCaptor;
 
   @SecurityTest
   void manageField_whenNotAuthenticated_thenRedirectedToLogin() throws Exception {
@@ -65,16 +75,15 @@ public class FieldControllerTest extends AbstractControllerTest {
     when(fieldService.getFieldWithOperatorAndLicences(field1JsonWithOperatorAndLicences.getId(), "Get field details for management screen"))
         .thenReturn(field1JsonWithOperatorAndLicences);
 
-    var startApplicationDecision = new StartApplicationDecision(List.of());
-    when(assetService.getStartApplicationDecision(field1JsonWithOperatorAndLicences))
-        .thenReturn(startApplicationDecision);
+    var startApplicationDecision = StartApplicationDecision.allowed();
+    when(assetService.getStartApplicationDecisionForField(eq(user), any())).thenReturn(startApplicationDecision);
 
     var applicationDataItemViews = List.of(ApplicationDataItemUtil.getApplicationDataItemView());
     when(manageAssetService.getApplicationDataItemViews(AssetKey.from(field1JsonWithOperatorAndLicences), user))
         .thenReturn(applicationDataItemViews);
 
     var backLinkUrl = ReverseRouter.route(on(AssetSelectionController.class).getAssetSelection());
-    var startApplicationUrl = ReverseRouter.route(on(StartApplicationFromFieldController.class).getStartApplicationForm(field1JsonWithOperatorAndLicences.getId()));
+    var startApplicationUrl = ReverseRouter.route(on(StartApplicationFromFieldController.class).getStartApplicationForm(field1JsonWithOperatorAndLicences.getId(), null));
 
     mockMvc.perform(get(ReverseRouter.route(on(FieldController.class)
             .manageField(field1JsonWithOperatorAndLicences.getId(), null)))
@@ -82,13 +91,14 @@ public class FieldControllerTest extends AbstractControllerTest {
         .andExpect(status().isOk())
         .andExpect(view().name("fcs/assets/fields"))
         .andExpect(model().attribute("fieldJson", field1JsonWithOperatorAndLicences))
-        .andExpect(model().attribute("operatorExists", field1JsonWithOperatorAndLicences.operatorExists()))
-        .andExpect(model().attribute("licencesExist", field1JsonWithOperatorAndLicences.licencesExist()))
         .andExpect(model().attribute("startApplicationDecision", startApplicationDecision))
         .andExpect(model().attribute("operatorName", field1JsonWithOperatorAndLicences.getOperatorName()))
         .andExpect(model().attribute("licences", field1JsonWithOperatorAndLicences.getLicencesAsString()))
         .andExpect(model().attribute("backLinkUrl", backLinkUrl))
         .andExpect(model().attribute("startApplicationUrl", startApplicationUrl))
         .andExpect(model().attribute("applicationDataItemViews", applicationDataItemViews));
+
+    verify(assetService).getStartApplicationDecisionForField(eq(user), fieldJsonSupplierCaptor.capture());
+    assertThat(fieldJsonSupplierCaptor.getValue().get()).isEqualTo(field1JsonWithOperatorAndLicences);
   }
 }

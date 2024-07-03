@@ -1,11 +1,13 @@
 package uk.co.nstauthority.fieldconsents.assets;
 
 import static uk.co.nstauthority.fieldconsents.assets.fields.FieldService.FIELD_STATUSES_ALLOWED;
+import static uk.co.nstauthority.fieldconsents.teams.permissionmanagement.RolePermission.CREATE_FCS_APPLICATIONS;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -16,7 +18,9 @@ import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalJson;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalService;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalStatus;
 import uk.co.nstauthority.fieldconsents.assets.terminals.TerminalWithOperatorJson;
+import uk.co.nstauthority.fieldconsents.authentication.ServiceUserDetail;
 import uk.co.nstauthority.fieldconsents.organisations.OrganisationUnitPermissionService;
+import uk.co.nstauthority.fieldconsents.teams.TeamService;
 
 @Service
 public class AssetService {
@@ -26,14 +30,19 @@ public class AssetService {
 
   private final FieldService fieldService;
   private final TerminalService terminalService;
+  private final OrganisationUnitPermissionService organisationUnitPermissionService;
+  private final TeamService teamService;
 
   AssetService(
       FieldService fieldService,
       TerminalService terminalService,
-      OrganisationUnitPermissionService organisationUnitPermissionService
+      OrganisationUnitPermissionService organisationUnitPermissionService,
+      TeamService teamService
   ) {
     this.fieldService = fieldService;
     this.terminalService = terminalService;
+    this.organisationUnitPermissionService = organisationUnitPermissionService;
+    this.teamService = teamService;
   }
 
   @Deprecated
@@ -73,30 +82,36 @@ public class AssetService {
     };
   }
 
-  public void throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(AssetKey assetKey) {
-    var assetId = assetKey.assetId();
-
+  public void throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(AssetKey assetKey, ServiceUserDetail user) {
     var startApplicationDecision = switch (assetKey.assetType()) {
-      case FIELD -> {
-        var fieldJson = fieldService.getFieldWithOperatorAndLicences(assetId, FIELD_LOOKUP_PURPOSE);
-        yield getStartApplicationDecision(fieldJson);
-      }
-      case TERMINAL -> {
-        var terminalJson = terminalService.getTerminalWithOperator(assetId, TERMINAL_LOOKUP_PURPOSE);
-        yield getStartApplicationDecision(terminalJson);
-      }
+      case FIELD -> getStartApplicationDecisionForField(
+          user,
+          () -> fieldService.getFieldWithOperatorAndLicences(assetKey.assetId(), FIELD_LOOKUP_PURPOSE)
+      );
+      case TERMINAL -> getStartApplicationDecisionForTerminal(
+          user,
+          () -> terminalService.getTerminalWithOperator(assetKey.assetId(), TERMINAL_LOOKUP_PURPOSE)
+      );
     };
-
-    var assetTypeLowercase = assetKey.assetType().getDisplayName().toLowerCase();
 
     if (!startApplicationDecision.canBeStarted()) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot start application for %s [%d]"
-          .formatted(assetTypeLowercase, assetId));
+          .formatted(assetKey.assetType().getDisplayName().toLowerCase(), assetKey.assetId()));
     }
   }
 
-  public StartApplicationDecision getStartApplicationDecision(FieldWithOperatorAndLicencesJson fieldJson) {
+  public StartApplicationDecision getStartApplicationDecisionForField(
+      ServiceUserDetail user,
+      Supplier<FieldWithOperatorAndLicencesJson> fieldJsonSupplier
+  ) {
+    if (!teamService.isIndustryUser(user)) {
+      return StartApplicationDecision.notAllowed(List.of());
+    }
+
     var reasonsWhyApplicationCannotBeStarted = new ArrayList<String>();
+    var fieldJson = fieldJsonSupplier.get();
+
+    getOperatorPermissionCheckReason(fieldJson, user).ifPresent(reasonsWhyApplicationCannotBeStarted::add);
 
     if (!fieldJson.licencesExist()) {
       reasonsWhyApplicationCannotBeStarted.add("There are no licences associated to this field");
@@ -111,11 +126,41 @@ public class AssetService {
         : StartApplicationDecision.notAllowed(reasonsWhyApplicationCannotBeStarted);
   }
 
-  public StartApplicationDecision getStartApplicationDecision(TerminalWithOperatorJson terminalJson) {
-    if (!TerminalStatus.ACTIVE.equals(terminalJson.getStatus())) {
-      return StartApplicationDecision.notAllowed(List.of("This facility is inactive"));
+  public StartApplicationDecision getStartApplicationDecisionForTerminal(
+      ServiceUserDetail user,
+      Supplier<TerminalWithOperatorJson> terminalJsonSupplier
+  ) {
+    if (!teamService.isIndustryUser(user)) {
+      return StartApplicationDecision.notAllowed(List.of());
     }
 
-    return StartApplicationDecision.allowed();
+    var reasonsWhyApplicationCannotBeStarted = new ArrayList<String>();
+    var terminalJson = terminalJsonSupplier.get();
+
+    getOperatorPermissionCheckReason(terminalJson, user).ifPresent(reasonsWhyApplicationCannotBeStarted::add);
+
+    if (!TerminalStatus.ACTIVE.equals(terminalJson.getStatus())) {
+      reasonsWhyApplicationCannotBeStarted.add("This facility is inactive");
+    }
+
+    return reasonsWhyApplicationCannotBeStarted.isEmpty()
+        ? StartApplicationDecision.allowed()
+        : StartApplicationDecision.notAllowed(reasonsWhyApplicationCannotBeStarted);
   }
+
+  private Optional<String> getOperatorPermissionCheckReason(AssetWithOperatorJson assetWithOperatorJson, ServiceUserDetail user) {
+    var assetTypeLowercase = assetWithOperatorJson.getAssetType().getDisplayName().toLowerCase();
+
+    if (!assetWithOperatorJson.operatorExists()) {
+      return Optional.of("An operator does not exist for this %s".formatted(assetTypeLowercase));
+    }
+
+    var operatorOuId = assetWithOperatorJson.getOperatorJson().organisationUnitId();
+    if (!organisationUnitPermissionService.hasOperatorPermission(user, operatorOuId, CREATE_FCS_APPLICATIONS)) {
+      return Optional.of("You are missing permissions to create applications for this %s".formatted(assetTypeLowercase));
+    }
+
+    return Optional.empty();
+  }
+
 }

@@ -74,8 +74,8 @@ public class StartApplicationFromFieldController {
   }
 
   @GetMapping("/start-application")
-  public ModelAndView getStartApplicationForm(@PathVariable Integer fieldId) {
-    assetService.throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(getAssetKeyForFieldId(fieldId));
+  public ModelAndView getStartApplicationForm(@PathVariable Integer fieldId, ServiceUserDetail user) {
+    assetService.throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(getAssetKeyForFieldId(fieldId), user);
 
     ModelAndView modelAndView = getStartApplicationFormModelAndView(fieldId);
     modelAndView.addObject("form", new StartApplicationForm());
@@ -92,6 +92,7 @@ public class StartApplicationFromFieldController {
                 fieldId,
                 null,
                 null,
+                null,
                 null
             )
         )
@@ -103,9 +104,10 @@ public class StartApplicationFromFieldController {
   @PostMapping("/start-application")
   public ModelAndView continueStartApplicationOfType(@PathVariable Integer fieldId,
                                                      @ModelAttribute("form") StartApplicationForm form,
+                                                     ServiceUserDetail user,
                                                      BindingResult bindingResult,
                                                      RedirectAttributes redirectAttributes) {
-    assetService.throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(getAssetKeyForFieldId(fieldId));
+    assetService.throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(getAssetKeyForFieldId(fieldId), user);
 
     formValidator.validate(form, bindingResult);
 
@@ -115,6 +117,7 @@ public class StartApplicationFromFieldController {
       redirectAttributes.addFlashAttribute(APPLICATION_TYPE_FLASH_ATTRIBUTE, form.getApplicationType());
       return ReverseRouter.redirect(on(StartApplicationFromFieldController.class).getStartApplicationOperatorForm(
           fieldId,
+          null,
           null
       ));
     }
@@ -123,9 +126,10 @@ public class StartApplicationFromFieldController {
   @GetMapping("/start-application/operator")
   public ModelAndView getStartApplicationOperatorForm(
       @PathVariable Integer fieldId,
-      @ModelAttribute(APPLICATION_TYPE_FLASH_ATTRIBUTE) ApplicationType applicationType
+      @ModelAttribute(APPLICATION_TYPE_FLASH_ATTRIBUTE) ApplicationType applicationType,
+      ServiceUserDetail user
   ) {
-    assetService.throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(getAssetKeyForFieldId(fieldId));
+    assetService.throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(getAssetKeyForFieldId(fieldId), user);
 
     ModelAndView modelAndView = getStartApplicationOperatorModelAndView(fieldId);
     modelAndView.addObject("form", new StartApplicationOperatorForm(applicationType));
@@ -159,7 +163,7 @@ public class StartApplicationFromFieldController {
                                            @ModelAttribute("form") StartApplicationOperatorForm form,
                                            BindingResult bindingResult,
                                            ServiceUserDetail user) {
-    assetService.throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(getAssetKeyForFieldId(fieldId));
+    assetService.throwForbiddenStatusExceptionIfCannotStartApplicationForAsset(getAssetKeyForFieldId(fieldId), user);
 
     operatorFormValidator.validate(form, bindingResult);
 

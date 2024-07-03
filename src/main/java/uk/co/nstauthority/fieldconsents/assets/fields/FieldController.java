@@ -37,25 +37,20 @@ public class FieldController {
   }
 
   @GetMapping
-  public ModelAndView manageField(@PathVariable Integer fieldId,
-                                  ServiceUserDetail user) {
-    var fieldJson =
-        fieldService.getFieldWithOperatorAndLicences(fieldId, "Get field details for management screen");
-
-    var startApplicationDecision = assetService.getStartApplicationDecision(fieldJson);
+  public ModelAndView manageField(@PathVariable Integer fieldId, ServiceUserDetail user) {
+    var fieldJson = fieldService.getFieldWithOperatorAndLicences(fieldId, "Get field details for management screen");
+    var startApplicationDecision = assetService.getStartApplicationDecisionForField(user, () -> fieldJson);
 
     return new ModelAndView("fcs/assets/fields")
         .addObject("fieldJson", fieldJson)
+        .addObject("startApplicationDecision", startApplicationDecision)
         // the below default interface methods aren't accessible within the Freemarker,
         // so we have to pass in individually here
-        .addObject("operatorExists", fieldJson.operatorExists())
-        .addObject("licencesExist", fieldJson.licencesExist())
-        .addObject("startApplicationDecision", startApplicationDecision)
         .addObject("operatorName", fieldJson.getOperatorName())
         .addObject("licences", fieldJson.getLicencesAsString())
         .addObject("backLinkUrl", ReverseRouter.route(on(AssetSelectionController.class).getAssetSelection()))
         .addObject("startApplicationUrl",
-            ReverseRouter.route(on(StartApplicationFromFieldController.class).getStartApplicationForm(fieldId))
+            ReverseRouter.route(on(StartApplicationFromFieldController.class).getStartApplicationForm(fieldId, null))
         )
         .addObject("applicationDataItemViews", manageAssetService.getApplicationDataItemViews(AssetKey.from(fieldJson), user));
   }

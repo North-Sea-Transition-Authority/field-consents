@@ -37,23 +37,17 @@ public class TerminalController {
   }
 
   @GetMapping
-  public ModelAndView manageTerminal(@PathVariable Integer terminalId,
-                                     ServiceUserDetail user) {
-    var terminalJson =
-        terminalService.getTerminalWithOperator(terminalId, "Get terminal details for management screen");
-
-    var startApplicationDecision = assetService.getStartApplicationDecision(terminalJson);
+  public ModelAndView manageTerminal(@PathVariable Integer terminalId, ServiceUserDetail user) {
+    var terminalJson = terminalService.getTerminalWithOperator(terminalId, "Get terminal details for management screen");
+    var startApplicationDecision = assetService.getStartApplicationDecisionForTerminal(user, () -> terminalJson);
 
     return new ModelAndView("fcs/assets/terminals")
         .addObject("terminalJson", terminalJson)
-        // the below default interface methods aren't accessible within the Freemarker,
-        // so we have to pass in individually here
-        .addObject("operatorExists", terminalJson.operatorExists())
         .addObject("startApplicationDecision", startApplicationDecision)
         .addObject("operatorName", terminalJson.getOperatorName())
         .addObject("backLinkUrl", ReverseRouter.route(on(AssetSelectionController.class).getAssetSelection()))
         .addObject("startApplicationUrl",
-            ReverseRouter.route(on(StartApplicationFromTerminalController.class).getStartApplicationForm(terminalId))
+            ReverseRouter.route(on(StartApplicationFromTerminalController.class).getStartApplicationForm(terminalId, null))
         )
         .addObject("applicationDataItemViews", manageAssetService.getApplicationDataItemViews(AssetKey.from(terminalJson), user));
   }
